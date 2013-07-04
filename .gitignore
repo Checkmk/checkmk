@@ -1,6 +1,7 @@
 *kate-swp
 .*.swp
 .*.swo
+*.pyc
 *~
 check_mk-*.spec
 check_mk-*.tar.gz

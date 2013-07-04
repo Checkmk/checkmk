@@ -24,8 +24,15 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from mod_python import Cookie, apache
-import time, cgi, config, os, defaults, pwd, urllib, weblib, random
+import time, cgi, config, os, pwd, urllib, weblib, random
+
+# In case we start standalone and outside an check_mk enviroment,
+# we have another path for the defaults
+try:
+    import defaults
+except:
+    import defaults_standalone as defaults
+
 from lib import *
 # Python 2.3 does not have 'set' in normal namespace.
 # But it can be imported from 'sets'
@@ -40,134 +47,8 @@ class InvalidUserInput(Exception):
         self.varname = varname
         self.text = text
 
-
-class uriinfo:
-    def __init__(self, req):
-        self.req = req
-
-    # URI aus Dateiname und Variablen rekonstruieren
-    # TODO: URI-Encode von Variablen!
-    def geturi(self):
-        uri = self.req.myfile + ".py"
-        if self.req.vars:
-            uri += "?" + urlencode(self.req.vars.items())
-        return uri
-
-    # [('varname1', value1), ('varname2', value2) ]
-    def makeuri(self, addvars):
-        v = self.req.vars.items() + addvars
-        if v:
-            return self.req.myfile + ".py?" + urlencode_vars(v)
-        else:
-            return self.req.myfile + ".py"
-
-    # Liste von Hidden-Felder erzeugen aus aktueller URI
-    def hiddenfields(self, omit=[]):
-        return ''.join([ '<input type=hidden name="%s" value="%s">\n' % i \
-                         for i in self.req.vars.items() \
-                         if i[0] not in omit ])
-
-
-# Encode HTML attributes: replace " with &quot;, also replace
-# < and >. This code is slow.
-def attrencode(value):
-    if type(value) == int:
-        return str(value)
-    new = ""
-    for c in value:
-        if c == '"':
-            new += "&quot;"
-        elif c == '<':
-            new += "&lt;"
-        elif c == '>':
-            new += "&gt;"
-        else:
-            new += c
-    return new
-
-# This function returns a str object, never unicode!
-# Beware: this code is crucial for the performance of Multisite!
-# Changing from the self coded urlencode to urllib.quote
-# is saving more then 90% of the total HTML generating time
-# on more complex pages!
-def urlencode_vars(vars):
-    output = []
-    for varname, value in vars:
-	if type(value) == int:
-	    value = str(value)
-        elif type(value) == unicode:
-            value = value.encode("utf-8")
-
-        try:
-            # urllib is not able to encode non-Ascii characters. Yurks
-            output.append(varname + '=' + urllib.quote(value))
-        except:
-            output.append(varname + '=' + urlencode(value)) # slow but working
-
-    return '&'.join(output)
-
-def urlencode(value):
-    if type(value) == unicode:
-        value = value.encode("utf-8")
-    elif value == None:
-        return ""
-    ret = ""
-    for c in value:
-        if c == " ":
-            c = "+"
-        elif ord(c) <= 32 or ord(c) > 127 or c in [ '#', '+', '"', "'", "=", "&", ":", "%" ]:
-            c = "%%%02x" % ord(c)
-        ret += c
-    return ret
-
-def urldecode(value):
-    return urllib.unquote_plus(value)
-
-def u8(c):
-    if ord(c) > 127:
-        return "&#%d;" % ord(c)
-    else:
-        return c
-
-def utf8_to_entities(text):
-    if type(text) != unicode:
-        return text
-    else:
-        return text.encode("utf-8")
-
-    # Old code is soooooooo slow...
-    n = ""
-    for c in text:
-        n += u8(c)
-    return n
-
-# remove all HTML-tags
-def strip_tags(ht):
-    while True:
-        x = ht.find('<')
-        if x == -1:
-            break
-        y = ht.find('>', x)
-        if y == -1:
-            break
-        ht = ht[0:x] + ht[y+1:]
-    return ht
-
-def strip_scripts(ht):
-    while True:
-        x = ht.find('<script')
-        if x == -1:
-            break
-        y = ht.find('</script>')
-        if y == -1:
-            break
-        ht = ht[0:x] + ht[y+9:]
-    return ht
-
-
 class html:
-    def __init__(self, req):
-        self.req = req
+    def __init__(self):
         self.user_errors = {}
         self.focus_object = None
         self.global_vars = []
@@ -192,6 +73,11 @@ class html:
         self.keybindings = []
         self.keybindings_enabled = True
         self.io_error = False
+        self.debug = False
+        try:
+            self.pagetitle_date_format = config.pagetitle_date_format
+        except:
+            self.pagetitle_date_format = False
 
     RETURN = 13
     SHIFT = 16
@@ -246,20 +132,6 @@ class html:
             self.plugged_text += text
         else:
             self.lowlevel_write(text)
-
-    def lowlevel_write(self, text):
-        if self.io_error:
-            return
-
-        try:
-            if self.buffering:
-                self.req.write(text, 0)
-            else:
-                self.req.write(text)
-        except IOError, e:
-            # Catch writing problems to client, prevent additional writes
-            self.io_error = True
-            self.log('%s' % e)
 
     def plug(self):
         self.plugged = True
@@ -352,7 +224,7 @@ class html:
     def hidden_field(self, var, value, id = None, add_var = False):
         if value != None:
             id = id and ' id="%s"' % id or ''
-            self.write("<input type=hidden name=\"%s\" value=\"%s\"%s>" % (attrencode(var), attrencode(value), id))
+            self.write("<input type=hidden name=\"%s\" value=\"%s\"%s>" % (self.attrencode(var), self.attrencode(value), id))
             if add_var:
                 self.add_form_var(var)
 
@@ -376,22 +248,6 @@ class html:
     def add_global_vars(self, varnames):
         self.global_vars += varnames
 
-    # [('varname1', value1), ('varname2', value2) ]
-    def makeuri(self, addvars, remove_prefix = None, filename=None):
-        new_vars = [ nv[0] for nv in addvars ]
-        vars = [ (v, self.var(v))
-                 for v in self.req.vars
-                 if v[0] != "_" and v not in new_vars ]
-        if remove_prefix != None:
-            vars = [ i for i in vars if not i[0].startswith(remove_prefix) ]
-        vars = vars + addvars
-        if filename == None:
-            filename = self.req.myfile + ".py"
-        if vars:
-            return filename + "?" + urlencode_vars(vars)
-        else:
-            return filename
-
     def makeactionuri(self, addvars):
         return self.makeuri(addvars + [("_transid", self.fresh_transid())])
 
@@ -399,7 +255,7 @@ class html:
         if not filename:
 	    filename = self.req.myfile + ".py"
         if vars:
-            return filename + "?" + urlencode_vars(vars)
+            return filename + "?" + self.urlencode_vars(vars)
         else:
             return filename
 
@@ -586,7 +442,7 @@ class html:
             addprops += " id='%s'" % id
 
         html += "<input type=%s class=%s value=\"%s\" name=\"%s\"%s>" % \
-                     (mytype, cssclass, attrencode(value), varname, addprops)
+                     (mytype, cssclass, self.attrencode(value), varname, addprops)
         if error:
             html += "</x>"
             self.set_focus(varname)
@@ -604,7 +460,7 @@ class html:
 
         attributes = ' ' + ' '.join([ '%s="%s"' % (k, v) for k, v in attrs.iteritems() ])
         self.write("<textarea rows=%d cols=%d name=\"%s\"%s>%s</textarea>\n" % (
-            rows, cols, varname, attributes, attrencode(value)))
+            rows, cols, varname, attributes, self.attrencode(value)))
         if error:
             self.write("</x>")
             self.set_focus(varname)
@@ -796,7 +652,7 @@ class html:
         return m * 60 + h * 3600
 
     def upload_file(self, varname):
-        error = self.user_errors.get(varname)
+        error = slf.user_errors.get(varname)
         if error:
             self.write("<x class=inputerror>")
         self.write('<input type="file" name="%s">' % varname)
@@ -805,7 +661,7 @@ class html:
         self.form_vars.append(varname)
 
     def html_head(self, title, javascripts = [], stylesheets = ["pages"]):
-        if not self.req.header_sent:
+        if not self.header_sent:
             self.write(
                 u'''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html><head>
@@ -846,7 +702,7 @@ class html:
 
 
             self.write("</head>\n")
-            self.req.header_sent = True
+            self.header_sent = True
 
     def html_foot(self):
         self.write("</html>\n")
@@ -874,9 +730,9 @@ class html:
                     self.top_heading(title)
 
     def top_heading(self, title):
-        if type(self.req.user) == str:
+        if type(self.user) == str:
             login_text = "<b>%s</b> (%s" % (config.user_id, "+".join(config.user_role_ids))
-            if config.debug:
+            if self.debug:
                 if config.get_language():
                     login_text += "/%s" % config.get_language()
             login_text += ')'
@@ -887,8 +743,8 @@ class html:
                    'onclick="this.innerHTML=\'%s\'; document.location.reload();">%s</a></td>' %
                    (_("Reloading..."), title))
         self.write('<td style="min-width:240px" class=right><span id=headinfo></span>%s &nbsp; ' % login_text)
-        if config.pagetitle_date_format:
-            self.write(' &nbsp; <b id=headerdate format="%s"></b>' % config.pagetitle_date_format)
+        if self.pagetitle_date_format:
+            self.write(' &nbsp; <b id=headerdate format="%s"></b>' % self.pagetitle_date_format)
         self.write(' <b id=headertime></b>') 
         self.write("<script language=\"javascript\" type=\"text/javascript\">updateHeaderTime()</script>")
         try:
@@ -902,7 +758,7 @@ class html:
         self.write("%s</td></tr></table>" %
                    _("<a href=\"http://mathias-kettner.de\"><img src=\"images/mk_logo_small.gif\"/></a>"))
         self.write("<hr class=header>\n")
-        if config.debug:
+        if self.debug:
             self.write("<div class=urldebug>%s</div>" % self.makeuri([]))
 
     def body_start(self, title='', **args):
@@ -923,7 +779,7 @@ class html:
                            "</script>\n" % (obj, obj, obj))
 
     def bottom_footer(self):
-        if self.req.header_sent:
+        if self.header_sent:
             self.bottom_focuscode()
             corner_text = ""
             corner_text += '<div style="display: %s" id=foot_refresh>%s</div>' % (
@@ -964,7 +820,7 @@ document.body.onfocus = keybindings_focus;
             h += '<a target="_top" href="%s"><img class=statusicon src="images/status_frameurl.png" title="%s"></a>\n' % \
                  (self.makeuri([]), _("URL to this frame"))
             h += '<a target="_top" href="%s"><img class=statusicon src="images/status_pageurl.png" title="%s"></a>\n' % \
-                 ("index.py?" + urlencode_vars([("start_url", self.makeuri([]))]), _("URL to this page including sidebar"))
+                 ("index.py?" + self.urlencode_vars([("start_url", self.makeuri([]))]), _("URL to this page including sidebar"))
         for img, tooltip in self.status_icons.items():
             h += '<img class=statusicon src="images/status_%s.png" title="%s">\n' % (img, tooltip)
         return h
@@ -976,7 +832,7 @@ document.body.onfocus = keybindings_focus;
             self.write("<div class=error>%s</div>\n" % msg)
         else:
             self.write(_("ERROR: "))
-            self.write(strip_tags(msg))
+            self.write(self.strip_tags(msg))
             self.write("\n")
         if self.mobile:
             self.write('</center>')
@@ -988,7 +844,7 @@ document.body.onfocus = keybindings_focus;
             self.write("<div class=warning>%s</div>\n" % msg)
         else:
             self.write(_("WARNING: "))
-            self.write(strip_tags(msg))
+            self.write(self.strip_tags(msg))
             self.write("\n")
         if self.mobile:
             self.write('</center>')
@@ -1000,7 +856,7 @@ document.body.onfocus = keybindings_focus;
             self.write("<div class=success>%s</div>\n" % msg)
         else:
             self.write(_("MESSAGE: "))
-            self.write(strip_tags(msg))
+            self.write(self.strip_tags(msg))
             self.write("\n")
         if self.mobile:
             self.write('</center>')
@@ -1036,11 +892,7 @@ document.body.onfocus = keybindings_focus;
     def set_focus(self, varname):
         self.focus_object = (self.form_name, varname)
 
-    def has_var(self, varname):
-        return varname in self.req.vars
 
-    def var(self, varname, deflt = None):
-        return self.req.vars.get(varname, deflt)
 
     def var_utf8(self, varname, deflt = None):
         val = self.req.vars.get(varname, deflt)
@@ -1188,7 +1040,7 @@ document.body.onfocus = keybindings_focus;
                   '<param name="autostart" value="true">\n'
                   '<param name="playcount" value="1">\n'
                   '</object>\n' % (url, url, url))
-        if config.debug:
+        if self.debug:
             self.write("(playing sound %s)" % url)
 
     def apache_user(self):
@@ -1290,20 +1142,11 @@ document.body.onfocus = keybindings_focus;
         except:
             return deflt
 
-    def set_cookie(self, varname, value, expires = None):
-        c = Cookie.Cookie(varname, value, path = '/')
-        if expires is not None:
-            c.expires = expires
-
-        if not self.req.headers_out.has_key("Set-Cookie"):
-            self.req.headers_out.add("Cache-Control", 'no-cache="set-cookie"')
-            self.req.err_headers_out.add("Cache-Control", 'no-cache="set-cookie"')
-
-        self.req.headers_out.add("Set-Cookie", str(c))
-        self.req.err_headers_out.add("Set-Cookie", str(c))
-
-    def del_cookie(self, varname):
-        self.set_cookie(varname, '', time.time() - 60)
+    def set_cookie():
+        raise NotImlementedError
+    
+    def del_cookie():
+        raise NotImlementedError
 
     # Keyboard control
     def add_keybinding(self, keylist, jscode):
@@ -1314,3 +1157,102 @@ document.body.onfocus = keybindings_focus;
 
     def disable_keybindings(self):
         self.keybindings_enabled = False
+
+    # From here: Former not class functions
+
+    # Encode HTML attributes: replace " with &quot;, also replace
+    # < and >. This code is slow.
+    def attrencode(self, value):
+        if type(value) == int:
+            return str(value)
+        new = ""
+        for c in value:
+            if c == '"':
+                new += "&quot;"
+            elif c == '<':
+                new += "&lt;"
+            elif c == '>':
+                new += "&gt;"
+            else:
+                new += c
+        return new
+
+
+
+    # This function returns a str object, never unicode!
+    # Beware: this code is crucial for the performance of Multisite!
+    # Changing from the self coded urlencode to urllib.quote
+    # is saving more then 90% of the total HTML generating time
+    # on more complex pages!
+    def urlencode_vars(self, vars):
+        output = []
+        for varname, value in vars:
+            if type(value) == int:
+                value = str(value)
+            elif type(value) == unicode:
+                value = value.encode("utf-8")
+
+            try:
+                # urllib is not able to encode non-Ascii characters. Yurks
+                output.append(varname + '=' + urllib.quote(value))
+            except:
+                output.append(varname + '=' + self.urlencode(value)) # slow but working
+
+        return '&'.join(output)
+
+    def urlencode(self, value):
+        if type(value) == unicode:
+            value = value.encode("utf-8")
+        elif value == None:
+            return ""
+        ret = ""
+        for c in value:
+            if c == " ":
+                c = "+"
+            elif ord(c) <= 32 or ord(c) > 127 or c in [ '#', '+', '"', "'", "=", "&", ":", "%" ]:
+                c = "%%%02x" % ord(c)
+            ret += c
+        return ret
+
+    def u8(self, c):
+        if ord(c) > 127:
+            return "&#%d;" % ord(c)
+        else:
+            return c
+
+    def utf8_to_entities(self, text):
+        if type(text) != unicode:
+            return text
+        else:
+            return text.encode("utf-8")
+
+        # Old code is soooooooo slow...
+        n = ""
+        for c in text:
+            n += self.u8(c)
+        return n
+
+    # remove all HTML-tags
+    def strip_tags(self, ht):
+        while True:
+            x = ht.find('<')
+            if x == -1:
+                break
+            y = ht.find('>', x)
+            if y == -1:
+                break
+            ht = ht[0:x] + ht[y+1:]
+        return ht
+
+    def strip_scripts(self, ht):
+        while True:
+            x = ht.find('<script')
+            if x == -1:
+                break
+            y = ht.find('</script>')
+            if y == -1:
+                break
+            ht = ht[0:x] + ht[y+9:]
+        return ht
+
+

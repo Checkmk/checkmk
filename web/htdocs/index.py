@@ -35,7 +35,8 @@ from mod_python import apache, util, Cookie
 import sys, os, pprint
 from lib import *
 import livestatus
-import defaults, config, htmllib, login, userdb, hooks, default_permissions
+import defaults, config, login, userdb, hooks, default_permissions
+from html_mod_python import *
 
 # Load page handlers
 pagehandlers = {}
@@ -56,26 +57,6 @@ if defaults.omd_root:
             if fn.endswith(".py"):
                 execfile(local_pagehandlers_dir + "/" + fn)
 
-def read_get_vars(req):
-    req.vars = {}
-    req.listvars = {} # for variables with more than one occurrance
-    fields = util.FieldStorage(req, keep_blank_values = 1)
-    for field in fields.list:
-        varname = field.name
-        value = field.value
-        # Multiple occurrance of a variable? Store in extra list dict
-        if varname in req.vars:
-            if varname in req.listvars:
-                req.listvars[varname].append(value)
-            else:
-                req.listvars[varname] = [ req.vars[varname], value ]
-        # In the single-value-store the last occurrance of a variable
-        # has precedence. That makes appending variables to the current
-        # URL simpler.
-        req.vars[varname] = value
-
-def read_cookies(req):
-    req.cookies = Cookie.get_cookies(req)
 
 def connect_to_livestatus(html):
     html.site_status = {}
@@ -198,24 +179,22 @@ def handler(req, profiling = True):
     req.content_type = "text/html; charset=UTF-8"
     req.header_sent = False
 
-    # All URIs end in .py. We strip away the .py and get the
-    # name of the page.
-    req.myfile = req.uri.split("/")[-1][:-3]
 
     # Create an object that contains all data about the request and
     # helper functions for creating valid HTML. Parse URI and
     # store results in the request object for later usage.
-    html = htmllib.html(req)
+    html = html_mod_python(req)
+    html.debug = config.debug
     html.id = {} # create unique ID for this request
     __builtin__.html = html
-    req.uriinfo = htmllib.uriinfo(req)
+    req.uriinfo = uriinfo(req)
 
     response_code = apache.OK
     try:
         # Do not parse variables again if profiling (and second run is done)
         if profiling:
-            read_get_vars(req)
-            read_cookies(req)
+            html.read_get_vars()
+            html.read_cookies()
 
         # Ajax-Functions want no HTML output in case of an error but
         # just a plain server result code of 500

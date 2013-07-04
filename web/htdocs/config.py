@@ -36,7 +36,13 @@
 
 import os, pprint, glob
 from lib import *
-import defaults
+
+# In case we start standalone and outside an check_mk enviroment,
+# we have another path for the defaults
+try:
+    import defaults
+except:
+    import defaults_standalone as defaults
 
 # Python 2.3 does not have 'set' in normal namespace.
 # But it can be imported from 'sets'

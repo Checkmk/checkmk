@@ -1,4 +1,4 @@
-title: Number of printed pages on printers using PRINTER-MIB
+title: Generic Printer: Number of printed pages
 agents: snmp
 catalog: hw/printer
 author: Peter Lauk <lauk@stuttgart-airport.com>

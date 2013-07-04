@@ -76,6 +76,7 @@
       via "sidebar_show_scrollbar = True" in multisite.mk 
     * Added option to disable automatic userdb synchronizations in multisite
     * Implemented search forms for most data tables
+    * New status icons: export as CSV, export as JSON
 
     WATO:
     * Allow to configure check-/retry_interval in second precision

@@ -965,6 +965,11 @@ document.body.onfocus = keybindings_focus;
                  (self.makeuri([]), _("URL to this frame"))
             h += '<a target="_top" href="%s"><img class=statusicon src="images/status_pageurl.png" title="%s"></a>\n' % \
                  ("index.py?" + urlencode_vars([("start_url", self.makeuri([]))]), _("URL to this page including sidebar"))
+            
+            h += '<a target="_top" href="%s"><img class=statusicon src="images/status_frameurl.png" title="%s"></a>\n' % \
+                 (self.makeuri([("output_format", "json_export")]), _("Export as JSON"))
+            h += '<a target="_top" href="%s"><img class=statusicon src="images/status_frameurl.png" title="%s"></a>\n' % \
+                 (self.makeuri([("output_format", "csv_export")]), _("Export as CSV"))
         for img, tooltip in self.status_icons.items():
             h += '<img class=statusicon src="images/status_%s.png" title="%s">\n' % (img, tooltip)
         return h

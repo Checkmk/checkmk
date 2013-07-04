@@ -1,4 +1,4 @@
-title: APC PDU units
+title: APC PDU units: Power and Voltage
 agents: snmp
 catalog: hw/power
 license: GPL

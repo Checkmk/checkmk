@@ -812,7 +812,7 @@ def get_counter(countername, this_time, this_val, allow_negative=False):
 # this_time: timestamp of new value
 # backlog: averaging horizon in minutes
 # initialize_zero: assume average of 0.0 when now previous average is stored
-def get_average(itemname, this_time, this_val, backlog, initialize_zero = True):
+def get_average(itemname, this_time, this_val, backlog_minutes, initialize_zero = True):
 
     # first call: take current value as average or assume 0.0
     if not itemname in g_counters:
@@ -826,14 +826,14 @@ def get_average(itemname, this_time, this_val, backlog, initialize_zero = True):
     timedif = this_time - last_time
 
     # Compute the weight: We do it like this: First we assume that
-    # we get one sample per minute. And that backlog is the number
+    # we get one sample per minute. And that backlog_minutes is the number
     # of minutes we should average over. Then we want that the weight
     # of the values of the last average minutes have a fraction of W%
     # in the result and the rest until infinity the rest (1-W%).
-    # Then the weight can be computed as backlog'th root of 1-W
+    # Then the weight can be computed as backlog_minutes'th root of 1-W
     percentile = 0.50
 
-    weight_per_minute = (1 - percentile) ** (1.0 / backlog)
+    weight_per_minute = (1 - percentile) ** (1.0 / backlog_minutes)
 
     # now let's compute the weight per second. This is done
     weight = weight_per_minute ** (timedif / 60.0)

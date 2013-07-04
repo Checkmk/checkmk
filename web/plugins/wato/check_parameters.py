@@ -1487,8 +1487,9 @@ register_check_parameters(
                               "errors and traffic are applied to the averaged value. That "
                               "way you can make the check react only on long-time changes, "
                               "not on one-minute events."),
-                     label = _("minutes"),
+                     unit = _("minutes"),
                      minvalue = 1,
+                     default_value = 15,
                  )
                ),
 
@@ -3116,57 +3117,102 @@ register_check_parameters(
 )
 
 # Add checks that have parameters but are only configured as manual checks
+def ps_convert_from_tuple(params):
+    if type(params) in (list, tuple):
+        if len(params) == 5:
+            procname, warnmin, okmin, okmax, warnmax = params
+            user = None
+        elif len(params) == 6:
+            procname, user, warnmin, okmin, okmax, warnmax = params
+        params = {
+            "process" : procname,
+            "warnmin" : warnmin,
+            "okmin"   : okmin,
+            "okmax"   : okmax,
+            "warnmax" : warnmax,
+        }
+        if user != None:
+            params["user"] = user
+    return params
+
+
 register_check_parameters(
     subgroup_applications,
     "ps",
     _("State and count of processes"),
-    Tuple(
-        elements = [
-            Alternative(
-                title = _("Name of the process"),
-                elements = [
-                    TextAscii(
-                        title = _("Exact name of the process without argments"),
-                        size = 50,
-                    ),
-                    Transform(
-                        RegExp(size = 50),
-                        title = _("Regular expression matching command line"),
-                        help = _("This regex must match the <i>beginning</i> of the complete "
-                                 "command line of the process including arguments"),
-                        forth = lambda x: x[1:],   # remove ~
-                        back  = lambda x: "~" + x, # prefix ~
-                    ),
-                    FixedValue(
-                        None,
-                        totext = "",
-                        title = _("Match all processes"),
-                    )
-                ],
-                match = lambda x: (not x and 2) or (x[0] == '~' and 1 or 0)
-                ),
-            TextAscii(
-                title = _("Name of operating system user"),
-                help = _("Leave this empty, if the user does not matter"),
-                none_is_empty = True,
-            ),
-            Integer(
-                title = _("Minimum number of matched process for WARNING state"),
-                default_value = 1,
-            ),
-            Integer(
-                title = _("Minimum number of matched process for OK state"),
-                default_value = 1,
-            ),
-            Integer(
-                title = _("Maximum number of matched process for OK state"),
-                default_value = 1,
-            ),
-            Integer(
-                title = _("Maximum number of matched process for WARNING state"),
-                default_value = 1,
-            ),
-        ]),
+    Transform(
+        Dictionary(
+            elements = [
+                ( "process", Alternative(
+                    title = _("Name of the process"),
+                    style = "dropdown",
+                    elements = [
+                        TextAscii(
+                            title = _("Exact name of the process without argments"),
+                            size = 50,
+                        ),
+                        Transform(
+                            RegExp(size = 50),
+                            title = _("Regular expression matching command line"),
+                            help = _("This regex must match the <i>beginning</i> of the complete "
+                                     "command line of the process including arguments"),
+                            forth = lambda x: x[1:],   # remove ~
+                            back  = lambda x: "~" + x, # prefix ~
+                        ),
+                        FixedValue(
+                            None,
+                            totext = "",
+                            title = _("Match all processes"),
+                        )
+                    ],
+                    match = lambda x: (not x and 2) or (x[0] == '~' and 1 or 0)
+                )),
+                ( "warnmin", Integer(
+                    title = _("Minimum number of matched process for WARNING state"),
+                    default_value = 1,
+                )),
+                ( "okmin", Integer(
+                    title = _("Minimum number of matched process for OK state"),
+                    default_value = 1,
+                )),
+                ( "okmax", Integer(
+                    title = _("Maximum number of matched process for OK state"),
+                    default_value = 1,
+                )),
+                ( "warnmax", Integer(
+                    title = _("Maximum number of matched process for WARNING state"),
+                    default_value = 1,
+                )),
+                ( "user", TextAscii(
+                    title = _("Name of operating system user"),
+                    help = _("Leave this empty, if the user does not matter"),
+                    none_is_empty = True,
+                )),
+                ( "cpulevels", 
+                  Tuple(
+                    title = _("Levels on CPU utilization"),
+                    elements = [
+                       Percentage(title = _("Warning at"), default_value = 90),
+                       Percentage(title = _("Critical at"), default_value = 98),
+                    ],
+                )),
+                ( "cpu_average",
+                 Integer(
+                     title = _("Average CPU utilization"),
+                     help = _("By activating the averaging, Check_MK will compute the average of "
+                              "the CPU utilization over a given interval. If you have defined "
+                              "alerting levels then these will automatically be applied on the "
+                              "averaged value. This helps to mask out short peaks. "),
+                     unit = _("minutes"),
+                     minvalue = 1,
+                     default_value = 15,
+                 )
+               ),
+
+            ],
+            optional_keys = [ "user", "cpulevels", "cpu_average" ]),
+        forth = ps_convert_from_tuple,
+    ),
     TextAscii(
         title = _("Name of service"),
         help = _("This name will be used in the description of the service"),

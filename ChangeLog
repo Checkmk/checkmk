@@ -46,6 +46,7 @@
     * mk_oracle: Added plugin for solaris
     * win_netstat: New check for Windows for checking the existance of a UDP/TCP
         connection or listener
+    * ps/ps.perf: allow to set levels on CPU util, optional averaging of CPU
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a

@@ -195,6 +195,13 @@ def inventory_ps_common(invdata, info, handle_perfdata = False):
                 # with their actual values of the found process.
                 i_pattern = instantiate_regex_pattern(pattern, matches)
                 inv = ( i_servicedesc, ( i_pattern, i_userspec, warnmin, okmin, okmax, warnmax ) )
+                inv = ( i_servicedesc, { 
+                    "process" : i_pattern, 
+                    "user"    : i_userspec, 
+                    "warnmin" : warnmin, 
+                    "okmin"   : okmin, 
+                    "okmax"   : okmax,
+                    "warnmax" : warnmax } )
                 if inv not in inventory:
                     inventory.append(inv)
 
@@ -257,15 +264,35 @@ def process_matches(ps, procname, l_user):
             return matchobject.groups()
     return False
 
+# New parameter format: dictionary. Example:
+# {
+#    "user" : "foo",
+#    "process" : "/usr/bin/food",
+#    "warnmin" : 1,
+#    "okmin"   : 1,
+#    "okmax"   : 1,
+#    "warnmax" : 1,
+# }
 def check_procs(item, params, info, with_perfdata):
+    now = time.time()
+
     cpu_cores, info = ps_parse_info(info) # parse windows wmic information
-    if len(params) == 5:
-        procname, warnmin, okmin, okmax, warnmax = params
-        user = None
-    elif len(params) == 6:
-        procname, user, warnmin, okmin, okmax, warnmax = params
-    else:
-        return (3, "invalid check parameters: %s" % (params,))
+
+    if type(params) in (list, tuple):
+        if len(params) == 5:
+            procname, warnmin, okmin, okmax, warnmax = params
+            user = None
+        elif len(params) == 6:
+            procname, user, warnmin, okmin, okmax, warnmax = params
+        params = {
+            "process" : procname,
+            "warnmin" : warnmin,
+            "okmin"   : okmin,
+            "okmax"   : okmax,
+            "warnmax" : warnmax,
+        }
+        if user != None:
+            params["user"] = user
 
     count = 0
     virtual_size   = 0
@@ -277,7 +304,7 @@ def check_procs(item, params, info, with_perfdata):
     for line in info:
         node_name = line[0]
         ps = line[1:]
-        if process_matches(ps, procname, [user]) != False:
+        if process_matches(ps, params["process"], [params.get("user")]) != False:
             count += 1
             if node_name != None:
                 running_on.add(node_name)
@@ -288,8 +315,8 @@ def check_procs(item, params, info, with_perfdata):
                     resident_size += int(addinfo[2]) # kB
                     if addinfo[3].startswith('@'): # wmic counters :-(
                         pid, user_c, kernel_c = map(int, addinfo[3][1:].split('/'))
-                        timedif, user_per_sec   = get_counter("ps_wmic.user.%d" % pid, time.time(), user_c)
-                        timedif, kernel_per_sec = get_counter("ps_wmic.kernel.%d" % pid, time.time(), kernel_c)
+                        timedif, user_per_sec   = get_counter("ps_wmic.user.%d" % pid, now, user_c)
+                        timedif, kernel_per_sec = get_counter("ps_wmic.kernel.%d" % pid, now, kernel_c)
                         user_perc = user_per_sec / 100000.0 / cpu_cores
                         kernel_perc = kernel_per_sec / 100000.0 / cpu_cores
                         percent_cpu += user_perc + kernel_perc
@@ -297,8 +324,13 @@ def check_procs(item, params, info, with_perfdata):
                         percent_cpu += savefloat(addinfo[3])
                     extended_perfdata = True
 
+    if "cpulevels" in params:
+        warn_cpu, crit_cpu = params["cpulevels"]
+    else:
+        warn_cpu, crit_cpu = None, None
+
     if with_perfdata:
-        perfdata = [ ("count", count, okmax+1, warnmax+1, 0) ]
+        perfdata = [ ("count", count, params["okmax"]+1, params["warnmax"]+1, 0) ]
         if count == 0 and not extended_perfdata:
             # No matching process found. Therefore we don't know yet,
             # wether the agents sends extended data for processes.
@@ -311,8 +343,8 @@ def check_procs(item, params, info, with_perfdata):
                 extended_perfdata = True
         if extended_perfdata:
             perfdata += [ ("vsz", virtual_size),
-                         ("rss", resident_size),
-                         ("pcpu", percent_cpu) ]
+                          ("rss", resident_size)]
+            perfdata.append(("pcpu", percent_cpu, warn_cpu, crit_cpu))
     else:
         perfdata = []
 
@@ -320,16 +352,35 @@ def check_procs(item, params, info, with_perfdata):
     if running_on:
         infotext += " [running on %s]" % ", ".join(running_on)
 
+    state = 0
+    if count > params["warnmax"] or count < params["warnmin"]:
+        state = 2
+        infotext += " (ok from %d to %d)(!!)" % (params["okmin"], params["okmax"])
+    elif count > params["okmax"] or count < params["okmin"]:
+        state = 1
+        infotext += " (ok from %d to %d)(!)" % (params["okmin"], params["okmax"])
+
     if virtual_size:
         infotext += " %.1f MB virtual, %.1f MB resident, %.1f%% CPU" % (
            virtual_size / 1024.0, resident_size / 1024.0, percent_cpu)
 
-    if count > warnmax or count < warnmin:
-        return (2, infotext + " (ok from %d to %d)" % (okmin, okmax), perfdata)
-    elif count > okmax or count < okmin:
-        return (1, infotext + " (ok from %d to %d)" % (okmin, okmax), perfdata)
-    else:
-        return (0, infotext, perfdata)
+        if "cpu_average" in params:
+            timedif, avg_cpu = get_average("ps.%s.cpu" % item, now, percent_cpu, params["cpu_average"], False)
+            infotext += " (%d min average: %.1f%%)" % (params["cpu_average"], avg_cpu)
+            percent_cpu = avg_cpu # use this for level comparison
+            if extended_perfdata:
+                perfdata.append(("pcpuavg", avg_cpu, warn_cpu, crit_cpu, 0, params["cpu_average"]))
+
+        if "cpulevels" in params:
+            if percent_cpu >= crit_cpu:
+                state = 2
+                infotext += "(!!)"
+            elif percent_cpu >= warn_cpu:
+                state = max(state, 1)
+                infotext += "(!)"
+
+
+    return state, infotext, perfdata
 
 check_info['ps'] = {
     "check_function"          : lambda i,p,n: check_procs(i,p,n,False),

@@ -1,4 +1,4 @@
-title: Tempreature and Humidity Sensors for Eaton UPS devices
+title: Eaton UPS Devices: Tempreature and Humidity Sensors
 agents: snmp
 catalog: hw/environment 
 author: Bastian Kuhn <bk@mathias-kettner.de>

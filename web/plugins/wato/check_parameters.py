@@ -1028,27 +1028,6 @@ register_check_parameters(
     None
 )
 
-register_check_parameters(
-    subgroup_networking,
-    "tcp_conn_stats_win",
-    ("TCP connection stats (Windows)"),
-    Dictionary(
-        elements = [
-            ( "ESTABLISHED",
-              Tuple(
-                  title = _("ESTABLISHED"),
-                  help = _("connection up and passing data"),
-                  elements = [
-                      Integer(title = _("Warning at"),  label = _("connections")),
-                      Integer(title = _("Critical at"), label = _("connections"))
-                  ]
-              )
-            )
-        ]
-    ),
-    None,
-    "first"
-)
 
 register_check_parameters(
     subgroup_networking,
@@ -1179,6 +1158,53 @@ register_check_parameters(
     None,
     "first"
 )
+
+
+register_check_parameters(
+    subgroup_networking,
+    "tcp_connections",
+    _("Monitor specific TCP/UDP connections and listeners"),
+    Dictionary(
+        help = _("This rule allows to monitor the existance of specify TCP connections or "
+                 "TCP/UDP listeners."),
+        elements = [
+            ( "proto",
+              DropdownChoice(
+                  title = _("Protocol"),
+                  choices = [ ("TCP", _("TCP")), ("UDP", _("UDP")) ],
+                  default_value = "TCP",
+              ),
+            ),
+            ( "state",
+              DropdownChoice(
+                  title = _("State"),
+                  choices = [
+                            ( "ESTABLISHED", "ESTABLISHED" ),
+                            ( "SYN_SENT", "SYN_SENT" ),
+                            ( "SYN_RECV", "SYN_RECV" ),
+                            ( "LAST_ACK", "LAST_ACK" ),
+                            ( "CLOSE_WAIT", "CLOSE_WAIT" ),
+                            ( "TIME_WAIT", "TIME_WAIT" ),
+                            ( "CLOSED", "CLOSED" ),
+                            ( "CLOSING", "CLOSING" ),
+                            ( "FIN_WAIT1", "FIN_WAIT1" ),
+                            ( "FIN_WAIT2", "FIN_WAIT2" ),
+                            ( "BOUND", "BOUND" ),
+                  ]
+              ),
+            ),
+            ( "local_ip", IPv4Address(title = _("Local IP address"))),
+            ( "local_port", Integer(title = _("Local port number"), minvalue = 1, maxvalue = 65535, )),
+            ( "remote_ip", IPv4Address(title = _("Remote IP address"))),
+            ( "remote_port", Integer(title = _("Local port number"), minvalue = 1, maxvalue = 65535, )),
+        ]
+    ),
+    TextAscii(title = _("Connection name"), help = _("Specify an arbitrary name of this connection here"), allow_empty = False),
+    "dict",
+    has_inventory = False,
+)
+
+
 
 register_check_parameters(
     subgroup_applications,
@@ -1461,8 +1487,9 @@ register_check_parameters(
                               "errors and traffic are applied to the averaged value. That "
                               "way you can make the check react only on long-time changes, "
                               "not on one-minute events."),
-                     label = _("minutes"),
+                     unit = _("minutes"),
                      minvalue = 1,
+                     default_value = 15,
                  )
                ),
 
@@ -2644,17 +2671,17 @@ register_check_parameters(
 register_check_parameters(
     subgroup_environment,
     "hw_temperature",
-    _("Harware temperature (e.g. switches)"),
+    _("Hardware temperature (e.g. switches)"),
     Tuple(
         help = _("Temperature levels for hardware devices like "
-                 "brocade switches."),
+                 "Brocade switches."),
         elements = [
-            Integer(title = _("warning at"), unit = u"°C", default_value = 26),
-            Integer(title = _("critical at"), unit = u"°C", default_value = 30),
+            Integer(title = _("warning at"), unit = u"°C", default_value = 35),
+            Integer(title = _("critical at"), unit = u"°C", default_value = 40),
         ]),
     TextAscii(
         title = _("Sensor ID"),
-        help = _("The identificator of the themal sensor.")),
+        help = _("The identifier of the thermal sensor.")),
     "first"
 )
 
@@ -2863,10 +2890,178 @@ syslog_facilities = [
 ]
 
 register_check_parameters(
+   subgroup_applications,
+    "jvm_threads",
+    _("JVM threads"),
+    Tuple(
+        help = _("This rule sets the warn and crit levels for the number of threads "
+                 "running in a JVM."),
+        elements = [
+            Integer(
+                title = _("Warning at"),
+                unit = _("threads"),
+                default_value = 80,
+            ),
+            Integer(
+                title = _("Critical at"),
+                unit = _("threads"),
+                default_value = 100,
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("Name of the virtual machine"),
+        help = _("The name of the application server"),
+        allow_empty = False,
+    ),
+    "first"
+)
+
+register_check_parameters(
+        subgroup_applications,
+        "jvm_uptime",
+        _("JVM uptime (since last reboot)"),
+        Dictionary(
+            help = _("This rule sets the warn and crit levels for the uptime of a JVM. "),
+            elements = [
+            ( "min",
+              Tuple(
+                  title = _("Minimum required uptime"),
+                  elements = [
+                  Age(title = _("Warning if below")),
+                  Age(title = _("Critical if below")),
+                  ]
+                  )),
+            ( "max",
+              Tuple(
+                  title = _("Maximum allowed uptime"),
+                  elements = [
+                  Age(title = _("Warning if above")),
+                  Age(title = _("Critical if above")),
+                  ]
+                  )),
+            ]
+            ),
+        TextAscii(
+                title = _("Name of the virtual machine"),
+                help = _("The name of the application server"),
+                allow_empty = False,
+                ),
+        "first",
+)
+
+register_check_parameters(
+   subgroup_applications,
+    "jvm_sessions",
+    _("JVM session count"),
+    Tuple(
+        help = _("This rule sets the warn and crit levels for the number of current "
+                 "connections to a JVM application on the servlet level."),
+        elements = [
+            Integer(
+                title = _("Warning low at"),
+                unit = _("sessions"),
+                default_value = -1,
+            ),
+            Integer(
+                title = _("Critical low at"),
+                unit = _("sessions"),
+                default_value = -1,
+            ),
+            Integer(
+                title = _("Warning high at"),
+                unit = _("sessions"),
+                default_value = 800,
+            ),
+            Integer(
+                title = _("Critical high at"),
+                unit = _("sessions"),
+                default_value = 1000,
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("Name of the virtual machine"),
+        help = _("The name of the application server"),
+        allow_empty = False,
+    ),
+    "first"
+)
+
+register_check_parameters(
+   subgroup_applications,
+    "jvm_requests",
+    _("JVM request count"),
+    Tuple(
+        help = _("This rule sets the warn and crit levels for the number "
+                 "of incoming requests to a JVM application server"),
+        elements = [
+            Integer(
+                title = _("Warning low at"),
+                unit = _("requests"),
+                default_value = -1,
+            ),
+            Integer(
+                title = _("Critical low at"),
+                unit = _("requests"),
+                default_value = -1,
+            ),
+            Integer(
+                title = _("Warning high at"),
+                unit = _("requests"),
+                default_value = 800,
+            ),
+            Integer(
+                title = _("Critical high at"),
+                unit = _("requests"),
+                default_value = 1000,
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("Name of the virtual machine"),
+        help = _("The name of the application server"),
+        allow_empty = False,
+    ),
+    "first"
+)
+
+register_check_parameters(
+   subgroup_applications,
+    "jvm_queue",
+    _("JVM queue count"),
+    Tuple(
+        help = _("The BEA application servers have 'Execute Queues' "
+                 "in which requests are processed. This rule allow to set "
+                 "warn and crit levels for the number of requests that are "
+                 "being queued for processing."),
+        elements = [
+            Integer(
+                title = _("Queue warning at"),
+                default_value = 20,
+            ),
+            Integer(
+                title = _("Queue critical at"),
+                default_value = 50,
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("Name of the virtual machine"),
+        help = _("The name of the application server"),
+        allow_empty = False,
+    ),
+    "first"
+)
+
+
+register_check_parameters(
     subgroup_applications,
     "jvm_memory",
     _("JVM memory levels"),
     Dictionary(
+        help = _("This rule allows to set the warn and crit levels of the heap / "
+                 "non-heap and total memory area usage on web application servers."),
         elements = [
             ( "totalheap",
                Alternative(
@@ -3090,57 +3285,102 @@ register_check_parameters(
 )
 
 # Add checks that have parameters but are only configured as manual checks
+def ps_convert_from_tuple(params):
+    if type(params) in (list, tuple):
+        if len(params) == 5:
+            procname, warnmin, okmin, okmax, warnmax = params
+            user = None
+        elif len(params) == 6:
+            procname, user, warnmin, okmin, okmax, warnmax = params
+        params = {
+            "process" : procname,
+            "warnmin" : warnmin,
+            "okmin"   : okmin,
+            "okmax"   : okmax,
+            "warnmax" : warnmax,
+        }
+        if user != None:
+            params["user"] = user
+    return params
+
+
 register_check_parameters(
     subgroup_applications,
     "ps",
     _("State and count of processes"),
-    Tuple(
-        elements = [
-            Alternative(
-                title = _("Name of the process"),
-                elements = [
-                    TextAscii(
-                        title = _("Exact name of the process without argments"),
-                        size = 50,
-                    ),
-                    Transform(
-                        RegExp(size = 50),
-                        title = _("Regular expression matching command line"),
-                        help = _("This regex must match the <i>beginning</i> of the complete "
-                                 "command line of the process including arguments"),
-                        forth = lambda x: x[1:],   # remove ~
-                        back  = lambda x: "~" + x, # prefix ~
-                    ),
-                    FixedValue(
-                        None,
-                        totext = "",
-                        title = _("Match all processes"),
-                    )
-                ],
-                match = lambda x: (not x and 2) or (x[0] == '~' and 1 or 0)
-                ),
-            TextAscii(
-                title = _("Name of operating system user"),
-                help = _("Leave this empty, if the user does not matter"),
-                none_is_empty = True,
-            ),
-            Integer(
-                title = _("Minimum number of matched process for WARNING state"),
-                default_value = 1,
-            ),
-            Integer(
-                title = _("Minimum number of matched process for OK state"),
-                default_value = 1,
-            ),
-            Integer(
-                title = _("Maximum number of matched process for OK state"),
-                default_value = 1,
-            ),
-            Integer(
-                title = _("Maximum number of matched process for WARNING state"),
-                default_value = 1,
-            ),
-        ]),
+    Transform(
+        Dictionary(
+            elements = [
+                ( "process", Alternative(
+                    title = _("Name of the process"),
+                    style = "dropdown",
+                    elements = [
+                        TextAscii(
+                            title = _("Exact name of the process without argments"),
+                            size = 50,
+                        ),
+                        Transform(
+                            RegExp(size = 50),
+                            title = _("Regular expression matching command line"),
+                            help = _("This regex must match the <i>beginning</i> of the complete "
+                                     "command line of the process including arguments"),
+                            forth = lambda x: x[1:],   # remove ~
+                            back  = lambda x: "~" + x, # prefix ~
+                        ),
+                        FixedValue(
+                            None,
+                            totext = "",
+                            title = _("Match all processes"),
+                        )
+                    ],
+                    match = lambda x: (not x and 2) or (x[0] == '~' and 1 or 0)
+                )),
+                ( "warnmin", Integer(
+                    title = _("Minimum number of matched process for WARNING state"),
+                    default_value = 1,
+                )),
+                ( "okmin", Integer(
+                    title = _("Minimum number of matched process for OK state"),
+                    default_value = 1,
+                )),
+                ( "okmax", Integer(
+                    title = _("Maximum number of matched process for OK state"),
+                    default_value = 1,
+                )),
+                ( "warnmax", Integer(
+                    title = _("Maximum number of matched process for WARNING state"),
+                    default_value = 1,
+                )),
+                ( "user", TextAscii(
+                    title = _("Name of operating system user"),
+                    help = _("Leave this empty, if the user does not matter"),
+                    none_is_empty = True,
+                )),
+                ( "cpulevels", 
+                  Tuple(
+                    title = _("Levels on CPU utilization"),
+                    elements = [
+                       Percentage(title = _("Warning at"), default_value = 90),
+                       Percentage(title = _("Critical at"), default_value = 98),
+                    ],
+                )),
+                ( "cpu_average",
+                 Integer(
+                     title = _("Average CPU utilization"),
+                     help = _("By activating the averaging, Check_MK will compute the average of "
+                              "the CPU utilization over a given interval. If you have defined "
+                              "alerting levels then these will automatically be applied on the "
+                              "averaged value. This helps to mask out short peaks. "),
+                     unit = _("minutes"),
+                     minvalue = 1,
+                     default_value = 15,
+                 )
+               ),
+
+            ],
+            optional_keys = [ "user", "cpulevels", "cpu_average" ]),
+        forth = ps_convert_from_tuple,
+    ),
     TextAscii(
         title = _("Name of service"),
         help = _("This name will be used in the description of the service"),

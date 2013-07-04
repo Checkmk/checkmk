@@ -2400,7 +2400,7 @@ def search_hosts_in_folder(folder, crit):
         render_folder_path(folder, True)
         found.sort()
 
-        table.begin("");
+        table.begin("search_hosts", "");
         for hostname, host, effective in found:
             host_url =  make_link_to([("mode", "edithost"), ("host", hostname)], folder)
             table.row()
@@ -5134,8 +5134,6 @@ def mode_snapshot(phase):
             if html.check_transaction():
                 filename = create_snapshot()
                 return None, _("Created snapshot <tt>%s</tt>.") % filename
-            else:
-                return None
 
         # upload snapshot
         elif html.has_var("_upload_file"):
@@ -5147,8 +5145,6 @@ def mode_snapshot(phase):
                 log_pending(SYNCRESTART, None, "snapshot-restored",
                     _("Restored from uploaded file"))
                 return None, _("Successfully restored configuration.")
-            else:
-                return None
 
         # delete file
         elif html.has_var("_delete_file"):
@@ -5162,8 +5158,6 @@ def mode_snapshot(phase):
                 return None, _("Snapshot deleted.")
             elif c == False: # not yet confirmed
                 return ""
-            else:
-                return None  # browser reload
 
         # restore snapshot
         elif html.has_var("_restore_snapshot"):
@@ -5179,8 +5173,6 @@ def mode_snapshot(phase):
                 return None, _("Successfully restored snapshot.")
             elif c == False: # not yet confirmed
                 return ""
-            else:
-                return None  # browser reload
 
         elif html.has_var("_factory_reset"):
             c = wato_confirm(_("Confirm factory reset"),
@@ -5194,12 +5186,7 @@ def mode_snapshot(phase):
                 return None, _("Resetted WATO, wiped all configuration.")
             elif c == False: # not yet confirmed
                 return ""
-            else:
-                return None  # browser reload
-
-
-        else:
-            return False
+        return None
 
     else:
         snapshots = []
@@ -5209,7 +5196,7 @@ def mode_snapshot(phase):
         snapshots.sort(reverse=True)
 
 
-        table.begin(_("Snapshots"), empty_text=_("There are no snapshots available."))
+        table.begin("snapshots", _("Snapshots"), empty_text=_("There are no snapshots available."))
         for name in snapshots:
             table.row()
             # Buttons
@@ -5755,36 +5742,36 @@ def mode_groups(phase, what):
     groups = all_groups.get(what, {})
 
     if phase == "action":
-        delname = html.var("_delete")
+        if html.var('_delete'):
+            delname = html.var("_delete")
 
-        if what == 'contact':
-            usages = find_usages_of_contact_group(delname)
-        elif what == 'host':
-            usages = find_usages_of_host_group(delname)
-        elif what == 'service':
-            usages = find_usages_of_service_group(delname)
+            if what == 'contact':
+                usages = find_usages_of_contact_group(delname)
+            elif what == 'host':
+                usages = find_usages_of_host_group(delname)
+            elif what == 'service':
+                usages = find_usages_of_service_group(delname)
 
-        if usages:
-            message = "<b>%s</b><br>%s:<ul>" % \
-                        (_("You cannot delete this %s group.") % what,
-                         _("It is still in use by"))
-            for title, link in usages:
-                message += '<li><a href="%s">%s</a></li>\n' % (link, title)
-            message += "</ul>"
-            raise MKUserError(None, message)
+            if usages:
+                message = "<b>%s</b><br>%s:<ul>" % \
+                            (_("You cannot delete this %s group.") % what,
+                             _("It is still in use by"))
+                for title, link in usages:
+                    message += '<li><a href="%s">%s</a></li>\n' % (link, title)
+                message += "</ul>"
+                raise MKUserError(None, message)
 
-        confirm_txt = _('Do you really want to delete the %s group "%s"?') % (what, delname)
+            confirm_txt = _('Do you really want to delete the %s group "%s"?') % (what, delname)
 
-        c = wato_confirm(_("Confirm deletion of group \"%s\"" % delname), confirm_txt)
-        if c:
-            del groups[delname]
-            save_group_information(all_groups)
-            log_pending(SYNCRESTART, None, "edit-%sgroups", _("Deleted %s group %s" % (what, delname)))
-            return None
-        elif c == False:
-            return ""
-        else:
-            return None
+            c = wato_confirm(_("Confirm deletion of group \"%s\"" % delname), confirm_txt)
+            if c:
+                del groups[delname]
+                save_group_information(all_groups)
+                log_pending(SYNCRESTART, None, "edit-%sgroups", _("Deleted %s group %s" % (what, delname)))
+            elif c == False:
+                return ""
+
+        return None
 
     sorted = groups.items()
     sorted.sort()
@@ -5807,7 +5794,7 @@ def mode_groups(phase, what):
             for cg in cgs:
                 members.setdefault(cg, []).append((userid, user.get('alias', userid)))
 
-    table.begin(what_name.title())
+    table.begin(what + "groups")
     for name, alias in sorted:
         table.row()
 
@@ -5983,7 +5970,7 @@ def mode_timeperiods(phase):
 
     if phase == "action":
         delname = html.var("_delete")
-        if html.transaction_valid():
+        if delname and html.transaction_valid():
             usages = find_usages_of_timeperiod(delname)
             if usages:
                 message = "<b>%s</b><br>%s:<ul>" % \
@@ -6001,14 +5988,12 @@ def mode_timeperiods(phase):
                 del timeperiods[delname]
                 save_timeperiods(timeperiods)
                 log_pending(SYNCRESTART, None, "edit-timeperiods", _("Deleted timeperiod %s") % delname)
-                return None
             elif c == False:
                 return ""
-            else:
-                return None
+        return None
 
 
-    table.begin(_("Time Periods"), empty_text = _("There are no timeperiods defined yet."))
+    table.begin("timeperiods", empty_text = _("There are no timeperiods defined yet."))
     names = timeperiods.keys()
     names.sort()
     for name in names:
@@ -6507,7 +6492,7 @@ def mode_sites(phase):
         return
 
 
-    table.begin(_("Connections to local and remote sites"),
+    table.begin("sites", _("Connections to local and remote sites"),
                 empty_text = _("You have not configured any local or remotes sites. Multisite will "
                                "implicitely add the data of the local monitoring site. If you add remotes "
                                "sites, please do not forget to add your local monitoring site also, if "
@@ -7924,17 +7909,19 @@ def load_notification_table():
 
 def mode_users(phase):
     if phase == "title":
-        return _("Users & Contacts")
+        return _("Users")
 
     elif phase == "buttons":
         global_buttons()
-        html.context_button(_("New user"), make_link([("mode", "edit_user")]), "new")
+        html.context_button(_("New User"), make_link([("mode", "edit_user")]), "new")
+        if 'wato_users' not in config.userdb_automatic_sync:
+            html.context_button(_("Sync Users"), html.makeactionuri([("_sync", 1)]), "replicate")
         return
 
     # Execute all connectors synchronisations of users. This must be done before
     # loading the users, because it might modify the users list. But don't execute
     # it during actions, this should save some time.
-    if phase != "action":
+    if phase != "action" and 'wato_users' in config.userdb_automatic_sync:
         userdb.hook_sync(add_to_changelog = True)
 
     roles = userdb.load_roles()
@@ -7943,30 +7930,32 @@ def mode_users(phase):
     contact_groups = userdb.load_group_information().get("contact", {})
 
     if phase == "action":
-        delid = html.var("_delete")
-        if delid == config.user_id:
-            raise MKUserError(None, _("You cannot delete your own account!"))
+        if html.var('_delete'):
+            delid = html.var("_delete")
+            if delid == config.user_id:
+                raise MKUserError(None, _("You cannot delete your own account!"))
 
-        if delid not in users:
-            return None # The account does not exist (anymore), no deletion needed
+            if delid not in users:
+                return None # The account does not exist (anymore), no deletion needed
 
-        c = wato_confirm(_("Confirm deletion of user %s" % delid),
-                         _("Do you really want to delete the user %s?" % delid))
-        if c:
-            del users[delid]
-            userdb.save_users(users)
-            log_pending(SYNCRESTART, None, "edit-users", _("Deleted user %s" % (delid)))
-            return None
-        elif c == False:
-            return ""
-        else:
-            return None
+            c = wato_confirm(_("Confirm deletion of user %s" % delid),
+                             _("Do you really want to delete the user %s?" % delid))
+            if c:
+                del users[delid]
+                userdb.save_users(users)
+                log_pending(SYNCRESTART, None, "edit-users", _("Deleted user %s" % (delid)))
+            elif c == False:
+                return ""
+        elif html.var('_sync'):
+            if userdb.hook_sync(add_to_changelog = True):
+                return None, _('The user synchronization completed successfully.')
+
+        return None
 
     entries = users.items()
     entries.sort(cmp = lambda a, b: cmp(a[1].get("alias", a[0]).lower(), b[1].get("alias", b[0]).lower()))
 
-    table.begin(_("Users & Contacts"),
-                empty_text = _("There are not defined any contacts/users yet."))
+    table.begin("users", None, empty_text = _("There are not defined any users yet."))
     for id, user in entries:
         table.row()
 
@@ -8543,11 +8532,8 @@ def mode_roles(phase):
                 del roles[delid]
                 save_roles(roles)
                 log_pending(False, None, "edit-roles", _("Deleted role '%s'" % delid))
-                return None
             elif c == False:
                 return ""
-            else:
-                return
         elif html.var("_clone"):
             if html.check_transaction():
                 cloneid = html.var("_clone")
@@ -8563,11 +8549,9 @@ def mode_roles(phase):
                 roles[newid] = new_role
                 save_roles(roles)
                 log_pending(False, None, "edit-roles", _("Created new role '%s'" % newid))
-                return None
-            else:
-                return None
+        return
 
-    table.begin(_("Roles"))
+    table.begin("roles")
 
     # Show table of builtin and user defined roles
     entries = roles.items()
@@ -8971,14 +8955,15 @@ def mode_hosttags(phase):
             ])
 
     else:
-        table.begin(_("Host tag groups"),
+        table.begin("hosttags", _("Host tag groups"),
                     help = (_("Host tags are the basis of Check_MK's rule based configuration. "
                              "If the first step you define arbitrary tag groups. A host "
                              "has assigned exactly one tag out of each group. These tags can "
                              "later be used for defining parameters for hosts and services, "
                              "such as <i>disable notifications for all hosts with the tags "
                              "<b>Network device</b> and <b>Test</b></i>.")),
-                    empty_text = _("You haven't defined any tag groups yet."))
+                    empty_text = _("You haven't defined any tag groups yet."),
+                    searchable = False)
 
         if hosttags:
             for nr, entry in enumerate(hosttags):
@@ -9012,12 +8997,13 @@ def mode_hosttags(phase):
                 html.end_form()
         table.end()
 
-        table.begin(_("Auxiliary tags"),
+        table.begin("auxtags", _("Auxiliary tags"),
                     help = _("Auxiliary tags can be attached to other tags. That way "
                              "you can for example have all hosts with the tag <tt>cmk-agent</tt> "
                              "get also the tag <tt>tcp</tt>. This makes the configuration of "
                              "your hosts easier."),
-                    empty_text = _("You haven't defined any auxiliary tags."))
+                    empty_text = _("You haven't defined any auxiliary tags."),
+                    searchable = False)
 
         if auxtags:
             table.row()
@@ -9826,7 +9812,7 @@ def mode_ineffective_rules(phase):
             rulegroup, test = g_rulegroups.get(groupname, (groupname, ""))
             html.write("<div>")
             ruleset_url = make_link([("mode", "edit_ruleset"), ("varname", varname)])
-            table.begin(title = _("<a href='%s'>%s</a> (%s)") % (ruleset_url, rulespec["title"], titlename), css="ruleset")
+            table.begin("ineffective_rules", title = _("<a href='%s'>%s</a> (%s)") % (ruleset_url, rulespec["title"], titlename), css="ruleset")
             for rel_rulenr, (f, rule) in ineffective_rules:
                 value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
                 table.row()
@@ -10227,7 +10213,8 @@ def mode_edit_ruleset(phase):
                     table.end()
                 first_in_group = True
                 alias_path = get_folder_aliaspath(folder, show_main = False)
-                table.begin(title = "%s %s" % (_("Rules in folder"), alias_path), css="ruleset")
+                table.begin("rules", title = "%s %s" % (_("Rules in folder"), alias_path),
+                    css="ruleset", searchable = False)
                 rel_rulenr = 0
                 last_folder = folder
             else:
@@ -10797,8 +10784,10 @@ def mode_edit_rule(phase, new = False):
         else:
             return "edit_ruleset"
 
-        return ("edit_ruleset",  _("%s rule in ruleset '%s' in folder %s") %
-                                  (new and _("Created new") or _("Edited"), rulespec["title"], new_rule_folder["title"]))
+        return ("edit_ruleset",
+           (new and _("Created new rule in ruleset '%s' in folder %s") 
+                or _("Editor rule in ruleset '%s' in folder %s")) %
+                      (rulespec["title"], new_rule_folder["title"]))
 
     if rulespec.get("help"):
         html.write("<div class=info>" + rulespec["help"] + "</div>")
@@ -12025,7 +12014,7 @@ def mode_bi_rules(phase):
         return
 
 
-    table.begin(_("Aggregations"))
+    table.begin("bi_aggr", _("Aggregations"))
     for nr, aggregation in enumerate(aggregations):
         table.row()
         table.cell(_("Actions"), css="buttons")
@@ -12053,7 +12042,7 @@ def mode_bi_rules(phase):
                    for (ruleid, rule) in rules ]
     rules_refs.sort(cmp = lambda a,b: cmp(a[2][2], b[2][2]) or cmp(a[1]["title"], b[1]["title"]))
 
-    table.begin(_("Rules"))
+    table.begin("bi_rules", _("Rules"))
     for ruleid, rule, (aggr_refs, rule_refs, level) in rules_refs:
         table.row()
         table.cell(_("Actions"), css="buttons")
@@ -13583,7 +13572,7 @@ def load_plugins():
 
     config.declare_permission("wato.users",
          _("User management"),
-         _("This permission is needed for the modules <b>Users & Contacts</b>, <b>Roles</b> and <b>Contact Groups</b>"),
+         _("This permission is needed for the modules <b>Users</b>, <b>Roles</b> and <b>Contact Groups</b>"),
          [ "admin", ])
 
     config.declare_permission("wato.snapshots",

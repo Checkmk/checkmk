@@ -1,4 +1,4 @@
-title: Out voltage of masterguard ups devices
+title: Masterguard UPS Devices: Out voltage
 agents: snmp
 catalog: hw/power
 author: Bastian Kuhn <bk@mathias-kettner.de>

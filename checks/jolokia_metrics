@@ -283,20 +283,14 @@ def check_jolokia_metrics_threads(item, params, info):
     else:
         return (status, ', '.join(output), perfdata)
 
-def check_jolokia_metrics_uptime(item, _unused, info):
+def check_jolokia_metrics_uptime(item, params, info):
     parsed = jolokia_metrics_parse(info)
     if item not in parsed:
         return (3, "data not found in agent output")
     uptime = saveint(parsed[item]['Uptime']) / 1000
 
-    seconds = uptime % 60
-    rem = uptime / 60
-    minutes = rem % 60
-    hours = (rem % 1440) / 60
-    days = rem / 1440
-    now = int(time.time())
-    since = time.strftime("%c", time.localtime(now - uptime))
-    return (0, "up since %s (%dd %02d:%02d:%02d)" % (since, days, hours, minutes, seconds), [ ("uptime", uptime) ])
+    return check_uptime_seconds(params, uptime)
+
 
 
 def check_jolokia_metrics_app_state(item, _unused, info):
@@ -472,6 +466,7 @@ check_info["jolokia_metrics.threads"] = {
     "service_description" : "JVM %s Threads",
     "check_function"      : check_jolokia_metrics_threads,
     "inventory_function"  : lambda i: inventory_jolokia_metrics(i, "threads"),
+    "group"               : "jvm_threads",
     "has_perfdata"        : True,
 }
 
@@ -479,6 +474,8 @@ check_info["jolokia_metrics.uptime"] = {
     "service_description" : "JVM %s Uptime",
     "check_function"      : check_jolokia_metrics_uptime,
     "inventory_function"  : lambda i: inventory_jolokia_metrics(i, "uptime"),
+    "group"               : "jvm_uptime",
+    'includes'            : [ 'uptime.include' ],
     "has_perfdata"        : True,
 }
 
@@ -496,6 +493,7 @@ check_info["jolokia_metrics.app_sess"] = {
     "service_description" : "JVM %s Sessions",
     "check_function"      : check_jolokia_metrics_app_sess,
     "inventory_function"  : lambda i: inventory_jolokia_metrics_apps(i, "app_sess"),
+    "group"               : "jvm_sessions",
     "has_perfdata"        : True,
 }
 
@@ -503,6 +501,7 @@ check_info["jolokia_metrics.requests"] = {
     "service_description" : "JVM %s Requests",
     "check_function"      : check_jolokia_metrics_bea_requests,
     "inventory_function"  : lambda i: inventory_jolokia_metrics_apps(i, "requests"),
+    "group"               : "jvm_requests",
     "has_perfdata"        : True,
 }
 
@@ -511,6 +510,7 @@ check_info["jolokia_metrics.serv_req"] = {
     "service_description" : "JVM %s Requests",
     "check_function"      : check_jolokia_metrics_serv_req,
     "inventory_function"  : lambda i: inventory_jolokia_metrics_serv(i, "serv_req"),
+    "group"               : "jvm_requests",
     "has_perfdata"        : True,
 }
 
@@ -519,6 +519,7 @@ check_info["jolokia_metrics.bea_queue"] = {
     "service_description" : "JVM %s Queue",
     "check_function"      : check_jolokia_metrics_bea_queue,
     "inventory_function"  : lambda i: inventory_jolokia_metrics_apps(i, "queue"),
+    "group"               : "jvm_queue",
     "has_perfdata"        : True,
 }
 
@@ -526,6 +527,7 @@ check_info["jolokia_metrics.bea_requests"] = {
     "service_description" : "JVM %s Requests",
     "check_function"      : check_jolokia_metrics_bea_requests,
     "inventory_function"  : lambda i: inventory_jolokia_metrics_apps(i, "bea_requests"),
+    "group"               : "jvm_requests",
     "has_perfdata"        : True,
 }
 
@@ -533,6 +535,7 @@ check_info["jolokia_metrics.bea_threads"] = {
     "service_description" : "JVM %s Threads",
     "check_function"      : check_jolokia_metrics_bea_threads,
     "inventory_function"  : lambda i: inventory_jolokia_metrics_apps(i, "threads"),
+    "group"               : "jvm_threads",
     "has_perfdata"        : True,
 }
 
@@ -540,6 +543,7 @@ check_info["jolokia_metrics.bea_sess"] = {
     "service_description" : "JVM %s Sessions",
     "check_function"      : check_jolokia_metrics_app_sess,
     "inventory_function"  : lambda i: inventory_jolokia_metrics_apps(i, "bea_app_sess"),
+    "group"               : "jvm_sessions",
     "has_perfdata"        : True,
 }
 

@@ -1,4 +1,4 @@
-title: Requests to JVM instances
+title: BEA Weblogic: Requests to JVM instances
 agents: linux
 catalog: app/java
 author: Mathias Kettner <mk@mathias-kettner.de>

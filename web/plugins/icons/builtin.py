@@ -94,7 +94,7 @@ def paint_reschedule(what, row, tags, custom_vars):
         servicedesc = ''
         wait_svc    = ''
         icon        = 'icon_reload'
-        txt         = _('Reschedule an immediate check of this %s') % _(what)
+        txt         = _('Reschedule an immediate check')
 
         if what == 'service':
             servicedesc = row['service_description'].replace("\\","\\\\")

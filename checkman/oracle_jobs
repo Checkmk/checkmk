@@ -1,5 +1,5 @@
 title: Oracle Database Jobs
-agents: linux
+agents: linux, solaris, hpux
 catalog: app/oracle
 author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL

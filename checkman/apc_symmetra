@@ -1,11 +1,11 @@
-title: Status of APC Symmetra USV
+title: APC Symmetra UPS: Status of battery and output
 agents: snmp
 catalog: hw/power 
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
- This check monitors eight aspects of an APC Symmetra USV: {(1)} the battery status,
+ This check monitors eight aspects of an APC Symmetra UPS: {(1)} the battery status,
  {(2)} the output status, {(3)} the battery capacity, {(4)} the battery
  temperature, {(5)} the battery current, {(6)} the output voltage and
  {(7)} the output current, {(8)} the remaing run time. The output current and

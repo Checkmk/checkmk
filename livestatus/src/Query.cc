@@ -247,8 +247,10 @@ Filter *Query::createFilter(Column *column, int operator_id, char *value)
         delete filter;
         filter = 0;
     }
-    else
+    else {
         filter->setQuery(this);
+        filter->setColumn(column);
+    }
     return filter;
 }
 

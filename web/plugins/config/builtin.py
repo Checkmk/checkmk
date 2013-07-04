@@ -148,6 +148,9 @@ reschedule_timeout = 10.0
 # Interval of snapin updates in seconds
 sidebar_update_interval = 30.0
 
+# It is possible (but ugly) to enable a scrollbar in the sidebar
+sidebar_show_scrollbar = False
+
 # Number of columsn in "Filter" form
 filter_columns = 2
 
@@ -177,11 +180,15 @@ selection_livetime  = 3600
 # Configure HTTP header to read usernames from
 auth_by_http_header = False
 
+# Number of rows to display by default in tables rendered with
+# the table.py module
+table_row_limit = 100
+
 # Add an icon pointing to the WATO rule to each service
 multisite_draw_ruleicon = False
 
 # Default downtime configuration
-default_downtime = {}
+adhoc_downtime = {}
 
 # Display dashboard date
 pagetitle_date_format = None
@@ -193,14 +200,15 @@ pagetitle_date_format = None
 #     \___/|___/\___|_|  |____/|____/
 #
 
-user_connectors      = ['htpasswd']
-ldap_connection      = {}
-ldap_userspec        = {}
-ldap_groupspec       = {}
-ldap_active_plugins  = {'email': {}, 'alias': {}, 'auth_expire': {}}
-ldap_cache_livetime  = 300
-ldap_debug_log       = None
-default_user_profile = {
+user_connectors       = ['htpasswd']
+userdb_automatic_sync = [ 'wato_users', 'page' ]
+ldap_connection       = {}
+ldap_userspec         = {}
+ldap_groupspec        = {}
+ldap_active_plugins   = {'email': {}, 'alias': {}, 'auth_expire': {}}
+ldap_cache_livetime   = 300
+ldap_debug_log        = None
+default_user_profile  = {
     'roles': ['user'],
 }
 lock_on_logon_failures = False

@@ -23,47 +23,76 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# The number of data source various due to different
+# settings (such as averaging). We rather work with names
+# than with numbers.
+$RRD = array();
+foreach ($NAME as $i => $n) {
+    $RRD[$n] = "$RRDFILE[$i]:$DS[$i]:MAX";
+    $WARN[$n] = $WARN[$i];
+    $CRIT[$n] = $CRIT[$i];
+    $MIN[$n]  = $MIN[$i];
+    $MAX[$n]  = $MAX[$i];
+}
+
+
+# 1. Graph: Number of processes
 $vertical = "count";
 $format = "%3.0lf";
-$upto = max(20, $CRIT[1]);
+$upto = max(20, $CRIT["count"]);
 $color = "8040f0";
 $line = "202060";
 
 $opt[1] = " --vertical-label \"count\" -X0 -L5 -l 0 -u $upto --title \"Number of Processes\" ";
 
-$def[1] = "DEF:count=$RRDFILE[1]:$DS[1]:MAX ";
-$def[1] .= "AREA:count#$color:\"Processes\"     ";
-$def[1] .= "LINE1:count#$line:\"\" ";
-$def[1] .= "GPRINT:count:LAST:\"Current\: $format\" ";
-$def[1] .= "GPRINT:count:MAX:\"Maximum\: $format \" ";
-$def[1] .= "HRULE:$WARN[1]#FFFF00:\"Warning at $WARN[1]\" ";
-$def[1] .= "HRULE:$CRIT[1]#FF0000:\"Critical at $CRIT[1]\" ";
+$def[1] = ""
+ . "DEF:count=$RRD[count] "
+ . "AREA:count#$color:\"Processes\"     "
+ . "LINE1:count#$line:\"\" "
+ . "GPRINT:count:LAST:\"Current\: $format\" "
+ . "GPRINT:count:MAX:\"Maximum\: $format \" "
+ . "HRULE:$WARN[count]#FFFF00:\"Warning at $WARN[count]\" "
+ . "HRULE:$CRIT[count]#FF0000:\"Critical at $CRIT[count]\" "
+ ;
 
-if (isset($DS[2])) {
- $opt[2]  = " --vertical-label \"MB\" -l 0 --title \"Memory Usage per process\" ";
- $def[2]  = "DEF:count=$RRDFILE[1]:$DS[1]:MAX ";
- $def[2] .= "DEF:vsz=$RRDFILE[2]:$DS[2]:MAX ";
- $def[2] .= "DEF:rss=$RRDFILE[3]:$DS[3]:MAX ";
- $def[2] .= "CDEF:vszmb=vsz,1024,/,count,/ ";
- $def[2] .= "CDEF:rssmb=rss,1024,/,count,/ ";
- $def[2] .= "AREA:vszmb#90a0f0:\"Virtual size \" ";
- $def[2] .= "GPRINT:vszmb:LAST:\"Current\: %5.1lf MB\" ";
- $def[2] .= "GPRINT:vszmb:MIN:\"Min\: %5.1lf MB\" ";
- $def[2] .= "GPRINT:vszmb:MAX:\"Max\: %5.1lf MB\" ";
- $def[2] .= "AREA:rssmb#2070ff:\"Resident size\" ";
- $def[2] .= "GPRINT:rssmb:LAST:\"Current\: %5.1lf MB\" ";
- $def[2] .= "GPRINT:rssmb:MIN:\"Min\: %5.1lf MB\" ";
- $def[2] .= "GPRINT:rssmb:MAX:\"Max\: %5.1lf MB\" ";
+# 2. Graph: Memory usage
+if (isset($RRD["vsz"])) {
+ $opt[2] = " --vertical-label \"MB\" -l 0 --title \"Memory Usage per process\" ";
+ $def[2] = ""
+   . "DEF:count=$RRD[count] "
+   . "DEF:vsz=$RRD[vsz] "
+   . "DEF:rss=$RRD[rss] "
+   . "CDEF:vszmb=vsz,1024,/,count,/ "
+   . "CDEF:rssmb=rss,1024,/,count,/ "
+   . "AREA:vszmb#90a0f0:\"Virtual size \" "
+   . "GPRINT:vszmb:LAST:\"Current\: %5.1lf MB\" "
+   . "GPRINT:vszmb:MIN:\"Min\: %5.1lf MB\" "
+   . "GPRINT:vszmb:MAX:\"Max\: %5.1lf MB\" "
+   . "AREA:rssmb#2070ff:\"Resident size\" "
+   . "GPRINT:rssmb:LAST:\"Current\: %5.1lf MB\" "
+   . "GPRINT:rssmb:MIN:\"Min\: %5.1lf MB\" "
+   . "GPRINT:rssmb:MAX:\"Max\: %5.1lf MB\" "
+   ;
 }
 
-if (isset($DS[3])) {
- $opt[3]  = " --vertical-label \"CPU(%)\" -l 0 -u 100 --title \"CPU Usage\" ";
- $def[3]  = "DEF:pcpu=$RRDFILE[4]:$DS[4]:MAX ";
- $def[3] .= "AREA:pcpu#30ff80:\"CPU usage (%) \" ";
- $def[3] .= "LINE:pcpu#20a060:\"\" ";
- $def[3] .= "GPRINT:pcpu:LAST:\"Current\: %4.1lf %%\" ";
- $def[3] .= "GPRINT:pcpu:MIN:\"Min\: %4.1lf %%\" ";
- $def[3] .= "GPRINT:pcpu:MAX:\"Max\: %4.1lf %%\" ";
+if (isset($RRD["pcpu"])) {
+ $opt[3] = " --vertical-label \"CPU(%)\" -l 0 -u 100 --title \"CPU Usage\" ";
+ $def[3] = ""
+  . "DEF:pcpu=$RRD[pcpu] "
+  . "AREA:pcpu#30ff80:\"CPU usage (%) \" "
+  . "LINE:pcpu#20a060:\"\" "
+  . "GPRINT:pcpu:LAST:\"Current\: %4.1lf%%\" "
+  . "GPRINT:pcpu:MIN:\"Min\: %4.1lf%%\" "
+  . "GPRINT:pcpu:MAX:\"Max\: %4.1lf%%\\n\" "
+  . "HRULE:$WARN[pcpu]#FFFF00:\"Warning at $WARN[pcpu]%\" "
+  . "HRULE:$CRIT[pcpu]#FF0000:\"Critical at $CRIT[pcpu]%\" "
+  ;
+  if (isset($RRD["pcpuavg"])) {
+     $def[3] .= 
+        "DEF:pcpuavg=$RRD[pcpuavg] ".
+        "LINE:pcpuavg#000000:\"Average over $MAX[pcpuavg] minutes\\n\" "
+        ; 
+  }
 }
 
 

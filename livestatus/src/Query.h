@@ -130,6 +130,7 @@ public:
     void findIntLimits(const char *columnname, int *lower, int *upper);
     void optimizeBitmask(const char *columnname, uint32_t *bitmask);
     int timezoneOffset() { return _timezone_offset; }
+    AndingFilter *filter() { return &_filter; }
 
 private:
     bool doStats();

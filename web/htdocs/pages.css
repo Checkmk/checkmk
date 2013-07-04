@@ -371,6 +371,36 @@ table.data td.singleicon {
     text-align: center;
 }
 
+table.data tr.actions td {
+    padding: 5px;
+}
+table.data tr.actions td div.search input[type="text"] {
+    margin-right: 2px;
+}
+table.data tr.actions.no_match td {
+    padding: 5px;
+}
+table.data tr th {
+    vertical-align: baseline;
+}
+   
+table.data tr a.toggle_actions {
+    display: inline-block;
+    float: left;
+    top: 0;
+    left: 0;
+    margin: 0;
+    padding: 0;
+}
+table.data tr th a.toggle_actions img {
+    vertical-align: top;
+    width: 12px;
+    height: 13px;
+    padding: 0;
+    position: relative;
+    top: 2px;
+}
+
 /* Group header used in table, box and tiled layout */
 table.groupheader {
     margin: 0px;

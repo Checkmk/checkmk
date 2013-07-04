@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <stddef.h>
 #include <stdarg.h>
+#include <list>
 
 #include "nagios.h"
 #include "logger.h"
@@ -47,6 +48,64 @@
 #include "Service.h"
 #include "Timeperiod.h"
 #endif
+
+int g_disable_statehist_filtering = 0;
+
+
+typedef pair<string, string> HostServiceKey;
+
+struct HostServiceState {
+    bool    _is_host;
+    time_t  _time;
+    int     _lineno;
+    time_t  _from;
+    time_t  _until;
+
+    time_t  _duration;
+    double  _duration_part;
+
+    // Do not change order within this block!
+    // These durations will be bzero'd
+    time_t  _duration_state_UNMONITORED;
+    double  _duration_part_UNMONITORED;
+    time_t  _duration_state_OK;
+    double  _duration_part_OK;
+    time_t  _duration_state_WARNING;
+    double  _duration_part_WARNING;
+    time_t  _duration_state_CRITICAL;
+    double  _duration_part_CRITICAL;
+    time_t  _duration_state_UNKNOWN;
+    double  _duration_part_UNKNOWN;
+
+    // State information
+    int     _host_down;      // used if service
+    int     _state;             // -1/0/1/2/3
+    int     _in_notification_period;
+    int     _in_downtime;
+    int     _in_host_downtime;
+    int     _is_flapping;
+
+
+    // Absent state handling
+    bool    _may_no_longer_exist;
+    bool    _has_vanished;
+    time_t  _last_known_time;
+
+
+    const char  *_debug_info;
+    // Pointer to dynamically allocated strings (strdup) that live here.
+    // These pointers are 0, if there is no output (e.g. downtime)
+    char        *_log_output;
+    char        *_notification_period;  // may be "": -> no period known, we assume "always"
+    host        *_host;
+    service     *_service;
+    const char  *_host_name;            // Fallback if host no longer exists
+    const char  *_service_description;  // Fallback if service no longer exists
+
+    HostServiceState() { bzero(this, sizeof(HostServiceState)); }
+    ~HostServiceState();
+    void debug_me(const char *loginfo, ...);
+};
 
 
 #define CHECK_MEM_CYCLE 1000 /* Check memory every N'th new message */
@@ -200,11 +259,48 @@ LogEntry *TableStateHistory::getNextLogentry()
 
 void TableStateHistory::answerQuery(Query *query)
 {
+    // Create a partial filter, that contains only such filters that
+    // check attributes of current hosts and services
+    typedef deque<Filter *> object_filter_t;
+    object_filter_t object_filter;
+    AndingFilter *orig_filter = query->filter();
+
+    if (!g_disable_statehist_filtering) {
+        deque<Filter *>::iterator it = orig_filter->begin();
+        while (it != orig_filter->end()) {
+            Filter *filter = *it;
+            Column *column = filter->column();
+            if (column) {
+                const char *column_name = column->name();
+                if (!strncmp(column_name, "current_", 8)
+                        || !strncmp(column_name, "host_", 5)
+                        || !strncmp(column_name, "service_", 8))
+                {
+                    object_filter.push_back(filter);
+                    // logger(LOG_NOTICE, "Nehme Column: %s", column_name);
+                }
+                else {
+                    // logger(LOG_NOTICE, "Column geht nciht: %s", column_name);
+                }
+            }
+            else {
+                // logger(LOG_NOTICE, "Mist: Filter ohne Column");
+            }
+            ++it;
+        }
+    }
+
+
     g_store->logCache()->lockLogCache();
     g_store->logCache()->logCachePreChecks();
 
+    // Keep track of the historic state of services/hosts here
     typedef map<HostServiceKey, HostServiceState*> state_info_t;
     state_info_t state_info;
+
+    // Store hosts/services that we have filtered out here
+    typedef set<HostServiceKey> object_blacklist_t;
+    object_blacklist_t object_blacklist;
 
     _query = query;
     _since = 0;
@@ -317,19 +413,54 @@ void TableStateHistory::answerQuery(Query *query)
             key.first  = entry->_host_name;
             key.second = entry->_svc_desc != 0 ? entry->_svc_desc : "";
 
+            if (object_blacklist.find(key) != object_blacklist.end())
+            {
+                // Host/Service is not needed for this query and has already
+                // been filtered out.
+                continue;
+            }
+
+            // Find state object for this host/service
             HostServiceState *state;
             state_info_t::iterator it_hst = state_info.find(key);
-            if (it_hst == state_info.end()) {
+            if (it_hst == state_info.end()) 
+            {
+                // Create state object that we also need for filtering right now
                 state = new HostServiceState();
-                state_info.insert(std::make_pair(key, state));
-
-                state->_is_host = entry->_svc_desc == 0;
-                state->_from    = _since;
-                state->_host    = entry->_host;
-                state->_service = entry->_service;
-
+                state->_is_host             = entry->_svc_desc == 0;
+                state->_host                = entry->_host;
+                state->_service             = entry->_service;
                 state->_host_name           = key.first.c_str();
                 state->_service_description = key.second.c_str();
+
+                // No state found. Now check if this host/services is filtered out.
+                // Note: we currently do not filter out hosts since they might be
+                // needed for service states
+                if (entry->_svc_desc)
+                {
+                    bool filtered_out = false;
+                    for (object_filter_t::iterator it = object_filter.begin();
+                         it != object_filter.end();
+                         ++it)
+                    {
+                        Filter *filter = *it;
+                        if (!filter->accepts(state)) {
+                            // logger(LOG_NOTICE, "kann ich rausschmeissen: %s/%s", key.first.c_str(), key.second.c_str());
+                            filtered_out = true;
+                            break;
+                        }
+                    }
+
+                    if (filtered_out) {
+                        object_blacklist.insert(key);
+                        delete state;
+                        continue;
+                    }
+                }
+
+                // Store this state object for tracking state transitions
+                state_info.insert(std::make_pair(key, state));
+                state->_from    = _since;
 
                 // Get notification period of host/service
                 // If this host/service is no longer availabe in nagios -> set to ""
@@ -446,6 +577,14 @@ void TableStateHistory::answerQuery(Query *query)
         it_hst++;
     }
     g_store->logCache()->unlockLogCache();
+}
+
+bool TableStateHistory::objectFilteredOut(Query *query, void *entry)
+{
+
+
+
+    return false;
 }
 
 void TableStateHistory::updateHostServiceState(Query *query, const LogEntry *entry, HostServiceState *hs_state, const bool only_update){

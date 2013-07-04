@@ -1,4 +1,4 @@
-title: Requests to JVM sessions on BEA Weblogic
+title: BEA Weblogic: Requests to JVM sessions
 agents: linux
 catalog: app/java
 author: Mathias Kettner <mk@mathias-kettner.de>

@@ -197,19 +197,11 @@ def do_login():
                 # c) Show the real requested page (No redirect needed)
                 set_auth_cookie(username, load_serial(username))
 
-                # Use redirects for URLs or simply execute other handlers for
-                # mulitsite modules
-                if '/' in origtarget or '?' in origtarget:
-                    html.set_http_header('Location', origtarget)
-                    raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
-                else:
-                    # Remove login vars to hide them from the next page handler
-                    html.del_var('_username')
-                    html.del_var('_password')
-                    html.del_var('_login')
-                    html.del_var('_origtarget')
-
-                    return (username, origtarget)
+                # Never use inplace redirect handling anymore as used in the past. This results
+                # in some unexpected situations. We simpy use 302 redirects now. So we have a
+                # clear situation.
+                html.set_http_header('Location', origtarget)
+                raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
             else:
                 userdb.on_failed_login(username)
                 raise MKUserError(None, _('Invalid credentials.'))
@@ -261,7 +253,7 @@ def normal_login_page(called_directly = True):
     html.write("<img id=login_window src=\"images/login_window.png\">")
     html.write("<div id=version>%s</div>" % defaults.check_mk_version)
 
-    html.begin_form("login", method = 'POST', add_transid = False)
+    html.begin_form("login", method = 'POST', add_transid = False, action = 'login.py')
     html.hidden_field('_login', '1')
     html.hidden_field('_origtarget', html.attrencode(origtarget))
     html.write("<label id=label_user class=legend for=_username>%s:</label><br />" % _('Username'))

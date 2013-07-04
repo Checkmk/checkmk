@@ -203,13 +203,20 @@ def swap_and_compute_levels(tg_data, tg_info):
         row = dict(zip(columns, step))
         for k, v in row.items():
             swapped[k].append(v)
-        upper, lower = compute_levels(tg_info, row["average"], row["stdev"])
-        if upper[0] != None:
-            swapped.setdefault("upper_warn", []).append(upper[0])
-            swapped.setdefault("upper_crit", []).append(upper[1])
-        if lower[0] != None:
-            swapped.setdefault("lower_warn", []).append(lower[0])
-            swapped.setdefault("lower_crit", []).append(lower[1])
+        if row["average"] != None and row["stdev"] != None:
+            upper, lower = compute_levels(tg_info, row["average"], row["stdev"])
+            if upper[0] != None:
+                swapped.setdefault("upper_warn", []).append(upper[0])
+                swapped.setdefault("upper_crit", []).append(upper[1])
+            if lower[0] != None:
+                swapped.setdefault("lower_warn", []).append(lower[0])
+                swapped.setdefault("lower_crit", []).append(lower[1])
+        else:
+            swapped.setdefault("upper_warn", []).append(0)
+            swapped.setdefault("upper_crit", []).append(0)
+            swapped.setdefault("lower_warn", []).append(0)
+            swapped.setdefault("lower_crit", []).append(0)
+
     return swapped
 
 def stack(apoints, bpoints, scale):
@@ -243,8 +250,8 @@ def compute_levels(params, ref_value, stdev):
 def compute_vertical_range(swapped):
     mmin, mmax = 0.0, 0.0
     for name, points in swapped.items():
-        mmax = max(mmax, max(points))
-        mmin = min(mmin, min(points))
+        mmax = max(mmax, max(points)) or 0.0 # convert None into 0.0
+        mmin = min(mmin, min(points)) or 0.0
     return mmin, mmax
 
 def create_graph(name, size, range, v_range, legend):

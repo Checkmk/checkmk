@@ -1,0 +1,13 @@
+Title: localization not working share/
+Component: multisite
+Class: bug
+State: works4me
+Date: 2013-07-01 17:00:52
+Targetversion: 1.2.3
+
+In OMD localization seems only to workin local/share, not directlyh
+in share. The languages are seen by Multisite, but not used by
+gettext.
+
+2013-07-02 15:01:10: changed state open -> works4me
+works with current versions. no problem.

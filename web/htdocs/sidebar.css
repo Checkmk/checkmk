@@ -84,7 +84,13 @@ body.side {
     height: 500px;
     overflow: hidden;
     color: #000000;
-    padding-top: 55px;
+    padding-top: 5px;
+    position: absolute;
+    top: 50px;
+}
+
+#side_content.scroll {
+    overflow-y: scroll;
 }
 
 /* The footer of the sidebar */

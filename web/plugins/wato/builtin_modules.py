@@ -49,8 +49,8 @@ modules = [
       ( "service_groups",    _("Service Groups"),     "servicegroups", "groups",
       _("Organize services in groups for a better overview in the status display.") ),
 
-      ( "users",          _("Users & Contacts"),     "users", "users",
-      _("Manage users of Multisite and contacts of the monitoring system.") ),
+      ( "users",          _("Users"),     "users", "users",
+      _("Manage users of the monitoring system.") ),
 
       ( "roles",            _("Roles & Permissions"),     "roles", "users",
       _("User roles are configurable sets of permissions." ) ),

@@ -3063,7 +3063,7 @@ no_inventory_possible = None
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-opt_nowiki = False
+opt_nowiki   = False
 
 def get_tty_size():
     import termios,struct,fcntl
@@ -3105,6 +3105,10 @@ def read_manpage_catalog():
     global g_manpage_catalog
     g_manpage_catalog = {}
     for checkname, path in all_manuals().items():
+        # Skip .* file (.f12)
+        a, filename = os.path.split(path)
+        if filename.startswith("."):
+            continue
         parsed = parse_man_header(checkname, path)
         cat = parsed["catalog"]
         if not cat:
@@ -3320,8 +3324,8 @@ def show_check_manual(checkname):
             # preserve the inner { and } in double braces and then replace the braces left
             return line.replace('{{', '{&#123;').replace('}}', '&#125;}').replace("{", "<b>").replace("}", "</b>")
 
-        def print_sectionheader(line, ignored):
-            print "H1:" + line
+        def print_sectionheader(line, title):
+            print "H1:" + title 
 
         def print_subheader(line):
             print "H2:" + line
@@ -5154,10 +5158,10 @@ if __name__ == "__main__":
                      "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
                      "man", "nowiki", "config-check", "backup=", "restore=",
                      "check-inventory=", "paths", "cleanup-autochecks", "checks=", 
-                     "cmc-file=", "browse-man" ]
+                     "cmc-file=", "browse-man", "list-man" ]
 
     non_config_options = ['-L', '--list-checks', '-P', '--package', '-M', '--notify',
-                          '--man', '-V', '--version' ,'-h', '--help', '--automation', ]
+                          '--man', '-V', '--version' ,'-h', '--help', '--automation']
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -5288,6 +5292,10 @@ if __name__ == "__main__":
                     show_check_manual(args[0])
                 else:
                     list_all_manuals()
+                done = True
+            elif o in [ '--list-man' ]:
+                read_manpage_catalog()
+                print pprint.pformat(g_manpage_catalog)
                 done = True
             elif o in [ '-m', '--browse-man' ]:
                 manpage_browser()

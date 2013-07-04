@@ -1,4 +1,4 @@
-title: Alerts reported by printers
+title: Generic Printer: Alerts reported
 agents: snmp
 catalog: hw/printer
 author: Lars Michelsen <lm@mathias-kettner.de>

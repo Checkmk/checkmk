@@ -156,7 +156,7 @@ def render_groups(what):
     groups.sort() # sort by Alias in lowercase
     html.write('<ul>')
     for alias_lower, alias, name in groups:
-        url = "view.py?view_name=%sgroup&%sgroup=%s" % (what, what, htmllib.urlencode(name))
+        url = "view.py?view_name=%sgroup&%sgroup=%s" % (what, what, html.urlencode(name))
         bulletlink(alias or name, url)
     html.write('</ul>')
 
@@ -227,7 +227,7 @@ def render_hosts(mode):
         else:
             statecolor = 0
         html.write('<div class="statebullet state%d">&nbsp;</div> ' % statecolor)
-        html.write(link(host, target + ("&host=%s&site=%s" % (htmllib.urlencode(host), htmllib.urlencode(site)))))
+        html.write(link(host, target + ("&host=%s&site=%s" % (html.urlencode(host), html.urlencode(site)))))
         html.write("</td>")
         if col == num_columns:
             html.write("</tr>\n")
@@ -334,7 +334,7 @@ def render_hostmatrix():
             s = 1
         else:
             s = 0
-        url = "view.py?view_name=host&site=%s&host=%s" % (htmllib.urlencode(site), htmllib.urlencode(host))
+        url = "view.py?view_name=host&site=%s&host=%s" % (html.urlencode(site), html.urlencode(host))
         html.write('<td class="state state%s"><a href="%s" title="%s" target="main" style="width:%spx;height:%spx;"></a></td>' %
                                                                                            (s, url, host, cell_size, cell_size))
         if col == n or (row == rows and n == lastcols):

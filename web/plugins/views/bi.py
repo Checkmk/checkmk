@@ -70,11 +70,11 @@ multisite_datasources["bi_hostname_aggregations"] = {
 
 def paint_bi_icons(row):
     html.plug()
-    single_url = "view.py?" + htmllib.urlencode_vars([
+    single_url = "view.py?" + html.urlencode_vars([
             ("view_name", "aggr_single"),
             ("aggr_name", row["aggr_name"])])
     html.icon_button(single_url, _("Show only this aggregation"), "showbi")
-    avail_url = "bi_availability.py?" + htmllib.urlencode_vars([
+    avail_url = "bi_availability.py?" + html.urlencode_vars([
             ("aggr_group", row["aggr_group"]),
             ("aggr_name",  row["aggr_name"])])
     html.icon_button(avail_url, _("Analyse availability of this aggregation"), "availability")

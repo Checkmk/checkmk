@@ -42,7 +42,7 @@ def render_python(rows, view, group_painters, painters, num_columns, show_checkb
         html.write("[")
         for p in painters:
             tdclass, content = p[0]["paint"](row)
-            html.write(repr(htmllib.strip_tags(content)))
+            html.write(repr(html.strip_tags(content)))
             html.write(",")
         html.write("],")
     html.write("\n]\n")
@@ -74,7 +74,7 @@ def render_json(rows, view, group_painters, painters, num_columns, show_checkbox
         else:
             html.write(",")
         content = p[0]["name"]
-        stripped = htmllib.strip_tags(content)
+        stripped = html.strip_tags(content)
         utf8 = stripped.encode("utf-8")
         html.write(encode_string_json(utf8))
     html.write("]")
@@ -89,7 +89,7 @@ def render_json(rows, view, group_painters, painters, num_columns, show_checkbox
                 html.write(",")
             tdclass, content = p[0]["paint"](row)
             content = str(content).replace("<br>","\n")
-            stripped = htmllib.strip_tags(content)
+            stripped = html.strip_tags(content)
             utf8 = stripped.encode("utf-8")
             html.write(encode_string_json(utf8))
         html.write("]")

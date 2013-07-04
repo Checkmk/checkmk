@@ -29,7 +29,7 @@ import wato
 def wato_link(folder, site, hostname, where):
     if 'X' in html.display_options:
         url = "wato.py?folder=%s&host=%s" % \
-           (htmllib.urlencode(folder), htmllib.urlencode(hostname))
+           (html.urlencode(folder), html.urlencode(hostname))
         if where == "inventory":
             url += "&mode=inventory"
             help = _("Edit services in WATO - the Check_MK Web Administration Tool")

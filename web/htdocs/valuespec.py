@@ -24,14 +24,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import math, os, time, re, sre_constants, urlparse, forms, htmllib
+import math, os, time, re, sre_constants, urlparse, forms
 from lib import *
 
 def type_name(v):
     try:
         return type(v).__name__
     except:
-        return htmllib.attrencode(type(v))
+        return html.attrencode(type(v))
 
 # Abstract base class of all value declaration classes.
 class ValueSpec:
@@ -337,7 +337,7 @@ class TextAscii(ValueSpec):
             return _("none")
         else:
             if self._attrencode:
-                return htmllib.attrencode(value)
+                return html.attrencode(value)
             else:
                 return value
 

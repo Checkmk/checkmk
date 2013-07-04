@@ -24,15 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-#!/usr/bin/python
-#encoding: utf-8
-
-#import config, defaults, livestatus, htmllib, time, os, re, pprint, time, copy
-#import weblib, traceback
 import re
 from lib import *
-import views, config, htmllib
-#from pagefunctions import *
+import views, config
 
 # These regexes are taken from the public domain code of Matt Sullivan
 # http://sullerton.com/2011/03/django-mobile-browser-detection-middleware/
@@ -165,9 +159,9 @@ def page_login():
     html.begin_form("login", method = 'POST', add_transid = False)
     # Keep information about original target URL
     origtarget = html.var('_origtarget', '')
-    if not origtarget and not html.req.myfile == 'login':
+    if not origtarget and not html.myfile == 'login':
         origtarget = html.req.uri
-    html.hidden_field('_origtarget', htmllib.attrencode(origtarget))
+    html.hidden_field('_origtarget', html.attrencode(origtarget))
 
     html.text_input("_username", label = _("Username:"))
     html.password_input("_password", size=None, label = _("Password:"))
@@ -344,7 +338,7 @@ def show_command_form(view, datasource, rows):
       $('x').children().css('background-color', '#f84');
     });
     """)
-    html.begin_form("commands", html.req.myfile + ".py#commands")
+    html.begin_form("commands", html.myfile + ".py#commands")
     html.hidden_field("_do_actions", "yes")
     html.hidden_field("actions", "yes")
     html.hidden_fields() # set all current variables, exception action vars

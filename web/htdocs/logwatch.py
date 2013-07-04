@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import htmllib, livestatus, time, re, os, datetime, config, defaults
+import livestatus, time, re, os, datetime, config, defaults
 from lib import *
 import views
 
@@ -72,7 +72,7 @@ def page_show():
 
     # Check user permissions on the host
     if not may_see(host):
-        raise MKAuthException(_("You are not allowed to access the logs of the host %s") % htmllib.attrencode(host))
+        raise MKAuthException(_("You are not allowed to access the logs of the host %s") % html.attrencode(host))
 
     if filename:
         show_file(host, filename)
@@ -103,10 +103,10 @@ def show_host_log_list(host):
     html.header(_("Logfiles of Host %s") % host, stylesheets = stylesheets)
     html.begin_context_buttons()
     html.context_button(_("Services"), "%sview.py?view_name=host&site=&host=%s" %
-                                (master_url, htmllib.urlencode(host)), 'services')
+                                (master_url, html.urlencode(host)), 'services')
     html.context_button(_("All Logfiles"), html.makeuri([('host', ''), ('file', '')]))
     html.context_button(_("Analyze Host Patterns"), "%swato.py?mode=pattern_editor&host=%s" %
-                                (master_url, htmllib.urlencode(host)), 'analyze')
+                                (master_url, html.urlencode(host)), 'analyze')
     ack_button(host)
     html.end_context_buttons()
 
@@ -133,7 +133,7 @@ def list_logs(host, logfiles):
             if logs == []: logs = "empty"
             html.write("<tr class=%s0>\n" % (rowno % 2 == 0 and "odd" or "even"))
             html.write("<td>-</td><td>%s</td><td>%s</td><td>0</td></tr>\n" %
-                             (htmllib.attrencode(logs), htmllib.attrencode(file_display)))
+                             (html.attrencode(logs), html.attrencode(file_display)))
         else:
             worst_log = get_worst_log(logs)
             last_log = get_last_log(logs)
@@ -143,7 +143,7 @@ def list_logs(host, logfiles):
 
             html.write("<td class=\"state%d\">%s</td>\n" % (state, state_name))
             html.write("<td><a href=\"%s\">%s</a></td>\n" %
-                        (html.makeuri([('host', host), ('file', file_display)]), htmllib.attrencode(file_display)))
+                        (html.makeuri([('host', host), ('file', file_display)]), html.attrencode(file_display)))
             html.write("<td>%s</td><td>%s</td></tr>\n" % \
                         (form_datetime(last_log['datetime']), len(logs)))
 
@@ -169,12 +169,12 @@ def show_file(host, filename):
     int_filename = form_file_to_int(filename)
     html.header(_("Logfiles of Host %s: %s") % (host, filename), stylesheets = stylesheets)
     html.begin_context_buttons()
-    html.context_button(_("Services"), "%sview.py?view_name=host&site=&host=%s" % (master_url, htmllib.urlencode(host)), 'services')
+    html.context_button(_("Services"), "%sview.py?view_name=host&site=&host=%s" % (master_url, html.urlencode(host)), 'services')
     html.context_button(_("All Logfiles of Host"), html.makeuri([('file', '')]))
     html.context_button(_("All Logfiles"), html.makeuri([('host', ''), ('file', '')]))
 
     html.context_button(_("Analyze Patterns"), "%swato.py?mode=pattern_editor&host=%s&file=%s" %
-                                (master_url, htmllib.urlencode(host), htmllib.urlencode(filename)), 'analyze')
+                                (master_url, html.urlencode(host), html.urlencode(filename)), 'analyze')
 
     if html.var('_hidecontext', 'no') == 'yes':
         hide_context_label = _('Show Context')
@@ -213,14 +213,14 @@ def show_file(host, filename):
         for line in log['lines']:
             html.write('<p class="%s">' % line['class'])
 
-            edit_url = master_url + "wato.py?" + htmllib.urlencode_vars([
+            edit_url = master_url + "wato.py?" + html.urlencode_vars([
                 ('mode',  'pattern_editor'),
                 ('host',  host),
                 ('file',  filename),
                 ('match', line['line']),
             ])
             html.icon_button(edit_url, _("Analyze this line"), "analyze")
-            html.write('%s</p>\n' % (htmllib.attrencode(line['line']).replace(" ", "&nbsp;").replace("\1", "<br>") ))
+            html.write('%s</p>\n' % (html.attrencode(line['line']).replace(" ", "&nbsp;").replace("\1", "<br>") ))
 
         html.write('</div>\n')
 
@@ -241,13 +241,13 @@ def do_log_ack(host, filename):
         for int_filename in host_logs(host):
             file_display = form_file_to_ext(int_filename)
             todo.append((host, int_filename, file_display))
-        ack_msg = _('all logfiles of host <tt>%s</tt>') % htmllib.attrencode(host)
+        ack_msg = _('all logfiles of host <tt>%s</tt>') % html.attrencode(host)
 
     elif host and filename: # one log on one host
         int_filename = form_file_to_int(filename)
         todo = [ (host, int_filename, form_file_to_ext(int_filename)) ]
         ack_msg = _('the log file <tt>%s</tt> on host <tt>%s</tt>') % \
-                       (htmllib.attrencode(filename), htmllib.attrencode(host))
+                       (html.attrencode(filename), html.attrencode(host))
 
     html.header(_("Acknowledge %s") % ack_msg, stylesheets = stylesheets)
 
@@ -281,7 +281,7 @@ def do_log_ack(host, filename):
             os.remove(defaults.logwatch_dir + '/' + this_host + '/' + int_filename)
         except Exception, e:
             html.show_error(_('The log file <tt>%s</tt> of host <tt>%s</tt> could not be deleted: %s.') % \
-                                      (htmllib.attrencode(file_display), htmllib.attrencode(this_host), e))
+                                      (html.attrencode(file_display), html.attrencode(this_host), e))
 
     html.message('<b>%s</b><p>%s</p>' % (
         _('Acknowledged %s') % ack_msg,

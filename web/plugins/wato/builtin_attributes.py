@@ -70,7 +70,7 @@ class ParentsAttribute(ValueSpecAttribute):
 
     def paint(self, value, hostname):
         parts = [ '<a href="%s">%s</a>' % (
-                   "wato.py?" + htmllib.urlencode_vars([("mode", "edithost"), ("host", hn)]), hn)
+                   "wato.py?" + html.urlencode_vars([("mode", "edithost"), ("host", hn)]), hn)
                   for hn in value ]
         return "", ", ".join(parts)
 

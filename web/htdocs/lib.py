@@ -230,7 +230,6 @@ crit_marker    = '<b class="stmark state2">CRIT</b>'
 unknown_marker = '<b class="stmark state3">UNKN</b>'
 
 def paint_host_list(site, hosts):
-    from htmllib import urlencode
     h = ""
     first = True
     for host in hosts:
@@ -238,7 +237,7 @@ def paint_host_list(site, hosts):
             first = False
         else:
             h += ", "
-        link = "view.py?view_name=hoststatus&site=%s&host=%s" % (urlencode(site), urlencode(host))
+        link = "view.py?view_name=hoststatus&site=%s&host=%s" % (html.urlencode(site), html.urlencode(host))
         if html.var("display_options"):
             link += "&display_options=%s" % html.var("display_options")
         h += "<a href=\"%s\">%s</a></div>" % (link, host)

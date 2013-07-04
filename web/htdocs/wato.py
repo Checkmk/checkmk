@@ -105,7 +105,7 @@
 
 import sys, pprint, socket, re, subprocess, time, datetime,  \
        shutil, tarfile, StringIO, math, fcntl, pickle, random
-import config, htmllib, table, multitar, userdb, hooks, weblib
+import config, table, multitar, userdb, hooks, weblib
 from lib import *
 from valuespec import *
 import forms
@@ -1162,7 +1162,7 @@ def show_subfolders(folder):
 
         else:
             html.write('<img class="icon autherr" src="images/icon_autherr.png" title="%s">' % \
-                       (htmllib.strip_tags(auth_message)))
+                       (html.strip_tags(auth_message)))
         html.write('<div class=infos>')
         # Show contact groups of the folder
         effective = effective_attributes(None, entry)
@@ -1390,7 +1390,7 @@ def show_hosts(folder):
             title = _("You have permission to this host.")
         else:
             icon = "autherr"
-            title = htmllib.strip_tags(auth)
+            title = html.strip_tags(auth)
         html.write('<td><img class=icon src="images/icon_%s.png" title="%s"></td>' % (icon, title))
 
         if not config.wato_hide_hosttags:
@@ -2275,7 +2275,7 @@ def show_service_table(host, firsttime):
                 # Strip all html code from the paramtext
                 paramtext = paramtext.replace('</td>', '\t')
                 paramtext = paramtext.replace('</tr>', '\n')
-                paramtext = htmllib.strip_tags(paramtext)
+                paramtext = html.strip_tags(paramtext)
 
                 title = _("Check parameters for this service") + ": \n" + paramtext
                 html.write('<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' %
@@ -3657,9 +3657,9 @@ def mode_changelog(phase):
                     # Last result
                     result = srs.get("result", "")
                     if len(result) > 20:
-                        result = htmllib.strip_tags(result)
+                        result = html.strip_tags(result)
                         result = '<span title="%s">%s...</span>' % \
-                            (htmllib.attrencode(result), result[:20])
+                            (html.attrencode(result), result[:20])
                     html.write("<td>%s</td>" % result)
 
                 html.write("</tr>")
@@ -7058,7 +7058,7 @@ def do_site_login(site_id, name, password):
     response = get_url(url, site.get('insecure', False), name, password).strip()
     if '<html>' in response.lower():
         message = _("Authentication to web service failed.<br>Message:<br>%s") % \
-            htmllib.strip_tags(htmllib.strip_scripts(response))
+            html.strip_tags(html.strip_scripts(response))
         if config.debug:
             message += "<br>Automation URL: <tt>%s</tt><br>" % url
         raise MKAutomationException(message)
@@ -7141,12 +7141,12 @@ def do_remote_automation(site, command, vars):
         raise MKAutomationException(_("You are not logged into the remote site."))
 
     url = base_url + "automation.py?" + \
-        htmllib.urlencode_vars([
+        html.urlencode_vars([
                ("command", command),
                ("secret",  secret),
                ("debug",   config.debug and '1' or '')
         ])
-    vars_encoded = htmllib.urlencode_vars(vars)
+    vars_encoded = html.urlencode_vars(vars)
     response = get_url(url, site.get('insecure', False),
                        post_data=vars_encoded)
     if not response:
@@ -7376,7 +7376,7 @@ def restart_site(site):
 def push_snapshot_to_site(site, do_restart):
     mode = site.get("replication", "slave")
     url_base = site["multisiteurl"] + "automation.py?"
-    var_string = htmllib.urlencode_vars([
+    var_string = html.urlencode_vars([
         ("command",    "push-snapshot"),
         ("secret",     site["secret"]),
         ("siteid",     site["id"]),         # This site must know it's ID
@@ -7528,7 +7528,7 @@ def do_peer_redirect(peer):
         current_mode = html.var("mode") or "main"
         if peer:
             rel_url = html.makeuri([])
-            frameset_url = "index.py?" + htmllib.urlencode_vars([("start_url", rel_url)])
+            frameset_url = "index.py?" + html.urlencode_vars([("start_url", rel_url)])
             url = peer["multisiteurl"] + frameset_url
 
             html.header(_("Access to standby system"), stylesheets = wato_styles)
@@ -9885,7 +9885,7 @@ def mode_ineffective_rules(phase):
                 if url:
                     html.icon_button(url, _("Context information about this rule"), "url", target="_blank")
                     html.write("&nbsp;")
-                html.write(htmllib.attrencode(rule_options.get("comment", "")))
+                html.write(html.attrencode(rule_options.get("comment", "")))
 
             table.end()
             html.write("</div>")
@@ -10361,7 +10361,7 @@ def mode_edit_ruleset(phase):
             if url:
                 html.icon_button(url, _("Context information about this rule"), "url", target="_blank")
                 html.write("&nbsp;")
-            html.write(htmllib.attrencode(rule_options.get("comment", "")))
+            html.write(html.attrencode(rule_options.get("comment", "")))
 
         table.end()
 
@@ -11790,7 +11790,7 @@ def mode_pattern_editor(phase):
             if config.is_multisite():
                 master_url = '&master_url=' + defaults.url_prefix + 'check_mk/'
             html.context_button(title, "logwatch.py?host=%s&amp;file=%s%s" %
-                (htmllib.urlencode(hostname), htmllib.urlencode(item), master_url), 'logwatch')
+                (html.urlencode(hostname), html.urlencode(item), master_url), 'logwatch')
 
         html.context_button(_('Edit Logfile Rules'), make_link([
                 ('mode', 'edit_ruleset'),
@@ -12897,16 +12897,16 @@ class API:
 
     # Create an URL to a certain WATO folder.
     def link_to_path(self, path):
-        return "wato.py?mode=folder&folder=" + htmllib.urlencode(path)
+        return "wato.py?mode=folder&folder=" + html.urlencode(path)
 
     # Create an URL to the edit-properties of a host.
     def link_to_host(self, hostname):
-        return "wato.py?" + htmllib.urlencode_vars(
+        return "wato.py?" + html.urlencode_vars(
         [("mode", "edithost"), ("host", hostname)])
 
     # Same, but links to services of that host
     def link_to_host_inventory(self, hostname):
-        return "wato.py?" + htmllib.urlencode_vars(
+        return "wato.py?" + html.urlencode_vars(
         [("mode", "inventory"), ("host", hostname)])
 
     # Return the title of a folder - which is given as a string path
@@ -13118,7 +13118,7 @@ def using_wato_hosts():
 
 def host_status_button(hostname, viewname):
     html.context_button(_("Status"),
-       "view.py?" + htmllib.urlencode_vars([
+       "view.py?" + html.urlencode_vars([
            ("view_name", viewname),
            ("filename", g_folder[".path"] + "/hosts.mk"),
            ("host",     hostname),
@@ -13127,7 +13127,7 @@ def host_status_button(hostname, viewname):
 
 def folder_status_button(viewname = "allhosts"):
     html.context_button(_("Status"),
-       "view.py?" + htmllib.urlencode_vars([
+       "view.py?" + html.urlencode_vars([
            ("view_name", viewname),
            ("wato_folder", g_folder[".path"])]),
            "status")  # TODO: support for distributed WATO

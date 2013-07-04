@@ -109,7 +109,7 @@ def paint_reschedule(what, row, tags, custom_vars):
         return '<a href=\"javascript:void(0);\" ' \
                'onclick="performAction(this, \'reschedule\', \'%s\', \'%s\', \'%s\', \'%s\');">' \
                '<img class=icon title="%s" src="images/%s.gif" /></a>' % \
-                (row["site"], row["host_name"], htmllib.urlencode(servicedesc), htmllib.urlencode(wait_svc), txt, icon)
+                (row["site"], row["host_name"], html.urlencode(servicedesc), html.urlencode(wait_svc), txt, icon)
 
 multisite_icons.append({
     'columns':         [ 'active_checks_enabled' ],
@@ -196,14 +196,14 @@ def pnp_url(row, what, how = 'graph'):
     site = html.site_status[sitename]["site"]
     if html.mobile:
         url = site["url_prefix"] + ("pnp4nagios/index.php?kohana_uri=/mobile/%s/%s/%s" % \
-            (how, htmllib.urlencode(host), htmllib.urlencode(svc)))
+            (how, html.urlencode(host), html.urlencode(svc)))
     else:
         url = site["url_prefix"] + ("pnp4nagios/index.php/%s?host=%s&srv=%s" % \
-            (how, htmllib.urlencode(host), htmllib.urlencode(svc)))
+            (how, html.urlencode(host), html.urlencode(svc)))
 
     if how == 'graph':
         url += "&theme=multisite&baseurl=%scheck_mk/" % \
-                        htmllib.urlencode(site["url_prefix"])
+                        html.urlencode(site["url_prefix"])
     return url
 
 def pnp_popup_url(row, what):
@@ -245,7 +245,7 @@ def paint_prediction_icon(what, row, tags, custom_vars):
                 dsname = varname[8:]
                 sitename = row["site"]
                 site = html.site_status[sitename]["site"]
-                url = site["url_prefix"] + "check_mk/prediction_graph.py?" + htmllib.urlencode_vars([
+                url = site["url_prefix"] + "check_mk/prediction_graph.py?" + html.urlencode_vars([
                     ( "host", row["host_name"] ),
                     ( "service", row["service_description"] ),
                     ( "dsname", dsname ) ])
@@ -293,7 +293,7 @@ multisite_icons.append({
 #   +----------------------------------------------------------------------+
 
 def logwatch_url(sitename, hostname, item):
-    host_item_url = "check_mk/logwatch.py?host=%s&file=%s" % (htmllib.urlencode(hostname), htmllib.urlencode(item))
+    host_item_url = "check_mk/logwatch.py?host=%s&file=%s" % (html.urlencode(hostname), html.urlencode(item))
     site = html.site_status[sitename]["site"]
     master_url = ''
     if config.is_multisite():

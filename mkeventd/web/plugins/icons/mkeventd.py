@@ -79,7 +79,7 @@ def paint_mkeventd(what, row, tags, custom_vars):
         url_prefix = site['url_prefix'] + 'check_mk/'
 
     title = _('Events of Host %s') % (row["host_name"])
-    url   = 'view.py?' + htmllib.urlencode_vars([
+    url   = 'view.py?' + html.urlencode_vars([
           ("view_name", "ec_events_of_monhost"),
           ("site", row["site"]),
           ("host", row["host_name"]),

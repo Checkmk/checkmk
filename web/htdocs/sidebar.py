@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config, defaults, livestatus, htmllib, views, pprint, os, copy
+import config, defaults, livestatus, views, pprint, os, copy
 from lib import *
 
 # Constants to be used in snapins
@@ -68,7 +68,7 @@ def link(text, target, frame="main"):
     if not (":" in target[:10]) and target[0] != '/':
         target = defaults.url_prefix + "check_mk/" + target
     return '<a onfocus="if (this.blur) this.blur();" target="%s" ' \
-           'class=link href="%s">%s</a>' % (frame, target, htmllib.attrencode(text))
+           'class=link href="%s">%s</a>' % (frame, target, html.attrencode(text))
 
 def simplelink(text, target, frame="main"):
     html.write(link(text, target, frame) + "<br>\n")
@@ -103,10 +103,10 @@ def iconbutton(what, url, target="side", handler="", name="", css_class = ""):
 
 def nagioscgilink(text, target):
     html.write("<li class=sidebar><a target=\"main\" class=link href=\"%snagios/cgi-bin/%s\">%s</a></li>" % \
-            (defaults.url_prefix, target, htmllib.attrencode(text)))
+            (defaults.url_prefix, target, html.attrencode(text)))
 
 def heading(text):
-    html.write("<h3>%s</h3>\n" % htmllib.attrencode(text))
+    html.write("<h3>%s</h3>\n" % html.attrencode(text))
 
 def load_user_config():
     path = config.user_confdir + "/sidebar.mk"

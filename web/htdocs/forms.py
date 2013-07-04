@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 from lib import *
-import htmllib
 
 # A input function with the same call syntax as htmllib.textinput()
 def input(valuespec, varprefix, defvalue):

@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config, defaults, htmllib, pprint, time
+import config, defaults, pprint, time
 from lib import *
 import wato
 
@@ -96,9 +96,9 @@ def add_wato_folder_to_url(url, wato_folder):
     elif '/' in url:
         return url # do not append wato_folder to non-Check_MK-urls
     elif '?' in url:
-        return url + "&wato_folder=" + htmllib.urlencode(wato_folder)
+        return url + "&wato_folder=" + html.urlencode(wato_folder)
     else:
-        return url + "?wato_folder=" + htmllib.urlencode(wato_folder)
+        return url + "?wato_folder=" + html.urlencode(wato_folder)
 
 
 # Actual rendering function
@@ -576,7 +576,7 @@ def render_statistics(pie_id, what, table, filter):
     table_entries.append(((_("Total"), "", "all%s" % what, ""), total))
     for (name, color, viewurl, query), count in table_entries:
         url = "view.py?view_name=" + viewurl + "&filled_in=filter&search=1&wato_folder=" \
-              + htmllib.urlencode(html.var("wato_folder", ""))
+              + html.urlencode(html.var("wato_folder", ""))
         if host_contact_group:
             url += '&opthost_contactgroup=' + host_contact_group
         if service_contact_group:

@@ -197,10 +197,10 @@ def paint_nagios_link(row):
     # We need to use the Nagios-URL as configured
     # in sites.
     baseurl = config.site(row["site"])["url_prefix"] + "nagios/cgi-bin"
-    url = baseurl + "/extinfo.cgi?host=" + htmllib.urlencode(row["host_name"])
+    url = baseurl + "/extinfo.cgi?host=" + html.urlencode(row["host_name"])
     svc = row.get("service_description")
     if svc:
-        url += "&type=2&service=" + htmllib.urlencode(svc)
+        url += "&type=2&service=" + html.urlencode(svc)
         what = "service"
     else:
         url += "&type=1"
@@ -686,7 +686,7 @@ multisite_painters["check_manpage"] = {
 
 def paint_comments(prefix, row):
     comments = row[ prefix + "comments_with_info"]
-    text = ", ".join(["<i>%s</i>: %s" % (a, htmllib.attrencode(c)) for (id, a, c) in comments ])
+    text = ", ".join(["<i>%s</i>: %s" % (a, html.attrencode(c)) for (id, a, c) in comments ])
     return "", text
 
 multisite_painters["svc_comments"] = {
@@ -950,7 +950,7 @@ multisite_painters["host_black"] = {
 def paint_host_black_with_link_to_old_nagios_services(row):
     host = row["host_name"]
     baseurl = config.site(row["site"])["url_prefix"] + "nagios/cgi-bin"
-    url = baseurl + "/status.cgi?host=" + htmllib.urlencode(host)
+    url = baseurl + "/status.cgi?host=" + html.urlencode(host)
     state = row["host_state"]
     if state != 0:
         return None, '<div class=hostdown><a href="%s">%s</a></div>' % (url, host)
@@ -1090,9 +1090,9 @@ def paint_service_list(row, columnname):
             host = row["host_name"]
             text = svc
         link = "view.py?view_name=service&site=%s&host=%s&service=%s" % (
-                htmllib.urlencode(row["site"]),
-                htmllib.urlencode(host),
-                htmllib.urlencode(svc))
+                html.urlencode(row["site"]),
+                html.urlencode(host),
+                html.urlencode(svc))
         if checked:
             css = "state%d" % state
         else:
@@ -1202,8 +1202,8 @@ def paint_hg_host_list(row):
     h = "<div class=objectlist>"
     for host, state, checked in row["hostgroup_members_with_state"]:
         link = "view.py?view_name=host&site=%s&host=%s" % (
-                htmllib.urlencode(row["site"]),
-                htmllib.urlencode(host))
+                html.urlencode(row["site"]),
+                html.urlencode(host))
         if checked:
             css = "hstate%d" % state
         else:
@@ -1402,7 +1402,7 @@ multisite_painters["comment_author"] = {
 multisite_painters["comment_comment"] = {
     "title"   : _("Comment text"),
     "columns" : ["comment_comment"],
-    "paint"   : lambda row: (None, htmllib.attrencode(row["comment_comment"])),
+    "paint"   : lambda row: (None, html.attrencode(row["comment_comment"])),
 }
 
 multisite_painters["comment_what"] = {
@@ -1481,7 +1481,7 @@ multisite_painters["downtime_comment"] = {
     "title"   : _("Downtime comment"),
     "short"   : _("Comment"),
     "columns" : ["downtime_comment"],
-    "paint"   : lambda row: (None, htmllib.attrencode(row["downtime_comment"])),
+    "paint"   : lambda row: (None, html.attrencode(row["downtime_comment"])),
 }
 
 multisite_painters["downtime_fixed"] = {
@@ -1550,7 +1550,7 @@ multisite_painters["log_message"] = {
     "title"   : _("Log: complete message"),
     "short"   : _("Message"),
     "columns" : ["log_message"],
-    "paint"   : lambda row: ("", htmllib.attrencode(row["log_message"])),
+    "paint"   : lambda row: ("", html.attrencode(row["log_message"])),
 }
 
 def paint_log_plugin_output(row):
@@ -1645,14 +1645,14 @@ multisite_painters["log_options"] = {
     "title"   : _("Log: informational part of message"),
     "short"   : _("Info"),
     "columns" : ["log_options"],
-    "paint"   : lambda row: ("", htmllib.attrencode(row["log_options"])),
+    "paint"   : lambda row: ("", html.attrencode(row["log_options"])),
 }
 
 def paint_log_comment(msg):
     if ';' in msg:
         parts = msg.split(';')
         if len(parts) > 6:
-          return ("", htmllib.attrencode(parts[-1]))
+          return ("", html.attrencode(parts[-1]))
     return ("", "")
 
 multisite_painters["log_comment"] = {

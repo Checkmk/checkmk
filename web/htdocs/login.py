@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import defaults, htmllib, config, userdb
+import defaults, config, userdb
 from lib import *
 from mod_python import apache
 import os, time
@@ -95,7 +95,7 @@ def renew_cookie(cookie_name, username, serial):
     # Do not renew if:
     # a) The _ajaxid var is set
     # b) A logout is requested
-    if (html.req.myfile != 'logout' or html.has_var('_ajaxid')) \
+    if (html.myfile != 'logout' or html.has_var('_ajaxid')) \
        and cookie_name == site_cookie_name():
         set_auth_cookie(username, serial)
 
@@ -126,8 +126,8 @@ def check_auth_cookie(cookie_name):
 def check_auth_automation():
     secret = html.var("_secret").strip()
     user = html.var("_username").strip()
-    del html.req.vars['_username']
-    del html.req.vars['_secret']
+    html.del_var('_username')
+    html.del_var('_secret')
     if secret and user and "/" not in user:
         path = defaults.var_dir + "/web/" + user + "/automation.secret"
         if os.path.isfile(path) and file(path).read().strip() == secret:
@@ -204,13 +204,10 @@ def do_login():
                     raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
                 else:
                     # Remove login vars to hide them from the next page handler
-                    try:
-                        del html.req.vars['_username']
-                        del html.req.vars['_password']
-                        del html.req.vars['_login']
-                        del html.req.vars['_origtarget']
-                    except:
-                        pass
+                    html.del_var('_username')
+                    html.del_var('_password')
+                    html.del_var('_login')
+                    html.del_var('_origtarget')
 
                     return (username, origtarget)
             else:
@@ -239,13 +236,13 @@ def normal_login_page(called_directly = True):
     html.header(_("Check_MK Multisite Login"), javascripts=[], stylesheets=["pages", "login"])
 
     origtarget = html.var('_origtarget', '')
-    if not origtarget and not html.req.myfile in [ 'login', 'logout' ]:
+    if not origtarget and not html.myfile in [ 'login', 'logout' ]:
         origtarget = html.makeuri([])
 
     # When e.g. the password of a user is changed and the first frame that recognizes the
     # non matching cookies is the sidebar it redirects the user to side.py while removing
     # the frameset. This is not good. Instead of this redirect the user to the index page.
-    if html.req.myfile == 'side':
+    if html.myfile == 'side':
         html.immediate_browser_redirect(0.1, 'login.py')
         return apache.OK
 
@@ -256,7 +253,7 @@ def normal_login_page(called_directly = True):
 }''')
 
     # When someone calls the login page directly and is already authed redirect to main page
-    if html.req.myfile == 'login' and check_auth() != '':
+    if html.myfile == 'login' and check_auth() != '':
         html.immediate_browser_redirect(0.5, origtarget and origtarget or 'index.py')
         return apache.OK
 
@@ -266,7 +263,7 @@ def normal_login_page(called_directly = True):
 
     html.begin_form("login", method = 'POST', add_transid = False)
     html.hidden_field('_login', '1')
-    html.hidden_field('_origtarget', htmllib.attrencode(origtarget))
+    html.hidden_field('_origtarget', html.attrencode(origtarget))
     html.write("<label id=label_user class=legend for=_username>%s:</label><br />" % _('Username'))
     html.text_input("_username", id="input_user")
     html.write("<label id=label_pass class=legend for=_password>%s:</label><br />" % _('Password'))

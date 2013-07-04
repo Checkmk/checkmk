@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config, defaults, livestatus, htmllib, time, os, re, pprint, time, copy
+import config, defaults, livestatus, time, os, re, pprint, time, copy
 import weblib, traceback, forms, valuespec
 from lib import *
 from pagefunctions import *
@@ -389,7 +389,7 @@ def page_edit_views(msg=None):
             # Clone / Customize
             buttontext = not owner and _("Customize this view") \
                          or _("Create a clone of this view")
-            backurl = htmllib.urlencode(html.makeuri([]))
+            backurl = html.urlencode(html.makeuri([]))
             clone_url = "edit_view.py?clonefrom=%s&load_view=%s&back=%s" \
                         % (owner, viewname, backurl)
             html.icon_button(clone_url, buttontext, "clone")
@@ -1733,7 +1733,7 @@ def show_context_links(thisview, active_filters, show_filters, display_options,
 
     # Customize/Edit view button
     if 'E' in display_options and config.may("general.edit_views"):
-        backurl = htmllib.urlencode(html.makeuri([]))
+        backurl = html.urlencode(html.makeuri([]))
         if thisview["owner"] == config.user_id:
             url = "edit_view.py?load_view=%s&back=%s" % (thisview["name"], backurl)
         else:
@@ -2278,7 +2278,7 @@ def prepare_paint(p, row):
 
     tdclass, content = painter["paint"](row)
 
-    content = htmllib.utf8_to_entities(content)
+    content = html.utf8_to_entities(content)
 
     # Create contextlink to other view
     if content and linkview:
@@ -2287,7 +2287,7 @@ def prepare_paint(p, row):
     # Tooltip
     if content != '' and tooltip:
         cla, txt = multisite_painters[tooltip]["paint"](row)
-        tooltiptext = htmllib.strip_tags(txt)
+        tooltiptext = html.strip_tags(txt)
         content = '<span title="%s">%s</span>' % (tooltiptext, content)
     return tdclass, content
 
@@ -2306,7 +2306,7 @@ def link_to_view(content, row, linkview):
             vars.append(("display_options", do))
 
         filename = html.mobile and "mobile_view.py" or "view.py"
-        uri = filename + "?" + htmllib.urlencode_vars([("view_name", linkview)] + vars)
+        uri = filename + "?" + html.urlencode_vars([("view_name", linkview)] + vars)
         content = "<a href=\"%s\">%s</a>" % (uri, content)
 #        rel = 'view.py?view_name=hoststatus&site=local&host=erdb-lit&display_options=htbfcoezrsix'
 #        content = '<a class=tips rel="%s" href="%s">%s</a>' % (rel, uri, content)

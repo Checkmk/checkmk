@@ -704,7 +704,7 @@ def history_url_of(site, host, service, from_time, until_time):
             ("view_name", "hostevents"),
         ]
 
-    return "view.py?" + htmllib.urlencode_vars(history_url_vars)
+    return "view.py?" + html.urlencode_vars(history_url_vars)
 
 def render_availability_table(availability, from_time, until_time, range_title, what, avoptions, render_number):
     # Some columns might be unneeded due to state treatment options
@@ -746,15 +746,15 @@ def render_availability_table(availability, from_time, until_time, range_title, 
                    ("timeline_service", service)])
             html.icon_button(timeline_url, _("Timeline"), "timeline")
 
-        host_url = "view.py?" + htmllib.urlencode_vars([("view_name", "hoststatus"), ("site", site), ("host", host)])
+        host_url = "view.py?" + html.urlencode_vars([("view_name", "hoststatus"), ("site", site), ("host", host)])
         if what == "bi":
-            bi_url = "view.py?" + htmllib.urlencode_vars([("view_name", "aggr_single"), ("aggr_name", service)])
+            bi_url = "view.py?" + html.urlencode_vars([("view_name", "aggr_single"), ("aggr_name", service)])
             table.cell(_("Aggregate"), '<a href="%s">%s</a>' % (bi_url, service))
             availability_columns = bi_availability_columns
         else:
             table.cell(_("Host"), '<a href="%s">%s</a>' % (host_url, host))
             if what == "service":
-                service_url = "view.py?" + htmllib.urlencode_vars([("view_name", "service"), ("site", site), ("host", host), ("service", service)])
+                service_url = "view.py?" + html.urlencode_vars([("view_name", "service"), ("site", site), ("host", host), ("service", service)])
                 table.cell(_("Service"), '<a href="%s">%s</a>' % (service_url, service))
                 availability_columns = service_availability_columns
             else:
@@ -804,7 +804,7 @@ def render_bi_availability(tree):
     html.begin_context_buttons()
     togglebutton("avoptions", False, "painteroptions", _("Configure details of the report"))
     html.context_button(_("Status View"), "view.py?" +
-            htmllib.urlencode_vars([("view_name", "aggr_single"),
+            html.urlencode_vars([("view_name", "aggr_single"),
               ("aggr_name", tree["title"])]), "showbi")
     if timeline:
         html.context_button(_("Availability"), html.makeuri([("timeline", "")]), "availability")

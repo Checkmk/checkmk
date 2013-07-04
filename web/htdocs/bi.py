@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import config, re, pprint, time, views
-import weblib, htmllib
+import weblib
 from lib import *
 
 
@@ -1478,7 +1478,7 @@ def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, 
     affected_hosts = row["aggr_hosts"]
     title = row["aggr_tree"]["title"]
     group = row["aggr_group"]
-    url_id = htmllib.urlencode_vars([
+    url_id = html.urlencode_vars([
         ( "group", group ),
         ( "title", title ),
         ( "omit_root", omit_root and "yes" or ""),
@@ -1487,7 +1487,7 @@ def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, 
         ( "reqhosts", ",".join('%s#%s' % sitehost for sitehost in affected_hosts) ),
     ])
 
-    htmlcode = '<div id="%s" class=bi_tree_container>' % htmllib.attrencode(url_id) + \
+    htmlcode = '<div id="%s" class=bi_tree_container>' % html.attrencode(url_id) + \
                render_subtree(tree, [tree[2]["title"]], len(affected_hosts) > 1) + \
                '</div>'
     return "aggrtree" + (boxes and "_box" or ""), htmlcode

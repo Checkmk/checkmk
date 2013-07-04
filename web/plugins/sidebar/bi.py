@@ -37,7 +37,7 @@ def render_bi_groups():
     html.write("<ul>")
     for group in bi.aggregation_groups():
         bulletlink(group, "view.py?view_name=aggr_group&aggr_group=%s" %
-              htmllib.urlencode(group))
+              html.urlencode(group))
     html.write("</ul>")
 
 sidebar_snapins["biaggr_groups"] = {

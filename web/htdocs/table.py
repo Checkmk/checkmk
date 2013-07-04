@@ -24,8 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import htmllib
-
 table = None
 mode = None
 next_func = None
@@ -113,7 +111,7 @@ def end():
     html.write("  <tr>")
     for header, help in table["headers"]:
         if help:
-            header = '<span title="%s">%s</span>' % (htmllib.attrencode(help), header)
+            header = '<span title="%s">%s</span>' % (html.attrencode(help), header)
         html.write("  <th>%s</th>\n" % header)
     html.write("  </tr>\n")
 

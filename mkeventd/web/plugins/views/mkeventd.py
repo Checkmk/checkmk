@@ -489,7 +489,7 @@ if mkeventd_enabled:
     def paint_rule_id(row):
         rule_id = row["event_rule_id"]
         if config.may("mkeventd.edit"):
-            urlvars = htmllib.urlencode_vars([("mode", "mkeventd_edit_rule"), ("rule_id", rule_id)])
+            urlvars = html.urlencode_vars([("mode", "mkeventd_edit_rule"), ("rule_id", rule_id)])
             return "", '<a href="wato.py?%s">%s</a>' % (urlvars, rule_id)
         else:
             return "", rule_id

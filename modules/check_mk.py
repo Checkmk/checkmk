@@ -3324,8 +3324,8 @@ def show_check_manual(checkname):
             # preserve the inner { and } in double braces and then replace the braces left
             return line.replace('{{', '{&#123;').replace('}}', '&#125;}').replace("{", "<b>").replace("}", "</b>")
 
-        def print_sectionheader(line, ignored):
-            print "H1:" + line
+        def print_sectionheader(line, title):
+            print "H1:" + title 
 
         def print_subheader(line):
             print "H2:" + line

@@ -249,7 +249,7 @@ Filter *Query::createFilter(Column *column, int operator_id, char *value)
     }
     else {
         filter->setQuery(this);
-        filter->setTable(column->table());
+        filter->setColumn(column);
     }
     return filter;
 }

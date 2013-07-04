@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <stddef.h>
 #include <stdarg.h>
+#include <list>
 
 #include "nagios.h"
 #include "logger.h"
@@ -47,6 +48,8 @@
 #include "Service.h"
 #include "Timeperiod.h"
 #endif
+
+int g_disable_statehist_filtering = 0;
 
 
 typedef pair<string, string> HostServiceKey;
@@ -256,6 +259,38 @@ LogEntry *TableStateHistory::getNextLogentry()
 
 void TableStateHistory::answerQuery(Query *query)
 {
+    // Create a partial filter, that contains only such filters that
+    // check attributes of current hosts and services
+    typedef deque<Filter *> object_filter_t;
+    object_filter_t object_filter;
+    AndingFilter *orig_filter = query->filter();
+
+    if (!g_disable_statehist_filtering) {
+        deque<Filter *>::iterator it = orig_filter->begin();
+        while (it != orig_filter->end()) {
+            Filter *filter = *it;
+            Column *column = filter->column();
+            if (column) {
+                const char *column_name = column->name();
+                if (!strncmp(column_name, "current_", 8)
+                        || !strncmp(column_name, "host_", 5)
+                        || !strncmp(column_name, "service_", 8))
+                {
+                    object_filter.push_back(filter);
+                    // logger(LOG_NOTICE, "Nehme Column: %s", column_name);
+                }
+                else {
+                    // logger(LOG_NOTICE, "Column geht nciht: %s", column_name);
+                }
+            }
+            else {
+                // logger(LOG_NOTICE, "Mist: Filter ohne Column");
+            }
+            ++it;
+        }
+    }
+
+
     g_store->logCache()->lockLogCache();
     g_store->logCache()->logCachePreChecks();
 
@@ -390,22 +425,42 @@ void TableStateHistory::answerQuery(Query *query)
             state_info_t::iterator it_hst = state_info.find(key);
             if (it_hst == state_info.end()) 
             {
-                // No state found. Now check if this host/services is filtered out
-                if (objectFilteredOut(entry->_host_name, entry->_svc_desc)) {
-                    object_blacklist.insert(key);
-                    continue;
-                }
-
+                // Create state object that we also need for filtering right now
                 state = new HostServiceState();
-                state_info.insert(std::make_pair(key, state));
-
-                state->_is_host = entry->_svc_desc == 0;
-                state->_from    = _since;
-                state->_host    = entry->_host;
-                state->_service = entry->_service;
-
+                state->_is_host             = entry->_svc_desc == 0;
+                state->_host                = entry->_host;
+                state->_service             = entry->_service;
                 state->_host_name           = key.first.c_str();
                 state->_service_description = key.second.c_str();
+
+                // No state found. Now check if this host/services is filtered out.
+                // Note: we currently do not filter out hosts since they might be
+                // needed for service states
+                if (entry->_svc_desc)
+                {
+                    bool filtered_out = false;
+                    for (object_filter_t::iterator it = object_filter.begin();
+                         it != object_filter.end();
+                         ++it)
+                    {
+                        Filter *filter = *it;
+                        if (!filter->accepts(state)) {
+                            // logger(LOG_NOTICE, "kann ich rausschmeissen: %s/%s", key.first.c_str(), key.second.c_str());
+                            filtered_out = true;
+                            break;
+                        }
+                    }
+
+                    if (filtered_out) {
+                        object_blacklist.insert(key);
+                        delete state;
+                        continue;
+                    }
+                }
+
+                // Store this state object for tracking state transitions
+                state_info.insert(std::make_pair(key, state));
+                state->_from    = _since;
 
                 // Get notification period of host/service
                 // If this host/service is no longer availabe in nagios -> set to ""
@@ -524,8 +579,11 @@ void TableStateHistory::answerQuery(Query *query)
     g_store->logCache()->unlockLogCache();
 }
 
-bool TableStateHistory::objectFilteredOut(const char *host_name, const char *service_description)
+bool TableStateHistory::objectFilteredOut(Query *query, void *entry)
 {
+
+
+
     return false;
 }
 

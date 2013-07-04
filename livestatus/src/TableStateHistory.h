@@ -68,7 +68,7 @@ private:
     LogEntry* getPreviousLogentry();
     LogEntry* getNextLogentry();
     void      process(Query *query, HostServiceState *hs_state);
-    bool objectFilteredOut(const char *host_name, const char *service_description);
+    bool      objectFilteredOut(Query *, void *entry);
 };
 
 

@@ -84,6 +84,7 @@ int g_num_clientthreads = 10;     /* allow 10 concurrent connections per default
 int g_num_queued_connections = 0;     /* current number of queued connections (for statistics) */
 int g_num_active_connections = 0;     /* current number of active connections (for statistics) */
 size_t g_thread_stack_size = 65536; /* stack size of threads */
+extern int g_disable_statehist_filtering;
 
 #define false 0
 #define true 1
@@ -759,6 +760,10 @@ void livestatus_parse_arguments(const char *args_orig)
             }
             else if (!strcmp(left, "num_livecheck_helpers")) {
                 g_num_livehelpers = atoi(right);
+            }
+            else if (!strcmp(left, "disable_statehist_filtering"))
+            {
+                g_disable_statehist_filtering = atoi(right);
             }
             else {
                 logger(LG_INFO, "Ignoring invalid option %s=%s", left, right);

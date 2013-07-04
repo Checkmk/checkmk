@@ -1,4 +1,4 @@
-title: Remaining battery capacity of UPS using generic MIB
+title: Generic UPS Device: Remaining battery capacity
 agents: snmp
 catalog: hw/power
 author: Mathias Kettner <mk@mathias-kettner.de>

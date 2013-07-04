@@ -1,4 +1,4 @@
-title: In voltage of devices
+title: Generic UPS Device: In voltage
 agents: snmp
 catalog: hw/power
 author: Bastian Kuhn <bk@mathias-kettner.de>

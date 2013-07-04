@@ -5,9 +5,10 @@ author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
- This check is always OK and simply outputs the uptime of the target
- systems (when the last boot was and how much time has elapsed since).
- It is always OK.
+ This check outputs the uptime of the target systems
+ (when the last boot was and how much time has elapsed since).
+ This check can go WARN or CRIT when the uptime is below or above certain
+ configurable levels.
 
 perfdata:
  The uptime in seconds.

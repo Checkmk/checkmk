@@ -526,7 +526,7 @@ void TableStateHistory::answerQuery(Query *query)
 
 bool TableStateHistory::objectFilteredOut(const char *host_name, const char *service_description)
 {
-    return true;
+    return false;
 }
 
 void TableStateHistory::updateHostServiceState(Query *query, const LogEntry *entry, HostServiceState *hs_state, const bool only_update){

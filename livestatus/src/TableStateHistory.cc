@@ -49,6 +49,62 @@
 #endif
 
 
+typedef pair<string, string> HostServiceKey;
+
+struct HostServiceState {
+    bool    _is_host;
+    time_t  _time;
+    int     _lineno;
+    time_t  _from;
+    time_t  _until;
+
+    time_t  _duration;
+    double  _duration_part;
+
+    // Do not change order within this block!
+    // These durations will be bzero'd
+    time_t  _duration_state_UNMONITORED;
+    double  _duration_part_UNMONITORED;
+    time_t  _duration_state_OK;
+    double  _duration_part_OK;
+    time_t  _duration_state_WARNING;
+    double  _duration_part_WARNING;
+    time_t  _duration_state_CRITICAL;
+    double  _duration_part_CRITICAL;
+    time_t  _duration_state_UNKNOWN;
+    double  _duration_part_UNKNOWN;
+
+    // State information
+    int     _host_down;      // used if service
+    int     _state;             // -1/0/1/2/3
+    int     _in_notification_period;
+    int     _in_downtime;
+    int     _in_host_downtime;
+    int     _is_flapping;
+
+
+    // Absent state handling
+    bool    _may_no_longer_exist;
+    bool    _has_vanished;
+    time_t  _last_known_time;
+
+
+    const char  *_debug_info;
+    // Pointer to dynamically allocated strings (strdup) that live here.
+    // These pointers are 0, if there is no output (e.g. downtime)
+    char        *_log_output;
+    char        *_notification_period;  // may be "": -> no period known, we assume "always"
+    host        *_host;
+    service     *_service;
+    const char  *_host_name;            // Fallback if host no longer exists
+    const char  *_service_description;  // Fallback if service no longer exists
+
+    HostServiceState() { bzero(this, sizeof(HostServiceState)); }
+    ~HostServiceState();
+    void debug_me(const char *loginfo, ...);
+};
+
+
 #define CHECK_MEM_CYCLE 1000 /* Check memory every N'th new message */
 
 extern Store *g_store;
@@ -203,8 +259,13 @@ void TableStateHistory::answerQuery(Query *query)
     g_store->logCache()->lockLogCache();
     g_store->logCache()->logCachePreChecks();
 
+    // Keep track of the historic state of services/hosts here
     typedef map<HostServiceKey, HostServiceState*> state_info_t;
     state_info_t state_info;
+
+    // Store hosts/services that we have filtered out here
+    typedef set<HostServiceKey> object_blacklist_t;
+    object_blacklist_t object_blacklist;
 
     _query = query;
     _since = 0;
@@ -317,9 +378,24 @@ void TableStateHistory::answerQuery(Query *query)
             key.first  = entry->_host_name;
             key.second = entry->_svc_desc != 0 ? entry->_svc_desc : "";
 
+            if (object_blacklist.find(key) != object_blacklist.end())
+            {
+                // Host/Service is not needed for this query and has already
+                // been filtered out.
+                continue;
+            }
+
+            // Find state object for this host/service
             HostServiceState *state;
             state_info_t::iterator it_hst = state_info.find(key);
-            if (it_hst == state_info.end()) {
+            if (it_hst == state_info.end()) 
+            {
+                // No state found. Now check if this host/services is filtered out
+                if (objectFilteredOut(entry->_host_name, entry->_svc_desc)) {
+                    object_blacklist.insert(key);
+                    continue;
+                }
+
                 state = new HostServiceState();
                 state_info.insert(std::make_pair(key, state));
 
@@ -446,6 +522,11 @@ void TableStateHistory::answerQuery(Query *query)
         it_hst++;
     }
     g_store->logCache()->unlockLogCache();
+}
+
+bool TableStateHistory::objectFilteredOut(const char *host_name, const char *service_description)
+{
+    return true;
 }
 
 void TableStateHistory::updateHostServiceState(Query *query, const LogEntry *entry, HostServiceState *hs_state, const bool only_update){

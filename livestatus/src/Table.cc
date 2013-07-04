@@ -38,8 +38,10 @@ void Table::addColumn(Column *col)
     if (column(col->name())) {
         delete col;
     }
-    else
+    else {
         _columns.insert(make_pair(col->name(), col));
+        col->setTable(this);
+    }
 }
 
 

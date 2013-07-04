@@ -707,6 +707,10 @@ def history_url_of(site, host, service, from_time, until_time):
     return "view.py?" + htmllib.urlencode_vars(history_url_vars)
 
 def render_availability_table(availability, from_time, until_time, range_title, what, avoptions, render_number):
+    if not availability:
+        html.message(_("No matching hosts/services."))
+        return # No objects
+
     # Some columns might be unneeded due to state treatment options
     sg = avoptions["state_grouping"]
     state_groups = [ sg["warn"], sg["unknown"], sg["host_down"] ]

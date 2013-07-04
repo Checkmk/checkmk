@@ -40,11 +40,13 @@ using namespace std;
 
 class Filter;
 class Query;
+class Table;
 
 class Column
 {
     string _name;
     string _description;
+    Table *_table;
 public:
     int _indirect_offset;
     int _extra_offset;
@@ -61,6 +63,8 @@ public:
     virtual Filter *createFilter(int opid __attribute__ ((__unused__)), char *value __attribute__ ((__unused__))) { return 0; }
     void *shiftPointer(void *data);
     void setExtraOffset(int o) { _extra_offset = o; }
+    void setTable(Table *t) { _table = t; }
+    Table *table() { return _table; }
 
 };
 

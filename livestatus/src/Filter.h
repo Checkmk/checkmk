@@ -33,11 +33,13 @@
 
 using namespace std;
 class Query;
+class Table;
 
 class Filter
 {
     string _error_message; // Error in constructor
     unsigned _error_code;
+    Table *_table;
 
 protected:
     Query *_query; // needed by TimeOffsetFilter (currently)
@@ -50,6 +52,8 @@ public:
     unsigned errorCode() { return _error_code; }
     bool hasError() { return _error_message != ""; }
     void setQuery(Query *q) { _query = q; }
+    void setTable(Table *t) { _table = t; }
+    Table *table() { return _table; }
     virtual bool accepts(void *data) = 0;
     virtual void *indexFilter(const char *columnname __attribute__ ((__unused__))) { return 0; }
     virtual void findIntLimits(const char *columnname __attribute__ ((__unused__)), int *lower __attribute__ ((__unused__)), int *upper __attribute__ ((__unused__))) {}

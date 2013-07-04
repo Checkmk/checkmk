@@ -1,4 +1,4 @@
-title: Remaining filling level on printer supplys for ricoh printers
+title: Ricoh Printers: Remaining filling level
 agents: snmp
 catalog: hw/printer
 author: Bastian Kuhn <bk@mathias-kettner.de>

@@ -2890,10 +2890,178 @@ syslog_facilities = [
 ]
 
 register_check_parameters(
+   subgroup_applications,
+    "jvm_threads",
+    _("JVM threads"),
+    Tuple(
+        help = _("This rule sets the warn and crit levels for the number of threads "
+                 "running in a JVM."),
+        elements = [
+            Integer(
+                title = _("Warning at"),
+                unit = _("threads"),
+                default_value = 80,
+            ),
+            Integer(
+                title = _("Critical at"),
+                unit = _("threads"),
+                default_value = 100,
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("Name of the virtual machine"),
+        help = _("The name of the application server"),
+        allow_empty = False,
+    ),
+    "first"
+)
+
+register_check_parameters(
+        subgroup_applications,
+        "jvm_uptime",
+        _("JVM uptime (since last reboot)"),
+        Dictionary(
+            help = _("This rule sets the warn and crit levels for the uptime of a JVM. "),
+            elements = [
+            ( "min",
+              Tuple(
+                  title = _("Minimum required uptime"),
+                  elements = [
+                  Age(title = _("Warning if below")),
+                  Age(title = _("Critical if below")),
+                  ]
+                  )),
+            ( "max",
+              Tuple(
+                  title = _("Maximum allowed uptime"),
+                  elements = [
+                  Age(title = _("Warning if above")),
+                  Age(title = _("Critical if above")),
+                  ]
+                  )),
+            ]
+            ),
+        TextAscii(
+                title = _("Name of the virtual machine"),
+                help = _("The name of the application server"),
+                allow_empty = False,
+                ),
+        "first",
+)
+
+register_check_parameters(
+   subgroup_applications,
+    "jvm_sessions",
+    _("JVM session count"),
+    Tuple(
+        help = _("This rule sets the warn and crit levels for the number of current "
+                 "connections to a JVM application on the servlet level."),
+        elements = [
+            Integer(
+                title = _("Warning low at"),
+                unit = _("sessions"),
+                default_value = -1,
+            ),
+            Integer(
+                title = _("Critical low at"),
+                unit = _("sessions"),
+                default_value = -1,
+            ),
+            Integer(
+                title = _("Warning high at"),
+                unit = _("sessions"),
+                default_value = 800,
+            ),
+            Integer(
+                title = _("Critical high at"),
+                unit = _("sessions"),
+                default_value = 1000,
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("Name of the virtual machine"),
+        help = _("The name of the application server"),
+        allow_empty = False,
+    ),
+    "first"
+)
+
+register_check_parameters(
+   subgroup_applications,
+    "jvm_requests",
+    _("JVM request count"),
+    Tuple(
+        help = _("This rule sets the warn and crit levels for the number "
+                 "of incoming requests to a JVM application server"),
+        elements = [
+            Integer(
+                title = _("Warning low at"),
+                unit = _("requests"),
+                default_value = -1,
+            ),
+            Integer(
+                title = _("Critical low at"),
+                unit = _("requests"),
+                default_value = -1,
+            ),
+            Integer(
+                title = _("Warning high at"),
+                unit = _("requests"),
+                default_value = 800,
+            ),
+            Integer(
+                title = _("Critical high at"),
+                unit = _("requests"),
+                default_value = 1000,
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("Name of the virtual machine"),
+        help = _("The name of the application server"),
+        allow_empty = False,
+    ),
+    "first"
+)
+
+register_check_parameters(
+   subgroup_applications,
+    "jvm_queue",
+    _("JVM queue count"),
+    Tuple(
+        help = _("The BEA application servers have 'Execute Queues' "
+                 "in which requests are processed. This rule allow to set "
+                 "warn and crit levels for the number of requests that are "
+                 "being queued for processing."),
+        elements = [
+            Integer(
+                title = _("Queue warning at"),
+                default_value = 20,
+            ),
+            Integer(
+                title = _("Queue critical at"),
+                default_value = 50,
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("Name of the virtual machine"),
+        help = _("The name of the application server"),
+        allow_empty = False,
+    ),
+    "first"
+)
+
+
+register_check_parameters(
     subgroup_applications,
     "jvm_memory",
     _("JVM memory levels"),
     Dictionary(
+        help = _("This rule allows to set the warn and crit levels of the heap / "
+                 "non-heap and total memory area usage on web application servers."),
         elements = [
             ( "totalheap",
                Alternative(

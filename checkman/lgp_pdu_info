@@ -1,4 +1,4 @@
-title: Power Distribution information from Liebert MPH/MPX devices
+title: Liebert MPH/MPX devices: Power Distribution information
 agents: snmp
 catalog: hw/power
 author: Lars Michelsen <lm@mathias-kettner.de>

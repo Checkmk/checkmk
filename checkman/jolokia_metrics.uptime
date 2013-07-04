@@ -1,20 +1,23 @@
-title: Uptime of operating system
+title: Uptime of JVM
 agents: linux
-catalog: os/misc
+catalog: app/java
 author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
- This check outputs the uptime of the target systems
- (when the last boot was and how much time has elapsed since).
+ This check outputs the uptime of the java virtual machine.
  This check can go WARN or CRIT when the uptime is below or above certain
  configurable levels.
+ 
+ To use this plugin, Jolokia and the agent plugin need to be installed
+ on the monitored server.
 
 perfdata:
  The uptime in seconds.
 
 inventory:
- One check per system is created if the agent has a section {<<<uptime>>>}.
+ One check is created for each application running inside an Jolokia
+ instance sent by the agent.
 
 [parameters]
 parameters (dict): A dictionary with the following optional keys:

@@ -1,4 +1,4 @@
-title: Remaining filling level on printer supplys using PRINTER-MIB
+title: Generic Printer: Remaining filling level
 agents: snmp
 catalog: hw/printer
 author: Peter Lauk <lauk@stuttgart-airport.com>

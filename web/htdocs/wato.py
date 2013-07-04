@@ -2400,7 +2400,7 @@ def search_hosts_in_folder(folder, crit):
         render_folder_path(folder, True)
         found.sort()
 
-        table.begin("");
+        table.begin("search_hosts", "");
         for hostname, host, effective in found:
             host_url =  make_link_to([("mode", "edithost"), ("host", hostname)], folder)
             table.row()
@@ -5196,7 +5196,7 @@ def mode_snapshot(phase):
         snapshots.sort(reverse=True)
 
 
-        table.begin(_("Snapshots"), empty_text=_("There are no snapshots available."))
+        table.begin("snapshots", _("Snapshots"), empty_text=_("There are no snapshots available."))
         for name in snapshots:
             table.row()
             # Buttons
@@ -5794,7 +5794,7 @@ def mode_groups(phase, what):
             for cg in cgs:
                 members.setdefault(cg, []).append((userid, user.get('alias', userid)))
 
-    table.begin(what_name.title())
+    table.begin(what + "groups")
     for name, alias in sorted:
         table.row()
 
@@ -5993,7 +5993,7 @@ def mode_timeperiods(phase):
         return None
 
 
-    table.begin(_("Time Periods"), empty_text = _("There are no timeperiods defined yet."))
+    table.begin("timeperiods", empty_text = _("There are no timeperiods defined yet."))
     names = timeperiods.keys()
     names.sort()
     for name in names:
@@ -6492,7 +6492,7 @@ def mode_sites(phase):
         return
 
 
-    table.begin(_("Connections to local and remote sites"),
+    table.begin("sites", _("Connections to local and remote sites"),
                 empty_text = _("You have not configured any local or remotes sites. Multisite will "
                                "implicitely add the data of the local monitoring site. If you add remotes "
                                "sites, please do not forget to add your local monitoring site also, if "
@@ -7909,7 +7909,7 @@ def load_notification_table():
 
 def mode_users(phase):
     if phase == "title":
-        return _("Users & Contacts")
+        return _("Users")
 
     elif phase == "buttons":
         global_buttons()
@@ -7955,7 +7955,7 @@ def mode_users(phase):
     entries = users.items()
     entries.sort(cmp = lambda a, b: cmp(a[1].get("alias", a[0]).lower(), b[1].get("alias", b[0]).lower()))
 
-    table.begin(None, empty_text = _("There are not defined any users yet."))
+    table.begin("users", None, empty_text = _("There are not defined any users yet."))
     for id, user in entries:
         table.row()
 
@@ -8551,7 +8551,7 @@ def mode_roles(phase):
                 log_pending(False, None, "edit-roles", _("Created new role '%s'" % newid))
         return
 
-    table.begin(_("Roles"))
+    table.begin("roles")
 
     # Show table of builtin and user defined roles
     entries = roles.items()
@@ -8955,7 +8955,7 @@ def mode_hosttags(phase):
             ])
 
     else:
-        table.begin(_("Host tag groups"),
+        table.begin("hosttags", _("Host tag groups"),
                     help = (_("Host tags are the basis of Check_MK's rule based configuration. "
                              "If the first step you define arbitrary tag groups. A host "
                              "has assigned exactly one tag out of each group. These tags can "
@@ -8997,7 +8997,7 @@ def mode_hosttags(phase):
                 html.end_form()
         table.end()
 
-        table.begin(_("Auxiliary tags"),
+        table.begin("auxtags", _("Auxiliary tags"),
                     help = _("Auxiliary tags can be attached to other tags. That way "
                              "you can for example have all hosts with the tag <tt>cmk-agent</tt> "
                              "get also the tag <tt>tcp</tt>. This makes the configuration of "
@@ -9812,7 +9812,7 @@ def mode_ineffective_rules(phase):
             rulegroup, test = g_rulegroups.get(groupname, (groupname, ""))
             html.write("<div>")
             ruleset_url = make_link([("mode", "edit_ruleset"), ("varname", varname)])
-            table.begin(title = _("<a href='%s'>%s</a> (%s)") % (ruleset_url, rulespec["title"], titlename), css="ruleset")
+            table.begin("ineffective_rules", title = _("<a href='%s'>%s</a> (%s)") % (ruleset_url, rulespec["title"], titlename), css="ruleset")
             for rel_rulenr, (f, rule) in ineffective_rules:
                 value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
                 table.row()
@@ -10213,7 +10213,8 @@ def mode_edit_ruleset(phase):
                     table.end()
                 first_in_group = True
                 alias_path = get_folder_aliaspath(folder, show_main = False)
-                table.begin(title = "%s %s" % (_("Rules in folder"), alias_path), css="ruleset")
+                table.begin("rules", title = "%s %s" % (_("Rules in folder"), alias_path),
+                    css="ruleset", searchable = False)
                 rel_rulenr = 0
                 last_folder = folder
             else:
@@ -12013,7 +12014,7 @@ def mode_bi_rules(phase):
         return
 
 
-    table.begin(_("Aggregations"), searchable = False)
+    table.begin("bi_aggr", _("Aggregations"))
     for nr, aggregation in enumerate(aggregations):
         table.row()
         table.cell(_("Actions"), css="buttons")
@@ -12041,7 +12042,7 @@ def mode_bi_rules(phase):
                    for (ruleid, rule) in rules ]
     rules_refs.sort(cmp = lambda a,b: cmp(a[2][2], b[2][2]) or cmp(a[1]["title"], b[1]["title"]))
 
-    table.begin(_("Rules"), searchable = False)
+    table.begin("bi_rules", _("Rules"))
     for ruleid, rule, (aggr_refs, rule_refs, level) in rules_refs:
         table.row()
         table.cell(_("Actions"), css="buttons")
@@ -13571,7 +13572,7 @@ def load_plugins():
 
     config.declare_permission("wato.users",
          _("User management"),
-         _("This permission is needed for the modules <b>Users & Contacts</b>, <b>Roles</b> and <b>Contact Groups</b>"),
+         _("This permission is needed for the modules <b>Users</b>, <b>Roles</b> and <b>Contact Groups</b>"),
          [ "admin", ])
 
     config.declare_permission("wato.snapshots",

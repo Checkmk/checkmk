@@ -11733,6 +11733,10 @@ def create_sample_config():
 
     save_rulesets(g_root_folder, rulesets)
 
+    # Make sure the host tag attributes are immediately declared!
+    config.wato_host_tags = wato_host_tags
+    config.wato_aux_tags = wato_aux_tags
+
 #.
 #   .-Pattern Editor-------------------------------------------------------.
 #   |   ____       _   _                    _____    _ _ _                 |

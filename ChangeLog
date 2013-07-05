@@ -244,6 +244,7 @@
 
     WATO:
     * FIX: fix layout of Auxiliary tags table
+    * FIX: avoid exception when called first time and first page ist host tags
 
 
 1.2.2p2:

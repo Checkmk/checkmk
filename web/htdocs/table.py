@@ -140,7 +140,7 @@ def end():
                 del table_opts['search'] # persist
 
         # Search is always lower case -> case insensitive
-        search_term = html.var('_%s_search' % table_id, table_opts.get('search')).lower()
+        search_term = html.var('_%s_search' % table_id, table_opts.get('search', '')).lower()
         if search_term:
             html.set_var('_%s_search' % table_id, search_term)
             table_opts['search'] = search_term # persist

@@ -349,8 +349,13 @@ def notify_keepalive():
     g_notify_readahead_buffer = ""
     config_timestamp = notify_config_timestamp()
 
+    # Send signal that we are ready to receive the next notification
+    sys.stdout.write("*")
+    sys.stdout.flush()
+
     while True:
         try:
+
             # If the configuration has changed, we do a restart. But we do
             # this check just before the next notification arrives. We must
             # *not* read data from stdin, just peek! On the other hand we
@@ -375,7 +380,15 @@ def notify_keepalive():
                 if g_notify_readahead_buffer.startswith('\n\n'):
                     sys.exit(0)
                 while '\n\n' in g_notify_readahead_buffer:
-                    notify_notify()
+                    try:
+                        notify_notify()
+                    except Exception, e:
+                        if opt_debug:
+                            raise
+                        notify_log("ERROR %s\n%s" % (e, format_exception()))
+                    sys.stdout.write("*")
+                    sys.stdout.flush()
+
         except Exception, e:
             if opt_debug:
                 raise

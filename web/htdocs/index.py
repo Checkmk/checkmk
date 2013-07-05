@@ -272,10 +272,10 @@ def handler(req, profiling = True):
                 # Redirect to the login-dialog with the current url as original target
                 # Never render the login form directly when accessing urls like "index.py"
                 # or "dashboard.py". This results in strange problems.
-                if req.myfile != 'login':
+                if html.myfile != 'login':
                     html.set_http_header('Location',
                         defaults.url_prefix + 'check_mk/login.py?_origtarget=%s' %
-                                                htmllib.urlencode(html.makeuri([])))
+                                                html.urlencode(html.makeuri([])))
                     raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
 
                 # Initialize the i18n for the login dialog. This might be overridden

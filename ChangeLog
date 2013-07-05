@@ -234,6 +234,9 @@
 
 
 1.2.2p3:
+    Core:
+    * FIX: get_average(): Gracefully handle time anomlies of target systems
+
     Checks & Agents:
     * FIX: winperf_processor: fix case where CPU percent is exactly 100%
     * FIX: blade_powerfan: fix mixup of default levels 50/40 -> 40/50

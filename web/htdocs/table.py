@@ -139,14 +139,15 @@ def end():
             if 'search' in table_opts:
                 del table_opts['search'] # persist
 
-        search_term = html.var('_%s_search' % table_id, table_opts.get('search'))
+        # Search is always lower case -> case insensitive
+        search_term = html.var('_%s_search' % table_id, table_opts.get('search')).lower()
         if search_term:
             html.set_var('_%s_search' % table_id, search_term)
             table_opts['search'] = search_term # persist
             filtered_rows = []
             for row, css in rows:
                 for cell_content, css_classes in row:
-                    if search_term in cell_content:
+                    if search_term in cell_content.lower():
                         filtered_rows.append((row, css))
                         break # skip other cells when matched
             rows = filtered_rows

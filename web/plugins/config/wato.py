@@ -36,3 +36,4 @@ wato_num_itemspecs     = 15
 wato_activation_method = 'restart'
 wato_write_nagvis_auth = False
 wato_hidden_users      = []
+wato_user_attrs        = []

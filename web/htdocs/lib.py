@@ -25,13 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import grp, pprint, os, errno, gettext, marshal, fcntl, __builtin__
-
-# In case we start standalone and outside an check_mk enviroment,
-# we have another path for the defaults
-try:
-    import defaults
-except:
-    import defaults_standalone as defaults
+import defaults
 
 
 nagios_state_names = { -1: "NODATA", 0: "OK", 1: "WARNING", 2: "CRITICAL", 3: "UNKNOWN", 4: "DEPENDENT" }

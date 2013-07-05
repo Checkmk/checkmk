@@ -416,7 +416,8 @@ def perfometer_check_mk_printer_supply(row, check_command, perf_data):
     fg_color = '#000000'
     if 'black' in s or s[-1] == 'k':
         colors   = [ '#000000', '#6E6F00', '#6F0000' ]
-        fg_color = '#ffffff'
+        if left >= 60:
+            fg_color = '#ffffff'
     elif 'magenta' in s or s[-1] == 'm':
         colors = [ '#fc00ff', '#FC7FFF', '#FEDFFF' ]
     elif 'yellow' in s or s[-1] == 'y':

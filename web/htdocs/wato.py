@@ -5852,7 +5852,7 @@ def mode_edit_group(phase, what):
                 raise MKUserError("alias", _("Please specify an alias name."))
             for key, value in groups.items():
                 if alias == value and name != key:
-                    raise MKUserError("alias", _("This alias is already used in the group %s ." % key))
+                    raise MKUserError("alias", _("This alias is already used in the group %s .") % key)
             if new:
                 name = html.var("name").strip()
                 if len(name) == 0:
@@ -5864,10 +5864,10 @@ def mode_edit_group(phase, what):
                 if name in groups:
                     raise MKUserError("name", _("Sorry, there is already a group with that name"))
                 groups[name] = alias
-                log_pending(SYNCRESTART, None, "edit-%sgroups" % what, _("Create new %s group %s" % (what, name)))
+                log_pending(SYNCRESTART, None, "edit-%sgroups" % what, _("Create new %s group %s") % (what, name))
             else:
                 groups[name] = alias
-                log_pending(SYNCRESTART, None, "edit-%sgroups" % what, _("Changed alias of %s group %s" % (what, name)))
+                log_pending(SYNCRESTART, None, "edit-%sgroups" % what, _("Changed alias of %s group %s") % (what, name))
             save_group_information(all_groups)
 
         return what + "_groups"
@@ -7914,6 +7914,7 @@ def mode_users(phase):
     elif phase == "buttons":
         global_buttons()
         html.context_button(_("New User"), make_link([("mode", "edit_user")]), "new")
+        html.context_button(_("Custom Attributes"), make_link([("mode", "user_attrs")]), "custom_attr")
         if 'wato_users' not in config.userdb_automatic_sync:
             html.context_button(_("Sync Users"), html.makeactionuri([("_sync", 1)]), "replicate")
         return
@@ -8052,6 +8053,8 @@ def mode_users(phase):
 
 
 def mode_edit_user(phase):
+    declare_custom_user_attrs()
+
     users = userdb.load_users()
     userid = html.var("edit") # missing -> new user
     cloneid = html.var("clone") # Only needed in 'new' mode
@@ -8218,7 +8221,7 @@ def mode_edit_user(phase):
         vs_notification_method.validate_value(value, "notification_method")
         new_user["notification_method"] = value
 
-        # Custom attributes
+        # Custom user attributes (the "old" wato plugin based mechanism)
         for name, attr in userdb.get_user_attributes():
             value = attr['valuespec'].from_html_vars('ua_' + name)
             attr['valuespec'].validate_value(value, "ua_" + name)
@@ -11517,6 +11520,8 @@ def page_user_profile():
     if not config.may('general.edit_profile') and not config.may('general.change_password'):
         raise MKAuthException(_("You are not allowed to edit your user profile."))
 
+    declare_custom_user_attrs()
+
     success = None
     if html.has_var('_save') and html.check_transaction():
         try:
@@ -12777,6 +12782,236 @@ def mode_bi_edit_rule(phase):
         html.set_focus("rule_p_title")
     html.end_form()
 
+#   .--Custom-Attrs.-------------------------------------------------------.
+#   |   ____          _                          _   _   _                 |
+#   |  / ___|   _ ___| |_ ___  _ __ ___         / \ | |_| |_ _ __ ___      |
+#   | | |  | | | / __| __/ _ \| '_ ` _ \ _____ / _ \| __| __| '__/ __|     |
+#   | | |__| |_| \__ \ || (_) | | | | | |_____/ ___ \ |_| |_| |  \__ \_    |
+#   |  \____\__,_|___/\__\___/|_| |_| |_|    /_/   \_\__|\__|_|  |___(_)   |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Mange custom attributes of users (in future hosts etc.)              |
+#   '----------------------------------------------------------------------'
+
+custom_attr_types = [
+    ('TextAscii', _('Simple Text')),
+]
+
+
+def load_custom_attrs():
+    try:
+        filename = multisite_dir + "custom_attrs.mk"
+        if not os.path.exists(filename):
+            return {}
+
+        vars = {
+            'wato_user_attrs': [],
+        }
+        execfile(filename, vars, vars)
+
+        attrs = {}
+        for what in [ "user" ]:
+            attrs[what] = vars.get("wato_%s_attrs" % what, [])
+        return attrs
+
+    except Exception, e:
+        if config.debug:
+            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
+                          (filename, e)))
+        else:
+            html.log('load_custom_attrs: Problem while loading custom attributes (%s - %s). '
+                     'Initializing structure...' % (filename, e))
+        return {}
+
+def save_custom_attrs(attrs):
+    make_nagios_directory(multisite_dir)
+    out = create_user_file(multisite_dir + "custom_attrs.mk", "w")
+    out.write("# Written by WATO\n# encoding: utf-8\n\n")
+    for what in [ "user" ]:
+        if what in attrs and len(attrs[what]) > 0:
+            out.write("if type(wato_%s_attrs) != list:\n    wato_%s_attrs = []\n" % (what, what))
+            out.write("wato_%s_attrs += %s\n\n" % (what, pprint.pformat(attrs[what])))
+
+def declare_custom_user_attrs():
+    all_attrs = load_custom_attrs()
+    attrs = all_attrs.setdefault('user', [])
+    for attr in attrs:
+        vs = globals()[attr['type']](title = attr['title'], help = attr['help'])
+        declare_user_attribute(attr['name'], vs, attr['user_editable'])
+
+def mode_edit_custom_attr(phase, what):
+    name = html.var("edit") # missing -> new group
+    new = name == None
+
+    if phase == "title":
+        if new:
+            if what == "user":
+                return _("Create User Attribute")
+        else:
+            if what == "user":
+                return _("Edit User Attribute")
+
+    elif phase == "buttons":
+        html.context_button(_("User Attributes"), make_link([("mode", "%s_attrs" % what)]), "back")
+        return
+
+    all_attrs = load_custom_attrs()
+    attrs = all_attrs.setdefault(what, [])
+
+    if not new:
+        attr = [ a for a in attrs if a['name'] == name ]
+        if not attr:
+            raise MKUserError(_('The attribute does not exist.'))
+        else:
+            attr = attr[0]
+    else:
+        attr = {}
+
+    if phase == "action":
+        if html.check_transaction():
+            title = html.var_utf8("title").strip()
+            if not title:
+                raise MKUserError("title", _("Please specify a title."))
+            for this_attr in attrs:
+                if title == this_attr['title'] and name != this_attr['name']:
+                    raise MKUserError("alias", _("This alias is already used by the attribute %s.") % this_attr['name'])
+
+            help = html.var_utf8('help').strip()
+            user_editable = html.get_checkbox('user_editable')
+
+            if new:
+                name = html.var("name", '').strip()
+                if not name:
+                    raise MKUserError("name", _("Please specify a name for the new attribute."))
+                if ' ' in name:
+                    raise MKUserError("name", _("Sorry, spaces are not allowed in attribute names."))
+                if not re.match("^[-a-z0-9A-Z_]*$", name):
+                    raise MKUserError("name", _("Invalid attribute name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
+                if [ a for a in attrs if a['name'] == name ]:
+                    raise MKUserError("name", _("Sorry, there is already an attribute with that name."))
+
+                ty = html.var('type', '').strip()
+                if ty not in [ t[0] for t in custom_attr_types ]:
+                    raise MKUserError('type', _('The choosen attribute type is invalid.'))
+
+                attrs.append({
+                    'name'          : name,
+                    'title'         : title,
+                    'type'          : ty,
+                    'help'          : help,
+                    'user_editable' : user_editable,
+                })
+                log_pending(SYNCRESTART, None, "edit-%sattr" % what, _("Create new %s attribute %s") % (what, name))
+            else:
+                attr['title']         = title
+                attr['help']          = help
+                attr['user_editable'] = user_editable,
+                log_pending(SYNCRESTART, None, "edit-%sattr" % what, _("Changed title of %s attribute %s") % (what, name))
+            save_custom_attrs(all_attrs)
+
+        return what + "_attrs"
+
+    html.begin_form("attr")
+    forms.header(_("Properties"))
+    forms.section(_("Name"), simple = not new)
+    html.help(_("The name of the attribute is used as an internal key. It cannot be "
+                 "changed later."))
+    if new:
+        html.text_input("name", attr.get('name'))
+        html.set_focus("name")
+    else:
+        html.write(name)
+        html.set_focus("title")
+
+    forms.section(_("Title"))
+    html.help(_("The title is used to label this attribute."))
+    html.text_input("title", attr.get('title'))
+
+    forms.section(_('Help Text'))
+    html.help(_('You might want to add some helpful description for the attribute.'))
+    html.text_area('help', attr.get('help', ''))
+
+    forms.section(_('Data type'))
+    html.help(_('The type of information to be stored in this attribute.'))
+    if new:
+        html.select('type', custom_attr_types, attr.get('type'))
+    else:
+        html.write(dict(custom_attr_types)[attr.get('type')])
+
+    forms.section(_('Editable by Users'))
+    html.help(_('It is possible to let users edit their custom attributes.'))
+    html.checkbox('user_editable', attr.get('user_editable', True))
+
+    forms.end()
+    html.button("save", _("Save"))
+    html.hidden_fields()
+    html.end_form()
+
+def mode_custom_attrs(phase, what):
+    if what == "user":
+        title = _("Custom User Attributes")
+
+    if phase == "title":
+        return title
+
+    elif phase == "buttons":
+        global_buttons()
+        html.context_button(_("Users"), make_link([("mode", "users")]), "back")
+        html.context_button(_("New Attribute"), make_link([("mode", "edit_%s_attr" % what)]), "new")
+        return
+
+    all_attrs = load_custom_attrs()
+    attrs = all_attrs.get(what, {})
+
+    if phase == "action":
+        if html.var('_delete'):
+            delname = html.var("_delete")
+
+            # FIXME: Find usages and warn
+            #if usages:
+            #    message = "<b>%s</b><br>%s:<ul>" % \
+            #                (_("You cannot delete this %s attribute.") % what,
+            #                 _("It is still in use by"))
+            #    for title, link in usages:
+            #        message += '<li><a href="%s">%s</a></li>\n' % (link, title)
+            #    message += "</ul>"
+            #    raise MKUserError(None, message)
+
+            confirm_txt = _('Do you really want to delete the custom attribute "%s"?') % (delname)
+
+            c = wato_confirm(_("Confirm deletion of attribute \"%s\"" % delname), confirm_txt)
+            if c:
+                for index, attr in enumerate(attrs):
+                    if attr['name'] == delname:
+                        attrs.pop(index)
+                save_custom_attrs(all_attrs)
+                log_pending(SYNCRESTART, None, "edit-%sattrs" % what, _("Deleted attribute %s" % (delname)))
+            elif c == False:
+                return ""
+
+        return None
+
+    if not attrs:
+        html.write("<div class=info>" + _("There are not defined any custom attributes yet.") + "</div>")
+        return
+
+    table.begin(what + "attrs")
+    for attr in sorted(attrs, key = lambda x: x['title']):
+        table.row()
+
+        table.cell(_("Actions"), css="buttons")
+        edit_url = make_link([("mode", "edit_%s_attr" % what), ("edit", attr['name'])])
+        delete_url = html.makeactionuri([("_delete", attr['name'])])
+        html.icon_button(edit_url, _("Properties"), "edit")
+        html.icon_button(delete_url, _("Delete"), "delete")
+
+        table.cell(_("Name"),  attr['name'])
+        table.cell(_("Title"), attr['title'])
+        table.cell(_("Type"),  attr['type'])
+
+    table.end()
+
+
 #.
 #   .-Hooks-&-API----------------------------------------------------------.
 #   |       _   _             _           ___        _    ____ ___         |
@@ -13347,6 +13582,8 @@ modes = {
    "edit_site"          : (["sites"], mode_edit_site),
    "users"              : (["users"], mode_users),
    "edit_user"          : (["users"], mode_edit_user),
+   "user_attrs"         : (["users"], lambda phase: mode_custom_attrs(phase, "user")),
+   "edit_user_attr"     : (["users"], lambda phase: mode_edit_custom_attr(phase, "user")),
    "roles"              : (["users"], mode_roles),
    "role_matrix"        : (["users"], mode_role_matrix),
    "edit_role"          : (["users"], mode_edit_role),

@@ -50,7 +50,7 @@ def check_brocade_power(item, _no_params, info):
 
     return 3, "Supply not found"
 
-check_info["brocade_power"] = {
+check_info["brocade.power"] = {
     "check_function"        : check_brocade_power,
     "inventory_function"    : inventory_brocade_power,
     "service_description"   : "Power supply %s",

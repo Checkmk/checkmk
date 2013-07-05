@@ -59,7 +59,7 @@ def check_brocade_fan(item, params, info):
             return state, "Fans at %drpm %s " % (value, label), perf
     return 3, "FAN not found"
 
-check_info["brocade_fan"] = {
+check_info["brocade.fan"] = {
     "check_function"        : check_brocade_fan,
     "inventory_function"    : inventory_brocade_fan,
     "service_description"   : "FAN %s",

@@ -1,0 +1,57 @@
+title: Established TCP Connections or TCP/UDP Listeners
+agents: windows
+catalog: os/network
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+  This check evaluates output of {netstat -an} command on windows
+  and checks if there are established connections or listeners
+  matching the given criteria.
+
+  Returns {OK} state if there are some and {CRITICAL} if not
+
+item:
+  Give the parameters to match against connection or listeners.
+  See {Examples} and {Parameters} for details.
+
+examples:
+  If you want to make sure some machine on 192.168.0.1 has an established
+  TCP connection to the monitored machine (192.168.0.2) on port 445 you
+  would define:
+
+  static_checks['tcp_connections'] = [
+    ( ('win_netstat', 'My Test Connection', 
+         {
+          'local_ip'  : '192.168.0.2', 
+          'local_port': 445, 
+          'remote_ip' : '192.168.0.1', 
+          'state'     : 'ESTABLISHED', 
+          'proto'     : 'TCP'
+         }),
+       [], ['winsrv1'] ),
+  ]
+
+  Or if you want to check if there is an HTTP listener available
+
+  static_checks['tcp_connections'] = [
+    ( ('win_netstat', 'HTTP Listener', 
+         {
+          'local_ip'  : '192.168.0.2', 
+          'local_port': 80, 
+          'state'     : 'LISTEN', 
+          'proto'     : 'TCP'
+         }),
+       [], ['websrv1'] ),
+  ]
+
+[parameters]
+local_ip(string):  the local IP address
+local_port(int):   the local Port
+remote_ip(string): the remote IP address
+remote_port(int):  the remote Port
+proto(string):     TCP or UDP are possible values: 
+  The protocol used for the connection or the listener
+state(string):     ESTABLISHED, LISTEN, TIME_WAIT, SYN_SENT, SYN_RECV,
+  LAST_ACK, CLOSE_WAIT, TIME_WAIT, CLOSED, CLOSING, FIN_WAIT1, FIN_WAIT2,
+  BOUND: The state of the connection or listener

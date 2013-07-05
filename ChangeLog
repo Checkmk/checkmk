@@ -237,6 +237,7 @@
     Checks & Agents:
     * FIX: winperf_processor: fix case where CPU percent is exactly 100%
     * FIX: blade_powerfan: fix mixup of default levels 50/40 -> 40/50
+    * FIX: Cleaned up graph rendering of Check_MK services 
 
     Multisite:
     * FIX: LDAP: Disabling use of referrals in active directory configuration

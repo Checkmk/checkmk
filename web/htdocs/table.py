@@ -199,7 +199,7 @@ def end():
             html.text_input("_%s_search" % table_id)
             html.button("_%s_submit" % table_id, _("Search"))
             html.button("_%s_reset" % table_id, _("Reset"))
-            html.set_focus("search")
+            html.set_focus("_%s_search" % table_id)
             html.write("</div>\n")
 
         html.hidden_fields()

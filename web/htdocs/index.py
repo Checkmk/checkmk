@@ -185,7 +185,7 @@ def handler(req, profiling = True):
     # store results in the request object for later usage.
     html = html_mod_python(req)
 
-    html.debug = config.debug
+    html.enable_debug = config.debug
     html.id = {} # create unique ID for this request
     __builtin__.html = html
 

@@ -59,7 +59,7 @@ def check_brocade_temp(item, params, info):
             return state, "Temperature at %d°C%s " % (value, label), perf
     return 3, "Temperature sensor not found"
 
-check_info["brocade_temp"] = {
+check_info["brocade.temp"] = {
     "check_function"        : check_brocade_temp,
     "inventory_function"    : inventory_brocade_temp,
     "service_description"   : "Temperature %s",

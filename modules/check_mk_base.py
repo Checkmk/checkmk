@@ -653,6 +653,11 @@ def get_average(itemname, this_time, this_val, backlog, initialize_zero = True):
     last_time, last_val = g_counters.get(itemname)
     timedif = this_time - last_time
 
+    # Gracefully handle time-anomaly of target systems. We loose
+    # one value, but what then heck..
+    if timedif < 0:
+        timedif = 0
+
     # Compute the weight: We do it like this: First we assume that
     # we get one sample per minute. And that backlog is the number
     # of minutes we should average over. Then we want that the weight

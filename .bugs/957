@@ -1,0 +1,12 @@
+Title: field author in check manpages is mandatory
+Component: checks
+State: open
+Date: 2013-07-05 12:33:13
+Targetversion: 1.2.3
+Class: cleanup
+
+author field should no longer be used
+but cmk -M declares it as mandatory
+
+cmk -M mysql.connections
+Invalid check manpage /omd/sites/bs1st/share/check_mk/checkman/mysql.connections: missing 'author'

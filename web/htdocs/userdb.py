@@ -107,7 +107,7 @@ def new_user_template(connector_id):
     return new_user
 
 def create_non_existing_user(connector_id, username):
-    users = load_users()
+    users = load_users(lock = True)
     if username in users:
         return # User exists. Nothing to do...
 
@@ -122,13 +122,13 @@ def user_locked(username):
     return users[username].get('locked', False)
 
 def on_succeeded_login(username):
-    users = load_users()
+    users = load_users(lock = True)
     if "num_failed" in users[username]:
         users[username]["num_failed"] = 0
         save_users(users)
 
 def on_failed_login(username):
-    users = load_users()
+    users = load_users(lock = True)
     if username in users:
         if "num_failed" in users[username]:
             users[username]["num_failed"] += 1
@@ -165,13 +165,14 @@ def declare_user_attribute(name, vs, user_editable = True, permission = None):
 def get_user_attributes():
     return user_attributes.items()
 
-def load_users():
+def load_users(lock = False):
     filename = root_dir + "contacts.mk"
 
     # Make sure that the file exists without modifying it, *if* it exists.
-    # Note the lock will be released at end of page request automatically.
+    # Note: the lock will be released at end of page request automatically.
     file(filename, "a")
-    aquire_lock(filename)
+    if lock:
+        aquire_lock(filename)
 
     # First load monitoring contacts from Check_MK's world. If this is
     # the first time, then the file will be empty, which is no problem.
@@ -393,6 +394,11 @@ def save_users(profiles):
     #         entry = dir + "/" + e
     #         if os.path.isdir(entry):
     #             shutil.rmtree(entry)
+
+    # Release the lock to make other threads access possible again asap
+    # This lock is set by load_users() only in the case something is expected
+    # to be written (like during user syncs, wato, ...)
+    release_lock(root_dir + "contacts.mk")
 
     # Call the users_saved hook
     hooks.call("users-saved", users)
@@ -647,7 +653,7 @@ def general_page_hook():
     # Create initial auth.serials file, same issue as auth.php above
     serials_file = '%s/auth.serials' % os.path.dirname(defaults.htpasswd_file)
     if not os.path.exists(serials_file) or os.path.getsize(serials_file) == 0:
-        save_users(load_users())
+        save_users(load_users(lock = True))
 
 # Hook function can be registered here to execute actions on a "regular" base without
 # user triggered action. This hook is called on each page load.

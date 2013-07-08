@@ -56,13 +56,11 @@
     Multisite:
     * User accounts can now be locked after a specified amount of auth
       failures (lock_on_logon_failures can be set to a number of tries)
-    * FIX: better error message in case of exception in SNMP handling
     * Column Perf-O-Meter is now sortable: it sorts after the *first*
       performance value. This might not always be the one you like, but
       its far better than nothing.
     * logwatch: Logwatch icon no longer uses notes_url
     * check_mk-if.pnp: fixed bug with pnp template on esx hosts without perfdata
-    * Fix: Inventory screen: Now shows custom checks
     * Inventory screen: Host inventory also displays its clustered services
     * Rules: Renamed "Ignored services" to "Disabled services"
              Renamed "Ignored checks" to "Disabled checks"
@@ -78,6 +76,9 @@
     * Added option to disable automatic userdb synchronizations in multisite
     * Implemented search forms for most data tables
     * New icons in view footers: export as CSV, export as JSON
+    * FIX: better error message in case of exception in SNMP handling
+    * FIX: Inventory screen: Now shows custom checks
+    * FIX: Fixed locking problem of multisite pages related to user loading/saving
 
     WATO:
     * Allow to configure check-/retry_interval in second precision

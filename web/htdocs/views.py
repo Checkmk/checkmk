@@ -340,11 +340,13 @@ def page_edit_views(msg=None):
     load_views()
 
     # Deletion of views
-    delname = html.var("_delete")
-    if delname and html.confirm(_("Please confirm the deletion of the view <tt>%s</tt>.") % delname):
-        del html.multisite_views[(config.user_id, delname)]
-        save_views(config.user_id)
-        html.reload_sidebar();
+    delname  = html.var("_delete")
+    if delname:
+        deltitle = html.multisite_views[(config.user_id, delname)]['title']
+        if html.confirm(_("Please confirm the deletion of the view \"%s\".") % deltitle):
+            del html.multisite_views[(config.user_id, delname)]
+            save_views(config.user_id)
+            html.reload_sidebar()
 
     html.begin_form("create_view", "edit_view.py")
 

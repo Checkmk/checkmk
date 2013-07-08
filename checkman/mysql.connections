@@ -11,7 +11,7 @@ description:
   the maximum number of possible parallel connections. 
   From these both it calculates the 
   maximum usage level of these connections in percent
-  and matches the given warning and critical thresholds against it.
+  and matches the given {WARN} and {CRIT} thresholds against it.
 
   This check needs the agent plugin {mk_mysql} to be installed.
   Further details about this plugin and monitoring of MySQL can be
@@ -23,9 +23,12 @@ inventory:
   and the MySQL daemon is running one service is being generated.
 
 [parameters]
-dictionary..., wenn perc_used nicht enthalten, ist der Chec immer OK.
-warning (float): The maximum connection usage (in percent) that triggers 
-  a warning state.
-critical (float): The maximum connection usage (in percent) that triggers 
-  a critical state.
+perc_used: (warn, crit)
 
+  {warn} (float): The maximum connection usage (in percent) that triggers 
+    a {WARN} state.
+
+  {crit} (float): The maximum connection usage (in percent) that triggers 
+    a {CRIT} state.
+
+  If perc_used is not set, the check always returns {OK} state.

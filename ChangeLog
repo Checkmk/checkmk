@@ -47,6 +47,7 @@
     * win_netstat: New check for Windows for checking the existance of a UDP/TCP
         connection or listener
     * ps/ps.perf: allow to set levels on CPU util, optional averaging of CPU
+    * diskstat: Agent is now also processing data of mmcblk devices
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a
@@ -240,11 +241,13 @@
     Checks & Agents:
     * FIX: winperf_processor: fix case where CPU percent is exactly 100%
     * FIX: blade_powerfan: fix mixup of default levels 50/40 -> 40/50
+    * FIX: Cleaned up graph rendering of Check_MK services 
 
     Multisite:
     * FIX: LDAP: Disabling use of referrals in active directory configuration
     * FIX: Fixed missing roles in auth.php (in some cases) which resulted in
            non visible pnp graphs and missing nagvis permissions
+    * FIX: Fixed label color of black toner perfometers when fuel is low
 
     WATO:
     * FIX: fix layout of Auxiliary tags table

@@ -30,36 +30,36 @@ $opt[1] = "--vertical-label 'time (s)' -l 0  --title '$hostname: Check_MK check 
 $def[1] = "DEF:extime=$RRDFILE[1]:$DS[1]:MAX "; 
 $def[1] .= "AREA:extime#d080af:\"execution time \" "; 
 $def[1] .= "LINE1:extime#d020a0: "; 
-$def[1] .= "GPRINT:extime:LAST:\"current\: %.2lf s\" ";
-$def[1] .= "GPRINT:extime:MAX:\"max(+/-)\: %.2lf s \" ";
-$def[1] .= "GPRINT:extime:AVERAGE:\"avg(+/-)\: %.2lf s\" ";
+$def[1] .= "GPRINT:extime:LAST:\"last\: %8.2lf s\" ";
+$def[1] .= "GPRINT:extime:MAX:\"max\: %8.2lf s \" ";
+$def[1] .= "GPRINT:extime:AVERAGE:\"avg\: %8.2lf s\\n\" ";
 
 if (isset($RRDFILE[2])) {
 
 $opt[2] = "--vertical-label 'time (s)' -l 0  --title '$hostname: Check_MK process times' ";
 $def[2] = "DEF:user_time=$RRDFILE[2]:$DS[1]:MAX "; 
 $def[2] .= "LINE1:user_time#d020a0:\"user time\" "; 
-$def[2] .= "GPRINT:user_time:LAST:\"          current\: %.2lf s\" "; 
-$def[2] .= "GPRINT:user_time:MAX:\"max(+/-)\: %.2lf s \" ";
-$def[2] .= "GPRINT:user_time:AVERAGE:\"avg(+/-)\: %.2lf s\" ";
+$def[2] .= "GPRINT:user_time:LAST:\"          last\: %8.2lf s\" "; 
+$def[2] .= "GPRINT:user_time:MAX:\"max\: %8.2lf s \" ";
+$def[2] .= "GPRINT:user_time:AVERAGE:\"avg\: %8.2lf s\\n\" ";
 
 $def[2] .= "DEF:system_time=$RRDFILE[3]:$DS[1]:MAX "; 
 $def[2] .= "LINE1:system_time#d08400:\"system time\" "; 
-$def[2] .= "GPRINT:system_time:LAST:\"        current\: %.2lf s\" ";
-$def[2] .= "GPRINT:system_time:MAX:\"max(+/-)\: %.2lf s \" ";
-$def[2] .= "GPRINT:system_time:AVERAGE:\"avg(+/-)\: %.2lf s\" ";
+$def[2] .= "GPRINT:system_time:LAST:\"        last\: %8.2lf s\" ";
+$def[2] .= "GPRINT:system_time:MAX:\"max\: %8.2lf s \" ";
+$def[2] .= "GPRINT:system_time:AVERAGE:\"avg\: %8.2lf s\\n\" ";
 
 $def[2] .= "DEF:children_user_time=$RRDFILE[4]:$DS[1]:MAX "; 
 $def[2] .= "LINE1:children_user_time#308400:\"childr. user time \" "; 
-$def[2] .= "GPRINT:children_user_time:LAST:\" current\: %.2lf s\" ";
-$def[2] .= "GPRINT:children_user_time:MAX:\"max(+/-)\: %.2lf s \" ";
-$def[2] .= "GPRINT:children_user_time:AVERAGE:\"avg(+/-)\: %.2lf s\" ";
+$def[2] .= "GPRINT:children_user_time:LAST:\" last\: %8.2lf s\" ";
+$def[2] .= "GPRINT:children_user_time:MAX:\"max\: %8.2lf s \" ";
+$def[2] .= "GPRINT:children_user_time:AVERAGE:\"avg\: %8.2lf s\\n\" ";
 
 $def[2] .= "DEF:children_system_time=$RRDFILE[5]:$DS[1]:MAX "; 
 $def[2] .= "LINE1:children_system_time#303400:\"childr. system time\" "; 
-$def[2] .= "GPRINT:children_system_time:LAST:\"current\: %.2lf s\" ";
-$def[2] .= "GPRINT:children_system_time:MAX:\"max(+/-)\: %.2lf s \" ";
-$def[2] .= "GPRINT:children_system_time:AVERAGE:\"avg(+/-)\: %.2lf s\" ";
+$def[2] .= "GPRINT:children_system_time:LAST:\"last\: %8.2lf s\" ";
+$def[2] .= "GPRINT:children_system_time:MAX:\"max\: %8.2lf s \" ";
+$def[2] .= "GPRINT:children_system_time:AVERAGE:\"avg\: %8.2lf s\\n\" ";
 }
 
 ?>

@@ -1,0 +1,28 @@
+title: MySQL Database: Maximum connection usage since startup
+agents: linux
+catalog: app/mysql
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+  This check allows tracking of connection usage for a MySQL database.
+  Therefor it queries 
+  the maximum number of connections that have been in use simultaneously since the server started
+  and 
+  the maximum number of possible parallel connections. 
+  From these both it calculates the 
+  maximum usage level of these connections in percent
+  and matches the given warning and critical thresholds against it.
+
+inventory:
+  The check generates one item for the connection usage.
+
+[parameters]
+warning (float): The maximum connection usage (in percent) that triggers 
+  a warning state.
+critical (float): The maximum connection usage (in percent) that triggers 
+  a critical state.
+
+[configuration]
+perc_used (float, float): The default levels for {warning} and {critical}
+  preset to {(None, None)}

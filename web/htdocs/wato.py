@@ -5246,7 +5246,7 @@ def create_snapshot():
 def factory_reset():
     # Darn. What makes things complicated here is that we need to conserve htpasswd,
     # at least the account of the currently logged in user.
-    users = userdb.load_users()
+    users = userdb.load_users(lock = True)
     for id in users.keys():
         if id != config.user_id:
             del users[id]
@@ -7917,7 +7917,7 @@ def mode_users(phase):
         userdb.hook_sync(add_to_changelog = True)
 
     roles = userdb.load_roles()
-    users = filter_hidden_users(userdb.load_users())
+    users = filter_hidden_users(userdb.load_users(lock = phase == 'action' and html.var('_delete')))
     timeperiods = load_timeperiods()
     contact_groups = userdb.load_group_information().get("contact", {})
 
@@ -8044,7 +8044,7 @@ def mode_users(phase):
 
 
 def mode_edit_user(phase):
-    users = userdb.load_users()
+    users = userdb.load_users(lock = phase == 'action')
     userid = html.var("edit") # missing -> new user
     cloneid = html.var("clone") # Only needed in 'new' mode
     new = userid == None
@@ -8744,7 +8744,7 @@ def save_roles(roles):
 # be renamed and are not handled here. If new_id is None,
 # the role is being deleted
 def rename_user_role(id, new_id):
-    users = userdb.load_users()
+    users = userdb.load_users(lock = True)
     for user in users.values():
         if id in user["roles"]:
             user["roles"].remove(id)
@@ -11518,7 +11518,7 @@ def page_user_profile():
     success = None
     if html.has_var('_save') and html.check_transaction():
         try:
-            users = userdb.load_users()
+            users = userdb.load_users(lock = True)
 
             # Profile edit (user options like language etc.)
             if config.may('general.edit_profile'):

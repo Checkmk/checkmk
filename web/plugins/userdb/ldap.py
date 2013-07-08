@@ -716,7 +716,7 @@ def ldap_sync(add_to_changelog, only_username):
     #    filt = '(%s=%s)' % (ldap_user_id_attr(), only_username)
 
     import wato
-    users      = load_users()
+    users      = load_users(lock = True)
     ldap_users = ldap_get_users()
 
     # Remove users which are controlled by this connector but can not be found in

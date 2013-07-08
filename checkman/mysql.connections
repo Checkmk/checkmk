@@ -5,25 +5,26 @@ author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
-  This check allows tracking of connection usage for a MySQL database.
+  This check allows the tracking of connection usage for a MySQL database.
   Therefore it queries the maximum number of connections that have been 
   in use simultaneously since the server started and 
   the maximum number of possible parallel connections. 
   From these both it calculates the 
   maximum usage level of these connections in percent
-  and matches the given {WARN} and {CRIT} thresholds against it.
+  and matches the specified {WARN} and {CRIT} thresholds against it.
 
   This check needs the agent plugin {mk_mysql} to be installed.
   Further details about this plugin and monitoring of MySQL can be
   found in the Check_MK online documentation in the article
   "Monitoring MySQL with Check_MK".
 
-inventory: 
+inventory:
   On each host where the agent plugin {mk_mysql} is being installed
   and the MySQL daemon is running one service is being generated.
 
 [parameters]
-perc_used: (warn, crit)
+parameters (dict): A dictionary with currentl just one possible key: {"perc_used"}. This
+  is a pair if two floating point numbers:
 
   {warn} (float): The maximum connection usage (in percent) that triggers 
     a {WARN} state.
@@ -31,4 +32,4 @@ perc_used: (warn, crit)
   {crit} (float): The maximum connection usage (in percent) that triggers 
     a {CRIT} state.
 
-  If perc_used is not set, the check always returns {OK} state.
+  If {perc_used} is not set, the check always returns {OK} state.

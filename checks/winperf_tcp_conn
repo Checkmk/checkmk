@@ -58,7 +58,7 @@ def check_winperf_tcp_conn(item, params, info):
             elif value >= warn:
                 worst_state = max(1, worst_state)
                 infotext += "(!) (warning at %d)" % warn
-            infotext += ", "
+        infotext += ", "
         perfdata.append( (name, value, warn, crit) )
 
     infotext = infotext[:-2]

@@ -1,0 +1,10 @@
+Title: Wato / Monitor specific TCP/UDP connections and listeners....................................................................................................
+Component: wato
+State: open
+Date: 2013-07-05 14:20:29
+Targetversion: 1.2.3
+Class: bug
+
+in Wato under Monitor specific TCP/UDP connections and listeners 
+at parameter state in the dropdown menu the state LISTEN is missing 
+and therefor cannot be selected

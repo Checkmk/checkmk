@@ -1196,7 +1196,7 @@ register_check_parameters(
             ( "local_ip", IPv4Address(title = _("Local IP address"))),
             ( "local_port", Integer(title = _("Local port number"), minvalue = 1, maxvalue = 65535, )),
             ( "remote_ip", IPv4Address(title = _("Remote IP address"))),
-            ( "remote_port", Integer(title = _("Local port number"), minvalue = 1, maxvalue = 65535, )),
+            ( "remote_port", Integer(title = _("Remote port number"), minvalue = 1, maxvalue = 65535, )),
         ]
     ),
     TextAscii(title = _("Connection name"), help = _("Specify an arbitrary name of this connection here"), allow_empty = False),

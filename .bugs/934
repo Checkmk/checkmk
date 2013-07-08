@@ -1,0 +1,19 @@
+Title: fileinfo.groups and "patterns" check_parameter
+Component: wato
+State: open
+Date: 2013-07-08 09:56:03
+Targetversion: future
+Class: bug
+
+The fileinfo.groups checks evaluates the parameter fileinfo_groups upon inventory
+and create an autocheck file with a pattern key.
+
+In the WATO inventory screen the valuespec for the fileinfo.groups parameters is
+displayed ( which does NOT contain a pattern key, just age/count/etc. )
+This raises in error when multisite debug is used ( valuespec validation fails )
+
+Additionally the static checks for fileinfo.groups is not working because
+it is not possible to define patterns in the fileinfo_groups valuespec
+
+Solution:
+Add patterns to fileinfo_groups valuespec

@@ -42,7 +42,10 @@ def load_plugins():
         return
 
     # declare & initialize global vars
+    global user_attributes ; user_attributes = {}
     global multisite_user_connectors ; multisite_user_connectors = []
+
+    declare_custom_user_attrs()
 
     load_web_plugins("userdb", globals())
 
@@ -150,12 +153,17 @@ multisite_dir = defaults.default_config_dir + "/multisite.d/wato/"
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
+def declare_user_attribute(name, vs, user_editable = True, permission = None):
+    user_attributes[name] = {
+        'valuespec':     vs,
+        'user_editable': user_editable,
+    }
+    # Permission needed for editing this attribute
+    if permission:
+        user_attributes[name]["permission"] = permission
+
 def get_user_attributes():
     return user_attributes.items()
-
-def reset_user_attributes():
-    global user_attributes
-    user_attributes = {}
 
 def load_users():
     filename = root_dir + "contacts.mk"
@@ -476,6 +484,49 @@ def load_group_information():
             html.log('load_group_information: Problem while loading groups (%s - %s). '
                      'Initializing structure...' % (filename, e))
         return {}
+
+#   .--Custom-Attrs.-------------------------------------------------------.
+#   |   ____          _                          _   _   _                 |
+#   |  / ___|   _ ___| |_ ___  _ __ ___         / \ | |_| |_ _ __ ___      |
+#   | | |  | | | / __| __/ _ \| '_ ` _ \ _____ / _ \| __| __| '__/ __|     |
+#   | | |__| |_| \__ \ || (_) | | | | | |_____/ ___ \ |_| |_| |  \__ \_    |
+#   |  \____\__,_|___/\__\___/|_| |_| |_|    /_/   \_\__|\__|_|  |___(_)   |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Mange custom attributes of users (in future hosts etc.)              |
+#   '----------------------------------------------------------------------'
+
+def load_custom_attrs():
+    try:
+        filename = multisite_dir + "custom_attrs.mk"
+        if not os.path.exists(filename):
+            return {}
+
+        vars = {
+            'wato_user_attrs': [],
+        }
+        execfile(filename, vars, vars)
+
+        attrs = {}
+        for what in [ "user" ]:
+            attrs[what] = vars.get("wato_%s_attrs" % what, [])
+        return attrs
+
+    except Exception, e:
+        if config.debug:
+            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
+                          (filename, e)))
+        else:
+            html.log('load_custom_attrs: Problem while loading custom attributes (%s - %s). '
+                     'Initializing structure...' % (filename, e))
+        return {}
+
+def declare_custom_user_attrs():
+    all_attrs = load_custom_attrs()
+    attrs = all_attrs.setdefault('user', [])
+    for attr in attrs:
+        vs = globals()[attr['type']](title = attr['title'], help = attr['help'])
+        declare_user_attribute(attr['name'], vs, attr['user_editable'])
 
 #   .----------------------------------------------------------------------.
 #   |                     _   _             _                              |

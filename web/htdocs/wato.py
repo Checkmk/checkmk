@@ -7712,15 +7712,6 @@ def service_levels():
     except:
         return [(0, "(no service level)")]
 
-def declare_user_attribute(name, vs, user_editable = True, permission = None):
-    userdb.user_attributes[name] = {
-        'valuespec':     vs,
-        'user_editable': user_editable,
-    }
-    # Permission needed for editing this attribute
-    if permission:
-        userdb.user_attributes[name]["permission"] = permission
-
 def load_notification_scripts_from(adir):
     scripts = {}
     if os.path.exists(adir):
@@ -8053,8 +8044,6 @@ def mode_users(phase):
 
 
 def mode_edit_user(phase):
-    declare_custom_user_attrs()
-
     users = userdb.load_users()
     userid = html.var("edit") # missing -> new user
     cloneid = html.var("clone") # Only needed in 'new' mode
@@ -8221,7 +8210,7 @@ def mode_edit_user(phase):
         vs_notification_method.validate_value(value, "notification_method")
         new_user["notification_method"] = value
 
-        # Custom user attributes (the "old" wato plugin based mechanism)
+        # Custom user attributes
         for name, attr in userdb.get_user_attributes():
             value = attr['valuespec'].from_html_vars('ua_' + name)
             attr['valuespec'].validate_value(value, "ua_" + name)
@@ -8439,12 +8428,18 @@ def mode_edit_user(phase):
     forms.header(_("Personal Settings"), isopen = False)
     select_language(user.get('language', ''))
     for name, attr in userdb.get_user_attributes():
-        if attr['user_editable']:
-            if not attr.get("permission") or config.may(attr["permission"]):
-                vs = attr['valuespec']
-                forms.section(vs.title())
+        if not attr.get("permission") or config.may(attr["permission"]):
+            vs = attr['valuespec']
+            forms.section(vs.title())
+            if attr['user_editable'] and not is_locked(name):
                 vs.render_input("ua_" + name, user.get(name, vs.default_value()))
-                html.help(vs.help())
+            else:
+                html.write(vs.value_to_text(user.get(name, vs.default_value())))
+                # Render hidden to have the values kept after saving
+                html.write('<div style="display:none">')
+                vs.render_input("ua_" + name, user.get(name, vs.default_value()))
+                html.write('</div>')
+            html.help(vs.help())
 
     # TODO: Later we could add custom macros here, which
     # then could be used for notifications. On the other hand,
@@ -11520,8 +11515,6 @@ def page_user_profile():
     if not config.may('general.edit_profile') and not config.may('general.change_password'):
         raise MKAuthException(_("You are not allowed to edit your user profile."))
 
-    declare_custom_user_attrs()
-
     success = None
     if html.has_var('_save') and html.check_transaction():
         try:
@@ -12797,32 +12790,6 @@ custom_attr_types = [
     ('TextAscii', _('Simple Text')),
 ]
 
-
-def load_custom_attrs():
-    try:
-        filename = multisite_dir + "custom_attrs.mk"
-        if not os.path.exists(filename):
-            return {}
-
-        vars = {
-            'wato_user_attrs': [],
-        }
-        execfile(filename, vars, vars)
-
-        attrs = {}
-        for what in [ "user" ]:
-            attrs[what] = vars.get("wato_%s_attrs" % what, [])
-        return attrs
-
-    except Exception, e:
-        if config.debug:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
-                          (filename, e)))
-        else:
-            html.log('load_custom_attrs: Problem while loading custom attributes (%s - %s). '
-                     'Initializing structure...' % (filename, e))
-        return {}
-
 def save_custom_attrs(attrs):
     make_nagios_directory(multisite_dir)
     out = create_user_file(multisite_dir + "custom_attrs.mk", "w")
@@ -12831,13 +12798,6 @@ def save_custom_attrs(attrs):
         if what in attrs and len(attrs[what]) > 0:
             out.write("if type(wato_%s_attrs) != list:\n    wato_%s_attrs = []\n" % (what, what))
             out.write("wato_%s_attrs += %s\n\n" % (what, pprint.pformat(attrs[what])))
-
-def declare_custom_user_attrs():
-    all_attrs = load_custom_attrs()
-    attrs = all_attrs.setdefault('user', [])
-    for attr in attrs:
-        vs = globals()[attr['type']](title = attr['title'], help = attr['help'])
-        declare_user_attribute(attr['name'], vs, attr['user_editable'])
 
 def mode_edit_custom_attr(phase, what):
     name = html.var("edit") # missing -> new group
@@ -12855,7 +12815,7 @@ def mode_edit_custom_attr(phase, what):
         html.context_button(_("User Attributes"), make_link([("mode", "%s_attrs" % what)]), "back")
         return
 
-    all_attrs = load_custom_attrs()
+    all_attrs = userdb.load_custom_attrs()
     attrs = all_attrs.setdefault(what, [])
 
     if not new:
@@ -12960,7 +12920,7 @@ def mode_custom_attrs(phase, what):
         html.context_button(_("New Attribute"), make_link([("mode", "edit_%s_attr" % what)]), "new")
         return
 
-    all_attrs = load_custom_attrs()
+    all_attrs = userdb.load_custom_attrs()
     attrs = all_attrs.get(what, {})
 
     if phase == "action":
@@ -13609,7 +13569,6 @@ def load_plugins():
     extra_buttons = []
     configured_host_tags = None
     host_attributes = []
-    userdb.reset_user_attributes()
 
     load_notification_table()
 

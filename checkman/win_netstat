@@ -9,35 +9,34 @@ description:
   and checks if there are established connections or listeners
   matching the given criteria.
 
-  Returns {OK} state if there are some and {CRITICAL} if not
+  Returns {OK} state if the specified connection/listener is present, 
+  and {CRIT} if not.
 
 item:
-  Give the parameters to match against connection or listeners.
-  See {Examples} and {Parameters} for details.
+  A user defined identifier of the connection.
 
 examples:
-  If you want to make sure some machine on 192.168.0.1 has an established
-  TCP connection to the monitored machine (192.168.0.2) on port 445 you
-  would define:
+  # If you want to make sure some machine on 192.168.0.1 has an established
+  # TCP connection to the monitored machine (192.168.0.2) on port 445 you
+  # would define:
 
-  static_checks['tcp_connections'] = [
-    ( ('win_netstat', 'My Test Connection', 
-         {
-          'local_ip'  : '192.168.0.2', 
-          'local_port': 445, 
-          'remote_ip' : '192.168.0.1', 
-          'state'     : 'ESTABLISHED', 
-          'proto'     : 'TCP'
-         }),
-       [], ['winsrv1'] ),
+  # Make sure that a ...
+  checks += [
+    ( 'winsrv1', 'win_netstat', 'My Test Connection', 
+       {
+        'local_ip'  : '192.168.0.2', 
+        'local_port': 445, 
+        'remote_ip' : '192.168.0.1', 
+        'state'     : 'ESTABLISHED', 
+        'proto'     : 'TCP'
+       }
+    ),
   ]
 
-  Or if you want to check if there is an HTTP listener available
-
-  static_checks['tcp_connections'] = [
+  # Check if TCP port 80 is listening
+  checkstatic_checks['tcp_connections'] = [
     ( ('win_netstat', 'HTTP Listener', 
          {
-          'local_ip'  : '192.168.0.2', 
           'local_port': 80, 
           'state'     : 'LISTEN', 
           'proto'     : 'TCP'
@@ -46,12 +45,18 @@ examples:
   ]
 
 [parameters]
-local_ip(string):  the local IP address
+parameters (dict): A dictionary with the following keys, all of which are
+ optional.
+
+ {"local_ip"}  The local IP address of the connection. For listeners
+ this is the IP address the process listens on. Applications that
+ listen on all IP address use an asterisk {*} here. If you omit
+ this parameter then the local address is being ignored.
 local_port(int):   the local Port
 remote_ip(string): the remote IP address
 remote_port(int):  the remote Port
 proto(string):     TCP or UDP are possible values: 
   The protocol used for the connection or the listener
-state(string):     ESTABLISHED, LISTEN, TIME_WAIT, SYN_SENT, SYN_RECV,
+state(string):     {ESTABLISHED}, LISTEN, TIME_WAIT, SYN_SENT, SYN_RECV,
   LAST_ACK, CLOSE_WAIT, TIME_WAIT, CLOSED, CLOSING, FIN_WAIT1, FIN_WAIT2,
   BOUND: The state of the connection or listener

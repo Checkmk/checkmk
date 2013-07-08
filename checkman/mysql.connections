@@ -7,11 +7,11 @@ distribution: check_mk
 description:
   This check allows tracking of connection usage for a MySQL database.
   Therefor it queries 
-  {the maximum number of connections that have been in use simultaneously since the server started}
+  the maximum number of connections that have been in use simultaneously since the server started
   and 
-  {the maximum number of possible parallel connections}. 
+  the maximum number of possible parallel connections. 
   From these both it calculates the 
-  {maximum usage level of these connections in percent}
+  maximum usage level of these connections in percent
   and matches the given warning and critical thresholds against it.
 
 inventory:

@@ -5,11 +5,11 @@ author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
-  This check evaluates output of {netstat -an} command on windows
+  This check evaluates the output of the {netstat -an} command on windows
   and checks if there are established connections or listeners
-  matching the given criteria.
+  matching a given criteria.
 
-  Returns {OK} state if the specified connection/listener is present, 
+  The check returns {OK} state if the specified connection/listener is present, 
   and {CRIT} if not.
 
   This check needs the agent plugin {netstat_an.bat} to be installed.
@@ -19,7 +19,7 @@ item:
 
 examples:
   # Make sure that a connection from 192.168.0.1 is established
-  # to this host (192.168.0.2) on port 445:
+  # to the host winsrv1 (192.168.0.2) on port 445:
   checks += [
     ( 'winsrv1', 'win_netstat', 'My Test Connection', 
        {
@@ -57,16 +57,17 @@ parameters (dict): A dictionary with the following keys, all of which are
    this is the port the process listens on.
 
  {"remote_ip"}    The remote IP address of the connection. You need
-   to give this only when monitoring connections. Omit if monitoring
+   to specify this only when monitoring connections. Omit if monitoring
    listeners.
 
  {"remote_port"}  The remote port of the connection. You need
-   to give this only when monitoring connections. Omit if monitoring
+   to specify this only when monitoring connections. Omit if monitoring
    listeners.
 
  {"proto"}        {TCP} or {UDP} are possible values: 
    The protocol used for the connection or the listener.
 
- {"state"}        {ESTABLISHED}, {LISTEN}, {TIME_WAIT}, {SYN_SENT}, {SYN_RECV},
-   {LAST_ACK}, {CLOSE_WAIT}, {TIME_WAIT}, {CLOSED}, {CLOSING}, {FIN_WAIT1}, {FIN_WAIT2},
-   {BOUND}: The state of the connection or listener.
+ {"state"}        {"ESTABLISHED"}, {"LISTEN"}, {"TIME_WAIT"}, {"SYN_SENT"}, {"SYN_RECV"},
+   {"LAST_ACK"}, {"CLOSE_WAIT"}, {"TIME_WAIT"}, {"CLOSED"}, {"CLOSING"}, {"FIN_WAIT1"}, {"FIN_WAIT2"},
+   or {"BOUND"}: The expected state of the TCP/UDP socket. You most probably will use either
+   {"ESTABLISHED"} or {"LISTEN"}.

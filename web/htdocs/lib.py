@@ -288,7 +288,7 @@ def release_lock(path):
     for lock_path, fd in g_aquired_locks:
         if lock_path == path:
             fcntl.flock(fd, fcntl.LOCK_UN)
-            fd.close()
+            os.close(fd)
             g_aquired_locks.remove((lock_path, fd))
     g_locked_paths.remove(path)
 

@@ -10080,7 +10080,10 @@ def mode_edit_ruleset(phase):
             descr_pattern  = checks[check_command]["service_description"].replace("%s", "(.*)")
             matcher = re.search(descr_pattern, html.var("service_description"))
             if matcher:
-                item = matcher.group(1)
+                try:
+                    item = matcher.group(1)
+                except:
+                    item = None
         elif check_command.startswith("check_mk_active-"):
             check_command = check_command[16:].split(" ")[0][:-1]
             varname = "active_checks:" + check_command

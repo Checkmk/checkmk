@@ -184,14 +184,15 @@ def check_mysql_connections(item, params, info):
     status = 0
     status_txt = ''
     if 'perc_used' in params:
-        if perc_used >= params['perc_used'][1]:
+        warn, crit = params['perc_used']
+        if perc_used >= crit:
             status = 2
             status_txt = ' (Threshold (%0.2f%%) for number of maximum parallel connections ' \
-                         'has been reached at least once since program start' % params['perc_used'][1]
-        elif perc_used >= params['perc_used'][0]:
+                         'has been reached at least once since program start' % crit
+        elif perc_used >= warn:
             status = 1
             status_txt = ' (Threshold (%0.2f%%) for number of maximum parallel connections ' \
-                         'has been reached at least once since program start)' % params['perc_used'][0]
+                         'has been reached at least once since program start)' % warn
 
     return (status, 'Max. parallel Connections: %d (Max.: %d): %0.2f%%%s' %
         (conn, max_conn, perc_used, status_txt))
@@ -201,6 +202,7 @@ check_info['mysql.connections'] = {
     "check_function"          : check_mysql_connections,
     "inventory_function"      : inventory_mysql_connections,
     "service_description"     : "MySQL Daemon Connections",
-    "has_perfdata"            : True,
+    "has_perfdata"            : False,
     "group"                   : "mysql_connections",
 }
+

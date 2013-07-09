@@ -1,0 +1,20 @@
+title: Virtual Machine under ESX: number of virtual CPUs and demanded CPU GHz
+agents: vsphere
+catalog: os/kernel
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+ For a virtual machine running on ESX this check reports the number of
+ virtual CPUs assigned to it and the currently demanded CPU GHz.
+
+ The check always returns {OK} state.
+
+ See "Monitoring VMWare ESX with Check_MK" in the online documentation
+ as well.
+
+perfdata:
+ One value is returned: The currently demanded CPU MHz.
+
+inventory:
+ On each VM one check is generated. 

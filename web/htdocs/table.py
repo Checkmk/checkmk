@@ -31,8 +31,12 @@ mode      = None
 next_func = None
 row_css   = None
 
-def begin(id, title=None, **kwargs):
+def begin(table_id=None, title=None, **kwargs):
     global table, mode, next_func
+
+    # Use our pagename as table id if none is specified
+    if table_id == None:
+        table_id = html.myfile
 
     try:
         limit = config.table_row_limit
@@ -44,7 +48,7 @@ def begin(id, title=None, **kwargs):
         limit = None
 
     table = {
-        "id"            : id,
+        "id"            : table_id,
         "title"         : title,
         "headers"       : [],
         "rows"          : [],

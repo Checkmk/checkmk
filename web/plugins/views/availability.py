@@ -203,6 +203,19 @@ avoption_entries = [
     ),
   ),
 
+  # Show colummns for min, max, avg duration and count
+  # ( "show_aggregations",
+  #   "double",
+  #   ListChoice(
+  #       title = _("Outage statistics"),
+  #       choices = [ 
+  #         ( "foo", "FOO" ),
+  #         ( "bar", "FABR" ),
+  #       ]
+  #   ),
+  # ),
+
+
   # How to deal with times out of the notification period
   ( "notification_period",
     "single",
@@ -291,6 +304,7 @@ def render_availability_options():
             "unknown"   : "unknown",
             "host_down" : "host_down",
         },
+        "outage_statistics" : [],
         "short_intervals" : 0,
         "dont_merge" : False,
         "summary" : "sum",

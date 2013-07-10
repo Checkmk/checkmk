@@ -48,6 +48,7 @@
         connection or listener
     * ps/ps.perf: allow to set levels on CPU util, optional averaging of CPU
     * diskstat: Agent is now also processing data of mmcblk devices
+    * qmail: Added check for mailqueue 
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a

@@ -47,6 +47,7 @@
         connection or listener
     * ps/ps.perf: allow to set levels on CPU util, optional averaging of CPU
     * diskstat: Agent is now also processing data of mmcblk devices
+    * qmail: Added check for mailqueue 
     * FIX: esx_vsphere_datastores: Fix incomplete performance data and Perf-O-Meter
     * FIX: cleaned up fileinfo.groups pattern handling, manual configuration
       is now possible using WATO
@@ -78,6 +79,7 @@
     * Added option to disable automatic userdb synchronizations in multisite
     * Implemented search forms for most data tables
     * New icons in view footers: export as CSV, export as JSON
+    * Availability: new columns for shortest, longest, average and count
     * FIX: better error message in case of exception in SNMP handling
     * FIX: Inventory screen: Now shows custom checks
     * FIX: Fixed locking problem of multisite pages related to user loading/saving

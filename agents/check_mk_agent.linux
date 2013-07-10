@@ -418,6 +418,13 @@ if type mailq >/dev/null 2>&1 && getent passwd postfix >/dev/null 2>&1; then
   mailq | tail -n 6
 fi
 
+#Check status of qmail mailqueue
+if type qmail-qstat >/dev/null
+then
+   echo "<<<qmail_stats>>>"
+   qmail-qstat
+fi
+
 # Check status of OMD sites
 if type omd >/dev/null
 then

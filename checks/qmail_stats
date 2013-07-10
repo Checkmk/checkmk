@@ -1,0 +1,57 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+qmail_stats_default_levels = ( 10, 20 )
+
+def inventory_qmail_stats(info):
+    if len(info) > 0:
+        return [ (None, "qmail_stats_default_levels") ]
+
+def check_qmail_stats(_no_item, params, info):
+    queue_length = saveint(info[0][-1])
+    warn, crit = params
+    state = 0
+    label = ''
+    if queue_length > crit:
+        state = 2
+	label = "(Levels at %d/%d)" % (warn, crit)
+    elif queue_length > warn:
+        state = 1
+	label = "(Levels at %d/%d)" % (warn, crit)
+
+    perf = [ ('queue', queue_length, warn, crit) ]
+    message = "Mailqueue length is %d %s" % (queue_length, label)
+    return state, message, perf
+
+
+check_info['qmail_stats'] = {
+  "inventory_function"  : inventory_qmail_stats,
+  "check_function"      : check_qmail_stats,
+  "service_description" : "Qmail Queue",
+  "has_perfdata"        : True,
+  "group"               : "mailqueue_length",
+}

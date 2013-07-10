@@ -42,7 +42,10 @@ def load_plugins():
         return
 
     # declare & initialize global vars
+    global user_attributes ; user_attributes = {}
     global multisite_user_connectors ; multisite_user_connectors = []
+
+    declare_custom_user_attrs()
 
     load_web_plugins("userdb", globals())
 
@@ -104,7 +107,7 @@ def new_user_template(connector_id):
     return new_user
 
 def create_non_existing_user(connector_id, username):
-    users = load_users()
+    users = load_users(lock = True)
     if username in users:
         return # User exists. Nothing to do...
 
@@ -119,13 +122,13 @@ def user_locked(username):
     return users[username].get('locked', False)
 
 def on_succeeded_login(username):
-    users = load_users()
+    users = load_users(lock = True)
     if "num_failed" in users[username]:
         users[username]["num_failed"] = 0
         save_users(users)
 
 def on_failed_login(username):
-    users = load_users()
+    users = load_users(lock = True)
     if username in users:
         if "num_failed" in users[username]:
             users[username]["num_failed"] += 1
@@ -150,20 +153,26 @@ multisite_dir = defaults.default_config_dir + "/multisite.d/wato/"
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
+def declare_user_attribute(name, vs, user_editable = True, permission = None):
+    user_attributes[name] = {
+        'valuespec':     vs,
+        'user_editable': user_editable,
+    }
+    # Permission needed for editing this attribute
+    if permission:
+        user_attributes[name]["permission"] = permission
+
 def get_user_attributes():
     return user_attributes.items()
 
-def reset_user_attributes():
-    global user_attributes
-    user_attributes = {}
-
-def load_users():
+def load_users(lock = False):
     filename = root_dir + "contacts.mk"
 
     # Make sure that the file exists without modifying it, *if* it exists.
-    # Note the lock will be released at end of page request automatically.
+    # Note: the lock will be released at end of page request automatically.
     file(filename, "a")
-    aquire_lock(filename)
+    if lock:
+        aquire_lock(filename)
 
     # First load monitoring contacts from Check_MK's world. If this is
     # the first time, then the file will be empty, which is no problem.
@@ -386,6 +395,11 @@ def save_users(profiles):
     #         if os.path.isdir(entry):
     #             shutil.rmtree(entry)
 
+    # Release the lock to make other threads access possible again asap
+    # This lock is set by load_users() only in the case something is expected
+    # to be written (like during user syncs, wato, ...)
+    release_lock(root_dir + "contacts.mk")
+
     # Call the users_saved hook
     hooks.call("users-saved", users)
 
@@ -476,6 +490,49 @@ def load_group_information():
             html.log('load_group_information: Problem while loading groups (%s - %s). '
                      'Initializing structure...' % (filename, e))
         return {}
+
+#   .--Custom-Attrs.-------------------------------------------------------.
+#   |   ____          _                          _   _   _                 |
+#   |  / ___|   _ ___| |_ ___  _ __ ___         / \ | |_| |_ _ __ ___      |
+#   | | |  | | | / __| __/ _ \| '_ ` _ \ _____ / _ \| __| __| '__/ __|     |
+#   | | |__| |_| \__ \ || (_) | | | | | |_____/ ___ \ |_| |_| |  \__ \_    |
+#   |  \____\__,_|___/\__\___/|_| |_| |_|    /_/   \_\__|\__|_|  |___(_)   |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Mange custom attributes of users (in future hosts etc.)              |
+#   '----------------------------------------------------------------------'
+
+def load_custom_attrs():
+    try:
+        filename = multisite_dir + "custom_attrs.mk"
+        if not os.path.exists(filename):
+            return {}
+
+        vars = {
+            'wato_user_attrs': [],
+        }
+        execfile(filename, vars, vars)
+
+        attrs = {}
+        for what in [ "user" ]:
+            attrs[what] = vars.get("wato_%s_attrs" % what, [])
+        return attrs
+
+    except Exception, e:
+        if config.debug:
+            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
+                          (filename, e)))
+        else:
+            html.log('load_custom_attrs: Problem while loading custom attributes (%s - %s). '
+                     'Initializing structure...' % (filename, e))
+        return {}
+
+def declare_custom_user_attrs():
+    all_attrs = load_custom_attrs()
+    attrs = all_attrs.setdefault('user', [])
+    for attr in attrs:
+        vs = globals()[attr['type']](title = attr['title'], help = attr['help'])
+        declare_user_attribute(attr['name'], vs, attr['user_editable'])
 
 #   .----------------------------------------------------------------------.
 #   |                     _   _             _                              |
@@ -596,7 +653,7 @@ def general_page_hook():
     # Create initial auth.serials file, same issue as auth.php above
     serials_file = '%s/auth.serials' % os.path.dirname(defaults.htpasswd_file)
     if not os.path.exists(serials_file) or os.path.getsize(serials_file) == 0:
-        save_users(load_users())
+        save_users(load_users(lock = True))
 
 # Hook function can be registered here to execute actions on a "regular" base without
 # user triggered action. This hook is called on each page load.

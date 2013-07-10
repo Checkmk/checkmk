@@ -1,0 +1,73 @@
+title: Established TCP Connections or TCP/UDP Listeners
+agents: windows
+catalog: os/network
+author: Mathias Kettner <mk@mathias-kettner.de>
+license: GPL
+distribution: check_mk
+description:
+  This check evaluates the output of the {netstat -an} command on windows
+  and checks if there are established connections or listeners
+  matching a given criteria.
+
+  The check returns {OK} state if the specified connection/listener is present, 
+  and {CRIT} if not.
+
+  This check needs the agent plugin {netstat_an.bat} to be installed.
+
+item:
+  A user defined identifier of the connection.
+
+examples:
+  # Make sure that a connection from 192.168.0.1 is established
+  # to the host winsrv1 (192.168.0.2) on port 445:
+  checks += [
+    ( 'winsrv1', 'win_netstat', 'My Test Connection', 
+       {
+        'local_ip'  : '192.168.0.2', 
+        'local_port': 445, 
+        'remote_ip' : '192.168.0.1', 
+        'state'     : 'ESTABLISHED', 
+        'proto'     : 'TCP'
+       }
+    ),
+  ]
+
+  # Check if TCP port 80 is listening
+  checks += [
+    ( 'websrv1', 'win_netstat', 'HTTP Listener', 
+         {
+          'local_port': 80, 
+          'state'     : 'LISTEN', 
+          'proto'     : 'TCP'
+         },
+    ),
+  ]
+
+[parameters]
+parameters (dict): A dictionary with the following keys, all of which are
+ optional.
+
+ {"local_ip"}     The local IP address of the connection. For listeners
+   this is the IP address the process listens on. Applications that
+   listen on all IP address use an asterisk {*} here. If you omit
+   this parameter then any local address matches (no matter if the
+   listener is bound to * or to a specific interface or IP).
+
+ {"local_port"}   The local port of the connection. For listeners
+   this is the port the process listens on.
+
+ {"remote_ip"}    The remote IP address of the connection. You need
+   to specify this only when monitoring connections. Omit if monitoring
+   listeners.
+
+ {"remote_port"}  The remote port of the connection. You need
+   to specify this only when monitoring connections. Omit if monitoring
+   listeners.
+
+ {"proto"}        {TCP} or {UDP} are possible values: 
+   The protocol used for the connection or the listener.
+
+ {"state"}        {"ESTABLISHED"}, {"LISTEN"}, {"TIME_WAIT"}, {"SYN_SENT"}, {"SYN_RECV"},
+   {"LAST_ACK"}, {"CLOSE_WAIT"}, {"TIME_WAIT"}, {"CLOSED"}, {"CLOSING"}, {"FIN_WAIT1"}, {"FIN_WAIT2"},
+   or {"BOUND"}: The expected state of the TCP/UDP socket. You most probably will use either
+   {"ESTABLISHED"} or {"LISTEN"}.

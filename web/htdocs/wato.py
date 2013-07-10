@@ -5246,7 +5246,7 @@ def create_snapshot():
 def factory_reset():
     # Darn. What makes things complicated here is that we need to conserve htpasswd,
     # at least the account of the currently logged in user.
-    users = userdb.load_users()
+    users = userdb.load_users(lock = True)
     for id in users.keys():
         if id != config.user_id:
             del users[id]
@@ -7712,15 +7712,6 @@ def service_levels():
     except:
         return [(0, "(no service level)")]
 
-def declare_user_attribute(name, vs, user_editable = True, permission = None):
-    userdb.user_attributes[name] = {
-        'valuespec':     vs,
-        'user_editable': user_editable,
-    }
-    # Permission needed for editing this attribute
-    if permission:
-        userdb.user_attributes[name]["permission"] = permission
-
 def load_notification_scripts_from(adir):
     scripts = {}
     if os.path.exists(adir):
@@ -7926,7 +7917,7 @@ def mode_users(phase):
         userdb.hook_sync(add_to_changelog = True)
 
     roles = userdb.load_roles()
-    users = filter_hidden_users(userdb.load_users())
+    users = filter_hidden_users(userdb.load_users(lock = phase == 'action' and html.var('_delete')))
     timeperiods = load_timeperiods()
     contact_groups = userdb.load_group_information().get("contact", {})
 
@@ -8053,9 +8044,7 @@ def mode_users(phase):
 
 
 def mode_edit_user(phase):
-    declare_custom_user_attrs()
-
-    users = userdb.load_users()
+    users = userdb.load_users(lock = phase == 'action')
     userid = html.var("edit") # missing -> new user
     cloneid = html.var("clone") # Only needed in 'new' mode
     new = userid == None
@@ -8074,8 +8063,10 @@ def mode_edit_user(phase):
             user = users.get(cloneid, userdb.new_user_template('htpasswd'))
         else:
             user = userdb.new_user_template('htpasswd')
+        pw_suffix = 'new'
     else:
         user = users.get(userid, userdb.new_user_template('htpasswd'))
+        pw_suffix = userid
 
     # Returns true if an attribute is locked and should be read only. Is only
     # checked when modifying an existing user
@@ -8132,8 +8123,8 @@ def mode_edit_user(phase):
             increase_serial = True # password changed, reflect in auth serial
 
         else:
-            password = html.var("password", '').strip()
-            password2 = html.var("password2", '').strip()
+            password = html.var("password_" + pw_suffix, '').strip()
+            password2 = html.var("password2_" + pw_suffix, '').strip()
 
             # Detect switch back from automation to password
             if "automation_secret" in new_user:
@@ -8221,7 +8212,7 @@ def mode_edit_user(phase):
         vs_notification_method.validate_value(value, "notification_method")
         new_user["notification_method"] = value
 
-        # Custom user attributes (the "old" wato plugin based mechanism)
+        # Custom user attributes
         for name, attr in userdb.get_user_attributes():
             value = attr['valuespec'].from_html_vars('ua_' + name)
             attr['valuespec'].validate_value(value, "ua_" + name)
@@ -8280,9 +8271,9 @@ def mode_edit_user(phase):
                      _("Normal user login with password"))
     html.write("<ul><table><tr><td>%s</td><td>" % _("password:"))
     if not is_locked('password'):
-        html.password_input("password", autocomplete="off")
+        html.password_input("password_" + pw_suffix, autocomplete="off")
         html.write("</td></tr><tr><td>%s</td><td>" % _("repeat:"))
-        html.password_input("password2", autocomplete="off")
+        html.password_input("password2_" + pw_suffix, autocomplete="off")
         html.write(" (%s)" % _("optional"))
     else:
         html.write('<i>%s</i>' % _('The password can not be changed (It is locked by the user connector).'))
@@ -8439,12 +8430,18 @@ def mode_edit_user(phase):
     forms.header(_("Personal Settings"), isopen = False)
     select_language(user.get('language', ''))
     for name, attr in userdb.get_user_attributes():
-        if attr['user_editable']:
-            if not attr.get("permission") or config.may(attr["permission"]):
-                vs = attr['valuespec']
-                forms.section(vs.title())
+        if not attr.get("permission") or config.may(attr["permission"]):
+            vs = attr['valuespec']
+            forms.section(vs.title())
+            if attr['user_editable'] and not is_locked(name):
                 vs.render_input("ua_" + name, user.get(name, vs.default_value()))
-                html.help(vs.help())
+            else:
+                html.write(vs.value_to_text(user.get(name, vs.default_value())))
+                # Render hidden to have the values kept after saving
+                html.write('<div style="display:none">')
+                vs.render_input("ua_" + name, user.get(name, vs.default_value()))
+                html.write('</div>')
+            html.help(vs.help())
 
     # TODO: Later we could add custom macros here, which
     # then could be used for notifications. On the other hand,
@@ -8749,7 +8746,7 @@ def save_roles(roles):
 # be renamed and are not handled here. If new_id is None,
 # the role is being deleted
 def rename_user_role(id, new_id):
-    users = userdb.load_users()
+    users = userdb.load_users(lock = True)
     for user in users.values():
         if id in user["roles"]:
             user["roles"].remove(id)
@@ -10083,7 +10080,10 @@ def mode_edit_ruleset(phase):
             descr_pattern  = checks[check_command]["service_description"].replace("%s", "(.*)")
             matcher = re.search(descr_pattern, html.var("service_description"))
             if matcher:
-                item = matcher.group(1)
+                try:
+                    item = matcher.group(1)
+                except:
+                    item = None
         elif check_command.startswith("check_mk_active-"):
             check_command = check_command[16:].split(" ")[0][:-1]
             varname = "active_checks:" + check_command
@@ -11520,12 +11520,10 @@ def page_user_profile():
     if not config.may('general.edit_profile') and not config.may('general.change_password'):
         raise MKAuthException(_("You are not allowed to edit your user profile."))
 
-    declare_custom_user_attrs()
-
     success = None
     if html.has_var('_save') and html.check_transaction():
         try:
-            users = userdb.load_users()
+            users = userdb.load_users(lock = True)
 
             # Profile edit (user options like language etc.)
             if config.may('general.edit_profile'):
@@ -12797,32 +12795,6 @@ custom_attr_types = [
     ('TextAscii', _('Simple Text')),
 ]
 
-
-def load_custom_attrs():
-    try:
-        filename = multisite_dir + "custom_attrs.mk"
-        if not os.path.exists(filename):
-            return {}
-
-        vars = {
-            'wato_user_attrs': [],
-        }
-        execfile(filename, vars, vars)
-
-        attrs = {}
-        for what in [ "user" ]:
-            attrs[what] = vars.get("wato_%s_attrs" % what, [])
-        return attrs
-
-    except Exception, e:
-        if config.debug:
-            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
-                          (filename, e)))
-        else:
-            html.log('load_custom_attrs: Problem while loading custom attributes (%s - %s). '
-                     'Initializing structure...' % (filename, e))
-        return {}
-
 def save_custom_attrs(attrs):
     make_nagios_directory(multisite_dir)
     out = create_user_file(multisite_dir + "custom_attrs.mk", "w")
@@ -12831,13 +12803,6 @@ def save_custom_attrs(attrs):
         if what in attrs and len(attrs[what]) > 0:
             out.write("if type(wato_%s_attrs) != list:\n    wato_%s_attrs = []\n" % (what, what))
             out.write("wato_%s_attrs += %s\n\n" % (what, pprint.pformat(attrs[what])))
-
-def declare_custom_user_attrs():
-    all_attrs = load_custom_attrs()
-    attrs = all_attrs.setdefault('user', [])
-    for attr in attrs:
-        vs = globals()[attr['type']](title = attr['title'], help = attr['help'])
-        declare_user_attribute(attr['name'], vs, attr['user_editable'])
 
 def mode_edit_custom_attr(phase, what):
     name = html.var("edit") # missing -> new group
@@ -12855,7 +12820,7 @@ def mode_edit_custom_attr(phase, what):
         html.context_button(_("User Attributes"), make_link([("mode", "%s_attrs" % what)]), "back")
         return
 
-    all_attrs = load_custom_attrs()
+    all_attrs = userdb.load_custom_attrs()
     attrs = all_attrs.setdefault(what, [])
 
     if not new:
@@ -12960,7 +12925,7 @@ def mode_custom_attrs(phase, what):
         html.context_button(_("New Attribute"), make_link([("mode", "edit_%s_attr" % what)]), "new")
         return
 
-    all_attrs = load_custom_attrs()
+    all_attrs = userdb.load_custom_attrs()
     attrs = all_attrs.get(what, {})
 
     if phase == "action":
@@ -13609,7 +13574,6 @@ def load_plugins():
     extra_buttons = []
     configured_host_tags = None
     host_attributes = []
-    userdb.reset_user_attributes()
 
     load_notification_table()
 

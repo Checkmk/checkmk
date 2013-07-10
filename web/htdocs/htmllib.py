@@ -66,7 +66,7 @@ class html:
         self.keybindings = []
         self.keybindings_enabled = True
         self.io_error = False
-        self.debug = False
+        self.enable_debug = False
         self.help_visible = False
 
     RETURN = 13
@@ -728,7 +728,7 @@ class html:
         self.write("%s</td></tr></table>" %
                    _("<a href=\"http://mathias-kettner.de\"><img src=\"images/mk_logo_small.gif\"/></a>"))
         self.write("<hr class=header>\n")
-        if self.debug:
+        if self.enable_debug:
             self.write("<div class=urldebug>%s</div>" % self.makeuri([]))
 
     def body_start(self, title='', **args):
@@ -790,9 +790,9 @@ class html:
              ("index.py?" + self.urlencode_vars([("start_url", self.makeuri([]))]), _("URL to this page including sidebar"))
 
         if self.myfile == "view":
-            h += '<a target="_top" href="%s"><img class=statusicon src="images/status_frameurl.png" title="%s"></a>\n' % \
-                 (self.makeuri([("output_format", "json_export")]), _("Export as JSON"))
-            h += '<a target="_top" href="%s"><img class=statusicon src="images/status_frameurl.png" title="%s"></a>\n' % \
+            # h += '<a target="_top" href="%s"><img class=statusicon src="images/status_frameurl.png" title="%s"></a>\n' % \
+            #     (self.makeuri([("output_format", "json_export")]), _("Export as JSON"))
+            h += '<a target="_top" href="%s"><img class=statusicon src="images/icon_download_csv.png" title="%s"></a>\n' % \
                  (self.makeuri([("output_format", "csv_export")]), _("Export as CSV"))
 
         for img, tooltip in self.status_icons.items():
@@ -999,7 +999,7 @@ class html:
                   '<param name="autostart" value="true">\n'
                   '<param name="playcount" value="1">\n'
                   '</object>\n' % (url, url, url))
-        if self.debug:
+        if self.enable_debug:
             self.write("(playing sound %s)" % url)
 
     def apache_user(self):

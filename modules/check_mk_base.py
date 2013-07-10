@@ -933,6 +933,8 @@ def do_check(hostname, ipaddress, only_check_types = None):
     run_time = time.time() - start_time
     if check_mk_perfdata_with_times:
         times = os.times()
+        if opt_keepalive:
+            times = map(lambda a: a[0]-a[1], zip(times, g_initial_times))
         output += "execution time %.1f sec|execution_time=%.3f user_time=%.3f "\
                   "system_time=%.3f children_user_time=%.3f children_system_time=%.3f\n" %\
                 (run_time, run_time, times[0], times[1], times[2], times[3])
@@ -990,6 +992,8 @@ class MKCheckTimeout(Exception):
     pass
 
 def do_check_keepalive():
+    global g_initial_times
+
     def check_timeout(signum, frame):
         raise MKCheckTimeout()
 
@@ -1005,6 +1009,7 @@ def do_check_keepalive():
     while True:
         cleanup_globals()
         hostname = sys.stdin.readline()
+        g_initial_times = os.times()
         if not hostname:
             break
         hostname = hostname.strip()

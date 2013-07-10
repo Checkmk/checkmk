@@ -29,7 +29,6 @@
     * cached checks: no longer output cached data if the age of the
                      cache file is twice the maximum cache age
     * windows agent: no longer tries to execute directories
-    * FIX: esx_vsphere_datastores: Fix incomplete performance data and Perf-O-Meter
     * fileinfo: no longer inventorize missing files(reported by windows agent)
     * New checks for Brocade fans, temperature and power supplies
     * cluster hosts: removed agent version output from Check_MK service (this
@@ -48,6 +47,9 @@
         connection or listener
     * ps/ps.perf: allow to set levels on CPU util, optional averaging of CPU
     * diskstat: Agent is now also processing data of mmcblk devices
+    * FIX: esx_vsphere_datastores: Fix incomplete performance data and Perf-O-Meter
+    * FIX: cleaned up fileinfo.groups pattern handling, manual configuration
+      is now possible using WATO
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a

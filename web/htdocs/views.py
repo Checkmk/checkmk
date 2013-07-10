@@ -637,7 +637,7 @@ def page_edit_view():
                 ("show", _("Show to user")),
                 ("hide", _("Use for linking")),
                 ("hard", _("Hardcode"))],
-                "", "filter_activation(this)")
+                "off", "filter_activation(this)")
         show_filter(filt)
         html.write('</div>')
         html.write('<div class=clear></div>')

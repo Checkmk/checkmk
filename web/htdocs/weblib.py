@@ -27,48 +27,8 @@
 import config
 import lib
 
-#   .--Treestates----------------------------------------------------------.
-#   |            _____                   _        _                        |
-#   |           |_   _| __ ___  ___  ___| |_ __ _| |_ ___  ___             |
-#   |             | || '__/ _ \/ _ \/ __| __/ _` | __/ _ \/ __|            |
-#   |             | || | |  __/  __/\__ \ || (_| | ||  __/\__ \            |
-#   |             |_||_|  \___|\___||___/\__\__,_|\__\___||___/            |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Saves and loads the current states of foldertrees for the user       |
-#   +----------------------------------------------------------------------+
-
-treestates = {}
-treestates_for_id = None
-
-def load_tree_states():
-    global treestates
-    global treestates_for_id
-    if html.id is not treestates_for_id:
-        treestates = config.load_user_file("treestates", {})
-        treestates_for_id = html.id
-
-def save_tree_states():
-    config.save_user_file("treestates", treestates)
-
-def get_tree_states(tree):
-    load_tree_states()
-    return treestates.get(tree, {})
-
-def set_tree_state(tree, key, val):
-    load_tree_states()
-
-    if tree not in treestates:
-        treestates[tree] = {}
-
-    treestates[tree][key] = val
-
-def set_tree_states(tree, val):
-    load_tree_states()
-    treestates[tree] = val
-
 def ajax_tree_openclose():
-    load_tree_states()
+    html.load_tree_states()
 
     tree = html.var("tree")
     name = html.var("name")
@@ -76,8 +36,8 @@ def ajax_tree_openclose():
     if not tree or not name:
         MKUserError('tree or name parameter missing')
 
-    set_tree_state(tree, name, html.var("state"))
-    save_tree_states()
+    html.set_tree_state(tree, name, html.var("state"))
+    html.save_tree_states()
 
 #   .--Row Selector--------------------------------------------------------.
 #   |      ____                 ____       _           _                   |

@@ -7927,8 +7927,10 @@ def mode_edit_user(phase):
             user = users.get(cloneid, userdb.new_user_template('htpasswd'))
         else:
             user = userdb.new_user_template('htpasswd')
+        pw_suffix = 'new'
     else:
         user = users.get(userid, userdb.new_user_template('htpasswd'))
+        pw_suffix = 'userid'
 
     # Returns true if an attribute is locked and should be read only. Is only
     # checked when modifying an existing user
@@ -7985,8 +7987,8 @@ def mode_edit_user(phase):
             increase_serial = True # password changed, reflect in auth serial
 
         else:
-            password = html.var("password", '').strip()
-            password2 = html.var("password2", '').strip()
+            password = html.var("password_" + pw_suffix, '').strip()
+            password2 = html.var("password2_" + pw_suffix, '').strip()
 
             # Detect switch back from automation to password
             if "automation_secret" in new_user:
@@ -8136,9 +8138,9 @@ def mode_edit_user(phase):
                      _("Normal user login with password"))
     html.write("<ul><table><tr><td>%s</td><td>" % _("password:"))
     if not is_locked('password'):
-        html.password_input("password", autocomplete="off")
+        html.password_input("password_" + pw_suffix, autocomplete="off")
         html.write("</td></tr><tr><td>%s</td><td>" % _("repeat:"))
-        html.password_input("password2", autocomplete="off")
+        html.password_input("password2_" + pw_suffix, autocomplete="off")
         html.write(" (%s)" % _("optional"))
     else:
         html.write('<i>%s</i>' % _('The password can not be changed (It is locked by the user connector).'))

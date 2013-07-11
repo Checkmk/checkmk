@@ -1,7 +1,6 @@
 title: Virtual servers on a F5 load balancer
 agents: snmp
 catalog: hw/network/f5 
-author: Florian Heigl <fh@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:

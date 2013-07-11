@@ -1,7 +1,6 @@
 title: Size of data- and logfiles of MSSQL tablespaces
 agents: windows
 catalog: app/mssql
-author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:

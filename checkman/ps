@@ -1,7 +1,6 @@
 title: State and count of processes
 agents: linux, windows, aix, solaris, openvms
 catalog: os/ps
-author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:

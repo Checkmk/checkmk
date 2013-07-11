@@ -1,7 +1,6 @@
 title: VxVM Multipath
 agents: hpux, linux
 catalog: os/storage 
-author: Bastian Kuhn <bk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:

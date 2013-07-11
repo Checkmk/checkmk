@@ -1,5 +1,11 @@
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 sudo cp * /omd/sites/$SITE/share/check_mk/pnp-templates
-echo 'location.reload();' | nc -w 0 localhost 32000
+
+# do nc to port 32000 only if there is someone listening
+# (otherwise complete f12 script breaks if no listener on 32000)
+if [ $(nmap -PN -p 32000 localhost | egrep "32000.*open" | wc -l) -gt 0 ]
+then
+	echo 'location.reload();' | nc -w 0 localhost 32000
+fi
 
 

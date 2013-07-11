@@ -1,7 +1,6 @@
 title: Status of the resources in heartbeat clusters using crm=yes
 agents: linux
 catalog: os/services 
-author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:

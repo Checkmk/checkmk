@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 import config, re, pprint, time, views
-import weblib
 from lib import *
 
 
@@ -1338,9 +1337,9 @@ def ajax_save_treestate():
     saved_ex_level = load_ex_level()
 
     if saved_ex_level != current_ex_level:
-        weblib.set_tree_states('bi', {})
-    weblib.set_tree_state('bi', path, html.var("state") == "open")
-    weblib.save_tree_states()
+        html.set_tree_states('bi', {})
+    html.set_tree_state('bi', path, html.var("state") == "open")
+    html.save_tree_states()
 
     save_ex_level(current_ex_level)
 
@@ -1383,11 +1382,11 @@ def ajax_render_tree():
 
 def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, lazy):
     saved_expansion_level = load_ex_level()
-    treestate = weblib.get_tree_states('bi')
+    treestate = html.get_tree_states('bi')
     if expansion_level != saved_expansion_level:
         treestate = {}
-        weblib.set_tree_states('bi', treestate)
-        weblib.save_tree_states()
+        html.set_tree_states('bi', treestate)
+        html.save_tree_states()
 
     def render_subtree(tree, path, show_host):
         is_leaf = len(tree) == 3

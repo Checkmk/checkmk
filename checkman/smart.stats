@@ -2,7 +2,6 @@ title: HDD health statistics using S.M.A.R.T
 agents: linux
 catalog: os/hardware
 license: GPL
-author: Mathias Kettner
 distribution: check_mk
 description:
  This check monitors health statistics like error counters of HDDs using the

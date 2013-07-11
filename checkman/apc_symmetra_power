@@ -1,7 +1,6 @@
 title: APC Symmetra UPS: Output power
 agents: snmp
 catalog: hw/power
-author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:

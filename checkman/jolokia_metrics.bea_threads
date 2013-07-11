@@ -1,4 +1,4 @@
-title: Number of JVM threads
+title: BEA Weblogic: Number of JVM threads
 agents: linux
 catalog: app/java
 license: GPL

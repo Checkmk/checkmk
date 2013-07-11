@@ -6,11 +6,7 @@ distribution: check_mk
 description:
  This check monitors the state of temperature sensors
  on older Cisco devices using data from the
- {CISCO-ENVMON-MIB}. This checks is useful for
- devices which do not provide a current level
- and threshold information and does not send performance
- data. Use {cisco_temp_perf} if your devices provides
- such data.
+ {CISCO-ENVMON-MIB}.
 
  Depending on the state of the sensor the checks can
  be {OK}, {WARN}, {CRIT} or {UNKNOWN}.

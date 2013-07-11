@@ -1,4 +1,4 @@
-title: CPU utilization
+title: Network Interfaces: Counters
 agents: hpux, solaris
 catalog: os/kernel
 license: GPL
@@ -8,6 +8,7 @@ description:
  cycle. A level can be set only on {wait} (disk wait).
 
  BERND: Hinweis auf statgrab-Plugin (HP) bzw. statgrab-Befehl (beide).
+ Title to be improved
 
 perfdata:
  Three variables: The percentage of time spent in {user}, {system} and {wait}

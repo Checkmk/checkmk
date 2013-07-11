@@ -1,4 +1,4 @@
-title: CPU utilization
+title: Memory (RAM) and Swap usage
 agents: hpux, solaris
 catalog: os/kernel
 license: GPL

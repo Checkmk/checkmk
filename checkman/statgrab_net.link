@@ -1,4 +1,4 @@
-title: CPU utilization
+title: Network Interfaces: Link status
 agents: hpux, solaris
 catalog: os/kernel
 license: GPL

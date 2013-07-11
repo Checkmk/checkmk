@@ -1,4 +1,4 @@
-title: Server BERND
+title: Requests
 agents: linux
 catalog: app/java
 license: GPL
@@ -6,6 +6,7 @@ distribution: check_mk
 description:
 
  BERND WIRD DAS HIER BALD RICHTEN ;-)
+ Title to be improved
 
  This check allows to monitor the usage of heap and non-heap memory area
  usage on web application servers.

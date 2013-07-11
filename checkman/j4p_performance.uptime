@@ -1,9 +1,11 @@
-title: Uptime of Java application server via JMX and j4p.war
+title: Uptime of Java application server via JMX and j4p.war - DEPRECATED
 agents: linux
 catalog: app/java
 license: GPL
 distribution: check_mk
 description:
+ Do not use this plugin. It will be removed soon. Use jolokia_metrics instead.
+
  This checks uses the JSON HTTP service of j4p (from jmx4perl) to
  monitor the uptime of a Java application server like
  Tomcat or JBoss.

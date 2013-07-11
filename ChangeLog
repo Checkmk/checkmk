@@ -51,6 +51,7 @@
     * cisco_locif: removed obsolete and already disabled check completely
     * fc_brocade_port: removed obsolete check
     * fc_brocade_port_detailed: removed obsolete check
+    * tsm_stgpool: removed orphaned check
     * FIX: esx_vsphere_datastores: Fix incomplete performance data and Perf-O-Meter
     * FIX: cleaned up fileinfo.groups pattern handling, manual configuration
       is now possible using WATO

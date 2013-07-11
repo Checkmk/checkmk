@@ -48,6 +48,7 @@
     * ps/ps.perf: allow to set levels on CPU util, optional averaging of CPU
     * diskstat: Agent is now also processing data of mmcblk devices
     * qmail: Added check for mailqueue 
+    * cisco_locif: removed obsolete and already disabled check completely
     * FIX: esx_vsphere_datastores: Fix incomplete performance data and Perf-O-Meter
     * FIX: cleaned up fileinfo.groups pattern handling, manual configuration
       is now possible using WATO

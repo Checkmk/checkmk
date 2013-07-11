@@ -711,12 +711,14 @@ class EventServer:
 
 
     def __init__(self):
-        self._syslog   = None
-        self._snmptrap = None
+        self._syslog     = None
+        self._syslog_tcp = None
+        self._snmptrap   = None
 
         self.create_pipe()
         self.open_eventsocket()
         self.open_syslog()
+        self.open_syslog_tcp()
         self.open_snmptrap()
         self._rules = []
         self._hash_stats = []
@@ -772,6 +774,23 @@ class EventServer:
                     log("Opened builtin syslog server on UDP port 514")
             except Exception, e:
                 raise Exception("Cannot start builtin syslog server: %s" % e)
+
+    def open_syslog_tcp(self):
+        if opt_syslog_tcp:
+            try:
+                if opt_syslog_tcp_fd != None:
+                    self._syslog_tcp = socket.fromfd(opt_syslog__tcp_fd, socket.AF_INET, socket.SOCK_STREAM)
+                    os.close(opt_syslog_tcp_fd)
+                    log("Opened builtin syslog-tcp server on inherited filedescriptor %d" % opt_syslog_tcp_fd)
+
+                else:
+                    self._syslog_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    self._syslog_tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                    self._syslog_tcp.bind(("0.0.0.0", 514))
+                    self._syslog_tcp.listen(20)
+                    log("Opened builtin syslog-tcp server on TCP port 514")
+            except Exception, e:
+                raise Exception("Cannot start builtin syslog-tcp server: %s" % e)
 
     def open_snmptrap(self):
         if opt_snmptrap:
@@ -943,14 +962,22 @@ class EventServer:
         pipe = self.open_pipe()
         listen_list = [ pipe ]
 
+        # Wait for incoming syslog packets via UDP
         if self._syslog != None:
             listen_list.append(self._syslog.fileno())
 
+        # Wait for new connections for events via TCP socket
+        if self._syslog_tcp != None:
+            listen_list.append(self._syslog_tcp.fileno())
+
+        # Wait for new connections for events via unix socket
+        if self._eventsocket:
+            listen_list.append(self._eventsocket)
+
+        # Wait for incomding SNMP traps
         if self._snmptrap != None:
             listen_list.append(self._snmptrap.fileno())
 
-        if self._eventsocket:
-            listen_list.append(self._eventsocket)
 
         # Keep list of client connections via UNIX socket and
         # read data that is not yet processed. Map from
@@ -964,6 +991,11 @@ class EventServer:
             # Accept new connection on event unix socket
             if self._eventsocket in readable:
                 client_socket, addr_info = self._eventsocket.accept()
+                client_sockets[client_socket.fileno()] = (client_socket, "")
+
+            # Same for the TCP syslog socket
+            if self._syslog_tcp.fileno() in readable:
+                client_socket, addr_info = self._syslog_tcp.accept()
                 client_sockets[client_socket.fileno()] = (client_socket, "")
 
             # Read data from existing event unix socket connections
@@ -1036,6 +1068,8 @@ class EventServer:
             # Read events from builtin syslog server
             if self._syslog != None and self._syslog.fileno() in readable:
                 self.process_raw_lines(self._syslog.recv(4096))
+
+            # Accept 
 
             # Read events from builtin snmptrap server
             if self._snmptrap != None and self._snmptrap.fileno() in readable:
@@ -2989,6 +3023,8 @@ opt_foreground    = False
 opt_profile       = {}
 opt_syslog        = False
 opt_syslog_fd     = None
+opt_syslog_tcp    = False
+opt_syslog_tcp_fd = None
 opt_snmptrap      = False
 opt_snmptrap_fd   = None
 
@@ -3017,7 +3053,7 @@ else:
 short_options = "hvVgS:P:p:C:E:L:"
 long_options = [ "help", "version", "verbose", "debug", "foreground", "socket=", "eventsocket=", "pipe=",
                  "pidfile=", "statedir=", "configdir=", "logdir=", "profile-status", "profile-event", "debug-locking",
-                 "syslog", "syslog-fd=", "snmptrap", "snmptrap-fd=", "livestatus=" ]
+                 "syslog", "syslog-fd=", "syslog-tcp", "syslog-tcp-fd=", "snmptrap", "snmptrap-fd=", "livestatus=" ]
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -3044,6 +3080,10 @@ try:
             opt_syslog = True
         elif o == '--syslog-fd':
             opt_syslog_fd = int(a)
+        elif o == '--syslog-tcp':
+            opt_syslog_tcp = True
+        elif o == '--syslog-tcp-fd':
+            opt_syslog_tcp_fd = int(a)
         elif o == '--snmptrap':
             opt_snmptrap = True
         elif o == '--snmptrap-fd':

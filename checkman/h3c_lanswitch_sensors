@@ -1,37 +1,31 @@
-title: CPU Utilization of 3COM and H3C switches
+title: Fan and Powersupply Sensors of 3COM and H3C switches
 agents: snmp
 catalog: hw/network/h3c 
 license: GPL
 distribution: check_mk
 description:
 
- This Check queries the CPU utilization for various switches made by 3Com
- and H3C, either standalone or that of the CPUs of all units in the stack. By
- default it will handle 3com Superstack 4 switches, but it should work with
- all devices defined in the "Lsw" lanswitch Mibs.
+ This check queries the fan and powersupply sensors of various switches made by 
+ 3Com and H3C. By default it will handle 3com Superstack 4 switches, but it should 
+ work with all devices defined in the "Lsw" lanswitch Mibs.
+
+ This check returns:
+
+ {OK} if the {active} state is reported for the sensor.
+
+ {WARN} if the {not-install} or {unsupport} state is reported for the sensor.
+
+ {CRIT} if the {deactive} state is reported for the sensor.
+
+ {UNKNOWN} if the queried sensor is not found.
 
  Please note: some of these switches don't handle SNMP well and might generate
  up to 90% CPU load while queried.  To accomodate for this you should lower
- the frequency of SNMP based checks with them.  The CPU usage ratio returned
- by the check is the average load of the last 60 seconds.
+ the frequency of SNMP based checks with them.
 
 inventory:
- The check will add one service per Unit/CPU in a stack.
-
-[parameters]
-warning (int): the percentage of 1-minute average load at which the switch is considered too busy.
-
-critical (int): the percentage of 1-minute average load at which the switch is considered overloaded.
-
-
-[configuration]
-superstack4_cpu_default_levels (int, int): the warn and critical levels for the checkl.
- They are set to default to 50% for "WARN" and 75% for "CRIT".
-
+ The check will add one service per sensor.
 
 item:
- The CPU found by inventory (it's OID is a multiple of 65536 and will be divided to come to a sane value)
+ The fan or powersupply sensor found by inventory (it's OID is a multiple of 65536 and will be divided to come to a sane value)
 
-
-perfdata:
- It does not generate any performance data yet.

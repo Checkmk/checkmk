@@ -779,7 +779,7 @@ class EventServer:
         if opt_syslog_tcp:
             try:
                 if opt_syslog_tcp_fd != None:
-                    self._syslog_tcp = socket.fromfd(opt_syslog__tcp_fd, socket.AF_INET, socket.SOCK_STREAM)
+                    self._syslog_tcp = socket.fromfd(opt_syslog_tcp_fd, socket.AF_INET, socket.SOCK_STREAM)
                     os.close(opt_syslog_tcp_fd)
                     log("Opened builtin syslog-tcp server on inherited filedescriptor %d" % opt_syslog_tcp_fd)
 
@@ -968,7 +968,7 @@ class EventServer:
 
         # Wait for new connections for events via TCP socket
         if self._syslog_tcp != None:
-            listen_list.append(self._syslog_tcp.fileno())
+            listen_list.append(self._syslog_tcp)
 
         # Wait for new connections for events via unix socket
         if self._eventsocket:
@@ -994,7 +994,7 @@ class EventServer:
                 client_sockets[client_socket.fileno()] = (client_socket, "")
 
             # Same for the TCP syslog socket
-            if self._syslog_tcp and self._syslog_tcp.fileno() in readable:
+            if self._syslog_tcp and self._syslog_tcp in readable:
                 client_socket, addr_info = self._syslog_tcp.accept()
                 client_sockets[client_socket.fileno()] = (client_socket, "")
 

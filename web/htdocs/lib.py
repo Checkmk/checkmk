@@ -25,7 +25,12 @@
 # Boston, MA 02110-1301 USA.
 
 import grp, pprint, os, errno, gettext, marshal, fcntl, __builtin__
-import defaults
+
+#Workarround when the file is included outsite multisite
+try:
+    import defaults
+except:
+    pass
 
 
 nagios_state_names = { -1: "NODATA", 0: "OK", 1: "WARNING", 2: "CRITICAL", 3: "UNKNOWN", 4: "DEPENDENT" }

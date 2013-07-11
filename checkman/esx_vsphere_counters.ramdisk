@@ -1,4 +1,4 @@
-title: Ramdisks of ESX host system
+title: VMWare ESX host systems: Ramdisks
 agents: vsphere
 catalog: os/kernel
 license: GPL

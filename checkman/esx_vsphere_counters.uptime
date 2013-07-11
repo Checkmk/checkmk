@@ -1,4 +1,4 @@
-title: Uptime of ESX host system
+title: VMWare ESX host systems: Uptime
 agents: vsphere
 catalog: os/misc 
 license: GPL

@@ -38,36 +38,149 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define PORT    514
-#define FD      3
+#define SYSLOG_PORT    514
+#define SNMPTRAP_PORT  612
+
 #define PROGRAM "mkeventd"
+
+
+// Example command line:
+// mkeventd_open514 --syslog --syslog-fd 3 --syslog-tcp --syslog-tcp-fd 4 --snmptrap --snmptrap-fd 5
 
 int main(int argc, char **argv)
 {
-    int sock;
+    int syslog_sock     = 0;
+    int syslog_tcp_sock = 0;
+    int snmptrap_sock   = 0;
 
-    // Create socket
-    if (0 > (sock = socket(PF_INET, SOCK_DGRAM, 0))) {
-        perror("Cannot create socket");
-        exit(1);
+    int do_syslog       = 0;
+    int do_syslog_tcp   = 0;
+    int do_snmptrap     = 0;
+
+    int syslog_fd       = -1;
+    int syslog_tcp_fd   = -1;
+    int snmptrap_fd     = -1;
+
+    int i;
+
+    for (i=1; i<argc; i++) {
+        if (!strcmp(argv[i], "--syslog"))
+            do_syslog = 1;
+        else if (!strcmp(argv[i], "--syslog-tcp"))
+            do_syslog_tcp = 1;
+        else if (!strcmp(argv[i], "--snmptrap"))
+            do_snmptrap = 1;
+        else if (!strcmp(argv[i], "--syslog-fd"))
+            syslog_fd = atoi(argv[i+1]);
+        else if (!strcmp(argv[i], "--syslog-tcp-fd"))
+            syslog_tcp_fd = atoi(argv[i+1]);
+        else if (!strcmp(argv[i], "--snmptrap-fd"))
+            snmptrap_fd = atoi(argv[i+1]);
     }
 
-    // set REUSEADDR
-    int optval = 1;
-    if (0 != setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval))) {
-        perror("Cannot set socket to SO_REUSEADDR");
-        exit(1);
+
+    // Syslog via UDP
+    if (do_syslog && syslog_fd > 0)
+    {
+        // Create socket
+        if (0 > (syslog_sock = socket(PF_INET, SOCK_DGRAM, 0))) {
+            perror("Cannot create UDP socket for syslog");
+            exit(1);
+        }
+
+        // set REUSEADDR
+        int optval = 1;
+        if (0 != setsockopt(syslog_sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval))) {
+            perror("Cannot set UDP socket for syslog to SO_REUSEADDR");
+            exit(1);
+        }
+
+        // Bind it to the port (this requires priviledges)
+        struct sockaddr_in addr;
+        addr.sin_family        = AF_INET;
+        addr.sin_port          = htons(SYSLOG_PORT);
+        addr.sin_addr.s_addr   = 0;
+        if (0 != bind(syslog_sock, (struct sockaddr *)&addr, sizeof(addr))) {
+            perror("Cannot bind UDP socket for syslog to port");
+            exit(1);
+        }
+
+        // Make sure it is at the correct FD
+        if (syslog_sock && syslog_sock != syslog_fd) {
+            dup2(syslog_sock, syslog_fd);
+            close(syslog_sock);
+        }
     }
 
-    // Bind it to the port (this requires priviledges)
-    struct sockaddr_in addr;
-    addr.sin_family        = AF_INET;
-    addr.sin_port          = htons(PORT);
-    addr.sin_addr.s_addr   = 0;
-    if (0 != bind(sock, (struct sockaddr *)&addr, sizeof(addr))) {
-        perror("Cannot bind socket to port");
-        exit(1);
+
+
+    // Syslog via TCP
+    if (do_syslog_tcp && syslog_tcp_fd > 0)
+    {
+        // Create socket
+        if (0 > (syslog_tcp_sock = socket(PF_INET, SOCK_STREAM, 0))) {
+            perror("Cannot create TCP socket for syslog-tcp");
+            exit(1);
+        }
+
+        // set REUSEADDR
+        int optval = 1;
+        if (0 != setsockopt(syslog_tcp_sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval))) {
+            perror("Cannot set TCP socket for syslog-tcp to SO_REUSEADDR");
+            exit(1);
+        }
+
+        // Bind it to the port (this requires priviledges)
+        struct sockaddr_in addr;
+        addr.sin_family        = AF_INET;
+        addr.sin_port          = htons(SYSLOG_PORT);
+        addr.sin_addr.s_addr   = 0;
+        if (0 != bind(syslog_tcp_sock, (struct sockaddr *)&addr, sizeof(addr))) {
+            perror("Cannot bind TCP socket for syslog-tcp to port");
+            exit(1);
+        }
+
+        // Make sure it is at the correct FD
+        if (syslog_tcp_sock && syslog_tcp_sock != syslog_tcp_fd) {
+            dup2(syslog_tcp_sock, syslog_tcp_fd);
+            close(syslog_tcp_sock);
+        }
     }
+
+
+    // SNMP traps
+    if (do_snmptrap && snmptrap_fd > 0)
+    {
+        // Create socket
+        if (0 > (snmptrap_sock = socket(PF_INET, SOCK_DGRAM, 0))) {
+            perror("Cannot create UDP socket for snmptrap");
+            exit(1);
+        }
+
+        // set REUSEADDR
+        int optval = 1;
+        if (0 != setsockopt(snmptrap_sock, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval))) {
+            perror("Cannot set UDP socket for snmptrap to SO_REUSEADDR");
+            exit(1);
+        }
+
+        // Bind it to the port (this requires priviledges)
+        struct sockaddr_in addr;
+        addr.sin_family        = AF_INET;
+        addr.sin_port          = htons(SNMPTRAP_PORT);
+        addr.sin_addr.s_addr   = 0;
+        if (0 != bind(snmptrap_sock, (struct sockaddr *)&addr, sizeof(addr))) {
+            perror("Cannot bind UDP socket for snmptrap to port");
+            exit(1);
+        }
+
+        // Make sure it is at the correct FD
+        if (snmptrap_sock && snmptrap_sock != snmptrap_fd) {
+            dup2(snmptrap_sock, snmptrap_fd);
+            close(snmptrap_sock);
+        }
+    }
+
 
     // Drop priviledges
     if (getuid() != geteuid()) {
@@ -75,12 +188,6 @@ int main(int argc, char **argv)
             perror("Cannot drop priviledges");
             exit(1);
         }
-    }
-
-    // Make sure it is at the correct FD
-    if (sock != FD) {
-        dup2(sock, FD);
-        close(sock);
     }
 
     // Execute the actual program that needs access to the

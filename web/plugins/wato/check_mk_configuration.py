@@ -171,6 +171,17 @@ register_configvar(group,
     domain = "multisite")
 
 register_configvar(group,
+    "table_row_limit",
+    Integer(title = _("Limit the number of rows shown in tables"),
+            help = _("Several pages which use tables to show data in rows, like the "
+                     "\"Users\" configuration page, can be configured to show "
+                     "only a limited number of rows when accessing the pages."),
+            minvalue = 1,
+            default_value = 100,
+            unit = _('rows')),
+    domain = "multisite")
+
+register_configvar(group,
     "start_url",
     TextAscii(title = _("Start-URL to display in main frame"),
               help = _("When you point your browser to the Multisite GUI, usually the dashboard "
@@ -372,17 +383,6 @@ register_configvar(group,
                   "the authentication information. This option can be useful to "
                   " realize authentication in reverse proxy environments.")
     ),
-    domain = "multisite")
-
-register_configvar(group,
-    "table_row_limit",
-    Integer(title = _("Limit the number of rows shown in tables"),
-            help = _("Several pages which use tables to show data in rows, like the "
-                     "\"Users\" configuration page, can be configured to show "
-                     "only a limited number of rows when accessing the pages."),
-            minvalue = 1,
-            default_value = 100,
-            unit = _('rows')),
     domain = "multisite")
 
 #   .----------------------------------------------------------------------.

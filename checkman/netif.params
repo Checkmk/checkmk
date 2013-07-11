@@ -1,0 +1,8 @@
+title: Network interfaces on Linux - DEPRECATED
+agents: linux
+catalog: os/networking
+license: GPL
+distribution: check_mk
+description:
+ This check is deprecated. Please use {lnx_if} instead.
+

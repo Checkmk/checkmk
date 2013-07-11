@@ -1,6 +1,6 @@
 title: System health via IBM Integrated Management Module (IMM)
 agents: snmp
-catalog: hw/server/ibm 
+catalog: hw/server/ibm
 license: GPL
 distribution: check_mk
 description:

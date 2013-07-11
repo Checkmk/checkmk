@@ -27,9 +27,9 @@
 
 
 def inventory_bluecoat_diskcpu(info):
-    return [ (line[0], "current value: " + line[1], '""') for line in info ]
+    return [ (line[0], None) for line in info ]
 
-def check_bluecoat_diskcpu(item, params, info):
+def check_bluecoat_diskcpu(item, _no_params, info):
     for line in info:
         if line[0] == item:
             perfdata = [("value", line[1]) ]

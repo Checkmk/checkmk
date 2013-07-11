@@ -1,0 +1,10 @@
+title: Monitor network interfaces of TP-LINK switches
+agents: snmp
+catalog: hw/network/tplink
+license: GPL
+distribution: check_mk
+description:
+ This check is a copy if {if64} but fixes two bugs of TP-LINK in their
+ MIB implementation that lead to wrong interface speed and wrong
+ alias names of ports. Both issues have been worked around in this
+ check plugin. Please refer to {if64} for the complete manual page.

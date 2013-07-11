@@ -1,0 +1,6 @@
+title: Blue Coat Systems: Security Gateway: Disk and CPU utilization
+catalog: hw/network/bluecoat
+license: GPL
+distribution: check_mk
+description:
+  BERND

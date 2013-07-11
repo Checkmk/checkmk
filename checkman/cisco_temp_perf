@@ -1,0 +1,30 @@
+title: Temperature sensors on Cisco devices, including performance data
+agents: snmp
+catalog: hw/network/cisco
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state of temperature sensors
+ on older Cisco devices using data from the
+ {CISCO-ENVMON-MIB}. This checks is useful for
+ devices which do not provide a current level
+ and threshold information and does not send performance
+ data. Use {cisco_temp_perf} if your devices provides
+ such data.
+
+ Depending on the state of the sensor the checks can
+ be {OK}, {WARN}, {CRIT} or {UNKNOWN}.
+
+ In addition to {cisco_temp} this check outputs performance
+ data.
+
+perfdata:
+ The current temperature in degrees celsius
+
+item:
+ The description of the sensor as provided by
+ the device.
+
+inventory:
+ One check for each sensor is created by the inventory, if the
+ sensor is not in state {5} (not present).

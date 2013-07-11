@@ -1,0 +1,8 @@
+title: ORACLE ASM Disk Groups
+agents: linux, solaris, hpux
+catalog: app/oracle
+license: GPL
+distribution: check_mk
+description:
+ BERND SCHREIBT WAS NETTES. LARS WEISS AUCH WAS.
+

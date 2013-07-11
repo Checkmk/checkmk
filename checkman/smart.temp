@@ -1,7 +1,6 @@
 title: Temperature of HDDs using S.M.A.R.T
 agents: linux
 catalog: os/hardware
-author: Benjamin Odenthal <benjamin.odenthal@tuxclouds.org>, Lars Michelsen <lm@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:

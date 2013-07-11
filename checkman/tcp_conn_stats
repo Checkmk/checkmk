@@ -1,7 +1,6 @@
 title: Number of TCP connections per state
 agents: linux
 catalog: os/networking
-author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:

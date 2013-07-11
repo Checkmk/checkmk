@@ -1,7 +1,6 @@
 title: OpenVMS Queue Jobs
 agents: openvms
 catalog: os/ps 
-author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:

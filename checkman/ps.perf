@@ -1,7 +1,6 @@
 title: Check for running process and send additional performance data
 agents: linux
 catalog: os/ps
-author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:

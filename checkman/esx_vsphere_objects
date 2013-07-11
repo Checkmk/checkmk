@@ -1,7 +1,6 @@
 title: Location and state of VMs and host systems and VMWare ESX
 agents: vsphere
 catalog: os/misc
-author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:

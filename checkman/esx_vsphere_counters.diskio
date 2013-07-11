@@ -1,4 +1,4 @@
-title: Disk throughput on VMWare ESX host systems
+title: VMWare ESX host systems: Disk throughput
 agents: vsphere
 catalog: os/storage 
 license: GPL

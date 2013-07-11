@@ -1,4 +1,4 @@
-title: Physical network interfaces on VMWare ESX host
+title: VMWare ESX host systems: Physical network interfaces
 agents: vsphere
 catalog: os/networking 
 license: GPL

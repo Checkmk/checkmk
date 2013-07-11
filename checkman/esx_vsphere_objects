@@ -1,4 +1,4 @@
-title: Location and state of VMs and host systems and VMWare ESX
+title: VMWare ESX: Location and state of VMs and host systems
 agents: vsphere
 catalog: os/misc
 license: GPL

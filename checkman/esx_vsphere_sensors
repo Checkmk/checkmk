@@ -1,4 +1,4 @@
-title: Hardware sensors on VMWare ESX host system
+title: VMWare ESX host systems: Hardware sensors
 agents: vsphere
 catalog: os/hardware
 license: GPL

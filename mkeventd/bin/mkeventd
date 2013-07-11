@@ -803,7 +803,7 @@ class EventServer:
                 else:
                     self._snmptrap = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                     self._snmptrap.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                    self._snmptrap.bind(("0.0.0.0", 1612))
+                    self._snmptrap.bind(("0.0.0.0", 612))
                     log("Opened builtin snmptrap server on UDP port 612")
             except Exception, e:
                 raise Exception("Cannot start builtin snmptrap server: %s" % e)
@@ -994,7 +994,7 @@ class EventServer:
                 client_sockets[client_socket.fileno()] = (client_socket, "")
 
             # Same for the TCP syslog socket
-            if self._syslog_tcp.fileno() in readable:
+            if self._syslog_tcp and self._syslog_tcp.fileno() in readable:
                 client_socket, addr_info = self._syslog_tcp.accept()
                 client_sockets[client_socket.fileno()] = (client_socket, "")
 

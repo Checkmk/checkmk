@@ -44,6 +44,10 @@ check-git:
 
 mkde:
 	cp -v agents/windows/install_agent.exe check-mk-agent-$(VERSION).exe
+	$(MAKE) mkde-manpages
+	make -C $(CHECKMANDIR)/../.. install
+
+mkde-manpages:
 	echo 'TI:Table of check types (incomplete)' > $(CHECKMANDIR)/checks
 	echo "DT:$$(date +%F)" >> $(CHECKMANDIR)/checks
 	echo "H1:Table of checks with documentation" >> $(CHECKMANDIR)/checks
@@ -59,4 +63,3 @@ mkde:
 	  do ./check_mk --nowiki -M $$check > $(CHECKMANDIR)/check_$$check 2>> $(CHECKMANDIR)/checks ; \
 	done
 	echo "</table>" >> $(CHECKMANDIR)/checks
-	make -C $(CHECKMANDIR)/../.. install

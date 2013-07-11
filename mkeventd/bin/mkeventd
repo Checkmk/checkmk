@@ -780,6 +780,7 @@ class EventServer:
             try:
                 if opt_syslog_tcp_fd != None:
                     self._syslog_tcp = socket.fromfd(opt_syslog_tcp_fd, socket.AF_INET, socket.SOCK_STREAM)
+                    self._syslog_tcp.listen(20)
                     os.close(opt_syslog_tcp_fd)
                     log("Opened builtin syslog-tcp server on inherited filedescriptor %d" % opt_syslog_tcp_fd)
 

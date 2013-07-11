@@ -100,6 +100,7 @@
     Event Console:
     * New global setting "force message archiving", converts the EC into
       a kind of syslog archive
+    * New built-in snmptrap server to directly receive snmp traps
     * FIX: fix layout of filter for history action type
     * FIX: better detect non-IP-number hosts in hostname translation
 

@@ -123,7 +123,7 @@ def user_locked(username):
 
 def on_succeeded_login(username):
     users = load_users(lock = True)
-    if "num_failed" in users[username]:
+    if users[username].get('num_failed', 0) != 0:
         users[username]["num_failed"] = 0
         save_users(users)
 

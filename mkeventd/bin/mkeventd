@@ -870,7 +870,6 @@ class EventServer:
         for oid, value in var_bind_list:
             key = str(oid)
 
-            print value.__class__
             if value.__class__.__name__ == 'ObjectIdentifier':
                 val = str(value)
             elif value.__class__.__name__ == 'TimeTicks':

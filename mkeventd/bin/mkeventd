@@ -932,7 +932,7 @@ class EventServer:
                 trap = []
                 trap.append(('Generic-Trap', proto.apiTrapPDU.getGenericTrap(req_pdu)._value))
                 trap.append(('Specific-Trap', proto.apiTrapPDU.getSpecificTrap(req_pdu)._value))
-                trap.append(('Uptime', proto.apiTrapPDU.getTimeStamp(req_pdu)._value))
+                trap.append(('Uptime', self.fmt_timeticks(proto.apiTrapPDU.getTimeStamp(req_pdu)._value)))
                 trap += self.snmptrap_convert_var_binds(proto.apiTrapPDU.getVarBinds(req_pdu))
 
             elif proto_version == pysnmp_api.protoVersion2c:

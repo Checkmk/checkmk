@@ -1072,7 +1072,6 @@ class EventServer:
 
             # Read events from builtin snmptrap server
             if self._snmptrap != None and self._snmptrap.fileno() in readable:
-                print 'got trap data'
                 try:
                     self.process_raw_data(self.process_snmptrap, self._snmptrap.recvfrom(65535))
                 except Exception, e:

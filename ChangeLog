@@ -98,6 +98,7 @@
                                          requests, queue
     * Custom user attributes can now be managed using WATO
     * FIX: do validation of check items in rule editor
+    * FIX: More consistent handling of folderpath select in rule editor
 
     Notifications:
     * Flexible Notification can now filter service levels

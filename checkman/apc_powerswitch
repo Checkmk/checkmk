@@ -1,0 +1,7 @@
+title: APC Powerswitch: Power status
+catalog: hw/power
+license: GPL
+distribution: check_mk
+description:
+  TODO: BERND
+  Title correct? Ask Bastian

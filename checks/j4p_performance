@@ -24,6 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# WARNING: These checks are deprecated and will be removed soon.
+# Please use jolokia_* instead
+
 # MB warn, crit
 j4p_performance_mem_default_levels      = (1000, 2000)
 # Number of threads warn, crit

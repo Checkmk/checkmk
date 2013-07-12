@@ -1,0 +1,7 @@
+title: Primergy BX600 Blade Server: Temperature
+catalog: hw/server/fujitsu
+license: GPL
+distribution: check_mk
+description:
+  TODO: BERND
+  title correct?

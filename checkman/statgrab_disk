@@ -1,4 +1,4 @@
-title: CPU utilization
+title: Disk IO
 agents: hpux, solaris
 catalog: os/kernel
 license: GPL

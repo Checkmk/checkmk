@@ -48,6 +48,12 @@
     * ps/ps.perf: allow to set levels on CPU util, optional averaging of CPU
     * diskstat: Agent is now also processing data of mmcblk devices
     * qmail: Added check for mailqueue 
+    * cisco_locif: removed obsolete and already disabled check completely
+    * fc_brocade_port: removed obsolete check
+    * fc_brocade_port_detailed: removed obsolete check
+    * tsm_stgpool: removed orphaned check
+    * vmware_state: removed ancient, now orphaned check. Use vsphere_agent instead.
+    * vms_{df,md,netif,sys}: remove orphaned checks that are not needed by the current agent
     * FIX: esx_vsphere_datastores: Fix incomplete performance data and Perf-O-Meter
     * FIX: cleaned up fileinfo.groups pattern handling, manual configuration
       is now possible using WATO

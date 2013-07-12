@@ -17,6 +17,8 @@ manpage_catalog_titles = {
             "riverbed"   : "Riverbed Technology",
             "symantec"   : "Symantec",
             "viprinet"   : "Viprinet",
+            "bluecoat"   : "Blue Coat Systems",
+            "tplink"     : "TP-LINK",
         "power"       : "Power supplies and PDUs",
         "printer"     : "Printers",
         "server"      : "Servers (management boards, blade enclosures)",

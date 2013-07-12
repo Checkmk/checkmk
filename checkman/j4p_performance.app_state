@@ -1,0 +1,6 @@
+title: J4P Performance: Application status - DEPRECATED
+agents: linux
+license: GPL
+distribution: check_mk
+description:
+ Do not use this plugin. It will be removed soon. Use jolokia_metrics instead.

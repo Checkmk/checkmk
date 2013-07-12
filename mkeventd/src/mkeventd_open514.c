@@ -39,7 +39,7 @@
 #include <stdio.h>
 
 #define SYSLOG_PORT    514
-#define SNMPTRAP_PORT  612
+#define SNMPTRAP_PORT  162
 
 #define PROGRAM "mkeventd"
 

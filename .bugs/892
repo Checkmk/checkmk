@@ -1,9 +1,9 @@
 Title: Invalid JSON output for BI aggregates?
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2013-06-05 17:50:48
 Targetversion: 1.2.3
-Class: bug
 
 Example:
 
@@ -21,3 +21,6 @@ Example:
 ]
 
 Problem are the single quotes in the table headers.
+
+2013-07-12 08:43:01: changed state open -> done
+can not reproduce this. Seems to already been fixed.

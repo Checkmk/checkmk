@@ -1,9 +1,9 @@
 Title: fileinfo.groups and "patterns" check_parameter
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2013-07-08 09:56:03
 Targetversion: future
-Class: bug
 
 The fileinfo.groups checks evaluates the parameter fileinfo_groups upon inventory
 and create an autocheck file with a pattern key.
@@ -17,3 +17,8 @@ it is not possible to define patterns in the fileinfo_groups valuespec
 
 Solution:
 Add patterns to fileinfo_groups valuespec
+
+2013-07-12 08:36:21: changed state open -> done
+Has been cleaned up by removing the pattern attribute and adding a precompile
+function to the check which precompiles the patterns of a fileinfo group
+just like the logwatch check

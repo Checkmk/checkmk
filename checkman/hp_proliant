@@ -4,6 +4,8 @@ catalog: hw/server/hp
 license: GPL
 distribution: check_mk
 description:
+ This is a copy only, FIXME, TODO: BERND
+
  This check connects to the SNMP agent installed on an operating system
  on a HP Proliant server and reads the information from the {CPQHLTH-MIB}
  MIB. In addition to the general state it also returns the serial number

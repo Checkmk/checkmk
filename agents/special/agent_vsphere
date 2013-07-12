@@ -200,7 +200,7 @@ except socket.timeout:
     error = "Cannot connect to vSphere Server: connect timeout."
 except:
     if opt_debug:
-        RAIse
+        raise
     error = "Cannot connect to vSphere Server. Maybe you provided wrong " \
             "credentials. Please check your connection settings and try " \
             "again."

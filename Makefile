@@ -39,6 +39,7 @@ LIVESTATUS_SOURCES = configure aclocal.m4 config.guess config.h.in config.sub \
 		     nagios/README nagios/*.h src/*.{h,c,cc} src/Makefile.{in,am} \
 		     depcomp install-sh api/python/{*.py,README} api/perl/*
 
+
 .PHONY: help install clean
 
 all: dist rpm deb

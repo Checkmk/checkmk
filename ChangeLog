@@ -14,7 +14,6 @@
     * livestatus: new service column staleness: indicator for outdated service checks
     * livestatus: new host    column staleness: indicator for outdated host checks
 
-
     Checks & Agents:
     * esx_hostystem multipath: criticize standby paths only if not equal to active paths
     * mk_logwatch: fixed bug when rewriting logwatch messages

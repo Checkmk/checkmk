@@ -10061,10 +10061,11 @@ def create_new_rule_form(rulespec, hostname = None, item = None, varname = None)
     html.button("_new_rule", _("Create rule in folder: "))
     html.write('</td><td>')
 
-    html.select("rule_folder", folder_selection(g_root_folder))
+    html.select("rule_folder", folder_selection(g_root_folder), html.var('folder'))
     html.write('</td></tr></table>\n')
     html.hidden_field("varname", varname)
     html.hidden_field("mode", "new_rule")
+    html.hidden_field('folder', html.var('folder'))
     html.end_form()
 
 def mode_edit_ruleset(phase):
@@ -10209,18 +10210,29 @@ def mode_edit_ruleset(phase):
         match_keys = set([]) # in case if match = "dict"
         last_folder = None
 
+        skip_this_folder = False
         for rulenr in range(0, len(ruleset)):
             folder, rule = ruleset[rulenr]
             if folder != last_folder:
+                skip_this_folder = False
                 if last_folder != None:
                     table.end()
                 first_in_group = True
                 alias_path = get_folder_aliaspath(folder, show_main = False)
+                last_folder = folder
+
+                folder_filter = html.var('folder')
+                if folder_filter and folder['.name'] != folder_filter:
+                    skip_this_folder = True
+                    continue
+
                 table.begin("rules", title = "%s %s" % (_("Rules in folder"), alias_path),
                     css="ruleset", searchable = False)
                 rel_rulenr = 0
-                last_folder = folder
             else:
+                if skip_this_folder:
+                    continue
+
                 first_in_group = False
                 rel_rulenr += 1
 

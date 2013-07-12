@@ -14,7 +14,6 @@
     * livestatus: new service column staleness: indicator for outdated service checks
     * livestatus: new host    column staleness: indicator for outdated host checks
 
-
     Checks & Agents:
     * esx_hostystem multipath: criticize standby paths only if not equal to active paths
     * mk_logwatch: fixed bug when rewriting logwatch messages
@@ -99,6 +98,7 @@
                                          requests, queue
     * Custom user attributes can now be managed using WATO
     * FIX: do validation of check items in rule editor
+    * FIX: More consistent handling of folderpath select in rule editor
 
     Notifications:
     * Flexible Notification can now filter service levels

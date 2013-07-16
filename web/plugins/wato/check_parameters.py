@@ -2621,7 +2621,8 @@ register_check_parameters(
          "do not mix up the service name with the display name of the service."
          "The latter one is just being displayed as a further information."),
         allow_empty = False),
-    "first"
+    "first",
+    False,
 )
 
 register_check_parameters(

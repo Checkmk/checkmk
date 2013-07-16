@@ -1,0 +1,57 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# Put here the example output from your TCP-Based agent. If the
+# check is SNMP-Based, then remove this section
+tsm_session_default_levels = ( 300, 600 )
+
+def inventory_tsm_sessions(info):
+    return [(None, tsm_session_default_levels)]
+
+def check_tsm_sessions(item, params, info):
+    state = 0
+    warn, crit = params
+    count = 0
+    for sid, client_name, proc_state, wait in info:
+        if proc_state in ['RecvW', 'MediaW']:
+            wait = saveint(wait)
+            if wait >= crit:
+                state = 2
+                count += 1
+            elif wait >= warn:
+                state = max(state, 1)
+                count += 1
+    return state, "%d sessions to long in RecvW or MediaW state" % count 
+
+
+check_info["tsm_sessions"] = {
+    "check_function"        : check_tsm_sessions,
+    "inventory_function"    : inventory_tsm_sessions,
+    "service_description"   : "tsm_sessions",
+    "has_perfdata"          : False,
+}
+

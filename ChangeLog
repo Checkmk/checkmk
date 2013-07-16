@@ -57,6 +57,7 @@
     * FIX: esx_vsphere_datastores: Fix incomplete performance data and Perf-O-Meter
     * FIX: cleaned up fileinfo.groups pattern handling, manual configuration
       is now possible using WATO
+    * tsm: Added new TSM checks with a simple windows agent plugin
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a

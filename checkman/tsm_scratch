@@ -1,0 +1,23 @@
+title: Check the number of tsm tapes ins scratch pool 
+agents: linux, windows
+catalog: app/tsm 
+license: GPL
+distribution: check_mk
+description:
+ This check checks the number of tapes in a tsm scrach pool.
+ A warning and a critical level can be set.
+
+item:
+ Is the name of the library
+
+
+inventory:
+ Per library one check is created
+
+
+[parameters]
+   critical int: Below or equal this level the check goes in critical state
+   warning  int: Below or equal the level the checks goes in warning state
+
+[configuration]
+tsm_scratch_default_levels (int, int): Critical and warning level for the number of tapes.

@@ -365,7 +365,7 @@ def save_user_file(name, content):
         write_settings_file(path, content)
     except Exception, e:
         raise MKConfigError(_("Cannot save %s options for user <b>%s</b> into <b>%s</b>: %s") % \
-                (name, user, path, e))
+                (name, user_id, path, e))
 
 # -------------------------------------------------------------------
 #    ____  _ _

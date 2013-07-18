@@ -23,7 +23,7 @@ item:
 examples:
  # Allow VMs beginning with "testvm" to be powered off.
  check_parameters = [
-   ( { "states" : { "poweredOff" : 0 } }, [ "esx" ], [ "VM testvm" ]),
+   ( { "states" : { "poweredOff" : 0 } }, [ "esx-host01" ], [ "VM testvm" ]),
  ]
 
 

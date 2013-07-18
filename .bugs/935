@@ -1,0 +1,8 @@
+Title: html.begin_form method="POST"
+Component: wato
+State: open
+Date: 2013-07-18 15:48:15
+Targetversion: future
+Class: feature
+
+Use POST as default form method

@@ -1,7 +1,6 @@
 title: State and performance of network interfaces of Windows hosts
 agents: windows
 catalog: os/networking 
-author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:

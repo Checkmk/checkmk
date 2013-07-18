@@ -24,33 +24,46 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Example output from agent:
+# Put here the example output from your TCP-Based agent. If the
+# check is SNMP-Based, then remove this section
 
-inventory_tsm_stgpool_check_params = 'tsm_stgpool_default_levels'
-tsm_stgpool_default_levels         = (90, 95)
+tsm_scratch_default_levels = ( 5, 7 )
+def inventory_tsm_scratch(info):
+    inventory = []
+    for inst, tapes, library in info:
+        if inst != 'default':
+            item = "%s / %s" % ( inst, library )
+        else:
+            item = library 
+        inventory.append((item, tsm_scratch_default_levels))
 
-def inventory_tsm_stgpool(info):
-    return [ (line[0], '%s perc used' % line[1], inventory_tsm_stgpool_check_params ) for line in info ]
+    return inventory
 
-def check_tsm_stgpool(item, params, info):
-    for line in info:
-        if line[0] == item:
-            current = float(line[1])
-            warn, crit = params
-            infotext = "%.1f%% used" % current
-            perfdata = [ ("percused", "%.1f%%" % current, warn, crit, 0, 100.0) ]
-            if current >= crit:
-                return (2, "%s (critical at %.1f%%)" % (infotext, crit), perfdata)
-            elif current >= warn:
-                return (1, "%s (warning  at %.1f%%)" % (infotext, warn), perfdata)
-            else:
-                return (0, "%s" % (infotext,), perfdata)
-    return (3, "No such storage pool found")
+def check_tsm_scratch(item, params, info):
+    crit, warn = params
+    for inst, tapes, library in info:
+        if inst != 'default':
+            found_item = "%s / %s" % ( inst, library )
+        else:
+            found_item = library 
+        if found_item == item:
+            tapes = saveint(tapes)
+            state = 0
+            if tapes <= crit:
+                state = 2
+            elif tapes <= warn:
+                state = 1
+
+            return state, "Found %d tapes" % tapes
 
 
+    return 3, "UNKNOWN - Check no implemented"
 
-check_info["tsm_stgpool"] = {
-    'check_function':          check_tsm_stgpool,
-    'inventory_function':      inventory_tsm_stgpool,
-    'service_description':     'Storage Pool %s',
-    'has_perfdata':            True,
+check_info["tsm_scratch"] = {
+    "check_function"        : check_tsm_scratch,
+    "inventory_function"    : inventory_tsm_scratch,
+    "service_description"   : "Scratch Pool %s",
+    "has_perfdata"          : False,
 }
+

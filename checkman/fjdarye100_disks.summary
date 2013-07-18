@@ -1,7 +1,6 @@
 title: Summarized status of all disks in Fujitsu ETERNUS DX80 S2 storage systems
 agents: snmp
 catalog: hw/storagehw/fujitsu 
-author: Philipp Hoefflin <hoefflin+cmk@fuh-e.de>
 license: GPLv2
 distribution: none
 description:

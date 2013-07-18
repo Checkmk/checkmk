@@ -1,0 +1,23 @@
+title: VMWare ESX Host System: Overall state and power state
+agents: vsphere
+catalog: os/misc
+license: GPL
+distribution: check_mk
+description:
+ This check queries the overall state and power state of an ESX host
+ system via the vsphere agent and returns:
+
+ {OK} if the ESX host is running normally (powered on)
+
+ {WARN} if vsphere reports overall state of yellow or if the ESX host is
+     in power state standBy
+
+ {CRIT} if vsphere reports overall state of red or grey or if the ESX host is
+     in power state poweredOff
+
+ See "Monitoring VMWare ESX with Check_MK" in the online documentation
+ as well.
+
+inventory:
+ On each ESX host one check is generated.
+

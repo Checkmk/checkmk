@@ -518,6 +518,15 @@ table.data.availability tr.odd0 td.number {
     background-repeat: repeat;
 }
 
+table.data.availability td.number.stats {
+    background-image: url("images/white_30percent.png");
+}
+
+table.data.availability tr.odd0 td.number.stats {
+    background-image: url("images/white_50percent.png");
+}
+
+
 div.floatfilter.rangespec table.valuespec_tuple {
     width: 100%;
 }

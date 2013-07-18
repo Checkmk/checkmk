@@ -708,8 +708,8 @@ register_check_parameters(
                 Tuple(
                     title = _("Minimal age"),
                     elements = [
-                      Age(title = _("Warning younger then")),
-                      Age(title = _("Critical younger then")),
+                      Age(title = _("Warning younger than")),
+                      Age(title = _("Critical younger than")),
                     ]
                 )
             ),
@@ -717,8 +717,8 @@ register_check_parameters(
                 Tuple(
                     title = _("Maximal age"),
                     elements = [
-                      Age(title = _("Warning older then")),
-                      Age(title = _("Critical older then")),
+                      Age(title = _("Warning older than")),
+                      Age(title = _("Critical older than")),
                     ]
                 )
             ),
@@ -726,8 +726,8 @@ register_check_parameters(
                 Tuple(
                     title = _("Minimal size"),
                     elements = [
-                      Filesize(title = _("Warning when lower then")),
-                      Filesize(title = _("Critical when lower then")),
+                      Filesize(title = _("Warning when lower than")),
+                      Filesize(title = _("Critical when lower than")),
                     ]
                 )
             ),
@@ -735,8 +735,8 @@ register_check_parameters(
                 Tuple(
                     title = _("Maximal size"),
                     elements = [
-                      Filesize(title = _("Warning when higher then")),
-                      Filesize(title = _("Critical when higher then")),
+                      Filesize(title = _("Warning when higher than")),
+                      Filesize(title = _("Critical when higher than")),
                     ]
                 )
             )
@@ -779,7 +779,7 @@ register_rule(group + '/' + subgroup_storage,
 )
 register_rule(group + '/' + subgroup_storage,
     varname   = "fileinfo_groups",
-    title     = _('Fileinfo grouping patterns'),
+    title     = _('File Grouping Patterns'),
     help      = _('The check <tt>fileinfo</tt> monitors the age and size of '
                   'a single file. Each file information that is sent '
                   'by the agent will create one service. By defining grouping '
@@ -787,13 +787,14 @@ register_rule(group + '/' + subgroup_storage,
                   'That check monitors a list of files at once. You can set levels '
                   'not only for the total size and the age of the oldest/youngest '
                   'file but also on the count. You can define one or several '
-                  'patterns containing <tt>*</tt> and <tt>?</tt>, for example '
+                  'patterns for a group containing <tt>*</tt> and <tt>?</tt>, for example '
                   '<tt>/var/log/apache/*.log</tt>. For files contained in a group '
-                  'the inventory will automatically create a group service and '
-                  'no single service.'),
+                  'the inventory will automatically create a group service instead '
+                  'of single services for each file. This rule also applies when '
+                  'you use manual configured checks instead of inventorized ones.'),
     valuespec = ListOf(
       Tuple(
-          help = _("This defines one fileinfo grouping pattern"),
+          help = _("This defines one file grouping pattern"),
           show_titles = True,
           orientation = "horizontal",
           elements = [
@@ -820,8 +821,8 @@ register_check_parameters(
                 Tuple(
                     title = _("Minimal age of oldest file"),
                     elements = [
-                      Age(title = _("Warning younger then")),
-                      Age(title = _("Critical younger then")),
+                      Age(title = _("Warning younger than")),
+                      Age(title = _("Critical younger than")),
                     ]
                 )
             ),
@@ -829,8 +830,8 @@ register_check_parameters(
                 Tuple(
                     title = _("Maximal age of oldest file"),
                     elements = [
-                      Age(title = _("Warning older then")),
-                      Age(title = _("Critical older then")),
+                      Age(title = _("Warning older than")),
+                      Age(title = _("Critical older than")),
                     ]
                 )
             ),
@@ -838,8 +839,8 @@ register_check_parameters(
                 Tuple(
                     title = _("Minimal age of newest file"),
                     elements = [
-                      Age(title = _("Warning younger then")),
-                      Age(title = _("Critical younger then")),
+                      Age(title = _("Warning younger than")),
+                      Age(title = _("Critical younger than")),
                     ]
                 )
             ),
@@ -847,8 +848,8 @@ register_check_parameters(
                 Tuple(
                     title = _("Maximal age of newest file"),
                     elements = [
-                      Age(title = _("Warning older then")),
-                      Age(title = _("Critical older then")),
+                      Age(title = _("Warning older than")),
+                      Age(title = _("Critical older than")),
                     ]
                 )
             ),
@@ -856,8 +857,8 @@ register_check_parameters(
                 Tuple(
                     title = _("Minimal size"),
                     elements = [
-                      Filesize(title = _("Warning when lower then")),
-                      Filesize(title = _("Critical when lower then")),
+                      Filesize(title = _("Warning when lower than")),
+                      Filesize(title = _("Critical when lower than")),
                     ]
                 )
             ),
@@ -865,8 +866,8 @@ register_check_parameters(
                 Tuple(
                     title = _("Maximal size"),
                     elements = [
-                      Filesize(title = _("Warning when higher then")),
-                      Filesize(title = _("Critical when higher then")),
+                      Filesize(title = _("Warning when higher than")),
+                      Filesize(title = _("Critical when higher than")),
                     ]
                 )
             ),
@@ -874,8 +875,8 @@ register_check_parameters(
                 Tuple(
                     title = _("Minimal file count"),
                     elements = [
-                      Integer(title = _("Warning when lower then")),
-                      Integer(title = _("Critical when lower then")),
+                      Integer(title = _("Warning when lower than")),
+                      Integer(title = _("Critical when lower than")),
                     ]
                 )
             ),
@@ -883,15 +884,18 @@ register_check_parameters(
                 Tuple(
                     title = _("Maximal file count"),
                     elements = [
-                      Integer(title = _("Warning when higher then")),
-                      Integer(title = _("Critical when higher then")),
+                      Integer(title = _("Warning when higher than")),
+                      Integer(title = _("Critical when higher than")),
                     ]
                 )
             ),
         ]
     ),
     TextAscii(
-        title = _("Filegroup Name"),
+        title = _("File Group Name"),
+        help = _("This name must match the name of the group defined "
+                 "in the <a href=\"wato.py?mode=edit_ruleset&varname=fileinfo_groups\">%s</a> ruleset.") % \
+                    (_('File Grouping Patterns')),
         allow_empty = True),
     "first"
 )
@@ -906,8 +910,8 @@ register_check_parameters(
                 Tuple(
                     title = _("Read"),
                     elements = [
-                      Filesize(title = _("Warning when lower then")),
-                      Filesize(title = _("Critical when lower then")),
+                      Filesize(title = _("Warning when lower than")),
+                      Filesize(title = _("Critical when lower than")),
                     ]
                 )
             ),
@@ -915,8 +919,8 @@ register_check_parameters(
                 Tuple(
                     title = _("Write"),
                     elements = [
-                      Filesize(title = _("Warning when higher then")),
-                      Filesize(title = _("Critical when higher then")),
+                      Filesize(title = _("Warning when higher than")),
+                      Filesize(title = _("Critical when higher than")),
                     ]
                 )
             )
@@ -950,8 +954,8 @@ register_check_parameters(
                        Tuple(
                            title = _("Absolute levels"),
                            elements = [
-                                Filesize(title = _("Warning when higher then")),
-                                Filesize(title = _("Critical when higher then")),
+                                Filesize(title = _("Warning when higher than")),
+                                Filesize(title = _("Critical when higher than")),
                            ]
                         )
                    ])),
@@ -969,8 +973,8 @@ register_check_parameters(
                        Tuple(
                            title = _("Absolute levels"),
                            elements = [
-                                Filesize(title = _("Warning when higher then")),
-                                Filesize(title = _("Critical when higher then")),
+                                Filesize(title = _("Warning when higher than")),
+                                Filesize(title = _("Critical when higher than")),
                            ]
                         )
                    ])),
@@ -2617,7 +2621,8 @@ register_check_parameters(
          "do not mix up the service name with the display name of the service."
          "The latter one is just being displayed as a further information."),
         allow_empty = False),
-    "first"
+    "first",
+    False,
 )
 
 register_check_parameters(

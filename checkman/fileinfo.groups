@@ -1,7 +1,6 @@
 title: Age, size and count of a group of files
 agents: windows, linux, freebsd, macosx, solaris
 catalog: os/files 
-author: Bastian Kuhn <bk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:

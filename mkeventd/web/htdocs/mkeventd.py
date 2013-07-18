@@ -73,6 +73,7 @@ syslog_facilities = [
     (21, "local5"),
     (22, "local6"),
     (23, "local7"),
+    (31, "snmptrap"),
 ]
 
 phase_names = {

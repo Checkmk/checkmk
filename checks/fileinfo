@@ -50,14 +50,14 @@ def inventory_fileinfo(info, case):
             if line[1] == "missing":
                 continue
             groups = fileinfo_groups_of_file(line[0])
-            if case == 'single' and len(groups) == 0:
+            if case == 'single' and not groups:
                 inventory.append((line[0], {}));
-            if case == 'group' and len(groups) > 0:
+
+            if case == 'group' and groups:
                 for group in groups:
                     if group not in added_groups:
                         added_groups.append(group)
-                        inventory.append((group, \
-                        { "patterns" : fileinfo_patterns_of_group(group) }))
+                        inventory.append((group, {}))
     return inventory
 
 def fileinfo_groups_of_file(check_filename):
@@ -68,14 +68,6 @@ def fileinfo_groups_of_file(check_filename):
             if fnmatch.fnmatch(check_filename, pattern):
                 groups.append(group_name)
     return groups
-
-def fileinfo_patterns_of_group(group):
-    patterns = []
-    for line in host_extra_conf(g_hostname, fileinfo_groups):
-        for group_name, pattern in line:
-            if group_name == group:
-                patterns.append(pattern)
-    return patterns
 
 def check_fileinfo(item, params, info):
     if len(info) == 0:
@@ -98,19 +90,40 @@ def check_fileinfo(item, params, info):
         return (3, "File not found")
     return fileinfo_check_function(check_definition, params)
 
-def check_fileinfogroups(item, params, info):
-    if len(info) == 0:
-        return (3, "no information sent by agent")
+# Extracts patterns that are relevant for the current host and item.
+# Constructs simple list of patterns and makes them available for the check
+def fileinfo_groups_precompile(hostname, item, params):
+    patterns = []
+
+    for line in host_extra_conf(hostname, fileinfo_groups):
+        for group_name, pattern in line:
+            if group_name == item:
+                patterns.append(pattern)
+
+    params['precompiled_patterns'] = patterns
+
+    return params
+
+def check_fileinfo_groups(item, params, info):
+    if not info:
+        return 3, "No information sent by agent"
     import fnmatch
     reftime = int(info[0][0])
+
+    # Get the grouping patterns (either compile or reuse the precompiled ones)
+    # Check_MK creates an empty string if the precompile function has
+    # not been exectued yet. The precompile function creates an empty
+    # list when no rules/patterns are defined.
+    if 'precompiled_patterns' not in params:
+        params = fileinfo_groups_precompile(g_hostname, item, params)
 
     count_all = 0
     age_oldest = None
     age_newest = 0
     size_all = 0
-    #Start counting all values
+    # Start counting all values
     for line in info[1:]:
-        for pattern in params['patterns']:
+        for pattern in params['precompiled_patterns']:
             if fnmatch.fnmatch(line[0], pattern) and str(line[1]) != 'missing':
                 size_all += int(line[1])
                 age = reftime - int(line[2])
@@ -121,9 +134,11 @@ def check_fileinfogroups(item, params, info):
                     age_oldest = max(age_oldest, age)
                     age_newest = min(age_newest, age)
                 count_all += 1
+
     if age_oldest == None:
-        age_oldest =0
-    #Start Checking
+        age_oldest = 0
+
+    # Start Checking
     check_definition = [
         ("age_oldest", age_oldest, get_age_human_readable),
         ("age_newest",  age_newest,  get_age_human_readable),
@@ -163,10 +178,13 @@ check_info["fileinfo"] = {
     "group"                   : "fileinfo",
 }
 
+
 check_info['fileinfo.groups'] = {
-    "check_function"          : check_fileinfogroups,
+    "check_function"          : check_fileinfo_groups,
     "inventory_function"      : lambda info: inventory_fileinfo(info, 'group'),
     "service_description"     : "File group %s",
     "has_perfdata"            : True,
     "group"                   : "fileinfo-groups",
 }
+
+precompile_params['fileinfo.groups'] = fileinfo_groups_precompile

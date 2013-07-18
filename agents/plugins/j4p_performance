@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+# WARNING: This pluin is deprecated and will be removed soon.
+# Please use mk_jolokia instead
+
 import urllib2, sys, os
 
 server   = "localhost"

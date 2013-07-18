@@ -1,0 +1,20 @@
+title: Virtual Machine under ESX: used Memory (RAM)
+agents: vsphere
+catalog: os/kernel
+license: GPL
+distribution: check_mk
+description:
+ The check reports used memory (RAM) for {host}, {guest}, {ballooned}, {private} 
+ and {shared} memory.
+
+ The check always returns {OK} state.
+
+ See "Monitoring VMWare ESX with Check_MK" in the online documentation
+ as well.
+
+perfdata:
+ One value for each of {host}, {guest}, {ballooned}, {private}
+ and {shared} memory.
+
+inventory:
+ On each VM one check is generated.

@@ -24,14 +24,24 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def check_brocade_port(portno, params, info):
-    return (3, "UKNOWN - This check has been removed. Please use brocade_fcport instead.")
+# Example output from agent:
+# Put here the example output from your TCP-Based agent. If the
+# check is SNMP-Based, then remove this section
 
+def inventory_tsm_paths(info):
+    return [(None, None)]
 
-check_info["fc_brocade_port"] = {
-    'check_function':          check_brocade_port,
-    'service_description':     'PORT %s',
-    'has_perfdata':            True,
-    'snmp_info':               [],
-    'snmp_scan_function':      lambda oid: False,
+def check_tsm_paths(item, _no_params, info):
+    count_pathes = len(info)
+    error_paths  = [ x[1] for x in info if x[2] != 'YES' ] 
+    if len(error_paths) > 0:
+        return 2, "Paths with errors: %s" % ", ".join(error_paths)
+    return 0, " %d paths OK" % count_pathes
+
+check_info["tsm_paths"] = {
+    "check_function"        : check_tsm_paths,
+    "inventory_function"    : inventory_tsm_paths,
+    "service_description"   : "TSM Paths",
+    "has_perfdata"          : False,
 }
+

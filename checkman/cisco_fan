@@ -1,7 +1,6 @@
 title: FAN health status on Cisco switches
 agents: snmp
 catalog: hw/network/cisco
-author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:

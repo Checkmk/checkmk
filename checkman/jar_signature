@@ -1,0 +1,6 @@
+title: Signatures of JAR files
+agents: linux
+catalog: app/java
+distribution: check_mk
+description:
+ BERND -> need to install plugin as well

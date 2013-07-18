@@ -25,19 +25,33 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inventory_cisco_locif(info):
-    pass
+qmail_stats_default_levels = ( 10, 20 )
 
-def check_cisco_locif(item, params, info):
-    return (3, 'The cisco_locif check has been removed. Please switch to either if or if64 checks')
+def inventory_qmail_stats(info):
+    if len(info) > 0:
+        return [ (None, "qmail_stats_default_levels") ]
 
-check_info['cisco_locif'] = (check_cisco_locif, "Port %s", 1,  inventory_cisco_locif)
-snmp_info['cisco_locif'] = ( ".1.3.6.1.4.1.9",
-                             [ "9.23.1.1.1.1.6", # CISCO-CDP-MIB::cdpInterfaceName
-                               "2.2.1.1.2",      # OLD-CISCO-INTERFACES-MIB::locIfLineProt
-                               "2.2.1.1.6",      # OLD-CISCO-INTERFACES-MIB::locIfInBitsSec
-                               "2.2.1.1.8",      # OLD-CISCO-INTERFACES-MIB::locIfOutBitsSec
-                               "2.2.1.1.28",     # OLD-CISCO-INTERFACES-MIB::locIfDescr
-                               OID_END ] )
+def check_qmail_stats(_no_item, params, info):
+    queue_length = saveint(info[0][-1])
+    warn, crit = params
+    state = 0
+    label = ''
+    if queue_length > crit:
+        state = 2
+	label = "(Levels at %d/%d)" % (warn, crit)
+    elif queue_length > warn:
+        state = 1
+	label = "(Levels at %d/%d)" % (warn, crit)
 
-snmp_scan_functions['cisco_locif'] = lambda oid: False
+    perf = [ ('queue', queue_length, warn, crit) ]
+    message = "Mailqueue length is %d %s" % (queue_length, label)
+    return state, message, perf
+
+
+check_info['qmail_stats'] = {
+  "inventory_function"  : inventory_qmail_stats,
+  "check_function"      : check_qmail_stats,
+  "service_description" : "Qmail Queue",
+  "has_perfdata"        : True,
+  "group"               : "mailqueue_length",
+}

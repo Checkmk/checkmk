@@ -1,10 +1,11 @@
-title: Threads of Java application server via JMX and j4p.war
+title: Threads of Java application server via JMX and j4p.war - DEPRECATED
 agents: linux
 catalog: app/java
-author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:
+ Do not use this plugin. It will be removed soon. Use jolokia_metrics instead.
+
  This checks uses the JSON HTTP service of j4p (from jmx4perl) to
  monitor the number of threads created by a Java application server like
  Tomcat or JBoss. You can define levels against the number of threads

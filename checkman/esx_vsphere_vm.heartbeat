@@ -1,0 +1,27 @@
+title: Virtual Machine under ESX: Heartbeat
+agents: vsphere
+catalog: os/ps
+license: GPL
+distribution: check_mk
+description:
+ For a virtual machine running on ESX this check reports the heartbeat
+ status (queried from vsphere agent)
+
+ This check returns:
+
+ {OK} if the guest operating system is responding normally
+      (vsphere state: green)
+
+ {WARN} on intermittent heartbeat. May be due to guest load.
+      (vsphere state: yellow)
+      or if VMware Tools are not installed or not running.
+      (vsphere state: gray)
+
+ {CRIT} if there is no heartbeat. Guest operating system may have stopped responding.
+      (vsphere state: red)
+
+ See "Monitoring VMWare ESX with Check_MK" in the online documentation 
+ as well.
+
+inventory:
+ On each VM one check is generated.

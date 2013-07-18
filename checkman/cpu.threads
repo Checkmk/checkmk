@@ -1,7 +1,6 @@
 title: Total number of current processes and threads
 agents: linux, aix, freebsd, macosx, netbsd, openbsd, solaris
 catalog: os/kernel
-author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:

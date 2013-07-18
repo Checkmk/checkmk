@@ -3486,20 +3486,19 @@ def show_check_manual(checkname):
         print_sectionheader(checkname, header['title'])
         if opt_nowiki:
             sys.stderr.write("<tr><td class=tt>%s</td><td>[check_%s|%s]</td></tr>\n" % (checkname, checkname, header['title']))
-        print_splitline(header_color_left, "Author:            ", header_color_right, header['author'])
-        print_splitline(header_color_left, "License:           ", header_color_right, header['license'])
-        distro = header['distribution']
-        if distro == 'check_mk':
-            distro = "official part of Check_MK"
-        print_splitline(header_color_left, "Distribution:      ", header_color_right, distro)
         ags = []
         for agent in header['agents'].split(","):
             agent = agent.strip()
             ags.append({ "vms" : "VMS", "linux":"Linux", "aix": "AIX",
                          "solaris":"Solaris", "windows":"Windows", "snmp":"SNMP",
-                         "openvms" : "OpenVMS" }
+                         "openvms" : "OpenVMS", "vsphere" : "vSphere" }
                          .get(agent, agent.upper()))
         print_splitline(header_color_left, "Supported Agents:  ", header_color_right, ", ".join(ags))
+        distro = header['distribution']
+        if distro == 'check_mk':
+            distro = "official part of Check_MK"
+        print_splitline(header_color_left, "Distribution:      ", header_color_right, distro)
+        print_splitline(header_color_left, "License:           ", header_color_right, header['license'])
 
         empty_line()
         print_textbody(header['description'])

@@ -1816,7 +1816,7 @@ sl_help = _("This rule set is useful if you send your monitoring notifications "
             "used as the service level of the resulting event in the Event Console.")
 
 register_rule(
-    group,
+    "grouping",
     "extra_host_conf:_ec_sl",
     DropdownChoice(
        title = _("Service Level of hosts"),
@@ -1827,7 +1827,7 @@ register_rule(
 )
 
 register_rule(
-    group,
+    "grouping",
     "extra_service_conf:_ec_sl",
     DropdownChoice(
        title = _("Service Level of services"),

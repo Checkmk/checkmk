@@ -1,0 +1,15 @@
+title: Virtual Machine under ESX: Name of the VM
+agents: vsphere
+catalog: os/misc
+license: GPL
+distribution: check_mk
+description:
+ This check reports the name the virtual machine has within ESX.
+
+ The check always returns {OK} state.
+
+ See "Monitoring VMWare ESX with Check_MK" in the online documentation
+ as well.
+
+inventory:
+ On each VM one check is generated.

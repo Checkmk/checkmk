@@ -1,0 +1,30 @@
+title: Checks the length of the qmail mailqueue
+agents: linux
+catalog: app/qmail
+license: GPL
+distribution: check_mk
+description:
+ This check uses the output of {qmail-qstat} as sent by the linux agent of
+ Check_MK. The command lists all mails which wait in the mail queue.
+
+ This check creates one service per host which represents the state
+ of the servers mailqueue.
+
+ The check will result in WARNING/CRITICAL states when the number of items
+ in the queue reach the defined thresholds.
+
+
+perfdata:
+ One variable: the number of messages in the queue
+
+inventory:
+ On each system which provides the {qmail-qstat} command one service is being created.
+
+[parameters]
+warning (int): Queues with more than this value will result in a WARNING state
+critical (int): Number of messages in the queue to result in a CRITICAL stat
+
+[configuration]
+qmail_stats_default_levels (int, int): The global default levels for all checks
+ of this type. This is preset to {(10, 20)} (which means that the check
+ gets critical if there are more than {20} messages in the queue).

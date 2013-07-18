@@ -1,7 +1,6 @@
 title: General status of the CRM for heartbeat nodes using crm=yes
 agents: linux
 catalog: os/services
-author: Lars Michelsen <lm@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:

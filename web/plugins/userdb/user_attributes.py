@@ -24,34 +24,29 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# <<<vms_netif>>>
-# WE0 661236727 169337595
-def inventory_vms_netif(info):
-    return [ (line[0], '""', None) for line in info ]
 
-def check_vms_netif(item, params, info):
-    for line in info:
-        if item == line[0]:
-            try:
-                global g_counters
-                perfdata = []
-                rates = []
-                this_time = time.time()
-                for dir, value in [ ('ipackets', int(line[1])), ('opackets', int(line[2])) ]:
-                    countername = "netctr.%s.%s" % (item, dir)
-                    timedif, items_per_sec = get_counter(countername, this_time, value)
-                    perfdata.append( (dir, "%dc" % value) )
-                    rates.append(items_per_sec)
-                return (0, "packets/s: %.2f in / %.2f out " % (rates[0], rates[1]), perfdata)
-            except:
-                return (3, "invalid output from plugin")
+declare_user_attribute(
+    "force_authuser",
+    Checkbox(
+        title = _("Visibility of Hosts/Services"),
+        label = _("Only show hosts and services the user is a contact for"),
+        help = _("When this option is checked, then the status GUI will only "
+                 "display hosts and services that the user is a contact for - "
+                 "even if he has the permission for seeing all objects."),
+    ),
+    permission = "general.see_all"
+)
 
-    return (3, "network inteface not present")
+declare_user_attribute(
+    "force_authuser_webservice",
+    Checkbox(
+        title = _("Visibility of Hosts/Services (Webservice)"),
+        label = _("Export only hosts and services the user is a contact for"),
+        help = _("When this option is checked, then the Multisite webservice "
+                 "will only export hosts and services that the user is a contact for - "
+                 "even if he has the permission for seeing all objects."),
+    ),
+    permission = "general.see_all"
+)
 
 
-check_info["vms_netif"] = {
-    'check_function':          check_vms_netif,
-    'inventory_function':      inventory_vms_netif,
-    'service_description':     'NIC %s',
-    'has_perfdata':            True,
-}

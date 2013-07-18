@@ -1,7 +1,6 @@
 title: Masterguard UPS Devices: Out voltage
 agents: snmp
 catalog: hw/power
-author: Bastian Kuhn <bk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:

@@ -1,7 +1,6 @@
-title: Used space in VMWare ESX Datastores
+title: VMWare ESX host systems: Used space
 agents: vsphere
 catalog: os/storage 
-author: Mathias Kettner <mk@mathias-kettner.de>
 license: GPL
 distribution: check_mk
 description:

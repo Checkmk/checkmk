@@ -26,7 +26,8 @@ syslog_priorities = [ "emerg", "alert", "crit", "err", "warning", "notice", "inf
 syslog_facilities = [ "kern", "user", "mail", "daemon", "auth", "syslog", "lpr", "news",
                       "uucp", "cron", "authpriv", "ftp",
                       "(unused 12)", "(unused 13)", "(unused 13)", "(unused 14)",
-                      "local0", "local1", "local2", "local3", "local4", "local5", "local6", "local7", ]
+                      "local0", "local1", "local2", "local3", "local4", "local5", "local6", "local7",
+                      None, None, None, None, None, None, None, "snmptrap" ]
 
 event_columns = [
     ( "event_id",            1 ),
@@ -710,13 +711,18 @@ class EventServer:
 
 
     def __init__(self):
-        self._syslog = None
+        self._syslog     = None
+        self._syslog_tcp = None
+        self._snmptrap   = None
+
         self.create_pipe()
         self.open_eventsocket()
         self.open_syslog()
+        self.open_syslog_tcp()
+        self.open_snmptrap()
         self._rules = []
         self._hash_stats = []
-        for facility in range(24):
+        for facility in range(32):
             self._hash_stats.append([ 0 ] * 8 )
 
     def status_columns(self):
@@ -768,6 +774,40 @@ class EventServer:
                     log("Opened builtin syslog server on UDP port 514")
             except Exception, e:
                 raise Exception("Cannot start builtin syslog server: %s" % e)
+
+    def open_syslog_tcp(self):
+        if opt_syslog_tcp:
+            try:
+                if opt_syslog_tcp_fd != None:
+                    self._syslog_tcp = socket.fromfd(opt_syslog_tcp_fd, socket.AF_INET, socket.SOCK_STREAM)
+                    self._syslog_tcp.listen(20)
+                    os.close(opt_syslog_tcp_fd)
+                    log("Opened builtin syslog-tcp server on inherited filedescriptor %d" % opt_syslog_tcp_fd)
+
+                else:
+                    self._syslog_tcp = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    self._syslog_tcp.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                    self._syslog_tcp.bind(("0.0.0.0", 514))
+                    self._syslog_tcp.listen(20)
+                    log("Opened builtin syslog-tcp server on TCP port 514")
+            except Exception, e:
+                raise Exception("Cannot start builtin syslog-tcp server: %s" % e)
+
+    def open_snmptrap(self):
+        if opt_snmptrap:
+            try:
+                if opt_snmptrap_fd != None:
+                    self._snmptrap = socket.fromfd(opt_snmptrap_fd, socket.AF_INET, socket.SOCK_DGRAM)
+                    os.close(opt_snmptrap_fd)
+                    log("Opened builtin snmptrap server on inherited filedescriptor %d" % opt_snmptrap_fd)
+
+                else:
+                    self._snmptrap = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+                    self._snmptrap.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                    self._snmptrap.bind(("0.0.0.0", 162))
+                    log("Opened builtin snmptrap server on UDP port 162")
+            except Exception, e:
+                raise Exception("Cannot start builtin snmptrap server: %s" % e)
 
     def open_eventsocket(self):
         if g_eventsocket_path:
@@ -826,14 +866,119 @@ class EventServer:
 
         return os.open(g_pipe_path, os.O_RDWR | os.O_NONBLOCK)
 
+    # Format time difference seconds into approximated
+    # human readable value
+    def fmt_timeticks(self, ticks):
+        secs = float(ticks) / 100
+        if secs < 240:
+            return "%d sec" % secs
+        mins = secs / 60
+
+        if mins < 120:
+            return "%d min" % mins
+
+        hours, mins = divmod(mins, 60)
+        if hours < 48:
+            return "%d hours, %d min" % (hours, mins)
+
+        days, hours = divmod(hours, 24)
+        return "%d days, %d hours, %d min" % (days, hours, mins)
+
+    # Convert pysnmp datatypes to simply handable ones
+    def snmptrap_convert_var_binds(self, var_bind_list):
+        var_binds = []
+        for oid, value in var_bind_list:
+            key = str(oid)
+
+            if value.__class__.__name__ == 'ObjectIdentifier':
+                val = str(value)
+            elif value.__class__.__name__ == 'TimeTicks':
+                val = self.fmt_timeticks(value._value)
+            else:
+                val = value._value
+
+            # Translate some standard SNMPv2 oids
+            if key == '1.3.6.1.2.1.1.3.0':
+                key = 'Uptime'
+
+            var_binds.append((key, val))
+        return var_binds
+
+    def process_snmptrap(self, (whole_msg, (host, port))):
+        while whole_msg:
+            # Verify the version is supported
+            proto_version = int(pysnmp_api.decodeMessageVersion(whole_msg))
+            if proto_version not in pysnmp_api.protoModules:
+                verbose('Dropped invalid snmptrap (Unsupported SNMP version %s)' % proto_version)
+                return
+
+            proto = pysnmp_api.protoModules[proto_version]
+
+            req_msg, whole_msg = pyasn_decoder.decode(whole_msg, asn1Spec = proto.Message())
+            req_pdu = proto.apiMessage.getPDU(req_msg) # pdu = protocol data unit
+            if not req_pdu.isSameTypeWith(proto.TrapPDU()):
+                return # Skip non trap packagesa (according to header)
+
+            # community: proto.apiMessage.getCommunity(req_msg)
+
+            if proto_version == pysnmp_api.protoVersion1:
+                # These fields are available by specification in v1, but not in v2.
+
+                # use the enterprise oid as application
+                application = proto.apiTrapPDU.getEnterprise(req_pdu).prettyPrint()
+                # override the host with the agent address
+                host = proto.apiTrapPDU.getAgentAddr(req_pdu).prettyPrint()
+
+                trap = []
+                trap.append(('Generic-Trap', proto.apiTrapPDU.getGenericTrap(req_pdu)._value))
+                trap.append(('Specific-Trap', proto.apiTrapPDU.getSpecificTrap(req_pdu)._value))
+                trap.append(('Uptime', self.fmt_timeticks(proto.apiTrapPDU.getTimeStamp(req_pdu)._value)))
+                trap += self.snmptrap_convert_var_binds(proto.apiTrapPDU.getVarBinds(req_pdu))
+
+            elif proto_version == pysnmp_api.protoVersion2c:
+                trap = self.snmptrap_convert_var_binds(proto.apiPDU.getVarBinds(req_pdu))
+
+                # use the trap-oid as application
+                application = ''
+                for index, (oid, val) in enumerate(trap):
+                    if oid == '1.3.6.1.6.3.1.1.4.1.0':
+                        application = trap.pop(index)[1]
+                        break
+            else:
+                return # dropping unhandled snmp version
+
+        # once we got here we have a real parsed trap which we convert to an event now
+        event = {
+            'time'        : time.time(),
+            'host'        : host,
+            'priority'    : 5,  # notice
+            'facility'    : 31, # not used by syslog -> we use this for all traps
+            'application' : application,
+            'text'        : ', '.join([ '%s: %s' % item for item in trap ])
+        }
+        self.process_event(event)
+
     def serve(self):
         pipe_fragment = ''
         pipe = self.open_pipe()
         listen_list = [ pipe ]
+
+        # Wait for incoming syslog packets via UDP
         if self._syslog != None:
             listen_list.append(self._syslog.fileno())
+
+        # Wait for new connections for events via TCP socket
+        if self._syslog_tcp != None:
+            listen_list.append(self._syslog_tcp)
+
+        # Wait for new connections for events via unix socket
         if self._eventsocket:
             listen_list.append(self._eventsocket)
+
+        # Wait for incomding SNMP traps
+        if self._snmptrap != None:
+            listen_list.append(self._snmptrap.fileno())
+
 
         # Keep list of client connections via UNIX socket and
         # read data that is not yet processed. Map from
@@ -847,6 +992,11 @@ class EventServer:
             # Accept new connection on event unix socket
             if self._eventsocket in readable:
                 client_socket, addr_info = self._eventsocket.accept()
+                client_sockets[client_socket.fileno()] = (client_socket, "")
+
+            # Same for the TCP syslog socket
+            if self._syslog_tcp and self._syslog_tcp in readable:
+                client_socket, addr_info = self._syslog_tcp.accept()
                 client_sockets[client_socket.fileno()] = (client_socket, "")
 
             # Read data from existing event unix socket connections
@@ -868,14 +1018,14 @@ class EventServer:
                         # Do we have any complete messages?
                         if '\n' in data:
                             complete, rest = data.rsplit("\n", 1)
-                            self.process_event_data(complete + "\n")
+                            self.process_raw_lines(complete + "\n")
                         else:
                             rest = data # keep for next time
 
                     # Only complete messages
                     else:
                         if data:
-                            self.process_event_data(data)
+                            self.process_raw_lines(data)
                         rest = ""
 
                     # Connection still open?
@@ -907,18 +1057,25 @@ class EventServer:
                         if data[-1] != '\n':
                             if '\n' in data: # at least one complete message contained
                                 messages, pipe_fragment = data.rsplit('\n', 1)
-                                self.process_event_data(messages + '\n') # got lost in split
+                                self.process_raw_lines(messages + '\n') # got lost in split
                             else:
                                 pipe_fragment = data # keep beginning of message, wait for \n
                         else:
-                            self.process_event_data(data)
+                            self.process_raw_lines(data)
 
                 except:
                     pass
 
             # Read events from builtin syslog server
             if self._syslog != None and self._syslog.fileno() in readable:
-                self.process_event_data(self._syslog.recv(4096))
+                self.process_raw_lines(self._syslog.recv(4096))
+
+            # Read events from builtin snmptrap server
+            if self._snmptrap != None and self._snmptrap.fileno() in readable:
+                try:
+                    self.process_raw_data(self.process_snmptrap, self._snmptrap.recvfrom(65535))
+                except Exception, e:
+                    log('Exception handling a snmptrap (skipping this one): %s' % format_exception())
 
             # check wether or not spool files are available
             spool_dir = g_state_dir + "/spool"
@@ -927,7 +1084,7 @@ class EventServer:
                 if spool_files:
                     # progress the first spool file we get
                     this_path = spool_dir + '/' + spool_files.pop()
-                    self.process_event_data(file(this_path).read())
+                    self.process_raw_lines(file(this_path).read())
                     os.remove(this_path)
                     if spool_files:
                         select_timeout = 0 # enable fast processing to process further files
@@ -937,8 +1094,21 @@ class EventServer:
             if opt_profile.get("event"):
                 return
 
+    # Processes incoming data, just a wrapper between the real data and the
+    # handler function to record some statistics etc.
+    def process_raw_data(self, handler_func, data):
+        g_perfcounters.count("messages")
+        before = time.time()
+        # In replication slave mode (when not took over), ignore all events
+        if not is_replication_slave() or g_slave_status["mode"] != "sync":
+            handler_func(data)
+        elif opt_debug:
+            log("Replication: we are in slave mode, ignoring event")
+        elapsed = time.time() - before
+        g_perfcounters.count_time("processing", elapsed)
 
-    def process_event_data(self, data):
+    # Takes several lines of messages, handles encoding and processes them separated
+    def process_raw_lines(self, data):
         lines = data.splitlines()
         for line in lines:
             line = line.rstrip()
@@ -949,16 +1119,7 @@ class EventServer:
                 line = line.decode("latin-1")
 
             if line:
-                g_perfcounters.count("messages")
-                before = time.time()
-                # In replication slave mode (when not took over), ignore all events
-                if not is_replication_slave() or g_slave_status["mode"] != "sync":
-                    self.process_event(line.rstrip())
-                elif opt_debug:
-                    log("Replication: we are in slave mode, ignoring event")
-                elapsed = time.time() - before
-                g_perfcounters.count_time("processing", elapsed)
-
+                self.process_raw_data(self.process_line, line)
 
     def do_housekeeping(self):
         with lock_eventstatus:
@@ -1235,12 +1396,13 @@ class EventServer:
         if g_config["rule_optimizer"]:
             log("Rule hash: %d rules - %d hashed, %d unspecific" %
                (len(self._rules), len(self._rules) - count_unspecific, count_unspecific))
-            for facility in range(24):
+            for facility in range(32):
                 if facility in self._rule_hash:
                     stats = []
                     for prio, entries in self._rule_hash[facility].items():
                         stats.append("%s(%d)" % (syslog_priorities[prio], len(entries)))
-                    log(" %-12s: %s" % (syslog_facilities[facility], " ".join(stats)))
+                    if syslog_facilities[facility]:
+                        log(" %-12s: %s" % (syslog_facilities[facility], " ".join(stats)))
 
 
     def hash_rule(self, rule):
@@ -1249,7 +1411,7 @@ class EventServer:
         if facility:
             self.hash_rule_facility(rule, facility)
         else:
-            for facility in range(24): # all syslog facilities
+            for facility in range(32): # all syslog facilities
                 self.hash_rule_facility(rule, facility)
 
 
@@ -1275,7 +1437,7 @@ class EventServer:
         log("Top 20 of facility/priority:")
         entries = []
         total_count = 0
-        for facility in range(24):
+        for facility in range(32):
             for priority in range(8):
                 count = self._hash_stats[facility][priority]
                 if count:
@@ -1288,11 +1450,13 @@ class EventServer:
                 syslog_facilities[facility], syslog_priorities[priority], count,
                     (100.0 * count / float(total_count))))
 
-    def process_event(self, line):
+    def process_line(self, line):
+        line = line.rstrip()
         if g_config["debug_rules"]:
             log(u"Processing message '%s'" % line)
-        event = self.parse_event(line)
+        self.process_event(self.parse_event(line))
 
+    def process_event(self, event):
         # Rule optimizer
         if g_config["rule_optimizer"]:
             self._hash_stats[event["facility"]][event["priority"]] += 1
@@ -2808,8 +2972,12 @@ def usage():
    -E, --eventsocket P  Path to unix socket for receiving events (optional)
    -L, --livestatus P   Path to livestatus socket of monitoring core (optional)
    -P, --pipe P         Path to pipe for receiving events
-   --syslog             Enable builtin syslog server
+   --syslog             Enable builtin UDP syslog server
    --syslog-fd FD       Do not open UDP port 514, but inherit it via this FD
+   --syslog-tcp         Enable builtin TCP syslog server
+   --syslog-tcp-fd FD   Do not open TCP port 514, but inherit it via this FD
+   --snmptrap           Enable builtin snmptrap server
+   --snmptrap-fd FD     Do not open UDP port 162, but inherit it via this FD
    --statedir D         Path to directory for saving status
    --logdir D           Path to directory where mkeventd.log is created
    -p, --pidfile        Path to PID file
@@ -2856,6 +3024,10 @@ opt_foreground    = False
 opt_profile       = {}
 opt_syslog        = False
 opt_syslog_fd     = None
+opt_syslog_tcp    = False
+opt_syslog_tcp_fd = None
+opt_snmptrap      = False
+opt_snmptrap_fd   = None
 
 # Set default values for options
 omd_root = os.getenv("OMD_ROOT")
@@ -2882,7 +3054,7 @@ else:
 short_options = "hvVgS:P:p:C:E:L:"
 long_options = [ "help", "version", "verbose", "debug", "foreground", "socket=", "eventsocket=", "pipe=",
                  "pidfile=", "statedir=", "configdir=", "logdir=", "profile-status", "profile-event", "debug-locking",
-                 "syslog", "syslog-fd=", "livestatus=" ]
+                 "syslog", "syslog-fd=", "syslog-tcp", "syslog-tcp-fd=", "snmptrap", "snmptrap-fd=", "livestatus=" ]
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -2909,6 +3081,14 @@ try:
             opt_syslog = True
         elif o == '--syslog-fd':
             opt_syslog_fd = int(a)
+        elif o == '--syslog-tcp':
+            opt_syslog_tcp = True
+        elif o == '--syslog-tcp-fd':
+            opt_syslog_tcp_fd = int(a)
+        elif o == '--snmptrap':
+            opt_snmptrap = True
+        elif o == '--snmptrap-fd':
+            opt_snmptrap_fd = int(a)
         elif o in [ '-p', '--pidfile' ]:
             g_pid_file = a
         elif o in [ '-C', '--configdir' ]:
@@ -2928,6 +3108,13 @@ try:
         elif o in [ '-V', '--version' ]:
             sys.stdout.write("mkeventd version %s\n" % VERSION)
             sys.exit(0)
+
+    # Handler specific imports
+    if opt_snmptrap:
+        #from pysnmp.carrier.asynsock.dispatch import AsynsockDispatcher as pysnmp_AsynsockDispatcher
+        #from pysnmp.carrier.asynsock.dgram import udp as pysnmp_udp
+        from pysnmp.proto import api as pysnmp_api
+        from pyasn1.codec.ber import decoder as pyasn_decoder
 
     if not g_pipe_path:
         bail_out("Please specify the path to the pipe (using -P).")

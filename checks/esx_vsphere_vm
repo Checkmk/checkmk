@@ -45,7 +45,7 @@ def inventory_esx_vsphere_vm_mem(info):
     if 'summary.quickStats.guestMemoryUsage' in data:
         return [(None, {})]
 
-def check_esx_vsphere_vm_mem(item, params, info):
+def check_esx_vsphere_vm_mem(_no_item, _no_params, info):
     data = esx_vsphere_vm_convert(info)
 
     # If the machine is powered of, we do not get data
@@ -102,7 +102,7 @@ def inventory_esx_vsphere_vm_name(info):
     if 'name' in data:
         return [(None, None)]
 
-def check_esx_vsphere_vm_name(item, params, info):
+def check_esx_vsphere_vm_name(_no_item, _no_params, info):
     data = esx_vsphere_vm_convert(info)
     return(0, " ".join(data['name']))
 
@@ -134,7 +134,7 @@ def inventory_esx_vsphere_vm_hb_status(info):
     if 'guestHeartbeatStatus' in data:
         return [(None, None)]
 
-def check_esx_vsphere_vm_hb_status(item, params, info):
+def check_esx_vsphere_vm_hb_status(_no_item, _no_params, info):
     data = esx_vsphere_vm_convert(info)
 
     vm_status = data['guestHeartbeatStatus'][0]

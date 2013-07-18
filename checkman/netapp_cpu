@@ -1,0 +1,8 @@
+title: CPU utilization of NetApp filers
+agents: snmp
+catalog: hw/storagehw/netapp
+license: GPL
+distribution: check_mk
+description:
+ BERND ERKLAERT UND DAS...
+

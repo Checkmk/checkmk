@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 import views, time, defaults, dashboard
-import weblib
 from lib import *
 
 # Python 2.3 does not have 'set' in normal namespace.
@@ -1024,7 +1023,7 @@ def render_custom_links():
         return
 
     def render_list(ids, links):
-        states = weblib.get_tree_states('customlinks')
+        states = html.get_tree_states('customlinks')
         n = 0
         for entry in links:
             n += 1

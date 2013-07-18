@@ -25,7 +25,12 @@
 # Boston, MA 02110-1301 USA.
 
 import grp, pprint, os, errno, gettext, marshal, fcntl, __builtin__
-import defaults
+
+#Workarround when the file is included outsite multisite
+try:
+    import defaults
+except:
+    pass
 
 
 nagios_state_names = { -1: "NODATA", 0: "OK", 1: "WARNING", 2: "CRITICAL", 3: "UNKNOWN", 4: "DEPENDENT" }
@@ -279,14 +284,23 @@ def aquire_lock(path):
         return # No recursive locking
     fd = os.open(path, os.O_RDONLY)
     fcntl.flock(fd, fcntl.LOCK_EX)
-    g_aquired_locks.append(fd)
+    g_aquired_locks.append((path, fd))
     g_locked_paths.append(path)
+
+def release_lock(path):
+    if path not in g_locked_paths:
+        return # no unlocking needed
+    for lock_path, fd in g_aquired_locks:
+        if lock_path == path:
+            fcntl.flock(fd, fcntl.LOCK_UN)
+            os.close(fd)
+            g_aquired_locks.remove((lock_path, fd))
+    g_locked_paths.remove(path)
 
 def release_all_locks():
     global g_aquired_locks, g_locked_paths
-    for fd in g_aquired_locks:
+    for path, fd in g_aquired_locks:
         os.close(fd)
     g_aquired_locks = []
     g_locked_paths = []
-
 

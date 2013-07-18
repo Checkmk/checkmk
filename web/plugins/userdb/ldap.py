@@ -579,6 +579,30 @@ ldap_attribute_plugins['pager'] = {
     ],
 }
 
+# Register sync plugins for all custom user attributes (assuming simple data types)
+def register_user_attribute_sync_plugins():
+    for attr, val in get_user_attributes():
+        html.log(attr)
+        html.log(val)
+        ldap_attribute_plugins[attr] = {
+            'title': val['valuespec'].title(),
+            'help':  val['valuespec'].help(),
+            'needed_attributes': lambda params: [ params.get('attr', ldap_attr(attr)) ],
+            'convert':           lambda params, user_id, ldap_user, user: \
+                                         ldap_convert_simple(user_id, ldap_user, user, attr,
+                                                        params.get('attr', ldap_attr(attr))),
+            'lock_attributes': [ attr ],
+            'parameters': [
+                ('attr', TextAscii(
+                    title = _("LDAP attribute to sync"),
+                    help  = _("The LDAP attribute which contents shal be synced into this custom attribute."),
+                    default_value = lambda: ldap_attr(attr),
+                )),
+            ],
+        }
+
+register_user_attribute_sync_plugins()
+
 def ldap_convert_groups_to_contactgroups(params, user_id, ldap_user, user):
     groups = []
     # 1. Fetch CNs of all LDAP groups of the user (use group_dn, group_filter)
@@ -692,7 +716,7 @@ def ldap_sync(add_to_changelog, only_username):
     #    filt = '(%s=%s)' % (ldap_user_id_attr(), only_username)
 
     import wato
-    users      = load_users()
+    users      = load_users(lock = True)
     ldap_users = ldap_get_users()
 
     # Remove users which are controlled by this connector but can not be found in

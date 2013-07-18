@@ -24,14 +24,34 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def check_brocade_port(portno, params, info):
-    return (3, "UKNOWN - This check has been removed. Please use brocade_fcport instead.")
+# Example output from agent:
+# Put here the example output from your TCP-Based agent. If the
+# check is SNMP-Based, then remove this section
+tsm_session_default_levels = ( 300, 600 )
+
+def inventory_tsm_sessions(info):
+    return [(None, tsm_session_default_levels)]
+
+def check_tsm_sessions(item, params, info):
+    state = 0
+    warn, crit = params
+    count = 0
+    for sid, client_name, proc_state, wait in info:
+        if proc_state in ['RecvW', 'MediaW']:
+            wait = saveint(wait)
+            if wait >= crit:
+                state = 2
+                count += 1
+            elif wait >= warn:
+                state = max(state, 1)
+                count += 1
+    return state, "%d sessions to long in RecvW or MediaW state" % count 
 
 
-check_info["fc_brocade_port_detailed"] = {
-    'check_function':          check_brocade_port,
-    'service_description':     'PORT %s',
-    'has_perfdata':            True,
-    'snmp_info':               [],
-    'snmp_scan_function':      lambda oid: False,
+check_info["tsm_sessions"] = {
+    "check_function"        : check_tsm_sessions,
+    "inventory_function"    : inventory_tsm_sessions,
+    "service_description"   : "tsm_sessions",
+    "has_perfdata"          : False,
 }
+

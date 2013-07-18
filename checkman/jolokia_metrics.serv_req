@@ -1,0 +1,59 @@
+title: Requests
+agents: linux
+catalog: app/java
+license: GPL
+distribution: check_mk
+description:
+
+ BERND WIRD DAS HIER BALD RICHTEN ;-)
+ Title to be improved
+
+ This check allows to monitor the usage of heap and non-heap memory area
+ usage on web application servers.
+
+ To use this plugin, Jolokia and the agent plugin need to be installed
+ on the monitored server.
+ It will then fetch the memory usage from the JMX status info of the remote
+ Java Virtual Machine.
+
+ The check can alert if the {WARN}/{CRIT} thresholds for a configurable heap, nonheap
+ or total is exceeded.
+
+item:
+ The name of the application server instance as configured by the agent.
+
+examples:
+ jolokia_metrics_mem_default_levels = {
+    "heap"    : (2000,1000),    # heap warning when 2000MB left, heap crit when 1000 MB left
+    "nonheap" : (75.0, 95.7),   # nonheap warning at 75.0% usage, nonheap crit at 95.7% usage
+    "total" : (3000, 2200), # total warning at 3000MB left, total crit at 2200MB left
+ }
+
+perfdata:
+ The heap and non-heap usage information and levels in Megabytes.
+
+inventory:
+ One check is created for each Jolokia instance sent by the agent.
+
+
+[parameters]
+parameters (dict): This check requires a dictionary with the following keys.
+                   If a key is missing no WARN/CRIT verfication is done for
+                   this specific key
+
+ {"heap"} - A pair of two values to be used as WARN/CRIT levels
+ Integer numbers are interpreted as remaining heap memory
+ Float numbers are interpreted as available heap memory usage
+
+ {"nonheap"} - A pair of two values to be used as WARN/CRIT levels
+ Integer numbers are interpreted as remaining nonheap memory
+ Float numbers are interpreted as available nonheap memory usage
+
+ {"total"} - A pair of two values to be used as WARN/CRIT levels
+ Integer numbers are interpreted as remaining total memory
+ Float numbers are interpreted as available total memory usage
+
+
+[configuration]
+jolokia_metrics_mem_default_levels (dict): Default warn/crit levels for heap, nonheap and total
+

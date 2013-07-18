@@ -1415,21 +1415,33 @@ class RelativeDate(OptionalDropdownChoice):
 
 # A ValueSpec for editing a date. The date is
 # represented as a UNIX timestamp x where x % seconds_per_day
-# is zero (or will be ignored if non-zero).
+# is zero (or will be ignored if non-zero), as long es
+# include_time is not set to True
 class AbsoluteDate(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
-        self._default_value = today()
         self._show_titles = kwargs.get("show_titles", True)
         self._label = kwargs.get("label")
-        self._format = kwargs.get("format", "%F")
+        self._include_time = kwargs.get("include_time", False)
+        self._format = kwargs.get("format", self._include_time and "%F %T" or "%F")
+        self._default_value = kwargs.get("default_value", None) 
+
+    def default_value(self):
+        if self._default_value != None:
+            return self._default_value
+        else:
+            if self._include_time:
+                return time.time()
+            else:
+                return today()
 
     def canonical_value(self):
-        return self._default_value
+        return self.default_value()
 
     def split_date(self, value):
         lt = time.localtime(value)
-        return lt.tm_year, lt.tm_mon, lt.tm_mday
+        return lt.tm_year, lt.tm_mon, lt.tm_mday, \
+               lt.tm_hour, lt.tm_min, lt.tm_sec
 
     def render_input(self, varprefix, value):
         if self._label:
@@ -1437,10 +1449,13 @@ class AbsoluteDate(ValueSpec):
 
         if self._show_titles:
             html.write('<table class=vs_date>')
-            html.write('<tr><th>%s</th><th>%s</th><th>%s</th></tr>' % (
+            html.write('<tr><th>%s</th><th>%s</th><th>%s</th>' % (
                     _("Year"), _("Month"), _("Day")))
-            html.write('<tr><td>')
-        year, month, day = self.split_date(value)
+            if self._include_time:
+                html.write('<th></th><th>%s</th><th>%s</th><th>%s</th>' % (
+                   _("Hour"), _("Minute"), _("Sec.")))
+            html.write('</tr><tr><td>')
+        year, month, day, hour, mmin, sec = self.split_date(value)
         html.number_input(varprefix + "_year", year, size=4)
         if self._show_titles:
             html.write('</td><td>')
@@ -1453,7 +1468,31 @@ class AbsoluteDate(ValueSpec):
             html.write(" ")
         html.number_input(varprefix + "_day", day, size=2)
         if self._show_titles:
-            html.write('</td></tr></table>')
+            html.write('</td>')
+
+        if self._include_time:
+            if self._show_titles:
+                html.write('<td>&nbsp</td><td>')
+            else:
+                html.write(" ")
+            html.number_input(varprefix + "_hour", hour, size=2)
+
+            if self._show_titles:
+                html.write('</td><td>')
+            else:
+                html.write(" ")
+            html.number_input(varprefix + "_min", mmin, size=2)
+            
+            if self._show_titles:
+                html.write('</td><td>')
+            else:
+                html.write(" ")
+            html.number_input(varprefix + "_sec", sec, size=2)
+            if self._show_titles:
+                html.write('</td>')
+            
+        if self._show_titles:
+            html.write('</tr></table>')
 
     def set_focus(self, varprefix):
         html.set_focus(varprefix + "_year")
@@ -1463,10 +1502,18 @@ class AbsoluteDate(ValueSpec):
 
     def from_html_vars(self, varprefix):
         parts = []
-        for what, mmin, mmax in [
+        entries = [
             ("year", 1970, 2038),
             ("month",   1,   12),
-            ("day",     1,   31)]:
+            ("day",     1,   31)]
+        if self._include_time:
+            entries += [
+              ("hour", 0, 23),
+              ("min",  0, 59),
+              ("sec",  0, 59),
+            ]
+
+        for what, mmin, mmax in entries:
             try:
                 varname = varprefix + "_" + what
                 part = int(html.var(varname))
@@ -1475,7 +1522,7 @@ class AbsoluteDate(ValueSpec):
             if part < mmin or part > mmax:
                 raise MKUserError(varname, _("The value for %s must be between %d and %d" % (_(what), mmin, mmax)))
             parts.append(part)
-        parts += [0] * 6
+        parts += [0] * (self._include_time and 3 or 6)
         return time.mktime(tuple(parts))
 
     def validate_datatype(self, value, varprefix):

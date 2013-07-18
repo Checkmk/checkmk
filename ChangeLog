@@ -58,6 +58,10 @@
     * FIX: cleaned up fileinfo.groups pattern handling, manual configuration
       is now possible using WATO
     * tsm: Added new TSM checks with a simple windows agent plugin
+    * windows_agent: now starts local/plugin scripts in separate threads/processes
+                     new script parameters cache_age, retry_count, timeout
+                     new script caching options "off", "async", "sync"
+
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a

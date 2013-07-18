@@ -2040,7 +2040,7 @@ def mode_edithost(phase, new, cluster):
         if len(lock_message) > 0:
             html.write("<div class=info>" + lock_message + "</div>")
 
-        html.begin_form("edithost")
+        html.begin_form("edithost", method="POST")
 
         # host name
         forms.header(_("General Properties"))

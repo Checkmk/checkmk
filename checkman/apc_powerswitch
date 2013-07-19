@@ -1,7 +1,24 @@
-title: APC Powerswitch: Power status
+title: APC Powerswitch/APC PDU: Power Outlet Status
+agents: snmp
 catalog: hw/power
 license: GPL
 distribution: check_mk
 description:
-  TODO: BERND
-  Title correct? Ask Bastian
+ Checks the status of a power outlet of an APC Powerswitch/APC PDU.
+ Returns {OK} if the power outlet status is {on}
+ and {WARN} if the power outlet status if {off}
+
+item:
+ The single power outlet port with it's number as delivered by SNMP.
+
+inventory:
+ One item per power outlet will be found.
+
+[configuration]
+apc_powerswitch_warning_states: A tuple of states leading to {WARN} level, default is
+ apc_powerswitch_warning_states = (2,)
+ meaning {WARN} is returned on power state {off}
+
+apc_powerswitch_critical_states: A tuple of states leading to {CRIT} level, default is
+ apc_powerswitch_critical_states  = ()
+ meaning {CRIT} is returned in no case by default

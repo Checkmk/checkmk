@@ -1,7 +1,38 @@
-title: Primergy BX600 Blade Server: CPU load
+title: Primergy BX600 Blade Enclosure: CPU load
 agents: snmp
 catalog: hw/server/fujitsu
 license: GPL
 distribution: check_mk
 description:
-  TODO: BERND
+  TODO: BERND, FIXME: is this really CPU of enclosure? Bastian tries out on monday...
+
+  This check measures and checks the averaged CPU load of a Primergy 
+  BX600 Blade Enclosure. The values for 1, 5 and 15 minute average are 
+  reported.
+
+examples:
+ # Set default levels to a load of 4 and 8
+ blade_bx_cpuload_default_levels = (4.0, 8.0).
+
+ checks += [
+    # Use levels 4 (warning) and 8 (critical)
+    # on all hosts with the tag "bx600"
+    (["bx600"], ALL_HOSTS, "blade_bx_load", None, (4, 8)),
+ ]
+
+perfdata:
+  Three values: The load average for 1, 5 and 15 minutes.
+
+inventory:
+  Returns one check on each blade enclosure.
+
+[parameters]
+warn (int): 15 minute average load at which a {WARN} is triggered.
+
+crit (int): 15 minute average load at which {CRIT} state is triggered.
+
+[configuration]
+blade_bx_cpuload_default_levels(int,int): A pair of integers: The default
+ levels for {WARN} and {CRIT}. These levels are used for inventorized checks. 
+ This variable is preset to {( 5, 20 )}
+

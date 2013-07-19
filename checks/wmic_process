@@ -100,4 +100,5 @@ check_info["wmic_process"] = {
     'check_function':          check_wmic_process,
     'service_description':     'proc_%s',
     'has_perfdata':            True,
+    'group':                   'wmic_process'
 }

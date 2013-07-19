@@ -1,7 +1,35 @@
 title: Primergy BX600 Blade Server: Temperature
+agents: snmp
 catalog: hw/server/fujitsu
 license: GPL
 distribution: check_mk
 description:
-  TODO: BERND
-  title correct?
+  TODO: BERND, FIXME: in Blade Servers or Blade Enclosures?
+
+  Checks temperature sensors in Primergy BX600 Blade Servers.
+
+  Returns {CRIT} if the sensor is not present or powered off or if the sensor
+  reports a non ok state or if the reported temperature is higher or equal {level_crit}
+
+  Returns {WARN} if the reported temperature is higher or equal {level_warn}
+
+  {OK} is returned otherwise.
+
+item:
+  The index of the temperature sensor as returned by SNMP
+
+perfdata:
+  One value: The temperature in °C
+
+inventory:
+ Creates one check per power module.
+
+[parameters]
+level_warn(int): If you want to set a warning level manually give a number here. 
+  Unit is °C. Or leave empty to use the default warning level from the device 
+  (reported by SNMP).
+
+level_crit(int): If you want to set a critical level manually give a number here. 
+  Unit is °C. Or leave empty to use the default critical level from the device 
+  (reported by SNMP).
+

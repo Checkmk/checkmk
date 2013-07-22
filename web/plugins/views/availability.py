@@ -334,6 +334,7 @@ def render_availability_options():
     # Make sure that parameters are set that have not been present in the
     # original version. This code can be dropped in a couple of years.
     avoptions.setdefault("notification_period", "honor")
+    avoptions.setdefault("outage_statistics", ([], []))
 
     is_open = False
     html.begin_form("avoptions")

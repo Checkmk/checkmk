@@ -1597,10 +1597,12 @@ class Timeofday(ValueSpec):
     def validate_value(self, value, varprefix):
         if not self._allow_empty and value == None:
             raise MKUserError(varprefix, _("Please enter a time."))
-        if self._allow_24_00 and value > (24, 0):
-            raise MKUserError(varprefix, _("The time must not be greater than 24:00."))
-        elif not self._allow_empty and value > (23, 59):
-            raise MKUserError(varprefix, _("The time must not be greater than 23:59."))
+        if self._allow_24_00:
+            max_value = (24, 0)
+        else:
+            max_value = (23, 59)
+        if value > max_value:
+            raise MKUserError(varprefix, _("The time must not be greater than %02d:%02d." % max_value))
         elif value[0] < 0 or value[1] < 0 or value[0] > 24 or value[1] > 59:
             raise MKUserError(varprefix, _("Hours/Minutes out of range"))
         ValueSpec.custom_validate(self, value, varprefix)

@@ -1,13 +1,22 @@
-title: Kernel tunables: Maximum file limit
+title: Kernel tunables: Number of open files
 agents: hpux
 catalog: os/kernel
 license: GPL
 distribution: check_mk
 description:
- This is a copy only, FIXME, TODO: BERND
- Title correct?
-
  The check uses the output of {kcusage -l} for monitoring the
- current usage of shared memory segments. Per default this
+ current number of open files (maxfiles_lim). Per default this
  check is always {OK}, but you can set levels for the used
  percentage.
+
+ See check manpage for hpux_tunables too.
+
+perfdata:
+ See check manpage for hpux_tunables.
+
+inventory:
+ See check manpage for hpux_tunables.
+
+[parameters]
+warn(float): See check manpage for hpux_tunables.
+crit(float): See check manpage for hpux_tunables.

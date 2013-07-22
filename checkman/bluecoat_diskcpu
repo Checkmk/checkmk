@@ -1,6 +1,23 @@
 title: Blue Coat Systems: Security Gateway: Disk and CPU utilization
+agents: snmp
 catalog: hw/network/bluecoat
 license: GPL
 distribution: check_mk
 description:
-  BERND
+  The check checks CPU utilization and Disk usage on Blue Coat Security
+  Gateways by SNMP.
+
+  Returns {OK} if SNMP reports OK status for the item and {CRIT} on
+  every other status.
+
+item:
+  The item {Disk} represents the disk usage.
+
+  The item {CPU} represents the CPU utilization.
+
+perfdata:
+  One value representing the usage (for the Disk check) or utilization 
+  (for the CPU check)
+
+inventory:
+ Returns two checks for each appliance (machine): {Disk} and {CPU}

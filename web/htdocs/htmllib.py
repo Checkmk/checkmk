@@ -644,7 +644,7 @@ class html:
         return m * 60 + h * 3600
 
     def upload_file(self, varname):
-        error = slf.user_errors.get(varname)
+        error = self.user_errors.get(varname)
         if error:
             self.write("<x class=inputerror>")
         self.write('<input type="file" name="%s">' % varname)

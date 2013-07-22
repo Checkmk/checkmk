@@ -781,7 +781,7 @@ def ldap_sync(add_to_changelog, only_username):
 def ldap_locked_attributes():
     locked = set([ 'password' ]) # This attributes are locked in all cases!
     for key in config.ldap_active_plugins.keys():
-        locked.update(ldap_attribute_plugins[key].get('lock_attributes', []))
+        locked.update(ldap_attribute_plugins.get(key, {}).get('lock_attributes', []))
     return list(locked)
 
 # Calculates the attributes added in this connector which shal be written to
@@ -789,7 +789,7 @@ def ldap_locked_attributes():
 def ldap_multisite_attributes():
     attrs = set([])
     for key in config.ldap_active_plugins.keys():
-        attrs.update(ldap_attribute_plugins[key].get('multisite_attributes', []))
+        attrs.update(ldap_attribute_plugins.get(key, {}).get('multisite_attributes', []))
     return list(attrs)
 
 # Calculates the attributes added in this connector which shal NOT be written to
@@ -797,7 +797,7 @@ def ldap_multisite_attributes():
 def ldap_non_contact_attributes():
     attrs = set([])
     for key in config.ldap_active_plugins.keys():
-        attrs.update(ldap_attribute_plugins[key].get('non_contact_attributes', []))
+        attrs.update(ldap_attribute_plugins.get(key, {}).get('non_contact_attributes', []))
     return list(attrs)
 
 # Is called on every multisite http request

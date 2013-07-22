@@ -394,10 +394,18 @@ def ldap_user_groups(username, attr = 'cn'):
         else:
             return g_ldap_group_cache[username][1]
 
+    # posixGroup objects use the memberUid attribute to specify the group memberships.
+    # This is the username instead of the users DN. So the username needs to be used
+    # for filtering here.
+    if ldap_member_attr().lower() == 'memberuid':
+        user_filter = username
+    else:
+        user_filter = user_dn
+
     # Apply configured group ldap filter and only reply with groups
     # having the current user as member
     filt = '(&%s(%s=%s))' % (ldap_filter('groups'), ldap_member_attr(),
-                             ldap.filter.escape_filter_chars(user_dn))
+                             ldap.filter.escape_filter_chars(user_filter))
     # First get all groups
     groups_cn = []
     groups_dn = []

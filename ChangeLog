@@ -273,6 +273,7 @@
     * FIX: fix layout of Auxiliary tags table
     * FIX: avoid exception when called first time and first page ist host tags
     * FIX: fix validation of time-of-day input field (24:00)
+    * FIX: automation users can now be deleted again (bug was introduced in 1.2.2p1)
 
 
 1.2.2p2:

@@ -4,4 +4,16 @@ catalog: hw/server/ibm
 license: GPL
 distribution: check_mk
 description:
- BERND
+  BERND, FIXME: Ask Mathias in which cases WARN and CRIT are issued.
+
+  Checks systems health via IBM Remote Supervisor Adapter (RSA) by SNMP.
+  The system health includes health of fans, power supplys, etc.
+
+  Returns {OK} if all of the included devices report OK status.
+
+  Returns {WARN} if ...
+
+  Returns {CRIT} if ...
+
+inventory:
+  Returns one check per RSA.

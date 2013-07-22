@@ -394,6 +394,14 @@ def save_users(profiles):
     #         entry = dir + "/" + e
     #         if os.path.isdir(entry):
     #             shutil.rmtree(entry)
+    # But for the automation.secret this is ok, since automation users are not
+    # created by other sources in common cases
+    dir = defaults.var_dir + "/web"
+    for user_dir in os.listdir(defaults.var_dir + "/web"):
+        if user_dir not in ['.', '..'] and user_dir not in profiles:
+            entry = dir + "/" + user_dir
+            if os.path.isdir(entry) and os.path.exists(entry + '/automation.secret'):
+                os.unlink(entry + '/automation.secret')
 
     # Release the lock to make other threads access possible again asap
     # This lock is set by load_users() only in the case something is expected

@@ -429,7 +429,17 @@ def notification_context_from_env():
         for (var, value)
         in os.environ.items()
         if var.startswith("NOTIFY_")
-            and not re.match('^\$[A-Z]+\$$', value)])
+            and not dead_nagios_variable(value) ])
+
+def dead_nagios_variable(value):
+    if len(value) < 3:
+        return False
+    if value[0] != '$' or value[-1] != '$':
+        return False
+    for c in value[1:-1]:
+        if not c.isupper() and c != '_':
+            return False
+    return True
 
 
 def convert_context_to_unicode(context):

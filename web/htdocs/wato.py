@@ -11202,6 +11202,7 @@ def mode_pattern_editor(phase):
     html.text_input('match', cssclass = 'match', size=100)
     forms.end()
     html.button('_try', _('Try out'))
+    html.del_var('folder') # Never hand over the folder here
     html.hidden_fields()
     html.end_form()
 

@@ -1,15 +1,12 @@
-title: HP Proliant servers: general status
+title: HP Proliant servers: General Status
 agents: snmp
 catalog: hw/server/hp
 license: GPL
 distribution: check_mk
 description:
- This is a copy only, FIXME, TODO: BERND
-
  This check connects to the SNMP agent installed on an operating system
- on a HP Proliant server and reads the information from the {CPQHLTH-MIB}
- MIB. In addition to the general state it also returns the serial number
- and firmware version.
+ on a HP Proliant server and reads the general status information.
+ In addition it also returns the serial number and firmware version.
 
  The status is {OK} if the agent signals {Unknown} or {Ok}, {WARN} on
  {Degraded} and {CRIT} on {Failed}.

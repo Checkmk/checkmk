@@ -311,7 +311,7 @@ def do_notify(args):
             notify_keepalive()
 
         else:
-            notify_notify()
+            notify_notify(notification_context_from_env())
 
     except Exception, e:
         if g_interactive:
@@ -345,81 +345,91 @@ def notify_config_timestamp():
 
 
 def notify_keepalive():
-    global g_notify_readahead_buffer
-    g_notify_readahead_buffer = ""
     config_timestamp = notify_config_timestamp()
 
-    # Send signal that we are ready to receive the next notification
-    sys.stdout.write("*")
-    sys.stdout.flush()
+    # Send signal that we are ready to receive the next notification, but
+    # not after a config-reload-restart (see below)
+    if os.getenv("CMK_NOTIFY_RESTART") != "1":
+        notify_log("Starting in keepalive mode with PID %d" % os.getpid())
+        sys.stdout.write("*")
+        sys.stdout.flush()
+    else:
+        notify_log("We are back after a restart.")
 
     while True:
         try:
 
             # If the configuration has changed, we do a restart. But we do
             # this check just before the next notification arrives. We must
-            # *not* read data from stdin, just peek! On the other hand we
-            # must *not* restart when there is danger that the buffered
-            # sys.stdin has already read data from the next notification. That
-            # would get lost! So we do restart if:
-            # - The last time we look *no* data was available on stdin.
-            # - Now there *is* data available
-            # - The buffer of stdin is empty
-            # - The timestamp of the youngest configuration file has changed.
-            if notify_data_available():
-                if not g_notify_readahead_buffer:
-                    current_config_timestamp = notify_config_timestamp()
-                    if current_config_timestamp > config_timestamp:
-                        notify_log("Configuration has changed. Restarting myself.")
-                        os.execvp("cmk", sys.argv)
+            # *not* read data from stdin, just peek! There is still one
+            # problem: when restarting we must *not* send the initial '*'
+            # byte, because that must be not no sooner then the notification
+            # has been sent. We do this by setting the environment variable
+            # CMK_NOTIFY_RESTART=1
 
-                new_data = os.read(0, 20000)
-                if not new_data:
-                    sys.exit(0) # closed stdin
-                g_notify_readahead_buffer += new_data
-                if g_notify_readahead_buffer.startswith('\n\n'):
-                    sys.exit(0)
-                while '\n\n' in g_notify_readahead_buffer:
+            if notify_data_available():
+                current_config_timestamp = notify_config_timestamp()
+                if current_config_timestamp > config_timestamp:
+                    notify_log("Configuration has changed. Restarting myself.")
+                    os.putenv("CMK_NOTIFY_RESTART", "1")
+                    os.execvp("cmk", sys.argv)
+
+                data = ""
+                while not data.endswith("\n\n"):
                     try:
-                        notify_notify()
+                        new_data = ""
+                        new_data = os.read(0, 32768)
+                    except IOError, e:
+                        new_data = ""
                     except Exception, e:
                         if opt_debug:
                             raise
-                        notify_log("ERROR %s\n%s" % (e, format_exception()))
-                    sys.stdout.write("*")
-                    sys.stdout.flush()
+                        notify_log("Cannot read data from CMC: %s" % e)
+
+                    if not new_data:
+                        notify_log("CMC has closed the connection. Shutting down.")
+                        sys.exit(0) # closed stdin, this is
+                    data += new_data
+
+                try:
+                    context = notification_context_from_string(data.rstrip('\n'))
+                    notify_notify(context)
+                except Exception, e:
+                    if opt_debug:
+                        raise
+                    notify_log("ERROR %s\n%s" % (e, format_exception()))
+
+                # Signal that we are ready for the next notification
+                sys.stdout.write("*")
+                sys.stdout.flush()
 
         except Exception, e:
             if opt_debug:
                 raise
             notify_log("ERROR %s\n%s" % (e, format_exception()))
 
-# Note: The values of the context are *always* unicode!
-def notify_get_context():
-    global g_notify_readahead_buffer
-    if opt_keepalive:
-        # Context is line-by-line in g_notify_readahead_buffer
-        this_part, rest = g_notify_readahead_buffer.split('\n\n', 1)
-        g_notify_readahead_buffer = rest
-        context = {}
-        try:
-            for line in this_part.split('\n'):
-                varname, value = line.strip().split("=", 1)
-                context[varname] = value
-        except Exception, e: # line without '=' ignored or alerted
-            if opt_debug:
-                raise
-        return context
 
-    else:
-        # Information about notification is excpected in the
-        # environment in variables with the prefix NOTIFY_
-        return dict([
-            (var[7:], value)
-            for (var, value)
-            in os.environ.items()
-            if var.startswith("NOTIFY_")
-                and not re.match('^\$[A-Z]+\$$', value)])
+def notification_context_from_string(data):
+    # Context is line-by-line in g_notify_readahead_buffer
+    context = {}
+    try:
+        for line in data.split('\n'):
+            varname, value = line.strip().split("=", 1)
+            context[varname] = value
+    except Exception, e: # line without '=' ignored or alerted
+        if opt_debug:
+            raise
+    return context
+
+def notification_context_from_env():
+    # Information about notification is excpected in the
+    # environment in variables with the prefix NOTIFY_
+    return dict([
+        (var[7:], value)
+        for (var, value)
+        in os.environ.items()
+        if var.startswith("NOTIFY_")
+            and not re.match('^\$[A-Z]+\$$', value)])
 
 
 def convert_context_to_unicode(context):
@@ -435,8 +445,7 @@ def convert_context_to_unicode(context):
                     value_unicode = u"(Invalid byte sequence)"
             context[key] = value_unicode
 
-def notify_notify():
-    context = notify_get_context()
+def notify_notify(context):
     notify_log("Got notification context with %s variables" % len(context))
 
     # Add a few further helper variables
@@ -516,7 +525,7 @@ def notify_via_email(context, write_into_spoolfile):
     subject = substitute_context(subject_t, context)
     context["SUBJECT"] = subject
     body = substitute_context(notification_common_body + body_t, context)
-    command = substitute_context(notification_mail_command, context)
+    command = substitute_context(notification_mail_command, context) + " >/dev/null 2>&1"
     command_utf8 = command.encode("utf-8")
     if notification_logging >= 2:
         notify_log("Executing command: %s" % command)
@@ -528,6 +537,10 @@ def notify_via_email(context, write_into_spoolfile):
     os.putenv("LANG", "C.UTF-8")
     if notification_logging >= 2:
         file(var_dir + "/notify/body.log", "w").write(body.encode("utf-8"))
+
+    # Important: we must not output anything on stdout or stderr. Data of stdout
+    # goes back into the socket to the CMC in keepalive mode and garbles the
+    # handshake signal.
     return os.popen(command_utf8, "w").write(body.encode("utf-8"))
 
 

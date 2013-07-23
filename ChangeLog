@@ -62,7 +62,6 @@
                      new script parameters cache_age, retry_count, timeout
                      new script caching options "off", "async", "sync"
 
-
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a
                  service has no service level set
@@ -91,6 +90,7 @@
     * Implemented search forms for most data tables
     * New icons in view footers: export as CSV, export as JSON
     * Availability: new columns for shortest, longest, average and count
+    * LDAP: Supporting posixGroup with memberUid as member attribute
     * FIX: better error message in case of exception in SNMP handling
     * FIX: Inventory screen: Now shows custom checks
     * FIX: Fixed locking problem of multisite pages related to user loading/saving
@@ -272,7 +272,10 @@
     WATO:
     * FIX: fix layout of Auxiliary tags table
     * FIX: avoid exception when called first time and first page ist host tags
-
+    * FIX: fix validation of time-of-day input field (24:00)
+    * FIX: automation users can now be deleted again (bug was introduced in 1.2.2p1)
+    * FIX: fix logwatch pattern analyzer message "The host xyz is not
+           managed by WATO." after direct access via snapin
 
 1.2.2p2:
     Core:

@@ -1,13 +1,23 @@
-title: Kernel tunables: nproc
+title: Kernel tunables: Number of Processes
 agents: hpux
 catalog: os/kernel
 license: GPL
 distribution: check_mk
 description:
- This is a copy only, FIXME, TODO: BERND
- Title to be improved
-
  The check uses the output of {kcusage -l} for monitoring the
- current usage of shared memory segments. Per default this
+ current Number of processes (npoc). Per default this
  check is always {OK}, but you can set levels for the used
  percentage.
+
+ See check manpage for hpux_tunables too.
+
+perfdata:
+ See check manpage for hpux_tunables.
+
+inventory:
+ See check manpage for hpux_tunables.
+
+[parameters]
+warn(float): See check manpage for hpux_tunables.
+crit(float): See check manpage for hpux_tunables.
+

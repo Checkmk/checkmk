@@ -1,7 +1,20 @@
-title: Blue Coat Systems: Security Gateway: Sensors
+title: Blue Coat Systems: Security Gateway: Hardware Sensors
+agents: snmp
 catalog: hw/network/bluecoat
 license: GPL
 distribution: check_mk
 description:
-  BERND
-  title to be improved
+  Checks by SNMP the hardware sensors of Blue Coat Security Gateways, such as
+  different temperature sensors, voltage levels and fan speeds.
+
+  Returns {OK} if an ok status is reported by SNMP and {CRIT} on any 
+  other status.
+
+item:
+ The sensor description as returned by SNMP
+
+perfdata:
+  One number: The measured value.
+
+inventory:
+  Finds one service for each hardware sensor.

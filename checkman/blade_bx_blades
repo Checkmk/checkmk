@@ -1,7 +1,19 @@
 title: Primergy BX600 Blade Server: Blade status
+agents: snmp
 catalog: hw/server/fujitsu
 license: GPL
 distribution: check_mk
 description:
-  TODO: BERND
-  title correct?
+ Checks the blade status of Primergy BX600 Blade Servers.
+
+ Returns {CRIT} on blade status {Error} or {Critical}
+
+ Returns {OK} for any other blade status
+
+item:
+ The blade ID
+
+inventory:
+ All blades are found which do not report status {not-present}
+
+ For all other blades one item per blade is found.

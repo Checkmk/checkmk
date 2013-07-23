@@ -1,7 +1,19 @@
 title: Primergy BX600 Blade Server: Power module
+agents: snmp
 catalog: hw/server/fujitsu
 license: GPL
 distribution: check_mk
 description:
-  TODO: BERND
-  title correct
+  TODO: BERND, FIXME: Blade Server or Blade Enclosure?
+
+  Checks the state of power modules in Primergy BX600 Blade Servers
+
+  Returns {OK} if the power module reports ok status and {CRIT} on any
+  other status.
+
+item:
+ The index of the power module as returned by SNMP.
+
+inventory:
+ Creates one check per power module.
+

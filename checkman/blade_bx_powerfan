@@ -1,7 +1,38 @@
 title: Primergy BX600 Blade Server: Power fan
+agents: snmp
 catalog: hw/server/fujitsu
 license: GPL
 distribution: check_mk
 description:
-  TODO: BERND
-  title correct?
+  TODO: BERND, FIXME: in Blade or in Enclosure?
+
+  Checks fans in Primergy BX600 Blade Servers.
+
+  Returns {CRIT} if the fan is not present or powered off or reports a
+  non-OK state or if the speed is less or equal {crit_perc}% of max speed.
+
+  Returns {WARN} if the speed is less or equal {warn_perc}% of max speed.
+
+  And {OK} is returned otherwise.
+
+item:
+  The name of the fan as returned by SNMP.
+
+perfdata:
+  Two values: The pecentage of max speed the fan is running at and the 
+  absolute speed of the fan (rpm).
+
+inventory:
+  Returns one Check for each fan.
+
+[parameters]
+warn_perc(int): If the speed is less or equal this percentage of max speed
+  the check results in {WARN} state.
+
+crit_perc(int): If the speed is less or equal this percentage of max speed
+  the check results in {CRIT} state.
+
+[configuration]
+blade_bx_fan_default_error_levels(int, int): A pair of integers: The default
+ levels for {WARN} and {CRIT}. These levels are used for inventorized checks.
+ This variable is preset to {( 50, 40 )}

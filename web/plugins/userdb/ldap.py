@@ -394,10 +394,18 @@ def ldap_user_groups(username, attr = 'cn'):
         else:
             return g_ldap_group_cache[username][1]
 
+    # posixGroup objects use the memberUid attribute to specify the group memberships.
+    # This is the username instead of the users DN. So the username needs to be used
+    # for filtering here.
+    if ldap_member_attr().lower() == 'memberuid':
+        user_filter = username
+    else:
+        user_filter = user_dn
+
     # Apply configured group ldap filter and only reply with groups
     # having the current user as member
     filt = '(&%s(%s=%s))' % (ldap_filter('groups'), ldap_member_attr(),
-                             ldap.filter.escape_filter_chars(user_dn))
+                             ldap.filter.escape_filter_chars(user_filter))
     # First get all groups
     groups_cn = []
     groups_dn = []
@@ -773,7 +781,7 @@ def ldap_sync(add_to_changelog, only_username):
 def ldap_locked_attributes():
     locked = set([ 'password' ]) # This attributes are locked in all cases!
     for key in config.ldap_active_plugins.keys():
-        locked.update(ldap_attribute_plugins[key].get('lock_attributes', []))
+        locked.update(ldap_attribute_plugins.get(key, {}).get('lock_attributes', []))
     return list(locked)
 
 # Calculates the attributes added in this connector which shal be written to
@@ -781,7 +789,7 @@ def ldap_locked_attributes():
 def ldap_multisite_attributes():
     attrs = set([])
     for key in config.ldap_active_plugins.keys():
-        attrs.update(ldap_attribute_plugins[key].get('multisite_attributes', []))
+        attrs.update(ldap_attribute_plugins.get(key, {}).get('multisite_attributes', []))
     return list(attrs)
 
 # Calculates the attributes added in this connector which shal NOT be written to
@@ -789,7 +797,7 @@ def ldap_multisite_attributes():
 def ldap_non_contact_attributes():
     attrs = set([])
     for key in config.ldap_active_plugins.keys():
-        attrs.update(ldap_attribute_plugins[key].get('non_contact_attributes', []))
+        attrs.update(ldap_attribute_plugins.get(key, {}).get('non_contact_attributes', []))
     return list(attrs)
 
 # Is called on every multisite http request

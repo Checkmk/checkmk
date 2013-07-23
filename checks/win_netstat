@@ -59,11 +59,6 @@ win_netstat_states = {
   "WARTEND"     : "TIME_WAIT",
   # Add further states in any required language here. Sorry, Windows
   # has no "unset LANG" ;-)
-
-  # English
-  "LISTENING"     : "LISTENING",
-  "ESTABLISHED"   : "ESTABLISHED",
-  "TIME_WAIT"     : "TIME_WAIT",
 }
 
 

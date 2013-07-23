@@ -71,7 +71,7 @@ def parse_win_netstat(info):
             connstate = "LISTEN"
         else:
             continue
-        connections.append( (proto, local.split(":"), remote.split(":"), 
+        connections.append( (proto, local.rsplit(":", 1), remote.rsplit(":", 1), 
                              win_netstat_states.get(connstate, connstate)) )
     return connections
 

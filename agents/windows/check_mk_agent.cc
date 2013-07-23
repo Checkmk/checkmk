@@ -2380,7 +2380,7 @@ void run_external_programs(char *dirname, script_type type, bool dry_run = false
                     cont->should_terminate = 0;
                     cont->timeout          = get_script_timeout(name, type);
                     cont->max_retries      = get_script_max_retries(name, type);
-                    cont->max_age          = g_caching_method == CACHE_OFF ? 0 : get_script_cache_age(name, type);
+                    cont->max_age          = get_script_cache_age(name, type);
                     cont->status           = SCRIPT_IDLE;
                     cont->last_problem     = SCRIPT_NONE;
                     script_containers[cont->path] = cont;

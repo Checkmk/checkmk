@@ -1184,6 +1184,7 @@ register_check_parameters(
                   title = _("State"),
                   choices = [
                             ( "ESTABLISHED", "ESTABLISHED" ),
+                            ( "LISTENING", "LISTENING" ),
                             ( "SYN_SENT", "SYN_SENT" ),
                             ( "SYN_RECV", "SYN_RECV" ),
                             ( "LAST_ACK", "LAST_ACK" ),
@@ -1201,6 +1202,24 @@ register_check_parameters(
             ( "local_port", Integer(title = _("Local port number"), minvalue = 1, maxvalue = 65535, )),
             ( "remote_ip", IPv4Address(title = _("Remote IP address"))),
             ( "remote_port", Integer(title = _("Remote port number"), minvalue = 1, maxvalue = 65535, )),
+            ( "min_states",
+               Tuple(
+                   title = _("Number of minimum connections or listeners"),
+                   elements = [
+                       Integer(title = _("Warning at")),
+                       Integer(title = _("Critical at")),
+                    ],
+               ),
+            ),
+            ( "max_states",
+               Tuple(
+                   title = _("Number of maximum connections or listeners"),
+                   elements = [
+                       Integer(title = _("Warning at")),
+                       Integer(title = _("Critical at")),
+                    ],
+               ),
+            ),
         ]
     ),
     TextAscii(title = _("Connection name"), help = _("Specify an arbitrary name of this connection here"), allow_empty = False),

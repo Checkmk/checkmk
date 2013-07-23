@@ -66,7 +66,12 @@ parameters (dict): A dictionary with the following keys, all of which are
  {"proto"}        {TCP} or {UDP} are possible values: 
    The protocol used for the connection or the listener.
 
- {"state"}        {"ESTABLISHED"}, {"LISTEN"}, {"TIME_WAIT"}, {"SYN_SENT"}, {"SYN_RECV"},
+ {"state"}        {"ESTABLISHED"}, {"LISTENING"}, {"TIME_WAIT"}, {"SYN_SENT"}, {"SYN_RECV"},
    {"LAST_ACK"}, {"CLOSE_WAIT"}, {"TIME_WAIT"}, {"CLOSED"}, {"CLOSING"}, {"FIN_WAIT1"}, {"FIN_WAIT2"},
    or {"BOUND"}: The expected state of the TCP/UDP socket. You most probably will use either
-   {"ESTABLISHED"} or {"LISTEN"}.
+   {"ESTABLISHED"} or {"LISTENING"}.
+
+ {"min_states"}  Tuple(warn, crit) The minimum allowed entries of the required state
+
+ {"min_states"}  Tuple(warn, crit) The maximum allowed entries of the required state
+

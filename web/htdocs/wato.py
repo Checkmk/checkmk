@@ -9778,7 +9778,7 @@ def mode_ineffective_rules(phase):
     html.write('<div class=rulesets>')
 
     all_hosts = load_all_hosts()
-    html.write("<div class=info>" + _("The following rules do match match to any of the existing hosts.") + "</div>")
+    html.write("<div class=info>" + _("The following rules do not match to any of the existing hosts.") + "</div>")
     have_ineffective = False
 
     for groupname in groupnames:

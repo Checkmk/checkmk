@@ -5860,9 +5860,11 @@ def mode_edit_group(phase, what):
             alias = html.var_utf8("alias").strip()
             if not alias:
                 raise MKUserError("alias", _("Please specify an alias name."))
-            for key, value in groups.items():
-                if alias == value and name != key:
-                    raise MKUserError("alias", _("This alias is already used in the group %s .") % key)
+
+            unique, info = is_alias_used(what, name, alias)
+            if not unique:
+                raise MKUserError("alias", info)
+
             if new:
                 name = html.var("name").strip()
                 if len(name) == 0:
@@ -6203,6 +6205,10 @@ def mode_edit_timeperiod(phase):
             alias = html.var_utf8("alias").strip()
             if not alias:
                 raise MKUserError("alias", _("Please specify an alias name for your timeperiod."))
+
+            unique, info = is_alias_used("timeperiods", name, alias)
+            if not unique:
+                raise MKUserError("alias", info)
 
             timeperiod.clear()
 
@@ -8642,6 +8648,11 @@ def mode_edit_role(phase):
 
     if phase == "action":
         alias = html.var_utf8("alias")
+
+        unique, info = is_alias_used("roles", id, alias)
+        if not unique:
+            raise MKUserError("alias", info)
+
         new_id = html.var("id")
         if len(new_id) == 0:
             raise MKUserError("id", _("Please specify an ID for the new role."))
@@ -13555,6 +13566,28 @@ def render_folder_path(the_folder = 0, link_to_last = False, keepvarnames = ["mo
 def may_see_hosts():
     return config.may("wato.use") and \
        (config.may("wato.seeall") or config.may("wato.hosts"))
+
+def is_alias_used(my_group, my_name, aliasname):
+    # Host / Service / Contact groups
+    all_groups = userdb.load_group_information()
+    for groupname, group in all_groups.items():
+        for key, value in group.items():
+            if value == aliasname and (my_group != groupname or my_name != key):
+                return False, _("This alias is already used in the %s group %s .") % (groupname, key)
+
+    # Timeperiods
+    timeperiods = load_timeperiods()
+    for key, value in timeperiods.items():
+        if value.get("alias") == aliasname and (my_group != "timeperiod" or my_name != key):
+            return False, _("This alias is already used in timeperiod %s.") % key
+
+    # Roles
+    roles = userdb.load_roles()
+    for key, value in roles.items():
+        if value.get("alias") == aliasname and (my_group != "roles" or my_name != key):
+            return False, _("This alias is already used in the role %s.") % key
+
+    return True, None
 
 #.
 #   .-Plugins--------------------------------------------------------------.

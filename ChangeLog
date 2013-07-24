@@ -106,6 +106,8 @@
     * Custom user attributes can now be managed using WATO
     * FIX: do validation of check items in rule editor
     * FIX: More consistent handling of folderpath select in rule editor
+    * Add: Require unique alias names in between the following elements:
+           Host/Service/Contact Groups, Timeperiods and Roles
 
     Notifications:
     * Flexible Notification can now filter service levels

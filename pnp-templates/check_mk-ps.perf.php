@@ -76,24 +76,24 @@ if (isset($RRD["vsz"])) {
 }
 
 if (isset($RRD["pcpu"])) {
- $opt[3] = " --vertical-label \"CPU(%)\" -l 0 -u 100 --title \"CPU Usage\" ";
- $def[3] = ""
-  . "DEF:pcpu=$RRD[pcpu] "
-  . "AREA:pcpu#30ff80:\"CPU usage (%) \" "
-  . "LINE:pcpu#20a060:\"\" "
-  . "GPRINT:pcpu:LAST:\"Current\: %4.1lf%%\" "
-  . "GPRINT:pcpu:MIN:\"Min\: %4.1lf%%\" "
-  . "GPRINT:pcpu:MAX:\"Max\: %4.1lf%%\\n\" "
-  . "HRULE:$WARN[pcpu]#FFFF00:\"Warning at $WARN[pcpu]%\" "
-  . "HRULE:$CRIT[pcpu]#FF0000:\"Critical at $CRIT[pcpu]%\" "
-  ;
-  if (isset($RRD["pcpuavg"])) {
-     $def[3] .= 
-        "DEF:pcpuavg=$RRD[pcpuavg] ".
-        "LINE:pcpuavg#000000:\"Average over $MAX[pcpuavg] minutes\\n\" "
-        ; 
-  }
-}
+    $opt[3] = " --vertical-label \"CPU(%)\" -l 0 -u 100 --title \"CPU Usage\" ";
+    $def[3] = ""
+     . "DEF:pcpu=$RRD[pcpu] "
+     . "AREA:pcpu#30ff80:\"CPU usage (%) \" "
+     . "LINE:pcpu#20a060:\"\" "
+     . "GPRINT:pcpu:LAST:\"Current\: %4.1lf%%\" "
+     . "GPRINT:pcpu:MIN:\"Min\: %4.1lf%%\" "
+     . "GPRINT:pcpu:MAX:\"Max\: %4.1lf%%\\n\" ";
 
+    if ($WARN['pcpu'] != '')
+        $def[3] .= "HRULE:$WARN[pcpu]#FFFF00:\"Warning at $WARN[pcpu]%\" ";
+    if ($CRIT['pcpu'] != '')
+        $def[3] .= "HRULE:$CRIT[pcpu]#FF0000:\"Critical at $CRIT[pcpu]%\" ";
+
+    if (isset($RRD["pcpuavg"])) {
+        $def[3] .= "DEF:pcpuavg=$RRD[pcpuavg] "
+                   "LINE:pcpuavg#000000:\"Average over $MAX[pcpuavg] minutes\\n\" "; 
+    }
+}
 
 ?>

@@ -153,10 +153,12 @@ multisite_dir = defaults.default_config_dir + "/multisite.d/wato/"
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-def declare_user_attribute(name, vs, user_editable = True, permission = None):
+def declare_user_attribute(name, vs, user_editable = True, permission = None, show_in_table = False, topic = None):
     user_attributes[name] = {
         'valuespec':     vs,
         'user_editable': user_editable,
+        'show_in_table': show_in_table,
+        'topic':         topic and topic or 'personal',
     }
     # Permission needed for editing this attribute
     if permission:
@@ -540,7 +542,11 @@ def declare_custom_user_attrs():
     attrs = all_attrs.setdefault('user', [])
     for attr in attrs:
         vs = globals()[attr['type']](title = attr['title'], help = attr['help'])
-        declare_user_attribute(attr['name'], vs, attr['user_editable'])
+        declare_user_attribute(attr['name'], vs,
+            user_editable = attr['user_editable'],
+            show_in_table = attr['show_in_table'],
+            topic = attr['topic'],
+        )
 
 #   .----------------------------------------------------------------------.
 #   |                     _   _             _                              |

@@ -7954,6 +7954,9 @@ def mode_users(phase):
 
         return None
 
+    visible_custom_attrs = [ (name, attr) for name, attr in userdb.get_user_attributes()
+                                                    if attr.get('show_in_table', False) ]
+
     entries = users.items()
     entries.sort(cmp = lambda a, b: cmp(a[1].get("alias", a[0]).lower(), b[1].get("alias", b[0]).lower()))
 
@@ -8041,6 +8044,12 @@ def mode_users(phase):
                 tp = _("Always")
             html.write(tp)
 
+        # the visible custom attributes
+        for name, attr in visible_custom_attrs:
+            vs = attr['valuespec']
+            table.cell(vs.title())
+            html.write(vs.value_to_text(user.get(name, vs.default_value())))
+
     table.end()
 
     if not userdb.load_group_information().get("contact", {}):
@@ -8083,6 +8092,24 @@ def mode_edit_user(phase):
     locked_attributes = userdb.locked_attributes(user.get('connector'))
     def is_locked(attr):
         return not new and attr in locked_attributes
+
+    def custom_user_attributes(topic = None):
+        for name, attr in userdb.get_user_attributes():
+            if topic is not None and topic != attr['topic']:
+                continue # skip attrs of other topics
+
+            if not attr.get("permission") or config.may(attr["permission"]):
+                vs = attr['valuespec']
+                forms.section(vs.title())
+                if attr['user_editable'] and not is_locked(name):
+                    vs.render_input("ua_" + name, user.get(name, vs.default_value()))
+                else:
+                    html.write(vs.value_to_text(user.get(name, vs.default_value())))
+                    # Render hidden to have the values kept after saving
+                    html.write('<div style="display:none">')
+                    vs.render_input("ua_" + name, user.get(name, vs.default_value()))
+                    html.write('</div>')
+                html.help(vs.help())
 
     # Load data that is referenced - in order to display dropdown
     # boxes and to check for validity.
@@ -8273,6 +8300,7 @@ def mode_edit_user(phase):
     forms.section(_("Pager address"))
     lockable_input('pager', '')
     html.help(_("The pager address is optional "))
+    custom_user_attributes('ident')
 
     forms.header(_("Security"))
     forms.section(_("Authentication"))
@@ -8344,6 +8372,7 @@ def mode_edit_user(phase):
             html.hidden_field("role_" + role_id, is_member and '1' or '')
     if is_locked('roles') and not is_member_of_at_least_one:
         html.write('<i>%s</i>' % _('No roles assigned.'))
+    custom_user_attributes('security')
 
     # Contact groups
     forms.header(_("Contact Groups"), isopen=False)
@@ -8436,22 +8465,11 @@ def mode_edit_user(phase):
 
     forms.section(_("Notification Method"))
     vs_notification_method.render_input("notification_method", user.get("notification_method"))
+    custom_user_attributes('notify')
 
     forms.header(_("Personal Settings"), isopen = False)
     select_language(user.get('language', ''))
-    for name, attr in userdb.get_user_attributes():
-        if not attr.get("permission") or config.may(attr["permission"]):
-            vs = attr['valuespec']
-            forms.section(vs.title())
-            if attr['user_editable'] and not is_locked(name):
-                vs.render_input("ua_" + name, user.get(name, vs.default_value()))
-            else:
-                html.write(vs.value_to_text(user.get(name, vs.default_value())))
-                # Render hidden to have the values kept after saving
-                html.write('<div style="display:none">')
-                vs.render_input("ua_" + name, user.get(name, vs.default_value()))
-                html.write('</div>')
-            html.help(vs.help())
+    custom_user_attributes('personal')
 
     # TODO: Later we could add custom macros here, which
     # then could be used for notifications. On the other hand,
@@ -12864,8 +12882,10 @@ def mode_edit_custom_attr(phase, what):
                 if title == this_attr['title'] and name != this_attr['name']:
                     raise MKUserError("alias", _("This alias is already used by the attribute %s.") % this_attr['name'])
 
-            help = html.var_utf8('help').strip()
+            topic = html.var('topic', '').strip()
+            help  = html.var_utf8('help').strip()
             user_editable = html.get_checkbox('user_editable')
+            show_in_table = html.get_checkbox('show_in_table')
 
             if new:
                 name = html.var("name", '').strip()
@@ -12882,19 +12902,23 @@ def mode_edit_custom_attr(phase, what):
                 if ty not in [ t[0] for t in custom_attr_types ]:
                     raise MKUserError('type', _('The choosen attribute type is invalid.'))
 
-                attrs.append({
-                    'name'          : name,
-                    'title'         : title,
-                    'type'          : ty,
-                    'help'          : help,
-                    'user_editable' : user_editable,
-                })
+                attr = {
+                    'name' : name,
+                    'type' : ty,
+                }
+                attrs.append(attr)
+
                 log_pending(SYNCRESTART, None, "edit-%sattr" % what, _("Create new %s attribute %s") % (what, name))
             else:
-                attr['title']         = title
-                attr['help']          = help
-                attr['user_editable'] = user_editable,
                 log_pending(SYNCRESTART, None, "edit-%sattr" % what, _("Changed title of %s attribute %s") % (what, name))
+            attr.update({
+                'title'         : title,
+                'topic'         : topic,
+                'help'          : help,
+                'user_editable' : user_editable,
+                'show_in_table' : show_in_table,
+            })
+
             save_custom_attrs(all_attrs)
 
         return what + "_attrs"
@@ -12915,6 +12939,15 @@ def mode_edit_custom_attr(phase, what):
     html.help(_("The title is used to label this attribute."))
     html.text_input("title", attr.get('title'))
 
+    forms.section(_('Topic'))
+    html.help(_('The attribute is added to this section in the edit dialog.'))
+    html.select('topic', [
+        ('ident',    _('Identity')),
+        ('security', _('Security')),
+        ('notify',   _('Notifications')),
+        ('personal', _('Personal Settings')),
+    ], attr.get('topic', 'personal'))
+
     forms.section(_('Help Text'))
     html.help(_('You might want to add some helpful description for the attribute.'))
     html.text_area('help', attr.get('help', ''))
@@ -12929,6 +12962,11 @@ def mode_edit_custom_attr(phase, what):
     forms.section(_('Editable by Users'))
     html.help(_('It is possible to let users edit their custom attributes.'))
     html.checkbox('user_editable', attr.get('user_editable', True))
+
+    forms.section(_('Show in Table'))
+    html.help(_('This attribute is only visibile on the detail pages by default, but '
+                'you can also make it visible in the overview tables.'))
+    html.checkbox('show_in_table', attr.get('show_in_table', False))
 
     forms.end()
     html.button("save", _("Save"))

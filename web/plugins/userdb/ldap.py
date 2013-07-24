@@ -311,8 +311,9 @@ def ldap_filter(key, handle_config = True):
 
 # Returns the ldap attribute name depending on the configured ldap directory type
 # If a key is not present in the map, the assumption is, that the key matches 1:1
+# Always use lower case here, just to prevent confusions.
 def ldap_attr(key):
-    return ldap_attr_map[config.ldap_connection['type']].get(key, key)
+    return ldap_attr_map[config.ldap_connection['type']].get(key, key).lower()
 
 # Returns the given distinguished name template with replaced vars
 def ldap_replace_macros(tmpl):
@@ -717,6 +718,8 @@ def ldap_sync(add_to_changelog, only_username):
     start_time = time.time()
 
     ldap_connect()
+
+    ldap_log('  SYNC PLUGINS: %s' % ', '.join(config.ldap_active_plugins.keys()))
 
     # Unused at the moment, always sync all users
     #filt = None

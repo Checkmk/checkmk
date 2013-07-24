@@ -86,3 +86,24 @@ if defaults.omd_site:
             },
         ]
     }
+
+builtin_dashboards["simple_problems"] = {
+    "title" : _("Problems Dashboard"),
+    "dashlets" : [
+        {
+            "title"      : _("Host Problems (unhandled)"),
+            "title_url"  : "view.py?view_name=hostproblems&is_host_acknowledged=0",
+            "view"       : "hostproblems_dash",
+            "position"   : (1, 1),
+            "size"       : (GROW, 18),
+        },
+        {
+            "title"      : _("Service Problems (unhandled)"),
+            "title_url"  : "view.py?view_name=svcproblems&is_service_acknowledged=0",
+            "view"       : "svcproblems_dash",
+            "position"   : (1, 19),
+            "size"       : (GROW, MAX),
+        },
+    ]
+}
+

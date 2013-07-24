@@ -1522,7 +1522,16 @@ class AbsoluteDate(ValueSpec):
             if part < mmin or part > mmax:
                 raise MKUserError(varname, _("The value for %s must be between %d and %d" % (_(what), mmin, mmax)))
             parts.append(part)
+
+        # Construct broken time from input fields. Assume no-dst
         parts += [0] * (self._include_time and 3 or 6)
+        # Convert to epoch
+        epoch = time.mktime(tuple(parts))
+        # Convert back to localtime in order to know DST setting
+        localtime = time.localtime(epoch)
+        # Enter DST setting of that time
+        parts[-1] = localtime.tm_isdst
+        # Convert to epoch again
         return time.mktime(tuple(parts))
 
     def validate_datatype(self, value, varprefix):

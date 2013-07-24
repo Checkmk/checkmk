@@ -103,11 +103,11 @@
 
 // Maximum heap buffer for a single local/plugin script
 // This buffer contains the check output
-#define SCRIPT_BUFFER_HEAP          65536
+#define SCRIPT_BUFFER_HEAP         524288
 
 // Maximum timeout for a single local/plugin script
 #define DEFAULT_PLUGIN_TIMEOUT         60
-#define DEFAULT_LOCAL_TIMEOUT          60 
+#define DEFAULT_LOCAL_TIMEOUT          60
 
 // Check compilation environment 32/64 bit
 #if _WIN32 || _WIN64
@@ -2289,6 +2289,9 @@ int launch_program(script_container* cont)
             }
         }
 
+        if (out_offset >= SCRIPT_BUFFER_HEAP)
+            break;
+
         if (exit != STILL_ACTIVE)
             break;
 
@@ -2309,7 +2312,7 @@ int launch_program(script_container* cont)
 DWORD WINAPI ScriptWorkerThread(LPVOID lpParam)
 {
     script_container* cont = (script_container*) lpParam;
-    cont->buffer_work = (char*) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, SCRIPT_BUFFER_HEAP);
+    cont->buffer_work = (char*) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, SCRIPT_BUFFER_HEAP + 1);
 
     // Execute script
     int result = launch_program(cont);
@@ -2380,7 +2383,7 @@ void run_external_programs(char *dirname, script_type type, bool dry_run = false
                     cont->should_terminate = 0;
                     cont->timeout          = get_script_timeout(name, type);
                     cont->max_retries      = get_script_max_retries(name, type);
-                    cont->max_age          = g_caching_method == CACHE_OFF ? 0 : get_script_cache_age(name, type);
+                    cont->max_age          = get_script_cache_age(name, type);
                     cont->status           = SCRIPT_IDLE;
                     cont->last_problem     = SCRIPT_NONE;
                     script_containers[cont->path] = cont;

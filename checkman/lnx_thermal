@@ -4,4 +4,25 @@ catalog: os/hardware
 license: GPL
 distribution: check_mk
 description:
-  BERND: verwendet /proc/sys/wasweisich...
+  This check uses the temperature information provided by the kernel in
+  /sys/class/thermal/thermal_zone* and reports values in °C
+
+  The measured value is matched against levels delivered by the kernel.
+  Returns {CRIT} if the kernel reports {hot} or {critical} state,
+  {WARN} on any other non ok state and {OK} if the temperature is 
+  considered to be within normal operation temperature levels.
+
+item:
+  The ID of the thermal zone
+
+examples:
+  # adding a check for /sys/class/thermal/thermal_zone0
+  checks += [
+    ( "localhost", "lnx_thermal", "0", None )
+  ]
+
+perfdata:
+  One value: The current temperature in °C
+
+inventory:
+  Creates one check for earch thermal zone.

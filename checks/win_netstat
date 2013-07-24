@@ -53,7 +53,8 @@
 #   UDP    127.0.0.1:1900         *:*
 
 win_netstat_states = {
-  "ABH\x99REN"  : "LISTEN",
+  # German
+  "ABH\x99REN"  : "LISTENING",
   "HERGESTELLT" : "ESTABLISHED",
   "WARTEND"     : "TIME_WAIT",
   # Add further states in any required language here. Sorry, Windows
@@ -71,7 +72,7 @@ def parse_win_netstat(info):
             connstate = "LISTEN"
         else:
             continue
-        connections.append( (proto, local.split(":"), remote.split(":"), 
+        connections.append( (proto, local.rsplit(":", 1), remote.rsplit(":", 1), 
                              win_netstat_states.get(connstate, connstate)) )
     return connections
 
@@ -105,11 +106,32 @@ def check_win_netstat(item, params, info):
         if match:
             found += 1
 
-    if found:
-        state = 0
-    else:
+    # Check if found connections are within limits
+    state = 0
+    extra_info = ""
+
+    if params["min_states"]:
+        min_warn, min_crit = params["min_states"]
+        if found <= min_crit:
+            state = max(state, 2)
+            extra_info += '(!!) Minimum at %d ' % min_crit
+        elif found <= min_warn:
+            state = max(state, 1)
+            extra_info += '(!) Minimum at %d ' % min_warn
+
+    if params["max_states"]:
+        max_warn, max_crit = params["max_states"]
+        if found >= max_crit:
+            state = max(state, 2)
+            extra_info += '(!!) Maximum at %d ' % max_crit
+        elif found >= max_warn:
+            state = max(state, 1)
+            extra_info += '(!) Maximum at %d ' % max_warn
+
+    if not found:
         state = 2
-    return state, "Found %d matching entries" % found
+
+    return state, "Found %d matching entries %s" % (found, extra_info)
 
 check_info["win_netstat"] = {
     'check_function'        : check_win_netstat, 

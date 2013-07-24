@@ -5579,12 +5579,16 @@ g_configvar_domains = {
     },
 }
 
-def register_configvar_domain(domain, configdir, pending = None):
-    g_configvar_domains[domain] = {
-        "configdir" : configdir,
-    }
-    if pending:
-        g_configvar_domains[domain]["pending"] = pending
+# The following keys are available:
+# configdir: Directory to store the global.mk in (applies to check_mk, multisite, mkeventd)
+# pending:   Handler function to create the pending log entry
+# load:      Optional handler to load/parse the file
+# save:      Optional handler to save the file
+def register_configvar_domain(domain, configdir = None, pending = None, save = None, load = None):
+    g_configvar_domains[domain] = {}
+    for k in [ 'configdir', 'pending', 'save', 'load' ]:
+        if locals()[k] is not None:
+            g_configvar_domains[domain][k] = locals()[k]
 
 # Persistenz: Speicherung der Werte
 # - WATO speichert seine Variablen für main.mk in conf.d/wato/global.mk
@@ -5605,7 +5609,10 @@ def register_configvar_domain(domain, configdir, pending = None):
 def load_configuration_settings():
     settings = {}
     for domain, domain_info in g_configvar_domains.items():
-        load_configuration_vars(domain_info["configdir"] + "global.mk", settings)
+        if 'load' in domain_info:
+            domain_info['load'](settings)
+        else:
+            load_configuration_vars(domain_info["configdir"] + "global.mk", settings)
     return settings
 
 
@@ -5633,9 +5640,12 @@ def save_configuration_settings(vars):
         per_domain.setdefault(domain, {})[varname] = vars[varname]
 
     for domain, domain_info in g_configvar_domains.items():
-        dir = domain_info["configdir"]
-        make_nagios_directory(dir)
-        save_configuration_vars(per_domain.get(domain, {}), dir + "global.mk")
+        if 'save' in domain_info:
+            domain_info['save'](per_domain.get(domain, {}))
+        else:
+            dir = domain_info["configdir"]
+            make_nagios_directory(dir)
+            save_configuration_vars(per_domain.get(domain, {}), dir + "global.mk")
 
 def save_configuration_vars(vars, filename):
     out = create_user_file(filename, 'w')
@@ -9778,7 +9788,7 @@ def mode_ineffective_rules(phase):
     html.write('<div class=rulesets>')
 
     all_hosts = load_all_hosts()
-    html.write("<div class=info>" + _("The following rules do match match to any of the existing hosts.") + "</div>")
+    html.write("<div class=info>" + _("The following rules do not match to any of the existing hosts.") + "</div>")
     have_ineffective = False
 
     for groupname in groupnames:
@@ -11831,6 +11841,7 @@ def mode_pattern_editor(phase):
     html.text_input('match', cssclass = 'match', size=100)
     forms.end()
     html.button('_try', _('Try out'))
+    html.del_var('folder') # Never hand over the folder here
     html.hidden_fields()
     html.end_form()
 

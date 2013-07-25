@@ -100,13 +100,13 @@ class MKLDAPException(MKGeneralException):
 
 ldap_connection = None
 
-def ldap_uri():
+def ldap_uri(server):
     if 'use_ssl' in config.ldap_connection:
         uri = 'ldaps://'
     else:
         uri = 'ldap://'
 
-    return uri + '%s:%d' % (config.ldap_connection['server'], config.ldap_connection['port'])
+    return uri + '%s:%d' % (server, config.ldap_connection['port'])
 
 def ldap_connect():
     global ldap_connection, ldap_connection_options
@@ -135,29 +135,34 @@ def ldap_connect():
                                 'LDAP User Settings</a>.'))
 
     try:
-        ldap_connection = ldap.ldapobject.ReconnectLDAPObject(ldap_uri())
-        ldap_connection.protocol_version = config.ldap_connection['version']
-        ldap_connection.network_timeout  = config.ldap_connection.get('connect_timeout', 2.0)
+        servers = [ config.ldap_connection['server'] ]
+        if config.ldap_connection.get('failover_servers'):
+            servers += config.ldap_connection.get('failover_servers')
 
-        # When using the domain top level as base-dn, the subtree search stumbles with referral objects.
-        # whatever. We simply disable them here when using active directory. Hope this fixes all problems.
-        if config.ldap_connection['type'] == 'ad':
-            ldap_connection.set_option(ldap.OPT_REFERRALS, 0)
+        errors = []
+        for server in servers:
+            try:
+                uri = ldap_uri(server)
+                ldap_connection = ldap.ldapobject.ReconnectLDAPObject(uri)
+                ldap_connection.protocol_version = config.ldap_connection['version']
+                ldap_connection.network_timeout  = config.ldap_connection.get('connect_timeout', 2.0)
 
-        ldap_default_bind()
+                # When using the domain top level as base-dn, the subtree search stumbles with referral objects.
+                # whatever. We simply disable them here when using active directory. Hope this fixes all problems.
+                if config.ldap_connection['type'] == 'ad':
+                    ldap_connection.set_option(ldap.OPT_REFERRALS, 0)
+
+                ldap_default_bind()
+            except (ldap.SERVER_DOWN, ldap.TIMEOUT, ldap.LOCAL_ERROR, ldap.LDAPError), e:
+                ldap_connection = None
+                errors.append('%s: %s' % (uri, e[0].get('info', e[0].get('desc', ''))))
+
+        if ldap_connection is None:
+            raise MKLDAPException(_('The LDAP connector is unable to connect to the LDAP server.\n%s') %
+                                        ('<br />\n'.join(errors)))
 
         # on success, store the connection options the connection has been made with
         ldap_connection_options = config.ldap_connection
-
-    except ldap.SERVER_DOWN, e:
-        msg = e[0].get('info', e[0].get('desc', ''))
-        ldap_connection = None # Invalidate connection on failure
-        raise MKLDAPException(_('The LDAP connector is unable to connect to the LDAP server (%s).') % msg)
-
-    except ldap.LDAPError, e:
-        html.write(repr(e))
-        ldap_connection = None # Invalidate connection on failure
-        raise MKLDAPException(e)
 
     except Exception:
         ldap_connection = None # Invalidate connection on failure

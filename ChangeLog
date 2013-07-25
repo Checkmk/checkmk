@@ -84,6 +84,8 @@
                                     Display current date in dashboard
     * LDAP: Using asynchronous searches / added optional support for paginated
       searches (Can be enabled in connection settings)
+    * LDAP: It is now possible to provide multiple failover servers, which are
+      tried when the primary ldap server fails
     * Added option to enable browser scrollbar to the multisite sidebar (only
       via "sidebar_show_scrollbar = True" in multisite.mk 
     * Added option to disable automatic userdb synchronizations in multisite

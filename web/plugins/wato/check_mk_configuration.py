@@ -445,6 +445,15 @@ register_configvar(group,
                          "resolvable hostname."),
                 allow_empty = False,
             )),
+            ('failover_servers', ListOfStrings(
+                title = _('Failover Servers'),
+                help = _('When the connection to the first server fails with connect specific errors '
+                         'like timeouts or some other network related problems, the connect mechanism '
+                         'will try to use this server instead of the server configured above. If you '
+                         'use persistent connections (default), the connection is being used until the '
+                         'LDAP is not reachable or the local webserver is restarted.'),
+                allow_empty = False,
+            )),
             ("port", Integer(
                 title = _("TCP Port"),
                 help  = _("This variable allows to specify the TCP port to "
@@ -525,7 +534,7 @@ register_configvar(group,
                 default_value = 5,
             )),
         ],
-        optional_keys = ['no_persistent', 'use_ssl', 'bind', 'page_size', 'response_timeout'],
+        optional_keys = ['no_persistent', 'use_ssl', 'bind', 'page_size', 'response_timeout', 'failover_servers'],
     ),
     domain = "multisite",
 )

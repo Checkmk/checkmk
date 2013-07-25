@@ -544,8 +544,8 @@ def declare_custom_user_attrs():
         vs = globals()[attr['type']](title = attr['title'], help = attr['help'])
         declare_user_attribute(attr['name'], vs,
             user_editable = attr['user_editable'],
-            show_in_table = attr['show_in_table'],
-            topic = attr['topic'],
+            show_in_table = attr.get('show_in_table', False),
+            topic = attr.get('topic', 'personal'),
         )
 
 #   .----------------------------------------------------------------------.

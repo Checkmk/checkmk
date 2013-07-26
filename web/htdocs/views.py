@@ -959,7 +959,7 @@ def create_view(vs):
     for key, valuespec in vs.items():
         val = valuespec.from_html_vars('view_' + key)
         valuespec.validate_value(val, 'view_' + key)
-        if not override or val != base_view[key]:
+        if not override or val != base_view.get(key):
             view[key] = val
 
     if not override:

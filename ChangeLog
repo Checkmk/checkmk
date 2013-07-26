@@ -93,6 +93,9 @@
     * New icons in view footers: export as CSV, export as JSON
     * Availability: new columns for shortest, longest, average and count
     * LDAP: Supporting posixGroup with memberUid as member attribute
+    * Editing localized strings (like the title) is now optional when cloning
+      views or editing cloned views. If not edited, the views inherit the
+      localized strings from their ancestors
     * FIX: better error message in case of exception in SNMP handling
     * FIX: Inventory screen: Now shows custom checks
     * FIX: Fixed locking problem of multisite pages related to user loading/saving

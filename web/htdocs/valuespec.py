@@ -1676,7 +1676,6 @@ class TimeofdayRange(ValueSpec):
             raise MKUserError(varprefix + "_until", _("The <i>from</i> time must not be greater then the <i>until</i> time."))
         ValueSpec.custom_validate(self, value, varprefix)
 
-
 # Make a configuration value optional, i.e. it may be None.
 # The user has a checkbox for activating the option. Example:
 # debug_log: it is either None or set to a filename.
@@ -1705,7 +1704,7 @@ class Optional(ValueSpec):
 
         html.write("<span>")
 
-        if self._label:
+        if self._label is not None:
             label = self._label
         elif self.title():
             label = _(self.title())
@@ -1761,6 +1760,62 @@ class Optional(ValueSpec):
         if value != self._none_value:
             self._valuespec.validate_value(value, varprefix + "_value")
         ValueSpec.custom_validate(self, value, varprefix)
+
+# Makes a configuration value optional, while displaying the current
+# value as text with a checkbox in front of it. When the checkbox is being checked,
+# the text hides and the encapsulated valuespec is being shown.
+class OptionalEdit(Optional):
+    def __init__(self, valuespec, **kwargs):
+        Optional.__init__(self, valuespec, **kwargs)
+        self._label = ''
+
+    def render_input(self, varprefix, value):
+        div_id = "option_" + varprefix
+        checked = html.get_checkbox(varprefix + "_use")
+        if checked == None:
+            if self._negate:
+                checked = True
+            else:
+                checked = False
+
+        html.write("<span>")
+
+        if self._label is not None:
+            label = self._label
+        elif self.title():
+            label = _(self.title())
+        elif self._negate:
+            label = _(" Ignore this option")
+        else:
+            label = _(" Activate this option")
+
+        html.checkbox(varprefix + "_use" , checked,
+                      onclick="valuespec_toggle_option(this, %r, %r);valuespec_toggle_option(this, %r, %r)" %
+                         (div_id + '_on', self._negate and 1 or 0,
+                          div_id + '_off', self._negate and 0 or 1),
+                      label = label)
+
+        html.write("&nbsp;")
+        html.write("</span>")
+
+        display_on  = checked == self._negate and 'none' or ''
+        display_off = checked != self._negate and 'none' or ''
+
+        if value == None:
+            value = self._valuespec.default_value()
+
+        html.write('<span id="%s_off" style="display:%s">' % (div_id, display_off))
+        html.write(value)
+        html.write('</span>')
+
+        html.write('<span id="%s_on" style="display:%s">' % (div_id, display_on))
+        if self._valuespec.title():
+            html.write(self._valuespec.title() + " ")
+        self._valuespec.render_input(varprefix + "_value", value)
+        html.write('</span>\n')
+
+    def from_html_vars(self, varprefix):
+        return self._valuespec.from_html_vars(varprefix + "_value")
 
 # Handle case when there are several possible allowed formats
 # for the value (e.g. strings, 4-tuple or 6-tuple like in SNMP-Communities)

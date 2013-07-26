@@ -511,6 +511,14 @@ multisite_painters["svc_last_notification"] = {
     "paint"   : lambda row: paint_age(row["service_last_notification"], row["service_last_notification"], 0),
 }
 
+multisite_painters['svc_notification_number'] = {
+    "title"     : _("Service notification number"),
+    "short"     : _("N#"),
+    "columns"   : [ "service_current_notification_number" ],
+    "paint"     : lambda row: ("count", row["service_current_notification_number"]),
+}
+
+
 multisite_painters["svc_check_latency"] = {
     "title"   : _("Service check latency"),
     "short"   : _("Latency"),
@@ -908,6 +916,13 @@ multisite_painters["host_notifper"] = {
     "short"   : _("notif."),
     "columns" : [ "host_notification_period" ],
     "paint"   : lambda row: (None, row["host_notification_period"]),
+}
+
+multisite_painters['host_notification_number'] = {
+    "title"     : _("Host notification number"),
+    "short"     : _("N#"),
+    "columns"   : [ "host_current_notification_number" ],
+    "paint"     : lambda row: ("count", saveint(row["host_current_notification_number"])), 
 }
 
 multisite_painters["host_flapping"] = {

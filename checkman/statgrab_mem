@@ -1,19 +1,53 @@
-title: Memory (RAM) and Swap usage
+title: Usage of physical and virtual RAM
 agents: hpux, solaris
 catalog: os/kernel
 license: GPL
 distribution: check_mk
 description:
- This check measures the CPU utilization during the last check
- cycle. A level can be set only on {wait} (disk wait).
+ This check measures the current usage of physical RAM and
+ virtual memory used by processes. You can define a warning
+ and critical level for the usage of virtual memory,
+ {not} for the usage of RAM.
 
- BERND: Hinweis auf statgrab-Plugin (HP) bzw. statgrab-Befehl (beide).
+ Check_mk lets you define levels in percentage of
+ the physically installed RAM or as absolute
+ values in MB. The default levels
+ are at 150% and 200%. That means that this check
+ gets critical if the memory used by processes
+ is twice the size of your RAM.
+
+ See check manpage for {mem.used} too.
+
+ Make sure you have the statgrab binary available on the monitored
+ machine. Under HP-UX you also need to activate the hpux_statgrab agent plugin.
+
+examples:
+ # Change default levels from 150%/200% to 100%/150%:
+ memused_default_levels = (100.0, 150.0)
+ checks += [
+   # make explicit check for hosts with tag "solaris"
+   ( ["solaris"], ALL_HOSTS, "statgrab_mem", None, (80.0, 100.0) ),
+   # use absolute levels at 8GB / 12GB for some other hosts
+   ( ["host12","host34"], "statgrab_mem", None, (8192, 12288) )
+ ]
 
 perfdata:
- Three variables: The percentage of time spent in {user}, {system} and {wait}
- (disk wait). The idle time can be computed by substracting those three values
- from 100%. The user value contains also {nice}.
+  Two values: The RAM used in MB (without Caches) and the swap space used
+  in MB.
 
 inventory:
- One check per host is created if the agent contains a {statgrab_cpu}
- section containing cpu information.
+  Finds one service on every machine with statgrab: The memory used.
+
+[parameters]
+warning (int or float): the percentage of virtual memory used
+ by processes at which {WARN} state is triggered. If the
+ level is defined as an integer value then it is interpreted
+ as an absolute value in megabytes.
+critical (int or float): the percentage or absolute value
+ at which {CRIT} state is triggered
+
+[configuration]
+memused_default_levels (float, float): Levels used by
+ all checks that are created by inventory. If not set they
+ have defaults of (150.0, 200.0)
+

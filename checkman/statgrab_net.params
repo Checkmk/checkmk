@@ -1,6 +1,6 @@
 title: Network Interfaces: Speed and Duplex
 agents: hpux, solaris
-catalog: os/kernel
+catalog: os/network
 license: GPL
 distribution: check_mk
 description:

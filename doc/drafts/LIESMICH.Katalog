@@ -52,3 +52,5 @@ hw
    SNMP-Agent auf Betriebssystem für HW
 
 generic (mrpe, local, ...)
+
+agentless "Networking checks without agent"

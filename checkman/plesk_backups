@@ -1,4 +1,4 @@
-title: FTP backup spaces of Plesk domains
+title: FTP backups of Plesk domains
 agents: linux
 catalog: app/Plesk
 license: GPL
@@ -8,11 +8,47 @@ description:
  manage multiple independent webspace instances including domains and
  so on.
 
- Plugin: plesk_backup (war das bei plesk_domains auch erwähnt)?
+ This check checks the FTP backups and backup space of Plesk domains.
 
- BERND SCHREIBT DEN REST.
+ To make this check work you need to install the agent plugin
+ {plesk_backups} on the host wich runs Plesk in the
+ directory {/usr/lib/check_mk_agent/plugins}.
+
+item:
+  The domain name of the domain backuped.
+
+examples:
+ # set up a check for a plesk backup
+ # warn if backup is elder than 1 day (86400 sec)
+ # and crit if elder than 2 days
+ # warn if Maximum size of all files on backup space is > 70 MB 
+ # (73400320 Bytes) and crit if > 80 MB
+ # warn also if no backup is configured or no backup can be found
+ static_checks['plesk_backups'] = [
+    ( ('plesk_backups', 
+       'Backup example.com', 
+       { 'backup_age': (86400, 172800), 
+         'total_size': (73400320, 83886080), 
+         'no_backup_configured_state': 1, 
+         'no_backup_found_state': 1
+       }), 
+       [], ['localhost1']
+    ),
+ ]
+
+perfdata:
+  Three values:
+    last backup size in bytes,
+    last backup age in seconds and
+    total size of all backups in bytes
 
 inventory:
- One check per system is created if the {plesk_domains} agent plugin
- is installed and working (it outputs the {<<<plesk_domains>>>} section).
+ One check per plesk domain is created if the {plesk_backups} agent plugin
+ is installed and working (it outputs the {<<<plesk_backups>>>} section).
+
+[parameters]
+backup_age(int, int): if the age of the backup (in seconds) is elder than the first value, return {WARN} state, if elder than the second one, return {CRIT} state
+total_size(int, int): if the total size of all backups on the backup space (in bytes) is larger than than the first value, return {WARN} state, if larger than the second one, return {CRIT} state
+no_backup_configured_state(int): the numeric state that should be returned if no backup is configured ( 0 = {OK}, 1 = {WARN}, 2 = {CRIT} )
+no_backup_found_state(int): the numeric state that should be returned if no backup can be found ( 0 = {OK}, 1 = {WARN}, 2 = {CRIT} )
 

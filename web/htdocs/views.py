@@ -32,6 +32,8 @@ from pagefunctions import *
 max_display_columns   = 12
 max_sort_columns      = 5
 
+view_inherit_attrs = [ 'title', 'linktitle', 'topic', 'description' ]
+
 # Python 2.3 does not have 'set' in normal namespace.
 # But it can be imported from 'sets'
 try:
@@ -280,12 +282,12 @@ def available_views():
     # 2. views of special users allowed to globally override builtin views
     for (u, n), view in html.multisite_views.items():
         if n not in views and view["public"] and config.user_may(u, "general.force_views"):
-            # Honor original permissions for the current user
-            permname = "view.%s" % n
-            if config.permission_exists(permname) \
-                and not config.may(permname):
-                continue
-            views[n] = view
+                # Honor original permissions for the current user
+                permname = "view.%s" % n
+                if config.permission_exists(permname) \
+                    and not config.may(permname):
+                    continue
+                views[n] = view
 
     # 3. Builtin views, if allowed.
     for (u, n), view in html.multisite_views.items():
@@ -305,14 +307,30 @@ def available_views():
                     continue
                 views[n] = view
 
-    return views
+    # Maybe resolve inherited attributes
+    for name, view in views.items():
+        builtin_view = html.multisite_views.get(('', name))
+        if builtin_view:
+            for attr in view_inherit_attrs:
+                if attr not in view and attr in builtin_view:
+                    view[attr] = builtin_view[attr]
 
+    return views
 
 def save_views(us):
     userviews = {}
     for (user, name), view in html.multisite_views.items():
         if us == user:
-            userviews[name] = view
+            builtin_view = html.multisite_views.get(('', name))
+            # need a copy here as we might remove the inherited attributes which
+            # are added during load_views() but should not be persisted.
+            if builtin_view:
+                userviews[name] = copy.deepcopy(view)
+                for attr in view_inherit_attrs:
+                    if attr in view and builtin_view.get(attr) == view[attr]:
+                        del userviews[name][attr]
+            else:
+                userviews[name] = view
     config.save_user_file("views", userviews)
 
 
@@ -407,12 +425,12 @@ def page_edit_views(msg=None):
 
             # Title
             html.write('<td>')
+            title = view['title']
             if not view["hidden"]:
-                html.write("<a href=\"view.py?view_name=%s\">%s</a>"
-                           % (viewname, view["title"]))
+                html.write("<a href=\"view.py?view_name=%s\">%s</a>" % (viewname, title))
             else:
-                html.write(view["title"])
-            html.help(view.get("description"))
+                html.write(title)
+            html.help(view['description'])
             html.write("</td>")
 
             # Datasource
@@ -452,20 +470,23 @@ def select_view(varname, only_with_hidden = False):
 #  |_____\__,_|_|\__|    \_/  |_|\___| \_/\_/
 #  Edit one view
 # -------------------------------------------------------------------------
+
 def page_edit_view():
     if not config.may("general.edit_views"):
         raise MKAuthException(_("You are not allowed to edit views."))
 
     load_views()
-    view = None
+    view = {}
 
     # Load existing view from disk - and create a copy if 'clonefrom' is set
     viewname = html.var("load_view")
     oldname = viewname
+    mode = html.var('mode', 'edit')
     if viewname:
         cloneuser = html.var("clonefrom")
-        if cloneuser != None:
-            view = copy.copy(html.multisite_views.get((cloneuser, viewname), None))
+        if cloneuser:
+            mode  = 'clone'
+            view = copy.deepcopy(html.multisite_views.get((cloneuser, viewname), None))
             # Make sure, name is unique
             if cloneuser == config.user_id: # Clone own view
                 newname = viewname + "_clone"
@@ -492,15 +513,34 @@ def page_edit_view():
 
     # set datasource name if a new view is being created
     elif html.var("datasource"):
+        if not html.var('view_name'):
+            mode = 'create'
         datasourcename = html.var("datasource")
     else:
         raise MKInternalError(_("No view name and not datasource defined."))
 
+    if mode == 'clone':
+        title = _('Clone View')
+    elif mode == 'create':
+        title = _('Create View')
+    else:
+        title = _('Edit View')
+
+    vs = {
+        'title'       : TextUnicode(size = 50, allow_empty = False),
+        'linktitle'   : TextUnicode(size = 26),
+        'topic'       : TextUnicode(size = 50),
+        'description' : TextAreaUnicode(rows = 4, cols = 50),
+    }
+
+    if mode != 'create':
+        for key, valuespec in vs.items():
+            vs[key] = OptionalEdit(valuespec)
 
     # handle case of save or try or press on search button
     if html.var("save") or html.var("try") or html.var("search"):
         try:
-            view = create_view()
+            view = create_view(vs)
             if html.var("save"):
                 if html.check_transaction():
                     load_views()
@@ -523,7 +563,7 @@ def page_edit_view():
             html.write("<div class=error>%s</div>\n" % e.message)
             html.add_user_error(e.varname, e.message)
 
-    html.header(_("Edit view"), stylesheets=["pages", "views", "status", "bi"])
+    html.header(title, stylesheets=["pages", "views", "status", "bi"])
     html.begin_context_buttons()
     back_url = html.var("back", "")
     if back_url:
@@ -533,12 +573,14 @@ def page_edit_view():
 
     html.begin_form("view")
     html.hidden_field("back", back_url)
-    html.hidden_field("old_name", viewname) # safe old name in case user changes it
+    html.hidden_field("mode", mode)
+    html.hidden_field("clonefrom", html.var("clonefrom", "")) # safe old name in case user changes it
+    html.hidden_field("old_name", oldname) # safe old name in case user changes it
 
     forms.header(_("Basic Settings"))
 
     forms.section(_("Title"))
-    html.text_input("view_title", size=50)
+    vs['title'].render_input('view_title', view.get('title'))
 
     forms.section(_("Link Name"))
     html.text_input("view_name", size=12)
@@ -556,18 +598,20 @@ def page_edit_view():
     html.help(_("The datasource of a view cannot be changed."))
 
     forms.section(_("Topic"))
-    html.text_input("view_topic", _("Other"), size=50)
+    vs['topic'].render_input('view_topic', view.get('topic'))
     html.help(_("The view will be sorted under this topic in the Views snapin. "))
 
-    forms.section(_("Buttontext"))
-    html.text_input("view_linktitle", size=26)
-    html.write(_("&nbsp; Icon: "))
-    html.text_input("view_icon", size=14)
+    forms.section(_("Button"))
+    html.write(_('Text') + ': ')
+    vs['linktitle'].render_input('view_linktitle', view.get('linktitle'))
     html.help(_("If you define a text here, then it will be used in "
                 "buttons to the view instead of of view title."))
+    html.write('<p>' + _('Icon') + ': ')
+    html.text_input("view_icon", size=14)
+    html.write('</p>')
 
     forms.section(_("Description"))
-    html.text_area("view_description", "", rows=4, cols=50)
+    vs['description'].render_input('view_description', view.get('description'))
 
     forms.section(_("Visibility"))
     if config.may("general.publish_views"):
@@ -886,25 +930,48 @@ def load_view_into_html_vars(view):
 
 # Extract properties of view from HTML variables and construct
 # view object, to be used for saving or displaying
-def create_view():
+def create_view(vs):
     name = html.var("view_name").strip()
     if name == "":
         raise MKUserError("view_name", _("Please supply a unique name for the view, this will be used to specify that view in HTTP links."))
     if not re.match("^[a-zA-Z0-9_]+$", name):
         raise MKUserError("view_name", _("The name of the view may only contain letters, digits and underscores."))
-    title = html.var_utf8("view_title").strip()
-    if title == "":
-        raise MKUserError("view_title", _("Please specify a title for your view."))
-    linktitle = html.var("view_linktitle").strip()
-    if not linktitle:
-        linktitle = title
+
+    mode = html.var("mode")
+    oldname = html.var("old_name")
+    override = False
+    if mode in 'clone':
+        if oldname == name:
+            override = True # means overriding another view with same name
+
+        cloneuser = html.var("clonefrom")
+        if cloneuser:
+            base_view = html.multisite_views.get((cloneuser, oldname), None)
+        else:
+            base_view = html.multisite_views.get((config.user_id, oldname))
+            if not base_view:
+                base_view = html.multisite_views.get(('', oldname)) # load builtin view
+    elif mode == 'edit' and ('', oldname) in html.multisite_views:
+        base_view = html.multisite_views.get(('', oldname)) # load builtin view
+        override = True
+
+    view = {}
+    for key, valuespec in vs.items():
+        val = valuespec.from_html_vars('view_' + key)
+        valuespec.validate_value(val, 'view_' + key)
+        if not override or val != base_view[key]:
+            view[key] = val
+
+    if not override:
+        if not view['linktitle']:
+            view['linktitle'] = view['title']
+        if not view['topic']:
+            view['topic'] = _("Other")
+
     icon = html.var("view_icon")
     if not icon:
         icon = None
 
-    topic = html.var_utf8("view_topic")
-    if not topic:
-        topic = _("Other")
     datasourcename = html.var("datasource")
     datasource = multisite_datasources[datasourcename]
     tablename = datasource["table"]
@@ -1001,14 +1068,10 @@ def create_view():
     if len(painternames) == 0:
         raise MKUserError("col_1", _("Please add at least one column to your view."))
 
-    return {
+    view.update({
         "name"            : name,
         "owner"           : config.user_id,
-        "title"           : title,
-        "topic"           : topic,
-        "linktitle"       : linktitle,
         "icon"            : icon,
-        "description"     : html.var_utf8("view_description", ""),
         "datasource"      : datasourcename,
         "public"          : public,
         "hidden"          : hidden,
@@ -1028,7 +1091,8 @@ def create_view():
         "sorters"         : sorternames,
         "group_painters"  : group_painternames,
         "painters"        : painternames,
-    }
+    })
+    return view
 
 
 # ---------------------------------------------------------------------

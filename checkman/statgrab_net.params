@@ -4,16 +4,30 @@ catalog: os/network
 license: GPL
 distribution: check_mk
 description:
- This check measures the CPU utilization during the last check
- cycle. A level can be set only on {wait} (disk wait).
+ Checks the settings for speed and duplex of a network interface and compares
+ them to their target state.
 
- BERND: Hinweis auf statgrab-Plugin (HP) bzw. statgrab-Befehl (beide).
+ Returns {OK} if they are equal and {CRIT} if not.
 
-perfdata:
- Three variables: The percentage of time spent in {user}, {system} and {wait}
- (disk wait). The idle time can be computed by substracting those three values
- from 100%. The user value contains also {nice}.
+ Make sure you have the statgrab binary available on the monitored
+ machine. Under HP-UX you also need to activate the hpux_statgrab agent plugin.
+
+examples:
+ # target settings for interface bge0 on host1 are a speed of 1000Mb/s
+ # and Unknown for the duplex state
+ checks += [
+     ('host1', 'statgrab_net.params', 'bge0', ('1000Mb/s', 'Unknown'))
+ ]
+
+item:
+  The interface name as defined in the operating system.
 
 inventory:
- One check per host is created if the agent contains a {statgrab_cpu}
- section containing cpu information.
+  Creates one check for each network interface.
+  When running inventory on a machine, the current settings for speed and duplex
+  of an interface are assumed to be the target states.
+
+[parameters]
+targetstate(string, string): the target state for interface speed and the 
+  target duplex state
+

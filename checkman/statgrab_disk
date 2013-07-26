@@ -19,8 +19,8 @@ item:
 examples:
   # adding one service for Disk IO read and one for Disk IO  write
   checks += [
-    ('statgrab', 'statgrab_disk', 'read', None),
-    ('statgrab', 'statgrab_disk', 'write', None),
+    ('host1', 'statgrab_disk', 'read', None),
+    ('host1', 'statgrab_disk', 'write', None),
   ]
 
 perfdata:

@@ -1,0 +1,23 @@
+title: Connection to a TCP Port (unencrypted or with SSL)
+agents: active
+catalog: agentless
+license: GPL
+distribution: check_mk
+description:
+ This is an active check that connects to any given TCP port and checks
+ if the connection could be established. Therefor it can be used to check 
+ nearly any TCP based service on the monitored machine. SSL can be activated
+ to connect to any SSL encrypted service.
+
+ Thresholds for the response time can be configured for {WARN} and {CRIT}.
+ You can give a string to send over the connection and define a string to
+ expect in the response. A given string to send for terminating the connection
+ can be configured too.
+
+ If using SSL you can configure to check for expiration of the SSL certificate
+ within the next days.
+
+ This check can be configured by Wato.
+
+perfdata:
+ One value: The response time in seconds.

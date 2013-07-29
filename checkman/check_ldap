@@ -1,0 +1,16 @@
+title: LDAP/LDAPS connection
+agents: active
+catalog: agentless
+license: GPL
+distribution: check_mk
+description:
+ This is an active check that connects to an LDAP server by LDAP or
+ LDAPS protocol and reports the status of the connection.
+
+ You can give a special attribute to search for. Thresholds can be set on the
+ response time for {WARN} and {CRIT}.
+
+ This check can be configured by Wato.
+
+perfdata:
+ One value: The response time in seconds.

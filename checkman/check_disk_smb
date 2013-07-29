@@ -1,0 +1,14 @@
+title: Access to a SMB share / free space
+agents: active
+catalog: agentless
+license: GPL
+distribution: check_mk
+description:
+ This is an active check that can access a SMB share, check if it is 
+ available and check the free space against given thresholds (in percent)
+ for {WARN} and {CRIT}.
+
+ This check can be configured by Wato.
+
+perfdata:
+ One value: The used space on the share in Bytes.

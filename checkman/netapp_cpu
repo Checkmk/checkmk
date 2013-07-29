@@ -4,5 +4,26 @@ catalog: hw/storagehw/netapp
 license: GPL
 distribution: check_mk
 description:
- BERND ERKLAERT UND DAS...
+ Checks the CPU utilization (in percent) of NetApp filers.
+
+ Returns {WARN}/{CRIT} if the current utilization is above the given levels.
+
+examples:
+ # set default levels to 90 and 99 percent:
+ netapp_cpu_default_levels = (90.0, 99.0)
+
+perfdata:
+ One value: The CPU utilization in percent.
+
+inventory:
+ Configures one check on each filer.
+
+[parameters]
+warn(float): Return {WARN} if the CPU utilization is higher or equal this value.
+
+crit(float): Return {CRIT} if the CPU utilization is higher or equal this value.
+
+[configuration]
+netapp_cpu_default_levels(float, float):  The default levels to be used for 
+ inventorized checks for {warn} and {crit}. They are preset to {(80.0, 90.0)}.
 

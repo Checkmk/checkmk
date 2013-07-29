@@ -1,4 +1,4 @@
-title: Channel modules on Fujitsu ETERNUS DX storage systems
+title: Fujitsu ETERNUS DX storage systems: Channel modules
 agents: snmp
 catalog: hw/storagehw/fujitsu 
 license: GPL

@@ -4,5 +4,34 @@ catalog: app/oracle
 license: GPL
 distribution: check_mk
 description:
- BERND SCHREIBT WAS NETTES. LARS WEISS AUCH WAS.
+ Checks usage of ORACLE ASM Disk Groups.
+
+ Make sure you have installed the mk_oracle_asm agent plugin on the monitored
+ machines. (It uses asmcmd commandline tool there to gather the needed
+ informations.)
+
+ See also check manpage for df. All the configuration from there can
+ also be used for ORACLE ASM Disk Groups.
+
+item:
+ The name of the disk group as delivered by asmcmd.
+
+examples:
+ # Set default levels for all filesystems (including ORACLE ASM Disk Groups)
+ # to 90/95
+ filesystem_default_levels = (90, 95)
+
+ # more examples in check manpage for df
+
+perfdata:
+ see check manpage for df
+
+inventory:
+ Creates one check for every disk group in the agent's output.
+
+[parameters]
+parameters(dict): see check manpage for df
+
+[configuration]
+filesystem_default_levels: see check manpage for df
 

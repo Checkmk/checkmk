@@ -68,7 +68,7 @@ manpage_catalog_titles = {
         "misc"        : "Miscellaneous",
         "storage"     : "Filesystems, Disks and RAID",
 
-    "agentless" : "Networking checks without agent"
+    "agentless" : "Networking checks without agent",
     "generic"  : "Generic check plugins",
     "unsorted" : "Uncategorized",
 }

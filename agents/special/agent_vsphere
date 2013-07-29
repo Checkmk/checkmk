@@ -33,9 +33,7 @@
 # Maybe the MOB is helpful:
 #   http://<your-esx-host>/mob
 
-import sys
-import getopt
-import socket
+import sys, os, getopt,socket
 
 import inspect, pprint # FOR DEBUGGING
 
@@ -70,6 +68,8 @@ OPTIONS:
                                 subquery.
   --debug                       Debug mode: let Python exceptions come through
 
+  --profile                     Enable performance profiling in Python source code
+
   -i MODULES, --modules MODULES Modules to query. This is a comma separated list of
                                 hostsystem, virtualmachine and storage. Default is to
                                 query all modules.
@@ -82,7 +82,7 @@ OPTIONS:
 short_options = 'hi:u:s:Dat:H:c'
 long_options  = [
     'help', 'user=', 'secret=', 'direct', 'agent', 'debug', 'modules=', 'timeout=', 'hostname=',
-    'dump-counters',
+    'dump-counters', 'profile'
 ]
 
 try:
@@ -98,6 +98,9 @@ opt_dump_counters = False
 opt_timeout       = 60
 opt_hostname      = None
 
+g_profile         = None
+g_profile_path    = "vsphere_profile.out"
+
 host_address = None
 user         = None
 secret       = None
@@ -106,6 +109,10 @@ mortypes     = [ 'hostsystem', 'virtualmachine', 'datastore', 'counters' ]
 for o,a in opts:
     if o in [ '--debug' ]:
         opt_debug = True
+    elif o in [ '--profile' ]:
+        import cProfile
+        g_profile = cProfile.Profile()
+        g_profile.enable()
     elif o in [ '-D', '--direct' ]:
         opt_direct = True
     elif o in [ '-a', '--agent' ]:
@@ -218,6 +225,19 @@ print "AgentOs: %s " % host.get_server_type()
 
 # Prepare list of all hosts systems
 all_hosts = host.get_hosts()
+
+def output_profile():
+    g_profile.dump_stats(g_profile_path)
+    show_profile = os.path.join(os.path.dirname(g_profile_path), 'show_profile.py')
+    file(show_profile, "w")\
+        .write("#!/usr/bin/python\n"
+               "import pstats\n"
+               "stats = pstats.Stats('%s')\n"
+               "stats.sort_stats('time').print_stats()\n" % g_profile_path)
+    os.chmod(show_profile, 0755)
+
+    sys.stderr.write("Profile '%s' written. Please run %s.\n" % (g_profile_path, show_profile))
+
 
 def debug(x):
     pprint.pprint(inspect.getmembers(x))
@@ -716,3 +736,6 @@ print "<<<esx_vsphere_objects:sep(9)>>>"
 for entry in object_collection:
     print "\t".join(entry)
 host.disconnect()
+
+if g_profile:
+    output_profile()

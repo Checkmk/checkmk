@@ -351,8 +351,8 @@ declare_filter(132, FilterNagiosFlag("host",    "host_active_checks_enabled",   
 declare_filter(133, FilterNagiosFlag("host",    "host_notifications_enabled",       _("Host notifications enabled")))
 declare_filter(230, FilterNagiosFlag("service", "service_acknowledged",             _("Problem acknowledged")))
 declare_filter(231, FilterNagiosFlag("service", "service_in_notification_period",   _("Service in notif. per.")))
-declare_filter(232, FilterNagiosFlag("service", "service_active_checks_enabled",    _("Active checks enabled")))
-declare_filter(233, FilterNagiosFlag("service", "service_notifications_enabled",    _("Notifications enabled")))
+declare_filter(233, FilterNagiosFlag("service", "service_active_checks_enabled",    _("Active checks enabled")))
+declare_filter(234, FilterNagiosFlag("service", "service_notifications_enabled",    _("Notifications enabled")))
 declare_filter(236, FilterNagiosFlag("service", "service_is_flapping",              _("Flapping")))
 declare_filter(231, FilterNagiosFlag("service", "service_scheduled_downtime_depth", _("Service in downtime")))
 declare_filter(132, FilterNagiosFlag("host",    "host_scheduled_downtime_depth",    _("Host in downtime")))
@@ -395,6 +395,39 @@ class FilterSite(Filter):
 
 declare_filter(500, FilterSite("siteopt", False), _("Optional selection of a site"))
 declare_filter(501, FilterSite("site",    True),  _("Selection of site is enforced, use this filter for joining"))
+
+# name: internal id of filter
+# title: user displayed title of the filter
+# info: usually either "host" or "service"
+# column: a livestatus column of type int or float
+class FilterNumberRange(Filter): # type is int
+    def __init__(self, name, title, info, column):
+        self.column = column
+        varnames = [ name + "_from", name + "_until" ]
+        Filter.__init__(self, name, title, info, varnames, [])
+
+    def display(self):
+        html.write(_("From:") + "&nbsp;")
+        html.text_input(self.htmlvars[0], style="width: 80px;")
+        html.write(" &nbsp; " + _("To:") + "&nbsp;")
+        html.text_input(self.htmlvars[1], style="width: 80px;")
+
+    def filter(self, tablename):
+        lql = ""
+        for i, op in [ (0, ">="), (1, "<=") ]:
+            try:
+                txt = html.var(self.htmlvars[i])
+                int(txt.strip())
+                lql += "Filter: %s %s %s\n" % (self.column, op, txt.strip())
+            except:
+                pass
+        return lql
+
+
+declare_filter(232, FilterNumberRange("host_notif_number", _("Current Host Notification Number"), "host", "current_notification_number"))
+declare_filter(232, FilterNumberRange("svc_notif_number", _("Current Service Notification Number"), "service", "current_notification_number"))
+
+
 
 # Filter for setting time ranges, e.g. on last_state_change and last_check
 # Variante eins:

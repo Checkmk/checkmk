@@ -515,7 +515,7 @@ multisite_painters['svc_notification_number'] = {
     "title"     : _("Service notification number"),
     "short"     : _("N#"),
     "columns"   : [ "service_current_notification_number" ],
-    "paint"     : lambda row: ("count", row["service_current_notification_number"]),
+    "paint"     : lambda row: ("", row["service_current_notification_number"]),
 }
 
 
@@ -922,7 +922,7 @@ multisite_painters['host_notification_number'] = {
     "title"     : _("Host notification number"),
     "short"     : _("N#"),
     "columns"   : [ "host_current_notification_number" ],
-    "paint"     : lambda row: ("count", saveint(row["host_current_notification_number"])), 
+    "paint"     : lambda row: ("", saveint(row["host_current_notification_number"])), 
 }
 
 multisite_painters["host_flapping"] = {

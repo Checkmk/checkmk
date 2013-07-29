@@ -1,4 +1,4 @@
-title: Channel adapters on Fujitsu ETERNUS DX80 S2 storage systems
+title: Fujitsu ETERNUS DX80 S2 storage systems: Channel adapters
 agents: snmp
 catalog: hw/storagehw/fujitsu 
 license: GPLv2

@@ -1,4 +1,4 @@
-title: System capacitor units on Fujitsu ETERNUS DX storage systems
+title: Fujitsu ETERNUS DX storage systems: System capacitor units
 agents: snmp
 catalog: hw/storagehw/fujitsu 
 license: GPL

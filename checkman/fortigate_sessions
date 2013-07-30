@@ -1,4 +1,4 @@
-title: Current number of sessions on FortiGate firewalls
+title: FortiGate firewalls: Current Number of Sessions
 agents: snmp
 catalog: hw/network/fortinet
 license: GPL

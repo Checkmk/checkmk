@@ -102,6 +102,7 @@ def check_sym_brightmail_queues(item, params, info):
 
 check_info["sym_brightmail_queues"] = {
      "check_function"           : check_sym_brightmail_queues,
+     "group"                    : "sym_brightmail_queues",
      "inventory_function"       : inventory_sym_brightmail_queues,
      "service_description"      : "Queue %s",
      "has_perfdata"             : False,

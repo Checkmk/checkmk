@@ -1,4 +1,4 @@
-title: Viprinet power supply
+title: Viprinet: Power Supplies
 agents: snmp
 catalog: hw/network/viprinet 
 license: GPL

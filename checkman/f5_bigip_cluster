@@ -1,4 +1,4 @@
-title: Cluster state of F5 Big-IP
+title: F5 Big-IP: Cluster state
 agents: snmp
 catalog: hw/network/f5 
 license: GPL

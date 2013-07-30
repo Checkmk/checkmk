@@ -1,4 +1,4 @@
-title: Memory of CISCO devices
+title: Memory
 agents: snmp
 catalog: hw/network/cisco 
 license: GPL

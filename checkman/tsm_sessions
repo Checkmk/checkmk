@@ -1,4 +1,4 @@
-title: Check the age of tsm sessions in RecvW or MediaW state 
+title: IBM Tivoli Storage Manager (TSM): Age of Sessions in RecvW or MediaW state 
 agents: windows
 catalog: app/tsm 
 license: GPL

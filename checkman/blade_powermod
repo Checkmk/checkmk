@@ -1,4 +1,4 @@
-title: Power modules of an IBM blade center
+title: IBM Blade Center: Power Modules
 agents: snmp
 catalog: hw/server/ibm 
 license: GPL

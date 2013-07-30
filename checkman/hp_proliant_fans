@@ -1,4 +1,4 @@
-title: FANs in HP Proliant servers
+title: HP Proliant Servers: FANs
 agents: snmp
 catalog: hw/server/hp
 license: GPL

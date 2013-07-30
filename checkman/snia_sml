@@ -1,4 +1,4 @@
-title: Various sensors of IBM Tapelib 3584
+title: IBM Tapelib 3584: Various Sensors
 agents: snmp
 catalog: hw/storagehw/ibm
 license: GPL

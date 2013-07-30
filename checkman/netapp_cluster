@@ -1,4 +1,4 @@
-title: MetroCluster status on NetAPP Ontap filers
+title: NetApp Ontap Filers: MetroCluster Status
 agents: snmp
 catalog: hw/storagehw/netapp
 license: GPL

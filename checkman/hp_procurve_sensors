@@ -1,4 +1,4 @@
-title: Sensor status (PSU, Fan, Temp) in HP Procurve Switches
+title: HP Procurve Switches: Power Supplies, Fans, Temperature
 agents: snmp
 catalog: hw/network/hp 
 license: GPL

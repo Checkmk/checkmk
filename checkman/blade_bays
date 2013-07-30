@@ -1,4 +1,4 @@
-title: Bays in an IBM blade center
+title: IBM Blade Center: Bays
 agents: snmp
 catalog: hw/server/ibm
 license: GPL

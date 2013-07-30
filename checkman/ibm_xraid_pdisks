@@ -1,4 +1,4 @@
-title: Physical disks on IBM servers
+title: IBM servers: Physical Disks
 agents: snmp
 catalog: hw/server/ibm
 license: GPL

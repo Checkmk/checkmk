@@ -1,4 +1,4 @@
-title: System fans on F5 Big-IP
+title: F5 Big-IP: System fans
 agents: snmp
 catalog: hw/network/f5 
 license: GPL

@@ -1,4 +1,4 @@
-title: FAN health status on Cisco switches
+title: Cisco switches: FAN health status
 agents: snmp
 catalog: hw/network/cisco
 license: GPL

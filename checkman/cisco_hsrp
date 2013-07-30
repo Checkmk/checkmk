@@ -1,4 +1,4 @@
-title: Cisco HSRP group status
+title: Cisco routers: HSRP group status
 agents: snmp
 catalog: hw/network/cisco 
 license: GPLv3

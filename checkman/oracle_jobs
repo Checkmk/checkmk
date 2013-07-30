@@ -1,4 +1,4 @@
-title: Oracle Database Jobs
+title: ORACLE Database Jobs
 agents: linux, solaris, hpux
 catalog: app/oracle
 license: GPL

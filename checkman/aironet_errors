@@ -1,4 +1,4 @@
-title: CRC errors on CISCO Aironet access points
+title: CISCO Aironet access points: CRC errors
 agents: snmp
 catalog: hw/network/cisco
 license: GPL

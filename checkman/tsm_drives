@@ -1,4 +1,4 @@
-title: Backup drives in Tivoli TSM
+title: IBM Tivoli Storage Manager (TSM): Backup Drives
 agents: aix, linux
 catalog: app/tsm 
 license: GPL

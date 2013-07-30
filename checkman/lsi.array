@@ -1,4 +1,4 @@
-title: Check LSI RAID array
+title: LSI RAID array
 agents: linux
 catalog: os/storage
 license: GPL

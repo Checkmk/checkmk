@@ -1,4 +1,4 @@
-title: Summary health state of an IBM blade center
+title: IBM Blade Center: Summary Health State
 agents: snmp
 catalog: hw/server/ibm 
 license: GPL

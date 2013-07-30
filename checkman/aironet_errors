@@ -1,11 +1,11 @@
-title: CISCO Aironet access points: CRC errors
+title: Cisco Aironet access points: CRC errors
 agents: snmp
 catalog: hw/network/cisco
 license: GPL
 distribution: check_mk
 description:
  This check monitors the rate of CRC errors on MAC level
- on each of the radios of an CISCO Aironet access point.
+ on each of the radios of an Cisco Aironet access point.
 
 item:
  The number of the radio - usually {1} or {2} (integer).

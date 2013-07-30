@@ -1,11 +1,11 @@
-title: CISCO switches: Redundant Power Supplies
+title: Cisco switches: Redundant Power Supplies
 agents: snmp
 catalog: hw/network/cisco
 license: GPL
 distribution: check_mk
 description:
  This check monitors the health of redundant power supplies in
- CISCO switches. If one of the two power supplies fails, the
+ Cisco switches. If one of the two power supplies fails, the
  check returns {CRIT}.
 
 item:

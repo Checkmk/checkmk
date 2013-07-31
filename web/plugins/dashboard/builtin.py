@@ -88,7 +88,7 @@ if defaults.omd_site:
     }
 
 builtin_dashboards["simple_problems"] = {
-    "title" : _("Problems Dashboard"),
+    "title" : _("Host &amp; Services Problems"),
     "dashlets" : [
         {
             "title"      : _("Host Problems (unhandled)"),

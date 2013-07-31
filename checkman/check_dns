@@ -1,0 +1,19 @@
+title: DNS query to a Nameserver
+agents: active
+catalog: agentless
+license: GPL
+distribution: check_mk
+description:
+ This is an active check that sends a DNS query to a DNS nameserver.
+
+ You can give the DNS name to query for.
+
+ It can compare the IP it gets back against a given IP and return {CRIT} if
+ they do not match. It can check the DNS server to be authoritativ for the
+ lookup. It can check response times against given thresholds for {WARN}
+ and {CRIT}.
+
+ This check can be configured by Wato.
+
+perfdata:
+ One value: The response time in seconds.

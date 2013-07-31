@@ -46,7 +46,7 @@ def check_zypper(_no_item, _no_params, info):
     locks = []
     for line in info:
         # 5 patches needed (2 security patches)
-        if len(line) >= 5 and line[4].strip() == 'needed':
+        if len(line) >= 5 and line[4].lower().strip() == 'needed':
             patch_type = line[3].strip()
             patch_types.setdefault(patch_type, 0)
             patch_types[patch_type] += 1

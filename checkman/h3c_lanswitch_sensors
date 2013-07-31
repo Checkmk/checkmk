@@ -1,11 +1,11 @@
-title: Fan and Powersupply Sensors of 3COM and H3C switches
+title: 3COM and H3C switches: Fan and Power Supply
 agents: snmp
 catalog: hw/network/h3c 
 license: GPL
 distribution: check_mk
 description:
 
- This check queries the fan and powersupply sensors of various switches made by 
+ This check queries the fan and power supply sensors of various switches made by 
  3Com and H3C. By default it will handle 3com Superstack 4 switches, but it should 
  work with all devices defined in the "Lsw" lanswitch Mibs.
 

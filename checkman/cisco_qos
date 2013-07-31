@@ -1,4 +1,4 @@
-title: Usage of QoS classes on Cisco Routers using CISCO-CLASS-BASED-QOS-MIB
+title: Cisco Routers: Usage of QoS classes
 agents: snmp
 catalog: hw/network/cisco
 license: GPL

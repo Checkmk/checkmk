@@ -1,4 +1,4 @@
-title: Memory Module state in HP Proliant servers
+title: HP Proliant Servers: Memory Modules
 agents: snmp
 catalog: hw/server/hp
 license: GPL

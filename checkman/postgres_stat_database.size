@@ -1,4 +1,4 @@
-title: Database size check for PostgreSQL
+title: Database Size for PostgreSQL
 agents: linux
 catalog: app/postgresql
 license: GPL

@@ -1,4 +1,4 @@
-title: RLUNs in Fujitsu ETERNUS DX80 S2 storage systems
+title: Fujitsu ETERNUS DX80 S2 storage systems: RLUNs
 agents: snmp
 catalog: hw/storagehw/fujitsu 
 license: GPLv2

@@ -1,4 +1,4 @@
-title: Hardware temperature of Brocade FC switches
+title: Brocade FibreChannel Switches: Temperature Sensors
 catalog: hw/storagehw/brocade
 agents: snmp
 license: GPL

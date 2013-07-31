@@ -2410,7 +2410,7 @@ void run_external_programs(char *dirname, script_type type, bool dry_run = false
                             cont,                 // argument to thread function
                             0,                    // use default creation flags
                             NULL);                // returns the thread identifier
-                    if (g_caching_method == CACHE_OFF && g_caching_method == CACHE_SYNC) {
+                    if (g_caching_method == CACHE_OFF || g_caching_method == CACHE_SYNC) {
                         crash_log("Thread wait (%s): %s",
                                  (g_caching_method == CACHE_OFF ? "CACHE OFF" : "CACHE SYNC"), cont->path);
                         WaitForSingleObject(cont->worker_thread, INFINITE);

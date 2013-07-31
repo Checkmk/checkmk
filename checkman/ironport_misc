@@ -1,4 +1,4 @@
-title: Hardware sensors of IronPort Appliances
+title: IronPort Appliances: Hardware sensors
 agents: snmp
 catalog: hw/network/cisco
 license: GPL

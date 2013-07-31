@@ -1,4 +1,4 @@
-title: Check the number of tsm tapes ins scratch pool 
+title: IBM Tivoli Storage Manager (TSM): Number of Tapes in Scratch Pool 
 agents: linux, windows
 catalog: app/tsm 
 license: GPL

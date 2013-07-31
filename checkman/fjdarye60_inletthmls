@@ -1,4 +1,4 @@
-title: Inlet thermal sensors on Fujitsu ETERNUS DX storage systems
+title: Fujitsu ETERNUS DX storage systems: Inlet thermal sensors
 agents: snmp
 catalog: hw/storagehw/fujitsu 
 license: GPL

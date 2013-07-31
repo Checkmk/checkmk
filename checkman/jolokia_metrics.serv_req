@@ -1,59 +1,51 @@
-title: Requests
+title: Number of Requests
 agents: linux
 catalog: app/java
 license: GPL
 distribution: check_mk
 description:
+ This check allows to monitor the number of requests on web application servers.
 
- BERND WIRD DAS HIER BALD RICHTEN ;-)
- Title to be improved
-
- This check allows to monitor the usage of heap and non-heap memory area
- usage on web application servers.
-
- To use this plugin, Jolokia and the agent plugin need to be installed
+ To use this check, Jolokia and the {mk_jolokia} agent plugin need to be installed
  on the monitored server.
- It will then fetch the memory usage from the JMX status info of the remote
- Java Virtual Machine.
 
- The check can alert if the {WARN}/{CRIT} thresholds for a configurable heap, nonheap
- or total is exceeded.
+ The check returns {WARN}/{CRIT} if the number of requests is outside the given
+ ranges.
 
 item:
  The name of the application server instance as configured by the agent.
 
 examples:
- jolokia_metrics_mem_default_levels = {
-    "heap"    : (2000,1000),    # heap warning when 2000MB left, heap crit when 1000 MB left
-    "nonheap" : (75.0, 95.7),   # nonheap warning at 75.0% usage, nonheap crit at 95.7% usage
-    "total" : (3000, 2200), # total warning at 3000MB left, total crit at 2200MB left
- }
+ # Number of requests low crit, low warn, high warn, high crit
+ jolokia_metrics_serv_req_default_levels = (-1, -1, 5000, 6000)
+
+ checks += [
+    # set warning level to 10.000 requests and crit to 12.000
+    # for instance ExampleServer on machine appserver1
+    ( "appserver1", "jolokia_metrics.serv_req", "ExampleServer", (-1, -1, 10000, 12000) ),
+ ]
 
 perfdata:
- The heap and non-heap usage information and levels in Megabytes.
+ One value: The number of requests.
 
 inventory:
  One check is created for each Jolokia instance sent by the agent.
 
-
 [parameters]
-parameters (dict): This check requires a dictionary with the following keys.
-                   If a key is missing no WARN/CRIT verfication is done for
-                   this specific key
+lo_crit(int): Return {CRIT} if number of requests is lower or equal than 
+  this value.
 
- {"heap"} - A pair of two values to be used as WARN/CRIT levels
- Integer numbers are interpreted as remaining heap memory
- Float numbers are interpreted as available heap memory usage
+lo_warn(int): Return {WARN} if number of requests is lower or equal than
+  this value.
 
- {"nonheap"} - A pair of two values to be used as WARN/CRIT levels
- Integer numbers are interpreted as remaining nonheap memory
- Float numbers are interpreted as available nonheap memory usage
+hi_warn(int): Return {WARN} if number of requests is higher or equal than
+  this value.
 
- {"total"} - A pair of two values to be used as WARN/CRIT levels
- Integer numbers are interpreted as remaining total memory
- Float numbers are interpreted as available total memory usage
-
+hi_crit(int): Return {CRIT} if number of requests is higher or equal than
+  this value.
 
 [configuration]
-jolokia_metrics_mem_default_levels (dict): Default warn/crit levels for heap, nonheap and total
-
+jolokia_metrics_serv_req_default_levels(int, int, int, int): 
+ The default levels to be used for inventorized checks for 
+ low crit, low warn, high warn, high crit.
+ They are preset to {(-1, -1, 5000, 6000)}

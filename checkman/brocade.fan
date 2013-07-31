@@ -1,4 +1,4 @@
-title: Fans of Brocade FibreChannel switches
+title: Brocade FibreChannel Switches: Fans
 catalog: hw/storagehw/brocade
 agents: snmp
 license: GPL

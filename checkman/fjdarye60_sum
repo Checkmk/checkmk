@@ -1,4 +1,4 @@
-title: Summary status of Fujitsu ETERNUS DX storage systems
+title: Fujitsu ETERNUS DX storage systems: Summary status
 agents: snmp
 catalog: hw/storagehw/fujitsu 
 license: GPL

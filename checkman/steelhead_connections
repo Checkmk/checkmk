@@ -1,4 +1,4 @@
-title: Connection stats on Riverbed Steelhead appliance
+title: Riverbed Steelhead: Connection Stats
 agents: snmp
 catalog: hw/network/riverbed
 license: GPL

@@ -1,4 +1,4 @@
-title: Power supply of DECRU NAS
+title: DECRU NAS: Power supply
 agents: snmp
 catalog: hw/network/decru
 license: GPL

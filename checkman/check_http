@@ -1,0 +1,22 @@
+title: HTTP/HTTPS connection
+agents: active
+catalog: agentless
+license: GPL
+distribution: check_mk
+description:
+ This performs an active check of a HTTP or HTTPS server.
+
+ It can check response times against given thresholds. It can check the response
+ page to match or not to match certain strings or regular expressions. It can 
+ check the size of the result page against given thresholds. It can check for 
+ a maximum age of the result page. 
+
+ And you can configure it also to check the SSL certificate used on HTTPS 
+ connection for expiration within the next days.
+
+ This check can be configured by Wato.
+
+perfdata:
+ If checking expiration of SSL certificate: None.
+
+ Otherwise two values: The response time in seconds and the size of the response in Bytes.

@@ -1,4 +1,4 @@
-title: Power supplies on F5 Big-IP
+title: F5 Big-IP: Power Supplies
 agents: snmp
 catalog: hw/network/f5 
 license: GPL

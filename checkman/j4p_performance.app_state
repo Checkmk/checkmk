@@ -1,5 +1,6 @@
 title: J4P Performance: Application status - DEPRECATED
 agents: linux
+catalog: app/java
 license: GPL
 distribution: check_mk
 description:

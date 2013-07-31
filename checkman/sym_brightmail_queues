@@ -1,4 +1,4 @@
-title: Queues on Symantec brightmail scanners
+title: Symantec brightmail scanners: Mail Queues
 agents: snmp
 catalog: hw/network/symantec 
 license: GPL

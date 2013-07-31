@@ -1,4 +1,4 @@
-title: Power supply units mounted on CE on Fujitsu ETERNUS DX80 S2 storage systems
+title: Fujitsu ETERNUS DX80 S2 storage systems: Power supply units mounted on CE
 agents: snmp
 catalog: hw/storagehw/fujitsu
 license: GPLv2

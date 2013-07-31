@@ -1,4 +1,4 @@
-title: Blue Coat Systems: Security Gateway: Hardware Sensors
+title: Blue Coat Security Gateway: Hardware Sensors
 agents: snmp
 catalog: hw/network/bluecoat
 license: GPL

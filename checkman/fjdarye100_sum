@@ -1,4 +1,4 @@
-title: Summary status of Fujitsu ETERNUS DX80 S2 storage systems
+title: Fujitsu ETERNUS DX80 S2 storage systems: Summary status
 agents: snmp
 catalog: hw/storagehw/fujitsu
 license: GPLv2

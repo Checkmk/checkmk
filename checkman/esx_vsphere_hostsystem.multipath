@@ -5,9 +5,11 @@ license: GPL
 distribution: check_mk
 description:
  This check monitors the state of all Multipath devices
- on an ESX host system. It gets critical if at least one
- path is dead or in {unknown} state.
- It gets warning if at least one path is disabled or in standby mode.
+ on an ESX host system. It returns {CRIT} if at least one
+ path is {dead} or in {unknown} state.
+ It returns {WARN} if at least one path is {disabled}. It also returns 
+ {WARN} if at least one path is in {standby} mode and the number of paths
+ in {standby} mode is not equal to the number of {active} paths.
 
 inventory:
  One service per multipath device will be created. Paths

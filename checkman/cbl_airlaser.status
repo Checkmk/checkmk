@@ -1,4 +1,4 @@
-title: Powerup Status CBL Airlaser
+title: CBL Airlaser: Powerup Status
 agents: snmp
 catalog: hw/network/cbl
 license: GPL

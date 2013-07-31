@@ -1,9 +1,42 @@
-title: NetApp filers: Fibre Channel IOPS
+title: NetApp Filers: Fibre Channel IOPS
 agents: snmp
 catalog: hw/storagehw/netapp
 license: GPL
 distribution: check_mk
 description:
- BERND ERKLAERT UND DAS...
- title to be improved
+ Reports Fibre Channel IOPS on NetApp filers.
 
+ You can set {WARN} and {CRIT} levels for read and write. If you did not
+ set levels, the check only reports measured numbers and returns always {OK}
+ status.
+
+examples:
+ # set default levels to 1000 (warn) and 2000 (crit) for both
+ # read and write
+ netapp_fcpio_default_levels = { "read" : (1000, 2000), "write" : (1000, 2000)}
+
+ checks += [
+  # check netapp_filer1 against default levels
+  ('netapp_filer1', 'netapp_fcpio', None, netapp_fcpio_default_levels),
+  # check netapp_filer1 against separate levels
+  ('netapp_filer2', 'netapp_fcpio', None, { "read" : (2000, 3000), "write" : (3000, 4000) }),
+ ]
+
+perfdata:
+ Two values: The number of write IOPS and the number of read IOPS.
+
+inventory:
+ Configures one check on each filer.
+
+[parameters]
+parameters (dict): A dictionary with the following optional keys:
+
+    {"read"}: Pair of integers of warn and crit: Return {WARN}/{CRIT} if the 
+    current value vor read IOPS is higher or equal these values.
+
+    {"write"}: Pair of integers of warn and crit: Return {WARN}/{CRIT} if the 
+    current value vor read IOPS is higher or equal these values.
+
+[configuration]
+netapp_fcpio_default_levels(dict): The default levels to be used for
+ inventorized checks. They are preset to {{"read" : (None, None), "write" : (None, None)}}.

@@ -1,4 +1,4 @@
-title: Storage System Drive Box Groups on HP Proliant Servers
+title: HP Proliant Servers: Storage System Drive Box Groups
 agents: snmp
 catalog: hw/server/hp
 license: GPL

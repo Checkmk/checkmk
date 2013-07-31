@@ -1,4 +1,4 @@
-title: Hardware sensors of IBM blade center
+title: IBM Blade Center: Hardware Sensors
 agents: snmp
 catalog: hw/server/ibm 
 license: GPL

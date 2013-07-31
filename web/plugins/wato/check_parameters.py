@@ -3155,6 +3155,71 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "sym_brightmail_queues",
+    "Symantec brightmail queues",
+    Dictionary(
+        help = _("This check is used to monitor successful email delivery through"
+                 "Symantec Brightmail Scanner appliances."),
+        elements = [
+            ("connections",
+            Tuple(
+                title = _("Number of connections"),
+                elements = [
+                    Integer(title = _("Warning at"), unit = _("")),
+                    Integer(title = _("Critical at"), unit = _("")),
+                ]
+            )),
+            ("messageRate",
+            Tuple(
+                title = _("Number of messages delivered"),
+                elements = [
+                    Integer(title = _("Warning at"), unit = _("")),
+                    Integer(title = _("Critical at"), unit = _("")),
+                ]
+            )),
+            ("dataRate",
+            Tuple(
+                title = _("Amount of data processed"),
+                elements = [
+                    Integer(title = _("Warning at"), unit = _("")),
+                    Integer(title = _("Cricital at"), unit = _("")),
+                ]
+            )),
+            ("queuedMessages",
+            Tuple(
+                title = _("Number of messages currently queued"),
+                elements = [
+                    Integer(title = _("Warning at"), unit = _("")),
+                    Integer(title = _("Critical at"), unit = _("")),
+                ]
+            )),
+            ("queueSize",
+            Tuple(
+                title = _("Size of the queue"),
+                elements = [
+                    Integer(title = _("Warning at"), unit = _("")),
+                    Integer(title = _("Critical at"), unit = _("")),
+                ]
+            )),
+            ("deferredMessages",
+            Tuple(
+                title = _("Number of messages in deferred state"),
+                elements = [
+                    Integer(title = _("Warning at"), unit = _("")),
+                    Integer(title = _("Critical at")),
+                ]
+            )),
+
+        ],
+    ),
+    TextAscii(
+        title = _("Instance name"),
+        allow_empty = True),
+    "dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
     "db2_mem",
     _("Memory levels for DB2 memory usage"),
     Tuple(

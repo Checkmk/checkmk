@@ -1,4 +1,4 @@
-title: Thermal sensors on Fujitsu ETERNUS DX storage systems
+title: Fujitsu ETERNUS DX storage systems: Thermal sensors
 agents: snmp
 catalog: hw/storagehw/fujitsu 
 license: GPL

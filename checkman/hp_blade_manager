@@ -1,4 +1,4 @@
-title: Manager boards in an HP BladeSystem Enclosure
+title: HP BladeSystem Enclosures: Manager boards
 agents: snmp
 catalog: hw/server/hp 
 license: GPL

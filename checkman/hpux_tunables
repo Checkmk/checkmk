@@ -1,4 +1,4 @@
-title: Kernel tunables on HP-UX
+title: Kernel tunables
 agents: hpux
 catalog: os/kernel 
 license: GPL
@@ -21,9 +21,6 @@ description:
    Number of IPC Semaphores          (semmns)
    Number of shared memory segments  (semmns)
 
-
-item:
- {None}
 
 inventory:
  {hpux_tunables} generates one check per host for each of the supported

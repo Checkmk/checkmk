@@ -96,8 +96,9 @@
     * Editing localized strings (like the title) is now optional when cloning
       views or editing cloned views. If not edited, the views inherit the
       localized strings from their ancestors
-    * Add: Added simple problems Dashboard
     * Added new painters for displaying host tags
+    * Added simple problems Dashboard
+    * New filter and column painter for current notification number (escalations)
     * FIX: better error message in case of exception in SNMP handling
     * FIX: Inventory screen: Now shows custom checks
     * FIX: Fixed locking problem of multisite pages related to user loading/saving
@@ -112,8 +113,8 @@
     * Custom user attributes can now be managed using WATO
     * FIX: do validation of check items in rule editor
     * FIX: More consistent handling of folderpath select in rule editor
-    * Add: Require unique alias names in between the following elements:
-           Host/Service/Contact Groups, Timeperiods and Roles
+    * Require unique alias names in between the following elements:
+      Host/Service/Contact Groups, Timeperiods and Roles
 
     Notifications:
     * Flexible Notification can now filter service levels
@@ -271,6 +272,7 @@
     * FIX: winperf_processor: fix case where CPU percent is exactly 100%
     * FIX: blade_powerfan: fix mixup of default levels 50/40 -> 40/50
     * FIX: Cleaned up graph rendering of Check_MK services 
+    * FIX: zypper: deal with output from SLES 10
 
     Multisite:
     * FIX: LDAP: Disabling use of referrals in active directory configuration

@@ -1,4 +1,4 @@
-title: Blades in an HP BladeSystem Enclosure
+title: HP BladeSystem Enclosures: Health of Blades
 agents: snmp
 catalog: hw/server/hp 
 license: GPL

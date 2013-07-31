@@ -1,4 +1,4 @@
-title: Flash of channel modules on Fujitsu ETERNUS DX storage systems
+title: Fujitsu ETERNUS DX storage systems: Flash of channel modules
 agents: snmp
 catalog: hw/storagehw/fujitsu 
 license: GPL

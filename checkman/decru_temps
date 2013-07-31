@@ -1,4 +1,4 @@
-title: Temperature sensors of DECRU NAS
+title: DECRU NAS: Temperature Sensors
 agents: snmp
 catalog: hw/network/decru 
 license: GPL

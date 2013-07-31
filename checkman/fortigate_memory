@@ -1,4 +1,4 @@
-title: Used RAM on FortiGate firewalls
+title: FortiGate firewalls: RAM Usage
 agents: snmp
 catalog: hw/network/fortinet 
 license: GPL

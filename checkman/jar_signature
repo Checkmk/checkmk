@@ -1,6 +1,22 @@
 title: Signatures of JAR files
 agents: linux
 catalog: app/java
+license: GPL
 distribution: check_mk
 description:
- BERND -> need to install plugin as well
+ Checks signature of JAR files for expiring certificates.
+
+ Returns {WARN} if the certificate will expire within the next 60 days.
+
+ Returns {CRIT} if the certificate will expire within the next 30 days or
+ already is expired.
+
+ Make sure You have the jar_signature agent plugin installed and configured
+ on the monitored machines. (It uses the program "jarsigner" there
+ to read ssl certificate information of jar files.)
+
+item:
+ The filename of the JAR file.
+
+inventory:
+ Creates one Check for every JAR file found in the agent's output.

@@ -63,21 +63,45 @@ def parse_emcvnx_hwstatus(info):
     parsed = {}
     for line in info:
         if len(line) > 3 and line[1] == "Bus" and line[3] == "Enclosure":
+            # print "found1: %s" % line
             encid = line[2] + "/" + line[4]
             enc = []
             parsed[encid] = enc
         elif len(line) > 6 and line[6] == "State:":
+            # print "found2: %s" % line
             device = line[4] + " " + line[5]
             state = line[-1]
-            parsed[encid] = [device, state]
+            parsed[encid].append({device: state})
+        elif len(line) > 7 and (line[5] == "Module" or line[6] == "Cabling") and line[7] == "State:":
+            # print "found3: %s" % line
+            device = line[4] + " " + line[5] + " " + line[6]
+            state = line[-1]
+            parsed[encid].append((device, state))
+        elif len(line) > 9 and line[7] == "Module" and line[9] == "State:":
+            # print "found4: %s" % line
+            device = line[4] + " " + line[5] + " " + line[6] + " " + line[7] + " " + line[8]
+            state = line[-1]
+            parsed[encid].append((device, state))
+        else:
+            # print "ignore: %s" % line
+            pass
 
     return parsed
 
 
 def inventory_emcvnx_hwstatus(info):
     parsed = parse_emcvnx_hwstatus(info)
+    inventory = []
     import pprint ; pprint.pprint(parsed)
-    return []
+
+    for enclosure in parsed:
+	print enclosure
+	print parsed [enclosure]
+	#for sensor in parsed[line]
+	#	print sensor
+	# print parsed[line][0]
+	# inventory.append( (line + " " + parsed[line][0], "", None) )
+    return inventory
 
 def check_emcvnx_hwstatus(item, _no_params, info):
     return 3, "Pech"

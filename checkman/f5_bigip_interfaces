@@ -1,4 +1,4 @@
-title: Special network interfaces of F5 Big-IP
+title: F5 Big-IP: Special Network Interfaces
 agents: snmp
 catalog: hw/network/f5 
 license: GPL

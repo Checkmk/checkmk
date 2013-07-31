@@ -1,4 +1,4 @@
-title: Viprinet router mode
+title: Viprinet: Router Mode
 agents: snmp
 catalog: hw/network/viprinet 
 license: GPL

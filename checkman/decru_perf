@@ -1,4 +1,4 @@
-title: Performance values of DECRU NAS
+title: DECRU NAS: Performance values
 agents: snmp
 catalog: hw/network/decru 
 license: GPL

@@ -1,4 +1,4 @@
-title: Temperature sensors on Cisco devices
+title: Temperature sensors (by CISCO-ENVMON-MIB)
 agents: snmp
 catalog: hw/network/cisco
 license: GPL

@@ -1,4 +1,4 @@
-title: Viprinet memory usage
+title: Viprinet: Memory Usage
 agents: snmp
 catalog: hw/network/viprinet 
 license: GPL

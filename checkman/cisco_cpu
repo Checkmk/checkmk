@@ -1,16 +1,16 @@
-title: CPU utilization of the last 5 minutes on CISCO devices
+title: CPU utilization of the last 5 minutes
 agents: snmp
 catalog: hw/network/cisco 
 license: GPL
 distribution: check_mk
 description:
- Check CPU utilization of the last 5 minutes in percent on CISCO devices.
+ Check CPU utilization of the last 5 minutes in percent on Cisco devices.
 
 perfdata:
  Just one value: The CPU utilization of the last 5 minutes in percent.
 
 inventory:
- One service per CISCO device is created.
+ One service per Cisco device is created.
 
 [parameters]
 warning (int): The percentage of CPU utilization that triggers a warning level.

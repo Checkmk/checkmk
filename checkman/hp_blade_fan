@@ -1,4 +1,4 @@
-title: FANs in an HP BladeSystem Enclosure
+title: HP BladeSystem Enclosures: FANs
 agents: snmp
 catalog: hw/server/hp 
 license: GPL

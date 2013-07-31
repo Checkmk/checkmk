@@ -1,4 +1,4 @@
-title: Monitor network interfaces of TP-LINK switches
+title: TP-LINK switches: Network Interfaces
 agents: snmp
 catalog: hw/network/tplink
 license: GPL

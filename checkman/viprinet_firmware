@@ -1,4 +1,4 @@
-title: Viprinet firmware status
+title: Viprinet: Firmware Status
 agents: snmp
 catalog: hw/network/viprinet 
 license: GPL

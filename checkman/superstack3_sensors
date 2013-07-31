@@ -1,4 +1,4 @@
-title: 3Com SuperStack 3 Hardware / FRU sensors
+title: 3Com SuperStack 3 Switches: Hardware / FRU sensors
 agents: snmp
 catalog: hw/network/h3c
 license: GPL

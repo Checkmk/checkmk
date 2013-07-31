@@ -1,4 +1,4 @@
-title: Tivoli TSM staging pools
+title: IBM Tivoli Storage Manager (TSM): Staging Pools
 agents: aix, linux
 catalog: app/tsm
 license: GPL

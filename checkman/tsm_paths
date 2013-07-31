@@ -1,4 +1,4 @@
-title: Check tsm drives
+title: IBM Tivoli Storage Manager (TSM): Paths
 agents: linux, windows
 catalog: app/tsm 
 license: GPL

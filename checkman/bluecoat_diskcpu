@@ -1,4 +1,4 @@
-title: Blue Coat Systems: Security Gateway: Disk and CPU utilization
+title: Blue Coat Security Gateway: Disk and CPU utilization
 agents: snmp
 catalog: hw/network/bluecoat
 license: GPL

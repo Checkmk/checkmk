@@ -1,4 +1,4 @@
-title: Physical drives of drive arrays in HP Proliant servers
+title: HP Proliant Servers: Physical Drives in Drive Arrays
 agents: snmp
 catalog: hw/server/hp
 license: GPL

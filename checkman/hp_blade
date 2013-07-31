@@ -1,4 +1,4 @@
-title: Summary health state of HP BladeSystem Enclosures
+title: HP BladeSystem Enclosures: Summary Health State
 agents: snmp
 catalog: hw/server/hp
 license: GPL

@@ -1,6 +1,6 @@
 title: Network Interfaces: Link status
 agents: hpux, solaris
-catalog: os/network
+catalog: os/networking
 license: GPL
 distribution: check_mk
 description:

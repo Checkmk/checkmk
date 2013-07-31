@@ -1,4 +1,4 @@
-title: vFiler status on NetAPP Ontap filers
+title: NetApp Ontap Filers: vFiler Status
 agents: snmp
 catalog: hw/storagehw/netapp
 license: GPL

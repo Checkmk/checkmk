@@ -96,6 +96,7 @@
     * Editing localized strings (like the title) is now optional when cloning
       views or editing cloned views. If not edited, the views inherit the
       localized strings from their ancestors
+    * Added new painters for displaying host tags
     * Added simple problems Dashboard
     * New filter and column painter for current notification number (escalations)
     * FIX: better error message in case of exception in SNMP handling

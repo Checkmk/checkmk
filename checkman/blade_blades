@@ -1,4 +1,4 @@
-title: State of blades in an IBM blade center
+title: IBM Blade Center: State of Blades
 agents: snmp
 catalog: hw/server/ibm
 license: GPL

@@ -1,4 +1,4 @@
-title: Overall status of Riverbed Steelhead appliance
+title: Riverbed Steelhead: Overall Status
 agents: snmp
 catalog: hw/network/riverbed
 license: GPL

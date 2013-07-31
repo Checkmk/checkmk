@@ -1,4 +1,4 @@
-title: NetApp filers: Fibre Channel IOPS
+title: NetApp Filers: Fibre Channel IOPS
 agents: snmp
 catalog: hw/storagehw/netapp
 license: GPL

@@ -1,4 +1,4 @@
-title: Virtual servers on a F5 load balancer
+title: F5 Big-IP: Virtual servers
 agents: snmp
 catalog: hw/network/f5 
 license: GPL

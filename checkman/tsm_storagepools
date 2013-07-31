@@ -1,4 +1,4 @@
-title: Usage of storage pools in Tivoli TSM
+title: IBM Tivoli Storage Manager (TSM): Usage of Storage Pools
 agents: aix, linux
 catalog: app/tsm
 license: GPL

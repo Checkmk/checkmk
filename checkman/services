@@ -1,4 +1,4 @@
-title: Check Windows services
+title: Windows Services
 agents: windows
 catalog: os/ps
 license: GPL

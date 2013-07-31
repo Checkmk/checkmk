@@ -13626,7 +13626,7 @@ def is_alias_used(my_group, my_name, aliasname):
     # Timeperiods
     timeperiods = load_timeperiods()
     for key, value in timeperiods.items():
-        if value.get("alias") == aliasname and (my_group != "timeperiod" or my_name != key):
+        if value.get("alias") == aliasname and (my_group != "timeperiods" or my_name != key):
             return False, _("This alias is already used in timeperiod %s.") % key
 
     # Roles

@@ -1,0 +1,35 @@
+title: EMC Storage: Status and I/O of Disks
+agents: emc
+catalog: hw/storage
+license: GPL
+distribution: check_mk
+description:
+ Reports the status and the I/O rate of a disk in an EMC storage system.
+
+ Returns {OK} if the number of Hard Read Errors is 0 and the number
+ of Hard Write Errors is 0. {CRIT} is returned otherwise.
+
+ Hint for implementation: Look for "Hard Read Errors:" and "Hard Write Errors:"
+ lines in section "Bus x Enclosure y Disk z" lines found under
+ "All Disks Information"
+
+ I/O rates (in Bytes/sec) are just informational and do not trigger any state
+ other than {OK}
+
+ Hint for implementation: Look for "Kbytes Read:" and "Kbytes Written:"
+ lines in section "Bus x Enclosure y Disk z" lines found under
+ "All Disks Information". Remember values of last check and devide by the 
+ time since last check.
+
+item:
+ Consists of bus ID, enclosure ID and disk ID as returned by the agent.
+ E. g. "Bus 0 Enclosure 0  Disk 0"
+
+ Hint for implementation: Look for "Bus x Enclosure y Disk z" lines in section 
+ "All Disks Information"
+
+perfdata:
+ Two values: Read-I/O and Write-I/O in Bytes/sec
+
+inventory:
+ Automatically configures one check for every disk listed in the agent output.

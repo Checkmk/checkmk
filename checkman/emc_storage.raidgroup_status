@@ -1,0 +1,28 @@
+title: EMC Storage: Status of RAID groups
+agents: emc
+catalog: hw/storage
+license: GPL
+distribution: check_mk
+description:
+ Reports the status of RAID groups in EMC storage systems.
+
+ Returns {OK} if ... and {CRIT} on ...
+ (to be defined)
+
+ Hint for implementation: Look for "RaidGroup State:" line and following
+ in section "RaidGroup ID: <my ID>" under "All RAID Groups Information"
+ Which states are good states and which are bad states is to be defined
+
+item:
+ The RAID group ID as returned by the special agent.
+ E. g. "4"
+
+ Hint for implementation: Look for "RaidGroup ID:" line in section 
+ "All RAID Groups Information"
+
+perfdata:
+ None
+
+inventory:
+ Automatically configures one check for every RAID group listed
+ in the agent output.

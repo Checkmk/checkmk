@@ -1,0 +1,49 @@
+title: EMC Storage: Hardware Status
+agents: emc
+catalog: hw/storage
+license: GPL
+distribution: check_mk
+description:
+ Reports the status of Power Supplies, SPS, SPS Cabeling, LCC, CPU Modules,
+ SP I/O Modules and DIMM Modules on EMC storage systems.
+
+ Returns {OK} if the agent reports "Present" or "Valid" status and {CRIT}
+ on every other status.
+
+ Hint for implementation: Look for lines matching
+    Bus x Enclosure y Power z State:
+    Bus x Enclosure y SPS z State:
+    Bus x Enclosure y SPS z Cabling State:
+    Bus x Enclosure y CPU Module z State:
+    Bus x Enclosure y SP z I/O Module w State:
+    Bus x Enclosure y DIMM Module z State:
+    Bus x Enclosure y LCC z State:
+ in section "Array Information"
+
+item:
+ The name of the storage processor as returned by the special agent.
+ E. g. 
+    Bus 0 Enclosure 0 Power A
+    Bus 0 Enclosure 0 Power B
+    Bus 0 Enclosure 0 SPS A
+    Bus 0 Enclosure 0 SPS B
+    Bus 0 Enclosure 0 SPS A Cabling
+    Bus 0 Enclosure 0 SPS B Cabling
+    Bus 0 Enclosure 0 CPU Module A
+    Bus 0 Enclosure 0 CPU Module B
+    Bus 0 Enclosure 0 SP A I/O Module 0
+    Bus 0 Enclosure 0 SP A I/O Module 1
+    Bus 0 Enclosure 0 SP B I/O Module 0
+    Bus 0 Enclosure 0 SP B I/O Module 1
+    Bus 0 Enclosure 0 DIMM Module A
+    Bus 0 Enclosure 0 DIMM Module B
+    Bus 0 Enclosure 1 LCC A
+
+ Hint for implementation: see description
+
+perfdata:
+ None
+
+inventory:
+ Automatically configures one check for every hardware status entry listed
+ in the agent output.

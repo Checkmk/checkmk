@@ -1,0 +1,26 @@
+title: EMC Storage: Status of StorageProcessors (sp)
+agents: emc
+catalog: hw/storage
+license: GPL
+distribution: check_mk
+description:
+ Reports the status of StorageProcessors (sp) on EMC storage systems.
+
+ Returns {OK} if the agent reports "Present" status and {CRIT} on every other
+ status.
+
+ Hint for implementation: Look for "SP * State:" line in section 
+ "Array Information", Present -> OK, everything else -> CRIT
+
+item:
+ The name of the storage processor as returned by the special agent.
+ E. g. "A"
+
+ Hint for implementation: see at description
+
+perfdata:
+ None
+
+inventory:
+ Automatically configures one check for every storage processor listed
+ in the agent output.

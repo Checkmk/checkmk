@@ -1,0 +1,30 @@
+title: EMC Storage: Usage of LUNs
+agents: emc
+catalog: hw/storage
+license: GPL
+distribution: check_mk
+description:
+ Reports the usage of LUNs on EMC storage systems.
+
+ You can set levels for minimum free space to result in {WARN} and {CRIT}
+ state. The levels can be given in absolute megabytes or percent of the 
+ total space available in the LUN.
+
+ Hint for implementation: Look for "LUN Capacity(Megabytes):" line in 
+ section "LOGICAL UNIT NUMBER <my ID>" under "All logical Units Information"
+ But: Where can we get actual used space in the LUN from? To be defined!
+
+item:
+ The ID of the LUN as returned by the special agent.
+ E. g. "18"
+
+ Hint for implementation: Look for "LOGICAL UNIT NUMBER" 
+ lines in section "All logical Units Information"
+
+perfdata:
+ One value: The used capacity in bytes, together with it's warn and crit
+ levels as well as the maximum (also in bytes)
+
+inventory:
+ Automatically configures one check for every LUN listed
+ in the agent output.

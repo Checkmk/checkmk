@@ -52,11 +52,11 @@
 
 # Parse agent output into a dict of the form:
 # parsed = {
-#     "0/1" : [
+#     "0/1" : {
 #         "Power A" : "Present",
 #         "Power B" : "Present",
 #         # ...
-#     ]
+#     }
 # }
 
 ok_states = ("Present", "Valid")
@@ -73,8 +73,6 @@ def parse_emcvnx_hwstatus(info):
             # print "found2: %s" % line
             device = line[4] + " " + line[5]
             state = line[-1]
-            #parsed[encid]{device} = state
-            #parsed[encid].append((device, state))
             enc[device] = state
         elif len(line) > 7 and (line[5] == "Module" or line[6] == "Cabling") and line[7] == "State:":
             # print "found3: %s" % line
@@ -86,29 +84,40 @@ def parse_emcvnx_hwstatus(info):
             device = line[4] + " " + line[5] + " " + line[6] + " " + line[7] + " " + line[8]
             state = line[-1]
             enc[device] = state
-        else:
+        # else:
             # print "ignore: %s" % line
-            pass
-
     return parsed
-
 
 def inventory_emcvnx_hwstatus(info):
     parsed = parse_emcvnx_hwstatus(info)
     inventory = []
-    #import pprint ; pprint.pprint(parsed)
+    # import pprint ; pprint.pprint(parsed)
 
     for enclosure in parsed:
 	#print enclosure
 	#print parsed[enclosure]
         for sensor in parsed[enclosure].iterkeys():
-	    #print "sensor %s vaule %s" % (sensor, parsed[enclosure][sensor])
-            if parsed[enclosure][sensor] in ok_states:
+	    #print "sensor %s value %s" % (sensor, parsed[enclosure][sensor])
+            if parsed[enclosure][sensor] != "Empty":
 	        inventory.append( (enclosure + " " + sensor, "", None) )
     return inventory
 
 def check_emcvnx_hwstatus(item, _no_params, info):
-    return 3, "Pech"
+    #print "item: %s" % item
+    parsed = parse_emcvnx_hwstatus(info)
+    for enclosure in parsed:
+	#print enclosure
+	#print parsed[enclosure]
+        for sensor in parsed[enclosure].iterkeys():
+	    #print "sensor: %s" % sensor
+            current_item = enclosure + " " + sensor
+            if current_item == item:
+	        #print "item %s value %s" % (current_item, parsed[enclosure][sensor])
+                if parsed[enclosure][sensor] in ok_states:
+                    return 0, "Enclosure %s is %s" % (current_item, parsed[enclosure][sensor])
+                else:
+                    return 2, "Enclosure %s is %s" % (current_item, parsed[enclosure][sensor])
+    return 3, "Enclosure %s not found in agent output" % item
 
 check_info['emcvnx_hwstatus'] = {
     "inventory_function"      : inventory_emcvnx_hwstatus,

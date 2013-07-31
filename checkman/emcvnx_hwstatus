@@ -1,0 +1,31 @@
+title: EMC Storage: Hardware Status
+agents: emc
+catalog: hw/storage
+license: GPL
+distribution: check_mk
+description:
+ Reports the status of Power Supplies, SPS, SPS Cabeling, LCC, CPU Modules,
+ SP I/O Modules and DIMM Modules on EMC storage systems.
+
+ Returns {OK} if the agent reports "Present" or "Valid" status and {CRIT}
+ on every other status.
+
+item:
+ The name of the name of the sensor as returned by the special agent prefixed 
+ with Bus ID and Enclosure ID
+
+ E. g. 
+
+    0/0 CPU Module A
+
+    or 
+
+    0/0 SP B I/O Module 0
+
+perfdata:
+ None
+
+inventory:
+ Automatically configures one check for every hardware status entry listed
+ in the agent output and not having status "Empty" (Entries having "Empty"
+ status when running inventory are considered to be intentionally empty.)

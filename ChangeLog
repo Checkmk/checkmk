@@ -96,12 +96,13 @@
     * Editing localized strings (like the title) is now optional when cloning
       views or editing cloned views. If not edited, the views inherit the
       localized strings from their ancestors
+    * Add: Added simple problems Dashboard
+    * Added new painters for displaying host tags
     * FIX: better error message in case of exception in SNMP handling
     * FIX: Inventory screen: Now shows custom checks
     * FIX: Fixed locking problem of multisite pages related to user loading/saving
     * FIX: Fixed wrong default settings of view filters in localized multisite
     * FIX: line wrapping of logwatch entries
-    * Add: Added simple problems Dashboard
 
     WATO:
     * Allow to configure check-/retry_interval in second precision

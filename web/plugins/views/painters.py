@@ -1178,14 +1178,27 @@ def paint_host_tags(row):
     return "", get_host_tags(row)
 
 multisite_painters["host_tags"] = {
-    "title"   : _("Host Tags (Check_MK)"),
+    "title"   : _("Host tags (raw)"),
     "short"   : _("Tags"),
     "columns" : [ "host_custom_variable_names", "host_custom_variable_values" ],
     "paint"   : paint_host_tags,
 }
 
+def paint_host_tags_with_titles(row):
+    output = ''
+    for tag in get_host_tags(row).split():
+        output += tag + '<br />\n'
+    return "", output
+
+multisite_painters["host_tags_with_titles"] = {
+    "title"   : _("Host tags (with titles)"),
+    "short"   : _("Tags"),
+    "columns" : [ "host_custom_variable_names", "host_custom_variable_values" ],
+    "paint"   : paint_host_tags_with_titles,
+}
+
 multisite_painters["host_comments"] = {
-    "title"   : _("Host Comments"),
+    "title"   : _("Host comments"),
     "short"   : _("Comments"),
     "columns" : [ "host_comments_with_info" ],
     "paint"   : lambda row: paint_comments("host_", row),

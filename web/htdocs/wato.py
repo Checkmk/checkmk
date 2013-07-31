@@ -179,6 +179,8 @@ def page_handler():
 
     global g_html_head_open
     g_html_head_open = False
+    global g_git_messages
+    g_git_messages = []
 
     if not config.wato_enabled:
         raise MKGeneralException(_("WATO is disabled. Please set <tt>wato_enabled = True</tt>"
@@ -331,6 +333,9 @@ def page_handler():
     if g_need_sidebar_reload == id(html):
         html.reload_sidebar()
 
+    if config.wato_use_git and html.is_transaction():
+        do_git_commit()
+
     html.footer()
 
 
@@ -365,6 +370,43 @@ def need_sidebar_reload():
 
 def lock_exclusive():
     aquire_lock(defaults.default_config_dir + "/multisite.mk")
+
+
+def git_command(args):
+    command = "cd '%s' && git %s 2>&1" % (defaults.default_config_dir, " ".join(args))
+    p = os.popen(command)
+    output = p.read()
+    status = p.close()
+    if status != None:
+        raise MKGeneralException(_("Error executing GIT command %s: %s") %
+                (command, output))
+
+def shell_quote(s):
+    return "'" + s.replace("'", "'\"'\"'") + "'"
+
+def do_git_commit():
+    author = shell_quote("%s <%s>" % (config.user_id, config.user_alias))
+    git_dir = defaults.default_config_dir + "/.git"
+    if not os.path.exists(git_dir):
+        git_command(["init"])
+
+        # Make sure that .gitignore-files are present and uptodate
+        file(defaults.default_config_dir + ".gitignore", "w").write("*\n!*.d\n!.gitignore\n")
+        for subdir in os.listdir(defaults.default_config_dir):
+            if subdir.endswith(".d"):
+                file(defaults.default_config_dir + "/" + subdir + "/.gitignore", "w").write("*\n!wato\n!wato/*\n")
+
+        git_command(["add", ".gitignore", "*.d/wato"])
+        git_command(["commit", "--author", author, "-m", shell_quote(_("Initialized GIT for Check_MK"))])
+
+    # Only commit, if something is changed
+    if os.popen("cd '%s' && git status --porcelain" % defaults.default_config_dir).read().strip():
+        git_command(["add", "*.d/wato"])
+        message = ", ".join(g_git_messages)
+        if not message:
+            message = _("Unknown configuration change")
+        git_command(["commit", "--author", author, "-m", shell_quote(message)])
+
 
 
 #.
@@ -3730,6 +3772,8 @@ def log_entry(linkinfo, action, message, logfilename):
 
 
 def log_audit(linkinfo, what, message):
+    if config.wato_use_git:
+        g_git_messages.append(message)
     log_entry(linkinfo, what, message, "audit.log")
 
 # status is one of:
@@ -3744,7 +3788,7 @@ def log_audit(linkinfo, what, message):
 #                sites have already been marked for restart. Do nothing here.
 #                In non-distributed mode mark for restart
 def log_pending(status, linkinfo, what, message):
-    log_entry(linkinfo, what, message, "audit.log")
+    log_audit(linkinfo, what, message)
     need_sidebar_reload()
 
     if not is_distributed():
@@ -9045,8 +9089,8 @@ def mode_hosttags(phase):
                     searchable = False)
 
         if auxtags:
-            table.row()
             for nr, (tag_id, title) in enumerate(auxtags):
+                table.row()
                 topic, title = parse_hosttag_title(title)
                 edit_url     = make_link([("mode", "edit_auxtag"), ("edit", nr)])
                 delete_url   = html.makeactionuri([("_delaux", nr)])
@@ -10704,6 +10748,9 @@ def get_rule_conditions(ruleset):
 
 
 
+def date_and_user():
+    return time.strftime("%F", time.localtime()) + " " + config.user_id + ": "
+
 def mode_edit_rule(phase, new = False):
     # Due to localization this cannot be defined in the global context!
     vs_rule_options = Dictionary(
@@ -10718,6 +10765,7 @@ def mode_edit_rule(phase, new = False):
                          "this rule"),
                 size = 80,
                 attrencode = True,
+                prefix_buttons = [ ("insertdate", date_and_user, _("Prefix date and your name to the comment")) ]
               )
             ),
             ( "docu_url",
@@ -13567,7 +13615,7 @@ def is_alias_used(my_group, my_name, aliasname):
     # Timeperiods
     timeperiods = load_timeperiods()
     for key, value in timeperiods.items():
-        if value.get("alias") == aliasname and (my_group != "timeperiod" or my_name != key):
+        if value.get("alias") == aliasname and (my_group != "timeperiods" or my_name != key):
             return False, _("This alias is already used in timeperiod %s.") % key
 
     # Roles

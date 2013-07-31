@@ -1707,6 +1707,17 @@ function valuespec_listof_fixarrows(oTbody) {
     }
 }
 
+function vs_textascii_button(img, text, how) {
+    var oInput = img.previousElementSibling;
+    while (oInput.tagName == "A")
+        oInput = oInput.previousElementSibling;
+    if (oInput.tagName != "INPUT")
+        oInput = oInput.firstChild; // complain mode
+    oInput.value = text + oInput.value; // TODO: how
+    oInput.focus();
+}
+
+
 function vs_passwordspec_randomize(img) {
     password = "";
     while (password.length < 8) {

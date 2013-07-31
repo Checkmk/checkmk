@@ -10759,6 +10759,9 @@ def get_rule_conditions(ruleset):
 
 
 
+def date_and_user():
+    return time.strftime("%F", time.localtime()) + " " + config.user_id + ": "
+
 def mode_edit_rule(phase, new = False):
     # Due to localization this cannot be defined in the global context!
     vs_rule_options = Dictionary(
@@ -10773,6 +10776,7 @@ def mode_edit_rule(phase, new = False):
                          "this rule"),
                 size = 80,
                 attrencode = True,
+                prefix_buttons = [ ("insertdate", date_and_user, _("Prefix date and your name to the comment")) ]
               )
             ),
             ( "docu_url",

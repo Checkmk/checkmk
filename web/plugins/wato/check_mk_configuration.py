@@ -35,9 +35,7 @@
 #   | Configuration variables for main.mk                                  |
 #   +----------------------------------------------------------------------+
 
-group = _("Configuration of Checks")
-
-group = _("Multisite & WATO")
+group = _("Status GUI (Multisite)")
 
 register_configvar(group,
     "debug",
@@ -202,34 +200,6 @@ register_configvar(group,
     domain = "multisite")
 
 register_configvar(group,
-    "wato_hide_filenames",
-    Checkbox(title = _("Hide internal folder names in WATO"),
-             label = _("hide folder names"),
-             help = _("When enabled, then the internal names of WATO folder in the filesystem "
-                      "are not shown. They will automatically be derived from the name of the folder "
-                      "when a new folder is being created. Disable this option if you want to see and "
-                      "set the filenames manually."),
-             default_value = True),
-    domain = "multisite")
-
-register_configvar(group,
-    "wato_hide_hosttags",
-    Checkbox(title = _("Hide hosttags in WATO folder view"),
-             label = _("hide hosttags"),
-             help = _("When enabled, hosttags are no longer shown within the WATO folder view"),
-             default_value = False),
-    domain = "multisite")
-
-register_configvar(group,
-    "wato_hide_varnames",
-    Checkbox(title = _("Hide names of configuration variables"),
-             label = _("hide variable names"),
-             help = _("When enabled, internal configuration variable names of Check_MK are hidded "
-                      "from the user (for example in the rule editor)"),
-             default_value = True),
-    domain = "multisite")
-
-register_configvar(group,
     "pagetitle_date_format",
     DropdownChoice(
         title = _("Date format for page titles"),
@@ -252,16 +222,6 @@ register_configvar(group,
                       "service in the multisite views. It is only displayed if the user "
                       "does have the permission to edit rules"),
             default_value = False),
-    domain = "multisite")
-
-register_configvar(group,
-    "wato_max_snapshots",
-    Integer(title = _("Number of configuration snapshots to keep"),
-            help = _("Whenever you successfully activate changes a snapshot of the configuration "
-                     "will be created. You can also create snapshots manually. WATO will delete old "
-                     "snapshots when the maximum number of snapshots is reached."),
-             minvalue = 1,
-             default_value = 50),
     domain = "multisite")
 
 register_configvar(group,
@@ -321,19 +281,6 @@ register_configvar(group,
 )
 
 register_configvar(group,
-    "wato_activation_method",
-    DropdownChoice(
-        title = _("WATO restart mode for Nagios"),
-        help = _("Should WATO restart or reload Nagios when activating changes"),
-        choices = [
-            ('restart', _("Restart")),
-            ('reload' , _("Reload") ),
-            ]),
-    domain = "multisite"
-    )
-
-
-register_configvar(group,
     "bi_precompile_on_demand",
     Checkbox(title = _("Precompile aggregations on demand"),
              label = _("Only precompile on demand"),
@@ -385,7 +332,85 @@ register_configvar(group,
     ),
     domain = "multisite")
 
-#   .----------------------------------------------------------------------.
+
+#   .--WATO----------------------------------------------------------------.
+#   |                     __        ___  _____ ___                         |
+#   |                     \ \      / / \|_   _/ _ \                        |
+#   |                      \ \ /\ / / _ \ | || | | |                       |
+#   |                       \ V  V / ___ \| || |_| |                       |
+#   |                        \_/\_/_/   \_\_| \___/                        |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+group = _("Configuration GUI (WATO)")
+
+register_configvar(group,
+    "wato_max_snapshots",
+    Integer(title = _("Number of configuration snapshots to keep"),
+            help = _("Whenever you successfully activate changes a snapshot of the configuration "
+                     "will be created. You can also create snapshots manually. WATO will delete old "
+                     "snapshots when the maximum number of snapshots is reached."),
+             minvalue = 1,
+             default_value = 50),
+    domain = "multisite")
+
+register_configvar(group,
+    "wato_activation_method",
+    DropdownChoice(
+        title = _("WATO restart mode for Nagios"),
+        help = _("Should WATO restart or reload Nagios when activating changes"),
+        choices = [
+            ('restart', _("Restart")),
+            ('reload' , _("Reload") ),
+            ]),
+    domain = "multisite"
+    )
+
+
+register_configvar(group,
+    "wato_hide_filenames",
+    Checkbox(title = _("Hide internal folder names in WATO"),
+             label = _("hide folder names"),
+             help = _("When enabled, then the internal names of WATO folder in the filesystem "
+                      "are not shown. They will automatically be derived from the name of the folder "
+                      "when a new folder is being created. Disable this option if you want to see and "
+                      "set the filenames manually."),
+             default_value = True),
+    domain = "multisite")
+
+
+register_configvar(group,
+    "wato_hide_hosttags",
+    Checkbox(title = _("Hide hosttags in WATO folder view"),
+             label = _("hide hosttags"),
+             help = _("When enabled, hosttags are no longer shown within the WATO folder view"),
+             default_value = False),
+    domain = "multisite")
+
+
+register_configvar(group,
+    "wato_hide_varnames",
+    Checkbox(title = _("Hide names of configuration variables"),
+             label = _("hide variable names"),
+             help = _("When enabled, internal configuration variable names of Check_MK are hidded "
+                      "from the user (for example in the rule editor)"),
+             default_value = True),
+    domain = "multisite")
+
+
+register_configvar(group,
+    "wato_use_git",
+    Checkbox(title = _("Use GIT version control for WATO"),
+             label = _("enable GIT version control"),
+             help = _("When enabled, all changes of configuration files are tracked with the "
+                      "version control system GIT. You need to make sure that git is installed "
+                      "on your Nagios server. The version history currently cannot be viewed "
+                      "via the web GUI. Please use git command line tools within your Check_MK "
+                      "configuration directory."),
+             default_value = False),
+    domain = "multisite")
+
+#GUI----------------------------------------------------------------------.
 #   |          _   _                 __  __                 _              |
 #   |         | | | |___  ___ _ __  |  \/  | __ _ _ __ ___ | |_            |
 #   |         | | | / __|/ _ \ '__| | |\/| |/ _` | '_ ` _ \| __|           |

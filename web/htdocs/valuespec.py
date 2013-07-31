@@ -319,6 +319,8 @@ class TextAscii(ValueSpec):
         if type(self._regex) == str:
             self._regex = re.compile(self._regex)
 
+        self._prefix_buttons = kwargs.get("prefix_buttons", [])
+
     def canonical_value(self):
         return ""
 
@@ -331,6 +333,18 @@ class TextAscii(ValueSpec):
             html.write("&nbsp;")
         html.text_input(varprefix, str(value), size = self._size,
                         read_only = self._read_only)
+        self.render_buttons()
+
+    def render_buttons(self):
+        if self._prefix_buttons:
+            html.write("&nbsp;")
+            for icon, textfunc, help in self._prefix_buttons:
+                try:
+                    text = textfunc()
+                except:
+                    text = textfunc
+                html.icon_button("#", help, icon, onclick="vs_textascii_button(this, '%s', 'prefix');" % text)
+
 
     def value_to_text(self, value):
         if value == None:
@@ -374,6 +388,7 @@ class TextUnicode(TextAscii):
 
     def render_input(self, varprefix, value):
         html.text_input(varprefix, value, size = self._size)
+        self.render_buttons()
 
     def from_html_vars(self, varprefix):
         return html.var_utf8(varprefix, "").strip()

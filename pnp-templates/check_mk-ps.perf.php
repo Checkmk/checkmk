@@ -91,8 +91,8 @@ if (isset($RRD["pcpu"])) {
         $def[3] .= "HRULE:$CRIT[pcpu]#FF0000:\"Critical at $CRIT[pcpu]%\" ";
 
     if (isset($RRD["pcpuavg"])) {
-        $def[3] .= "DEF:pcpuavg=$RRD[pcpuavg] "
-                   "LINE:pcpuavg#000000:\"Average over $MAX[pcpuavg] minutes\\n\" "; 
+        $def[3] .= "DEF:pcpuavg=$RRD[pcpuavg] 
+                   LINE:pcpuavg#000000:\"Average over $MAX[pcpuavg] minutes\\n\" "; 
     }
 }
 

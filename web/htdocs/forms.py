@@ -40,11 +40,17 @@ def get_input(valuespec, varprefix):
     return value
 
 
+
+# preview = True: Do not output error messages, do not consume
+# current transaction. This is for preview mode
 def edit_dictionary(entries, value, focus=None, hover_help=True,
                     validate=None, buttontext=None, title=None,
-                    buttons = None, method="GET"):
+                    buttons = None, method="GET", preview=False):
     new_value = value.copy()
-    if html.var("filled_in") == "form" and html.check_transaction():
+    if html.var("filled_in") == "form" and html.transaction_valid():
+        if not preview:
+            html.check_transaction()
+
         messages = []
         for name, vs in entries:
             try:
@@ -63,9 +69,13 @@ def edit_dictionary(entries, value, focus=None, hover_help=True,
                 html.add_user_error(e.varname, e.message)
 
         if messages:
-            html.show_error("".join(["%s<br>\n" % m for m in messages]))
+            if not preview:
+                html.show_error("".join(["%s<br>\n" % m for m in messages]))
+            else:
+                return None
         else:
             return new_value
+
 
     html.begin_form("form", method=method)
     header(title and title or _("Properties"))

@@ -672,3 +672,5 @@ class BIServiceIsUsedFilter(FilterTristate):
 	return new_rows
 
 declare_filter(300, BIServiceIsUsedFilter())
+
+declare_filter(301, FilterText("downtime_id", _("Downtime ID"), "downtime", "downtime_id", "downtime_id", "="))

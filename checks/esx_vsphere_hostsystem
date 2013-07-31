@@ -263,9 +263,9 @@ def check_esx_vsphere_hostsystem_multipath(item, params, info):
                     unknow_label = "(!!)"
                     unknown += 1
                 
-                if standby > 0 and standby != active:
-                    standby_label = "(!)"
-                    state = max(1, state)
+            if standby > 0 and standby != active:
+                standby_label = "(!)"
+                state = max(1, state)
 
             message = "Type %s, %d active, %d dead%s, %d disabled%s, %d standby%s, %s unknown%s" % \
                      (path_type, active, dead, dead_label, disabled, disabled_label,

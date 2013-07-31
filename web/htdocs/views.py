@@ -2007,7 +2007,7 @@ def sort_data(data, sorters):
         return
 
     # Handle case where join columns are not present for all rows
-    def save_compare(compfunc, row1, row2):
+    def save_compare(compfunc, row1, row2, args):
         if row1 == None and row2 == None:
             return 0
         elif row1 == None:
@@ -2015,7 +2015,10 @@ def sort_data(data, sorters):
         elif row2 == None:
             return 1
         else:
-            return compfunc(row1, row2)
+            if args:
+                return compfunc(row1, row2, *args)
+            else:
+                return compfunc(row1, row2)
 
     sort_cmps = []
     for s in sorters:
@@ -2025,14 +2028,17 @@ def sort_data(data, sorters):
             joinkey = s[2] # e.g. service description
         else:
             joinkey = None
-        sort_cmps.append((cmpfunc, negate, joinkey))
+        sort_cmps.append((cmpfunc, negate, joinkey, s[0].get('args')))
 
     def multisort(e1, e2):
-        for func, neg, joinkey in sort_cmps:
+        for func, neg, joinkey, args in sort_cmps:
             if joinkey: # Sorter for join column, use JOIN info
-                c = neg * save_compare(func, e1["JOIN"].get(joinkey), e2["JOIN"].get(joinkey))
+                c = neg * save_compare(func, e1["JOIN"].get(joinkey), e2["JOIN"].get(joinkey), args)
             else:
-                c = neg * func(e1, e2)
+                if args:
+                    c = neg * func(e1, e2, *args)
+                else:
+                    c = neg * func(e1, e2)
             if c != 0: return c
         return 0 # equal
 
@@ -2342,7 +2348,10 @@ def prepare_paint(p, row):
         if not row:
             return "", ""  # no join information available for that column
 
-    tdclass, content = painter["paint"](row)
+    if "args" in painter:
+        tdclass, content = painter["paint"](row, *painter["args"])
+    else:
+        tdclass, content = painter["paint"](row)
 
     content = html.utf8_to_entities(content)
 

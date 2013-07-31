@@ -1912,6 +1912,27 @@ function view_switch_option(oDiv, viewname, option, choices) {
     handleReload('');
 }
 
+var g_hosttag_groups = {};
+
+function host_tag_update_value(prefix, grp) {
+    var value_select = document.getElementById(prefix + '_val');
+
+    // Remove all options
+    value_select.options.length = 0;
+
+    if(grp === '')
+        return; // skip over when empty group selected
+
+    var opt = null;
+    for (var i = 0, len = g_hosttag_groups[grp].length; i < len; i++) {
+        opt = document.createElement('option');
+        opt.value = g_hosttag_groups[grp][i][0];
+        opt.text  = g_hosttag_groups[grp][i][1];
+        value_select.appendChild(opt);
+    }
+    opt = null;
+    value_select = null;
+}
 
 // .-Availability----------------------------------------------------------.
 // |             _             _ _       _     _ _ _ _                     |

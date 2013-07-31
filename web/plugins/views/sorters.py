@@ -121,7 +121,7 @@ def cmp_host_tags(r1, r2):
     return cmp(get_host_tags(r1), get_host_tags(r2))
 
 multisite_sorters["host"] = {
-    "title"   : _("Host Tags (Check_MK)"),
+    "title"   : _("Host Tags (raw)"),
     "columns" : [ "host_custom_variable_names", "host_custom_variable_values" ],
     "cmp"     : cmp_host_tags,
 }
@@ -333,3 +333,34 @@ declare_simple_sorter("alerts_problem",  _("Number of problem alerts"),  "alerts
 # Aggregations
 declare_simple_sorter("aggr_name",   _("Aggregation name"),  "aggr_name",       cmp_simple_string)
 declare_simple_sorter("aggr_group",  _("Aggregation group"),  "aggr_group",       cmp_simple_string)
+
+#
+# SINGLE HOSTTAG FIELDS
+#
+
+def cmp_host_tag(r1, r2, tgid):
+    tags1 = get_host_tags(r1).split()
+    tags2 = get_host_tags(r2).split()
+
+    val1 = _('N/A')
+    val2 = _('N/A')
+    for t in get_tag_group(tgid)[1]:
+        if t[0] in tags1:
+            val1 = t[1]
+        if t[0] in tags2:
+            val2 = t[1]
+
+    return cmp(val1, val2)
+
+for entry in config.wato_host_tags:
+    tgid = entry[0]
+    tit  = entry[1]
+
+    declare_simple_sorter("host_tag_" + tgid,  _("Host tag:") + ' ' + tit,  "host_tag_" + tgid, cmp_simple_string)
+
+    multisite_sorters["host_tag_" + tgid] = {
+        "title"   : _("Host tag:") + ' ' + tit,
+        "columns" : [ "host_custom_variable_names", "host_custom_variable_values" ],
+        "cmp"     : cmp_host_tag,
+        "args"    : [ tgid ],
+    }

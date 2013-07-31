@@ -1174,29 +1174,6 @@ multisite_painters["host_custom_notes"] = {
     "paint"   : paint_custom_notes,
 }
 
-def paint_host_tags(row):
-    return "", get_host_tags(row)
-
-multisite_painters["host_tags"] = {
-    "title"   : _("Host tags (raw)"),
-    "short"   : _("Tags"),
-    "columns" : [ "host_custom_variable_names", "host_custom_variable_values" ],
-    "paint"   : paint_host_tags,
-}
-
-def paint_host_tags_with_titles(row):
-    output = ''
-    for tag in get_host_tags(row).split():
-        output += tag + '<br />\n'
-    return "", output
-
-multisite_painters["host_tags_with_titles"] = {
-    "title"   : _("Host tags (with titles)"),
-    "short"   : _("Tags"),
-    "columns" : [ "host_custom_variable_names", "host_custom_variable_values" ],
-    "paint"   : paint_host_tags_with_titles,
-}
-
 multisite_painters["host_comments"] = {
     "title"   : _("Host comments"),
     "short"   : _("Comments"),
@@ -1763,3 +1740,71 @@ multisite_painters["alert_stats_problem"] = {
     "columns" : [ "alerts_problem" ],
     "paint" : lambda row: paint_svc_count('s', row["alerts_problem"])
 }
+
+#
+# HOSTTAGS
+#
+
+def paint_host_tags(row):
+    return "", get_host_tags(row)
+
+multisite_painters["host_tags"] = {
+    "title"   : _("Host tags (raw)"),
+    "short"   : _("Tags"),
+    "columns" : [ "host_custom_variable_names", "host_custom_variable_values" ],
+    "paint"   : paint_host_tags,
+    "sorter"  : 'host',
+}
+
+def paint_host_tags_with_titles(row):
+    output = ''
+    misc_tags = []
+    for tag in get_host_tags(row).split():
+        group_title = config.tag_group_title(tag)
+        if group_title:
+            output += group_title + ': ' + (config.tag_alias(tag) or tag) + '<br />\n'
+        else:
+            misc_tags.append(tag)
+
+    if misc_tags:
+        output += _('Misc:') + ' ' + ', '.join(misc_tags)
+
+    return "", output
+
+multisite_painters["host_tags_with_titles"] = {
+    "title"   : _("Host tags (with titles)"),
+    "short"   : _("Tags"),
+    "columns" : [ "host_custom_variable_names", "host_custom_variable_values" ],
+    "paint"   : paint_host_tags_with_titles,
+    "sorter"  : 'host',
+}
+
+g_tags_by_id = {}
+def get_tag_group(tgid):
+    # Build a cache
+    if not g_tags_by_id:
+        for entry in config.wato_host_tags:
+            g_tags_by_id[entry[0]] = (entry[1], entry[2])
+
+    return g_tags_by_id.get(tgid)
+
+def paint_host_tag(row, tgid):
+    tags_of_host = get_host_tags(row).split()
+
+    for t in get_tag_group(tgid)[1]:
+        if t[0] in tags_of_host:
+            return "", t[1]
+    return "", _("N/A")
+
+for entry in config.wato_host_tags:
+    tgid = entry[0]
+    tit  = entry[1]
+    ch   = entry[2]
+
+    multisite_painters["host_tag_" + tgid] = {
+        "title"   : _("Host tag:") + ' ' + tit,
+        "short"   : tit,
+        "columns" : [ "host_custom_variable_names", "host_custom_variable_values" ],
+        "paint"   : paint_host_tag,
+        "args"    : [ tgid ],
+    }

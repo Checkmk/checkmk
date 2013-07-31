@@ -37,3 +37,20 @@ wato_activation_method = 'restart'
 wato_write_nagvis_auth = False
 wato_hidden_users      = []
 wato_user_attrs        = []
+
+def tag_alias(tag):
+    for entry in wato_host_tags:
+        id, title, tags = entry[:3]
+        for t in tags:
+            if t[0] == tag:
+                return t[1]
+    for id, alias in wato_aux_tags:
+        if id == tag:
+            return alias
+
+def tag_group_title(tag):
+    for entry in wato_host_tags:
+        id, title, tags = entry[:3]
+        for t in tags:
+            if t[0] == tag:
+                return title

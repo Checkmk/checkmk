@@ -10574,17 +10574,6 @@ def construct_rule(ruleset, value, tag_specs, host_list, item_list, rule_options
 
     return tuple(rule)
 
-
-def tag_alias(tag):
-    for entry in config.wato_host_tags:
-        id, title, tags = entry[:3]
-        for t in tags:
-            if t[0] == tag:
-                return t[1]
-    for id, alias in config.wato_aux_tags:
-        if id == tag:
-            return alias
-
 def render_conditions(ruleset, tagspecs, host_list, item_list, varname, folder):
     html.write("<ul class=conditions>")
 
@@ -10599,7 +10588,7 @@ def render_conditions(ruleset, tagspecs, host_list, item_list, varname, folder):
 
 
         html.write('<li class="condition">')
-        alias = tag_alias(tag)
+        alias = config.tag_alias(tag)
         if alias:
             if negate:
                 html.write(_("Host is <b>not</b> of type "))

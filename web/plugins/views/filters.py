@@ -674,3 +674,74 @@ class BIServiceIsUsedFilter(FilterTristate):
 declare_filter(300, BIServiceIsUsedFilter())
 
 declare_filter(301, FilterText("downtime_id", _("Downtime ID"), "downtime", "downtime_id", "downtime_id", "="))
+
+class FilterHostTags(Filter):
+    def __init__(self):
+        self.count = 3
+        htmlvars = []
+        for num in range(self.count):
+            htmlvars += [ 'host_tag_%d_grp' % num, 'host_tag_%d_op' % num, 'host_tag_%d_val' % num ]
+
+        Filter.__init__(self,
+            name = 'host_tags',
+            title = _('Host Tags'),
+            info = 'host',
+            htmlvars = htmlvars,
+            link_columns = []
+        )
+
+    def display(self):
+        groups = [ (e[0], e[1]) for e in config.wato_host_tags ]
+        operators = [
+            ("is", _("is")),
+            ("isnot", _("is not")),
+        ]
+
+        # replace unicode strings, before writing out as "json"
+        grouped = {}
+        for entry in config.wato_host_tags:
+            grouped.setdefault(entry[0], [["", ""]])
+
+            for tag, title, aux_tags in entry[2]:
+                if tag is None:
+                    tag = ''
+                grouped[entry[0]].append([tag, str(title)])
+
+        html.javascript('g_hosttag_groups = %r;' % grouped)
+        html.write('<table>')
+        for num in range(self.count):
+            prefix = 'host_tag_%d' % num
+            html.write('<tr><td>')
+            html.sorted_select(prefix + '_grp',
+                [("", "")] + groups,
+                onchange = 'host_tag_update_value(\'%s\', this.value)' % prefix
+            )
+            html.write('</td><td>')
+            html.sorted_select(prefix + '_op', [("", "")] + operators)
+            html.write('</td><td>')
+            html.sorted_select(prefix + '_val', html.var(prefix + '_grp') and grouped[html.var(prefix + '_grp')] or [("", "")])
+            html.write('</td></tr>')
+        html.write('</table>')
+
+    def filter(self, infoname):
+        headers = []
+
+        for num in range(self.count):
+            prefix = 'host_tag_%d' % num
+            op  = html.var(prefix + '_op')
+            val = html.var(prefix + '_val')
+
+            if op and val:
+                operator = op != 'is' and '!~' or '~'
+                headers.append('Filter: custom_variables %s TAGS %s' % (operator, val))
+
+        if headers:
+            return '\n'.join(headers) + '\n'
+        else:
+            return ''
+
+    def double_height(self):
+        return True
+
+
+declare_filter(302, FilterHostTags())

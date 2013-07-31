@@ -9045,8 +9045,8 @@ def mode_hosttags(phase):
                     searchable = False)
 
         if auxtags:
-            table.row()
             for nr, (tag_id, title) in enumerate(auxtags):
+                table.row()
                 topic, title = parse_hosttag_title(title)
                 edit_url     = make_link([("mode", "edit_auxtag"), ("edit", nr)])
                 delete_url   = html.makeactionuri([("_delaux", nr)])

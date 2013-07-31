@@ -50,9 +50,32 @@
 # Bus 1 Enclosure 0 Power A State: Present
 
 
+# Parse agent output into a dict of the form:
+# parsed = {
+#     "0/1" : [
+#         "Power A" : "Present",
+#         "Power B" : "Present",
+#         # ...
+#     ]
+# }
+
+def parse_emcvnx_hwstatus(info):
+    parsed = {}
+    for line in info:
+        if line[1] == "Bus" and line[3] == "Enclosure":
+            encid = line[2] + "/" + line[4]
+            enc = []
+            parsed[encid] = enc
+        elif line[6] == "State:":
+            device = line[4] + " " + line[5]
+            state = line[-1]
+
+    return parsed
 
 
 def inventory_emcvnx_hwstatus(info):
+    parsed = parse_emcvnx_hwstatus(info)
+    import pprint ; pprint.pprint(parsed)
     return []
 
 def check_emcvnx_hwstatus(item, _no_params, info):

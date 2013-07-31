@@ -101,7 +101,8 @@ def livedump_config():
          "GET hosts\n" \
          "Columns: name alias address groups check_command " \
          "max_check_attempts contacts\n" + \
-         opt_host_headers
+         opt_host_headers + \
+         opt_host_only_headers
     for row in g_connection.query_table_assoc(query):
         prepare_row(row)
         row["groupstring"] = ",".join(row["groups"])
@@ -151,7 +152,8 @@ def livedump_state():
     query = \
         "GET hosts\n" \
         "Columns: name state plugin_output perf_data latency\n" \
-        + opt_host_headers
+        + opt_host_headers \
+        + opt_host_only_headers
 
     for row in g_connection.query_table_assoc(query):
         encode_row(row)
@@ -219,20 +221,22 @@ def bail_out(x):
 def usage():
     sys.stderr.write("""Usage: %s [OPTIONS] [-C]
 
-  -C, --config           Dump configuration (instead of state)
+  -C, --config              Dump configuration (instead of state)
 
-  -h, --help             Show this cruft
-  -V, --version          Show version and exit
-  -T, --dump-templates   Also dump host/service templates
+  -h, --help                Show this cruft
+  -V, --version             Show version and exit
+  -T, --dump-templates      Also dump host/service templates
 
-  -s, --socket S         connect to Livestatus-socket at S
-                          -s tcp:10.11.0.55:6557
-                          -s unix:/var/run/nagios/rw/live
-  -H, --host-header H    add header H to host LQL (usually Filter: ...)
-  -S, --service-header H add header H to service LQL (usually Filter: ...)
-                    
-  -v, --verbose          output debug information an stderr
-  --debug                do not catch Python exceptions
+  -s, --socket S            connect to Livestatus-socket at S
+                             -s tcp:10.11.0.55:6557
+                             -s unix:/var/run/nagios/rw/live
+  -O, --host-only-header H  add header H to host queries only (usually Filter: ...)
+  -H, --host-header H       add header H to host queries (usually Filter: ...).
+                            This header is also used in service queries.
+  -S, --service-header H    add header H to service queries (usually Filter: ...)
+
+  -v, --verbose             output debug information an stderr
+  --debug                   do not catch Python exceptions
 
 """)
 
@@ -251,15 +255,16 @@ def print_version():
 #   | Main entry point, getopt, etc.                                       |
 #   '----------------------------------------------------------------------'
 
-short_options = 'hVvc:H:S:TC'
+short_options = 'hVvc:H:S:O:TC'
 long_options = [ "help", "version", "verbose", "debug", "socket=", 
-                 "host-header=", "service-header=",
+                 "host-header=", "host-only-header=", "service-header=",
                  "dump-templates", "config", "state" ]  
 
 opt_verbose = False
 opt_debug = False
 opt_socket = None
 opt_host_headers = ""
+opt_host_only_headers = ""
 opt_service_headers = ""
 opt_dump_templates = False
 
@@ -286,6 +291,8 @@ for o,a in opts:
         opt_debug = True
     elif o in [ '-s', '--socket' ]:
         opt_socket = a
+    elif o in [ '-O', '--host-only-header' ]:
+        opt_host_only_headers += a + "\n"
     elif o in [ '-H', '--host-header' ]:
         opt_host_headers += a + "\n"
     elif o in [ '-S', '--service-header' ]:

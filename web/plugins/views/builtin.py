@@ -286,7 +286,7 @@ multisite_builtin_views.update({
                                     '-1'),
                                    ('host', ''),
                                    ('service', '')],
-               'hidden': False,
+               'hidden': True,
                'hide_filters': [],
                'icon' : 'downtime',
                'layout': 'table',

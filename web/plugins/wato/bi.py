@@ -60,7 +60,7 @@ bi_aggregation_functions["best"] = {
                 default_value = 1,
                 min_value = 1),
             MonitoringState(
-                title = _("Restrict severity to at worst "),
+                title = _("Restrict severity to at worst"),
                 help = _("Here you can have the node the state WARN, even if some of the child nodes "
                          "are CRIT."),
                 default_value = 2,

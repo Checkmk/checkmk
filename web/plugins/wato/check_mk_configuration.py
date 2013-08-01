@@ -596,6 +596,19 @@ register_configvar(group,
                 size = 80,
                 default_value = lambda: userdb.ldap_filter('users', False),
             )),
+            ("filter_group", LDAPDistinguishedName(
+                title = _("Filter Group"),
+                help = _("Using this option you can define the DN of a group object which is used to filter the users. "
+                         "Only members of this group will then be synchronized. This is a filter which can be "
+                         "used to extend capabilities of the regular \"Search Filter\". Using the search filter "
+                         "you can only define filters which directly apply to the user objects. To filter by "
+                         "group memberships, you can use the \"memberOf\" attribute of the user objects in some "
+                         "directories. But some directories do not have such attributes because the memberships "
+                         "are stored in the group objects as e.g. \"member\" attributes. You should use the "
+                         "regular search filter whenever possible and only use this filter when it is really "
+                         "neccessary."),
+                size = 80,
+            )),
             ("user_id", TextAscii(
                 title = _("User-ID Attribute"),
                 help  = _("The attribute used to identify the individual users. It must have "
@@ -610,7 +623,7 @@ register_configvar(group,
                 totext = _("Enforce lower case User-IDs."),
             )),
         ],
-        optional_keys = ['scope', 'filter', 'user_id', 'lower_user_ids'],
+        optional_keys = ['scope', 'filter', 'filter_group', 'user_id', 'lower_user_ids'],
     ),
     domain = "multisite",
 )

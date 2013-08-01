@@ -365,14 +365,47 @@ def ldap_get_user(username, no_escape = False):
         else:
             return (dn.replace('\\', '\\\\'), user_id)
 
-def ldap_get_users(add_filter = None):
+def ldap_get_users(add_filter = ''):
     columns = [
         ldap_user_id_attr(), # needed in all cases as uniq id
     ] + ldap_needed_attributes()
 
     filt = ldap_filter('users')
+
+    # Create filter by the optional filter_group
+    filter_group_dn = config.ldap_userspec.get('filter_group', None)
+    member_filter = ''
+    if filter_group_dn:
+        member_attr = ldap_member_attr().lower()
+        # posixGroup objects use the memberUid attribute to specify the group memberships.
+        # This is the username instead of the users DN. So the username needs to be used
+        # for filtering here.
+        user_cmp_attr = member_attr == 'memberuid' and ldap_user_id_attr() or 'distinguishedname'
+
+        # Apply configured group ldap filter
+        try:
+            group = ldap_search(ldap_replace_macros(filter_group_dn),
+                                columns = [member_attr],
+                                scope = 'base')
+        except MKLDAPException:
+            group = None
+
+        if not group:
+            raise MKLDAPException(_('The configured ldap user filter group could not be found. '
+                                    'Please check <a href="%s">your configuration</a>.') %
+                                        'wato.py?mode=edit_configvar&varname=ldap_userspec')
+
+        members = group[0][1].values()[0]
+
+        member_filter_items = []
+        for member in members:
+            member_filter_items.append('(%s=%s)' % (user_cmp_attr, member))
+        add_filter += '(|%s)' % ''.join(member_filter_items)
+
     if add_filter:
         filt = '(&%s%s)' % (filt, add_filter)
+
+    html.write(repr(filt))
 
     result = {}
     for dn, ldap_user in ldap_search(ldap_replace_macros(config.ldap_userspec['dn']),

@@ -3165,47 +3165,47 @@ register_check_parameters(
             Tuple(
                 title = _("Number of connections"),
                 elements = [
-                    Integer(title = _("Warning at"), unit = _("")),
-                    Integer(title = _("Critical at"), unit = _("")),
+                    Integer(title = _("Warning at"))),
+                    Integer(title = _("Critical at"))),
                 ]
             )),
             ("messageRate",
             Tuple(
                 title = _("Number of messages delivered"),
                 elements = [
-                    Integer(title = _("Warning at"), unit = _("")),
-                    Integer(title = _("Critical at"), unit = _("")),
+                    Integer(title = _("Warning at"))),
+                    Integer(title = _("Critical at"))),
                 ]
             )),
             ("dataRate",
             Tuple(
                 title = _("Amount of data processed"),
                 elements = [
-                    Integer(title = _("Warning at"), unit = _("")),
-                    Integer(title = _("Cricital at"), unit = _("")),
+                    Integer(title = _("Warning at"))),
+                    Integer(title = _("Cricital at"))),
                 ]
             )),
             ("queuedMessages",
             Tuple(
                 title = _("Number of messages currently queued"),
                 elements = [
-                    Integer(title = _("Warning at"), unit = _("")),
-                    Integer(title = _("Critical at"), unit = _("")),
+                    Integer(title = _("Warning at"))),
+                    Integer(title = _("Critical at"))),
                 ]
             )),
             ("queueSize",
             Tuple(
                 title = _("Size of the queue"),
                 elements = [
-                    Integer(title = _("Warning at"), unit = _("")),
-                    Integer(title = _("Critical at"), unit = _("")),
+                    Integer(title = _("Warning at"))),
+                    Integer(title = _("Critical at"))),
                 ]
             )),
             ("deferredMessages",
             Tuple(
                 title = _("Number of messages in deferred state"),
                 elements = [
-                    Integer(title = _("Warning at"), unit = _("")),
+                    Integer(title = _("Warning at"))),
                     Integer(title = _("Critical at")),
                 ]
             )),

@@ -846,7 +846,7 @@ register_rule(group,
                            "directory (<tt>~/lib/nagios/plugins</tt>) within your site directory.<br><br>"
                            "<b>Passive checks</b>: Do no specify a command line if you want "
                            "to define passive checks."),
-                  size = 80,
+                  size = "max",
                )
             ),
             ( "command_name",

@@ -61,6 +61,7 @@
     * windows_agent: now starts local/plugin scripts in separate threads/processes
                      new script parameters cache_age, retry_count, timeout
                      new script caching options "off", "async", "sync"
+    * windows_agent: increased maximum local/plugin script output length to 512kB
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a

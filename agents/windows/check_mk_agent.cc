@@ -103,7 +103,7 @@
 
 // Maximum heap buffer for a single local/plugin script
 // This buffer contains the check output
-#define SCRIPT_BUFFER_HEAP         524288
+#define SCRIPT_BUFFER_HEAP        524288L
 
 // Maximum timeout for a single local/plugin script
 #define DEFAULT_PLUGIN_TIMEOUT         60
@@ -2211,8 +2211,7 @@ int launch_program(script_container* cont)
 {
     int exit_code  = 0;
     int out_offset = 0;
-    char buf[1024];           // i/o buffer
-    unsigned int buf_size = sizeof(buf);
+    char buf[16635];           // i/o buffer
 
     STARTUPINFO si;
     SECURITY_ATTRIBUTES sa;
@@ -2265,37 +2264,38 @@ int launch_program(script_container* cont)
 
     memset(buf, 0, sizeof(buf));
     time_t process_start = time(0);
+    bool buffer_full = false;
+
     for(;;)
     {
         if (cont->should_terminate || time(0) - process_start > cont->timeout){
             exit_code = 2;
             break;
         }
-        GetExitCodeProcess(pi.hProcess,&exit);      // while the process is running
-        PeekNamedPipe(read_stdout,buf,buf_size - 1,&bread,&avail,NULL);
-        // check to see if there is any data to read from stdout
-        if (bread != 0) {
-            memset(buf, 0, sizeof(buf));
-            if (avail > buf_size - 1) {
-                while (bread >= buf_size - 1) {
-                    ReadFile(read_stdout,buf,buf_size - 1,&bread,NULL); // read the stdout pipe
-                    out_offset += snprintf(cont->buffer_work + out_offset, SCRIPT_BUFFER_HEAP - out_offset, buf);
-                    memset(buf, 0, sizeof(buf));
-                }
+        GetExitCodeProcess(pi.hProcess, &exit);      // while the process is running
+        while (!buffer_full) {
+            PeekNamedPipe(read_stdout, buf, sizeof(buf), &bread, &avail, NULL);
+            if (avail == 0)
+                break;
+
+            if (out_offset + bread > SCRIPT_BUFFER_HEAP) {
+                buffer_full = true;
+                break;
             }
-            else {
-                ReadFile(read_stdout,buf,buf_size - 1,&bread,NULL);
+
+            if (bread > 0) {
+                memset(buf, 0, sizeof(buf));
+                ReadFile(read_stdout, buf, sizeof(buf), &bread, NULL);
                 out_offset += snprintf(cont->buffer_work + out_offset, SCRIPT_BUFFER_HEAP - out_offset, buf);
             }
         }
-
-        if (out_offset >= SCRIPT_BUFFER_HEAP)
+        if (buffer_full)
             break;
 
         if (exit != STILL_ACTIVE)
             break;
 
-        Sleep(50);
+        Sleep(10);
     }
 
     TerminateJobObject(cont->job_object, exit_code);
@@ -2312,7 +2312,7 @@ int launch_program(script_container* cont)
 DWORD WINAPI ScriptWorkerThread(LPVOID lpParam)
 {
     script_container* cont = (script_container*) lpParam;
-    cont->buffer_work = (char*) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, SCRIPT_BUFFER_HEAP + 1);
+    cont->buffer_work = (char*) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, SCRIPT_BUFFER_HEAP + 1 );
 
     // Execute script
     int result = launch_program(cont);
@@ -3574,7 +3574,7 @@ void listen_tcp_loop()
 
 void output(SOCKET &out, const char *format, ...)
 {
-    static char outbuffer[16384];
+    static char outbuffer[SCRIPT_BUFFER_HEAP];
     static int  len = 0;
     va_list ap;
     va_start(ap, format);

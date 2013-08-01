@@ -361,6 +361,7 @@ div.warning a {
 '-------------------------------------------------------------------------*/
 
 table.dictionary {
+    width: 100%;
 }
 
 table.dictionary b.header {

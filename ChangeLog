@@ -295,6 +295,9 @@
     * FIX: fix logwatch pattern analyzer message "The host xyz is not
            managed by WATO." after direct access via snapin
 
+    Event Console:
+    * FIX: apply rewriting of application/hostname also when cancelling events
+
 1.2.2p2:
     Core:
     * FIX: livecheck: fixed handling of one-line plugin outputs and missing \n

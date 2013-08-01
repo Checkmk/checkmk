@@ -1245,7 +1245,7 @@ class EventServer:
                     return
 
                 if cancelling:
-                    g_event_status.cancel_events(event, groups, rule["id"])
+                    g_event_status.cancel_events(event, groups, rule)
                     return
 
                 else:
@@ -2140,29 +2140,41 @@ class EventStatus():
 
     # Cancel all events the belong to a certain rule id and are
     # of the same "breed" as a new event.
-    def cancel_events(self, new_event, match_groups, rule_id):
+    def cancel_events(self, new_event, match_groups, rule):
         with lock_eventstatus:
             to_delete = []
             for nr, event in enumerate(self._events):
-                if event["rule_id"] == rule_id:
-                    if self.cancelling_match(match_groups, new_event, event):
+                if event["rule_id"] == rule["id"]:
+                    if self.cancelling_match(match_groups, new_event, event, rule):
                         log_event_history(event, "CANCELLED")
                         to_delete.append(nr)
             for nr in to_delete[::-1]:
                 del self._events[nr]
 
-    def cancelling_match(self, match_groups, new_event, event):
+    def cancelling_match(self, match_groups, new_event, event, rule):
         debug = g_config["debug_rules"]
-        if event["host"] != new_event["host"]:
+
+        # Note: before we compare host and application we need to
+        # apply the rewrite rules to the event. Because if in the previous
+        # the hostname was rewritten, it wouldn't match anymore here.
+        host = new_event["host"]
+        if "set_host" in rule:
+            host = replace_groups(rule["set_host"], host, match_groups)
+
+        if event["host"] != host:
             if debug:
-                log("Do not cancel event %d: host is not the same (%s != %s)" % 
-                        (event["id"], event["host"], new_event["host"]))
+                log("Do not cancel event %d: host is not the same (%s != %s)" %
+                        (event["id"], event["host"], host))
             return False
 
-        if event["application"] != new_event["application"]:
+        # The same for the application
+        application = new_event["application"]
+        if "set_application" in rule:
+            application = replace_groups(rule["set_application"], application, match_groups)
+        if event["application"] != application:
             if debug:
-                log("Do not cancel event %d: application is not the same (%s != %s)" % 
-                        (event["id"], event["application"], new_event["application"]))
+                log("Do not cancel event %d: application is not the same (%s != %s)" %
+                        (event["id"], event["application"], application))
             return False
 
         if event["facility"] != new_event["facility"]:

@@ -103,7 +103,8 @@
 
 // Maximum heap buffer for a single local/plugin script
 // This buffer contains the check output
-#define SCRIPT_BUFFER_HEAP        524288L
+#define HEAP_BUFFER_DEFAULT         16384L
+#define HEAP_BUFFER_MAX            524288L
 
 // Maximum timeout for a single local/plugin script
 #define DEFAULT_PLUGIN_TIMEOUT         60
@@ -2266,6 +2267,9 @@ int launch_program(script_container* cont)
     time_t process_start = time(0);
     bool buffer_full = false;
 
+    cont->buffer_work = (char*) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, HEAP_BUFFER_DEFAULT);
+    unsigned long current_heap_size = HeapSize(GetProcessHeap(), 0, cont->buffer_work);
+
     for(;;)
     {
         if (cont->should_terminate || time(0) - process_start > cont->timeout){
@@ -2278,19 +2282,32 @@ int launch_program(script_container* cont)
             if (avail == 0)
                 break;
 
-            if (out_offset + bread > SCRIPT_BUFFER_HEAP) {
-                buffer_full = true;
-                break;
+            while (out_offset + bread > current_heap_size) {
+                // Increase heap buffer
+                if (current_heap_size * 2 <= HEAP_BUFFER_MAX) {
+                    cont->buffer_work = (char *) HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
+                                                             cont->buffer_work, current_heap_size * 2);
+                    current_heap_size = HeapSize(GetProcessHeap(), 0, cont->buffer_work);
+                }
+                else {
+                    buffer_full = true;
+                    break;
+                }
             }
+            if (buffer_full)
+                break;
 
             if (bread > 0) {
                 memset(buf, 0, sizeof(buf));
                 ReadFile(read_stdout, buf, sizeof(buf), &bread, NULL);
-                out_offset += snprintf(cont->buffer_work + out_offset, SCRIPT_BUFFER_HEAP - out_offset, buf);
+                out_offset += snprintf(cont->buffer_work + out_offset, current_heap_size - out_offset, buf);
             }
         }
-        if (buffer_full)
+        if (buffer_full) {
+            // Buffer full -> delete incomplete data
+            exit_code = 1;
             break;
+        }
 
         if (exit != STILL_ACTIVE)
             break;
@@ -2312,7 +2329,6 @@ int launch_program(script_container* cont)
 DWORD WINAPI ScriptWorkerThread(LPVOID lpParam)
 {
     script_container* cont = (script_container*) lpParam;
-    cont->buffer_work = (char*) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, SCRIPT_BUFFER_HEAP + 1 );
 
     // Execute script
     int result = launch_program(cont);
@@ -3574,7 +3590,7 @@ void listen_tcp_loop()
 
 void output(SOCKET &out, const char *format, ...)
 {
-    static char outbuffer[SCRIPT_BUFFER_HEAP];
+    static char outbuffer[HEAP_BUFFER_MAX]; // won't get any bigger...
     static int  len = 0;
     va_list ap;
     va_start(ap, format);

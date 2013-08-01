@@ -1,0 +1,185 @@
+#!/usr/bin/python # -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+#<<<emcvnx_disks>>>
+#
+#All Disks Information
+#---------------------
+#
+#
+#Bus 0 Enclosure 0  Disk 0
+#Vendor Id:               SEAGATE
+#Product Id:              STE60005 CLAR600
+#Product Revision:        ES0F
+#Lun:                     Unbound
+#Type:                    N/A
+#State:                   Unbound
+#Hot Spare:               NO
+#Prct Rebuilt:            Unbound
+#Prct Bound:              Unbound
+#Serial Number:           6SL342E6
+#Sectors:                 0 (0)
+#Capacity:                549691
+#Private:                 Unbound
+#Bind Signature:          0x0, 0, 0
+#Hard Read Errors:        0
+#Hard Write Errors:       0
+#Soft Read Errors:        0
+#Soft Write Errors:       0
+#Read Retries:     N/A
+#Write Retries:    N/A
+#Remapped Sectors:        N/A
+#Number of Reads:         15922079
+#Number of Writes:        14841793
+#Number of Luns:          0
+#Raid Group ID:           This disk does not belong to a RAIDGroup
+#Clariion Part Number:    DG118032656
+#Request Service Time:    N/A
+#Read Requests:           15922079
+#Write Requests:          14841793
+#Kbytes Read:             998099223
+#Kbytes Written:          1661571498
+#Stripe Boundary Crossing: None
+#Drive Type:              SAS
+#Clariion TLA Part Number:005049274
+#User Capacity:           0
+#Idle Ticks:              162808947
+#Busy Ticks:              1220056
+#Current Speed: 6Gbps
+#Maximum Speed: 6Gbps
+#Queue Max:        N/A
+#Queue Avg:        N/A
+#Prct Idle:        0
+#Prct Busy:        0
+#Hardware Power Savings Qualified: NO
+#Hardware Power Savings Eligible: NO
+#Power Savings State: Full Power
+#Current Power Savings Log Timestamp: N/A
+#Spinning Ticks: N/A
+#Standby Ticks: N/A
+#Number of Spin Ups: N/A
+#Arrivals with Nonzero Queue: 8982980
+#High Sum of Seeks:       315504963402436
+#Idle Ticks SPA:          81201290
+#Idle Ticks SPB:          81607657
+#Busy Ticks SPA:          812651
+#Busy Ticks SPB:          407405
+#Queue Length:            83023848
+#
+#Bus 1 Enclosure 0  Disk 7
+#State:                   Removed
+#
+#Bus 1 Enclosure 0  Disk 8
+#Vendor Id:               SEAGATE
+#Product Id:              STE60005 CLAR600
+#Product Revision:        ES0F
+#[...]
+
+
+# Parse agent output into a dict of the form:
+# parsed = {
+#    '0/0 Disk 0': {'Hard Read Errors':  '0',
+#                   'Hard Write Errors': '0',
+#                   'state':              'Unbound'},
+#    '1/0 Disk 7': {'state': 'Removed'},
+#    '1/0 Disk 8': {'Hard Read Errors': '0',
+#                   'Hard Write Errors': '0',
+#                   'state': 'Enabled'},
+# }
+
+def parse_emcvnx_disks(info):
+    parsed = {}
+    for line in info:
+        if len(line) > 4 and line[0] == "Bus" and line[4] == "Disk":
+            #print "match: %s" % line
+            encid = line[1] + "/" + line[3] + " " + line[4] + " " + line[5]
+            enc = {}
+            parsed[encid] = enc
+        elif len(line) > 1 and line[0] == "State:":
+            #print "match: %s" % line
+            state = line[-1]
+            enc["state"] = state
+        elif len(line) > 2 and line[0] == "Hard" and line[2] == "Errors:":
+            #print "match: %s" % line
+            error_count = saveint(line[-1])
+            enc[line[0] + " " + line[1] + " Errors"] = error_count
+        elif len(line) > 1 and line[0] == "Kbytes" and line[1] in ("Read:", "Written:"):
+            #print "match: %s" % line
+            io_kbytes = saveint(line[-1])
+            enc[line[0] + " " + line[1]] = io_kbytes
+        #else:
+            #print "ignor: %s" % line
+    return parsed
+
+
+def inventory_emcvnx_disks(info):
+    parsed = parse_emcvnx_disks(info)
+    import pprint; pprint.pprint(parsed)
+    inventory = []
+    for disk in parsed:
+        inventory.append( (disk, None) )
+    return inventory
+
+
+def check_emcvnx_disks(item, _no_params, info):
+    diskstate_errorstring=""
+    write_errors_errorstring=""
+    read_errors_errorstring=""
+    try:
+        diskstate = parse_emcvnx_disks(info)[item]["state"]
+        if diskstate in ("Unbound", "Hot Spare Ready", "Enabled", "Ready"):
+            nagstate = 0
+        elif diskstate in ("Rebuilding"):
+            nagstate = 1
+            diskstate_errorstring="(!)"
+        else:
+            nagstate = 2
+            diskstate_errorstring="(!!)"
+
+        if nagstate in (0, 1):
+            write_errors = parse_emcvnx_disks(info)[item]["Hard Write Errors"]
+            if write_errors > 0:
+                nagstate = 2
+                write_errors_errorstring="(!!)"
+
+            read_errors = parse_emcvnx_disks(info)[item]["Hard Read Errors"]
+            if read_errors > 0:
+                nagstate = 2
+                read_errors_errorstring="(!!)"
+
+            return nagstate, "Enclosure %s is %s%s, Hard Write Errors: %s%s, Hard Read Errors: %s%s" % (item, diskstate, diskstate_errorstring, write_errors, write_errors_errorstring, read_errors, read_errors_errorstring)
+        else:
+            return nagstate, "Enclosure %s is %s%s" % (item, diskstate, diskstate_errorstring)
+
+    except KeyError:
+        return 3, "Enclosure %s not found in agent output" % item
+
+
+check_info['emcvnx_disks'] = {
+    "inventory_function"      : inventory_emcvnx_disks,
+    "check_function"          : check_emcvnx_disks,
+    "service_description"     : "Enclosure %s", 
+}

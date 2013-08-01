@@ -6,11 +6,12 @@ distribution: check_mk
 description:
  Reports the status and the I/O rate of a disk in an EMC storage system.
 
- Returns {OK} if the number of Hard Read Errors is 0 and the number
+ Returns {OK} if the state of a disk is "Unbound" or "Hot Spare Ready" or "Enabled",
+ the number of Hard Read Errors is 0 and the number
  of Hard Write Errors is 0. {CRIT} is returned otherwise.
 
  Hint for implementation: Look for "Hard Read Errors:" and "Hard Write Errors:"
- lines in section "Bus x Enclosure y Disk z" lines found under
+ and "State:" lines in section "Bus x Enclosure y Disk z" lines found under
  "All Disks Information"
 
  I/O rates (in Bytes/sec) are just informational and do not trigger any state

@@ -86,7 +86,7 @@ def parse_emcvnx_hwstatus(info):
             encid = line[2] + "/" + line[4]
             enc = {}
             parsed[encid] = enc
-        elif line[-2] == "State:":
+        elif len(line) > 2 and line[-2] == "State:":
             if line[0] == "SP":
                 device = line[0] + " " + line[1]
             else:

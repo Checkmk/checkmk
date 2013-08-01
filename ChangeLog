@@ -86,13 +86,16 @@
       searches (Can be enabled in connection settings)
     * LDAP: It is now possible to provide multiple failover servers, which are
       tried when the primary ldap server fails
+    * LDAP: Supporting posixGroup with memberUid as member attribute
+    * LDAP: Added filter_group option to user configuration to make the
+    synchonized users filterable by group memberships in directories without
+    memberof attributes
     * Added option to enable browser scrollbar to the multisite sidebar (only
       via "sidebar_show_scrollbar = True" in multisite.mk 
     * Added option to disable automatic userdb synchronizations in multisite
     * Implemented search forms for most data tables
     * New icons in view footers: export as CSV, export as JSON
     * Availability: new columns for shortest, longest, average and count
-    * LDAP: Supporting posixGroup with memberUid as member attribute
     * Editing localized strings (like the title) is now optional when cloning
       views or editing cloned views. If not edited, the views inherit the
       localized strings from their ancestors

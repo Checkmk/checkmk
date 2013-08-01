@@ -693,8 +693,8 @@ class FilterHostTags(Filter):
     def display(self):
         groups = [ (e[0], e[1]) for e in config.wato_host_tags ]
         operators = [
-            ("is", _("is")),
-            ("isnot", _("is not")),
+            ("is", _("=")),
+            ("isnot", _("&ne;")),
         ]
 
         # replace unicode strings, before writing out as "json"
@@ -714,12 +714,16 @@ class FilterHostTags(Filter):
             html.write('<tr><td>')
             html.sorted_select(prefix + '_grp',
                 [("", "")] + groups,
-                onchange = 'host_tag_update_value(\'%s\', this.value)' % prefix
+                onchange = 'host_tag_update_value(\'%s\', this.value)' % prefix,
+                attrs = {'style': 'width:129px'}
             )
             html.write('</td><td>')
-            html.sorted_select(prefix + '_op', [("", "")] + operators)
+            html.sorted_select(prefix + '_op', [("", "")] + operators,
+                attrs = {'style': 'width:36px'})
             html.write('</td><td>')
-            html.sorted_select(prefix + '_val', html.var(prefix + '_grp') and grouped[html.var(prefix + '_grp')] or [("", "")])
+            html.sorted_select(prefix + '_val',
+                html.var(prefix + '_grp') and grouped[html.var(prefix + '_grp')] or [("", "")],
+                attrs = {'style': 'width:129px'})
             html.write('</td></tr>')
         html.write('</table>')
 

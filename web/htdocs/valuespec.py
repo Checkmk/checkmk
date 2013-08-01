@@ -308,7 +308,7 @@ class TextAscii(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._label         = kwargs.get("label")
-        self._size          = kwargs.get("size", 25)
+        self._size          = kwargs.get("size", 25) # also possible: "max"
         self._strip         = kwargs.get("strip", True)
         self._allow_empty   = kwargs.get("allow_empty", True)
         self._read_only     = kwargs.get("read_only")
@@ -331,8 +331,8 @@ class TextAscii(ValueSpec):
         if self._label:
             html.write(self._label)
             html.write("&nbsp;")
-        html.text_input(varprefix, str(value), size = self._size,
-                        read_only = self._read_only)
+
+        html.text_input(varprefix, str(value), size = self._size, read_only = self._read_only)
         self.render_buttons()
 
     def render_buttons(self):
@@ -385,10 +385,6 @@ class TextAscii(ValueSpec):
 class TextUnicode(TextAscii):
     def __init__(self, **kwargs):
         TextAscii.__init__(self, **kwargs)
-
-    def render_input(self, varprefix, value):
-        html.text_input(varprefix, value, size = self._size)
-        self.render_buttons()
 
     def from_html_vars(self, varprefix):
         return html.var_utf8(varprefix, "").strip()
@@ -563,7 +559,8 @@ class TextAreaUnicode(TextUnicode):
         if value == None:
             value = "" # should never happen, but avoids exception for invalid input
         if self._rows == "auto":
-            attrs = { "onkeyup" : 'valuespec_textarea_resize(this);' }
+            func = 'valuespec_textarea_resize(this);'
+            attrs = { "onkeyup" : func, "onmousedown" : func, "onmouseup" : func, "onmouseout" : func }
             if html.has_var(varprefix):
                 rows = len(html.var(varprefix).splitlines())
             else:

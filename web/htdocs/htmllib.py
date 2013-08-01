@@ -390,15 +390,19 @@ class html:
     def add_form_var(self, varname):
         self.form_vars.append(varname)
 
-    def text_input(self, varname, default_value = "", cssclass = "text", label = None, id = None, submit = None, **args):
+    def text_input(self, varname, default_value = "", cssclass = "text", label = None, id = None, 
+                   submit = None, attrs = {}, **args):
         if default_value == None:
             default_value = ""
         addprops = ""
         add_style = ""
         if "size" in args and args["size"]:
-            addprops += " size=%d" % (args["size"] + 1)
-            if "width:" not in args.get("style", "") and not self.mobile:
-                add_style = "width: %d.8ex; " % args["size"]
+            if args["size"] == "max":
+                add_style = "width: 100%; "
+            else:
+                addprops += " size=%d" % (args["size"] + 1)
+                if "width:" not in args.get("style", "") and not self.mobile:
+                    add_style = "width: %d.8ex; " % args["size"]
 
         if "type" in args:
             mytype = args["type"]
@@ -433,8 +437,9 @@ class html:
         if id:
             addprops += " id='%s'" % id
 
-        html += "<input type=%s class=%s value=\"%s\" name=\"%s\"%s>" % \
-                     (mytype, cssclass, self.attrencode(value), varname, addprops)
+        attributes = ' ' + ' '.join([ '%s="%s"' % (k, v) for k, v in attrs.iteritems() ])
+        html += "<input type=%s class=%s value=\"%s\" name=\"%s\"%s%s>" % \
+                     (mytype, cssclass, self.attrencode(value), varname, addprops, attributes)
         if error:
             html += "</x>"
             self.set_focus(varname)

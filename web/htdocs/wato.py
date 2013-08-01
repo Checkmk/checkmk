@@ -7097,7 +7097,7 @@ def do_site_login(site_id, name, password):
     # Trying basic auth AND form based auth to ensure the site login works.
     # Adding _ajaxid makes the web service fail silently with an HTTP code and
     # not output HTML code for an error screen.
-    url = site["multisiteurl"] + 'automation_login.py?_login=1' \
+    url = site["multisiteurl"] + 'login.py?_login=1' \
           '&_username=%s&_password=%s&_origtarget=automation_login.py&_plain_error=1' % \
           (name, password)
     response = get_url(url, site.get('insecure', False), name, password).strip()
@@ -7128,7 +7128,9 @@ def get_url(url, insecure, user=None, password=None, params = '', post_data = No
     # -s: silent
     # -S: show errors
     # -w '%{http_code}': add the http status code to the end of the output
-    command = 'curl -w "\n%%{http_code}" -s -S%s%s%s "%s" 2>&1' % (
+    # -L: follow redirects
+    # -b /dev/null: handle cookies, but do not persist them
+    command = 'curl -b /dev/null -L -w "\n%%{http_code}" -s -S%s%s%s "%s" 2>&1' % (
               insecure, cred, params, url)
     tmp_file = None
     if post_data != None:

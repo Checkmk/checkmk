@@ -62,7 +62,7 @@ def render_mkeventd_performance():
     # Time columns
     time_columns = [
         (_("Processing time per message"), "processing"),
-        (_("Tiime per client request"), "request"),
+        (_("Time per client request"), "request"),
         (_("Replication synchronization"), "sync"),
     ]
     for title, name in time_columns:

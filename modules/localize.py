@@ -251,8 +251,6 @@ def localize_update(lang):
        and os.path.exists(locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)):
         file(po_file, 'w').write(file(locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)).read())
 
-    sys.exit(1)
-
     localize_sniff()
 
     if not os.path.exists(po_file):

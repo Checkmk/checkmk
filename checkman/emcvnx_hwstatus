@@ -5,7 +5,8 @@ license: GPL
 distribution: check_mk
 description:
  Reports the status of Power Supplies, SPS, SPS Cabeling, LCC, SP, CPU Modules,
- SP I/O Modules and DIMM Modules on EMC storage systems.
+ SP I/O Modules, DIMM Modules and the Overall Status of an Enclosure on EMC 
+ storage systems.
 
  Returns {OK} if the agent reports "Present" or "Valid" status and {CRIT}
  on every other status.

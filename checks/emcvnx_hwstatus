@@ -86,6 +86,10 @@ def parse_emcvnx_hwstatus(info):
             encid = line[2] + "/" + line[4]
             enc = {}
             parsed[encid] = enc
+            if len(line) > 5:
+                enc["Overall Status"] = line[5].replace("*", "")
+            else:
+                enc["Overall Status"] = "No Errors Reported"
         elif len(line) > 2 and line[-2] == "State:":
             if line[0] == "SP":
                 device = line[0] + " " + line[1]
@@ -110,7 +114,7 @@ def check_emcvnx_hwstatus(item, _no_params, info):
     enc, device = item.split(" ", 1)
     try:
         devstate = parse_emcvnx_hwstatus(info)[enc][device]
-        if devstate in ("Present", "Valid"):
+        if devstate in ("Present", "Valid", "No Errors Reported"):
             nagstate = 0
         else:
             nagstate = 2

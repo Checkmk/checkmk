@@ -1,0 +1,133 @@
+#!/usr/bin/python # -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+#<<<emcvnx_hba>>>
+#Information about each SPPORT:
+#
+#SP Name:             SP A
+#SP Port ID:          0
+#SP UID:              50:06:01:60:BE:A0:5D:E5:50:06:01:60:3E:A0:5D:E5
+#Link Status:         Up
+#Port Status:         Online
+#Switch Present:      YES
+#Switch UID:          10:00:00:27:F8:28:52:5B:20:02:00:27:F8:28:52:5B
+#SP Source ID:        66048
+#ALPA Value:         0
+#Speed Value :         8Gbps
+#Auto Negotiable :     NO
+#Available Speeds:
+#2Gbps
+#4Gbps
+#8Gbps
+#Auto
+#Requested Value:      Auto
+#MAC Address:         Not Applicable
+#SFP State:           Online
+#Reads:               426729
+#Writes:              8683578
+#Blocks Read:         4917783
+#Blocks Written:      12008476
+#Queue Full/Busy:     0
+#I/O Module Slot:     Onboard
+#Physical Port ID:    2
+#Usage:     Mirrorview
+#SFP/Connector EMC Part Number: 019-078-042
+#SFP/Connector EMC Serial Number: 00000000000
+#SFP/Connector Vendor Part Number: AFBR-57D7APZ-E2
+#SFP/Connector Vendor Serial Number: AGL1213A3188822
+#SFP/Connector Supported Speeds:
+#2Gbps
+#4Gbps
+#8Gbps
+#
+#SP Name:             SP A
+#SP Port ID:          1
+#SP UID:              50:06:01:60:BE:A0:5D:E5:50:06:01:61:3E:A0:5D:E5
+#Link Status:         Up
+#Port Status:         Online
+#Switch Present:      YES
+#[...]
+
+# Parse agent output into a dict of the form:
+# parsed = {
+# {'SP A Port 0': {'Blocks Read': 4917783, 'Blocks Written': 12008476},
+#  'SP A Port 1': {'Blocks Read': 363283639, 'Blocks Written': 218463965},
+#  'SP A Port 2': {'Blocks Read': 2, 'Blocks Written': 0},
+#  'SP B Port 0': {'Blocks Read': 0, 'Blocks Written': 4348086},
+# }
+
+def parse_emcvnx_hba(info):
+    parsed = {}
+    for line in info:
+        if len(line) > 2 and line[0] == "SP" and line[1] == "Name:":
+            hba_id = " ".join(line[2:])
+        elif len(line) > 2 and line[0] == "SP" and line[1] == "Port" and line[2] == "ID:":
+            hba_id += " Port " + line[-1]
+            hba = {}
+            parsed[hba_id] = hba
+        elif len(line) > 2 and line[0] == "Blocks" and line[1] in ("Read:", "Written:"):
+            hba["Blocks " + line[1].replace(":", "")] = saveint(line[-1])
+    return parsed
+
+
+def inventory_emcvnx_hba(info):
+    parsed = parse_emcvnx_hba(info)
+    import pprint; pprint.pprint(parsed)
+    inventory = []
+    for hba in parsed:
+        inventory.append( (hba, None) )
+    return inventory
+
+
+def check_emcvnx_hba(item, _no_params, info):
+    now = time.time()
+    perfdata = []
+    try:
+        read_blocks = parse_emcvnx_hba(info)[item]["Blocks Read"]
+        write_blocks = parse_emcvnx_hba(info)[item]["Blocks Written"]
+        countername_r = "emcvnx_hba.read_blocks.%s" % item.replace(" ", "_")
+        countername_w = "emcvnx_hba.write_blocks.%s" % item.replace(" ", "_")
+        timedif, read_blocks_per_sec = get_counter(countername_r, now, read_blocks)
+        timedif, write_blocks_per_sec = get_counter(countername_w, now, write_blocks)
+	read_blocks_per_sec = saveint(read_blocks_per_sec)
+	write_blocks_per_sec = saveint(write_blocks_per_sec)
+        perfdata.append(("read_blocks", read_blocks_per_sec))
+        perfdata.append(("write_blocks", write_blocks_per_sec))
+        #print "read blocks: %s, %s/sec" % (read_blocks, read_blocks_per_sec)
+        #print "write blocks: %s, %s/sec" % (write_blocks, write_blocks_per_sec)
+
+        return 0, "Read: %s Blocks/s, Write: %s Blocks/s" % (read_blocks_per_sec, write_blocks_per_sec), perfdata
+
+    except KeyError:
+        return 3, "HBA %s not found in agent output" % item
+
+
+check_info['emcvnx_hba'] = {
+    "inventory_function"      : inventory_emcvnx_hba,
+    "check_function"          : check_emcvnx_hba,
+    "service_description"     : "HBA %s", 
+   'has_perfdata'             : True,
+}

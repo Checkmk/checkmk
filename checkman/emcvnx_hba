@@ -9,17 +9,9 @@ description:
  The values for Blocks Read/sec and Blocks Written/sec are just informational.
  The check always returns {OK}
 
- Hint for implementation: Look for "Blocks Read:" and "Blocks Written:"
- lines in section "SP Name: <my Name>" and "SP Port ID: <my ID>" lines found under
- "Information about each SPPORT:". Remember values of last check and devide by the 
- time since last check.
-
 item:
  Consists of the SP Name and the SP Port ID as returned by the agent.
  E. g. "SP A Port 0"
-
- Hint for implementation: Look for "SP Name:" and "SP Port ID:" lines in section 
- "Information about each SPPORT:"
 
 perfdata:
  Two values: Blocks Read/sec and Blocks Written/sec

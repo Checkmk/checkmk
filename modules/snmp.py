@@ -335,119 +335,93 @@ def get_stored_snmpwalk(hostname, oid):
 
     if opt_debug:
         sys.stderr.write("Getting %s from %s\n" % (oid, path))
-    if not os.path.exists(path):
-        raise MKGeneralException("No snmpwalk file %s\n" % path)
 
     rowinfo = []
 
-    use_new = True
-    if use_new:
-        # New implementation: use binary search
-        def to_bin_string(oid):
-            try:
-                return tuple(map(int, oid.strip(".").split(".")))
-            except:
-                raise MKGeneralException("Invalid OID %s" % oid)
+    # New implementation: use binary search
+    def to_bin_string(oid):
+        try:
+            return tuple(map(int, oid.strip(".").split(".")))
+        except:
+            raise MKGeneralException("Invalid OID %s" % oid)
 
-        def compare_oids(a, b):
-            aa = to_bin_string(a)
-            bb = to_bin_string(b)
-            if len(aa) <= len(bb) and bb[:len(aa)] == aa:
-                result = 0
-            else:
-                result = cmp(aa, bb)
-            return result
-
-        if hostname in g_walk_cache:
-            lines = g_walk_cache[hostname]
+    def compare_oids(a, b):
+        aa = to_bin_string(a)
+        bb = to_bin_string(b)
+        if len(aa) <= len(bb) and bb[:len(aa)] == aa:
+            result = 0
         else:
+            result = cmp(aa, bb)
+        return result
+
+    if hostname in g_walk_cache:
+        lines = g_walk_cache[hostname]
+    else:
+        try:
             lines = file(path).readlines()
-            g_walk_cache[hostname] = lines
+        except IOError:
+            raise MKGeneralException("No snmpwalk file %s\n" % path)
+        g_walk_cache[hostname] = lines
 
-        begin = 0
-        end = len(lines)
-        hit = None
-        while end - begin > 0:
-            current = (begin + end) / 2
-            parts = lines[current].split(None, 1)
-            comp = parts[0]
-            hit = compare_oids(oid_prefix, comp)
-            if hit == 0:
-                break
-            elif hit == 1: # we are too low
-                begin = current + 1
-            else:
-                end = current
-
-        if hit != 0:
-            return [] # not found
-
-
-        def collect_until(index, direction):
-            rows = []
-            # Handle case, where we run after the end of the lines list
-            if index >= len(lines):
-                if direction > 0:
-                    return []
-                else:
-                    index -= 1
-            while True:
-                line = lines[index]
-                parts = line.split(None, 1)
-                o = parts[0]
-                if o.startswith('.'):
-                    o = o[1:]
-                if o == oid or o.startswith(oid_prefix + "."):
-                    if len(parts) > 1:
-                        value = parts[1]
-                        if agent_simulator:
-                            value = agent_simulator_process(value)
-                    else:
-                        value = ""
-                    # Fix for missing starting oids
-                    rows.append(('.'+o, strip_snmp_value(value)))
-                    index += direction
-                    if index < 0 or index >= len(lines):
-                        break
-                else:
-                    break
-            return rows
-
-
-        rowinfo = collect_until(current, -1)
-        rowinfo.reverse()
-        rowinfo += collect_until(current + 1, 1)
-        # import pprint ; pprint.pprint(rowinfo)
-
-        if dot_star:
-            return [ rowinfo[0] ]
-        else:
-            return rowinfo
-
-
-
-    # Old implementation
-    hot = False
-    for line in file(path):
-        parts = line.split(None, 1)
-        o = parts[0]
-        if o.startswith('.'):
-            o = o[1:]
-        if o == oid or o.startswith(oid_prefix + "."):
-            hot = True
-            if len(parts) > 1:
-                value = parts[1]
-                if agent_simulator:
-                    value = agent_simulator_process(value)
-            else:
-                value = ""
-            rowinfo.append((o, strip_snmp_value(value))) # return pair of OID and value
-            if dot_star:
-                break
-        elif hot: # end of interesting part, no point in further search
+    begin = 0
+    end = len(lines)
+    hit = None
+    while end - begin > 0:
+        current = (begin + end) / 2
+        parts = lines[current].split(None, 1)
+        comp = parts[0]
+        hit = compare_oids(oid_prefix, comp)
+        if hit == 0:
             break
+        elif hit == 1: # we are too low
+            begin = current + 1
+        else:
+            end = current
+
+    if hit != 0:
+        return [] # not found
+
+
+    def collect_until(index, direction):
+        rows = []
+        # Handle case, where we run after the end of the lines list
+        if index >= len(lines):
+            if direction > 0:
+                return []
+            else:
+                index -= 1
+        while True:
+            line = lines[index]
+            parts = line.split(None, 1)
+            o = parts[0]
+            if o.startswith('.'):
+                o = o[1:]
+            if o == oid or o.startswith(oid_prefix + "."):
+                if len(parts) > 1:
+                    value = parts[1]
+                    if agent_simulator:
+                        value = agent_simulator_process(value)
+                else:
+                    value = ""
+                # Fix for missing starting oids
+                rows.append(('.'+o, strip_snmp_value(value)))
+                index += direction
+                if index < 0 or index >= len(lines):
+                    break
+            else:
+                break
+        return rows
+
+
+    rowinfo = collect_until(current, -1)
+    rowinfo.reverse()
+    rowinfo += collect_until(current + 1, 1)
     # import pprint ; pprint.pprint(rowinfo)
-    return rowinfo
+
+    if dot_star:
+        return [ rowinfo[0] ]
+    else:
+        return rowinfo
 
 # Helper function to be used in checks.  It applies a user-specified
 # character encoding in order to tranlate e.g. latin1 to utf8

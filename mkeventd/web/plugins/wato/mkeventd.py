@@ -1527,8 +1527,8 @@ if mkeventd_enabled:
 
     register_configvar(group,
         "mkeventd_pprint_rules",
-        Checkbox(title = _("Pritty-Print rules in configuration file"),
-                 label = _("enable pritty-printing of rules"),
+        Checkbox(title = _("Pretty-Print rules in configuration file"),
+                 label = _("enable pretty-printing of rules"),
                  help = _("When the WATO module of the Event Console saves rules to the file "
                           "<tt>mkeventd.d/wato/rules.mk</tt> it usually prints the Python "
                           "representation of the rules-list into one single line by using the "

@@ -15,24 +15,12 @@ description:
 
  {CRIT} is returned otherwise.
 
- Hint for implementation: Look for "Hard Read Errors:" and "Hard Write Errors:"
- and "State:" lines in section "Bus x Enclosure y Disk z" lines found under
- "All Disks Information"
-
  I/O rates (in Bytes/sec) are just informational and do not trigger any state
  other than {OK}
 
- Hint for implementation: Look for "Kbytes Read:" and "Kbytes Written:"
- lines in section "Bus x Enclosure y Disk z" lines found under
- "All Disks Information". Remember values of last check and devide by the 
- time since last check.
-
 item:
  Consists of bus ID, enclosure ID and disk ID as returned by the agent.
- E. g. "Bus 0 Enclosure 0  Disk 0"
-
- Hint for implementation: Look for "Bus x Enclosure y Disk z" lines in section 
- "All Disks Information"
+ E. g. "1/1 Disk 9"
 
 perfdata:
  Two values: Read-I/O and Write-I/O in Bytes/sec

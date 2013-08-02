@@ -114,30 +114,23 @@ def parse_emcvnx_disks(info):
     parsed = {}
     for line in info:
         if len(line) > 4 and line[0] == "Bus" and line[4] == "Disk":
-            #print "match: %s" % line
             encid = line[1] + "/" + line[3] + " " + line[4] + " " + line[5]
             enc = {}
             parsed[encid] = enc
         elif len(line) > 1 and line[0] == "State:":
-            #print "match: %s" % line
             state = line[-1]
             enc["state"] = state
         elif len(line) > 2 and line[0] == "Hard" and line[2] == "Errors:":
-            #print "match: %s" % line
             error_count = saveint(line[-1])
             enc[line[0] + " " + line[1] + " Errors"] = error_count
         elif len(line) > 1 and line[0] == "Kbytes" and line[1] in ("Read:", "Written:"):
-            #print "match: %s" % line
             io_kbytes = saveint(line[-1])
             enc[line[0] + " " + line[1].replace(':', '')] = io_kbytes
-        #else:
-            #print "ignor: %s" % line
     return parsed
 
 
 def inventory_emcvnx_disks(info):
     parsed = parse_emcvnx_disks(info)
-    #import pprint; pprint.pprint(parsed)
     inventory = []
     for disk in parsed:
         inventory.append( (disk, None) )
@@ -179,8 +172,8 @@ def check_emcvnx_disks(item, _no_params, info):
             countername_w = "emcvnx_disks.write_bytes.%s" % item.replace(" ", "_")
             timedif, read_bytes_per_sec = get_counter(countername_r, now, read_bytes)
             timedif, write_bytes_per_sec = get_counter(countername_w, now, write_bytes)
-            perfdata.append(("read_bytes_per_sec", read_bytes_per_sec))
-            perfdata.append(("write_bytes_per_sec", write_bytes_per_sec))
+            perfdata.append(("read", read_bytes_per_sec))
+            perfdata.append(("write", write_bytes_per_sec))
 
             return nagstate, "Enclosure %s is %s%s, Hard Read Errors: %s%s, Hard Write Errors: %s%s, Read: %s/s, Write: %s/s" % (item, diskstate, diskstate_errorstring, read_errors, read_errors_errorstring, write_errors, write_errors_errorstring, get_bytes_human_readable(read_bytes_per_sec), get_bytes_human_readable(write_bytes_per_sec)), perfdata
         else:

@@ -62,6 +62,7 @@
                      new script parameters cache_age, retry_count, timeout
                      new script caching options "off", "async", "sync"
     * windows_agent: increased maximum local/plugin script output length to 512kB
+                     (output buffer now grows dynamically)
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a
@@ -293,6 +294,9 @@
     * FIX: automation users can now be deleted again (bug was introduced in 1.2.2p1)
     * FIX: fix logwatch pattern analyzer message "The host xyz is not
            managed by WATO." after direct access via snapin
+
+    Event Console:
+    * FIX: apply rewriting of application/hostname also when cancelling events
 
 1.2.2p2:
     Core:

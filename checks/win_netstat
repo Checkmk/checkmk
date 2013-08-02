@@ -110,7 +110,7 @@ def check_win_netstat(item, params, info):
     state = 0
     extra_info = ""
 
-    if params["min_states"]:
+    if params.get("min_states"):
         min_warn, min_crit = params["min_states"]
         if found <= min_crit:
             state = max(state, 2)
@@ -119,7 +119,7 @@ def check_win_netstat(item, params, info):
             state = max(state, 1)
             extra_info += '(!) Minimum at %d ' % min_warn
 
-    if params["max_states"]:
+    if params.get("max_states"):
         max_warn, max_crit = params["max_states"]
         if found >= max_crit:
             state = max(state, 2)

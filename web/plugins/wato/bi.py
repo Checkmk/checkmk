@@ -39,8 +39,8 @@ bi_aggregation_functions["worst"] = {
                 min_value = 1),
             MonitoringState(
                 title = _("Restrict severity to at worst"),
-                help = _("Here you can have the node the state WARN, even if some of the child nodes "
-                         "are CRIT."),
+                help = _("Here a maximum severity of the node state can be set. This severity is not "
+                         "exceeded, even if some of the childs have more severe states."),
                 default_value = 2,
             ),
         ]),
@@ -60,9 +60,9 @@ bi_aggregation_functions["best"] = {
                 default_value = 1,
                 min_value = 1),
             MonitoringState(
-                title = _("Restrict severity to at worst "),
-                help = _("Here you can have the node the state WARN, even if some of the child nodes "
-                         "are CRIT."),
+                title = _("Restrict severity to at worst"),
+                help = _("Here a maximum severity of the node state can be set. This severity is not "
+                         "exceeded, even if some of the childs have more severe states."),
                 default_value = 2,
             ),
         ]),

@@ -95,7 +95,6 @@ def parse_emcvnx_hba(info):
 
 def inventory_emcvnx_hba(info):
     parsed = parse_emcvnx_hba(info)
-    import pprint; pprint.pprint(parsed)
     inventory = []
     for hba in parsed:
         inventory.append( (hba, None) )
@@ -116,8 +115,6 @@ def check_emcvnx_hba(item, _no_params, info):
 	write_blocks_per_sec = saveint(write_blocks_per_sec)
         perfdata.append(("read_blocks", read_blocks_per_sec))
         perfdata.append(("write_blocks", write_blocks_per_sec))
-        #print "read blocks: %s, %s/sec" % (read_blocks, read_blocks_per_sec)
-        #print "write blocks: %s, %s/sec" % (write_blocks, write_blocks_per_sec)
 
         return 0, "Read: %s Blocks/s, Write: %s Blocks/s" % (read_blocks_per_sec, write_blocks_per_sec), perfdata
 

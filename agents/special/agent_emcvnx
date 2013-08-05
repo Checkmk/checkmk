@@ -39,18 +39,20 @@
 # <-mirrorview><-snapviews><-sancopy><-reserved> <-cloneview><-metalun>
 # <-migration><-ioportconfig> <-fastcache><-backendbus>
 
-import sys, os, getopt,socket
+import sys, os, getopt, re
 
 import inspect, pprint # FOR DEBUGGING
 
+#############################################################################
 def usage():
+#############################################################################
     sys.stderr.write("""Check_MK EMC VNX Agent
 
 USAGE: agent_emcvnx [OPTIONS] HOST
        agent_emcvnx -h
 
 ARGUMENTS:
-  HOST                          Host name or IP address of EMC VNX
+  HOST                          Host name or IP address of the target SP
 
 OPTIONS:
   -h, --help                    Show this help message and exit
@@ -62,10 +64,19 @@ OPTIONS:
 
   --profile                     Enable performance profiling in Python source code
 
+  -i MODULES, --modules MODULES Modules to query. This is a comma separated list of
+                                which may contain the keywords "disks", "hba", "hwstatus"
+                                or "all" to define which information should be queried
+                                from the SP. You can define to use only view of them
+                                to optimize performance. The default is "all".
+
 """)
 
-short_options = 'hu:p:t:'
-long_options  = [ 'help', 'user=', 'password=', 'debug', 'timeout=', 'profile' ]
+#############################################################################
+# command line options
+#############################################################################
+short_options = 'hu:p:t:m:'
+long_options  = [ 'help', 'user=', 'password=', 'debug', 'timeout=', 'profile', 'modules=' ]
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -82,6 +93,14 @@ g_profile_path    = "emcvnx_profile.out"
 host_address = None
 user         = None
 password     = None
+mortypes     = [ 'all' ]
+
+naviseccli_options = { 
+    "disks"      : {"cmd_option" : "-disk",  "active" : False},
+    "hba"        : {"cmd_option" : "-hba",   "active" : False},
+    "hwstatus"   : {"cmd_option" : "-array", "active" : False},
+#   "agent-info" : {"cmd_option" : "-sp",    "active" : False},
+}
 
 for o,a in opts:
     if o in [ '--debug' ]:
@@ -94,6 +113,8 @@ for o,a in opts:
         user = a
     elif o in [ '-p', '--password' ]:
         password = a
+    elif o in [ '-i', '--modules' ]:
+        mortypes = a.split(',')
     elif o in [ '-t', '--timeout' ]:
         opt_timeout = int(a)
     elif o in [ '-h', '--help' ]:
@@ -109,7 +130,64 @@ else:
     sys.stderr.write("ERROR: Please specify exactly one host.\n")
     sys.exit(1)
 
+for module in naviseccli_options.keys():
+
+    try:
+        if mortypes.index("all") >= 0:
+            naviseccli_options[module]["active"] = True
+    except ValueError:
+        pass
+
+    try:
+        if mortypes.index(module) >= 0:
+            naviseccli_options[module]["active"] = True
+    except ValueError:
+        pass
+
+    #print naviseccli_options[module]
+
+
+#############################################################################
+# fetch information by calling naviseccli
+#############################################################################
+
+basecmd="naviseccli -h %s -User %s -Password %s -Scope0 getall " % (host_address, user, password)
+
+#
+# check_mk section of agent output
+#
+
+cmd=basecmd + " -sp"
+for line in os.popen(cmd).readlines():
+    line = line.strip()
+    tokens = re.split("\s+", line)
+    if tokens[0] == "Agent" and tokens[1] == "Rev:":
+        emcvnx_version = "_".join(tokens[2:])
+        break
+
+print "<<<check_mk>>>"
+print "Version: %s" % emcvnx_version
+
+# maybe we could fill AgentOs: by reading "Model:" line of naviseccli output
+# in section "Agent/Host Information", but need a call of naviseccli with an
+# other commandline argument
+#print "AgentOs: %s " % emcvnx_model
+
+
+#
+# all other sections of agent output
+#
+for module in naviseccli_options.keys():
+    if naviseccli_options[module]["active"] == True:
+        print "<<<emcvnx_%s>>>" % module
+        cmd=basecmd + naviseccli_options[module]["cmd_option"]
+        for line in os.popen(cmd).readlines():
+            print line,
+
+
+#############################################################################
 def output_profile():
+#############################################################################
     g_profile.dump_stats(g_profile_path)
     show_profile = os.path.join(os.path.dirname(g_profile_path), 'show_profile.py')
     file(show_profile, "w")\
@@ -120,8 +198,6 @@ def output_profile():
     os.chmod(show_profile, 0755)
 
     sys.stderr.write("Profile '%s' written. Please run %s.\n" % (g_profile_path, show_profile))
-
-print "<<<emcvnx_hugo>>>"
 
 if g_profile:
     output_profile()

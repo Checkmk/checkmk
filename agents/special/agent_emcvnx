@@ -75,7 +75,7 @@ OPTIONS:
 #############################################################################
 # command line options
 #############################################################################
-short_options = 'hu:p:t:m:'
+short_options = 'hu:p:t:m:i:'
 long_options  = [ 'help', 'user=', 'password=', 'debug', 'timeout=', 'profile', 'modules=' ]
 
 try:

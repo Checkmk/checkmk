@@ -117,6 +117,48 @@ register_rule(group,
 
 
 register_rule(group,
+    "special_agents:emcvnx",
+     Dictionary(
+        title = _("Check state of EMC VNX storage systems"),
+        help = _("This rule selects the EMC VNX agent instead of the normal Check_MK Agent "
+                 "and allows monitoring of EMC VNX storage systems by calling naviseccli "
+                 "commandline tool locally on the monitoring system. Make sure it is installed "
+                 "and working. You can configure your connection settings here."
+                 ),
+        elements = [
+            ( "user",
+              TextAscii(
+                  title = _("EMC VNX admin user name"),
+                  allow_empty = False,
+              )
+            ),
+            ( "password",
+              Password(
+                  title = _("EMC VNX admin user password"),
+                  allow_empty = False,
+              )
+            ),
+            ( "infos",
+              Transform(
+                  ListChoice(
+                     choices = [
+                         ( "disks",          _("Disks") ),
+                         ( "hba",            _("iSCSI HBAs") ),
+                         ( "hwstatus",       _("Hardware Status") ),
+                     ],
+                     default_value = [ "disks", "hba", "hwstatus", ],
+                     allow_empty = False,
+                   ),
+                   title = _("Retrieve information about..."),
+                )
+             ),
+        ],
+        optional_keys = [ ],
+    ),
+    match = 'first')
+
+
+register_rule(group,
     "special_agents:random",
      FixedValue(
         {},

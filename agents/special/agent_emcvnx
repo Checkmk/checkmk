@@ -58,9 +58,8 @@ OPTIONS:
   -h, --help                    Show this help message and exit
   -u USER, --user USER          Username for EMC VNX login
   -p PASSWORD, --password PASSWORD  Password for EMC VNX login
-  -t, --timeout SECS            Set the timeout for naviseccli command execution to SECS 
-                                seconds. The default is 60 sec.
-  --debug                       Debug mode: let Python exceptions come through
+  --debug                       Debug mode: write some debug messages,
+                                let Python exceptions come through
 
   --profile                     Enable performance profiling in Python source code
 
@@ -157,7 +156,11 @@ basecmd="naviseccli -h %s -User %s -Password %s -Scope0 getall " % (host_address
 # check_mk section of agent output
 #
 
-cmd=basecmd + " -sp"
+print "<<<check_mk>>>"
+cmd=basecmd + "-sp"
+if opt_debug:
+    sys.stderr.write("executing external command: %s\n" % cmd)
+
 for line in os.popen(cmd).readlines():
     line = line.strip()
     tokens = re.split("\s+", line)
@@ -165,7 +168,6 @@ for line in os.popen(cmd).readlines():
         emcvnx_version = "_".join(tokens[2:])
         break
 
-print "<<<check_mk>>>"
 print "Version: %s" % emcvnx_version
 
 # maybe we could fill AgentOs: by reading "Model:" line of naviseccli output
@@ -181,6 +183,8 @@ for module in naviseccli_options.keys():
     if naviseccli_options[module]["active"] == True:
         print "<<<emcvnx_%s>>>" % module
         cmd=basecmd + naviseccli_options[module]["cmd_option"]
+        if opt_debug:
+            sys.stderr.write("executing external command: %s\n" % cmd)
         for line in os.popen(cmd).readlines():
             print line,
 

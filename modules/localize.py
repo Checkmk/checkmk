@@ -250,6 +250,7 @@ def localize_update(lang):
     if local_locale_dir and not os.path.exists(po_file) \
        and os.path.exists(locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)):
         file(po_file, 'w').write(file(locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)).read())
+        sys.stdout.write('Initialize %s with the file in the default hierarchy\n' % po_file)
 
     localize_sniff()
 
@@ -274,6 +275,7 @@ def localize_compile(lang):
     if local_locale_dir and not os.path.exists(po_file) \
        and os.path.exists(locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)):
         file(po_file, 'w').write(file(locale_dir + '/%s/LC_MESSAGES/%s.po' % (lang, domain)).read())
+        sys.stdout.write('Initialize %s with the file in the default hierarchy\n' % po_file)
 
     if not os.path.exists(po_file):
         raise LocalizeException('The .po file %s does not exist.' % po_file)

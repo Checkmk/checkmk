@@ -5405,6 +5405,169 @@ def render_main_menu(some_modules, columns = 2):
 
     html.write("</div>")
 
+#   .--LDAP Config---------------------------------------------------------.
+#   |       _     ____    _    ____     ____             __ _              |
+#   |      | |   |  _ \  / \  |  _ \   / ___|___  _ __  / _(_) __ _        |
+#   |      | |   | | | |/ _ \ | |_) | | |   / _ \| '_ \| |_| |/ _` |       |
+#   |      | |___| |_| / ___ \|  __/  | |__| (_) | | | |  _| | (_| |       |
+#   |      |_____|____/_/   \_\_|      \____\___/|_| |_|_| |_|\__, |       |
+#   |                                                         |___/        |
+#   +----------------------------------------------------------------------+
+#   | LDAP configuration and diagnose page                                 |
+#   '----------------------------------------------------------------------'
+
+def mode_ldap_config(phase):
+    if phase == 'title':
+        return _('LDAP Configuration')
+
+    elif phase == 'buttons':
+        global_buttons()
+        return
+
+    config_vars = [
+        'ldap_connection',
+        'ldap_userspec',
+        'ldap_groupspec',
+        'ldap_active_plugins',
+        'ldap_cache_livetime',
+        'ldap_debug_log',
+    ]
+    vs = [ (v, g_configvars[v][1]) for v in config_vars ]
+
+    current_settings = load_configuration_settings()
+
+    if phase == 'action':
+        if not html.check_transaction():
+            return
+
+        for (varname, valuespec) in vs:
+            valuespec = dict(vs)[varname]
+            new_value = valuespec.from_html_vars(varname)
+            valuespec.validate_value(new_value, varname)
+            if current_settings.get(varname) != new_value:
+                msg = _("Changed ldap configuration variable %s to %s.") \
+                          % (varname, valuespec.value_to_text(new_value))
+                log_pending(SYNC, None, "edit-configvar", msg)
+            current_settings[varname] = new_value
+
+        save_configuration_settings(current_settings)
+        config.load_config() # make new configuration active
+        return
+
+    userdb.ldap_test_module()
+
+    #
+    # Regular page rendering
+    #
+
+    html.write('<div id=ldap>')
+    html.write('<table><tr><td>')
+    html.begin_form('ldap_config', method = "POST", action = 'wato.py?mode=ldap_config')
+    forms.header(_('LDAP Settings'))
+    for (var, valuespec) in vs:
+        value = current_settings.get(var, valuespec.default_value())
+        forms.section(valuespec.title())
+        valuespec.render_input(var, value)
+        html.help(valuespec.help())
+    forms.end()
+
+    html.button("_save", _("Save"))
+    html.button("_test", _("Save & Test"))
+    html.hidden_fields()
+    html.end_form()
+    html.write('</td><td style="padding-left:10px;">')
+
+    html.write('<h2>' + _('Diagnostics') + '</h2>')
+    if not html.var('_test'):
+        html.message(_('You can verify the single parts of your ldap configuration using this '
+                       'dialog. Simply make your configuration in the form on the left side and '
+                       'hit the "Save & Test" button to execute the tests. After '
+                       'the page reload, you should see the results of the test here.'))
+    else:
+        def test_connect(address):
+            conn, msg = userdb.ldap_connect_server(address)
+            if conn:
+                return (True, _('Connection established. The connection settings seem to be ok.'))
+            else:
+                return (False, msg)
+
+        def test_user_base_dn(address):
+            userdb.ldap_connect(enforce_new = True, enforce_server = address)
+            if userdb.ldap_user_base_dn_exists():
+                return (True, _('The User Base DN could be found.'))
+            else:
+                return (False, _('The User Base DN could not be found.'))
+
+        def test_user_count(address):
+            userdb.ldap_connect(enforce_new = True, enforce_server = address)
+            try:
+                ldap_users = userdb.ldap_get_users()
+            except Exception, e:
+                ldap_users = None
+                msg = str(e)
+            if ldap_users and len(ldap_users) > 0:
+                return (True, _('Found %d users for synchronization.') % len(ldap_users))
+            else:
+                if not msg:
+                    msg = _('Found no user object for synchronization. Please check your filter settings.')
+                return (False, msg)
+
+        def test_group_base_dn(address):
+            userdb.ldap_connect(enforce_new = True, enforce_server = address)
+            if userdb.ldap_group_base_dn_exists():
+                return (True, _('The Group Base DN could be found.'))
+            else:
+                return (False, _('The Group Base DN could not be found.'))
+
+        def test_group_count(address):
+            userdb.ldap_connect(enforce_new = True, enforce_server = address)
+            try:
+                ldap_groups = userdb.ldap_get_groups()
+            except Exception, e:
+                ldap_groups = None
+                msg = str(e)
+            if ldap_groups and len(ldap_groups) > 0:
+                return (True, _('Found %d groups for synchronization.') % len(ldap_groups))
+            else:
+                if not msg:
+                    msg = _('Found no group object for synchronization. Please check your filter settings.')
+                return (False, msg)
+
+        tests = [
+            test_connect,
+            test_user_base_dn,
+            test_user_count,
+            test_group_base_dn,
+            test_group_count,
+        ]
+
+        for address in userdb.ldap_servers():
+            html.write('<h3>%s: %s</h3>' % (_('Server'), address))
+            table.begin('test', searchable = False)
+
+            for test in tests:
+                table.row()
+                try:
+                    state, msg = test(address)
+                except Exception, e:
+                    state = False
+                    msg = _('Exception: %s') % e
+
+                if state:
+                    img = '<img src="images/icon_success.gif" alt="%s" />' % _('Success')
+                else:
+                    img = '<img src="images/icon_failed.gif" alt="%s" />' % _('Failed')
+
+                table.cell(_("State"),   img)
+                table.cell(_("Details"), msg)
+
+            table.end()
+
+        userdb.ldap_disconnect()
+
+    html.write('</td></tr></table>')
+    html.write('</div>')
+
 #.
 #   .-Global-Settings------------------------------------------------------.
 #   |          ____ _       _           _  __     __                       |
@@ -5423,6 +5586,8 @@ def mode_globalvars(phase):
 
     elif phase == "buttons":
         global_buttons()
+        if userdb.connector_enabled('ldap'):
+            html.context_button(_("LDAP Settings"), make_link([("mode", "ldap_config")]), "ldap")
         return
 
     # Get default settings of all configuration variables of interest in the domain
@@ -5435,7 +5600,7 @@ def mode_globalvars(phase):
         varname = html.var("_varname")
         action = html.var("_action")
         if varname:
-            domain, valuespec, need_restart, allow_reset = g_configvars[varname]
+            domain, valuespec, need_restart, allow_reset, in_global_settings = g_configvars[varname]
             def_value = default_values.get(varname, valuespec.canonical_value())
 
             if action == "reset" and not isinstance(valuespec, Checkbox):
@@ -5484,6 +5649,8 @@ def mode_globalvars(phase):
         forms.header(groupname, isopen=False)
 
         for domain, varname, valuespec in g_configvar_groups[groupname]:
+            if not g_configvars[varname][4]:
+                continue # do not edit via global settings
             if domain == "check_mk" and varname not in default_values:
                 if config.debug:
                     raise MKGeneralException("The configuration variable <tt>%s</tt> is unknown to "
@@ -5536,7 +5703,7 @@ def mode_edit_configvar(phase):
         return
 
     varname = html.var("varname")
-    domain, valuespec, need_restart, allow_reset = g_configvars[varname]
+    domain, valuespec, need_restart, allow_reset, in_global_settings = g_configvars[varname]
     current_settings = load_configuration_settings()
     is_on_default = varname not in current_settings
 
@@ -5610,9 +5777,10 @@ def mode_edit_configvar(phase):
     html.end_form()
 
 # domain is one of "check_mk", "multisite" or "nagios"
-def register_configvar(group, varname, valuespec, domain="check_mk", need_restart=False, allow_reset=True):
+def register_configvar(group, varname, valuespec, domain="check_mk",
+                       need_restart=False, allow_reset=True, in_global_settings=True):
     g_configvar_groups.setdefault(group, []).append((domain, varname, valuespec))
-    g_configvars[varname] = domain, valuespec, need_restart, allow_reset
+    g_configvars[varname] = domain, valuespec, need_restart, allow_reset, in_global_settings
 
 g_configvar_domains = {
     "check_mk" : {
@@ -5678,7 +5846,7 @@ def load_configuration_vars(filename, settings):
 
 def save_configuration_settings(vars):
     per_domain = {}
-    for varname, (domain, valuespec, need_restart, allow_reset) in g_configvars.items():
+    for varname, (domain, valuespec, need_restart, allow_reset, in_global_settings) in g_configvars.items():
         if varname not in vars:
             continue
         per_domain.setdefault(domain, {})[varname] = vars[varname]
@@ -5744,7 +5912,7 @@ def find_usages_of_contact_group(name):
     global_config = load_configuration_settings()
 
     # Used in default_user_profile?
-    domain, valuespec, need_restart, allow_reset = g_configvars['default_user_profile']
+    domain, valuespec, need_restart, allow_reset, in_global_settings = g_configvars['default_user_profile']
     configured = global_config.get('default_user_profile', {})
     default_value = valuespec.default_value()
     if (configured and name in configured['contactgroups']) \
@@ -5754,7 +5922,7 @@ def find_usages_of_contact_group(name):
 
     # Is the contactgroup used in mkeventd notify (if available)?
     if 'mkeventd_notify_contactgroup' in g_configvars:
-        domain, valuespec, need_restart, allow_reset = g_configvars['mkeventd_notify_contactgroup']
+        domain, valuespec, need_restart, allow_reset, in_global_settings = g_configvars['mkeventd_notify_contactgroup']
         configured = global_config.get('mkeventd_notify_contactgroup')
         default_value = valuespec.default_value()
         if (configured and name == configured) \
@@ -13662,6 +13830,7 @@ modes = {
    "snapshot"           : (["snapshots"], mode_snapshot),
    "globalvars"         : (["global"], mode_globalvars),
    "edit_configvar"     : (["global"], mode_edit_configvar),
+   "ldap_config"        : (["global"], mode_ldap_config),
    "ruleeditor"         : (["rulesets"], mode_ruleeditor),
    "rulesets"           : (["rulesets"], mode_rulesets),
    "ineffective_rules"  : (["rulesets"], mode_ineffective_rules),

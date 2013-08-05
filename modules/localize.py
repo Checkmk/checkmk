@@ -55,7 +55,6 @@ if local_locale_dir and os.path.exists(local_locale_dir + '/multisite.pot'):
 else:
     pot_file = locale_base + '/multisite.pot'
 
-
 try:
     os.makedirs(locale_base)
 except:

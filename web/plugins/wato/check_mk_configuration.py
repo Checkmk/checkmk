@@ -536,7 +536,7 @@ register_configvar(group,
                         title = _("Bind DN"),
                         help  = _("Specify the distinguished name to be used to bind to "
                                   "the LDAP directory."),
-                        size = 80,
+                        size = 63,
                     ),
                     Password(
                         title = _("Bind Password"),

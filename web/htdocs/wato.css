@@ -61,6 +61,7 @@ Boston, MA 02110-1301 USA.
     border-radius: 4px 0px 0px 0px;
 }
 .wato table.data td {
+    html.write('</div>')
     /* border-style: dashed; */
 }
 
@@ -1099,4 +1100,3 @@ table.multisite_conn_method td input {
 .wato .biruletree .node {
     margin-top: 0px;
 }
-

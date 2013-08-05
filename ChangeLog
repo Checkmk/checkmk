@@ -92,6 +92,8 @@
     * LDAP: Added filter_group option to user configuration to make the
     synchonized users filterable by group memberships in directories without
     memberof attributes
+    * LDAP: Moved configuration to dedicated page which also provides some
+      testing mechanisms for the configuration
     * Added option to enable browser scrollbar to the multisite sidebar (only
       via "sidebar_show_scrollbar = True" in multisite.mk 
     * Added option to disable automatic userdb synchronizations in multisite

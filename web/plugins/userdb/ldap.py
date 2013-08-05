@@ -99,6 +99,7 @@ class MKLDAPException(MKGeneralException):
     pass
 
 ldap_connection = None
+ldap_connection_options = None
 
 def ldap_uri(server):
     if 'use_ssl' in config.ldap_connection:
@@ -108,54 +109,81 @@ def ldap_uri(server):
 
     return uri + '%s:%d' % (server, config.ldap_connection['port'])
 
-def ldap_connect():
-    global ldap_connection, ldap_connection_options
-
-    if not "no_persistent" in config.ldap_connection and ldap_connection and config.ldap_connection == ldap_connection_options:
-        return # Use existing connections (if connection settings have not changed)
-
+def ldap_test_module():
     try:
         ldap
     except:
         raise MKLDAPException(_("The python module python-ldap seems to be missing. You need to "
                                 "install this extension to make the LDAP user connector work."))
 
+def ldap_servers():
+    servers = [ config.ldap_connection['server'] ]
+    if config.ldap_connection.get('failover_servers'):
+        servers += config.ldap_connection.get('failover_servers')
+    return servers
+
+def ldap_connect_server(server):
+    try:
+        uri = ldap_uri(server)
+        conn = ldap.ldapobject.ReconnectLDAPObject(uri)
+        conn.protocol_version = config.ldap_connection['version']
+        conn.network_timeout  = config.ldap_connection.get('connect_timeout', 2.0)
+
+        # When using the domain top level as base-dn, the subtree search stumbles with referral objects.
+        # whatever. We simply disable them here when using active directory. Hope this fixes all problems.
+        if config.ldap_connection['type'] == 'ad':
+            conn.set_option(ldap.OPT_REFERRALS, 0)
+
+        ldap_default_bind(conn)
+        return conn, None
+    except (ldap.SERVER_DOWN, ldap.TIMEOUT, ldap.LOCAL_ERROR, ldap.LDAPError), e:
+        return None, '%s: %s' % (uri, e[0].get('info', e[0].get('desc', '')))
+    except MKLDAPException, e:
+        return None, str(e)
+
+def ldap_disconnect():
+    global ldap_connection, ldap_connection_options
+    ldap_connection = None
+    ldap_connection_options = None
+
+def ldap_connect(enforce_new = False, enforce_server = None):
+    global ldap_connection, ldap_connection_options
+
+    if not enforce_new \
+       and not "no_persistent" in config.ldap_connection \
+       and ldap_connection \
+       and config.ldap_connection == ldap_connection_options:
+        return # Use existing connections (if connection settings have not changed)
+
+    ldap_test_module()
+
     # Some major config var validations
 
     if not config.ldap_connection.get('server'):
         raise MKLDAPException(_('The LDAP connector is enabled in global settings, but the '
                                 'LDAP server to connect to is not configured. Please fix this in the '
-                                '<a href="wato.py?mode=edit_configvar&varname=ldap_connection">LDAP '
+                                '<a href="wato.py?mode=ldap_config">LDAP '
                                 'connection settings</a>.'))
 
     if not config.ldap_userspec.get('dn'):
         raise MKLDAPException(_('The distinguished name of the container object, which holds '
                                 'the user objects to be authenticated, is not configured. Please '
-                                'fix this in the <a href="wato.py?mode=edit_configvar&varname=ldap_userspec">'
+                                'fix this in the <a href="wato.py?mode=ldap_config">'
                                 'LDAP User Settings</a>.'))
 
     try:
-        servers = [ config.ldap_connection['server'] ]
-        if config.ldap_connection.get('failover_servers'):
-            servers += config.ldap_connection.get('failover_servers')
-
         errors = []
+        if enforce_server:
+            servers = [ enforce_server ]
+        else:
+            servers = ldap_servers()
+
         for server in servers:
-            try:
-                uri = ldap_uri(server)
-                ldap_connection = ldap.ldapobject.ReconnectLDAPObject(uri)
-                ldap_connection.protocol_version = config.ldap_connection['version']
-                ldap_connection.network_timeout  = config.ldap_connection.get('connect_timeout', 2.0)
-
-                # When using the domain top level as base-dn, the subtree search stumbles with referral objects.
-                # whatever. We simply disable them here when using active directory. Hope this fixes all problems.
-                if config.ldap_connection['type'] == 'ad':
-                    ldap_connection.set_option(ldap.OPT_REFERRALS, 0)
-
-                ldap_default_bind()
-            except (ldap.SERVER_DOWN, ldap.TIMEOUT, ldap.LOCAL_ERROR, ldap.LDAPError), e:
-                ldap_connection = None
-                errors.append('%s: %s' % (uri, e[0].get('info', e[0].get('desc', ''))))
+            ldap_connection, error_msg = ldap_connect_server(server)
+            if ldap_connection:
+                break # got a connection!
+            else:
+                errors.append(error_msg)
 
         if ldap_connection is None:
             raise MKLDAPException(_('The LDAP connector is unable to connect to the LDAP server.\n%s') %
@@ -169,23 +197,24 @@ def ldap_connect():
         raise
 
 # Bind with the default credentials
-def ldap_default_bind():
+def ldap_default_bind(conn):
     try:
         if 'bind' in config.ldap_connection:
             ldap_bind(ldap_replace_macros(config.ldap_connection['bind'][0]),
-                      config.ldap_connection['bind'][1], catch = False)
+                      config.ldap_connection['bind'][1], catch = False, conn = conn)
         else:
-            ldap_bind('', '', catch = False) # anonymous bind
+            ldap_bind('', '', catch = False, conn = conn) # anonymous bind
     except (ldap.INVALID_CREDENTIALS, ldap.INAPPROPRIATE_AUTH):
         raise MKLDAPException(_('Unable to connect to LDAP server with the configured bind credentials. '
                                 'Please fix this in the '
-                                '<a href="wato.py?mode=edit_configvar&varname=ldap_connection">LDAP '
-                                'connection settings</a>.'))
+                                '<a href="wato.py?mode=ldap_config">LDAP connection settings</a>.'))
 
-def ldap_bind(username, password, catch = True):
+def ldap_bind(username, password, catch = True, conn = None):
+    if conn is None:
+        conn = ldap_connection
     ldap_log('LDAP_BIND %s' % username)
     try:
-        ldap_connection.simple_bind_s(username, password)
+        conn.simple_bind_s(username, password)
         ldap_log('  SUCCESS')
     except ldap.LDAPError, e:
         ldap_log('  FAILED (%s)' % e)
@@ -338,6 +367,16 @@ def ldap_user_id_attr():
 def ldap_member_attr():
     return config.ldap_groupspec.get('member', ldap_attr('member'))
 
+def ldap_user_base_dn_exists():
+    try:
+        result = ldap_search(ldap_replace_macros(config.ldap_userspec['dn']), columns = ['dn'], scope = 'base')
+    except Exception, e:
+        return False
+    if not result:
+        return False
+    else:
+        return len(result) == 1
+
 def ldap_get_user(username, no_escape = False):
     if username in g_ldap_user_cache:
         return g_ldap_user_cache[username]
@@ -393,7 +432,7 @@ def ldap_get_users(add_filter = ''):
         if not group:
             raise MKLDAPException(_('The configured ldap user filter group could not be found. '
                                     'Please check <a href="%s">your configuration</a>.') %
-                                        'wato.py?mode=edit_configvar&varname=ldap_userspec')
+                                        'wato.py?mode=ldap_config&varname=ldap_userspec')
 
         members = group[0][1].values()[0]
 
@@ -404,8 +443,6 @@ def ldap_get_users(add_filter = ''):
 
     if add_filter:
         filt = '(&%s%s)' % (filt, add_filter)
-
-    html.write(repr(filt))
 
     result = {}
     for dn, ldap_user in ldap_search(ldap_replace_macros(config.ldap_userspec['dn']),
@@ -421,6 +458,22 @@ def ldap_get_users(add_filter = ''):
         result[user_id] = ldap_user
 
     return result
+
+def ldap_group_base_dn_exists():
+    try:
+        result = ldap_search(ldap_replace_macros(config.ldap_groupspec['dn']), columns = ['dn'], scope = 'base')
+    except Exception, e:
+        return False
+    if not result:
+        return False
+    else:
+        return len(result) == 1
+
+def ldap_get_groups(add_filt = None):
+    filt = ldap_filter('groups')
+    if add_filt:
+        filt = '(&%s%s)' % (filt, add_filt)
+    return ldap_search(ldap_replace_macros(config.ldap_groupspec['dn']), filt, ['cn'])
 
 def ldap_user_groups(username, attr = 'cn'):
     # The given username might be wrong case. The ldap search is case insensitive,
@@ -443,13 +496,12 @@ def ldap_user_groups(username, attr = 'cn'):
 
     # Apply configured group ldap filter and only reply with groups
     # having the current user as member
-    filt = '(&%s(%s=%s))' % (ldap_filter('groups'), ldap_member_attr(),
-                             ldap.filter.escape_filter_chars(user_filter))
+    add_filt = '(%s=%s)' % (ldap_member_attr(), ldap.filter.escape_filter_chars(user_filter))
+
     # First get all groups
     groups_cn = []
     groups_dn = []
-    for dn, group in ldap_search(ldap_replace_macros(config.ldap_groupspec['dn']),
-                                 filt, ['cn']):
+    for dn, group in ldap_get_groups(add_filt):
         groups_cn.append(group['cn'][0])
         groups_dn.append(dn)
 
@@ -519,8 +571,8 @@ def ldap_convert_simple(user_id, ldap_user, user, user_attr, attr):
 
 def ldap_convert_mail(params, user_id, ldap_user, user):
     mail = ''
-    if ldap_user.get(ldap_attr('mail')):
-        mail = ldap_user[ldap_attr('mail')][0].lower()
+    if ldap_user.get(params.get('attr', ldap_attr('mail'))):
+        mail = ldap_user[params.get('attr', ldap_attr('mail'))][0].lower()
     if mail:
         return {'email': mail}
     else:
@@ -530,13 +582,19 @@ ldap_attribute_plugins['email'] = {
     'title': _('Email address'),
     'help':  _('Synchronizes the email of the LDAP user account into Check_MK.'),
     # Attributes which must be fetched from ldap
-    'needed_attributes': lambda params: [ ldap_attr('mail') ],
+    'needed_attributes': lambda params: [ params.get('attr', ldap_attr('mail')) ],
     # Calculating the value of the attribute based on the configuration and the values
     # gathered from ldap
     'convert': ldap_convert_mail,
     # User-Attributes to be written by this plugin and will be locked in WATO
     'lock_attributes': [ 'email' ],
-    'no_param_txt': _('Synchronize the &quot;mail&quot; attribute of LDAP users into Check_MK.'),
+    'parameters': [
+        ("attr", TextAscii(
+            title = _("LDAP attribute to sync"),
+            help  = _("The LDAP attribute containing the mail address of the user."),
+            default_value = lambda: ldap_attr('mail'),
+        )),
+    ],
 }
 
 ldap_attribute_plugins['alias'] = {
@@ -693,7 +751,7 @@ def ldap_list_roles_with_group_dn():
             title = role['alias'] + ' - ' + _("Specify the Group DN"),
             help  = _("Distinguished Name of the LDAP group to add users this role. This group must "
                       "be defined within the scope of the "
-                      "<a href=\"wato.py?mode=edit_configvar&varname=ldap_groupspec\">LDAP Group Settings</a>."),
+                      "<a href=\"wato.py?mode=ldap_config&varname=ldap_groupspec\">LDAP Group Settings</a>."),
             size  = 80,
             enforce_suffix = ldap_replace_macros(config.ldap_groupspec.get('dn', '')),
         )))
@@ -739,7 +797,7 @@ def ldap_login(username, password):
     except:
         result = False
 
-    ldap_default_bind()
+    ldap_default_bind(ldap_connection)
     return result
 
 def ldap_sync(add_to_changelog, only_username):

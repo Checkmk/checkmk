@@ -562,6 +562,7 @@ register_configvar(group,
         optional_keys = ['no_persistent', 'use_ssl', 'bind', 'page_size', 'response_timeout', 'failover_servers'],
     ),
     domain = "multisite",
+    in_global_settings = False,
 )
 
 register_configvar(group,
@@ -626,6 +627,7 @@ register_configvar(group,
         optional_keys = ['scope', 'filter', 'filter_group', 'user_id', 'lower_user_ids'],
     ),
     domain = "multisite",
+    in_global_settings = False,
 )
 
 register_configvar(group,
@@ -670,6 +672,7 @@ register_configvar(group,
         optional_keys = ['scope', 'filter', 'member'],
     ),
     domain = "multisite",
+    in_global_settings = False,
 )
 
 register_configvar(group,
@@ -684,6 +687,7 @@ register_configvar(group,
         elements = userdb.ldap_attribute_plugins_elements,
     ),
     domain = "multisite",
+    in_global_settings = False,
 )
 
 register_configvar(group,
@@ -697,6 +701,7 @@ register_configvar(group,
         default_value = 300,
     ),
     domain = "multisite",
+    in_global_settings = False,
 )
 
 register_configvar(group,
@@ -710,7 +715,9 @@ register_configvar(group,
           label = _("Activate logging of LDAP transactions into a logfile"),
           help = _("If this option is used and set to a filename, Check_MK will create a logfile "
                    "containing details about connecting to LDAP and the single transactions.")),
-    domain = "multisite")
+    domain = "multisite",
+    in_global_settings = False,
+)
 
 register_configvar(group,
     "lock_on_logon_failures",

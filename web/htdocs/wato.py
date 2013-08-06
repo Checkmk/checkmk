@@ -1100,11 +1100,11 @@ def check_folder_permissions(folder, how, exception=True, user = None, users = N
         if c in cgs:
             return True
 
-    reason = _("Sorry, you have no permission on the folder '<b>%s</b>'. " % folder["title"])
+    reason = _("Sorry, you have no permissions to access the folder <b>%s</b>. ") % folder["title"]
     if not cgs:
         reason += _("The folder has no contact groups assigned to.")
     else:
-        reason += _("The folder's contact groups are <b>%s</b>. " % ", ".join(cgs))
+        reason += _("The folder's contact groups are <b>%s</b>. ") % ", ".join(cgs)
         if user_cgs:
             reason += _("Your contact groups are <b>%s</b>.") %  ", ".join(user_cgs)
         else:
@@ -7087,7 +7087,7 @@ def mode_edit_site(phase):
                  "or the classical Nagios GUI when a link to such applications points to a host or "
                  "service on that site. You can either use an absolute URL prefix like <tt>http://some.host/mysite/</tt> "
                  "or a relative URL like <tt>/mysite/</tt>. When using relative prefixes you needed a mod_proxy "
-                 "configuration in your local system apache that proxies such URLs ot the according remote site. "
+                 "configuration in your local system apache that proxies such URLs to the according remote site. "
                  "Please refer to the <a target=_blank href='%s'>online documentation</a> for details. "
                  "The prefix should end with a slash. Omit the <tt>/pnp4nagios/</tt> from the prefix.") % docu_url)
 

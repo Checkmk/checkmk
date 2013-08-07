@@ -131,7 +131,8 @@ register_rule(group + '/' + subgroup_applications,
     itemtype = 'item',
     itemname = 'Logfile',
     itemhelp = _("Put the item names of the logfiles here. For example \"System$\" "
-                 "to select the service \"LOG System\"."),
+                 "to select the service \"LOG System\". You can use regular "
+                 "expressions which must match the beginning of the logfile name."),
     match = 'all',
 )
 
@@ -3244,8 +3245,8 @@ register_check_parameters(subgroup_applications,
                  "console can be configured for each host in a separate rule."),
         elements = [
             FixedValue(
-                None,
-                totext = "Messages are handled by logwatch.",
+                "",
+                totext = _("Messages are handled by logwatch."),
                 title = _("No forwarding"),
             ),
             Dictionary(
@@ -3256,7 +3257,7 @@ register_check_parameters(subgroup_applications,
                             title = _('Restrict Logfiles (Prefix matching regular expressions)'),
                             help  = _("Put the item names of the logfiles here. For example \"System$\" "
                                       "to select the service \"LOG System\". You can use regular expressions "
-                                      "here which must match the beginning of the logfile name."),
+                                      "which must match the beginning of the logfile name."),
                         ),
                     ),
                     ('method', Alternative(
@@ -3267,7 +3268,7 @@ register_check_parameters(subgroup_applications,
                                 elements = [
                                     FixedValue(
                                         "",
-                                        totext = "Directly forward to event console",
+                                        totext = _("Directly forward to event console"),
                                         title = _("Send events to local event console in same OMD site"),
                                     ),
                                     TextAscii(
@@ -3277,7 +3278,7 @@ register_check_parameters(subgroup_applications,
 
                                     FixedValue(
                                         "spool:",
-                                        totext = "Spool to event console",
+                                        totext = _("Spool to event console"),
                                         title = _("Spooling: Send events to local event console in same OMD site"),
                                     ),
                                     Transform(

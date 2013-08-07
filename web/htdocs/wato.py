@@ -11066,7 +11066,7 @@ def mode_edit_rule(phase, new = False):
     # Host tags
     forms.section(_("Host tags"))
     render_condition_editor(tag_specs)
-    html.help(_("The rule will only be applied to hosts fullfulling all of "
+    html.help(_("The rule will only be applied to hosts fullfilling all of "
                  "of the host tag conditions listed here, even if they appear "
                  "in the list of explicit host names."))
 

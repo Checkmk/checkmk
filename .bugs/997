@@ -1,0 +1,8 @@
+Title: OptionalDropdownChoice and Rule Items
+Component: wato
+State: open
+Date: 2013-08-07 16:47:10
+Targetversion: future
+Class: bug
+
+When using OptionalDropdownChoices otheritems are not displayed

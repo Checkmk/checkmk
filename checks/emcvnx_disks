@@ -123,69 +123,69 @@ def parse_emcvnx_disks(info):
         elif len(line) > 2 and line[0] == "Hard" and line[2] == "Errors:":
             error_count = saveint(line[-1])
             enc[line[0] + " " + line[1] + " Errors"] = error_count
-        elif len(line) > 1 and line[0] == "Kbytes" and line[1] in ("Read:", "Written:"):
+        elif len(line) > 1 and line[0] == "Kbytes" and line[1] in ["Read:", "Written:"]:
             io_kbytes = saveint(line[-1])
             enc[line[0] + " " + line[1].replace(':', '')] = io_kbytes
     return parsed
 
 
 def inventory_emcvnx_disks(info):
-    parsed = parse_emcvnx_disks(info)
-    inventory = []
-    for disk in parsed:
-        inventory.append( (disk, None) )
-    return inventory
+    return [ (disk, None) for disk in parse_emcvnx_disks(info).keys() ]
 
 
 def check_emcvnx_disks(item, _no_params, info):
-    diskstate_errorstring=""
-    write_errors_errorstring=""
-    read_errors_errorstring=""
     now = time.time()
     perfdata = []
-    try:
-        diskstate = parse_emcvnx_disks(info)[item]["state"]
-        if diskstate in ("Unbound", "Hot Spare Ready", "Enabled", "Ready"):
-            nagstate = 0
-        elif diskstate in ("Rebuilding"):
-            nagstate = 1
-            diskstate_errorstring="(!)"
-        else:
-            nagstate = 2
-            diskstate_errorstring="(!!)"
-
-        # on error state all other fields besides "State:" are missing, omitting...
-        if nagstate in (0, 1):
-            read_errors = parse_emcvnx_disks(info)[item]["Hard Read Errors"]
-            if read_errors > 0:
-                nagstate = 2
-                read_errors_errorstring="(!!)"
-
-            write_errors = parse_emcvnx_disks(info)[item]["Hard Write Errors"]
-            if write_errors > 0:
-                nagstate = 2
-                write_errors_errorstring="(!!)"
-
-            read_bytes = parse_emcvnx_disks(info)[item]["Kbytes Read"] * 1024
-            write_bytes = parse_emcvnx_disks(info)[item]["Kbytes Written"] * 1024
-            countername_r = "emcvnx_disks.read_bytes.%s" % item.replace(" ", "_")
-            countername_w = "emcvnx_disks.write_bytes.%s" % item.replace(" ", "_")
-            timedif, read_bytes_per_sec = get_counter(countername_r, now, read_bytes)
-            timedif, write_bytes_per_sec = get_counter(countername_w, now, write_bytes)
-            perfdata.append(("read", read_bytes_per_sec))
-            perfdata.append(("write", write_bytes_per_sec))
-
-            return nagstate, "Enclosure %s is %s%s, Hard Read Errors: %s%s, Hard Write Errors: %s%s, Read: %s/s, Write: %s/s" % (item, diskstate, diskstate_errorstring, read_errors, read_errors_errorstring, write_errors, write_errors_errorstring, get_bytes_human_readable(read_bytes_per_sec), get_bytes_human_readable(write_bytes_per_sec)), perfdata
-        else:
-            return nagstate, "Enclosure %s is %s%s" % (item, diskstate, diskstate_errorstring)
-
-    except KeyError:
+    parsed = parse_emcvnx_disks(info)
+    if item not in parsed:
         return 3, "Enclosure %s not found in agent output" % item
+
+    diskstate = parsed[item]["state"]
+    message = "Enclosure %s is %s" % (item, diskstate)
+    if diskstate in ["Unbound", "Hot Spare Ready", "Enabled", "Ready"]:
+        nagstate = 0
+    elif diskstate == "Rebuilding":
+        nagstate = 1
+        message += " (!)"
+    else:
+        nagstate = 2
+        message += " (!!)"
+        # on error state all other fields besides "State:" are missing, omitting...
+        return nagstate, message
+
+    read_errors = parsed[item]["Hard Read Errors"]
+    message += ", Hard Read Errors: %s" % read_errors
+    if read_errors > 0:
+        nagstate = 2
+        message += " (!!)"
+
+    write_errors = parsed[item]["Hard Write Errors"]
+    message += ", Hard Write Errors: %s" % write_errors
+    if write_errors > 0:
+        nagstate = 2
+        message += " (!!)"
+
+    read_bytes = parsed[item]["Kbytes Read"] * 1024
+    write_bytes = parsed[item]["Kbytes Written"] * 1024
+    countername_r = "emcvnx_disks.read_bytes.%s" % item.replace(" ", "_")
+    countername_w = "emcvnx_disks.write_bytes.%s" % item.replace(" ", "_")
+    try:
+        timedif, read_bytes_per_sec = get_counter(countername_r, now, read_bytes)
+        message += ", Read: %s/s" % get_bytes_human_readable(read_bytes_per_sec)
+        perfdata.append(("read", read_bytes_per_sec))
+
+        timedif, write_bytes_per_sec = get_counter(countername_w, now, write_bytes)
+        message += ", Write: %s/s" % get_bytes_human_readable(write_bytes_per_sec)
+        perfdata.append(("write", write_bytes_per_sec))
+    except MKCounterWrapped:
+        pass
+
+    return nagstate, message, perfdata
 
 
 check_info['emcvnx_disks'] = {
     "inventory_function"      : inventory_emcvnx_disks,
     "check_function"          : check_emcvnx_disks,
     "service_description"     : "Enclosure %s", 
-   'has_perfdata'             : True,
+    "has_perfdata"            : True,
 }

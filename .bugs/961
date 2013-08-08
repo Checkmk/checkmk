@@ -1,0 +1,60 @@
+Title: check_http: allow regex to span newlines
+Component: checks
+State: open
+Date: 2013-08-08 11:43:24
+Targetversion: future
+Class: feature
+
+kam per feedback@ rein, Orginal-Mail ist im feedback/gitbug eroeffnet folder noch vorhanden
+
+
+Date: Thu, 25 Jul 2013 18:25:38 +0200
+Message-ID: <CAPyBW-xa=wLVp4CfyBgUY6j6GKi-0JNG=kif3GBc3qnYv2sixA@mail.gmail.com>
+Subject: [Patch]: Erweiterung des aktiven HTTP Checks mit "Allow regex to span newlines"
+From: Marcel Schulte <schulte.marcel@gmail.com>
+To: feedback@check-mk.org
+
+Hallo ihr MK'ler,
+
+ich habe den Check um die genante Funktion erweitert. Dazu findet ihr
+im Anhang die Patches fuer folgende Dateien:
+
+* "checks/check_http"
+* "web/plugins/wato/active_checks.py"
+
+Waere echt toll, wenn ihr die einbauen koenntet 
+
+Ach ja, ich habe gegen 1.2.2p2 gepatcht - vielleicht schaffen es die
+Patches ja noch ins naechste Release der 1.2.2?
+
+Schoene Gruesse aus'm Sauerland,
+Marcel
+
+
+check_http.patch
+
+--- check_http_ori	2013-07-25 16:43:58.415663477 +0200
++++ check_http	2013-07-25 16:46:45.401102140 +0200
+@@ -96,6 +96,8 @@
+         args += ' %s' % quote_shell_string(settings['expect_regex'][0])
+         if settings['expect_regex'][2]:
+             args += ' --invert-regex'
++        if settings['expect_regex'][3]:
++            args += ' -l'
+ 
+     if "post_data" in settings:
+         data, content_type = settings["post_data"]
+
+
+active_checks.py.patch
+
+--- active_checks.py_ori	2013-07-25 15:11:57.945206130 +0200
++++ active_checks.py	2013-07-25 18:12:30.297378001 +0200
+@@ -397,6 +397,7 @@
+                                       RegExp(label = _("Regular expression: ")),
+                                       Checkbox(label = _("Case insensitive")),
+                                       Checkbox(label = _("return CRITICAL if found, OK if not")),
++                                      Checkbox(label = _("Allow regex to span newlines")),
+                                   ])
+                             ),
+                             ( "post_data",

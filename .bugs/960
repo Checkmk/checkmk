@@ -1,0 +1,45 @@
+Title: Security issue if agent_vsphere exits with RC != 0
+Component: checks
+State: open
+Date: 2013-08-08 11:37:26
+Targetversion: 1.2.3
+Class: bug
+
+kam an feedback@ rein, orginal-Mail im folder feedback/gitbug eroffnet noch vorhanden
+
+Date: Fri, 26 Jul 2013 12:21:13 +0200 (CEST)
+From: Udo Woehler <uw@bsw-com.de>
+To: "feedback " <feedback@check-mk.org>
+Message-ID: <11092989.648.1374834057793.JavaMail.uwoehler@LAPTOP-UW>
+In-Reply-To: <26615552.645.1374833862296.JavaMail.uwoehler@LAPTOP-UW>
+Subject: Noch ein kleines Security Problem
+
+Hallo Herr Kettner,
+
+mit dem vSphere Agent ist mir noch ein kleines Security Problem aufgefallen.
+Ab und zu läuft der Agent bei uns in einen Fehler, der zu einem Critical des Check_mk führt.
+Dieser meldet dann:
+CRIT - Program '/omd/sites/bsw/share/check_mk/agents/special/agent_vsphere -u '<username>' -s '<password>' -i hostsystem,virtualmachine,datastore,counters '<ip>'' exited with code 1, execution time 3.8 sec
+
+Da sollte man zumindest das Passwort ausfiltern 
+
+Gruß
+
+Udo Wöhler
+
+----------------------------------------------
+BITTE BEACHTEN SIE UNSERE NEUE BÜROANSCHRIFT
+
+Udo Wöhler
+CCIE #4919 (R&S, Security)
+
+BSW-COM GmbH
+Heisenbergstraße 26-40
+D-50169 Kerpen
+
+Mobil: +49 178 93044 54
+Fax: +49 2237 638302 89
+EMail: uw@bsw-com.de
+
+Sitz der Gesellschaft ist Viersen, HRB 13785 AG Mönchengladbach
+Geschäftsführer: Mario Buschbell, Frank Schlesinger, Hasso-Ulrich Döring

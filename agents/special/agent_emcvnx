@@ -83,16 +83,16 @@ except getopt.GetoptError, err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
-opt_debug         = False
-opt_timeout       = 60
+opt_debug      = False
+opt_timeout    = 60
 
-g_profile         = None
-g_profile_path    = "emcvnx_profile.out"
+g_profile      = None
+g_profile_path = "emcvnx_profile.out"
 
-host_address = None
-user         = None
-password     = None
-mortypes     = [ 'all' ]
+host_address   = None
+user           = None
+password       = None
+mortypes       = [ 'all' ]
 
 naviseccli_options = { 
     "disks"      : {"cmd_option" : "-disk",  "active" : False},
@@ -142,8 +142,6 @@ for module in naviseccli_options.keys():
             naviseccli_options[module]["active"] = True
     except ValueError:
         pass
-
-    #print naviseccli_options[module]
 
 
 #############################################################################

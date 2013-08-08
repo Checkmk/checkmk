@@ -131,7 +131,8 @@ register_rule(group + '/' + subgroup_applications,
     itemtype = 'item',
     itemname = 'Logfile',
     itemhelp = _("Put the item names of the logfiles here. For example \"System$\" "
-                 "to select the service \"LOG System\"."),
+                 "to select the service \"LOG System\". You can use regular "
+                 "expressions which must match the beginning of the logfile name."),
     match = 'all',
 )
 
@@ -1232,19 +1233,16 @@ register_check_parameters(
 register_check_parameters(
     subgroup_applications,
     "msx_queues",
-    _("MS Exchange message queues"),
+    _("MS Exchange Message Queues"),
     Tuple(
-        help = _("The length of the queues"),
+        help = _("This rule applies to the number of E-Mails in the various Exchange Message Queues"),
         elements = [
-            Integer(title = _("Warning at queue length")),
-            Integer(title = _("Critical at queue length"))
+            Integer(title = _("Warning at"), unit = _("E-Mails")),
+            Integer(title = _("Critical at"), unit = _("E-Mails"))
         ]),
         OptionalDropdownChoice(
             title = _("Explicit Queue Names"),
-            help = _("You can enter a number of explicit queues names that "
-                     "rule should or should not apply here. Builtin queues:<br>"
-                     "Active Remote Delivery<br>Active Mailbox Delivery<br>"
-                     "Retry Remote Delivery<br>Poison Queue Length<br>"),
+            help = _("Select queue names that the rule should apply"),
            choices = [
               ( "Active Remote Delivery",  _("Active Remote Delivery") ),
               ( "Retry Remote Delivery",   _("Retry Remote Delivery") ),
@@ -1861,15 +1859,15 @@ register_check_parameters(
                         Tuple(
                             title = _("Percentage free space"),
                             elements = [
-                                Percentage(title = _("Warning below"), label = _("free")),
-                                Percentage(title = _("Critical below"), label = _("free")),
+                                Percentage(title = _("Warning if below"), unit = _("% free")),
+                                Percentage(title = _("Critical if below"), unit = _("% free")),
                             ]
                         ),
                         Tuple(
                             title = _("Absolute free space"),
                             elements = [
-                                 Integer(title = _("Warning lower than"), unit = _("MB")),
-                                 Integer(title = _("Critical lower than"), unit = _("MB")),
+                                 Integer(title = _("Warning if below"), unit = _("MB")),
+                                 Integer(title = _("Critical if below"), unit = _("MB")),
                             ]
                         ),
                         ListOf(
@@ -1883,15 +1881,15 @@ register_check_parameters(
                                             Tuple(
                                                 title = _("Percentage free space"),
                                                 elements = [
-                                                    Percentage(title = _("Warning below"), label = _("free")),
-                                                    Percentage(title = _("Critical below"), label = _("free")),
+                                                    Percentage(title = _("Warning if below"), unit = _("% free")),
+                                                    Percentage(title = _("Critical if below"), unit = _("% free")),
                                                 ]
                                             ),
                                             Tuple(
                                                 title = _("Absolute free space"),
                                                 elements = [
-                                                     Integer(title = _("Warning lower than"), unit = _("MB")),
-                                                     Integer(title = _("Critical lower than"), unit = _("MB")),
+                                                     Integer(title = _("Warning if below"), unit = _("MB")),
+                                                     Integer(title = _("Critical if below"), unit = _("MB")),
                                                 ]
                                             ),
                                         ]
@@ -1920,8 +1918,8 @@ register_check_parameters(
                   help = _("The tablespace levels will never fall below these values, when using "
                            "the magic factor and the tablespace is very small."),
                   elements = [
-                      Percentage(title = _("Warning at"),  label = _("usage"), allow_int = True),
-                      Percentage(title = _("Critical at"), label = _("usage"), allow_int = True)])),
+                      Percentage(title = _("Warning at"),  unit = _("% usage"), allow_int = True),
+                      Percentage(title = _("Critical at"), unit = _("% usage"), allow_int = True)])),
             ( "autoextend",
                 Checkbox(
                   title = _("Autoextend"),
@@ -2479,7 +2477,7 @@ register_check_parameters(
     "mailqueue_length",
     _("Number of mails in outgoing mail queue"),
     Tuple(
-          help = _("These levels are applied to the number of Email that are "
+          help = _("This rule is applied to the number of E-Mails that are "
                    "currently in the outgoing mail queue."),
           elements = [
               Integer(title = _("Warning at"), unit = _("mails"), default_value = 10),
@@ -2983,22 +2981,22 @@ register_check_parameters(
                  "connections to a JVM application on the servlet level."),
         elements = [
             Integer(
-                title = _("Warning low at"),
+                title = _("Warning if below"),
                 unit = _("sessions"),
                 default_value = -1,
             ),
             Integer(
-                title = _("Critical low at"),
+                title = _("Critical if below"),
                 unit = _("sessions"),
                 default_value = -1,
             ),
             Integer(
-                title = _("Warning high at"),
+                title = _("Warning if above"),
                 unit = _("sessions"),
                 default_value = 800,
             ),
             Integer(
-                title = _("Critical high at"),
+                title = _("Critical if above"),
                 unit = _("sessions"),
                 default_value = 1000,
             ),
@@ -3021,23 +3019,23 @@ register_check_parameters(
                  "of incoming requests to a JVM application server"),
         elements = [
             Integer(
-                title = _("Warning low at"),
-                unit = _("requests"),
+                title = _("Warning if below"),
+                unit = _("requests/sec"),
                 default_value = -1,
             ),
             Integer(
-                title = _("Critical low at"),
-                unit = _("requests"),
+                title = _("Critical if below"),
+                unit = _("requests/sec"),
                 default_value = -1,
             ),
             Integer(
-                title = _("Warning high at"),
-                unit = _("requests"),
+                title = _("Warning if above"),
+                unit = _("requests/sec"),
                 default_value = 800,
             ),
             Integer(
-                title = _("Critical high at"),
-                unit = _("requests"),
+                title = _("Critical if above"),
+                unit = _("requests/sec"),
                 default_value = 1000,
             ),
         ]
@@ -3053,19 +3051,21 @@ register_check_parameters(
 register_check_parameters(
    subgroup_applications,
     "jvm_queue",
-    _("JVM queue count"),
+    _("JVM Execute Queue Count"),
     Tuple(
         help = _("The BEA application servers have 'Execute Queues' "
-                 "in which requests are processed. This rule allow to set "
+                 "in which requests are processed. This rule allows to set "
                  "warn and crit levels for the number of requests that are "
                  "being queued for processing."),
         elements = [
             Integer(
-                title = _("Queue warning at"),
+                title = _("Queue warning above"),
+                unit = _("requests"),
                 default_value = 20,
             ),
             Integer(
-                title = _("Queue critical at"),
+                title = _("Queue critical above"),
+                unit = _("requests"),
                 default_value = 50,
             ),
         ]
@@ -3156,9 +3156,9 @@ register_check_parameters(
 register_check_parameters(
     subgroup_applications,
     "sym_brightmail_queues",
-    "Symantec brightmail queues",
+    "Symantec Brightmail Queues",
     Dictionary(
-        help = _("This check is used to monitor successful email delivery through"
+        help = _("This check is used to monitor successful email delivery through "
                  "Symantec Brightmail Scanner appliances."),
         elements = [
             ("connections",
@@ -3244,8 +3244,8 @@ register_check_parameters(subgroup_applications,
                  "console can be configured for each host in a separate rule."),
         elements = [
             FixedValue(
-                None,
-                totext = "Messages are handled by logwatch.",
+                "",
+                totext = _("Messages are handled by logwatch."),
                 title = _("No forwarding"),
             ),
             Dictionary(
@@ -3256,7 +3256,7 @@ register_check_parameters(subgroup_applications,
                             title = _('Restrict Logfiles (Prefix matching regular expressions)'),
                             help  = _("Put the item names of the logfiles here. For example \"System$\" "
                                       "to select the service \"LOG System\". You can use regular expressions "
-                                      "here which must match the beginning of the logfile name."),
+                                      "which must match the beginning of the logfile name."),
                         ),
                     ),
                     ('method', Alternative(
@@ -3267,7 +3267,7 @@ register_check_parameters(subgroup_applications,
                                 elements = [
                                     FixedValue(
                                         "",
-                                        totext = "Directly forward to event console",
+                                        totext = _("Directly forward to event console"),
                                         title = _("Send events to local event console in same OMD site"),
                                     ),
                                     TextAscii(
@@ -3277,7 +3277,7 @@ register_check_parameters(subgroup_applications,
 
                                     FixedValue(
                                         "spool:",
-                                        totext = "Spool to event console",
+                                        totext = _("Spool to event console"),
                                         title = _("Spooling: Send events to local event console in same OMD site"),
                                     ),
                                     Transform(

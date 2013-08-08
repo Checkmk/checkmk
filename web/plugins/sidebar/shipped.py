@@ -263,7 +263,7 @@ sidebar_snapins["summary_hosts"] = {
 
 sidebar_snapins["problem_hosts"] = {
     "title" : _("Problem hosts"),
-    "description" : _("A summary state of all hosts that have problem, with links to problems of those hosts"),
+    "description" : _("A summary state of all hosts that have a problem, with links to problems of those hosts"),
     "render" : lambda: render_hosts("problems"),
     "allowed" : [ "user", "admin", "guest" ],
     "refresh" : True,

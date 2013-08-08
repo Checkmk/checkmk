@@ -1100,11 +1100,11 @@ def check_folder_permissions(folder, how, exception=True, user = None, users = N
         if c in cgs:
             return True
 
-    reason = _("Sorry, you have no permission on the folder '<b>%s</b>'. " % folder["title"])
+    reason = _("Sorry, you have no permissions to access the folder <b>%s</b>. ") % folder["title"]
     if not cgs:
         reason += _("The folder has no contact groups assigned to.")
     else:
-        reason += _("The folder's contact groups are <b>%s</b>. " % ", ".join(cgs))
+        reason += _("The folder's contact groups are <b>%s</b>. ") % ", ".join(cgs)
         if user_cgs:
             reason += _("Your contact groups are <b>%s</b>.") %  ", ".join(user_cgs)
         else:
@@ -7087,7 +7087,7 @@ def mode_edit_site(phase):
                  "or the classical Nagios GUI when a link to such applications points to a host or "
                  "service on that site. You can either use an absolute URL prefix like <tt>http://some.host/mysite/</tt> "
                  "or a relative URL like <tt>/mysite/</tt>. When using relative prefixes you needed a mod_proxy "
-                 "configuration in your local system apache that proxies such URLs ot the according remote site. "
+                 "configuration in your local system apache that proxies such URLs to the according remote site. "
                  "Please refer to the <a target=_blank href='%s'>online documentation</a> for details. "
                  "The prefix should end with a slash. Omit the <tt>/pnp4nagios/</tt> from the prefix.") % docu_url)
 
@@ -11066,7 +11066,7 @@ def mode_edit_rule(phase, new = False):
     # Host tags
     forms.section(_("Host tags"))
     render_condition_editor(tag_specs)
-    html.help(_("The rule will only be applied to hosts fullfulling all of "
+    html.help(_("The rule will only be applied to hosts fullfilling all of "
                  "of the host tag conditions listed here, even if they appear "
                  "in the list of explicit host names."))
 
@@ -11088,7 +11088,7 @@ def mode_edit_rule(phase, new = False):
 
     html.checkbox("negate_hosts", negate_hosts, label =
                  _("<b>Negate:</b> make rule apply for <b>all but</b> the above hosts"))
-    html.write("</div>")
+    html.write("</div><br>")
     html.help(_("You can enter a number of explicit host names that rule should or should "
                  "not apply to here. Leave this option disabled if you want the rule to "
                  "apply for all hosts specified by the given tags."))
@@ -11110,8 +11110,8 @@ def mode_edit_rule(phase, new = False):
             if rulespec["itemhelp"]:
                 html.help(rulespec["itemhelp"])
             else:
-                html.help(_("You can make the rule apply only on certain services of the "
-                             "specified hosts. Do this by specifying explicit items to mach "
+                html.help(_("You can make the rule apply only to certain services of the "
+                             "specified hosts. Do this by specifying explicit items to match "
                              "here. <b>Note:</b> the match is done on the <u>beginning</u> "
                              "of the item in question. Regular expressions are interpreted, "
                              "so appending a <tt>$</tt> will force an exact match."))
@@ -11137,6 +11137,7 @@ def mode_edit_rule(phase, new = False):
                     orientation = "horizontal",
                     valuespec = TextAscii(size = 30)).render_input("itemlist", item_list)
 
+                html.write("<br><br>")
                 html.help(_("The entries here are regular expressions to match the beginning. "
                              "Add a <tt>$</tt> for an exact match. An arbitrary substring is matched "
                              "with <tt>.*</tt><br>Please note that on windows systems any backslashes need to be escaped."
@@ -11144,7 +11145,7 @@ def mode_edit_rule(phase, new = False):
                 html.write("</div>")
 
     # Value
-    forms.header(_("Value"))
+    forms.header(_("Patterns"))
     if valuespec:
         value = rule[0]
         forms.section()
@@ -11470,7 +11471,7 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec, 
             itemtype = "item"
             itemname = itemspec.title()
             itemhelp = itemspec.help()
-            if isinstance(itemspec, DropdownChoice):
+            if isinstance(itemspec, DropdownChoice) or isinstance(itemspec, OptionalDropdownChoice):
                 itemenum = itemspec._choices
         else:
             itemtype = None

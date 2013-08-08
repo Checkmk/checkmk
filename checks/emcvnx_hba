@@ -94,32 +94,31 @@ def parse_emcvnx_hba(info):
 
 
 def inventory_emcvnx_hba(info):
-    parsed = parse_emcvnx_hba(info)
-    inventory = []
-    for hba in parsed:
-        inventory.append( (hba, None) )
-    return inventory
+    return [ (hba, None) for hba in parse_emcvnx_hba(info).keys() ]
 
 
 def check_emcvnx_hba(item, _no_params, info):
     now = time.time()
     perfdata = []
+    parsed = parse_emcvnx_hba(info)
+    if item not in parsed:
+        return 3, "HBA %s not found in agent output" % item
+
+    read_blocks = parsed[item]["Blocks Read"]
+    write_blocks = parsed[item]["Blocks Written"]
+    countername_r = "emcvnx_hba.read_blocks.%s" % item.replace(" ", "_")
+    countername_w = "emcvnx_hba.write_blocks.%s" % item.replace(" ", "_")
     try:
-        read_blocks = parse_emcvnx_hba(info)[item]["Blocks Read"]
-        write_blocks = parse_emcvnx_hba(info)[item]["Blocks Written"]
-        countername_r = "emcvnx_hba.read_blocks.%s" % item.replace(" ", "_")
-        countername_w = "emcvnx_hba.write_blocks.%s" % item.replace(" ", "_")
         timedif, read_blocks_per_sec = get_counter(countername_r, now, read_blocks)
         timedif, write_blocks_per_sec = get_counter(countername_w, now, write_blocks)
-	read_blocks_per_sec = saveint(read_blocks_per_sec)
-	write_blocks_per_sec = saveint(write_blocks_per_sec)
+        read_blocks_per_sec = saveint(read_blocks_per_sec)
+        write_blocks_per_sec = saveint(write_blocks_per_sec)
         perfdata.append(("read_blocks", read_blocks_per_sec))
         perfdata.append(("write_blocks", write_blocks_per_sec))
 
         return 0, "Read: %s Blocks/s, Write: %s Blocks/s" % (read_blocks_per_sec, write_blocks_per_sec), perfdata
-
-    except KeyError:
-        return 3, "HBA %s not found in agent output" % item
+    except MKCounterWrapped:
+        return 0, "Counter wrapped. Next check contains data again.", perfdata
 
 
 check_info['emcvnx_hba'] = {

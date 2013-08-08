@@ -773,6 +773,18 @@ register_configvar(group,
     domain = "multisite",
 )
 
+register_configvar(group,
+    "save_user_access_times",
+    Checkbox(
+        title = _("Store access times of users"),
+        label = _("Save the time of the latest user activity"),
+        help = _("When enabled, the time of the last access is stored for each user. The last "
+                 "activity is shown on the users page."),
+        default_value = True
+    ),
+    domain = "multisite"
+)
+
 #   .----------------------------------------------------------------------.
 #   |                   _                                      _           |
 #   |     ___ _ __ ___ | | __   ___  _ __  _ __ ___   ___   __| | ___      |

@@ -569,7 +569,7 @@ multisite_painters["svc_check_type"] = {
 
 def paint_nagiosflag(row, field, bold_if_nonzero):
     value = row[field]
-    yesno = {True:"yes", False:"no"}[value != 0]
+    yesno = {True: _("yes"), False: _("no")}[value != 0]
     if (value != 0) == bold_if_nonzero:
         return "badflag", yesno
     else:
@@ -765,6 +765,27 @@ multisite_painters["svc_custom_notes"] = {
     "short"   : _("Notes"),
     "columns" : [ "host_name", "host_address", "service_description", "service_plugin_output" ],
     "paint"   : paint_custom_notes,
+}
+
+multisite_painters["svc_staleness"] = {
+    "title"   : _("Service staleness value"),
+    "short"   : _("Staleness"),
+    "columns" : ["service_staleness"],
+    "paint"   : lambda row: ('', '%0.2f' % row.get('service_staleness', 0)),
+}
+
+def paint_is_stale(row):
+    if is_stale(row):
+        return "badflag", _('yes')
+    else:
+        return "goodflag", _('no')
+
+multisite_painters["svc_is_stale"] = {
+    "title"   : _("Service is stale"),
+    "short"   : _("Stale"),
+    "columns" : ["service_staleness"],
+    "paint"   : paint_is_stale,
+    "sorter"  : 'svc_staleness',
 }
 
 #   _   _           _
@@ -1195,6 +1216,20 @@ multisite_painters["host_acknowledged"] = {
     "paint"   : lambda row: paint_nagiosflag(row, "host_acknowledged", False),
 }
 
+multisite_painters["host_staleness"] = {
+    "title"   : _("Host staleness value"),
+    "short"   : _("Staleness"),
+    "columns" : ["host_staleness"],
+    "paint"   : lambda row: ('', '%0.2f' % row.get('host_staleness', 0)),
+}
+
+multisite_painters["host_is_stale"] = {
+    "title"   : _("Host is stale"),
+    "short"   : _("Stale"),
+    "columns" : ["host_staleness"],
+    "paint"   : paint_is_stale,
+    "sorter"  : 'svc_staleness',
+}
 
 #    _   _           _
 #   | | | | ___  ___| |_ __ _ _ __ ___  _   _ _ __  ___

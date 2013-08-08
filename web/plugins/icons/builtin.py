@@ -432,6 +432,28 @@ multisite_icons.append({
     'paint':           paint_flapping,
 })
 
+#   .--Staleness-----------------------------------------------------------.
+#   |              ____  _        _                                        |
+#   |             / ___|| |_ __ _| | ___ _ __   ___  ___ ___               |
+#   |             \___ \| __/ _` | |/ _ \ '_ \ / _ \/ __/ __|              |
+#   |              ___) | || (_| | |  __/ | | |  __/\__ \__ \              |
+#   |             |____/ \__\__,_|_|\___|_| |_|\___||___/___/              |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+def paint_is_stale(what, row, tags, custom_vars):
+    if is_stale(row):
+        if what == "host":
+            title = _("This host is stale")
+        else:
+            title = _("This service is stale")
+        return '<img class=icon title="%s" src="images/icon_stale.png">' % title
+
+multisite_icons.append({
+    'columns':         [ 'staleness' ],
+    'paint':           paint_is_stale,
+})
+
 #   +----------------------------------------------------------------------+
 #   |     _        _   _                  ____ _               _           |
 #   |    / \   ___| |_(_)_   _____       / ___| |__   ___  ___| | _____    |

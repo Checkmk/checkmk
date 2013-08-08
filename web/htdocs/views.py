@@ -2593,6 +2593,9 @@ def get_host_tags(row):
             return  val
     return ""
 
+def is_stale(row):
+    return row.get('service_staleness', row.get('host_staleness', 0)) >= 1.5
+
 def cmp_insensitive_string(v1, v2):
     c = cmp(v1.lower(), v2.lower())
     # force a strict order in case of equal spelling but different

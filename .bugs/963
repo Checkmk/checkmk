@@ -1,0 +1,17 @@
+Title: Package for CentOS 6.4 (64bit): missing dependency
+Component: core
+State: open
+Date: 2013-08-08 12:35:54
+Targetversion: 1.2.3
+Class: todo
+
+came in to mk@  / original mail is still available in feedback/gitbug folder
+
+FYI (the least I could do helping your team continue to do a great job with distro integration):
+
+On CentOS 6.4 (64bit), Perl module=Time::HiRes was missing after updating to OMD 1.2.3.i1 from 1.01.20130705.
+
+
+On Fri, Jul 12, 2013 at 9:30 PM, Brian Hargrave <brian@flipbit.com> wrote:
+
+    Thanks for the tip.  We installed the OMD 1.2.3i1 RPM and then updated our "site" and now monitoring our ESXi hosts!  Unfortunately, all of the PNP graphs stopped updating.  Thoughts?

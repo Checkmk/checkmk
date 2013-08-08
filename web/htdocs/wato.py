@@ -11088,7 +11088,7 @@ def mode_edit_rule(phase, new = False):
 
     html.checkbox("negate_hosts", negate_hosts, label =
                  _("<b>Negate:</b> make rule apply for <b>all but</b> the above hosts"))
-    html.write("</div>")
+    html.write("</div><br>")
     html.help(_("You can enter a number of explicit host names that rule should or should "
                  "not apply to here. Leave this option disabled if you want the rule to "
                  "apply for all hosts specified by the given tags."))
@@ -11110,8 +11110,8 @@ def mode_edit_rule(phase, new = False):
             if rulespec["itemhelp"]:
                 html.help(rulespec["itemhelp"])
             else:
-                html.help(_("You can make the rule apply only on certain services of the "
-                             "specified hosts. Do this by specifying explicit items to mach "
+                html.help(_("You can make the rule apply only to certain services of the "
+                             "specified hosts. Do this by specifying explicit items to match "
                              "here. <b>Note:</b> the match is done on the <u>beginning</u> "
                              "of the item in question. Regular expressions are interpreted, "
                              "so appending a <tt>$</tt> will force an exact match."))
@@ -11137,6 +11137,7 @@ def mode_edit_rule(phase, new = False):
                     orientation = "horizontal",
                     valuespec = TextAscii(size = 30)).render_input("itemlist", item_list)
 
+                html.write("<br><br>")
                 html.help(_("The entries here are regular expressions to match the beginning. "
                              "Add a <tt>$</tt> for an exact match. An arbitrary substring is matched "
                              "with <tt>.*</tt><br>Please note that on windows systems any backslashes need to be escaped."
@@ -11470,7 +11471,7 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec, 
             itemtype = "item"
             itemname = itemspec.title()
             itemhelp = itemspec.help()
-            if isinstance(itemspec, DropdownChoice):
+            if isinstance(itemspec, DropdownChoice) or isinstance(itemspec, OptionalDropdownChoice):
                 itemenum = itemspec._choices
         else:
             itemtype = None

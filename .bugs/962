@@ -1,0 +1,43 @@
+Title: Restore per GUI not successful
+Component: multisite
+State: open
+Date: 2013-08-08 12:01:30
+Targetversion: 1.2.3
+Class: bug
+
+kam per feedback@ rein, Orginal-Mail im folder feedback/gitbug eroeffnet noch vorhanden
+
+FROM: <t.baer@dokom21.de>
+TO: <feedback@check-mk.org>
+SUBJECT: [Bug]: Restore ohne Funktion - System nach Restore ohne Funktion
+DATE: Thu, 25 Jul 2013 16:00:05 +0200
+
+Hallo,
+
+ein Restore eines Snapshots für über die Gui zu einem "internal error" und das System ist nicht mehr nutzbar. Über die Kommandozeile wird zwar kein Fehler ausgegeben, hat aber den gleichen Effekt.
+Nach dem Restore ist das Verzeichnis ~/etc/check_mk/conf.d/wato nicht mehr vorhanden. Nach manuellem auspacken des Tarballs (wato-snapshot-xxxx-xx-xx-xx-xx-xx.tar.gz) und manuellem erstellen des "wato" Verzeichnisses und manuellen kopieren der *.mk Dateien, ist das System wieder funktionstüchtig.
+
+
+OMD[dokom21]:~$ uname -a
+Linux dkmcheckmk 2.6.18-194.el5xen #1 SMP Fri Apr 2 15:34:40 EDT 2010 x86_64 x86_64 x86_64 GNU/Linux
+
+OMD[dokom21]:~$ cat /etc/redhat-release
+CentOS release 5.5 (Final)
+
+OMD[dokom21]:~$ check_mk -V
+This is check_mk version 1.2.2p2
+
+
+
+
+Mit freundlichen Grüßen
+Torsten Bär
+
+DOKOM Gesellschaft für Telekommunikation mbH
+Systemadministration und Sicherheit
+
+Stockholmer Allee 24
+44269 Dortmund
+Fon: +49 231.930-10 71
+Fax: +49 231.930-10 64
+E-Mail: t.baer@dokom21.de

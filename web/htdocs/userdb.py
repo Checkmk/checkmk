@@ -123,8 +123,17 @@ def user_locked(username):
 
 def on_succeeded_login(username):
     users = load_users(lock = True)
+    changed = False
+
     if users[username].get('num_failed', 0) != 0:
         users[username]["num_failed"] = 0
+        changed = True
+
+    if config.save_user_access_times:
+        users[username]['last_seen'] = time.time()
+        changed = True
+
+    if changed:
         save_users(users)
 
 def on_failed_login(username):
@@ -314,6 +323,7 @@ def save_users(profiles):
         "serial",
         "connector",
         "num_failed",
+        "last_seen",
     ] + custom_values
 
     # Keys to put into multisite configuration
@@ -324,6 +334,7 @@ def save_users(profiles):
         "alias",
         "language",
         "connector",
+        "last_seen",
     ] + custom_values
 
     # Remove multisite keys in contacts.

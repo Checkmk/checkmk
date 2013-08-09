@@ -776,11 +776,11 @@ register_configvar(group,
 register_configvar(group,
     "save_user_access_times",
     Checkbox(
-        title = _("Store access times of users"),
+        title = _("Save last access times of users"),
         label = _("Save the time of the latest user activity"),
         help = _("When enabled, the time of the last access is stored for each user. The last "
                  "activity is shown on the users page."),
-        default_value = True
+        default_value = False
     ),
     domain = "multisite"
 )

@@ -1,0 +1,36 @@
+Title: Logwatch in Windows Agent: Problem with EventId 0
+Component: checks
+State: open
+Date: 2013-08-09 14:16:36
+Targetversion: 1.2.3
+Class: bug
+
+came in via checkmk-de@ / original mail still available at feedback/gitbug folder
+
+Date: Wed, 29 May 2013 16:09:14 +0200
+Message-ID: <iupni9gct0hc1if4yki27jk0.1369836554030@email.android.com>
+Importance: normal
+From: "=?ISO-8859-1?Q?Markus_Nie=DF?=" <markus.niess@gmail.com>
+To: checkmk-de@lists.mathias-kettner.de
+MIME-Version: 1.0
+Subject: [Check_mk (deutsch)] Logwatch Windows EventId 0
+
+Hallo zusammen,
+
+Auch auf die Gefahr hin zu nerven starte ich eine zweite Anfrage :-).
+Ich überwache mit dem aktuellen Agent WinEventlogs und kann auf zwei Maschinen einen Fehler beobachten wenn die EventID 0 ist.
+Die Severity bleibt gleich aber der Text wird auf The Operation completed successfully gesetzt. 
+Das geschieht scheinbar durch den Agent selbst, da cmk -d bereits die veränderten Werte anzeigt. 
+
+Ich würde mich über eine kurze Bestätigung freuen wenn es dich wirklich um einen Bug handelt. 
+
+Danke an alle. Bin begeistert
+
+
+Von Samsung Mobile gesendet
+
+
+_______________________________________________
+checkmk-de mailing list
+checkmk-de@lists.mathias-kettner.de
+http://lists.mathias-kettner.de/mailman/listinfo/checkmk-de

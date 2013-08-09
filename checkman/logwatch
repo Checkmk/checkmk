@@ -15,7 +15,7 @@ description:
  at least one warning message exists but no critical, the check results in a warning state.
 
  The only way to bring the state back to OK is to delete the text file with the stored log
- messages.  This is stored below {/var/lib/check_mk/logwatch}.  Usually the logwatch webpage is
+ messages.  This is stored below {~/var/check_mk/logwatch}.  Usually the logwatch webpage is
  used to browse and delete the messages. Please refer to the online documentation of check_mk
  for more details about logwatch.
 

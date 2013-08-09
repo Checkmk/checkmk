@@ -1,0 +1,51 @@
+Title: defunct and other entries on ps section of AIX agent confuse ps check
+Component: checks
+State: open
+Date: 2013-08-08 17:05:36
+Targetversion: 1.2.3
+Class: bug
+
+reported on checkmk-en@lists.mathias-kettner.de / original mail available in folder feedback/gitbug
+
+From: Dale Stubblefield <dalestubblefield@gmail.com>
+Date: Thu, 23 May 2013 09:56:16 -0500
+Message-ID: <CABBA0287p4L9eW76op_=qTrccOhdEKOmmkKMhLscLxufw11Jsg@mail.gmail.com>
+To: Mathias Kettner <mk@mathias-kettner.de>
+Cc: "checkmk-en@lists.mathias-kettner.de" <checkmk-en@lists.mathias-kettner.de>
+Subject: Re: [Check_mk (english)] AIX Agent bug regarding "Match all
+	processes"
+
+Mathias,
+
+The section that needs to be reviewed is "<<<ps>>>".  I would prefer not to
+post the entire agent output, but instead I will provide the relevant
+section and offending entries.  The first entry below is a standard entry
+that looks good.  It's the "defunct", "idle", and "exiting" entries that
+the ps.check chokes on.  As a workaround, I have used "grep -v" on the
+entries in my agent script to make sure they are not returned.  This is not
+ideal as it would be awesome if the ps.check interpreted those entries and
+possibly even included them in performance data.
+
+<<<ps>>>
+(root,776,180,0.0) /etc/init
+(<defunct>,,,)
+(<defunct>,,,)
+(<idle>,,,)
+(<exiting>,,,)
+
+Let me know if I can provide any additional information.
+
+Thanks,
+Dale
+
+
+
+On Wed, May 22, 2013 at 10:00 AM, Mathias Kettner <mk@mathias-kettner.de>wrote:
+
+> Hi Dale,
+>
+> could you send us an example agent output in such a case? So that
+> we can simulate and fix the problem without touching the agent...
+>
+> Mathais
+>

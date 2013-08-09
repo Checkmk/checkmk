@@ -1,0 +1,33 @@
+Install into OMD site
+=====================
+Prerequirements:
+
+  - Have an existing OMD site
+  - Have the NSCA running in the site
+  - Have the MK Event Console running in the site
+
+Copy the nsca2mkeventd program to the site and make it executable:
+
+cp -p nsca2mkeventd /omd/sites/<site>/local/bin
+chmod +x /omd/sites/<site>/local/bin/nsca2mkeventd
+
+
+Copy the init script and enable the service:
+
+cp -p nsca2mkeventd.init  /omd/sites/<site>/etc/init.d/nsca2mkeventd
+ln -s ../init.d/nsca2mkeventd /omd/sites/<site>/etc/rc.d/70-nsca2mkeventd
+
+
+Change the nsca configuration to forward the events to the nsca2mkeventd pipe.
+Open /omd/sites/<site>/etc/nsca/nsca.cfg and change the parameter "command_file"
+to /omd/sites/<site>/tmp/run/nsca2mkeventd.pipe
+
+
+Now restart all services.
+
+omd restart <mysite>
+
+
+Now all check results incoming from the sites NSCA daemon, are handed over
+to the command pipe opened by the nsca2mkeventd and then handed over to
+the event console of the site. 

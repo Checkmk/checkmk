@@ -121,6 +121,14 @@ def user_locked(username):
     users = load_users()
     return users[username].get('locked', False)
 
+def update_user_access_time():
+    if not config.save_user_access_times:
+        return
+
+    users = load_users(lock = True)
+    users[html.user]['last_seen'] = time.time()
+    save_users(users)
+
 def on_succeeded_login(username):
     users = load_users(lock = True)
     changed = False
@@ -286,10 +294,11 @@ def load_users(lock = False):
         if d[0] != '.':
             id = d
 
-            # read failed login counts
-            failed_file = dir + d + '/num_failed.mk'
-            if id in result and os.path.exists(failed_file):
-                result[id]['num_failed'] = int(file(failed_file).read().strip())
+            # read special values from own files
+            for val, conv_func in [ ('num_failed', int), ('last_seen', float) ]:
+                path = dir + d + '/' + val + '.mk'
+                if id in result and os.path.exists(path):
+                    result[id][val] = conv_func(file(path).read().strip())
 
             # read automation secrets and add them to existing
             # users or create new users automatically
@@ -334,7 +343,6 @@ def save_users(profiles):
         "alias",
         "language",
         "connector",
-        "last_seen",
     ] + custom_values
 
     # Remove multisite keys in contacts.
@@ -396,6 +404,11 @@ def save_users(profiles):
         # Write out the users number of failed login
         failed_file = user_dir + '/num_failed.mk'
         create_user_file(failed_file, 'w').write('%d\n' % user.get('num_failed', 0))
+
+        # Write out the last seent time
+        if 'last_seen' in user:
+            last_seen_file = user_dir + '/last_seen.mk'
+            create_user_file(last_seen_file, 'w').write(repr(user['last_seen']) + '\n')
 
     # Remove settings directories of non-existant users.
     # Beware: we removed this since it leads to violent destructions

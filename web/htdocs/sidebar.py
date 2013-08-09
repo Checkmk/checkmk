@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config, defaults, livestatus, views, pprint, os, copy
+import config, defaults, livestatus, views, pprint, os, copy, userdb
 from lib import *
 
 # Constants to be used in snapins
@@ -280,6 +280,9 @@ def ajax_openclose():
     save_user_config(new_config)
 
 def ajax_snapin():
+    # Update online state of the user (if enabled)
+    userdb.update_user_access_time()
+
     snapname = html.var("name")
     if snapname:
         snapnames = [ snapname ]

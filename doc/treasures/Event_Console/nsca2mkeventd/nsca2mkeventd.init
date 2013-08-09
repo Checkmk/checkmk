@@ -1,0 +1,80 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides:          nsca2mkeventd
+# Required-Start:    $local_fs $remote_fs
+# Required-Stop:     $local_fs $remote_fs
+# Should-Start:      $syslog
+# Should-Stop:       $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Start or stop the nsca2mkeventd daemon.
+### END INIT INFO
+
+unset LANG
+
+pidof_nsca2mkeventd() {
+    pgrep -u $OMD_SITE -f -x "/usr/bin/python $OMD_ROOT/local/bin/nsca2mkeventd"
+}
+
+case "$1" in
+    start)
+        echo -n 'Starting nsca2mkeventd... '
+
+        PID=$(pidof_nsca2mkeventd) && {
+            echo "Already running (PID: $PID)."
+            exit 1
+        }
+
+        $OMD_ROOT/local/bin/nsca2mkeventd
+        if [ $? -eq 0 ]; then
+            echo OK
+        else
+            echo ERROR
+            exit 1
+        fi
+    ;;
+    stop)
+        echo -n 'Stopping nsca2mkeventd... '
+        PID=$(pidof_nsca2mkeventd) || {
+            echo 'Not running.'
+            exit 0
+        }
+
+        I=0
+        kill $PID
+        while kill -0 $PID >/dev/null 2>&1; do
+            if [ $I = '5' ]; then
+                echo -e 'sending SIGKILL... '
+                kill -9 $PID
+            elif [ $I = '10' ]; then
+                echo ERROR
+                exit 1
+            fi
+
+            echo -n '.'
+            I=$(($I+1))
+            sleep 1
+        done
+
+        echo OK
+    ;;
+    status)
+        PID=$(pidof_nsca2mkeventd) && {
+            echo "Running (PID: $PID)."
+            exit 0
+        } || {
+            echo "Not running."
+            exit 1
+        }
+    ;;
+    restart)
+        $0 stop
+        $0 start
+    ;;
+    *)
+        echo 'Usage: /etc/init.d/nsca2mkeventd {start|stop|restart|status}'
+        exit 1
+    ;;
+esac
+
+exit 0

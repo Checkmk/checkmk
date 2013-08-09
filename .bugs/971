@@ -1,0 +1,49 @@
+Title: apache_status agent plugin: Problem at split if more than one slash in output
+Component: checks
+State: open
+Date: 2013-08-09 14:57:53
+Targetversion: 1.2.3
+Class: bug
+
+came in via feedback@  //  original email still available in feedback/gitbug folder
+
+Date: Thu, 13 Jun 2013 12:42:59 +0200
+From: Wouter de Geus <wouter-check_mk.org@owl-ict.nl>
+To: feedback@check-mk.org
+Subject: Agent plugin apache_status process detection
+
+Hej,
+
+I just installed the agents plugin apache_status (the version from release 1.2.2p2) on several of my machines.
+On one of the machines it bugs however:
+Traceback (most recent call last):
+  File "./apache_status", line 83, in <module>
+    servers = try_detect_servers()
+  File "./apache_status", line 46, in try_detect_servers
+    pid, proc = parts[6].split('/')
+ValueError: too many values to unpack
+
+After reading the source the problem is obvious: the output of the netstat command has entries
+that have slashes in the command name:
+----
+# netstat -tlnp 2>/dev/null
+Active Internet connections (only servers)
+Proto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name    
+tcp        0      0 0.0.0.0:30033           0.0.0.0:*               LISTEN      1326/./ts3server_li 
+tcp        0      0 127.0.0.1:7505          0.0.0.0:*               LISTEN      1331/openvpn        
+tcp        0      0 0.0.0.0:21              0.0.0.0:*               LISTEN      1333/tcpserver      
+tcp        0      0 0.0.0.0:22              0.0.0.0:*               LISTEN      566/sshd            
+tcp        0      0 0.0.0.0:10011           0.0.0.0:*               LISTEN      1326/./ts3server_li 
+tcp6       0      0 :::80                   :::*                    LISTEN      12193/httpd         
+tcp6       0      0 :::22                   :::*                    LISTEN      566/sshd            
+tcp6       0      0 :::443                  :::*                    LISTEN      12193/httpd        
+----
+Note the ./ts3server_li entries.
+Since there is more than 1 slash in the line, the split will return more than the expected 2 results.
+
+I thought I'd report this bug 
+
+Regards,
+
+Wouter.
+-- Wouter de Geus Owl ICT wouter@owl-ict.nl http://www.owl-ict.nl/ 

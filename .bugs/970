@@ -1,0 +1,59 @@
+Title: On-demand macros not expanded
+Component: livestatus
+State: open
+Date: 2013-08-09 14:46:30
+Targetversion: 1.2.3
+Class: bug
+
+came in via info@   /   original mail still available at feedback/gitbug
+
+Date: Thu, 13 Jun 2013 08:49:16 +0200
+From: Rostislav Opocensky <orbis@pictus.org>
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:20.0) Gecko/20100101 Firefox/20.0 SeaMonkey/2.17.1
+MIME-Version: 1.0
+To: info@mathias-kettner.de
+Subject: On-demand macros not expanded
+
+
+Hello Matthias,
+
+I am a happy user of MK LiveStatus. Thank you for such an excellent tool!
+
+I would just like to bring a small problem to your attention. It seems that on-demand macros are not expanded in *_expanded columns. For instance if I have the following definitions:
+
+define host {
+        name                            cfg-archived
+        register                        0
+        notes_url http://$_HOSTFQDN:localhost$/cgi-bin/viewvc.cgi/$_HOSTSITE$/$HOSTALIAS$?view=markup
+}
+
+define host {
+        host_name                       localhost
+        _fqdn                           ngssrv.example.com
+}
+
+define host {
+        host_name                       fl-sw-01
+        _site                           florenc
+        use                             cfg-archived
+}
+
+and I issue the following query:
+
+GET services
+Filter: host_name = fl-sw-01
+Columns: notes_url_expanded
+
+I get the following result:
+
+http://$_HOSTFQDN:localhost$/cgi-bin/viewvc.cgi/florenc/fl-sw-01?view=markup
+
+However, the result should be:
+
+http://ngssrv.example.com/cgi-bin/viewvc.cgi/florenc/fl-sw-01?view=markup
+
+Would you please consider looking into this issue?
+
+Thank you,
+
+Rostislav 

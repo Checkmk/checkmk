@@ -8181,6 +8181,7 @@ def mode_users(phase):
     entries.sort(cmp = lambda a, b: cmp(a[1].get("alias", a[0]).lower(), b[1].get("alias", b[0]).lower()))
 
     table.begin("users", None, empty_text = _("There are not defined any users yet."))
+    online_threshold = time.time() - config.user_online_maxage
     for id, user in entries:
         table.row()
 
@@ -8200,6 +8201,16 @@ def mode_users(phase):
 
         # ID
         table.cell(_("ID"), id)
+
+        # Online/Offline
+        if config.save_user_access_times:
+            if user.get('last_seen', 0) >= online_threshold:
+                title = _('Online')
+                img_txt = 'on'
+            else:
+                title = _('Offline')
+                img_txt = 'off'
+            table.cell(_("Act."), '<img class=icon title="%s" src="images/icon_%sline.png" />' % (title, img_txt))
 
         # Connector
         if connector:

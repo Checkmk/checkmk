@@ -155,6 +155,7 @@ declare_1to1_sorter("svc_notifications_enabled",  cmp_simple_number)
 declare_1to1_sorter("svc_is_active",              cmp_simple_number)
 declare_1to1_sorter("svc_group_memberlist",       cmp_string_list)
 declare_1to1_sorter("svc_acknowledged",           cmp_simple_number)
+declare_1to1_sorter("svc_staleness",              cmp_simple_number)
 
 def cmp_perfdata_nth_value(r1, r2, n):
     return cmp(savefloat(get_perfdata_nth_value(r1, n)), savefloat(get_perfdata_nth_value(r2, n)))

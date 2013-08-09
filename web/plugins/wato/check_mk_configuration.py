@@ -536,7 +536,7 @@ register_configvar(group,
                         title = _("Bind DN"),
                         help  = _("Specify the distinguished name to be used to bind to "
                                   "the LDAP directory."),
-                        size = 80,
+                        size = 63,
                     ),
                     Password(
                         title = _("Bind Password"),
@@ -771,6 +771,18 @@ register_configvar(group,
         optional_keys = [],
     ),
     domain = "multisite",
+)
+
+register_configvar(group,
+    "save_user_access_times",
+    Checkbox(
+        title = _("Save last access times of users"),
+        label = _("Save the time of the latest user activity"),
+        help = _("When enabled, the time of the last access is stored for each user. The last "
+                 "activity is shown on the users page."),
+        default_value = False
+    ),
+    domain = "multisite"
 )
 
 #   .----------------------------------------------------------------------.

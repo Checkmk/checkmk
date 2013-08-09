@@ -1,0 +1,268 @@
+#!/usr/bin/python
+# encoding: utf-8
+# Reads all incoming commands from it's own command pipe. Those
+# commands are sent by NSCA to the command pipe. Forwards these
+# events to the local event console daemon.
+
+import os, sys, getopt, traceback, time, socket
+
+opt_debug       = False
+opt_foreground  = False
+
+g_application   = 'nsca'
+
+#.
+#   .--Helper functions----------------------------------------------------.
+#   |                  _   _      _                                        |
+#   |                 | | | | ___| |_ __   ___ _ __ ___                    |
+#   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
+#   |                 |  _  |  __/ | |_) |  __/ |  \__ \                   |
+#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
+#   |                              |_|                                     |
+#   +----------------------------------------------------------------------+
+#   |  Various helper functions                                            |
+#   '----------------------------------------------------------------------'
+
+def bail_out(reason):
+    log("FATAL ERROR: %s" % reason)
+    sys.exit(1)
+
+def open_logfile():
+    global g_logfile
+    g_logfile = file(g_logfile_path, "a")
+
+def log(text):
+    if type(text) == unicode:
+        text = text.encode("utf-8")
+    try:
+        g_logfile.write('[%.6f] %s\n' % (time.time(), text))
+        g_logfile.flush()
+    except:
+        sys.stderr.write("%s\n" % text)
+
+def usage():
+    sys.stdout.write('''Usage: nsca2mkeventd [OPTIONS]
+
+    -g, --foreground     Do not daemonize, run in foreground
+    -d, --debug          Enable debug mode (let exceptions through)
+    -E, --eventsocket P  Path to unix socket to write events to
+    -P, --pipe P         Path to pipe for receiving events from NSCA
+
+Default paths:
+
+    Event socket:     %(g_eventsocket_path)s
+    Event Pipe:       %(g_pipe_path)s
+    Log file:         %(g_logfile_path)s
+
+''' % globals())
+
+#.
+#   .--Daemonize-----------------------------------------------------------.
+#   |          ____                                   _                    |
+#   |         |  _ \  __ _  ___ _ __ ___   ___  _ __ (_)_______            |
+#   |         | | | |/ _` |/ _ \ '_ ` _ \ / _ \| '_ \| |_  / _ \           |
+#   |         | |_| | (_| |  __/ | | | | | (_) | | | | |/ /  __/           |
+#   |         |____/ \__,_|\___|_| |_| |_|\___/|_| |_|_/___\___|           |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Code for daemonizing                                                |
+#   '----------------------------------------------------------------------'
+
+def daemonize(user=0, group=0):
+    # do the UNIX double-fork magic, see Stevens' "Advanced
+    # Programming in the UNIX Environment" for details (ISBN 0201563177)
+    try:
+        pid = os.fork()
+        if pid > 0:
+            # exit first parent
+            sys.exit(0)
+    except OSError, e:
+        sys.stderr.write("Fork failed (#1): %d (%s)\n" % (e.errno, e.strerror))
+        sys.exit(1)
+
+    # decouple from parent environment
+    # chdir -> don't prevent unmounting...
+    os.chdir("/")
+
+    # Create new process group with the process as leader
+    os.setsid()
+
+    # Set user/group depending on params
+    if group:
+        os.setregid(getgrnam(group)[2], getgrnam(group)[2])
+    if user:
+        os.setreuid(getpwnam(user)[2], getpwnam(user)[2])
+
+    # do second fork
+    try:
+        pid = os.fork()
+        if pid > 0:
+            sys.exit(0)
+    except OSError, e:
+        sys.stderr.write("Fork failed (#2): %d (%s)\n" % (e.errno, e.strerror))
+        sys.exit(1)
+
+    sys.stdout.flush()
+    sys.stderr.flush()
+
+    si = os.open("/dev/null", os.O_RDONLY)
+    so = os.open("/dev/null", os.O_WRONLY)
+    os.dup2(si, 0)
+    os.dup2(so, 1)
+    os.dup2(so, 2)
+    os.close(si)
+    os.close(so)
+
+    log("Daemonized with PID %d." % os.getpid())
+
+class MKSignalException(Exception):
+    def __init__(self, signum):
+        Exception.__init__(self, "Got signal %d" % signum)
+        self._signum = signum
+
+def signal_handler(signum, stack_frame):
+    verbose("Got signal %d." % signum)
+    raise MKSignalException(signum)
+
+#.
+#   .--Main----------------------------------------------------------------.
+#   |                        __  __       _                                |
+#   |                       |  \/  | __ _(_)_ __                           |
+#   |                       | |\/| |/ _` | | '_ \                          |
+#   |                       | |  | | (_| | | | | |                         |
+#   |                       |_|  |_|\__,_|_|_| |_|                         |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Main entry and option parsing                                       |
+#   '----------------------------------------------------------------------'
+
+def create_pipe():
+    try:
+        if not stat.S_ISFIFO(os.stat(g_pipe_path).st_mode):
+            os.remove(g_pipe_path)
+    except:
+        pass
+
+    if not os.path.exists(g_pipe_path):
+        os.mkfifo(g_pipe_path)
+    os.chmod(g_pipe_path, 0666)
+    log("Created pipe '%s' for receiving commands from nsca" % g_pipe_path)
+
+# Incoming lines:
+#fprintf(command_file_fp,"[%lu] PROCESS_HOST_CHECK_RESULT;%s;%d;%s\n",(unsigned long)check_time,host_name,return_code,plugin_output);
+#fprintf(command_file_fp,"[%lu] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n",(unsigned long)check_time,host_name,svc_description,return_code,plugin_output);
+def parse_line(line):
+    timestamp, command = line.split(' ', 1)
+    timestamp = int(timestamp[1:-1])
+    cmd = command.split(';')
+    return [ timestamp ] + cmd
+
+def state_to_prio(state):
+    state = int(state)
+    if state == 0:
+        return 5
+    elif state == 1:
+        return 4
+    elif state == 2:
+        return 2
+    elif state == 3:
+        return 7
+
+def forward_line(parsed):
+    if parsed[1] == 'PROCESS_HOST_CHECK_RESULT':
+        timestamp, cmd, hostname, state, output = parsed
+    else:
+        timestamp, cmd, hostname, svc_desc, state, output = parsed
+        output = '%s: %s' % (svc_desc, output)
+
+    t = time.strftime("%b %d %H:%M:%S", time.localtime(timestamp))
+    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    s.connect(g_eventsocket_path)
+    s.send("<%d>%s %s %s: %s\n" % (state_to_prio(state), t, hostname, g_application, output))
+    s.close()
+
+def main():
+    create_pipe()
+
+    while True:
+        try:
+            for line in file(g_pipe_path):
+                try:
+                    parsed = parse_line(line.rstrip())
+                    forward_line(parsed)
+                except Exception, e:
+                    log('EXCEPTION while processing line "%s" (%s). Skipping...' % (line.rstrip(), e))
+                    if opt_debug:
+                        raise
+
+        except MKSignalException, e:
+            log("Signalled to death by signal %d" % e._signum)
+            break
+
+        except Exception, e:
+            log("EXCEPTION in main thread:\n%s" % traceback.format_exc())
+            if opt_debug:
+                raise
+            time.sleep(1)
+
+os.unsetenv("LANG")
+
+omd_root = os.getenv("OMD_ROOT")
+if omd_root:
+    g_pipe_path        = omd_root + '/tmp/run/nsca2mkeventd.pipe'
+    g_eventsocket_path = omd_root + "/tmp/run/mkeventd/eventsocket"
+    g_logfile_path     = omd_root + "/var/log/nsca2mkeventd.log"
+else:
+    g_pipe_path        = None
+    g_eventsocket_path = None
+    g_logfile_path     = "/var/log/nsca2mkeventd.log"
+
+short_options = "hdgP:E:"
+long_options = [ "help", "foreground", "debug", "eventsocket=", "pipe=" ]
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+
+    # first parse modifers
+    for o, a in opts:
+        if o in [ '-d', '--debug' ]:
+            opt_debug = True
+        elif o in [ '-g', '--foreground' ]:
+            opt_foreground = True
+        elif o in [ '-E', '--eventsocket' ]:
+            g_eventsocket_path = a
+        elif o in [ '-P', '--pipe' ]:
+            g_pipe_path = a
+
+    # now handle action options
+    for o, a in opts:
+        if o in [ '-h', '--help' ]:
+            usage()
+            sys.exit(0)
+
+    if not g_pipe_path:
+        bail_out("Please specify the path to the pipe (using -P).")
+
+    if not g_eventsocket_path:
+        bail_out("Please specify the path to the eventsocket (using -E).")
+
+    # Prepare logging if running in daemon mode
+    if not opt_foreground:
+        open_logfile()
+    log("nsca2mkeventd is starting")
+
+    if not opt_foreground:
+        daemonize()
+
+    main()
+
+    log("Cleaning up")
+    os.remove(g_pipe_path)
+
+    log("Successfully shut down.")
+    sys.exit(0)
+
+except Exception, e:
+    if opt_debug:
+        raise
+    bail_out(e)

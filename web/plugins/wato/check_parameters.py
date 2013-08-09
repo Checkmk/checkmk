@@ -2879,7 +2879,7 @@ register_check_parameters(
                 help = _("The critical battery current in Ampere"),
             ),
             Integer(
-                title = _("Max. Voltage"),
+                title = _("Min. Voltage"),
                 help = _("The output voltage at and below which a critical state is triggered."),
             ),
         ]

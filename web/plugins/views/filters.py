@@ -360,6 +360,12 @@ declare_filter(232, FilterNagiosExpression("service", "in_downtime",            
             "Filter: service_scheduled_downtime_depth > 0\nFilter: host_scheduled_downtime_depth > 0\nOr: 2\n",
             "Filter: service_scheduled_downtime_depth = 0\nFilter: host_scheduled_downtime_depth = 0\nAnd: 2\n"))
 
+declare_filter(232, FilterNagiosExpression("host", "host_staleness",                _("Host is stale"),
+            "Filter: host_staleness >= 1.5\n",
+            "Filter: host_staleness < 1.5\n"))
+declare_filter(232, FilterNagiosExpression("service", "service_staleness",          _("Service is stale"),
+            "Filter: service_staleness >= 1.5\n",
+            "Filter: service_staleness < 1.5\n"))
 
 class FilterSite(Filter):
     def __init__(self, name, enforce):
@@ -702,7 +708,9 @@ class FilterHostTags(Filter):
         for entry in config.wato_host_tags:
             grouped.setdefault(entry[0], [["", ""]])
 
-            for tag, title, aux_tags in entry[2]:
+            for tag_entry in entry[2]:
+                tag   = tag_entry[0]
+                title = tag_entry[1]
                 if tag is None:
                     tag = ''
                 grouped[entry[0]].append([tag, str(title)])

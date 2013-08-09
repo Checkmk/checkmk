@@ -1,0 +1,45 @@
+Title: non working mail notifications after upgrading to cmk 1.2.2
+Component: core
+State: open
+Date: 2013-08-08 17:15:04
+Targetversion: 1.2.3
+Class: bug
+
+reported very often on the different mailinglists
+one mail for example below, You can find original mail in folder feedback/gitbug
+
+From: "JDMA (Jason Magee)" <Jason.Magee@panduit.com>
+To: Marco Lenhardt <0815@lenhardt.in>, "checkmk-en@lists.mathias-kettner.de"
+	<checkmk-en@lists.mathias-kettner.de>
+Thread-Topic: [Check_mk (english)] Notifications no longer working
+Thread-Index: Ac5Xy3nfmEKptLJmRr2h/2T2lGDbIg==
+Date: Thu, 23 May 2013 15:38:59 +0000
+Subject: Re: [Check_mk (english)] Notifications no longer working
+
+-----Original Message-----
+From: checkmk-en-bounces@lists.mathias-kettner.de 
+[mailto:checkmk-en-bounces@lists.mathias-kettner.de] On Behalf Of 
+Marco Lenhardt
+Sent: Thursday, May 23, 2013 7:44 AM
+To: checkmk-en@lists.mathias-kettner.de
+Subject: Re: [Check_mk (english)] Notifications no longer working
+
+Hi!
+
+I had also the problem with non working mail notifications after upgrading to cmk 1.2.2.
+
+Custom notifications were working fine.
+
+After reading
+http://mathias-kettner.de/checkmk_flexible_notifications.html
+
+I created the (missing) folder
+$CHECK_MK_HOME/var/notify
+
+and switched logging on in main.mk
+notification_logging = 1
+
+After that, standard check_mk mail notification was working again!
+
+br,
+Marco

@@ -1,0 +1,38 @@
+Title: Windows Agent switches disk IO label on reboot
+Component: checks
+State: open
+Date: 2013-08-08 16:59:01
+Targetversion: 1.2.3
+Class: bug
+
+came in via feedback@ / original mail available at feedback/gitbug folder
+
+Subject: [Bug]: Windows Agent switches disk IO label on reboot
+Date: Thu, 23 May 2013 10:38:03 +0200
+Message-ID: <614B6EB6F693564AB7BDB8907D75FE91198B70BF@NTEXS05.swp.de>
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Thread-Topic: [Bug]: Windows Agent switches disk IO label on reboot
+Thread-Index: Ac5XkDKSzo0isThdQ3SeTOyRGNi4Uw==
+From: "Vogt, Jonathan (SDS)" <J.Vogt@swp.de>
+To: <feedback@check-mk.org>
+
+Hello,
+
+when a windows maschine has 2 (or maybe more) logical volumes on one physical disk, only one „Disk IO“ is found by the inventory. When a maschine reboots sometimes a switch occours. On our machines this switches between Disk IO C: and Disk IO E: as they have a C: and an E: drive.
+
+When a maschine has two logical disks each on a physical disk the behavior is not seen.
+
+Sincerly
+
+Jonthan Vogt
+
+Jonathan Vogt
+IT-Systembetreuung
+Tel: +49(731)156-892, Fax: +49(731)156-805
+
+Südwest Presse Data Service GmbH
+Frauenstrasse 77, 89073 Ulm
+Registergericht Ulm: HRB 3671
+Geschäftsführer:
+Thomas Brackvogel, Marino Milite

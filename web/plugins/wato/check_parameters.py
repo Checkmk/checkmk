@@ -1851,6 +1851,11 @@ register_check_parameters(
     "oracle_tablespaces",
     _("Oracle Tablespaces"),
     Dictionary(
+        help = _("A tablespace is a container for segments (tables, indexes, etc). A "
+                 "database consists of one or more tablespaces, each made up of one or "
+                 "more data files. Tables and indexes are created within a particular "
+                 "tablespace. " 
+                 "This rule allows you to define checks on the size of tablespaces."),
         elements = [
             ("levels",
                 Alternative(
@@ -2281,8 +2286,8 @@ register_check_parameters(
           help = _("The count of remaining entries in the DHCP pool represents "
                    "the number of IP addresses left which can be assigned in the network"),
           elements = [
-              Percentage(title = _("Warning if pool usage higher than")),
-              Percentage(title = _("Critical if pool usage higher than")),
+              Percentage(title = _("Warning if more than"), unit = _("pool entries")),
+              Percentage(title = _("Critical if more than"), unit = _("pool entries")),
               ]),
     TextAscii(
         title = _("Service descriptions"),
@@ -3059,12 +3064,12 @@ register_check_parameters(
                  "being queued for processing."),
         elements = [
             Integer(
-                title = _("Queue warning above"),
+                title = _("Warning if above"),
                 unit = _("requests"),
                 default_value = 20,
             ),
             Integer(
-                title = _("Queue critical above"),
+                title = _("Critical if above"),
                 unit = _("requests"),
                 default_value = 50,
             ),
@@ -3224,8 +3229,8 @@ register_check_parameters(
     _("Memory levels for DB2 memory usage"),
     Tuple(
         elements = [
-                Percentage(title = _("Memory left warning at")),
-                Percentage(title = _("Memory left critical at")),
+                Percentage(title = _("Warning if less than"), unit = _("% memory left")),
+                Percentage(title = _("Critical if less than"), unit = _("% memory left")),
               ],
     ),
     TextAscii(

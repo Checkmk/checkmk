@@ -1,0 +1,54 @@
+Title: Patch for PNP4Nagios Template: check_mk-cmctc.temp.php
+Component: checks
+State: open
+Date: 2013-08-09 12:38:29
+Targetversion: 1.2.3
+Class: feature
+
+kam rein checkmk-de@ / orginal-Mail noch vorhanden unter feedback/gitbug
+
+From: "Roeder, Christoph" <Christoph.Roeder@ZIT-BB.Brandenburg.de>
+To: "checkmk-de@lists.mathias-kettner.de" <checkmk-de@lists.mathias-kettner.de>
+Thread-Topic: PNP4Nagios Template: check_mk-cmctc.temp.php
+Thread-Index: Ac6Rw6diJVz9Y/EYSEOuESZ8IDeZVQ==
+Date: Mon, 5 Aug 2013 10:16:51 +0000
+
+Subject: [Check_mk (deutsch)] PNP4Nagios Template: check_mk-cmctc.temp.php
+
+Hallo,
+
+ 
+
+ich habe eine kleine Änderung am Template „check_mk-cmctc.temp.php“ vorgenommen, die m.E. die Daten viel besser lesbar machen, da der Graph das autoscaling von rrdgraph nutzt:
+
+ 
+
+ 
+
+--- check_mk-cmctc.temp.php.org 2013-08-05 12:13:28.347456051 +0200
+
++++ check_mk-cmctc.temp.php     2013-08-05 12:12:37.018879220 +0200
+
+@@ -23,7 +23,7 @@
+
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+
+# Boston, MA 02110-1301 USA.
+
+ 
+
+-$opt[1] = "--vertical-label \"Celsius\"  -l 0 -u 40 --title \"Temperature $servicedesc\" ";
+
++$opt[1] = "--vertical-label \"Celsius\" -A --title \"Temperature $servicedesc\" ";
+
+ 
+
+$def[1] = "DEF:var1=$RRDFILE[1]:$DS[1]:MAX ";
+
+$def[1] .= "AREA:var1#2080ff:\"Temperature\:\" ";
+
+
+_______________________________________________
+checkmk-de mailing list
+checkmk-de@lists.mathias-kettner.de
+http://lists.mathias-kettner.de/mailman/listinfo/checkmk-de

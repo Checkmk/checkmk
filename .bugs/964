@@ -1,0 +1,76 @@
+Title: make vsphere monitoring work with ESX 4.0
+Component: checks
+State: open
+Date: 2013-08-08 12:41:52
+Targetversion: 1.2.3
+Class: feature
+
+came in via feedback@ / original mail is still available in folder feedback/gitbug
+
+
+From: Maarten Vanraes <maarten@ba.be>
+To: feedback@mathias-kettner.de
+Subject: ESX4.0 vspere patch
+Date: Tue, 09 Jul 2013 13:30:26 +0200
+
+vsphere agent works on ESX4.0 with this patch: http://pastebin.com/E6mw9t3s
+-- 
+BA NV
+IT & Security
+
+
+From: Maarten Vanraes <maarten@ba.be>
+To: Check_MK Feedback <feedback@mathias-kettner.de>
+Subject: updated ESX4.0 vsphere patch
+Date: Tue, 09 Jul 2013 13:50:23 +0200
+
+needs some patching for the memory check too
+-- BA NV IT & Security
+
+
+0009-vsphere-check-works-for-ESX-4.0.patch
+
+--- a/share/check_mk/agents/special/agent_vsphere	2013-07-09 10:07:33.000000000 +0200
++++ b/share/check_mk/agents/special/agent_vsphere	2013-07-09 11:31:36.000000000 +0200
+@@ -672,7 +672,6 @@
+ vm_propertys = {
+       "name": str,
+       "guestHeartbeatStatus": str,
+-      "summary.quickStats.uptimeSeconds": str,
+ 
+       # CPU Statistics
+       "summary.quickStats.overallCpuUsage": str,
+@@ -690,7 +689,6 @@
+       "summary.quickStats.swappedMemory": str,
+       "summary.quickStats.balloonedMemory": str,
+       "summary.quickStats.consumedOverheadMemory": str,
+-      "summary.quickStats.compressedMemory": str,
+ 
+       # Virtual machine configuration
+       "config.hardware.memoryMB": str,
+@@ -705,6 +703,10 @@
+       "guest.toolsVersionStatus" : str,
+ }
+ 
++if esx_version_num > 4.0:
++    vm_propertys["summary.quickStats.uptimeSeconds"] = str
++    vm_propertys["summary.quickStats.compressedMemory"] = str
++
+ if esx_version_num > 4.1:
+     vm_propertys["config.hardware.numCoresPerSocket"] = str
+ 
+--- a/share/check_mk/checks/esx_vsphere_vm	2013-07-09 13:37:56.000000000 +0200
++++ b/share/check_mk/checks/esx_vsphere_vm	2013-07-09 13:44:12.000000000 +0200
+@@ -53,9 +53,9 @@
+     #active guest memory
+     guest_memory_usage  = savefloat(data["summary.quickStats.guestMemoryUsage"][0]) * 1024 * 1024
+     #size of the balloon driver in the VM
+-    ballooned_memory    = savefloat(data["summary.quickStats.balloonedMemory"][0]) * 1024 * 1024
++    ballooned_memory    = savefloat(data.get("summary.quickStats.balloonedMemory",[0])[0]) * 1024 * 1024
+     #The portion of memory, in MB, that is granted to this VM from non-shared host memor(musst not be set)
+-    shared_memory       = savefloat(data["summary.quickStats.sharedMemory"][0]) * 1024 * 1024
++    shared_memory       = savefloat(data.get("summary.quickStats.sharedMemory",[0])[0]) * 1024 * 1024
+     #The portion of memory, in MB, that is granted to this VM from host memory that is shared between VMs.
+     private_memory      = savefloat(data.get("summary.quickStats.privateMemory",[0])[0]) * 1024 * 1024
+ 
+

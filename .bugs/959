@@ -1,0 +1,61 @@
+Title: Livestatus/Nagios Core crashes, if nagios.log is not accessible
+Component: livestatus
+State: open
+Date: 2013-08-08 11:30:12
+Targetversion: 1.2.3
+Class: bug
+
+kam an info@mathias-kettner.de, Orginal-Mail im feedback/gitbug noch vorhanden
+
+Date: Tue, 30 Jul 2013 11:36:12 +0200
+From: Oliver Kutscher <ok@addix.net>
+User-Agent: Mozilla/5.0 (Windows NT 6.2; WOW64; rv:17.0) Gecko/20130620 Thunderbird/17.0.7
+MIME-Version: 1.0
+To: info@mathias-kettner.de
+Subject: MK-Livestatus
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ADDIX-Received: 212.51.6.4
+X-ADDIX-Info: Bitte wenden Sie sich an uns, falls Sie mehr Informationen benoetigen.
+X-MailScanner-ID: 1V46Lm-0000Lc-7H
+X-ADDIX-Scan: Virenfrei
+X-ADDIX-From: ok@addix.net
+
+Hallo Herr Kettner,
+
+vermutlich ist das die falsche Mailadresse, um Vorschläger oder Probleme 
+zu melden. Aber ich habe keine passende(re) gefunden.
+
+In Benutzung war: Nagios 3.3, Check_MK check_mk-1.2.2p2 sowie 
+mk-livestatus-1.2.2p2 auf einem Centos 5.5.
+
+Ich hatte das Phänomen, dass der Nagios Core abstürzte, sobald ich die 
+Check_MK-Seite aufgerufen habe. Ursache war, dass das nagios.log-Logfile 
+durch fehlende Berechtigungen nicht rotiert werden konnte und somit auf 
+ > 2 GB angewachsen ist. Aus diesem Grund konnte das Livestatus die 
+Datei nicht mehr öffnen, was wiederum zu einem Absturz des 
+Nagios-Prozess (SIGSEGV) führte.
+
+Ich weiß nicht, inwieweit das Verhalten von Livestatus, die 
+Fehlermeldung bzw. ein Eintrag in der Dokumentation angepasst werden 
+könnten. Der Fehler ist in gewisser Weise selbst verschuldet, jedoch war 
+es nicht leicht, die Ursache zu finden.
+
+
+Mit freundlichen Grüßen,
+i.A.
+Oliver Kutscher
+
+-- 
+
+Postanschrift:
+
+ADDIX Internet Services GmbH
+Postfach 1225
+D-24011 Kiel
+
+Tel: +49 431 7755 140
+Fax: +49 431 7755 105
+
+ok@addix.net
+www.addix.net

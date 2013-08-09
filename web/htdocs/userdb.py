@@ -121,6 +121,14 @@ def user_locked(username):
     users = load_users()
     return users[username].get('locked', False)
 
+def update_user_access_time():
+    if not config.save_user_access_times:
+        return
+
+    users = load_users(lock = True)
+    users[html.user]['last_seen'] = time.time()
+    save_users(users)
+
 def on_succeeded_login(username):
     users = load_users(lock = True)
     changed = False

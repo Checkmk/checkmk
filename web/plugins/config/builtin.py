@@ -40,7 +40,7 @@ admin_users            = []
 guest_users            = []
 default_user_role      = "user"
 save_user_access_times = False
-user_online_maxage     = 10 # seconds
+user_online_maxage     = 30 # seconds
 
 # New style, used by WATO
 multisite_users = {}

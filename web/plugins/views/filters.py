@@ -708,7 +708,9 @@ class FilterHostTags(Filter):
         for entry in config.wato_host_tags:
             grouped.setdefault(entry[0], [["", ""]])
 
-            for tag, title, aux_tags in entry[2]:
+            for tag_entry in entry[2]:
+                tag   = tag_entry[0]
+                title = tag_entry[1]
                 if tag is None:
                     tag = ''
                 grouped[entry[0]].append([tag, str(title)])

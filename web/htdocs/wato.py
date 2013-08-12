@@ -572,16 +572,17 @@ def load_hosts_file(folder):
     filename = root_dir + folder[".path"] + "/hosts.mk"
     if os.path.exists(filename):
         variables = {
-            "FOLDER_PATH"         : "",
-            "ALL_HOSTS"           : ALL_HOSTS,
-            "all_hosts"           : [],
-            "clusters"            : {},
-            "ipaddresses"         : {},
-            "extra_host_conf"     : { "alias" : [] },
-            "extra_service_conf"  : { "_WATO" : [] },
-            "host_attributes"     : {},
-            "host_contactgroups"  : [],
-            "_lock"               : False,
+            "FOLDER_PATH"               : "",
+            "ALL_HOSTS"                 : ALL_HOSTS,
+            "all_hosts"                 : [],
+            "clusters"                  : {},
+            "ipaddresses"               : {},
+            "explicit_snmp_communities" : {},
+            "extra_host_conf"           : { "alias" : [] },
+            "extra_service_conf"        : { "_WATO" : [] },
+            "host_attributes"           : {},
+            "host_contactgroups"        : [],
+            "_lock"                     : False,
         }
         execfile(filename, variables, variables)
         nodes_of = {}
@@ -610,8 +611,9 @@ def load_hosts_file(folder):
                     alias = aliases[0]
                 else:
                     alias = None
-                host["alias"]     = alias
-                host["ipaddress"] = ipaddress
+                host["alias"]           = alias
+                host["ipaddress"]       = ipaddress
+                host["snmp_community"]  = variables["explicit_snmp_communities"].get(hostname)
 
                 # Retrieve setting for each individual host tag
                 tags = set([ tag for tag in parts[1:] if tag != 'wato' and not tag.endswith('.mk') ])
@@ -675,6 +677,7 @@ def save_hosts(folder = None):
     all_hosts = [] # list of [Python string for all_hosts]
     clusters = [] # tuple list of (Python string, nodes)
     ipaddresses = {}
+    explicit_snmp_communities = {}
     hostnames = hosts.keys()
     hostnames.sort()
     custom_macros = {} # collect value for attributes that are to be present in Nagios
@@ -686,7 +689,8 @@ def save_hosts(folder = None):
 
         host = cleaned_hosts[hostname]
         effective = effective_attributes(host, folder)
-        ipaddress = effective.get("ipaddress")
+        ipaddress      = effective.get("ipaddress")
+        snmp_community = effective.get("snmp_community")
 
         # Compute tags from settings of each individual tag. We've got
         # the current value for each individual tag. Also other attributes
@@ -712,6 +716,8 @@ def save_hosts(folder = None):
 
         if ipaddress:
             ipaddresses[hostname] = ipaddress
+        if snmp_community:
+            explicit_snmp_communities[hostname] = snmp_community
 
         # Create contact group rule entries for hosts with explicitely set values
         # Note: since the type if this entry is a list, not a single contact group, all other list
@@ -754,6 +760,12 @@ def save_hosts(folder = None):
         out.write("\n# Explicit IP addresses\n")
         out.write("ipaddresses.update(")
         out.write(pprint.pformat(ipaddresses))
+        out.write(")\n")
+
+    if len(ipaddresses) > 0:
+        out.write("\n# Explicit SNMP communities\n")
+        out.write("explicit_snmp_communities.update(")
+        out.write(pprint.pformat(explicit_snmp_communities))
         out.write(")")
     out.write("\n")
 

@@ -122,6 +122,8 @@
                                          requests, queue
     * Custom user attributes can now be managed using WATO
     * Allow GIT to be used for change tracking (enable via global option)
+    * Hosts/Folders: SNMP communities can now be configured via the host
+      and folders hierarchy. Those settings override the rule base config.
     * FIX: do validation of check items in rule editor
     * FIX: More consistent handling of folderpath select in rule editor
     * Require unique alias names in between the following elements:

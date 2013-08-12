@@ -46,6 +46,17 @@ declare_host_attribute(TextAttribute("ipaddress", _("IP address"),
                          show_in_table = True,
                          show_in_folder = False)
 
+declare_host_attribute(TextAttribute("snmp_community", _("SNMP Community"),
+                       _("Using this option you can configure the community which should be used when "
+                         "contacting this host via SNMP v1 or v2. It is possible to configure the SNMP community by "
+                         "using the <a href=\"%s\">SNMP Communities</a> ruleset, but when you configure "
+                         "some community here, this will override the community defined by the rules.") % \
+                             html.makeuri([('mode', 'edit_ruleset'), ('varname', 'snmp_communities')]),
+                         allow_empty = False),
+                         show_in_table = False,
+                         show_in_folder = True,
+                         depends_on_tags = ['snmp'])
+
 # Attribute for configuring parents
 class ParentsAttribute(ValueSpecAttribute):
     def __init__(self):

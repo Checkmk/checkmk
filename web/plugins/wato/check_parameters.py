@@ -163,7 +163,7 @@ register_rule(group + '/' + subgroup_inventory,
                 title = _("Create check if service is in start mode"),
             )),
         ],
-        help = _('<p>This rule can be used to configure the inventory of the windows services check. '
+        help = _('This rule can be used to configure the inventory of the windows services check. '
                  'You can configure specific window services to be monitored by the windows check by '
                  'selecting them by name, current state during the inventory or start mode.'),
     ),
@@ -279,7 +279,7 @@ register_rule(group + '/' + subgroup_networking,
               columns = 3)),
 
         ],
-        help = _('<p>This rule can be used to control the inventory for network ports. '
+        help = _('This rule can be used to control the inventory for network ports. '
                  'You can configure the port types and port states for inventory'
                  'and the use of alias or description as service name.'),
     ),

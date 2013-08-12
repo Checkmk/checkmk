@@ -164,8 +164,8 @@ register_rule(group + '/' + subgroup_inventory,
             )),
         ],
         help = _('This rule can be used to configure the inventory of the windows services check. '
-                 'You can configure specific window services to be monitored by the windows check by '
-                 'selecting them by name, current state during the inventory or start mode.'),
+                 'You can configure specific windows services to be monitored by the windows check by '
+                 'selecting them by name, current state during the inventory, or start mode.'),
     ),
     match = 'all',
 )
@@ -418,8 +418,8 @@ register_rule(group + '/' + subgroup_inventory,
                 default_value = 'SAP CCMS Monitor Templates/Dialog Overview/Dialog Response Time/ResponseTime',
             )),
             ('limit_item_levels', Integer(
-                title = _("Limit Levels for Service Names"),
-                unit = _('levels'),
+                title = _("Limit Path Levels for Service Names"),
+                unit = _('path levels'),
                 minvalue = 1,
                 help = _("The service descriptions of the inventorized services are named like the paths "
                          "in SAP. You can use this option to let the inventory function only use the last "
@@ -505,18 +505,19 @@ register_check_parameters(
             ("bw",
               Alternative(
                   title = _("Throughput levels"),
-                  help = _("In few cases you have to set the link speed manually it you want "
-                           "to use relative levels"),
+                  help = _("Please note: in a few cases the automatic detection of the link speed "
+                           "does not work. In these cases you have to set the link speed manually "
+                           "below if you want to monitor percentage values"),
                   elements = [
                       Tuple(
-                        title = _("Maximum bandwidth in relation to the total traffic"),
+                        title = _("Used bandwidth of port relative to the link speed"),
                         elements = [
                             Percentage(title = _("Warning if above"), unit = _("percent")),
                             Percentage(title = _("Critical if above"), unit = _("percent")),
                         ]
                     ),
                     Tuple(
-                        title = _("Megabyte bandwidth of the port"),
+                        title = _("Used Bandwidth of port in megabyte/s"),
                         elements = [
                             Integer(title = _("Warning if above"), unit = _("MByte/s")),
                             Integer(title = _("Critical if above"), unit = _("MByte/s")),
@@ -527,9 +528,8 @@ register_check_parameters(
             ("assumed_speed",
                 Float(
                     title = _("Assumed link speed"),
-                    help = _("If the automatic detection of the link "
-                             "speed does not work and you want monitors the relative levels of the "
-                             "throughtput you have to set the link speed here."),
+                    help = _("If the automatic detection of the link speed does "
+                             "not work you can set the link speed here."),
                     unit = _("GByte/s")
                 )
             ),
@@ -571,10 +571,9 @@ register_check_parameters(
             ),
             ("average",
                 Integer (
-                    title = _("Average"),
-                    help = _("A number in minutes. If this parameter is set, then "
-                           "averaging is turned on and all levels will be applied "
-                           "to the averaged values, not the the current ones. Per "
+                    title = _("Averaging"),
+                    help = _("If this parameter is set, all throughputs will be averaged "
+                           "over the specified time interval before levels are being applied. Per "
                            "default, averaging is turned off. "),
                    unit = _("minutes"),
                    minvalue = 1,
@@ -634,7 +633,7 @@ register_check_parameters(
         ]
       ),
     TextAscii(
-        title = _("Portname"),
+        title = _("port name"),
         help = _("The name of the switch port"),
     ),
     "first"
@@ -757,9 +756,8 @@ register_rule(group + '/' + subgroup_storage,
                   'will create a single service for each filesystem. '
                   'By defining grouping '
                   'patterns you can handle groups of filesystems like one filesystem. '
-                  'For each group you can define one or several patterns containing '
-                  '<tt>*</tt> and <tt>?</tt>, for example '
-                  '<tt>/spool/tmpspace*</tt>. The filesystems matching one of the patterns '
+                  'For each group you can define one or several patterns. '
+                  'The filesystems matching one of the patterns '
                   'will be monitored like one big filesystem in a single service.'),
     valuespec = ListOf(
       Tuple(
@@ -771,6 +769,10 @@ register_rule(group + '/' + subgroup_storage,
              ),
              TextAscii(
                  title = _("File pattern (using * and ?)"),
+                 help  = _("You can specify one or several patterns containing "
+                           "<tt>*</tt> and <tt>?</tt>, for example <tt>/spool/tmpspace*</tt>. "
+                           "The filesystems matching the patterns will be monitored "
+                           "like one big filesystem in a single service."),
              ),
           ]
       ),
@@ -1257,7 +1259,7 @@ register_check_parameters(
 filesystem_elements = [
     ( "levels",
       Tuple(
-          title = _("Levels for the used space"),
+          title = _("Levels for filesystem usage"),
           elements = [
               Percentage(title = _("Warning if above"),  unit = _("% usage"), allow_int = True, default_value=80),
               Percentage(title = _("Critical if above"), unit = _("% usage"), allow_int = True, default_value=90)])),
@@ -1272,49 +1274,49 @@ filesystem_elements = [
            title = _("Reference size for magic factor"),
            default_value = 20,
            minvalue = 1,
-           label = _("GB"))),
+           unit = _("GB"))),
     ( "levels_low",
       Tuple(
           title = _("Minimum levels if using magic factor"),
           help = _("The filesystem levels will never fall below these values, when using "
                    "the magic factor and the filesystem is very small."),
           elements = [
-              Percentage(title = _("Warning if above"),  label = _("usage"), allow_int = True, default_value=50),
-              Percentage(title = _("Critical if above"), label = _("usage"), allow_int = True, default_value=60)])),
+              Percentage(title = _("Warning if above"),  unit = _("% usage"), allow_int = True, default_value=50),
+              Percentage(title = _("Critical if above"), unit = _("% usage"), allow_int = True, default_value=60)])),
     (  "trend_range",
        Optional(
            Integer(
-               title = _("Range for filesystem trend computation"),
+               title = _("Time Range for filesystem trend computation"),
                default_value = 24,
                minvalue = 1,
-               label= _("hours")),
+               unit= _("hours")),
            title = _("Trend computation"),
            label = _("Enable trend computation"))),
     (  "trend_mb",
        Tuple(
-           title = _("Levels on trends in MB per range"),
+           title = _("Levels on trends in MB per time range"),
            elements = [
-               Integer(title = _("Warning if above"), label = _("MB / range"), default_value = 100),
-               Integer(title = _("Critical if above"), label = _("MB / range"), default_value = 200)
+               Integer(title = _("Warning if above"), unit = _("MB / range"), default_value = 100),
+               Integer(title = _("Critical if above"), unit = _("MB / range"), default_value = 200)
            ])),
     (  "trend_perc",
        Tuple(
-           title = _("Levels for the percentual growth"),
+           title = _("Levels for the percentual growth per time range"),
            elements = [
-               Percentage(title = _("Warning if above"), label = _("% / range"), default_value = 5,),
-               Percentage(title = _("Critical if above"), label = _("% / range"), default_value = 10,),
+               Percentage(title = _("Warning if above"), unit = _("% / range"), default_value = 5,),
+               Percentage(title = _("Critical if above"), unit = _("% / range"), default_value = 10,),
            ])),
     (  "trend_timeleft",
        Tuple(
            title = _("Levels on the time left until the filesystem gets full"),
            elements = [
-               Integer(title = _("Warning if above"), label = _("hours left"), default_value = 12,),
-               Integer(title = _("Critical if above"), label = _("hours left"), default_value = 6, ),
+               Integer(title = _("Warning if below"), unit = _("hours"), default_value = 12,),
+               Integer(title = _("Critical if below"), unit = _("hours"), default_value = 6, ),
            ])),
     ( "trend_perfdata",
       Checkbox(
           title = _("Trend performance data"),
-          label = _("Enable performance data from trends"))),
+          label = _("Enable generation of performance data from trends"))),
 ]
 
 register_check_parameters(
@@ -2762,12 +2764,12 @@ register_check_parameters(
     Tuple(
         help = _("Levels for the FAN speed of a hardware device like a switch"),
         elements = [
-            Integer(title = _("warning bellow"), unit = u"rpm", default_value = 3000),
-            Integer(title = _("critical bellow"), unit = u"rpm", default_value = 2500),
+            Integer(title = _("warning if below"), unit = u"rpm", default_value = 3000),
+            Integer(title = _("critical if below"), unit = u"rpm", default_value = 2500),
         ]),
     TextAscii(
         title = _("Fan Name"),
-        help = _("The identificator of the Fan.")),
+        help = _("The identificator of the fan.")),
     "first"
 )
 

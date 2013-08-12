@@ -1,0 +1,45 @@
+Title: host_state (and others) are not treated as integers in log table
+Component: livestatus
+State: open
+Date: 2013-08-12 10:45:03
+Targetversion: 1.2.2
+Class: bug
+
+Multisite assumes that columns like the host_state are integers.
+
+
+GET log
+Columns: host_state host_has_been_checked host_name service_max_check_attempts service_description service_current_attempt
+Filter: class = 1
+Stats: state = 0
+Stats: state = 1
+Stats: state = 2
+Stats: state = 3
+Stats: state != 0
+OutputFormat: python
+
+this results in [u"1",u"1",u"win7",u"1",u"Check_MK",u"1",0,0,1,0,1],
+[u"1",u"1",u"win7",u"1",u"Check_MK inventory",u"1",0,0,0,1,1]]
+
+we see host_state and host_has_been_checked and service_max_check_attempts as
+strings which should really be integers.
+
+This host_state results in an exception in views which use the alert statistics
+datasource and have sounds enabled.
+
+Internal error:: u'0'
+
+Traceback (most recent call last):
+  File "/omd/sites/event/share/check_mk/web/htdocs/index.py", line 330, in handler
+    handler()
+  File "/omd/sites/event/share/check_mk/web/htdocs/views.py", line 1118, in page_view
+    show_view(view, True, True, True)
+  File "/omd/sites/event/share/check_mk/web/htdocs/views.py", line 1400, in show_view
+    browser_reload)
+  File "/omd/sites/event/share/check_mk/web/htdocs/views.py", line 1496, in render_view
+    show_checkboxes and not html.do_actions())
+  File "/omd/sites/event/share/check_mk/web/plugins/views/layouts.py", line 121, in render_grouped_boxes
+    register_events(row) # needed for playing sounds
+  File "/omd/sites/event/share/check_mk/web/htdocs/views.py", line 2565, in register_events
+    html.register_event({0:"up", 1:"down", 2:"unreachable"}[host_state])
+KeyError: u'0'

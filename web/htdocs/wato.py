@@ -10290,6 +10290,7 @@ def mode_rulesets(phase):
             html.write('<span class=dots>%s</span></div>' % ("." * 100))
             html.write('<div class="rulecount %s" title="%s">%d</div>' %
                       (num_rules and "nonzero" or "zero", title, num_rules))
+            html.help(rulespec["help"])
             html.write('</div>')
 
     if something_shown:

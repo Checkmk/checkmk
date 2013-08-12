@@ -327,12 +327,14 @@ class TextAscii(ValueSpec):
     def render_input(self, varprefix, value):
         if value == None:
             value = ""
+        elif type(value) != unicode:
+            value = str(value)
 
         if self._label:
             html.write(self._label)
             html.write("&nbsp;")
 
-        html.text_input(varprefix, str(value), size = self._size, read_only = self._read_only)
+        html.text_input(varprefix, value, size = self._size, read_only = self._read_only)
         self.render_buttons()
 
     def render_buttons(self):

@@ -233,6 +233,7 @@ snmp_default_community             = 'public'
 snmp_communities                   = []
 snmp_timing                        = []
 snmp_character_encodings           = []
+explicit_snmp_communities          = {} # override the rule based configuration
 
 # Inventory and inventory checks
 inventory_check_interval           = None # Nagios intervals (4h = 240)
@@ -644,6 +645,11 @@ def snmp_base_command(what, hostname):
 # the snmp_default_community is returned (wich is preset with
 # "public", but can be overridden in main.mk
 def snmp_credentials_of(hostname):
+    try:
+        return explicit_snmp_communities[hostname]
+    except KeyError:
+        pass
+
     communities = host_extra_conf(hostname, snmp_communities)
     if len(communities) > 0:
         return communities[0]

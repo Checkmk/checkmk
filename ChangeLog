@@ -11,6 +11,7 @@
     * Predictive monitoring: correctly handle spaces in variable names (thanks
        to Karl Golland)
     * New man page browser for console (cmk -m)
+    * New option explicit_snmp_communities to override rule based SNMP settings
     * livestatus: new service column staleness: indicator for outdated service checks
     * livestatus: new host    column staleness: indicator for outdated host checks
 

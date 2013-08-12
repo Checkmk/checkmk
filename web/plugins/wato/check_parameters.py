@@ -768,7 +768,7 @@ register_rule(group + '/' + subgroup_storage,
                  title = _("Name of group"),
              ),
              TextAscii(
-                 title = _("File pattern (using * and ?)"),
+                 title = _("Pattern for mount point (using * and ?)"),
                  help  = _("You can specify one or several patterns containing "
                            "<tt>*</tt> and <tt>?</tt>, for example <tt>/spool/tmpspace*</tt>. "
                            "The filesystems matching the patterns will be monitored "
@@ -805,7 +805,7 @@ register_rule(group + '/' + subgroup_storage,
                  title = _("Name of group"),
              ),
              TextAscii(
-                 title = _("Pattern for mount point (using * and ?)"),
+                 title = _("File pattern (using * and ?)"),
              ),
           ]
       ),
@@ -824,8 +824,8 @@ register_check_parameters(
                 Tuple(
                     title = _("Minimal age of oldest file"),
                     elements = [
-                      Age(title = _("Warning younger than")),
-                      Age(title = _("Critical younger than")),
+                      Age(title = _("Warning if younger than")),
+                      Age(title = _("Critical if younger than")),
                     ]
                 )
             ),

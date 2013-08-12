@@ -2048,7 +2048,15 @@ def mode_edithost(phase, new, cluster):
             if errors: # keep on this page if host does not validate
                 return
             elif new:
-                return go_to_services and "firstinventory" or "folder"
+                if host.get('tag_agent') != 'ping':
+                    create_result = 'folder', _('Successfully created the host. Now you should do an '
+                                                '<a href="%s">inventory</a> in order to auto-configure '
+                                                'all services to be checked on this host.') % \
+                                                    make_link([("mode", "inventory"), ("host", hostname)])
+                else:
+                    create_result = 'folder'
+
+                return go_to_services and "firstinventory" or create_result
             else:
                 return go_to_services and "inventory" or "folder"
 

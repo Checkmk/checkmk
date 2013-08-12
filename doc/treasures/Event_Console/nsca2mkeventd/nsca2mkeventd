@@ -7,6 +7,7 @@
 import os, sys, getopt, traceback, time, socket
 
 opt_debug       = False
+opt_verbose     = False
 opt_foreground  = False
 
 g_application   = 'nsca'
@@ -40,6 +41,10 @@ def log(text):
     except:
         sys.stderr.write("%s\n" % text)
 
+def verbose(txt):
+    if opt_verbose:
+        log(txt)
+
 def usage():
     sys.stdout.write('''Usage: nsca2mkeventd [OPTIONS]
 
@@ -47,6 +52,7 @@ def usage():
     -d, --debug          Enable debug mode (let exceptions through)
     -E, --eventsocket P  Path to unix socket to write events to
     -P, --pipe P         Path to pipe for receiving events from NSCA
+    -v, --verbose        Log more details
 
 Default paths:
 
@@ -176,9 +182,12 @@ def forward_line(parsed):
         output = '%s: %s' % (svc_desc, output)
 
     t = time.strftime("%b %d %H:%M:%S", time.localtime(timestamp))
+    line = "<%d>%s %s %s: %s\n" % (state_to_prio(state), t, hostname, g_application, output)
+
     s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     s.connect(g_eventsocket_path)
-    s.send("<%d>%s %s %s: %s\n" % (state_to_prio(state), t, hostname, g_application, output))
+    verbose('=> %r' % line.rstrip())
+    s.send(line)
     s.close()
 
 def main():
@@ -188,6 +197,7 @@ def main():
         try:
             for line in file(g_pipe_path):
                 try:
+                    verbose('<= %r' % line.rstrip())
                     parsed = parse_line(line.rstrip())
                     forward_line(parsed)
                 except Exception, e:
@@ -217,8 +227,8 @@ else:
     g_eventsocket_path = None
     g_logfile_path     = "/var/log/nsca2mkeventd.log"
 
-short_options = "hdgP:E:"
-long_options = [ "help", "foreground", "debug", "eventsocket=", "pipe=" ]
+short_options = "hdvgP:E:"
+long_options = [ "help", "foreground", "debug", "verbose", "eventsocket=", "pipe=" ]
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -227,6 +237,8 @@ try:
     for o, a in opts:
         if o in [ '-d', '--debug' ]:
             opt_debug = True
+        elif o in [ '-v', '--verbose' ]:
+            opt_verbose = True
         elif o in [ '-g', '--foreground' ]:
             opt_foreground = True
         elif o in [ '-E', '--eventsocket' ]:

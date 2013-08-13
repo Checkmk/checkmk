@@ -699,6 +699,21 @@ register_check_parameters(
 )
 
 register_check_parameters(
+   subgroup_environment,
+    "ups_test",
+    _("Time since last UPS selftest"),
+    Tuple(
+        title = _("Time since last UPS selftest"),
+        elements = [
+           Age(title = _("Warning if above")),
+           Age(title = _("Critical if above")),
+        ]
+    ),
+    None,
+    "first"
+)
+
+register_check_parameters(
     subgroup_storage,
     "fileinfo",
     _("Size and age of single files"),
@@ -2865,7 +2880,7 @@ register_check_parameters(
 register_check_parameters(
    subgroup_os,
     "apc_symentra",
-    _("Levels for APC Symentra Check"),
+    _("APC Symentra Checks"),
     Tuple(
         elements = [
             Integer(

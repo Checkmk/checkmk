@@ -97,7 +97,7 @@ function wato_fix_visibility() {
             /* If the Checkbox is unchecked try to get a value from the inherited_tags */
             var oCheckbox = oTdLegend.childNodes[1].childNodes[0];
             if (oCheckbox.checked == false ){
-                var attrname = oCheckbox.parentNode.parentNode.id;
+                var attrname = 'attr_' + oCheckbox.name.replace('_change_', '');
                 if(attrname in inherited_tags && inherited_tags[attrname] !== null){
                     currentTags = currentTags.concat(inherited_tags[attrname].split("|"));
                 }

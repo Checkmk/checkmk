@@ -124,10 +124,12 @@
     * Allow GIT to be used for change tracking (enable via global option)
     * Hosts/Folders: SNMP communities can now be configured via the host
       and folders hierarchy. Those settings override the rule base config.
-    * FIX: do validation of check items in rule editor
-    * FIX: More consistent handling of folderpath select in rule editor
     * Require unique alias names in between the following elements:
       Host/Service/Contact Groups, Timeperiods and Roles
+    * FIX: do validation of check items in rule editor
+    * FIX: More consistent handling of folderpath select in rule editor
+    * FIX: Now correctly handling depends_on_tags on page rendering for
+           inherited values
 
     Notifications:
     * Flexible Notification can now filter service levels

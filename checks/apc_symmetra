@@ -72,7 +72,8 @@ def check_apc(item, params, info):
                     6:"software bypass", 7:"off", 8:"rebooting", 9:"switched bypass",
                    10:"hardware failure bypass", 11:"sleeping until power return",
                    12:"on smart trim" }
-    infotxt = "output status: %s" % (status_text.get(BasicOutputStatus))
+    calib_text = { 1:"", 2:"/calibration invalid", 3:"/calibration in progress" }
+    infotxt = "output status: %s%s" % (status_text.get(BasicOutputStatus), calib_text.get(AdvTestCalibrationResults))
     if BasicOutputStatus not in [2, 4, 12] and AdvTestCalibrationResults != 3:
         state = 2
         infotxt += "(!!)"

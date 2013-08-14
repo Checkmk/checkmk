@@ -121,10 +121,10 @@ def check_apc(item, params, info):
     single_states.append( (0, "output current %dA" % AdvOutputCurrent, ("current", AdvOutputCurrent)) )
 
     # 8. run time remaining
-    # RunTimeRemaining == "0:0:26:00.00"
+    # RunTimeRemaining formatiert == "26:00.00"
     hrs = int(RunTimeRemaining) / 3600
     mins, secs = divmod(int(RunTimeRemaining) % 3600, 60)
-    single_states.append( (0, "run time remaining: %02d:%02d:%02d" % (hrs, mins, secs), None) )
+    single_states.append( (0, "run time remaining: %02d:%02d:%02d" % (hrs, mins, secs), ("runtime", RunTimeRemaining/60)) )
 
     # create summary state
     worst_state = max([x[0] for x in single_states])

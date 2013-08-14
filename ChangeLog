@@ -109,6 +109,9 @@
     * Added new painters for displaying host tags (list of tags, single tag
     groups). All those painters are sortable. Also added new filters for tags.
     * Added painters, icon and filters for visualizing staleness information
+    * Improved filtering of the foldertree snapin by user permissions (when a user is
+      only permitted on one child folder, the upper folder is removed from the
+      hierarchy)
     * FIX: better error message in case of exception in SNMP handling
     * FIX: Inventory screen: Now shows custom checks
     * FIX: Fixed locking problem of multisite pages related to user loading/saving

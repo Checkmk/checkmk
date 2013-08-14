@@ -156,6 +156,7 @@ def render_wato_foldertree():
             '.folders':   {},
         }
 
+
     # After the query we have a list of lists where each
     # row is a folder with the number of hosts on this level.
     #
@@ -188,6 +189,25 @@ def render_wato_foldertree():
 
         user_folders[parent_folder]['.folders'][folder_path] = folder
         del user_folders[folder_path]
+
+    #
+    # Now reduce the tree by e.g. removing top-level parts which the user is not
+    # permitted to see directly. Example:
+    # Locations
+    #  -> Hamburg: Permitted to see all hosts
+    #  -> Munich:  Permitted to see no host
+    # In this case, where only a single child with hosts is available, remove the
+    # top level
+    def reduce_tree(folders):
+        for folder_path, folder in folders.items():
+            if len(folder['.folders']) == 1:
+                child_path, child_folder = folder['.folders'].items()[0]
+                folders[child_path] = child_folder
+                del folders[folder_path]
+
+                reduce_tree(folders)
+
+    reduce_tree(user_folders)
 
     #
     # Render link target selection
@@ -224,7 +244,7 @@ def render_wato_foldertree():
 
     # Now render the whole tree
     if user_folders:
-        render_tree_folder(user_folders[''])
+        render_tree_folder(user_folders.values()[0])
 
 def render_tree_folder(f):
     subfolders = f.get(".folders", {})

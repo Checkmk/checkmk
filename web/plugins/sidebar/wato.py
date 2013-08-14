@@ -200,7 +200,7 @@ def render_wato_foldertree():
     # top level
     def reduce_tree(folders):
         for folder_path, folder in folders.items():
-            if len(folder['.folders']) == 1:
+            if len(folder['.folders']) == 1 and folder['.num_hosts'] == 0:
                 child_path, child_folder = folder['.folders'].items()[0]
                 folders[child_path] = child_folder
                 del folders[folder_path]

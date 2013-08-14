@@ -713,7 +713,10 @@ class FilterHostTags(Filter):
                 title = tag_entry[1]
                 if tag is None:
                     tag = ''
-                grouped[entry[0]].append([tag, str(title)])
+                
+                if type(title) == unicode:
+                    title = title.encode("utf-8")
+                grouped[entry[0]].append([tag, title])
 
         html.javascript('g_hosttag_groups = %r;' % grouped)
         html.write('<table>')

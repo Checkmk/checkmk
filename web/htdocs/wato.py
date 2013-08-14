@@ -5681,7 +5681,8 @@ def mode_globalvars(phase):
             defaultvalue = default_values.get(varname, valuespec.default_value())
 
             edit_url = make_link([("mode", "edit_configvar"), ("varname", varname)])
-            title = '<a href="%s">%s</a>' % (edit_url, valuespec.title())
+            title = '<a href="%s" title="%s">%s</a>' % \
+                    (edit_url, html.strip_tags(valuespec.help() or ''), valuespec.title())
 
             if varname in current_settings:
                 to_text = valuespec.value_to_text(current_settings[varname])
@@ -10308,8 +10309,8 @@ def mode_rulesets(phase):
             html.write('<a class="%s" href="%s">%s</a>' %
                       (num_rules and "nonzero" or "zero", view_url, rulespec["title"]))
             html.write('<span class=dots>%s</span></div>' % ("." * 100))
-            html.write('<div class="rulecount %s" title="%s">%d</div>' %
-                      (num_rules and "nonzero" or "zero", title, num_rules))
+            html.write('<div class="rulecount %s">%d</div>' %
+                      (num_rules and "nonzero" or "zero", num_rules))
             html.write('</div>')
 
     if something_shown:

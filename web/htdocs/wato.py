@@ -10304,13 +10304,12 @@ def mode_rulesets(phase):
             if only_host:
                 url_vars.append(("host", only_host))
             view_url = make_link(url_vars)
-            html.write('<div class=ruleset><div class=text>')
+            html.write('<div class=ruleset title="%s"><div class=text>' % html.strip_tags(rulespec["help"]))
             html.write('<a class="%s" href="%s">%s</a>' %
                       (num_rules and "nonzero" or "zero", view_url, rulespec["title"]))
             html.write('<span class=dots>%s</span></div>' % ("." * 100))
             html.write('<div class="rulecount %s" title="%s">%d</div>' %
                       (num_rules and "nonzero" or "zero", title, num_rules))
-            html.help(rulespec["help"])
             html.write('</div>')
 
     if something_shown:

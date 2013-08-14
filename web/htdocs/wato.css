@@ -781,16 +781,6 @@ div.rulesets table.nform tr.bottom td {
     /* color: #444; */
 }
 
-.wato .rulesets div.ruleset.nofloat {
-    float: none;
-    clear: left;
-}
-
-.wato .rulesets div.ruleset div.help {
-    height: auto;
-    clear: left;
-}
-
 /* Page edit_ruleset */
 div.varname {
     color: white;

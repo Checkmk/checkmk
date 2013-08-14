@@ -118,7 +118,7 @@ def check_ups_test(item, params, info):
     elif warn and ElapsedTime >= warn:
         state = max(state, 1)
         time_label = "(!)"
-    
+
     ResultsDetail = "%s%s Time elapsed since test: %s%s" % (line[-1], state_label, etime, time_label)
 
     perf = [ ( "ElapsedTime", ElapsedTime, warn, crit) ]

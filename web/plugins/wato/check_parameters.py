@@ -2880,24 +2880,46 @@ register_check_parameters(
 register_check_parameters(
    subgroup_os,
     "apc_symentra",
-    _("APC Symentra Checks"),
+    _("APC Symmetra Checks"),
     Tuple(
         elements = [
             Integer(
-                title = _("Max. Crit Capacity"),
+                title = _("Critical Battery Capacity"),
                 help = _("The battery capacity in percent at and below which a critical state is be triggered"),
+                unit = _("%"),
+                default_value = 95,
             ),
             Integer(
-                title = _("Max. Battery Temperature"),
+                title = _("Critical Battery Temperature"),
                 help = _("The critical temperature of the battery"),
+                unit = _("C"),
+                default_value = 40,
             ),
             Integer(
-                title = _("Max. Current Power"),
+                title = _("Critical Battery Current"),
                 help = _("The critical battery current in Ampere"),
+                unit = _("A"),
+                default_value = 1,
             ),
             Integer(
-                title = _("Min. Voltage"),
+                title = _("Critical Battery Voltage"),
                 help = _("The output voltage at and below which a critical state is triggered."),
+                unit = _("V"),
+                default_value = 220,
+            ),
+            Integer(
+                title = _("Warning Level for time since last diagnostic test"),
+                help = _("Warning Level for time since last diagnostic test of the device. "
+                         "For a value of 0 the warning level will not be used"),
+                unit = _("days"),
+                default_value = 0,
+            ),
+            Integer(
+                title = _("Critical Level for time since last diagnostic test"),
+                help = _("Critical Level for time since last diagnostic test of the device. "
+                         "For a value of 0 the critical level will not be used"),
+                unit = _("days"),
+                default_value = 0,
             ),
         ]
     ),

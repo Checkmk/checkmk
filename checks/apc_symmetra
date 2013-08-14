@@ -32,27 +32,34 @@
 # PowerNet-MIB::upsAdvBatteryCurrent.0     .1.3.6.1.4.1.318.1.1.1.2.2.9.0
 # PowerNet-MIB::upsAdvOutputVoltage.0      .1.3.6.1.4.1.318.1.1.1.4.2.1.0
 # PowerNet-MIB::upsAdvOutputCurrent.0      .1.3.6.1.4.1.318.1.1.1.4.2.4.0
+# PowerNet-MIB::upsAdvBatteryRunTimeRemaining.0      .1.3.6.1.4.1.318.1.1.1.2.2.3.0
+# PowerNet-MIB::upsAdvTestCalibrationResults   .1.3.6.1.4.1.318.1.1.1.7.2.6
 
 # upsBasicBatteryStatus: unknown(1), batteryNormal(2), batteryLow(3)
 # upsBasicOutputStatus: unknown(1),  onLine(2), onBattery(3), onSmartBoost(4),
 #   timedSleeping(5), softwareBypass(6), off(7), rebooting(8), switchedBypass(9),
 #   hardwareFailureBypass(10), sleepingUntilPowerReturn(11), onSmartTrim(12)
+# upsAdvTestCalibrationResults: ok(1), invalidTest(2), calibrationInProgress(3)
 
-apc_default_levels = ( 95, 40, 1, 220 )
+# levels refer to the apc_symentra group which has 6 values, 
+# only the first four are needed in this test
+# the others belong to the apc_symmetra_test check
+apc_default_levels = ( 95, 40, 1, 220, 0, 0 )
 
 def check_apc(item, params, info):
     BasicBatteryStatus, BasicOutputStatus, AdvBatteryCapacity, \
     AdvBatteryTemperature, AdvBatteryCurrent, AdvOutputVoltage, \
-    AdvOutputCurrent = [ saveint(x) for x in info[0][:7] ]
-    RunTimeRemaining = int(info[0][7]) / 100
+    AdvOutputCurrent, AdvBatteryRunTimeRemaining, AdvTestCalibrationResults \
+                                                = [ saveint(x) for x in info[0][:9] ]
+    RunTimeRemaining = AdvBatteryRunTimeRemaining / 100
 
-    crit_capacity, crit_batt_temp, crit_batt_curr, crit_voltage = params
+    crit_capacity, crit_batt_temp, crit_batt_curr, crit_voltage = params[0:4]
 
     single_states = []
 
     # 1. Check battery status
     status_text = { 1:"unknown", 2:"normal", 3:"low" }
-    infotxt = "Battery status %s" % (status_text.get(BasicBatteryStatus))
+    infotxt = "Battery status: %s" % (status_text.get(BasicBatteryStatus))
     if BasicBatteryStatus != 2:
         state = 2
         infotxt += "(!!)"
@@ -65,8 +72,8 @@ def check_apc(item, params, info):
                     6:"software bypass", 7:"off", 8:"rebooting", 9:"switched bypass",
                    10:"hardware failure bypass", 11:"sleeping until power return",
                    12:"on smart trim" }
-    infotxt = "output status %s" % (status_text.get(BasicOutputStatus))
-    if BasicOutputStatus not in [2, 4, 12]:
+    infotxt = "output status: %s" % (status_text.get(BasicOutputStatus))
+    if BasicOutputStatus not in [2, 4, 12] and AdvTestCalibrationResults != 3:
         state = 2
         infotxt += "(!!)"
     else:
@@ -138,5 +145,5 @@ check_info['apc_symmetra'] = {
   "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.318.1.3"),
   "snmp_info"           : (".1.3.6.1.4.1.318.1.1.1",
                           [ "2.1.1.0", "4.1.1.0", "2.2.1.0", "2.2.2.0",
-                             "2.2.9.0", "4.2.1.0", "4.2.4.0", "2.2.3.0" ] )
+                             "2.2.9.0", "4.2.1.0", "4.2.4.0", "2.2.3.0", "7.2.6.0" ] )
 }

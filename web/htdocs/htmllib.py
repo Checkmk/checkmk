@@ -371,7 +371,7 @@ class html:
         if hover_title:
             self.write(' title="%s"' % hover_title)
         if bestof:
-            self.write(' onmousedown="count_context_button(this); document.location=this.href; " ')
+            self.write(' onclick="count_context_button(this); document.location=this.href; " ')
         if fkey and self.keybindings_enabled:
             title += '<div class=keysym>F%d</div>' % fkey
             self.add_keybinding([html.F1 + (fkey - 1)], "document.location='%s';" % url)

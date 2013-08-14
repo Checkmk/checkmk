@@ -117,6 +117,8 @@
     * FIX: Fixed locking problem of multisite pages related to user loading/saving
     * FIX: Fixed wrong default settings of view filters in localized multisite
     * FIX: line wrapping of logwatch entries
+    * FIX: Fixed button dragging bug when opening the view editor
+           (at least in Firefox)
 
     WATO:
     * Allow to configure check-/retry_interval in second precision

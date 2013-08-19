@@ -27,6 +27,9 @@
 import wato
 
 def wato_link(folder, site, hostname, where):
+    if not config.wato_enabled:
+        return ""
+
     if 'X' in html.display_options:
         url = "wato.py?folder=%s&host=%s" % \
            (html.urlencode(folder), html.urlencode(hostname))

@@ -40,7 +40,7 @@
 #         DESCRIPTION
 #                 "The results of the last UPS diagnostics test performed."
 #         ::= { upsAdvTest 3 }
- 
+
 # PowerNet-MIB::upsAdvTestLastDiagnosticsDate  .1.3.6.1.4.1.318.1.1.1.7.2.4
 # upsAdvTestLastDiagnosticsDate OBJECT-TYPE
 #         SYNTAX DisplayString
@@ -50,55 +50,19 @@
 #                 "The date the last UPS diagnostics test was performed in
 #                  mm/dd/yy format."
 #         ::= { upsAdvTest 4 }
-# 
-
-# PowerNet-MIB::upsAdvTestCalibrationResults   .1.3.6.1.4.1.318.1.1.1.7.2.6
-# upsAdvTestCalibrationResults OBJECT-TYPE
-#         SYNTAX INTEGER {
-#                 ok(1),
-#                 invalidTest(2),
-#                 calibrationInProgress(3)
-#         }
-#         ACCESS read-only
-#         STATUS mandatory
-#         DESCRIPTION
-#                 "The results of the last runtime calibration.
-#                 
-#                  Value ok(1) means a successful runtime calibration.
-#                 
-#                  Value invalidTest(2) indicates last calibration did
-#                  not take place since the battery capacity was below
-#                  100%.
-#                 
-#                  Value calibrationInProgress(3) means a calibration 
-#                  is occurring now. "
-#         ::= { upsAdvTest 6 }
-  
-# PowerNet-MIB::upsAdvTestCalibrationDate      .1.3.6.1.4.1.318.1.1.1.7.2.7
-# upsAdvTestCalibrationDate OBJECT-TYPE
-#         SYNTAX DisplayString
-#         ACCESS read-only
-#         STATUS mandatory
-#         DESCRIPTION
-#                 "The date the last UPS runtime calibration was 
-#                  performed in mm/dd/yy format."
-#         ::= { upsAdvTest 7 }
-
-
-
-# levels refer to the apc_symentra group which has 6 values, 
-# only the last two are needed in this test
-# the others belong to the apc_symmetra check
+#
 
 import datetime
 
-apc_test_default_levels = ( 0, 0, 0, 0, 0, 0 )
+ups_test_default = ( 0, 0 )
 
 def check_apc_test(item, params, info):
-    warn, crit = params[4:]
+    warn, crit = params
+    if not info:
+        return 3, "Data Missing"
     line = info[0]
-    DiagnosticsResults, CalibrationResults = map(saveint, line[0:2])
-    LastDiagnosticsDate, TestCalibrationDate = line[2:4]
+    DiagnosticsResults = saveint(line[0])
+    LastDiagnosticsDate = line[1]
 
     month, day, year = map(saveint, LastDiagnosticsDate.split('/'))
     last_diag_date = datetime.date( year, month, day)
@@ -108,7 +72,6 @@ def check_apc_test(item, params, info):
     dwarn =  datetime.timedelta(days=warn)
 
     diagnostic_status_text = { 1:"OK", 2:"failed", 3:"invalid", 4:"in progress" }
-    calibration_status_text = { 1:"OK", 2:"invalid", 3:"in progress" }
 
     state = 0
     diag_label = ""
@@ -133,16 +96,16 @@ def check_apc_test(item, params, info):
     return (state, ResultsDetail )
 
 def inventory_apc_test(info):
-    if len(info) > 0:
-        return [(None, "apc_test_default_levels")]
+    if info:
+        return [(None, "ups_test_default")]
 
 
 check_info['apc_symmetra_test'] = {
   "inventory_function"  : inventory_apc_test,
   "check_function"      : check_apc_test,
-  "service_description" : "APC Symmetra Test Status",
+  "service_description" : "Self Test",
   "has_perfdata"        : False,
-  "group"               : "apc_symentra",
+  "group"               : "ups_test",
   "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.318.1.3"),
-  "snmp_info"           : (".1.3.6.1.4.1.318.1.1.1.7.2", [ 3,6,4,7 ] )
+  "snmp_info"           : (".1.3.6.1.4.1.318.1.1.1.7.2", [ 3,4 ] )
 }

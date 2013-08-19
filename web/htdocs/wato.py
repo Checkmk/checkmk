@@ -12965,7 +12965,7 @@ def mode_bi_edit_rule(phase):
         ( "params",
           ListOfStrings(
               title = _("Parameters"),
-              help = _("Parameters are used in order to make rules more flexible. The must "
+              help = _("Parameters are used in order to make rules more flexible. They must "
                        "be named like variables in programming languages. For example you can "
                        "make your rule have the two parameters <tt>HOST</tt> and <tt>INST</tt>. "
                        "When calling the rule - from an aggergation or a higher level rule - "

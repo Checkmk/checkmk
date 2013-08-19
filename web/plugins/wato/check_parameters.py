@@ -293,7 +293,7 @@ register_rule(group + '/' + subgroup_inventory,
             ('descr', TextAscii(
                 title = _('Service Description'),
                 help  = _('<p>The service description may contain one or more occurances of <tt>%s</tt>. If you do this, then the pattern must be a regular '
-                          'expression and be prefixed with ~. For each %s in the description, the expression has to contain one "group". A group '
+                          'expression and be prefixed with ~. For each <tt>%s</tt> in the description, the expression has to contain one "group". A group '
                           'is a subexpression enclosed in brackets, for example <tt>(.*)</tt> or <tt>([a-zA-Z]+)</tt> or <tt>(...)</tt>. When the inventory finds a process '
                           'matching the pattern, it will substitute all such groups with the actual values when creating the check. That way one '
                           'rule can create several checks on a host.</p>'
@@ -1222,7 +1222,7 @@ register_check_parameters(
             ( "remote_port", Integer(title = _("Remote port number"), minvalue = 1, maxvalue = 65535, )),
             ( "min_states",
                Tuple(
-                   title = _("Number of minimum connections or listeners"),
+                   title = _("Minimum number of connections or listeners"),
                    elements = [
                        Integer(title = _("Warning if above")),
                        Integer(title = _("Critical if above")),
@@ -1231,7 +1231,7 @@ register_check_parameters(
             ),
             ( "max_states",
                Tuple(
-                   title = _("Number of maximum connections or listeners"),
+                   title = _("Maximum number of connections or listeners"),
                    elements = [
                        Integer(title = _("Warning if above")),
                        Integer(title = _("Critical if above")),
@@ -1450,9 +1450,9 @@ register_check_parameters(
              ( "assumed_speed_in",
                OptionalDropdownChoice(
                         title = _("Assumed input speed"),
-                        help = _("If the automatic detection of the incoming link speed does not work "
+                        help = _("If the automatic detection of the link speed does not work "
                                  "or the switch's capabilities are throttled because of the network setup "
-                                 "you can set the assummend incoming speed here."),
+                                 "you can set the assumed speed here."),
                   choices = [
                      ( None,       _("ignore speed") ),
                      ( 10000000,    "10 MBit/s" ),
@@ -1469,9 +1469,9 @@ register_check_parameters(
              ( "assumed_speed_out",
                OptionalDropdownChoice(
                         title = _("Assumed output speed"),
-                        help = _("If the automatic detection of the outgoing speed does not work "
+                        help = _("If the automatic detection of the link speed does not work "
                                  "or the switch's capabilities are throttled because of the network setup "
-                                 "you can set the assummend outgoing speed here."),
+                                 "you can set the assumed speed here."),
                   choices = [
                      ( None,       _("ignore speed") ),
                      ( 10000000,    "10 MBit/s" ),

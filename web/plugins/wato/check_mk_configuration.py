@@ -399,6 +399,14 @@ register_configvar(group,
 
 
 register_configvar(group,
+    "wato_hide_help_in_lists",
+    Checkbox(title = _("Hide help text of rules in list views"),
+             label = _("hide help text"),
+             help = _("When disabled, WATO shows the help texts of the rules also in the list views."),
+             default_value = True),
+    domain = "multisite")
+
+register_configvar(group,
     "wato_use_git",
     Checkbox(title = _("Use GIT version control for WATO"),
              label = _("enable GIT version control"),

@@ -658,7 +658,7 @@ register_check_parameters(
 register_check_parameters(
    subgroup_os,
    "uptime",
-   _("Uptime (seconds since last reboot)"),
+   _("Uptime since last reboot"),
    Dictionary(
        elements = [
            ( "min",
@@ -949,8 +949,8 @@ register_check_parameters(
                 Tuple(
                     title = _("Write"),
                     elements = [
-                      Filesize(title = _("Warning when higher than")),
-                      Filesize(title = _("Critical when higher than")),
+                      Filesize(title = _("Warning if above")),
+                      Filesize(title = _("Critical if above")),
                     ]
                 )
             )
@@ -975,17 +975,17 @@ register_check_parameters(
                    title = _("Memory Levels"),
                    elements = [
                        Tuple(
-                           title = _("Levels in percent"),
+                           title = _("Usage Levels in Percent"),
                            elements = [
-                               Percentage(title = _("Warning if above"), label = _("% usage")),
-                               Percentage(title = _("Critical if above"), label = _("% usage")),
+                               Percentage(title = _("Warning if above") ),
+                               Percentage(title = _("Critical if above") ),
                            ]
                        ),
                        Tuple(
-                           title = _("Absolute levels"),
+                           title = _("Absolute Usage Levels"),
                            elements = [
-                                Filesize(title = _("Warning when higher than")),
-                                Filesize(title = _("Critical when higher than")),
+                                Filesize(title = _("Warning if above")),
+                                Filesize(title = _("Critical if above")),
                            ]
                         )
                    ])),
@@ -994,17 +994,17 @@ register_check_parameters(
                    title = _("Pagefile Levels"),
                    elements = [
                        Tuple(
-                           title = _("Levels in percent"),
+                           title = _("Usage Levels in Percent"),
                            elements = [
-                               Percentage(title = _("Warning if above"), label = _("% usage")),
-                               Percentage(title = _("Critical if above"), label = _("% usage")),
+                               Percentage(title = _("Warning if above")),
+                               Percentage(title = _("Critical if above")),
                            ]
                        ),
                        Tuple(
-                           title = _("Absolute levels"),
+                           title = _("Absolute Usage Levels"),
                            elements = [
-                                Filesize(title = _("Warning when higher than")),
-                                Filesize(title = _("Critical when higher than")),
+                                Filesize(title = _("Warning if above")),
+                                Filesize(title = _("Critical if above")),
                            ]
                         )
                    ])),
@@ -1864,10 +1864,10 @@ register_check_parameters(
           help = _("This Rulset sets the threshold limits for humidity sensors attached to "
                    "AKCP Sensor Probe "),
           elements = [
-              Integer(title = _("Critical if moisture lower than")),
-              Integer(title = _("Warning if moisture lower than")),
-              Integer(title = _("Warning if moisture higher than")),
-              Integer(title = _("Critical if moisture higher than")),
+              Integer(title = _("Critical if below"), unit="%" ),
+              Integer(title = _("Warning if below"), unit="%" ),
+              Integer(title = _("Warning if above"), unit="%" ),
+              Integer(title = _("Critical if above"), unit="%" ),
               ]),
     TextAscii(
         title = _("Service descriptions"),

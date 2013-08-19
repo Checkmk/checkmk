@@ -63,7 +63,7 @@ url = 'http://%slocalhost/%scheck_mk/view.py?view_name=aggr_summary&output_forma
   (logininfo, url_prefix)
 
 try:
-    command = "curl --silent %s '%s'" % (opts, url)
+    command = "curl --noproxy localhost --silent %s '%s'" % (opts, url)
     output = os.popen(command).read()
     data = eval(output)
 except:

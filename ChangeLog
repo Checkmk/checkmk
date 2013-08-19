@@ -7,6 +7,7 @@
     * FIX: blade_powerfan: fix mixup of default levels 50/40 -> 40/50
     * FIX: Cleaned up graph rendering of Check_MK services 
     * FIX: zypper: deal with output from SLES 10
+    * FIX: zpool_status: Ignoring "No known data errors" text
 
     Multisite:
     * FIX: LDAP: Disabling use of referrals in active directory configuration

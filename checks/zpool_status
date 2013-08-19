@@ -87,7 +87,9 @@ def check_zpool_status(_no_item, _no_params, info):
 
         if line[0] == "errors:":
             start_pool = False
-            pool_messages[last_pool] = " ".join(line[1:])
+            msg = " ".join(line[1:])
+            if msg != 'No known data errors':
+                pool_messages[last_pool] = msg
             continue
 
         if line[0] == "spares":

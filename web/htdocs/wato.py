@@ -10301,16 +10301,20 @@ def mode_rulesets(phase):
 
             something_shown = True
 
+            float_cls = (not config.wato_hide_help_in_lists and html.help_visible) and ' nofloat' or ''
             url_vars = [("mode", "edit_ruleset"), ("varname", varname)]
             if only_host:
                 url_vars.append(("host", only_host))
             view_url = make_link(url_vars)
-            html.write('<div class=ruleset title="%s"><div class=text>' % html.strip_tags(rulespec["help"]))
+            html.write('<div class="ruleset%s" title="%s"><div class=text>' %
+                                (float_cls, html.strip_tags(rulespec["help"] or '')))
             html.write('<a class="%s" href="%s">%s</a>' %
                       (num_rules and "nonzero" or "zero", view_url, rulespec["title"]))
             html.write('<span class=dots>%s</span></div>' % ("." * 100))
             html.write('<div class="rulecount %s">%d</div>' %
                       (num_rules and "nonzero" or "zero", num_rules))
+            if not config.wato_hide_help_in_lists and rulespec["help"]:
+                html.help(rulespec["help"])
             html.write('</div>')
 
     if something_shown:
@@ -12965,7 +12969,7 @@ def mode_bi_edit_rule(phase):
         ( "params",
           ListOfStrings(
               title = _("Parameters"),
-              help = _("Parameters are used in order to make rules more flexible. The must "
+              help = _("Parameters are used in order to make rules more flexible. They must "
                        "be named like variables in programming languages. For example you can "
                        "make your rule have the two parameters <tt>HOST</tt> and <tt>INST</tt>. "
                        "When calling the rule - from an aggergation or a higher level rule - "

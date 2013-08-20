@@ -68,6 +68,7 @@
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a
                  service has no service level set
+    * notify.py: fixed bug with local notification spooling
 
     Multisite:
     * User accounts can now be locked after a specified amount of auth

@@ -136,7 +136,8 @@ check_info['mysql.sessions'] = {
 #   '----------------------------------------------------------------------'
 
 def inventory_mysql_iostat(info):
-    if len(info) > 200:
+    values = parse_mysql(info)
+    if "Innodb_data_read" in values.keys():
         return [(None, {})]
 
 def check_mysql_iostat(item, params, info):

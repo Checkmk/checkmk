@@ -64,6 +64,7 @@
                      new script caching options "off", "async", "sync"
     * windows_agent: increased maximum local/plugin script output length to 512kB
                      (output buffer now grows dynamically)
+    * jolokia_metrics: fixed incorrect plugin output for high warn/crit levels
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a

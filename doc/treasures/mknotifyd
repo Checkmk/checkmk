@@ -232,10 +232,25 @@ class TcpServer:
         while not self._should_terminate:
             readable = select.select([self._tcp_socket], [], [], 0.5)[0]
             for s in readable:
+                client_data = ""
+                chunk_count = 0
                 client_socket, addr_info = s.accept()
-                client_data = client_socket.recv(8192)
+                while True:
+                    try:
+                        data_ready = select.select([client_socket], [], [], 2)[0]
+                        if data_ready:
+                            chunk = client_socket.recv(8192)
+                            if not chunk:
+                                break
+                            chunk_count += 1
+                            client_data += chunk
+                        else:
+                            break
+                    except:
+                        break # Error while reading
+
                 if opt_verbose > 1:
-                    verbose("Received notification %d from %s" % ( handled_connections, pprint.pformat(addr_info)), 2)
+                    verbose("Received notification %d from %s in %d chunks" % ( handled_connections, pprint.pformat(addr_info), chunk_count), 2)
                     handled_connections = handled_connections + 1
 
                 try:

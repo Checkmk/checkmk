@@ -44,7 +44,7 @@
 # levels refer to the apc_symentra group which has 6 values, 
 # only the first four are needed in this test
 # the others belong to the apc_symmetra_test check
-apc_default_levels = ( 95, 40, 1, 220, 0, 0 )
+apc_default_levels = ( 95, 40, 1, 220 )
 
 def check_apc(item, params, info):
     BasicBatteryStatus, BasicOutputStatus, AdvBatteryCapacity, \
@@ -53,7 +53,7 @@ def check_apc(item, params, info):
                                                 = [ saveint(x) for x in info[0][:9] ]
     RunTimeRemaining = AdvBatteryRunTimeRemaining / 100
 
-    crit_capacity, crit_batt_temp, crit_batt_curr, crit_voltage = params[0:4]
+    crit_capacity, crit_batt_temp, crit_batt_curr, crit_voltage = params
 
     single_states = []
 
@@ -72,8 +72,9 @@ def check_apc(item, params, info):
                     6:"software bypass", 7:"off", 8:"rebooting", 9:"switched bypass",
                    10:"hardware failure bypass", 11:"sleeping until power return",
                    12:"on smart trim" }
-    calib_text = { 1:"", 2:"/calibration invalid", 3:"/calibration in progress" }
+    calib_text = { 1:"", 2:" (calibration invalid)", 3:" (calibration in progress)" }
     infotxt = "output status: %s%s" % (status_text.get(BasicOutputStatus), calib_text.get(AdvTestCalibrationResults))
+    # during calibration test is OK
     if BasicOutputStatus not in [2, 4, 12] and AdvTestCalibrationResults != 3:
         state = 2
         infotxt += "(!!)"
@@ -124,7 +125,8 @@ def check_apc(item, params, info):
     # RunTimeRemaining formatiert == "26:00.00"
     hrs = int(RunTimeRemaining) / 3600
     mins, secs = divmod(int(RunTimeRemaining) % 3600, 60)
-    single_states.append( (0, "run time remaining: %02d:%02d:%02d" % (hrs, mins, secs), ("runtime", RunTimeRemaining/60)) )
+    single_states.append( (0, "run time remaining: %02d:%02d:%02d" % (hrs, mins, secs), 
+                            ("runtime", RunTimeRemaining/60)) )
 
     # create summary state
     worst_state = max([x[0] for x in single_states])

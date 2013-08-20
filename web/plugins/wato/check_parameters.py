@@ -293,7 +293,7 @@ register_rule(group + '/' + subgroup_inventory,
             ('descr', TextAscii(
                 title = _('Service Description'),
                 help  = _('<p>The service description may contain one or more occurances of <tt>%s</tt>. If you do this, then the pattern must be a regular '
-                          'expression and be prefixed with ~. For each %s in the description, the expression has to contain one "group". A group '
+                          'expression and be prefixed with ~. For each <tt>%s</tt> in the description, the expression has to contain one "group". A group '
                           'is a subexpression enclosed in brackets, for example <tt>(.*)</tt> or <tt>([a-zA-Z]+)</tt> or <tt>(...)</tt>. When the inventory finds a process '
                           'matching the pattern, it will substitute all such groups with the actual values when creating the check. That way one '
                           'rule can create several checks on a host.</p>'
@@ -658,7 +658,7 @@ register_check_parameters(
 register_check_parameters(
    subgroup_os,
    "uptime",
-   _("Uptime (seconds since last reboot)"),
+   _("Uptime since last reboot"),
    Dictionary(
        elements = [
            ( "min",
@@ -705,8 +705,20 @@ register_check_parameters(
     Tuple(
         title = _("Time since last UPS selftest"),
         elements = [
-           Age(title = _("Warning if above")),
-           Age(title = _("Critical if above")),
+            Integer(
+                title = _("Warning Level for time since last self test"),
+                help = _("Warning Level for time since last diagnostic test of the device. "
+                         "For a value of 0 the warning level will not be used"),
+                unit = _("days"),
+                default_value = 0,
+            ),
+            Integer(
+                title = _("Critical Level for time since last self test"),
+                help = _("Critical Level for time since last diagnostic test of the device. "
+                         "For a value of 0 the critical level will not be used"),
+                unit = _("days"),
+                default_value = 0,
+            ),
         ]
     ),
     None,
@@ -937,8 +949,8 @@ register_check_parameters(
                 Tuple(
                     title = _("Write"),
                     elements = [
-                      Filesize(title = _("Warning when higher than")),
-                      Filesize(title = _("Critical when higher than")),
+                      Filesize(title = _("Warning if above")),
+                      Filesize(title = _("Critical if above")),
                     ]
                 )
             )
@@ -963,17 +975,17 @@ register_check_parameters(
                    title = _("Memory Levels"),
                    elements = [
                        Tuple(
-                           title = _("Levels in percent"),
+                           title = _("Usage Levels in Percent"),
                            elements = [
-                               Percentage(title = _("Warning if above"), label = _("% usage")),
-                               Percentage(title = _("Critical if above"), label = _("% usage")),
+                               Percentage(title = _("Warning if above") ),
+                               Percentage(title = _("Critical if above") ),
                            ]
                        ),
                        Tuple(
-                           title = _("Absolute levels"),
+                           title = _("Absolute Usage Levels"),
                            elements = [
-                                Filesize(title = _("Warning when higher than")),
-                                Filesize(title = _("Critical when higher than")),
+                                Filesize(title = _("Warning if above")),
+                                Filesize(title = _("Critical if above")),
                            ]
                         )
                    ])),
@@ -982,17 +994,17 @@ register_check_parameters(
                    title = _("Pagefile Levels"),
                    elements = [
                        Tuple(
-                           title = _("Levels in percent"),
+                           title = _("Usage Levels in Percent"),
                            elements = [
-                               Percentage(title = _("Warning if above"), label = _("% usage")),
-                               Percentage(title = _("Critical if above"), label = _("% usage")),
+                               Percentage(title = _("Warning if above")),
+                               Percentage(title = _("Critical if above")),
                            ]
                        ),
                        Tuple(
-                           title = _("Absolute levels"),
+                           title = _("Absolute Usage Levels"),
                            elements = [
-                                Filesize(title = _("Warning when higher than")),
-                                Filesize(title = _("Critical when higher than")),
+                                Filesize(title = _("Warning if above")),
+                                Filesize(title = _("Critical if above")),
                            ]
                         )
                    ])),
@@ -1222,7 +1234,7 @@ register_check_parameters(
             ( "remote_port", Integer(title = _("Remote port number"), minvalue = 1, maxvalue = 65535, )),
             ( "min_states",
                Tuple(
-                   title = _("Number of minimum connections or listeners"),
+                   title = _("Minimum number of connections or listeners"),
                    elements = [
                        Integer(title = _("Warning if above")),
                        Integer(title = _("Critical if above")),
@@ -1231,7 +1243,7 @@ register_check_parameters(
             ),
             ( "max_states",
                Tuple(
-                   title = _("Number of maximum connections or listeners"),
+                   title = _("Maximum number of connections or listeners"),
                    elements = [
                        Integer(title = _("Warning if above")),
                        Integer(title = _("Critical if above")),
@@ -1450,9 +1462,9 @@ register_check_parameters(
              ( "assumed_speed_in",
                OptionalDropdownChoice(
                         title = _("Assumed input speed"),
-                        help = _("If the automatic detection of the incoming link speed does not work "
+                        help = _("If the automatic detection of the link speed does not work "
                                  "or the switch's capabilities are throttled because of the network setup "
-                                 "you can set the assummend incoming speed here."),
+                                 "you can set the assumed speed here."),
                   choices = [
                      ( None,       _("ignore speed") ),
                      ( 10000000,    "10 MBit/s" ),
@@ -1469,9 +1481,9 @@ register_check_parameters(
              ( "assumed_speed_out",
                OptionalDropdownChoice(
                         title = _("Assumed output speed"),
-                        help = _("If the automatic detection of the outgoing speed does not work "
+                        help = _("If the automatic detection of the link speed does not work "
                                  "or the switch's capabilities are throttled because of the network setup "
-                                 "you can set the assummend outgoing speed here."),
+                                 "you can set the assumed speed here."),
                   choices = [
                      ( None,       _("ignore speed") ),
                      ( 10000000,    "10 MBit/s" ),
@@ -1852,10 +1864,10 @@ register_check_parameters(
           help = _("This Rulset sets the threshold limits for humidity sensors attached to "
                    "AKCP Sensor Probe "),
           elements = [
-              Integer(title = _("Critical if moisture lower than")),
-              Integer(title = _("Warning if moisture lower than")),
-              Integer(title = _("Warning if moisture higher than")),
-              Integer(title = _("Critical if moisture higher than")),
+              Integer(title = _("Critical if below"), unit="%" ),
+              Integer(title = _("Warning if below"), unit="%" ),
+              Integer(title = _("Warning if above"), unit="%" ),
+              Integer(title = _("Critical if above"), unit="%" ),
               ]),
     TextAscii(
         title = _("Service descriptions"),
@@ -2878,7 +2890,7 @@ register_check_parameters(
 )
 
 register_check_parameters(
-   subgroup_os,
+   subgroup_environment,
     "apc_symentra",
     _("APC Symmetra Checks"),
     Tuple(
@@ -2906,20 +2918,6 @@ register_check_parameters(
                 help = _("The output voltage at and below which a critical state is triggered."),
                 unit = _("V"),
                 default_value = 220,
-            ),
-            Integer(
-                title = _("Warning Level for time since last diagnostic test"),
-                help = _("Warning Level for time since last diagnostic test of the device. "
-                         "For a value of 0 the warning level will not be used"),
-                unit = _("days"),
-                default_value = 0,
-            ),
-            Integer(
-                title = _("Critical Level for time since last diagnostic test"),
-                help = _("Critical Level for time since last diagnostic test of the device. "
-                         "For a value of 0 the critical level will not be used"),
-                unit = _("days"),
-                default_value = 0,
             ),
         ]
     ),

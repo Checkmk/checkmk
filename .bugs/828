@@ -1,0 +1,10 @@
+Title: locale c.utf8 is missing at least in debian squezzy
+Component: checks
+State: open
+Date: 2013-08-19 09:38:38
+Targetversion: future
+Class: nastiness
+
+If using Debian 6 with flexible notification system, plain e mail and umlauts in alias,
+the mail never receives the mail. Reason is the missing c.utf8 locale. In german debian versions,
+there is only de_DE.utf8.

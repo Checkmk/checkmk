@@ -213,8 +213,8 @@ avoption_entries = [
             ListChoice(
                 title = _("Aggregations"),
                 choices = [
-                  ( "min", _("minimal duration" )),
-                  ( "max", _("maximal duration" )),
+                  ( "min", _("minimum duration" )),
+                  ( "max", _("maximum duration" )),
                   ( "avg", _("average duration" )),
                   ( "cnt", _("count" )),
                 ]

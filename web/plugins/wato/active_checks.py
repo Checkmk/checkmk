@@ -60,16 +60,23 @@ register_rule(group,
                          help = _("Optional expect the DNS server to be authoriative"
                                   "for the lookup ")),
                    ),
+                   #( "expected_authority",
+                   #  FixedValue(
+                   #      value = True,
+                   #      title = _("Expect Authoritative DNS Server"),
+                   #      totext = _("DNS Server must be authoritative for the lookup"),
+                   #           )
+
                    ( "response_time",
                      Tuple(
                          title = _("Expected response time"),
                          elements = [
                              Float(
-                                 title = _("Warning at"),
+                                 title = _("Warning if above"),
                                  unit = "sec",
                                  default_value = 1),
                              Float(
-                                 title = _("Critical at"),
+                                 title = _("Critical if above"),
                                  unit = "sec",
                                  default_value = 2),
                          ])
@@ -109,11 +116,11 @@ register_rule(group,
                          title = _("Expected response time"),
                          elements = [
                              Float(
-                                 title = _("Warning at"),
+                                 title = _("Warning if above"),
                                  unit = "ms",
                                  default_value = 100.0),
                              Float(
-                                 title = _("Critical at"),
+                                 title = _("Critical if above"),
                                  unit = "ms",
                                  default_value = 200.0),
                          ])
@@ -298,11 +305,11 @@ register_rule(group,
                                  title = _("Expected response time"),
                                  elements = [
                                      Float(
-                                         title = _("Warning at"),
+                                         title = _("Warning if above"),
                                          unit = "ms",
                                          default_value = 100.0),
                                      Float(
-                                         title = _("Critical at"),
+                                         title = _("Critical if above"),
                                          unit = "ms",
                                          default_value = 200.0),
                                  ])
@@ -581,11 +588,11 @@ register_rule(group,
                          title = _("Expected response time"),
                          elements = [
                              Float(
-                                 title = _("Warning at"),
+                                 title = _("Warning if above"),
                                  unit = "ms",
                                  default_value = 1000.0),
                              Float(
-                                 title = _("Critical at"),
+                                 title = _("Critical if above"),
                                  unit = "ms",
                                  default_value = 2000.0),
                          ])
@@ -700,7 +707,7 @@ register_rule(group,
                    ("starttls",
                       FixedValue(
                           True,
-                          totext = "STARTTLS enabled.",
+                          totext = _("STARTTLS enabled."),
                           title = _("Use STARTTLS for the connection.")
                       )
                    ),
@@ -725,11 +732,11 @@ register_rule(group,
                          title = _("Expected response time"),
                          elements = [
                              Integer(
-                                 title = _("Warning at"),
+                                 title = _("Warning if above"),
                                  unit = "sec"
                              ),
                              Integer(
-                                 title = _("Critical at"),
+                                 title = _("Critical if above"),
                                  unit = "sec"
                              ),
                          ])
@@ -786,8 +793,8 @@ register_rule(group,
               Tuple(
                   title = _("Levels for used disk space"),
                   elements = [
-                      Percentage(title = _("Warning at"), default_value = 85, unit=_("% used space"), allow_int = True),
-                      Percentage(title = _("Critical at"), default_value = 95, unit=_("% used space"), allow_int = True),
+                      Percentage(title = _("Warning if above"), default_value = 85,  allow_int = True),
+                      Percentage(title = _("Critical if above"), default_value = 95, allow_int = True),
                   ]
             )),
             ( "auth",

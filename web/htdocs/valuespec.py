@@ -160,9 +160,13 @@ class Age(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)
         self._label    = kwargs.get("label")
+        self._minvalue = kwargs.get("minvalue")
 
     def canonical_value(self):
-        return 0
+        if self._minvalue:
+            return self._minvalue
+        else:
+            return 0
 
     def render_input(self, varprefix, value):
         days,    rest    = divmod(value, 60*60*24)
@@ -199,6 +203,10 @@ class Age(ValueSpec):
             raise MKUserError(varprefix, _("The value %r has type %s, but must be of type int") %
                         (value, type_name(value)))
 
+    def validate_value(self, value, varprefix):
+        if self._minvalue != None and value < self._minvalue:
+            raise MKUserError(varprefix, _("%s is too low. The minimum allowed value is %s." % (
+                                     value, self._minvalue)))
 
 # Editor for a single integer
 class Integer(ValueSpec):

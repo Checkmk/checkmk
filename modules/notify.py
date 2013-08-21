@@ -508,7 +508,7 @@ def notify_notify(context):
                          "that are prefixed with NOTIFY_\n")
         sys.exit(1)
 
-    if notification_spooling:
+    if notification_spool_to:
         # Create spoolfile
         target_site = "%s:%s" % notification_spool_to[0:2]
         create_spoolfile({"context": context, "forward": target_site})

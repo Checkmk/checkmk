@@ -1,0 +1,13 @@
+title: Wlan accesspoints from Cisco Wireless Lan Controller
+agents: snmp
+catalog: hw/network/cisco
+license: GPL
+distribution: check_mk
+description:
+ This check automaticly detects all online accesspoints and checks for the current status.
+ If a accesspoint is not longer reachable, the checks also triggers an critical state.
+ The checks direct connects against a Cisco Wireless Lan Controller. Currently its tested 
+ with the model 5508.
+
+inventory:
+ One check for each online accesspoint is created

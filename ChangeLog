@@ -69,6 +69,7 @@
     * df / esx_vsphere_datastore: filesystem levels configuration gets even easier
                                   now able to set absolute levels and levels depending
                                   on total disk space
+    * cisco_wlc: New check for monitoring cisco wireless lan access points 
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a

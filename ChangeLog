@@ -70,6 +70,7 @@
                                   now able to set absolute levels and levels depending
                                   on total disk space
     * cisco_wlc: New check for monitoring cisco wireless lan access points 
+    * cisco_wlc_clients: New check for the nummber of clients in a wlc wifi
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a

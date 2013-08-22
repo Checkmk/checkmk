@@ -10510,8 +10510,7 @@ def mode_edit_ruleset(phase):
                 alias_path = get_folder_aliaspath(folder, show_main = False)
                 last_folder = folder
 
-                folder_filter = html.var('folder')
-                if folder_filter and folder['.name'] != folder_filter:
+                if g_folder != g_root_folder and not folder_is_parent_of(folder, g_folder):
                     skip_this_folder = True
                     continue
 

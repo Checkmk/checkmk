@@ -1,0 +1,13 @@
+title: Check the state of vms on a hyperview server
+agents: windows
+catalog: app/hyperview
+license: GPL
+distribution: check_mk
+description:
+ This checks queries a heyperview server via an agent plugin (hyperv_vms.ps1) and
+ checks if the current state of the VM equals to the state detected during the inventory.
+ The check produces an error after the state has changed.
+
+inventory:
+ One service will be created for each system.
+

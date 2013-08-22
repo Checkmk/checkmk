@@ -66,6 +66,9 @@ declare_filter(201, FilterText("service", _("Service (exact match)"),           
                           _("Exact match, used for linking"))
 
 
+declare_filter(101, FilterText("hostgroupnameregex",    _("Hostgroup)"),        "hostgroup",    "hostgroup_name",      "hostgroup_name",    "~~"),
+                               _("Search field allowing regular expressions and partial matches on the names of hostgroups"))
+
 declare_filter(101, FilterText("servicegroupnameregex", _("Servicegroup"),   "servicegroup", "servicegroup_name",   "servicegroup_name", "~~"),
                           _("Search field allowing regular expression and partial matches"))
 
@@ -73,8 +76,6 @@ declare_filter(101, FilterText("servicegroupname", _("Servicegroup (enforced)"),
                           _("Exact match, used for linking"))
 
 declare_filter(202, FilterText("output",  _("Status detail"), "service", "service_plugin_output", "service_output", "~~"))
-
-
 
 class FilterIPAddress(Filter):
     def __init__(self):

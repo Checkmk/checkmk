@@ -2079,6 +2079,10 @@ class Dictionary(ValueSpec):
                 self._optional_keys = False
         else:
             self._optional_keys = True
+        if "hidden_keys" in kwargs:
+            self._hidden_keys = kwargs["hidden_keys"]
+        else:
+            self._hidden_keys = []
 
         self._columns = kwargs.get("columns", 1) # possible: 1 or 2
         self._render = kwargs.get("render", "normal") # also: "form" -> use forms.section()
@@ -2115,6 +2119,8 @@ class Dictionary(ValueSpec):
         if headers_sup:
             html.write('<tr>')
         for param, vs in self._get_elements():
+            if param in self._hidden_keys:
+                continue
             if not oneline:
                 html.write('<tr><td class=dictleft>')
             div_id = varprefix + "_d_" + param
@@ -2181,9 +2187,12 @@ class Dictionary(ValueSpec):
     def render_input_form_header(self, varprefix, value, title, sections):
         forms.header(title, narrow=self._form_narrow)
         for param, vs in self._get_elements():
-            if sections and param not in sections:
+            if param in self._hidden_keys:
                 continue
 
+            if sections and param not in sections:
+                continue
+            
             div_id = varprefix + "_d_" + param
             vp     = varprefix + "_p_" + param
             if self._optional_keys and param not in self._required_keys:

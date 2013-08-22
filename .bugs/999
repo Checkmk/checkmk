@@ -1,0 +1,8 @@
+Title: Service Description of check ups_in_freq is in German
+Component: checks
+State: open
+Date: 2013-08-22 12:00:53
+Targetversion: future
+Class: nastiness
+
+the service description uses 'frequenz' instead of 'frequency'

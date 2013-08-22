@@ -1,0 +1,10 @@
+Title: Diskstat latency at many times on 1.0ms
+Component: checks
+State: open
+Date: 2013-08-20 12:48:52
+Targetversion: 1.2.3
+Class: bug
+
+The graph for diskstat latency show on many times a latency from 1.0ms. But this is the wrong value.
+Compared to the ios graph, it seems possible that 1.0ms really is 0ms.
+There is a screenshot in owncloud://Technik/BUGs

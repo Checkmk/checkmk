@@ -1062,6 +1062,44 @@ register_check_parameters(
     None
 )
 
+register_check_parameters(
+    subgroup_networking,
+    "vpn_tunnel",
+    _("VPN Tunnel"),
+    Dictionary(
+        elements = [
+            ( "tunnels",
+              ListOf(
+                  Tuple(
+                      title = ("VPN Tunnel Endpoints"),
+                      elements = [
+                      IPv4Address(
+                          title = _("IP-Address of Tunnel Endpoint"),
+                          allow_empty = False,
+                          ),
+                      TextAscii(
+                          title = _("Name of Tunnel"),
+                          ),
+                      MonitoringState(
+                          default_value = 2,
+                          title = _("State if this tunnel is not found"),
+                          )]),
+                  add_label = _("Add another Tunnel"),
+                  movable = False,
+                  title = _("VPN Tunnel"),
+                  )),
+            ( "state",
+              MonitoringState(
+                  title = _("Default state if inventorized, unregistered tunnel is not found"),
+                  help = _("Default state if a tunnel, which was inventorized but is not listed in this rule, "
+                      "is not longer present in the snmp data"),
+                  ),
+            ),
+        ],
+    ),
+    TextAscii( title = _("IP-Address of Tunnel Endpoint")),
+    "first"
+)
 
 register_check_parameters(
     subgroup_networking,

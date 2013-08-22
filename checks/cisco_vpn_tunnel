@@ -24,40 +24,44 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# OID: 1.3.6.1.4.1.9.9.171.1.2.3.1.7.###
+# cikeTunRemoteValue
+# Description
+#       "The value of the remote peer identity.
+#       If the remote peer type is an IP Address, then this
+#       is the IP Address used to identify the remote peer.
+#       If the remote peer type is a host name, then
+#       this is the host name used to identify the
+#       remote peer."
 
-ups_bat_temp_default = (40, 50) # warning / critical
+def check_cisco_vpn_tunnel(item, params, info):
+    if not info:
+        return 3, "SNMP Data for VPN Tunnel Missing"
 
-def inventory_ups_bat_temp(info):
-    if len(info) > 0:
-        return [ ( x[0], "ups_bat_temp_default") for x in info ]
+    tunnels = params.get('tunnels',[])
+    tunnel_alias  = ""
+    tunnel_state  = params.get('state',0)
+    if item in [tunnel[0] for tunnel in tunnels]:
+        if tunnel[1]:
+            tunnel_alias = " (%s)" % tunnel[1]
+        tunnel_state = tunnel[2]
 
-def check_ups_bat_temp(item, params, info):
-    warn, crit = params
-    for line in info:
-	if line[0] == item:
-	    power = saveint(line[1])
-	    perfdata = [ ( "temp", power, warn, crit, 80 ) ]
-	    infotext = "temperature: %d°C , (warn/crit at %d°C/%d°C) " % \
-	 	(power, warn, crit)
+    extra_info = ""
+    state = 0
+    if [item] not in info:
+        extra_info = " - Tunnel is missing"
+        state = tunnel_state
 
-	    if power >= crit:
-		return (2, infotext, perfdata)
-	    elif power >= warn:
-		return (1, infotext, perfdata)
-	    else:
-		return (0, infotext, perfdata)
+    result = "%s%s%s" % (item, tunnel_alias, extra_info)
+    return state, result
 
-    return (3, "Temperature %s not found in SNMP output" % item)
-
-check_info['ups_bat_temp'] = {
-  "inventory_function"  : inventory_ups_bat_temp,
-  "check_function"      : check_ups_bat_temp,
-  "service_description" : "Battery Temp",
-  "has_perfdata"        : True,
-  "group"               : "hw_temperature",
-  "snmp_info"           : ( ".1.3.6.1.2.1.33.1", ["1.5", "2.7" ] ),
-  "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in \
-                         [".1.3.6.1.4.1.818.1.100.1.1",".1.3.6.1.2.1.33",".1.3.6.1.2.1.33.2"] \
-                         or oid('.1.3.6.1.2.1.33.1.1.1.0').startswith('RPS'),
-
+check_info["cisco_vpn_tunnel"] = {
+    "check_function"        : check_cisco_vpn_tunnel,
+    "inventory_function"    : lambda info: [(item[0], {}) for item in info],
+    "service_description"   : "VPN Tunnel %s",
+    "has_perfdata"          : False,
+    "group"                 : "vpn_tunnel",
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.1.0").lower().startswith("cisco adaptive security"),
+    "snmp_info"             : ( ".1.3.6.1.4.1.9.9.171.1.2.3.1", [ 7 ] ),
 }
+

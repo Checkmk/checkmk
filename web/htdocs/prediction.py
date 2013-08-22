@@ -91,7 +91,6 @@ def page_graph():
     html.select("timegroup", choices, choices[0], onchange="document.prediction.submit();")
     html.hidden_fields()
     html.end_form()
-    html.log("HIRN")
 
     # Get prediction data
     tg_data = eval(file(dir + "/" + timegroup["name"]).read())

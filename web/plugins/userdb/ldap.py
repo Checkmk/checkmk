@@ -687,8 +687,6 @@ ldap_attribute_plugins['pager'] = {
 # Register sync plugins for all custom user attributes (assuming simple data types)
 def register_user_attribute_sync_plugins():
     for attr, val in get_user_attributes():
-        html.log(attr)
-        html.log(val)
         ldap_attribute_plugins[attr] = {
             'title': val['valuespec'].title(),
             'help':  val['valuespec'].help(),

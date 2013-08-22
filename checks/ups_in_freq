@@ -37,7 +37,7 @@ def check_ups_in_freq(item, params, info):
 	if line[0] == item:
 	    power = int(line[1]) / 10
 	    perfdata = [ ( "in_freq", power, warn, crit, 30, 70 ) ]
-	    infotext = "current in freq: %dHz (warn/crit at %d/%d Hz)" % \
+	    infotext = "in frequency: %dHz (warn/crit at %d/%d Hz)" % \
 	 	(power, warn, crit)
 
 	    if power <= crit:

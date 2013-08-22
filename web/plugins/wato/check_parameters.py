@@ -37,7 +37,7 @@ subgroup_networking =   _("Networking")
 subgroup_storage =      _("Storage, Filesystems and Files")
 subgroup_os =           _("Operating System Resources")
 subgroup_printing =     _("Printers")
-subgroup_environment =  _("Temperature, Humidity, etc.")
+subgroup_environment =  _("Temperature, Humidity, Electrical Parameters, etc.")
 subgroup_applications = _("Applications, Processes &amp; Services")
 subgroup_virt =         _("Virtualization")
 subgroup_hardware =     _("Hardware, BIOS")
@@ -2753,7 +2753,73 @@ register_check_parameters(
         ]),
     TextAscii(
         title = _("Sensor ID"),
-        help = _("The identificator of the themal sensor.")),
+        help = _("The identifier of the themal sensor.")),
+    "first"
+)
+
+register_check_parameters(
+    subgroup_environment,
+    "hw_single_temperature",
+    _("Host/Device temperature"),
+    Tuple(
+        help = _("Temperature levels for hardware devices with "
+                 "a single temperature sensor."),
+        elements = [
+            Integer(title = _("warning if above"), unit = u"°C", default_value = 35),
+            Integer(title = _("critical if above"), unit = u"°C", default_value = 40),
+        ]),
+    None,
+    "first"
+)
+
+register_check_parameters(
+    subgroup_environment,
+    "evolt",
+    _("Nominal Voltages"),
+    Tuple(
+        help = _("Voltage Levels for devices like UPS oder PDUs. "
+                 "Several phases may be addressed independently."),
+        elements = [
+            Integer(title = _("warning if below"), unit = "V", default_value = 210),
+            Integer(title = _("critical if below"), unit = "V", default_value = 180),
+        ]),
+    TextAscii(
+        title = _("Phase"),
+        help = _("The identifier of the phase the power is related to.")),
+    "first"
+)
+
+register_check_parameters(
+    subgroup_environment,
+    "efreq",
+    _("Nominal Frequencies"),
+    Tuple(
+        help = _("Levels for the nominal frequencies of AC devices "
+                 "like UPSs or PDUs. Several phases may be addressed independently."),
+        elements = [
+            Integer(title = _("warning if below"), unit = "Hz", default_value = 40),
+            Integer(title = _("critical if below"), unit = "Hz", default_value = 45),
+        ]),
+    TextAscii(
+        title = _("Phase"),
+        help = _("The identifier of the phase the power is related to.")),
+    "first"
+)
+
+register_check_parameters(
+    subgroup_environment,
+    "epower",
+    _("Electrical Power"),
+    Tuple(
+        help = _("Levels for the electrical power consumption of a device "
+                 "like a UPS or a PDU. Several phases may be addressed independently."),
+        elements = [
+            Integer(title = _("warning if below"), unit = "Watt", default_value = 20),
+            Integer(title = _("critical if below"), unit = "Watt", default_value = 1),
+        ]),
+    TextAscii(
+        title = _("Phase"),
+        help = _("The identifier of the phase the power is related to.")),
     "first"
 )
 
@@ -2763,7 +2829,9 @@ register_check_parameters(
     _("Hardware temperature (e.g. switches)"),
     Tuple(
         help = _("Temperature levels for hardware devices like "
-                 "Brocade switches."),
+                 "Brocade switches with (potentially) several "
+                 "temperature sensors. Sensor IDs can be selected "
+                 "in the rule."),
         elements = [
             Integer(title = _("warning if above"), unit = u"°C", default_value = 35),
             Integer(title = _("critical if above"), unit = u"°C", default_value = 40),

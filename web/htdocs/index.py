@@ -401,6 +401,7 @@ def handler(req, profiling = True):
 
     except Exception, e:
         html.unplug()
+        apache.log_error("%s %s %s" % (req.uri, _('Internal error') + ':', e), apache.APLOG_ERR) # log in all cases
         if plain_error:
             html.write(_("Internal error") + ": %s\n" % e)
         elif not fail_silently:
@@ -411,7 +412,6 @@ def handler(req, profiling = True):
             else:
                 url = html.makeuri([("debug", "1")])
                 html.show_error("%s: %s (<a href=\"%s\">%s</a>)" % (_('Internal error') + ':', e, url, _('Retry with debug mode')))
-                apache.log_error("%s %s" % (_('Internal error') + ':', e), apache.APLOG_ERR)
             html.footer()
         response_code = apache.OK
 

@@ -1322,12 +1322,60 @@ register_check_parameters(
 )
 
 filesystem_elements = [
-    ( "levels",
-      Tuple(
-          title = _("Levels for filesystem usage"),
-          elements = [
-              Percentage(title = _("Warning if above"),  unit = _("% usage"), allow_int = True, default_value=80),
-              Percentage(title = _("Critical if above"), unit = _("% usage"), allow_int = True, default_value=90)])),
+    ("levels",
+        Alternative(
+            title = _("Levels for filesystem usage"),
+            default_value = (80.0, 90.0),
+            elements = [
+                Tuple(
+                    title = _("Percentage used space"),
+                    elements = [
+                        Percentage(title = _("Warning if above"), unit = _("% usage")),
+                        Percentage(title = _("Critical if above"), unit = _("% usage")),
+                    ]
+                ),
+                Tuple(
+                    title = _("Absolute used space"),
+                    elements = [
+                         Integer(title = _("Warning if above"), unit = _("MB")),
+                         Integer(title = _("Critical if above"), unit = _("MB")),
+                    ]
+                ),
+                ListOf(
+                    Tuple(
+                        orientation = "horizontal",
+                        elements = [
+                            Filesize(title = _("Filesystem larger than")),
+                            Alternative(
+                                title = _("Levels for the filesystem usage"),
+                                elements = [
+                                    Tuple(
+                                        title = _("Percentage used space"),
+                                        elements = [
+                                            Percentage(title = _("Warning if above"), unit = _("% usage")),
+                                            Percentage(title = _("Critical if above"), unit = _("% usage")),
+                                        ]
+                                    ),
+                                    Tuple(
+                                        title = _("Absolute used space"),
+                                        elements = [
+                                             Integer(title = _("Warning if above"), unit = _("MB")),
+                                             Integer(title = _("Critical if above"), unit = _("MB")),
+                                        ]
+                                    ),
+                                ]
+                            ),
+                        ],
+                    ),
+                    title = _('Dynamic levels'),
+                    ),]),
+        ),
+    ( "flex_levels",
+      FixedValue(
+          None,
+          totext = "",
+          title = _("Hidden identifier key for flexible level usage")
+          )),
     (  "magic",
        Float(
           title = _("Magic factor (automatic level adaptation for large filesystems)"),
@@ -1390,6 +1438,7 @@ register_check_parameters(
     _("Filesystems (used space and growth)"),
     Dictionary(
         elements = filesystem_elements,
+        hidden_keys = ["flex_levels"],
     ),
     TextAscii(
         title = _("Mount point"),
@@ -1414,6 +1463,7 @@ register_check_parameters(
                 ]
             )),
         ],
+        hidden_keys = ["flex_levels"],
     ),
     TextAscii(
         title = _("Datastore Name"),

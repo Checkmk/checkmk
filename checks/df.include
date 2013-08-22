@@ -55,9 +55,9 @@ filesystem_groups = []
 # }
 
 factory_settings["filesystem_default_levels"] = {
-    "levels"          : (80, 90), # warn/crit in percent
+    "levels"          : (80.0, 90.0), # warn/crit in percent
     "magic_normsize"  : 20,       # Standard size if 20 GB
-    "levels_low"      : (50, 60), # Never move warn level below 50% due to magic factor
+    "levels_low"      : (50.0, 60.0), # Never move warn level below 50% due to magic factor
     "trend_range"     : 24,
     "trend_perfdata"  : True,    # do send performance data for trends
 }
@@ -101,16 +101,28 @@ def df_inventory(mplist):
 # old style params a'la (80, 90). As soon as we drop support for that
 # (can happen any decade now), we can get rid of this function.
 def get_filesystem_levels(host, mountpoint, size_gb, params):
-
+    mega = 1024 * 1024
+    giga = mega * 1024
     # Start with factory settings
     levels = factory_settings["filesystem_default_levels"].copy()
+
+    def convert_legacy_levels(value):
+        if type(params) == tuple or not params.get("flex_levels"):
+            return tuple(map(float, value))
+        else:
+            return value
+
     # convert default levels to dictionary. This is in order support
     # old style levels like (80, 90)
     if type(filesystem_default_levels) == dict:
+        fs_default_levels = filesystem_default_levels.copy()
+        fs_levels = fs_default_levels.get("levels")
+        if fs_levels:
+            fs_default_levels["levels"] = convert_legacy_levels(fs_levels)
         levels.update(filesystem_default_levels)
     else:
         levels = factory_settings["filesystem_default_levels"].copy()
-        levels["levels"] = filesystem_default_levels[:2]
+        levels["levels"] = convert_legacy_levels(filesystem_default_levels[:2])
         if len(filesystem_default_levels) == 2:
             levels["magic"] = None
         else:
@@ -121,16 +133,35 @@ def get_filesystem_levels(host, mountpoint, size_gb, params):
         levels.update(params)
 
     else: # simple format - explicitely override levels and magic
-        levels["levels"] = params[:2]
+        levels["levels"] = convert_legacy_levels(params[:2])
         if len(params) >= 3:
             levels["magic"] = params[2]
 
-    warn, crit = levels["levels"]
+    # Determine real warn, crit levels
+    if type(levels["levels"]) == tuple:
+        warn, crit = levels["levels"]
+    else:
+        # A list of levels. Choose the correct one depending on the
+        # size of the current tablespace
+        found = False
+        for to_size, this_levels in levels["levels"]:
+            if size_gb * giga > to_size:
+                warn, crit = this_levels
+                found = True
+        if not found:
+            warn, crit = 100.0, 100.0 # entry not found in list
+
 
     # If the magic factor is used, take disk size and magic factor
     # into account in order to move levels
     magic = levels.get("magic")
     if magic:
+        # convert warn/crit to percentage
+        if type(warn) != float:
+            warn = savefloat(warn * mega / float(size_gb * giga)) * 100
+        if type(crit) != float:
+            crit = savefloat(crit * mega / float(size_gb * giga)) * 100
+
         normsize = levels["magic_normsize"]
         hgb_size = size_gb / float(normsize)
         felt_size = hgb_size ** magic
@@ -145,14 +176,27 @@ def get_filesystem_levels(host, mountpoint, size_gb, params):
         if crit_scaled < lowest_critical_level:
             crit_scaled = lowest_critical_level
     else:
-        warn_scaled = warn
-        crit_scaled = crit
+        if type(warn) != float:
+            warn_scaled = savefloat(warn * mega / float(size_gb * giga)) * 100
+        else:
+            warn_scaled = warn
+
+        if type(crit) != float:
+            crit_scaled = savefloat(crit * mega / float(size_gb * giga)) * 100
+        else:
+            crit_scaled = crit
 
     size_mb     = size_gb * 1024
     warn_mb     = savefloat(size_mb * warn_scaled / 100)
     crit_mb     = savefloat(size_mb * crit_scaled / 100)
     levels["levels_mb"] = (warn_mb, crit_mb)
-    levels["levels_text"] = "(levels at %.1f/%.1f%%)" % (warn_scaled, crit_scaled)
+    if type(warn) == float:
+        levels["levels_text"] = "(levels at %.2f/%.2f%%)" % (warn_scaled, crit_scaled)
+    else:
+        warn_hr = get_bytes_human_readable(warn * mega)
+        crit_hr = get_bytes_human_readable(crit * mega)
+        levels["levels_text"] = "(levels at %s/%s)" % ( warn_hr, crit_hr )
+
     return levels
 
 # Legacy function for checks that do not support groups yet

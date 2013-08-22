@@ -66,6 +66,9 @@
                      (output buffer now grows dynamically)
     * jolokia_metrics: fixed incorrect plugin output for high warn/crit levels
     * hyperv: Added a check for checking state changes.
+    * df / esx_vsphere_datastore: filesystem levels configuration gets even easier
+                                  now able to set absolute levels and levels depending
+                                  on total disk space
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a

@@ -57,7 +57,7 @@ def check_cisco_vpn_tunnel(item, params, info):
 
 check_info["cisco_vpn_tunnel"] = {
     "check_function"        : check_cisco_vpn_tunnel,
-    "inventory_function"    : lambda info: [(item[0], None) for item in info],
+    "inventory_function"    : lambda info: [(item[0], {}) for item in info],
     "service_description"   : "VPN Tunnel %s",
     "has_perfdata"          : False,
     "group"                 : "vpn_tunnel",

@@ -34,6 +34,7 @@ snapin_width = 230
 # Datastructures and functions needed before plugins can be loaded
 loaded_with_language = False
 sidebar_snapins = {}
+search_plugins  = []
 
 def load_plugins():
     global loaded_with_language
@@ -43,6 +44,8 @@ def load_plugins():
     # Load all snapins
     global sidebar_snapins
     sidebar_snapins = {}
+    global search_plugins
+    search_plugins = []
     load_web_plugins("sidebar", globals())
 
     # This must be set after plugin loading to make broken plugins raise
@@ -531,6 +534,7 @@ def ajax_add_bookmark():
         save_bookmarks(bookmarks)
     render_bookmarks()
 
+
 def page_edit_bookmark():
     html.header(_("Edit Bookmark"))
     n = int(html.var("num"))
@@ -569,3 +573,179 @@ def page_edit_bookmark():
     html.end_form()
 
     html.footer()
+
+#   .--Quicksearch---------------------------------------------------------.
+#   |         ___        _      _                            _             |
+#   |        / _ \ _   _(_) ___| | _____  ___  __ _ _ __ ___| |__          |
+#   |       | | | | | | | |/ __| |/ / __|/ _ \/ _` | '__/ __| '_ \         |
+#   |       | |_| | |_| | | (__|   <\__ \  __/ (_| | | | (__| | | |        |
+#   |        \__\_\\__,_|_|\___|_|\_\___/\___|\__,_|_|  \___|_| |_|        |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Handles ajax search reuquests (like issued by the quicksearch dialog |
+#   '----------------------------------------------------------------------'
+
+def parse_search_query(s):
+    types = {'h': 'host', 'hg': 'hostgroup', 's': 'service', 'sg': 'servicegroup'}
+    ty = 'host'
+    if ':' in s:
+        s_ty, s_part = s.split(':', 1)
+        if s_ty in types.keys():
+            ty = types[s_ty]
+            s  = s_part
+    return ty, s.replace('*', '.*')
+
+def is_ipaddress(s):
+    try:
+        octets = map(int, s.strip(".").split("."))
+        for o in octets:
+            if o < 0 or o > 255:
+                return False
+        return True
+    except:
+        return False
+
+def search_url_tmpl(ty, exact = True):
+    if ty == 'host':
+        if exact:
+            return 'view.py?view_name=host&host=%(name)s&site=%(site)s'
+        else:
+            return 'view.py?view_name=hosts&host=%(name)s'
+    elif ty == 'hostgroup':
+        if exact:
+            return 'view.py?view_name=hostgroup&hostgroup=%(name)s&site=%(site)s'
+        else:
+            return 'view.py?view_name=hostgroups&hostgroup_name=%(name)s&site=%(site)s'
+    elif ty == 'servicegroup':
+        if exact:
+            return 'view.py?view_name=servicegroup&servicegroup=%(name)s&site=%(site)s'
+        else:
+            return 'view.py?view_name=svcgroups&servicegroup_name=%(name)s&site=%(site)s'
+    elif ty == 'service':
+        if exact:
+            return 'view.py?view_name=servicedesc&service=%(name)s&site=%(site)s'
+        else:
+            return 'view.py?view_name=allservices&service=%(name)s&site=%(site)s'
+
+def search_livestatus(ty, q):
+    try:
+        limit = config.quicksearch_dropdown_limit
+    except:
+        limit = 80
+
+    filt = []
+    for plugin in search_plugins:
+        if plugin['type'] == ty and 'filter_func' in plugin:
+            f = plugin['filter_func'](q)
+            if f:
+                filt.append(f)
+    if filt:
+        filt.append('Or: %d\n' % (len(filt)))
+
+    column = ty == 'service' and 'description' or 'name'
+    lq = "GET %ss\nColumns: %s\n%sLimit: %d\n" % \
+            (ty, column, ''.join(filt), limit)
+    html.live.set_prepend_site(True)
+    data = html.live.query(lq)
+    html.live.set_prepend_site(False)
+
+    # Some special plugins fetch host data, but do own livestatus
+    # queries, maybe in other tables, for example when searching
+    # for hosts which have a service with specific plugin output
+    for plugin in search_plugins:
+        if plugin['type'] == ty and 'search_func' in plugin:
+            data += plugin['search_func'](q)
+
+    # Apply the limit once again (search_funcs of plugins could have
+    # added some results)
+    data = data[:limit]
+
+    def sort_data(data):
+        sorted_data = set([])
+        for entry in data:
+            entry = ('', entry[1])
+            if entry not in sorted_data:
+                sorted_data.add(entry)
+        sorted_data = list(sorted_data)
+        sorted_data.sort()
+        return sorted_data
+
+    if ty != 'host':
+        data = sort_data(data)
+
+    return data
+
+def render_search_results(ty, objects):
+    url_tmpl = search_url_tmpl(ty)
+
+    # When results contain infos from several sites, display
+    # the site id in the result text
+    only_site = None
+    display_site = False
+    for obj in objects:
+        if only_site is None:
+            only_site = obj[0]
+        elif only_site != obj[0]:
+            display_site = True
+            break
+
+    for obj in objects:
+        if len(obj) == 2:
+            site, name = obj
+            url = url_tmpl % {'name': name, 'site': site}
+        else:
+            site, name, url = obj
+        html.write('<a id="result_%s" class="%s" href="%s" onClick="mkSearchClose()" target="main">%s' %
+                    (name, ty, url, name))
+        if display_site:
+            html.write(' (%s)' % site)
+        html.write('</a>\n')
+
+def process_search(q):
+    ty, q = parse_search_query(q)
+    if ty not in [ 'host', 'hostgroup', 'service', 'servicegroup' ]:
+        return None, None
+
+    data = search_livestatus(ty, q)
+    if ty == 'host' and not data:
+        # When asking for hosts and no host found, try searching services instead
+        ty = 'service'
+        data = search_livestatus(ty, q)
+    return ty, data
+
+def ajax_search():
+    q = html.var('q').strip()
+    if not q:
+        return
+
+    ty, data = process_search(q)
+    if ty is None:
+        return
+
+    try:
+        render_search_results(ty, data)
+    except Exception, e:
+        html.write(repr(e))
+
+def search_open():
+    q = html.var('q').strip()
+    if not q:
+        return
+
+    ty, data = process_search(q)
+    if ty is None:
+        return
+
+    html.log(repr(data))
+
+    if len(data) == 1:
+        if len(data[0]) == 2:
+            url = search_url_tmpl(ty) % {'name': html.urlencode(data[0][1]), 'site': data[0][0]}
+        else:
+            url = data[0][2]
+    else:
+        url = search_url_tmpl(ty, exact = False) % {'name': html.urlencode(parse_search_query(q)[1]), 'site': ''}
+
+    html.set_http_header('Location', url)
+    from mod_python import apache
+    raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY

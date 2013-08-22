@@ -24,76 +24,18 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# +------------------------------------------------------------------+
-# | This file has been contributed and is copyrighted by:            |
-# |                                                                  |
-# | Lars Michelsen <lm@mathias-kettner.de>            Copyright 2010 |
-# +------------------------------------------------------------------+
-
-import views, defaults
-
-# Python 2.3 does not have 'set' in normal namespace.
-# But it can be imported from 'sets'
-try:
-    set()
-except NameError:
-    from sets import Set as set
-
 def render_searchform():
-    try:
-        limit = config.quicksearch_dropdown_limit
-    except:
-        limit = 80
-
-    html.write('<div id="mk_side_search" class="content_center" onclick="mkSearchClose();">')
-    html.write('<input id="mk_side_search_field" type="text" name="search" autocomplete="off" />')
+    html.write('<div id="mk_side_search" class="content_center" onclick="mkSearchClose();">\n')
+    html.write('<input id="mk_side_search_field" type="text" name="search" autocomplete="off" />\n')
     html.icon_button("#", _("Search"), "quicksearch", onclick="mkSearchButton();")
-    html.write('</div><div id=mk_side_clear></div>')
+    html.write('</div>\n<div id=mk_side_clear></div>\n')
     html.write("<script type='text/javascript' src='js/search.js'></script>\n")
-    html.write("<script type='text/javascript'>\n")
-
-    # Store (user) hosts in JS array
-    html.live.set_prepend_site(True)
-
-    def sort_data(data):
-        sorted_data = set([])
-        for entry in data:
-            entry = ('', entry[1])
-            if entry not in sorted_data:
-                sorted_data.add(entry)
-        sorted_data = list(sorted_data)
-        sorted_data.sort()
-        return sorted_data
-
-    try:
-        import json
-        data = html.live.query("GET hosts\nColumns: name\n")
-        html.write("aSearchHosts = %s;\n" % json.dumps(data))
-        data = sort_data(html.live.query("GET hostgroups\nColumns: name\n"))
-        html.write("aSearchHostgroups = %s;\n" % json.dumps(data))
-        data = sort_data(html.live.query("GET servicegroups\nColumns: name\n"))
-        html.write("aSearchServicegroups = %s;\n" % json.dumps(data))
-        data = sort_data(html.live.query("GET services\nColumns: description\n"))
-        html.write("aSearchServices = %s;\n" % json.dumps(data))
-    except:
-        data = html.live.query("GET hosts\nColumns: name\n", "OutputFormat: json\n")
-        html.write("aSearchHosts = %s;\n" % data)
-        data = html.live.query("GET hostgroups\nColumns: name\n", "OutputFormat: json\n")
-        html.write("aSearchHostgroups = %s;\n" % data)
-        data = html.live.query("GET servicegroups\nColumns: name\n", "OutputFormat: json\n")
-        html.write("aSearchServicegroups = %s;\n" % data)
-        data = html.live.query("GET services\nColumns: description\n", "OutputFormat: json\n")
-        html.write("aSearchServices = %s;\n" % data)
-    html.write("aSearchLimit = %d;\n" % limit)
-    html.live.set_prepend_site(False)
-
-    html.write("</script>\n")
 
 sidebar_snapins["search"] = {
     "title":       _("Quicksearch"),
-    "description": _("Interactive search field for direct access to hosts"),
+    "description": _("Interactive search field for direct access to hosts and services"),
     "render":      render_searchform,
-    "restart":     True,
+    "restart":     False,
     "allowed":     [ "user", "admin", "guest" ],
     "styles":      """
 
@@ -153,3 +95,54 @@ sidebar_snapins["search"] = {
 
 """
 }
+
+#   .--Search Plugins------------------------------------------------------.
+#   |  ____                      _       ____  _             _             |
+#   | / ___|  ___  __ _ _ __ ___| |__   |  _ \| |_   _  __ _(_)_ __  ___   |
+#   | \___ \ / _ \/ _` | '__/ __| '_ \  | |_) | | | | |/ _` | | '_ \/ __|  |
+#   |  ___) |  __/ (_| | | | (__| | | | |  __/| | |_| | (_| | | | | \__ \  |
+#   | |____/ \___|\__,_|_|  \___|_| |_| |_|   |_|\__,_|\__, |_|_| |_|___/  |
+#   |                                                  |___/               |
+#   +----------------------------------------------------------------------+
+#   | Realize the search mechanism to find objects via livestatus          |
+#   '----------------------------------------------------------------------'
+
+def search_filter_name(q, column = 'name'):
+    return 'Filter: %s ~~ %s\n' % (column, q)
+
+search_plugins.append({
+    'type'        : 'host',
+    'filter_func' : search_filter_name,
+})
+
+search_plugins.append({
+    'type'        : 'service',
+    'filter_func' : lambda q: search_filter_name(q, 'description'),
+})
+
+search_plugins.append({
+    'type'        : 'hostgroup',
+    'filter_func' : search_filter_name,
+})
+
+search_plugins.append({
+    'type'        : 'servicegroup',
+    'filter_func' : search_filter_name,
+})
+
+def search_filter_ipaddress(q):
+    if is_ipaddress(q):
+        return 'Filter: address ~~ %s\n' % q
+
+search_plugins.append({
+    'type'        : 'host',
+    'filter_func' : search_filter_ipaddress,
+})
+
+def search_filter_alias(q):
+    return 'Filter: alias ~~ %s\n' % q
+
+search_plugins.append({
+    'type'        : 'host',
+    'filter_func' : search_filter_alias,
+})

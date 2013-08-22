@@ -1,0 +1,12 @@
+Title: check ups_power uses the group 'hw_temperature' which settings levels in degree celcius'
+Component: checks
+State: open
+Date: 2013-08-22 13:43:24
+Targetversion: future
+Class: nastiness
+
+Levels for the electric power of ups devices are in watt, however the check uses the group
+hw_temperature to set the values with the corresponding wato check in degrees celcius.
+This will nevertheless work and may be in active use since the values are integers. However it 
+may be confusing. A new group hw_power with corresponding wato rule should be added. Customers 
+need to be aware that this fix may break their existing checks.

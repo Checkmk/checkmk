@@ -155,7 +155,9 @@ def get_filesystem_levels(host, mountpoint, size_gb, params):
     # If the magic factor is used, take disk size and magic factor
     # into account in order to move levels
     magic = levels.get("magic")
-    if magic:
+    # We need a way to disable the magic factor so check
+    # if magic not 1.0
+    if magic and magic != 1.0:
         # convert warn/crit to percentage
         if type(warn) != float:
             warn = savefloat(warn * mega / float(size_gb * giga)) * 100
@@ -370,11 +372,20 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, params):
             # for the trend information
             perfdata = []
 
-
-    if used_mb >= crit_mb:
-        status = 2
-    elif used_mb >= warn_mb:
-        status = max(1, status)
+    if warn_mb <= -1:
+        #Negativ levels, so calculate mb left
+        rest_mb = size_mb - used_mb
+        crit_mb = crit_mb * -1
+        warn_mb = warn_mb * -1
+        if rest_mb <= crit_mb:
+            status = 2
+        elif rest_mb <= warn_mb:
+            status = max(1, status)
+    else:
+       if used_mb >= crit_mb:
+           status = 2
+       elif used_mb >= warn_mb:
+           status = max(1, status)
 
     if problems:
         infotext += " - %s" % ", ".join(problems)

@@ -1,0 +1,8 @@
+Title: Remove peer replication from WATO -> useless, senseless, confusing
+Component: wato
+State: open
+Date: 2013-08-23 12:26:21
+Targetversion: 1.2.3
+Class: nastiness
+
+It confuses people. This feature does not seem to matter.

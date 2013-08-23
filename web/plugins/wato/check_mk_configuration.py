@@ -1822,7 +1822,9 @@ register_rule(group,
                       title = _("Privacy protocol")),
                  TextAscii(title = _("Privacy pass phrase")),
                    ])],
-        title = _("SNMP communities of monitored hosts")))
+        title = _("SNMP communities of monitored hosts"),
+        help = _("By default Check_MK uses the community \"public\" to contact hosts via SNMP. This rule "
+                 "can be used to customize the the credentials to be used when contacting hosts via SNMP.")))
 
 register_rule(group,
     "snmp_character_encodings",

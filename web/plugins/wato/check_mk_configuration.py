@@ -1202,7 +1202,10 @@ register_rule(group,
     "host_groups",
     GroupSelection(
         "host",
-        title = _("Assignment of hosts to host groups")),
+        title = _("Assignment of hosts to host groups"),
+        help = _("Hosts can be grouped together into host groups. The most common use case "
+                 "is to put hosts which belong together in a host group to make it possible "
+                 "to get them listed together in the status GUI.")),
     match = "all")
 
 register_rule(group,

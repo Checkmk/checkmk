@@ -338,6 +338,7 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
         except ldap.SERVER_DOWN:
             if tries_left:
                 ldap_log('  Received SERVER_DOWN. Retrying...')
+                ldap_connection.reconnect(ldap_connection._uri)
                 time.sleep(0.5)
             else:
                 break
@@ -345,6 +346,7 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
     duration = time.time() - start_time
 
     if not success:
+        ldap_log('  FAILED')
         raise MKLDAPException(_('Unable to successfully perform the LDAP search. '
                                 'Maybe there is a connection problem with the LDAP server.'))
 

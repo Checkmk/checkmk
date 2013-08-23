@@ -1,0 +1,95 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# Put here the example output from your TCP-Based agent. If the
+# check is SNMP-Based, then remove this section
+
+def inventory_win_printers(info):
+    return [ (" ".join(x[:-3]), (None, None)) for x in info ]
+
+def check_win_printers(item, params, info):
+    status_map = {
+
+        1 : "Other",
+        2 : "Unkown",
+        3 : "Idle",
+        4 : "Printing",
+        5 : "Warming Up",
+        6 : "Stopped Printing",
+        7 : "Offline",
+
+    }
+    error_map = {
+        0 : "Unkown",
+        1 : "Other",
+        2 : "No Error",
+        3 : "Low Paper",
+        4 : "No Paper",
+        5 : "Low Toner",
+        6 : "No Toner",
+        7 : "Door Open",
+        8 : "Jammed",
+        9 : "Offline",
+        10 : "Service Requested",
+        11 : "Output Bin Full"
+    }
+    warn, crit = params
+    for line in info:
+        name = " ".join(line[:-3])
+        if name == item:
+            state = 0
+            current_jobs, status, error = map(saveint, line[-3:])
+
+            error_text = ""
+            if error in [ 9, 10 ]:
+                state = 2
+                error_text = "Error State: %s(!!)" %  error_map[error]
+            elif error in [ 8, 11 ]:
+                state = 1
+                error_text = "Error State: %s(!)" % error_map[error]
+
+            queue_label = ""
+            if crit and crit > current_jobs:
+                state = 2
+                queue_label = "(!!)"
+            elif warn and warn > current_jobs:
+                state = max(1, state)
+                queue_label = "(!)"
+
+            return state, "%s jobs current%s, State: %s, %s" %\
+                    ( current_jobs, queue_label, status_map[status], error_text )
+
+    return 3, "Printer not found in agent output"
+
+check_info["win_printers"] = {
+    "check_function"        : check_win_printers,
+    "group"                 : "windows_printer_queues",
+    "inventory_function"    : inventory_win_printers,
+    "service_description"   : "Printer %s",
+    "has_perfdata"          : False,
+}
+

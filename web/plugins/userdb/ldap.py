@@ -153,7 +153,10 @@ def ldap_connect(enforce_new = False, enforce_server = None):
        and not "no_persistent" in config.ldap_connection \
        and ldap_connection \
        and config.ldap_connection == ldap_connection_options:
+        ldap_log('LDAP CONNECT - Using existing connecting')
         return # Use existing connections (if connection settings have not changed)
+    else:
+        ldap_log('LDAP CONNECT - Connecting...')
 
     ldap_test_module()
 
@@ -455,6 +458,7 @@ def ldap_get_users(add_filter = ''):
         if config.ldap_userspec.get('lower_user_ids', False):
             user_id = user_id.lower()
 
+        ldap_user['dn'] = dn # also add the DN
         result[user_id] = ldap_user
 
     return result
@@ -475,10 +479,15 @@ def ldap_get_groups(add_filt = None):
         filt = '(&%s%s)' % (filt, add_filt)
     return ldap_search(ldap_replace_macros(config.ldap_groupspec['dn']), filt, ['cn'])
 
-def ldap_user_groups(username, attr = 'cn'):
-    # The given username might be wrong case. The ldap search is case insensitive,
-    # so the username read from ldap might differ. Fix it here.
-    user_dn, username = ldap_get_user(username, True)
+def ldap_user_groups(username, user_dn, attr = 'cn'):
+    # When configured to convert user_ids to lower case, all user ids here are lower case.
+    # Otherwise all user_ids are in the case which they are in LDAP. This should be ok
+    # for this function! I removed the snippet below to reduce the number of ldap queries.
+    # Before removal, this query was executed for every user again, just to fetch the DN
+    # and the username.
+    #   # The given username might be wrong case. The ldap search is case insensitive,
+    #   # so the username read from ldap might differ. Fix it here.
+    #   user_dn, username = ldap_get_user(username, True)
 
     if username in g_ldap_group_cache:
         if attr == 'cn':
@@ -709,7 +718,7 @@ register_user_attribute_sync_plugins()
 def ldap_convert_groups_to_contactgroups(params, user_id, ldap_user, user):
     groups = []
     # 1. Fetch CNs of all LDAP groups of the user (use group_dn, group_filter)
-    ldap_groups = ldap_user_groups(user_id)
+    ldap_groups = ldap_user_groups(user_id, ldap_user['dn'])
 
     # 2. Fetch all existing group names in WATO
     cg_names = load_group_information().get("contact", {}).keys()
@@ -730,7 +739,7 @@ ldap_attribute_plugins['groups_to_contactgroups'] = {
 def ldap_convert_groups_to_roles(params, user_id, ldap_user, user):
     groups = []
     # 1. Fetch DNs of all LDAP groups of the user
-    ldap_groups = [ g.lower() for g in ldap_user_groups(user_id, 'dn') ]
+    ldap_groups = [ g.lower() for g in ldap_user_groups(user_id, ldap_user['dn'], 'dn') ]
 
     # 2. Load default roles from default user profile
     roles = config.default_user_profile['roles'][:]

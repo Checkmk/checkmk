@@ -48,7 +48,7 @@ td.state {
     background-color: #0b3; color: #fff;
 }
 
-tr.stale .state0, tr.stale .hstate0, tr.stale .state0 a, tr.stale .hstate0 a {
+.state0.stale, .hstate0.stale, .state0.stale a, .hstate0.stale a {
     background-color: #9FDDB0; color: #fff;
 }
 
@@ -60,8 +60,8 @@ tr.stale .state0, tr.stale .hstate0, tr.stale .state0 a, tr.stale .hstate0 a {
     background-color: #ff0; color: #000;
 }
 
-tr.stale .state1, tr.stale .state1 a, tr.groupheader.stale td.state1 {
-    background-color: #FFFFCE; color: #000;
+.state1.stale, .state1.stale a, tr.groupheader td.state1.stale {
+    background-color: #FFFFCE; color: #BCBCBC;
 }
 
 /* CRIT/DOWN */
@@ -69,7 +69,7 @@ tr.stale .state1, tr.stale .state1 a, tr.groupheader.stale td.state1 {
     background-color: #f00; color: #fff;
 }
 
-tr.stale .state2, tr.stale .hstate1, tr.stale .state2 a, tr.stale .hstate2 a {
+.state2.stale, .hstate1.stale, .state2.stale a, .hstate2.stale a {
     background-color: #FFBFBF; color: #fff;
 }
 
@@ -78,7 +78,7 @@ tr.stale .state2, tr.stale .hstate1, tr.stale .state2 a, tr.stale .hstate2 a {
     background-color: #f80; color: #fff;
 }
 
-tr.stale .state3, tr.stale .hstate2, tr.stale .state3 a, tr.stale .hstate2 a {
+.state3.stale, .hstate2.stale, .state3.stale a, .hstate2.stale a {
     background-color: #FFE1BF; color: #fff;
 }
 
@@ -87,7 +87,7 @@ tr.stale .state3, tr.stale .hstate2, tr.stale .state3 a, tr.stale .hstate2 a {
     background-color: #888; color: #fff;
 }
 
-tr.stale .statep, tr.stale .hstatep, tr.stale .statep a, tr.stale .hstatep a {
+.statep.stale, .hstatep.stale, .statep.stale a, .hstatep.stale a {
     background-color: #D6D6D6; color: #fff;
 }
 
@@ -96,7 +96,7 @@ tr.stale .statep, tr.stale .hstatep, tr.stale .statep a, tr.stale .hstatep a {
     background-color: #0af; color: #fff;
 }
 
-tr.stale .stated, tr.stale .hstated, tr.stale .stated a, tr.stale .hstated a {
+.stated.stale, .hstated.stale, .stated.stale a, .hstated.stale a {
     background-color: #CCEEFF; color: #fff;
 }
 
@@ -241,27 +241,20 @@ td.statex {  /* zero count */
 
 /* Row coloring in case of the different states */
 tr.odd0        { background-color: #eee; }
-tr.odd0.stale  { background-color: #f4f4f4; }
+tr.odd0 td.stale  { background-color: #f4f4f4; }
 tr.even0       { background-color: #ddd; }
-tr.even0.stale { background-color: #eee; }
 
 td.odd0  { background-color: #eee; }
 td.even0 { background-color: #ddd; }
 
 tr.odd1        { background-color: #ffc; }
-tr.odd1.stale  { background-color: #ffffe5; }
 tr.even1       { background-color: #ffa; }
-tr.even1.stale { background-color: #ffc; }
 
 tr.odd2        { background-color: #fcc; }
-tr.odd2.stale  { background-color: #ffe2e2; }
 tr.even2       { background-color: #faa; }
-tr.even2.stale { background-color: #fcc; }
 
 tr.odd3        { background-color: #ffe0a0; }
-tr.odd3.stale  { background-color: #ffedc9; }
 tr.even3       { background-color: #ffefaf; }
-tr.even3.stale { background-color: #fff0d3; }
 
 /* Row headers in single dataset layout */
 
@@ -338,7 +331,7 @@ table.data td.center {
     text-align: center;
 }
 
-table.data tr.stale, table.data tr.stale a, table.data tr.stale td.age {
+table.data tr .stale, table.data tr .stale a, table.data tr .stale td.age {
     color: #b7b7b7;
 }
 

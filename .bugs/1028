@@ -72,3 +72,13 @@ Fax.: (03 35) 55 82 - 509
 www.geobasis-bb.de
 
  
+
+2013-08-26 11:38:00: changed state open -> closed
+laut eMail Rueckmeldung von Karsten bereits gefixt durch Bastian
+
+2013-08-26 11:45:07: changed state closed -> open
+Nachtrag von Karsten: 
+Aber nur bei uns gefixt....
+Ich bitte kontaktiere Basti, es war eine Einstellung der locale Variable auf unseren Debian Squeeze.
+
+Da muss bestimmt in OMD etwas gefixt werden....

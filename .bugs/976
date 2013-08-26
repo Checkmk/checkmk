@@ -1,0 +1,141 @@
+Title: querying statehist can crash Nagios
+Component: livestatus
+State: open
+Date: 2013-08-26 10:36:05
+Targetversion: 1.2.3
+Class: bug
+
+came in via feedback@  //  mail still available in feedback/gitbug folder
+
+
+From: Marno van der Molen <MarnovanderMolen@Acknowledge.nl>
+X-Barracuda-Apparent-Source-IP: fe80::b52e:af30:e21c:c076
+To: "'feedback@check-mk.org'" <feedback@check-mk.org>
+Subject: [Bug]: querying statehist can crash Nagios
+Date: Mon, 12 Aug 2013 09:34:43 +0000
+
+
+
+Hi,
+
+ 
+
+We just upgraded our test environment to 1.2.2p2 to experiment with the new statehist tables; this could really solve our reporting challenges J Unfortunately it seems that when we query a timerange longer than several days (e.g.: last week / last month) Nagios becomes unresponsive (ea; multisite shows the site as down & I cannot run livestatus queries from command line either). A Nagios restart is required to make it work again. We rotate our logfiles daily and they have an average size of 10MB per file. For example the ‘Last Month’ logfiles;
+
+ 
+
+6.4M    nagios-01-07-2013-00.log
+
+9.5M    nagios-02-07-2013-00.log
+
+6.5M    nagios-03-07-2013-00.log
+
+9.6M    nagios-04-07-2013-00.log
+
+10M     nagios-05-07-2013-00.log
+
+11M     nagios-06-07-2013-00.log
+
+8.7M    nagios-07-01-2013-00.log
+
+9.5M    nagios-07-02-2013-00.log
+
+9.2M    nagios-07-03-2013-00.log
+
+9.2M    nagios-07-04-2013-00.log
+
+9.4M    nagios-07-05-2013-00.log
+
+9.2M    nagios-07-06-2013-00.log
+
+11M     nagios-07-07-2013-00.log
+
+8.5M    nagios-07-08-2013-00.log
+
+8.9M    nagios-07-09-2013-00.log
+
+8.9M    nagios-07-10-2013-00.log
+
+9.0M    nagios-07-11-2013-00.log
+
+9.1M    nagios-07-12-2013-00.log
+
+9.8M    nagios-07-13-2013-00.log
+
+8.2M    nagios-07-14-2013-00.log
+
+7.6M    nagios-07-15-2013-00.log
+
+7.7M    nagios-07-16-2013-00.log
+
+7.9M    nagios-07-17-2013-00.log
+
+8.2M    nagios-07-18-2013-00.log
+
+8.2M    nagios-07-19-2013-00.log
+
+8.7M    nagios-07-20-2013-00.log
+
+8.6M    nagios-07-21-2013-00.log
+
+7.5M    nagios-07-22-2013-00.log
+
+7.9M    nagios-07-23-2013-00.log
+
+7.7M    nagios-07-24-2013-00.log
+
+8.1M    nagios-07-25-2013-00.log
+
+7.7M    nagios-07-26-2013-00.log
+
+7.8M    nagios-07-27-2013-00.log
+
+8.8M    nagios-07-28-2013-00.log
+
+7.8M    nagios-07-29-2013-00.log
+
+9.8M    nagios-07-30-2013-00.log
+
+9.5M    nagios-07-31-2013-00.log
+
+3.0M    nagios-08-07-2013-00.log
+
+321M    total
+
+ 
+
+We saw the following query before Livestatus became unreachable;
+
+ 
+
+GET statehist
+Filter: time >= 1372636800
+Filter: time <= 1375315200
+Filter: service_description !=
+Columns: host_name service_description duration from until state host_down in_downtime in_host_downtime in_notification_period is_flapping log_output
+Filter: service_groups >= apm-L4
+Localtime: 1376295356
+OutputFormat: python
+KeepAlive: on
+ResponseHeader: fixed16
+Limit: 1001
+
+ 
+
+Please let me know if this is a configuration issue on my side or what I can do to help troubleshoot this issue. I’ve already tried putting the archives on a ramdisk to eliminate IO-wait as a cause but this hasn’t helped at all. We were running Nagios 3.3.1 but upgraded to Nagios 3.5.0 on our test environment to make sure the issue is not related to our old Nagios release but this didn’t help either (ea; issue still exists with latest Nagios version).  Our Nagios instance has 2200 hosts and 35k services. Please let me know if you need any more info. Thanks.
+
+ 
+
+Kind regards,
+
+Marno van der Molen
+Lead Developer
+
+Acknowledge
+Burgemeester Mollaan 80
+5582 CK Waalre
+T: +31 (0) 40 255 25 25
+F: + 31 (0) 40 25 43 470
+E: servicedesk@acknowledge.nl
+
+ 

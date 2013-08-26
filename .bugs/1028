@@ -1,0 +1,74 @@
+Title: flexible Notification / plain Text Email: Problem with Umlaut in Hostalias
+Component: core
+State: open
+Date: 2013-08-26 11:07:27
+Targetversion: 1.2.3
+Class: bug
+
+came in via feedback@  //  original mail still avaliable in feedback/gitbug folder
+
+
+From: =?utf-8?B?U2Now7ZrZSwgS2Fyc3Rlbg==?= <Karsten.Schoeke@geobasis-bb.de>
+To: "'feedback@check-mk.org'" <feedback@check-mk.org>
+CC: "Mathias Kettner (mk@mathias-kettner.de)" <mk@mathias-kettner.de>
+Subject: [Bug]:
+Thread-Topic: [Bug]:
+Thread-Index: Ac6Ztx9R2ql85SPFRdK+HzlRtswRIg==
+Disposition-Notification-To: =?utf-8?B?U2Now7ZrZSwgS2Fyc3Rlbg==?=
+	<Karsten.Schoeke@geobasis-bb.de>
+Date: Thu, 15 Aug 2013 12:58:29 +0000
+
+
+
+
+Hallo,
+
+ 
+
+auf meiner Installation, omd Paket von Euch Version 1.2.3i1 ist folgender Fehler:
+
+ 
+
+Wähle ich unter flexible Notification das ‚plain Text Email‘ Template aus, bekomme ich keine Mails, wenn ein Umlaut im Host-Alias enthalten ist.
+
+Wird der Umlaut entfernt, wird die Email versendet.
+
+ 
+
+Wird das Template ‚HTML Emails with included Graphs‘ gewählt wird die Mail versendet.
+
+ 
+
+ 
+
+Bitte mit prio 1 behandeln.
+
+ 
+
+vG
+
+Karsten
+
+ 
+
+Landesvermessung und Geobasisinformation Brandenburg
+
+Geokompetenzzentrum
+
+Dezernat 13 Technologische Erneuerung
+
+Herr Karsten Schöke
+
+Robert-Havemann-Straße 4, 15236 Frankfurt (Oder)
+
+ 
+
+Mail: Karsten.Schoeke@geobasis-bb.de
+
+Tel.: (03 35) 55 82 - 553
+
+Fax.: (03 35) 55 82 - 509
+
+www.geobasis-bb.de
+
+ 

@@ -376,7 +376,7 @@ def page_edit_views(msg=None):
     html.write('<table class=data>')
     html.write("<tr>")
     html.write("<th>%s</th>" % _("Actions"))
-    html.write("<th>%s</th>" % _("Link Name"))
+    html.write("<th>%s</th>" % _("View Name"))
     html.write("<th>%s</th>" % _("Title"))
     html.write("<th>%s</th>" % _("Datasource"))
     html.write("<th>%s</th>" % _("Owner"))
@@ -420,7 +420,7 @@ def page_edit_views(msg=None):
                                  % viewname, _("Delete this view!"), "delete")
             html.write('</td>')
 
-            # Link name
+            # View Name
             html.write('<td>%s</td>' % viewname)
 
             # Title
@@ -579,39 +579,42 @@ def page_edit_view():
 
     forms.header(_("Basic Settings"))
 
-    forms.section(_("Title"))
-    vs['title'].render_input('view_title', view.get('title'))
-
-    forms.section(_("Link Name"))
+    forms.section(_("View Name"))
     html.text_input("view_name", size=12)
-    html.help(_("The link name will be used in URLs that point to a view, e.g. "
+    html.help(_("The view name will be used in URLs that point to a view, e.g. "
                 "<tt>view.py?view_name=<b>myview</b></tt>. It will also be used "
                 "internally for identifying a view. You can create several views "
-                "with the same title but only one per link name. If you create a "
-                "view that has the same link name as a builtin view, then your "
+                "with the same title but only one per view name. If you create a "
+                "view that has the same view name as a builtin view, then your "
                 "view will override that (shadowing it)."))
 
     forms.section(_("Datasource"), simple=True)
     datasource_title = multisite_datasources[datasourcename]["title"]
-    html.write("%s: <b>%s</b><br>\n" % (_('Datasource'), datasource_title))
+    html.write("%s: <b>%s</b><br />\n" % (_('Datasource'), datasource_title))
     html.hidden_field("datasource", datasourcename)
     html.help(_("The datasource of a view cannot be changed."))
+
+    forms.space()
+
+    forms.section(_("Title"))
+    vs['title'].render_input('view_title', view.get('title'))
 
     forms.section(_("Topic"))
     vs['topic'].render_input('view_topic', view.get('topic'))
     html.help(_("The view will be sorted under this topic in the Views snapin. "))
 
-    forms.section(_("Button"))
-    html.write(_('Text') + ': ')
+    forms.section(_("Description"))
+    vs['description'].render_input('view_description', view.get('description'))
+
+    forms.section(_("Button Text"))
     vs['linktitle'].render_input('view_linktitle', view.get('linktitle'))
     html.help(_("If you define a text here, then it will be used in "
                 "buttons to the view instead of of view title."))
-    html.write('<p>' + _('Icon') + ': ')
-    html.text_input("view_icon", size=14)
-    html.write('</p>')
 
-    forms.section(_("Description"))
-    vs['description'].render_input('view_description', view.get('description'))
+    forms.section(_("Button Icon"))
+    html.text_input("view_icon", size=14)
+
+    forms.space()
 
     forms.section(_("Visibility"))
     if config.may("general.publish_views"):

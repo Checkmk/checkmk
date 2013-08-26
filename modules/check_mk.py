@@ -1801,6 +1801,21 @@ def create_nagios_servicedefs(outfile, hostname):
             return True
         return False
 
+    def get_dependencies(hostname,servicedesc):
+        result = ""
+        for dep in service_deps(hostname, servicedesc):
+            result += """
+define servicedependency {
+  use\t\t\t\t%s
+  host_name\t\t\t%s
+  service_description\t%s
+  dependent_host_name\t%s
+  dependent_service_description %s
+}\n
+""" % (service_dependency_template, hostname, dep, hostname, servicedesc)
+
+        return result
+
     host_checks = get_check_table(hostname).items()
     host_checks.sort() # Create deterministic order
     aggregated_services_conf = set([])
@@ -1942,7 +1957,7 @@ define service {
 define service {
   use\t\t\t\t%s
   host_name\t\t\t%s
-  normal_check_interval\t\t%d
+  normal_check_interval\t\t%d 
   retry_check_interval\t\t%d
 %s  service_description\t\tCheck_MK inventory
 }
@@ -1991,6 +2006,9 @@ define service {
   active_checks_enabled\t\t1
 %s}
 """ % (template, hostname, make_utf8(description), simulate_command(command), extraconf))
+
+        # write service dependencies for legacy checks
+        outfile.write(get_dependencies(hostname,description))
 
     # legacy checks via active_checks
     actchecks = []
@@ -2043,6 +2061,8 @@ define service {
 %s}
 """ % (template, hostname, make_utf8(description), simulate_command(command), extraconf))
 
+            # write service dependencies for active checks
+            outfile.write(get_dependencies(hostname,description))
 
     # Legacy checks via custom_checks
     custchecks = host_extra_conf(hostname, custom_checks)
@@ -2110,6 +2130,9 @@ define service {
 %s%s}
 """ % (template, hostname, make_utf8(description), simulate_command(command),
        (command_line and not freshness) and 1 or 0, extraconf, freshness))
+
+            # write service dependencies for custom checks
+            outfile.write(get_dependencies(hostname,description))
 
     # Levels for host check
     if is_cluster(hostname):

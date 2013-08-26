@@ -122,6 +122,7 @@
     * Improved filtering of the foldertree snapin by user permissions (when a user is
       only permitted on one child folder, the upper folder is removed from the
       hierarchy)
+    * "Unchecked Services" view now uses the staleness of services for filtering
     * FIX: better error message in case of exception in SNMP handling
     * FIX: Inventory screen: Now shows custom checks
     * FIX: Fixed locking problem of multisite pages related to user loading/saving

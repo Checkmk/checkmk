@@ -332,6 +332,20 @@ register_configvar(group,
     ),
     domain = "multisite")
 
+register_configvar(group,
+    "staleness_threshold",
+    Float(
+        title = _('Staleness value to mark hosts / services stale'),
+        help  = _('The staleness value of a host / service is calculated by measuring the '
+                  'configured check intervals a check result is old. A value of 1.5 means the '
+                  'current check result has been gathered one and a half check intervals of an object. '
+                  'This would mean 90 seconds in case of a check which is checked each 60 seconds.'),
+        minvalue = 1,
+        default_value = 1.5,
+    ),
+    domain = "multisite",
+)
+
 
 #   .--WATO----------------------------------------------------------------.
 #   |                     __        ___  _____ ___                         |
@@ -1853,6 +1867,14 @@ register_rule(group,
              "Please be aware, however, that there are some broken devices out there, that support "
              "bulk walk but behave very bad when it is used. When you want to enable v2c while not using "
              "bulk walk, please use the rule set snmpv2c_hosts instead."))
+
+register_rule(group,
+    "snmp_without_sys_descr",
+    title = _("Hosts without system description OID"),
+    help = _("Devices which do not publish the system description OID "
+             ".1.3.6.1.2.1.1.1.0 are normally ignored by the SNMP inventory. "
+             "Use this ruleset to select hosts which should nevertheless "
+             "be checked."))
 
 register_rule(group,
     "snmpv2c_hosts",

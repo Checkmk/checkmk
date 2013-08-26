@@ -1253,7 +1253,7 @@ register_check_parameters(
     "tcp_connections",
     _("Monitor specific TCP/UDP connections and listeners"),
     Dictionary(
-        help = _("This rule allows to monitor the existance of specify TCP connections or "
+        help = _("This rule allows to monitor the existence of specific TCP connections or "
                  "TCP/UDP listeners."),
         elements = [
             ( "proto",
@@ -1811,26 +1811,26 @@ register_check_parameters(
                  "You can change this behaviour on a per-state-base here."),
         optional_keys = False,
         elements = [
-           ( "states", 
+           ( "states",
              Dictionary(
                  title = _("Target states"),
                  optional_keys = False,
                  elements = [
-                     ( "poweredOn", 
+                     ( "poweredOn",
                        MonitoringState(
                            title = _("Powered ON"),
                            help = _("Check result if the host or VM is powered on"),
                            default_value = 0,
                        )
                     ),
-                    ( "poweredOff", 
+                    ( "poweredOff",
                        MonitoringState(
                            title = _("Powered OFF"),
                            help = _("Check result if the host or VM is powered off"),
                            default_value = 1,
                        )
                     ),
-                    ( "suspended", 
+                    ( "suspended",
                        MonitoringState(
                            title = _("Suspended"),
                            help = _("Check result if the host or VM is suspended"),
@@ -1872,7 +1872,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_printing,
     "windows_printer_queues",
-    _("Number of open jobs of a printer on windows" ), 
+    _("Number of open jobs of a printer on windows" ),
     Tuple(
           help = _("This rule is applied to the number of print jobs "
                    "currently waiting in windows printer queue."),
@@ -2005,7 +2005,7 @@ register_check_parameters(
         help = _("A tablespace is a container for segments (tables, indexes, etc). A "
                  "database consists of one or more tablespaces, each made up of one or "
                  "more data files. Tables and indexes are created within a particular "
-                 "tablespace. " 
+                 "tablespace. "
                  "This rule allows you to define checks on the size of tablespaces."),
         elements = [
             ("levels",
@@ -3672,7 +3672,7 @@ register_check_parameters(
                     help = _("Leave this empty, if the user does not matter"),
                     none_is_empty = True,
                 )),
-                ( "cpulevels", 
+                ( "cpulevels",
                   Tuple(
                     title = _("Levels on CPU utilization"),
                     elements = [

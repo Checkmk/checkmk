@@ -274,6 +274,7 @@ snmp_hosts                           = [ (['snmp'], ALL_HOSTS) ]
 tcp_hosts                            = [ (['tcp'], ALL_HOSTS), (NEGATE, ['snmp'], ALL_HOSTS), (['!ping'], ALL_HOSTS) ]
 bulkwalk_hosts                       = []
 snmpv2c_hosts                        = []
+snmp_without_sys_descr               = []
 usewalk_hosts                        = []
 dyndns_hosts                         = [] # use host name as ip address for these hosts
 ignored_checktypes                   = [] # exclude from inventory
@@ -785,11 +786,12 @@ def snmp_scan(hostname, ipaddress):
 
     if opt_verbose:
         sys.stdout.write("Scanning host %s(%s) for SNMP checks..." % (hostname, ipaddress))
-    sys_descr = get_single_oid(hostname, ipaddress, ".1.3.6.1.2.1.1.1.0")
-    if sys_descr == None:
-        if opt_debug:
-            sys.stderr.write("no SNMP answer\n")
-        return []
+    if not in_binary_hostlist(hostname, snmp_without_sys_descr):
+        sys_descr = get_single_oid(hostname, ipaddress, ".1.3.6.1.2.1.1.1.0")
+        if sys_descr == None:
+            if opt_debug:
+                sys.stderr.write("no SNMP answer\n")
+            return []
 
     found = []
     for check_type, check in check_info.items():

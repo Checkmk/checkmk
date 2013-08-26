@@ -1,9 +1,9 @@
 Title: flexible Notification / plain Text Email: Problem with Umlaut in Hostalias
 Component: core
-State: open
+Class: bug
+State: closed
 Date: 2013-08-26 11:07:27
 Targetversion: 1.2.3
-Class: bug
 
 came in via feedback@  //  original mail still avaliable in feedback/gitbug folder
 
@@ -72,3 +72,6 @@ Fax.: (03 35) 55 82 - 509
 www.geobasis-bb.de
 
  
+
+2013-08-26 11:38:00: changed state open -> closed
+laut eMail Rueckmeldung von Karsten bereits gefixt durch Bastian

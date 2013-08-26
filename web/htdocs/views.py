@@ -2341,6 +2341,12 @@ def execute_hooks(hook):
             else:
                 pass
 
+def paint_painter(painter, row):
+    if "args" in painter:
+        return painter["paint"](row, *painter["args"])
+    else:
+        return painter["paint"](row)
+
 def prepare_paint(p, row):
     painter = p[0]
     linkview = p[1]
@@ -2351,10 +2357,7 @@ def prepare_paint(p, row):
         if not row:
             return "", ""  # no join information available for that column
 
-    if "args" in painter:
-        tdclass, content = painter["paint"](row, *painter["args"])
-    else:
-        tdclass, content = painter["paint"](row)
+    tdclass, content = paint_painter(painter, row)
 
     content = html.utf8_to_entities(content)
 

@@ -92,7 +92,7 @@ def render_json(rows, view, group_painters, painters, num_columns, show_checkbox
                 first = False
             else:
                 html.write(",")
-            tdclass, content = p[0]["paint"](row)
+            tdclass, content = paint_painter(p[0], row)
             content = str(content).replace("<br>","\n")
             stripped = html.strip_tags(content)
             utf8 = stripped.encode("utf-8")
@@ -123,7 +123,7 @@ def render_csv(rows, view, group_painters, painters, num_columns, show_checkboxe
         filename = '%s-%s.csv' % (view['name'], time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
         html.req.headers_out['Content-Disposition'] = 'Attachment; filename=%s' % filename
 
-    csv_separator = html.var("csv_separator", ",")
+    csv_separator = html.var("csv_separator", ";")
     first = True
     for p in painters:
         if first:
@@ -131,9 +131,8 @@ def render_csv(rows, view, group_painters, painters, num_columns, show_checkboxe
         else:
             html.write(csv_separator)
         content = p[0]["name"]
-        stripped = html.strip_tags(content)
-        stripped = stripped.replace(csv_separator, "\%s" % csv_separator)
-        html.write(stripped.encode("utf-8"))
+        stripped = html.strip_tags(content).replace('\n', '').replace('"', '""')
+        html.write('"%s"' % stripped.encode("utf-8"))
 
     for row in rows:
         html.write("\n")
@@ -143,10 +142,9 @@ def render_csv(rows, view, group_painters, painters, num_columns, show_checkboxe
                 first = False
             else:
                 html.write(csv_separator)
-            tdclass, content = p[0]["paint"](row)
-            stripped = html.strip_tags(content)
-            stripped = stripped.replace(csv_separator, "\%s" % csv_separator)
-            html.write(stripped.encode("utf-8"))
+            tdclass, content = paint_painter(p[0], row)
+            stripped = html.strip_tags(content).replace('\n', '').replace('"', '""')
+            html.write('"%s"' % stripped.encode("utf-8"))
 
 multisite_layouts["csv_export"] = {
     "title"  : _("CSV data export"),

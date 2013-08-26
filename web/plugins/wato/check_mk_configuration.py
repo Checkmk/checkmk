@@ -332,6 +332,20 @@ register_configvar(group,
     ),
     domain = "multisite")
 
+register_configvar(group,
+    "staleness_threshold",
+    Float(
+        title = _('Staleness value to mark hosts / services stale'),
+        help  = _('The staleness value of a host / service is calculated by measuring the '
+                  'configured check intervals a check result is old. A value of 1.5 means the '
+                  'current check result has been gathered one and a half check intervals of an object. '
+                  'This would mean 90 seconds in case of a check which is checked each 60 seconds.'),
+        minvalue = 1,
+        default_value = 1.5,
+    ),
+    domain = "multisite",
+)
+
 
 #   .--WATO----------------------------------------------------------------.
 #   |                     __        ___  _____ ___                         |

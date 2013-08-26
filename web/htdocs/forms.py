@@ -152,6 +152,9 @@ def container():
          (g_section_isopen and "open" or "closed"))
     g_section_open = True
 
+def space():
+    html.write('<tr><td colspan=2 style="height:15px;"></td></tr>')
+
 def section(title = None, checkbox = None, id = "", simple=False, hide = False):
     global g_section_open
     if g_section_open:

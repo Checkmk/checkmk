@@ -195,6 +195,10 @@ adhoc_downtime = {}
 # Display dashboard date
 pagetitle_date_format = None
 
+# Value of the host_staleness/service_staleness field to make hosts/services
+# appear in a stale state
+staleness_threshold = 1.5
+
 #     _   _               ____  ____
 #    | | | |___  ___ _ __|  _ \| __ )
 #    | | | / __|/ _ \ '__| | | |  _ \

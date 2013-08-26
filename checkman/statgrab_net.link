@@ -26,7 +26,7 @@ item:
 
 inventory:
   Creates one check for each network interface.
-  When running inventory on a machine, the current state of an interface is 
+  When running inventory on a machine, the current state of an interface is
   assumed to be the target state.
 
 [parameters]

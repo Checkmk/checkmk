@@ -1556,7 +1556,7 @@ if mkeventd_enabled:
                  default_value = False),
         domain = "mkeventd",
     )
-                 
+
 
     register_configvar(group,
         "hostname_translation",

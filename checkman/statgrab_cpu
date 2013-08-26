@@ -7,7 +7,7 @@ description:
  This check measures the CPU utilization during the last check
  cycle.
 
- Make sure you have the statgrab binary available on the monitored 
+ Make sure you have the statgrab binary available on the monitored
  machine. Under HP-UX you also need to activate the hpux_statgrab agent plugin.
 
  The check allways returns {OK} status.

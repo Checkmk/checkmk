@@ -1,6 +1,6 @@
 title: HP BladeSystem Enclosures: Manager boards
 agents: snmp
-catalog: hw/server/hp 
+catalog: hw/server/hp
 license: GPL
 distribution: check_mk
 description:

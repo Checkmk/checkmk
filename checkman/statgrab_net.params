@@ -28,6 +28,6 @@ inventory:
   of an interface are assumed to be the target states.
 
 [parameters]
-targetstate(string, string): the target state for interface speed and the 
+targetstate(string, string): the target state for interface speed and the
   target duplex state
 

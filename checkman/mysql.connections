@@ -5,10 +5,10 @@ license: GPL
 distribution: check_mk
 description:
   This check allows the tracking of connection usage for a MySQL database.
-  Therefore it queries the maximum number of connections that have been 
-  in use simultaneously since the server started and 
-  the maximum number of possible parallel connections. 
-  From these both it calculates the 
+  Therefore it queries the maximum number of connections that have been
+  in use simultaneously since the server started and
+  the maximum number of possible parallel connections.
+  From these both it calculates the
   maximum usage level of these connections in percent
   and matches the specified {WARN} and {CRIT} thresholds against it.
 
@@ -25,10 +25,10 @@ inventory:
 parameters (dict): A dictionary with currentl just one possible key: {"perc_used"}. This
   is a pair if two floating point numbers:
 
-  {warn} (float): The maximum connection usage (in percent) that triggers 
+  {warn} (float): The maximum connection usage (in percent) that triggers
     a {WARN} state.
 
-  {crit} (float): The maximum connection usage (in percent) that triggers 
+  {crit} (float): The maximum connection usage (in percent) that triggers
     a {CRIT} state.
 
   If {perc_used} is not set, the check always returns {OK} state.

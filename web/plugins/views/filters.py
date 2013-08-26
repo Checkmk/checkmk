@@ -714,7 +714,7 @@ class FilterHostTags(Filter):
                 title = tag_entry[1]
                 if tag is None:
                     tag = ''
-                
+
                 if type(title) == unicode:
                     title = title.encode("utf-8")
                 grouped[entry[0]].append([tag, title])

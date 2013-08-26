@@ -1,6 +1,6 @@
 title: MK's Remote Plugin Executor
 agents: linux, aix, solaris, hpux, macosx, netbsd, openbsd, freebsd
-catalog: generic 
+catalog: generic
 license: GPL
 distribution: check_mk
 description:

@@ -6867,13 +6867,13 @@ def mode_edit_site(phase):
               columns = 1,
               elements = [
                   ( "socket", vs_tcp_port ),
-                  ( "channels", 
+                  ( "channels",
                     Integer(
                         title = _("Number of channels to keep open"),
                         minvalue = 2,
                         maxvalue = 50,
                         default_value = 5)),
-                  ( "heartbeat", 
+                  ( "heartbeat",
                     Tuple(
                         title = _("Regular heartbeat"),
                         orientation = "float",
@@ -10412,7 +10412,7 @@ def mode_edit_ruleset(phase):
             groupname = g_rulegroups[group][0]
             html.context_button(groupname,
                   make_link([("mode", "rulesets"), ("group", group), ("host", hostname)]), "back")
-        html.context_button(_("Used Rulesets"), 
+        html.context_button(_("Used Rulesets"),
              make_link([("mode", "rulesets"), ("group", "used"), ("host", hostname)]), "usedrulesets")
         if hostname:
             html.context_button(_("Services"),
@@ -11081,7 +11081,7 @@ def mode_edit_rule(phase, new = False):
             return "edit_ruleset"
 
         return ("edit_ruleset",
-           (new and _("Created new rule in ruleset '%s' in folder %s") 
+           (new and _("Created new rule in ruleset '%s' in folder %s")
                 or _("Editor rule in ruleset '%s' in folder %s")) %
                       (rulespec["title"], new_rule_folder["title"]))
 
@@ -11519,7 +11519,7 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec, 
             title = title,
             valuespec = valuespec,
             itemspec = itemspec,
-            itemtype = itemtype, 
+            itemtype = itemtype,
             itemname = itemname,
             itemhelp = itemhelp,
             itemenum = itemenum,

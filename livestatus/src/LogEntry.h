@@ -37,7 +37,7 @@
 
 #include "nagios.h"
 
-enum LogEntryType {	
+enum LogEntryType {
     NONE,
     ALERT_HOST,
     ALERT_SERVICE,

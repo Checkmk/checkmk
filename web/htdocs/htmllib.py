@@ -223,7 +223,7 @@ class html:
 
     def add_global_vars(self, varnames):
         self.global_vars += varnames
-        
+
     # [('varname1', value1), ('varname2', value2) ]
     def makeuri(self, addvars, remove_prefix = None, filename=None):
         new_vars = [ nv[0] for nv in addvars ]
@@ -390,7 +390,7 @@ class html:
     def add_form_var(self, varname):
         self.form_vars.append(varname)
 
-    def text_input(self, varname, default_value = "", cssclass = "text", label = None, id = None, 
+    def text_input(self, varname, default_value = "", cssclass = "text", label = None, id = None,
                    submit = None, attrs = {}, **args):
         if default_value == None:
             default_value = ""
@@ -681,7 +681,7 @@ class html:
                        '<![endif]-->\n')
 
             self.add_custom_style_sheet()
-            
+
             # Load specified Javascript files
             for js in [ "checkmk", "hover" ] + javascripts:
                 self.write('<script type="text/javascript" src="js/%s.js"></script>\n' % js)
@@ -774,7 +774,7 @@ class html:
         if self.have_help:
             self.javascript("help_enable();")
         if self.keybindings_enabled and self.keybindings:
-            self.javascript("var keybindings = %r;\n" 
+            self.javascript("var keybindings = %r;\n"
                             "document.body.onkeydown = keybindings_keydown;\n"
                             "document.body.onkeyup = keybindings_keyup;\n"
                             "document.body.onfocus = keybindings_focus;\n" % self.keybindings)
@@ -922,7 +922,7 @@ class html:
     # time we remove all entries from that list that are older
     # then one week.
     def invalidate_transid(self, id):
-        used_ids = self.load_transids() 
+        used_ids = self.load_transids()
         new_ids = []
         now = time.time()
         for used_id in used_ids:

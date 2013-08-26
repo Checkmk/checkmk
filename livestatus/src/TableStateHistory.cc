@@ -423,7 +423,7 @@ void TableStateHistory::answerQuery(Query *query)
             // Find state object for this host/service
             HostServiceState *state;
             state_info_t::iterator it_hst = state_info.find(key);
-            if (it_hst == state_info.end()) 
+            if (it_hst == state_info.end())
             {
                 // Create state object that we also need for filtering right now
                 state = new HostServiceState();

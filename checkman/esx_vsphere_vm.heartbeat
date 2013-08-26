@@ -20,7 +20,7 @@ description:
  {CRIT} if there is no heartbeat. Guest operating system may have stopped responding.
       (vsphere state: red)
 
- See "Monitoring VMWare ESX with Check_MK" in the online documentation 
+ See "Monitoring VMWare ESX with Check_MK" in the online documentation
  as well.
 
 inventory:

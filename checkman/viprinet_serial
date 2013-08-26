@@ -1,6 +1,6 @@
 title: Viprinet: Serial Number
 agents: snmp
-catalog: hw/network/viprinet 
+catalog: hw/network/viprinet
 license: GPL
 distribution: check_mk
 description:

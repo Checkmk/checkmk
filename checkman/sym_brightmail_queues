@@ -1,6 +1,6 @@
 title: Symantec brightmail scanners: Mail Queues
 agents: snmp
-catalog: hw/network/symantec 
+catalog: hw/network/symantec
 license: GPL
 distribution: check_mk
 description:

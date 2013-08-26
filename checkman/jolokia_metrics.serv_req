@@ -32,7 +32,7 @@ inventory:
  One check is created for each Jolokia instance sent by the agent.
 
 [parameters]
-lo_crit(int): Return {CRIT} if number of requests is lower or equal than 
+lo_crit(int): Return {CRIT} if number of requests is lower or equal than
   this value.
 
 lo_warn(int): Return {WARN} if number of requests is lower or equal than
@@ -45,7 +45,7 @@ hi_crit(int): Return {CRIT} if number of requests is higher or equal than
   this value.
 
 [configuration]
-jolokia_metrics_serv_req_default_levels(int, int, int, int): 
- The default levels to be used for inventorized checks for 
+jolokia_metrics_serv_req_default_levels(int, int, int, int):
+ The default levels to be used for inventorized checks for
  low crit, low warn, high warn, high crit.
  They are preset to {(-1, -1, 5000, 6000)}

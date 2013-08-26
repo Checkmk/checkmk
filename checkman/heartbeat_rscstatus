@@ -1,6 +1,6 @@
 title: Ressource status of heartbeat nodes using crm=no
 agents: linux
-catalog: os/services 
+catalog: os/services
 license: GPL
 distribution: check_mk
 description:

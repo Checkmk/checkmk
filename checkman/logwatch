@@ -1,6 +1,6 @@
 title: Check logfiles for relevant new messages
 agents: linux, windows, aix, solaris
-catalog: os/files 
+catalog: os/files
 license: GPL
 distribution: check_mk
 description:

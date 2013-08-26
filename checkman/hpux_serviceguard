@@ -1,6 +1,6 @@
 title: HP-UX Serviveguard
 agents: hpux
-catalog: os/services 
+catalog: os/services
 license: GPL
 distribution: check_mk
 description:

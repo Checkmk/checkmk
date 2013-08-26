@@ -1446,7 +1446,7 @@ class AbsoluteDate(ValueSpec):
         self._label = kwargs.get("label")
         self._include_time = kwargs.get("include_time", False)
         self._format = kwargs.get("format", self._include_time and "%F %T" or "%F")
-        self._default_value = kwargs.get("default_value", None) 
+        self._default_value = kwargs.get("default_value", None)
 
     def default_value(self):
         if self._default_value != None:
@@ -1504,7 +1504,7 @@ class AbsoluteDate(ValueSpec):
             else:
                 html.write(" ")
             html.number_input(varprefix + "_min", mmin, size=2)
-            
+
             if self._show_titles:
                 html.write('</td><td>')
             else:
@@ -1512,7 +1512,7 @@ class AbsoluteDate(ValueSpec):
             html.number_input(varprefix + "_sec", sec, size=2)
             if self._show_titles:
                 html.write('</td>')
-            
+
         if self._show_titles:
             html.write('</tr></table>')
 
@@ -1849,6 +1849,7 @@ class Alternative(ValueSpec):
         self._elements = kwargs["elements"]
         self._match = kwargs.get("match") # custom match function
         self._style = kwargs.get("style", "radio") # alternative: "dropdown"
+        self._show_alternative_title = kwargs.get("show_alternative_title")
 
     # Return the alternative (i.e. valuespec)
     # that matches the datatype of a given value. We assume
@@ -1933,7 +1934,10 @@ class Alternative(ValueSpec):
     def value_to_text(self, value):
         vs = self.matching_alternative(value)
         if vs:
-            return vs.value_to_text(value)
+            output = ""
+            if self._show_alternative_title and vs.title():
+                output = "%s<br>" % vs.title()
+            return output + vs.value_to_text(value)
         else:
             return _("invalid:") + " " + str(value)
 
@@ -2192,7 +2196,7 @@ class Dictionary(ValueSpec):
 
             if sections and param not in sections:
                 continue
-            
+
             div_id = varprefix + "_d_" + param
             vp     = varprefix + "_p_" + param
             if self._optional_keys and param not in self._required_keys:

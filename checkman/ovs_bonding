@@ -1,6 +1,6 @@
 title: State of Bonding network interface on Open vSwitch
 agents: linux
-catalog: os/networking 
+catalog: os/networking
 license: GPL
 distribution: check_mk
 description:

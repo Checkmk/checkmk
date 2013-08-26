@@ -1,0 +1,8 @@
+Title: df levels percentage is treated wrong (int instead of float)
+Component: checks
+State: open
+Date: 2013-08-23 12:25:23
+Targetversion: 1.2.3
+Class: nastiness
+
+fix either check, wato and/or manpage

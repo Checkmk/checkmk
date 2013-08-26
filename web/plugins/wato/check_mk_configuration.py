@@ -1202,7 +1202,10 @@ register_rule(group,
     "host_groups",
     GroupSelection(
         "host",
-        title = _("Assignment of hosts to host groups")),
+        title = _("Assignment of hosts to host groups"),
+        help = _("Hosts can be grouped together into host groups. The most common use case "
+                 "is to put hosts which belong together in a host group to make it possible "
+                 "to get them listed together in the status GUI.")),
     match = "all")
 
 register_rule(group,
@@ -1822,7 +1825,9 @@ register_rule(group,
                       title = _("Privacy protocol")),
                  TextAscii(title = _("Privacy pass phrase")),
                    ])],
-        title = _("SNMP communities of monitored hosts")))
+        title = _("SNMP communities of monitored hosts"),
+        help = _("By default Check_MK uses the community \"public\" to contact hosts via SNMP. This rule "
+                 "can be used to customize the the credentials to be used when contacting hosts via SNMP.")))
 
 register_rule(group,
     "snmp_character_encodings",

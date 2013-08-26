@@ -1,0 +1,48 @@
+Title: parent scan fails after renaming a wato folder
+Component: wato
+State: open
+Date: 2013-08-09 16:33:23
+Targetversion: 1.2.3
+Class: bug
+
+came in via feedback@  //  original mail still available at folder feedback/gitbug
+
+
+To: feedback@check-mk.org
+MIME-Version: 1.0
+Subject: =?ISO-8859-1?Q?[BUG]=3A_2013=2E06=2E17=2E_-_Parent_Scan_schl=E4gt_fehl?=
+ =?ISO-8859-1?Q?_nach_Ordner_Namensanpassung?=
+X-KeepSent: 8EC789A2:22AB56CB-C1257B91:0039EA95;
+ type=4; name=$KeepSent
+X-Mailer: Lotus Notes Release 8.5.3FP1 March 08, 2012
+Message-ID: <OF8EC789A2.22AB56CB-ONC1257B91.0039EA95-C1257B91.003ADE67@bechtle.de>
+From: tim.kreutzer@bechtle.com
+Date: Fri, 21 Jun 2013 12:43:00 +0200
+
+
+Hallo Feedback,
+
+mir ist folgendes in der Entwickler Version 2013.06.17 aufgefallen.
+Kurzes Beispiel:
+
+Folgende Ordner in WATO:
+Main Directory\Kunde\Hosts
+
+Nach Änderung des Namens des Ordners in z.B:
+Main Directory\KundeXYZ\Hosts
+
+Versucht der Parent Scan in WATO die Hosts unter dem alten Ordner Namen (Main Directory\Kunde\Hosts )zu finden und schlägt fehl. Alle bestehenden Regeln wurden, einwandfrei auf den neuen Ordner angepasst.
+Hoffe das war euch noch nicht bekannt, habe in der Bug Liste nichts dazu gefunden.
+
+Mit freundlichen Grüßen
+
+Tim Kreutzer
+System Engineer
+
+Bechtle GmbH
+IT-Systemhaus Bremen
+Otto-Lilienthal Straße 20, D - 28199 Bremen
+Tel:             +49 421 59680-804
+Fax:            +49 421 59680-596
+E-Mail:        tim.kreutzer@bechtle.com
+Internet:       http://www.bechtle.com 

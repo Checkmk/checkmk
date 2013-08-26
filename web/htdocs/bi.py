@@ -321,7 +321,7 @@ def compile_forest(user, only_hosts = None, only_groups = None):
                 continue
 
             if len(entry) < 3:
-                raise MKConfigError(_("<h1>Invalid aggregation <tt>%s</tt>'</h1>"
+                raise MKConfigError(_("<h1>Invalid aggregation <tt>%s</tt></h1>"
                                       "Must have at least 3 entries (has %d)") % (entry, len(entry)))
 
             if type(entry[0]) == list:

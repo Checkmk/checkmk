@@ -1855,6 +1855,14 @@ register_rule(group,
              "bulk walk, please use the rule set snmpv2c_hosts instead."))
 
 register_rule(group,
+    "snmp_without_sys_descr",
+    title = _("Hosts without system description OID"),
+    help = _("Devices which do not publish the system description OID "
+             ".1.3.6.1.2.1.1.1.0 are normally ignored by the SNMP inventory. "
+             "Use this ruleset to select hosts which should nevertheless "
+             "be checked."))
+
+register_rule(group,
     "snmpv2c_hosts",
     title = _("Hosts using SNMP v2c (and no bulk walk)"),
     help = _("There exist a few devices out there that behave very badly when using SNMP bulk walk. "

@@ -72,6 +72,7 @@
     * cisco_wlc: New check for monitoring cisco wireless lan access points 
     * cisco_wlc_clients: New check for the nummber of clients in a wlc wifi
     * df: Negative integer levels for MB left on a device
+    * win_printers: Monitoring of printer queue on a windows printserver
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a

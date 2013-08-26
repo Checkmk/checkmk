@@ -46,10 +46,6 @@ def check_win_cpuusage(item, params, info):
     else:
         warn, crit = params['levels']
 
-    if params == None:
-        params = winperf_cpu_default_levels
-    warn, crit = params
-
     for line in info:
         if line[0] == '238:6':
             this_time = int(float(line[1]))

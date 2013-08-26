@@ -1,0 +1,53 @@
+Title: Bug in hr_mem with virtual memorry
+Component: checks
+State: open
+Date: 2013-08-26 10:43:59
+Targetversion: 1.2.3
+Class: bug
+
+came in via checkmk-en@   //   original mail still available in feedback/gitbug folder
+
+
+From: "Roeder, Christoph" <Christoph.Roeder@ZIT-BB.Brandenburg.de>
+To: "checkmk-en@lists.mathias-kettner.de" <checkmk-en@lists.mathias-kettner.de>
+Thread-Topic: Bug in hr_mem with virtual memorry
+Thread-Index: Ac6YvZOYz0N8Zxs7TGuUppEKqZZS2g==
+Date: Wed, 14 Aug 2013 07:28:25 +0000
+
+Hello,
+
+ 
+
+I’ve got the same problem as Michaël Coquard, which wrote a workaround back in Dec. 2012!
+
+ 
+
+Maybe a bulletin board and an bugtracker, e.g. github is better than this mailinglist… just my 2cents :-/
+
+ 
+
+Hope his Patch or something similar will be commited:
+
+ 
+
+--- /root/hr_mem        2013-08-14 09:23:10.000000000 +0200                                                                                                                                         
+
++++ hr_mem      2013-08-14 09:23:27.000000000 +0200                                                                                                                                                 
+
+@@ -47,7 +47,7 @@                                                                                                                                                                                    
+
+            # We use only the first entry of each type. We have                                                                                                                                      
+
+            # seen devices (pfSense), that have lots of additional                                                                                                                                   
+
+             # entries that are not useful.                                                                                                                                                         
+
+-           if hrtype not in usage:                                                                                                                                                                 
+
++           if hrtype not in usage and hrdescr != "Virtual memory":                                                                                                                                  
+
+                usage[hrtype] = (size, used)                                                                                                                                                         
+
+                                                                                                                                                                                                     
+
+     # Account for cached memory (this works at least for systems using

@@ -1,0 +1,43 @@
+Title: Bug in hr_mem with swap not yet fixed
+Component: checks
+State: open
+Date: 2013-08-26 12:46:09
+Targetversion: 1.2.3
+Class: bug
+
+came in by email to mk@  //  original mail still available in feedback/gitbug folder
+
+
+Subject: Fehler in hr_mem mit Swap
+From: =?utf-8?Q?Christof_Musik?= <christof@senfdax.de>
+To: =?utf-8?Q?mk=40mathias-kettner=2Ede?= <mk@mathias-kettner.de>
+Date: Wed, 10 Jul 2013 21:24:50 +0200
+
+
+Hallo Mathias,
+
+vor einiger Zeit wurde ein Fehler im hr_mem Check auf der ML gemeldet. (http://www.mail-archive.com/checkmk-en@lists.mathias-kettner.de/msg06808.html)
+Daraufhin hast du geantwortet das der Bug #1 behoben wäre. Dies ist allerdings nicht der Fall.
+Ich habe gerade 1.2.2p2 installiert und mir auch git angeschaut. Dort ist kein Fix für den Fehler zu erkennen.
+
+Das Problem ist sollte wohl mit c505863948d2e2df9e93d94c1c91b17f773c0516 gefixed sein. Dies tut es aber leider nicht.
+Ich weiß jetzt leider auch keine elegante Lösung, als mit hrStorageDescr zu arbeiten. Hast du vielleicht noch eine Idee? Den Patch kann ich gerne umsetzen.
+
+Um das Problem noch mal kurz zu erklären: In der aktuellen Version wird geprüft ob ein Wert von hrStorageVirtualMemory ausgelesen wurde oder nicht. Der erste
+Wert gewinnt. Auf manchen System ist es aber "Virtual memory" und nicht "Swap space". Damit kommen falsche Werte zustande und der Check meldet falsche Zustände.
+
+HOST-RESOURCES-MIB::hrStorageType.1 = OID: HOST-RESOURCES-TYPES::hrStorageRam
+HOST-RESOURCES-MIB::hrStorageType.3 = OID: HOST-RESOURCES-TYPES::hrStorageVirtualMemory
+HOST-RESOURCES-MIB::hrStorageType.6 = OID: HOST-RESOURCES-TYPES::hrStorageOther
+HOST-RESOURCES-MIB::hrStorageType.7 = OID: HOST-RESOURCES-TYPES::hrStorageOther
+HOST-RESOURCES-MIB::hrStorageType.8 = OID: HOST-RESOURCES-TYPES::hrStorageOther
+HOST-RESOURCES-MIB::hrStorageType.10 = OID: HOST-RESOURCES-TYPES::hrStorageVirtualMemory
+HOST-RESOURCES-MIB::hrStorageDescr.1 = STRING: Physical memory
+HOST-RESOURCES-MIB::hrStorageDescr.3 = STRING: Virtual memory
+HOST-RESOURCES-MIB::hrStorageDescr.6 = STRING: Memory buffers
+HOST-RESOURCES-MIB::hrStorageDescr.7 = STRING: Cached memory
+HOST-RESOURCES-MIB::hrStorageDescr.8 = STRING: Shared memory
+HOST-RESOURCES-MIB::hrStorageDescr.10 = STRING: Swap space
+
+Gruß
+Christof

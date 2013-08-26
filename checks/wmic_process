@@ -56,45 +56,38 @@ def check_wmic_process(item, params, info):
             ("user",   user_perc,   cpuwarn,  cpucrit,  0, 100),
             ("kernel", kernel_perc, cpuwarn,  cpucrit,  0, 100) ]
 
-    infos = [
-       "%d processes" % count,
-       "", # 1
-       ", %.1fMB RAM" % mem_mb,
-       "", # 3
-       ", %1.fMB Page" % page_mb,
-       "", # 5
-       ", %.0f%%/%.0f%% User/Kernel" % (user_perc, kernel_perc),
-       "", # 7
-    ]
-
+    messages = []
+    messages.append("%d processes" % count)
+    state = 0
+    
+    msg =  "%.0f%%/%.0f%% User/Kernel" % (user_perc, kernel_perc)
     if cpu_perc >= cpucrit:
         state = 2
-        infos[7] = "(!!) - critical at %d%%" % cpucrit
-
-    elif page_mb >= pagecrit:
-        state = 2
-        infos[5] = "(!!) critical at %d MB" % pagecrit
-
-    elif mem_mb >= memcrit:
-        state = 2
-        infos[3] = "(!!) critical at %d MB" % memcrit
-
+	msg += "(!!) (critical at %d%%)" % cpucrit
     elif cpu_perc >= cpuwarn:
         state = 1
-        infos[7] = "(!) warning at %d%%" % cpuwarn
+        msg += "(!) (warning at %d%%)" % cpuwarn
+    messages.append(msg)
 
-    elif mem_mb >= memwarn:
-        state = 1
-        infos[3] = "(!) warning at %d MB" % memwarn
+    msg = "%.1fMB RAM" % mem_mb
+    if mem_mb >= memcrit and memcrit > 0:
+        state = 2
+        msg += "(!!) (critical at %d MB)" % memcrit
+    elif mem_mb >= memwarn and memwarn > 0:
+        state = max(1, state)
+        msg += "(!) (warning at %d MB)" % memwarn
+    messages.append(msg)
 
+    msg = "%1.fMB Page" % page_mb
+    if page_mb >= pagecrit:
+        state = 2
+        msg += "(!!) (critical at %d MB)" % pagecrit
     elif page_mb >= pagewarn:
-        state = 1
-        infos[5] = "(!) warning at %d MB" % pagewarn
+        state = max(state, 1)
+        msg += "(!) (warning at %d MB)" % pagewarn
+    messages.append(msg)
 
-    else:
-        state = 0
-
-    return (state, "".join(infos), perfdata)
+    return (state, ", ".join(messages), perfdata)
 
 check_info["wmic_process"] = {
     'check_function':          check_wmic_process,

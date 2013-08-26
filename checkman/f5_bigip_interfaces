@@ -1,6 +1,6 @@
 title: F5 Big-IP: Special Network Interfaces
 agents: snmp
-catalog: hw/network/f5 
+catalog: hw/network/f5
 license: GPL
 distribution: check_mk
 description:

@@ -19,7 +19,7 @@ item:
   The name of the fan as returned by SNMP.
 
 perfdata:
-  Two values: The pecentage of max speed the fan is running at and the 
+  Two values: The pecentage of max speed the fan is running at and the
   absolute speed of the fan (rpm).
 
 inventory:

@@ -1,6 +1,6 @@
 title: F5 Big-IP: Load Balancing Pools
 agents: snmp
-catalog: hw/network/f5 
+catalog: hw/network/f5
 license: GPL
 distribution: check_mk
 description:

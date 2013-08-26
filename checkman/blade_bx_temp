@@ -25,11 +25,11 @@ inventory:
  Creates one check per power module.
 
 [parameters]
-level_warn(int): If you want to set a warning level manually give a number here. 
-  Unit is °C. Or leave empty to use the default warning level from the device 
+level_warn(int): If you want to set a warning level manually give a number here.
+  Unit is °C. Or leave empty to use the default warning level from the device
   (reported by SNMP).
 
-level_crit(int): If you want to set a critical level manually give a number here. 
-  Unit is °C. Or leave empty to use the default critical level from the device 
+level_crit(int): If you want to set a critical level manually give a number here.
+  Unit is °C. Or leave empty to use the default critical level from the device
   (reported by SNMP).
 

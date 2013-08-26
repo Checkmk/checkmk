@@ -21,17 +21,17 @@ examples:
  # set up a check for a plesk backup
  # warn if backup is older than 1 day (86400 sec)
  # and crit if older than 2 days
- # warn if Maximum size of all files on backup space is > 70 MB 
+ # warn if Maximum size of all files on backup space is > 70 MB
  # (73400320 Bytes) and crit if > 80 MB
  # warn also if no backup is configured or no backup can be found
  static_checks['plesk_backups'] = [
-    ( ('plesk_backups', 
-       'Backup example.com', 
-       { 'backup_age': (86400, 172800), 
-         'total_size': (73400320, 83886080), 
-         'no_backup_configured_state': 1, 
+    ( ('plesk_backups',
+       'Backup example.com',
+       { 'backup_age': (86400, 172800),
+         'total_size': (73400320, 83886080),
+         'no_backup_configured_state': 1,
          'no_backup_found_state': 1
-       }), 
+       }),
        [], ['localhost1']
     ),
  ]

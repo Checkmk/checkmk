@@ -1,6 +1,6 @@
 title: Viprinet: Router Mode
 agents: snmp
-catalog: hw/network/viprinet 
+catalog: hw/network/viprinet
 license: GPL
 distribution: check_mk
 description:
@@ -25,5 +25,5 @@ parameters(dict): a dictionary with the optional key
 
  {"expect_mode"} - specifies the required router mode. The mode can be set to
                    "0", "1", "2", "3" (mentioned above) or "inv" which means
-                   the same mode as detected during inventory. 
+                   the same mode as detected during inventory.
                    If the actual mode differs from this mode an error is raised

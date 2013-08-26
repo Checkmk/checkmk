@@ -1,6 +1,6 @@
 title: Performance of OMD monitoring core via Livestatus
 agents: linux
-catalog: app/omd 
+catalog: app/omd
 license: GPL
 distribution: check_mk
 description:

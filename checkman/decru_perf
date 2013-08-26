@@ -1,6 +1,6 @@
 title: DECRU NAS: Performance values
 agents: snmp
-catalog: hw/network/decru 
+catalog: hw/network/decru
 license: GPL
 distribution: check_mk
 description:

@@ -1,6 +1,6 @@
 title: Canon Printer: Printed/scanned pages
 agents: snmp
-catalog: hw/printer 
+catalog: hw/printer
 license: GPL
 distribution: check_mk
 description:

@@ -41,7 +41,7 @@ def check_viprinet_router(_no_item, params, info):
             expect_mode = params.get("mode_inv")
         if expect_mode in router_mode_map:
             if expect_mode != current_mode:
-                return (2, "Mode '%s' differs from expected mode '%s'" % 
+                return (2, "Mode '%s' differs from expected mode '%s'" %
                             ( mode, router_mode_map.get(expect_mode) ))
 
     if mode:

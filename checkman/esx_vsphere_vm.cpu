@@ -16,4 +16,4 @@ perfdata:
  One value is returned: The currently demanded CPU MHz.
 
 inventory:
- On each VM one check is generated. 
+ On each VM one check is generated.

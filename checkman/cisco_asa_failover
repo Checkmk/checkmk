@@ -1,6 +1,6 @@
 title: Cisco ASA: Cluster failover
 agents: snmp
-catalog: hw/network/cisco 
+catalog: hw/network/cisco
 license: GPLv3
 distribution: check_mk
 description:

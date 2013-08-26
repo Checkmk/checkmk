@@ -1,6 +1,6 @@
 title: Check IP restriction of Check_MK agent
 agents: linux, windows
-catalog: generic 
+catalog: generic
 license: GPL
 distribution: check_mk
 description:

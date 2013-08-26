@@ -1,6 +1,6 @@
 title: Operational status of network interfaces - DEPRECATED
 agents: snmp
-catalog: hw/network/generic 
+catalog: hw/network/generic
 license: GPL
 distribution: check_mk
 description:

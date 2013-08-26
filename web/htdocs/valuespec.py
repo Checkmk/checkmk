@@ -1446,7 +1446,7 @@ class AbsoluteDate(ValueSpec):
         self._label = kwargs.get("label")
         self._include_time = kwargs.get("include_time", False)
         self._format = kwargs.get("format", self._include_time and "%F %T" or "%F")
-        self._default_value = kwargs.get("default_value", None) 
+        self._default_value = kwargs.get("default_value", None)
 
     def default_value(self):
         if self._default_value != None:
@@ -1504,7 +1504,7 @@ class AbsoluteDate(ValueSpec):
             else:
                 html.write(" ")
             html.number_input(varprefix + "_min", mmin, size=2)
-            
+
             if self._show_titles:
                 html.write('</td><td>')
             else:
@@ -1512,7 +1512,7 @@ class AbsoluteDate(ValueSpec):
             html.number_input(varprefix + "_sec", sec, size=2)
             if self._show_titles:
                 html.write('</td>')
-            
+
         if self._show_titles:
             html.write('</tr></table>')
 
@@ -2196,7 +2196,7 @@ class Dictionary(ValueSpec):
 
             if sections and param not in sections:
                 continue
-            
+
             div_id = varprefix + "_d_" + param
             vp     = varprefix + "_p_" + param
             if self._optional_keys and param not in self._required_keys:

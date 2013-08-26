@@ -1,6 +1,6 @@
-title: IBM Tivoli Storage Manager (TSM): Number of Tapes in Scratch Pool 
+title: IBM Tivoli Storage Manager (TSM): Number of Tapes in Scratch Pool
 agents: linux, windows
-catalog: app/tsm 
+catalog: app/tsm
 license: GPL
 distribution: check_mk
 description:

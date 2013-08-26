@@ -59,7 +59,7 @@ def check_wmic_process(item, params, info):
     messages = []
     messages.append("%d processes" % count)
     state = 0
-    
+
     msg =  "%.0f%%/%.0f%% User/Kernel" % (user_perc, kernel_perc)
     if cpu_perc >= cpucrit:
         state = 2

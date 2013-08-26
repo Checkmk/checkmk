@@ -31,10 +31,10 @@ inventory:
 [parameters]
 parameters (dict): A dictionary with the following optional keys:
 
-    {"read"}: Pair of integers of warn and crit: Return {WARN}/{CRIT} if the 
+    {"read"}: Pair of integers of warn and crit: Return {WARN}/{CRIT} if the
     current value vor read IOPS is higher or equal these values.
 
-    {"write"}: Pair of integers of warn and crit: Return {WARN}/{CRIT} if the 
+    {"write"}: Pair of integers of warn and crit: Return {WARN}/{CRIT} if the
     current value vor read IOPS is higher or equal these values.
 
 [configuration]

@@ -866,7 +866,7 @@ function updateHeaderTime() {
         var day   = ("0" + t.getDate()).slice(-2);
         var month = ("0" + (t.getMonth() + 1)).slice(-2);
         var year  = t.getFullYear();
-        var date_format = oDate.getAttribute("format"); 
+        var date_format = oDate.getAttribute("format");
         oDate.innerHTML = date_format.replace(/yyyy/, year).replace(/mm/, month).replace(/dd/, day);
     }
     day    = null;

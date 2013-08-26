@@ -476,7 +476,7 @@ def notify_notify(context):
         broken = time.localtime(timestamp)
         context["DATE"] = time.strftime("%Y-%m-%d", broken)
         context["SHORTDATETIME"] = time.strftime("%Y-%m-%d %H:%M:%S", broken)
-        context["LONGDATETIME"] = time.strftime("%a %b %d %H:%M:%S %Z %Y", broken) 
+        context["LONGDATETIME"] = time.strftime("%a %b %d %H:%M:%S %Z %Y", broken)
 
     # Handle interactive calls
     if notify_mode == 'fake-service':
@@ -581,7 +581,7 @@ def should_notify(context, entry):
         else:
             sl = saveint(context.get('HOST_SL'))
 
-        if sl < from_sl or sl > to_sl: 
+        if sl < from_sl or sl > to_sl:
             notify_log(" - Skipping: service level %d not between %d and %d" % (sl, from_sl, to_sl))
             return False
 
@@ -671,7 +671,7 @@ def call_notification_script(plugin, parameters, context, write_into_spoolfile):
     # Export complete context to have all vars in environment.
     # Existing vars are replaced, some already existing might remain
     for key in context:
-        os.putenv('NOTIFY_' + key, context[key].encode('utf-8')) 
+        os.putenv('NOTIFY_' + key, context[key].encode('utf-8'))
 
     # Remove service macros for host notifications
     if context['WHAT'] == 'HOST':

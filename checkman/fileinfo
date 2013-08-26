@@ -1,6 +1,6 @@
 title: Age and size of files
 agents: windows, linux, freebsd, macosx, solaris
-catalog: os/files 
+catalog: os/files
 license: GPL
 distribution: check_mk
 description:

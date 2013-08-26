@@ -88,7 +88,7 @@ class html_mod_python(htmllib.html):
         self.write('<td style="min-width:240px" class=right><span id=headinfo></span>%s &nbsp; ' % login_text)
         if config.pagetitle_date_format:
             self.write(' &nbsp; <b id=headerdate format="%s"></b>' % config.pagetitle_date_format)
-        self.write(' <b id=headertime></b>') 
+        self.write(' <b id=headertime></b>')
         self.write("<script language=\"javascript\" type=\"text/javascript\">updateHeaderTime()</script>")
         self.top_heading_right()
 
@@ -141,7 +141,7 @@ class html_mod_python(htmllib.html):
 
     def load_transids(self):
         return config.load_user_file("transids", [])
-    
+
     def save_transids(self, used_ids):
         config.save_user_file("transids", used_ids)
 
@@ -152,7 +152,7 @@ class html_mod_python(htmllib.html):
         if self.id is not self.treestates_for_id:
             self.treestates = config.load_user_file("treestates", {})
             self.treestates_for_id = self.id
-    
+
     def add_custom_style_sheet(self):
         for css in self.plugin_stylesheets():
            self.write('<link rel="stylesheet" type="text/css" href="css/%s">\n' % css)

@@ -1,6 +1,6 @@
 title: OpenVPN client connections
 agents: linux
-catalog: os/networking 
+catalog: os/networking
 license: GPL
 distribution: check_mk
 description:

@@ -1,6 +1,6 @@
 title: FortiGate firewalls: CPU utilization
 agents: snmp
-catalog: hw/network/fortinet 
+catalog: hw/network/fortinet
 license: GPL
 distribution: check_mk
 description:

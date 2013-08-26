@@ -6,8 +6,8 @@ distribution: check_mk
 description:
   FIXME: is this really CPU of enclosure? Asked Bastian to figure this out...
 
-  This check measures and checks the averaged CPU load of a Primergy 
-  BX600 Blade Enclosure. The values for 1, 5 and 15 minute average are 
+  This check measures and checks the averaged CPU load of a Primergy
+  BX600 Blade Enclosure. The values for 1, 5 and 15 minute average are
   reported.
 
 examples:
@@ -33,6 +33,6 @@ crit (int): 15 minute average load at which {CRIT} state is triggered.
 
 [configuration]
 blade_bx_cpuload_default_levels(int,int): A pair of integers: The default
- levels for {WARN} and {CRIT}. These levels are used for inventorized checks. 
+ levels for {WARN} and {CRIT}. These levels are used for inventorized checks.
  This variable is preset to {( 5, 20 )}
 

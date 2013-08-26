@@ -57,7 +57,7 @@ def check_cisco_wlc_clients(item, params, info):
             state = 1
         perf = [ ("clients", num_of_clients, warn, crit ) ]
         return state, "%d connections (%s)" % (num_of_clients, interface), perf
-            
+
     return 3, "WiFi not found"
 
 check_info["cisco_wlc_clients"] = {

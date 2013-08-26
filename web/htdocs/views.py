@@ -2408,6 +2408,13 @@ def row_id(view, row):
 
 def paint(p, row, tdattrs=""):
     tdclass, content = prepare_paint(p, row)
+
+    if is_stale(row):
+        if not tdclass:
+            tdclass = 'stale'
+        else:
+            tdclass += ' stale'
+
     if tdclass:
         html.write("<td %s class=\"%s\">%s</td>\n" % (tdattrs, tdclass, content))
     else:

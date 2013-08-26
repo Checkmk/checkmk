@@ -1,6 +1,6 @@
 title: VMWare ESX host systems: Uptime
 agents: vsphere
-catalog: os/misc 
+catalog: os/misc
 license: GPL
 distribution: check_mk
 description:

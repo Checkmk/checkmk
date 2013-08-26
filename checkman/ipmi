@@ -1,6 +1,6 @@
 title: Hardware sensors with ipmitool
 agents: linux
-catalog: os/hardware 
+catalog: os/hardware
 license: GPL
 distribution: check_mk
 description:

@@ -980,7 +980,7 @@ def copy_globals():
     import copy
     global_saved = {}
     for varname, value in globals().items():
-        # Some global caches are allowed to change. 
+        # Some global caches are allowed to change.
         if varname not in [ "g_service_description", "g_multihost_checks", "g_check_table_cache", "g_singlehost_checks", "total_check_outout" ] \
             and type(value).__name__ not in [ "function", "module", "SRE_Pattern" ]:
             global_saved[varname] = copy.copy(value)
@@ -1048,7 +1048,7 @@ def do_check_keepalive():
                 status = 3
                 total_check_output = "UNKNOWN - Check_MK timed out after %d seconds\n" % timeout
 
-            sys.stdout.write("%03d\n%08d\n%s" % 
+            sys.stdout.write("%03d\n%08d\n%s" %
                  (status, len(total_check_output), total_check_output))
             sys.stdout.flush()
             total_check_output = ""
@@ -1059,7 +1059,7 @@ def do_check_keepalive():
                 after = copy_globals()
                 for varname, value in before.items():
                     if value != after[varname]:
-                        sys.stderr.write("WARNING: global variable %s has changed: %r ==> %s\n" 
+                        sys.stderr.write("WARNING: global variable %s has changed: %r ==> %s\n"
                                % (varname, value, repr(after[varname])[:50]))
                 new_vars = set(after.keys()).difference(set(before.keys()))
                 if (new_vars):

@@ -383,7 +383,7 @@ table.data tr.actions.no_match td {
 table.data tr th {
     vertical-align: baseline;
 }
-   
+
 table.data tr a.toggle_actions {
     display: inline-block;
     float: left;

@@ -1,6 +1,6 @@
 title: Dell PowerConnect Switches: Temperature Sensors
 agents: snmp
-catalog: hw/network/dell 
+catalog: hw/network/dell
 license: GPL
 distribution: check_mk
 description:

@@ -262,7 +262,7 @@ def check_esx_vsphere_hostsystem_multipath(item, params, info):
                     state = 2
                     unknow_label = "(!!)"
                     unknown += 1
-                
+
             if standby > 0 and standby != active:
                 standby_label = "(!)"
                 state = max(1, state)

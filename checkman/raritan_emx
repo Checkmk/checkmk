@@ -1,6 +1,6 @@
 title: Raritan EMX devices: Temperature, FAN  and Door States
 agents: snmp
-catalog: hw/other 
+catalog: hw/other
 license: GPL
 distribution: check_mk
 description:

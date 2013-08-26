@@ -58,7 +58,7 @@ manpage_catalog_titles = {
         "solaris"       : "Solaris",
         "vsphere"       : "VMWare ESX (via vSphere)",
         "windows"       : "Microsoft Windows",
-        
+
         "hardware"    : "Hardware Sensors",
         "kernel"      : "CPU, Memory and Kernel Performance",
         "ps"          : "Processes, Services and Jobs",

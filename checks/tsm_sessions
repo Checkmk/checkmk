@@ -45,7 +45,7 @@ def check_tsm_sessions(item, params, info):
             elif wait >= warn:
                 state = max(state, 1)
                 count += 1
-    return state, "%d sessions to long in RecvW or MediaW state" % count 
+    return state, "%d sessions to long in RecvW or MediaW state" % count
 
 
 check_info["tsm_sessions"] = {

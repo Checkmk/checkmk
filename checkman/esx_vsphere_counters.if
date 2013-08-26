@@ -1,6 +1,6 @@
 title: VMWare ESX host systems: Physical network interfaces
 agents: vsphere
-catalog: os/networking 
+catalog: os/networking
 license: GPL
 distribution: check_mk
 description:

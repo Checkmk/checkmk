@@ -36,7 +36,7 @@
 
 def brocade_sensor_convert(info, what):
     return_list = []
-    for state, name in info: 
+    for state, name in info:
         if name.startswith(what) and saveint(state) > 0:
             sensor_id  = name.split('#')[-1]
             return_list.append([sensor_id, name, state])
@@ -69,7 +69,7 @@ def check_brocade_fan(item, params, info):
             elif value <= crit:
                 state = 1
                 label = "(Levels bellow: %d/%d)" % (warn, crit)
-              
+
             return state, "Fans at %drpm %s " % (value, label), perf
     return 3, "FAN not found"
 
@@ -79,7 +79,7 @@ check_info["brocade.fan"] = {
     "service_description"   : "FAN %s",
     "has_perfdata"          : True,
     "group"                 : "hw_fans",
-    "snmp_info"             : brocade_info, 
+    "snmp_info"             : brocade_info,
     'snmp_scan_function'    : brocade_scan,
 }
 
@@ -103,7 +103,7 @@ check_info["brocade.power"] = {
     "inventory_function"    : inventory_brocade_power,
     "service_description"   : "Power supply %s",
     "has_perfdata"          : False,
-    "snmp_info"             : brocade_info, 
+    "snmp_info"             : brocade_info,
     'snmp_scan_function'    : brocade_scan,
 }
 
@@ -128,7 +128,7 @@ def check_brocade_temp(item, params, info):
             elif value >= warn:
                 state = 1
                 label = "(Levels at: %d/%d) %s" % (warn, crit, name)
-              
+
             return state, "Temperature at %d°C%s " % (value, label), perf
     return 3, "Temperature sensor not found"
 
@@ -138,6 +138,6 @@ check_info["brocade.temp"] = {
     "service_description"   : "Temperature %s",
     "has_perfdata"          : True,
     "group"                 : "hw_temperature",
-    "snmp_info"             : brocade_info, 
+    "snmp_info"             : brocade_info,
     'snmp_scan_function'    : brocade_scan,
 }

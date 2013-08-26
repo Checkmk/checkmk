@@ -1796,7 +1796,7 @@ def create_nagios_servicedefs(outfile, hostname):
 
     def do_omit_service(hostname, description):
         if service_ignored(hostname, None, description):
-            return True 
+            return True
         if hostname != host_of_clustered_service(hostname, description):
             return True
         return False
@@ -1957,7 +1957,7 @@ define service {
 define service {
   use\t\t\t\t%s
   host_name\t\t\t%s
-  normal_check_interval\t\t%d 
+  normal_check_interval\t\t%d
   retry_check_interval\t\t%d
 %s  service_description\t\tCheck_MK inventory
 }
@@ -2032,7 +2032,7 @@ define service {
             description = act_info["service_description"](params)
 
             if do_omit_service(hostname, description):
-                continue 
+                continue
 
             # compute argument, and quote ! and \ for Nagios
             args = act_info["argument_function"](params).replace("\\", "\\\\").replace("!", "\\!")
@@ -2082,7 +2082,7 @@ define service {
             command_line = entry.get("command_line", "")
 
             if do_omit_service(hostname, description):
-                continue 
+                continue
 
             if command_line:
                 plugin_name = command_line.split()[0]
@@ -3183,7 +3183,7 @@ def manpage_browser_folder(cat, subtrees):
     execfile(modules_dir + "/catalog.py", globals())
     titles = []
     for e in subtrees:
-        title = manpage_catalog_titles.get(e,e) 
+        title = manpage_catalog_titles.get(e,e)
         count = manpage_num_entries(cat + (e,))
         if count:
             title += " (%d)" % count
@@ -3356,7 +3356,7 @@ def show_check_manual(checkname):
             return line.replace('{{', '{&#123;').replace('}}', '&#125;}').replace("{", "<b>").replace("}", "</b>")
 
         def print_sectionheader(line, title):
-            print "H1:" + title 
+            print "H1:" + title
 
         def print_subheader(line):
             print "H2:" + line
@@ -5187,7 +5187,7 @@ if __name__ == "__main__":
                      "snmpget=", "profile", "keepalive", "create-rrd",
                      "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
                      "man", "nowiki", "config-check", "backup=", "restore=",
-                     "check-inventory=", "paths", "cleanup-autochecks", "checks=", 
+                     "check-inventory=", "paths", "cleanup-autochecks", "checks=",
                      "cmc-file=", "browse-man", "list-man" ]
 
     non_config_options = ['-L', '--list-checks', '-P', '--package', '-M', '--notify',

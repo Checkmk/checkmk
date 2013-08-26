@@ -1,6 +1,6 @@
 title: Memory usage of db2 instances
 agents: solaris, aix, linux
-catalog: app/db2 
+catalog: app/db2
 license: GPL
 distribution: check_mk
 description:

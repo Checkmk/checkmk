@@ -50,7 +50,7 @@
 #                TESTING(9),
 #                DISABLED(10) }
 
-# the mib is the NetSure_ESNA.mib, which we have received from directly 
+# the mib is the NetSure_ESNA.mib, which we have received from directly
 # from a customer, it is named "Emerson Energy Systems (EES) Power MIB"
 
 
@@ -85,5 +85,5 @@ check_info['emerson_stat'] = {
   "service_description" : "Status",
   "has_perfdata"        : False,
   "snmp_info"           : ( ".1.3.6.1.4.1.6302.2.1.2.1", ["0"] ),
-  "snmp_scan_function"  : lambda oid: oid('.1.3.6.1.4.1.6302.2.1.1.1.0').startswith('Emerson Network Power'), 
+  "snmp_scan_function"  : lambda oid: oid('.1.3.6.1.4.1.6302.2.1.1.1.0').startswith('Emerson Network Power'),
 }

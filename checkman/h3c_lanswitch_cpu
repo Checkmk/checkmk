@@ -1,6 +1,6 @@
 title: 3COM and H3C switches: CPU utilization
 agents: snmp
-catalog: hw/network/h3c 
+catalog: hw/network/h3c
 license: GPL
 distribution: check_mk
 description:

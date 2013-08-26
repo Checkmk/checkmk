@@ -380,7 +380,7 @@ def command_downtime(cmdtag, spec, row):
 
     if down_to:
         if html.var("_down_adhoc"):
-            comment = config.adhoc_downtime.get("comment","") 
+            comment = config.adhoc_downtime.get("comment","")
         else:
             comment = html.var_utf8("_down_comment")
         if not comment:

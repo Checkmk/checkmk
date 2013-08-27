@@ -1,3 +1,3 @@
-sudo mkdir -p /omd/versions/default/share/check_mk/notifications
-sudo cp -p * /omd/versions/default/share/check_mk/notifications
-
+SITE=${SITE:-$(omd sites --bare | head -n 1)}
+sudo mkdir -p /omd/sites/$SITE/share/check_mk/notifications
+sudo cp -vp * /omd/sites/$SITE/share/check_mk/notifications

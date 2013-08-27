@@ -111,11 +111,10 @@ tr.even3 { background-color: #ffefaf; }
 td.state {
     text-align: center;
     font-weight: bold;
-    width: 32px;
 }
 
 /* OK/UP */
-.state0, .hstate0, .state0 a, .hstate0 a {
+.state0, .stateOK, .hstate0, .hstateUP, .state0 a, .hstate0 a {
         background-color: #0b3; color: #fff;
 }
 
@@ -123,27 +122,27 @@ td.state {
         white-space: nowrap;
 }
 /* WARN */
-.state1, .state1 a, tr.groupheader td.state1 {
+.state1, .stateWARNING, .state1 a, tr.groupheader td.state1 {
         background-color: #ff0; color: #000;
 }
 
 /* CRIT/DOWN */
-.state2, .hstate1, .state2 a, .hstate2 a {
+.state2, .stateCRITICAL, .hstate1, .hstateDOWN, .state2 a, .hstate2 a {
         background-color: #f00; color: #fff;
 }
 
 /* UNKNOWN / UNREACH */
-.state3, .hstate2, .state3 a, .hstate2 a {
+.state3, .stateUNKNOWN, .hstate2, .hstateUNREACHABLE, .state3 a, .hstate2 a {
         background-color: #f80; color: #fff;
 }
 
 /* PENDING */
-.statep, .hstatep, .statep a, .hstatep a {
+.statep, .statePENDING, .hstatep, .hstatePENDING, .statep a, .hstatep a {
         background-color: #888; color: #fff;
 }
 
 /* in DOWNTIME */
-.stated, .hstated, .stated a, .hstated a {
+.stated, .stateDOWNTIME, .hstated, .hstateDOWNTIME, .stated a, .hstated a {
         background-color: #0af; color: #fff;
 }
 
@@ -195,7 +194,7 @@ tmpl_host_html = tmpl_head_html + '''
 </tr>
 <tr class="data odd0">
     <td class=left>State</td>
-    <td class="state hstate hstate$HOSTSTATEID$">$LASTHOSTSTATE$ -> $HOSTSTATE$ ($NOTIFICATIONTYPE$)</td>
+    <td class="state hstate"><span class="hstate$LASTHOSTSTATE$">$LASTHOSTSTATE$>/span> &rarr; <span class="hstate$HOSTSTATEID$">$HOSTSTATE$ ($NOTIFICATIONTYPE$)</span></td>
 </tr>
 <tr class="data even0">
     <td class="left">Output</td>
@@ -243,7 +242,7 @@ tmpl_service_html = tmpl_head_html + '''
 </tr>
 <tr class="data odd0">
     <td class=left>State</td>
-    <td class="state svcstate state$SERVICESTATEID$">$LASTSERVICESTATE$ -> $SERVICESTATE$ ($NOTIFICATIONTYPE$)</td>
+    <td class="state svcstate"><span class="state$LASTSERVICESTATE$">$LASTSERVICESTATE$</span> &rarr; <span class="state$SERVICESTATEID$">$SERVICESTATE$ ($NOTIFICATIONTYPE$)</span></td>
 </tr>
 <tr class="data even0">
     <td class="left">Output</td>

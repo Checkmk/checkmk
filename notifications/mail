@@ -2,6 +2,11 @@
 # HTML Emails with included Graphs
 # This script creates a very beautiful mail in multipart format with
 # attached graphs and such neat stuff. Sweet!
+#
+# Argument 1: Full system path to the pnp4nagios index.php for fetching
+#             the graphs. Usually auto configured in OMD.
+# Argument 2: HTTP-URL-Prefix to open multisite. When provided, several
+#             links are added to the mail.
 
 import os, re, sys, subprocess
 from email.mime.multipart import MIMEMultipart
@@ -169,7 +174,7 @@ tmpl_host_subject = 'Check_MK: $HOSTNAME$ - $NOTIFICATIONTYPE$'
 tmpl_host_txt = '''
 Host:     $HOSTNAME$ ($HOSTALIAS$)
 Address:  $HOSTADDRESS$
-
+$HOSTLINK$
 State:    $LASTHOSTSTATE$ -> $HOSTSTATE$ ($NOTIFICATIONTYPE$)
 Output:   $HOSTOUTPUT$
 Perfdata: $HOSTPERFDATA$
@@ -183,7 +188,7 @@ tmpl_host_html = tmpl_head_html + '''
 </tr>
 <tr class="data odd0">
     <td class=left>Name</td>
-    <td>$HOSTNAME$ ($HOSTALIAS$)</td>
+    <td>$LINKEDHOSTNAME$ ($HOSTALIAS$)</td>
 </tr>
 <tr class="data even0">
     <td class=left>Address</td>
@@ -211,9 +216,9 @@ tmpl_service_subject = 'Check_MK: $HOSTNAME$/$SERVICEDESC$ $NOTIFICATIONTYPE$'
 
 tmpl_service_txt = '''
 Host:     $HOSTNAME$ ($HOSTALIAS$)
-Address:  $HOSTADDRESS$
+Address:  $HOSTADDRESS$$HOSTLINK$
 
-Service:  $SERVICEDESC$
+Service:  $SERVICEDESC$$SERVICELINK$
 State:    $LASTSERVICESTATE$ -> $SERVICESTATE$ ($NOTIFICATIONTYPE$)
 Output:   $SERVICEOUTPUT$
 Perfdata: $SERVICEPERFDATA$
@@ -227,7 +232,7 @@ tmpl_service_html = tmpl_head_html + '''
 </tr>
 <tr class="data odd0">
     <td class=left>Hostname</td>
-    <td>$HOSTNAME$ ($HOSTALIAS$)</td>
+    <td>$LINKEDHOSTNAME$ ($HOSTALIAS$)</td>
 </tr>
 <tr class="data even0">
     <td class=left>Address</td>
@@ -235,7 +240,7 @@ tmpl_service_html = tmpl_head_html + '''
 </tr>
 <tr class="data odd0">
     <td class=left>Service description</td>
-    <td>$SERVICEDESC$</td>
+    <td>$LINKEDSERVICEDESC$</td>
 </tr>
 <tr>
     <th colspan=2>State</th>
@@ -352,6 +357,8 @@ def main():
         in os.environ.items()
         if var.startswith("NOTIFY_")])
 
+    print repr(context)
+
     # Fetch graphs for this object. It first tries to detect how many sources
     # are available for this object. Then it loops through all sources and
     # fetches retrieves the images. If a problem occurs, it is printed to
@@ -361,6 +368,25 @@ def main():
     except GraphException, e:
         sys.stderr.write('Unable to fetch graph infos: %s\n' % e)
         num_sources = 0
+
+    # If argument 2 is given, we know the base url to the installation and can add
+    # links to hosts and services. ubercomfortable!
+    if context.get('PARAMETER_2'):
+        base_url = context['PARAMETER_2'].rstrip('/')
+        host_url = base_url + context['HOSTURL']
+
+        context['LINKEDHOSTNAME'] = '<a href="%s">%s</a>' % (host_url, context['HOSTNAME'])
+        context['HOSTLINK']       = '\nLink:     %s' % host_url
+
+        if context['WHAT'] == 'SERVICE':
+            service_url = base_url + context['SERVICEURL']
+            context['LINKEDSERVICEDESC'] = '<a href="%s">%s</a>' % (service_url, context['SERVICEDESC'])
+            context['SERVICELINK']       = '\nLink:     %s' % service_url
+    else:
+        context['LINKEDHOSTNAME']    = context['HOSTNAME']
+        context['LINKEDSERVICEDESC'] = context['SERVICEDESC']
+        context['HOSTLINK']          = ''
+        context['SERVICELINK']       = ''
 
     attachments = []
     graph_code = ''

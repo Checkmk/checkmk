@@ -1,0 +1,9 @@
+Title: package dependency ethtool is missing for agent
+Component: core
+State: open
+Date: 2013-08-27 10:14:07
+Targetversion: 1.2.3
+Class: nastiness
+
+check_mk agent benoetigt ethtool, damit lnx_if check funktioniert
+sollte ethtool in den rpm/deb-Packages als Requires aufgenommen werden?

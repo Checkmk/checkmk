@@ -1,6 +1,6 @@
 title: Integrate custom checks
 agents: linux, windows, aix, solaris, freebsd, netbsd, openbsd
-catalog: generic 
+catalog: generic
 license: GPL
 distribution: check_mk
 description:

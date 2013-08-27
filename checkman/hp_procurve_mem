@@ -1,6 +1,6 @@
 title: HP Procurve Switches: Memory usage
 agents: snmp
-catalog: hw/network/hp 
+catalog: hw/network/hp
 license: GPL
 distribution: check_mk
 description:

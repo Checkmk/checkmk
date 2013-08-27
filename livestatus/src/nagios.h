@@ -27,7 +27,7 @@
 
 #include "config.h"
 
-#ifdef CMC 
+#ifdef CMC
 #include "../cmc.h"
 #else
 #define NSCORE

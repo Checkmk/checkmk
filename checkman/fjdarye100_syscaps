@@ -1,6 +1,6 @@
 title: Fujitsu ETERNUS DX80 S2 storage systems: System capacitor units
 agents: snmp
-catalog: hw/storagehw/fujitsu 
+catalog: hw/storagehw/fujitsu
 license: GPLv2
 distribution: none
 description:

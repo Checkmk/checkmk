@@ -1,6 +1,6 @@
 title: HP StorageWorks EML E-Series Enterprise Tape Library: Summary Status
 agents: snmp
-catalog: hw/storagehw/hp 
+catalog: hw/storagehw/hp
 license: GPL
 distribution: check_mk
 description:

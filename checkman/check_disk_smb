@@ -4,7 +4,7 @@ catalog: agentless
 license: GPL
 distribution: check_mk
 description:
- This is an active check that can access a SMB share, check if it is 
+ This is an active check that can access a SMB share, check if it is
  available and check the free space against given thresholds (in percent)
  for {WARN} and {CRIT}.
 

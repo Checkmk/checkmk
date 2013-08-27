@@ -1,11 +1,11 @@
 title: IBM Tivoli Storage Manager (TSM): Paths
 agents: linux, windows
-catalog: app/tsm 
+catalog: app/tsm
 license: GPL
 distribution: check_mk
 description:
  This check checks the overall state of tsm paths.
- Theres no configuration. The check displayes all faulty paths. In 
+ Theres no configuration. The check displayes all faulty paths. In
  OK state the check always display the number of paths.
 
 item:

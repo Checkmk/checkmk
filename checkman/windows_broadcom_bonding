@@ -1,6 +1,6 @@
 title: Broadcom Bonding network interface on windows
 agents: windows
-catalog: os/networking 
+catalog: os/networking
 license: GPL
 distribution: check_mk
 description:

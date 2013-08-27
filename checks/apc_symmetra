@@ -41,7 +41,7 @@
 #   hardwareFailureBypass(10), sleepingUntilPowerReturn(11), onSmartTrim(12)
 # upsAdvTestCalibrationResults: ok(1), invalidTest(2), calibrationInProgress(3)
 
-# levels refer to the apc_symentra group which has 6 values, 
+# levels refer to the apc_symentra group which has 6 values,
 # only the first four are needed in this test
 # the others belong to the apc_symmetra_test check
 apc_default_levels = ( 95, 40, 1, 220 )
@@ -125,7 +125,7 @@ def check_apc(item, params, info):
     # RunTimeRemaining formatiert == "26:00.00"
     hrs = int(RunTimeRemaining) / 3600
     mins, secs = divmod(int(RunTimeRemaining) % 3600, 60)
-    single_states.append( (0, "run time remaining: %02d:%02d:%02d" % (hrs, mins, secs), 
+    single_states.append( (0, "run time remaining: %02d:%02d:%02d" % (hrs, mins, secs),
                             ("runtime", RunTimeRemaining/60)) )
 
     # create summary state

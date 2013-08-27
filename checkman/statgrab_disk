@@ -24,7 +24,7 @@ examples:
   ]
 
 perfdata:
-  One value per Check: Disk IO in Bytes/s 
+  One value per Check: Disk IO in Bytes/s
 
 inventory:
   Finds two checks on every machine with statgrab: Disk IO read and

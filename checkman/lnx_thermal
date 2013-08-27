@@ -9,7 +9,7 @@ description:
 
   The measured value is matched against levels delivered by the kernel.
   Returns {CRIT} if the kernel reports {hot} or {critical} state,
-  {WARN} on any other non ok state and {OK} if the temperature is 
+  {WARN} on any other non ok state and {OK} if the temperature is
   considered to be within normal operation temperature levels.
 
 item:

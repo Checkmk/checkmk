@@ -82,7 +82,7 @@ LogEntry::LogEntry(unsigned lineno, char *line)
         if (_command_name)
             _command = find_command(_command_name);
     }
-    else 
+    else
         handleProgrammEntry();
     // rest is LOGCLASS_INFO
 }
@@ -315,7 +315,7 @@ bool LogEntry::handleProgrammEntry()
     {
         _logclass = LOGCLASS_PROGRAM;
         return true;
-    } 
+    }
     else if (strstr(_text, "logging intitial states")){
         _logclass = LOGCLASS_PROGRAM;
         _type     = LOG_INITIAL_STATES;

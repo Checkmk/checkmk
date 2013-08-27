@@ -4,7 +4,7 @@ catalog: os/kernel
 license: GPL
 distribution: check_mk
 description:
- The check reports used memory (RAM) for {host}, {guest}, {ballooned}, {private} 
+ The check reports used memory (RAM) for {host}, {guest}, {ballooned}, {private}
  and {shared} memory.
 
  The check always returns {OK} state.

@@ -1,6 +1,6 @@
 title: Node status and link status of heartbeat nodes
 agents: linux
-catalog: os/services 
+catalog: os/services
 license: GPL
 distribution: check_mk
 description:

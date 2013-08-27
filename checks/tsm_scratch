@@ -35,7 +35,7 @@ def inventory_tsm_scratch(info):
         if inst != 'default':
             item = "%s / %s" % ( inst, library )
         else:
-            item = library 
+            item = library
         inventory.append((item, tsm_scratch_default_levels))
 
     return inventory
@@ -46,7 +46,7 @@ def check_tsm_scratch(item, params, info):
         if inst != 'default':
             found_item = "%s / %s" % ( inst, library )
         else:
-            found_item = library 
+            found_item = library
         if found_item == item:
             tapes = saveint(tapes)
             state = 0

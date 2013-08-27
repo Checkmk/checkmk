@@ -1,6 +1,6 @@
 title: Physical status of Fujitsu Siemens (FSC) Hardware parts
 agents: snmp
-catalog: hw/server/fujitsu 
+catalog: hw/server/fujitsu
 license: GPL
 distribution: check_mk
 description:

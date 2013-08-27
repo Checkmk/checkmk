@@ -1,6 +1,6 @@
 title: Siemens Octopus E: CPU Utilization
 agents: snmp
-catalog: hw/phone 
+catalog: hw/phone
 license: GPL
 distribution: check_mk
 description:

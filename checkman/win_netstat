@@ -8,7 +8,7 @@ description:
   and checks if there are established connections or listeners
   matching a given criteria.
 
-  The check returns {OK} state if the specified connection/listener is present, 
+  The check returns {OK} state if the specified connection/listener is present,
   and {CRIT} if not.
 
   This check needs the agent plugin {netstat_an.bat} to be installed.
@@ -20,12 +20,12 @@ examples:
   # Make sure that a connection from 192.168.0.1 is established
   # to the host winsrv1 (192.168.0.2) on port 445:
   checks += [
-    ( 'winsrv1', 'win_netstat', 'My Test Connection', 
+    ( 'winsrv1', 'win_netstat', 'My Test Connection',
        {
-        'local_ip'  : '192.168.0.2', 
-        'local_port': 445, 
-        'remote_ip' : '192.168.0.1', 
-        'state'     : 'ESTABLISHED', 
+        'local_ip'  : '192.168.0.2',
+        'local_port': 445,
+        'remote_ip' : '192.168.0.1',
+        'state'     : 'ESTABLISHED',
         'proto'     : 'TCP'
        }
     ),
@@ -33,10 +33,10 @@ examples:
 
   # Check if TCP port 80 is listening
   checks += [
-    ( 'websrv1', 'win_netstat', 'HTTP Listener', 
+    ( 'websrv1', 'win_netstat', 'HTTP Listener',
          {
-          'local_port': 80, 
-          'state'     : 'LISTEN', 
+          'local_port': 80,
+          'state'     : 'LISTEN',
           'proto'     : 'TCP'
          },
     ),
@@ -63,7 +63,7 @@ parameters (dict): A dictionary with the following keys, all of which are
    to specify this only when monitoring connections. Omit if monitoring
    listeners.
 
- {"proto"}        {TCP} or {UDP} are possible values: 
+ {"proto"}        {TCP} or {UDP} are possible values:
    The protocol used for the connection or the listener.
 
  {"state"}        {"ESTABLISHED"}, {"LISTENING"}, {"TIME_WAIT"}, {"SYN_SENT"}, {"SYN_RECV"},

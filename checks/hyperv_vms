@@ -26,7 +26,7 @@
 
 # Example output from agent:
 #<<<hyperv_vms>>>
-#DMZ-DC1                         Running 4.21:44:58          Operating normally 
+#DMZ-DC1                         Running 4.21:44:58          Operating normally
 #DMZ-DC2                         Running 4.21:44:47          Operating normally
 
 def inventory_hyperv_vms(info):

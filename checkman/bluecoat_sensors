@@ -7,7 +7,7 @@ description:
   Checks by SNMP the hardware sensors of Blue Coat Security Gateways, such as
   different temperature sensors, voltage levels and fan speeds.
 
-  Returns {OK} if an ok status is reported by SNMP and {CRIT} on any 
+  Returns {OK} if an ok status is reported by SNMP and {CRIT} on any
   other status.
 
 item:

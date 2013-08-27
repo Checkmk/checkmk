@@ -5,7 +5,7 @@ license: GPL
 distribution: check_mk
 description:
  The check executes the {lparstat} command on a logical partition (LPAR) under
- AIX and reports CPU utilization extracted from it's output. See section 
+ AIX and reports CPU utilization extracted from it's output. See section
  perfdata for description of the single values.
 
  A level can be set only on {wait} (disk wait).
@@ -24,7 +24,7 @@ inventory:
 
 [parameters]
 warning (int): The percentage of {wait} that triggers a warning level.
- 
+
 critical (int): The percentage of {wait} that triggers a critical level
 
  The parameters may also be set to {None}, which makes the check alwas {OK}.

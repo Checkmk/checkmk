@@ -1,6 +1,6 @@
 title: Memory module status using IPMI via freeipmi
 agents: linux
-catalog: os/hardware 
+catalog: os/hardware
 license: GPL
 distribution: check_mk
 description:

@@ -31,7 +31,7 @@
 # EES-POWER-MIB::psTemperature1.0 .1.3.6.1.4.1.6302.2.1.2.7.1
 # EES-POWER-MIB::psTemperature2.0 .1.3.6.1.4.1.6302.2.1.2.7.2
 #
-# the mib is the NetSure_ESNA.mib, which we have received from directly 
+# the mib is the NetSure_ESNA.mib, which we have received from directly
 # from a customer, its named "Emerson Energy Systems (EES) Power MIB"
 
 
@@ -64,5 +64,5 @@ check_info['emerson_temp'] = {
   "has_perfdata"        : True,
   "group"               : "hw_temperature",
   "snmp_info"           : ( ".1.3.6.1.4.1.6302.2.1.2", ["7"] ),
-  "snmp_scan_function"  : lambda oid: oid('.1.3.6.1.4.1.6302.2.1.1.1.0').startswith('Emerson Network Power'), 
+  "snmp_scan_function"  : lambda oid: oid('.1.3.6.1.4.1.6302.2.1.1.1.0').startswith('Emerson Network Power'),
 }

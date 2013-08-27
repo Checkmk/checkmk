@@ -2626,7 +2626,7 @@ def cmp_ip_address(column, r1, r2):
         except:
             return ip
     v1, v2 = split_ip(r1.get(column, '')), split_ip(r2.get(column, ''))
-    return cmp(v1, v2) 
+    return cmp(v1, v2)
 
 
 def cmp_simple_string(column, r1, r2):

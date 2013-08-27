@@ -195,11 +195,11 @@ def inventory_ps_common(invdata, info, handle_perfdata = False):
                 # with their actual values of the found process.
                 i_pattern = instantiate_regex_pattern(pattern, matches)
                 inv = ( i_servicedesc, ( i_pattern, i_userspec, warnmin, okmin, okmax, warnmax ) )
-                inv = ( i_servicedesc, { 
-                    "process" : i_pattern, 
-                    "user"    : i_userspec, 
-                    "warnmin" : warnmin, 
-                    "okmin"   : okmin, 
+                inv = ( i_servicedesc, {
+                    "process" : i_pattern,
+                    "user"    : i_userspec,
+                    "warnmin" : warnmin,
+                    "okmin"   : okmin,
                     "okmax"   : okmax,
                     "warnmax" : warnmax } )
                 if inv not in inventory:

@@ -1,6 +1,6 @@
 title: Memory usage of Java application server via JMX and j4p.war - DEPRECATED
 agents: linux
-catalog: app/java 
+catalog: app/java
 license: GPL
 distribution: check_mk
 description:

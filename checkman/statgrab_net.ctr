@@ -14,7 +14,7 @@ item:
   The interface name as defined in the operating system.
 
 perfdata:
- Seven values are delivered, the differences of the counters during the last check 
+ Seven values are delivered, the differences of the counters during the last check
  cycle for {rx_bytes}, {tx_bytes}, {rx_packets}, {tx_packets}, {rx_errors},
  {tx_errors}, {tx_collisions}
 

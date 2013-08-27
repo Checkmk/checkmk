@@ -1,6 +1,6 @@
 title: VMWare ESX host systems: Disk throughput
 agents: vsphere
-catalog: os/storage 
+catalog: os/storage
 license: GPL
 distribution: check_mk
 description:

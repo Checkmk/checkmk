@@ -32,7 +32,7 @@
 # 3. Add a correct url_prefix (OMD site and slash)
 #    user and password with read access to Multisite.
 
-url_prefix = "event/" # non-OMD installations
+url_prefix = "" # non-OMD installations
 # url_prefix = "mysite/" # with OMD site name
 
 # Authentication credentials

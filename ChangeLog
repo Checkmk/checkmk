@@ -77,6 +77,9 @@
     * notify.py: Matching service level: Use the hosts service level if a
                  service has no service level set
     * notify.py: fixed bug with local notification spooling
+    * HTML notifications: Now adding optional links to host- and service names
+      when second argument notification script is configured to the base url of the
+      monitoring installation (e.g. http://<host>/<site>/ in case of OMD setups)
 
     Multisite:
     * User accounts can now be locked after a specified amount of auth

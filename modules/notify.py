@@ -319,7 +319,8 @@ def do_notify(args):
         crash_dir = var_dir + "/notify"
         if not os.path.exists(crash_dir):
             os.makedirs(crash_dir)
-        file(crash_dir + "/crash.log", "a").write("CRASH:\n%s\n\n" % format_exception())
+        file(crash_dir + "/crash.log", "a").write("CRASH (%s):\n%s\n" %
+            (time.strftime("%Y-%m-%d %H:%M:%S"), format_exception()))
 
 
 def notify_data_available():

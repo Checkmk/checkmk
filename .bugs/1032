@@ -1,21 +1,9 @@
 Title: f5_bigip_psu: inventory finds only one psu
 Component: checks
-State: open
+Class: bug
+State: wontfix
 Date: 2013-08-27 09:18:20
 Targetversion: 1.2.3
-Class: bug
-
-came in by mail to mk@  //  original email still available at feedback/gitbug folder
-
-
-Date: Mon, 27 May 2013 15:51:12 +0200
-Message-ID: <CALhzvFj+4jk3t0YmkRGFNfLcLKuSo_r1+OOtLvS-hWESX95Nzw@mail.gmail.com>
-Subject: Re: Bugs in f5_bigip checks, proposed patch included
-From: miro ramza <miroramza@gmail.com>
-To: Mathias Kettner <mk@mathias-kettner.de>
-
-
-Hi Mathias,
 
 it was pretty long time, and during this time I found one more necessary change to f5_bigip_psu check.
 
@@ -26,4 +14,5 @@ it was pretty long time, and during this time I found one more necessary change 
 
 tested on BIG-IP 11.3.0 HF5 SW/ BIG-IP 3900HW.
 
-Miro
+2013-08-28 12:29:29: changed state open -> wontfix
+This patch does not fix the problem.

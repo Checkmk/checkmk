@@ -238,7 +238,7 @@ def df_check_filesystem_list(item, params, fslist):
 
 def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, params):
     if size_mb == 0:
-        return (1, "size of filesystem is 0 MB")
+        return (1, "size of filesystem is 0 MB", [])
 
     used_mb   = size_mb - avail_mb
     used_perc = 100.0 * (float(used_mb) / size_mb)

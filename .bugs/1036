@@ -1,9 +1,9 @@
 Title: df_check_filesystem_single returns a 2-tuple when check_esx_vsphere_datastores expects 3
 Component: checks
-State: open
+Class: bug
+State: done
 Date: 2013-08-27 10:50:42
 Targetversion: 1.2.3
-Class: bug
 
 came in via feedback@  //  mail is still available at feedback/gitbug folder
 
@@ -26,12 +26,9 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, params):
 
 def check_esx_vsphere_datastores(item, params, info):
 
-…
-
-…
-
-…
 
         state, infotext, perfdata = df_check_filesystem_single(
-
             g_hostname, item, size_mb, avail_mb, params)
+
+2013-08-28 12:33:57: changed state open -> done
+Fixed.

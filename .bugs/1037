@@ -3,27 +3,18 @@ Component: checks
 Class: bug
 State: open
 Date: 2013-08-27 10:58:29
-Targetversion: 1.2.3
-
-came in via feedback@  //  original mail still available in feedback/gitbug folder
-
-
-Date: Fri, 07 Jun 2013 08:56:13 -0400
-From: "Peter Rogers" <peterrogers@email.com>
-Message-ID: <20130607125613.34790@gmx.com>
-MIME-Version: 1.0
-Subject: check_mk_agent.exe unable to restart after a crash
-To: feedback@check-mk.org
-
+Targetversion: 1.2.3i2
 
 Host = Windows 7
 CMK Agent = Agent version 1.2.2p1
 
-I have found a problem where the check_mk_agent.exe is unable to restart after a crash because the logstate.txt file becomes currupt.
+I have found a problem where the check_mk_agent.exe is unable to restart
+after a crash because the logstate.txt file becomes currupt.
 
 Attached is an example currupt logstate.txt file.
 
-To work around the problem I remove the logstate.txt and then start the check_mk_agent.exe successfully.
+To work around the problem I remove the logstate.txt and then start the
+check_mk_agent.exe successfully.
 
 
 hint by bs: the attached logstate.txt is 0 bytes
@@ -46,7 +37,7 @@ If I edit the file in Notepad++ I see one line of null entries, and converted to
 00000000000000000000000000000000
 0000000000000000000000
 
-I have had a number of crashes on this server as the Windows machine is running on a VM server which has had problems, but the currupt logstate.txt file is always 123k in size and looks the same when edited.
+I have had a number of crashes on this server as the Windows machine is
+running on a VM server which has had problems, but the currupt logstate.txt
+file is always 123k in size and looks the same when edited.
 
-Regards,
-Peter Rogers

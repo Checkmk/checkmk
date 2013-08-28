@@ -1,20 +1,9 @@
 Title: Bug in hr_mem with swap not yet fixed
 Component: checks
-State: open
+Class: bug
+State: done
 Date: 2013-08-26 12:46:09
 Targetversion: 1.2.3
-Class: bug
-
-came in by email to mk@  //  original mail still available in feedback/gitbug folder
-
-
-Subject: Fehler in hr_mem mit Swap
-From: =?utf-8?Q?Christof_Musik?= <christof@senfdax.de>
-To: =?utf-8?Q?mk=40mathias-kettner=2Ede?= <mk@mathias-kettner.de>
-Date: Wed, 10 Jul 2013 21:24:50 +0200
-
-
-Hallo Mathias,
 
 vor einiger Zeit wurde ein Fehler im hr_mem Check auf der ML gemeldet. (http://www.mail-archive.com/checkmk-en@lists.mathias-kettner.de/msg06808.html)
 Daraufhin hast du geantwortet das der Bug #1 behoben wäre. Dies ist allerdings nicht der Fall.
@@ -41,3 +30,6 @@ HOST-RESOURCES-MIB::hrStorageDescr.10 = STRING: Swap space
 
 Gruß
 Christof
+
+2013-08-28 12:27:55: changed state open -> done
+Should be fixed now.

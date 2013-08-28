@@ -2,7 +2,7 @@ Title: unify CPU load checks, avoid incompatible check parameters
 Component: checks
 State: open
 Date: 2013-03-25 11:23:06
-Targetversion: 1.2.3
+Targetversion: 1.4.0
 Class: bug
 
 Several checks are in the group "cpu_load". All these checks need to

@@ -2,24 +2,12 @@ Title: problem with mrpe if lable has white space characters
 Component: checks
 State: open
 Date: 2013-08-27 12:12:33
-Targetversion: 1.2.3
+Targetversion: future
 Class: bug
 
-came in via feedback@  //  original mail still available in feedback/gitbug folder
-
-
-Date: Wed, 26 Jun 2013 15:03:06 +0200
-Message-ID: <CACA1nGEzOmECJufVGOgUqZm6tAxGH+vHoXoEh7SGbx7uw+3ZwQ@mail.gmail.com>
-Subject: Fwd: [BUG]: MRPE Checks mit Performance Daten bringen Fehler
-From: =?ISO-8859-1?Q?Andreas_D=F6hler?= <andreas.doehler@gmail.com>
-To: Check MK Feedback <feedback@check-mk.org>
-
-
-
-Hallo zusammen,
-
-habe heute eine seltsame Sache mit einigen MRPE Checks gehabt.
-Falls die Checks Performance Daten liefern und das Label der Performance Daten Leerzeichen enthält so wir der Check mit einer Exception abgebrochen.
+habe heute eine seltsame Sache mit einigen MRPE Checks gehabt.  Falls die
+Checks Performance Daten liefern und das Label der Performance Daten
+Leerzeichen enthält so wir der Check mit einer Exception abgebrochen.
 
 Traceback (most recent call last):
   File "/usr/share/check_mk/modules/check_mk.py", line 5442, in <module>
@@ -34,23 +22,25 @@ Traceback (most recent call last):
     varname, valuetxt = perfinfo.split("=", 1)
 ValueError: need more than 1 value to unpack
 
-Bei genauerer Untersuchung hab ich festgestellt das dieses Verhalten seit dem Umbau des MRPE am 22.05. (Commit 7705017d0d5db5093d9bdaa1538eecac56832dfe) auftritt.
-Das Problem besteht aus zwei Punkten.
-Einmal diese Zeile
-perfdata = parts[1].strip().split()
-Hierbei werden nicht nur vorn und hinten die Leerzeichen abgeschnitten sondern auch der String vom Performancedaten Label zerschnitten.
-Beispiel:
-'Cluster Groups on This Node'=0;0;0                       Perfdaten noch ok
-["'Cluster", 'Groups', 'on', 'This', "Node'=0;0;0"]         nach der "Behandlung"
+Bei genauerer Untersuchung hab ich festgestellt das dieses Verhalten seit dem
+Umbau des MRPE am 22.05. (Commit 7705017d0d5db5093d9bdaa1538eecac56832dfe)
+auftritt.  Das Problem besteht aus zwei Punkten.  Einmal diese Zeile perfdata
+= parts[1].strip().split() Hierbei werden nicht nur vorn und hinten die
+Leerzeichen abgeschnitten sondern auch der String vom Performancedaten Label
+zerschnitten.  Beispiel: 'Cluster Groups on This Node'=0;0;0 Perfdaten noch ok
+["'Cluster", 'Groups', 'on', 'This', "Node'=0;0;0"] nach der "Behandlung"
 
 Der zweite Punkt tritt dann auf wenn ich den String hier im ganzen lasse.
-'Cluster Groups on This Node'=0;0;0
-und es nur einen Perfomance Daten Wert gibt dann wird perfdata nicht zur Liste und bringt einen Fehler dann beim Aufruf der map Funktion in Zeile 90
-Deshalb hab ich extra noch vor der ersten perfdata Zuweisung in Zeile 70 eine Zeile eingefügt mit perfdata = [] und Zeile 70 auf perfdata += parts[1].strip() geändert.
-Danach funktionieren wieder alle meine MRPE Checks mit Performance Daten ohne Fehler.
+'Cluster Groups on This Node'=0;0;0 und es nur einen Perfomance Daten Wert
+gibt dann wird perfdata nicht zur Liste und bringt einen Fehler dann beim
+Aufruf der map Funktion in Zeile 90 Deshalb hab ich extra noch vor der ersten
+perfdata Zuweisung in Zeile 70 eine Zeile eingefügt mit perfdata = [] und
+Zeile 70 auf perfdata += parts[1].strip() geändert.  Danach funktionieren
+wieder alle meine MRPE Checks mit Performance Daten ohne Fehler.
 
-Einen MRPE Check mit mehreren Werten hatte ich leider nicht an der Hand zum testen.
-Damit ist der Abschnitt ab # Further lines noch offen ob das alles so klappt. :)
+Einen MRPE Check mit mehreren Werten hatte ich leider nicht an der Hand
+zum testen.  Damit ist der Abschnitt ab # Further lines noch offen ob das
+alles so klappt. :)
 
 Gruß
 Andreas

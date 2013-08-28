@@ -1,34 +1,17 @@
 Title: Bug in hr_mem with virtual memorry
 Component: checks
-State: open
+Class: bug
+State: done
 Date: 2013-08-26 10:43:59
 Targetversion: 1.2.3
-Class: bug
 
-came in via checkmk-en@   //   original mail still available in feedback/gitbug folder
+I’ve got the same problem as Michaël Coquard, which wrote a workaround
+back in Dec. 2012!
 
-
-From: "Roeder, Christoph" <Christoph.Roeder@ZIT-BB.Brandenburg.de>
-To: "checkmk-en@lists.mathias-kettner.de" <checkmk-en@lists.mathias-kettner.de>
-Thread-Topic: Bug in hr_mem with virtual memorry
-Thread-Index: Ac6YvZOYz0N8Zxs7TGuUppEKqZZS2g==
-Date: Wed, 14 Aug 2013 07:28:25 +0000
-
-Hello,
-
- 
-
-I’ve got the same problem as Michaël Coquard, which wrote a workaround back in Dec. 2012!
-
- 
-
-Maybe a bulletin board and an bugtracker, e.g. github is better than this mailinglist… just my 2cents :-/
-
- 
+Maybe a bulletin board and an bugtracker, e.g. github is better than this
+mailinglist… just my 2cents :-/
 
 Hope his Patch or something similar will be commited:
-
- 
 
 --- /root/hr_mem        2013-08-14 09:23:10.000000000 +0200                                                                                                                                         
 
@@ -51,3 +34,6 @@ Hope his Patch or something similar will be commited:
                                                                                                                                                                                                      
 
      # Account for cached memory (this works at least for systems using
+
+2013-08-28 12:25:45: changed state open -> done
+Fixed.

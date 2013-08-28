@@ -1,9 +1,9 @@
 Title: checkmk.js - Bug with IE
 Component: multisite
-State: open
+Class: bug
+State: works4me
 Date: 2013-08-26 10:21:49
 Targetversion: 1.2.3i2
-Class: bug
 
 Since upgrade to 1.2.2p1 the Check_MK web page produces an error warning on
 IE8 and IE9 browsers. I have a clean install of OMD release and the behaviour
@@ -76,3 +76,6 @@ Ian Phelps
 FTS SBG MIS DCSC
 
  
+
+2013-08-28 16:26:09: changed state open -> works4me
+Seems as it has already been solved.

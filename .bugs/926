@@ -1,9 +1,9 @@
 Title: host_state (and others) are not treated as integers in log table
 Component: livestatus
-State: open
+Class: bug
+State: done
 Date: 2013-08-12 10:45:03
 Targetversion: 1.2.3i2
-Class: bug
 
 Multisite assumes that columns like the host_state are integers.
 
@@ -45,3 +45,6 @@ Traceback (most recent call last):
 KeyError: u'0'
 
 --> We fix this in Multisite. Use saveint() here.
+
+2013-08-28 16:24:55: changed state open -> done
+Seems to be fixed now. But there might be other places...

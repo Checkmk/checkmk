@@ -6026,7 +6026,7 @@ def mode_groups(phase, what):
               what == "contact" and "users" or "groups",
               _("Contact groups are needed for assigning hosts and services to people (contacts)"))])
         else:
-            html.write("<div class=info>" + _("There are not defined any groups yet.") + "</div>")
+            html.write("<div class=info>" + _("No groups are defined yet.") + "</div>")
         return
 
     # Show member of contact groups
@@ -8202,7 +8202,7 @@ def mode_users(phase):
     entries = users.items()
     entries.sort(cmp = lambda a, b: cmp(a[1].get("alias", a[0]).lower(), b[1].get("alias", b[0]).lower()))
 
-    table.begin("users", None, empty_text = _("There are not defined any users yet."))
+    table.begin("users", None, empty_text = _("No users are defined yet."))
     online_threshold = time.time() - config.user_online_maxage
     for id, user in entries:
         table.row()
@@ -13279,7 +13279,7 @@ def mode_custom_attrs(phase, what):
         return None
 
     if not attrs:
-        html.write("<div class=info>" + _("There are not defined any custom attributes yet.") + "</div>")
+        html.write("<div class=info>" + _("No custom attributes are defined yet.") + "</div>")
         return
 
     table.begin(what + "attrs")

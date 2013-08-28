@@ -10302,7 +10302,13 @@ def mode_rulesets(phase):
 
             something_shown = True
 
-            float_cls = (not config.wato_hide_help_in_lists and html.help_visible) and ' nofloat' or ''
+            float_cls = ''
+            if not config.wato_hide_help_in_lists:
+                if html.help_visible:
+                    float_cls = ' nofloat'
+                else:
+                    float_cls = ' float'
+
             url_vars = [("mode", "edit_ruleset"), ("varname", varname)]
             if only_host:
                 url_vars.append(("host", only_host))

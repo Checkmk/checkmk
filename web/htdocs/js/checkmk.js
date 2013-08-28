@@ -1763,14 +1763,21 @@ function help_switch(how) {
         helpdivs[i].style.display = how ? "block" : "none";
     }
 
-    // small hack for wato ruleset lists, toggle the "nofloat" class
-    // on those objects to make the layout possible
+    // small hack for wato ruleset lists, toggle the "float" and "nofloat"
+    // classes on those objects to make the layout possible
     var rulesetdivs = document.getElementsByClassName('ruleset');
     for (var i = 0; i < rulesetdivs.length; i++) {
-        if (how)
-            add_class(rulesetdivs[i], 'nofloat');
-        else
-            remove_class(rulesetdivs[i], 'nofloat');
+        if (how) {
+            if (has_class(rulesetdivs[i], 'float')) {
+                remove_class(rulesetdivs[i], 'float');
+                add_class(rulesetdivs[i], 'nofloat');
+            }
+        } else {
+            if (has_class(rulesetdivs[i], 'nofloat')) {
+                remove_class(rulesetdivs[i], 'nofloat');
+                add_class(rulesetdivs[i], 'float');
+            }
+        }
     }
 
     get_url("ajax_switch_help.py?enabled=" + (how ? "yes" : ""));

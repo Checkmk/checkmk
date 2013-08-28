@@ -1541,6 +1541,13 @@ def render_view(view, rows, datasource, group_painters, painters,
         if bi.reused_compilation():
             html.add_status_icon("aggrcomp", _("Reused cached compiled BI aggregations (PID %d)") % pid)
 
+        if config.may('wato.users'):
+            try:
+                msg = file(defaults.var_dir + '/web/ldap_sync_fail.mk').read()
+                html.add_status_icon("ldap", _('Last LDAP sync failed! %s') % html.attrencode(msg))
+            except IOError:
+                pass
+
         html.bottom_focuscode()
         if 'Z' in display_options:
             html.bottom_footer()

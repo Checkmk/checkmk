@@ -5,27 +5,9 @@ Date: 2013-08-08 12:41:52
 Targetversion: 1.2.3
 Class: feature
 
-came in via feedback@ / original mail is still available in folder feedback/gitbug
-
-
-From: Maarten Vanraes <maarten@ba.be>
-To: feedback@mathias-kettner.de
-Subject: ESX4.0 vspere patch
-Date: Tue, 09 Jul 2013 13:30:26 +0200
-
 vsphere agent works on ESX4.0 with this patch: http://pastebin.com/E6mw9t3s
--- 
-BA NV
-IT & Security
-
-
-From: Maarten Vanraes <maarten@ba.be>
-To: Check_MK Feedback <feedback@mathias-kettner.de>
-Subject: updated ESX4.0 vsphere patch
-Date: Tue, 09 Jul 2013 13:50:23 +0200
 
 needs some patching for the memory check too
--- BA NV IT & Security
 
 
 0009-vsphere-check-works-for-ESX-4.0.patch

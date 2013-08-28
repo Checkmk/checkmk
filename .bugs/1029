@@ -5,14 +5,6 @@ Date: 2013-08-26 12:30:45
 Targetversion: 1.2.3
 Class: feature
 
-patch came in via feedback@  //  original mail still available in feeedback/gitbug folder
-
-
-Date: Tue, 2 Jul 2013 14:46:10 -0400
-Message-ID: <CANzfhcfnDOKnRqdDeiyubh1Ph+6ihNap7nOv4ZOdPSQWR5hk8w@mail.gmail.com>
-Subject: [Bug]: agent does not monitor io for md raidsets
-From: Philip Kubat <philip@kubat.com>
-
 the egrep needs updated ti include md arrays
 
 # Performancecounter Platten

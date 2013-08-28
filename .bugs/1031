@@ -5,21 +5,6 @@ Date: 2013-08-26 13:01:12
 Targetversion: 1.2.3
 Class: cleanup
 
-came in via checkmk-de@   //  original mail available in feedback/gitbug folder
-
-Date: Mon, 15 Jul 2013 13:44:02 +0200
-From: Marcel =?UTF-8?B?UGVubmV3acOf?= <mailinglists@pennewiss.de>
-To: checkmk-de@lists.mathias-kettner.de
-Message-ID: <20130715134402.5743e494@marcel.intern.exa-edv.de>
-X-Mailer: Claws Mail 3.8.1 (GTK+ 2.24.10; x86_64-suse-linux-gnu)
-Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="MP_/diqzEXo3x_6IHPojiKv3M6F"
-Subject: [Check_mk (deutsch)] =?utf-8?q?BUG=3A_setup=2Esh_-_Erstellung_der?=
- =?utf-8?q?_auth=2Eserials_au=C3=9Ferhalb_von_DESTDIR?=
-
-
-Hallo,
-
 ich verwende check_mk und check_mk-agent auch unter Gentoo. Der
 Build-Prozess wird dort in einer Sandbox vollzogen, was die
 Beachtung von DESTDIR als Grundvoraussetzung mit sich bringt.
@@ -29,9 +14,6 @@ welches jedoch außerhalb des DESTDIR erfolgt und somit mindestens unter
 Gentoo zu Problem führt.
 
 Anbei ein passender Patch.
-
-Grüße,
-Marcel
 
 
 setup.sh.patch

@@ -64,8 +64,13 @@ def check_esx_vsphere_datastores(item, params, info):
     size_mb = store["capacity"] / 1024.0 / 1024.0
     avail_mb = store["freeSpace"] / 1024.0 / 1024.0
 
-    state, infotext, perfdata = df_check_filesystem_single(
-        g_hostname, item, size_mb, avail_mb, params)
+    df_info =  df_check_filesystem_single(g_hostname, item, size_mb, avail_mb, params)
+    state    = df_info[0]
+    infotext = df_info[1]
+    if len(df_info) >= 3:
+        perfdata = df_info[2]
+    else:
+        perfdata = []
 
     if 'uncommitted' in store:
         uncommitted_mb = store["uncommitted"] / 1024.0 / 1024.0

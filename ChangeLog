@@ -321,6 +321,7 @@
     * FIX: automation users can now be deleted again (bug was introduced in 1.2.2p1)
     * FIX: fix logwatch pattern analyzer message "The host xyz is not
            managed by WATO." after direct access via snapin
+    * FIX: Fixed first toggle of flags in global settings when default is set to True
 
     Event Console:
     * FIX: apply rewriting of application/hostname also when cancelling events

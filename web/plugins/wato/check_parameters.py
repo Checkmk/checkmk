@@ -1337,55 +1337,94 @@ register_check_parameters(
     "first"
 )
 
+def get_filesystem_valuespec(what):
+    if what == "used":
+        title  = _("used space")
+        course = _("above")
+    else:
+        title  = _("free space")
+        course = _("below")
+
+
+    vs_subgroup =  [
+                    Tuple( title = _("Percentage %s") % title,
+                        elements = [
+                            Percentage(title = _("Warning if %s") % course, unit = _("%"), minvalue = 0.0),
+                            Percentage(title = _("Critical if %s") % course, unit = _("%"), minvalue = 0.0),
+                        ]
+                    ),
+                    Tuple( title = _("Absolute %s") % title,
+                        elements = [
+                            Integer(title = _("Warning if %s") % course, unit = _("MB"), minvalue = 0),
+                            Integer(title = _("Critical if %s") % course, unit = _("MB"), minvalue = 0),
+                        ]
+                    )
+                   ]
+
+    return Alternative(
+            title = _("Levels for filesystem %s") % title,
+            show_alternative_title = True,
+            default_value = (80.0, 90.0),
+                    elements = vs_subgroup + [
+                                ListOf(
+                                    Tuple(
+                                        orientation = "horizontal",
+                                        elements = [
+                                            Filesize(title = _("Filesystem larger than")),
+                                            Alternative(
+                                                title = _("Levels for %s") % title,
+                                                elements = vs_subgroup
+                                            )
+                                        ]
+                                    ),
+                                    title = _('Dynamic levels'),
+                                )],
+                    )
+
+def match_filesystem_level_type(value):
+    if type(value) == list:
+        for entry in value:
+            if entry[1][0] < 0 or entry[1][1] < 0:
+                return 1
+        else:
+            return 0
+    else:
+        if value[0] < 0 or value[1] < 0:
+            return 1
+        else:
+            return 0
+
+def transform_filesystem_levels(value):
+    tuple_convert = lambda val: tuple(map(lambda x: -x, val))
+
+    if type(value) == tuple:
+        return tuple_convert(value)
+    else:
+        result = []
+        for item in value:
+            result.append((item[0], tuple_convert(item[1])))
+        return result
+
+
 filesystem_elements = [
     ("levels",
         Alternative(
-            title = _("Levels for filesystem usage"),
+            title = _("Levels for filesystem"),
+            show_alternative_title = True,
             default_value = (80.0, 90.0),
+            match = match_filesystem_level_type,
             elements = [
-                Tuple(
-                    title = _("Percentage used space"),
-                    elements = [
-                        Percentage(title = _("Warning if above"), unit = _("% usage")),
-                        Percentage(title = _("Critical if above"), unit = _("% usage")),
-                    ]
-                ),
-                Tuple(
-                    title = _("Absolute used space"),
-                    elements = [
-                         Integer(title = _("Warning if above"), unit = _("MB")),
-                         Integer(title = _("Critical if above"), unit = _("MB")),
-                    ]
-                ),
-                ListOf(
-                    Tuple(
-                        orientation = "horizontal",
-                        elements = [
-                            Filesize(title = _("Filesystem larger than")),
-                            Alternative(
-                                title = _("Levels for the filesystem usage"),
-                                elements = [
-                                    Tuple(
-                                        title = _("Percentage used space"),
-                                        elements = [
-                                            Percentage(title = _("Warning if above"), unit = _("% usage")),
-                                            Percentage(title = _("Critical if above"), unit = _("% usage")),
-                                        ]
-                                    ),
-                                    Tuple(
-                                        title = _("Absolute used space"),
-                                        elements = [
-                                             Integer(title = _("Warning if above"), unit = _("MB")),
-                                             Integer(title = _("Critical if above"), unit = _("MB")),
-                                        ]
-                                    ),
-                                ]
-                            ),
-                        ],
-                    ),
-                    title = _('Dynamic levels'),
-                    ),]),
-        ),
+                   get_filesystem_valuespec("used"),
+                   Transform(
+                            get_filesystem_valuespec("free"),
+                            title = _("Levels for filesystem free space"),
+                            allow_empty = False,
+                            forth = transform_filesystem_levels,
+                            back  = transform_filesystem_levels
+                    )
+                ]
+                )
+    ),
     ( "flex_levels",
       FixedValue(
           None,
@@ -1527,8 +1566,8 @@ register_check_parameters(
                            "the given bounds. The error rate is computed by dividing number of "
                            "errors by the total number of packets (successful plus errors)."),
                   elements = [
-                      Percentage(title = _("Warning if above"), label = _("errors")),
-                      Percentage(title = _("Critical if above"), label = _("errors"))
+                      Percentage(title = _("Warning if above"), label = _("errors"), default_value = 0.01),
+                      Percentage(title = _("Critical if above"), label = _("errors"), default_value = 0.1)
                   ])),
              ( "speed",
                OptionalDropdownChoice(

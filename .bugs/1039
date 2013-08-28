@@ -1,0 +1,63 @@
+Title: livestatus bug in OutputFormat: json
+Component: livestatus
+State: open
+Date: 2013-08-27 16:02:02
+Targetversion: 1.2.3i2
+Class: bug
+
+Hi,
+
+Erst mal möchte ich danke sagen für das super Plugin, das hat mir viel
+Arbeit erspart und macht den Einsatz von unseren Nagios und SMBox Systemen
+etwas leichter
+
+Allerdings scheint sich ein Bug in die V1.2.2p2 eingeschlichen zu haben,
+und zwar geht es um das Auslesen von Kommentaren bei folgendem Kommando:
+
+$CMD = "GET services\n";
+$CMD.= "Columns: host_name comments_with_info\n";
+$CMD.= "Filter: host_name = localhost\n";
+$CMD.= "OutputFormat: json\n";
+
+Der Host localhost hat 11 Services definiert, wobei einer einen Kommentar definiert hat. Dabei erhalte ich folgende Ausgabe:
+
+[["localhost",[]],
+["localhost",[]],
+["localhost",[]],
+["localhost",[]],
+["localhost",[]],
+["localhost",[]],
+["localhost",[]],
+["localhost",[]],
+["localhost",[]],
+["localhost",[]],
+["localhost",[[705,"nagios","Testing",]]]]
+
+Und das ist leider nicht korrekt, das letzte ",]" ist falsch! Diese Daten
+lassen sich leider nicht via json_decode() in PHP dekodieren. Wandel ich
+das Ganze aber wie folgt ab:
+
+[["localhost",[]],
+["localhost",[]],
+["localhost",[]],
+["localhost",[]],
+["localhost",[]],
+["localhost",[]],
+["localhost",[]],
+["localhost",[]],
+["localhost",[]],
+["localhost",[]],
+["localhost",[[705,"nagios","Testing"]]]]
+
+-------------------------------------^^^
+
+
+Dann funktioniert das auch sofort wieder.
+
+Ich habe leider aktuell nicht so viel Zeit, um einen Patch zu liefern,
+deswegen dieser etwas chaotische Bugreport, ich hoffe aber, das man das
+soweit nachvollziehen kann.
+
+In der 1.1.10p3 war dieser Bug definitiv nicht drin.
+
+Getestet habe ich mit den Nagios Versionen 3.2.1 und 3.5.0, bei beiden tritt diese falsche JSON Kodierung auf.

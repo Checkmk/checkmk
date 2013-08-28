@@ -66,18 +66,21 @@
                      (output buffer now grows dynamically)
     * jolokia_metrics: fixed incorrect plugin output for high warn/crit levels
     * hyperv: Added a check for checking state changes.
-    * df / esx_vsphere_datastore: filesystem levels configuration gets even easier
-                                  now able to set absolute levels and levels depending
-                                  on total disk space
+    * df / esx_vsphere_datastore: now able to set absolute levels and levels depending
+                                  on total disk space of used and free space
     * cisco_wlc: New check for monitoring cisco wireless lan access points 
     * cisco_wlc_clients: New check for the nummber of clients in a wlc wifi
     * df: Negative integer levels for MB left on a device
     * win_printers: Monitoring of printer queue on a windows printserver
+    * FIX: hr_mem: handle virtual memory correct on some devices
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a
                  service has no service level set
     * notify.py: fixed bug with local notification spooling
+    * HTML notifications: Now adding optional links to host- and service names
+      when second argument notification script is configured to the base url of the
+      monitoring installation (e.g. http://<host>/<site>/ in case of OMD setups)
 
     Multisite:
     * User accounts can now be locked after a specified amount of auth
@@ -319,6 +322,7 @@
     * FIX: automation users can now be deleted again (bug was introduced in 1.2.2p1)
     * FIX: fix logwatch pattern analyzer message "The host xyz is not
            managed by WATO." after direct access via snapin
+    * FIX: Fixed first toggle of flags in global settings when default is set to True
 
     Event Console:
     * FIX: apply rewriting of application/hostname also when cancelling events

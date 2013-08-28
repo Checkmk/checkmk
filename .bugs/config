@@ -32,6 +32,7 @@ classes = [
 targetversions = [
   "1.2.2",
   "1.2.3",
+  "1.2.3i2",
   "1.4.0",
   "future",
 ]

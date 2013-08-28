@@ -2,7 +2,7 @@ Title: check_dns is missing in omd builds of debian 7.1
 Component: checks
 State: open
 Date: 2013-08-23 13:56:01
-Targetversion: 1.2.3
+Targetversion: 1.2.3i2
 Class: bug
 
 the nagios plugin check_dns is missing in the omd build of debian 7.1

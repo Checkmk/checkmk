@@ -5621,7 +5621,7 @@ def mode_globalvars(phase):
         action = html.var("_action")
         if varname:
             domain, valuespec, need_restart, allow_reset, in_global_settings = g_configvars[varname]
-            def_value = default_values.get(varname, valuespec.canonical_value())
+            def_value = default_values.get(varname, valuespec.default_value())
 
             if action == "reset" and not isinstance(valuespec, Checkbox):
                 c = wato_confirm(
@@ -5631,8 +5631,9 @@ def mode_globalvars(phase):
                        (varname, valuespec.value_to_text(def_value)))
             else:
                 if not html.check_transaction():
-                        return
+                    return
                 c = True # no confirmation for direct toggle
+
             if c:
                 # if action == "reset":
                 #     del current_settings[varname]
@@ -10301,7 +10302,13 @@ def mode_rulesets(phase):
 
             something_shown = True
 
-            float_cls = (not config.wato_hide_help_in_lists and html.help_visible) and ' nofloat' or ''
+            float_cls = ''
+            if not config.wato_hide_help_in_lists:
+                if html.help_visible:
+                    float_cls = ' nofloat'
+                else:
+                    float_cls = ' float'
+
             url_vars = [("mode", "edit_ruleset"), ("varname", varname)]
             if only_host:
                 url_vars.append(("host", only_host))

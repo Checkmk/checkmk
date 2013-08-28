@@ -2,7 +2,7 @@ Title: Problem with check_mk notify in manually setup check_mk
 Component: core
 State: open
 Date: 2013-03-01 12:42:36
-Targetversion: future
+Targetversion: 1.2.3i2
 Class: bug
 
 When enable "Debug notifications" from wato (Global settings/Noificatoins)

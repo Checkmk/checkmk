@@ -2,7 +2,7 @@ Title: Livestatus/Nagios Core crashes, if nagios.log is not accessible
 Component: livestatus
 State: open
 Date: 2013-08-08 11:30:12
-Targetversion: 1.2.3
+Targetversion: future
 Class: bug
 
 kam an info@mathias-kettner.de, Orginal-Mail im feedback/gitbug noch vorhanden

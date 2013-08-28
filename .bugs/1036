@@ -1,0 +1,34 @@
+Title: df_check_filesystem_single returns a 2-tuple when check_esx_vsphere_datastores expects 3
+Component: checks
+Class: bug
+State: done
+Date: 2013-08-27 10:50:42
+Targetversion: 1.2.3
+
+came in via feedback@  //  mail is still available at feedback/gitbug folder
+
+
+From: Clynt Heikes <cheikes@peak6.com>
+To: "'feedback@check-mk.org'" <feedback@check-mk.org>
+Subject: [Bug]:df_check_filesystem_single returns a 2-tuple when
+ check_esx_vsphere_datastores expects 3
+
+
+def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, params):
+
+    if size_mb == 0:
+
+        return (1, "size of filesystem is 0 MB")
+
+ 
+
+ 
+
+def check_esx_vsphere_datastores(item, params, info):
+
+
+        state, infotext, perfdata = df_check_filesystem_single(
+            g_hostname, item, size_mb, avail_mb, params)
+
+2013-08-28 12:33:57: changed state open -> done
+Fixed.

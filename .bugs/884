@@ -2,7 +2,7 @@ Title: EC view recent event history: wrong sorting
 Component: ec
 State: open
 Date: 2013-02-12 17:53:17
-Targetversion: 1.2.3
+Targetversion: 1.2.3i2
 Class: bug
 
 This might be a bug in Multisite: The sorting is after time and

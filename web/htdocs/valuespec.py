@@ -1849,6 +1849,7 @@ class Alternative(ValueSpec):
         self._elements = kwargs["elements"]
         self._match = kwargs.get("match") # custom match function
         self._style = kwargs.get("style", "radio") # alternative: "dropdown"
+        self._show_alternative_title = kwargs.get("show_alternative_title")
 
     # Return the alternative (i.e. valuespec)
     # that matches the datatype of a given value. We assume
@@ -1933,7 +1934,10 @@ class Alternative(ValueSpec):
     def value_to_text(self, value):
         vs = self.matching_alternative(value)
         if vs:
-            return vs.value_to_text(value)
+            output = ""
+            if self._show_alternative_title and vs.title():
+                output = "%s<br>" % vs.title()
+            return output + vs.value_to_text(value)
         else:
             return _("invalid:") + " " + str(value)
 

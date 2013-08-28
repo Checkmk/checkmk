@@ -1,0 +1,18 @@
+Title: f5_bigip_psu: inventory finds only one psu
+Component: checks
+Class: bug
+State: wontfix
+Date: 2013-08-27 09:18:20
+Targetversion: 1.2.3
+
+it was pretty long time, and during this time I found one more necessary change to f5_bigip_psu check.
+
+50c50
+<             inventory.append((psu, None))
+---
+>             inventory.append((("%s" % psu), None))
+
+tested on BIG-IP 11.3.0 HF5 SW/ BIG-IP 3900HW.
+
+2013-08-28 12:29:29: changed state open -> wontfix
+This patch does not fix the problem.

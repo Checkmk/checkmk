@@ -1,0 +1,58 @@
+Title: modify check_mk_agent.linux - heartbeat_crm test for clusters with pacemaker since 1.1.9
+Component: core
+State: open
+Date: 2013-08-27 10:22:15
+Targetversion: 1.2.3
+Class: todo
+
+came in via feedback@  //  original mail still available at feedback/gitbug folder
+
+
+From: Stefan Botter <jsj@jsj.dyndns.org>
+To: feedback@check-mk.org
+Subject: [PATCH] - modify check_mk_agent.linux - heartbeat_crm test for clusters with pacemaker since 1.1.9
+Date: Tue, 28 May 2013 09:45:22 +0200
+
+
+From 13d33c76eb02b87e6f816a67dba393b586e9d4bf Mon Sep 17 00:00:00 2001
+From: Stefan Botter <jsj@jsj.dyndns.org>
+Date: Tue, 28 May 2013 09:38:06 +0200
+Subject: [PATCH 1/1] change heartbeat_crm: since pacemaker 1.1.9 there 
+are no
+ /var/run files, also use crm status instead of crm_mon
+
+
+Signed-off-by: Stefan Botter <jsj@jsj.dyndns.org>
+---
+ agents/check_mk_agent.linux |    9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/agents/check_mk_agent.linux b/agents/check_mk_agent.linux
+index 335ba79..118fa41 100755
+--- a/agents/check_mk_agent.linux
++++ b/agents/check_mk_agent.linux
+@@ -371,9 +371,18 @@ fi
+ # Heartbeat monitoring
+ # Different handling for heartbeat clusters with and without CRM
+ # for the resource state
++# pacemaker since 1.1.9 has no /var/run files, ugly detect FTB
++newPM=0
++for n in /dev/shm/qb-cib_rw-response-*-data; do if [ -f $n ]; then 
+newPM=1; break; fi; done
+ if [ -S /var/run/heartbeat/crm/cib_ro -o -S /var/run/crm/cib_ro ]; then
+   echo '<<<heartbeat_crm>>>'
+   crm_mon -1 -r | grep -v ^$ | sed 's/^ //; /^\sResource Group:/,$ 
+s/^\s//; s/^\s/_/g'
++elif [ $newPM != 0 ]; then
++  echo '<<<heartbeat_crm>>>'
++  # pacemaker since 1.1.9
++  # additionally, in that case use crm status, as crm_mon segfaults
++  # also add line for identification of resources in agent output, 
+which is missing from crm status
++  crm status | sed -e '/^Online:/{:a;n;/^$/!ba;i\Full list of 
+resources:' -e '}' | grep -v ^$ | sed 's/^ //; /^\sResource Group:/,$ 
+s/^\s//; s/^\s/_/g' 
+ fi
+ if type cl_status > /dev/null 2>&1; then
+   echo '<<<heartbeat_rscstatus>>>'
+-- 1.7.10.4 

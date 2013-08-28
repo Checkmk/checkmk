@@ -2,7 +2,7 @@ Title: host_state (and others) are not treated as integers in log table
 Component: livestatus
 State: open
 Date: 2013-08-12 10:45:03
-Targetversion: 1.2.2
+Targetversion: 1.2.3i2
 Class: bug
 
 Multisite assumes that columns like the host_state are integers.
@@ -43,3 +43,5 @@ Traceback (most recent call last):
   File "/omd/sites/event/share/check_mk/web/htdocs/views.py", line 2565, in register_events
     html.register_event({0:"up", 1:"down", 2:"unreachable"}[host_state])
 KeyError: u'0'
+
+--> We fix this in Multisite. Use saveint() here.

@@ -24,46 +24,32 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Example for creating real Nagios checks from BI aggregations. 
+# Example for creating real Nagios checks from BI aggregations.
 
 # Installation:
 # 1. Put this file in /usr/lib/check_mk_agent/local
 # 2. Make the file executable
 # 3. Add a correct url_prefix (OMD site and slash)
-#    user and password with read access to Multisite. 
+#    user and password with read access to Multisite.
 
 url_prefix = "" # non-OMD installations
 # url_prefix = "mysite/" # with OMD site name
 
-# HTTP Basic Auth
+# Authentication credentials
 user = "omdadmin"
 password = "omd"
-cookie = None
-
-# Alternatively: Multisite Cookie authentication:
-# If you are using Cookie base authentication, then
-# login with your browser and get the cookie content
-# of auth_... from your browser settings and put
-# it here:
-# cookie = "omdadmin:1329218457.69:16b1d572fe059e00a89b7f24592733f2"
-
 
 # Do not change anything below
 
 import os, sys
 
-if cookie:
-    logininfo = ""
-    opts = "-b 'auth_=%s'" % cookie
-else:
-    logininfo = "%s:%s@" % (user, password)
-    opts = ""
-
-url = 'http://%slocalhost/%scheck_mk/view.py?view_name=aggr_summary&output_format=python' % \
-  (logininfo, url_prefix)
+url = 'http://localhost/%scheck_mk/login.py?_login=1&_username=%s&_password=%s' \
+      '&_origtarget=view.py%%3Fview_name=aggr_summary%%26output_format=python' % \
+        (url_prefix, user, password)
 
 try:
-    command = "curl --noproxy localhost --silent %s '%s'" % (opts, url)
+    command = "curl -u \"%s:%s\" -b /dev/null -L --noproxy localhost --silent '%s'" % \
+                    (user, password, url)
     output = os.popen(command).read()
     data = eval(output)
 except:

@@ -707,6 +707,7 @@ register_configvar(group,
                   'user accounts for gathering their attributes. The user options which get imported '
                   'into Check_MK from LDAP will be locked in WATO.'),
         elements = userdb.ldap_attribute_plugins_elements,
+        default_keys = ['email', 'alias', 'auth_expire' ],
     ),
     domain = "multisite",
     in_global_settings = False,

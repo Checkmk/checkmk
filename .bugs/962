@@ -1,9 +1,9 @@
 Title: Restore per GUI not successful
 Component: multisite
-State: open
+Class: bug
+State: wontfix
 Date: 2013-08-08 12:01:30
 Targetversion: 1.2.3
-Class: bug
 
 kam per feedback@ rein, Orginal-Mail im folder feedback/gitbug eroeffnet noch vorhanden
 
@@ -41,3 +41,6 @@ Stockholmer Allee 24
 Fon: +49 231.930-10 71
 Fax: +49 231.930-10 64
 E-Mail: t.baer@dokom21.de
+
+2013-08-28 12:08:44: changed state open -> wontfix
+Restore ist eh aktuell komplett neu geschriebn.

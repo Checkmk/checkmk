@@ -2,6 +2,11 @@
 # HTML Emails with included Graphs
 # This script creates a very beautiful mail in multipart format with
 # attached graphs and such neat stuff. Sweet!
+#
+# Argument 1: Full system path to the pnp4nagios index.php for fetching
+#             the graphs. Usually auto configured in OMD.
+# Argument 2: HTTP-URL-Prefix to open multisite. When provided, several
+#             links are added to the mail.
 
 import os, re, sys, subprocess
 from email.mime.multipart import MIMEMultipart
@@ -111,11 +116,10 @@ tr.even3 { background-color: #ffefaf; }
 td.state {
     text-align: center;
     font-weight: bold;
-    width: 32px;
 }
 
 /* OK/UP */
-.state0, .hstate0, .state0 a, .hstate0 a {
+.state0, .stateOK, .hstate0, .hstateUP, .state0 a, .hstate0 a {
         background-color: #0b3; color: #fff;
 }
 
@@ -123,27 +127,27 @@ td.state {
         white-space: nowrap;
 }
 /* WARN */
-.state1, .state1 a, tr.groupheader td.state1 {
+.state1, .stateWARNING, .state1 a, tr.groupheader td.state1 {
         background-color: #ff0; color: #000;
 }
 
 /* CRIT/DOWN */
-.state2, .hstate1, .state2 a, .hstate2 a {
+.state2, .stateCRITICAL, .hstate1, .hstateDOWN, .state2 a, .hstate2 a {
         background-color: #f00; color: #fff;
 }
 
 /* UNKNOWN / UNREACH */
-.state3, .hstate2, .state3 a, .hstate2 a {
+.state3, .stateUNKNOWN, .hstate2, .hstateUNREACHABLE, .state3 a, .hstate2 a {
         background-color: #f80; color: #fff;
 }
 
 /* PENDING */
-.statep, .hstatep, .statep a, .hstatep a {
+.statep, .statePENDING, .hstatep, .hstatePENDING, .statep a, .hstatep a {
         background-color: #888; color: #fff;
 }
 
 /* in DOWNTIME */
-.stated, .hstated, .stated a, .hstated a {
+.stated, .stateDOWNTIME, .hstated, .hstateDOWNTIME, .stated a, .hstated a {
         background-color: #0af; color: #fff;
 }
 
@@ -170,7 +174,7 @@ tmpl_host_subject = 'Check_MK: $HOSTNAME$ - $NOTIFICATIONTYPE$'
 tmpl_host_txt = '''
 Host:     $HOSTNAME$ ($HOSTALIAS$)
 Address:  $HOSTADDRESS$
-
+$HOSTLINK$
 State:    $LASTHOSTSTATE$ -> $HOSTSTATE$ ($NOTIFICATIONTYPE$)
 Output:   $HOSTOUTPUT$
 Perfdata: $HOSTPERFDATA$
@@ -184,7 +188,7 @@ tmpl_host_html = tmpl_head_html + '''
 </tr>
 <tr class="data odd0">
     <td class=left>Name</td>
-    <td>$HOSTNAME$ ($HOSTALIAS$)</td>
+    <td>$LINKEDHOSTNAME$ ($HOSTALIAS$)</td>
 </tr>
 <tr class="data even0">
     <td class=left>Address</td>
@@ -195,7 +199,7 @@ tmpl_host_html = tmpl_head_html + '''
 </tr>
 <tr class="data odd0">
     <td class=left>State</td>
-    <td class="state hstate hstate$HOSTSTATEID$">$LASTHOSTSTATE$ -> $HOSTSTATE$ ($NOTIFICATIONTYPE$)</td>
+    <td class="state hstate"><span class="hstate$LASTHOSTSTATE$">$LASTHOSTSTATE$>/span> &rarr; <span class="hstate$HOSTSTATEID$">$HOSTSTATE$ ($NOTIFICATIONTYPE$)</span></td>
 </tr>
 <tr class="data even0">
     <td class="left">Output</td>
@@ -212,9 +216,9 @@ tmpl_service_subject = 'Check_MK: $HOSTNAME$/$SERVICEDESC$ $NOTIFICATIONTYPE$'
 
 tmpl_service_txt = '''
 Host:     $HOSTNAME$ ($HOSTALIAS$)
-Address:  $HOSTADDRESS$
+Address:  $HOSTADDRESS$$HOSTLINK$
 
-Service:  $SERVICEDESC$
+Service:  $SERVICEDESC$$SERVICELINK$
 State:    $LASTSERVICESTATE$ -> $SERVICESTATE$ ($NOTIFICATIONTYPE$)
 Output:   $SERVICEOUTPUT$
 Perfdata: $SERVICEPERFDATA$
@@ -228,7 +232,7 @@ tmpl_service_html = tmpl_head_html + '''
 </tr>
 <tr class="data odd0">
     <td class=left>Hostname</td>
-    <td>$HOSTNAME$ ($HOSTALIAS$)</td>
+    <td>$LINKEDHOSTNAME$ ($HOSTALIAS$)</td>
 </tr>
 <tr class="data even0">
     <td class=left>Address</td>
@@ -236,14 +240,14 @@ tmpl_service_html = tmpl_head_html + '''
 </tr>
 <tr class="data odd0">
     <td class=left>Service description</td>
-    <td>$SERVICEDESC$</td>
+    <td>$LINKEDSERVICEDESC$</td>
 </tr>
 <tr>
     <th colspan=2>State</th>
 </tr>
 <tr class="data odd0">
     <td class=left>State</td>
-    <td class="state svcstate state$SERVICESTATEID$">$LASTSERVICESTATE$ -> $SERVICESTATE$ ($NOTIFICATIONTYPE$)</td>
+    <td class="state svcstate"><span class="state$LASTSERVICESTATE$">$LASTSERVICESTATE$</span> &rarr; <span class="state$SERVICESTATEID$">$SERVICESTATE$ ($NOTIFICATIONTYPE$)</span></td>
 </tr>
 <tr class="data even0">
     <td class="left">Output</td>
@@ -353,6 +357,8 @@ def main():
         in os.environ.items()
         if var.startswith("NOTIFY_")])
 
+    print repr(context)
+
     # Fetch graphs for this object. It first tries to detect how many sources
     # are available for this object. Then it loops through all sources and
     # fetches retrieves the images. If a problem occurs, it is printed to
@@ -362,6 +368,25 @@ def main():
     except GraphException, e:
         sys.stderr.write('Unable to fetch graph infos: %s\n' % e)
         num_sources = 0
+
+    # If argument 2 is given, we know the base url to the installation and can add
+    # links to hosts and services. ubercomfortable!
+    if context.get('PARAMETER_2'):
+        base_url = context['PARAMETER_2'].rstrip('/')
+        host_url = base_url + context['HOSTURL']
+
+        context['LINKEDHOSTNAME'] = '<a href="%s">%s</a>' % (host_url, context['HOSTNAME'])
+        context['HOSTLINK']       = '\nLink:     %s' % host_url
+
+        if context['WHAT'] == 'SERVICE':
+            service_url = base_url + context['SERVICEURL']
+            context['LINKEDSERVICEDESC'] = '<a href="%s">%s</a>' % (service_url, context['SERVICEDESC'])
+            context['SERVICELINK']       = '\nLink:     %s' % service_url
+    else:
+        context['LINKEDHOSTNAME']    = context['HOSTNAME']
+        context['LINKEDSERVICEDESC'] = context['SERVICEDESC']
+        context['HOSTLINK']          = ''
+        context['SERVICELINK']       = ''
 
     attachments = []
     graph_code = ''

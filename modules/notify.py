@@ -319,7 +319,8 @@ def do_notify(args):
         crash_dir = var_dir + "/notify"
         if not os.path.exists(crash_dir):
             os.makedirs(crash_dir)
-        file(crash_dir + "/crash.log", "a").write("CRASH:\n%s\n\n" % format_exception())
+        file(crash_dir + "/crash.log", "a").write("CRASH (%s):\n%s\n" %
+            (time.strftime("%Y-%m-%d %H:%M:%S"), format_exception()))
 
 
 def notify_data_available():
@@ -484,10 +485,12 @@ def notify_notify(context):
     elif notify_mode == 'fake-host':
         set_fake_env('host', context)
 
-    context['HOSTURL'] = '/check_mk/view.py?view_name=hoststatus&host=%s' % urlencode(context['HOSTNAME'])
+    context['HOSTURL'] = '/check_mk/index.py?start_url=%s' % \
+                        urlencode('view.py?view_name=hoststatus&host=%s' % context['HOSTNAME'])
     if context['WHAT'] == 'SERVICE':
-        context['SERVICEURL'] = '/check_mk/view.py?view_name=service&host=%s&service=%s' % \
-                                 (urlencode(context['HOSTNAME']), urlencode(context['SERVICEDESC']))
+        context['SERVICEURL'] = '/check_mk/index.py?start_url=%s' % \
+                                    urlencode('view.py?view_name=service&host=%s&service=%s' %
+                                                 (context['HOSTNAME'], context['SERVICEDESC']))
 
     if notify_mode in [ 'fake-service', 'fake-host' ]:
         sys.exit(call_notification_script(plugin, [], context, True))

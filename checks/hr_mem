@@ -37,7 +37,7 @@ def inventory_hr_mem(info):
             if saveint(hrsize) > 0: # some device have zero (broken) values
                 return [(None, "memused_default_levels")]
 
-def check_hr_mem(item, params, info):
+def check_hr_mem(_no_item, params, info):
     usage = {}
     for hrtype, hrdescr, hrunits, hrsize, hrused in info:
         if hrtype in [ ".1.3.6.1.2.1.25.2.1.2",
@@ -47,7 +47,7 @@ def check_hr_mem(item, params, info):
 	    # We use only the first entry of each type. We have
 	    # seen devices (pfSense), that have lots of additional
             # entries that are not useful.
-	    if hrtype not in usage:
+	    if hrtype not in usage and hrdescr != "Virtual memory":
 	        usage[hrtype] = (size, used)
 
     # Account for cached memory (this works at least for systems using

@@ -2,43 +2,24 @@ Title: checkmk.js - Bug with IE
 Component: multisite
 State: open
 Date: 2013-08-26 10:21:49
-Targetversion: 1.2.3
+Targetversion: 1.2.3i2
 Class: bug
 
-came in via feedback@  //  original mail still available at feedback/gitbug folder
+Since upgrade to 1.2.2p1 the Check_MK web page produces an error warning on
+IE8 and IE9 browsers. I have a clean install of OMD release and the behaviour
+is the same on that. The same page on Firefox browser loads OK.
 
-From: "Phelps, Ian" <ian.phelps@ts.fujitsu.com>
-To: "feedback@check-mk.org" <feedback@check-mk.org>
-Date: Thu, 8 Aug 2013 11:43:21 +0200
-Subject: [Bug]: checkmk.js - 'undefined' is null or not an object - line 131
-
-Dear Check_MK
-
- 
-
-Since upgrade to 1.2.2p1 the Check_MK web page produces an error warning on IE8 and IE9 browsers. I have a clean install of OMD release and the behaviour is the same on that. The same page on Firefox browser loads OK.
-
- 
-
-To be more specific, the page loads initially OK but very soon after the error flag is generated in IE status bar. My suspicion is that it is related to page refresh with the dynamic ID (used I assume to avoid refresh from cache).
-
- 
+To be more specific, the page loads initially OK but very soon after the error
+flag is generated in IE status bar. My suspicion is that it is related to
+page refresh with the dynamic ID (used I assume to avoid refresh from cache).
 
 The error detail says
 
- 
-
 Webpage error details
-
- 
 
 User Agent: Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; InfoPath.3; .NET4.0C; .NET4.0E; Zune 4.7; MS-RTC LM 8)
 
 Timestamp: Thu, 8 Aug 2013 08:19:22 UTC
-
- 
-
- 
 
 Message: 'undefined' is null or not an object
 
@@ -50,15 +31,15 @@ Code: 0
 
 URI: https://n02demgfgcp10.ts.fujitsu.com/check_mk/js/checkmk.js
 
- 
+This seems to cause an error in the sidebar tools. On IE8/9 clients the
+Server Time snapin and the Tactical Overview snapin are not updated. On
+Firefox these do behave as expected.
 
-This seems to cause an error in the sidebar tools. On IE8/9 clients the Server Time snapin and the Tactical Overview snapin are not updated. On Firefox these do behave as expected.
-
- 
-
-I have a workaround to check for missing/undefined URL as a 1st test in the get_url function in checkmk.js. But I can’t figure out which routine is calling get_url with a missing parameter. (found this by adding “alert(url);” in the function. I will try to run it again in firefox and IE side by side to see if any further hints.)
-
- 
+I have a workaround to check for missing/undefined URL as a 1st test
+in the get_url function in checkmk.js. But I can’t figure out which
+routine is calling get_url with a missing parameter. (found this by adding
+“alert(url);” in the function. I will try to run it again in firefox
+and IE side by side to see if any further hints.)
 
 [root@OMDTest js]# diff checkmk.js checkmk.js.original
 
@@ -95,21 +76,3 @@ Ian Phelps
 FTS SBG MIS DCSC
 
  
-
-imap://feedback@mail.mathias-kettner.de:993/fetch%3EUID%3E/INBOX%3E5503?part=1.2&filename=image001.png
-
-FUJITSU
-
-Fujitsu Technology Solutions Ltd.
-
-Lovelace Road, Bracknell, Berkshire, RG12 8SN, UK
-
-Tel: +44 (843) 354 1830
-
-Mob.: +44 7867 834107
-
-E-mail: ian.phelps@ts.fujitsu.com
-
-Web: fujitsu.com/fts
-
-Company details: fujitsu.com/fts/imprint

@@ -3913,6 +3913,7 @@ def do_snmptranslate(walk):
         sys.stderr.flush()
         process_lines = walk_lines[i:i+entries_per_cycle]
         translated_lines.extend(translate(process_lines))
+    sys.stderr.write("\n")
 
     # Output formatted
     longest_translation = 40

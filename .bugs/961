@@ -5,17 +5,6 @@ Date: 2013-08-08 11:43:24
 Targetversion: future
 Class: feature
 
-kam per feedback@ rein, Orginal-Mail ist im feedback/gitbug eroeffnet folder noch vorhanden
-
-
-Date: Thu, 25 Jul 2013 18:25:38 +0200
-Message-ID: <CAPyBW-xa=wLVp4CfyBgUY6j6GKi-0JNG=kif3GBc3qnYv2sixA@mail.gmail.com>
-Subject: [Patch]: Erweiterung des aktiven HTTP Checks mit "Allow regex to span newlines"
-From: Marcel Schulte <schulte.marcel@gmail.com>
-To: feedback@check-mk.org
-
-Hallo ihr MK'ler,
-
 ich habe den Check um die genante Funktion erweitert. Dazu findet ihr
 im Anhang die Patches fuer folgende Dateien:
 
@@ -26,9 +15,6 @@ Waere echt toll, wenn ihr die einbauen koenntet
 
 Ach ja, ich habe gegen 1.2.2p2 gepatcht - vielleicht schaffen es die
 Patches ja noch ins naechste Release der 1.2.2?
-
-Schoene Gruesse aus'm Sauerland,
-Marcel
 
 
 check_http.patch

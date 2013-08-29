@@ -200,9 +200,9 @@ def render_grouped_boxes(rows, view, group_painters, painters, num_columns, show
             else:
                 trclass = "odd"
             # state = row.get("service_state", row.get("aggr_state"))
-            state = row.get("service_state")
+            state = saveint(row.get("service_state"))
             if state == None:
-                state = row.get("host_state", 0)
+                state = saveint(row.get("host_state", 0))
                 if state > 0: state +=1 # 1 is critical for hosts
             stale = ''
             if is_stale(row):

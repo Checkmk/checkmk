@@ -5,18 +5,6 @@ Date: 2013-08-26 09:45:18
 Targetversion: 1.2.3
 Class: cleanup
 
-came in via checkmk-en@   //   original email still available in feedback/gitbug folder
-
-
-From: "Dan Urist" <durist@ucar.edu>
-To: "checkmk-en@lists.mathias-kettner.de" <checkmk-en@lists.mathias-kettner.de>
-X-Mailer: CommuniGate Pro WebUser v6.0.5
-Date: Wed, 07 Aug 2013 13:08:20 -0600
-Message-ID: <web-47829324@mail.ucar.edu>
-MIME-Version: 1.0
-X-Virus-Scanned: amavisd-new at ucar.edu
-Subject: [Check_mk (english)] check_mk_agent with pacemaker cluster
-
 Currently, check_mk_agent attempts to get cluster status information
 with cl_status. It runs the command 'cls_status rscstatus', but in
 newer pacemaker clusters that results in the following error, which

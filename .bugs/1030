@@ -28,8 +28,5 @@ HOST-RESOURCES-MIB::hrStorageDescr.7 = STRING: Cached memory
 HOST-RESOURCES-MIB::hrStorageDescr.8 = STRING: Shared memory
 HOST-RESOURCES-MIB::hrStorageDescr.10 = STRING: Swap space
 
-Gruß
-Christof
-
 2013-08-28 12:27:55: changed state open -> done
 Should be fixed now.

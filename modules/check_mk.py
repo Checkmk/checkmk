@@ -3907,12 +3907,13 @@ def do_snmptranslate(walk):
     translated_lines = []
 
     walk_lines = file(path_walk).readlines()
-    print("Processing %d lines (%d per dot)" %  (len(walk_lines), entries_per_cycle))
+    sys.stderr.write("Processing %d lines (%d per dot)\n" %  (len(walk_lines), entries_per_cycle))
     for i in range(0, len(walk_lines), entries_per_cycle):
-        sys.stdout.write(".")
-        sys.stdout.flush()
+        sys.stderr.write(".")
+        sys.stderr.flush()
         process_lines = walk_lines[i:i+entries_per_cycle]
         translated_lines.extend(translate(process_lines))
+    sys.stderr.write("\n")
 
     # Output formatted
     longest_translation = 40

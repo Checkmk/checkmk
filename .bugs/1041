@@ -1,0 +1,12 @@
+Title: cmc problem with parents
+Component: core
+State: open
+Date: 2013-08-30 12:37:32
+Targetversion: 1.2.3
+Class: bug
+
+when running site with cmc, parents of a host are not shown in multisite gui in host status page
+even if there are configured some
+maybe parent hosts are ignored completely??
+
+if running the same site with nagios core, the parents are displayed on host status page

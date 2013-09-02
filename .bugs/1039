@@ -61,3 +61,26 @@ soweit nachvollziehen kann.
 In der 1.1.10p3 war dieser Bug definitiv nicht drin.
 
 Getestet habe ich mit den Nagios Versionen 3.2.1 und 3.5.0, bei beiden tritt diese falsche JSON Kodierung auf.
+
+
+2013-09-02 bs:
+das letzte Komma ist definitiv falsch
+Der Bug ist in der 1.2.2p2 vorhanden, in der 1.2.3i1 aber bereits gefixt,
+da ist das Komma nicht drin:
+
+OMD[bs2nd]:~/testdata$ (echo 'GET services'; echo 'Columns: host_name comments_with_info'; echo 'Filter: host_name = localhost'; echo 'OutputFormat: json') | unixcat ~/tmp/run/live
+[["localhost",[]],
+["localhost",[]],
+["localhost",[]],
+["localhost",[]],
+["localhost",[]],
+["localhost",[]],
+["localhost",[]],
+["localhost",[[1,"omdadmin","test for comment bug"],[2,"omdadmin","Testing"]]]]
+
+
+2013-09-02 bs:
+interne Frage:
+Der Bug ist in der 1.2.2p2 vorhanden, in der 1.2.3i1 aber bereits gefixt.
+Was muessen wir auf den Stable-Branch mergen, damit das Problem auch in der
+naechsten Stable-Version gefixt ist?

@@ -36,6 +36,8 @@ def parse_snmp_ticks(value):
     seconds += days * 8640000
     seconds += hours * 360000
     seconds += minutes * 6000
+    # We use floats here to have even subseconds be processed. This
+    # is different to the old SNMP implementation within Check_MK.
     return seconds
 
 def strip_snmp_value(value):

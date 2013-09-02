@@ -1,9 +1,9 @@
 Title: livestatus bug in OutputFormat: json
 Component: livestatus
-State: open
+Class: bug
+State: done
 Date: 2013-08-27 16:02:02
 Targetversion: 1.2.3i2
-Class: bug
 
 Hi,
 
@@ -84,3 +84,6 @@ interne Frage:
 Der Bug ist in der 1.2.2p2 vorhanden, in der 1.2.3i1 aber bereits gefixt.
 Was muessen wir auf den Stable-Branch mergen, damit das Problem auch in der
 naechsten Stable-Version gefixt ist?
+
+2013-09-02 12:35:30: changed state open -> done
+Fix vom master nach 1.2.2 nachgezogen

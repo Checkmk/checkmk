@@ -18,7 +18,7 @@
 # It is also possible to override or extend the ssl_ports variable to make the
 # check contact other ports than 443 with HTTPS requests.
 
-import os, sys, urllib2
+import os, sys, urllib2, re
 
 config_dir = os.getenv("MK_CONFDIR", "/etc/check_mk")  
 config_file = config_dir + "/apache_status.conf"
@@ -43,7 +43,9 @@ def try_detect_servers():
         if len(parts) < 7 or '/' not in parts[6]:
             continue
 
-        pid, proc = parts[6].split('/')
+        pid, proc = parts[6].split('/', 1)
+        to_replace = re.compile('^.*/')
+        proc = to_replace.sub('', proc)
 
         procs = [ 'apache2', 'httpd', 'httpd2-prefork', 'httpd2-worker', 'httpd.worker' ]
         # the pid/proc field length is limited to 19 chars. Thus in case of

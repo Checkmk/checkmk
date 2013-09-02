@@ -74,6 +74,7 @@
     * win_printers: Monitoring of printer queue on a windows printserver
     * FIX: hr_mem: handle virtual memory correct on some devices
     * FIX: apache_status agent plugin: now also works, if prog name contains slashes
+    * FIX: check_dns: parameter -A does not get an additional string
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a

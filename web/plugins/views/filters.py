@@ -112,12 +112,10 @@ declare_filter(102, FilterIPAddress())
 
 
 # Helper that retrieves the list of host/service/contactgroups via Livestatus
+# use alias by default but fallback to name if no alias defined
 def all_groups(what):
     groups = dict(html.live.query("GET %sgroups\nColumns: name alias\n" % what))
-    names = groups.keys()
-    names.sort()
-    # use alias by default but fallback to name if no alias defined
-    return [ (name, groups[name] or name) for name in names ]
+    return [ (name, groups[name] or name) for name in groups.keys() ]
 
 class FilterGroupCombo(Filter):
     def __init__(self, what, title, enforce):
@@ -137,7 +135,7 @@ class FilterGroupCombo(Filter):
         choices = all_groups(self.what.split("_")[-1])
         if not self.enforce:
             choices = [("", "")] + choices
-        html.select(self.htmlvars[0], choices)
+        html.sorted_select(self.htmlvars[0], choices)
         if not self.enforce:
             html.write(" <nobr>")
             html.checkbox(self.htmlvars[1], label=_("negate"))

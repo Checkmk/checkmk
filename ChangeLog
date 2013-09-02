@@ -81,6 +81,7 @@
     * HTML notifications: Now adding optional links to host- and service names
       when second argument notification script is configured to the base url of the
       monitoring installation (e.g. http://<host>/<site>/ in case of OMD setups)
+    * HTML notifications: Added time of state change
 
     Multisite:
     * User accounts can now be locked after a specified amount of auth

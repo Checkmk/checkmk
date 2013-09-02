@@ -282,7 +282,7 @@ def paint_service_state_short(row):
         state = "p"
         name = "PEND"
     if is_stale(row):
-        state += " stale"
+        state = str(state) + " stale"
     return "state svcstate state%s" % state, name
 
 def paint_host_state_short(row):
@@ -294,7 +294,7 @@ def paint_host_state_short(row):
         state = "p"
         name = "PEND"
     if is_stale(row):
-        state += " stale"
+        state = str(state) + " stale"
     return "state hstate hstate%s" % state, name
 
 multisite_painters["service_nagios_link"] = {

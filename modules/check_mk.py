@@ -713,6 +713,42 @@ def check_interval_of(hostname, checkname):
         if match is None or match == checkname:
             return minutes # use first match
 
+def snmp_get_oid(hostname, oid):
+    s = init_snmp_host(hostname)
+
+    if oid[-2:] == ".*":
+        oid_prefix = oid[:-2]
+        func       = s.getnext
+        what       = 'GETNEXT'
+    else:
+        oid_prefix = oid
+        func       = s.get
+        what       = 'GET'
+
+    if opt_debug:
+        sys.stdout.write("Executing SNMP %s of %s on %s\n" % (what, oid_prefix, hostname))
+
+    var_list = netsnmp.VarList(netsnmp.Varbind(oid))
+    res = s.get(var_list)
+
+    for var in var_list:
+        value = var.val
+
+        if what == "GETNEXT" and not var.tag.startswith(oid_prefix + "."):
+            # In case of .*, check if prefix is the one we are looking for
+            value = None
+
+        elif value == 'NULL':
+            value = None
+
+        elif value is not None and value[0] == '"' and value[0] == '"':
+            value = value[1:-1]
+
+        if opt_verbose and opt_debug:
+            sys.stdout.write("=> [%r] %s\n" % (value, var.type))
+
+        return value
+
 def get_single_oid(hostname, ipaddress, oid):
     # New in Check_MK 1.1.11: oid can end with ".*". In that case
     # we do a snmpgetnext and try to find an OID with the prefix
@@ -735,43 +771,11 @@ def get_single_oid(hostname, ipaddress, oid):
         else:
             return None
 
-    if oid.endswith(".*"):
-        oid_prefix = oid[:-2]
-        commandtype = "getnext"
-    else:
-        oid_prefix = oid
-        commandtype = "get"
-
-    portspec = snmp_port_spec(hostname)
-    command = snmp_base_command(commandtype, hostname) + \
-         " -On -OQ -Oe -Ot %s%s %s 2>/dev/null" % (ipaddress, portspec, oid_prefix)
     try:
-        if opt_debug:
-            sys.stdout.write("Running '%s'\n" % command)
-
-        snmp_process = os.popen(command, "r")
-        line = snmp_process.readline().strip()
-        item, value = line.split("=", 1)
-        value = value.strip()
-        if opt_debug:
-            sys.stdout.write("SNMP answer: ==> [%s]\n" % value)
-        if value.startswith('No more variables') or value.startswith('End of MIB') \
-           or value.startswith('No Such Object available') or value.startswith('No Such Instance currently exists'):
-            value = None
-
-        # In case of .*, check if prefix is the one we are looking for
-        if commandtype == "getnext" and not item.startswith(oid_prefix + "."):
-            value = None
-
-        # Strip quotes
-        if value.startswith('"') and value.endswith('"'):
-            value = value[1:-1]
-        # try to remove text, only keep number
-        # value_num = value_text.split(" ")[0]
-        # value_num = value_num.lstrip("+")
-        # value_num = value_num.rstrip("%")
-        # value = value_num
+        value = snmp_get_oid(hostname, oid)
     except:
+        if opt_debug:
+            raise
         value = None
 
     g_single_oid_cache[oid] = value
@@ -808,7 +812,12 @@ def snmp_scan(hostname, ipaddress):
                 snmp_scan_functions.get(basename))
         if scan_function:
             try:
-                if scan_function(lambda oid: get_single_oid(hostname, ipaddress, oid)):
+                result = scan_function(lambda oid: get_single_oid(hostname, ipaddress, oid))
+                if result is not None and type(result) not in [ str, bool ]:
+                    if opt_debug:
+                        sys.stderr.write("[%s] Scan function returns invalid type (%s).\n" %
+                                                                (check_type, type(result)))
+                elif result:
                     found.append(check_type)
                     if opt_verbose:
                         sys.stdout.write(tty_green + tty_bold + check_type
@@ -2971,8 +2980,12 @@ no_inventory_possible = None
     # snmp hosts
     output.write("def is_snmp_host(hostname):\n   return %r\n\n" % is_snmp_host(hostname))
     output.write("def is_tcp_host(hostname):\n   return %r\n\n" % is_tcp_host(hostname))
-    output.write("def snmp_walk_command(hostname):\n   return %r\n\n" % snmp_walk_command(hostname))
+    output.write("def snmp_credentials_of(hostname):\n   return %r\n\n" % snmp_credentials_of(hostname))
     output.write("def is_usewalk_host(hostname):\n   return %r\n\n" % is_usewalk_host(hostname))
+    output.write("def is_bulkwalk_host(hostname):\n   return %r\n\n" % is_bulkwalk_host(hostname))
+    output.write("def is_snmpv2c_host(hostname):\n   return %r\n\n" % is_snmpv2c_host(hostname))
+    output.write("def snmp_timing_of(hostname):\n   return %r\n\n" % snmp_timing_of(hostname))
+    output.write("def snmp_port_of(hostname):\n   return %r\n\n" % snmp_port_of(hostname))
 
     # IP addresses
     needed_ipaddresses = {}

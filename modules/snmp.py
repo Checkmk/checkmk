@@ -69,52 +69,87 @@ def convert_from_hex(value):
 def oid_to_bin(oid):
     return u"".join([ unichr(int(p)) for p in oid.strip(".").split(".") ])
 
+import netsnmp
 
-def snmpwalk_on_suboid(hostname, ip, oid):
-    portspec = snmp_port_spec(hostname)
-    command = snmp_walk_command(hostname) + \
-             " -OQ -OU -On -Ot %s%s %s 2>/dev/null" % (ip, portspec, oid)
-    if opt_debug:
-        sys.stderr.write('   Running %s\n' % (command,))
-    snmp_process = os.popen(command, "r").xreadlines()
+g_snmp_sessions = {}
 
-    # Ugly(1): in some cases snmpwalk inserts line feed within one
-    # dataset. This happens for example on hexdump outputs longer
-    # than a few bytes. Those dumps are enclosed in double quotes.
-    # So if the value begins with a double quote, but the line
-    # does not end with a double quote, we take the next line(s) as
-    # a continuation line.
-    rowinfo = []
+def init_snmp_host(hostname):
     try:
-        while True: # walk through all lines
-            line = snmp_process.next().strip()
-            parts = line.split('=', 1)
-            if len(parts) < 2:
-                continue # broken line, must contain =
-            oid = parts[0].strip()
-            value = parts[1].strip()
-            # Filter out silly error messages from snmpwalk >:-P
-            if value.startswith('No more variables') or value.startswith('End of MIB') \
-               or value.startswith('No Such Object available') or value.startswith('No Such Instance currently exists'):
-                continue
-
-            if len(value) > 0 and value[0] == '"' and value[-1] != '"': # to be continued
-                while True: # scan for end of this dataset
-                    nextline = snmp_process.next().strip()
-                    value += " " + nextline
-                    if value[-1] == '"':
-                        break
-            rowinfo.append((oid, strip_snmp_value(value)))
-
-    except StopIteration:
+        return g_snmp_sessions[hostname]
+    except KeyError:
         pass
 
-    exitstatus = snmp_process.close()
-    if exitstatus:
+    credentials = snmp_credentials_of(hostname)
+    version = 1
+    if type(credentials) == str:
+        if is_bulkwalk_host(hostname) or is_snmpv2c_host(hostname):
+            version = 2
+    else:
+        version = 3
+        if len(credentials) == 6:
+            sec_level, auth_proto, sec_name, auth_pass, priv_proto, priv_pass = credentials
+        elif len(credentials) == 4:
+            sec_level, auth_proto, sec_name, auth_pass = credentials
+            priv_proto = 'DEFAULT'
+            priv_pass  = ''
+        else:
+            raise MKGeneralException("Invalid SNMP credentials '%r' for host %s: must be string, 4-tuple or 6-tuple" % (credentials, hostname))
+
+    try:
+        ipaddress = lookup_ipaddress(hostname)
+    except:
+        sys.stdout.write("Cannot resolve %s into IP address. Skipping.\n" % hostname)
+        return None
+
+    if version != 3:
+        s = netsnmp.Session(Version = version, DestHost = ipaddress, Community = credentials)
+    else:
+        s = netsnmp.Session(Version = version, DestHost = ipaddress,
+            SecLevel  = sec_level,
+            AuthProto = auth_proto.upper(),
+            AuthPass  = auth_pass,
+            SecName   = sec_name,
+            PrivProto = priv_proto.upper(),
+            PrivPass  = priv_pass
+        )
+
+    s.UseNumeric = 1
+    s.UseSprintValue = 1
+
+    g_snmp_sessions[hostname] = s
+    return s
+
+def snmpwalk_on_suboid(hostname, ip, oid):
+    s = init_snmp_host(hostname)
+
+    # FIXME: handle bulkwalk/getnext walk
+
+    # Remove trailing .0 for walks
+    # .1.3.6.1.2.1.1.5.0 but receive the value for 1.3.6.1.2.1.1.6.0.
+    if oid[-2:] == '.0':
+        oid = oid[:-2]
+
+    if opt_debug:
+        sys.stdout.write("Executing SNMPWALK of %s on %s\n" % (oid, hostname))
+
+    var_list = netsnmp.VarList(netsnmp.Varbind(oid))
+    res = s.walk(var_list)
+    if s.ErrorNum != 0:
         if opt_verbose:
-            sys.stderr.write(tty_red + tty_bold + "ERROR: " + tty_normal + "SNMP error\n")
-	raise MKSNMPError("SNMP Error on %s" % ip)
-    return rowinfo
+            # s.ErrorStr, s.ErrorNum, s.ErrorInd
+            sys.stderr.write(tty_red + tty_bold + "ERROR: " + tty_normal + "SNMP error (%s)\n" % s.ErrorStr)
+        raise MKSNMPError('SNMP Error on %s while walking %s.' % (hostname, oid))
+
+    results = []
+    for var in var_list:
+        this_oid = var.tag + '.' + var.iid
+        value    = strip_snmp_value(var.val)
+
+        if opt_verbose and opt_debug:
+            sys.stdout.write("%s => [%s] %r\n" % (this_oid, value, var.type))
+
+        results.append((this_oid, value))
+    return results
 
 def extract_end_oid(prefix, complete):
     return complete[len(prefix):].lstrip('.')

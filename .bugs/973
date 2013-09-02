@@ -1,9 +1,9 @@
 Title: problem in check options for check_dns
 Component: checks
-State: open
+Class: bug
+State: done
 Date: 2013-08-09 16:39:44
 Targetversion: 1.2.3i2
-Class: bug
 
 bin gerade in WATO auf einen Punkt gestoßen, den ich für einen Fehler
 halte, und zwar beim Konfigurieren eines aktiven DNS-Checks unter
@@ -26,3 +26,7 @@ Ich hab mir in WATO erstmal durch Eingabe von '' (also leerem String)
 geholfen. Ich bin noch nicht so vertraut mit Check_MK, daher wollte ich
 lieber erstmal hier nachfragen - als Alternative zu einem Bug-Report.
 
+
+2013-09-02 12:35:21: changed state open -> done
+FIX: check_dns: parameter -A does not get an additional string
+it is handled as a boolean now

@@ -93,7 +93,8 @@ def init_snmp_host(hostname):
             priv_proto = 'DEFAULT'
             priv_pass  = ''
         else:
-            raise MKGeneralException("Invalid SNMP credentials '%r' for host %s: must be string, 4-tuple or 6-tuple" % (credentials, hostname))
+            raise MKGeneralException("Invalid SNMP credentials '%r' for host %s: "
+                                     "must be string, 4-tuple or 6-tuple" % (credentials, hostname))
 
     try:
         ipaddress = lookup_ipaddress(hostname)
@@ -119,10 +120,11 @@ def init_snmp_host(hostname):
     g_snmp_sessions[hostname] = s
     return s
 
-def snmpwalk_on_suboid(hostname, ip, oid):
+def snmpwalk_on_suboid(hostname, oid, strip_values = True):
     s = init_snmp_host(hostname)
 
-    # FIXME: handle bulkwalk/getnext walk
+    # FIXME: handle bulkwalk/getnext walk. At the moment it seems only
+    # a getnext walk is done in all cases.
 
     # Remove trailing .0 for walks
     # .1.3.6.1.2.1.1.5.0 but receive the value for 1.3.6.1.2.1.1.6.0.
@@ -130,7 +132,7 @@ def snmpwalk_on_suboid(hostname, ip, oid):
         oid = oid[:-2]
 
     if opt_debug:
-        sys.stdout.write("Executing SNMPWALK of %s on %s\n" % (oid, hostname))
+        sys.stdout.write("Executing SNMPWALK of \"%s\" on %s\n" % (oid, hostname))
 
     var_list = netsnmp.VarList(netsnmp.Varbind(oid))
     res = s.walk(var_list)
@@ -142,8 +144,14 @@ def snmpwalk_on_suboid(hostname, ip, oid):
 
     results = []
     for var in var_list:
+        if var.iid is None:
+            continue
+
         this_oid = var.tag + '.' + var.iid
-        value    = strip_snmp_value(var.val)
+        if strip_values:
+            value = strip_snmp_value(var.val)
+        else:
+            value = var.val
 
         if opt_verbose and opt_debug:
             sys.stdout.write("%s => [%s] %r\n" % (this_oid, value, var.type))
@@ -217,7 +225,7 @@ def get_snmp_table(hostname, ip, oid_info):
             if opt_use_snmp_walk or is_usewalk_host(hostname):
                 rowinfo = get_stored_snmpwalk(hostname, fetchoid)
             else:
-                rowinfo = snmpwalk_on_suboid(hostname, ip, fetchoid)
+                rowinfo = snmpwalk_on_suboid(hostname, fetchoid)
 
             columns.append((fetchoid, rowinfo))
             number_rows = len(rowinfo)

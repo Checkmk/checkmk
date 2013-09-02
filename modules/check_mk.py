@@ -578,69 +578,6 @@ def aggregated_service_name(hostname, servicedesc):
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-# Returns command lines for snmpwalk and snmpget including
-# options for authentication. This handles communities and
-# authentication for SNMP V3. Also bulkwalk hosts
-def snmp_walk_command(hostname):
-    return snmp_base_command('walk', hostname) + " -Cc"
-
-# Constructs the basic snmp commands for a host with all important information
-# like the commandname, SNMP version and credentials.
-# This function also changes snmpbulkwalk to snmpwalk for snmpv1.
-def snmp_base_command(what, hostname):
-    # if the credentials are a string, we use that as community,
-    # if it is a four-tuple, we use it as V3 auth parameters:
-    # (1) security level (-l)
-    # (2) auth protocol (-a, e.g. 'md5')
-    # (3) security name (-u)
-    # (4) auth password (-A)
-    # And if it is a six-tuple, it has the following additional arguments:
-    # (5) privacy protocol (DES|AES) (-x)
-    # (6) privacy protocol pass phrase (-X)
-
-    credentials = snmp_credentials_of(hostname)
-    if what == 'get':
-        command = 'snmpget'
-    elif what == 'getnext':
-        command = 'snmpgetnext -Cf'
-    else:
-        command = 'snmpbulkwalk'
-
-    # Handle V1 and V2C
-    if type(credentials) == str:
-        if is_bulkwalk_host(hostname):
-            options = '-v2c'
-        else:
-            if what == 'walk':
-                command = 'snmpwalk'
-            if is_snmpv2c_host(hostname):
-                options = '-v2c'
-            else:
-                options = '-v1'
-        options += " -c '%s'" % credentials
-
-        # Handle V3
-    else:
-        if len(credentials) == 6:
-           options = "-v3 -l '%s' -a '%s' -u '%s' -A '%s' -x '%s' -X '%s'" % tuple(credentials)
-        elif len(credentials) == 4:
-           options = "-v3 -l '%s' -a '%s' -u '%s' -A '%s'" % tuple(credentials)
-        else:
-            raise MKGeneralException("Invalid SNMP credentials '%r' for host %s: must be string, 4-tuple or 6-tuple" % (credentials, hostname))
-
-    # Do not load *any* MIB files. This save lot's of CPU.
-    options += " -m '' -M ''"
-
-    # Configuration of timing and retries
-    settings = snmp_timing_of(hostname)
-    if "timeout" in settings:
-        options += " -t %d" % settings["timeout"]
-    if "retries" in settings:
-        options += " -r %d" % settings["retries"]
-
-    return command + ' ' + options
-
-
 # Determine SNMP community for a specific host.  It the host is found
 # int the map snmp_communities, that community is returned. Otherwise
 # the snmp_default_community is returned (wich is preset with
@@ -738,11 +675,11 @@ def snmp_get_oid(hostname, oid):
             # In case of .*, check if prefix is the one we are looking for
             value = None
 
-        elif value == 'NULL':
+        elif value == 'NULL' or var.type in [ 'NOSUCHINSTANCE', 'NOSUCHOBJECT' ]:
             value = None
 
-        elif value is not None and value[0] == '"' and value[0] == '"':
-            value = value[1:-1]
+        elif value is not None:
+            value = strip_snmp_value(value)
 
         if opt_verbose and opt_debug:
             sys.stdout.write("=> [%r] %s\n" % (value, var.type))
@@ -3953,42 +3890,30 @@ def do_snmpwalk(hostnames):
 def do_snmpwalk_on(hostname, filename):
     if opt_verbose:
         sys.stdout.write("%s:\n" % hostname)
-    ip = lookup_ipaddress(hostname)
-    portspec = snmp_port_spec(hostname)
-    cmd = snmp_walk_command(hostname) + " -On -Ob -OQ -Ot %s%s " % (ip, portspec)
-    if opt_debug:
-        print 'Executing: %s' % cmd
-    out = file(filename, "w")
-    for oid in [ "", "1.3.6.1.4.1" ]: # SNMPv2-SMI::enterprises
-        oids = []
-        values = []
-        if opt_verbose:
-            sys.stdout.write("%s..." % (cmd + oid))
-            sys.stdout.flush()
-        count = 0
-        f = os.popen(cmd + oid)
-        while True:
-            line = f.readline()
-            if not line:
-                break
-            parts = line.split("=", 1)
-            if len(parts) != 2:
-                continue
-            oid, value = parts
-            value = value.rstrip("\n")
-            if value.lstrip().startswith('"'):
-                while value[-1] != '"':
-                    value += f.readline().rstrip("\n")
 
-            if not oid.startswith("."):
-                oid = "." + oid
-            oids.append(oid)
-            values.append(value)
-        for oid, value in zip(oids, values):
-            out.write("%s %s\n" % (oid, value.strip()))
-            count += 1
+    out = file(filename, "w")
+    for oid in [
+            ".1.3.6.1.2.1", # SNMPv2-SMI::mib-2
+            ".1.3.6.1.4.1"  # SNMPv2-SMI::enterprises
+          ]:
         if opt_verbose:
-            sys.stdout.write("%d variables.\n" % count)
+            sys.stdout.write("Walk on \"%s\"..." % oid)
+            sys.stdout.flush()
+        results = snmpwalk_on_suboid(hostname, oid, strip_values = False)
+        for oid, value in results:
+            # FIXME: Need to parse some datatypes to have a compatible data format
+            # with older versions:
+            # .1.3.6.1.2.1.1.3.0 0:1:43:32.82
+            # ->
+            # .1.3.6.1.2.1.1.3.0  620972
+            #
+            # .1.3.6.1.2.1.1.8.0 0:0:00:00.00
+            # ->
+            # .1.3.6.1.2.1.1.8.0  0
+            out.write("%s %s\n" % (oid, value.strip()))
+
+        if opt_verbose:
+            sys.stdout.write("%d variables.\n" % len(results))
 
     out.close()
     if opt_verbose:

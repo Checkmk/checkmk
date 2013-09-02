@@ -30,6 +30,14 @@ OID_END    =  0
 OID_STRING = -1
 OID_BIN    = -2
 
+# 0:2:01:20.13 -> seconds
+def parse_snmp_ticks(value):
+    days, hours, minutes, seconds = map(float, value.split(':'))
+    seconds += days * 8640000
+    seconds += hours * 360000
+    seconds += minutes * 6000
+    return seconds
+
 def strip_snmp_value(value):
     v = value.strip()
     if v.startswith('"'):
@@ -148,8 +156,13 @@ def snmpwalk_on_suboid(hostname, oid, strip_values = True):
             continue
 
         this_oid = var.tag + '.' + var.iid
-        if strip_values:
+
+        if var.type == 'TICKS':
+            value = parse_snmp_ticks(var.val)
+
+        elif strip_values:
             value = strip_snmp_value(var.val)
+
         else:
             value = var.val
 

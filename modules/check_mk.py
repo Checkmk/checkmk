@@ -3901,16 +3901,7 @@ def do_snmpwalk_on(hostname, filename):
             sys.stdout.flush()
         results = snmpwalk_on_suboid(hostname, oid, strip_values = False)
         for oid, value in results:
-            # FIXME: Need to parse some datatypes to have a compatible data format
-            # with older versions:
-            # .1.3.6.1.2.1.1.3.0 0:1:43:32.82
-            # ->
-            # .1.3.6.1.2.1.1.3.0  620972
-            #
-            # .1.3.6.1.2.1.1.8.0 0:0:00:00.00
-            # ->
-            # .1.3.6.1.2.1.1.8.0  0
-            out.write("%s %s\n" % (oid, value.strip()))
+            out.write("%s %s\n" % (oid, value))
 
         if opt_verbose:
             sys.stdout.write("%d variables.\n" % len(results))

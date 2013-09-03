@@ -1959,7 +1959,8 @@ define service {
 }
 """ % (active_service_template, hostname, extra_service_conf_of(hostname, "Check_MK")))
         # Inventory checks - if user has configured them. Not for clusters.
-        if inventory_check_interval and not is_cluster(hostname):
+        if inventory_check_interval and not is_cluster(hostname) \
+            and not service_ignored(hostname,None,'Check_MK inventory'):
             outfile.write("""
 define service {
   use\t\t\t\t%s

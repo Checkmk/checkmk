@@ -298,7 +298,6 @@ def check_cisco_qos(item, params, info):
     infotext += ', Policy-Name: %s, Int-Bandwidth: %s' % (policy_name, format_value(bw))
     return (state, infotext.lstrip(', '), perfdata)
 
-# General JVM checks
 check_info["cisco_qos"] = {
     "service_description"     : "QoS %s",
     "check_function"          : check_cisco_qos,

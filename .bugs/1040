@@ -1,0 +1,14 @@
+Title: job directory should be created with mode 1777
+Component: core
+State: open
+Date: 2013-08-30 10:58:02
+Targetversion: 1.2.3i2
+Class: nastiness
+
+/var/lib/check_mk_agent/job directory is created root.root 755 now
+this way only cronjobs running under root can use mk-job
+
+directory should be created with mode 1777 so cronjobs running under unprivileged
+users can write their files into this directory too
+this should be no security problem, because the t bit makes sure, every user can only
+delete his own files

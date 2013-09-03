@@ -73,6 +73,8 @@
     * df: Negative integer levels for MB left on a device
     * win_printers: Monitoring of printer queue on a windows printserver
     * FIX: hr_mem: handle virtual memory correct on some devices
+    * FIX: apache_status agent plugin: now also works, if prog name contains slashes
+    * FIX: check_dns: parameter -A does not get an additional string
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a
@@ -81,6 +83,7 @@
     * HTML notifications: Now adding optional links to host- and service names
       when second argument notification script is configured to the base url of the
       monitoring installation (e.g. http://<host>/<site>/ in case of OMD setups)
+    * HTML notifications: Added time of state change
 
     Multisite:
     * User accounts can now be locked after a specified amount of auth
@@ -314,6 +317,9 @@
     * FIX: Fixed missing roles in auth.php (in some cases) which resulted in
            non visible pnp graphs and missing nagvis permissions
     * FIX: Fixed label color of black toner perfometers when fuel is low
+    * FIX: Fixed wrong default settings of view filters in localized multisite
+    * FIX: Fixed exception when enabling sounds for views relying on 
+           e.g. alert statistics source
 
     WATO:
     * FIX: fix layout of Auxiliary tags table

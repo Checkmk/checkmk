@@ -22,8 +22,5 @@ notification_logging = 1
 
 After that, standard check_mk mail notification was working again!
 
-br,
-Marco
-
 2013-08-28 12:11:24: changed state open -> closed
 Duplicate

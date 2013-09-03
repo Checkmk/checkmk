@@ -1541,6 +1541,13 @@ def render_view(view, rows, datasource, group_painters, painters,
         if bi.reused_compilation():
             html.add_status_icon("aggrcomp", _("Reused cached compiled BI aggregations (PID %d)") % pid)
 
+        if config.may('wato.users'):
+            try:
+                msg = file(defaults.var_dir + '/web/ldap_sync_fail.mk').read()
+                html.add_status_icon("ldap", _('Last LDAP sync failed! %s') % html.attrencode(msg))
+            except IOError:
+                pass
+
         html.bottom_focuscode()
         if 'Z' in display_options:
             html.bottom_footer()
@@ -2409,17 +2416,18 @@ def row_id(view, row):
 def paint(p, row, tdattrs=""):
     tdclass, content = prepare_paint(p, row)
 
-    if is_stale(row):
-        if not tdclass:
-            tdclass = 'stale'
-        else:
-            tdclass += ' stale'
-
     if tdclass:
         html.write("<td %s class=\"%s\">%s</td>\n" % (tdattrs, tdclass, content))
     else:
         html.write("<td %s>%s</td>" % (tdattrs, content))
     return content != ""
+
+def paint_stalified(row, text):
+    if is_stale(row):
+        return "stale", text
+    else:
+        return "", text
+
 
 def substract_sorters(base, remove):
     for s in remove:
@@ -2575,10 +2583,10 @@ def register_events(row):
     if config.sounds != []:
         host_state = row.get("host_hard_state", row.get("host_state"))
         if host_state != None:
-            html.register_event({0:"up", 1:"down", 2:"unreachable"}[host_state])
+            html.register_event({0:"up", 1:"down", 2:"unreachable"}[saveint(host_state)])
         svc_state = row.get("service_last_hard_state", row.get("service_state"))
         if svc_state != None:
-            html.register_event({0:"up", 1:"warning", 2:"critical", 3:"unknown"}[svc_state])
+            html.register_event({0:"up", 1:"warning", 2:"critical", 3:"unknown"}[saveint(svc_state)])
 
 # The Group-value of a row is used for deciding wether
 # two rows are in the same group or not

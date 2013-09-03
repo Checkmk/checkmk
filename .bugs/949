@@ -1,0 +1,11 @@
+Title: Add directory local/share/check_mk/mibs
+Component: core
+State: open
+Date: 2013-08-29 10:51:27
+Targetversion: future
+Class: nastiness
+
+The option --snmptranslate allows to install SNMP MIBs in that
+directory. In non-OMD-Situtations another directory is being
+used. Setup/OMD should make sure that those directories always
+exist.

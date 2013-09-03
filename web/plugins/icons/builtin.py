@@ -447,6 +447,7 @@ def paint_is_stale(what, row, tags, custom_vars):
             title = _("This host is stale")
         else:
             title = _("This service is stale")
+        title += _(", no data has been received within the last %.1f check periods") % config.staleness_threshold
         return '<img class=icon title="%s" src="images/icon_stale.png">' % title
 
 multisite_icons.append({

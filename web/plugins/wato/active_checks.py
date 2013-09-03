@@ -54,19 +54,13 @@ register_rule(group,
                                   "must end with a dot (.) " )),
                    ),
                    ( "expected_authority",
-                     TextAscii(
-                         title = _("Expected Authority"),
-                         allow_empty = False,
-                         help = _("Optional expect the DNS server to be authoriative"
-                                  "for the lookup ")),
+                     FixedValue(
+                         value  = True,
+                         title  = _("Expect Authoritative DNS Server"),
+                         totext = _("Expect Authoritative"),
+                         help   = _("Optional expect the DNS server to be authoriative"
+                                    "for the lookup ")),
                    ),
-                   #( "expected_authority",
-                   #  FixedValue(
-                   #      value = True,
-                   #      title = _("Expect Authoritative DNS Server"),
-                   #      totext = _("DNS Server must be authoritative for the lookup"),
-                   #           )
-
                    ( "response_time",
                      Tuple(
                          title = _("Expected response time"),

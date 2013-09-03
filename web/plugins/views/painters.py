@@ -274,13 +274,15 @@ multisite_painters["sitealias"] = {
 #   |____/ \___|_|    \_/ |_|\___\___||___/
 #
 
-def paint_service_state_short(row ):
+def paint_service_state_short(row):
     if row["service_has_been_checked"] == 1:
-        state = row["service_state"]
+        state = str(row["service_state"])
         name = nagios_short_state_names[row["service_state"]]
     else:
         state = "p"
         name = "PEND"
+    if is_stale(row):
+        state = str(state) + " stale"
     return "state svcstate state%s" % state, name
 
 def paint_host_state_short(row):
@@ -291,6 +293,8 @@ def paint_host_state_short(row):
     else:
         state = "p"
         name = "PEND"
+    if is_stale(row):
+        state = str(state) + " stale"
     return "state hstate hstate%s" % state, name
 
 multisite_painters["service_nagios_link"] = {
@@ -317,25 +321,24 @@ multisite_painters["site_icon"] = {
     "sorter"  : 'site',
 }
 
-
 multisite_painters["svc_plugin_output"] = {
     "title"   : _("Output of check plugin"),
     "short"   : _("Status detail"),
     "columns" : ["service_plugin_output"],
-    "paint"   : lambda row: ("", format_plugin_output(row["service_plugin_output"], row)),
+    "paint"   : lambda row: paint_stalified(row, format_plugin_output(row["service_plugin_output"], row)),
     "sorter"  : 'svcoutput',
 }
 multisite_painters["svc_long_plugin_output"] = {
     "title"   : _("Long output of check plugin (multiline)"),
     "short"   : _("Status detail"),
     "columns" : ["service_long_plugin_output"],
-    "paint"   : lambda row: (None, row["service_long_plugin_output"].replace('\\n', '<br>')),
+    "paint"   : lambda row: paint_stalified(row, row["service_long_plugin_output"].replace('\\n', '<br>')),
 }
 multisite_painters["svc_perf_data"] = {
     "title" : _("Service performance data"),
     "short" : _("Perfdata"),
     "columns" : ["service_perf_data"],
-    "paint" : lambda row: (None, row["service_perf_data"])
+    "paint" : lambda row: paint_stalified(row, row["service_perf_data"])
 }
 
 def get_perfdata_nth_value(row, n, remove_unit = False):
@@ -357,7 +360,7 @@ def get_perfdata_nth_value(row, n, remove_unit = False):
         return str(e)
 
 def paint_perfdata_nth_value(row, n):
-    return "", get_perfdata_nth_value(row, n)
+    return paint_stalified(row, get_perfdata_nth_value(row, n))
 
 multisite_painters["svc_perf_val01"] = {
     "title" : _("Service performance data - value number  1"),

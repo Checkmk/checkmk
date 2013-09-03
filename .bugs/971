@@ -1,9 +1,9 @@
 Title: apache_status agent plugin: Problem at split if more than one slash in output
 Component: checks
-State: open
+Class: bug
+State: done
 Date: 2013-08-09 14:57:53
 Targetversion: 1.2.3i2
-Class: bug
 
 I just installed the agents plugin apache_status (the version from release 1.2.2p2) on several of my machines.
 On one of the machines it bugs however:
@@ -31,3 +31,6 @@ tcp6       0      0 :::443                  :::*                    LISTEN      
 ----
 Note the ./ts3server_li entries.
 Since there is more than 1 slash in the line, the split will return more than the expected 2 results.
+
+2013-09-02 11:45:03: changed state open -> done
+agent plugin apache_status now also works, if prog name contains slashes

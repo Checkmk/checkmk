@@ -43,13 +43,22 @@ td.state {
     width: 32px;
 }
 
+td.svcstate.stale {
+    background-image: url("images/white_60percent.png");
+    background-repeat: repeat;
+}
+
+table.data tr.data td.stale,
+table.data td.perfometer.stale div.title {
+    color: #888;
+    text-shadow: 0.8px 0.8px 0.8px #fff;
+}
+
+
+
 /* OK/UP */
 .state0, .hstate0, .state0 a, .hstate0 a {
     background-color: #0b3; color: #fff;
-}
-
-.state0.stale, .hstate0.stale, .state0.stale a, .hstate0.stale a {
-    background-color: #9FDDB0; color: #fff;
 }
 
 .hstate {
@@ -60,17 +69,9 @@ td.state {
     background-color: #ff0; color: #000;
 }
 
-.state1.stale, .state1.stale a, tr.groupheader td.state1.stale {
-    background-color: #FFFFCE; color: #BCBCBC;
-}
-
 /* CRIT/DOWN */
 .state2, .hstate1, .state2 a, .hstate2 a {
     background-color: #f00; color: #fff;
-}
-
-.state2.stale, .hstate1.stale, .state2.stale a, .hstate2.stale a {
-    background-color: #FFBFBF; color: #fff;
 }
 
 /* UNKNOWN / UNREACH */
@@ -78,26 +79,14 @@ td.state {
     background-color: #f80; color: #fff;
 }
 
-.state3.stale, .hstate2.stale, .state3.stale a, .hstate2.stale a {
-    background-color: #FFE1BF; color: #fff;
-}
-
 /* PENDING */
 .statep, .hstatep, .statep a, .hstatep a {
     background-color: #888; color: #fff;
 }
 
-.statep.stale, .hstatep.stale, .statep.stale a, .hstatep.stale a {
-    background-color: #D6D6D6; color: #fff;
-}
-
 /* in DOWNTIME */
 .stated, .hstated, .stated a, .hstated a {
     background-color: #0af; color: #fff;
-}
-
-.stated.stale, .hstated.stale, .stated.stale a, .hstated.stale a {
-    background-color: #CCEEFF; color: #fff;
 }
 
 /* inline state markers in check output */
@@ -241,7 +230,6 @@ td.statex {  /* zero count */
 
 /* Row coloring in case of the different states */
 tr.odd0        { background-color: #eee; }
-tr.odd0 td.stale  { background-color: #f4f4f4; }
 tr.even0       { background-color: #ddd; }
 
 td.odd0  { background-color: #eee; }
@@ -329,10 +317,6 @@ table.data td.nobr {
 
 table.data td.center {
     text-align: center;
-}
-
-table.data tr .stale, table.data tr .stale a, table.data tr .stale td.age {
-    color: #b7b7b7;
 }
 
 td.narrow {

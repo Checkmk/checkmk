@@ -1894,7 +1894,8 @@ register_rule(group,
             ( "timeout",
               Integer(
                   title = _("Timeout between retries"),
-                  help = _("The default is 1 sec."),
+                  help = _("A request is sent to the SNMP daemon, than wait up to this "
+                           " number of seconds until retrying."),
                   default_value = 1,
                   minvalue = 1,
                   maxvalue = 60,

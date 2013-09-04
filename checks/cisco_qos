@@ -199,8 +199,8 @@ def check_cisco_qos(item, params, info):
         # to "1" instead of the plicy_if_id
         policy_id = config[policy_if_id+'.1']
     policy_name = policies[policy_id]
-    post_b      = post_bytes[policy_if_id+'.'+policy_if_id2]
-    drop_b      = drop_bytes[policy_if_id+'.'+policy_if_id2]
+    post_b      = post_bytes.get(policy_if_id+'.'+policy_if_id2, 0)
+    drop_b      = drop_bytes.get(policy_if_id+'.'+policy_if_id2, 0)
     speed       = saveint(if_speeds[if_id])
 
     speed_found = False

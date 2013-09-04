@@ -475,7 +475,7 @@ def dashlet_hoststats():
     ]
     filter = "Filter: custom_variable_names < _REALNAME\n"
 
-    render_statistics("hoststats", "hosts", table, filter)
+    render_statistics(html.var('id', "hoststats"), "hosts", table, filter)
 
 def dashlet_servicestats():
     table = [
@@ -530,7 +530,7 @@ def dashlet_servicestats():
     ]
     filter = "Filter: host_custom_variable_names < _REALNAME\n"
 
-    render_statistics("servicestats", "services", table, filter)
+    render_statistics(html.var('id', "servicestats"), "services", table, filter)
 
 
 def render_statistics(pie_id, what, table, filter):
@@ -684,5 +684,3 @@ def render_pnpgraph(site, host, service = None, source = 0, view = 0):
     pnp_url = base_url + "graph" + var_part
     img_url = base_url + "image" + var_part
     html.write('<a href="%s"><img border=0 src="%s"></a>' % (pnp_url, img_url))
-
-# load_plugins()

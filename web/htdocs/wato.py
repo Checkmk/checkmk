@@ -8160,6 +8160,8 @@ def mode_users(phase):
         html.context_button(_("Custom Attributes"), make_link([("mode", "user_attrs")]), "custom_attr")
         if 'wato_users' not in config.userdb_automatic_sync:
             html.context_button(_("Sync Users"), html.makeactionuri([("_sync", 1)]), "replicate")
+        if config.may("general.notify"):
+            html.context_button(_("Notify Users"), 'notify.py', "notification")
         return
 
     # Execute all connectors synchronisations of users. This must be done before

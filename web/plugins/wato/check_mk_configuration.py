@@ -251,6 +251,22 @@ register_configvar(group,
     domain = "multisite")
 
 register_configvar(group,
+    "sidebar_notify_interval",
+    Optional(
+        Float(
+            minvalue = 10.0,
+            default_value = 60.0,
+            unit = "sec",
+            display_format = "%.1f"
+        ),
+        title = _("Interval of sidebar popup notification updates"),
+        help = _("The sidebar can be configured to regularly check for pending popup notififcations. "
+                 "This is disabled by default."),
+        none_label = _('(disabled)'),
+    ),
+    domain = "multisite")
+
+register_configvar(group,
     "adhoc_downtime",
     Optional(
         Dictionary(
@@ -1894,7 +1910,8 @@ register_rule(group,
             ( "timeout",
               Integer(
                   title = _("Timeout between retries"),
-                  help = _("The default is 1 sec."),
+                  help = _("A request is sent to the SNMP daemon, than wait up to this "
+                           " number of seconds until retrying."),
                   default_value = 1,
                   minvalue = 1,
                   maxvalue = 60,

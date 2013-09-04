@@ -472,10 +472,10 @@ class html:
     def select(self, varname, options, deflt="", onchange=None, attrs = {}):
         current = self.var(varname, deflt)
         onchange_code = onchange and " onchange=\"%s\"" % (onchange) or ""
-
+        attrs.setdefault('size', 1)
         attributes = ' ' + ' '.join([ '%s="%s"' % (k, v) for k, v in attrs.iteritems() ])
 
-        self.write("<select%s name=\"%s\" id=\"%s\" size=\"1\"%s>\n" %
+        self.write("<select%s name=\"%s\" id=\"%s\"%s>\n" %
                              (onchange_code, varname, varname, attributes))
         for value, text in options:
             if value == None: value = ""

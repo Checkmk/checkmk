@@ -1086,7 +1086,7 @@ class CascadingDropdown(ValueSpec):
                 vp = varprefix + "_%d" % nr
                 # Form already submitted once (and probably in complain state)
                 if cur_val != None:
-                    def_val_2 = vs.default_value() # not used anyway, form already submitted
+                    def_val_2 = vs.from_html_vars(vp)
                     if cur_val == str(nr):
                         disp = ""
                     else:
@@ -1264,16 +1264,19 @@ class MultiSelect(ListChoice):
     def __init__(self, **kwargs):
         ListChoice.__init__(self, **kwargs)
 
-    def render_input(self, varprefix, value):
-        self.load_elements()
-        html.write("<select multiple name='%s'>" % varprefix)
-        for nr, (key, title) in enumerate(self._elements):
-            if key in value:
+    def _render_field(self, name, choices, selected = []):
+        html.write("<select multiple name=\"%s\">\n" % name)
+        for key, title in choices:
+            if key in selected:
                 sel = " selected"
             else:
                 sel = ""
             html.write('<option value="%s"%s>%s</option>\n' % (key, sel, title))
-        html.write("</select>")
+        html.write("</select>\n")
+
+    def render_input(self, varprefix, value):
+        self.load_elements()
+        self._render_field(varprefix, self._elements, value)
 
     def from_html_vars(self, varprefix):
         self.load_elements()
@@ -1284,8 +1287,46 @@ class MultiSelect(ListChoice):
                 value.append(key)
         return value
 
+# Implements a choice of items which is realized with
+# two ListChoices select fields. One contains all available
+# items and one contains all selected items.
+class DualListChoice(ListChoice):
+    def __init__(self, **kwargs):
+        ListChoice.__init__(self, **kwargs)
 
+    def render_input(self, varprefix, value):
+        self.load_elements()
+        selected   = []
+        unselected = []
+        for e in self._elements:
+            if e[0] in value:
+                selected.append(e)
+            else:
+                unselected.append(e)
 
+        html.write('<table><tr><td>')
+        html.write(_('Available:'))
+        html.write('</td><td>')
+        html.write(_('Selected:'))
+        html.write('</td></tr><tr><td>')
+        html.sorted_select(varprefix + '_unselected', unselected,
+                           attrs = {'size': 5, 'style': 'height:auto'},
+                           onchange = 'vs_duallist_switch(this, \'%s\');' % varprefix)
+        html.write('</td><td>')
+        html.sorted_select(varprefix + '_selected', selected,
+                           attrs = {'size': 5, 'style': 'height:auto', 'multiple': 'multiple'},
+                           onchange = 'vs_duallist_switch(this, \'%s\');' % varprefix)
+        html.write('</td></tr></table>')
+        html.hidden_field(varprefix, '|'.join([k for k, v in selected]), id = varprefix, add_var = True)
+
+    def from_html_vars(self, varprefix):
+        self.load_elements()
+        selected = html.var(varprefix, '').split('|')
+        value = []
+        for key, title in self._elements:
+            if key in selected:
+                value.append(key)
+        return value
 
 # A type-save dropdown choice with one extra field that
 # opens a further value spec for entering an alternative

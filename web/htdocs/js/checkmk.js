@@ -1737,7 +1737,42 @@ function vs_passwordspec_randomize(img) {
     oInput.value = password;
 }
 
+function vs_duallist_switch(field, varprefix) {
+    if (field.id != varprefix + '_selected') {
+        // The other field is the one without "_unselected" suffix
+        var other_id = varprefix + '_selected';
+        var positive = true;
+    } else {
+        // The other field is the one with "_unselected" suffix
+        var other_id = varprefix + '_unselected';
+        var positive = false;
+    }
 
+    var other_field = document.getElementById(other_id);
+    if (!other_field)
+        return;
+
+    var helper = document.getElementById(varprefix);
+    if (!helper)
+        return;
+
+    // Move the selected option to the other select field
+    var selected = field.options[field.selectedIndex];
+    field.removeChild(selected);
+    other_field.appendChild(selected);
+    selected.selected = false;
+
+    // add remove from internal helper field
+    if (positive)
+        var pos_field = other_field;
+    else
+        var pos_field = field;
+    var texts = [];
+    for (var i = 0; i < pos_field.options.length; i++) {
+        texts.push(pos_field.options[i].value);
+    }
+    helper.value = texts.join('|')
+}
 
 function help_enable() {
     var aHelp = document.getElementById('helpbutton');

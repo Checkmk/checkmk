@@ -410,4 +410,38 @@ div.add_snapin div.snapin_preview {
     left: 0px;
 }
 
+/*-Popup Msg-----------------------------------------------------------.
+|           ____                           __  __                      |
+|          |  _ \ ___  _ __  _   _ _ __   |  \/  |___  __ _            |
+|          | |_) / _ \| '_ \| | | | '_ \  | |\/| / __|/ _` |           |
+|          |  __/ (_) | |_) | |_| | |_) | | |  | \__ \ (_| |           |
+|          |_|   \___/| .__/ \__,_| .__/  |_|  |_|___/\__, |           |
+|                     |_|         |_|                 |___/            |
++----------------------------------------------------------------------+
+| Popup message rendering                                              |
+'---------------------------------------------------------------------*/
 
+div.popup_msg {
+    position:absolute;
+    bottom: 35px;
+    left: 20px;
+    width: 200px;
+    padding: 3px;
+
+    background-color: #244452;
+}
+
+div.popup_msg .close {
+    display: block;
+    float: right;
+}
+
+span#msg_label {
+    z-index: 15;
+
+    background-color: #fff;
+    color: #ff0000;
+    padding: 1px;
+    position: relative;
+    border-radius: 5px;
+}

@@ -176,7 +176,7 @@ def page_side():
     if not config.may("general.see_sidebar"):
         return
     html.html_head(_("Check_MK Sidebar"), javascripts=["sidebar"], stylesheets=["sidebar", "status"])
-    html.write('<body class="side" onload="initScrollPos(); setSidebarHeight(); init_messages(%d);" '
+    html.write('<body class="side" onload="initScrollPos(); setSidebarHeight(); init_messages(%s);" '
                'onunload="storeScrollPos()">\n' % config.sidebar_notify_interval or 'null')
     html.write('<div id="check_mk_sidebar">\n')
 

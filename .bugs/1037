@@ -41,3 +41,4 @@ I have had a number of crashes on this server as the Windows machine is
 running on a VM server which has had problems, but the currupt logstate.txt
 file is always 123k in size and looks the same when edited.
 
+2013-08-28: user did supply original logstate.txt file, see feedback/gitbug folder

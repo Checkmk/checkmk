@@ -1,0 +1,10 @@
+Title: Oracle Tablespace Monitoring - TEMP Tablespaces
+Component: checks
+State: open
+Date: 2013-09-04 11:22:25
+Targetversion: 1.4.0
+Class: nastiness
+
+It is senseless to apply thresholds to TEMP tablespaces in oracle. On startup, the tablespace
+is small, but once allocated it grows and grows, but never gets smaller again. So we should
+either completely remove those tablespaces or at least disable the thresholds by default.

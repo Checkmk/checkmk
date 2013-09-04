@@ -131,6 +131,9 @@
     * "Unchecked Services" view now uses the staleness of services for filtering
     * Globe dashlets make use of the parameter "id" to make it possible to
       provide unique ids in the render HTML code to the dashlets
+    * Multisite can now track wether or not a user is online, this need to be
+      enabled e.g. via Global Settings in WATO (Save last access times of
+      users)
     * Added popup message notification system to make it possible to notify
       multisite users about various things. It is linked on WATO Users page at
       the moment. An image will appear for a user in the sidebar footer with

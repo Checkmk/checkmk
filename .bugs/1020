@@ -1,0 +1,12 @@
+Title: cmk --snmpwalk does not always get all oids
+Component: core
+State: open
+Date: 2013-09-04 11:27:53
+Targetversion: 1.2.3
+Class: bug
+
+In some cases, on somehow broken devices, the cmk --snmpwalk feature does not
+get complete results. At the moment it walks the standard OIDs 1.2.6.1.2 and
+1.2.6.1.4.
+
+An option to try to fix this problem is to add the oid returned by .1.3.6.1.2.1.1.2.0 .

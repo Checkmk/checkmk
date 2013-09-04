@@ -656,6 +656,10 @@ function sidebar_scheduler() {
         }
     }
 
+    if (g_sidebar_notify_interval !== null && timestamp % g_sidebar_notify_interval == 0) {
+        update_messages();
+    }
+
     // Detect page changes and re-register the mousemove event handler
     // in the content frame. another bad hack ... narf
     if (contentFrameAccessible() && contentLocation != parent.frames[1].document.location) {
@@ -769,4 +773,89 @@ function add_html_var(url, varname, value) {
     return new_url;
 }
 
+/************************************************
+ * Popup Message Handling
+ *************************************************/
 
+// integer representing interval in seconds or <null> when disabled.
+var g_sidebar_notify_interval;
+
+function init_messages(interval) {
+    g_sidebar_notify_interval = interval;
+
+    // Are there pending messages? Render the initial state of
+    // trigger button
+    update_message_trigger();
+}
+
+function handle_update_messages(_unused, code) {
+    // add new messages to container
+    var c = document.getElementById('messages');
+    if (c) {
+        c.innerHTML = code;
+        update_message_trigger();
+    }
+}
+
+function update_messages() {
+    // Remove all pending messages from container
+    var c = document.getElementById('messages');
+    if (c) {
+        c.innerHTML = '';
+    }
+
+    // retrieve new messages
+    get_url('sidebar_get_messages.py', handle_update_messages);
+}
+
+function update_message_trigger() {
+    var c = document.getElementById('messages');
+    if (c) {
+        var b = document.getElementById('msg_button');
+        var num = c.children.length;
+        if (c.children.length > 0) {
+            // are there pending messages? make trigger visible
+            b.style.display = 'inline';
+
+            // Create/Update a blinking number label
+            var l = document.getElementById('msg_label');
+            if (!l) {
+                var l = document.createElement('span');
+                l.setAttribute('id', 'msg_label');
+                b.appendChild(l);
+            }
+
+            l.innerHTML = '' + c.children.length;
+        } else {
+            // no messages: hide the trigger
+            b.style.display = 'none';
+        }
+    }
+}
+
+function read_message() {
+    var c = document.getElementById('messages');
+    if (!c)
+        return;
+
+    // extract message from teh message container
+    var msg = c.children[0];
+    c.removeChild(msg);
+
+    // open the next message in a window
+    c.parentNode.appendChild(msg);
+    
+    // tell server that the message has been read
+    var msg_id = msg.id.replace('message-', '');
+    get_url('sidebar_message_read.py?id=' + msg_id);
+
+    // Update the button state
+    update_message_trigger();
+}
+
+function message_close(msg_id) {
+    var m = document.getElementById('message-' + msg_id);
+    if (m) {
+        m.parentNode.removeChild(m);
+    }
+}

@@ -131,6 +131,13 @@
     * "Unchecked Services" view now uses the staleness of services for filtering
     * Globe dashlets make use of the parameter "id" to make it possible to
       provide unique ids in the render HTML code to the dashlets
+    * Added popup message notification system to make it possible to notify
+      multisite users about various things. It is linked on WATO Users page at
+      the moment. An image will appear for a user in the sidebar footer with
+      the number of pending messages when there are pending messages for a user.
+      To make the sidebar check for new messages on a regular base, you need
+      to configure the interval of sidebar popup notification updates e.g. via
+      WATO Global Settings.
     * FIX: better error message in case of exception in SNMP handling
     * FIX: Inventory screen: Now shows custom checks
     * FIX: Fixed locking problem of multisite pages related to user loading/saving

@@ -164,7 +164,7 @@ def connect_to_livestatus(html):
 
 # Call the load_plugins() function in all modules
 def load_all_plugins():
-    for module in [ hooks, userdb, views, sidebar, dashboard, wato, bi, mobile ]:
+    for module in [ hooks, userdb, views, sidebar, dashboard, wato, bi, mobile, notify ]:
         try:
             module.load_plugins # just check if this function exists
             module.load_plugins()

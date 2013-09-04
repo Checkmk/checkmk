@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import config, defaults, livestatus, views, pprint, os, copy, userdb
+import notify
 from lib import *
 
 # Constants to be used in snapins
@@ -136,6 +137,19 @@ def sidebar_head():
                '</a>'
                '</div>\n' % (_("Go to main overview"), config.start_url, defaults.check_mk_version))
 
+def render_messages():
+    for msg in notify.get_popup_messages():
+        html.write('<div class="popup_msg" id="message-%s">' % msg['id'])
+        html.write('<a href="javascript:void(0)" class="close" onclick="message_close(\'%s\')">x</a>' % msg['id'])
+        html.write(html.attrencode(msg['text']).replace('\n', '<br />\n'))
+        html.write('</div>\n')
+
+def ajax_get_messages():
+    render_messages()
+
+def ajax_message_read():
+    notify.delete_popup_message(html.var('id'))
+
 def sidebar_foot():
     html.write('<div id="side_footer">')
     if config.may("general.configure_sidebar"):
@@ -144,12 +158,17 @@ def sidebar_foot():
     if config.may("general.edit_profile") or config.may("general.change_password"):
         html.icon_button("user_profile.py", _("Edit your personal settings, change your password"), "sidebar_settings",
                          target="main")
-        # html.write('<li><a class=profile target="main" href="user_profile.py" title="%s"></a></li>' % _('Edit user profile'))
     if config.may("general.logout") and not config.auth_by_http_header:
         html.icon_button("logout.py", _("Log out"), "sidebar_logout", target="_top")
-        # html.write('<li><a class=logout target="_top" href="logout.py" title="%s"></a></li>' % _('Logout'))
-    html.write('</ul>')
-    html.write("<div class=copyright>%s</div>\n" % _("&copy; <a target=\"_blank\" href=\"http://mathias-kettner.de\">Mathias Kettner</a>"))
+
+    html.icon_button("return void();", _("You have pending messages."),
+                     "sidebar_messages", onclick = 'read_message()', id = 'msg_button', style = 'display:none')
+    html.write('<div id="messages" style="display:none;">')
+    render_messages()
+    html.write('</div>')
+
+    html.write("<div class=copyright>%s</div>\n" %
+        _("&copy; <a target=\"_blank\" href=\"http://mathias-kettner.de\">Mathias Kettner</a>"))
     html.write('</div>')
 
 # Standalone sidebar
@@ -157,7 +176,8 @@ def page_side():
     if not config.may("general.see_sidebar"):
         return
     html.html_head(_("Check_MK Sidebar"), javascripts=["sidebar"], stylesheets=["sidebar", "status"])
-    html.write('<body class="side" onload="initScrollPos(); setSidebarHeight();" onunload="storeScrollPos()">\n')
+    html.write('<body class="side" onload="initScrollPos(); setSidebarHeight(); init_messages(%d);" '
+               'onunload="storeScrollPos()">\n' % config.sidebar_notify_interval or 'null')
     html.write('<div id="check_mk_sidebar">\n')
 
     views.load_views()

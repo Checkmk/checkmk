@@ -61,6 +61,15 @@ sidebar = [
     ('master_control',    'closed')
 ]
 
+# Interval of snapin updates in seconds
+sidebar_update_interval = 30.0
+
+# It is possible (but ugly) to enable a scrollbar in the sidebar
+sidebar_show_scrollbar = False
+
+# Enable regular checking for popup notifications
+sidebar_notify_interval = None
+
 #    _     _           _ _
 #   | |   (_)_ __ ___ (_) |_ ___
 #   | |   | | '_ ` _ \| | __/ __|
@@ -146,12 +155,6 @@ page_heading = "Check_MK %s"
 
 # Timeout for rescheduling of host- and servicechecks
 reschedule_timeout = 10.0
-
-# Interval of snapin updates in seconds
-sidebar_update_interval = 30.0
-
-# It is possible (but ugly) to enable a scrollbar in the sidebar
-sidebar_show_scrollbar = False
 
 # Number of columsn in "Filter" form
 filter_columns = 2

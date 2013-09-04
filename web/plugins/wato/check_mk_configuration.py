@@ -251,6 +251,22 @@ register_configvar(group,
     domain = "multisite")
 
 register_configvar(group,
+    "sidebar_notify_interval",
+    Optional(
+        Float(
+            minvalue = 10.0,
+            default_value = 60.0,
+            unit = "sec",
+            display_format = "%.1f"
+        ),
+        title = _("Interval of sidebar popup notification updates"),
+        help = _("The sidebar can be configured to regularly check for pending popup notififcations. "
+                 "This is disabled by default."),
+        none_label = _('(disabled)'),
+    ),
+    domain = "multisite")
+
+register_configvar(group,
     "adhoc_downtime",
     Optional(
         Dictionary(

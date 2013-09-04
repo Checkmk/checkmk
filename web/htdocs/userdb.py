@@ -315,9 +315,16 @@ def load_users(lock = False):
 
     return result
 
+def get_online_user_ids():
+    online_threshold = time.time() - config.user_online_maxage
+    users = []
+    for user_id, user in load_users(lock = False).items():
+        if user.get('last_seen', 0) >= online_threshold:
+            users.append(user_id)
+    return users
+
 def split_dict(d, keylist, positive):
     return dict([(k,v) for (k,v) in d.items() if (k in keylist) == positive])
-
 
 def save_users(profiles):
     custom_values = user_attributes.keys()

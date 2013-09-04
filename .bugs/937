@@ -1,8 +1,11 @@
 Title: Availability timerange "Last year" not working
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2013-09-04 11:23:15
 Targetversion: 1.2.3i2
-Class: bug
 
 see topic
+
+2013-09-04 11:31:56: changed state open -> done
+Text interpretation problem -> user error :)

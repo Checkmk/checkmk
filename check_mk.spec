@@ -138,6 +138,7 @@ install -m 755 $R/usr/share/check_mk/agents/mk-job $R/usr/bin
 mkdir -p $R/usr/lib/check_mk_agent/plugins
 mkdir -p $R/usr/lib/check_mk_agent/local
 mkdir -p $R/var/lib/check_mk_agent
+mkdir -p $R/var/lib/check_mk_agent/job
 
 # logwatch and oracle extension
 install -m 755 $R/usr/share/check_mk/agents/plugins/mk_logwatch $R/usr/lib/check_mk_agent/plugins

@@ -12,3 +12,8 @@ directory should be created with mode 1777 so cronjobs running under unprivilege
 users can write their files into this directory too
 this should be no security problem, because the t bit makes sure, every user can only
 delete his own files
+
+2013-09-05 bs:
+integrated directives in .spec file
+test of rpm packages done
+test of deb packaged tbd

@@ -1313,7 +1313,7 @@ def show_hosts(folder):
         html.write("</td></tr>\n")
 
     # Show table of hosts in this folder
-    html.begin_form("hosts", None, "POST")
+    html.begin_form("hosts", method = "POST")
     html.write("<table class=data>\n")
 
     # Remember if that host has a target folder (i.e. was imported with
@@ -1847,7 +1847,7 @@ def mode_editfolder(phase, new):
         if len(lock_message) > 0:
             html.write("<div class=info>" + lock_message + "</div>")
 
-        html.begin_form("edithost")
+        html.begin_form("edithost", method = "POST")
 
         # title
         forms.header(_("Title"))
@@ -2248,7 +2248,7 @@ def show_service_table(host, firsttime):
 
     table.sort()
 
-    html.begin_form("checks", None, "POST")
+    html.begin_form("checks", method = "POST")
     fixall = 0
     if config.may("wato.services"):
         for entry in table:
@@ -2382,7 +2382,7 @@ def mode_search(phase):
     render_folder_path()
 
     ## # Show search form
-    html.begin_form("edithost")
+    html.begin_form("edithost", method = "POST")
     forms.header(_("General Properties"))
     forms.section(_("Hostname"))
     html.text_input("host")
@@ -2701,7 +2701,7 @@ def mode_bulk_inventory(phase):
         )
 
     else:
-        html.begin_form("bulkinventory", None, "POST")
+        html.begin_form("bulkinventory", method = "POST")
         html.hidden_fields()
 
         # Mode of action
@@ -2785,7 +2785,7 @@ def mode_bulk_edit(phase):
     "hosts share the same setting for this attribute. If you leave that selection, all hosts "
     "will keep their individual settings.") + "</p>")
 
-    html.begin_form("edithost", None, "POST")
+    html.begin_form("edithost", method = "POST")
     configure_attributes(False, hosts, "bulk", parent = g_folder)
     forms.end()
     html.button("_save", _("Save &amp; Finish"))
@@ -2853,7 +2853,7 @@ def mode_bulk_cleanup(phase):
     "default values.") % len(hostnames))
     html.write("</p>")
 
-    html.begin_form("bulkcleanup", None, "POST")
+    html.begin_form("bulkcleanup", method = "POST")
     forms.header(_("Attributes to remove from hosts"))
     if not bulk_cleanup_attributes(g_folder, hosts):
         forms.end()
@@ -3073,7 +3073,7 @@ def mode_parentscan(phase):
         )
 
     else:
-        html.begin_form("parentscan", None, "POST")
+        html.begin_form("parentscan", method = "POST")
         html.hidden_fields()
 
         # Mode of action
@@ -5280,7 +5280,7 @@ def mode_snapshot(phase):
         table.end()
 
         html.write("<h3>" + _("Restore from uploaded file") + "</h3>")
-        html.begin_form("upload_form", None, "POST")
+        html.begin_form("upload_form", method = "POST")
         html.upload_file("_upload_file")
         html.button("upload_button", _("Restore from file"), "submit")
         html.hidden_fields()
@@ -9615,7 +9615,7 @@ def mode_edit_hosttag(phase):
 
 
 
-    html.begin_form("hosttaggroup")
+    html.begin_form("hosttaggroup", method = 'POST')
     forms.header(_("Edit group") + (tag_id and " %s" % tag_id or ""))
 
     # Tag ID
@@ -10337,7 +10337,7 @@ def mode_rulesets(phase):
     html.write('</div>')
 
 def create_new_rule_form(rulespec, hostname = None, item = None, varname = None):
-    html.begin_form("new_rule", add_transid = False)
+    html.begin_form("new_rule", add_transid = False, method = "POST")
 
     html.write('<table>')
     if hostname:

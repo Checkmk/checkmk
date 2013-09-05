@@ -165,6 +165,8 @@
     * FIX: More consistent handling of folderpath select in rule editor
     * FIX: Now correctly handling depends_on_tags on page rendering for
            inherited values
+    * FIX: Changed several forms from GET to POST to prevent "Request-URI too
+           large" error messages during submitting forms
 
     Notifications:
     * Flexible Notification can now filter service levels

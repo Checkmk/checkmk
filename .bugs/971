@@ -34,3 +34,9 @@ Since there is more than 1 slash in the line, the split will return more than th
 
 2013-09-02 11:45:03: changed state open -> done
 agent plugin apache_status now also works, if prog name contains slashes
+
+2013-09-05: User did test, positive:
+I've tried the new apache_status plugin on the server where it previously failed and it now seems to work 
+So good job 
+On servers that had no issues it still works as before as far as I can see (I've tested it on 3 servers).
+

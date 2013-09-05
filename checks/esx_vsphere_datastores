@@ -44,7 +44,7 @@ def esx_vsphere_datastores_parse(info):
         else:
             key, value = line
             if key == "accessible":
-                value = value == "True"
+                value = value.lower() == "true"
             elif key in [ "capacity", "freeSpace", "uncommitted" ]:
                 value = int(value)
             store[key] = value

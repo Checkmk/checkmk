@@ -187,10 +187,12 @@ def get_user_attributes():
 def load_users(lock = False):
     filename = root_dir + "contacts.mk"
 
-    # Make sure that the file exists without modifying it, *if* it exists.
-    # Note: the lock will be released at end of page request automatically.
-    file(filename, "a")
     if lock:
+        # Make sure that the file exists without modifying it, *if* it exists
+        # to be able to lock and realease the file properly.
+        # Note: the lock will be released on next save_users() call or at
+        #       end of page request automatically.
+        file(filename, "a")
         aquire_lock(filename)
 
     # First load monitoring contacts from Check_MK's world. If this is
@@ -200,6 +202,8 @@ def load_users(lock = False):
         vars = { "contacts" : {} }
         execfile(filename, vars, vars)
         contacts = vars["contacts"]
+    except IOError:
+        contacts = {} # a not existing file is ok, start with empty data
     except Exception, e:
         if config.debug:
             raise MKGeneralException(_("Cannot read configuration file %s: %s" %
@@ -211,20 +215,19 @@ def load_users(lock = False):
 
     # Now add information about users from the Web world
     filename = multisite_dir + "users.mk"
-    if os.path.exists(filename):
-        try:
-            vars = { "multisite_users" : {} }
-            execfile(filename, vars, vars)
-            users = vars["multisite_users"]
-        except Exception, e:
-            if config.debug:
-                raise MKGeneralException(_("Cannot read configuration file %s: %s" %
-                              (filename, e)))
-            else:
-                html.log('load_users: Problem while loading users (%s - %s). '
-                         'Initializing structure...' % (filename, e))
-            users = {}
-    else:
+    try:
+        vars = { "multisite_users" : {} }
+        execfile(filename, vars, vars)
+        users = vars["multisite_users"]
+    except IOError:
+        users = {} # not existing is ok -> empty structure
+    except Exception, e:
+        if config.debug:
+            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
+                          (filename, e)))
+        else:
+            html.log('load_users: Problem while loading users (%s - %s). '
+                     'Initializing structure...' % (filename, e))
         users = {}
 
     # Merge them together. Monitoring users not known to Multisite
@@ -252,41 +255,45 @@ def load_users(lock = False):
     # they are getting according to the multisite old-style
     # configuration variables.
 
+    def readlines(f):
+        try:
+            return file(f)
+        except IOError:
+            return []
+
     filename = defaults.htpasswd_file
-    if os.path.exists(filename):
-        for line in file(filename):
-            line = line.strip()
-            if ':' in line:
-                id, password = line.strip().split(":")[:2]
-                if password.startswith("!"):
-                    locked = True
-                    password = password[1:]
-                else:
-                    locked = False
-                if id in result:
-                    result[id]["password"] = password
-                    result[id]["locked"] = locked
-                else:
-                    # Create entry if this is an admin user
-                    new_user = {
-                        "roles"    : config.roles_of_user(id),
-                        "password" : password,
-                        "locked"   : False,
-                    }
-                    result[id] = new_user
-                # Make sure that the user has an alias
-                result[id].setdefault("alias", id)
-            # Other unknown entries will silently be dropped. Sorry...
+    for line in readlines(filename):
+        line = line.strip()
+        if ':' in line:
+            id, password = line.strip().split(":")[:2]
+            if password.startswith("!"):
+                locked = True
+                password = password[1:]
+            else:
+                locked = False
+            if id in result:
+                result[id]["password"] = password
+                result[id]["locked"] = locked
+            else:
+                # Create entry if this is an admin user
+                new_user = {
+                    "roles"    : config.roles_of_user(id),
+                    "password" : password,
+                    "locked"   : False,
+                }
+                result[id] = new_user
+            # Make sure that the user has an alias
+            result[id].setdefault("alias", id)
+        # Other unknown entries will silently be dropped. Sorry...
 
     # Now read the serials, only process for existing users
     serials_file = '%s/auth.serials' % os.path.dirname(defaults.htpasswd_file)
-    if os.path.exists(serials_file):
-        for line in file(serials_file):
-            line = line.strip()
-            if ':' in line:
-                user_id, serial = line.split(':')[:2]
-                if user_id in result:
-                    result[user_id]['serial'] = saveint(serial)
+    for line in readlines(serials_file):
+        line = line.strip()
+        if ':' in line:
+            user_id, serial = line.split(':')[:2]
+            if user_id in result:
+                result[user_id]['serial'] = saveint(serial)
 
     # Now read the user specific files
     dir = defaults.var_dir + "/web/"
@@ -296,15 +303,19 @@ def load_users(lock = False):
 
             # read special values from own files
             for val, conv_func in [ ('num_failed', int), ('last_seen', float) ]:
-                path = dir + d + '/' + val + '.mk'
-                if id in result and os.path.exists(path):
-                    result[id][val] = conv_func(file(path).read().strip())
+                if id in result:
+                    try:
+                        result[id][val] = conv_func(file(dir + d + '/' + val + '.mk').read().strip())
+                    except IOError:
+                        pass
 
             # read automation secrets and add them to existing
             # users or create new users automatically
-            secret_file = dir + d + "/automation.secret"
-            if os.path.exists(secret_file):
-                secret = file(secret_file).read().strip()
+            try:
+                secret = file(dir + d + "/automation.secret").read().strip()
+            except IOError:
+                secret = None
+            if secret:
                 if id in result:
                     result[id]["automation_secret"] = secret
                 else:
@@ -467,9 +478,6 @@ def load_roles():
                   for id in config.builtin_role_ids ])
 
     filename = multisite_dir + "roles.mk"
-    if not os.path.exists(filename):
-        return roles
-
     try:
         vars = { "roles" : roles }
         execfile(filename, vars, vars)
@@ -489,6 +497,8 @@ def load_roles():
 
         return vars["roles"]
 
+    except IOError:
+        return roles # Use empty structure, not existing file is ok!
     except Exception, e:
         if config.debug:
             raise MKGeneralException(_("Cannot read configuration file %s: %s" %
@@ -509,15 +519,16 @@ def load_roles():
 
 def load_group_information():
     try:
-        filename = root_dir + "groups.mk"
-        if not os.path.exists(filename):
-            return {}
-
         vars = {}
         for what in ["host", "service", "contact" ]:
             vars["define_%sgroups" % what] = {}
 
-        execfile(filename, vars, vars)
+        filename = root_dir + "groups.mk"
+        try:
+            execfile(filename, vars, vars)
+        except IOError:
+            return {} # skip on not existing file
+
         groups = {}
         for what in ["host", "service", "contact" ]:
             groups[what] = vars.get("define_%sgroups" % what, {})

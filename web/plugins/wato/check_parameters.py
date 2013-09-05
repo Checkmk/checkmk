@@ -1498,7 +1498,7 @@ register_check_parameters(
     TextAscii(
         title = _("Mount point"),
         help = _("For Linux/UNIX systems, specify the mount point, for Windows systems "
-                 "the drive letter uppercase followed by a colon, e.g. <tt>C:</tt>"),
+                 "the drive letter uppercase followed by a colon and a slash, e.g. <tt>C:/</tt>"),
         allow_empty = False),
     "dict"
 )
@@ -2604,8 +2604,8 @@ register_check_parameters(
         title = _("Device"),
         help = _("For a summarized throughput of all disks, specify <tt>SUMMARY</tt>, for a "
                  "sum of read or write throughput write <tt>read</tt> or <tt>write</tt> resp. "
-                 "A per-disk IO is specified by the drive letter and a colon on Windows "
-                 "(e.g. <tt>C:</tt>) or by the device name on Linux/UNIX (e.g. <tt>/dev/sda</tt>).")),
+                 "A per-disk IO is specified by the drive letter, a colon and a slash on Windows "
+                 "(e.g. <tt>C:/</tt>) or by the device name on Linux/UNIX (e.g. <tt>/dev/sda</tt>).")),
     "first"
 )
 

@@ -16,4 +16,5 @@ delete his own files
 2013-09-05 bs:
 integrated directives in .spec file
 test of rpm packages done
-test of deb packaged tbd
+test of deb packaged done
+on CentOS mk-job probably needs package time to have /usr/bin/time available -> to be approved

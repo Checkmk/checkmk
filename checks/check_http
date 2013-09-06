@@ -48,7 +48,7 @@ def check_http_arguments(params):
 
     if "cert_host" in settings:
         omit_ip = True
-        args += '-H $HOSTADDRESS$'
+        args += ' -H $HOSTADDRESS$'
         args += ' -I %s' % quote_shell_string(settings['cert_host'])
 
     if "cert_days" in settings:

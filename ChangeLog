@@ -78,6 +78,8 @@
     * FIX: check_dns: parameter -A does not get an additional string
     * FIX: cisco_qos: Catch policies without post/drop byte information
     * FIX: cisco_qos: Catch policies without individual bandwidth limits
+    * mk-job: /var/lib/check_mk_agent/job directory is now created with mode 1777 so 
+              mk-job can be used by unprivileged users too
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a

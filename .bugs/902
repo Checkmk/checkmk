@@ -12,3 +12,10 @@ Looks like a file creation/permission problem in directory
 If I mkdir /var/lib/check_mk/notify and chmod nagios.nagios
 /var/lib/check_mk/notify it works.
 Environment: check_mk 1.2.0p3, 1.2.2b1, ubuntu 12.10
+
+2013-09-06 bs: Bug approved
+when installing check_mk-1.2.2p1 manually (by setup.sh) the directory
+/var/lib/check_mk/notify is not created
+and as long as this directory is missing *all* notifications fail
+silently!!
+directory needs to be created in setup.sh

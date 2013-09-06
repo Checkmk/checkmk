@@ -36,7 +36,7 @@ def check_dmi_sysinfo(item, param, info):
     for line in info:
         line = " ".join(line)
         if ":" in line:
-            key, value = line.split(":")
+            key, value = line.split(":", 1)
             data[key.strip()] = value.strip()
 
     return (0, "Manufacturer: %s, Product-Name: %s, Version: %s, S/N: %s" % (

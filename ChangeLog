@@ -72,10 +72,12 @@
     * cisco_wlc_clients: New check for the nummber of clients in a wlc wifi
     * df: Negative integer levels for MB left on a device
     * win_printers: Monitoring of printer queue on a windows printserver
+    * cisco_qos: Updated to be able to mintor IOS XR 4.2.1 (on a ASR9K device)
     * FIX: hr_mem: handle virtual memory correct on some devices
     * FIX: apache_status agent plugin: now also works, if prog name contains slashes
     * FIX: check_dns: parameter -A does not get an additional string
     * FIX: cisco_qos: Catch policies without post/drop byte information
+    * FIX: cisco_qos: Catch policies without individual bandwidth limits
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a

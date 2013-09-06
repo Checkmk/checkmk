@@ -65,6 +65,7 @@
     * windows_agent: increased maximum local/plugin script output length to 512kB
                      (output buffer now grows dynamically)
     * jolokia_metrics: fixed incorrect plugin output for high warn/crit levels
+    * jolokia_metrics.uptime: Added pnp template
     * hyperv: Added a check for checking state changes.
     * df / esx_vsphere_datastore: now able to set absolute levels and levels depending
                                   on total disk space of used and free space

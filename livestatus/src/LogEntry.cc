@@ -67,6 +67,9 @@ LogEntry::LogEntry(unsigned lineno, char *line, unsigned logclasses = LOGCLASS_A
     _time = atoi(_msg+1);
     _text = _msg + 13; // also skip space after timestamp
 
+    // If LOGCLASS_INFO is in logclasses we can't thin out the function calls
+    logclasses = 1 << LOGCLASS_INFO & logclasses ? LOGCLASS_ALL : logclasses;
+
     // now classify the log message. Some messages
     // refer to other table, some do not.
     if (((1 << LOGCLASS_ALERT & logclasses) && handleStatusEntry()) ||

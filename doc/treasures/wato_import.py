@@ -37,28 +37,36 @@ except:
     print """Run this script inside a OMD site
     Usage: ./wato_import.py csvfile.csv
     CSV Example:
-    wato_foldername;hostname;host_alias"""
+    wato_foldername;hostname;host_alias;ipaddress|None"""
     sys.exit()
 
 folders = {}
 for line in datei:
-    ordner, name, alias = line.split(';')[:3]
+    ordner, name, alias, ipaddress = line.split(';')[:4]
     if ordner:
         try:
             os.makedirs(pathlokal+ordner)
         except os.error:
             pass
         folders.setdefault(ordner,[])
-
-        folders[ordner].append((name,alias))
+        ipaddress = ipaddress.strip()
+        if ipaddress == "None":
+            ipaddress = False 
+        folders[ordner].append((name,alias,ipaddress))
 datei.close()
 
 for folder in folders:
     all_hosts = "" 
     host_attributes = "" 
-    for name, alias in folders[folder]:
+    ips = ""
+    for name, alias, ipaddress in folders[folder]:
         all_hosts += "'%s',\n" % (name)
-        host_attributes += "'%s' : {'alias' : u'%s' },\n" % (name, alias)
+        if ipaddress:
+            host_attributes += "'%s' : {'alias' : u'%s', 'ipaddress' : '%s' },\n" % (name, alias, ipaddress)
+            ips += "'%s' : '%s'," % ( name, ipaddress )
+        else:
+            host_attributes += "'%s' : {'alias' : u'%s' },\n" % (name, alias)
+
 
     ziel = open(pathlokal + folder + '/hosts.mk','w') 
     ziel.write('all_hosts += [')
@@ -66,5 +74,9 @@ for folder in folders:
     ziel.write(']\n\n')
     ziel.write('host_attributes.update({')
     ziel.write(host_attributes)
-    ziel.write('})')
+    ziel.write('})\n\n')
+    if len(ips) > 0:
+        ziel.write('ipaddresses.update({')
+        ziel.write(ips)
+        ziel.write('})\n\n')
     ziel.close()

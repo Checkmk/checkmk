@@ -1,0 +1,20 @@
+Title: Handle limit-settings sensefully at availability reporting
+Component: multisite
+State: open
+Date: 2013-09-09 16:33:52
+Targetversion: 1.4.0
+Class: nastiness
+
+The problem is: we cannot simply us Limit: when querying statehist, since this will
+create invalid availability data - silently. The Limit: needs to be applied on the
+number of result rows, i.e. hosts and services. This cannot be done with Livestatus
+but would need to be done in the AV GUI.
+
+Furthermore: an AV-report with 1000 services could be very harmful when it
+comes to performance.
+
+One solution could be to hide the AV-Button whenever a query produces more
+than X results. 
+
+Another solution could be to implement the Limit just as it should be - 
+i.e. count the number of lines in the AV GUI.

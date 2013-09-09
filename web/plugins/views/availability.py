@@ -485,7 +485,7 @@ def get_availability_data(datasource, filterheaders, range, only_sites, limit, t
         columns.append("log_output")
 
     add_columns = datasource.get("add_columns", [])
-    rows = do_query_data(query, columns, add_columns, None, filterheaders, only_sites, limit)
+    rows = do_query_data(query, columns, add_columns, None, filterheaders, only_sites, limit = None)
     return rows
 
 

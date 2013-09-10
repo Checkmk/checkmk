@@ -1802,6 +1802,19 @@ register_rule(group,
              "and can change."))
 group = "agent/" + _("SNMP")
 
+register_configvar(group,
+    "inline_snmp",
+    Checkbox(title = _("Use Inline SNMP"),
+             label = _("Enable inline SNMP (directly use net-snmp libraries)"),
+             help = _("In older versions Check_MK used command line calls of net-snmp "
+                      "tools like snmpget or snmpwalk. For each request a new command line "
+                      "program had to be executed. The new default is the inline SNMP implementation "
+                      "which calls the net-snmp libraries directly via its python bindings. This "
+                      "should increase the performance of SNMP checks in a significant way. "
+                      "For compatibility the classic SNMP integration is still available and can be "
+                      "enabled here.")),
+    need_restart = True)
+
 _snmpv3_basic_elements = [
      DropdownChoice(
          choices = [

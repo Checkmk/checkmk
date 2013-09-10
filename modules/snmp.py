@@ -30,16 +30,6 @@ OID_END    =  0
 OID_STRING = -1
 OID_BIN    = -2
 
-# 0:2:01:20.13 -> seconds
-def parse_snmp_ticks(value):
-    days, hours, minutes, seconds = map(float, value.split(':'))
-    seconds += days * 8640000
-    seconds += hours * 360000
-    seconds += minutes * 6000
-    # We use floats here to have even subseconds be processed. This
-    # is different to the old SNMP implementation within Check_MK.
-    return seconds
-
 def strip_snmp_value(value):
     v = value.strip()
     if v.startswith('"'):
@@ -79,7 +69,12 @@ def convert_from_hex(value):
 def oid_to_bin(oid):
     return u"".join([ unichr(int(p)) for p in oid.strip(".").split(".") ])
 
-import netsnmp
+try:
+    import netsnmp
+except:
+    # In this case, inline_snmp is not possible. As we kept the classic snmp code,
+    # we can deal with it, so dont raise errors.
+    pass
 
 g_snmp_sessions = {}
 
@@ -112,6 +107,7 @@ def init_snmp_host(hostname):
         sys.stdout.write("Cannot resolve %s into IP address. Skipping.\n" % hostname)
         return None
 
+    # FIXME: Whan about timing / retries?
     if version != 3:
         s = netsnmp.Session(Version = version, DestHost = ipaddress, Community = credentials)
     else:
@@ -130,7 +126,7 @@ def init_snmp_host(hostname):
     g_snmp_sessions[hostname] = s
     return s
 
-def snmpwalk_on_suboid(hostname, oid, strip_values = True):
+def inline_snmpwalk_on_suboid(hostname, oid, strip_values = True):
     s = init_snmp_host(hostname)
 
     # FIXME: handle bulkwalk/getnext walk. At the moment it seems only
@@ -159,10 +155,7 @@ def snmpwalk_on_suboid(hostname, oid, strip_values = True):
 
         this_oid = var.tag + '.' + var.iid
 
-        if var.type == 'TICKS':
-            value = parse_snmp_ticks(var.val)
-
-        elif strip_values:
+        if var.type != 'TICKS' and strip_values:
             value = strip_snmp_value(var.val)
 
         else:
@@ -239,8 +232,10 @@ def get_snmp_table(hostname, ip, oid_info):
 
             if opt_use_snmp_walk or is_usewalk_host(hostname):
                 rowinfo = get_stored_snmpwalk(hostname, fetchoid)
+            elif inline_snmp:
+                rowinfo = inline_snmpwalk_on_suboid(hostname, fetchoid)
             else:
-                rowinfo = snmpwalk_on_suboid(hostname, fetchoid)
+                rowinfo = snmpwalk_on_suboid(hostname, ip, fetchoid)
 
             columns.append((fetchoid, rowinfo))
             number_rows = len(rowinfo)
@@ -490,3 +485,59 @@ def snmp_decode_string(text):
     else:
         return text
 
+#   .--Classic SNMP--------------------------------------------------------.
+#   |        ____ _               _        ____  _   _ __  __ ____         |
+#   |       / ___| | __ _ ___ ___(_) ___  / ___|| \ | |  \/  |  _ \        |
+#   |      | |   | |/ _` / __/ __| |/ __| \___ \|  \| | |\/| | |_) |       |
+#   |      | |___| | (_| \__ \__ \ | (__   ___) | |\  | |  | |  __/        |
+#   |       \____|_|\__,_|___/___/_|\___| |____/|_| \_|_|  |_|_|           |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Non-inline SNMP handling code. Kept for compatibility.               |
+#   '----------------------------------------------------------------------'
+
+def snmpwalk_on_suboid(hostname, ip, oid):
+    portspec = snmp_port_spec(hostname)
+    command = snmp_walk_command(hostname) + \
+             " -OQ -OU -On -Ot %s%s %s 2>/dev/null" % (ip, portspec, oid)
+    if opt_debug:
+        sys.stderr.write('   Running %s\n' % (command,))
+    snmp_process = os.popen(command, "r").xreadlines()
+
+    # Ugly(1): in some cases snmpwalk inserts line feed within one
+    # dataset. This happens for example on hexdump outputs longer
+    # than a few bytes. Those dumps are enclosed in double quotes.
+    # So if the value begins with a double quote, but the line
+    # does not end with a double quote, we take the next line(s) as
+    # a continuation line.
+    rowinfo = []
+    try:
+        while True: # walk through all lines
+            line = snmp_process.next().strip()
+            parts = line.split('=', 1)
+            if len(parts) < 2:
+                continue # broken line, must contain =
+            oid = parts[0].strip()
+            value = parts[1].strip()
+            # Filter out silly error messages from snmpwalk >:-P
+            if value.startswith('No more variables') or value.startswith('End of MIB') \
+               or value.startswith('No Such Object available') or value.startswith('No Such Instance currently exists'):
+                continue
+
+            if len(value) > 0 and value[0] == '"' and value[-1] != '"': # to be continued
+                while True: # scan for end of this dataset
+                    nextline = snmp_process.next().strip()
+                    value += " " + nextline
+                    if value[-1] == '"':
+                        break
+            rowinfo.append((oid, strip_snmp_value(value)))
+
+    except StopIteration:
+        pass
+
+    exitstatus = snmp_process.close()
+    if exitstatus:
+        if opt_verbose:
+            sys.stderr.write(tty_red + tty_bold + "ERROR: " + tty_normal + "SNMP error\n")
+        raise MKSNMPError("SNMP Error on %s" % ip)
+    return rowinfo

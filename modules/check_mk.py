@@ -229,6 +229,7 @@ monitoring_host                    = None # deprecated
 max_num_processes                  = 50
 
 # SNMP communities and encoding
+inline_snmp                        = True
 snmp_default_community             = 'public'
 snmp_communities                   = []
 snmp_timing                        = []
@@ -568,6 +569,40 @@ def aggregated_service_name(hostname, servicedesc):
                     return aggrname
     return ""
 
+#   .--Helpers-------------------------------------------------------------.
+#   |                  _   _      _                                        |
+#   |                 | | | | ___| |_ __   ___ _ __ ___                    |
+#   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
+#   |                 |  _  |  __/ | |_) |  __/ |  \__ \                   |
+#   |                 |_| |_|\___|_| .__/ \___|_|  |___/                   |
+#   |                              |_|                                     |
+#   +----------------------------------------------------------------------+
+#   | Misc functions which do not belong to any other topic                |
+#   '----------------------------------------------------------------------'
+
+def is_tcp_host(hostname):
+    return in_binary_hostlist(hostname, tcp_hosts)
+
+def is_ping_host(hostname):
+    return not is_snmp_host(hostname) and not is_tcp_host(hostname)
+
+def check_period_of(hostname, service):
+    periods = service_extra_conf(hostname, service, check_periods)
+    if periods:
+        period = periods[0]
+        if period == "24X7":
+            return None
+        else:
+            return period
+    else:
+        return None
+
+def check_interval_of(hostname, checkname):
+    if not check_uses_snmp(checkname):
+        return # no values at all for non snmp checks
+    for match, minutes in host_extra_conf(hostname, snmp_check_interval):
+        if match is None or match == checkname:
+            return minutes # use first match
 
 #   +----------------------------------------------------------------------+
 #   |                      ____  _   _ __  __ ____                         |
@@ -595,13 +630,6 @@ def snmp_credentials_of(hostname):
     # nothing configured for this host -> use default
     return snmp_default_community
 
-def snmp_timing_of(hostname):
-    timing = host_extra_conf(hostname, snmp_timing)
-    if len(timing) > 0:
-        return timing[0]
-    else:
-        return {}
-
 def get_snmp_character_encoding(hostname):
     entries = host_extra_conf(hostname, snmp_character_encodings)
     if len(entries) > 0:
@@ -612,12 +640,6 @@ def check_uses_snmp(check_type):
 
 def is_snmp_host(hostname):
     return in_binary_hostlist(hostname, snmp_hosts)
-
-def is_tcp_host(hostname):
-    return in_binary_hostlist(hostname, tcp_hosts)
-
-def is_ping_host(hostname):
-    return not is_snmp_host(hostname) and not is_tcp_host(hostname)
 
 def is_bulkwalk_host(hostname):
     if bulkwalk_hosts:
@@ -632,25 +654,7 @@ def is_snmpv2c_host(hostname):
 def is_usewalk_host(hostname):
     return in_binary_hostlist(hostname, usewalk_hosts)
 
-def check_period_of(hostname, service):
-    periods = service_extra_conf(hostname, service, check_periods)
-    if periods:
-        period = periods[0]
-        if period == "24X7":
-            return None
-        else:
-            return period
-    else:
-        return None
-
-def check_interval_of(hostname, checkname):
-    if not check_uses_snmp(checkname):
-        return # no values at all for non snmp checks
-    for match, minutes in host_extra_conf(hostname, snmp_check_interval):
-        if match is None or match == checkname:
-            return minutes # use first match
-
-def snmp_get_oid(hostname, oid):
+def inline_snmp_get_oid(hostname, oid):
     s = init_snmp_host(hostname)
 
     if oid[-2:] == ".*":
@@ -686,6 +690,125 @@ def snmp_get_oid(hostname, oid):
 
         return value
 
+#   .--Classic SNMP--------------------------------------------------------.
+#   |        ____ _               _        ____  _   _ __  __ ____         |
+#   |       / ___| | __ _ ___ ___(_) ___  / ___|| \ | |  \/  |  _ \        |
+#   |      | |   | |/ _` / __/ __| |/ __| \___ \|  \| | |\/| | |_) |       |
+#   |      | |___| | (_| \__ \__ \ | (__   ___) | |\  | |  | |  __/        |
+#   |       \____|_|\__,_|___/___/_|\___| |____/|_| \_|_|  |_|_|           |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Non-inline SNMP handling code. Kept for compatibility.               |
+#   '----------------------------------------------------------------------'
+
+
+def snmp_timing_of(hostname):
+    timing = host_extra_conf(hostname, snmp_timing)
+    if len(timing) > 0:
+        return timing[0]
+    else:
+        return {}
+
+def snmp_port_spec(hostname):
+    port = snmp_port_of(hostname)
+    if port == None:
+        return ""
+    else:
+        return ":%d" % port
+
+# Returns command lines for snmpwalk and snmpget including
+# options for authentication. This handles communities and
+# authentication for SNMP V3. Also bulkwalk hosts
+def snmp_walk_command(hostname):
+    return snmp_base_command('walk', hostname) + " -Cc"
+
+def snmp_base_command(what, hostname):
+    # if the credentials are a string, we use that as community,
+    # if it is a four-tuple, we use it as V3 auth parameters:
+    # (1) security level (-l)
+    # (2) auth protocol (-a, e.g. 'md5')
+    # (3) security name (-u)
+    # (4) auth password (-A)
+    # And if it is a six-tuple, it has the following additional arguments:
+    # (5) privacy protocol (DES|AES) (-x)
+    # (6) privacy protocol pass phrase (-X)
+
+    credentials = snmp_credentials_of(hostname)
+    if what == 'get':
+        command = 'snmpget'
+    elif what == 'getnext':
+        command = 'snmpgetnext -Cf'
+    else:
+        command = 'snmpbulkwalk'
+
+    # Handle V1 and V2C
+    if type(credentials) == str:
+        if is_bulkwalk_host(hostname):
+            options = '-v2c'
+        else:
+            if what == 'walk':
+                command = 'snmpwalk'
+            if is_snmpv2c_host(hostname):
+                options = '-v2c'
+            else:
+                options = '-v1'
+        options += " -c '%s'" % credentials
+
+        # Handle V3
+    else:
+        if len(credentials) == 6:
+           options = "-v3 -l '%s' -a '%s' -u '%s' -A '%s' -x '%s' -X '%s'" % tuple(credentials)
+        elif len(credentials) == 4:
+           options = "-v3 -l '%s' -a '%s' -u '%s' -A '%s'" % tuple(credentials)
+        else:
+            raise MKGeneralException("Invalid SNMP credentials '%r' for host %s: must be string, 4-tuple or 6-tuple" % (credentials, hostname))
+
+    # Do not load *any* MIB files. This save lot's of CPU.
+    options += " -m '' -M ''"
+
+    # Configuration of timing and retries
+    settings = snmp_timing_of(hostname)
+    if "timeout" in settings:
+        options += " -t %d" % settings["timeout"]
+    if "retries" in settings:
+        options += " -r %d" % settings["retries"]
+
+    return command + ' ' + options
+
+def snmp_get_oid(hostname, ipaddress, oid):
+    if oid.endswith(".*"):
+        oid_prefix = oid[:-2]
+        commandtype = "getnext"
+    else:
+        oid_prefix = oid
+        commandtype = "get"
+
+    portspec = snmp_port_spec(hostname)
+    command = snmp_base_command(commandtype, hostname) + \
+              " -On -OQ -Oe -Ot %s%s %s 2>/dev/null" % (ipaddress, portspec, oid_prefix)
+
+    if opt_debug:
+        sys.stdout.write("Running '%s'\n" % command)
+
+    snmp_process = os.popen(command, "r")
+    line = snmp_process.readline().strip()
+    item, value = line.split("=", 1)
+    value = value.strip()
+    if opt_debug:
+        sys.stdout.write("SNMP answer: ==> [%s]\n" % value)
+    if value.startswith('No more variables') or value.startswith('End of MIB') \
+       or value.startswith('No Such Object available') or value.startswith('No Such Instance currently exists'):
+        value = None
+
+    # In case of .*, check if prefix is the one we are looking for
+    if commandtype == "getnext" and not item.startswith(oid_prefix + "."):
+        value = None
+
+    # Strip quotes
+    if value.startswith('"') and value.endswith('"'):
+        value = value[1:-1]
+    return value
+
 def get_single_oid(hostname, ipaddress, oid):
     # New in Check_MK 1.1.11: oid can end with ".*". In that case
     # we do a snmpgetnext and try to find an OID with the prefix
@@ -709,7 +832,10 @@ def get_single_oid(hostname, ipaddress, oid):
             return None
 
     try:
-        value = snmp_get_oid(hostname, oid)
+        if inline_snmp:
+            value = inline_snmp_get_oid(hostname, oid)
+        else:
+            value = snmp_get_oid(hostname, ipaddress, oid)
     except:
         if opt_debug:
             raise
@@ -1070,13 +1196,6 @@ def snmp_port_of(hostname):
         return None # do not specify a port, use default
     else:
         return ports[0]
-
-def snmp_port_spec(hostname):
-    port = snmp_port_of(hostname)
-    if port == None:
-        return ""
-    else:
-        return ":%d" % port
 
 def exit_code_spec(hostname):
     spec = {}
@@ -2818,7 +2937,7 @@ no_inventory_possible = None
                  'www_group', 'cluster_max_cachefile_age', 'check_max_cachefile_age',
                  'piggyback_max_cachefile_age',
                  'simulation_mode', 'agent_simulator', 'aggregate_check_mk', 'debug_log',
-                 'check_mk_perfdata_with_times', 'livestatus_unix_socket',
+                 'check_mk_perfdata_with_times', 'livestatus_unix_socket', 'inline_snmp',
                  ]:
         output.write("%s = %r\n" % (var, globals()[var]))
 
@@ -2917,12 +3036,16 @@ no_inventory_possible = None
     # snmp hosts
     output.write("def is_snmp_host(hostname):\n   return %r\n\n" % is_snmp_host(hostname))
     output.write("def is_tcp_host(hostname):\n   return %r\n\n" % is_tcp_host(hostname))
-    output.write("def snmp_credentials_of(hostname):\n   return %r\n\n" % snmp_credentials_of(hostname))
     output.write("def is_usewalk_host(hostname):\n   return %r\n\n" % is_usewalk_host(hostname))
-    output.write("def is_bulkwalk_host(hostname):\n   return %r\n\n" % is_bulkwalk_host(hostname))
-    output.write("def is_snmpv2c_host(hostname):\n   return %r\n\n" % is_snmpv2c_host(hostname))
-    output.write("def snmp_timing_of(hostname):\n   return %r\n\n" % snmp_timing_of(hostname))
-    output.write("def snmp_port_of(hostname):\n   return %r\n\n" % snmp_port_of(hostname))
+    if inline_snmp:
+        output.write("def is_snmpv2c_host(hostname):\n   return %r\n\n" % is_snmpv2c_host(hostname))
+        output.write("def is_bulkwalk_host(hostname):\n   return %r\n\n" % is_bulkwalk_host(hostname))
+        output.write("def snmp_timing_of(hostname):\n   return %r\n\n" % snmp_timing_of(hostname))
+        output.write("def snmp_credentials_of(hostname):\n   return %r\n\n" % snmp_credentials_of(hostname))
+        output.write("def snmp_port_of(hostname):\n   return %r\n\n" % snmp_port_of(hostname))
+    else:
+        output.write("def snmp_port_spec(hostname):\n    return %r\n\n" % snmp_port_spec(hostname))
+        output.write("def snmp_walk_command(hostname):\n   return %r\n\n" % snmp_walk_command(hostname))
 
     # IP addresses
     needed_ipaddresses = {}
@@ -2961,7 +3084,6 @@ no_inventory_possible = None
 
     # TCP and SNMP port of agent
     output.write("def agent_port_of(hostname):\n    return %d\n\n" % agent_port_of(hostname))
-    output.write("def snmp_port_spec(hostname):\n    return %r\n\n" % snmp_port_spec(hostname))
 
     # Exit code of Check_MK in case of various errors
     output.write("def exit_code_spec(hostname):\n    return %r\n\n" % exit_code_spec(hostname))
@@ -3899,7 +4021,12 @@ def do_snmpwalk_on(hostname, filename):
         if opt_verbose:
             sys.stdout.write("Walk on \"%s\"..." % oid)
             sys.stdout.flush()
-        results = snmpwalk_on_suboid(hostname, oid, strip_values = False)
+
+        if inline_snmp:
+            results = inline_snmpwalk_on_suboid(hostname, oid, strip_values = False)
+        else:
+            results = snmpwalk_on_suboid(hostname, oid)
+
         for oid, value in results:
             out.write("%s %s\n" % (oid, value))
 

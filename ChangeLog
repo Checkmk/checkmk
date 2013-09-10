@@ -81,6 +81,7 @@
     * FIX: cisco_qos: Catch policies without individual bandwidth limits
     * mk-job: /var/lib/check_mk_agent/job directory is now created with mode 1777 so 
               mk-job can be used by unprivileged users too
+    * windows_agent: fixed bug on merging plugin output buffers
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a
@@ -172,6 +173,8 @@
            inherited values
     * FIX: Changed several forms from GET to POST to prevent "Request-URI too
            large" error messages during submitting forms
+    * FIX: automation snmp scan now adhere rules for shoddy snmp devices 
+           which have no sys description
 
     Notifications:
     * Flexible Notification can now filter service levels

@@ -10111,7 +10111,8 @@ def mode_ineffective_rules(phase):
                     ("mode", "edit_rule"),
                     ("varname", varname),
                     ("rulenr", rel_rulenr),
-                    ("rule_folder", f[".path"])])
+                    ("rule_folder", f[".path"])
+                ])
                 html.icon_button(edit_url, _("Edit this rule"), "edit")
 
                 delete_url = make_action_link([
@@ -10119,7 +10120,9 @@ def mode_ineffective_rules(phase):
                     ("varname", varname),
                     ("_action", "delete"),
                     ("_folder", f[".path"]),
-                    ("_rulenr", rel_rulenr)])
+                    ("_rulenr", rel_rulenr),
+                    ("rule_folder", f[".path"])
+                ])
                 html.icon_button(delete_url, _("Delete this rule"), "delete")
 
                 # Rule folder
@@ -10707,6 +10710,8 @@ def rule_button(action, help=None, folder=None, rulenr=0):
             ("_rulenr", str(rulenr)),
             ("_action", action)
         ]
+        if html.var("rule_folder"):
+            vars.append(("rule_folder", html.var("rule_folder")))
         if html.var("host"):
             vars.append(("host", html.var("host")))
         url = make_action_link(vars)

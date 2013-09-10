@@ -1939,7 +1939,7 @@ def do_query_data(query, columns, add_columns, merge_column,
         html.live.set_limit(limit + 1) # + 1: We need to know, if limit is exceeded
     if config.debug_livestatus_queries \
             and html.output_format == "html" and 'W' in html.display_options:
-        html.write('<div class="livestatus message" onmouseover="this.style.display=\'none\';">'
+        html.write('<div class="livestatus message">'
                    '<tt>%s</tt></div>\n' % (query.replace('\n', '<br>\n')))
 
     if only_sites:

@@ -201,13 +201,14 @@ def automation_try_inventory_node(hostname):
                     if cn in existing_checks:
                         found_services += make_inventory(cn, [hostname], True, True)
             else:
-                sys_descr = get_single_oid(hostname, ipaddress, ".1.3.6.1.2.1.1.1.0")
-                if sys_descr != None:
-                    found_services = do_snmp_scan([hostname], True, True)
-                else:
-                    raise MKSNMPError("Cannot get system description via SNMP. "
-                                      "SNMP agent is not responding. Probably wrong "
-                                      "community or wrong SNMP version.")
+                if not in_binary_hostlist(hostname, snmp_without_sys_descr):
+                    sys_descr = get_single_oid(hostname, ipaddress, ".1.3.6.1.2.1.1.1.0")
+                    if sys_descr == None:
+                        raise MKSNMPError("Cannot get system description via SNMP. "
+                                          "SNMP agent is not responding. Probably wrong "
+                                          "community or wrong SNMP version.")
+
+                found_services = do_snmp_scan([hostname], True, True)
 
         except Exception, e:
             if not dual_host:

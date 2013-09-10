@@ -172,6 +172,8 @@
            inherited values
     * FIX: Changed several forms from GET to POST to prevent "Request-URI too
            large" error messages during submitting forms
+    * FIX: automation snmp scan now adhere rules for shoddy snmp devices 
+           which have no sys description
 
     Notifications:
     * Flexible Notification can now filter service levels

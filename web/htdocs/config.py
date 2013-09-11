@@ -385,7 +385,8 @@ def sitenames():
 def allsites():
     return dict( [(name, site(name))
                   for name in sitenames()
-                  if not site(name).get("disabled", False)] )
+                  if not site(name).get("disabled", False)
+                     and site(name)['socket'] != 'disabled' ] )
 
 def site(name):
     s = sites.get(name, {})
@@ -405,6 +406,8 @@ def site_is_local(name):
     sock = s.get("socket")
     return not sock or sock == "unix:" + defaults.livestatus_unix_socket
 
+# FIXME: Should this return True even if all sites but one are disabled?
+# -> should we use allsites() instead of "sites" directly?
 def is_multisite():
     if len(sites) > 1:
         return True

@@ -397,10 +397,10 @@ def do_git_commit():
                 file(defaults.default_config_dir + "/" + subdir + "/.gitignore", "w").write("*\n!wato\n!wato/*\n")
 
         git_command(["add", ".gitignore", "*.d/wato"])
-        git_command(["commit", "--author", author, "-m", shell_quote(_("Initialized GIT for Check_MK"))])
+        git_command(["commit", "--untracked-files=no", "--author", author, "-m", shell_quote(_("Initialized GIT for Check_MK"))])
 
     # Only commit, if something is changed
-    if os.popen("cd '%s' && git status --porcelain" % defaults.default_config_dir).read().strip():
+    if os.popen("cd '%s' && git status --untracked-files=no --porcelain" % defaults.default_config_dir).read().strip():
         git_command(["add", "*.d/wato"])
         message = ", ".join(g_git_messages)
         if not message:

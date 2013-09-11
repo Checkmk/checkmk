@@ -167,6 +167,8 @@
       and folders hierarchy. Those settings override the rule base config.
     * Require unique alias names in between the following elements:
       Host/Service/Contact Groups, Timeperiods and Roles
+    * Removed "do not connect" option from site socket editor. Use the
+      checkbox "Disable" to disable the site for multisite.
     * FIX: do validation of check items in rule editor
     * FIX: More consistent handling of folderpath select in rule editor
     * FIX: Now correctly handling depends_on_tags on page rendering for

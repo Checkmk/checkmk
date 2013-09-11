@@ -6858,7 +6858,6 @@ def mode_edit_site(phase):
             label = _("Path:"),
             size = 40,
             allow_empty = False)),
-        ( "disabled", _("Do not connect")),
     ]
     if config.liveproxyd_enabled:
         conn_choices[2:2] = [
@@ -7189,12 +7188,20 @@ def load_sites():
 
         vars = { "sites" : {} }
         execfile(sites_mk, vars, vars)
+
+        # Be compatible to old "disabled" value in socket attribute.
+        # Can be removed one day.
+        for site in vars['sites'].values():
+            if site.get('socket') == 'disabled':
+                site['disabled'] = True
+                del site['socket']
+
         return vars["sites"]
 
     except Exception, e:
         if config.debug:
             raise MKGeneralException(_("Cannot read configuration file %s: %s" %
-                          (filename, e)))
+                          (sites_mk, e)))
         return {}
 
 

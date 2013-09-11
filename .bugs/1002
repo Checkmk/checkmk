@@ -1,0 +1,11 @@
+Title: Use triangle as indicator that a view is hidden (or not hidden)
+Component: multisite
+State: open
+Date: 2013-09-11 13:19:55
+Targetversion: future
+Class: nastiness
+
+In the WATO as well as the multisite GUI views/topic can be hidden by clicking on the title.
+This may confuse a user in some occasions, because it may not be clear if the topic is hidden, or
+no item were found under that topic.
+Therefore a triangle as indicator if the topic is hidden or not should be very useful.

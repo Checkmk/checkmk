@@ -391,7 +391,7 @@ def do_git_commit():
         git_command(["init"])
 
         # Make sure that .gitignore-files are present and uptodate
-        file(defaults.default_config_dir + ".gitignore", "w").write("*\n!*.d\n!.gitignore\n")
+        file(defaults.default_config_dir + "/.gitignore", "w").write("*\n!*.d\n!.gitignore\n")
         for subdir in os.listdir(defaults.default_config_dir):
             if subdir.endswith(".d"):
                 file(defaults.default_config_dir + "/" + subdir + "/.gitignore", "w").write("*\n!wato\n!wato/*\n")
@@ -4154,8 +4154,6 @@ def check_mk_local_automation(command, args=[], indata=""):
             html.show_error("<h1>Cannot activate changes</h1>%s" % e)
             return
 
-    if config.debug:
-        log_audit(None, "automation", "Automation: %s" % " ".join(cmd))
     try:
         # This debug output makes problems when doing bulk inventory, because
         # it garbles the non-HTML response output
@@ -4174,7 +4172,6 @@ def check_mk_local_automation(command, args=[], indata=""):
     exitcode = p.wait()
     if exitcode != 0:
         if config.debug:
-            log_audit(None, "automation", "Automation command %s failed with exit code %d: %s" % (" ".join(cmd), exitcode, outdata))
             raise MKGeneralException("Error running <tt>%s</tt> (exit code %d): <pre>%s</pre>%s" %
                   (" ".join(cmd), exitcode, hilite_errors(outdata), outdata.lstrip().startswith('sudo:') and sudo_msg or ''))
         else:
@@ -4186,12 +4183,8 @@ def check_mk_local_automation(command, args=[], indata=""):
         call_hook_activate_changes()
 
     try:
-        if config.debug:
-            log_audit(None, "automation", "Result from automation: %s" % outdata)
         return eval(outdata)
     except Exception, e:
-        if config.debug:
-            log_audit(None, "automation", "Automation command %s failed: invalid output: %s" % (" ".join(cmd), outdata))
         raise MKGeneralException("Error running <tt>%s</tt>. Invalid output from webservice (%s): <pre>%s</pre>" %
                       (" ".join(cmd), e, outdata))
 

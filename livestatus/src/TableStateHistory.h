@@ -62,7 +62,7 @@ public:
     void handleNewMessage(Logfile *logfile, time_t since, time_t until, unsigned logclasses);
     void answerQuery(Query *query);
     Column *column(const char *colname); // override in order to handle current_
-    void updateHostServiceState(Query *query, const LogEntry *entry, HostServiceState *state, const bool only_update);
+    int updateHostServiceState(Query *query, const LogEntry *entry, HostServiceState *state, const bool only_update);
 
 private:
     LogEntry* getPreviousLogentry();

@@ -52,7 +52,11 @@
 int g_disable_statehist_filtering = 0;
 
 
-typedef pair<string, string> HostServiceKey;
+
+struct HostServiceState;
+typedef vector<HostServiceState*> HostServices;
+
+typedef void* HostServiceKey;
 
 struct HostServiceState {
     bool    _is_host;
@@ -85,6 +89,8 @@ struct HostServiceState {
     int     _in_host_downtime;
     int     _is_flapping;
 
+    // Service information
+    HostServices _services;
 
     // Absent state handling
     bool    _may_no_longer_exist;
@@ -107,13 +113,12 @@ struct HostServiceState {
     void debug_me(const char *loginfo, ...);
 };
 
-
-#define CHECK_MEM_CYCLE 1000 /* Check memory every N'th new message */
-
 extern Store *g_store;
 
-#define CLASSMASK_STATEHIST 70
+#define CLASSMASK_STATEHIST 0xC2
 
+// Debug information
+int total_update_calls = 0;
 
 // Debugging logging is hard if debug messages are logged themselves...
 void debug_statehist(const char *loginfo, ...)
@@ -372,8 +377,20 @@ void TableStateHistory::answerQuery(Query *query)
     HostServiceKey key;
     bool only_update = true;
     bool in_nagios_initial_states = false;
+
+    // Debug parameters
+    int total_calls_saved = 0;
+    total_update_calls = 0;
+    int logentry_counter = 0;
+
+
     while (0 != (entry = getNextLogentry()))
     {
+        logentry_counter++;
+//
+//      if (logentry_counter % 50000 == 0)
+//          logger(LOG_NOTICE, "Statehist Entry: %d", logentry_counter);
+
         if (entry->_time >= _until) {
             getPreviousLogentry();
             break;
@@ -390,11 +407,10 @@ void TableStateHistory::answerQuery(Query *query)
             {
                 HostServiceState* hst = it_hst->second;
                 if (hst->_may_no_longer_exist) {
-                	hst->_has_vanished = true;
+                    hst->_has_vanished = true;
                 }
                 it_hst++;
             }
-
             in_nagios_initial_states = false;
         }
 
@@ -410,8 +426,14 @@ void TableStateHistory::answerQuery(Query *query)
         case FLAPPING_HOST:
         case FLAPPING_SERVICE:
         {
-            key.first  = entry->_host_name;
-            key.second = entry->_svc_desc != 0 ? entry->_svc_desc : "";
+            key = 0;
+            if (entry->_service != 0)
+                key = entry->_service;
+            else if (entry->_host != 0)
+                key = entry->_host;
+
+            if (key == 0)
+                continue;
 
             if (object_blacklist.find(key) != object_blacklist.end())
             {
@@ -430,8 +452,8 @@ void TableStateHistory::answerQuery(Query *query)
                 state->_is_host             = entry->_svc_desc == 0;
                 state->_host                = entry->_host;
                 state->_service             = entry->_service;
-                state->_host_name           = key.first.c_str();
-                state->_service_description = key.second.c_str();
+                state->_host_name           = entry->_host_name;
+                state->_service_description = entry->_svc_desc != 0 ? entry->_svc_desc : "";
 
                 // No state found. Now check if this host/services is filtered out.
                 // Note: we currently do not filter out hosts since they might be
@@ -458,9 +480,25 @@ void TableStateHistory::answerQuery(Query *query)
                     }
                 }
 
+                // Host/Service relations
+                if (state->_is_host) {
+                    state_info_t::iterator it_inh = state_info.begin();
+                    while (it_inh != state_info.end()) {
+                        if (it_inh->second->_host == state->_host){
+                            state->_services.push_back(it_inh->second);
+                        }
+                        it_inh++;
+                    }
+                } else {
+                    state_info_t::iterator it_inh = state_info.find(state->_host);
+                    if (it_inh != state_info.end())
+                        it_inh->second->_services.push_back(state);
+                }
+
+
                 // Store this state object for tracking state transitions
                 state_info.insert(std::make_pair(key, state));
-                state->_from    = _since;
+                state->_from = _since;
 
                 // Get notification period of host/service
                 // If this host/service is no longer availabe in nagios -> set to ""
@@ -479,6 +517,7 @@ void TableStateHistory::answerQuery(Query *query)
                 else
                     state->_notification_period = (char *)"";
 
+
                 // Determine initial in_notification_period status
                 _notification_periods_t::const_iterator tmp_period = _notification_periods.find(state->_notification_period);
                 if (tmp_period != _notification_periods.end())
@@ -488,7 +527,7 @@ void TableStateHistory::answerQuery(Query *query)
 
                 // If this key is a service try to find its host and apply its _in_host_downtime and _host_down parameters
                 if (!state->_is_host) {
-                    state_info_t::iterator my_host = state_info.find(HostServiceKey(key.first,""));
+                    state_info_t::iterator my_host = state_info.find(state->_host);
                     if (my_host != state_info.end()) {
                         state->_in_host_downtime = my_host->second->_in_host_downtime;
                         state->_host_down        = my_host->second->_host_down;
@@ -504,16 +543,18 @@ void TableStateHistory::answerQuery(Query *query)
             else
                 state = it_hst->second;
 
-            updateHostServiceState(query, entry, state, only_update);
-
+            int state_changed = updateHostServiceState(query, entry, state, only_update);
             // Host downtime or state changes also affect its services
             if (entry->_type == ALERT_HOST || entry->_type == STATE_HOST || entry->_type == DOWNTIME_ALERT_HOST){
-                state_info_t::iterator it_hst = state_info.begin();
-                while (it_hst != state_info.end()) {
-                    if (!it_hst->second->_is_host && !strcmp(state->_host_name, it_hst->second->_host_name)){
-                        updateHostServiceState(query, entry, it_hst->second, only_update);
+
+
+                if (state_changed != 0) {
+                    total_calls_saved += state_info.size() - state->_services.size();
+                    HostServices::iterator it_svc = state->_services.begin();
+                    while (it_svc != state->_services.end()) {
+                        updateHostServiceState(query, entry, *it_svc, only_update);
+                        it_svc++;
                     }
-                    it_hst++;
                 }
             }
             break;
@@ -536,10 +577,10 @@ void TableStateHistory::answerQuery(Query *query)
             // a nagios startup. If it still exists an INITIAL HOST/SERVICE state entry will follow up shortly.
             state_info_t::iterator it_hst = state_info.begin();
             while (it_hst != state_info.end()) {
-            	if (!it_hst->second->_has_vanished) {
-            		it_hst->second->_last_known_time = entry->_time;
-            		it_hst->second->_may_no_longer_exist = true;
-            	}
+                if (!it_hst->second->_has_vanished) {
+                    it_hst->second->_last_known_time = entry->_time;
+                    it_hst->second->_may_no_longer_exist = true;
+                }
                 it_hst++;
             }
             in_nagios_initial_states = true;
@@ -547,6 +588,10 @@ void TableStateHistory::answerQuery(Query *query)
         }
         }
     }
+
+    logger(LOG_NOTICE, "Processed statehist logentries: %d", logentry_counter);
+    logger(LOG_NOTICE, "Total calls %d saved: %d", total_update_calls, total_calls_saved);
+    logger(LOG_NOTICE, "Objects: %d, Blacklisted: %d", state_info.size(), object_blacklist.size());
 
     // Create final reports
     state_info_t::iterator it_hst = state_info.begin();
@@ -556,7 +601,7 @@ void TableStateHistory::answerQuery(Query *query)
 
         // No trace since the last two nagios startup -> host/service has vanished
         if (hst->_may_no_longer_exist) {
-        	// Log last known state up to nagios restart
+            // Log last known state up to nagios restart
             hst->_time  = hst->_last_known_time;
             hst->_until = hst->_last_known_time;
             process(query, hst);
@@ -581,31 +626,31 @@ void TableStateHistory::answerQuery(Query *query)
 
 bool TableStateHistory::objectFilteredOut(Query *query, void *entry)
 {
-
-
-
     return false;
 }
 
-void TableStateHistory::updateHostServiceState(Query *query, const LogEntry *entry, HostServiceState *hs_state, const bool only_update){
+inline int TableStateHistory::updateHostServiceState(Query *query, const LogEntry *entry, HostServiceState *hs_state, const bool only_update){
+    int state_changed = 1;
+    total_update_calls++;
+
     // Revive host / service if it was unmonitored
     if (entry->_type != TIMEPERIOD_TRANSITION && hs_state->_has_vanished)
     {
-    	hs_state->_time  = hs_state->_last_known_time;
-    	hs_state->_until = hs_state->_last_known_time;
-    	process(query, hs_state);
+        hs_state->_time  = hs_state->_last_known_time;
+        hs_state->_until = hs_state->_last_known_time;
+        process(query, hs_state);
 
-    	hs_state->_may_no_longer_exist = false;
-    	hs_state->_has_vanished = false;
-    	// Set absent state
-    	hs_state->_state = -1;
-    	hs_state->_debug_info = "UNMONITORED";
-    	hs_state->_in_downtime = 0;
-    	hs_state->_in_notification_period = 0;
-    	hs_state->_is_flapping = 0;
-    	if (hs_state->_log_output)
-    		free(hs_state->_log_output);
-    	hs_state->_log_output = 0;
+        hs_state->_may_no_longer_exist = false;
+        hs_state->_has_vanished = false;
+        // Set absent state
+        hs_state->_state = -1;
+        hs_state->_debug_info = "UNMONITORED";
+        hs_state->_in_downtime = 0;
+        hs_state->_in_notification_period = 0;
+        hs_state->_is_flapping = 0;
+        if (hs_state->_log_output)
+            free(hs_state->_log_output);
+        hs_state->_log_output = 0;
 
         // Apply latest notification period information and set the host_state to unmonitored
         _notification_periods_t::const_iterator it_status = _notification_periods.find(hs_state->_notification_period);
@@ -638,7 +683,8 @@ void TableStateHistory::updateHostServiceState(Query *query, const LogEntry *ent
                 hs_state->_state      = entry->_state;
                 hs_state->_host_down  = entry->_state > 0;
                 hs_state->_debug_info = "HOST STATE";
-            }
+            } else
+                state_changed = 0;
         }
         else if (hs_state->_host_down != entry->_state > 0)
         {
@@ -673,7 +719,8 @@ void TableStateHistory::updateHostServiceState(Query *query, const LogEntry *ent
             hs_state->_in_host_downtime = downtime_active;
             if (hs_state->_is_host)
                 hs_state->_in_downtime  = downtime_active;
-        }
+        } else
+            state_changed = 0;
         break;
     }
     case DOWNTIME_ALERT_SERVICE:
@@ -697,7 +744,8 @@ void TableStateHistory::updateHostServiceState(Query *query, const LogEntry *ent
                 process(query, hs_state);
             hs_state->_debug_info = "FLAPPING ";
             hs_state->_is_flapping = flapping_active;
-        }
+        } else
+            state_changed = 0;
         break;
     }
     case TIMEPERIOD_TRANSITION:
@@ -727,10 +775,12 @@ void TableStateHistory::updateHostServiceState(Query *query, const LogEntry *ent
         else
             hs_state->_log_output = entry->_check_output ? strdup(entry->_check_output) : 0;
     }
+
+    return state_changed;
 }
 
 
-void TableStateHistory::process(Query *query, HostServiceState *hs_state)
+inline void TableStateHistory::process(Query *query, HostServiceState *hs_state)
 {
     hs_state->_duration = hs_state->_until - hs_state->_from;
     hs_state->_duration_part = (double)hs_state->_duration / (double)_query_timeframe;

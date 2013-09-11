@@ -2299,7 +2299,7 @@ int launch_program(script_container* cont)
 
             if (bread > 0) {
                 memset(buf, 0, sizeof(buf));
-                ReadFile(read_stdout, buf, sizeof(buf), &bread, NULL);
+                ReadFile(read_stdout, buf, sizeof(buf) - 1, &bread, NULL);
                 out_offset += snprintf(cont->buffer_work + out_offset, current_heap_size - out_offset, buf);
             }
         }

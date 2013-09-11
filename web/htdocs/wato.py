@@ -6858,7 +6858,6 @@ def mode_edit_site(phase):
             label = _("Path:"),
             size = 40,
             allow_empty = False)),
-        ( "disabled", _("Do not connect")),
     ]
     if config.liveproxyd_enabled:
         conn_choices[2:2] = [
@@ -7189,12 +7188,20 @@ def load_sites():
 
         vars = { "sites" : {} }
         execfile(sites_mk, vars, vars)
+
+        # Be compatible to old "disabled" value in socket attribute.
+        # Can be removed one day.
+        for site in vars['sites'].values():
+            if site.get('socket') == 'disabled':
+                site['disabled'] = True
+                del site['socket']
+
         return vars["sites"]
 
     except Exception, e:
         if config.debug:
             raise MKGeneralException(_("Cannot read configuration file %s: %s" %
-                          (filename, e)))
+                          (sites_mk, e)))
         return {}
 
 
@@ -9259,17 +9266,17 @@ def mode_hosttags(phase):
                 topic, title = parse_hosttag_title(title)
                 table.row()
                 edit_url     = make_link([("mode", "edit_hosttag"), ("edit", tag_id)])
-                delete_url   = html.makeactionuri([("_delete", tag_id)])
+                delete_url   = make_action_link([("mode", "hosttags"), ("_delete", tag_id)])
                 table.cell(_("Actions"), css="buttons")
                 if nr == 0:
                     html.empty_icon_button()
                 else:
-                    html.icon_button(html.makeactionuri([("_move", str(-nr))]),
+                    html.icon_button(make_action_link([("mode", "hosttags"), ("_move", str(-nr))]),
                                 _("Move this tag group one position up"), "up")
                 if nr == len(hosttags) - 1:
                     html.empty_icon_button()
                 else:
-                    html.icon_button(html.makeactionuri([("_move", str(nr))]),
+                    html.icon_button(make_action_link([("mode", "hosttags"), ("_move", str(nr))]),
                                 _("Move this tag group one position down"), "down")
                 html.icon_button(edit_url,   _("Edit this tag group"), "edit")
                 html.icon_button(delete_url, _("Delete this tag group"), "delete")
@@ -9298,7 +9305,7 @@ def mode_hosttags(phase):
                 table.row()
                 topic, title = parse_hosttag_title(title)
                 edit_url     = make_link([("mode", "edit_auxtag"), ("edit", nr)])
-                delete_url   = html.makeactionuri([("_delaux", nr)])
+                delete_url   = make_action_link([("mode", "hosttags"), ("_delaux", nr)])
                 table.cell(_("Actions"), css="buttons")
                 html.icon_button(edit_url, _("Edit this auxiliary tag"), "edit")
                 html.icon_button(delete_url, _("Delete this auxiliary tag"), "delete")
@@ -10111,7 +10118,8 @@ def mode_ineffective_rules(phase):
                     ("mode", "edit_rule"),
                     ("varname", varname),
                     ("rulenr", rel_rulenr),
-                    ("rule_folder", f[".path"])])
+                    ("rule_folder", f[".path"])
+                ])
                 html.icon_button(edit_url, _("Edit this rule"), "edit")
 
                 delete_url = make_action_link([
@@ -10119,7 +10127,9 @@ def mode_ineffective_rules(phase):
                     ("varname", varname),
                     ("_action", "delete"),
                     ("_folder", f[".path"]),
-                    ("_rulenr", rel_rulenr)])
+                    ("_rulenr", rel_rulenr),
+                    ("rule_folder", f[".path"])
+                ])
                 html.icon_button(delete_url, _("Delete this rule"), "delete")
 
                 # Rule folder
@@ -10696,18 +10706,22 @@ def create_rule(rulespec, hostname=None, item=NO_ITEM):
             new_rule.append([""])
     return tuple(new_rule)
 
-
-
 def rule_button(action, help=None, folder=None, rulenr=0):
     if action == None:
         html.empty_icon_button()
     else:
-        vars = [("_folder", folder[".path"]),
-          ("_rulenr", str(rulenr)),
-          ("_action", action)]
+        vars = [
+            ("mode",    html.var('mode', 'edit_ruleset')),
+            ("varname", html.var('varname')),
+            ("_folder", folder[".path"]),
+            ("_rulenr", str(rulenr)),
+            ("_action", action)
+        ]
+        if html.var("rule_folder"):
+            vars.append(("rule_folder", html.var("rule_folder")))
         if html.var("host"):
             vars.append(("host", html.var("host")))
-        url = html.makeactionuri(vars)
+        url = make_action_link(vars)
         html.icon_button(url, help, action)
 
 def parse_rule(ruleset, orig_rule):

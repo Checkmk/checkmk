@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,32 +23,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+$title = str_replace("_", " ", $servicedesc);
+$opt[1] = "--vertical-label 'Uptime (days)' -l0 --title \"$hostname / $title: Time since last reboot\" ";
 
-def inventory_dmi_sysinfo(checkname, info):
-    if len(info) > 0 and info[0] == ['System', 'Information']:
-        return [(None, None)]
-
-def check_dmi_sysinfo(item, param, info):
-    if len(info) == 0 or info[0] != ['System', 'Information']:
-        return (3, "Invalid information")
-    data = {}
-    for line in info:
-        line = " ".join(line)
-        if ":" in line:
-            key, value = line.split(":", 1)
-            data[key.strip()] = value.strip()
-
-    return (0, "Manufacturer: %s, Product-Name: %s, Version: %s, S/N: %s" % (
-                 data.get("Manufacturer", "Unknown"),
-                 data.get("Product Name", "Unknown"),
-                 data.get("Version", "Unknown"),
-                 data.get("Serial Number", "Unknown"),
-            ))
-
-
-
-check_info["dmi_sysinfo"] = {
-    'check_function':          check_dmi_sysinfo,
-    'inventory_function':      inventory_dmi_sysinfo,
-    'service_description':     'DMI Sysinfo',
-}
+$def[1] = "DEF:sec=$RRDFILE[1]:$DS[1]:MAX ";
+$def[1] .= "CDEF:uptime=sec,86400,/ ";
+$def[1] .= "AREA:uptime#80f000:\"Uptime (days)\"\\n ";
+$def[1] .= "LINE:uptime#408000 ";
+$def[1] .= "GPRINT:uptime:LAST:\"%7.2lf %s LAST\"\\t ";
+$def[1] .= "GPRINT:uptime:MAX:\"%7.2lf %s MAX\" ";
+$def[1] .= "GPRINT:uptime:AVERAGE:\"%7.2lf %s AVG\" ";
+?>

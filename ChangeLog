@@ -65,6 +65,7 @@
     * windows_agent: increased maximum local/plugin script output length to 512kB
                      (output buffer now grows dynamically)
     * jolokia_metrics: fixed incorrect plugin output for high warn/crit levels
+    * jolokia_metrics.uptime: Added pnp template
     * hyperv: Added a check for checking state changes.
     * df / esx_vsphere_datastore: now able to set absolute levels and levels depending
                                   on total disk space of used and free space
@@ -72,10 +73,15 @@
     * cisco_wlc_clients: New check for the nummber of clients in a wlc wifi
     * df: Negative integer levels for MB left on a device
     * win_printers: Monitoring of printer queue on a windows printserver
+    * cisco_qos: Updated to be able to mintor IOS XR 4.2.1 (on a ASR9K device)
     * FIX: hr_mem: handle virtual memory correct on some devices
     * FIX: apache_status agent plugin: now also works, if prog name contains slashes
     * FIX: check_dns: parameter -A does not get an additional string
     * FIX: cisco_qos: Catch policies without post/drop byte information
+    * FIX: cisco_qos: Catch policies without individual bandwidth limits
+    * mk-job: /var/lib/check_mk_agent/job directory is now created with mode 1777 so 
+              mk-job can be used by unprivileged users too
+    * windows_agent: fixed bug on merging plugin output buffers
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a
@@ -161,12 +167,16 @@
       and folders hierarchy. Those settings override the rule base config.
     * Require unique alias names in between the following elements:
       Host/Service/Contact Groups, Timeperiods and Roles
+    * Removed "do not connect" option from site socket editor. Use the
+      checkbox "Disable" to disable the site for multisite.
     * FIX: do validation of check items in rule editor
     * FIX: More consistent handling of folderpath select in rule editor
     * FIX: Now correctly handling depends_on_tags on page rendering for
            inherited values
     * FIX: Changed several forms from GET to POST to prevent "Request-URI too
            large" error messages during submitting forms
+    * FIX: automation snmp scan now adhere rules for shoddy snmp devices 
+           which have no sys description
 
     Notifications:
     * Flexible Notification can now filter service levels
@@ -326,6 +336,8 @@
     * FIX: Cleaned up graph rendering of Check_MK services 
     * FIX: zypper: deal with output from SLES 10
     * FIX: zpool_status: Ignoring "No known data errors" text
+    * FIX: dmi_sysinfo: Handling ":" in value correctly
+    * FIX: check_http: Fixed syntax error when monitoring certificates
 
     Multisite:
     * FIX: LDAP: Disabling use of referrals in active directory configuration

@@ -45,20 +45,20 @@
 # TEST:
 #
 # search class table:
-# .1.3.6.1.4.1.9.9.166.1.7.1.1.1.284945 "AF1"
-# class_id = 284945
+# .1.3.6.1.4.1.9.9.166.1.7.1.1.1.284945 (cbQosCMName) "AF1"
+# class_id = 284945 (cbQosConfigIndex)
 #
 # search config table for matching value
 # .1.3.6.1.4.1.9.9.166.1.5.1.1.2.144.5256 284945
-# key = 144.5256
+# key = 144.5256 (cbQosPolicyIndex: 144, cbQosObjectsIndex: 5256)
 #
 # search if table for matchin if_id: 144
-# .1.3.6.1.4.1.9.9.166.1.1.1.1.4.144 9
-# if_policy = 9
+# .1.3.6.1.4.1.9.9.166.1.1.1.1.4.144 (cbQosIfIndex) 9
+# if_policy = 9 (ifIndex -> standard mib)
 #
-# get policy_id from config table using if_id.if_id 144.144
-# .1.3.6.1.4.1.9.9.166.1.5.1.1.2.144.144 6208592
-# policy_index = 6208592
+# get config_id from config table using if_id.if_id 144.144
+# .1.3.6.1.4.1.9.9.166.1.5.1.1.2.144.144 (cbQosConfigIndex) 6208592
+# config_index = 6208592
 #
 # get policy name using the policy_index
 # .1.3.6.1.4.1.9.9.166.1.6.1.1.1.6208592 "ingress-map"
@@ -122,7 +122,7 @@ cisco_qos_default_levels = (None, None, 0.01, 0.01)
 #    "drop" : (0.01, 0.01)
 #}
 
-def cisco_qos_get_ifs_by_class_id(config, class_id):
+def cisco_qos_get_config_entries_by_class_id(config, class_id):
     return [ if_index.split('.') for if_index, value in config.iteritems() if value == class_id ]
 
 def inventory_cisco_qos(info):
@@ -135,8 +135,8 @@ def inventory_cisco_qos(info):
         items = []
         for class_id, class_name in info[2]:
             # Get interface ids which use this qos class
-            for policy_if_id, policy_if_id2 in cisco_qos_get_ifs_by_class_id(config, class_id):
-                if_name = if_names[ifs[policy_if_id]]
+            for policy_id, objects_id in cisco_qos_get_config_entries_by_class_id(config, class_id):
+                if_name = if_names[ifs[policy_id]]
                 items += [ ('%s: %s' % (if_name, class_name), {}) ]
 
         return items
@@ -169,7 +169,7 @@ def check_cisco_qos(item, params, info):
     if_speeds = dict(info[7])
     parents = dict(info[8])
     if_qos_bandwidth = dict(info[9])
-    parents_type = dict(info[10])
+    object_types = dict(info[10])
 
     if_name, class_name = item.split(': ')
 
@@ -190,19 +190,35 @@ def check_cisco_qos(item, params, info):
     if not if_id or not class_id:
         return (3, "QoS class not found for that interface")
 
-    # Gather information for this object
-    policy_if_id, policy_if_id2 = cisco_qos_get_ifs_by_class_id(config, class_id)[0]
-    try:
-        policy_id = config[policy_if_id+'.'+policy_if_id]
-    except KeyError:
-        # Be compatible with newer IOS-XE releases where the last digit is pinned
-        # to "1" instead of the plicy_if_id
-        policy_id = config[policy_if_id+'.1']
-    policy_name = policies[policy_id]
-    post_b      = post_bytes.get(policy_if_id+'.'+policy_if_id2, 0)
-    drop_b      = drop_bytes.get(policy_if_id+'.'+policy_if_id2, 0)
+    policy_id, objects_id, policy_map_id, policy_name = None, None, None, None
+    for this_policy_id, this_objects_id in cisco_qos_get_config_entries_by_class_id(config, class_id):
+        if if_id != ifs[this_policy_id]:
+            continue # skip the ones of other interfaces
+
+        # Get the policy_map_id. To retrieve this get one of the config entries
+        # of type "policy map" from the config table. All of this type should have
+        # the same value, which is then the policy_map_id.
+        for key in object_types.keys():
+            if key.startswith(this_policy_id+'.') and object_types[key] == '1':
+                policy_map_id = config[key]
+                break
+
+        if policy_map_id is None:
+            return 3, 'Invalid policy map id'
+
+        policy_name = policies[policy_map_id]
+        policy_id   = this_policy_id
+        objects_id  = this_objects_id
+
+    if policy_id is None or objects_id is None:
+        return 3, 'Could not find policy_id or objects_id'
+
+    post_b      = post_bytes.get(policy_id+'.'+objects_id, 0)
+    drop_b      = drop_bytes.get(policy_id+'.'+objects_id, 0)
     speed       = saveint(if_speeds[if_id])
 
+    # might not have a specific speed. Skip these.
+    # FIXME: Maybe ignore speed checking on them or similar - does it make sense?
     speed_found = False
     for a_key, a_value in config.items():
         if speed_found:
@@ -211,9 +227,12 @@ def check_cisco_qos(item, params, info):
             parent_value = a_key.split(".")[1]
             for b_key, b_value in parents.items():
                 if parent_value == b_value:
-                    if parents_type[b_key] == "4":
-                        speed = saveint(if_qos_bandwidth[config[b_key]]) * 1000
-                        speed_found = True
+                    if object_types[b_key] == "4":
+                        try:
+                            speed = saveint(if_qos_bandwidth[config[b_key]]) * 1000
+                            speed_found = True
+                        except KeyError:
+                            pass
 
     # Bandwidth needs to be in bytes for later calculations
     bw = speed / 8.0

@@ -366,11 +366,22 @@ def page_edit_views(msg=None):
             save_views(config.user_id)
             html.reload_sidebar()
 
-    html.begin_form("create_view", "edit_view.py")
+    if html.var('mode') == 'create':
+        datasource = html.var('datasource')
+        if not datasource:
+            html.show_error(_('Please select a datasource. The datasource specifies which kind of objects '
+                              'can be rendered within the view.'))
+        else:
+            html.immediate_browser_redirect(1, "edit_view.py?mode=create&datasource=%s" % datasource)
+            return
 
+    html.begin_form("create_view")
+    html.hidden_field('mode', 'create')
     html.button("create", _("Create New View"))
     html.write(_(" for datasource: "))
-    html.sorted_select("datasource", [ (k, v["title"]) for k, v in multisite_datasources.items() ])
+    html.sorted_select("datasource", [('', _('--- Select a Datasource ---'))]
+              + [ (k, v["title"]) for k, v in multisite_datasources.items() ])
+    html.end_form()
 
     html.write('<h3>' + _("Existing Views") + '</h3>')
     html.write('<table class=data>')
@@ -447,7 +458,6 @@ def page_edit_views(msg=None):
             html.write("</tr>\n")
 
     html.write("</table>\n")
-    html.end_form()
     html.footer()
 
 
@@ -517,7 +527,7 @@ def page_edit_view():
             mode = 'create'
         datasourcename = html.var("datasource")
     else:
-        raise MKInternalError(_("No view name and not datasource defined."))
+        raise MKInternalError(_("No view name and no datasource defined."))
 
     if mode == 'clone':
         title = _('Clone View')

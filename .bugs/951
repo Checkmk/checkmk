@@ -1,0 +1,12 @@
+Title: Folder-Tree Snapin shows foreign folders, but filter does not work
+Component: multisite
+State: open
+Date: 2013-09-12 17:27:28
+Targetversion: 1.2.3i2
+Class: bug
+
+If you create a disributed monitoring then the folder tree snapin
+can show folders from remote sites (without alias), which is OK.
+But when you click on a folder then the filter does not work
+because (i think) it does not know the folder and hence ignored
+it.

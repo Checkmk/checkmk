@@ -83,6 +83,9 @@
     * FIX: esx_vsphere_datastores: Fix incomplete performance data and Perf-O-Meter
     * FIX: cleaned up fileinfo.groups pattern handling, manual configuration
       is now possible using WATO
+    * ADD: etherbox: new check for etherbox (messpc) sensors.
+           currently supported: temperature, humidity, switch contact and smoke sensors
+
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a

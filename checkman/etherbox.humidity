@@ -1,0 +1,24 @@
+title: Etherbox Sensor Humidity
+catalog: hw/environment
+agents: snmp
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the value of an etherbox humidity sensor
+
+item:
+ The port number of the sensor followed by the sensor type
+ Example: "2.3" A humidity sensor(type 3) on port 2
+
+perfdata:
+ The current humidity in percent, lower crit, lower warn, upper warn, upper crit
+
+inventory:
+ The inventory creates a service for each humidity sensor found
+
+[parameters]
+critical low (int): lower border for triggering critical level
+warning low (int): lower border for warning level
+warning high (int): upper border for triggering warning level
+critical high (int): upper border for critical level
+

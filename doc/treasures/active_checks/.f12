@@ -1,0 +1,2 @@
+site=${site:-$(omd sites --bare | head -n 1)}
+sudo rsync -ar ./ /omd/sites/$site/lib/nagios/plugins

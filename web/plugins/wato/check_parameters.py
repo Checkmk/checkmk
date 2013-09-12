@@ -2019,11 +2019,10 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_environment,
-    "akcp_humidity",
-    _("AKCP Humidity Levels"),
+    "humidity",
+    _("Humidity Levels"),
     Tuple(
-          help = _("This Rulset sets the threshold limits for humidity sensors attached to "
-                   "AKCP Sensor Probe "),
+          help = _("This Rulset sets the threshold limits for humidity sensors"),
           elements = [
               Integer(title = _("Critical if below"), unit="%" ),
               Integer(title = _("Warning if below"), unit="%" ),

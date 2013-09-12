@@ -1,0 +1,226 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+import sys, getopt
+
+def usage():
+    sys.stderr.write("""Check_MK SQL Test
+
+USAGE: check-sql [OPTIONS] SQL-Statement
+       check-sql -h
+
+ARGUMENTS:
+  SQL-Statement                 Valid SQL-Statement for the selected database
+                                The statement must return at least a number and a string,
+                                plus optional performance data.
+
+OPTIONS:
+  -h, --help                    Show this help message and exit
+  -u USER, --user USER          Username for database access
+  -p PASS, --password PASS      Password for database access
+  -d DBMS, --dbms DBMS          Name of the database management system.
+                                Default is 'postgres', other valid values are
+                                'mysql' and 'oracle'
+  -H HOST , --hostname HOST     Hostname or IP-Address where the database lives. Default is '127.0.0.1'
+  -n NAME, --name NAME          Name of the database on the DBMS
+  -w RANGE, --warning RANGE     lower and upper level for the warning state
+  -c RANGE, --critical RANGE    lower and upper level for the critical state
+  --debug                       Debug mode: let Python exceptions come through
+  -v, --verbose                 Verbose mode: print sql statement and levels
+
+""")
+
+def saverfloat(f):
+    if f == "":
+        return None
+    else:
+        return float(f)
+
+
+
+#
+# defining and collection input parameters
+#
+short_options = 'hu:p:d:n:H:w:c:v'
+long_options  = [
+    'help', 'user=', 'password=', 'dbms=', 'name=', 'warning=', 'critical=', 'hostname=',
+    'debug', 'verbose'
+]
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+
+except getopt.GetoptError, e:
+    sys.stderr.write("UNKOWN - Error in command options: %s\n" % e)
+    sys.exit(3)
+
+opt_debug         = False
+opt_verbose       = False
+opt_dbms          = "postgres"
+opt_name          = None
+opt_user          = opt_dbms
+opt_password      = None
+opt_hostname      = "127.0.0.1"
+opt_sql           = None
+warn              = [ None, None ]
+crit              = [ None, None ]
+
+try:
+    for o,a in opts:
+        if o in [ '--debug' ]:
+            opt_debug = True
+        elif o in [ '-v', '--verbose' ]:
+            opt_verbose = True
+        elif o in [ '-d', '--dbms' ]:
+            opt_dbms = a
+        elif o in [ '-n', '--name' ]:
+            opt_name = a
+        elif o in [ '-u', '--user' ]:
+            opt_user = a
+        elif o in [ '-p', '--password' ]:
+            opt_password = a
+        elif o in [ '-H', '--hostname' ]:
+            opt_hostname = a
+        elif o in [ '-w', '--warning' ]:
+            warn = map(saverfloat,a.split(":",2))
+        elif o in [ '-c', '--critical' ]:
+            crit = map(saverfloat,a.split(":",2))
+        elif o in [ '-h', '--help' ]:
+            usage()
+            sys.exit(0)
+
+    if args:
+        opt_sql = ' '.join(map(str,args))
+    else:
+        sys.stderr.write("UNKNOWN - no sql statement given\n")
+        sys.exit(3)
+
+except Exception, e:
+    if opt_debug:
+        raise
+    print "UNKNOWN - Error while processing input: %s" % e
+    sys.exit(3)
+
+
+#
+# database connection
+#
+try:
+
+    if opt_dbms == "postgres":
+        import psycopg2 # postgres driver
+        db = psycopg2
+        db_connection = db.connect(host=opt_hostname, database=opt_name, \
+            user=opt_user, password=opt_password )
+
+    elif opt_dbms == "mysql":
+        import MySQLdb  # mysql driver
+        db = MySQLdb
+        db_connection = db.connect(host=opt_hostname, db=opt_name, \
+            user=opt_user, passwd=opt_password )
+
+    elif opt_dbms == "odbc":
+        import pyodbc   # odbc driver
+        db = odbc
+        db_connection = db.connect(DRIVER=opt_dbms, SERVER=opt_hostname, DATABASE=opt_name, \
+            UID=opt_user, PWD=opt_password, CHARSET='UTF8' )
+
+    else:
+        print "UNKNOWN - dbms not found"
+        sys.exit(3)
+
+    cursor = db_connection.cursor()
+
+except Exception, e:
+    if len(e.args) > 1:
+        print "UNKNOWN - Error while connecting to database: [%d] %s" % (e.args[0], e.args[1])
+    else:
+        print "UNKNOWN - Error while connecting to database: %s" % e
+    sys.exit(3)
+
+#
+# excecuting the sql statement
+#
+try:
+    if opt_verbose:
+        sys.stderr.write("\nSQL Statement:\n %s" % opt_sql)
+    cursor.execute(opt_sql)
+    rows = cursor.fetchmany(2)
+    cursor.close()
+    db_connection.close()
+
+except Exception, e:
+    if opt_debug:
+        raise
+    if len(e.args) > 1:
+        print "UNKNOWN - Error while executing SQL statement: [%d] %s" % (e.args[0], e.args[1])
+    else:
+        print "UNKNOWN - Error while executing SQL statement: %s" % e
+    sys.exit(3)
+
+if opt_verbose:
+    sys.stderr.write("\nSQL Result:\n %s\n\n" % rows)
+
+#
+# processing of result
+#
+try:
+    if len(rows) > 1:
+        sys.stderr.write("UNKNOWN - SQL statement returned more than one line\n")
+        sys.exit(3)
+    elif len(rows) == 0:
+        sys.stderr.write("UNKNOWN - SQL statement returned no data\n")
+        sys.exit(3)
+
+    row = rows[0]
+    number = float(row[0])
+    text = str(row[1])
+    state = 0
+    if warn != [ None, None] or crit != [ None, None ]:
+        if (warn[0] != None and warn[0] > number) or \
+           (warn[1] != None and warn[1] < number):
+            state = 1
+        if (crit[0] != None and crit[0] > number) or \
+           (crit[1] != None and crit[1] < number):
+            state = 2
+    else:
+        if number  in [ 0 ,1 ,2 ,3 ]:
+            state = number
+        else:
+            sys.stderr.write("UNKNOWN - <%s> is not a state, and no levels given\n" % str(number))
+            sys.exit(3)
+
+except Exception, e:
+    if opt_debug:
+        raise
+    print "UNKNOWN - Error while processing result of SQL statement: %s" % e
+    sys.exit(3)
+
+result = ["OK", "WARN", "CRIT", "UNKNOWN" ][state]
+print "%s - %s %s" % (result, number, text)
+sys.exit(state)
+

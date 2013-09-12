@@ -75,7 +75,7 @@ try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
 
 except getopt.GetoptError, e:
-    sys.stderr.write("UNKOWN - Error in command options: %s\n" % e)
+    print "UNKOWN - Error in command options: %s" % e
     sys.exit(3)
 
 opt_debug         = False
@@ -116,7 +116,7 @@ try:
     if args:
         opt_sql = ' '.join(map(str,args))
     else:
-        sys.stderr.write("UNKNOWN - no sql statement given\n")
+        print "UNKNOWN - no sql statement given"
         sys.exit(3)
 
 except Exception, e:
@@ -190,10 +190,10 @@ if opt_verbose:
 #
 try:
     if len(rows) > 1:
-        sys.stderr.write("UNKNOWN - SQL statement returned more than one line\n")
+        print "UNKNOWN - SQL statement returned more than one line"
         sys.exit(3)
     elif len(rows) == 0:
-        sys.stderr.write("UNKNOWN - SQL statement returned no data\n")
+        print "UNKNOWN - SQL statement returned no data"
         sys.exit(3)
 
     row = rows[0]
@@ -211,7 +211,7 @@ try:
         if number  in [ 0 ,1 ,2 ,3 ]:
             state = number
         else:
-            sys.stderr.write("UNKNOWN - <%s> is not a state, and no levels given\n" % str(number))
+            print "UNKNOWN - <%s> is not a state, and no levels given" % str(number)
             sys.exit(3)
 
 except Exception, e:

@@ -11,3 +11,21 @@ description:
 
 inventory:
  One check for each online accesspoint is created
+
+examples:
+ checkgroup_parameters.setdefault('cisco_wlc', [])
+
+ checkgroup_parameters['cisco_wlc'] = [
+   ( {'ap_name': [('HOMEOFFICE', 0), ('FALLBACK', 2)], 'ap_model': [('K7-B30329', 3)]}, [], ALL_HOSTS, ALL_SERVICES ),
+ ] + checkgroup_parameters['cisco_wlc']
+
+
+[parameters]
+parameters(dict): with the keys "ap_model" and "ap_name"
+
+ The values of in this dict are list of tuples. Each tuple contain
+ eiter (ap_name(string), action(int)) or (ap_model(string), action(int)), 
+ whereas the ap_name is the human readable name of the AP and the ap_model is the model number
+ The action represent the outcome when this model is missing and can be 
+ set from 0 to 3 (OK, WARN, CRIT, UNKNOWN)
+

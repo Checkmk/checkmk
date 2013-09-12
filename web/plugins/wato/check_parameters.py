@@ -1120,6 +1120,42 @@ register_check_parameters(
 )
 
 register_check_parameters(
+   subgroup_networking,
+   "cisco_wlc",
+   _("Cisco WLAN AP"),
+   Dictionary(
+       help = _("Here you can set which alert type is set when the given "
+                "access point is missing (might be powered off). The access point "
+                "can be specified by the AP name or the AP model"),
+        elements = [
+           ( "ap_name",
+            ListOf(
+                Tuple(
+                    elements = [
+                        TextAscii(title = _("AP name")),
+                        MonitoringState( title=_("State when missing"), default_value = 2)
+                    ]
+                ),
+                title = _("Access point name"),
+            add_label = _("Add name"))
+           ),
+           ( "ap_model",
+            ListOf(
+                Tuple(
+                    elements = [
+                        TextAscii(title = _("AP model")),
+                        MonitoringState( title=_("State when missing"), default_value = 2)
+                    ]
+                ),
+                title = _("Access point device id"),
+            add_label = _("Add id"))
+           )
+        ]
+    ),
+   TextAscii(title = _("Access Point")),
+   "first",
+)
+register_check_parameters(
     subgroup_networking,
     "tcp_conn_stats",
     ("TCP connection stats (LINUX / UNIX)"),

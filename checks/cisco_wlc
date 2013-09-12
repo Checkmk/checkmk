@@ -24,27 +24,22 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Example output from agent:
-# Put here the example output from your TCP-Based agent. If the
-# check is SNMP-Based, then remove this section
-
-
 # States:
 # 1: OK, 2: Crit, 3: Warn
 
 def cisco_wlc_convert(info):
     data = []
     for i in range(0, len(info[0])):
-        data.append((info[0][i][1], info[1][i][1], info[2][i][1] ))
+        data.append((info[0][i][1], info[1][i][1], info[2][i][1], info[3][i][1] ))
     return data
 
 def inventory_cisco_wlc(info):
     data = cisco_wlc_convert(info)
     return [ (x[0], None) for x in data ]
 
-def check_cisco_wlc(item, _no_params, info):
+def check_cisco_wlc(item, params, info):
     data = cisco_wlc_convert(info)
-    for name, mac, state in data:
+    for name, mac, state, model in data:
         if name == item:
             state = saveint(state)
             if state == 1:
@@ -53,17 +48,30 @@ def check_cisco_wlc(item, _no_params, info):
                 return 1, "Accesspoint state Warning"
             if state == 2:
                 return 2, "State Critical"
+
+    # Special treatment if this device is missing
+    if params:
+        for name, mac, state, model in data:
+            for ap_name, ap_state in params.get("ap_name", []):
+                if name.startswith(ap_name):
+                    return ap_state, "Accesspoint not found (State set to %s by rule)" % nagios_state_names[ap_state]
+            for ap_model, ap_state in params.get("ap_model", []):
+                if mode.startswith(ap_model):
+                    return ap_state, "Accesspoint not found (State set to %s by rule)" % nagios_state_names[ap_state]
+
     return 2, "Accesspoint not found"
 
 check_info["cisco_wlc"] = {
     "check_function"        : check_cisco_wlc,
     "inventory_function"    : inventory_cisco_wlc,
+    "group"                 : "cisco_wlc",
     "service_description"   : "AP %s",
     "has_perfdata"          : False,
     "snmp_scan_function"    : lambda oid: oid('.1.3.6.1.2.1.1.2.0') in [".1.3.6.1.4.1.9.1.1069"],
     "snmp_info"             : [( ".1.3.6.1.4.1.14179.2.2.1.1.3", [ OID_END, '' ]),
                                ( ".1.3.6.1.4.1.14179.2.2.1.1.1", [ OID_END, '' ]),
                                ( ".1.3.6.1.4.1.14179.2.2.1.1.6", [ OID_END, '' ]),
+                               ( ".1.3.6.1.4.1.14179.2.2.1.1.16", [ OID_END, '' ]),
                                ],
 }
 

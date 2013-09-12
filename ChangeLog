@@ -85,6 +85,7 @@
       is now possible using WATO
     * ADD: etherbox: new check for etherbox (messpc) sensors.
            currently supported: temperature, humidity, switch contact and smoke sensors
+    * cisco_wlc_client: now supports low/high warn and crit levels
 
 
     Notifications:
@@ -182,6 +183,8 @@
     * FIX: automation snmp scan now adhere rules for shoddy snmp devices 
            which have no sys description
     * ADD: Rule to check state of physical switch (currently used by etherbox check)
+    * FIX: Cisco ruleset "Cisco WLC WiFi client connections" has been generalized to
+           "WLC WiFi client connections"
 
     Notifications:
     * Flexible Notification can now filter service levels

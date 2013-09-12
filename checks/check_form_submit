@@ -29,12 +29,7 @@ def check_form_submit_arguments(params):
     args = ''
 
     if "virthost" in settings:
-        vhost, omit_ip = settings["virthost"]
-        args += ' -H %s' % quote_shell_string(vhost)
-        if omit_ip:
-            args += ' -I %s' % quote_shell_string(vhost)
-    else:
-        omit_ip = False
+        args += ' -H %s' % quote_shell_string(settings["virthost"])
 
     if "port" in settings:
         args += ' -p %d' % settings["port"]
@@ -57,8 +52,14 @@ def check_form_submit_arguments(params):
     if "query" in settings:
         args += ' -q %s' % quote_shell_string(settings["query"])
 
-    if not omit_ip:
-        args = " -I $HOSTADDRESS$" + args
+    if "num_succeeded" in settings:
+        args += ' -n %s' % ','.join(map(str, settings["num_succeeded"]))
+
+    if not settings.get('hosts'):
+        args += " -I $HOSTADDRESS$"
+    else:
+        for address in settings['hosts']:
+            args += " -I %s" % quote_shell_string(address)
 
     return args
 

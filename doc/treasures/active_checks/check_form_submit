@@ -48,7 +48,7 @@
 #
 # ./check_form_submit -I localhost -u /event -q '_origtarget=wato.py&_username=omdadmin&_password=omd' -e 'WATO'
 
-import sys, getopt, urllib2, urllib, re
+import sys, getopt, urllib2, urllib, re, socket
 
 def usage():
     sys.stderr.write("""
@@ -200,6 +200,8 @@ def open_url(url, method = 'GET', data = None):
         new_state(2, 'Unable to open %s: [%d] %s' % (url, e.code, e.reason))
     except urllib2.URLError, e:
         new_state(2, 'Unable to open %s: %s' % (url, e.reason))
+    except socket.timeout, e:
+        new_state(2, 'Unable to open %s: %s' % (url, e))
     real_url = fd.geturl()
     code     = fd.getcode()
     content  = fd.read()
@@ -324,10 +326,10 @@ try:
             # use the worst state as summary state
             sum_state = max_state
 
-        elif num_crit is not None and len(failed) >= num_crit:
+        elif num_crit is not None and len(success) <= num_crit:
             sum_state = 2
 
-        elif num_warn is not None and len(failed) >= num_warn:
+        elif num_warn is not None and len(success) <= num_warn:
             sum_state = 1
 
         txt = '%d succeeded, %d failed' % (len(success), len(failed))

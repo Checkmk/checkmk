@@ -928,27 +928,20 @@ register_rule(group,
             Dictionary(
                 title = _("Check the URL"),
                 elements = [
-                    ("virthost", Tuple(
+                    ("hosts", ListOfStrings(
+                        title = _('Check specific host(s)'),
+                        help = _('By default, if you do not specify any host addresses here, '
+                                 'the host address of the host this service is assigned to will '
+                                 'be used. But by specifying one or several host addresses here, '
+                                 'it is possible to let the check monitor one or multiple hosts.')
+                    )),
+                    ("virthost", TextAscii(
                         title = _("Virtual host"),
-                        elements = [
-                            TextAscii(
-                                title = _("Name of the virtual host"),
-                                help = _("Set this in order to specify the name of the "
-                                 "virtual host for the query (using HTTP/1.1). When you "
-                                 "leave this empty, then the IP address of the host "
-                                 "will be used instead."),
-                                allow_empty = False
-                            ),
-                            Checkbox(
-                                label = _("Omit specifying an IP address"),
-                                help = _("Usually Check_MK will nail this check to the "
-                                  "IP address of the host it is attached to. With this "
-                                  "option you can have the check use the name of the "
-                                  "virtual host instead and do a dynamic DNS lookup."),
-                                true_label = _("omit IP address"),
-                                false_label = _("specify IP address"),
-                            ),
-                        ]
+                        help = _("Set this in order to specify the name of the "
+                         "virtual host for the query (using HTTP/1.1). When you "
+                         "leave this empty, then the IP address of the host "
+                         "will be used instead."),
+                        allow_empty = False,
                     )),
                     ("uri", TextAscii(
                         title = _("URI to fetch (default is <tt>/</tt>)"),
@@ -989,6 +982,13 @@ register_rule(group,
                         help = _("Data to send via HTTP POST method. Please make sure, that the data "
                                  "is URL-encoded (for example \"key1=val1&key2=val2\")."),
                         size = 40,
+                    )),
+                    ("num_succeeded", Tuple(
+                        title = _("Multiple Hosts: Number of successful results"),
+                        elements = [
+                            Integer(title = _("Warning if equal or below")),
+                            Integer(title = _("Critical if equal or below")),
+                        ]
                     )),
                 ]
             ),

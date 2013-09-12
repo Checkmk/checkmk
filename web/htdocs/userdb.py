@@ -302,7 +302,7 @@ def load_users(lock = False):
             id = d
 
             # read special values from own files
-            for val, conv_func in [ ('num_failed', int), ('last_seen', float) ]:
+            for val, conv_func in [ ('num_failed', saveint), ('last_seen', savefloat) ]:
                 if id in result:
                     try:
                         result[id][val] = conv_func(file(dir + d + '/' + val + '.mk').read().strip())

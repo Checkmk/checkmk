@@ -1,0 +1,13 @@
+Title: Errormessage displayed when configuring distributed monitoring
+Component: multisite
+State: open
+Date: 2013-09-12 10:27:16
+Targetversion: 1.2.3i2
+Class: bug
+
+in distributed monitoring a remote slave is configured
+when clicking "save" butto multisite displays an error, where there seems to be none:
+Internal error:: '.siteid' (Retry with debug mode)
+but when klicking "Retry with debug mode" it works
+
+the connection is created correct within the first click on save

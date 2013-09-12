@@ -1,0 +1,19 @@
+title: Etherbox Sensor Smoke
+catalog: hw/environment
+agents: snmp
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state of the etherbox smoke sensor
+
+item:
+ The port number of the sensor followed by the sensor type
+ Example: "2.6" A smoke sensor(type 6) on port 2
+
+perfdata:
+ The current state of the smoke sensor
+
+inventory:
+ The inventory creates a service for each smoke sensor found
+
+

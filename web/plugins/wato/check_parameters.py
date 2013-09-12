@@ -1103,20 +1103,58 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_networking,
-    "cisco_wlc_clients",
-    _("Cisco WLC WiFi client connections"),
+    "wlc_clients",
+    _("WLC WiFi client connections"),
     Tuple(
         title = _("Number of connections"),
-        help = _("Number of connections for a WiFi "),
+        help = _("Number of connections for a WiFi"),
               elements = [
-                  Integer(title = _("Warning if above"),  label = _("connections")),
-                  Integer(title = _("Critical if above"), label = _("connections"))
+              Integer(title = _("Critical if below"), unit=_("connections")),
+              Integer(title = _("Warning if below"),  unit=_("connections")),
+              Integer(title = _("Warning if above"),  unit=_("connections")),
+              Integer(title = _("Critical if above"), unit=_("connections")),
               ]
     ),
     TextAscii( title = _("Name of Wifi")),
     "first"
 )
 
+register_check_parameters(
+   subgroup_networking,
+   "cisco_wlc",
+   _("Cisco WLAN AP"),
+   Dictionary(
+       help = _("Here you can set which alert type is set when the given "
+                "access point is missing (might be powered off). The access point "
+                "can be specified by the AP name or the AP model"),
+        elements = [
+           ( "ap_name",
+            ListOf(
+                Tuple(
+                    elements = [
+                        TextAscii(title = _("AP name")),
+                        MonitoringState( title=_("State when missing"), default_value = 2)
+                    ]
+                ),
+                title = _("Access point name"),
+            add_label = _("Add name"))
+           ),
+           ( "ap_model",
+            ListOf(
+                Tuple(
+                    elements = [
+                        TextAscii(title = _("AP model")),
+                        MonitoringState( title=_("State when missing"), default_value = 2)
+                    ]
+                ),
+                title = _("Access point device id"),
+            add_label = _("Add id"))
+           )
+        ]
+    ),
+   TextAscii(title = _("Access Point")),
+   "first",
+)
 register_check_parameters(
     subgroup_networking,
     "tcp_conn_stats",
@@ -2019,11 +2057,10 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_environment,
-    "akcp_humidity",
-    _("AKCP Humidity Levels"),
+    "humidity",
+    _("Humidity Levels"),
     Tuple(
-          help = _("This Rulset sets the threshold limits for humidity sensors attached to "
-                   "AKCP Sensor Probe "),
+          help = _("This Rulset sets the threshold limits for humidity sensors"),
           elements = [
               Integer(title = _("Critical if below"), unit="%" ),
               Integer(title = _("Warning if below"), unit="%" ),

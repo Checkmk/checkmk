@@ -83,6 +83,11 @@
     * FIX: esx_vsphere_datastores: Fix incomplete performance data and Perf-O-Meter
     * FIX: cleaned up fileinfo.groups pattern handling, manual configuration
       is now possible using WATO
+    * ADD: etherbox: new check for etherbox (messpc) sensors.
+           currently supported: temperature, humidity, switch contact and smoke sensors
+    * cisco_wlc_client: now supports low/high warn and crit levels
+    * cisco_wlc: now supports configuration options for missing AP
+
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a
@@ -179,6 +184,9 @@
     * FIX: automation snmp scan now adhere rules for shoddy snmp devices 
            which have no sys description
     * ADD: Rule to check state of physical switch (currently used by etherbox check)
+    * FIX: Cisco ruleset "Cisco WLC WiFi client connections" has been generalized to
+           "WLC WiFi client connections"
+    * ADD: new ruleset cisco_wlc: Allows to configure handling of missing AP
 
     Notifications:
     * Flexible Notification can now filter service levels

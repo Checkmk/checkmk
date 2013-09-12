@@ -1,0 +1,23 @@
+title: Etherbox Sensor Switch Contact
+catalog: hw/environment
+agents: snmp
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state of the etherbox switch contact sensor
+ The check reports a CRIT only when the current state differs from the
+ expected_state ("open", "closed") specified by the parameters.
+ Without parameters the check is always OK.
+
+item:
+ The port number of the sensor followed by the sensor type
+ Example: "2.4" A switch contact sensor(type 4) on port 2
+
+perfdata:
+ The current state of the switch contact
+
+inventory:
+ The inventory creates a service for each switch contact sensor found
+
+[parameters]
+expected_state (string): the expected state of this switch: "open", "closed" or "ignore"

@@ -1103,14 +1103,16 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_networking,
-    "cisco_wlc_clients",
-    _("Cisco WLC WiFi client connections"),
+    "wlc_clients",
+    _("WLC WiFi client connections"),
     Tuple(
         title = _("Number of connections"),
-        help = _("Number of connections for a WiFi "),
+        help = _("Number of connections for a WiFi"),
               elements = [
-                  Integer(title = _("Warning if above"),  label = _("connections")),
-                  Integer(title = _("Critical if above"), label = _("connections"))
+              Integer(title = _("Critical if below"), unit=_("connections")),
+              Integer(title = _("Warning if below"),  unit=_("connections")),
+              Integer(title = _("Warning if above"),  unit=_("connections")),
+              Integer(title = _("Critical if above"), unit=_("connections")),
               ]
     ),
     TextAscii( title = _("Name of Wifi")),

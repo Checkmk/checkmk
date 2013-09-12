@@ -19,5 +19,7 @@ inventory:
  One check for each wifi network, and one summary check will be created
 
 [parameters]
-warn(int): Optional warning level for the number of clients
-crit(int): Critical level for the number of clients
+crit_low(int): Critical level for minimum number of clients
+warn_low(int): Warning level for minimum number of clients
+warn_high(int): Warning level for maximum number of clients
+crit_high(int): Critical level for maximum number of clients

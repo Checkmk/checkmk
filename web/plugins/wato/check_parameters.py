@@ -360,6 +360,8 @@ register_rule(group + '/' + subgroup_inventory,
             )),
             ('levels', Tuple(
                 title = _('Levels'),
+                help = _("Please note that if you specify and also if you modify levels here, the change is activated "
+                         "only during an inventory.  Saving this rule is not enough. This is due to the nature of inventory rules."),
                 elements = [
                     Integer(
                         title = _("Critical below"),

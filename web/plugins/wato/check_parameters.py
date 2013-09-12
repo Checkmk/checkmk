@@ -2864,6 +2864,25 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_environment,
+    "switch_state",
+    _("State of physical switch"),
+    DropdownChoice(
+          help = _("This Rule sets the required state of a physical switch"),
+          label = _("Required switch state"),
+          choices = [
+                    ( "open", "Switch is <b>open</b>" ),
+                    ( "closed", "Switch is <b>closed</b>" ),
+                    ( "ignore", "Ignore switch state" ),
+                    ],
+    ),
+    TextAscii(
+        title = _("Sensor"),
+        allow_empty = False),
+     None
+)
+
+register_check_parameters(
+    subgroup_environment,
     "room_temperature",
     _("Room temperature (external thermal sensors)"),
     Tuple(

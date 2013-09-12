@@ -292,6 +292,7 @@ register_rule(group + '/' + subgroup_inventory,
         elements = [
             ('descr', TextAscii(
                 title = _('Service Description'),
+                allow_empty = False,
                 help  = _('<p>The service description may contain one or more occurances of <tt>%s</tt>. If you do this, then the pattern must be a regular '
                           'expression and be prefixed with ~. For each <tt>%s</tt> in the description, the expression has to contain one "group". A group '
                           'is a subexpression enclosed in brackets, for example <tt>(.*)</tt> or <tt>([a-zA-Z]+)</tt> or <tt>(...)</tt>. When the inventory finds a process '

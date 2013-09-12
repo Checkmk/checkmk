@@ -52,7 +52,7 @@ class FilterWatoFile(Filter):
     def filter(self, infoname):
         self.check_wato_data_update()
         current = html.var(self.name)
-        if current and current in self.path_to_tree:
+        if current:
             return "Filter: host_filename ~ ^/wato/%s/\n" % current.replace("\n", "") # prevent insertions attack
         else:
             return ""

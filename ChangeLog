@@ -178,6 +178,7 @@
            large" error messages during submitting forms
     * FIX: automation snmp scan now adhere rules for shoddy snmp devices 
            which have no sys description
+    * ADD: Rule to check state of physical switch (currently used by etherbox check)
 
     Notifications:
     * Flexible Notification can now filter service levels

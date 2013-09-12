@@ -2864,15 +2864,15 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_environment,
-    "switch_state",
-    _("State of physical switch"),
+    "switch_contact",
+    _("Switch contact state"),
     DropdownChoice(
-          help = _("This Rule sets the required state of a physical switch"),
-          label = _("Required switch state"),
+          help = _("This rule sets the required state of a switch contact"),
+          label = _("Required switch contact state"),
           choices = [
-                    ( "open", "Switch is <b>open</b>" ),
-                    ( "closed", "Switch is <b>closed</b>" ),
-                    ( "ignore", "Ignore switch state" ),
+                    ( "open", "Switch contact is <b>open</b>" ),
+                    ( "closed", "Switch contact is <b>closed</b>" ),
+                    ( "ignore", "Ignore switch contact state" ),
                     ],
     ),
     TextAscii(

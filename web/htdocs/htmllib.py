@@ -200,7 +200,8 @@ class html:
     def hidden_field(self, var, value, id = None, add_var = False):
         if value != None:
             id = id and ' id="%s"' % id or ''
-            self.write("<input type=hidden name=\"%s\" value=\"%s\"%s>" % (self.attrencode(var), self.attrencode(value), id))
+            self.write("<input type=\"hidden\" name=\"%s\" value=\"%s\"%s />\n" %
+                                (self.attrencode(var), self.attrencode(value), id))
             if add_var:
                 self.add_form_var(var)
 
@@ -253,7 +254,7 @@ class html:
 
     def image_button(self, varname, title, cssclass = ''):
         if not self.mobile:
-            self.write('<label for="%s" class=image_button>' % varname)
+            self.write('<label for="%s" class="image_button">' % varname)
         self.raw_button(varname, title, cssclass)
         if not self.mobile:
             self.write('</label>')
@@ -263,8 +264,8 @@ class html:
 
     def raw_button(self, varname, title, cssclass=""):
         self.write("<input onfocus=\"if (this.blur) this.blur();\" "
-                   "type=submit name=\"%s\" id=\"%s\" value=\"%s\" "
-                   "class=\"%s\">\n" % \
+                   "type=\"submit\" name=\"%s\" id=\"%s\" value=\"%s\" "
+                   "class=\"%s\" />\n" % \
                    ( varname, varname, title, cssclass))
 
 
@@ -282,18 +283,18 @@ class html:
             title = ' disabled="%s"' % disabled
 
         if not self.mobile:
-            self.write('<label for="%s" class=image_button>' % obj_id)
-        self.write('<input%s%s%s%s value="%s" class=buttonlink type=button onclick="location.href=\'%s\'">' % \
+            self.write('<label for="%s" class="image_button">' % obj_id)
+        self.write('<input%s%s%s%s value="%s" class="buttonlink" type="button" onclick="location.href=\'%s\'" />\n' % \
                 (obj_id, style, title, disabled, text, href))
         if not self.mobile:
             self.write('</label>')
 
     def icon(self, help, icon):
-       self.write('<img align=absmiddle class=icon title="%s" src="images/icon_%s.png">' % (
+       self.write('<img align=absmiddle class=icon title="%s" src="images/icon_%s.png" />' % (
         help, icon))
 
     def empty_icon(self):
-        self.write('<img class=icon src="images/trans.png">')
+        self.write('<img class=icon src="images/trans.png" />')
 
     def icon_button(self, url, help, icon, id="", onclick="", style="", target="", cssclass=""):
         if id:
@@ -400,7 +401,7 @@ class html:
             if args["size"] == "max":
                 add_style = "width: 100%; "
             else:
-                addprops += " size=%d" % (args["size"] + 1)
+                addprops += " size=\"%d\"" % (args["size"] + 1)
                 if "width:" not in args.get("style", "") and not self.mobile:
                     add_style = "width: %d.8ex; " % args["size"]
 
@@ -428,17 +429,17 @@ class html:
         error = self.user_errors.get(varname)
         html = ""
         if error:
-            html = "<x class=inputerror>"
+            html = "<x class=\"inputerror\">"
         if label:
             if not id:
                 id = "ti_%s" % varname
             html += '<label for="%s">%s</label>' % (id, label)
 
         if id:
-            addprops += " id='%s'" % id
+            addprops += ' id="%s"' % id
 
         attributes = ' ' + ' '.join([ '%s="%s"' % (k, v) for k, v in attrs.iteritems() ])
-        html += "<input type=%s class=%s value=\"%s\" name=\"%s\"%s%s>" % \
+        html += "<input type=\"%s\" class=\"%s\" value=\"%s\" name=\"%s\"%s%s />\n" % \
                      (mytype, cssclass, self.attrencode(value), varname, addprops, attributes)
         if error:
             html += "</x>"
@@ -662,7 +663,7 @@ class html:
             self.write(
                 u'''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html><head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">\n''')
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />\n''')
             self.write('<title>')
             self.write(title)
             self.write('</title>\n')
@@ -675,7 +676,7 @@ class html:
 
             # Load all specified style sheets and all user style sheets in htdocs/css
             for css in [ "check_mk" ] + stylesheets:
-                self.write('<link rel="stylesheet" type="text/css" href="%s.css">\n' % css)
+                self.write('<link rel="stylesheet" type="text/css" href="%s.css" />\n' % css)
             self.write('<!--[if IE]>\n'
                        '<link rel="stylesheet" href="ie.css" type="text/css" />\n'
                        '<![endif]-->\n')

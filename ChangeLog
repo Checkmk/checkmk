@@ -55,9 +55,6 @@
     * tsm_stgpool: removed orphaned check
     * vmware_state: removed ancient, now orphaned check. Use vsphere_agent instead.
     * vms_{df,md,netif,sys}: remove orphaned checks that are not needed by the current agent
-    * FIX: esx_vsphere_datastores: Fix incomplete performance data and Perf-O-Meter
-    * FIX: cleaned up fileinfo.groups pattern handling, manual configuration
-      is now possible using WATO
     * tsm: Added new TSM checks with a simple windows agent plugin
     * windows_agent: now starts local/plugin scripts in separate threads/processes
                      new script parameters cache_age, retry_count, timeout
@@ -74,14 +71,18 @@
     * df: Negative integer levels for MB left on a device
     * win_printers: Monitoring of printer queue on a windows printserver
     * cisco_qos: Updated to be able to mintor IOS XR 4.2.1 (on a ASR9K device)
+    * New active check, check_form_submit, to submit HTML forms and check the resulting page
+    * mk-job: /var/lib/check_mk_agent/job directory is now created with mode 1777 so 
+              mk-job can be used by unprivileged users too
     * FIX: hr_mem: handle virtual memory correct on some devices
     * FIX: apache_status agent plugin: now also works, if prog name contains slashes
     * FIX: check_dns: parameter -A does not get an additional string
     * FIX: cisco_qos: Catch policies without post/drop byte information
     * FIX: cisco_qos: Catch policies without individual bandwidth limits
-    * mk-job: /var/lib/check_mk_agent/job directory is now created with mode 1777 so 
-              mk-job can be used by unprivileged users too
-    * windows_agent: fixed bug on merging plugin output buffers
+    * FIX: windows_agent: fixed bug on merging plugin output buffers
+    * FIX: esx_vsphere_datastores: Fix incomplete performance data and Perf-O-Meter
+    * FIX: cleaned up fileinfo.groups pattern handling, manual configuration
+      is now possible using WATO
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a

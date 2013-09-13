@@ -910,4 +910,89 @@ register_rule(group,
     match = 'all'
 )
 
-
+register_rule(group,
+    "active_checks:form_submit",
+    Tuple(
+        title = _("Check HTML Form Submit"),
+        help = _("Check submission of HTML forms via HTTP/HTTPS using the plugin <tt>check_form_submit</tt> "
+                 "provided with Check_MK. This plugin provides more functionality as <tt>check_http</tt>, "
+                 "as it automatically follows HTTP redirect, accepts and uses cookies, parses forms "
+                 "from the requested pages, changes vars and submits them to check the response "
+                 "afterwards."),
+        elements = [
+            TextUnicode(
+                title = _("Name"),
+                help = _("The name will be used in the service description"),
+                allow_empty = False
+            ),
+            Dictionary(
+                title = _("Check the URL"),
+                elements = [
+                    ("hosts", ListOfStrings(
+                        title = _('Check specific host(s)'),
+                        help = _('By default, if you do not specify any host addresses here, '
+                                 'the host address of the host this service is assigned to will '
+                                 'be used. But by specifying one or several host addresses here, '
+                                 'it is possible to let the check monitor one or multiple hosts.')
+                    )),
+                    ("virthost", TextAscii(
+                        title = _("Virtual host"),
+                        help = _("Set this in order to specify the name of the "
+                         "virtual host for the query (using HTTP/1.1). When you "
+                         "leave this empty, then the IP address of the host "
+                         "will be used instead."),
+                        allow_empty = False,
+                    )),
+                    ("uri", TextAscii(
+                        title = _("URI to fetch (default is <tt>/</tt>)"),
+                        allow_empty = False,
+                        default_value = "/",
+                        regex = '^/.*',
+                    )),
+                    ("port", Integer(
+                        title = _("TCP Port"),
+                        minvalue = 1,
+                        maxvalue = 65535,
+                        default_value = 80,
+                    )),
+                    ("ssl", FixedValue(
+                        value = True,
+                        totext = _("use SSL/HTTPS"),
+                        title = _("Use SSL/HTTPS for the connection."))
+                    ),
+                    ("timeout", Integer(
+                        title = _("Seconds before connection times out"),
+                        unit = _("sec"),
+                        default_value = 10,
+                    )),
+                    ("expect_regex", RegExp(
+                        title = _("Regular expression to expect in content"),
+                    )),
+                    ("form_name", TextAscii(
+                        title = _("Name of the form to populate and submit"),
+                        help = _("If there is only one form element on the requested page, you "
+                                 "do not need to provide the name of that form here. But if you "
+                                 "have several forms on that page, you need to provide the name "
+                                 "of the form here, to make the check able to identify the correct "
+                                 "form element."),
+                        allow_empty = True,
+                    )),
+                    ("query", TextAscii(
+                        title = _("Send HTTP POST data"),
+                        help = _("Data to send via HTTP POST method. Please make sure, that the data "
+                                 "is URL-encoded (for example \"key1=val1&key2=val2\")."),
+                        size = 40,
+                    )),
+                    ("num_succeeded", Tuple(
+                        title = _("Multiple Hosts: Number of successful results"),
+                        elements = [
+                            Integer(title = _("Warning if equal or below")),
+                            Integer(title = _("Critical if equal or below")),
+                        ]
+                    )),
+                ]
+            ),
+        ]
+    ),
+    match = 'all'
+)

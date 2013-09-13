@@ -86,5 +86,5 @@ check_info["akcp_sensor_humidity"] = {
     ),
     'snmp_scan_function':      \
          lambda oid: "AKCP" in oid(".1.3.6.1.4.1.3854.1.1.6.0") and "sensorProbe" in oid(".1.3.6.1.4.1.3854.1.1.8.0"),
-    'group':                   'akcp_humidity',
+    'group':                   'humidity',
 }

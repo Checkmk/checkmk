@@ -1,0 +1,25 @@
+title: Etherbox Sensor Temperature
+catalog: hw/environment
+agents: snmp
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the value of an etherbox temperature sensor
+
+item:
+ The port number of the sensor followed by the sensor type
+ Example: "2.1" A temperature sensor(type 1) on port 2
+
+perfdata:
+ The current temperature value and its warn/crit limits
+
+inventory:
+ The inventory creates a service for each temperature sensor found
+
+[parameters]
+warning (int): temperature in degrees at which the check goes warning
+critical (int): level for critical temperature
+
+ Please note that the sensor can be configured in Degree, Fahrenheit
+ and Kelvin.
+

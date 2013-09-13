@@ -1,0 +1,11 @@
+Title: snmp check without inventory
+Component: checks
+State: open
+Date: 2013-09-10 15:06:00
+Targetversion: 1.2.3i2
+Class: bug
+
+The snmp_scan_function needs to be set in order to
+complete a cmk -II call. Otherwise the inventory process
+exits with Sorry. No inventory possible for check type etherbox_dew
+and other checks are skipped

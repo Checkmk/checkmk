@@ -292,6 +292,7 @@ register_rule(group + '/' + subgroup_inventory,
         elements = [
             ('descr', TextAscii(
                 title = _('Service Description'),
+                allow_empty = False,
                 help  = _('<p>The service description may contain one or more occurances of <tt>%s</tt>. If you do this, then the pattern must be a regular '
                           'expression and be prefixed with ~. For each <tt>%s</tt> in the description, the expression has to contain one "group". A group '
                           'is a subexpression enclosed in brackets, for example <tt>(.*)</tt> or <tt>([a-zA-Z]+)</tt> or <tt>(...)</tt>. When the inventory finds a process '
@@ -359,6 +360,8 @@ register_rule(group + '/' + subgroup_inventory,
             )),
             ('levels', Tuple(
                 title = _('Levels'),
+                help = _("Please note that if you specify and also if you modify levels here, the change is activated "
+                         "only during an inventory.  Saving this rule is not enough. This is due to the nature of inventory rules."),
                 elements = [
                     Integer(
                         title = _("Critical below"),
@@ -1103,20 +1106,58 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_networking,
-    "cisco_wlc_clients",
-    _("Cisco WLC WiFi client connections"),
+    "wlc_clients",
+    _("WLC WiFi client connections"),
     Tuple(
         title = _("Number of connections"),
-        help = _("Number of connections for a WiFi "),
+        help = _("Number of connections for a WiFi"),
               elements = [
-                  Integer(title = _("Warning if above"),  label = _("connections")),
-                  Integer(title = _("Critical if above"), label = _("connections"))
+              Integer(title = _("Critical if below"), unit=_("connections")),
+              Integer(title = _("Warning if below"),  unit=_("connections")),
+              Integer(title = _("Warning if above"),  unit=_("connections")),
+              Integer(title = _("Critical if above"), unit=_("connections")),
               ]
     ),
     TextAscii( title = _("Name of Wifi")),
     "first"
 )
 
+register_check_parameters(
+   subgroup_networking,
+   "cisco_wlc",
+   _("Cisco WLAN AP"),
+   Dictionary(
+       help = _("Here you can set which alert type is set when the given "
+                "access point is missing (might be powered off). The access point "
+                "can be specified by the AP name or the AP model"),
+        elements = [
+           ( "ap_name",
+            ListOf(
+                Tuple(
+                    elements = [
+                        TextAscii(title = _("AP name")),
+                        MonitoringState( title=_("State when missing"), default_value = 2)
+                    ]
+                ),
+                title = _("Access point name"),
+            add_label = _("Add name"))
+           ),
+           ( "ap_model",
+            ListOf(
+                Tuple(
+                    elements = [
+                        TextAscii(title = _("AP model")),
+                        MonitoringState( title=_("State when missing"), default_value = 2)
+                    ]
+                ),
+                title = _("Access point device id"),
+            add_label = _("Add id"))
+           )
+        ]
+    ),
+   TextAscii(title = _("Access Point")),
+   "first",
+)
 register_check_parameters(
     subgroup_networking,
     "tcp_conn_stats",
@@ -2019,11 +2060,10 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_environment,
-    "akcp_humidity",
-    _("AKCP Humidity Levels"),
+    "humidity",
+    _("Humidity Levels"),
     Tuple(
-          help = _("This Rulset sets the threshold limits for humidity sensors attached to "
-                   "AKCP Sensor Probe "),
+          help = _("This Rulset sets the threshold limits for humidity sensors"),
           elements = [
               Integer(title = _("Critical if below"), unit="%" ),
               Integer(title = _("Warning if below"), unit="%" ),
@@ -2860,6 +2900,25 @@ register_check_parameters(
         help = _("How the disks are named depends on the type of hardware being "
                  "used. Please look at already inventorized checks for examples.")),
     "first"
+)
+
+register_check_parameters(
+    subgroup_environment,
+    "switch_contact",
+    _("Switch contact state"),
+    DropdownChoice(
+          help = _("This rule sets the required state of a switch contact"),
+          label = _("Required switch contact state"),
+          choices = [
+                    ( "open", "Switch contact is <b>open</b>" ),
+                    ( "closed", "Switch contact is <b>closed</b>" ),
+                    ( "ignore", "Ignore switch contact state" ),
+                    ],
+    ),
+    TextAscii(
+        title = _("Sensor"),
+        allow_empty = False),
+     None
 )
 
 register_check_parameters(

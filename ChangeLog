@@ -12,6 +12,8 @@
        to Karl Golland)
     * New man page browser for console (cmk -m)
     * New option explicit_snmp_communities to override rule based SNMP settings
+    * Preparations for significant SNMP monitoring performance improvement
+      (It's named Inline SNMP, which is available as special feature via subscriptions)
     * livestatus: new service column staleness: indicator for outdated service checks
     * livestatus: new host    column staleness: indicator for outdated host checks
 

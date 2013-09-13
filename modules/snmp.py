@@ -107,11 +107,20 @@ def init_snmp_host(hostname):
         sys.stdout.write("Cannot resolve %s into IP address. Skipping.\n" % hostname)
         return None
 
-    # FIXME: Whan about timing / retries?
+    timing = snmp_timing_of(hostname)
+    timeout = int(timing.get("timeout", 1) * 1000000) # default: 1 second
+    retries = timing.get('retries', 3)
+
     if version != 3:
-        s = netsnmp.Session(Version = version, DestHost = ipaddress, Community = credentials)
+        s = netsnmp.Session(Version = version, DestHost = ipaddress,
+            Timeout   = timeout,
+            Retries   = retries,
+            Community = credentials,
+        )
     else:
         s = netsnmp.Session(Version = version, DestHost = ipaddress,
+            Timeout   = timeout,
+            Retries   = retries,
             SecLevel  = sec_level,
             AuthProto = auth_proto.upper(),
             AuthPass  = auth_pass,

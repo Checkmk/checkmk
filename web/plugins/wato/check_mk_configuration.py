@@ -933,6 +933,23 @@ register_configvar(group,
                       "and children_system_time")),
     need_restart = True)
 
+register_configvar(group,
+    "use_inline_snmp",
+    Checkbox(
+        title = _("Use Inline SNMP (EXPERIMENTAL)"),
+        label = _("Enable inline SNMP (directly use net-snmp libraries)"),
+        help = _("In older versions Check_MK used command line calls of net-snmp "
+                 "tools like snmpget or snmpwalk. For each request a new command line "
+                 "program had to be executed. The new default is the inline SNMP implementation "
+                 "which calls the net-snmp libraries directly via its python bindings. This "
+                 "should increase the performance of SNMP checks in a significant way. "
+                 "For compatibility the classic SNMP integration is still available and can be "
+                 "enabled here."),
+        default_value = False
+    ),
+    need_restart = True
+)
+
 group = _("Inventory - automatic service detection")
 
 register_configvar(group,
@@ -1115,7 +1132,6 @@ register_configvar(group,
                       "after each inventory, i.e. create one file per host. This is the same "
                       "as adding the option <tt>-u</tt> to each call of <tt>-I</tt> on the "
                       "command line.")))
-
 
 group = _("Check configuration")
 
@@ -1801,19 +1817,6 @@ register_rule(group,
              "a host is connected to, e.g. when the IP address of the host is dynamic "
              "and can change."))
 group = "agent/" + _("SNMP")
-
-register_configvar(group,
-    "inline_snmp",
-    Checkbox(title = _("Use Inline SNMP"),
-             label = _("Enable inline SNMP (directly use net-snmp libraries)"),
-             help = _("In older versions Check_MK used command line calls of net-snmp "
-                      "tools like snmpget or snmpwalk. For each request a new command line "
-                      "program had to be executed. The new default is the inline SNMP implementation "
-                      "which calls the net-snmp libraries directly via its python bindings. This "
-                      "should increase the performance of SNMP checks in a significant way. "
-                      "For compatibility the classic SNMP integration is still available and can be "
-                      "enabled here.")),
-    need_restart = True)
 
 _snmpv3_basic_elements = [
      DropdownChoice(

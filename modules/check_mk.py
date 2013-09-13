@@ -229,7 +229,8 @@ monitoring_host                    = None # deprecated
 max_num_processes                  = 50
 
 # SNMP communities and encoding
-inline_snmp                        = True
+has_inline_snmp                    = False # is set to True by inline_snmp module, when available
+use_inline_snmp                    = False
 snmp_default_community             = 'public'
 snmp_communities                   = []
 snmp_timing                        = []
@@ -351,7 +352,7 @@ special_agent_info                 = {}
 # Now include the other modules. They contain everything that is needed
 # at check time (and many of what is also needed at administration time).
 try:
-    modules =  [ 'check_mk_base', 'snmp', 'notify', 'prediction', 'cmc' ]
+    modules =  [ 'check_mk_base', 'snmp', 'notify', 'prediction', 'cmc', 'inline_snmp' ]
     for module in modules:
         filename = modules_dir + "/" + module + ".py"
         if os.path.exists(filename):
@@ -832,7 +833,7 @@ def get_single_oid(hostname, ipaddress, oid):
             return None
 
     try:
-        if inline_snmp:
+        if has_inline_snmp and use_inline_snmp:
             value = inline_snmp_get_oid(hostname, oid)
         else:
             value = snmp_get_oid(hostname, ipaddress, oid)
@@ -2937,7 +2938,8 @@ no_inventory_possible = None
                  'www_group', 'cluster_max_cachefile_age', 'check_max_cachefile_age',
                  'piggyback_max_cachefile_age',
                  'simulation_mode', 'agent_simulator', 'aggregate_check_mk', 'debug_log',
-                 'check_mk_perfdata_with_times', 'livestatus_unix_socket', 'inline_snmp',
+                 'check_mk_perfdata_with_times', 'livestatus_unix_socket',
+                 'has_inline_snmp', 'use_inline_snmp',
                  ]:
         output.write("%s = %r\n" % (var, globals()[var]))
 
@@ -3037,7 +3039,7 @@ no_inventory_possible = None
     output.write("def is_snmp_host(hostname):\n   return %r\n\n" % is_snmp_host(hostname))
     output.write("def is_tcp_host(hostname):\n   return %r\n\n" % is_tcp_host(hostname))
     output.write("def is_usewalk_host(hostname):\n   return %r\n\n" % is_usewalk_host(hostname))
-    if inline_snmp:
+    if has_inline_snmp and use_inline_snmp:
         output.write("def is_snmpv2c_host(hostname):\n   return %r\n\n" % is_snmpv2c_host(hostname))
         output.write("def is_bulkwalk_host(hostname):\n   return %r\n\n" % is_bulkwalk_host(hostname))
         output.write("def snmp_timing_of(hostname):\n   return %r\n\n" % snmp_timing_of(hostname))
@@ -4022,7 +4024,7 @@ def do_snmpwalk_on(hostname, filename):
             sys.stdout.write("Walk on \"%s\"..." % oid)
             sys.stdout.flush()
 
-        if inline_snmp:
+        if has_inline_snmp and use_inline_snmp:
             results = inline_snmpwalk_on_suboid(hostname, oid, strip_values = False)
         else:
             results = snmpwalk_on_suboid(hostname, oid)
@@ -4178,6 +4180,10 @@ def dump_host(hostname):
         if is_usewalk_host(hostname):
             agenttypes.append("SNMP (use stored walk)")
         else:
+            if has_inline_snmp and use_inline_snmp:
+                inline = "yes"
+            else:
+                inline = "no"
             credentials = snmp_credentials_of(hostname)
             if is_bulkwalk_host(hostname):
                 bulk = "yes"
@@ -4186,7 +4192,8 @@ def dump_host(hostname):
             portinfo = snmp_port_of(hostname)
             if portinfo == None:
                 portinfo = 'default'
-            agenttypes.append("SNMP (community: '%s', bulk walk: %s, port: %s)" % (credentials, bulk, portinfo))
+            agenttypes.append("SNMP (community: '%s', bulk walk: %s, port: %s, inline: %s)" %
+                (credentials, bulk, portinfo, inline))
 
     if is_ping_host(hostname):
         agenttypes.append('PING only')

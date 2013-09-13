@@ -517,7 +517,8 @@ if not error:
         print "<<<<>>>>"
         print "<<<esx_vsphere_objects:sep(9)>>>"
         if "hostsystem" in query_objects:
-            print "hostsystem\t%s\t\t%s" % ( opt_hostname or host_address, "".join(hostsystem_propsets["runtime.powerState"]) )
+            print "hostsystem\t%s\t\t%s" % ( hostsystem_propsets["name"][0], "".join(hostsystem_propsets["runtime.powerState"]) )
+
 
         if "virtualmachine" in query_objects:
             for key in sorted(vms.keys()):

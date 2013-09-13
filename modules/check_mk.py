@@ -4014,6 +4014,7 @@ def do_snmpwalk(hostnames):
 def do_snmpwalk_on(hostname, filename):
     if opt_verbose:
         sys.stdout.write("%s:\n" % hostname)
+    ip = lookup_ipaddress(hostname)
 
     out = file(filename, "w")
     for oid in [
@@ -4027,7 +4028,7 @@ def do_snmpwalk_on(hostname, filename):
         if has_inline_snmp and use_inline_snmp:
             results = inline_snmpwalk_on_suboid(hostname, oid, strip_values = False)
         else:
-            results = snmpwalk_on_suboid(hostname, oid)
+            results = snmpwalk_on_suboid(hostname, ip, oid)
 
         for oid, value in results:
             out.write("%s %s\n" % (oid, value))

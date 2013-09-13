@@ -39,9 +39,6 @@ import httplib, pprint, sys, os, getopt, socket, time
 
 #execfile("soap_commands.py", globals(), globals())
 
-
-# List of predefined SOAP requests
-# ( [{used_by_object}], {internal_id}, {SOAP telegram} )
 soapdata_list = [
             (["required"],      "1_serviceinfo", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:RetrieveServiceContent xsi:type="ns1:RetrieveServiceContentRequestType"><ns1:_this type="ServiceInstance">ServiceInstance</ns1:_this></ns1:RetrieveServiceContent></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
             (["required"],      "2_login", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:Login xsi:type="ns1:LoginRequestType"><ns1:_this type="SessionManager">ha-sessionmgr</ns1:_this><ns1:userName>###user###</ns1:userName><ns1:password>###secret###</ns1:password></ns1:Login></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
@@ -49,13 +46,73 @@ soapdata_list = [
             (["datastore"],     "4_datastores", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType"><ns1:_this type="PropertyCollector">ha-property-collector</ns1:_this><ns1:specSet><ns1:propSet><ns1:type>Datastore</ns1:type><ns1:pathSet>name</ns1:pathSet><ns1:pathSet>summary.freeSpace</ns1:pathSet><ns1:pathSet>summary.capacity</ns1:pathSet><ns1:pathSet>summary.uncommitted</ns1:pathSet><ns1:pathSet>summary.url</ns1:pathSet><ns1:pathSet>summary.accessible</ns1:pathSet><ns1:pathSet>summary.type</ns1:pathSet><ns1:pathSet>summary.maintenanceMode</ns1:pathSet></ns1:propSet><ns1:objectSet><ns1:obj type="Folder">ha-folder-root</ns1:obj><ns1:skip>false</ns1:skip><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>visitFolders</ns1:name><ns1:type>Folder</ns1:type><ns1:path>childEntity</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToHf</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToVmf</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>crToH</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>crToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToDs</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>hToVm</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToVmf</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>vmFolder</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToDs</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>datastore</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToHf</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>hostFolder</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToH</ns1:name><ns1:type>ComputeResource</ns1:type><ns1:path>host</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToRp</ns1:name><ns1:type>ComputeResource</ns1:type><ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToRp</ns1:name><ns1:type>ResourcePool</ns1:type><ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>hToVm</ns1:name><ns1:type>HostSystem</ns1:type><ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToVm</ns1:name><ns1:type>ResourcePool</ns1:type><ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet></ns1:objectSet></ns1:specSet><ns1:options></ns1:options></ns1:RetrievePropertiesEx></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
 #            ([],                "5_retrieve_ex_3", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType"><ns1:_this type="PropertyCollector">ha-property-collector</ns1:_this><ns1:specSet><ns1:propSet><ns1:type>PerformanceManager</ns1:type><ns1:all>true</ns1:all></ns1:propSet><ns1:objectSet><ns1:obj type="PerformanceManager">ha-perfmgr</ns1:obj><ns1:skip>false</ns1:skip></ns1:objectSet></ns1:specSet><ns1:options></ns1:options></ns1:RetrievePropertiesEx></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
 #            ([],                "6_query_perf_provider_summary", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:QueryPerfProviderSummary xsi:type="ns1:QueryPerfProviderSummaryRequestType"><ns1:_this type="PerformanceManager">ha-perfmgr</ns1:_this><ns1:entity type="HostSystem">ha-host</ns1:entity></ns1:QueryPerfProviderSummary></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
-#            ([],                "7_query_avail_perf_metric", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:QueryAvailablePerfMetric xsi:type="ns1:QueryAvailablePerfMetricRequestType"><ns1:_this type="PerformanceManager">ha-perfmgr</ns1:_this><ns1:entity type="HostSystem">ha-host</ns1:entity><ns1:intervalId>20</ns1:intervalId></ns1:QueryAvailablePerfMetric></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
-            (["counters"],      "8_perf_counter_syntax", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:QueryPerfCounter xsi:type="ns1:QueryPerfCounterRequestType"><ns1:_this type="PerformanceManager">ha-perfmgr</ns1:_this><ns1:counterId>262144</ns1:counterId><ns1:counterId>131078</ns1:counterId><ns1:counterId>131079</ns1:counterId><ns1:counterId>131091</ns1:counterId><ns1:counterId>131076</ns1:counterId><ns1:counterId>131077</ns1:counterId><ns1:counterId>196616</ns1:counterId><ns1:counterId>196621</ns1:counterId><ns1:counterId>196617</ns1:counterId><ns1:counterId>196625</ns1:counterId><ns1:counterId>196619</ns1:counterId><ns1:counterId>196623</ns1:counterId><ns1:counterId>196609</ns1:counterId><ns1:counterId>196614</ns1:counterId><ns1:counterId>196620</ns1:counterId><ns1:counterId>196624</ns1:counterId><ns1:counterId>196615</ns1:counterId><ns1:counterId>196622</ns1:counterId><ns1:counterId>196618</ns1:counterId><ns1:counterId>196612</ns1:counterId><ns1:counterId>196613</ns1:counterId><ns1:counterId>196626</ns1:counterId></ns1:QueryPerfCounter></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
-            (["counters"],      "9_perf_counter_data", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:QueryPerf xsi:type="ns1:QueryPerfRequestType"><ns1:_this type="PerformanceManager">ha-perfmgr</ns1:_this><ns1:querySpec><ns1:entity type="HostSystem">ha-host</ns1:entity><ns1:maxSample>1</ns1:maxSample><ns1:metricId><ns1:counterId>131078</ns1:counterId><ns1:instance></ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196614</ns1:counterId><ns1:instance></ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196614</ns1:counterId><ns1:instance>vmnic0</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196614</ns1:counterId><ns1:instance>vmnic1</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196614</ns1:counterId><ns1:instance>vmnic2</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196614</ns1:counterId><ns1:instance>vmnic3</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196612</ns1:counterId><ns1:instance></ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196613</ns1:counterId><ns1:instance></ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>262144</ns1:counterId><ns1:instance></ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196613</ns1:counterId><ns1:instance>vmnic0</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196613</ns1:counterId><ns1:instance>vmnic1</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196613</ns1:counterId><ns1:instance>vmnic2</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196613</ns1:counterId><ns1:instance>vmnic3</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196625</ns1:counterId><ns1:instance>vmnic0</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196625</ns1:counterId><ns1:instance>vmnic1</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196625</ns1:counterId><ns1:instance>vmnic2</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196625</ns1:counterId><ns1:instance>vmnic3</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196616</ns1:counterId><ns1:instance>vmnic0</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196616</ns1:counterId><ns1:instance>vmnic1</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196616</ns1:counterId><ns1:instance>vmnic2</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196616</ns1:counterId><ns1:instance>vmnic3</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196619</ns1:counterId><ns1:instance>vmnic0</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196619</ns1:counterId><ns1:instance>vmnic1</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196619</ns1:counterId><ns1:instance>vmnic2</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196619</ns1:counterId><ns1:instance>vmnic3</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196620</ns1:counterId><ns1:instance></ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196626</ns1:counterId><ns1:instance>vmnic0</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196626</ns1:counterId><ns1:instance>vmnic1</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196626</ns1:counterId><ns1:instance>vmnic2</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196626</ns1:counterId><ns1:instance>vmnic3</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196621</ns1:counterId><ns1:instance></ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>131079</ns1:counterId><ns1:instance></ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196626</ns1:counterId><ns1:instance></ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196622</ns1:counterId><ns1:instance>vmnic0</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196624</ns1:counterId><ns1:instance></ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196625</ns1:counterId><ns1:instance></ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196620</ns1:counterId><ns1:instance>vmnic0</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196617</ns1:counterId><ns1:instance>vmnic0</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196617</ns1:counterId><ns1:instance>vmnic1</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196617</ns1:counterId><ns1:instance>vmnic2</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196617</ns1:counterId><ns1:instance>vmnic3</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196615</ns1:counterId><ns1:instance>vmnic0</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196615</ns1:counterId><ns1:instance>vmnic1</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196615</ns1:counterId><ns1:instance>vmnic2</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196615</ns1:counterId><ns1:instance>vmnic3</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196615</ns1:counterId><ns1:instance></ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196616</ns1:counterId><ns1:instance></ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196617</ns1:counterId><ns1:instance></ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196618</ns1:counterId><ns1:instance></ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196619</ns1:counterId><ns1:instance></ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>131079</ns1:counterId><ns1:instance>naa.600605b002db9f7018d0a40c2a1444b0</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196622</ns1:counterId><ns1:instance></ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>131078</ns1:counterId><ns1:instance>naa.600605b002db9f7018d0a40c2a1444b0</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196623</ns1:counterId><ns1:instance></ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>131077</ns1:counterId><ns1:instance>naa.600605b002db9f7018d0a40c2a1444b0</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196623</ns1:counterId><ns1:instance>vmnic0</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196609</ns1:counterId><ns1:instance></ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196621</ns1:counterId><ns1:instance>vmnic0</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196612</ns1:counterId><ns1:instance>vmnic0</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196612</ns1:counterId><ns1:instance>vmnic1</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196612</ns1:counterId><ns1:instance>vmnic2</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196612</ns1:counterId><ns1:instance>vmnic3</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196609</ns1:counterId><ns1:instance>vmnic0</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196609</ns1:counterId><ns1:instance>vmnic1</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196609</ns1:counterId><ns1:instance>vmnic2</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196609</ns1:counterId><ns1:instance>vmnic3</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196624</ns1:counterId><ns1:instance>vmnic0</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196624</ns1:counterId><ns1:instance>vmnic1</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196624</ns1:counterId><ns1:instance>vmnic2</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196624</ns1:counterId><ns1:instance>vmnic3</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>131091</ns1:counterId><ns1:instance>naa.600605b002db9f7018d0a40c2a1444b0</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>131076</ns1:counterId><ns1:instance>naa.600605b002db9f7018d0a40c2a1444b0</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196618</ns1:counterId><ns1:instance>vmnic0</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196618</ns1:counterId><ns1:instance>vmnic1</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196618</ns1:counterId><ns1:instance>vmnic2</ns1:instance></ns1:metricId><ns1:metricId><ns1:counterId>196618</ns1:counterId><ns1:instance>vmnic3</ns1:instance></ns1:metricId><ns1:intervalId>20</ns1:intervalId></ns1:querySpec></ns1:QueryPerf></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
+            (["counters"],      "7_query_avail_perf_metric", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:QueryAvailablePerfMetric xsi:type="ns1:QueryAvailablePerfMetricRequestType"><ns1:_this type="PerformanceManager">ha-perfmgr</ns1:_this><ns1:entity type="HostSystem">ha-host</ns1:entity><ns1:intervalId>20</ns1:intervalId></ns1:QueryAvailablePerfMetric></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
+            (["counters"],      "8_perf_counter_syntax", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:QueryPerfCounter xsi:type="ns1:QueryPerfCounterRequestType"><ns1:_this type="PerformanceManager">ha-perfmgr</ns1:_this>###counters###</ns1:QueryPerfCounter></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
+            (["counters"],      "9_perf_counter_data", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:QueryPerf xsi:type="ns1:QueryPerfRequestType"><ns1:_this type="PerformanceManager">ha-perfmgr</ns1:_this><ns1:querySpec><ns1:entity type="HostSystem">ha-host</ns1:entity><ns1:maxSample>1</ns1:maxSample>###counters###<ns1:intervalId>20</ns1:intervalId></ns1:querySpec></ns1:QueryPerf></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
             (["hostsystem"],    "10_hostsystem", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType"><ns1:_this type="PropertyCollector">ha-property-collector</ns1:_this><ns1:specSet><ns1:propSet><ns1:type>HostSystem</ns1:type><ns1:pathSet>summary.quickStats.overallMemoryUsage</ns1:pathSet><ns1:pathSet>hardware.cpuInfo.numCpuThreads</ns1:pathSet><ns1:pathSet>runtime.powerState</ns1:pathSet><ns1:pathSet>summary.quickStats.overallCpuUsage</ns1:pathSet><ns1:pathSet>hardware.cpuInfo.hz</ns1:pathSet><ns1:pathSet>hardware.cpuInfo.numCpuPackages</ns1:pathSet><ns1:pathSet>config.multipathState.path</ns1:pathSet><ns1:pathSet>hardware.cpuInfo.numCpuCores</ns1:pathSet><ns1:pathSet>name</ns1:pathSet><ns1:pathSet>overallStatus</ns1:pathSet><ns1:pathSet>runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo</ns1:pathSet><ns1:pathSet>runtime.inMaintenanceMode</ns1:pathSet><ns1:pathSet>hardware.memorySize</ns1:pathSet></ns1:propSet><ns1:objectSet><ns1:obj type="Folder">ha-folder-root</ns1:obj><ns1:skip>false</ns1:skip><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>visitFolders</ns1:name><ns1:type>Folder</ns1:type><ns1:path>childEntity</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToHf</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToVmf</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>crToH</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>crToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToDs</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>hToVm</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToVmf</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>vmFolder</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToDs</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>datastore</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToHf</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>hostFolder</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToH</ns1:name><ns1:type>ComputeResource</ns1:type><ns1:path>host</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToRp</ns1:name><ns1:type>ComputeResource</ns1:type><ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToRp</ns1:name><ns1:type>ResourcePool</ns1:type><ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>hToVm</ns1:name><ns1:type>HostSystem</ns1:type><ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToVm</ns1:name><ns1:type>ResourcePool</ns1:type><ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet></ns1:objectSet></ns1:specSet><ns1:options></ns1:options></ns1:RetrievePropertiesEx></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
             (["virtualmachine"],"11_virtualmachine", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType"><ns1:_this type="PropertyCollector">ha-property-collector</ns1:_this><ns1:specSet><ns1:propSet><ns1:type>VirtualMachine</ns1:type><ns1:pathSet>summary.quickStats.consumedOverheadMemory</ns1:pathSet><ns1:pathSet>config.hardware.numCPU</ns1:pathSet><ns1:pathSet>summary.quickStats.overallCpuDemand</ns1:pathSet><ns1:pathSet>summary.quickStats.distributedCpuEntitlement</ns1:pathSet><ns1:pathSet>runtime.host</ns1:pathSet><ns1:pathSet>summary.quickStats.distributedMemoryEntitlement</ns1:pathSet><ns1:pathSet>summary.quickStats.uptimeSeconds</ns1:pathSet><ns1:pathSet>summary.quickStats.sharedMemory</ns1:pathSet><ns1:pathSet>config.hardware.memoryMB</ns1:pathSet><ns1:pathSet>summary.quickStats.privateMemory</ns1:pathSet><ns1:pathSet>summary.quickStats.balloonedMemory</ns1:pathSet><ns1:pathSet>summary.quickStats.staticMemoryEntitlement</ns1:pathSet><ns1:pathSet>runtime.powerState</ns1:pathSet><ns1:pathSet>summary.quickStats.overallCpuUsage</ns1:pathSet><ns1:pathSet>config.hardware.numCoresPerSocket</ns1:pathSet><ns1:pathSet>guest.toolsVersion</ns1:pathSet><ns1:pathSet>guestHeartbeatStatus</ns1:pathSet><ns1:pathSet>name</ns1:pathSet><ns1:pathSet>summary.quickStats.compressedMemory</ns1:pathSet><ns1:pathSet>summary.quickStats.swappedMemory</ns1:pathSet><ns1:pathSet>summary.quickStats.guestMemoryUsage</ns1:pathSet><ns1:pathSet>summary.quickStats.staticCpuEntitlement</ns1:pathSet><ns1:pathSet>summary.quickStats.hostMemoryUsage</ns1:pathSet><ns1:pathSet>guest.toolsVersionStatus</ns1:pathSet></ns1:propSet><ns1:objectSet><ns1:obj type="Folder">ha-folder-root</ns1:obj><ns1:skip>false</ns1:skip><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>visitFolders</ns1:name><ns1:type>Folder</ns1:type><ns1:path>childEntity</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToHf</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToVmf</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>crToH</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>crToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToDs</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>hToVm</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToVmf</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>vmFolder</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToDs</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>datastore</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToHf</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>hostFolder</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToH</ns1:name><ns1:type>ComputeResource</ns1:type><ns1:path>host</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToRp</ns1:name><ns1:type>ComputeResource</ns1:type><ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToRp</ns1:name><ns1:type>ResourcePool</ns1:type><ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>hToVm</ns1:name><ns1:type>HostSystem</ns1:type><ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToVm</ns1:name><ns1:type>ResourcePool</ns1:type><ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet></ns1:objectSet></ns1:specSet><ns1:options></ns1:options></ns1:RetrievePropertiesEx></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
             (["required"],      "12_logout", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:Logout xsi:type="ns1:LogoutRequestType"><ns1:_this type="SessionManager">ha-sessionmgr</ns1:_this></ns1:Logout></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
            ]
+
+
+# List of predefined SOAP requests
+# ( [{used_by_object}], {internal_id}, {SOAP telegram} )
+
+def get_counters(esx_version_num):
+    needed_ids = [
+	# sys.uptime
+        262144,
+        # mem.*
+        # 65635, 65537, 65577, 65625, 65545, 65611, 65573, 65615, 65582,
+        # 65549, 65630, 65622, 65618, 65621, 65561, 65623, 65632, 65557,
+        # 65628, 65633, 65541, 65643, 65586, 65553, 65569, 65589, 65639,
+        # 65620, 65599, 65580, 65619, 65603,
+        #  'disk.deviceLatency': 131091,
+        #  'disk.deviceReadLatency': 131083,
+        #  'disk.deviceWriteLatency': 131087,
+        #  'disk.kernelLatency': 131092,
+        #  'disk.kernelReadLatency': 131084,
+        #  'disk.kernelWriteLatency': 131088,
+        #  'disk.maxQueueDepth': 131096,
+        #  'disk.maxTotalLatency': 131095,
+        #  'disk.numberRead': 131076,
+        #  'disk.numberReadAveraged': 131097,
+        #  'disk.numberWrite': 131077,
+        #  'disk.numberWriteAveraged': 131098,
+        #  'disk.queueLatency': 131094,
+        #  'disk.queueReadLatency': 131086,
+        #  'disk.queueWriteLatency': 131090,
+        #  'disk.read': 131078,
+        #  'disk.totalLatency': 131093,
+        #  'disk.totalReadLatency': 131085,
+        #  'disk.totalWriteLatency': 131089,
+        #  'disk.usage': 131073,
+
+        # disk.read/write/deviceLatency/numberRead/numberWrite
+        131078, 131079, 131091, 131076, 131077,
+    ]
+
+
+    #needed_ids = [
+    #    # sys.resourceMem*
+    #    262151, 262155, 262169, 262152, 262154, 262153, 262157, 262156, 262168,
+    #]
+
+    # Seems as this is not available in ESX 5.0 but we saw it on 5.1
+    if esx_version_num > 5.0:
+        # sys.resourceMemConsumed
+        needed_ids += [
+            262171,
+        ]
+
+    if esx_version_num > 4.1:
+        needed_ids += [
+            # net.*
+            196616, 196621, 196617, 196625, 196619, 196623, 196609, 196614,
+            196620, 196624, 196615, 196622, 196618, 196612, 196613, 196626,
+        ]
+
+    return needed_ids
 
 def usage():
     sys.stderr.write("""Check_MK vSphere Agent
@@ -196,6 +253,13 @@ results = {}
 # Debugging stuff
 query_duration = 0
 query_start = 0
+esx_version_num = None
+esx_name = ""
+
+import re
+def get_pattern(pattern, line):
+    p = re.compile(pattern)
+    return p.findall(line)
 
 try:
     my_cookie   = None
@@ -212,14 +276,7 @@ try:
 
     start = time.time()
 
-    for (used_by, name, soapdata) in soapdata_list:
-        # Only sent queries we actually need
-        for item in used_by:
-            if item in query_objects:
-                break
-        else:
-            continue
-        soapdata = soapdata.replace("###user###", user).replace("###secret###", secret)
+    def query_server(soapdata):
         handle.putrequest("POST", request_uri)
         handle.putheader("Content-Length", "%d" % len(soapdata))
         handle.putheader("Content-Type", 'text/xml; charset="utf-8"')
@@ -232,15 +289,59 @@ try:
         handle.send(soapdata)
 
         response = handle.getresponse()
-        reply_code, reply_msg, reply_headers, reply_data = \
-        response.status, response.reason, response.msg, response.read()
+        return response.status, response.reason, response.msg, response.read()
 
+    def get_counter_instances():
+
+        import re
+        p = re.compile("<counterId>([0-9]*)</counterId><instance>([^<]*)")
+        m = p.findall( results["7_query_avail_perf_metric"] )
+
+        elements = get_pattern("<counterId>([0-9]*)</counterId><instance>([^<]*)", results["7_query_avail_perf_metric"])
+        counters_avail  = {}
+        for counter, instance in elements:
+            counters_avail.setdefault(counter, []).append(instance)
+
+        return counters_avail
+
+    for (used_by, name, soapdata) in soapdata_list:
+        # Only sent queries we actually need
+        for item in used_by:
+            if item in query_objects:
+                break
+        else:
+            continue
+
+        # Prepare request data
         if name == "2_login":
-            my_cookie =  reply_headers.get("Set-Cookie")
+            soapdata = soapdata.replace("###user###", user).replace("###secret###", secret)
+        elif name == "8_perf_counter_syntax":
+            needed_ids = get_counters(esx_version_num)
+            counter_data = []
+            for entry in needed_ids:
+                counter_data.append("<ns1:counterId>%s</ns1:counterId>" % entry)
+            soapdata = soapdata.replace("###counters###", "".join(counter_data))
+        elif name == "9_perf_counter_data":
+            needed_ids     = get_counters(esx_version_num)
+            counters_avail = get_counter_instances()
+            counter_data = []
+            for entry in needed_ids:
+                for instance in counters_avail.get(entry, []):
+                    counter_data.append("<ns1:metricId><ns1:counterId>%d</ns1:counterId><ns1:instance>%s</ns1:instance></ns1:metricId>" % (entry, instance))
+            soapdata = soapdata.replace("###counters###", "".join(counter_data))
 
+        # Query data 
+        reply_code, reply_msg, reply_headers, reply_data = query_server(soapdata)
         results[name] = reply_data
 
-    query_duration = time.time() - start
+        # Postprocess response data
+        if name == "1_serviceinfo":
+            elements = get_pattern("<name>(.*)</name>.*<apiVersion>([0-9\.]*)</apiVersion>", results["1_serviceinfo"])
+            esx_name        = elements[0][0]
+            esx_version_num = float(elements[0][1])
+        elif name == "2_login":
+            my_cookie =  reply_headers.get("Set-Cookie")
+
 
 except Exception, e:
     if opt_debug:
@@ -258,52 +359,37 @@ except Exception, e:
 #for name, value in results.items():
 #    file("results/%s.%s" % (host, name), "w").write(value)
 
+
 if not error:
     try:
 
-        def get_value(line):
-            return line.split(">")[1]
-
         ##########################
-        # Check MK header an Agent Version
+        # Check MK header and Agent Version
         print   "<<<check_mk>>>"
-        lines = results["1_serviceinfo"].replace("<", "\n<").splitlines()
-        for line in lines:
-            if line.startswith("<version>"):
-                print "Version: %s" % get_value(line)
-            elif line.startswith("<name>"):
-                print "AgentOs: %s" % get_value(line)
+        print "Version: %.1f" %  esx_version_num
+        print "AgentOs: %s" %  esx_name
 
         #############################
         # Hostsystem instance to name
         #############################
         hostsystem_name = {}
-        lines = results["3_hostsystem_name"].replace("<", "\n<").splitlines()
-        hostsystem = ""
-        for line in lines:
-            if line.startswith('<obj type="HostSystem'):
-                hostsystem = get_value(line)
-                print "AgentOs: %s" % get_value(line)
-            elif line.startswith('<val xsi:type="xsd:string">'):
-                hostsystem_name[hostsystem] = get_value(line)
+        elements = get_pattern('<obj type="HostSystem">(.*?)</obj>.*?<val xsi:type="xsd:string">(.*?)</val>',
+                               results["3_hostsystem_name"])
+        for hostsystem, name in elements:
+            hostsystem_name[hostsystem] = name
 
         ###########################
         # Datastores
         ###########################
         if "datastore" in query_objects:
-            lines = results["4_datastores"].replace("<", "\n<").splitlines()
-
             datastores = {}
-            entry = None
-            current_datastore = None
-            for line in lines:
-                if line.startswith('<obj type="Datastore">'):
-                    current_datastore = get_value(line)
-                    datastores[current_datastore] = {}
-                elif line.startswith("<name>"):
-                    entry = get_value(line)
-                elif line.startswith("<val xsi:type"):
-                    datastores[current_datastore][entry] = get_value(line)
+            elements = get_pattern('<objects><obj type="Datastore">(.*?)</obj>(.*?)</objects>', results["4_datastores"])
+            for datastore, content in elements:
+                entries = get_pattern('<name>(.*?)</name><val xsi:type.*?>(.*?)</val>', content)
+                datastores[datastore] = {}
+                for name, value in entries:
+                    datastores[datastore][name] = value
+
 
             print "<<<esx_vsphere_datastores:sep(9)>>>"
             for key in sorted(datastores.keys()):
@@ -317,45 +403,23 @@ if not error:
         # Counters
         ###########################
         if "counters" in query_objects:
-            lines = results["8_perf_counter_syntax"].replace("<", "\n<").splitlines()
-
+            ### Syntax
             counters_syntax = {}
-            current_key     = None
+            elements = get_pattern('<returnval><key>(.*?)</key>.*?<key>(.*?)</key>.*?'\
+                                   '<key>(.*?)</key>.*?<key>(.*?)</key>.*?', results["8_perf_counter_syntax"])
 
-            add_name_fctn  = lambda x: counters_syntax[current_key].update({"name":  x})
-            add_group_fctn = lambda x: counters_syntax[current_key].update({"group": x})
-            add_unit_fctn  = lambda x: counters_syntax[current_key].update({"unit":  x})
-            add_key_fctn   = None
-
-            for line in lines:
-                if line.startswith("<key>"):
-                    key_value = get_value(line)
-                    if add_key_fctn == None:
-                        current_key = key_value
-                        counters_syntax[key_value] = {}
-                    else:
-                        add_key_fctn(key_value)
-
-                if line.startswith("<nameInfo>"):
-                    add_key_fctn = add_name_fctn
-                elif line.startswith("<groupInfo>"):
-                    add_key_fctn = add_group_fctn
-                elif line.startswith("<unitInfo>"):
-                    add_key_fctn = add_unit_fctn
-                elif line.startswith("</returnval>"):
-                    add_key_fctn = None
+            for key, nameInfo, groupInfo, unitInfo in elements:
+                counters_syntax[key] = { "name": nameInfo, "group": groupInfo, "unit": unitInfo }
 
 
-            lines          = results["9_perf_counter_data"].replace("<", "\n<").splitlines()
+            ### Data
             counters_value = {}
-            for line in lines:
-                if line.startswith("<counterId>"):
-                    counter_id = get_value(line)
-                elif line.startswith("<instance>"):
-                    instance_id = get_value(line)
-                elif line.startswith("<value>"):
-                    if counter_id in counters_syntax:
-                        counters_value["%s.%s" % (counter_id, instance_id)] = { "id": counter_id, "instance": instance_id, "value": get_value(line) }
+
+            elements = get_pattern("<id><counterId>(.*?)</counterId><instance>(.*?)</instance></id><value>(.*?)</value>", results["9_perf_counter_data"])
+
+            for counter, instance, value in elements:
+                if counter in counters_syntax:
+                    counters_value["%s.%s" % (counter, instance)] = { "id": counter, "instance": instance, "value": value }
 
             print "<<<esx_vsphere_counters:sep(124)>>>"
             counters_output = {}
@@ -367,48 +431,40 @@ if not error:
             for key in sorted(counters_output.keys()):
                 value = counters_output[key]
                 print "%s.%s|%s|%s|%s" % (key + value)
-                                        #(desc["group"], desc["name"], 
-                                        #  value["instance"], value["value"], desc["unit"])
 
         ###########################
         # Hostsystem
         ###########################
         if "hostsystem" in query_objects:
-            lines = results["10_hostsystem"].replace("<", "\n<").splitlines()
-
             hostsystem_propsets = {}
-            current_propset     = None
-
             hostsystem_sensors  = {}
-            current_sensor_info = None
-            for line in lines:
-                if line.startswith("<propSet>"):
-                    current_propset = None
-                    if current_sensor_info:
-                        hostsystem_sensors[current_sensor_info["name"]] = current_sensor_info
-                        current_sensor_info = None
 
-                if current_sensor_info != None:
-                    for key in [ "name", "label", "summary", "key", "currentReading", 
-                                 "unitModifier", "baseUnits", "sensorType", "rateUnits" ]:
-                        if line.startswith("<%s>" % key):
-                            current_sensor_info[key] = get_value(line)
-                            break
+            # Propsets
+            elements = get_pattern('<propSet><name>(.*?)</name><val.*?>(.*?)</val></propSet>', results["10_hostsystem"])
+            sensor_propset = None
+            for name, value in elements:
+                if name == "runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo":
+                    sensor_propset = value
+                elif name == "config.multipathState.path":
+                    multipaths = get_pattern("<name>(.*?)</name><pathState>(.*?)</pathState>", value)
+                    for mp_name, mp_state in multipaths:
+                        hostsystem_propsets.setdefault(name, []).append("%s %s" % (mp_name, mp_state))
+                else:
+                    hostsystem_propsets.setdefault(name, []).append(value)
 
-                if line.startswith('<HostNumericSensorInfo xsi:type="HostNumericSensorInfo">'):
-                    if current_sensor_info:
-                        hostsystem_sensors[current_sensor_info["name"]] = current_sensor_info
-                    current_sensor_info = {}
-                    continue
+            # Sensor info
+            entry_pattern = ""
+            for key in [ "name", "label", "summary", "key", "currentReading",
+                         "unitModifier", "baseUnits", "sensorType" ]:
+                entry_pattern += "<%(name)s>(.*?)</%(name)s>.*?" % { "name": key}
 
-                if line.startswith("<name>") or line.startswith("<pathState>"):
-                    if current_propset:
-                        hostsystem_propsets[current_propset].append(get_value(line))
-                    else:
-                        current_propset = get_value(line)
-                        hostsystem_propsets[current_propset] = []
-                elif line.startswith("<val xsi:type"):
-                    hostsystem_propsets[current_propset].append(get_value(line))
+            # TODO: rate unit?
+            sensor_data = get_pattern(entry_pattern, sensor_propset)
+            for name, label, summary, key, currentReading, unitModifier, baseUnits, sensorType in sensor_data:
+                hostsystem_sensors[name] = { "name": name, "label": label, "summary": summary, "key": key,
+                                             "currentReading": currentReading, "unitModifier": unitModifier,
+                                             "baseUnits": baseUnits, "sensorType": sensorType }
+
 
             print "<<<esx_vsphere_hostsystem>>>"
             for key in sorted(hostsystem_propsets.keys()):
@@ -429,23 +485,23 @@ if not error:
                 line += ";%s;%s;%s" % ( data["key"], data["label"], data["summary"] )
                 print line
 
+
         ###########################
         # Virtual machines
         ###########################
         if "virtualmachine" in query_objects:
             vms = {}
-            lines = results["11_virtualmachine"].replace("<", "\n<").splitlines()
-            for line in lines:
-                if line.startswith('<obj type="VirtualMachine"'):
-                    vm_id = get_value(line)
-                    vm = {}
-                    vms[vm_id] = vm
-                elif line.startswith('<name>'):
-                    name = get_value(line)
-                elif line.startswith('<val'):
-                    value = get_value(line)
-                    vm[name] = value
 
+            start = time.time()
+            elements = get_pattern("<objects>(.*?)</objects>", results["11_virtualmachine"])
+            for entry in elements:
+                vm_data = get_pattern("<name>(.*?)</name><val.*?>(.*?)</val>", entry)
+                for key, value in vm_data:
+                    if key == "name":
+                        vms[value] = {}
+                        for k, v in vm_data:
+                            vms[value][k] = v
+                        break
 
             for key in sorted(vms.keys()):
                 data = vms[key]
@@ -461,7 +517,8 @@ if not error:
         print "<<<<>>>>"
         print "<<<esx_vsphere_objects:sep(9)>>>"
         if "hostsystem" in query_objects:
-            print "hostsystem\t%s\t\t%s" % ( opt_hostname or host_address, "".join(hostsystem_propsets["runtime.powerState"]) )
+            print "hostsystem\t%s\t\t%s" % ( hostsystem_propsets["name"][0], "".join(hostsystem_propsets["runtime.powerState"]) )
+
 
         if "virtualmachine" in query_objects:
             for key in sorted(vms.keys()):

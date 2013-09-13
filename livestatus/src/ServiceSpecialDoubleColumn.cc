@@ -27,6 +27,8 @@
 #include "logger.h"
 #include "time.h"
 
+extern int      interval_length;
+
 double ServiceSpecialDoubleColumn::getValue(void *data)
 {
     data = shiftPointer(data);
@@ -49,7 +51,7 @@ double ServiceSpecialDoubleColumn::getValue(void *data)
                 while (svc_member != 0) {
                     tmp_svc = svc_member->service_ptr;
                     if (!strncmp(tmp_svc->check_command_ptr->name, "check-mk", 9)) {
-                        return check_result_age / ((tmp_svc->check_interval == 0 ? 1 : tmp_svc->check_interval) * 60);
+                        return check_result_age / ((tmp_svc->check_interval == 0 ? 1 : tmp_svc->check_interval) * interval_length);
                     }
                     svc_member = svc_member->next;
                 }
@@ -57,7 +59,7 @@ double ServiceSpecialDoubleColumn::getValue(void *data)
             }
             else // Other non-cmk passive and active checks
             {
-                return check_result_age / ((svc->check_interval == 0 ? 1 : svc->check_interval) * 60);
+                return check_result_age / ((svc->check_interval == 0 ? 1 : svc->check_interval) * interval_length);
             }
         }
     }

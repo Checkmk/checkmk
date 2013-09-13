@@ -359,6 +359,8 @@
     * FIX: Fixed wrong default settings of view filters in localized multisite
     * FIX: Fixed exception when enabling sounds for views relying on 
            e.g. alert statistics source
+    * FIX: Folder Tree Snapin: make folder filter also work for remote
+           folders that do not exist locally
 
     WATO:
     * FIX: fix layout of Auxiliary tags table

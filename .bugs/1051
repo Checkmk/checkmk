@@ -1,0 +1,12 @@
+Title: cache problem after adding service levels
+Component: multisite
+State: open
+Date: 2013-09-13 11:45:17
+Targetversion: 1.2.3i2
+Class: nastiness
+
+after adding service levels, they are not displayed in configuration dialog of
+custom notification for a user
+restart of apache is required before using the service levels
+should work without restart
+cache invalidation required

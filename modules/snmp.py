@@ -135,11 +135,57 @@ def init_snmp_host(hostname):
     g_snmp_sessions[hostname] = s
     return s
 
+# The net-snmp python bindings used by the new inline snmp method
+# does not provide a bulkwalk functionality. Though we need to
+# implement this on our own.
+def inline_bulkwalk(s, oid):
+    # Start from index 0, and use getbulk operations
+    startindex = 0
+    thistree = oid
+    results = []
+    while thistree == oid:
+        if startindex == 0:
+            var_list = netsnmp.VarList(netsnmp.Varbind(oid))
+        else:
+            var_list = netsnmp.VarList(netsnmp.Varbind(oid, startindex))
+        result = s.getbulk(0, 10, var_list)
+        for i in var_list:
+            if i.tag == thistree:
+                results.append(i)
+
+        # Proceed with another bulkget request or finished?
+
+        # If startindex is null
+        if not var_list[-1].iid:
+            break
+        else:
+            # Refresh thistree name and increment startindex
+            thistree = var_list[-1].tag
+            startindex = int(var_list[-1].iid)
+
+        # If startindex still 0
+        if startindex == 0:
+            break
+
+    return results
+
+def inline_walk(s, oid):
+    var_list = netsnmp.VarList(netsnmp.Varbind(oid))
+    res = s.walk(var_list)
+    results = []
+    for var in var_list:
+        if var.iid is not None:
+            results.append(var)
+    return results
+
 def inline_snmpwalk_on_suboid(hostname, oid, strip_values = True):
     s = init_snmp_host(hostname)
 
-    # FIXME: handle bulkwalk/getnext walk. At the moment it seems only
-    # a getnext walk is done in all cases.
+    bulkwalk = is_bulkwalk_host(hostname)
+    if bulkwalk:
+        what = 'BULKWALK'
+    else:
+        what = 'WALK'
 
     # Remove trailing .0 for walks
     # .1.3.6.1.2.1.1.5.0 but receive the value for 1.3.6.1.2.1.1.6.0.
@@ -147,10 +193,12 @@ def inline_snmpwalk_on_suboid(hostname, oid, strip_values = True):
         oid = oid[:-2]
 
     if opt_debug:
-        sys.stdout.write("Executing SNMPWALK of \"%s\" on %s\n" % (oid, hostname))
+        sys.stdout.write("Executing %s of \"%s\" on %s\n" % (what, oid, hostname))
 
-    var_list = netsnmp.VarList(netsnmp.Varbind(oid))
-    res = s.walk(var_list)
+    if bulkwalk:
+        res = inline_bulkwalk(s, oid)
+    else:
+        res = inline_walk(s, oid)
     if s.ErrorNum != 0:
         if opt_verbose:
             # s.ErrorStr, s.ErrorNum, s.ErrorInd
@@ -158,7 +206,7 @@ def inline_snmpwalk_on_suboid(hostname, oid, strip_values = True):
         raise MKSNMPError('SNMP Error on %s while walking %s.' % (hostname, oid))
 
     results = []
-    for var in var_list:
+    for var in res:
         if var.iid is None:
             continue
 

@@ -1451,6 +1451,13 @@ def host_check_command(hostname, ip, is_clust):
     elif value[0] == "tcp":
         return "check-mk-host-tcp!" + str(value[1])
 
+    elif value[0] == "custom":
+        try:
+            custom_commands_to_define.add("check-mk-custom")
+        except:
+            pass # not needed and not available with CMC
+        return "check-mk-custom!" + autodetect_plugin(value[1])
+
     raise MKGeneralException("Invalid value %r for host_check_command of host %s." % (
             value, hostname))
 
@@ -2159,16 +2166,7 @@ define service {
                 continue
 
             if command_line:
-                plugin_name = command_line.split()[0]
-                if command_line[0] not in [ '$', '/' ]:
-                    try:
-                        for dir in [ "/local", "" ]:
-                            path = omd_root + dir + "/lib/nagios/plugins/"
-                            if os.path.exists(path + plugin_name):
-                                command_line = path + command_line
-                                break
-                    except:
-                        pass
+                command_line = autodetect_plugin(command_line)
 
             if "freshness" in entry:
                 freshness = "  check_freshness\t\t1\n" + \
@@ -2224,6 +2222,19 @@ define service {
 }
 
 """ % (pingonly_template, ping_command, check_icmp_arguments(hostname), extra_service_conf_of(hostname, "PING"), hostname))
+
+def autodetect_plugin(command_line):
+    plugin_name = command_line.split()[0]
+    if command_line[0] not in [ '$', '/' ]:
+        try:
+            for dir in [ "/local", "" ]:
+                path = omd_root + dir + "/lib/nagios/plugins/"
+                if os.path.exists(path + plugin_name):
+                    command_line = path + command_line
+                    break
+        except:
+            pass
+    return command_line
 
 def simulate_command(command):
     if simulation_mode:

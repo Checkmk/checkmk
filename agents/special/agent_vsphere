@@ -358,6 +358,8 @@ try:
             esx_version_num = float(elements[0][1])
         elif name == "2_login":
             my_cookie =  reply_headers.get("Set-Cookie")
+            if reply_msg != "OK":
+                raise Exception("Login response is not 'OK'. Please check the credentials")
 
 except Exception, e:
     if opt_debug:

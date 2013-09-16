@@ -94,6 +94,8 @@
     * cisco_wlc: now supports configuration options for missing AP
     * FIX: check_mk-ipmi.php: PNP template now displays correct units as delivered
            by the check plugin
+    * agent_vsphere: completely rewritten, now considerably faster
+                     vCenter is still queried by old version
 
 
     Notifications:

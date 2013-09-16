@@ -258,6 +258,8 @@ esx_name = ""
 
 import re
 def get_pattern(pattern, line):
+    if not line:
+        return []
     p = re.compile(pattern)
     return p.findall(line)
 

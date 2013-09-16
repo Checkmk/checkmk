@@ -30,22 +30,40 @@
 # 1. Put this file in /usr/lib/check_mk_agent/local
 # 2. Make the file executable
 # 3. Add a correct url_prefix (OMD site and slash)
-#    user and password with read access to Multisite.
+#    user with read access to Multisite.
+# 4. Add password OR automation secret of this user
 
 url_prefix = "" # non-OMD installations
 # url_prefix = "mysite/" # with OMD site name
 
 # Authentication credentials
 user = "omdadmin"
+
+# use password OR automation_secret (you do not need both of them!!)
+# set the other one to the empty string ""
+# either:
 password = "omd"
+automation_secret=""
+
+# or:
+# password = ""
+# automation_secret = "LSEGRILPWQVLDBCYCKOC"
 
 # Do not change anything below
 
 import os, sys
 
-url = 'http://localhost/%scheck_mk/login.py?_login=1&_username=%s&_password=%s' \
-      '&_origtarget=view.py%%3Fview_name=aggr_summary%%26output_format=python' % \
-        (url_prefix, user, password)
+if automation_secret != "":
+    url = 'http://localhost/%scheck_mk/view.py?view_name=aggr_summary&output_format=python' \
+          '&_username=%s&_secret=%s' % (url_prefix, user, automation_secret)
+elif password != "":
+    url = 'http://localhost/%scheck_mk/login.py?_login=1&_username=%s&_password=%s' \
+          '&_origtarget=view.py%%3Fview_name=aggr_summary%%26output_format=python' % \
+          (url_prefix, user, password)
+else:
+    sys.stderr.write("You need to specify a password or an automation secret in the script source\n")
+    sys.exit(1)
+
 
 try:
     command = "curl -u \"%s:%s\" -b /dev/null -L --noproxy localhost --silent '%s'" % \

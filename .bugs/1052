@@ -1,0 +1,16 @@
+Title: CUPS print queue monitoring: Default Printer is not checked / inventorized
+Component: checks
+State: open
+Date: 2013-09-16 08:52:34
+Targetversion: 1.2.3i2
+Class: bug
+
+after a change in the linux agent, all printers are monitored / inventorized
+except the default printer, having a
+<DefaultPrinter sw>
+section in /etc/cups/printers.conf
+
+execution time optimization can be done within the change:
+lpstat -a
+command should not be executed twice, but only once
+(whereas the lpstat -p and lpstat -o commands can be done once per printer)

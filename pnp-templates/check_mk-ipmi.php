@@ -23,11 +23,24 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+if ($UNIT[1] == 'degrees_C') {
+    $unit   = "°C";
+    $vlabel = "--vertical-label 'Celsius'";
+} elseif ($UNIT[1] == 'unspecified') {
+    $unit   = "";
+    $vlabel = "";
+} else {
+    $unit   = $UNIT[1];
+    $vlabel = "--vertical-label '$UNIT[1]'";
+}
 
-$opt[1] = "--vertical-label 'Celsius' -l0 -u60 --title \"IPMI temperature sensors $hostname\" ";
+$opt[1] = "$vlabel -l0 --title \"IPMI sensor $NAME[1] / $hostname\" ";
 
-$def[1] = "DEF:temp=$RRDFILE[1]:$DS[1]:MAX ";
-$def[1] .= "AREA:temp#ffd040:\"Average ambient temperature\" ";
-$def[1] .= "LINE:temp#ff8000 ";
+$def[1] = "DEF:value=$RRDFILE[1]:$DS[1]:MAX ";
+$def[1] .= "AREA:value#ffd040:\"Sensor $NAME[1]\" ";
+$def[1] .= "LINE:value#ff8000 ";
+$def[1] .= "GPRINT:value:LAST:\"%6.2lf $unit last\" " ;
+$def[1] .= "GPRINT:value:AVERAGE:\"%6.2lf $unit avg\" " ;
+$def[1] .= "GPRINT:value:MAX:\"%6.2lf $unit max\\n\" ";
 
 ?>

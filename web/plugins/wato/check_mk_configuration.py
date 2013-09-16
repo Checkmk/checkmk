@@ -949,6 +949,23 @@ register_configvar(group,
                       "and children_system_time")),
     need_restart = True)
 
+register_configvar(group,
+    "use_inline_snmp",
+    Checkbox(
+        title = _("Use Inline SNMP (EXPERIMENTAL)"),
+        label = _("Enable inline SNMP (directly use net-snmp libraries)"),
+        help = _("In older versions Check_MK used command line calls of net-snmp "
+                 "tools like snmpget or snmpwalk. For each request a new command line "
+                 "program had to be executed. The new default is the inline SNMP implementation "
+                 "which calls the net-snmp libraries directly via its python bindings. This "
+                 "should increase the performance of SNMP checks in a significant way. "
+                 "For compatibility the classic SNMP integration is still available and can be "
+                 "enabled here."),
+        default_value = False
+    ),
+    need_restart = True
+)
+
 group = _("Inventory - automatic service detection")
 
 register_configvar(group,
@@ -1131,7 +1148,6 @@ register_configvar(group,
                       "after each inventory, i.e. create one file per host. This is the same "
                       "as adding the option <tt>-u</tt> to each call of <tt>-I</tt> on the "
                       "command line.")))
-
 
 group = _("Check configuration")
 
@@ -1417,7 +1433,8 @@ register_rule(
           ( "tcp" ,    _("TCP Connect"), Integer(label = _("to port:"), minvalue=1, maxvalue=65535, default_value=80 )),
           ( "ok",      _("Always assume host to be up") ),
           ( "agent",   _("Use the status of the Check_MK Agent") ),
-          ( "service", _("Use the status of the service..."), TextUnicode(label = ":", size=32, allow_empty=False )),
+          ( "service", _("Use the status of the service..."), TextUnicode(label = ":", size=45, allow_empty=False )),
+          ( "custom",  _("Use a custom check plugin..."), PluginCommandLine() ),
         ],
         default_value = "ping",
         html_separator = " ",

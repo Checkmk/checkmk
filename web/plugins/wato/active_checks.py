@@ -810,6 +810,24 @@ register_rule(group,
     ),
     match = 'all')
 
+def PluginCommandLine(addhelp = ""):
+    return TextAscii(
+          title = _("Command line"),
+          help = _("Please enter the complete shell command including "
+                   "path name and arguments to execute. You can use Nagios "
+                   "macros here. The most important are:<ul>"
+                   "<li><tt>$HOSTADDRESS$</tt>: The IP address of the host</li>"
+                   "<li><tt>$HOSTNAME$</tt>: The name of the host</li>"
+                   "<li><tt>$USER1$</tt>: user macro 1 (usually path to shipped plugins)</li>"
+                   "<li><tt>$USER2$</tt>: user marco 2 (usually path to your own plugins)</li>"
+                   "</ul>"
+                   "If you are using OMD, then you can omit the path and just specify "
+                   "the command (e.g. <tt>check_foobar</tt>). This command will be "
+                   "searched first in the local plugins directory "
+                   "(<tt>~/local/lib/nagios/plugins</tt>) and then in the shipped plugins "
+                   "directory (<tt>~/lib/nagios/plugins</tt>) within your site directory."),
+          size = "max",
+       )
 
 register_rule(group,
     "custom_checks",
@@ -830,25 +848,9 @@ register_rule(group,
                   default_value = _("Customcheck"))
             ),
             ( "command_line",
-              TextAscii(
-                  title = _("Command line"),
-                  help = _("Please enter the complete shell command including "
-                           "path name and arguments to execute. You can use Nagios "
-                           "macros here. The most important are:<ul>"
-                           "<li><tt>$HOSTADDRESS$</tt>: The IP address of the host</li>"
-                           "<li><tt>$HOSTNAME$</tt>: The name of the host</li>"
-                           "<li><tt>$USER1$</tt>: user macro 1 (usually path to shipped plugins)</li>"
-                           "<li><tt>$USER2$</tt>: user marco 2 (usually path to your own plugins)</li>"
-                           "</ul>"
-                           "If you are using OMD, then you can omit the path and just specify "
-                           "the command (e.g. <tt>check_foobar</tt>). This command will be "
-                           "searched first in the local plugins directory "
-                           "(<tt>~/local/lib/nagios/plugins</tt>) and then in the shipped plugins "
-                           "directory (<tt>~/lib/nagios/plugins</tt>) within your site directory.<br><br>"
-                           "<b>Passive checks</b>: Do no specify a command line if you want "
-                           "to define passive checks."),
-                  size = "max",
-               )
+              PluginCommandLine(addhelp = _("<br><br>"
+                   "<b>Passive checks</b>: Do no specify a command line if you want "
+                   "to define passive checks.")),
             ),
             ( "command_name",
               TextAscii(

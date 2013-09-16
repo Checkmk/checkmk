@@ -1,0 +1,14 @@
+Title: Livestatus: parse DOWNTIMESTOPPED (UP) into correct state UP
+Component: livestatus
+State: open
+Date: 2013-09-16 11:34:56
+Targetversion: 1.4.0
+Class: nastiness
+
+When parsing lines like:
+
+[1379282400] HOST NOTIFICATION: mk;Lehrerrechner;check-mk-notify;DOWNTIMESTOPPED (UP);mk
+
+Livestatus sets 3 as the state (meaning invalid). It should extract the (UP) however
+and set the state 0.
+

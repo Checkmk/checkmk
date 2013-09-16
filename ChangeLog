@@ -92,8 +92,8 @@
            currently supported: temperature, humidity, switch contact and smoke sensors
     * cisco_wlc_client: now supports low/high warn and crit levels
     * cisco_wlc: now supports configuration options for missing AP
-    * FIX: check_mk-ipmi.php: PNP template for Power_Meter now displays correct
-           unit (Watts)
+    * FIX: check_mk-ipmi.php: PNP template now displays correct units as delivered
+           by the check plugin
 
 
     Notifications:

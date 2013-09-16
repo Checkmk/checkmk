@@ -90,6 +90,7 @@ multisite_painter_options["ts_format"] = {
      ("abs", _("Absolute")),
      ("rel", _("Relative")),
      ("both", _("Both")),
+     ("epoch", _("Unix Timestamp (Epoch)")),
   ]
 }
 
@@ -213,6 +214,9 @@ def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None):
 
     if mode == None:
         mode = get_painter_option("ts_format")
+
+    if mode == "epoch":
+        return "", str(int(timestamp))
 
     if mode == "both":
         css, h1 = paint_age(timestamp, has_been_checked, bold_if_younger_than, "abs")

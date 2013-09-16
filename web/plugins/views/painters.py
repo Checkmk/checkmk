@@ -281,7 +281,7 @@ multisite_painters["sitealias"] = {
 def paint_service_state_short(row):
     if row["service_has_been_checked"] == 1:
         state = str(row["service_state"])
-        name = nagios_short_state_names[row["service_state"]]
+        name = nagios_short_state_names.get(row["service_state"], "")
     else:
         state = "p"
         name = "PEND"
@@ -293,7 +293,9 @@ def paint_host_state_short(row):
 # return None, str(row)
     if row["host_has_been_checked"] == 1:
         state = row["host_state"]
-        name = nagios_short_host_state_names[row["host_state"]]
+        # A state of 3 is sent by livestatus in cases where no normal state
+        # information is avaiable, e.g. for "DOWNTIMESTOPPED (UP)"
+        name = nagios_short_host_state_names.get(row["host_state"], "")
     else:
         state = "p"
         name = "PEND"

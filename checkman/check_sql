@@ -1,0 +1,24 @@
+title: SQL database request check
+agents: active
+catalog: agentless
+license: GPL
+distribution: check_mk
+description:
+This is an active check that connects to a database server, sends an SQL
+statement to that server, and checks for the following result:
+
+The query must return three columns, a number, a text, and 
+performance data in the third column.
+If upper and lower levels are given, the number is being checked
+against these levels and the according state is being computed. 
+Otherwise the number ist treated as a Nagios state (0,1,2,3).
+State, text and the performance data are being returned
+
+The check works with MySQL, Postgresql and Oracle databases using the
+python drivers MySQLdb, psycopg2 and cx_Oracle. For cx_Oracle the
+Oracle instantclient needs to be installed as well, and the 
+LD_LIBRARY_PATH needs to be modified to point to the libclntsh.so of 
+that package.
+
+perfdata:
+ One value: the third field of the database response.

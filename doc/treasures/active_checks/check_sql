@@ -143,12 +143,12 @@ try:
         db_connection = db.connect(host=opt_hostname, db=opt_name, \
             user=opt_user, passwd=opt_password )
 
-    elif opt_dbms == "odbc":
-        import pyodbc   # odbc driver
-        db = odbc
-        db_connection = db.connect(DRIVER=opt_dbms, SERVER=opt_hostname, DATABASE=opt_name, \
-            UID=opt_user, PWD=opt_password, CHARSET='UTF8' )
-
+    elif opt_dbms == "oracle":
+        sys.path.append('/usr/lib/python2.7/site-packages')
+        import cx_Oracle
+        db = cx_Oracle
+        cstring = opt_user+"/"+opt_password+"@"+opt_hostname+"/"+opt_name
+        db_connection = db.connect(cstring)
     else:
         print "UNKNOWN - dbms not found"
         sys.exit(3)
@@ -199,6 +199,13 @@ try:
     row = rows[0]
     number = float(row[0])
     text = str(row[1])
+    try:
+        perf = row[2]
+    except IndexError:
+        if opt_debug:
+            raise
+        perf = ""  # no perf data
+
     state = 0
     if warn != [ None, None] or crit != [ None, None ]:
         if (warn[0] != None and warn[0] > number) or \
@@ -221,6 +228,6 @@ except Exception, e:
     sys.exit(3)
 
 result = ["OK", "WARN", "CRIT", "UNKNOWN" ][state]
-print "%s - %s %s" % (result, number, text)
+print "%s - %s %s %s" % (result, number, text, perf)
 sys.exit(state)
 

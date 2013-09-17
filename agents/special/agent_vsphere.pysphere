@@ -1,0 +1,741 @@
+#!/usr/bin/python
+# encoding: utf-8
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Useful resources:
+# http://pubs.vmware.com/vsphere-51/topic/com.vmware.ICbase/PDF/wssdk_510_dsg.pdf
+# http://pubs.vmware.com/vsphere-51/topic/com.vmware.ICbase/PDF/wssdk_prog_guide_5_1.pdf
+# http://pubs.vmware.com/vsphere-51/index.jsp?topic=/com.vmware.wssdk.apiref.doc/index.html&single=true
+#   http://www.vmware.com/support/developer/vc-sdk/visdk41pubs/ApiReference/
+#   http://www.vmware.com/support/developer/vc-sdk/visdk400pubs/sdk40programmingguide.pdf
+# Maybe the MOB is helpful:
+#   http://<your-esx-host>/mob
+
+import sys, os, getopt,socket
+
+import inspect, pprint # FOR DEBUGGING
+
+def usage():
+    sys.stderr.write("""Check_MK vSphere Agent
+
+USAGE: agent_vsphere [OPTIONS] HOST
+       agent_vsphere -h
+
+ARGUMENTS:
+  HOST                          Host name or IP address of vCenter or VMWare HostSystem
+
+OPTIONS:
+  -h, --help                    Show this help message and exit
+  -u USER, --user USER          Username for vSphere login
+  -s SECRET, --secret SECRET    Secret/Password for vSphere login
+  -D, --direct                  Assume a directly queried host system (no vCenter). In
+                                This we expect data about only one HostSystem to be
+                                Found and do not create piggy host data for that host.
+  -H, --hostname                Specify a hostname. This is neccessary if this is
+                                different from HOST. It is being used in --direct
+                                mode as the name of the host system when outputting
+                                its power state.
+  -a, --agent                   Also retrieve data from the normal Check_MK Agent.
+                                This makes sense if you query a vCenter that is
+                                Installed on a Windows host that you also want to
+                                Monitor with Check_MK.
+  -t, --timeout SECS            Set the network timeout to vSphere to SECS seconds.
+                                This is also used when connecting the agent (option -a).
+                                Default is 60 seconds. Note: the timeout is not only
+                                applied to the connection, but also to each individual
+                                subquery.
+  --debug                       Debug mode: let Python exceptions come through
+
+  --profile                     Enable performance profiling in Python source code
+
+  -i MODULES, --modules MODULES Modules to query. This is a comma separated list of
+                                hostsystem, virtualmachine and storage. Default is to
+                                query all modules.
+
+  -c, --dump-counters           Simply dumping out all available counters and their values.
+                                This mode is meant for debugging and diagnostic purposes.
+
+""")
+
+short_options = 'hi:u:s:Dat:H:c'
+long_options  = [
+    'help', 'user=', 'secret=', 'direct', 'agent', 'debug', 'modules=', 'timeout=', 'hostname=',
+    'dump-counters', 'profile'
+]
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+except getopt.GetoptError, err:
+    sys.stderr.write("%s\n" % err)
+    sys.exit(1)
+
+opt_debug         = False
+opt_direct        = False
+opt_agent         = False
+opt_dump_counters = False
+opt_timeout       = 60
+opt_hostname      = None
+
+g_profile         = None
+g_profile_path    = "vsphere_profile.out"
+
+host_address = None
+user         = None
+secret       = None
+mortypes     = [ 'hostsystem', 'virtualmachine', 'datastore', 'counters' ]
+
+for o,a in opts:
+    if o in [ '--debug' ]:
+        opt_debug = True
+    elif o in [ '--profile' ]:
+        import cProfile
+        g_profile = cProfile.Profile()
+        g_profile.enable()
+    elif o in [ '-D', '--direct' ]:
+        opt_direct = True
+    elif o in [ '-a', '--agent' ]:
+        opt_agent = True
+    elif o in [ '-u', '--user' ]:
+        user = a
+    elif o in [ '-s', '--secret' ]:
+        secret = a
+    elif o in [ '-i', '--modules' ]:
+        mortypes = a.split(',')
+    elif o in [ '-t', '--timeout' ]:
+        opt_timeout = int(a)
+    elif o in [ '-H', '--hostname' ]:
+        opt_hostname = a
+    elif o in [ '-c', '--dump-counters' ]:
+        opt_dump_counters = True
+    elif o in [ '-h', '--help' ]:
+        usage()
+        sys.exit(0)
+
+if len(args) == 1:
+    host_address = args[0]
+elif not args:
+    sys.stderr.write("ERROR: No host given.\n")
+    sys.exit(1)
+else:
+    sys.stderr.write("ERROR: Please specify exactly one host.\n")
+    sys.exit(1)
+
+socket.setdefaulttimeout(opt_timeout)
+
+def get_agent_info_tcp(hostname):
+    output = ""
+    try:
+        if hostname[0] in "123456789":
+            ipaddress = hostname
+        else:
+            ipaddress = socket.gethostbyname(hostname)
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            s.settimeout(opt_timeout)
+        except:
+            pass # some old Python versions lack settimeout(). Better ignore than fail
+        s.connect((ipaddress, 6556))
+        try:
+            s.setblocking(1)
+        except:
+            pass
+        output = ""
+        while True:
+            out = s.recv(4096, socket.MSG_WAITALL)
+            if out and len(out) > 0:
+                output += out
+            else:
+                break
+        s.close()
+        return output
+    except Exception, e:
+        if opt_debug:
+            raise
+    return output
+
+error_exit = 1
+if opt_agent:
+    sys.stdout.write(get_agent_info_tcp(host_address))
+    sys.stdout.flush()
+    error_exit = 0 # do not fail if vSphere fails
+
+
+try:
+    from pysphere import VIServer, VIProperty, MORTypes
+    from pysphere.resources import VimService_services as VI
+except: 
+    sys.stderr.write("pysphere API not found. Please install and try again.\n")
+    sys.exit(error_exit)
+
+host = VIServer()
+
+object_collection = []
+error = None
+try:
+    # During connect ServiceInstance is created and information are fetched from the
+    # server. Details can be found here:
+    # http://www.vmware.com/support/developer/vc-sdk/visdk41pubs/ApiReference/vim.ServiceInstance.html)
+    if opt_debug:
+        sys.stderr.write("Connecting to %s..." % host_address)
+        sys.stderr.flush()
+    host.connect(host_address, user, secret, sock_timeout=opt_timeout)
+    if opt_debug:
+        sys.stderr.write("Connected.\n")
+except socket.timeout:
+    error = "Cannot connect to vSphere Server: connect timeout."
+except:
+    if opt_debug:
+        raise
+    error = "Cannot connect to vSphere Server. Maybe you provided wrong " \
+            "credentials. Please check your connection settings and try " \
+            "again."
+
+if error:
+    sys.stderr.write(error + "\n")
+    sys.exit(error_exit)
+
+esx_version = host.get_api_version()
+esx_version_num = float(esx_version)
+
+print "<<<check_mk>>>"
+print "Version: %s" % esx_version
+print "AgentOs: %s " % host.get_server_type()
+
+# Prepare list of all hosts systems
+all_hosts = host.get_hosts()
+
+def output_profile():
+    g_profile.dump_stats(g_profile_path)
+    show_profile = os.path.join(os.path.dirname(g_profile_path), 'show_profile.py')
+    file(show_profile, "w")\
+        .write("#!/usr/bin/python\n"
+               "import pstats\n"
+               "stats = pstats.Stats('%s')\n"
+               "stats.sort_stats('time').print_stats()\n" % g_profile_path)
+    os.chmod(show_profile, 0755)
+
+    sys.stderr.write("Profile '%s' written. Please run %s.\n" % (g_profile_path, show_profile))
+
+
+def debug(x):
+    pprint.pprint(inspect.getmembers(x))
+
+def dump(x, indent=""):
+    for key, value in inspect.getmembers(x):
+        if key == "__dict__":
+            try:
+                value.items()
+                is_dict = True
+            except:
+                is_dict = False
+
+            if "_values" in value:
+                for k, v in value["_values"].items():
+                    print indent + k
+                    dump_object(v, indent + "    ")
+
+            elif type(value) == str:
+                print indent + value
+            elif is_dict:
+                dump_dict(value, indent)
+            elif type(value) == list:
+                dump_list(value, indent)
+            else:
+                debug(value)
+                sys.exit(0)
+
+def dump_dict(d, indent):
+    for key, value in d.items():
+        print indent + key
+        # dump(value, "    " + indent)
+
+def dump_object(v, indent):
+    for name, member in inspect.getmembers(v):
+        if not name.startswith("_"):
+            print indent + name
+            dump(member, indent + "    ")
+
+
+def dump_list(l, indent):
+    for nr, v in enumerate(l):
+        print indent + "%d:" % nr
+        dump(v, indent + "    ")
+
+# List of counters:
+#  'cpu.coreUtilization': 20,
+#  'cpu.costop': 27,
+#  'cpu.demand': 26,
+#  'cpu.idle': 13,
+#  'cpu.latency': 24,
+#  'cpu.ready': 11,
+#  'cpu.reservedCapacity': 8,
+#  'cpu.swapwait': 14,
+#  'cpu.totalCapacity': 23,
+#  'cpu.usage': 1,
+#  'cpu.usagemhz': 5,
+#  'cpu.used': 12,
+#  'cpu.utilization': 16,
+#  'cpu.wait': 10,
+#  'datastore.datastoreIops': 655367,
+#  'datastore.datastoreMaxQueueDepth': 655376,
+#  'datastore.datastoreNormalReadLatency': 655372,
+#  'datastore.datastoreNormalWriteLatency': 655373,
+#  'datastore.datastoreReadBytes': 655368,
+#  'datastore.datastoreReadIops': 655370,
+#  'datastore.datastoreReadLoadMetric': 655377,
+#  'datastore.datastoreReadOIO': 655374,
+#  'datastore.datastoreWriteBytes': 655369,
+#  'datastore.datastoreWriteIops': 655371,
+#  'datastore.datastoreWriteLoadMetric': 655378,
+#  'datastore.datastoreWriteOIO': 655375,
+#  'datastore.maxTotalLatency': 655379,
+#  'datastore.numberReadAveraged': 655360,
+#  'datastore.numberWriteAveraged': 655361,
+#  'datastore.read': 655362,
+#  'datastore.sizeNormalizedDatastoreLatency': 655366,
+#  'datastore.totalReadLatency': 655364,
+#  'datastore.totalWriteLatency': 655365,
+#  'datastore.write': 655363,
+#  'disk.busResets': 131082,
+#  'disk.commands': 131080,
+#  'disk.commandsAborted': 131081,
+#  'disk.commandsAveraged': 131099,
+#  'disk.deviceLatency': 131091,
+#  'disk.deviceReadLatency': 131083,
+#  'disk.deviceWriteLatency': 131087,
+#  'disk.kernelLatency': 131092,
+#  'disk.kernelReadLatency': 131084,
+#  'disk.kernelWriteLatency': 131088,
+#  'disk.maxQueueDepth': 131096,
+#  'disk.maxTotalLatency': 131095,
+#  'disk.numberRead': 131076,
+#  'disk.numberReadAveraged': 131097,
+#  'disk.numberWrite': 131077,
+#  'disk.numberWriteAveraged': 131098,
+#  'disk.queueLatency': 131094,
+#  'disk.queueReadLatency': 131086,
+#  'disk.queueWriteLatency': 131090,
+#  'disk.read': 131078,
+#  'disk.totalLatency': 131093,
+#  'disk.totalReadLatency': 131085,
+#  'disk.totalWriteLatency': 131089,
+#  'disk.usage': 131073,
+#  'disk.write': 131079,
+#  'hbr.hbrNetRx': 786433,
+#  'hbr.hbrNetTx': 786434,
+#  'hbr.hbrNumVms': 786432,
+#  'mem.active': 65545,
+#  'mem.activewrite': 65620,
+#  'mem.compressed': 65621,
+#  'mem.compressionRate': 65622,
+#  'mem.consumed': 65611,
+#  'mem.decompressionRate': 65623,
+#  'mem.granted': 65541,
+#  'mem.heap': 65573,
+#  'mem.heapfree': 65577,
+#  'mem.latency': 65628,
+#  'mem.llSwapIn': 65639,
+#  'mem.llSwapInRate': 65632,
+#  'mem.llSwapOut': 65643,
+#  'mem.llSwapOutRate': 65633,
+#  'mem.llSwapUsed': 65635,
+#  'mem.lowfreethreshold': 65630,
+#  'mem.overhead': 65586,
+#  'mem.reservedCapacity': 65589,
+#  'mem.shared': 65549,
+#  'mem.sharedcommon': 65569,
+#  'mem.state': 65580,
+#  'mem.swapin': 65599,
+#  'mem.swapinRate': 65618,
+#  'mem.swapout': 65603,
+#  'mem.swapoutRate': 65619,
+#  'mem.swapused': 65561,
+#  'mem.sysUsage': 65615,
+#  'mem.totalCapacity': 65625,
+#  'mem.unreserved': 65557,
+#  'mem.usage': 65537,
+#  'mem.vmmemctl': 65582,
+#  'mem.zero': 65553,
+#  'net.broadcastRx': 196620,
+#  'net.broadcastTx': 196621,
+#  'net.bytesRx': 196618,
+#  'net.bytesTx': 196619,
+#  'net.droppedRx': 196616,
+#  'net.droppedTx': 196617,
+#  'net.errorsRx': 196624,
+#  'net.errorsTx': 196625,
+#  'net.multicastRx': 196622,
+#  'net.multicastTx': 196623,
+#  'net.packetsRx': 196612,
+#  'net.packetsTx': 196613,
+#  'net.received': 196614,
+#  'net.transmitted': 196615,
+#  'net.unknownProtos': 196626,
+#  'net.usage': 196609,
+#  'power.energy': 720898,
+#  'power.power': 720896,
+#  'power.powerCap': 720897,
+#  'rescpu.actav1': 327680,
+#  'rescpu.actav15': 327686,
+#  'rescpu.actav5': 327683,
+#  'rescpu.actpk1': 327681,
+#  'rescpu.actpk15': 327687,
+#  'rescpu.actpk5': 327684,
+#  'rescpu.maxLimited1': 327690,
+#  'rescpu.maxLimited15': 327694,
+#  'rescpu.maxLimited5': 327692,
+#  'rescpu.runav1': 327682,
+#  'rescpu.runav15': 327688,
+#  'rescpu.runav5': 327685,
+#  'rescpu.runpk1': 327689,
+#  'rescpu.runpk15': 327693,
+#  'rescpu.runpk5': 327691,
+#  'rescpu.sampleCount': 327695,
+#  'rescpu.samplePeriod': 327696,
+#  'storageAdapter.commandsAveraged': 458752,
+#  'storageAdapter.maxTotalLatency': 458759,
+#  'storageAdapter.numberReadAveraged': 458753,
+#  'storageAdapter.numberWriteAveraged': 458754,
+#  'storageAdapter.read': 458755,
+#  'storageAdapter.totalReadLatency': 458757,
+#  'storageAdapter.totalWriteLatency': 458758,
+#  'storageAdapter.write': 458756,
+#  'storagePath.commandsAveraged': 524288,
+#  'storagePath.maxTotalLatency': 524295,
+#  'storagePath.numberReadAveraged': 524289,
+#  'storagePath.numberWriteAveraged': 524290,
+#  'storagePath.read': 524291,
+#  'storagePath.totalReadLatency': 524293,
+#  'storagePath.totalWriteLatency': 524294,
+#  'storagePath.write': 524292,
+#  'sys.resourceCpuAct1': 262159,
+#  'sys.resourceCpuAct5': 262162,
+#  'sys.resourceCpuAllocMax': 262165,
+#  'sys.resourceCpuAllocMin': 262164,
+#  'sys.resourceCpuAllocShares': 262166,
+#  'sys.resourceCpuMaxLimited1': 262160,
+#  'sys.resourceCpuMaxLimited5': 262163,
+#  'sys.resourceCpuRun1': 262158,
+#  'sys.resourceCpuRun5': 262161,
+#  'sys.resourceCpuUsage': 262148,
+#  'sys.resourceMemAllocMax': 262168,
+#  'sys.resourceMemAllocMin': 262167,
+#  'sys.resourceMemAllocShares': 262169,
+#  'sys.resourceMemCow': 262156,
+#  'sys.resourceMemMapped': 262152,
+#  'sys.resourceMemOverhead': 262155,
+#  'sys.resourceMemShared': 262153,
+#  'sys.resourceMemSwapped': 262154,
+#  'sys.resourceMemTouched': 262151,
+#  'sys.resourceMemZero': 262157,
+#  'sys.uptime': 262144}
+
+def dump_hostsystem_counters():
+    output_hostsystem_counters(all_counters = True)
+
+def output_hostsystem_counters(all_counters = False):
+    pm = host.get_performance_manager()
+    for mor, name in all_hosts.items():
+        if not opt_direct:
+            print '<<<<%s>>>>' % name
+        print '<<<esx_vsphere_counters:sep(124)>>>'
+
+        # Determine IDs of the counters: We have hard coded the IDs here in order to save
+        # a couple of seconds. To check out which counters are available just comment out
+        # the hardcoded needed_ids and uncomment the following three lines of code. This will
+        # give you a) A dict of name to id mappings and b) Current values of all counters.
+        if all_counters:
+            counterids = pm.get_entity_counters(mor)
+            needed_ids = counterids.keys() # retrieve all ids....
+        else:
+            needed_ids = [
+		# sys.uptime
+                262144,
+                # mem.*
+                # 65635, 65537, 65577, 65625, 65545, 65611, 65573, 65615, 65582,
+                # 65549, 65630, 65622, 65618, 65621, 65561, 65623, 65632, 65557,
+                # 65628, 65633, 65541, 65643, 65586, 65553, 65569, 65589, 65639,
+                # 65620, 65599, 65580, 65619, 65603,
+                #  'disk.deviceLatency': 131091,
+                #  'disk.deviceReadLatency': 131083,
+                #  'disk.deviceWriteLatency': 131087,
+                #  'disk.kernelLatency': 131092,
+                #  'disk.kernelReadLatency': 131084,
+                #  'disk.kernelWriteLatency': 131088,
+                #  'disk.maxQueueDepth': 131096,
+                #  'disk.maxTotalLatency': 131095,
+                #  'disk.numberRead': 131076,
+                #  'disk.numberReadAveraged': 131097,
+                #  'disk.numberWrite': 131077,
+                #  'disk.numberWriteAveraged': 131098,
+                #  'disk.queueLatency': 131094,
+                #  'disk.queueReadLatency': 131086,
+                #  'disk.queueWriteLatency': 131090,
+                #  'disk.read': 131078,
+                #  'disk.totalLatency': 131093,
+                #  'disk.totalReadLatency': 131085,
+                #  'disk.totalWriteLatency': 131089,
+                #  'disk.usage': 131073,
+
+                # disk.read/write/deviceLatency/numberRead/numberWrite
+                131078, 131079, 131091, 131076, 131077,
+            ]
+
+            
+            #needed_ids = [
+            #    # sys.resourceMem*
+            #    262151, 262155, 262169, 262152, 262154, 262153, 262157, 262156, 262168,
+            #]
+            
+            # Seems as this is not available in ESX 5.0 but we saw it on 5.1
+        if esx_version_num > 5.0:
+            # sys.resourceMemConsumed
+            needed_ids += [
+                262171,
+            ]
+
+        if esx_version_num > 4.1:
+            needed_ids += [
+                # net.*
+                196616, 196621, 196617, 196625, 196619, 196623, 196609, 196614,
+                196620, 196624, 196615, 196622, 196618, 196612, 196613, 196626,
+            ]
+
+        counters = pm.get_entity_statistic(mor, needed_ids)
+        lines = []
+        for counter in counters:
+            name = counter.group + "." + counter.counter
+            lines.append("%s|%s|%s|%s" % (name, counter.instance, counter.value, counter.unit))
+        lines.sort()
+        for line in lines:
+            print line
+    if not opt_direct:
+        print '<<<<>>>>'
+
+def output_mors(what, properties, direct=False):
+    if what == "hostsystem":
+        obj_type = MORTypes.HostSystem
+    elif what == "networking":
+        obj_type = MORTypes.HostNetworkSystem
+    else:
+        obj_type = MORTypes.VirtualMachine
+
+    count = 0
+    mors = host._retrieve_properties_traversal(property_names=properties.keys(), obj_type=obj_type)
+    if not mors:
+        return
+
+    for mor in mors:
+        sections = []
+        count += 1
+        # Parse result into a dictionary. Key is the property name,
+        # value is the value (some custom Python classes)
+        data = {}
+        for p in mor.PropSet:
+            # Convert property value using specified conversion function
+            data[p.Name] = properties[p.Name](p.Val)
+
+        obj_name = data["name"].split()[0] # get rid of comment
+
+        # Output multiplexed Check_MK Agent output (new in version 1.2.3i1)
+        if direct:
+            if count > 1:
+                raise Exception("You specified --direct, but there is more than one HostSystem!")
+        else:
+            print '<<<<%s>>>>' % obj_name
+
+        print '<<<esx_vsphere_%s>>>' % (what.replace('virtualmachine', 'vm'))
+        items = data.items()
+        items.sort()
+        running_on = ''
+        power_state = ''
+        for name, value in items:
+            if type(value) == tuple:
+                sections.append(value)
+            else:
+                if name == 'runtime.host':
+                    running_on = value
+                elif name == 'runtime.powerState':
+                    power_state = value
+                print '%s %s' % (name, value)
+
+        # Remember the total list of output objects. We will put this into
+        # a special section
+        if what == "hostsystem" and opt_direct and opt_hostname:
+            obj_name = opt_hostname
+        object_collection.append([what, obj_name, running_on, power_state])
+
+        # pprint.pprint(sections)
+        for section_name, section_lines in sections:
+            print '<<<%s>>>' % section_name
+            for line in section_lines:
+                print line
+
+
+def output_datastores():
+    property_names = [ 
+        "name",
+        "summary.freeSpace",
+        "summary.capacity",
+        "summary.uncommitted",
+        "summary.url",
+        "summary.accessible",
+        "summary.type",
+        ]
+
+    if esx_version_num > 4.1:
+        property_names += [
+        "summary.maintenanceMode",
+        ]
+        
+    # print inspect.getmembers(MORTypes)
+    print "<<<esx_vsphere_datastores:sep(%d)>>>" % ord('\t')
+    for mor in host._retrieve_properties_traversal(property_names=property_names, obj_type=MORTypes.Datastore):
+	for entry in mor.PropSet:
+	    if entry.Name == "name":
+                print '[%s]' % entry.Val
+            else:
+                print '%s\t%s' % (entry.Name.split(".")[1], entry.Val)
+
+def conv_multipath(value):
+    return " ".join(["%s %s" % (p.Name, p.PathState) for p in value.HostMultipathStateInfoPath])
+
+def conv_numeric_sensor_info(value):
+    # import inspect, pprint
+    lines = []
+    for sensor in value.HostNumericSensorInfo:
+        if not hasattr(sensor, "HealthState"):
+            continue # should never happen. If happens, sensor not interesting for monitoring
+        if (sensor.HealthState.Key == "green") or (sensor.HealthState.Key == "unknown"):
+            continue # just output sensors with issuse - saves lots of data
+
+        line = '%s;%s;%s;%s;%s;' % (sensor.Name, sensor.BaseUnits, sensor.CurrentReading,
+                                    sensor.SensorType, sensor.UnitModifier)
+        if hasattr(sensor, "RateUnits"):
+            line += sensor.RateUnits
+        line += ";%s;%s;%s" % (sensor.HealthState.Key, sensor.HealthState.Label,
+                                                          sensor.HealthState.Summary)
+        lines.append(line)
+
+        # print inspect.getmembers(sensor)
+    return ('esx_vsphere_sensors:sep(59)', lines)
+
+    # return pprint.pformat(inspect.getmembers(value))
+
+def conv_host(value):
+    return all_hosts.get(value)
+
+# This is only for testing/debugging. Simply printing all counters.
+if opt_dump_counters:
+    dump_hostsystem_counters()
+    sys.exit(0)
+
+if "datastore" in mortypes:
+    output_datastores()
+
+if "counters" in mortypes:
+    output_hostsystem_counters()
+
+if "hostsystem" in mortypes:
+    output_mors("hostsystem", {
+      "name": str,
+
+      "overallStatus": str,
+      "runtime.powerState": str,
+      "runtime.inMaintenanceMode": str,
+
+      "summary.quickStats.overallMemoryUsage":     str,
+      "hardware.memorySize": str,
+
+      "summary.quickStats.overallCpuUsage": str,
+      #"summary.quickStats.overallCpuDemand": str,
+      #"summary.quickStats.sharedMemory": str,
+#      "summary.quickStats.guestMemoryUsage": str,
+
+      "config.multipathState.path": conv_multipath,
+
+      "hardware.cpuInfo.numCpuPackages": str,
+      "hardware.cpuInfo.numCpuCores": str,
+      "hardware.cpuInfo.numCpuThreads": str,
+      "hardware.cpuInfo.hz": str,
+
+      "runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo" : conv_numeric_sensor_info,
+
+      #"summary.quickStats.uptime": str,
+    }, opt_direct)
+
+# Warning: we have no guarantee that all properties are always
+# output. For example if a VM is powered off, the only property
+# we get is summary.runtime.powerState
+vm_propertys = {
+      "name": str,
+      "guestHeartbeatStatus": str,
+      "summary.quickStats.uptimeSeconds": str,
+
+      # CPU Statistics
+      "summary.quickStats.overallCpuUsage": str,
+      "summary.quickStats.overallCpuDemand": str,
+      "summary.quickStats.staticCpuEntitlement": str,
+      "summary.quickStats.distributedCpuEntitlement": str,
+      
+      # Memory
+      "summary.quickStats.guestMemoryUsage": str,
+      "summary.quickStats.hostMemoryUsage": str,
+      "summary.quickStats.distributedMemoryEntitlement": str,
+      "summary.quickStats.staticMemoryEntitlement": str,
+      "summary.quickStats.privateMemory": str,
+      "summary.quickStats.sharedMemory": str,
+      "summary.quickStats.swappedMemory": str,
+      "summary.quickStats.balloonedMemory": str,
+      "summary.quickStats.consumedOverheadMemory": str,
+      "summary.quickStats.compressedMemory": str,
+
+      # Virtual machine configuration
+      "config.hardware.memoryMB": str,
+      "config.hardware.numCPU": str,
+      #"config.hardware.hwVersion": str,
+      #"config.hardware.guestId": str,
+      #"config.hardware.uuid": str,
+
+      "runtime.powerState": str,
+      "runtime.host" : conv_host,
+      "guest.toolsVersion" : str,
+      "guest.toolsVersionStatus" : str,
+}
+
+if esx_version_num > 4.1:
+    vm_propertys["config.hardware.numCoresPerSocket"] = str
+
+if "virtualmachine" in mortypes:
+    output_mors("virtualmachine", vm_propertys)
+
+print "<<<<>>>>"
+print "<<<esx_vsphere_objects:sep(9)>>>"
+for entry in object_collection:
+    print "\t".join(entry)
+host.disconnect()
+
+if g_profile:
+    output_profile()

@@ -92,6 +92,10 @@
            currently supported: temperature, humidity, switch contact and smoke sensors
     * cisco_wlc_client: now supports low/high warn and crit levels
     * cisco_wlc: now supports configuration options for missing AP
+    * FIX: check_mk-ipmi.php: PNP template now displays correct units as delivered
+           by the check plugin
+    * agent_vsphere: completely rewritten, now considerably faster
+                     vCenter is still queried by old version
 
 
     Notifications:
@@ -159,6 +163,7 @@
       To make the sidebar check for new messages on a regular base, you need
       to configure the interval of sidebar popup notification updates e.g. via
       WATO Global Settings.
+    * New option for painting timestamp: as Unix Epoch time
     * FIX: better error message in case of exception in SNMP handling
     * FIX: Inventory screen: Now shows custom checks
     * FIX: Fixed locking problem of multisite pages related to user loading/saving

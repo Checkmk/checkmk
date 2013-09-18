@@ -219,7 +219,8 @@ def page_side():
     html.write("refresh_snapins = %r;\n" % refresh_snapins)
     html.write("restart_snapins = %r;\n" % restart_snapins)
     html.write("sidebar_scheduler();\n")
-    html.write("window.onresize = function() { setSidebarHeight(); }\n")
+    html.write("window.onresize = function() { setSidebarHeight(); };\n")
+    html.write("if (contentFrameAccessible()) { update_content_location(); };\n")
     html.write("</script>\n")
 
     html.write("</body>\n</html>")

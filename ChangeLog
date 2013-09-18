@@ -108,6 +108,8 @@
     * HTML notifications: Added time of state change
 
     Multisite:
+    * Finally good handling of F5 / browser reloads -> no page switching to
+      start page anymore (at least in modern browsers)
     * User accounts can now be locked after a specified amount of auth
       failures (lock_on_logon_failures can be set to a number of tries)
     * Column Perf-O-Meter is now sortable: it sorts after the *first*

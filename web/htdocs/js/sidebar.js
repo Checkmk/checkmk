@@ -26,9 +26,8 @@ var browser         = navigator.userAgent.toLowerCase();
 var weAreIEF__k     = ((browser.indexOf("msie") != -1) && (browser.indexOf("opera") == -1));
 var weAreOpera      = browser.indexOf("opera") != -1;
 var weAreFirefox    = browser.indexOf("firefox") != -1 || browser.indexOf("namoroka") != -1;
-var contentLocation = null;
-if(contentFrameAccessible())
-    var contentLocation = parent.frames[1].document.location;
+var g_orig_title    = null;
+var g_content_loc   = null;
 
 //
 // Sidebar styling and scrolling stuff
@@ -360,6 +359,40 @@ function contentFrameAccessible() {
     }
 }
 
+function update_content_location() {
+    // init the original frameset title
+    if (g_orig_title == null)
+        g_orig_title = window.parent.document.title;
+
+    var content_frame = window.parent.frames[1];
+
+    // Change the title to add the right frame title to reflect the
+    // title of the content URL in the framesets title (window title or tab title)
+    if (content_frame.document.title != '') {
+        var page_title = g_orig_title + ' - ' + content_frame.document.title;
+    } else {
+        var page_title = g_orig_title;
+    }
+    window.parent.document.title = page_title;
+
+    // Construct the URL to be called on page reload
+    var parts = content_frame.location.pathname.split('/')
+    parts.pop();
+    var cmk_path = parts.join('/');
+    var rel_url = content_frame.location.pathname + content_frame.location.search + content_frame.location.hash
+    var index_url = cmk_path + '/index.py?start_url=' + rel_url
+
+    if (rel_url && rel_url != 'blank') {
+        // Update the URL to be called on reload, e.g. via F5, to make the
+        // frameset switch to exactly this URL
+        window.parent.history.replaceState({}, page_title, index_url);
+
+        // only update the internal flag var if the url was not blank and has been updated
+        //otherwise try again on next scheduler run
+        g_content_loc = parent.frames[1].document.location.href;
+    }
+}
+
 function debug(s) {
   window.parent.frames[1].document.write(s+'<br />');
 }
@@ -662,9 +695,9 @@ function sidebar_scheduler() {
 
     // Detect page changes and re-register the mousemove event handler
     // in the content frame. another bad hack ... narf
-    if (contentFrameAccessible() && contentLocation != parent.frames[1].document.location) {
+    if(contentFrameAccessible() && g_content_loc != parent.frames[1].document.location.href) {
         registerEdgeListeners(parent.frames[1]);
-        contentLocation = parent.frames[1].document.location;
+        update_content_location();
     }
     setTimeout(function(){sidebar_scheduler();}, 1000);
 }

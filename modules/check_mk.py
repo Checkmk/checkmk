@@ -211,6 +211,7 @@ agent_port                         = 6556
 agent_ports                        = []
 snmp_ports                         = [] # UDP ports used for SNMP
 tcp_connect_timeout                = 5.0
+use_dns_cache                      = True # prevent DNS by using own cache file
 delay_precompile                   = False  # delay Python compilation to Nagios execution
 restart_locking                    = "abort" # also possible: "wait", None
 check_submission                   = "file" # alternative: "pipe"
@@ -1153,25 +1154,38 @@ def lookup_ipaddress(hostname):
     if hostname in g_dns_cache:
         return g_dns_cache[hostname]
 
+    # Prepare file based fall-back DNS cache in case resolution fails
     init_ip_lookup_cache()
+
+    cached_ip = g_ip_lookup_cache.get(hostname)
+    if cached_ip and use_dns_cache:
+        g_dns_cache[hostname] = cached_ip
+        return cached_ip
 
     # Now do the actual DNS lookup
     try:
         ipa = socket.gethostbyname(hostname)
 
-        # Cache the result (persistant) when resolving succeeded
-        if ipa != g_ip_lookup_cache.get(hostname):
+        # Update our cached address if that has changed or was missing
+        if ipa != cached_ip:
+            if opt_verbose:
+                print "Updating DNS cache for %s: %s" % (hostname, ipa)
             g_ip_lookup_cache[hostname] = ipa
             write_ip_lookup_cache()
+
+        g_dns_cache[hostname] = ipa # Update in-memory-cache
+        return ipa
+
     except:
-        # Initialize the lookup cache when called for the first time
-        if hostname in g_ip_lookup_cache:
-            ipa = g_ip_lookup_cache[hostname]
+        # DNS failed. Use cached IP address if present, even if caching
+        # is disabled.
+        if cached_ip:
+            g_dns_cache[hostname] = cached_ip
+            return cached_ip
         else:
             g_dns_cache[hostname] = None
             raise
-    g_dns_cache[hostname] = ipa
-    return ipa
+
 
 def init_ip_lookup_cache():
     global g_ip_lookup_cache
@@ -1182,7 +1196,23 @@ def init_ip_lookup_cache():
             g_ip_lookup_cache = {}
 
 def write_ip_lookup_cache():
-    file(var_dir + '/ipaddresses.cache', 'w').write(repr(g_ip_lookup_cache))
+    suffix = "." + str(os.getpid())
+    file(var_dir + '/ipaddresses.cache' + suffix, 'w').write(repr(g_ip_lookup_cache))
+    os.rename(var_dir + '/ipaddresses.cache' + suffix, var_dir + '/ipaddresses.cache')
+
+def do_update_dns_cache():
+    # Temporarily disable *use* of cache, we want to force an update
+    global use_dns_cache
+    use_dns_cache = False
+
+    if opt_verbose:
+        print "Updating DNS cache..."
+    for hostname in all_active_hosts() + all_active_clusters():
+        # Use intelligent logic. This prevents DNS lookups for hosts
+        # with statically configured addresses, etc.
+        lookup_ipaddress(hostname)
+
+
 
 def agent_port_of(hostname):
     ports = host_extra_conf(hostname, agent_ports)
@@ -1438,11 +1468,9 @@ def host_check_command(hostname, ip, is_clust):
         return "check-mk-host-ok"
 
     elif value == "agent" or value[0] == "service":
-        if monitoring_core == "cmc":
-            raise MKGeneralException("Cannot configure host check command for host <b>%s</b>: "
-                   "Sorry, host checks of type 'Use status of a service' "
-                   "are not implemented in the Check_MK Micro Core" % hostname)
         service = value == "agent" and "Check_MK" or value[1]
+        if monitoring_core == "cmc":
+            return "check-mk-host-service!" + service
         command = "check-mk-host-custom-%d" % (len(hostcheck_commands_to_define) + 1)
         hostcheck_commands_to_define.append((command,
            'echo "$SERVICEOUTPUT:%s:%s$" && exit $SERVICESTATEID:%s:%s$' % (hostname, service, hostname, service)))
@@ -4307,6 +4335,7 @@ def usage():
  cmk -D, --dump [H1 H2 ..]            dump all or some hosts
  cmk -d HOSTNAME|IPADDRESS            show raw information from agent
  cmk --check-inventory HOSTNAME       check for items not yet checked
+ cmk --update-dns-cache               update IP address lookup cache
  cmk --list-hosts [G1 G2 ...]         print list of hosts
  cmk --list-tag TAG1 TAG2 ...         list hosts having certain tags
  cmk -L, --list-checks                list all available check types
@@ -4928,6 +4957,124 @@ def ip_to_dnsname(ip):
         return None
 
 
+# Reset some global variable to their original value. This
+# is needed in keepalive mode.
+# We could in fact do some positive caching in keepalive
+# mode - e.g. the counters of the hosts could be saved in memory.
+def cleanup_globals():
+    global g_agent_already_contacted
+    g_agent_already_contacted = {}
+    global g_hostname
+    g_hostname = "unknown"
+    global g_counters
+    g_counters = {}
+    global g_infocache
+    g_infocache = {}
+    global g_broken_agent_hosts
+    g_broken_agent_hosts = set([])
+    global g_broken_snmp_hosts
+    g_broken_snmp_hosts = set([])
+    global g_inactive_timerperiods
+    g_inactive_timerperiods = None
+    global g_walk_cache
+    g_walk_cache = {}
+
+
+# Diagnostic function for detecting global variables that have
+# changed during checking. This is slow and canno be used
+# in production mode.
+def copy_globals():
+    import copy
+    global_saved = {}
+    for varname, value in globals().items():
+        # Some global caches are allowed to change.
+        if varname not in [ "g_service_description", "g_multihost_checks", "g_check_table_cache", "g_singlehost_checks", "total_check_outout" ] \
+            and type(value).__name__ not in [ "function", "module", "SRE_Pattern" ]:
+            global_saved[varname] = copy.copy(value)
+    return global_saved
+
+
+def do_check_keepalive():
+    global g_initial_times
+
+    def check_timeout(signum, frame):
+        raise MKCheckTimeout()
+
+    signal.signal(signal.SIGALRM, signal.SIG_IGN) # Prevent ALRM from CheckHelper.cc
+
+    global total_check_output
+    total_check_output = ""
+    if opt_debug:
+        before = copy_globals()
+
+    ipaddress_cache = {}
+
+    while True:
+        cleanup_globals()
+        hostname = sys.stdin.readline()
+        g_initial_times = os.times()
+        if not hostname:
+            break
+        hostname = hostname.strip()
+        if hostname == "*":
+            if opt_debug:
+                sys.stdout.write("Restarting myself...\n")
+            sys.stdout.flush()
+            os.execvp("cmk", sys.argv)
+        elif not hostname:
+            break
+
+        timeout = int(sys.stdin.readline())
+        try: # catch non-timeout exceptions
+            try: # catch timeouts
+                signal.signal(signal.SIGALRM, check_timeout)
+                signal.alarm(timeout)
+                if ';' in hostname:
+                    hostname, ipaddress = hostname.split(";", 1)
+                elif hostname in ipaddress_cache:
+                    ipaddress = ipaddress_cache[hostname]
+                else:
+                    if is_cluster(hostname):
+                        ipaddress = None
+                    else:
+                        try:
+                            ipaddress = lookup_ipaddress(hostname)
+                        except:
+                            raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
+                    ipaddress_cache[hostname] = ipaddress
+
+                status = do_check(hostname, ipaddress)
+                signal.signal(signal.SIGALRM, signal.SIG_IGN) # Prevent ALRM from CheckHelper.cc
+                signal.alarm(0)
+            except MKCheckTimeout:
+                signal.signal(signal.SIGALRM, signal.SIG_IGN) # Prevent ALRM from CheckHelper.cc
+                status = 3
+                total_check_output = "UNKNOWN - Check_MK timed out after %d seconds\n" % timeout
+
+            sys.stdout.write("%03d\n%08d\n%s" %
+                 (status, len(total_check_output), total_check_output))
+            sys.stdout.flush()
+            total_check_output = ""
+            cleanup_globals()
+
+            # Check if all global variables are clean, but only in debug mode
+            if opt_debug:
+                after = copy_globals()
+                for varname, value in before.items():
+                    if value != after[varname]:
+                        sys.stderr.write("WARNING: global variable %s has changed: %r ==> %s\n"
+                               % (varname, value, repr(after[varname])[:50]))
+                new_vars = set(after.keys()).difference(set(before.keys()))
+                if (new_vars):
+                    sys.stderr.write("WARNING: new variable appeared: %s" % ", ".join(new_vars))
+
+        except Exception, e:
+            if opt_debug:
+                raise
+            sys.stdout.write("UNKNOWN - %s\n3\n" % e)
+
+
+
 
 #   +----------------------------------------------------------------------+
 #   |         ____                _                    __ _                |
@@ -5272,7 +5419,7 @@ if __name__ == "__main__":
                      "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
                      "man", "nowiki", "config-check", "backup=", "restore=",
                      "check-inventory=", "paths", "cleanup-autochecks", "checks=",
-                     "cmc-file=", "browse-man", "list-man" ]
+                     "cmc-file=", "browse-man", "list-man", "update-dns-cache" ]
 
     non_config_options = ['-L', '--list-checks', '-P', '--package', '-M', '--notify',
                           '--man', '-V', '--version' ,'-h', '--help', '--automation']
@@ -5391,6 +5538,9 @@ if __name__ == "__main__":
                 done = True
             elif o == '--donate':
                 do_donation()
+                done = True
+            elif o == '--update-dns-cache':
+                do_update_dns_cache()
                 done = True
             elif o == '--snmpwalk':
                 do_snmpwalk(args)

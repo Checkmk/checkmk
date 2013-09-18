@@ -838,6 +838,9 @@ def ldap_sync(add_to_changelog, only_username):
     # requests to e.g. the page hook would cause duplicate calculations
     file(g_ldap_sync_time_file, 'w').write('%s\n' % time.time())
 
+    if not config.ldap_connection:
+        return # silently skip sync without configuration
+
     # Flush ldap related before each sync to have a caching only for the
     # current sync process
     global g_ldap_user_cache, g_ldap_group_cache

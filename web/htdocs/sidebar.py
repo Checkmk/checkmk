@@ -175,9 +175,13 @@ def sidebar_foot():
 def page_side():
     if not config.may("general.see_sidebar"):
         return
+    if config.sidebar_notify_interval is not None:
+        interval = config.sidebar_notify_interval
+    else:
+        interval = 'null'
     html.html_head(_("Check_MK Sidebar"), javascripts=["sidebar"], stylesheets=["sidebar", "status"])
     html.write('<body class="side" onload="initScrollPos(); setSidebarHeight(); init_messages(%s);" '
-               'onunload="storeScrollPos()">\n' % config.sidebar_notify_interval or 'null')
+               'onunload="storeScrollPos()">\n' % interval)
     html.write('<div id="check_mk_sidebar">\n')
 
     views.load_views()
@@ -215,7 +219,8 @@ def page_side():
     html.write("refresh_snapins = %r;\n" % refresh_snapins)
     html.write("restart_snapins = %r;\n" % restart_snapins)
     html.write("sidebar_scheduler();\n")
-    html.write("window.onresize = function() { setSidebarHeight(); }\n")
+    html.write("window.onresize = function() { setSidebarHeight(); };\n")
+    html.write("if (contentFrameAccessible()) { update_content_location(); };\n")
     html.write("</script>\n")
 
     html.write("</body>\n</html>")

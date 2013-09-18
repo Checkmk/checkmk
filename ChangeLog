@@ -15,6 +15,7 @@
     * Preparations for significant SNMP monitoring performance improvement
       (It's named Inline SNMP, which is available as special feature via subscriptions)
     * Allow to specify custom host check via WATO (arbitrary command line)
+    * Implement DNS caching. This can be disabled with use_dns_cache = False
 
     Livestatus:
     * new service column staleness: indicator for outdated service checks
@@ -108,6 +109,8 @@
     * HTML notifications: Added time of state change
 
     Multisite:
+    * Finally good handling of F5 / browser reloads -> no page switching to
+      start page anymore (at least in modern browsers)
     * User accounts can now be locked after a specified amount of auth
       failures (lock_on_logon_failures can be set to a number of tries)
     * Column Perf-O-Meter is now sortable: it sorts after the *first*
@@ -378,6 +381,8 @@
     * FIX: fix logwatch pattern analyzer message "The host xyz is not
            managed by WATO." after direct access via snapin
     * FIX: Fixed first toggle of flags in global settings when default is set to True
+    * FIX: fix exception and loss of hosts in a folder when deleting all site connections
+           of a distributed WATO setup
 
     Event Console:
     * FIX: apply rewriting of application/hostname also when cancelling events

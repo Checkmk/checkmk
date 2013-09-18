@@ -1,0 +1,9 @@
+Title: list index out of range  when deleting last site
+Component: wato
+State: open
+Date: 2013-09-17 18:05:17
+Targetversion: 1.4.0
+Class: nastiness
+
+Configure two sites in the Distributed Monitoring setup. Then delete
+both sites. After you delete the last one you can a WATO exception.

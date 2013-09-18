@@ -380,7 +380,7 @@ function update_content_location() {
     parts.pop();
     var cmk_path = parts.join('/');
     var rel_url = content_frame.location.pathname + content_frame.location.search + content_frame.location.hash
-    var index_url = cmk_path + '/index.py?start_url=' + rel_url
+    var index_url = cmk_path + '/index.py?start_url=' + encodeURIComponent(rel_url);
 
     if (rel_url && rel_url != 'blank') {
         // Update the URL to be called on reload, e.g. via F5, to make the

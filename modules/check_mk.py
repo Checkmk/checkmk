@@ -1438,11 +1438,9 @@ def host_check_command(hostname, ip, is_clust):
         return "check-mk-host-ok"
 
     elif value == "agent" or value[0] == "service":
-        if monitoring_core == "cmc":
-            raise MKGeneralException("Cannot configure host check command for host <b>%s</b>: "
-                   "Sorry, host checks of type 'Use status of a service' "
-                   "are not implemented in the Check_MK Micro Core" % hostname)
         service = value == "agent" and "Check_MK" or value[1]
+        if monitoring_core == "cmc":
+            return "check-mk-host-service!" + service
         command = "check-mk-host-custom-%d" % (len(hostcheck_commands_to_define) + 1)
         hostcheck_commands_to_define.append((command,
            'echo "$SERVICEOUTPUT:%s:%s$" && exit $SERVICESTATEID:%s:%s$' % (hostname, service, hostname, service)))

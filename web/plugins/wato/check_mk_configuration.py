@@ -950,6 +950,24 @@ register_configvar(group,
     need_restart = True)
 
 register_configvar(group,
+    "use_dns_cache",
+    Checkbox(
+        title = _("Use DNS lookup cache"),
+        label = _("Prevent DNS lookups by use of a cache file"),
+        help = _("When this option is enabled (which is the default), then Check_MK tries to "
+                 "prevent IP address lookups during the configuration generation. This can speed "
+                 "up this process greatly when you have a larger number of hosts. The cache is stored "
+                 "in a simple file. Note: when the cache is enabled then changes of the IP address "
+                 "of a host in your name server will not be detected immediately. If you need an "
+                 "immediate update then simply disable the cache once, activate the changes and "
+                 "enabled it again. OMD based installations automatically update the cache once "
+                 "a day."),
+        default_value = True,
+    ),
+    need_restart = True
+)
+
+register_configvar(group,
     "use_inline_snmp",
     Checkbox(
         title = _("Use Inline SNMP (EXPERIMENTAL)"),

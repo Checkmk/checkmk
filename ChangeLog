@@ -15,6 +15,7 @@
     * Preparations for significant SNMP monitoring performance improvement
       (It's named Inline SNMP, which is available as special feature via subscriptions)
     * Allow to specify custom host check via WATO (arbitrary command line)
+    * Implement DNS caching. This can be disabled with use_dns_cache = False
 
     Livestatus:
     * new service column staleness: indicator for outdated service checks

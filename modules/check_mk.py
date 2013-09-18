@@ -211,6 +211,7 @@ agent_port                         = 6556
 agent_ports                        = []
 snmp_ports                         = [] # UDP ports used for SNMP
 tcp_connect_timeout                = 5.0
+use_dns_cache                      = True # prevent DNS by using own cache file
 delay_precompile                   = False  # delay Python compilation to Nagios execution
 restart_locking                    = "abort" # also possible: "wait", None
 check_submission                   = "file" # alternative: "pipe"
@@ -1153,25 +1154,38 @@ def lookup_ipaddress(hostname):
     if hostname in g_dns_cache:
         return g_dns_cache[hostname]
 
+    # Prepare file based fall-back DNS cache in case resolution fails
     init_ip_lookup_cache()
+
+    cached_ip = g_ip_lookup_cache.get(hostname)
+    if cached_ip and use_dns_cache:
+        g_dns_cache[hostname] = cached_ip
+        return cached_ip
 
     # Now do the actual DNS lookup
     try:
         ipa = socket.gethostbyname(hostname)
 
-        # Cache the result (persistant) when resolving succeeded
-        if ipa != g_ip_lookup_cache.get(hostname):
+        # Update our cached address if that has changed or was missing
+        if ipa != cached_ip:
+            if opt_verbose:
+                print "Updating DNS cache for %s: %s" % (hostname, ipa)
             g_ip_lookup_cache[hostname] = ipa
             write_ip_lookup_cache()
+
+        g_dns_cache[hostname] = ipa # Update in-memory-cache
+        return ipa
+
     except:
-        # Initialize the lookup cache when called for the first time
-        if hostname in g_ip_lookup_cache:
-            ipa = g_ip_lookup_cache[hostname]
+        # DNS failed. Use cached IP address if present, even if caching
+        # is disabled.
+        if cached_ip:
+            g_dns_cache[hostname] = cached_ip
+            return cached_ip
         else:
             g_dns_cache[hostname] = None
             raise
-    g_dns_cache[hostname] = ipa
-    return ipa
+
 
 def init_ip_lookup_cache():
     global g_ip_lookup_cache
@@ -1183,6 +1197,20 @@ def init_ip_lookup_cache():
 
 def write_ip_lookup_cache():
     file(var_dir + '/ipaddresses.cache', 'w').write(repr(g_ip_lookup_cache))
+
+def do_update_dns_cache():
+    # Temporarily disable *use* of cache, we want to force an update
+    global use_dns_cache
+    use_dns_cache = False
+
+    if opt_verbose:
+        print "Updating DNS cache..."
+    for hostname in all_active_hosts() + all_active_clusters():
+        # Use intelligent logic. This prevents DNS lookups for hosts
+        # with statically configured addresses, etc.
+        lookup_ipaddress(hostname)
+
+
 
 def agent_port_of(hostname):
     ports = host_extra_conf(hostname, agent_ports)
@@ -4305,6 +4333,7 @@ def usage():
  cmk -D, --dump [H1 H2 ..]            dump all or some hosts
  cmk -d HOSTNAME|IPADDRESS            show raw information from agent
  cmk --check-inventory HOSTNAME       check for items not yet checked
+ cmk --update-dns-cache               update IP address lookup cache
  cmk --list-hosts [G1 G2 ...]         print list of hosts
  cmk --list-tag TAG1 TAG2 ...         list hosts having certain tags
  cmk -L, --list-checks                list all available check types
@@ -5270,7 +5299,7 @@ if __name__ == "__main__":
                      "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
                      "man", "nowiki", "config-check", "backup=", "restore=",
                      "check-inventory=", "paths", "cleanup-autochecks", "checks=",
-                     "cmc-file=", "browse-man", "list-man" ]
+                     "cmc-file=", "browse-man", "list-man", "update-dns-cache" ]
 
     non_config_options = ['-L', '--list-checks', '-P', '--package', '-M', '--notify',
                           '--man', '-V', '--version' ,'-h', '--help', '--automation']
@@ -5389,6 +5418,9 @@ if __name__ == "__main__":
                 done = True
             elif o == '--donate':
                 do_donation()
+                done = True
+            elif o == '--update-dns-cache':
+                do_update_dns_cache()
                 done = True
             elif o == '--snmpwalk':
                 do_snmpwalk(args)

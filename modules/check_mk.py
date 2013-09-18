@@ -1196,7 +1196,9 @@ def init_ip_lookup_cache():
             g_ip_lookup_cache = {}
 
 def write_ip_lookup_cache():
-    file(var_dir + '/ipaddresses.cache', 'w').write(repr(g_ip_lookup_cache))
+    suffix = "." + str(os.getpid())
+    file(var_dir + '/ipaddresses.cache' + suffix, 'w').write(repr(g_ip_lookup_cache))
+    os.rename(var_dir + '/ipaddresses.cache' + suffix, var_dir + '/ipaddresses.cache')
 
 def do_update_dns_cache():
     # Temporarily disable *use* of cache, we want to force an update

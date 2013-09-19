@@ -121,7 +121,6 @@ def logwatch_level_name(level):
 
 def logwatch_level_worst(worst, level):
     if   level == 'O': return max(worst, 0)
-    elif level == 'I': return max(worst, 0)
     elif level == 'W': return max(worst, 1)
     elif level == 'u': return max(worst, 1)
     elif level == 'C': return max(worst, 2)

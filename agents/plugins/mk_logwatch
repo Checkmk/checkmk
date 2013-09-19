@@ -291,6 +291,8 @@ def process_logfile(logfile, patterns):
         color = {'C': tty_red, 'W': tty_yellow, 'O': tty_green, 'I': tty_blue, '.': ''}[level]
         if debug:
             line = line.replace("\1", "\nCONT:")
+        if level == "I":
+            level = "."
         outputtxt += "%s%s %s%s\n" % (color, level, line[:-1], tty_normal)
 
     new_offset = os.lseek(fl, 0, 1) # os.SEEK_CUR not available in Python 2.4

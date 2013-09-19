@@ -97,7 +97,8 @@
            by the check plugin
     * agent_vsphere: completely rewritten, now considerably faster
                      vCenter is still queried by old version
-    * logwatch: fixed reclassification of solely informational lines
+    * windows_agent: windows eventlog informational/audit logs now reported with O prefix
+    * mk_logwatch: ignored loglines now reported with an "." prefix (if required)
 
 
     Notifications:

@@ -97,6 +97,7 @@
            by the check plugin
     * agent_vsphere: completely rewritten, now considerably faster
                      vCenter is still queried by old version
+    * windows_agent: windows eventlog informational/audit logs now reported with O prefix
 
 
     Notifications:

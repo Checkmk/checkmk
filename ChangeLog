@@ -10,6 +10,9 @@
     * FIX: zpool_status: Ignoring "No known data errors" text
     * FIX: fileinfo: no longer inventorize missing files
     * FIX: fileinfo: fixed fileinfo grouping in case of missing files
+    * FIX: dmi_sysinfo: Handling ":" in value correctly
+    * FIX: check_http: Fixed syntax error when monitoring certificates
+    * FIX: check_dns: parameter -A does not get an additional string
 
     Multisite:
     * FIX: LDAP: Disabling use of referrals in active directory configuration
@@ -17,6 +20,10 @@
            non visible pnp graphs and missing nagvis permissions
     * FIX: Fixed label color of black toner perfometers when fuel is low
     * FIX: Fixed wrong default settings of view filters in localized multisite
+    * FIX: Fixed exception when enabling sounds for views relying on 
+           e.g. alert statistics source
+    * FIX: Folder Tree Snapin: make folder filter also work for remote
+           folders that do not exist locally
 
     WATO:
     * FIX: fix layout of Auxiliary tags table
@@ -25,9 +32,15 @@
     * FIX: automation users can now be deleted again (bug was introduced in 1.2.2p1)
     * FIX: fix logwatch pattern analyzer message "The host xyz is not
            managed by WATO." after direct access via snapin
+    * FIX: Fixed first toggle of flags in global settings when default is set to True
+    * FIX: fix exception and loss of hosts in a folder when deleting all site connections
+           of a distributed WATO setup
 
     Event Console:
     * FIX: apply rewriting of application/hostname also when cancelling events
+
+    Livestatus:
+    * livestatus: fixed incorrect output formatting of comments_with_info column
 
 1.2.2p2:
     Core:

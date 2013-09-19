@@ -33,7 +33,7 @@ def page_index():
     #html.req.headers_out.add("Cache-Control", "max-age=7200, public");
     html.req.headers_out.add("Cache-Control", "no-cache");
     if "%s" in config.page_heading:
-        heading = config.page_heading % (defaults.omd_site or _("Multisite"))
+        heading = config.page_heading % (config.site(defaults.omd_site).get('alias', _("Multisite")))
     else:
         heading = config.page_heading
 

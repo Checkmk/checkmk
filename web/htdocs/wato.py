@@ -5292,7 +5292,8 @@ def create_snapshot():
     # Maintenance, remove old snapshots
     snapshots = []
     for f in os.listdir(snapshot_dir):
-        snapshots.append(f)
+        if f.startswith('wato-snapshot-') and f.endswith('.tar.gz'):
+            snapshots.append(f)
     snapshots.sort(reverse=True)
     while len(snapshots) > config.wato_max_snapshots:
         log_audit(None, "snapshot-removed", _("Removed snapshot %s") % snapshots[-1])

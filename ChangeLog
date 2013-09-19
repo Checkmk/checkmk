@@ -97,6 +97,7 @@
            by the check plugin
     * agent_vsphere: completely rewritten, now considerably faster
                      vCenter is still queried by old version
+    * logwatch: fixed reclassification of solely informational lines
 
 
     Notifications:

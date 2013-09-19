@@ -60,10 +60,6 @@ Boston, MA 02110-1301 USA.
     border-left-style: none;
     border-radius: 4px 0px 0px 0px;
 }
-.wato table.data td {
-    html.write('</div>')
-    /* border-style: dashed; */
-}
 
 .wato table.data td.select {
     text-align: center;

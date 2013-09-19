@@ -1,0 +1,10 @@
+Title: Beim Clicken auf Vorschau wird neue Angebotsnummer generiert
+Component: wato
+State: open
+Date: 2013-09-19 09:39:02
+Targetversion: future
+Class: bug
+
+Klicken man beim Erstellen eines Angebots auf den Vorschau-Button, wird anscheinend immer
+eine neue Angebotsnummer erzeugt. Sinnvoll vermutlich, dass nur das erste Mal eine Angebotsnummer
+erzeugt wird. 

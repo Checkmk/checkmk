@@ -964,7 +964,7 @@ def mode_mkeventd_rules(phase):
             # Syslog Facility
             if "match_facility" in rule:
                 facnr = rule["match_facility"]
-                html.write("<td>%s</td>" % mkeventd.syslog_facilities[facnr][1])
+                html.write("<td>%s</td>" % dict(mkeventd.syslog_facilities)[facnr])
             else:
                 html.write("<td></td>")
 

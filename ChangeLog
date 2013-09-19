@@ -8,6 +8,8 @@
     * FIX: Cleaned up graph rendering of Check_MK services 
     * FIX: zypper: deal with output from SLES 10
     * FIX: zpool_status: Ignoring "No known data errors" text
+    * FIX: fileinfo: no longer inventorize missing files
+    * FIX: fileinfo: fixed fileinfo grouping in case of missing files
 
     Multisite:
     * FIX: LDAP: Disabling use of referrals in active directory configuration

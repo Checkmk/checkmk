@@ -11418,7 +11418,11 @@ def save_rule(out, folder, rulespec, rule):
 
 def load_rulesets(folder):
     # TODO: folder berücksichtigen
-    path = root_dir + "/" + folder[".path"] + "/" + "rules.mk"
+    if folder[".path"]:
+        path = root_dir + folder[".path"] + "/" + "rules.mk"
+    else:
+        path = root_dir + "rules.mk"
+
     vars = {
         "ALL_HOSTS"      : ALL_HOSTS,
         "ALL_SERVICES"   : [ "" ],
@@ -11438,8 +11442,15 @@ def load_rulesets(folder):
 
     try:
         execfile(path, vars, vars)
-    except:
-        pass
+    except IOError:
+        pass # Non existant files are ok...
+    except Exception, e:
+        if config.debug:
+            raise MKGeneralException(_("Cannot read configuration file %s: %s" %
+                                                                       (path, e)))
+        else:
+            html.log('load_rulesets: Problem while loading rulesets (%s - %s). '
+                     'Continue with partly loaded rules...' % (path, e))
 
     # Extract only specified rule variables
     rulevars = {}

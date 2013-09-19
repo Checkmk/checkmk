@@ -202,6 +202,7 @@
            "WLC WiFi client connections"
     * FIX: Snapshot handling is a little more robust agains manually created
            files in snapshot directory now
+    * FIX: Slightly more transparent handling of syntax errors when loading rules.mk
 
     Notifications:
     * Flexible Notification can now filter service levels

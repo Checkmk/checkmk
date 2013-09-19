@@ -188,6 +188,8 @@
       Host/Service/Contact Groups, Timeperiods and Roles
     * Removed "do not connect" option from site socket editor. Use the
       checkbox "Disable" to disable the site for multisite.
+    * ADD: Rule to check state of physical switch (currently used by etherbox check)
+    * ADD: new ruleset cisco_wlc: Allows to configure handling of missing AP
     * FIX: do validation of check items in rule editor
     * FIX: More consistent handling of folderpath select in rule editor
     * FIX: Now correctly handling depends_on_tags on page rendering for
@@ -196,10 +198,10 @@
            large" error messages during submitting forms
     * FIX: automation snmp scan now adhere rules for shoddy snmp devices 
            which have no sys description
-    * ADD: Rule to check state of physical switch (currently used by etherbox check)
     * FIX: Cisco ruleset "Cisco WLC WiFi client connections" has been generalized to
            "WLC WiFi client connections"
-    * ADD: new ruleset cisco_wlc: Allows to configure handling of missing AP
+    * FIX: Snapshot handling is a little more robust agains manually created
+           files in snapshot directory now
 
     Notifications:
     * Flexible Notification can now filter service levels

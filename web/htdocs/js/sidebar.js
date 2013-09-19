@@ -361,8 +361,9 @@ function contentFrameAccessible() {
 
 function update_content_location() {
     // init the original frameset title
-    if (g_orig_title == null)
+    if (g_orig_title == null) {
         g_orig_title = window.parent.document.title;
+    }
 
     var content_frame = window.parent.frames[1];
 
@@ -376,11 +377,11 @@ function update_content_location() {
     window.parent.document.title = page_title;
 
     // Construct the URL to be called on page reload
-    var parts = content_frame.location.pathname.split('/')
+    var parts = window.parent.location.pathname.split('/')
     parts.pop();
     var cmk_path = parts.join('/');
     var rel_url = content_frame.location.pathname + content_frame.location.search + content_frame.location.hash
-    var index_url = cmk_path + '/index.py?start_url=' + rel_url
+    var index_url = cmk_path + '/index.py?start_url=' + encodeURIComponent(rel_url);
 
     if (rel_url && rel_url != 'blank') {
         // Update the URL to be called on reload, e.g. via F5, to make the

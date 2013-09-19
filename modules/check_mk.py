@@ -1107,7 +1107,10 @@ def get_sorted_check_table(hostname):
 # be None in most cases -> to TCP connect on port 6556
 # HACK:
 special_agent_dir = agents_dir + "/special"
-special_agent_local_dir = local_agents_dir + "/special"
+if local_agents_dir:
+    special_agent_local_dir = local_agents_dir + "/special"
+else:
+    special_agent_local_dir = None
 
 def get_datasource_program(hostname, ipaddress):
     # First check WATO-style special_agent rules

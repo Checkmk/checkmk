@@ -1109,6 +1109,8 @@ def get_sorted_check_table(hostname):
 special_agent_dir = agents_dir + "/special"
 if local_agents_dir:
     special_agent_local_dir = local_agents_dir + "/special"
+else:
+    special_agent_local_dir = None
 
 def get_datasource_program(hostname, ipaddress):
     # First check WATO-style special_agent rules
@@ -1117,7 +1119,7 @@ def get_datasource_program(hostname, ipaddress):
         if params: # rule match!
             # Create command line using the special_agent_info
             cmd_arguments = special_agent_info[agentname](params[0], hostname, ipaddress)
-            if local_agents_dir and \
+            if special_agent_local_dir and \
                 os.path.exists(special_agent_local_dir + "/agent_" + agentname):
                 path = special_agent_local_dir + "/agent_" + agentname
             else:

@@ -383,13 +383,19 @@ function update_content_location() {
     var rel_url = content_frame.location.pathname + content_frame.location.search + content_frame.location.hash
     var index_url = cmk_path + '/index.py?start_url=' + encodeURIComponent(rel_url);
 
-    if (rel_url && rel_url != 'blank') {
-        // Update the URL to be called on reload, e.g. via F5, to make the
-        // frameset switch to exactly this URL
-        window.parent.history.replaceState({}, page_title, index_url);
+    if (window.parent.history.replaceState) {
+        if (rel_url && rel_url != 'blank') {
+            // Update the URL to be called on reload, e.g. via F5, to make the
+            // frameset switch to exactly this URL
+            window.parent.history.replaceState({}, page_title, index_url);
 
-        // only update the internal flag var if the url was not blank and has been updated
-        //otherwise try again on next scheduler run
+            // only update the internal flag var if the url was not blank and has been updated
+            //otherwise try again on next scheduler run
+            g_content_loc = parent.frames[1].document.location.href;
+        }
+    } else {
+        // Only a browser without history.replaceState support reaches this. Sadly
+        // we have no F5/reload fix for them...
         g_content_loc = parent.frames[1].document.location.href;
     }
 }

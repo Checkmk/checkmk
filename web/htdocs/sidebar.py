@@ -761,8 +761,6 @@ def search_open():
     if ty is None:
         return
 
-    html.log(repr(data))
-
     if len(data) == 1:
         if len(data[0]) == 2:
             url = search_url_tmpl(ty) % {'name': html.urlencode(data[0][1]), 'site': data[0][0]}

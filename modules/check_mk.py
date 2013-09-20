@@ -1107,7 +1107,8 @@ def get_sorted_check_table(hostname):
 # be None in most cases -> to TCP connect on port 6556
 # HACK:
 special_agent_dir = agents_dir + "/special"
-special_agent_local_dir = local_agents_dir + "/special"
+if local_agents_dir:
+    special_agent_local_dir = local_agents_dir + "/special"
 
 def get_datasource_program(hostname, ipaddress):
     # First check WATO-style special_agent rules
@@ -1116,7 +1117,7 @@ def get_datasource_program(hostname, ipaddress):
         if params: # rule match!
             # Create command line using the special_agent_info
             cmd_arguments = special_agent_info[agentname](params[0], hostname, ipaddress)
-            if special_agent_local_dir and \
+            if local_agents_dir and \
                 os.path.exists(special_agent_local_dir + "/agent_" + agentname):
                 path = special_agent_local_dir + "/agent_" + agentname
             else:

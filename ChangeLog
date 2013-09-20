@@ -14,6 +14,7 @@
     * FIX: check_http: Fixed syntax error when monitoring certificates
     * FIX: check_dns: parameter -A does not get an additional string
     * FIX: diskstat: Fixed wrong values for IO/s computation on linux hosts
+    * FIX: blade_healts: Fixed wrong index checking resulting in exceptions
 
     Multisite:
     * FIX: LDAP: Disabling use of referrals in active directory configuration

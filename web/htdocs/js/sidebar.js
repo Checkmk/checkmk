@@ -663,7 +663,7 @@ function sidebar_scheduler() {
     var newcontent = "";
     var to_be_updated = [];
 
-    for (var i in refresh_snapins) {
+    for (var i = 0; i < refresh_snapins.length; i++) {
         var name = refresh_snapins[i][0];
         if (refresh_snapins[i][1] != '') {
             // Special handling for snapins like the nagvis maps snapin which request

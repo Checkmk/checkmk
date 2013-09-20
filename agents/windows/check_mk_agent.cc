@@ -138,6 +138,7 @@ struct winperf_counter {
 struct eventlog_config_entry {
     char name[256];
     int level;
+    int hide_context;
 };
 
 // Definitions for scripts
@@ -1120,7 +1121,7 @@ bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, ch
 
 void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
         DWORD bytesread, DWORD *record_number, bool just_find_end,
-        int *worst_state, int level)
+        int *worst_state, int level, int hide_context)
 {
     WCHAR *strings[64];
     char regpath[128];
@@ -1163,7 +1164,7 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
 
         // If we are not just scanning for the current end and the worst state,
         // we output the event message
-        if (!just_find_end)
+        if (!just_find_end && (!hide_context || type_char != '.'))
         {
             // The source name is the name of the application that produced the event
             // It is UTF-16 encoded
@@ -1234,14 +1235,14 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
         } // type_char != '.'
 
         bytesread -= event->Length;
-        crash_log("     - record %d: event_processed, bytesread %d, event->Length %d", *record_number, bytesread, event->Length); 
+        crash_log("     - record %d: event_processed, bytesread %d, event->Length %d", *record_number, bytesread, event->Length);
         event = (EVENTLOGRECORD *) ((LPBYTE) event + event->Length);
     }
 }
 
 
 void output_eventlog(SOCKET &out, const char *logname,
-        DWORD *record_number, bool just_find_end, int level)
+        DWORD *record_number, bool just_find_end, int level, int hide_context)
 {
     crash_log(" - event log \"%s\":", logname);
 
@@ -1298,7 +1299,7 @@ void output_eventlog(SOCKET &out, const char *logname,
                 {
                     crash_log("   . got entries starting at %d (%d bytes)", *record_number + 1, bytesread);
                     process_eventlog_entries(out, logname, eventlog_buffer,
-                            bytesread, record_number, just_find_end || t==0, &worst_state, level);
+                            bytesread, record_number, just_find_end || t==0, &worst_state, level, hide_context);
                 }
                 else {
                     DWORD error = GetLastError();
@@ -1928,18 +1929,20 @@ void section_eventlog(SOCKET &out)
             else {
                 // Get the configuration of that log file (which messages to send)
                 int level = 1;
+                int hide_context = 0;
                 for (int j=0; j<num_eventlog_configs; j++) {
                     const char *cname = eventlog_config[j].name;
                     if (!strcmp(cname, "*") ||
                             !strcasecmp(cname, eventlog_names[i]))
                     {
                         level = eventlog_config[j].level;
+                        hide_context = eventlog_config[j].hide_context;
                         break;
                     }
                 }
                 if (level != -1) {
                     output_eventlog(out, eventlog_names[i], &known_record_numbers[i],
-                            first_run && !logwatch_send_initial_entries, level);
+                            first_run && !logwatch_send_initial_entries, level, hide_context);
                 }
             }
         }
@@ -3214,6 +3217,18 @@ bool handle_logwatch_config_variable(char *var, char *value)
         int level;
         char *logfilename = lstrip(var + 8);
         lowercase(logfilename);
+
+        // value might have the option nocontext
+        int hide_context = 0;
+        char *s = value;
+        while (*s && *s != ' ')
+            s++;
+        if (*s == ' ') {
+            if (!strcmp(s+1, "nocontext"))
+                hide_context = 1;
+        }
+        *s = 0;
+
         if (!strcmp(value, "off"))
             level = -1;
         else if (!strcmp(value, "all"))
@@ -3230,6 +3245,7 @@ bool handle_logwatch_config_variable(char *var, char *value)
 
         if (num_eventlog_configs < MAX_EVENTLOGS) {
             eventlog_config[num_eventlog_configs].level = level;
+            eventlog_config[num_eventlog_configs].hide_context = hide_context;
             strncpy(eventlog_config[num_eventlog_configs].name, logfilename, 256);
             num_eventlog_configs++;
         }

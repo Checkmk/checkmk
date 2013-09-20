@@ -5516,14 +5516,13 @@ def mode_ldap_config(phase):
             userdb.ldap_connect(enforce_new = True, enforce_server = address)
             try:
                 ldap_users = userdb.ldap_get_users()
+                msg = _('Found no user object for synchronization. Please check your filter settings.')
             except Exception, e:
                 ldap_users = None
                 msg = str(e)
             if ldap_users and len(ldap_users) > 0:
                 return (True, _('Found %d users for synchronization.') % len(ldap_users))
             else:
-                if not msg:
-                    msg = _('Found no user object for synchronization. Please check your filter settings.')
                 return (False, msg)
 
         def test_group_base_dn(address):
@@ -5537,14 +5536,13 @@ def mode_ldap_config(phase):
             userdb.ldap_connect(enforce_new = True, enforce_server = address)
             try:
                 ldap_groups = userdb.ldap_get_groups()
+                msg = _('Found no group object for synchronization. Please check your filter settings.')
             except Exception, e:
                 ldap_groups = None
                 msg = str(e)
             if ldap_groups and len(ldap_groups) > 0:
                 return (True, _('Found %d groups for synchronization.') % len(ldap_groups))
             else:
-                if not msg:
-                    msg = _('Found no group object for synchronization. Please check your filter settings.')
                 return (False, msg)
 
         tests = [

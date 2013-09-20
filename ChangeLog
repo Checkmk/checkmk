@@ -366,6 +366,8 @@
     * FIX: zpool_status: Ignoring "No known data errors" text
     * FIX: dmi_sysinfo: Handling ":" in value correctly
     * FIX: check_http: Fixed syntax error when monitoring certificates
+    * FIX: check_dns: parameter -A does not get an additional string
+    * FIX: diskstat: Fixed wrong values for IO/s computation on linux hosts
 
     Multisite:
     * FIX: LDAP: Disabling use of referrals in active directory configuration

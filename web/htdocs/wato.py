@@ -7077,7 +7077,10 @@ def default_site():
         if not "socket" in site \
             or site["socket"] == "unix:" + defaults.livestatus_unix_socket:
             return id
-    return config.sites.keys()[0]
+    try:
+        return config.sites.keys()[0]
+    except:
+        return None
 
 class SiteAttribute(Attribute):
     def __init__(self):

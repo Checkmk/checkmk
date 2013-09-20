@@ -47,6 +47,8 @@ def inventory_fileinfo(info, case):
     added_groups = []
     for line in info:
         if len(line) >= 3:
+            if line[1] == "missing":
+                continue
             groups = fileinfo_groups_of_file(line[0])
             if case == 'single' and len(groups) == 0:
                 inventory.append((line[0], {}));
@@ -84,7 +86,7 @@ def check_fileinfo(item, params, info):
     for line in info[1:]:
         if item == line[0]:
             if line[1] == "missing":
-                return (3, "UNKNOWN - File is missing")
+                return (3, "UNKNOWN - File not found")
             state = 0
             size = int(line[1])
             age = reftime - int(line[2])
@@ -109,7 +111,7 @@ def check_fileinfogroups(item, params, info):
     #Start counting all values
     for line in info[1:]:
         for pattern in params['patterns']:
-            if fnmatch.fnmatch(line[0], pattern):
+            if fnmatch.fnmatch(line[0], pattern) and str(line[1]) != 'missing':
                 size_all += int(line[1])
                 age = reftime - int(line[2])
                 if age_oldest == None: # very first match

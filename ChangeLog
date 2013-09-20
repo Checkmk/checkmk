@@ -88,6 +88,7 @@
     * windows_agent: windows eventlog informational/audit logs now reported with O prefix
     * mk_logwatch: ignored loglines now reported with an "." prefix (if required)
     * apache_status: Nopw also supports multithreaded mpm
+    * FIX: blade_blades: Fixed output of "(UNKNOWN)" even if state is OK
     * FIX: apache_status: fix exception if parameter is None
     * FIX: hr_mem: handle virtual memory correct on some devices
     * FIX: apache_status agent plugin: now also works, if prog name contains slashes

@@ -1,0 +1,10 @@
+Title: Move LDAP-Settings button to user management
+Component: multisite
+Class: nastiness
+State: done
+Date: 2013-09-20 13:58:50
+Targetversion: 1.4.0
+
+Currently it's in the global settings
+
+2013-09-20 14:14:22: changed state open -> done

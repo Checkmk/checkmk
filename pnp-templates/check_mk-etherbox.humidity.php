@@ -29,7 +29,7 @@
 # | Michael Nieporte <Michael.Nieporte@uk-essen.de>                  |
 # +------------------------------------------------------------------+
 
-$opt[1] = "--vertical-label \"Percent\" --title \"$servicedesc\" ";
+$opt[1] = "--vertical-label \"Percent\" -l 0 -u 100 --title \"$servicedesc\" ";
 
 $def[1] = "DEF:var1=$RRDFILE[1]:$DS[1]:MAX ";
 $def[1] .= "LINE2:var1#2080ff:\"Humidity\:\" ";
@@ -37,8 +37,12 @@ $def[1] .= "GPRINT:var1:LAST:\"%2.0lf%%\" ";
 $def[1] .= "GPRINT:var1:AVERAGE:\"(Avg\: %2.0lf%%,\" ";
 $def[1] .= "GPRINT:var1:MIN:\"Min\: %2.0lf%%,\" ";
 $def[1] .= "GPRINT:var1:MAX:\"Max\: %2.0lf%%)\" ";
-$def[1] .= "HRULE:$CRIT[1]#FFFF00 ";
-$def[1] .= "HRULE:$WARN[1]#FF0000 ";
-$def[1] .= "HRULE:$MIN[1]#FFFF00 ";
-$def[1] .= "HRULE:$MAX[1]#FF0000 ";
+if($CRIT[1])
+    $def[1] .= "HRULE:$CRIT[1]#FFFF00 ";
+if($WARN[1])
+    $def[1] .= "HRULE:$WARN[1]#FF0000 ";
+if($MIN[1])
+    $def[1] .= "HRULE:$MIN[1]#FFFF00 ";
+if($MAX[1])
+    $def[1] .= "HRULE:$MAX[1]#FF0000 ";
 ?>

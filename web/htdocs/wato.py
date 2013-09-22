@@ -5436,6 +5436,7 @@ def mode_ldap_config(phase):
 
     elif phase == 'buttons':
         global_buttons()
+        html.context_button(_("Users"), make_link([("mode", "users")]), "users")
         return
 
     config_vars = [
@@ -5516,14 +5517,13 @@ def mode_ldap_config(phase):
             userdb.ldap_connect(enforce_new = True, enforce_server = address)
             try:
                 ldap_users = userdb.ldap_get_users()
+                msg = _('Found no user object for synchronization. Please check your filter settings.')
             except Exception, e:
                 ldap_users = None
                 msg = str(e)
             if ldap_users and len(ldap_users) > 0:
                 return (True, _('Found %d users for synchronization.') % len(ldap_users))
             else:
-                if not msg:
-                    msg = _('Found no user object for synchronization. Please check your filter settings.')
                 return (False, msg)
 
         def test_group_base_dn(address):
@@ -5537,14 +5537,13 @@ def mode_ldap_config(phase):
             userdb.ldap_connect(enforce_new = True, enforce_server = address)
             try:
                 ldap_groups = userdb.ldap_get_groups()
+                msg = _('Found no group object for synchronization. Please check your filter settings.')
             except Exception, e:
                 ldap_groups = None
                 msg = str(e)
             if ldap_groups and len(ldap_groups) > 0:
                 return (True, _('Found %d groups for synchronization.') % len(ldap_groups))
             else:
-                if not msg:
-                    msg = _('Found no group object for synchronization. Please check your filter settings.')
                 return (False, msg)
 
         tests = [
@@ -5600,8 +5599,6 @@ def mode_globalvars(phase):
 
     elif phase == "buttons":
         global_buttons()
-        if userdb.connector_enabled('ldap'):
-            html.context_button(_("LDAP Settings"), make_link([("mode", "ldap_config")]), "ldap")
         return
 
     # Get default settings of all configuration variables of interest in the domain
@@ -8166,6 +8163,8 @@ def mode_users(phase):
             html.context_button(_("Sync Users"), html.makeactionuri([("_sync", 1)]), "replicate")
         if config.may("general.notify"):
             html.context_button(_("Notify Users"), 'notify.py', "notification")
+        if userdb.connector_enabled('ldap'):
+            html.context_button(_("LDAP Settings"), make_link([("mode", "ldap_config")]), "ldap")
         return
 
     # Execute all connectors synchronisations of users. This must be done before

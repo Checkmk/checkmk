@@ -32,7 +32,6 @@
     * windows_agent: Now available as 64 bit version
     * agent_vsphere: fix problem where sensors were missing when
       you queried multiple host systems via vCenter
-    * apache_status: fix exception if parameter is None
     * cached checks: no longer output cached data if the age of the
                      cache file is twice the maximum cache age
     * windows agent: no longer tries to execute directories
@@ -80,6 +79,23 @@
     * New active check, check_form_submit, to submit HTML forms and check the resulting page
     * mk-job: /var/lib/check_mk_agent/job directory is now created with mode 1777 so 
               mk-job can be used by unprivileged users too
+    * ADD: etherbox: new check for etherbox (messpc) sensors.
+           currently supported: temperature, humidity, switch contact and smoke sensors
+    * cisco_wlc_client: now supports low/high warn and crit levels
+    * cisco_wlc: now supports configuration options for missing AP
+    * agent_vsphere: completely rewritten, now considerably faster
+                     vCenter is still queried by old version
+    * windows_agent: windows eventlog informational/audit logs now reported with O prefix
+    * mk_logwatch: ignored loglines now reported with an "." prefix (if required)
+    * apache_status: Nopw also supports multithreaded mpm
+    * windows_agent: now able to suppress context messages in windows eventlogs
+    * agent_vsphere: completely rewritten, now considerably faster
+                     vCenter is still queried by old version
+    * windows_agent: windows eventlog informational/audit logs now reported with O prefix
+    * mk_logwatch: ignored loglines now reported with an "." prefix (if required)
+    * check_mk-if.pnp: fixed bug with pnp template on esx hosts without perfdata
+    * FIX: blade_blades: Fixed output of "(UNKNOWN)" even if state is OK
+    * FIX: apache_status: fix exception if parameter is None
     * FIX: hr_mem: handle virtual memory correct on some devices
     * FIX: apache_status agent plugin: now also works, if prog name contains slashes
     * FIX: check_dns: parameter -A does not get an additional string
@@ -89,17 +105,8 @@
     * FIX: esx_vsphere_datastores: Fix incomplete performance data and Perf-O-Meter
     * FIX: cleaned up fileinfo.groups pattern handling, manual configuration
       is now possible using WATO
-    * ADD: etherbox: new check for etherbox (messpc) sensors.
-           currently supported: temperature, humidity, switch contact and smoke sensors
-    * cisco_wlc_client: now supports low/high warn and crit levels
-    * cisco_wlc: now supports configuration options for missing AP
     * FIX: check_mk-ipmi.php: PNP template now displays correct units as delivered
            by the check plugin
-    * agent_vsphere: completely rewritten, now considerably faster
-                     vCenter is still queried by old version
-    * windows_agent: windows eventlog informational/audit logs now reported with O prefix
-    * mk_logwatch: ignored loglines now reported with an "." prefix (if required)
-    * check_mk-if.pnp: fixed bug with pnp template on esx hosts without perfdata
 
 
     Notifications:
@@ -367,6 +374,9 @@
     * FIX: zpool_status: Ignoring "No known data errors" text
     * FIX: dmi_sysinfo: Handling ":" in value correctly
     * FIX: check_http: Fixed syntax error when monitoring certificates
+    * FIX: check_dns: parameter -A does not get an additional string
+    * FIX: diskstat: Fixed wrong values for IO/s computation on linux hosts
+    * FIX: blade_healts: Fixed wrong index checking resulting in exceptions
 
     Multisite:
     * FIX: LDAP: Disabling use of referrals in active directory configuration

@@ -58,7 +58,7 @@ def check_blade_blades(item, params, info):
                     output += ' (!)'
                 elif nag_state == 2:
                     output += ' (!!)'
-                else:
+                elif nag_state == 3:
                     output += ' (UNKNOWN)'
                 state = max(state, nag_state)
                 output += ', '

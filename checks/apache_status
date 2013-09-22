@@ -36,19 +36,23 @@ def apache_status_open_slots(value, params):
         return 0, "", extra_perf
 
 apache_status_fields = {
-    # key           sort  convert-func param_function
-    'Uptime':         (0,  int),
-    'IdleWorkers':    (5,  int),
-    'BusyWorkers':    (6,  int),
-    'OpenSlots':      (7,  int,        apache_status_open_slots),
-    'TotalSlots':     (8,  int),
-    'Total Accesses': (9,  int),
-    'CPULoad':        (10, float),
-    'Total kBytes':   (11, float),
-    'ReqPerSec':      (12, float),
-    'BytesPerReq':    (13, float),
-    'BytesPerSec':    (14, float),
-    'Scoreboard':     (15,  str),
+    # key                sort  convert-func param_function
+    'Uptime':              (0,  int),
+    'IdleWorkers':         (5,  int),
+    'BusyWorkers':         (6,  int),
+    'OpenSlots':           (7,  int,        apache_status_open_slots),
+    'TotalSlots':          (8,  int),
+    'Total Accesses':      (9,  int),
+    'CPULoad':             (10, float),
+    'Total kBytes':        (11, float),
+    'ReqPerSec':           (12, float),
+    'BytesPerReq':         (13, float),
+    'BytesPerSec':         (14, float),
+    'Scoreboard':          (15, str),
+    'ConnsTotal':          (16, int),
+    'ConnsAsyncWriting':   (17, int),
+    'ConnsAsyncKeepAlive': (18, int),
+    'ConnsAsyncClosing':   (19, int),
 }
 
 apache_status_stats = {

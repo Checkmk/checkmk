@@ -661,7 +661,7 @@ class html:
     def html_head(self, title, javascripts = [], stylesheets = ["pages"]):
         if not self.header_sent:
             self.write(
-                u'''<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+                u'''<!DOCTYPE HTML>
 <html><head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />\n''')
             self.write('<title>')

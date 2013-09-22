@@ -19,3 +19,4 @@ check-mk-agent-*.exe
 .metadata
 RemoteSystemsTempFiles
 .directory
+.site

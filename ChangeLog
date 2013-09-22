@@ -99,6 +99,7 @@
                      vCenter is still queried by old version
     * windows_agent: windows eventlog informational/audit logs now reported with O prefix
     * mk_logwatch: ignored loglines now reported with an "." prefix (if required)
+    * check_mk-if.pnp: fixed bug with pnp template on esx hosts without perfdata
 
 
     Notifications:
@@ -119,7 +120,6 @@
       performance value. This might not always be the one you like, but
       its far better than nothing.
     * logwatch: Logwatch icon no longer uses notes_url
-    * check_mk-if.pnp: fixed bug with pnp template on esx hosts without perfdata
     * Inventory screen: Host inventory also displays its clustered services
     * Rules: Renamed "Ignored services" to "Disabled services"
              Renamed "Ignored checks" to "Disabled checks"
@@ -139,7 +139,7 @@
     * LDAP: Moved configuration to dedicated page which also provides some
       testing mechanisms for the configuration
     * Added option to enable browser scrollbar to the multisite sidebar (only
-      via "sidebar_show_scrollbar = True" in multisite.mk 
+      via "sidebar_show_scrollbar = True" in multisite.mk
     * Added option to disable automatic userdb synchronizations in multisite
     * Implemented search forms for most data tables
     * New icons in view footers: export as CSV, export as JSON
@@ -190,6 +190,7 @@
       Host/Service/Contact Groups, Timeperiods and Roles
     * Removed "do not connect" option from site socket editor. Use the
       checkbox "Disable" to disable the site for multisite.
+    * Converted table of Event Console Rules to new implementation, make it sortable
     * ADD: Rule to check state of physical switch (currently used by etherbox check)
     * ADD: new ruleset cisco_wlc: Allows to configure handling of missing AP
     * FIX: do validation of check items in rule editor
@@ -198,7 +199,7 @@
            inherited values
     * FIX: Changed several forms from GET to POST to prevent "Request-URI too
            large" error messages during submitting forms
-    * FIX: automation snmp scan now adhere rules for shoddy snmp devices 
+    * FIX: automation snmp scan now adhere rules for shoddy snmp devices
            which have no sys description
     * FIX: Cisco ruleset "Cisco WLC WiFi client connections" has been generalized to
            "WLC WiFi client connections"

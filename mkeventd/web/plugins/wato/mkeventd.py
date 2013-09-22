@@ -872,26 +872,11 @@ def mode_mkeventd_rules(phase):
         event = None
 
     if rules:
-        html.write('<table class=data>')
-        html.write("<tr>")
-        html.write("<th>%s</th>" % _("Actions"))
-        html.write("<th></th>")
-        html.write("<th>%s</th>" % _("ID"))
-        html.write("<th>%s</th>" % _("State"))
-        html.write("<th>%s</th>" % _("Priority"))
-        html.write("<th>%s</th>" % _("Facility"))
-        html.write("<th>%s</th>" % _("Service Level"))
-        if defaults.omd_root:
-            html.write("<th>%s</th>" % _("Hits"))
-        html.write("<th>%s</th>" % _("Description"))
-        html.write("<th>%s</th>" % _("Text to match"))
-        html.write("</tr>")
+        table.begin(limit = None)
 
-        odd = "even"
         have_match = False
         for nr, rule in enumerate(rules):
-            odd = odd == "odd" and "even" or "odd"
-            html.write('<tr class="data %s0">' % odd)
+            table.row()
             delete_url = make_action_link([("mode", "mkeventd_rules"), ("_delete", nr)])
             top_url    = make_action_link([("mode", "mkeventd_rules"), ("_move", nr), ("_where", 0)])
             bottom_url = make_action_link([("mode", "mkeventd_rules"), ("_move", nr), ("_where", len(rules)-1)])
@@ -899,7 +884,8 @@ def mode_mkeventd_rules(phase):
             down_url   = make_action_link([("mode", "mkeventd_rules"), ("_move", nr), ("_where", nr+1)])
             edit_url   = make_link([("mode", "mkeventd_edit_rule"), ("edit", nr)])
             clone_url  = make_link([("mode", "mkeventd_edit_rule"), ("clone", nr)])
-            html.write('<td class=buttons>')
+
+            table.cell(_("Actions"), css="buttons")
             html.icon_button(edit_url, _("Edit this rule"), "edit")
             html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
             html.icon_button(delete_url, _("Delete this rule"), "delete")
@@ -917,8 +903,7 @@ def mode_mkeventd_rules(phase):
                 html.empty_icon_button()
                 html.empty_icon_button()
 
-            html.write('</td>')
-            html.write('<td>')
+            table.cell("")
             if rule.get("disabled"):
                 html.icon(_("This rule is currently disabled and will not be applied"), "disabled")
             elif event:
@@ -941,13 +926,13 @@ def mode_mkeventd_rules(phase):
                         msg += _(" Match groups: %s") % ",".join(groups)
                     html.icon(msg, icon)
 
-            html.write('</td>')
-            html.write('<td><a href="%s">%s</a></td>' % (edit_url, rule["id"]))
+            table.cell(_("ID"), '<a href="%s">%s</a>' % (edit_url, rule["id"]))
+
             if rule.get("drop"):
-                html.write('<td class="state statep">%s</td>' % _("DROP"))
+                table.cell(_("Priority"), _("DROP"), css="state statep")
             else:
-                html.write('<td class="state state%d">%s</td>' % (rule["state"],
-                  {0:_("OK"), 1:_("WARN"), 2:_("CRIT"), 3:_("UNKNOWN"), -1:_("(syslog)")}[rule["state"]]))
+                txt = {0:_("OK"), 1:_("WARN"), 2:_("CRIT"), 3:_("UNKNOWN"), -1:_("(syslog)")}[rule["state"]]
+                table.cell(_("Priority"), txt,  css="state state%d" % rule["state"])
 
             # Syslog priority
             if "match_priority" in rule:
@@ -959,23 +944,22 @@ def mode_mkeventd_rules(phase):
                                 mkeventd.syslog_priorities[prio_to][1][:2]
             else:
                 prio_text = ""
-            html.write("<td>%s</td>" % prio_text)
+            table.cell(_("Priority"), prio_text)
 
             # Syslog Facility
+            table.cell(_("Facility"))
             if "match_facility" in rule:
                 facnr = rule["match_facility"]
-                html.write("<td>%s</td>" % dict(mkeventd.syslog_facilities)[facnr])
-            else:
-                html.write("<td></td>")
+                html.write("%s" % dict(mkeventd.syslog_facilities)[facnr])
 
-            html.write('<td>%s</td>' % dict(mkeventd.service_levels()).get(rule["sl"], rule["sl"]))
+            table.cell(_("Service Level"),
+                      dict(mkeventd.service_levels()).get(rule["sl"], rule["sl"]))
             if defaults.omd_root:
                 hits = rule.get('hits')
-                html.write('<td class=number>%s</td>' % (hits != None and hits or ''))
-            html.write('<td>%s</td>' % rule.get("description"))
-            html.write('<td>%s</td>' % rule.get("match"))
-            html.write('</tr>\n')
-        html.write('</table>')
+                table.cell(_("Hits"), hits != None and hits or '', css="number")
+            table.cell(_("Description"), rule.get("description"))
+            table.cell(_("Text to match"), rule.get("match"))
+        table.end()
 
 
 def copy_rules_from_master():

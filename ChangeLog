@@ -253,7 +253,7 @@
 
     Event Console:
     * New rule feature: automatically delete event after actions
-    * New filter for maximum services level (minimum already existed)
+    * New filter for maximum service level (minimum already existed)
     * New global setting: hostname translation (allows e.g. to drop domain name)
     * New rule match: only apply rule within specified time period
 
@@ -323,14 +323,15 @@
     * logwatch: Agent can now rewrite Messages
     * apache_status: New rule: set levels for number of remaining open slots
     * mrpe: handle long plugin output correctly, including performance data
+    * cisco_qos: parameters now configurable via WATO
 
     Notifications:
     * notify.py: unique spoolfiles name no longer created with uuid
-    * Warn user if only_services does never match 
+    * Warn user if only_services does never match
 
     Livestatus:
     * Table statehist: Improved detection of vanished hosts and services.
-                       Now able to detect and remove nonsense check plugin output 
+                       Now able to detect and remove nonsense check plugin output
     * FIX: able to handle equal comment_id between host and service
     * livestatus.log: show utf-8 decoding problems only with debug logging >=2
     * livestatus: fixed incorrect output formatting of comments_with_info column
@@ -343,11 +344,10 @@
     * New editor for Business Intelligence rules
     * Rule Editor: Now able to show infeffective rules
     * Valuespec: CascadingDropdown now able to process choice values from functions
-    * cisco_qos parameters now configurable via WATO
     * Removed global option logwatch_forward_to_ec, moved this to the
       logwatch_ec ruleset. With this option the forwarding can now be enabled
       for each logfile on a host
-    * Configuration of an alternativ host check command
+    * Configuration of an alternative host check command
     * Inventory: Display link symbol for ps ruleset
     * New rule for notification_options of hosts and services
     * FIX: Rulesets: correct display of rules within subfolders

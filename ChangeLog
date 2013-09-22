@@ -94,6 +94,11 @@
     * windows_agent: windows eventlog informational/audit logs now reported with O prefix
     * mk_logwatch: ignored loglines now reported with an "." prefix (if required)
     * check_mk-if.pnp: fixed bug with pnp template on esx hosts without perfdata
+    * jolokia checks (JVM): uptime, threads, sessions, requests, queue
+      now configurable via WATO
+    * vSphere checks: secret is not shown to the user via WATO anymore
+    * WATO rule to check state of physical switch (currently used by etherbox check)
+    * cisco_wlc: Allows to configure handling of missing AP
     * FIX: blade_blades: Fixed output of "(UNKNOWN)" even if state is OK
     * FIX: apache_status: fix exception if parameter is None
     * FIX: hr_mem: handle virtual memory correct on some devices
@@ -186,9 +191,6 @@
 
     WATO:
     * Allow to configure check-/retry_interval in second precision
-    * vSphere secret is not shown to the user via WATO anymore
-    * New rules for jolokia check (JVM): uptime, threads, sessions,
-                                         requests, queue
     * Custom user attributes can now be managed using WATO
     * Allow GIT to be used for change tracking (enable via global option)
     * Hosts/Folders: SNMP communities can now be configured via the host
@@ -198,8 +200,6 @@
     * Removed "do not connect" option from site socket editor. Use the
       checkbox "Disable" to disable the site for multisite.
     * Converted table of Event Console Rules to new implementation, make it sortable
-    * ADD: Rule to check state of physical switch (currently used by etherbox check)
-    * ADD: new ruleset cisco_wlc: Allows to configure handling of missing AP
     * FIX: do validation of check items in rule editor
     * FIX: More consistent handling of folderpath select in rule editor
     * FIX: Now correctly handling depends_on_tags on page rendering for

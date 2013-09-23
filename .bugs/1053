@@ -1,0 +1,15 @@
+Title: blade_bx_*: find out, what these check really check
+Component: checks
+State: open
+Date: 2013-09-23 11:38:30
+Targetversion: future
+Class: todo
+
+Bastian promised to figure this out
+blade_bx_load: is this really CPU of enclosure? or in the Blade
+blade_bx_powerfan: is it about fans in enclosure or in the blade
+blade_bx_powermod: is it about power modules in enclosure or in the blade?
+blade_bx_temp: is it about the temperature in enclosure or in the blade?
+
+Bastian needs to figure that out, afterwards the named check manpages
+need to be updated

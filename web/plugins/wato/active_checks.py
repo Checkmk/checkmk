@@ -872,15 +872,13 @@ register_rule(group,
             ( "freshness",
               Dictionary(
                   title = _("Check freshness"),
-                  help = _("Freshness checking is only useful for passive checks. It makes sure that passive "
-                           "check results are submitted on a regular basis. If not, the check is being set to "
-                           "warning, critical or unknown.<br>"
-                           "The freshness checking works in addition to the staleness feature. The latter grays "
-                           "out passive checks for which no data were received after an interval. The interval "
-                           "is calculated from the staleness value in <tt>Global Settings</tt> multiplied by "
-                           "the normal check interval defined in a separate rule (default is 60sec). If you use "
-                           "freshness checking you might want to modify the normal check interval for your check "
-                           "as well."),
+                  help = _("Freshness checking is only useful for passive checks when the staleness feature "
+                           "is not enough for you. It changes the state of a check to a configurable other state "
+                           "when the check results are not arriving in time. Staleness will still grey out the "
+                           "test after the corrsponding interval. If you dont want that, you might want to adjust "
+                           "the staleness interval as well. The staleness interval is calculated from the normal "
+                           "check interval multiplied by the stateness value in the <tt>Global Settings</tt>. "
+                           "The normal check interval can be configured in a separate rule for your check."),
                   optional_keys = False,
                   elements = [
                       ( "interval",

@@ -3181,33 +3181,67 @@ register_check_parameters(
    subgroup_environment,
     "apc_symentra",
     _("APC Symmetra Checks"),
-    Tuple(
+    Dictionary(
         elements = [
-            Integer(
-                title = _("Critical Battery Capacity"),
-                help = _("The battery capacity in percent at and below which a critical state is be triggered"),
-                unit = _("%"),
-                default_value = 95,
-            ),
-            Integer(
-                title = _("Critical Battery Temperature"),
-                help = _("The critical temperature of the battery"),
-                unit = _("C"),
-                default_value = 40,
-            ),
-            Integer(
-                title = _("Critical Battery Current"),
-                help = _("The critical battery current in Ampere"),
-                unit = _("A"),
-                default_value = 1,
-            ),
-            Integer(
-                title = _("Critical Battery Voltage"),
-                help = _("The output voltage at and below which a critical state is triggered."),
-                unit = _("V"),
-                default_value = 220,
-            ),
-        ]
+            ("levels",
+            Tuple(
+                title = _("Levels of battery parameters during normal operation"),
+                elements = [
+                    Integer(
+                        title = _("Critical Battery Capacity"),
+                        help = _("The battery capacity in percent at and below which a critical state is be triggered"),
+                        unit = _("%"),
+                        default_value = 95,
+                    ),
+                    Integer(
+                        title = _("Critical Battery Temperature"),
+                        help = _("The critical temperature of the battery"),
+                        unit = _("C"),
+                        default_value = 40,
+                    ),
+                    Integer(
+                        title = _("Critical Battery Current"),
+                        help = _("The critical battery current in Ampere"),
+                        unit = _("A"),
+                        default_value = 1,
+                    ),
+                    Integer(
+                        title = _("Critical Battery Voltage"),
+                        help = _("The output voltage at and below which a critical state is triggered."),
+                        unit = _("V"),
+                        default_value = 220,
+                    ),
+                ]
+            )),
+            ("post_calibration_levels",
+            Dictionary(
+                title = _("Levels of battery parameters after calibration"),
+                help = _("After a battery calibration the battery capacity is reduced until the "
+                         "battery is fully charged again. Here you can specify an alternative lower "
+                         "level in this post-calibration phase. "
+                         "Since apc devices remember the time of the last calibration only "
+                         "as a date, the alternative lower level will be applied on the whole "
+                         "day of the calibration until midnight. You can extend this time period "
+                         "with an additional time span to make sure calibrations occuring just "
+                         "before midnight do not trigger false alarms."
+                ),
+                elements = [
+                    ("altcapacity",
+                    Percentage(
+                        title = _("Alternative critical battery capacity after calibration"),
+                        default_value = 50,
+                    )),
+                    ("additional_time_span",
+                    Integer(
+                        title = ("Extend post-calibration phase by additional time span"),
+                        unit = _("minutes"),
+                        default_value = 0,
+                    )),
+                ],
+                optional_keys = False,
+            )),
+        ],
+        optional_keys = ['post_calibration_levels'],
     ),
     None,
     "first"

@@ -66,7 +66,7 @@
 #         ::= { upsAdvTest 4 }
 #
 
-# altes Format:
+# old format:
 # apc_default_levels = ( 95, 40, 1, 220 )
 
 apc_default_levels = { "levels": ( 95, 40, 1, 220 ) }
@@ -81,9 +81,9 @@ def check_apc(item, params, info):
     RunTimeRemaining = AdvBatteryRunTimeRemaining / 100
 
     delay_after_test, alt_crit_capacity = None, None
-    if len(params) == 4 and type(params) is tuple:  # früher gab es 4 Parameter im tuple
+    if len(params) == 4 and type(params) is tuple:  # old format with 4 params in tuple
         crit_capacity, crit_batt_temp, crit_batt_curr, crit_voltage = params
-    else:  # nun sind es 6 im dict
+    else:  # new format with up to 6 params in dict
         crit_capacity, crit_batt_temp, crit_batt_curr, crit_voltage = params['levels']
         if params.get("post_calibration_levels"):
             delay_after_test  = params['post_calibration_levels']['additional_time_span']

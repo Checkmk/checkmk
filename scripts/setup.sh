@@ -801,9 +801,9 @@ do
 	       sed -ri 's@^export MK_LIBDIR="(.*)"@export MK_LIBDIR="'"$agentslibdir"'"@' $agent
 	       sed -ri 's@^export MK_CONFDIR="(.*)"@export MK_CONFDIR="'"$agentsconfdir"'"@' $agent
 	   done &&
-	   mkdir -p $DESTDIR$vardir/{autochecks,counters,precompiled,cache,logwatch,web,wato} &&
+	   mkdir -p $DESTDIR$vardir/{autochecks,counters,precompiled,cache,logwatch,web,wato,notify} &&
 	   if [ -z "$DESTDIR" ] && id "$nagiosuser" > /dev/null 2>&1 && [ $UID = 0 ] ; then
-	     chown -R $nagiosuser $DESTDIR$vardir/{counters,cache,logwatch}
+	     chown -R $nagiosuser $DESTDIR$vardir/{counters,cache,logwatch,notify}
 	     chown $nagiosuser $DESTDIR$vardir/web
            fi &&
 	   mkdir -p $DESTDIR$confdir/conf.d &&

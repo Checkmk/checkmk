@@ -78,6 +78,20 @@ examples:
    # make sure exactly one ntpd is running
    ( "somehost", "ps", "NTP", ( "/usr/sbin/ntpd", 1, 1, 1, 1 ) ),
 
+   # or this can be done with the new, dictionary based
+   # syntax; in this case additional parameters cpulevels and
+   # cpu_average can be passed
+   ( 'somehost', 'ps', 'NTP', { 
+                                'process': '/usr/sbin/ntpd', 
+                                'user': 'ntp', 
+                                'warnmin': 1, 
+                                'warnmax': 1, 
+                                'okmin': 1
+                                'okmax': 1, 
+                                'cpulevels': (90.0, 98.0), 
+                                'cpu_average': 15, 
+   }),
+
    # the same, but  for all hosts with the tag "lnx"
    ( ["lnx"], ALL_HOSTS, "ps", "NTPD", ( "/usr/sbin/ntpd", 1, 1, 1, 1 ) ),
 
@@ -143,3 +157,16 @@ okmin (int): Minimum number for OK state
 okmax (int): Maximum number for OK state
 warnmax (int): Maximum number for WARNING state. Counts less than warnmin or greater than
  warnmax are CRITICAL
+
+parameters (dict): Or the parameters can be given in the new, dictionary based syntax
+   with the elements below.
+   In this case additional parameters cpulevels and cpu_average can be passed.
+
+{"process"}: procname, see above
+{"user"}: see above
+{"warnmin"}: see above
+{"warnmax"}: see above
+{"okmin"}: see above
+{"okmax"}: see above
+{"cpulevels"}: (float, float): levels of CPU usage for {WARN} and {CRIT} in percent
+{"cpu_average"}: int: build average over CPU usage for the given time in minutes

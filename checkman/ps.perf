@@ -28,6 +28,8 @@ inventory:
 
 [parameters]
 params (5 or 6 tuple): Please refer to {ps} for information about the parameters.
+parameters (dict): or the parameters can be given in the new, dictionary based syntax.
+   Please refer to {ps} for information about the parameters.
 
 [configuration]
 inventory_processes_perf (list): A list of 7-tuples. See {ps} for details.

@@ -43,7 +43,7 @@ This package is only needed on the Nagios server.
 
 %package agent
 Group:     System/Monitoring
-Requires:  xinetd
+Requires:  xinetd, time
 Summary: Linux-Agent for check_mk
 AutoReq:   off
 AutoProv:  off
@@ -55,7 +55,7 @@ xinetd to run this agent.
 
 %package agent-scriptless
 Group:     System/Monitoring
-Requires:  xinetd
+Requires:  xinetd, time
 Summary: Linux-Agent for check_mk
 AutoReq:   off
 AutoProv:  off
@@ -69,7 +69,7 @@ own.
 
 %package caching-agent
 Group:     System/Monitoring
-Requires:  xinetd
+Requires:  xinetd, time
 Summary: Caching Linux-Agent for check_mk
 AutoReq:   off
 AutoProv:  off

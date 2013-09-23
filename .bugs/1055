@@ -1,0 +1,29 @@
+Title: in version 1.2.2p3 livestatus does not compile
+Component: livestatus
+State: open
+Date: 2013-09-23 15:08:41
+Targetversion: 1.2.2
+Class: bug
+
+when compiling livestatus from the actual 1.2.2 branch it breaks:
+
+last lines in livestatus.log are:
+mv -f .deps/livestatus_so-ServicelistStateColumn.Tpo .deps/livestatus_so-ServicelistStateColumn.Po
+g++ -DHAVE_CONFIG_H -I. -I..    -I../nagios -fPIC -g -O2 -MT livestatus_so-TableColumns.o -MD -MP -MF .deps/livestatus_so-TableColumns.Tpo -c -o livestatus_so-TableColumns.o `test -f 'TableColumns.cc' || echo './'`TableColumns.cc
+make[2]: *** No rule to make target `HostSpecialDoubleColumn.cc', needed by `livestatus_so-HostSpecialDoubleColumn.o'.  Stop.
+make[2]: *** Waiting for unfinished jobs....
+mv -f .deps/livestatus_so-strutil.Tpo .deps/livestatus_so-strutil.Po
+mv -f .deps/livestatus_so-StringColumnFilter.Tpo .deps/livestatus_so-StringColumnFilter.Po
+mv -f .deps/livestatus_so-store.Tpo .deps/livestatus_so-store.Po
+mv -f .deps/livestatus_so-StringColumn.Tpo .deps/livestatus_so-StringColumn.Po
+mv -f .deps/livestatus_so-Table.Tpo .deps/livestatus_so-Table.Po
+mv -f .deps/livestatus_so-Store.Tpo .deps/livestatus_so-Store.Po
+mv -f .deps/livestatus_so-TableColumns.Tpo .deps/livestatus_so-TableColumns.Po
+mv -f .deps/livestatus_so-Query.Tpo .deps/livestatus_so-Query.Po
+make[2]: Leaving directory `/usr/local/src/check_mk-1.2.2p2/livestatus.src/src'
+make[1]: *** [all-recursive] Error 1
+make[1]: Leaving directory `/usr/local/src/check_mk-1.2.2p2/livestatus.src'
+make: *** [all] Error 2
+
+compiling livestatus 1.2.2p2 on the same system works
+system is CentOS 5.9 64bit, Nagios 3.5.1

@@ -1,12 +1,12 @@
-title: Wlan accesspoints from Cisco Wireless Lan Controller
+title: Wlan accesspoints on Cisco Wireless Lan Controller
 agents: snmp
 catalog: hw/network/cisco
 license: GPL
 distribution: check_mk
 description:
- This check automaticly detects all online accesspoints and checks for the current status.
- If a accesspoint is not longer reachable, the checks also triggers an critical state.
- The checks direct connects against a Cisco Wireless Lan Controller. Currently its tested
+ This check automatically detects all online accesspoints and checks for the current status.
+ If an accesspoint is not longer reachable, the checks also triggers a critical state.
+ The checks directly connects to a Cisco Wireless Lan Controller. Currently its tested
  with the model 5508.
 
 inventory:
@@ -23,9 +23,9 @@ examples:
 [parameters]
 parameters(dict): with the keys "ap_model" and "ap_name"
 
- The values of in this dict are list of tuples. Each tuple contain
- eiter (ap_name(string), action(int)) or (ap_model(string), action(int)), 
- whereas the ap_name is the human readable name of the AP and the ap_model is the model number
- The action represent the outcome when this model is missing and can be 
- set from 0 to 3 (OK, WARN, CRIT, UNKNOWN)
+ The values in this dict are lists of tuples. Each tuple contains
+ either (ap_name(string), action(int)) or (ap_model(string), action(int)), 
+ where the ap_name is the human readable name of the AP and the ap_model is the model number.
+ The action represents the outcome when this model is missing and can be 
+ from 0 to 3 (OK, WARN, CRIT, UNKNOWN)
 

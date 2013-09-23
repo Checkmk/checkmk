@@ -1,0 +1,34 @@
+title: IPSEC and Remote Access VPN-Tunnels on Cisco Devices
+agents: snmp
+catalog: hw/network/cisco
+license: GPL
+distribution: check_mk
+description:
+ This check tests for the existence of inventorized IPSEC and remote access VPN
+ Tunnels on a Cisco ASA device. A name and a state if the configured tunnel can no longer
+ be found can be configured. Also, a global state for no longer existing
+ tunnels can be configured.
+ The check has been tested with a cisco model ASA 5510.
+
+inventory:
+ One check is created for each IPSEC and remote access tunnel found during inventory
+
+item:
+ Check item is the ip address of the remote tunnel endpoint
+
+examples:
+ checkgroup_parameters.setdefault('vpn_tunnel', [])
+
+ checkgroup_parameters['vpn_tunnel'] = [
+   ( {'state': 1, 'tunnels': [('12.34.56.78', 'dark tunnel', 2)]}, [], ALL_HOSTS, ALL_SERVICES ),
+   ] + checkgroup_parameters['vpn_tunnel']
+
+
+[parameters]
+parameters(dict): with the keys "state" and "tunnel"
+
+ 'state' is the globally returned state of no longer existent tunnels
+
+ 'tunnels' is a list of tuples. Each tuple consists of the ip address of the tunnel endpoint, 
+ a corresponding name of the tunnel shown in the check output, and the state which is returned 
+ when the tunnel no longer exists.

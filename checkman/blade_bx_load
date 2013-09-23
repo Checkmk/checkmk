@@ -4,8 +4,6 @@ catalog: hw/server/fujitsu
 license: GPL
 distribution: check_mk
 description:
-  FIXME: is this really CPU of enclosure? Asked Bastian to figure this out...
-
   This check measures and checks the averaged CPU load of a Primergy
   BX600 Blade Enclosure. The values for 1, 5 and 15 minute average are
   reported.

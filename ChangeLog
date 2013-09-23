@@ -485,6 +485,9 @@
     * FIX: check_dns: parameter -A does not get an additional string
     * FIX: diskstat: Fixed wrong values for IO/s computation on linux hosts
     * FIX: blade_healts: Fixed wrong index checking resulting in exceptions
+    * FIX: notifications: /var/lib/check_mk/notify directory is now created 
+           correctly during setup from tgz file. (Without it notifications
+           did not get sent out.)
 
     Multisite:
     * FIX: LDAP: Disabling use of referrals in active directory configuration

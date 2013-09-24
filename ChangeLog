@@ -112,7 +112,8 @@
       is now possible using WATO
     * FIX: check_mk-ipmi.php: PNP template now displays correct units as delivered
            by the check plugin
-
+    * FIX: check_disk_smb: Remove $ from share when creating service description.
+           Otherwise Nagios will not accept the service description.
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a

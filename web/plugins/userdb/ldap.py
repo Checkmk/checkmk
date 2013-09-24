@@ -577,7 +577,7 @@ def ldap_attribute_plugins_elements():
             elements.append((key, FixedValue(
                 title    = plugin['title'],
                 help     = plugin['help'],
-                value    = None,
+                value    = {},
                 totext   = 'no_param_txt' in plugin and plugin['no_param_txt'] \
                               or _('This synchronization plugin has no parameters.'),
             )))

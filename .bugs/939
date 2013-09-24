@@ -1,0 +1,15 @@
+Title: windows_agent: loadlibrary call with *.rll fails
+Component: checks
+State: open
+Date: 2013-09-24 10:06:29
+Targetversion: 1.2.3i2
+Class: bug
+
+0.078000      - record 219666: process_eventlog_entries bytesread 448, event->Length 448
+0.078000      - record 219667: DLLs to load: C:\Program Files\Microsoft SQL Server\MSSQL10_50.MSSQLSERVER\MSSQL\Binn\Resources\1031\sqlevn70.rll
+0.078000      --> failed to load C:\Program Files\Microsoft SQL Server\MSSQL10_50.MSSQLSERVER\MSSQL\Binn\Resources\1031\sqlevn70.rll
+
+rll files are Windows Resource Libraries ( used for localisation )
+
+The loadlibrary call in the check_mk_agent fails when loading the sqlevn70.rll
+file, leading to an incorrect localized (not localized at all...) message

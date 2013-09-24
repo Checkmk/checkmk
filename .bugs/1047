@@ -1,10 +1,15 @@
 Title: check-mk-agent package needs dependency to time package
 Component: checks
-State: open
+Class: bug
+State: done
 Date: 2013-09-06 09:36:53
 Targetversion: 1.2.3i2
-Class: bug
 
 mk-job uses /usr/bin/time
 this is included in package time (as well in CentOS as in Ubuntu)
 package should require package time
+
+2013-09-23 16:10:57: changed state open -> done
+added dependency in check_mk.spec
+tested positive on CentOS 6.4: pulls package time as depenency
+tested on Ubuntu12.04: no negative issues found, package still installs

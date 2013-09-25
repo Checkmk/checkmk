@@ -2327,7 +2327,7 @@ class Dictionary(ValueSpec):
                 except MKUserError, e:
                     raise MKUserError(e.varname, _("%s: %s") % (vs.title(), e.message))
             elif not self._optional_keys or param in self._required_keys:
-                raise MKUserError(varprefix, _("The entry %s is missing") % vp.title())
+                raise MKUserError(varprefix, _("The entry %s is missing") % vs.title())
 
         # Check for exceeding keys
         allowed_keys = [ p for (p,v) in self._get_elements() ]

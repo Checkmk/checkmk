@@ -589,9 +589,9 @@ void TableStateHistory::answerQuery(Query *query)
         }
     }
 
-    logger(LOG_NOTICE, "Processed statehist logentries: %d", logentry_counter);
-    logger(LOG_NOTICE, "Total calls %d saved: %d", total_update_calls, total_calls_saved);
-    logger(LOG_NOTICE, "Objects: %d, Blacklisted: %d", state_info.size(), object_blacklist.size());
+    logger(LOG_DEBUG, "Processed statehist logentries: %d", logentry_counter);
+    logger(LOG_DEBUG, "Total calls %d saved: %d", total_update_calls, total_calls_saved);
+    logger(LOG_DEBUG, "Objects: %d, Blacklisted: %d", state_info.size(), object_blacklist.size());
 
     // Create final reports
     state_info_t::iterator it_hst = state_info.begin();

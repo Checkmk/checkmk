@@ -115,9 +115,25 @@ def diskstat_rewrite_device(nameinfo, linestart):
 
 def linux_diskstat_convert(info):
     info, nameinfo = diskstat_parse_info(info)
-    rewritten = [ ( diskstat_rewrite_device(nameinfo, l[0:3]), int(l[5]), int(l[9]),
-               int(l[6]), int(l[10]), int(l[12])) for l in info[1:]
-               if len(l) >= 13 ]
+    # The generic function takes the following values per line:
+    #  0: devname
+    #  1: read bytes counter
+    #  2: write bytes counter
+    # Optional ones:
+    #  3: number of reads
+    #  4: number of writes
+    #  5: timems
+    #  6: read queue length *counters*
+    #  7: write queue length *counters*
+    rewritten = [
+        ( diskstat_rewrite_device(nameinfo, l[0:3]),
+        int(l[5]),
+        int(l[9]),
+        int(l[3]),
+        int(l[7]),
+        int(l[12])
+        ) for l in info[1:] if len(l) >= 13
+    ]
 
     # Remove device mapper devices without a translated name
     return [ line for line in rewritten if not line[0].startswith("dm-") ]

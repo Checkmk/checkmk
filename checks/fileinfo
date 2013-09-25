@@ -110,7 +110,7 @@ def check_fileinfogroups(item, params, info):
     size_all = 0
     #Start counting all values
     for line in info[1:]:
-        for pattern in params['patterns']:
+        for pattern in params.get('patterns',[]):
             if fnmatch.fnmatch(line[0], pattern) and str(line[1]) != 'missing':
                 size_all += int(line[1])
                 age = reftime - int(line[2])

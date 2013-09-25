@@ -10,6 +10,7 @@
     * FIX: zpool_status: Ignoring "No known data errors" text
     * FIX: fileinfo: no longer inventorize missing files
     * FIX: fileinfo: fixed fileinfo grouping in case of missing files
+    * FIX: fileinfo: take care of empty patterns
     * FIX: dmi_sysinfo: Handling ":" in value correctly
     * FIX: check_http: Fixed syntax error when monitoring certificates
     * FIX: check_dns: parameter -A does not get an additional string

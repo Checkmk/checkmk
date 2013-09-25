@@ -4,13 +4,43 @@ catalog: hw/power
 license: GPL
 distribution: check_mk
 description:
- This checks monitors the remaining capacity in minutes of a UPS
- that supports the generic UPS-MIB
- (such as General Electric (GE) SitePro UPS). The check is always
- OK, there are currently neither levels nor other parameters.
+ This checks monitors a UPS that supports the generic UPS-MIB,
+ such as General Electric (GE) SitePro UPS, and many more.
+ The check monitors
+ the time the UPS is on battery (in seconds),
+ the battery capacity (in percent),
+ and the remaining runtime (in minutes).
+ Warning and critical levels can
+ be given for the time on battery and the capacity.
 
 perfdata:
- The remaining capacity in minutes
+ The remaining runtime in minutes and the capacity in percent
 
 inventory:
  Supported.
+
+examples:
+ ups_capacity_default_levels = {
+     'battime': (0, 0),
+     'capacity': (90, 80)
+ }
+
+ checkgroup_parameters.setdefault('ups_capacity', [])
+
+ checkgroup_parameters['ups_capacity'] = [
+     ( {'capacity': ( 90, 80 ) }, ["prod"], ALL_HOSTS, ["ups_capacity"]' ),
+      ] + checkgroup_parameters['ups_capacity']
+
+[configuration]
+ups_capacity_default_levels(dict): This variable is preset to {{ 'battime': (0, 0), 'capacity': (95, 90) }}
+
+
+[parameters]
+parameters(dict): with the keys "battime" and "capacity"
+
+    'battime' is a tuple containing warning and critical levels for the 
+    time in seconds the USV is on battery. Default levels are (0, 0)
+
+    'capacity' is a tuple containing the warning and critical levels for 
+    the battery capacity in percent. Default levels are (95, 90)
+

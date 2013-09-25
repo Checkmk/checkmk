@@ -3189,7 +3189,7 @@ register_check_parameters(
                 elements = [
                     Integer(
                         title = _("Critical Battery Capacity"),
-                        help = _("The battery capacity in percent at and below which a critical state is be triggered"),
+                        help = _("The battery capacity in percent at and below which a critical state is triggered"),
                         unit = _("%"),
                         default_value = 95,
                     ),
@@ -3242,6 +3242,57 @@ register_check_parameters(
             )),
         ],
         optional_keys = ['post_calibration_levels'],
+    ),
+    None,
+    "first"
+)
+
+register_check_parameters(
+   subgroup_environment,
+    "ups_capacity",
+    _("UPS Capacity"),
+    Dictionary(
+        title = _("Levels for battery parameters"),
+        optional_keys = False,
+        elements = [
+        ("capacity",
+            Tuple(
+                title = _("Battery Capacity"),
+                elements = [
+                    Integer(
+                        title = _("Warning Level"),
+                        help = _("The battery capacity in percent at and below which a warning state is triggered"),
+                        unit = _("%"),
+                        default_value = 95,
+                    ),
+                    Integer(
+                        title = _("Critical Level"),
+                        help = _("The battery capacity in percent at and below which a critical state is triggered"),
+                        unit = _("%"),
+                        default_value = 90,
+                    ),
+                ],
+            ),
+        ),
+        ("battime",
+            Tuple(
+                title = _("Time Left on Battery"),
+                elements = [
+                    Integer(
+                        title = _("Warning Level"),
+                        help = _("Time left on Battery at and below which a warning state is triggered"),
+                        unit = _("%"),
+                        default_value = 0,
+                    ),
+                    Integer(
+                        title = _("Critical Level"),
+                        help = _("Time Left on Battery at and below which a critical state is triggered"),
+                        unit = _("min"),
+                        default_value = 0,
+                    ),
+                ],
+            ),
+        )],
     ),
     None,
     "first"

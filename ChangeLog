@@ -114,6 +114,7 @@
            by the check plugin
     * FIX: check_disk_smb: Remove $ from share when creating service description.
            Otherwise Nagios will not accept the service description.
+    * FIX: mrpe: gracefully handle invalid exit code of plugin
 
     Notifications:
     * notify.py: Matching service level: Use the hosts service level if a

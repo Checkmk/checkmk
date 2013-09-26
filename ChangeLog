@@ -99,6 +99,7 @@
     * vSphere checks: secret is not shown to the user via WATO anymore
     * WATO rule to check state of physical switch (currently used by etherbox check)
     * cisco_wlc: Allows to configure handling of missing AP
+    * logwatch.ec: show logfiles from that we forwarded messages
     * FIX: blade_blades: Fixed output of "(UNKNOWN)" even if state is OK
     * FIX: apache_status: fix exception if parameter is None
     * FIX: hr_mem: handle virtual memory correct on some devices

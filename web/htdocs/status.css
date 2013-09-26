@@ -273,6 +273,10 @@ table.data td.age {
     color: #666;
     white-space: nowrap;
 }
+table.data td.age.staletime {
+    color: red;
+    font-weight: bold;
+}
 
 table.data td.age.recent {
     font-weight: bold;

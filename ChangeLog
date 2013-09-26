@@ -1,6 +1,9 @@
 1.2.2p3:
     Core:
     * FIX: get_average(): Gracefully handle time anomlies of target systems
+    * FIX: notifications: /var/lib/check_mk/notify directory is now created 
+           correctly during setup from tgz file. (Without it notifications
+           did not get sent out.)
 
     Checks & Agents:
     * FIX: winperf_processor: fix case where CPU percent is exactly 100%
@@ -16,9 +19,7 @@
     * FIX: check_dns: parameter -A does not get an additional string
     * FIX: diskstat: Fixed wrong values for IO/s computation on linux hosts
     * FIX: blade_healts: Fixed wrong index checking resulting in exceptions
-    * FIX: notifications: /var/lib/check_mk/notify directory is now created 
-           correctly during setup from tgz file. (Without it notifications
-           did not get sent out.)
+    * FIX: mrpe: gracefully handle invalid plugin exit codes
 
     Multisite:
     * FIX: LDAP: Disabling use of referrals in active directory configuration

@@ -777,6 +777,7 @@ def mode_mkeventd_rules(phase):
         if html.var("simulate") or html.var("_generate"):
             event = vs_mkeventd_event.from_html_vars("event")
             vs_mkeventd_event.validate_value(event, "event")
+            config.save_user_file("simulated_event", event)
 
         if html.has_var("_generate") and html.check_transaction():
             if not event.get("application"):
@@ -867,7 +868,6 @@ def mode_mkeventd_rules(phase):
 
     if html.var("simulate"):
         event = vs_mkeventd_event.from_html_vars("event")
-        config.save_user_file("simulated_event", event)
     else:
         event = None
 

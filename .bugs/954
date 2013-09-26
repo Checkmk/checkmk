@@ -1,0 +1,9 @@
+Title: During config generation show all errors, not just one
+Component: core
+State: open
+Date: 2013-09-26 09:22:17
+Targetversion: future
+Class: feature
+
+When there are more than one errors during config generation,
+we could display all of them, not just one.

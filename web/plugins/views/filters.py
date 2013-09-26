@@ -286,6 +286,8 @@ class FilterHostState(Filter):
 
 declare_filter(115, FilterHostState())
 
+
+
 class FilterTristate(Filter):
     def __init__(self, name, title, info, column, deflt = -1):
         self.column = column
@@ -315,6 +317,25 @@ class FilterTristate(Filter):
             return self.filter_code(infoname, True)
         else:
             return self.filter_code(infoname, False)
+
+
+class FilterStateType(FilterTristate):
+    def __init__(self, info, column, title, deflt = -1):
+        FilterTristate.__init__(self, column, title, info, None, deflt)
+
+    def display(self):
+        current = html.var(self.varname)
+        html.begin_radio_group(horizontal = True)
+        for value, text in [("0", _("SOFT")), ("1", _("HARD")), ("-1", _("(ignore)"))]:
+            checked = current == value or (current in [ None, ""] and int(value) == self.deflt)
+            html.radiobutton(self.varname, value, checked, text + " &nbsp; ")
+        html.end_radio_group()
+
+    def filter_code(self, infoname, positive):
+        return "Filter: state_type = %d\n" % int(positive)
+
+declare_filter(116, FilterStateType("host", "host_state_type",       _("Host state type")))
+declare_filter(217, FilterStateType("service", "service_state_type", _("Service state type")))
 
 class FilterNagiosFlag(FilterTristate):
     def __init__(self, info, column, title, deflt = -1):

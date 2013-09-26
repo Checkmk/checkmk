@@ -127,6 +127,9 @@ OPTIONS:
   -h, --help                    Show this help message and exit
   -u USER, --user USER          Username for vSphere login
   -s SECRET, --secret SECRET    Secret/Password for vSphere login
+  -D, --direct                  Assume a directly queried host system (no vCenter). In
+                                This we expect data about only one HostSystem to be
+                                Found and do not create piggy host data for that host.
   -H, --hostname                Specify a hostname. This is neccessary if this is
                                 different from HOST. It is being used when outputting
                                 the hosts power state.

@@ -1,0 +1,13 @@
+Title: Manage members of a contactgroup in the contactgroup
+Component: wato
+State: open
+Date: 2013-09-26 09:32:08
+Targetversion: 1.4.0
+Class: feature
+
+It would be very nice if one could manage the members of
+a contactgroup also in the settings of the contact group, not only
+on that of the contacts.
+
+We could us the new membership valuespec that show two selection
+lists.

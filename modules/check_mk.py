@@ -2707,7 +2707,6 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
     except KeyboardInterrupt:
         sys.stderr.write('<Interrupted>\n')
 
-
     if not check_only:
         if newchecks != []:
             filename = autochecksdir + "/" + checkname + "-" + time.strftime("%Y-%m-%d_%H.%M.%S")

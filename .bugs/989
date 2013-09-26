@@ -1,0 +1,10 @@
+Title: Liveproxyd: Flap detection
+Component: livestatus
+State: open
+Date: 2013-09-26 10:39:53
+Targetversion: 1.4.0
+Class: feature
+
+When a connection breaks down than we could set the target
+site to down for some longer time - in order to avoid
+flapping situations.

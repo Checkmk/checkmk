@@ -3281,7 +3281,7 @@ register_check_parameters(
                     Integer(
                         title = _("Warning Level"),
                         help = _("Time left on Battery at and below which a warning state is triggered"),
-                        unit = _("%"),
+                        unit = _("min"),
                         default_value = 0,
                     ),
                     Integer(

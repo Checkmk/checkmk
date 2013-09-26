@@ -1,0 +1,14 @@
+Title: Handle extra IP addresses of service boards intelligently
+Component: core
+State: open
+Date: 2013-09-26 09:30:22
+Targetversion: future
+Class: feature
+
+Many people have servers with service boards. The servers are monitored
+with TCP and maybe also SNMP. The service boards have different IP
+addresses and are monitored via SNMP. It would be *very* nice to have that
+services mapped onto the actual server, not onto a separate host in 
+the monitoring.
+
+Find a good, simple solution with a simple and clear code impact.

@@ -1213,8 +1213,14 @@ def do_update_dns_cache():
     for hostname in all_active_hosts() + all_active_clusters():
         # Use intelligent logic. This prevents DNS lookups for hosts
         # with statically configured addresses, etc.
-        lookup_ipaddress(hostname)
-
+        try:
+            lookup_ipaddress(hostname)
+        except Exception, e:
+            if opt_verbose:
+                print "Failed to lookup IP address of %s: %s" % (hostname, e)
+            if opt_debug:
+                raise
+            continue
 
 
 def agent_port_of(hostname):

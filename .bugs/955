@@ -1,0 +1,13 @@
+Title: Automatically remove duplicate checks
+Component: core
+State: open
+Date: 2013-09-26 09:23:02
+Targetversion: 1.2.3i3
+Class: nastiness
+
+When you check a host with TCP and SNMP, you most times have
+duplicate checks. This is nasty because you manually have
+to ignore the duplicate.
+
+We simply could silently disable the SNMP based variants
+if a TCP based variant already exist.

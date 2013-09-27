@@ -1,0 +1,11 @@
+Title: Notification digest
+Component: core
+State: open
+Date: 2013-09-27 11:17:40
+Targetversion: future
+Class: feature
+
+It would be nice if a user could have a "notification digest"
+instead of one notification per problem. Something like in
+mailinglists. If we implement such a feature, then the digest
+should be on a per-checktype-base. 

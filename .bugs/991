@@ -1,0 +1,10 @@
+Title: LDAP Updates creates Auditlog entries with random user names
+Component: multisite
+State: open
+Date: 2013-09-27 11:02:23
+Targetversion: 1.2.3i3
+Class: nastiness
+
+Due to the cache every couple of minutes a random user might trigger
+an LDAP update and thus an entry in the audit log with his/her username.
+Better leave the user empty here or add some dummy entry.

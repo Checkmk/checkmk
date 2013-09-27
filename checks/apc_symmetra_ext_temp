@@ -45,11 +45,6 @@ def check_temp(item, params, info):
                 return (0, infotxt, perfdata)
     return (3, "Sensor not found in SNMP data")
 
-
-
-
-
-
 check_info["apc_symmetra_ext_temp"] = {
     'check_function':          check_temp,
     'inventory_function':      inventory_temp,

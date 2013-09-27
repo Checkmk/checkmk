@@ -4,11 +4,13 @@ catalog: hw/power
 license: GPL
 distribution: check_mk
 description:
- This checks just monitors the output power (in Watt) of the
+ This check monitors the output power (in Watt) of the
  (usually three) phases of an APC Symmetra power supply.
  You can define warning and critical levels of power, below which
- the phases must not drop. Each phase is realized as a separate
- check.
+ the phases must not drop. 
+
+item:
+ The index of the phase, e.g. {"1"}.
 
 examples:
  # Trigger warning/critical level if power drops below 100 or 20 Watt

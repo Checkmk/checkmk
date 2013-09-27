@@ -729,6 +729,33 @@ register_check_parameters(
 )
 
 register_check_parameters(
+   subgroup_environment,
+    "apc_power",
+    _("APC Power Consumption"),
+    Tuple(
+        title = _("Power Comsumption of APC Devices"),
+        elements = [
+            Integer(
+                title = _("Warning below"),
+                unit = _("W"),
+                default_value = 20,
+            ),
+            Integer(
+                title = _("Critical below"),
+                unit = _("W"),
+                default_value = 1,
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("Phase"),
+        help = _("The identifier of the phase the power is related to."),
+    ),
+    None,
+    "first"
+)
+
+register_check_parameters(
     subgroup_storage,
     "fileinfo",
     _("Size and age of single files"),

@@ -491,8 +491,8 @@ multisite_painters["svc_state_age"] = {
     "sorter"  : "stateage",
 }
 
-def paint_checked(row):
-    css, td = paint_age(row["service_last_check"], row["service_has_been_checked"] == 1, 0)
+def paint_checked(what, row):
+    css, td = paint_age(row[what + "_last_check"], row[what + "_has_been_checked"] == 1, 0)
     if is_stale(row):
         css += " staletime"
     return css, td
@@ -502,7 +502,7 @@ multisite_painters["svc_check_age"] = {
     "short"   : _("Checked"),
     "columns" : [ "service_has_been_checked", "service_last_check" ],
     "options" : [ "ts_format", "ts_date" ],
-    "paint"   : paint_checked,
+    "paint"   : lambda row: paint_checked("service", row),
 }
 
 multisite_painters["svc_next_check"] = {
@@ -868,7 +868,7 @@ multisite_painters["host_check_age"] = {
     "short"   : _("Checked"),
     "columns" : [ "host_has_been_checked", "host_last_check" ],
     "options" : [ "ts_format", "ts_date" ],
-    "paint"   : lambda row: paint_age(row["host_last_check"], row["host_has_been_checked"] == 1, 0),
+    "paint"   : lambda row: paint_checked("host", row),
 }
 
 multisite_painters["host_next_check"] = {

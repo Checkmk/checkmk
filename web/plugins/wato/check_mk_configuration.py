@@ -731,7 +731,7 @@ register_configvar(group,
 
 register_configvar(group,
     "ldap_cache_livetime",
-    Integer(
+    Age(
         title = _('LDAP Cache Livetime'),
         help  = _('This option defines the maximum age for using the cached LDAP data. The time of the '
                   'last LDAP synchronisation is saved and checked on every request to the multisite '

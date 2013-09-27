@@ -1,4 +1,4 @@
-title: Numer of Wifi connections for Cisco WLC
+title: Cisco Wireless Lan Controller (WLC): Numer of Wifi connections
 agents: snmp
 catalog: hw/network/cisco
 license: GPL

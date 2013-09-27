@@ -1,0 +1,13 @@
+Title: Allow rescheduling of several checks to spread over time
+Component: multisite
+State: open
+Date: 2013-09-26 10:41:56
+Targetversion: 1.2.3i3
+Class: feature
+
+When rescheduling more than one check we could offer a checkbox. If that
+is checked then we spread the rescheduled services over a longer time.
+Do we know the check period? Then we could use that. Otherwise make
+a number entry for minutes.
+
+Very usefull for inventory checks.

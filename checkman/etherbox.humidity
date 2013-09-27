@@ -1,4 +1,4 @@
-title: Etherbox Sensor Humidity
+title: Etherbox: Sensor Humidity
 catalog: hw/environment
 agents: snmp
 license: GPL

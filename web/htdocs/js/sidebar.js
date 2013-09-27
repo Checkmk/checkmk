@@ -884,7 +884,7 @@ function read_message() {
 
     // open the next message in a window
     c.parentNode.appendChild(msg);
-    
+
     // tell server that the message has been read
     var msg_id = msg.id.replace('message-', '');
     get_url('sidebar_message_read.py?id=' + msg_id);

@@ -108,7 +108,7 @@ LogEntry::~LogEntry()
 inline bool LogEntry::handleStatusEntry()
 {
 //// TODO: check if its worth of implementing
-//// Most lines are status entries anyway... 
+//// Most lines are status entries anyway...
 //    int len_text = strlen(_text);
 //    if (len_text < 12)
 //        return false;

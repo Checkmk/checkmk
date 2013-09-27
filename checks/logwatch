@@ -467,11 +467,13 @@ def check_logwatch_ec(item, params, info):
     facility = params.get('facility', 17) << 3 # default to "local1"
     messages = []
     cur_time = syslog_time()
+    forwarded_logfiles = set([])
     for logfile, lines in logs.items():
         for line in lines:
             msg = '<%d>' % (facility + logwatch_to_prio(line[0]),)
             msg += '%s %s %s: %s' % (cur_time, g_hostname, logfile, line[2:])
             messages.append(msg)
+            forwarded_logfiles.add(logfile)
 
     # 4. send lines to event console
     # a) local in same omd site
@@ -520,7 +522,12 @@ def check_logwatch_ec(item, params, info):
                 file('%s/%s' % (spool_path, file_name), 'w').write('\n'.join(messages) + '\n')
                 os.rename('%s/%s' % (spool_path, file_name), '%s/%s' % (spool_path, file_name[1:]))
 
-        return (0, 'Forwarded %d messages to event console' % num_messages, [('messages', num_messages)])
+        if forwarded_logfiles:
+            logfile_info = " from " + ",".join(list(forwarded_logfiles))
+        else:
+            logfile_info = ""
+        return (0, 'Forwarded %d messages%s to event console' % (
+           num_messages, logfile_info ), [('messages', num_messages)])
     except Exception, e:
         return (2, 'Unable to forward messages to event console (%s). Lost %d messages.' %
                 (e, num_messages))

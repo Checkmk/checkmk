@@ -6,7 +6,7 @@ import socket, os, time, sys, getopt, signal, thread, pprint, re, \
 from pwd import getpwnam
 from grp import getgrnam
 
-VERSION="1.2.3i1"
+VERSION="1.2.3i2"
 
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
@@ -2125,7 +2125,7 @@ class StatusServer:
             event = g_event_status.event(int(event_id))
             if action_id not in g_config["action"]:
                 raise MKClientError("The action '%s' is not defined. After adding new commands please "
-                   "make sure that you activate the changes in the Event Console.") % action_id
+                   "make sure that you activate the changes in the Event Console." % action_id)
             action = g_config["action"][action_id]
         do_rule_action(action, event, user)
 

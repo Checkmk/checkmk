@@ -16,8 +16,8 @@ inventory:
 
 
 [parameters]
-   critical int: Below or equal this level the check goes in critical state
-   warning  int: Below or equal the level the checks goes in warning state
+critical(int): Below or equal this level the check goes in critical state
+warning(int): Below or equal the level the checks goes in warning state
 
 [configuration]
 tsm_scratch_default_levels (int, int): Critical and warning level for the number of tapes.

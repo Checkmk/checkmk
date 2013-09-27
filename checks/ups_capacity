@@ -54,7 +54,7 @@ def check_ups_capacity(item, params, info):
     if type(params) is tuple:  # old format with 2 params in tuple
         warn, crit = params
         cap_warn, cap_crit =  (95, 90)
-    elif type(params) is dict:  # new dict format 
+    elif type(params) is dict:  # new dict format
         warn,crit = params.get('battime',(0,0))
         cap_warn,cap_crit = params.get('capacity',(95,90))
     else:
@@ -72,11 +72,11 @@ def check_ups_capacity(item, params, info):
     cap_label = ""
     if time_on_bat > crit:
         state = 2
-        time_label = "On battery since %ds(%ds/%dss)(!!), " % time_on_bat, warn, crit
+        time_label = "On battery since %ds(%ds/%ds)(!!), " % time_on_bat, warn, crit
         #return(2, "On battery since %ds(!!) " % time_on_bat + info_text, perf)
     elif time_on_bat > warn:
         state = 1
-        time_label = "On battery since %ds(%ds/%dss)(!)" % time_on_bat, warn, crit
+        time_label = "On battery since %ds(%ds/%ds)(!)" % time_on_bat, warn, crit
         #return(1, "On battery since %ds(!) " % time_on_bat + info_text, perf)
     if percent_fuel < cap_crit:
         state = 2

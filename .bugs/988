@@ -1,0 +1,9 @@
+Title: vsphere/piggyback: optionally use alias instead of hostname
+Component: checks
+State: open
+Date: 2013-09-26 10:30:51
+Targetversion: future
+Class: feature
+
+We could enable the host alias to be used for hostname matching.
+That way users could use that field for their VMware host name.

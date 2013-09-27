@@ -1,4 +1,4 @@
-title: APC self test
+title: APC Symmetra UPS: self test
 agents: snmp
 catalog: hw/power
 license: GPL
@@ -6,7 +6,7 @@ distribution: check_mk
 description:
  This check monitors two OIDs of APC Symmetra UPS devices: The result of the last self test
  and the last date of the self test run. The check becomes critical if the test result is
- "failed" and it has a warning or ciritical state if the date of the last self test is more 
+ "failed" and it has a warning or ciritical state if the date of the last self test is more
  than the warning or critical level ago.
 
 examples:

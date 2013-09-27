@@ -12823,6 +12823,9 @@ def declare_bi_valuespecs(aggregation_rules):
                     ),
                     CascadingDropdown(
                         title = _("Nodes to create:"),
+                        help = _("When calling a rule you can use the place holder <tt>$1$</tt> "
+                                 "in the rule arguments. This will be replaced by the actual host "
+                                 "names found by the search - one host name for each rule call."),
                         choices = subnode_choices,
                     ),
                  ]
@@ -12850,6 +12853,12 @@ def declare_bi_valuespecs(aggregation_rules):
                     ),
                     CascadingDropdown(
                         title = _("Nodes to create:"),
+                        help = _("When calling a rule you can use the place holder <tt>$1$</tt> "
+                                 "in the rule arguments. This will be replaced by the actual host "
+                                 "names found by the search - one host name for each rule call. If you "
+                                 "have regular expression subgroups in the service pattern, then "
+                                 "the place holders <tt>$2$</tt> will represent the first group match, "
+                                 "<tt>$3</tt> the second, and so on..."),
                         choices = subnode_choices,
                     ),
                  ]

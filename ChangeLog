@@ -183,6 +183,7 @@
       To make the sidebar check for new messages on a regular base, you need
       to configure the interval of sidebar popup notification updates e.g. via
       WATO Global Settings.
+    * Event views: changed default horizon from 31 to 7 days
     * New option for painting timestamp: as Unix Epoch time
     * New filters: Host state type and Service state type
     * FIX: better error message in case of exception in SNMP handling

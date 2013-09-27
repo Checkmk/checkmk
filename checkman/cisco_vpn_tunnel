@@ -29,6 +29,6 @@ parameters(dict): with the keys "state" and "tunnel"
 
  'state' is the globally returned state of no longer existent tunnels
 
- 'tunnels' is a list of tuples. Each tuple consists of the ip address of the tunnel endpoint, 
- a corresponding name of the tunnel shown in the check output, and the state which is returned 
+ 'tunnels' is a list of tuples. Each tuple consists of the ip address of the tunnel endpoint,
+ a corresponding name of the tunnel shown in the check output, and the state which is returned
  when the tunnel no longer exists.

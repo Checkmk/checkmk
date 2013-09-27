@@ -54,7 +54,7 @@ def check_ups_capacity(item, params, info):
     if type(params) is tuple:  # old format with 2 params in tuple
         warn, crit = params
         cap_warn, cap_crit =  (95, 90)
-    elif type(params) is dict:  # new dict format 
+    elif type(params) is dict:  # new dict format
         warn,crit = params.get('battime',(0,0))
         cap_warn,cap_crit = params.get('capacity',(95,90))
     else:

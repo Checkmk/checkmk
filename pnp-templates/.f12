@@ -1,5 +1,7 @@
+#!/bin/bash
+SITE=${SITE:-$(cat ../.site || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
-sudo cp * /omd/sites/$SITE/share/check_mk/pnp-templates
+sudo rsync -varx * /omd/sites/$SITE/share/check_mk/pnp-templates
 
 # do nc to port 32000 only if there is someone listening
 # (otherwise complete f12 script breaks if no listener on 32000)

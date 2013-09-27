@@ -24,8 +24,8 @@ examples:
 parameters(dict): with the keys "ap_model" and "ap_name"
 
  The values in this dict are lists of tuples. Each tuple contains
- either (ap_name(string), action(int)) or (ap_model(string), action(int)), 
+ either (ap_name(string), action(int)) or (ap_model(string), action(int)),
  where the ap_name is the human readable name of the AP and the ap_model is the model number.
- The action represents the outcome when this model is missing and can be 
+ The action represents the outcome when this model is missing and can be
  from 0 to 3 (OK, WARN, CRIT, UNKNOWN)
 

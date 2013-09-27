@@ -81,15 +81,15 @@ examples:
    # or this can be done with the new, dictionary based
    # syntax; in this case additional parameters cpulevels and
    # cpu_average can be passed
-   ( 'somehost', 'ps', 'NTP', { 
-                                'process': '/usr/sbin/ntpd', 
-                                'user': 'ntp', 
-                                'warnmin': 1, 
-                                'warnmax': 1, 
+   ( 'somehost', 'ps', 'NTP', {
+                                'process': '/usr/sbin/ntpd',
+                                'user': 'ntp',
+                                'warnmin': 1,
+                                'warnmax': 1,
                                 'okmin': 1
-                                'okmax': 1, 
-                                'cpulevels': (90.0, 98.0), 
-                                'cpu_average': 15, 
+                                'okmax': 1,
+                                'cpulevels': (90.0, 98.0),
+                                'cpu_average': 15,
    }),
 
    # the same, but  for all hosts with the tag "lnx"

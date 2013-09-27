@@ -1,0 +1,9 @@
+Title: Active check definition for check_icmp
+Component: wato
+State: open
+Date: 2013-09-27 11:47:28
+Targetversion: 1.4.0
+Class: feature
+
+This is especially useful for CMC where you use Smart PING.
+A simple plain formalization like check_http, etc.

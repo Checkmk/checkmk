@@ -11,8 +11,8 @@ inventory:
  One check will be created
 
 [parameters]
-   warning  int: minimal age in secounds for warning state
-   critical int: minimal age in secounds for critical state
+warning(int): minimal age in secounds for warning state
+critical(int): minimal age in secounds for critical state
 
 [configuration]
 tsm_session_default_levels(int, int): Warning and Critical levels for session age.

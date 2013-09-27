@@ -1,4 +1,4 @@
-title: Etherbox Sensor Temperature
+title: Etherbox: Sensor Temperature
 catalog: hw/environment
 agents: snmp
 license: GPL

@@ -1,4 +1,4 @@
-title: APC self test
+title: APC Symmetra UPS: self test
 agents: snmp
 catalog: hw/power
 license: GPL

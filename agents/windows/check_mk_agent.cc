@@ -104,7 +104,7 @@
 // Maximum heap buffer for a single local/plugin script
 // This buffer contains the check output
 #define HEAP_BUFFER_DEFAULT         16384L
-#define HEAP_BUFFER_MAX            524288L
+#define HEAP_BUFFER_MAX           2097152L
 
 // Maximum timeout for a single local/plugin script
 #define DEFAULT_PLUGIN_TIMEOUT         60

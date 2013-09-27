@@ -1,0 +1,10 @@
+Title: Notification spooling: only for certain plugin types or users
+Component: core
+State: open
+Date: 2013-09-27 11:15:30
+Targetversion: 1.4.0
+Class: feature
+
+It would be helpful if the notification spooling to a central
+site could selectively be configured on a per-users and/or
+per check-type base.

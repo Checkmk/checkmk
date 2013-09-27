@@ -1,0 +1,10 @@
+Title: Notification spooling: deliver locally in case of an error
+Component: core
+State: open
+Date: 2013-09-27 11:16:24
+Targetversion: future
+Class: feature
+
+Currently there is a setting "also deliver locally". Nice would be
+a third choice: "also deliver locally in case the central site cannot be reached
+and make this text shorter in the first place."

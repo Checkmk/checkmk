@@ -2266,8 +2266,6 @@ def show_service_table(host, firsttime):
                     rulespec["valuespec"].validate_value(params, "")
                     paramtext = rulespec["valuespec"].value_to_text(params)
                 except Exception, e:
-                    if config.debug:
-                        raise
                     paramtext = _("Invalid check parameter: %s!") % e
                     paramtext += _(" The parameter is: %r") % (params,)
 

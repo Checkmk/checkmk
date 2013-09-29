@@ -261,7 +261,7 @@ def process_matches(ps, procname, l_user):
             compiled_regexes[pattern] = reg
         matchobject = reg.match(" ".join(ps))
         if matchobject:
-            return matchobject.groups()
+            return [ g and g or "" for g in matchobject.groups() ]
     return False
 
 # New parameter format: dictionary. Example:

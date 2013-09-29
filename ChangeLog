@@ -31,6 +31,7 @@
            e.g. alert statistics source
     * FIX: Folder Tree Snapin: make folder filter also work for remote
            folders that do not exist locally
+    * FIX: correctly display sub-minute check/retry intervals
 
     WATO:
     * FIX: fix layout of Auxiliary tags table

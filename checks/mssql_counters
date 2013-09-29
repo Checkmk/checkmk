@@ -90,7 +90,7 @@ def check_mssql_counters_perc(item, params, info, perc_w_base = True):
 
     if perc_w_base:
         if base == 0:
-            return (3, 'Base is 0 (Value: %.2f)' % value)
+            base = 1
         perc = value / base * 100.0
     else:
         perc = value

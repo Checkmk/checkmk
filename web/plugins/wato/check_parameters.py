@@ -851,7 +851,7 @@ register_rule(group + '/' + subgroup_storage,
                   '<tt>/var/log/apache/*.log</tt>. For files contained in a group '
                   'the inventory will automatically create a group service instead '
                   'of single services for each file. This rule also applies when '
-                  'you use manual configured checks instead of inventorized ones.'),
+                  'you use manually configured checks instead of inventorized ones.'),
     valuespec = ListOf(
       Tuple(
           help = _("This defines one file grouping pattern"),

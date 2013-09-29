@@ -77,8 +77,8 @@ multisite_commands.append({
     "permission"  : "action.notifications",
     "title"       : _("Notifications"),
     "render"      : lambda: \
-       html.button("_enable_notifications", _("Enable")) == \
-       html.button("_disable_notifications", _("Disable")),
+       html.button("_enable_notifications", _("Enable.")) == \
+       html.button("_disable_notifications", _("Disable.")),
     "action"      : command_notifications,
 })
 
@@ -102,8 +102,8 @@ multisite_commands.append({
     "permission"  : "action.enablechecks",
     "title"       : _("Active checks"),
     "render"      : lambda: \
-       html.button("_enable_checks", _("Enable")) == \
-       html.button("_disable_checks", _("Disable")),
+       html.button("_enable_checks", _("Enable.")) == \
+       html.button("_disable_checks", _("Disable.")),
     "action"      : command_enable_active,
 })
 
@@ -122,8 +122,8 @@ multisite_commands.append({
     "permission"  : "action.enablechecks",
     "title"       : _("Passive checks"),
     "render"      : lambda: \
-       html.button("_enable_passive_checks", _("Enable")) == \
-       html.button("_disable_passive_checks", _("Disable")),
+       html.button("_enable_passive_checks", _("Enable.")) == \
+       html.button("_disable_passive_checks", _("Disable.")),
     "action"      : command_enable_passive,
 })
 
@@ -249,10 +249,10 @@ def command_acknowledgement(cmdtag, spec, row):
 multisite_commands.append({
     "tables"      : [ "host", "service" ],
     "permission"  : "action.acknowledge",
-    "title"       : _("Acknowledge"),
+    "title"       : _("Acknowledging Problems"),
     "render"      : lambda: \
         html.button("_acknowledge", _("Acknowledge")) == \
-        html.button("_remove_ack", _("Remove Acknowledge")) == \
+        html.button("_remove_ack", _("Remove Acknowledgement")) == \
         html.write("<hr>") == \
         html.checkbox("_ack_sticky", True, label=_("sticky")) == \
         html.checkbox("_ack_notify", True, label=_("send notification")) == \

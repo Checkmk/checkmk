@@ -158,7 +158,7 @@ multisite_datasources["comments"] = {
 }
 
 multisite_datasources["downtimes"] = {
-    "title"    : _("Schedules Downtimes"),
+    "title"    : _("Scheduled Downtimes"),
     "table"    : "downtimes",
     "infos"    : [ "downtime", "host", "service" ],
     "keys"     : [ "downtime_id", "service_description" ],

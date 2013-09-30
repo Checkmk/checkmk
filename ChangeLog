@@ -4,6 +4,7 @@
     * FIX: windows_agent: fixed bug in cleanup of open thread handles
 
     Multisite:
+    * FIX: add missing service icons to view "All Services with this descr..."
     * FIX: ldap attribute plugins: fixed crash when parameters are None
 
 1.2.3i2:

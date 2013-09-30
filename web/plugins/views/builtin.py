@@ -1190,6 +1190,7 @@ multisite_builtin_views.update({
                  'num_columns': 2,
                  'owner': '',
                  'painters': [('service_state', None),
+                              ('service_icons', None),
                               ('host', 'host'),
                               ('svc_plugin_output', None),
                               ('perfometer', None)],

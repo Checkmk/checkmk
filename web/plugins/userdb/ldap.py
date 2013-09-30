@@ -595,7 +595,7 @@ def ldap_needed_attributes():
     for key, params in config.ldap_active_plugins.items():
         plugin = ldap_attribute_plugins[key]
         if 'needed_attributes' in plugin:
-            attrs.update(plugin['needed_attributes'](params))
+            attrs.update(plugin['needed_attributes'](params or {}))
     return list(attrs)
 
 def ldap_convert_simple(user_id, ldap_user, user, user_attr, attr):
@@ -882,7 +882,7 @@ def ldap_sync(add_to_changelog, only_username):
 
         # Gather config from convert functions of plugins
         for key, params in config.ldap_active_plugins.items():
-            user.update(ldap_attribute_plugins[key]['convert'](params, user_id, ldap_user, user))
+            user.update(ldap_attribute_plugins[key]['convert'](params or {}, user_id, ldap_user, user))
 
         if not mode_create and user == users[user_id]:
             continue # no modification. Skip this user.

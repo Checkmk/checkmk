@@ -2,6 +2,7 @@
     Checks & Agents:
     * windows_agent: increased maximum plugin output buffer size to 2MB
     * FIX: windows_agent: fixed bug in cleanup of open thread handles
+    * FIX: cups default printer is now monitored again in linux agent
 
     Multisite:
     * FIX: ldap attribute plugins: fixed crash when parameters are None

@@ -5,6 +5,7 @@
     * FIX: cups default printer is now monitored again in linux agent
 
     Multisite:
+    * FIX: add missing service icons to view "All Services with this descr..."
     * FIX: ldap attribute plugins: fixed crash when parameters are None
 
 1.2.3i2:

@@ -20,6 +20,8 @@
     * FIX: diskstat: Fixed wrong values for IO/s computation on linux hosts
     * FIX: blade_healts: Fixed wrong index checking resulting in exceptions
     * FIX: mrpe: gracefully handle invalid plugin exit codes
+    * FIX: check_mk-ipmi.php: PNP template now displays correct units as delivered
+           by the check plugin
 
     Multisite:
     * FIX: LDAP: Disabling use of referrals in active directory configuration

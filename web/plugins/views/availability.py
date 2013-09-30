@@ -479,8 +479,7 @@ def get_availability_data(datasource, filterheaders, range, only_sites, limit, t
     # Columns for availability
     columns += [
       "duration", "from", "until", "state", "host_down", "in_downtime",
-      "in_host_downtime", "in_notification_period", "is_flapping",
-      "log_output" ]
+      "in_host_downtime", "in_notification_period", "is_flapping", ]
     if timeline:
         columns.append("log_output")
 

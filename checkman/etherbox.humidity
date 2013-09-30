@@ -8,6 +8,7 @@ description:
 
 item:
  The port number of the sensor followed by the sensor type
+
  Example: "2.3" A humidity sensor(type 3) on port 2
 
 perfdata:

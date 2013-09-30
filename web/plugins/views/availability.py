@@ -479,8 +479,7 @@ def get_availability_data(datasource, filterheaders, range, only_sites, limit, t
     # Columns for availability
     columns += [
       "duration", "from", "until", "state", "host_down", "in_downtime",
-      "in_host_downtime", "in_notification_period", "is_flapping",
-      "log_output" ]
+      "in_host_downtime", "in_notification_period", "is_flapping", ]
     if timeline:
         columns.append("log_output")
 
@@ -575,9 +574,9 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
                     s = "flapping"
                 else:
                     if what in [ "service", "bi" ]:
-                        s = { 0: "ok", 1:"warn", 2:"crit", 3:"unknown", -1: "unmonitored", -2: "unmonitored" }[state]
+                        s = { 0: "ok", 1:"warn", 2:"crit", 3:"unknown" }.get(state, "unmonitored")
                     else:
-                        s = { 0: "up", 1:"down", 2:"unreach", -1: "unmonitored", -2: "unmonitored" }[state]
+                        s = { 0: "up", 1:"down", 2:"unreach" }.get(state, "unmonitored")
                     if s == "warn":
                         s = avoptions["state_grouping"]["warn"]
                     elif s == "unknown":

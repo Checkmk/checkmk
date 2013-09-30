@@ -30,8 +30,8 @@ import sys, getopt
 def usage():
     sys.stderr.write("""Check_MK SQL Test
 
-USAGE: check-sql [OPTIONS] SQL-Statement
-       check-sql -h
+USAGE: check_sql [OPTIONS] SQL-Statement
+       check_sql -h
 
 ARGUMENTS:
   SQL-Statement                 Valid SQL-Statement for the selected database
@@ -40,17 +40,17 @@ ARGUMENTS:
 
 OPTIONS:
   -h, --help                    Show this help message and exit
-  -u USER, --user USER          Username for database access
-  -p PASS, --password PASS      Password for database access
-  -d DBMS, --dbms DBMS          Name of the database management system.
+  -u USER,  --user USER         Username for database access
+  -p PASS,  --password PASS     Password for database access
+  -d DBMS,  --dbms DBMS         Name of the database management system.
                                 Default is 'postgres', other valid values are
                                 'mysql' and 'oracle'
-  -H HOST , --hostname HOST     Hostname or IP-Address where the database lives. Default is '127.0.0.1'
-  -n NAME, --name NAME          Name of the database on the DBMS
-  -w RANGE, --warning RANGE     lower and upper level for the warning state
-  -c RANGE, --critical RANGE    lower and upper level for the critical state
+  -H HOST,  --hostname HOST     Hostname or IP-Address where the database lives. Default is '127.0.0.1'
+  -n NAME,  --name NAME         Name of the database on the DBMS
+  -w RANGE, --warning RANGE     lower and upper level for the warning state, separated by a colon
+  -c RANGE, --critical RANGE    lower and upper level for the critical state, separated by a colon
   --debug                       Debug mode: let Python exceptions come through
-  -v, --verbose                 Verbose mode: print sql statement and levels
+  -v, --verbose                 Verbose mode: print SQL statement and levels
 
 """)
 
@@ -116,7 +116,7 @@ try:
     if args:
         opt_sql = ' '.join(map(str,args))
     else:
-        print "UNKNOWN - no sql statement given"
+        print "UNKNOWN - no SQL statement given"
         sys.exit(3)
 
 except Exception, e:

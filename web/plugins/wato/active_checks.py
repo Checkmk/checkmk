@@ -89,41 +89,58 @@ register_rule(group,
 
 register_rule(group,
     "active_checks:sql",
-    Tuple(
-        title = _("Check SQL DB"),
-        help = _("This check connects to the specified database, sends a custom sql-statement "
+    Dictionary(
+        title = _("Check SQL Database"),
+        help = _("This check connects to the specified database, sends a custom SQL-statement "
                  "and checks that the result has a defined format containing three columns, a "
                  "number, a text, and performance data. Upper or lower levels may be defined "
                  "here. If they are not defined the number is taken as the state of the check."
                  "This check uses the active check <tt>check_sql</tt>."),
+        optional_keys = [ "levels", "levels_low", "perfdata" ],
         elements = [
-           TextAscii(title = _("Hostname"), allow_empty = False,
-                     help = _('The hostname or address you want to query')),
-           TextAscii(title = _("DBMS"), allow_empty = False,
-                     help = _('The database management system you want to query')),
-           TextAscii(title = _("DB-Name"), allow_empty = False,
-                     help = _('The name of the database on the DBMS')),
-           TextAscii(title = _("SQL-Statement"), allow_empty = False,
-                     help = _('The SQL-Statement which is sent to the DBMS')),
-           Dictionary(
-               title = _("Optional parameters"),
-               elements = [
-                    ( "upperlevels",
-                    Tuple(
-                        title = _("Upper levels for first output item"),
-                        elements = [
-                            Float( title = _("Warning if above")),
-                            Float( title = _("Critical if above"))
-                        ])
-                    ),
-                    ( "lowerlevels",
-                    Tuple(
-                        title = _("Lower levels for first output item"),
-                        elements = [
-                            Float( title = _("Warning if below")),
-                            Float( title = _("Critical if below"))
-                    ])),
-                ]),
+            ( "description",
+              TextUnicode(title = _("Service Description"),
+                 help = _("The name of this active service to be displayed."),
+                 allow_empty = False,
+            )),
+            ( "dbms",
+               DropdownChoice(
+                   title = _("Type of Database"),
+                   choices = [
+                      ( "mysql",    _("MySQL") ),
+                      ( "postgres", _("PostgreSQL") ),
+                      ( "oracle",   _("Oracle") ),
+                   ],
+                   default_value = "mysql",
+               ),
+            ),
+            ( "name",
+               TextAscii(title = _("Database Name"), allow_empty = False,
+                      help = _('The name of the database on the DBMS'))
+            ),
+            ( "sql",
+              TextAscii(title = _("SQL-Statement"), allow_empty = False,
+                      help = _('The SQL-Statement which is sent to the DBMS'))
+            ),
+            ( "levels",
+            Tuple(
+                title = _("Upper levels for first output item"),
+                elements = [
+                    Float( title = _("Warning if above")),
+                    Float( title = _("Critical if above"))
+                ])
+            ),
+            ( "levels_low",
+            Tuple(
+                title = _("Lower levels for first output item"),
+                elements = [
+                    Float( title = _("Warning if below")),
+                    Float( title = _("Critical if below"))
+                ])
+            ),
+            ( "perfdata",
+              FixedValue(True, totext=_("Store output value into RRD database"), title = _("Performance Data"), ),
+            )
         ]
     ),
     match = 'all')

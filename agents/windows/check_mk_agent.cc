@@ -2422,6 +2422,9 @@ void run_external_programs(char *dirname, script_type type, bool dry_run = false
                     cont->buffer_time = time(0);
                     cont->status = SCRIPT_COLLECT;
                     crash_log("Thread start: %s", cont->path);
+
+                    if (cont->worker_thread != INVALID_HANDLE_VALUE)
+                        CloseHandle(cont->worker_thread);
                     cont->worker_thread  = CreateThread(
                             NULL,                 // default security attributes
                             0,                    // use default stack size
@@ -3745,6 +3748,8 @@ void start_external_data_collection()
         }
     }
 
+    if (g_collection_thread != INVALID_HANDLE_VALUE)
+        CloseHandle(g_collection_thread);
     crash_log("Start thread for collecting local/plugin data");
     g_collection_thread = CreateThread(NULL, // default security attributes
             0,                    // use default stack size

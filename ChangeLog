@@ -1,6 +1,7 @@
 1.2.3i3:
     Checks & Agents:
     * windows_agent: increased maximum plugin output buffer size to 2MB
+    * FIX: windows_agent: fixed bug in cleanup of open thread handles
 
 
 1.2.3i2:

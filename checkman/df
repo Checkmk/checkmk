@@ -8,38 +8,36 @@ description:
  is checked against a warning and a critical level, which
  can be specified in numerous ways. Beware: on Linux and UNIX systems
  the filesystem might reserve a certain amount for root (typical is 5%).
- This checks considers that reserved space as used. This is consistant with
+ This checks considers that reserved space as used. This is consistent with
  the percentage-column in the output of {df}. So your filesystem might
  be at 100% in a situation where root still has 5% free space available.
 
  {Trends:} This checks supports filesystem {trends}. This means that the {df} check
  is able to compute the {change} of the used space over the time and can
- make a forecast into the future. It can estimate the point of time where
+ make a forecast into the future. It can estimate the time when
  the filesystem will be full.
 
  In the default configuration the check will compute the trend based on the
- data of the last 24 hours. Similar like the CPU load this is done with
- a logarithmic average that weights the more recent time more than time
- farer away. Also data beyond the 24 hours will to some small degree be
+ data of the last 24 hours using a logarithmic average that gives more recent
+ data a higher weight. Also data beyond the 24 hours will to some small degree be
  reflected in the computation. The advantage of this algorithm is a more
  precise prediction and a simpler implementation, which does not need any
  access to any RRDs or similar storage.
 
- Please note, that when a filesystem is started being monitored, then
- the trend of the past is unknown and will be assumed to be {zero}. That
- means that it will take at least one trend range of time until the trend
+ Please note that when a filesystem is started to be monitored,
+ the trend of the past is unknown and is assumed to be {zero}.
+ It will take at least one trend range of time until the trend
  approximately reflects the reality.
 
  {Grouping:} In some situations you do not want to monitor a single
- filesystem but a group of filesystems that together form a pool.
- It is not relevant if some filesystems of the pool are
- full but only the total usage of the pool as whole. The {df} check supports such pools
+ filesystem but a group of filesystems forming a pool.
+ Only the total usage of the pool is of interest. The {df} check supports pools
  by defining groups. For each group you specify a name and a list
  of globbing patterns (path patterns containing {*} and {?}). The name
  is being used as the check item. All filesystems that match one of
  the patterns are part of the pool.
 
- When using inventory then you specify the groups with the ruleset
+ When using inventory you specify the groups with the ruleset
  {filesystem_groups}. When configuring manual checks, you specify
  the list of patterns in the check parameter {"patterns"}.
 
@@ -50,14 +48,14 @@ item:
 
 examples:
  # Set default levels for all filesystems to 90/95 (simple way)
- filesystem_default_levels = (90, 95)
+ filesystem_default_levels = (90.0, 95.0)
 
  # alternative: Set default levels via new dictionary method:
  filesystem_default_levels = {
-    "levels"         : (80, 90),  # levels in percent
+    "levels"         : (80.0, 90.0),  # levels in percent
     "magic"          : 0.8,       # magic factor
     "magic_normsize" : 20,        # normsize in GB
-    "levels_low"     : (50, 60),  # magic never lowers levels below this (percent)
+    "levels_low"     : (50.0, 60.0),  # magic never lowers levels below this (percent)
     "trend_range"    : 48,        # hours
     "trend_mb"       : (10, 20),  # MB of change during trend_range
     "trend_perc"     : (1, 2),    # Percent change during trend_range
@@ -75,17 +73,17 @@ examples:
  # levels are "filesystem_default_levels"
  check_parameters = [
     # Hosts with tag "vms" get 85/95
-    ( (85, 95), ["vms"], ALL_HOSTS, [ "fs_" ] ),
+    ( (85.0, 95.0), ["vms"], ALL_HOSTS, [ "fs_" ] ),
     # all /sapdata partitions will never be critical
-    ( (101, 101), ALL_HOSTS, [ "fs_/sapdata$" ] ),
+    ( (101.0, 101.0), ALL_HOSTS, [ "fs_/sapdata$" ] ),
     # Partitions below "/var" get 80/90 with magic factor 0.5
-    ( (80, 90, 0.5), ALL_HOSTS, [ "fs_/var" ] ),
+    ( (80.0, 90.0, 0.5), ALL_HOSTS, [ "fs_/var" ] ),
     # /usr and /opt on hosts zlnx01 and zlnx02
-    ( (98, 99), [ "zlnx01", "zlnx02" ], [ "fs_/usr$", "fs_/opt$" ] ),
+    ( (98.0, 99.0), [ "zlnx01", "zlnx02" ], [ "fs_/usr$", "fs_/opt$" ] ),
     # All filesystems on clusters get 80/95
-    ( (80, 95), CLUSTERS_HOSTS, [ "fs_" ] ),
+    ( (80.0, 95.0), CLUSTERS_HOSTS, [ "fs_" ] ),
     # Complex parameters in dictionary form
-    ( {"levels":(80,90), "trend_range":48, "trend_mb":(20,40)},
+    ( {"levels":(80.0,90.0), "trend_range":48, "trend_mb":(20,40)},
       [ "windows" ], ALL_HOSTS, [ "fs_" ]),
  ]
 
@@ -122,7 +120,7 @@ perfdata:
  trends is enabled per default. You can globally disable that in {main.mk}
  with {filesystem_default_levels["trend_perfdata"] = False}.
 
- Please note, that - until you use the storage type {MULTIPLE} in PNP4Nagios -
+ Please note that - until you use the storage type {MULTIPLE} in PNP4Nagios -
  changing the parameter {"trend_perfdata"} will stop all updates to
  your existing filesystem RRDs. You need either to delete or convert your RRDs
  if you want to change.
@@ -136,7 +134,7 @@ inventory:
  that have a size and are not of type smbfs, tmpfs, cifs or nfs.
 
  When {filesystem_groups} is defined and a found filesystem
- is matching one of the patterns of a group then instead of a
+ is matching one of the patterns of a group, then instead of a
  service of the single filesystem a check for the group is being
  created. The check item is the name of that group in that
  case.
@@ -146,20 +144,27 @@ parameters (dict): This check supports two types of parameters. The
  new version supports trends and is a dictionary with the following
  keys:
 
- {"levels"}: Warning and critical level of filesystem usage in percentages
- of the filesystem size. The default is {(80, 90)}.
+ {"levels"}: Warning and critical level of filesystem usage. You need to
+ supply two numbers. Depending of the type of number you can choose
+ different kinds of levels as follows: Positive {integers} denote the
+ amount of {used} space in {megabytes}. Positive {floating point numbers} 
+ denote the amount of used space in {precent}. {Negative} numbers impose
+ limits on the amount of space {available}, again with the possibility 
+ to specify integers or floats to denote values in megabytes of precent.
+ The default is {(80.0, 90.0)}, meaning 80% and 90%.
 
  {"magic"}: The magic number, which scales the levels according to the
  filesystem size. Default
  is a factor of 1.0, which does no adaptation. A factor less than 1.0 raises
  the levels for large filesystems and lowers them for small ones. Please
- look at online documentation for more details about the magic factor.
+ have a look at the online documentation for more details about the magic factor.
 
  {"magic_normsize"}: Norm size of a filesystem for the magic computation.
  The default for this is {20}. It is measured in {GB}.
 
  {"levels_low"}: When applying the magic factor the warn/crit levels
- will never drop below these numbers. The is preset to {(50,60)}.
+ will never drop below these numbers. The default is preset to 
+ {(50.0,60.0)} meaning 50% and 60%.
 
  {"trend_range"}: The time range over that trends are computed. This
  is in hours and preset to {24} (i.e. one day). If you set this to
@@ -196,9 +201,9 @@ parameters (dict): This check supports two types of parameters. The
  It is still possible to specify a pair or triple of numbers
  {instead} of a dictionary:
 
-warning (int): The percentage of used space that triggers
+warning (int or float): The amount of used space that triggers
  WARNING state
-critical (int): The percentage of used space that triggers
+critical (int or float): The amount of used space that triggers
  CRITICAL space
 magic_factor (float): Optional: Magic factor that adapts the levels
  according to the size of the filesystem. Default
@@ -211,8 +216,8 @@ magic_factor (float): Optional: Magic factor that adapts the levels
 inventory_df_exclude_fs (list of strings): Lists of filesystem types to exclude from inventory
 inventory_df_exclude_mountpoints (list of strings): List of mount points to exclude from inventory
 filesystem_default_levels: Default levels for filesystem detected by inventory.
- This variable is preset to {{ "levels" : (80, 90), "magic_normsize"  : 20,
- "levels_low" : (50, 60), "trend_range" : 24 }}
+ This variable is preset to {{ "levels" : (80.0, 90.0), "magic_normsize"  : 20,
+ "levels_low" : (50.0, 60.0), "trend_range" : 24 }}
 filesystem_groups (ruleset): A ruleset for defining filesystem groups. The value of each
  rule is a pair of (groupname, patterns), where patterns is a list of strings (path
  patterns). During inventory filesystems that match one of the patterns are handled

@@ -1,12 +1,12 @@
 title: Windows Printers: Queue and printer states
 agents: windows
-catalog: os/misc
+catalog: os/services
 license: GPL
 distribution: check_mk
 description:
  This check needs the agent pluing win_printers.ps1 from our plugin directory.
  After copying to the agent plugin directory, Check_MK will find all connected printers.
- Then its possible to set warning and critical levels for the number of jobs in the queue.
+ Then its possible to set {WARN} and {CRIT} levels for the number of jobs in the queue.
  Error and operational states from the print will be automaticly detected and displayed.
 
 item:

@@ -11,6 +11,7 @@ description:
 
 item:
  The port number of the sensor followed by the sensor type
+
  Example: "2.4" A switch contact sensor(type 4) on port 2
 
 perfdata:

@@ -5,9 +5,9 @@ license: GPL
 distribution: check_mk
 description:
  This check monitors parameters related to the self test of UPS devices: The result of the
- last self test and the last date of the self test run. The check becomes critical if the test
- result is {"doneError"} or {"aborted"}, and warning if the result is {"doneWarning"} or
- {"noTestsInitiated"}. It also has a warning or critical state if the date of the last self
+ last self test and the last date of the self test run. The check becomes {CRIT} if the test
+ result is {"doneError"} or {"aborted"}, and {WARN} if the result is {"doneWarning"} or
+ {"noTestsInitiated"}. It also has a {WARN} or {CRIT} state if the date of the last self
  test is more than the warning or critical level ago.
 
 examples:
@@ -21,8 +21,9 @@ inventory:
 [parameters]
 parameters(tuple): parameters is a tuple of two values
 
-    warn (int): The warning level in days
-    crit (int): The critical level in days
+ {warn}: (int) The warning level in days
+
+ {crit}: (int) The critical level in days
 
 [configuration]
 ups_test_default (tuple): This variable is preset to { (0,0) }

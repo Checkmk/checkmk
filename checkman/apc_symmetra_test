@@ -20,8 +20,9 @@ inventory:
 [parameters]
 parameters(tuple): parameters is a tuple of two values
 
-    warn (int): The warning level in days
-    crit (int): The critical level in days
+ {warn}: (int) The warning level in days
+
+ {crit}: (int) The critical level in days
 
 [configuration]
 ups_test_default (tuple): This variable is preset to { (0,0) }

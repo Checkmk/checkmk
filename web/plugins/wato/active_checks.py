@@ -33,7 +33,7 @@ register_rule(group,
     "active_checks:dns",
     Tuple(
         title = _("Check DNS service"),
-        help = _("Check the resultion of a hostname into an IP address by a DNS server. "
+        help = _("Check the resolution of a hostname into an IP address by a DNS server. "
                  "This check uses <tt>check_dns</tt> from the standard Nagios plugins."),
         elements = [
            TextAscii(title = _("Hostname"), allow_empty = False,
@@ -88,10 +88,51 @@ register_rule(group,
     match = 'all')
 
 register_rule(group,
+    "active_checks:sql",
+    Tuple(
+        title = _("Check SQL DB"),
+        help = _("This check connects to the specified database, sends a custom sql-statement "
+                 "and checks that the result has a defined format containing three columns, a "
+                 "number, a text, and performance data. Upper or lower levels may be defined "
+                 "here. If they are not defined the number is taken as the state of the check."
+                 "This check uses the active check <tt>check_sql</tt>."),
+        elements = [
+           TextAscii(title = _("Hostname"), allow_empty = False,
+                     help = _('The hostname or address you want to query')),
+           TextAscii(title = _("DBMS"), allow_empty = False,
+                     help = _('The database management system you want to query')),
+           TextAscii(title = _("DB-Name"), allow_empty = False,
+                     help = _('The name of the database on the DBMS')),
+           TextAscii(title = _("SQL-Statement"), allow_empty = False,
+                     help = _('The SQL-Statement which is sent to the DBMS')),
+           Dictionary(
+               title = _("Optional parameters"),
+               elements = [
+                    ( "upperlevels",
+                    Tuple(
+                        title = _("Upper levels for first output item"),
+                        elements = [
+                            Float( title = _("Warning if above")),
+                            Float( title = _("Critical if above"))
+                        ])
+                    ),
+                    ( "lowerlevels",
+                    Tuple(
+                        title = _("Lower levels for first output item"),
+                        elements = [
+                            Float( title = _("Warning if below")),
+                            Float( title = _("Critical if below"))
+                    ])),
+                ]),
+        ]
+    ),
+    match = 'all')
+
+register_rule(group,
     "active_checks:tcp",
     Tuple(
         title = _("Check connecting to a TCP port"),
-        help = _("This check test the connection to a TCP port. It uses "
+        help = _("This check tests the connection to a TCP port. It uses "
                  "<tt>check_tcp</tt> from the standard Nagios plugins."),
         elements = [
            Integer(title = _("TCP Port"), minvalue=1, maxvalue=65535),

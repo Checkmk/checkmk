@@ -1,3 +1,5 @@
+#!/bin/bash
+SITE=${SITE:-$(cat .site || true)}
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
 sed -e "s#@BINDIR@#/omd/sites/$SITE/bin#g" \
     -e "s#@VARDIR@#/omd/sites/$SITE/var/check_mk#g" \

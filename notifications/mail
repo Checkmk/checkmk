@@ -200,7 +200,7 @@ tmpl_host_html = tmpl_head_html + '''
 <tr class="data odd0">
     <td class=left>State</td>
     <td class="state hstate">
-        <span class="hstate$LASTHOSTSTATE$">$LASTHOSTSTATE$>/span> &rarr;
+        <span class="hstate$LASTHOSTSTATE$">$LASTHOSTSTATE$</span> &rarr;
         <span class="hstate$HOSTSTATEID$">$HOSTSTATE$ ($NOTIFICATIONTYPE$)</span>
         since $LASTHOSTSTATECHANGE_REL$
     </td>

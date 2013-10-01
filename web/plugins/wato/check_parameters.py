@@ -3866,9 +3866,25 @@ register_check_parameters(
                      default_value = 15,
                  )
                ),
+               ( "virtual_levels",
+                  Tuple(
+                    title = _("Virtual memory usage"),
+                    elements = [
+                        Filesize(title = _("Warning at")),
+                        Filesize(title = _("Critical at")),
+                    ],
+               )),
+               ( "resident_levels",
+                  Tuple(
+                    title = _("Physical memory usage"),
+                    elements = [
+                        Filesize(title = _("Warning at")),
+                        Filesize(title = _("Critical at")),
+                    ],
+               )),
 
             ],
-            optional_keys = [ "user", "cpulevels", "cpu_average" ]),
+            optional_keys = [ "user", "cpulevels", "cpu_average", "virtual_levels", "resident_levels" ]),
         forth = ps_convert_from_tuple,
     ),
     TextAscii(
@@ -3879,5 +3895,5 @@ register_check_parameters(
         regex_error = _("Please use only a-z, A-Z, 0-9, space, underscore, "
                         "dot and hyphon for your service description"),
     ),
-    "first", True
+    "first", False
 )

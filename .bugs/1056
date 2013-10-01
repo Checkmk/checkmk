@@ -1,9 +1,9 @@
 Title: dependency to perl-Time-HiRes is missing in omd builds for centOS
 Component: core
-State: open
+Class: bug
+State: done
 Date: 2013-10-01 14:38:34
 Targetversion: 1.2.3i3
-Class: bug
 
 the omd packages for CentOS/RHEL (at least for CentOS 6.4 64bit) do not have a dependency to
 perl-Time-HiRes package. Without PNP graphs are not generated
@@ -15,3 +15,6 @@ OMD[demo]:~/var/pnp4nagios/log$ tail npcd.log
 OMD[demo]:~/var/pnp4nagios/log$ /omd/sites/demo/lib/pnp4nagios/process_perfdata.pl 
 Can't locate Time/HiRes.pm in @INC (@INC contains: /omd/versions/1.2.3i2.dmmk/lib/perl5/lib/perl5/x86_64-linux-thread-multi /omd/versions/1.2.3i2.dmmk/lib/perl5/lib/perl5 /omd/sites/demo/local/lib/perl5/lib/perl5 /omd/sites/demo/lib/perl5/lib/perl5/x86_64-linux-thread-multi /omd/sites/demo/lib/perl5/lib/perl5 /usr/local/lib64/perl5 /usr/local/share/perl5 /usr/lib64/perl5/vendor_perl /usr/share/perl5/vendor_perl /usr/lib64/perl5 /usr/share/perl5 .) at /omd/sites/demo/lib/pnp4nagios/process_perfdata.pl line 31.
 BEGIN failed--compilation aborted at /omd/sites/demo/lib/pnp4nagios/process_perfdata.pl line 31.
+
+2013-10-01 15:02:24: changed state open -> done
+added dependency to package

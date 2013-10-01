@@ -29,6 +29,70 @@ register_rulegroup("activechecks",
     _("Configure active networking checks like HTTP and TCP"))
 group = "activechecks"
 
+# This elements are also used in check_parameters.py
+check_icmp_params = [
+   ( "rta",
+     Tuple(
+         title = _("Round trip average"),
+         elements = [
+             Float(title = _("Warning if above"), unit = "ms", default_value = 200.0),
+             Float(title = _("Critical if above"), unit = "ms", default_value = 500.0),
+         ])),
+   ( "loss",
+     Tuple(
+         title = _("Packet loss"),
+         help = _("When the percentual number of lost packets is equal or greater then "
+                  "the level, then the according state is triggered. The default for critical "
+                  "is 100%. That means that the check is only critical if <b>all</b> packets "
+                  "are lost."),
+         elements = [
+             Percentage(title = _("Warning if above"), default_value = 80.0),
+             Percentage(title = _("Critical if above"), default_value = 100.0),
+         ])),
+
+    ( "packets",
+      Integer(
+          title = _("Number of packets"),
+          help = _("Number ICMP echo request packets to send to the target host on each "
+                   "check execution. All packets are sent directly on check execution. Afterwards "
+                   "the check waits for the incoming packets."),
+          minvalue = 1,
+          maxvalue = 20,
+          default_value = 5,
+       )),
+
+     ( "timeout",
+       Integer(
+           title = _("Total timeout of check"),
+           help = _("After this time (in seconds) the check is aborted, regardless "
+                    "of how many packets have been received yet."),
+           minvalue = 1,
+       )),
+]
+
+
+register_rule(group,
+    "active_checks:icmp",
+    Dictionary(
+        title = _("Check hosts with PING (ICMP Echo Request)"),
+        help = _("This ruleset allows you to configure explizit PING monitoring of hosts. "
+                 "Usually a PING is being used as a host check, so this is not neccessary. "
+                 "There are some situations, however, where this can be useful. One of them "
+                 "is when using the Check_MK Micro Core with SMART Ping and you want to "
+                 "track performance data of the PING to some hosts, nevertheless."),
+        elements = [
+           ( "description",
+             TextUnicode(
+                 title = _("Service Description"),
+                 allow_empty = False,
+                 default_value = "PING",
+           ))
+        ] + check_icmp_params,
+        match = "all",
+    )
+)
+
+
 register_rule(group,
     "active_checks:dns",
     Tuple(

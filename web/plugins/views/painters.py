@@ -1626,7 +1626,10 @@ def paint_log_plugin_output(row):
             else:
                 return "", _("The %s started flapping") % what
 
-        return "", (lst + " - " + log_type)
+        elif lst:
+            return "", (lst + " - " + log_type)
+        else:
+            return "", ""
 
 
 multisite_painters["log_plugin_output"] = {

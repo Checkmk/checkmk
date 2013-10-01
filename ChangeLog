@@ -11,6 +11,7 @@
     Multisite:
     * FIX: add missing service icons to view "All Services with this descr..."
     * FIX: ldap attribute plugins: fixed crash when parameters are None
+    * FIX: avoid duplicate output of log message in log tables
 
 1.2.3i2:
     Core:

@@ -510,7 +510,7 @@ int broker_event(int event_type __attribute__ ((__unused__)), void *data)
         if (g_thread_running == 1 )
             livestatus_log_initial_states();
         else if (log_initial_states == 1) // initi
-            write_to_all_logs("logging intitial states", LG_INFO); // initial info during startup
+            write_to_all_logs("logging initial states", LG_INFO); // initial info during startup
     }
     update_timeperiods_cache(ts->timestamp.tv_sec);
     return 0;

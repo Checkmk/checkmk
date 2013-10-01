@@ -1,0 +1,20 @@
+title: ICMP Echo Request (Ping)
+agents: active
+catalog: agentless
+license: GPL
+distribution: check_mk
+description:
+ This performs an active check with a ICMP Echo Request (Ping)
+
+ It can check round trip times against given thresholds. It can also check packet
+ loss against given thresholds.
+
+ Returns {WARN} or {CRIT} if round trip times or packet loss is above given levels.
+ Returns {CRIT} if receiving ICMP Host unreachable messages.
+
+ This check can be configured by Wato.
+
+perfdata:
+ Four values: The round trip time (average) in milliseconds, the packet loss in
+ percent, the maximum round trip time in milliseconds and the minimum round trip time 
+ in milliseconds.

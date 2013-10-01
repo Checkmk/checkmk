@@ -1,6 +1,11 @@
 1.2.3i3:
     Core:
     * FIX: fixed typo in core startup message "logging initial states"
+
+    Notifications:
+    * mkeventd: new notification plugin for forwarding notifications
+       to the Event Console. See inline docu in share/check_mk/notification/mkeventd
+       for documentation.
     * FIX: cleanup environment from notifications (needed for CMC)
 
     Checks & Agents:
@@ -10,7 +15,6 @@
     * FIX: cups default printer is now monitored again in linux agent
     * FIX: host notification email in html format: fixed formating error 
            (typo in tag)
-
 
     Multisite:
     * FIX: add missing service icons to view "All Services with this descr..."

@@ -1,0 +1,22 @@
+#!/bin/bash
+# Forward Notification to Event Console
+# This notification plugin sends a notification to the
+# Check_MK Event Console. It takes two parameters:
+# 1. Syslog facility to use. This must be a number
+#  from 0 to 23. 16 means 'local0', 17 means 'local1',
+#  ... and 23 means 'local7'. If you leave this empty
+# the local0 is being used.
+# 2. IP-Address of the remote Event Console. If you
+# do not leave this empty then the notifications are
+# being sent via syslog/UDP (port 514) to that address.
+
+FACILITY=${NOTIFY_PARAMETER_1:-16}
+REMOTE=${NOTIFY_PARAMETER_2:-}
+
+if [ "$NOTIFY_WHAT" = HOST ]
+then
+    mkevent -n "$FACILITY" "$REMOTE" $NOTIFY_HOSTSTATEID "$NOTIFY_HOSTNAME" "" "$NOTIFY_HOSTOUTPUT" "$NOTIFY_HOST_SL" "$NOTIFY_HOST_EC_CONTACT"
+else
+    mkevent -n "$FACILITY" "$REMOTE" $NOTIFY_SERVICESTATEID "$NOTIFY_HOSTNAME" "$NOTIFY_SERVICENAME" "$NOTIFY_SERVICEOUTPUT" "$NOTIFY_SERVICE_SL" "$NOTIFY_SERVICE_EC_CONTACT" "$NOTIFY_HOST_SL" "$NOTIFY_HOST_EC_CONTACT"
+fi
+

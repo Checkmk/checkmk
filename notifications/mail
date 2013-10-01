@@ -365,8 +365,6 @@ def main():
         in os.environ.items()
         if var.startswith("NOTIFY_")])
 
-    print repr(context)
-
     # Fetch graphs for this object. It first tries to detect how many sources
     # are available for this object. Then it loops through all sources and
     # fetches retrieves the images. If a problem occurs, it is printed to

@@ -1685,7 +1685,6 @@ class EventServer:
         event = {}
         # line starts with '@'
         if line[11] == ';':
-            log(line)
             timestamp_str, sl, contact, rest = line[1:].split(';', 3)
             host, rest = rest.split(None, 1)
             if len(sl):

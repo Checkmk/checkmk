@@ -5,6 +5,7 @@ def paint_wiki_notes(row):
     svc = svc.replace(':','')
     svc = svc.replace('/','')
     svc = svc.replace('\\','')
+    svc = svc.replace('','_')
     svc = svc.lower()
     host = host.lower()
     filename = defaults.omd_root + '/var/dokuwiki/data/pages/docu/%s/%s.txt' % (host, svc)

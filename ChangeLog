@@ -1,10 +1,12 @@
 1.2.3i3:
     Checks & Agents:
     * windows_agent: increased maximum plugin output buffer size to 2MB
+    * check_icmp: New WATO rule for custom PING checks
     * FIX: windows_agent: fixed bug in cleanup of open thread handles
     * FIX: cups default printer is now monitored again in linux agent
     * FIX: host notification email in html format: fixed formating error 
            (typo in tag)
+
 
     Multisite:
     * FIX: add missing service icons to view "All Services with this descr..."

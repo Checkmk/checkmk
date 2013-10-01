@@ -562,12 +562,18 @@ void TableStateHistory::answerQuery(Query *query)
         }
         case TIMEPERIOD_TRANSITION:
         {
-            _notification_periods[entry->_command_name] = atoi(entry->_state_type);
+            char *buffer   = strdup(entry->_options);
+            char *tp_name  = strtok(buffer, ";");
+            strtok(NULL, ";");
+            char *tp_state = strtok(NULL, ";");
+
+            _notification_periods[tp_name] = atoi(tp_state);
             state_info_t::iterator it_hst = state_info.begin();
             while (it_hst != state_info.end()) {
                 updateHostServiceState(query, entry, it_hst->second, only_update);
                 it_hst++;
             }
+            free(buffer);
             break;
         }
         case LOG_INITIAL_STATES:
@@ -590,9 +596,9 @@ void TableStateHistory::answerQuery(Query *query)
         }
     }
 
-    logger(LOG_DEBUG, "Processed statehist logentries: %d", logentry_counter);
-    logger(LOG_DEBUG, "Total calls %d saved: %d", total_update_calls, total_calls_saved);
-    logger(LOG_DEBUG, "Objects: %d, Blacklisted: %d", state_info.size(), object_blacklist.size());
+    //logger(LOG_DEBUG, "Processed statehist logentries: %d", logentry_counter);
+    //logger(LOG_DEBUG, "Total calls %d saved: %d", total_update_calls, total_calls_saved);
+    //logger(LOG_DEBUG, "Objects: %d, Blacklisted: %d", state_info.size(), object_blacklist.size());
 
     // Create final reports
     state_info_t::iterator it_hst = state_info.begin();
@@ -751,9 +757,14 @@ inline int TableStateHistory::updateHostServiceState(Query *query, const LogEntr
     }
     case TIMEPERIOD_TRANSITION:
     {
+        char *buffer   = strdup(entry->_options);
+        char *tp_name  = strtok(buffer, ";");
+        strtok(NULL, ";");
+        char *tp_state = strtok(NULL, ";");
+
         // if no _host pointer is available the initial status of _in_notification_period (1) never changes
-        if (hs_state->_host && !strcmp(entry->_command_name, hs_state->_notification_period)) {
-            int new_status = atoi(entry->_state_type);
+        if (hs_state->_host && !strcmp(tp_name, hs_state->_notification_period)) {
+            int new_status = atoi(tp_state);
             if (new_status != hs_state->_in_notification_period) {
                 if (!only_update)
                     process(query, hs_state);
@@ -761,6 +772,7 @@ inline int TableStateHistory::updateHostServiceState(Query *query, const LogEntr
                 hs_state->_in_notification_period = new_status;
             }
         }
+        free(buffer);
         break;
     }
     }

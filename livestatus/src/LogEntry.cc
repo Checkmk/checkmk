@@ -246,13 +246,6 @@ inline bool LogEntry::handleStatusEntry()
     {
         _logclass = LOGCLASS_STATE;
         _type     = TIMEPERIOD_TRANSITION;
-        char *scan = _text;
-        _text = next_token(&scan, ':');
-        scan++;
-
-        _command_name  = next_token(&scan, ';');
-        _check_output  = next_token(&scan, ';');
-        _state_type    = next_token(&scan, ';');
         return true;
     }
 

@@ -1,0 +1,25 @@
+title: Liebert UPS Device: Temperature sensor
+agents: snmp
+catalog: hw/power
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state of the temperature sensor on Liebert UPS devices.
+ {warn} and {crit} levels can be defined for the temperature.
+
+perfdata:
+ The actual temperature in degrees celcius
+
+inventory:
+ The inventory works for all devices which have a '.1.3.6.1.4.1.476.1.42' in their
+ system description OID. No items are expected.
+
+[parameters]
+parameters (tuple): A pair of numbers for warning and critical level
+
+ warning (int): The temperature that triggers an WARNING state
+
+ critical (int): The temperature that triggers an CRITICAL state
+
+[configuration]
+liebert_bat_temp_default (tuple): Default warning and critical level

@@ -50,7 +50,7 @@
 #                TESTING(9),
 #                DISABLED(10) }
 
-# the mib is the NetSure_ESNA.mib, which we have received from directly
+# the mib is the NetSure_ESNA.mib, which we have received directly
 # from a customer, it is named "Emerson Energy Systems (EES) Power MIB"
 
 
@@ -64,7 +64,7 @@ def check_emerson_stat(item, params, info):
     if info:
         warn, crit = params # unused
         status_text = { 1:"unknown", 2:"normal", 3:"observation", 4: "warning - A3",
-                    5: "minar - MA", 6: "major - CA", 7: "unmanaged", 8: "restricted",
+                    5: "minor - MA", 6: "major - CA", 7: "unmanaged", 8: "restricted",
                     9: "testing", 10: "disabled" }
         status = saveint(info[0][0])
         infotext = "Status: " + status_text.get(status)

@@ -1,0 +1,31 @@
+title: Emerson UPS Device: Temperature sensor
+agents: snmp
+catalog: hw/power
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state of temperature sensors on Emerson UPS devices which
+ have the Emerson Energy Systems Power MIB. They must have a system desciption OID
+ starting with "Emerson Network Power".
+ In case the device does not have a system description OID, it needs to be listed in
+ the configuration variable {snmp_without_sys_descr} to be inventorized.
+
+
+item:
+ The index of the sensors found during inventory  numbered starting from 0.
+
+perfdata:
+ The actual temperature in degrees celcius
+
+inventory:
+ One check for each sensor is created by the inventory
+
+[parameters]
+parameters (tuple): A pair of numbers for warning and critical level
+
+ warning (int): The temperature that triggers an WARNING state
+
+ critical (int): The temperature that triggers an CRITICAL state
+
+[configuration]
+emerson_temp_default (tuple): Default warning and critical level

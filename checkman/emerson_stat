@@ -1,0 +1,39 @@
+title: Emerson UPS: status
+agents: snmp
+catalog: hw/power
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the status OID of Emerson UPS devices which have the emerson energy
+ systems power MIB. They must have a system desciption OID
+ starting with "Emerson Network Power".
+ In case the device does not have a system description OID, it needs to be listed in
+ the configuration variable {snmp_without_sys_descr} to be inventorized.
+
+ The following states of the device are known and lead to a nagios
+ state of {crit}:
+ (5) "minor - MA"
+ (6) "major"
+ (10) "disabled"
+ The following device states are known and lead to the nagios state {warn}:
+ (1) "unknown"
+ (3) "observation"
+ (4) "warning - A3"
+ (7) "unmanaged"
+ (8) "restricted""
+ (9) "testing"
+
+
+examples:
+ # host does not have a system description OID
+ snmp_without_sys_descr = [
+  ( [], ['liebert-cabinet'] ),
+  ] + snmp_without_sys_descr
+
+
+inventory:
+ The inventory process checks if the device has a system description OIDs (.1.3.6.1.2.1.1.2.0)
+ and if the name of this OID begins with "Emerson Network Power". In case the device does
+ not have a system description OID it needs to be listed in the configuration variable 
+ {snmp_without_sys_descr} to be inventorized
+

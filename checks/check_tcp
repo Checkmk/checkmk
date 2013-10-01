@@ -76,7 +76,7 @@ def check_tcp_arguments(params):
     if "hostname" in settings:
         args += ' -H %s' % quote_shell_string(settings["hostname"])
     else:
-        args += ' -H $HOSTADDRESS$'
+        args += " -H '$HOSTADDRESS$'"
     return args
 
 

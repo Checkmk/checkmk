@@ -100,6 +100,7 @@ def render_wiki():
     """ % defaults.omd_site)
     html.begin_form("wikisearch", onsubmit="wiki_search();")
     html.text_input("wikisearch", "", id="wikisearch_input", )
+    html.icon_button("#", _("Search"), "wikisearch", onclick="wiki_search();")
     html.end_form()
 
 if defaults.omd_root:
@@ -114,8 +115,18 @@ if defaults.omd_root:
             color: white;
         }
         input#wikisearch_input {
-            margin-top: 3px;
-            width: 222px;
+    #        margin-top: 3px;
+    #        width: 222px;
+    margin:  0;
+    padding: 0px 5px;
+    font-size: 8pt;
+    width: 194px;
+    height: 25px;
+    background-image: url("images/quicksearch_field_bg.png");
+    background-repeat: no-repeat;
+    -moz-border-radius: 0px;
+    border-style: none;
+    float: left;
         }
         #snapin_container_wiki hr {
             margin: 5px 2px;
@@ -123,6 +134,14 @@ if defaults.omd_root:
         #snapin_container_wiki ul {
             margin: 1px;
         }
+#wikisearch img.iconbutton {
+    width: 33px;
+    height: 26px;
+    margin-top: -25px;
+    left: 196px;
+    float:right;
+    z-index:100;
+}
     
         """
     }

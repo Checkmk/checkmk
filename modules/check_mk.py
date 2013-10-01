@@ -1462,10 +1462,18 @@ def host_check_command(hostname, ip, is_clust):
     values = host_extra_conf(hostname, host_check_commands)
     if values:
         value = values[0]
+    elif monitoring_core == "cmc":
+        value = "smart"
     else:
         value = "ping"
 
-    if value == "ping":
+    if monitoring_core != "cmc" and value == "smart":
+        value = "ping" # avoid problems when switching back to nagios core
+
+    if value == "smart" and not is_clust:
+        return "check-mk-host-smart"
+
+    elif value in [ "ping", "smart" ]:
         ping_args = check_icmp_arguments(hostname)
         if is_clust and ip: # Do check cluster IP address if one is there
             return "check-mk-host-ping!%s" % ping_args

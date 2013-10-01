@@ -37,8 +37,8 @@ def check_icmp_arguments(params):
             rta = value
         elif key == "loss":
             loss = value
-    args.append("-w %.2f,%.2f%%" % (rta[0], loss[0]))
-    args.append("-c %.2f,%.2f%%" % (rta[1], loss[1]))
+    args.append("-w %.2f,%d%%" % (rta[0], loss[0]))
+    args.append("-c %.2f,%d%%" % (rta[1], loss[1]))
     args.append("'$HOSTADDRESS$'")
     return " ".join(args)
 

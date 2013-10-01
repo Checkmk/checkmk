@@ -16,6 +16,13 @@
     * FIX: ldap attribute plugins: fixed crash when parameters are None
     * FIX: avoid duplicate output of log message in log tables
 
+    WATO:
+    * Rule "State and count of processes": New configuration options:
+           virtual and resident memory levels
+    * FIX: The rule "State and count of processes" is no longer available
+           in "Parameters for inventorized check". This rule was solely
+           intented for "Manual checks" configuration
+
 1.2.3i2:
     Core:
     * New option -B for just generating the configuration

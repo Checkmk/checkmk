@@ -101,11 +101,11 @@ def ps_parse_info(info):
                 pid     = int(psinfo["ProcessId"])
                 if pid not in seen_pids:
                     seen_pids.add(pid)
-                    mem     = int(psinfo["WorkingSetSize"]) / 1024 # Bytes -> KB
-                    page    = int(psinfo["PageFileUsage"]) / 1024 # Bytes -> KB
+                    virt    = int(psinfo["VirtualSize"]) / 1024 # Bytes -> KB
+                    resi    = int(psinfo["WorkingSetSize"]) / 1024 # Bytes -> KB
                     userc   = int(psinfo["UserModeTime"])   # do not resolve counter here!
                     kernelc = int(psinfo["KernelModeTime"]) # do not resolve counter here!
-                    line[1:1] = [ "(unknown,%d,%d,@%d/%d/%d)" % (mem, page, pid, userc, kernelc) ]
+                    line[1:1] = [ "(unknown,%d,%d,@%d/%d/%d)" % (virt, resi, pid, userc, kernelc) ]
             info.append(line)
         return cpu_cores, info
     else:
@@ -361,8 +361,19 @@ def check_procs(item, params, info, with_perfdata):
         infotext += " (ok from %d to %d)(!)" % (params["okmin"], params["okmax"])
 
     if virtual_size:
-        infotext += " %.1f MB virtual, %.1f MB resident, %.1f%% CPU" % (
-           virtual_size / 1024.0, resident_size / 1024.0, percent_cpu)
+        for size, name in [ (virtual_size, "virtual"), (resident_size, "resident") ]:
+            infotext += " %.1f MB %s" % ((size / 1024.0), name)
+            if "%s_levels" % name in params:
+                warn_level, crit_level = params["%s_levels" % name]
+                if size * 1024 >= crit_level:
+                    state = 2
+                    infotext += "(!!)"
+                elif size * 1024 >= warn_level:
+                    state = max(state, 1)
+                    infotext += "(!)"
+            infotext += ","
+
+        infotext += " %.1f%% CPU" % percent_cpu
 
         if "cpu_average" in params:
             timedif, avg_cpu = get_average("ps.%s.cpu" % item, now, percent_cpu, params["cpu_average"], False)

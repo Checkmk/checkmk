@@ -8033,7 +8033,16 @@ def load_notification_table():
                                        DropdownChoice(
                                             title = _("Notification Plugin"),
                                             choices = load_notification_scripts,
+                                            default_value = "mail",
                                         ),
+                                    ),
+                                    ( "parameters",
+                                       ListOfStrings(
+                                        title = _("Plugin Arguments"),
+                                        help = _("You can specify arguments to the notification plugin here. "
+                                                 "Please refer to the documentation about the plugin for what "
+                                                 "parameters are allowed or required here."),
+                                       )
                                     ),
                                     (  "disabled",
                                        Checkbox(
@@ -8093,7 +8102,7 @@ def load_notification_table():
                                           ( 's', _("Start or end of a scheduled downtime ")),
                                           ( 'x', _("Acknowledgement of host problem")),
                                         ],
-                                        default_value = [ 'd', 'u' ],
+                                        default_value = [ 'd', 'u', 'r', 'f', 's', 'x' ],
                                     )
                                   ),
                                     ( "service_events",
@@ -8108,7 +8117,7 @@ def load_notification_table():
                                             ( 's', _("Start or end of a scheduled downtime")),
                                             ( 'x', _("Acknowledgement of service problem")),
                                         ],
-                                        default_value = [ 'w', 'c', 'u' ],
+                                        default_value = [ 'w', 'c', 'u', 'r', 'f', 's', 'x' ],
                                     )
                                   ),
                                   ( "only_hosts",
@@ -8129,14 +8138,6 @@ def load_notification_table():
                                         validate = validate_only_services,
                                     ),
                                   ),
-                                  ( "parameters",
-                                    ListOfStrings(
-                                        title = _("Plugin Arguments"),
-                                        help = _("You can specify arguments to the notification plugin here. "
-                                                 "Please refer to the documentation about the plugin for what "
-                                                 "parameters are allowed or required here."),
-                                    )
-                                ),
                                 ]
                             ),
                             title_function = lambda v: _("Notify by: ") + notification_script_title(v["plugin"]),

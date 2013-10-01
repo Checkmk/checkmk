@@ -1,6 +1,7 @@
 1.2.3i3:
     Core:
     * FIX: fixed typo in core startup message "logging initial states"
+    * FIX: cleanup environment from notifications (needed for CMC)
 
     Checks & Agents:
     * windows_agent: increased maximum plugin output buffer size to 2MB

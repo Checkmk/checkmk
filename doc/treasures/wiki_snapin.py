@@ -31,10 +31,37 @@
 #a the dokuwiki navigation menu if set
 #Place the file to ~/local/share/check/web/plugins/sidebar
 #and restart apacher.
+#Example Sidebar:
+#Heading1:
+#   * [[link1]]
+#   * [[link2]]
+#
+#----
+#
+#Heading2:
+#   * [[link3]]
+#   * [[link4]]
 
 def render_wiki():
     import re
     filename = defaults.omd_root + '/var/dokuwiki/data/pages/sidebar.txt'
+    html.write("<div>")
+    html.javascript("""
+    function wiki_search()
+    {
+        var oInput = document.getElementById('wiki_search_field');
+        top.frames["main"].location.href = 
+           "/%s/wiki/doku.php?do=search&id=" + escape(oInput.value);
+    }
+    """ % defaults.omd_site)
+    html.write('<form onSubmit="wiki_search()"')
+    html.write('<div id="wiki_search"> \n')
+    html.write('<input id="wiki_search_field" type="text" name="wikisearch"/>\n')
+    html.icon_button("#", _("Search"), "quicksearch", onclick="wiki_search();")
+    html.write('</div>\n<div class="mk_side_clear"></div>\n')
+    html.write('</form><br><br>')
+
+    html.write("<div id='wiki_navigation'>")
     start_ul = True
     ul_started = False
     try:
@@ -88,20 +115,9 @@ def render_wiki():
             html.write("</ul>")
     except IOError:
         html.write("You have to create a sidebar first")
+    html.write("</div>") #Navigation
+    html.write("</div>") #Snapin total
         
-    html.write("<hr>")
-    html.javascript("""
-    function wiki_search()
-    {
-        var oInput = document.getElementById('wikisearch_input');
-        top.frames["main"].location.href = 
-           "/%s/wiki/doku.php?do=search&id=" + escape(oInput.value);
-    }
-    """ % defaults.omd_site)
-    html.begin_form("wikisearch", onsubmit="wiki_search();")
-    html.text_input("wikisearch", "", id="wikisearch_input", )
-    html.icon_button("#", _("Search"), "wikisearch", onclick="wiki_search();")
-    html.end_form()
 
 if defaults.omd_root:
     sidebar_snapins["wiki"] = {
@@ -114,35 +130,41 @@ if defaults.omd_root:
             font-weight: bold;
             color: white;
         }
-        input#wikisearch_input {
-    #        margin-top: 3px;
-    #        width: 222px;
-    margin:  0;
-    padding: 0px 5px;
-    font-size: 8pt;
-    width: 194px;
-    height: 25px;
-    background-image: url("images/quicksearch_field_bg.png");
-    background-repeat: no-repeat;
-    -moz-border-radius: 0px;
-    border-style: none;
-    float: left;
+
+        #wiki_navigation {
+            text-align: left;
         }
-        #snapin_container_wiki hr {
-            margin: 5px 2px;
+
+        #wiki_search {
+            width: 232px;
+            padding: 0;
         }
-        #snapin_container_wiki ul {
-            margin: 1px;
+
+        #mk_side_clear {
+            clear: both;
         }
-#wikisearch img.iconbutton {
-    width: 33px;
-    height: 26px;
-    margin-top: -25px;
-    left: 196px;
-    float:right;
-    z-index:100;
-}
-    
+
+        #wiki_search img.iconbutton {
+            width: 33px;
+            height: 26px;
+            margin-top: -25px;
+            left: 196px;
+            float:right;
+            z-index:100;
+        }
+
+        #wiki_search input {
+            margin:  0;
+            padding: 0px 5px;
+            font-size: 8pt;
+            width: 194px;
+            height: 25px;
+            background-image: url("images/quicksearch_field_bg.png");
+            background-repeat: no-repeat;
+            -moz-border-radius: 0px;
+            border-style: none;
+            float: left;
+        }
         """
     }
     

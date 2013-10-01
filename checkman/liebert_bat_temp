@@ -17,9 +17,9 @@ inventory:
 [parameters]
 parameters (tuple): A pair of numbers for warning and critical level
 
- warning (int): The temperature that triggers an WARNING state
+ warning (int): The temperature that triggers an {WARN} state
 
- critical (int): The temperature that triggers an CRITICAL state
+ critical (int): The temperature that triggers an {CRIT} state
 
 [configuration]
 liebert_bat_temp_default (tuple): Default warning and critical level

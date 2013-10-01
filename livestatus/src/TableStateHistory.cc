@@ -414,22 +414,23 @@ void TableStateHistory::answerQuery(Query *query)
             in_nagios_initial_states = false;
         }
 
+        key = 0;
+        bool is_service = false;
         switch (entry->_type) {
-        case DOWNTIME_ALERT_SERVICE:
-        case DOWNTIME_ALERT_HOST:
+        case ALERT_SERVICE:
         case STATE_SERVICE:
         case STATE_SERVICE_INITIAL:
+        case DOWNTIME_ALERT_SERVICE:
+        case FLAPPING_SERVICE:
+            key = entry->_service;
+            is_service = true;
+        case ALERT_HOST:
         case STATE_HOST:
         case STATE_HOST_INITIAL:
-        case ALERT_SERVICE:
-        case ALERT_HOST:
+        case DOWNTIME_ALERT_HOST:
         case FLAPPING_HOST:
-        case FLAPPING_SERVICE:
         {
-            key = 0;
-            if (entry->_service != 0)
-                key = entry->_service;
-            else if (entry->_host != 0)
+            if (!is_service)
                 key = entry->_host;
 
             if (key == 0)

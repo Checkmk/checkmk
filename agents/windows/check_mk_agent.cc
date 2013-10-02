@@ -2861,6 +2861,7 @@ void close_crash_log()
         WaitForSingleObject(crashlogMutex, INFINITE);
         crash_log("Closing crash log (no crash this time)");
         fclose(g_connectionlog_file);
+        g_connectionlog_file = 0;
         unlink(g_success_log);
         rename(g_connection_log, g_success_log);
         ReleaseMutex(crashlogMutex);

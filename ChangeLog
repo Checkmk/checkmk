@@ -444,6 +444,7 @@
 
     Event Console:
     * FIX: apply rewriting of application/hostname also when cancelling events
+    * FIX: check_mkevents now uses case insensitive host name matching
 
 1.2.2p2:
     Core:

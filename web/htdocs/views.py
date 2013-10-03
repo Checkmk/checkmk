@@ -590,7 +590,7 @@ def page_edit_view():
     forms.header(_("Basic Settings"))
 
     forms.section(_("View Name"))
-    html.text_input("view_name", size=12)
+    html.text_input("view_name", size=24)
     html.help(_("The view name will be used in URLs that point to a view, e.g. "
                 "<tt>view.py?view_name=<b>myview</b></tt>. It will also be used "
                 "internally for identifying a view. You can create several views "

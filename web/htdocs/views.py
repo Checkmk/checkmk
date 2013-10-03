@@ -361,10 +361,13 @@ def page_edit_views(msg=None):
     delname  = html.var("_delete")
     if delname:
         deltitle = html.multisite_views[(config.user_id, delname)]['title']
-        if html.confirm(_("Please confirm the deletion of the view \"%s\".") % deltitle):
+        c = html.confirm(_("Please confirm the deletion of the view \"%s\".") % deltitle)
+        if c:
             del html.multisite_views[(config.user_id, delname)]
             save_views(config.user_id)
             html.reload_sidebar()
+        elif c == False:
+            return
 
     if html.var('mode') == 'create':
         datasource = html.var('datasource')

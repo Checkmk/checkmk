@@ -1,9 +1,9 @@
 Title: Percentage valuespec not constistent
 Component: wato
-State: open
+Class: bug
+State: works4me
 Date: 2013-06-26 10:44:31
 Targetversion: future
-Class: bug
 
 The validate_datatype() is not always called on creating rules
 
@@ -14,3 +14,9 @@ Create rule in WATO -> Warning
 check_parameters.py filesystem_elements
 Remove allow_int from trend_perc
 Create rule in WATO -> No Warning (int not allowed)
+
+2013-10-03 12:40:38: changed state open -> works4me
+Sollte behoben sein. Das validate() wird jetzt s
+doch sauber durchgeführt und ein gelber Kasten angezeigt, wenn
+der aktuelle Wert vom Valuespec nicht dargestellt werden kann,
+weil die Validierung scheitert.

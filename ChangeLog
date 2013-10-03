@@ -50,6 +50,7 @@
 
     Event Console:
     * FIX: apply rewriting of application/hostname also when cancelling events
+    * FIX: check_mkevents now uses case insensitive host name matching
 
     Livestatus:
     * livestatus: fixed incorrect output formatting of comments_with_info column

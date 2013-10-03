@@ -723,7 +723,7 @@ def page_edit_view():
         allowed = allowed_for_datasource(data, datasourcename)
         forms.header(title, isopen=False)
         # make sure, at least 3 selection boxes are free for new columns
-        while html.has_var("%s%d" % (var_prefix, maxnum - 2)):
+        while html.var("%s%d" % (var_prefix, maxnum - 2)):
             maxnum += 1
         for n in range(1, maxnum + 1):
             forms.section(_("%d. Column") % n)

@@ -1,9 +1,9 @@
 Title: fix logwatch in mk_logwatch & check_mk_caching_agent & zei monitoring servers
 Component: core
-State: open
+Class: bug
+State: wontfix
 Date: 2013-03-01 12:39:47
 Targetversion: future
-Class: bug
 
 Wir setzen omd 0.56 ein. Dabei haben wir eine test und eine prod
 instanz und transportieren config änderungen per svn von test nach prod.
@@ -59,3 +59,12 @@ nagios ALL=(root) NOPASSWD: /usr/bin/check_mk_caching_agent
 
 PS wir machen in user ~nagios/.ssh/authorized_keys sowas:
 command="/usr/bin/sudo /usr/bin/check_mk_caching_agent" ssh-rsa AAAAB3Nz
+
+-----------------------------------------------------------------
+Alles viel zu kompliziert.
+
+
+2013-10-03 12:35:43: changed state open -> wontfix
+Eine Lösung ist wohl viel zu kompliziert. Allenfalls können wir den
+Fall mit xinetd beheben, indem wir die Quell-IP nehmen. Aber
+das ist ein anderes Thema.

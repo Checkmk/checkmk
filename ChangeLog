@@ -1,6 +1,8 @@
 1.2.3i3:
     Core:
     * FIX: fixed typo in core startup message "logging initial states"
+    * FIX: livestatus table statehist: fixed rubbish entries whenever
+           logfile instances got unloaded
 
     Notifications:
     * mkeventd: new notification plugin for forwarding notifications

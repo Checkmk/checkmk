@@ -84,6 +84,7 @@ struct LogEntry
 
     LogEntry(unsigned lineno, char *line, unsigned logclasses);
     ~LogEntry();
+    unsigned updateReferences();
 
 private:
     bool handleStatusEntry();

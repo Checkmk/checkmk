@@ -37,11 +37,25 @@ using namespace std;
 class LogEntry;
 class Query;
 class LogCache;
+class World;
 
 typedef map<uint64_t, LogEntry *> logfile_entries_t; // key is time_t . lineno
 
 class Logfile
 {
+private:
+    char      *_path;
+    time_t     _since;         // time of first entry
+    bool       _watch;         // true only for current logfile
+    ino_t      _inode;         // needed to detect switching
+    fpos_t     _read_pos;      // read until this position
+    uint32_t   _lineno;        // read until this line
+
+    logfile_entries_t  _entries;
+    char       _linebuffer[MAX_LOGLINE];
+    World     *_world;         // CMC: world our references point into
+
+
 public:
     Logfile(const char *path, bool watch);
     ~Logfile();
@@ -57,18 +71,9 @@ public:
     bool answerQueryReverse(Query *query, LogCache *lc, time_t since, time_t until, unsigned);
 
     long freeMessages(unsigned logclasses);
+    void updateReferences();
 
     unsigned   _logclasses_read; // only these types have been read
-private:
-    char      *_path;
-    time_t     _since;         // time of first entry
-    bool       _watch;         // true only for current logfile
-    ino_t      _inode;         // needed to detect switching
-    fpos_t     _read_pos;      // read until this position
-    uint32_t   _lineno;        // read until this line
-
-    logfile_entries_t  _entries;
-    char       _linebuffer[MAX_LOGLINE];
 
 
 private:

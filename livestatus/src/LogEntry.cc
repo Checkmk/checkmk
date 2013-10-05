@@ -79,14 +79,7 @@ LogEntry::LogEntry(unsigned lineno, char *line, unsigned logclasses = LOGCLASS_A
         ((1 << LOGCLASS_COMMAND & logclasses) && handleExternalCommandEntry())
         )
     {
-        if (_host_name)
-            _host = find_host(_host_name);
-        if (_svc_desc)
-            _service = find_service(_host_name, _svc_desc);
-        if (_contact_name)
-            _contact = find_contact(_contact_name);
-        if (_command_name)
-            _command = find_command(_command_name);
+        updateReferences();
     }
     else {
         (1 << LOGCLASS_PROGRAM & logclasses) && handleProgrammEntry(); // Performance killer strstr!
@@ -396,3 +389,25 @@ inline int LogEntry::hostStateToInt(char *s)
     }
 }
 
+
+unsigned LogEntry::updateReferences()
+{
+    unsigned updated = 0;
+    if (_host_name) {
+        _host = find_host(_host_name);
+        updated++;
+    }
+    if (_svc_desc) {
+        _service = find_service(_host_name, _svc_desc);
+        updated++;
+    }
+    if (_contact_name) {
+        _contact = find_contact(_contact_name);
+        updated++;
+    }
+    if (_command_name) {
+        _command = find_command(_command_name);
+        updated++;
+    }
+    return updated;
+}

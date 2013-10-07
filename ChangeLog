@@ -18,6 +18,7 @@
     * FIX: host notification email in html format: fixed formating error 
            (typo in tag)
     * agent_vsphere: now able to handle < > & ' " in login credentials
+    * if/if64 and friends: add 95% percentiles to graphs
 
     Multisite:
     * FIX: add missing service icons to view "All Services with this descr..."

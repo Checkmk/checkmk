@@ -1,0 +1,13 @@
+Title: winperf_phydisk: better handle counter wraps
+Component: checks
+State: open
+Date: 2013-10-07 21:44:26
+Targetversion: 1.2.3i3
+Class: nastiness
+
+If you reboot a server then the diskstat.include based checks
+need many cycles before the produce output again. This shows
+up with the new staleness feature. 
+
+Resolution: handle CounterWrapped exceptions and make sure, that
+all counters are handled, even if one exception occurs.

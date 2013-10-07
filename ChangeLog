@@ -21,6 +21,7 @@
            (typo in tag)
     * FIX: netapp_volumes: better output when volume is missing
     * FIX: winperf_phydisk: handle case where not performance counters are available
+    * FIX: check_mk_agent.linux: limit Livestatus check to 3 seconds
 
     Multisite:
     * FIX: add missing service icons to view "All Services with this descr..."

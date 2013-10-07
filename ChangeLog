@@ -13,12 +13,13 @@
     Checks & Agents:
     * windows_agent: increased maximum plugin output buffer size to 2MB
     * check_icmp: New WATO rule for custom PING checks
-    * FIX: windows_agent: fixed bug in cleanup of open thread handles
-    * FIX: cups default printer is now monitored again in linux agent
-    * FIX: host notification email in html format: fixed formating error 
-           (typo in tag)
     * agent_vsphere: now able to handle < > & ' " in login credentials
     * if/if64 and friends: add 95% percentiles to graphs
+    * FIX: windows_agent: fixed bug in cleanup of open thread handles
+    * FIX: cups default printer is now monitored again in linux agent
+    * FIX: host notification email in html format: fixed formating error
+           (typo in tag)
+    * FIX: netapp_volumes: better output when volume is missing
 
     Multisite:
     * FIX: add missing service icons to view "All Services with this descr..."

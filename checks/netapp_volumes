@@ -91,30 +91,28 @@ def inventory_netapp_volumes(info):
     return [ (line[0], None) for line in info if netapp_volumes_owner.get(line[2], '') == 'local' ]
 
 def check_netapp_volumes(item, _not_used, info):
-    info = [ line for line in info if line[0] == item ][0]
+    for line in info:
+        if line[0] == item:
+	    name, fsid, owner, state, status = line
 
-    if len(info) != 5:
-        return (3, "Invalid SNMP response")
+            output = 'FSID: %s, Owner: %s, ' % (fsid, netapp_volumes_owner.get(owner, 'UNKNOWN'))
 
-    name, fsid, owner, state, status = info
+            ret_state = 0
+            output += 'State: %s' % state
+            if state == 'offline':
+                ret_state = 1
+                output += '(!)'
 
-    output = 'FSID: %s, Owner: %s, ' % (fsid, netapp_volumes_owner.get(owner, 'UNKNOWN'))
+            output += ', Status: %s' % status
+            if status == 'reconstructing':
+                ret_state = 1
+                output += '(!)'
+            elif status.split(',')[0] not in [ 'normal', 'raid_dp', 'raid0', 'raid0, mirrored', 'raid4' ]:
+                ret_state = 2
+                output += '(!!)'
 
-    ret_state = 0
-    output += 'State: %s' % state
-    if state == 'offline':
-        ret_state = 1
-        output += '(!)'
-
-    output += ', Status: %s' % status
-    if status == 'reconstructing':
-        ret_state = 1
-        output += '(!)'
-    elif status.split(',')[0] not in [ 'normal', 'raid_dp', 'raid0', 'raid0, mirrored', 'raid4' ]:
-        ret_state = 2
-        output += '(!!)'
-
-    return (ret_state, output)
+            return (ret_state, output)
+    return 3, "Volume not found"
 
 check_info["netapp_volumes"] = {
     'check_function':          check_netapp_volumes,

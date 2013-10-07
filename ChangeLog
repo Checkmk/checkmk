@@ -20,6 +20,7 @@
     * FIX: host notification email in html format: fixed formating error
            (typo in tag)
     * FIX: netapp_volumes: better output when volume is missing
+    * FIX: winperf_phydisk: handle case where not performance counters are available
 
     Multisite:
     * FIX: add missing service icons to view "All Services with this descr..."

@@ -1,9 +1,9 @@
 Title: Patch for setup.sh: fix DESTDIR
 Component: core
-State: open
+Class: cleanup
+State: done
 Date: 2013-08-26 13:01:12
 Targetversion: 1.2.3
-Class: cleanup
 
 ich verwende check_mk und check_mk-agent auch unter Gentoo. Der
 Build-Prozess wird dort in einer Sandbox vollzogen, was die
@@ -29,3 +29,6 @@ setup.sh.patch
             touch "$serials_file" &&
             chown $wwwuser "$serials_file" &&
             chown $wwwuser "$htpasswd_file" &&
+
+2013-10-03 10:40:26: changed state open -> done
+Ist eingebaut.

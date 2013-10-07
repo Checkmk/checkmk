@@ -361,10 +361,13 @@ def page_edit_views(msg=None):
     delname  = html.var("_delete")
     if delname:
         deltitle = html.multisite_views[(config.user_id, delname)]['title']
-        if html.confirm(_("Please confirm the deletion of the view \"%s\".") % deltitle):
+        c = html.confirm(_("Please confirm the deletion of the view \"%s\".") % deltitle)
+        if c:
             del html.multisite_views[(config.user_id, delname)]
             save_views(config.user_id)
             html.reload_sidebar()
+        elif c == False:
+            return
 
     if html.var('mode') == 'create':
         datasource = html.var('datasource')
@@ -590,7 +593,7 @@ def page_edit_view():
     forms.header(_("Basic Settings"))
 
     forms.section(_("View Name"))
-    html.text_input("view_name", size=12)
+    html.text_input("view_name", size=24)
     html.help(_("The view name will be used in URLs that point to a view, e.g. "
                 "<tt>view.py?view_name=<b>myview</b></tt>. It will also be used "
                 "internally for identifying a view. You can create several views "
@@ -720,7 +723,7 @@ def page_edit_view():
         allowed = allowed_for_datasource(data, datasourcename)
         forms.header(title, isopen=False)
         # make sure, at least 3 selection boxes are free for new columns
-        while html.has_var("%s%d" % (var_prefix, maxnum - 2)):
+        while html.var("%s%d" % (var_prefix, maxnum - 2)):
             maxnum += 1
         for n in range(1, maxnum + 1):
             forms.section(_("%d. Column") % n)
@@ -2670,8 +2673,11 @@ def declare_1to1_sorter(painter_name, func, col_num = 0, reverse = False):
     multisite_sorters[painter_name] = {
         "title"   : multisite_painters[painter_name]['title'],
         "columns" : multisite_painters[painter_name]['columns'],
-        "cmp"     : lambda r1, r2: func(multisite_painters[painter_name]['columns'][col_num],
-                                        reverse and r1 or r2,
-                                        reverse and r2 or r1)
     }
+    if not reverse:
+        multisite_sorters[painter_name]["cmp"] = \
+            lambda r1, r2: func(multisite_painters[painter_name]['columns'][col_num], r1, r2)
+    else:
+        multisite_sorters[painter_name]["cmp"] = \
+            lambda r1, r2: func(multisite_painters[painter_name]['columns'][col_num], r2, r1)
     return painter_name

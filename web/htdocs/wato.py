@@ -7643,7 +7643,6 @@ def ajax_activation():
         # This is the single site activation mode
         try:
             start = time.time()
-            # if not cmc_rush_ahead_activation():
             check_mk_local_automation(config.wato_activation_method)
             duration = time.time() - start
             update_replication_status(None, {}, { 'act': duration })
@@ -7651,7 +7650,7 @@ def ajax_activation():
             if config.debug:
                 import traceback
                 raise MKUserError(None, "Error executing hooks: %s" %
-                                            traceback.format_exc().replace('\n', '<br />'))
+                                  traceback.format_exc().replace('\n', '<br />'))
             else:
                 raise
 
@@ -7667,21 +7666,9 @@ def ajax_activation():
 
 # Try to do a rush-ahead-activation
 def cmc_rush_ahead_activation():
-    if defaults.omd_root:
-        rush_config = defaults.var_dir + "/core/config.rush"
-        if os.path.exists(rush_config):
-            try:
-                rush_id = file(rush_config + ".id").read().strip()
-                changeid = file(log_dir + "changeid").read().strip()
-                if rush_id == changeid: # Rush ahead file is up-to-date!
-                    os.rename(rush_config, rush_config[:-5])
-                    cmc_reload()
-                    log_commit_pending()
-                    html.final_javascript("wato_hide_changes_button();")
-                    return True
-            except Exception, e:
-                if config.debug:
-                    raise
+    return
+
+
 
 def cmc_reload():
     log_audit(None, "activate-config", "Reloading Check_MK Micro Core on the fly")

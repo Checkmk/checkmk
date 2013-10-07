@@ -2,7 +2,11 @@
 
 import os, socket, sys
 
-socket_path = os.getenv("OMD_ROOT") + "/tmp/run/mkeventd/status"
+try:
+    socket_path = os.getenv("OMD_ROOT") + "/tmp/run/mkeventd/status"
+except:
+    sys.stdout.write("UNKNOWN - OMD_ROOT is not set, no socket path is defined.\n")
+    sys.exit(3)
 
 def query(query, remote_host):
     try:
@@ -67,7 +71,7 @@ except:
     sys.exit(3)
 
 q = "GET events\n" \
-    "Filter: event_host = %s\n" % host_name
+    "Filter: event_host =~ %s\n" % host_name
 
 if application:
     q += "Filter: event_application ~~ %s\n" % application

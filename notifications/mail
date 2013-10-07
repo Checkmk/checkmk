@@ -390,7 +390,7 @@ def main():
             context['SERVICELINK']       = '\nLink:     %s' % service_url
     else:
         context['LINKEDHOSTNAME']    = context['HOSTNAME']
-        context['LINKEDSERVICEDESC'] = context['SERVICEDESC']
+        context['LINKEDSERVICEDESC'] = context.get('SERVICEDESC', '')
         context['HOSTLINK']          = ''
         context['SERVICELINK']       = ''
 

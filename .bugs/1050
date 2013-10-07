@@ -1,11 +1,14 @@
 Title: Event Console check does not find events anymore when matching is done by hostname
 Component: checks
-State: open
+Class: bug
+State: done
 Date: 2013-09-13 11:09:44
 Targetversion: 1.2.3i2
-Class: bug
 
 version is 2013.09.09
 Event Console check does not find events anymore when matching is done by hostname
 if matching via IP is configured, everything works
 root problem seems to be: eventconsole displays hostname in all lower case, uses internally mixed Upper/lower case instead
+
+2013-10-03 11:01:38: changed state open -> done
+check_mkevents no always uses case insensitive host name matching.

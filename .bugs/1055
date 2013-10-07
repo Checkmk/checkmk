@@ -1,9 +1,9 @@
 Title: in version 1.2.2p3 livestatus does not compile
 Component: livestatus
-State: open
+Class: bug
+State: works4me
 Date: 2013-09-23 15:08:41
 Targetversion: 1.2.2
-Class: bug
 
 when compiling livestatus from the actual 1.2.2 branch it breaks:
 
@@ -27,3 +27,7 @@ make: *** [all] Error 2
 
 compiling livestatus 1.2.2p2 on the same system works
 system is CentOS 5.9 64bit, Nagios 3.5.1
+
+2013-10-03 10:46:01: changed state open -> works4me
+Das passiert, wenn man noch ein Makefile vom master-Branch
+rumliegen hast und auf den 1.2.2'er gewechselt hat.

@@ -755,29 +755,29 @@ if mkeventd_enabled:
         return cmp(a, b)
 
 
-    declare_1to1_sorter("event_id", cmp_simple_number)
-    declare_1to1_sorter("event_count", cmp_simple_number)
-    declare_1to1_sorter("event_text", cmp_simple_string)
-    declare_1to1_sorter("event_first", cmp_simple_number)
-    declare_1to1_sorter("event_last", cmp_simple_number)
-    declare_1to1_sorter("event_comment", cmp_simple_string)
-    declare_1to1_sorter("event_sl", cmp_simple_number)
-    declare_1to1_sorter("event_host", cmp_simple_string)
-    declare_1to1_sorter("event_contact", cmp_simple_string)
+    declare_1to1_sorter("event_id",          cmp_simple_number)
+    declare_1to1_sorter("event_count",       cmp_simple_number)
+    declare_1to1_sorter("event_text",        cmp_simple_string)
+    declare_1to1_sorter("event_first",       cmp_simple_number)
+    declare_1to1_sorter("event_last",        cmp_simple_number)
+    declare_1to1_sorter("event_comment",     cmp_simple_string)
+    declare_1to1_sorter("event_sl",          cmp_simple_number)
+    declare_1to1_sorter("event_host",        cmp_simple_string)
+    declare_1to1_sorter("event_contact",     cmp_simple_string)
     declare_1to1_sorter("event_application", cmp_simple_string)
-    declare_1to1_sorter("event_pid", cmp_simple_number)
-    declare_1to1_sorter("event_priority", cmp_simple_number)
-    declare_1to1_sorter("event_facility", cmp_simple_number) # maybe convert to text
-    declare_1to1_sorter("event_rule_id", cmp_simple_string)
-    declare_1to1_sorter("event_state", cmp_simple_state)
-    declare_1to1_sorter("event_phase", cmp_simple_string)
-    declare_1to1_sorter("event_owner", cmp_simple_string)
+    declare_1to1_sorter("event_pid",         cmp_simple_number)
+    declare_1to1_sorter("event_priority",    cmp_simple_number)
+    declare_1to1_sorter("event_facility",    cmp_simple_number) # maybe convert to text
+    declare_1to1_sorter("event_rule_id",     cmp_simple_string)
+    declare_1to1_sorter("event_state",       cmp_simple_state)
+    declare_1to1_sorter("event_phase",       cmp_simple_string)
+    declare_1to1_sorter("event_owner",       cmp_simple_string)
 
-    declare_1to1_sorter("history_line", cmp_simple_number)
-    declare_1to1_sorter("history_time", cmp_simple_number)
-    declare_1to1_sorter("history_what", cmp_simple_string)
-    declare_1to1_sorter("history_who", cmp_simple_string)
-    declare_1to1_sorter("history_addinfo", cmp_simple_string)
+    declare_1to1_sorter("history_line",      cmp_simple_number)
+    declare_1to1_sorter("history_time",      cmp_simple_number)
+    declare_1to1_sorter("history_what",      cmp_simple_string)
+    declare_1to1_sorter("history_who",       cmp_simple_string)
+    declare_1to1_sorter("history_addinfo",   cmp_simple_string)
 
     #.
     #   .--Views---------------------------------------------------------------.
@@ -1024,7 +1024,7 @@ if mkeventd_enabled:
            ('history_time_from_range', '86400'),
         ],
         'sorters': [
-            ('history_time', False),
+            ('history_time', True),
             ('history_line', True),
         ],
     })
@@ -1098,7 +1098,7 @@ if mkeventd_enabled:
             ('event_count', None, ''),
         ],
         'sorters': [
-            ('history_time', False),
+            ('history_time', True),
             ('history_line', True),
         ],
     })
@@ -1153,7 +1153,7 @@ if mkeventd_enabled:
             ('event_count', None, ''),
         ],
         'sorters': [
-            ('history_time', False),
+            ('history_time', True),
             ('history_line', True),
         ],
     })

@@ -1,6 +1,8 @@
 1.2.3i3:
     Core:
     * FIX: fixed typo in core startup message "logging initial states"
+    * FIX: livestatus table statehist: fixed rubbish entries whenever
+           logfile instances got unloaded
 
     Notifications:
     * mkeventd: new notification plugin for forwarding notifications
@@ -15,6 +17,7 @@
     * FIX: cups default printer is now monitored again in linux agent
     * FIX: host notification email in html format: fixed formating error 
            (typo in tag)
+    * agent_vsphere: now able to handle < > & ' " in login credentials
 
     Multisite:
     * FIX: add missing service icons to view "All Services with this descr..."
@@ -400,6 +403,10 @@
 1.2.2p3:
     Core:
     * FIX: get_average(): Gracefully handle time anomlies of target systems
+    * FIX: notifications: /var/lib/check_mk/notify directory is now created 
+           correctly during setup from tgz file. (Without it notifications
+           did not get sent out.)
+    * FIX: add missing $DESTDIR to auth.serials in setup.sh
 
     Checks & Agents:
     * FIX: winperf_processor: fix case where CPU percent is exactly 100%
@@ -424,6 +431,7 @@
     * FIX: Folder Tree Snapin: make folder filter also work for remote
            folders that do not exist locally
     * FIX: correctly display sub-minute check/retry intervals
+    * FIX: fix logic of some numeric sorters
 
     WATO:
     * FIX: fix layout of Auxiliary tags table
@@ -439,6 +447,7 @@
 
     Event Console:
     * FIX: apply rewriting of application/hostname also when cancelling events
+    * FIX: check_mkevents now uses case insensitive host name matching
 
 1.2.2p2:
     Core:

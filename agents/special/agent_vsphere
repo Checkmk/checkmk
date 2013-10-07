@@ -334,7 +334,15 @@ try:
 
         # Prepare request data
         if name == "2_login":
-            soapdata = soapdata.replace("###user###", user).replace("###secret###", secret)
+            def encode_url(text):
+                for char, replacement in [ ( "&",  "&amp;"),
+                                           ( ">",  "&gt;" ),
+                                           ( "<",  "&lt;"),
+                                           ( "'",  "&apos;"),
+                                           ( "\"", "&quot;") ]:
+                    text = text.replace(char, replacement)
+                return text 
+            soapdata = soapdata.replace("###user###", encode_url(user)).replace("###secret###", encode_url(secret))
         elif name == "8_perf_counter_syntax":
             needed_ids = get_counters(esx_version_num)
             counter_data = []

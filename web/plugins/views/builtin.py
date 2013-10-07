@@ -1832,7 +1832,7 @@ multisite_builtin_views.update({
                               'opthostgroup',
                               'logtime',
                               'log_state'],
-             'sorters': [('log_time', False), ('log_lineno', False)],
+             'sorters': [('log_time', True), ('log_lineno', True)],
              'title': _('Search Global Logfile'),
              'topic': _('Other')},
 

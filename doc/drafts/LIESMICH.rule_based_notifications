@@ -44,6 +44,8 @@ Wie bei bestehenden "Flexible Notifications":
 * Service-Bedingungen wie bei den WATO-Regeln mit Regexen
 
 Neu kommt dazu:
+* Eventuell: Ausgangszustand bzw. kompletter Übergang, also nicht
+  nur "bei WARN", sondern bei "CRIT -> WARN".
 * Eventuell: Bedingung über den Typ des Checks (z.B. nur df)
 * Eventuell: enthalten in bestimmter Host oder Servicegruppe
 * Eventuell: enthalten in bestimmter Kontaktgruppe
@@ -69,6 +71,9 @@ mit dem Aufbau
 
       Kontakt, Plugin, Parameter
 
+Und eine Checkbox: [ ] Kann vom Benutzer deaktiviert werden.
+(siehe Auschlussregeln)
+
 
 AUSSCHLUSS-REGELN
 -----------------
@@ -90,7 +95,13 @@ ausgewertet werden, muss man hier die Ausnahmen *nach* den allgemeinen
 Regeln definieren. So können spätere Regeln frühere immer wieder revidieren.
 
 Auch bei Sperrregeln kann man ein Plugin auswählen. Dann werden nur die
-Notifikationen mit diesem Plugin gelöscht (um z.B. keine SMS zu bekommen)
+Notifikationen mit diesem Plugin gelöscht (um z.B. keine SMS zu bekommen).
+Wenn man kein Plugin auswählt, dann werden alle Notifikationen gelöscht.
+
+Positive Regeln und Ausschlussreglen können sich beliebig Abwechseln.
+Die Reihenfolge ist frei definierbar. Damit kann man z.B. erstmal alles
+zulassen, dann für eine Gruppe von Benutzern wieder abklemmen und
+dann für einen Benutzer doch wieder aktivieren.
 
 
 BENUTZER-REGELN
@@ -108,6 +119,10 @@ Der Benutzer kann somit:
 
 Merke: Der Benutzer kann so auch Notifikationen "abbonieren" für
 Hosts/Services, für die er im Nagios kein Kontakt ist!
+
+Notifikationen, die der Admin gesperrt hat (siehe oben), können vom
+Benutzer nicht abgeklemmt werden.
+
 
 
 FALLBACK

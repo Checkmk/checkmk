@@ -205,6 +205,8 @@ def check_diskstat_generic(item, params, this_time, info):
     # summary mode
     if item == 'SUMMARY': # summary mode (only summarize physical disks!)
         summary_line = [0] * 13
+        if len(info) == 0:
+            return 3, "No performance information about any disk found"
         for line in info:
             devname = line[0]
             if ' ' in devname:

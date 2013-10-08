@@ -33,6 +33,11 @@
 #include "Query.h"
 #include "LogCache.h"
 
+#ifdef CMC
+#include "Core.h"
+extern Core *g_core;
+#endif 
+
 
 Logfile::Logfile(const char *path, bool watch)
   : _path(strdup(path))
@@ -68,14 +73,14 @@ Logfile::Logfile(const char *path, bool watch)
 
 Logfile::~Logfile()
 {
-    free(_path);
     flush();
+    free(_path);
 }
 
 
 void Logfile::flush()
 {
-	for (logfile_entries_t::iterator it = _entries.begin(); it != _entries.end(); ++it)
+    for (logfile_entries_t::iterator it = _entries.begin(); it != _entries.end(); ++it)
         delete it->second;
 
     _entries.clear();
@@ -112,7 +117,7 @@ void Logfile::load(LogCache *logcache, time_t since, time_t until, unsigned logc
             fgetpos(file, &_read_pos);
         }
         if (missing_types) {
-        	fseek(file, 0, SEEK_SET);
+            fseek(file, 0, SEEK_SET);
             _lineno = 0;
             loadRange(file, missing_types, logcache, since, until, logclasses);
             _logclasses_read |= missing_types;
@@ -194,12 +199,14 @@ inline bool Logfile::processLogLine(uint32_t lineno, unsigned logclasses)
 
 logfile_entries_t* Logfile::getEntriesFromQuery(Query *query, LogCache *logcache, time_t since, time_t until, unsigned logclasses)
 {
-	 load(logcache, since, until, logclasses); // make sure all messages are present
-	 return &_entries;
+    updateReferences();
+    load(logcache, since, until, logclasses); // make sure all messages are present
+    return &_entries;
 }
 
 bool Logfile::answerQuery(Query *query, LogCache *logcache, time_t since, time_t until, unsigned logclasses)
 {
+    updateReferences();
     load(logcache, since, until, logclasses); // make sure all messages are present
     uint64_t sincekey = makeKey(since, 0);
     logfile_entries_t::iterator it = _entries.lower_bound(sincekey);
@@ -217,6 +224,7 @@ bool Logfile::answerQuery(Query *query, LogCache *logcache, time_t since, time_t
 
 bool Logfile::answerQueryReverse(Query *query, LogCache *logcache, time_t since, time_t until, unsigned logclasses)
 {
+    updateReferences();
     load(logcache, since, until, logclasses); // make sure all messages are present
     uint64_t untilkey = makeKey(until, 999999999);
     logfile_entries_t::iterator it = _entries.upper_bound(untilkey);
@@ -235,5 +243,21 @@ bool Logfile::answerQueryReverse(Query *query, LogCache *logcache, time_t since,
 uint64_t Logfile::makeKey(time_t t, unsigned lineno)
 {
     return (uint64_t)((uint64_t)t << 32) | (uint64_t)lineno;
+}
+
+
+void Logfile::updateReferences()
+{
+#ifdef CMC
+    // If our references in cached log entries do not point to the currently
+    // active configuration world, then update all references
+    if (_world != g_live_world) {
+        unsigned num = 0;
+        for (logfile_entries_t::iterator it = _entries.begin(); it != _entries.end(); ++it)
+            num += it->second->updateReferences();
+        logger(LOG_NOTICE, "Updated %u log cache references of %s to new world.", num, _path);
+        _world = g_live_world;
+    }
+#endif
 }
 

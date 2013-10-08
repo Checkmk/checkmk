@@ -31,7 +31,6 @@
 #include "Table.h"
 
 class Logfile;
-class World;
 
 typedef map<time_t, Logfile *> _logfiles_t;
 
@@ -47,7 +46,6 @@ public:
     ~LogCache();
     void setMaxCachedMessages(unsigned long m);
     time_t _last_index_update;
-    World *_my_world;
 
     const char *name() { return "log"; }
     const char *prefixname() { return "logs"; }

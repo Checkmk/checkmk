@@ -63,6 +63,10 @@
 check_includes['winperf_phydisk'] = [ "diskstat.include" ]
 
 def winperf_phydisk_convert(info):
+    # In case disk performance counters are not enabled, the agent sends
+    # an almost empty section, where the second line is missing completely
+    if len(info) == 1:
+        return []
     disks = [ d.split('_')[-1] for d in info[1][2:-1] ]
     for line in info[2:]:
         if line[0] == '-14':

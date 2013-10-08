@@ -1,0 +1,31 @@
+#!/usr/bin/python
+from lxml import etree
+import hashlib
+import inspect, pprint
+
+address = "http://fritz.box"
+username = ''
+password = "test123"
+
+url = '%s/login_sid.lua' % address
+login_page = etree.parse(url).getroot()
+sid = login_page.findtext('SID')
+block = login_page.findtext('BlockTime')
+if sid == "0000000000000000":
+    challenge = login_page.findtext('Challenge')
+    challenge = "123456z"
+    password = ".abc"
+    rep = challenge + '-' + password  
+    rep = rep.encode('utf-16le')
+    print rep
+    response = challenge + '-' + hashlib.md5(rep).hexdigest()
+
+    print response
+
+    login_page = etree.parse(url+"?username=%s&response=%s" % (username, response)).getroot()
+    print url+"?username=%s&response=%s" % (username, response)
+    sid = login_page.findtext('SID')
+    block = login_page.findtext('BlockTime')
+
+print "SID: %s, Block: %s" % ( sid, block )
+

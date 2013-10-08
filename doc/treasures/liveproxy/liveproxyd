@@ -6,7 +6,7 @@ import os, sys, getopt, signal, time, socket, select, traceback
 VERSION="1.2.3i1"
 
 sites = {}
-dump_interval = None
+dump_interval = 5 # dump state once every five seconds
 
 #   .--Proxy---------------------------------------------------------------.
 #   |                      ____                                            |

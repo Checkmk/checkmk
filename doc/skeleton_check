@@ -32,7 +32,7 @@ def inventory_foobar(info):
     return []
 
 def check_foobar(item, _no_params, info):
-    return 3, "UNKNOWN - Check no implemented"
+    return 3, "UNKNOWN - Check not implemented"
 
 check_info["foobar"] = {
     "check_function"        : check_foobar,

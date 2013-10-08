@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # encoding: utf-8
 
-import os, sys, getopt, signal, time, socket, select
+import os, sys, getopt, signal, time, socket, select, traceback
 
 VERSION="1.2.3i1"
 
@@ -93,7 +93,7 @@ def liveproxyd_run():
             if opt_debug:
                 raise
 
-            log("Ignoring exception: %s" % e)
+            log("Ignoring exception: %s: %s" % (e, traceback.format_exc()))
 
 def initiate_connections():
     # Create new channels to target sites. Nonblocking!
@@ -404,8 +404,8 @@ def receive_response(sitename, channel):
     try:
         chunk = channel["socket"].recv(65536)
         if not chunk:
-            raise Exception("Connect closed by foreign host")
-            
+            raise Exception("Connection closed by foreign host")
+
         response = old_response + chunk
         channel["response"] = response
 

@@ -659,42 +659,6 @@ def is_snmpv2c_host(hostname):
 def is_usewalk_host(hostname):
     return in_binary_hostlist(hostname, usewalk_hosts)
 
-def inline_snmp_get_oid(hostname, oid):
-    s = init_snmp_host(hostname)
-
-    if oid[-2:] == ".*":
-        oid_prefix = oid[:-2]
-        func       = s.getnext
-        what       = 'GETNEXT'
-    else:
-        oid_prefix = oid
-        func       = s.get
-        what       = 'GET'
-
-    if opt_debug:
-        sys.stdout.write("Executing SNMP %s of %s on %s\n" % (what, oid_prefix, hostname))
-
-    var_list = netsnmp.VarList(netsnmp.Varbind(oid))
-    res = s.get(var_list)
-
-    for var in var_list:
-        value = var.val
-
-        if what == "GETNEXT" and not var.tag.startswith(oid_prefix + "."):
-            # In case of .*, check if prefix is the one we are looking for
-            value = None
-
-        elif value == 'NULL' or var.type in [ 'NOSUCHINSTANCE', 'NOSUCHOBJECT' ]:
-            value = None
-
-        elif value is not None:
-            value = strip_snmp_value(value)
-
-        if opt_verbose and opt_debug:
-            sys.stdout.write("=> [%r] %s\n" % (value, var.type))
-
-        return value
-
 #   .--Classic SNMP--------------------------------------------------------.
 #   |        ____ _               _        ____  _   _ __  __ ____         |
 #   |       / ___| | __ _ ___ ___(_) ___  / ___|| \ | |  \/  |  _ \        |

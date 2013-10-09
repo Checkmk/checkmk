@@ -81,6 +81,7 @@ def liveproxyd_run():
             get_new_requests(readable)
             distribute_requests()
             get_responses(readable) # also heartbeats
+            send_responses(writable)
             handle_client_timeouts()
             garbage_collect_sockets()
 
@@ -219,10 +220,14 @@ def do_select(timeout):
         # new client connections
         read_fds.append(sitestate["socket"])
 
-        # new requests from existing clients
         for client in sitestate["clients"]:
+            # new requests from existing clients
             if client["state"] == "idle":
                 read_fds.append(client["socket"])
+
+            # clients ready to receive a response
+            if client["state"] == "response":
+                write_fds.append(client["socket"])
 
         # Responses from channels, also heartbeat responses
         for channel in sitestate["channels"]:
@@ -242,7 +247,7 @@ def accept_new_clients(readable):
             try:
                 s, addrinfo = sitestate["socket"].accept()
                 s.setblocking(1)
-                log("Accepted new client %s/%d" % (sitename, s.fileno()))
+                # log("Accepted new client %s/%d" % (sitename, s.fileno()))
                 sitestate["clients"].append({"socket" : s, "state" : "idle", "since" : time.time()})
             except Exception, e:
                 if opt_debug:
@@ -367,7 +372,7 @@ def receive_request(sitename, client):
                 raise
 
         if not chunk:
-            log("Client %s/%d closed connection." % (sitename, client["socket"].fileno()))
+            # log("Client %s/%d closed connection." % (sitename, client["socket"].fileno()))
             return None
     end = request.index("\n\n")
     client["nextrequest"] = request[end+2:]
@@ -445,21 +450,41 @@ def receive_response(sitename, channel):
     if client:
         del channel["client"]
         del client["channel"]
+        client["response"] = response
+        client["response_offset"] = 0
+        client["state"] = "response"
 
-        try:
-            # ACHTUNG: Beim senden an den Client können wir blockieren, wenn
-            # der Empfänger uns ausbremst. Dürfen wir aber nicht. Wir brauchen
-            # eine Queue, müssen mit select() warten, usw.
-            client["socket"].send(response)
-            # log("HIRN: An client: [%s]" % response[16:80].replace("\n", ""))
-            client["state"] = "idle"
-            client["request"] = ""
-        except Exception, e:
-            if opt_debug:
-                raise
-            log("Cannot forward response from client %s/%d to client %s/%d: %s", 
-                (sitename, channel["socket"].fileno(), sitename, client["socket"].fileno(), e))
-            client["state"] = "error"
+def send_responses(writable):
+    for sitename, sitestatus in g_sites.items():
+        for client in sitestatus["clients"]:
+            if client["state"] == "response" and client["socket"] in writable:
+
+                try:
+                    # ACHTUNG: Beim senden an den Client können wir blockieren, wenn
+                    # der Empfänger uns ausbremst. Dürfen wir aber nicht. Wir brauchen
+                    # eine Queue, müssen mit select() warten, usw.
+                    offset = client["response_offset"]
+                    chunk = client["response"][offset:offset + 8192]
+                    client["socket"].setblocking(0) # TEST TEST TEST
+                    bytes_sent = client["socket"].send(chunk)
+                    client["socket"].setblocking(1)
+                    if bytes_sent <= 0:
+                        raise Exception("Could not send any bytes of response to client")
+                    if offset + bytes_sent == len(client["response"]):
+                        client["state"] = "idle"
+                        del client["response"]
+                        del client["response_offset"]
+                    else:
+                        client["response_offset"] += bytes_sent
+
+                except Exception, e:
+                    if opt_debug:
+                        raise
+                    log("Cannot forward next %d bytes of response to client %s/%d: %s" %
+                        (len(chunk), sitename, client["socket"].fileno(), e))
+                    client["state"] = "error"
+                    del client["response"]
+                    del client["response_offset"]
 
 def receive_heartbeat(sitename, channel):
     sitestate = g_sites[sitename]

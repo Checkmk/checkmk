@@ -35,6 +35,7 @@
     Livestatus-Proxy:
     * FIX: fix exception when printing error message
     * FIX: honor wait time (now called cooling period) after failed TCP connection
+    * FIX: fix hanging if client cannot accept large chunks (seen on RH6.4)
 
     WATO:
     * Rule "State and count of processes": New configuration options:

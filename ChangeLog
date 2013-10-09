@@ -34,6 +34,8 @@
     * FIX: The rule "State and count of processes" is no longer available
            in "Parameters for inventorized check". This rule was solely
            intented for "Manual checks" configuration
+    * FIX: Trying to prevent auth.php errors while file is being updated
+    * Added title of tests to LDAP diagnose table
 
 1.2.3i2:
     Core:

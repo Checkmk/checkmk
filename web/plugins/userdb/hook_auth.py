@@ -90,7 +90,9 @@ def create_php_file(callee, users, role_permissions, folder_permissions):
     for username in users:
         users[username].setdefault('language', config.default_language)
 
-    file(g_auth_base_dir + '/auth.php', 'w').write('''<?php
+    # First write a temp file and then do a move to prevent syntax errors
+    # when reading half written files during creating that new file
+    file(g_auth_base_dir + '/auth.php.tmp', 'w').write('''<?php
 // Created by Multisite UserDB Hook (%s)
 global $mk_users, $mk_roles, $mk_folders;
 $mk_users   = %s;
@@ -183,6 +185,8 @@ function may($username, $need_permission) {
 
 ?>
 ''' % (callee, format_php(users), format_php(role_permissions), format_php(folder_permissions)))
+    # Now really replace the file
+    os.rename(g_auth_base_dir + '/auth.php.tmp', g_auth_base_dir + '/auth.php');
 
 def create_auth_file(callee, users):
     make_nagios_directory(g_auth_base_dir)

@@ -5546,18 +5546,18 @@ def mode_ldap_config(phase):
                 return (False, msg)
 
         tests = [
-            test_connect,
-            test_user_base_dn,
-            test_user_count,
-            test_group_base_dn,
-            test_group_count,
+            (_('Connect'),       test_connect),
+            (_('User Base-DN'),  test_user_base_dn),
+            (_('Count Users'),   test_user_count),
+            (_('Group Base-DN'), test_group_base_dn),
+            (_('Count Groups'),  test_group_count),
         ]
 
         for address in userdb.ldap_servers():
             html.write('<h3>%s: %s</h3>' % (_('Server'), address))
             table.begin('test', searchable = False)
 
-            for test in tests:
+            for title, test in tests:
                 table.row()
                 try:
                     state, msg = test(address)
@@ -5570,6 +5570,7 @@ def mode_ldap_config(phase):
                 else:
                     img = '<img src="images/icon_failed.gif" alt="%s" />' % _('Failed')
 
+                table.cell(_("Test"),   title)
                 table.cell(_("State"),   img)
                 table.cell(_("Details"), msg)
 

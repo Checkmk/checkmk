@@ -27,7 +27,6 @@
     * FIX: add missing service icons to view "All Services with this descr..."
     * FIX: ldap attribute plugins: fixed crash when parameters are None
     * FIX: avoid duplicate output of log message in log tables
-    * Added title of tests to LDAP diagnose table
 
     WATO:
     * Rule "State and count of processes": New configuration options:
@@ -35,6 +34,8 @@
     * FIX: The rule "State and count of processes" is no longer available
            in "Parameters for inventorized check". This rule was solely
            intented for "Manual checks" configuration
+    * FIX: Trying to prevent auth.php errors while file is being updated
+    * Added title of tests to LDAP diagnose table
 
 1.2.3i2:
     Core:

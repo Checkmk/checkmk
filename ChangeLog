@@ -15,6 +15,7 @@
     * check_icmp: New WATO rule for custom PING checks
     * agent_vsphere: now able to handle < > & ' " in login credentials
     * if/if64 and friends: add 95% percentiles to graphs
+    * services: inventory now also matches against display names of services
     * FIX: windows_agent: fixed bug in cleanup of open thread handles
     * FIX: cups default printer is now monitored again in linux agent
     * FIX: host notification email in html format: fixed formating error

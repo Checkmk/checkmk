@@ -107,8 +107,9 @@ register_rule(group + '/' + subgroup_inventory,
         elements = [
             ('services', ListOfStrings(
                 title = _("Services (Regular Expressions)"),
-                help  = _('Matching the begining of the service names (regular expression). '
-                          'If no service is given, this rule will match all services. The '
+                help  = _('Regular expressions matching the begining of the internal name '
+                          'or the description of the service. '
+                          'If no name is given then this rule will match all services. The '
                           'match is done on the <i>beginning</i> of the service name. It '
                           'is done <i>case sensitive</i>. You can do a case insensitive match '
                           'by prefixing the regular expression with <tt>(?i)</tt>. Example: '

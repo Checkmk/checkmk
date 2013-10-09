@@ -108,7 +108,12 @@ register_rule(group + '/' + subgroup_inventory,
             ('services', ListOfStrings(
                 title = _("Services (Regular Expressions)"),
                 help  = _('Matching the begining of the service names (regular expression). '
-                          'If no service is given, this rule will match all services.'),
+                          'If no service is given, this rule will match all services. The '
+                          'match is done on the <i>beginning</i> of the service name. It '
+                          'is done <i>case sensitive</i>. You can do a case insensitive match '
+                          'by prefixing the regular expression with <tt>(?i)</tt>. Example: '
+                          '<tt>(?i).*mssql</tt> matches all services that contain <tt>MSSQL</tt> '
+                          'or <tt>MsSQL</tt> or <tt>mssql</tt> or...'),
                 orientation = "horizontal",
             )),
             ('state', DropdownChoice(

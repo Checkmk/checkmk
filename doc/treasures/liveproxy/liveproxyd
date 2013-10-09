@@ -111,13 +111,13 @@ def initiate_connections():
                         if opt_debug:
                             raise
                         else:
-                            log("Error: cannot create TCP channel to %s:%d: %d" % siteconf["socket"] + (e,))
+                            log("Error: cannot create TCP channel to %s:%d: %s" % (siteconf["socket"] + (e,)))
                             break
 
                 except Exception, e:
                     if opt_debug:
                         raise
-                    log("Error: cannot create TCP channel to %s:%d: %d" % siteconf["socket"] + (e,))
+                    log("Error: cannot create TCP channel to %s:%d: %s" % (siteconf["socket"] + (e,)))
                     break
 
                 channels.append({ "socket" : s, "state" : "connecting", "since": time.time()})

@@ -1,0 +1,9 @@
+Title: WATO: Hostlist in folder: enable checkboxes -> all should be checked
+Component: wato
+State: open
+Date: 2013-10-09 20:39:38
+Targetversion: 1.4.0
+Class: nastiness
+
+When you enable the checkboxes in a WATO folder host list,
+then all boxes should initially be checked.

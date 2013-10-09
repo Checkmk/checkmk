@@ -43,6 +43,8 @@
     * Added title of tests to LDAP diagnose table
     * Bulk inventory: new checkbox to only include hosts that have a failed
         inventory check.
+    * Bulk inventory: yet another checkbox for skipping hosts where the
+        Check_MK service is currently critical
     * FIX: The rule "State and count of processes" is no longer available
            in "Parameters for inventorized check". This rule was solely
            intented for "Manual checks" configuration

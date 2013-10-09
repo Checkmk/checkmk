@@ -2656,6 +2656,11 @@ def mode_bulk_inventory(phase):
 
     config.need_permission("wato.services")
 
+    if html.get_checkbox("only_failed_invcheck"):
+        failed_invcheck_hosts = find_hosts_with_failed_inventory_check()
+    else:
+        failed_invcheck_hosts = None
+
     # 'all' not set -> only inventorize checked hosts
     if not html.var("all"):
         complete_folder = False
@@ -2666,7 +2671,8 @@ def mode_bulk_inventory(phase):
 
         hostnames = get_hostnames_from_checkboxes(filterfunc)
         items = [ "%s|%s" % (g_folder[".path"], hostname)
-             for hostname in hostnames ]
+             for hostname in hostnames 
+             if (failed_invcheck_hosts == None or hostname in failed_invcheck_hosts) ]
         for hostname in hostnames:
             check_host_permissions(hostname)
 
@@ -2677,6 +2683,8 @@ def mode_bulk_inventory(phase):
         items = []
         hostnames = []
         for hostname, folder in entries:
+            if failed_invcheck_hosts != None and hostname not in failed_invcheck_hosts:
+                continue
             check_host_permissions(hostname, folder=folder)
             items.append("%s|%s" % (folder[".path"], hostname))
             hostnames.append(hostname)
@@ -2720,10 +2728,20 @@ def mode_bulk_inventory(phase):
             html.checkbox("recurse", True, label=_("Include all subfolders"))
             html.write("<br>")
         html.checkbox("only_failed", False, label=_("Only include hosts that failed on previous inventory"))
+        html.write("<br>")
+        html.checkbox("only_failed_invcheck", False, label=_("Only include hosts with a failed inventory check"))
 
         # Start button
         forms.end()
         html.button("_start", _("Start"))
+
+def find_hosts_with_failed_inventory_check():
+    hosts = html.live.query_column(
+        "GET services\n"
+        "Filter: description = Check_MK inventory\n"
+        "Filter: state > 0\n"
+        "Columns: host_name")
+    return hosts 
 
 #.
 #   .-Bulk-Edit------------------------------------------------------------.

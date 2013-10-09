@@ -59,6 +59,9 @@ declare_filter(100, FilterText("hostregex",    _("Hostname"),        "host",    
 declare_filter(101, FilterText("host",    _("Hostname (exact match)"),             "host",    "host_name",          "host",    "="),
                           _("Exact match, used for linking"))
 
+declare_filter(102, FilterText("hostalias",   _("Hostalias"),      "host",     "host_alias",      "hostalias",    "~~"),
+                          _("Search field allowing regular expressions and partial matches"))
+
 declare_filter(200, FilterText("serviceregex", _("Service"),         "service", "service_description",   "service", "~~"),
                           _("Search field allowing regular expressions and partial matches"))
 

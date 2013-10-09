@@ -27,6 +27,7 @@
     * FIX: add missing service icons to view "All Services with this descr..."
     * FIX: ldap attribute plugins: fixed crash when parameters are None
     * FIX: avoid duplicate output of log message in log tables
+    * FIX: fixed problem with ldap userid encoding
 
     WATO:
     * Rule "State and count of processes": New configuration options:

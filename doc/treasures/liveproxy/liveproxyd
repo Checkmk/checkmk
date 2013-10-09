@@ -390,7 +390,7 @@ def receive_response(sitename, channel):
     client = channel.get("client") # None -> client timed out before response!
     if not client:
         log("Response from timed-out client arrived lately on channel %s/%d" % 
-            sitename, channel["socket"].fileno())
+            (sitename, channel["socket"].fileno()))
     # We always assume fixed16 as response header!
     old_response = channel.get("response", "")
     try:
@@ -447,6 +447,9 @@ def receive_response(sitename, channel):
         del client["channel"]
 
         try:
+            # ACHTUNG: Beim senden an den Client können wir blockieren, wenn
+            # der Empfänger uns ausbremst. Dürfen wir aber nicht. Wir brauchen
+            # eine Queue, müssen mit select() warten, usw.
             client["socket"].send(response)
             # log("HIRN: An client: [%s]" % response[16:80].replace("\n", ""))
             client["state"] = "idle"

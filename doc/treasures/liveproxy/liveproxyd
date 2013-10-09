@@ -1,12 +1,12 @@
 #!/usr/bin/python
 # encoding: utf-8
 
-import os, sys, getopt, signal, time, socket, select
+import os, sys, getopt, signal, time, socket, select, traceback
 
 VERSION="1.2.3i1"
 
 sites = {}
-dump_interval = None
+dump_interval = 5 # dump state once every five seconds
 
 #   .--Proxy---------------------------------------------------------------.
 #   |                      ____                                            |
@@ -93,7 +93,7 @@ def liveproxyd_run():
             if opt_debug:
                 raise
 
-            log("Ignoring exception: %s" % e)
+            log("Ignoring exception: %s: %s" % (e, traceback.format_exc()))
 
 def initiate_connections():
     # Create new channels to target sites. Nonblocking!
@@ -108,16 +108,18 @@ def initiate_connections():
                     s.connect(siteconf["socket"])
                 except socket.error, e:
                     if e.errno != 115: # "Operation now in progress"
+                        sitestate["last_failed_connect"] = time.time()
                         if opt_debug:
                             raise
                         else:
-                            log("Error: cannot create TCP channel to %s:%d: %d" % siteconf["socket"] + (e,))
+                            log("Error: cannot create TCP channel to %s:%d: %s" % (siteconf["socket"] + (e,)))
                             break
 
                 except Exception, e:
+                    sitestate["last_failed_connect"] = time.time()
                     if opt_debug:
                         raise
-                    log("Error: cannot create TCP channel to %s:%d: %d" % siteconf["socket"] + (e,))
+                    log("Error: cannot create TCP channel to %s:%d: %s" % (siteconf["socket"] + (e,)))
                     break
 
                 channels.append({ "socket" : s, "state" : "connecting", "since": time.time()})
@@ -135,6 +137,7 @@ def do_heartbeats():
                 if age >= timeout:
                     log("Heartbeat timeout after %.1f sec on channel %s/%d" % (
                         age, sitename, channel["socket"].fileno()))
+                    sitestate["last_failed_connect"] = now
                     disconnect_from_site(sitename)
             else:
                 if now - since >= rate:
@@ -269,8 +272,6 @@ def get_new_requests(readable):
                             client["state"] = "wait_for_channel"
                             client["since"] = time.time()
                             client["request"] = request
-                            # log("Get new request from %s/%d (%d bytes)" % 
-                            #     (sitename, client["socket"].fileno(), len(request)))
                 except Exception, e:
                     if opt_debug:
                         raise
@@ -302,8 +303,6 @@ def distribute_requests():
 def forward_request(sitename, client, channel):
     cls = client["socket"]
     chs = channel["socket"]
-    # log("Forwarding request [%s] from client %s/%d to channel %s/%d" % (
-    #     client["request"].replace("\n","\\n"), sitename, cls.fileno(), sitename, chs.fileno()))
     try:
         chs.send(client["request"])
         if not client["request"].startswith("COMMAND"):
@@ -356,14 +355,10 @@ def receive_request(sitename, client):
     # Note: Multisite can send several requests at once. For example
     # a command and a wait query (reschedule button)
     request = client.get("nextrequest", "")
-    # if request:
-    #     log("HIRN: client %s/%d noch ein Rest vom letzten mal: [%s]" % (
-    #           sitename, client["socket"].fileno(), request.replace("\n", "\\n")))
     client["nextrequest"] = ""
     while "\n\n" not in request:
         try:
             chunk = client["socket"].recv(65536)
-            # log("HIRN: CHUNK von client: [%s]" % chunk.replace("\n", "\\n"))
             request += chunk
         except socket.error, e:
             if e.errno == 104: # Connection reset by peer
@@ -374,12 +369,9 @@ def receive_request(sitename, client):
         if not chunk:
             log("Client %s/%d closed connection." % (sitename, client["socket"].fileno()))
             return None
-    # log("HIRN: VOR DEM SPLITTEN: [%s]" % request)
     end = request.index("\n\n")
     client["nextrequest"] = request[end+2:]
     request = request[:end+2]
-    #log("HIRN: Diesesmal: [%s], naechstes Mal: [%s]" % (
-    #    request.replace("\n", "\\n"), client["nextrequest"].replace("\n", "\\n")))
     return request
 
 
@@ -404,8 +396,8 @@ def receive_response(sitename, channel):
     try:
         chunk = channel["socket"].recv(65536)
         if not chunk:
-            raise Exception("Connect closed by foreign host")
-            
+            raise Exception("Connection closed by foreign host")
+
         response = old_response + chunk
         channel["response"] = response
 

@@ -27,13 +27,25 @@
     * FIX: add missing service icons to view "All Services with this descr..."
     * FIX: ldap attribute plugins: fixed crash when parameters are None
     * FIX: avoid duplicate output of log message in log tables
+    * FIX: fixed problem with ldap userid encoding
+    * Filtering in views by Hostalias is possible now too
+       (however the filter is not displayed in any standard view - user needs
+       to enable it by customizing the needed views himself)
+
+    Livestatus-Proxy:
+    * FIX: fix exception when printing error message
+    * FIX: honor wait time (now called cooling period) after failed TCP connection
 
     WATO:
     * Rule "State and count of processes": New configuration options:
            virtual and resident memory levels
+    * Added title of tests to LDAP diagnose table
+    * Bulk inventory: new checkbox to only include hosts that have a failed
+        inventory check.
     * FIX: The rule "State and count of processes" is no longer available
            in "Parameters for inventorized check". This rule was solely
            intented for "Manual checks" configuration
+    * FIX: Trying to prevent auth.php errors while file is being updated
 
 1.2.3i2:
     Core:

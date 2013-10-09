@@ -1,0 +1,8 @@
+Title: GUI Notification highlighting is inconspicuous
+Component: multisite
+State: open
+Date: 2013-10-09 14:05:50
+Targetversion: 1.4.0
+Class: cleanup
+
+We need a better highlighting for new messages. The small number is not enough.

@@ -1,0 +1,15 @@
+Title: liveproxyd: keep site closed for a while after an error
+Component: livestatus
+State: open
+Date: 2013-10-09 18:48:24
+Targetversion: 1.2.3i3
+Class: todo
+
+When the livestatus proxy daemon cannot connect to a site
+for any reason, or if a heartbeat fails, it should mark
+that site dead for a certain time (e.g. 30 seconds). Maybe
+we even binary backoff this time each time a problem
+occurrs. That way we tackle:
+
+- flapping connections
+- problems with permament errors (cannot resolve hostname)

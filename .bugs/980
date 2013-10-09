@@ -1,0 +1,30 @@
+Title: Hooks users-saved called duplicate when doing WATO sync
+Component: wato
+State: open
+Date: 2013-10-08 18:24:47
+Targetversion: 1.2.3i3
+Class: nastiness
+
+When doing a replicated WATO sync, then the hook users-saved is
+being called twice. We should elimiate that. Especially because
+there might be involved lengthy LDAP syncs
+
+
+[Tue Oct 08 09:23:05 2013] [warn] [client 127.0.0.1] AUTOMATION
+[Tue Oct 08 09:23:05 2013] [warn] [client 127.0.0.1] PUSH SNAPSHOT
+[Tue Oct 08 09:23:05 2013] [warn] [client 127.0.0.1] GOT TARCONTENT
+[Tue Oct 08 09:23:05 2013] [warn] [client 127.0.0.1] TAR EXTRACTED
+[Tue Oct 08 09:23:05 2013] [warn] [client 127.0.0.1] CALLING HOOK snapshot-pushed
+[Tue Oct 08 09:23:17 2013] [warn] [client 127.0.0.1] CALLING HOOK users-saved
+[Tue Oct 08 09:23:18 2013] [warn] [client 127.0.0.1] FINISHED HOOK users-saved
+[Tue Oct 08 09:23:18 2013] [warn] [client 127.0.0.1] FINISHED HOOK snapshot-pushed
+[Tue Oct 08 09:23:18 2013] [warn] [client 127.0.0.1] HOOKS CALLED
+[Tue Oct 08 09:23:18 2013] [warn] [client 127.0.0.1] CALLING HOOK pre-activate-changes
+[Tue Oct 08 09:23:18 2013] [warn] [client 127.0.0.1] FINISHED HOOK pre-activate-changes
+[Tue Oct 08 09:23:18 2013] [warn] [client 127.0.0.1] CALLING HOOK pre-activate-changes
+[Tue Oct 08 09:23:30 2013] [warn] [client 127.0.0.1] CALLING HOOK users-saved
+[Tue Oct 08 09:23:31 2013] [warn] [client 127.0.0.1] FINISHED HOOK users-saved
+[Tue Oct 08 09:23:31 2013] [warn] [client 127.0.0.1] FINISHED HOOK pre-activate-changes
+[Tue Oct 08 09:23:31 2013] [warn] [client 127.0.0.1] CALLING HOOK activate-changes
+[Tue Oct 08 09:23:32 2013] [warn] [client 127.0.0.1] FINISHED HOOK activate-changes
+[Tue Oct 08 09:23:32 2013] [warn] [client 127.0.0.1] RESTARTED

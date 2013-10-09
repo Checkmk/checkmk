@@ -108,6 +108,7 @@ def initiate_connections():
                     s.connect(siteconf["socket"])
                 except socket.error, e:
                     if e.errno != 115: # "Operation now in progress"
+                        sitestate["last_failed_connect"] = time.time()
                         if opt_debug:
                             raise
                         else:
@@ -115,6 +116,7 @@ def initiate_connections():
                             break
 
                 except Exception, e:
+                    sitestate["last_failed_connect"] = time.time()
                     if opt_debug:
                         raise
                     log("Error: cannot create TCP channel to %s:%d: %s" % (siteconf["socket"] + (e,)))
@@ -135,6 +137,7 @@ def do_heartbeats():
                 if age >= timeout:
                     log("Heartbeat timeout after %.1f sec on channel %s/%d" % (
                         age, sitename, channel["socket"].fileno()))
+                    sitestate["last_failed_connect"] = now
                     disconnect_from_site(sitename)
             else:
                 if now - since >= rate:

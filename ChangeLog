@@ -29,6 +29,10 @@
     * FIX: avoid duplicate output of log message in log tables
     * FIX: fixed problem with ldap userid encoding
 
+    Livestatus-Proxy:
+    * FIX: fix exception when printing error message
+    * FIX: honor wait time (now called cooling period) after failed TCP connection
+
     WATO:
     * Rule "State and count of processes": New configuration options:
            virtual and resident memory levels

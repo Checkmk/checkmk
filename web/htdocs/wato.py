@@ -6890,7 +6890,7 @@ def mode_edit_site(phase):
                    ),
                    ( "connect_retry",
                      Float(
-                        title = _("Wait time after failed connect"),
+                        title = _("Cooling period after failed connect/heartbeat"),
                         minvalue = 0.1,
                         unit = _("sec"),
                         default_value = 4.0,

@@ -90,7 +90,7 @@ def do_automation(cmd, args):
 # "refresh" - drop all services and reinventorize
 def automation_inventory(args):
     if len(args) < 2:
-        raise MKAutomationError("Need two arguments: [new|remove|fixall|refresh] HOSTNAME")
+        raise MKAutomationError("Need two arguments: new|remove|fixall|refresh HOSTNAME")
 
     how = args[0]
     hostname = args[1]

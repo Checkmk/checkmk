@@ -52,6 +52,8 @@ def check_mrpe(item, params, info):
             check_name = None
         if line[0] == item:
             state = int(line[1])
+            if state not in [ 0, 1, 2, 3]:
+                state = 3
             rest = " ".join(line[2:])
             parts = rest.split("|", 1)
             # replace first line break with "\\n" -> Nagios expects it like this

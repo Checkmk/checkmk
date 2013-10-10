@@ -2536,8 +2536,11 @@ def declare_1to1_sorter(painter_name, func, col_num = 0, reverse = False):
     multisite_sorters[painter_name] = {
         "title"   : multisite_painters[painter_name]['title'],
         "columns" : multisite_painters[painter_name]['columns'],
-        "cmp"     : lambda r1, r2: func(multisite_painters[painter_name]['columns'][col_num],
-                                        reverse and r1 or r2,
-                                        reverse and r2 or r1)
     }
+    if not reverse:
+        multisite_sorters[painter_name]["cmp"] = \
+            lambda r1, r2: func(multisite_painters[painter_name]['columns'][col_num], r1, r2)
+    else:
+        multisite_sorters[painter_name]["cmp"] = \
+            lambda r1, r2: func(multisite_painters[painter_name]['columns'][col_num], r2, r1)
     return painter_name

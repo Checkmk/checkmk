@@ -84,7 +84,7 @@ except:
     sys.exit(3)
 
 q = "GET events\n" \
-    "Filter: event_host = %s\n" % host_name
+    "Filter: event_host =~ %s\n" % host_name
 
 if application:
     q += "Filter: event_application ~~ %s\n" % application

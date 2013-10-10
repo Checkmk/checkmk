@@ -1,6 +1,10 @@
 1.2.2p3:
     Core:
     * FIX: get_average(): Gracefully handle time anomlies of target systems
+    * FIX: notifications: /var/lib/check_mk/notify directory is now created 
+           correctly during setup from tgz file. (Without it notifications
+           did not get sent out.)
+    * FIX: add missing $DESTDIR to auth.serials in setup.sh
 
     Checks & Agents:
     * FIX: winperf_processor: fix case where CPU percent is exactly 100%
@@ -10,11 +14,15 @@
     * FIX: zpool_status: Ignoring "No known data errors" text
     * FIX: fileinfo: no longer inventorize missing files
     * FIX: fileinfo: fixed fileinfo grouping in case of missing files
+    * FIX: fileinfo: take care of empty patterns
     * FIX: dmi_sysinfo: Handling ":" in value correctly
     * FIX: check_http: Fixed syntax error when monitoring certificates
     * FIX: check_dns: parameter -A does not get an additional string
     * FIX: diskstat: Fixed wrong values for IO/s computation on linux hosts
     * FIX: blade_healts: Fixed wrong index checking resulting in exceptions
+    * FIX: mrpe: gracefully handle invalid plugin exit codes
+    * FIX: check_mk-ipmi.php: PNP template now displays correct units as delivered
+           by the check plugin
 
     Multisite:
     * FIX: LDAP: Disabling use of referrals in active directory configuration
@@ -26,6 +34,8 @@
            e.g. alert statistics source
     * FIX: Folder Tree Snapin: make folder filter also work for remote
            folders that do not exist locally
+    * FIX: correctly display sub-minute check/retry intervals
+    * FIX: fix logic of some numeric sorters
 
     WATO:
     * FIX: fix layout of Auxiliary tags table
@@ -37,12 +47,12 @@
     * FIX: Fixed first toggle of flags in global settings when default is set to True
     * FIX: fix exception and loss of hosts in a folder when deleting all site connections
            of a distributed WATO setup
-    * FIX: fix exception and loss of hosts in a folder when deleting all site
-           connections of a distributed WATO setup
+    * FIX: avoid Python exception for invalid parameters even in debug mode
     * FIX: check_ldap: Removed duplicate "-H" definition
 
     Event Console:
     * FIX: apply rewriting of application/hostname also when cancelling events
+    * FIX: check_mkevents now uses case insensitive host name matching
 
     Livestatus:
     * livestatus: fixed incorrect output formatting of comments_with_info column

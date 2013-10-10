@@ -1,0 +1,17 @@
+Title: Multisite: cut down number of Livestatus queries
+Component: multisite
+State: open
+Date: 2013-10-10 23:24:22
+Targetversion: 1.2.3i3
+Class: nastiness
+
+Currently for each page one query of SET status is being done.
+On low-latency connections this hurts. We could either do without
+that or let liveproxyd cache that kind of query. We could make
+the Heartbeat of the liveproxyd query exactly the same columns
+as Multisite needs for its status-query and then simply answer
+with a cached result.
+
+Also we should cache queries needed for the search filters that
+are contained in many views. The caching could be done by
+the livproxyd.

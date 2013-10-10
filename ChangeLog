@@ -16,6 +16,7 @@
     * agent_vsphere: now able to handle < > & ' " in login credentials
     * if/if64 and friends: add 95% percentiles to graphs
     * services: inventory now also matches against display names of services
+    * esx_vsphere_hostsystem.multipath: now able to set warn/crit levels
     * FIX: windows_agent: fixed bug in cleanup of open thread handles
     * FIX: cups default printer is now monitored again in linux agent
     * FIX: host notification email in html format: fixed formating error
@@ -23,6 +24,8 @@
     * FIX: netapp_volumes: better output when volume is missing
     * FIX: winperf_phydisk: handle case where not performance counters are available
     * FIX: check_mk_agent.linux: limit Livestatus check to 3 seconds
+    * FIX: esx_vsphere_vm: fixed exception when memory info for vm is missing
+    * FIX: esx_vsphere_hostsystem: Fixed typo in check output
 
     Multisite:
     * FIX: add missing service icons to view "All Services with this descr..."
@@ -33,6 +36,7 @@
     * Filtering in views by Hostalias is possible now too
        (however the filter is not displayed in any standard view - user needs
        to enable it by customizing the needed views himself)
+    * FIX: brocade_fcport pnp-template: fixed incorrect display of average values
 
     Livestatus-Proxy:
     * FIX: fix exception when printing error message
@@ -47,6 +51,7 @@
         inventory check.
     * Bulk inventory: yet another checkbox for skipping hosts where the
         Check_MK service is currently critical
+    * New rule: Multipath Count (used by esx_vsphere_hostsystem.multipath)
     * FIX: The rule "State and count of processes" is no longer available
            in "Parameters for inventorized check". This rule was solely
            intented for "Manual checks" configuration
@@ -465,6 +470,7 @@
     * FIX: fix exception and loss of hosts in a folder when deleting all site connections
            of a distributed WATO setup
     * FIX: avoid Python exception for invalid parameters even in debug mode
+    * FIX: check_ldap: Removed duplicate "-H" definition
 
     Event Console:
     * FIX: apply rewriting of application/hostname also when cancelling events

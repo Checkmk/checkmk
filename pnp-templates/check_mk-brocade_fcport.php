@@ -29,11 +29,12 @@
 # than with numbers.
 $RRD = array();
 foreach ($NAME as $i => $n) {
-    $RRD[$n] = "$RRDFILE[$i]:$DS[$i]:MAX";
-    $WARN[$n] = $WARN[$i];
-    $CRIT[$n] = $CRIT[$i];
-    $MIN[$n]  = $MIN[$i];
-    $MAX[$n]  = $MAX[$i];
+    $RRD[$n]    = "$RRDFILE[$i]:$DS[$i]:MAX";
+    $RRDAVG[$n] = "$RRDFILE[$i]:$DS[$i]:AVERAGE";
+    $WARN[$n]   = $WARN[$i];
+    $CRIT[$n]   = $CRIT[$i];
+    $MIN[$n]    = $MIN[$i];
+    $MAX[$n]    = $MAX[$i];
 }
 
 
@@ -45,18 +46,22 @@ $opt[1]  = "--vertical-label \"MByte/sec\" -X0 -b 1024 --title \"Traffic for $ho
 $def[1] = ""
   . "HRULE:0#c0c0c0 "
   . "DEF:in=$RRD[in] "
+  . "DEF:inavg=$RRDAVG[in] "
+  . "DEF:outavg=$RRDAVG[out] "
   . "DEF:out=$RRD[out] "
   . "CDEF:inmb=in,1048576,/ "
+  . "CDEF:inmbavg=inavg,1048576,/ "
+  . "CDEF:outmbavg=outavg,1048576,/ "
   . "CDEF:outmb=out,1048576,/ "
   . "AREA:inmb#60a020:\"in       \" "
-  . "GPRINT:inmb:LAST:\"%5.1lf MB/s last\" "
-  . "GPRINT:inmb:AVERAGE:\"%5.1lf MB/s avg\" "
-  . "GPRINT:inmb:MAX:\"%5.1lf MB/s max\\n\" "
+  . "GPRINT:inmb:LAST:\"%5.3lf MB/s last\" "
+  . "GPRINT:inmbavg:AVERAGE:\"%5.3lf MB/s avg\" "
+  . "GPRINT:inmb:MAX:\"%5.3lf MB/s max\\n\" "
   . "CDEF:out_draw=outmb,-1,* "
   . "AREA:out_draw#2060a0:\"out      \" "
-  . "GPRINT:outmb:LAST:\"%5.1lf MB/s last\" "
-  . "GPRINT:outmb:AVERAGE:\"%5.1lf MB/s avg\" "
-  . "GPRINT:outmb:MAX:\"%5.1lf MB/s max\\n\" "
+  . "GPRINT:outmb:LAST:\"%5.3lf MB/s last\" "
+  . "GPRINT:outmbavg:AVERAGE:\"%5.3lf MB/s avg\" "
+  . "GPRINT:outmb:MAX:\"%5.3lf MB/s max\\n\" "
   ;
 
 if (isset($RRD['in_avg'])) {
@@ -98,8 +103,8 @@ $ds_name[2] = 'Frames';
 $opt[2]  = "--vertical-label \"Frames/sec\" -b 1024 --title \"Frames per second\" ";
 $def[2] = ""
   . "HRULE:0#c0c0c0 "
-  . "DEF:in=$RRD[rxframes] "
-  . "DEF:out=$RRD[txframes] "
+  . "DEF:in=$RRDAVG[rxframes] "
+  . "DEF:out=$RRDAVG[txframes] "
   . "AREA:in#a0d040:\"in       \" "
   . "GPRINT:in:LAST:\"%5.1lf/s last\" "
   . "GPRINT:in:AVERAGE:\"%5.1lf/s avg\" "

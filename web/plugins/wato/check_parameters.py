@@ -2795,6 +2795,46 @@ register_check_parameters(
 
 register_check_parameters(
      subgroup_storage,
+    "multipath_count",
+    _("Multipath Count"),
+    Alternative(
+            title = _("Match type"),
+            elements = [
+                    FixedValue(
+                        None,
+                        title = _("OK if standby count is zero or equals active paths."),
+                        totext  = "",
+                    ),
+                    Dictionary(
+                        title = _("Custom settings"),
+                        elements = [ (element,
+                                      Tuple(
+                                          title = description,
+                                          elements = [
+                                              Integer(title = _("Warning if more than")),
+                                              Integer(title = _("Critical if more than")),
+                                          ]
+                                      )
+                                     ) for (element, description) in [
+                                             ("active",   _("Active paths")),
+                                             ("dead",     _("Dead paths")),
+                                             ("disabled", _("Disabled paths")),
+                                             ("standby",  _("Standby paths")),
+                                             ("unknown",  _("Unknown paths"))
+                                            ]
+                                    ]
+                        ),
+                    ]
+    ),
+    TextAscii(
+        title = _("Path ID")),
+    "first"
+)
+
+
+
+register_check_parameters(
+     subgroup_storage,
     "hpux_multipath",
     _("Multipathing on HPUX - state of paths of a LUN"),
     Tuple(

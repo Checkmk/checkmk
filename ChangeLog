@@ -29,6 +29,7 @@
     * FIX: ldap attribute plugins: fixed crash when parameters are None
     * FIX: avoid duplicate output of log message in log tables
     * FIX: fixed problem with ldap userid encoding
+    * FIX: removed state-based colors from all Perf-O-Meters
     * Filtering in views by Hostalias is possible now too
        (however the filter is not displayed in any standard view - user needs
        to enable it by customizing the needed views himself)

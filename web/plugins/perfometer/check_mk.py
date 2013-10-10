@@ -142,11 +142,7 @@ def perfometer_check_mk_mem_used(row, check_command, perf_data):
 
     state = row["service_state"]
     # paint used ram and swap
-    ram_color, swap_color = {
-        0:("#80ff40", "#008030"),
-        1:("#ff2", "#dd0"),
-        2:("#f44", "#d00"),
-        3:("#fa2", "#d80") }[state]
+    ram_color, swap_color = "#80ff40", "#008030"
     h += perfometer_td(100 * ram_used / virt_total, ram_color)
     h += perfometer_td(100 * swap_used / virt_total, swap_color)
 
@@ -165,9 +161,8 @@ perfometers["check_mk-hr_mem"] = perfometer_check_mk_mem_used
 
 def perfometer_check_mk_mem_win(row, check_command, perf_data):
     # only show mem usage, do omit page file
-    base_colors = ("#20d060", "#3040d0")
     state = row["service_state"]
-    color = { 0: "#20d060", 1: "#ff2", 2: "#f44", 3: "#fa2",}[state]
+    color = "#5090c0"
     ram_total  = float(perf_data[0][6])
     ram_used   = float(perf_data[0][1])
     perc = ram_used / ram_total * 100.0
@@ -228,7 +223,7 @@ perfometers["check_mk-systemtime"] = lambda r, c, p: perfometer_check_mk_ntp(r, 
 
 def perfometer_ipmi_sensors(row, check_command, perf_data):
     state = row["service_state"]
-    color = { 0: "#39f", 1: "#ff2", 2: "#f22", 3: "#fa2" }[state]
+    color = "#39f"
     value = float(perf_data[0][1])
     crit = savefloat(perf_data[0][4])
     if not crit:
@@ -259,7 +254,7 @@ perfometers["check_mk-ipmi_sensors"] = perfometer_ipmi_sensors
 
 def perfometer_temperature(row, check_command, perf_data):
     state = row["service_state"]
-    color = { 0: "#39f", 1: "#ff2", 2: "#f22", 3: "#fa2" }[state]
+    color = "#39f"
     value = float(perf_data[0][1])
     crit = savefloat(perf_data[0][4])
     return u"%d°C" % int(value), perfometer_logarithmic(value, 40, 1.2, color)
@@ -400,20 +395,14 @@ perfometers["check_mk-oracle_logswitches"] = perfometer_oracle_sessions
 
 def perfometer_cpu_utilization(row, check_command, perf_data):
     util = float(perf_data[0][1]) # is already percentage
-    color = "#cf2"
-    if perf_data[0][3]:
-        warn = float(perf_data[0][3])
-        crit = float(perf_data[0][4])
-        if util < warn:
-            color = "#6f2"
-        elif util < crit:
-            color = "#9f2"
-
+    color = "#60f020"
     return "%.0f%%" % util, perfometer_linear(util, color)
 
 #perfometer_linear(perc, color)
 perfometers["check_mk-h3c_lanswitch_cpu"] = perfometer_cpu_utilization
 perfometers["check_mk-winperf_processor.util"] = perfometer_cpu_utilization
+perfometers["check_mk-netapp_cpu"] = perfometer_cpu_utilization
+perfometers["check_mk-cisco_cpu"] = perfometer_cpu_utilization
 
 def perfometer_ps_perf(row, check_command, perf_data):
     perf_dict = dict([(p[0], float(p[1])) for p in perf_data])

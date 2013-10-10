@@ -17,6 +17,8 @@
     * if/if64 and friends: add 95% percentiles to graphs
     * services: inventory now also matches against display names of services
     * esx_vsphere_hostsystem.multipath: now able to set warn/crit levels
+    * cpu_netapp: added Perf-O-Meter and PNP template
+    * cisco_cpu: added Perf-O-Meter and PNP template
     * FIX: windows_agent: fixed bug in cleanup of open thread handles
     * FIX: cups default printer is now monitored again in linux agent
     * FIX: host notification email in html format: fixed formating error
@@ -28,14 +30,16 @@
     * FIX: esx_vsphere_hostsystem: Fixed typo in check output
 
     Multisite:
+    * Filtering in views by Hostalias is possible now too
+       (however the filter is not displayed in any standard view - user needs
+       to enable it by customizing the needed views himself)
     * FIX: add missing service icons to view "All Services with this descr..."
     * FIX: ldap attribute plugins: fixed crash when parameters are None
     * FIX: avoid duplicate output of log message in log tables
     * FIX: fixed problem with ldap userid encoding
-    * Filtering in views by Hostalias is possible now too
-       (however the filter is not displayed in any standard view - user needs
-       to enable it by customizing the needed views himself)
+    * FIX: removed state-based colors from all Perf-O-Meters
     * FIX: brocade_fcport pnp-template: fixed incorrect display of average values
+    * FIX: all log views are now correctly sorted from new to old
 
     Livestatus-Proxy:
     * FIX: fix exception when printing error message

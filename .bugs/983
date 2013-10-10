@@ -15,3 +15,17 @@ with a cached result.
 Also we should cache queries needed for the search filters that
 are contained in many views. The caching could be done by
 the livproxyd.
+
+The caching should take into account if the core has been
+changed its configuration. For example the list of check
+commands, host groups and stuff can only change due to
+a configuration reload. So we can safely cache such a query.
+
+Question is, how the proxy could know that it should cache.
+A new Cache: header? But then the proxy would need to parse
+the headers completely. Or we simply make a:
+if "\nCache:" in request:
+    ....
+
+Cache: 500 --> Sekunden
+Cache: reload --> Bis config reload

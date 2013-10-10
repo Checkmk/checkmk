@@ -19,6 +19,7 @@
     * esx_vsphere_hostsystem.multipath: now able to set warn/crit levels
     * cpu_netapp: added Perf-O-Meter and PNP template
     * cisco_cpu: added Perf-O-Meter and PNP template
+    * apc_symmetra: add input voltage to informational output
     * FIX: windows_agent: fixed bug in cleanup of open thread handles
     * FIX: cups default printer is now monitored again in linux agent
     * FIX: host notification email in html format: fixed formating error

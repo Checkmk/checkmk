@@ -23,6 +23,7 @@
     * FIX: netapp_volumes: better output when volume is missing
     * FIX: winperf_phydisk: handle case where not performance counters are available
     * FIX: check_mk_agent.linux: limit Livestatus check to 3 seconds
+    * FIX: esx_vsphere_vm: fixed exception when memory info for vm is missing
 
     Multisite:
     * FIX: add missing service icons to view "All Services with this descr..."

@@ -464,6 +464,7 @@
     * FIX: fix exception and loss of hosts in a folder when deleting all site connections
            of a distributed WATO setup
     * FIX: avoid Python exception for invalid parameters even in debug mode
+    * FIX: check_ldap: Removed duplicate "-H" definition
 
     Event Console:
     * FIX: apply rewriting of application/hostname also when cancelling events

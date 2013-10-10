@@ -162,7 +162,7 @@ perfometers["check_mk-hr_mem"] = perfometer_check_mk_mem_used
 def perfometer_check_mk_mem_win(row, check_command, perf_data):
     # only show mem usage, do omit page file
     state = row["service_state"]
-    color = "#20d060"
+    color = "#5090c0"
     ram_total  = float(perf_data[0][6])
     ram_used   = float(perf_data[0][1])
     perc = ram_used / ram_total * 100.0

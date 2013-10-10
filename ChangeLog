@@ -37,6 +37,7 @@
     * FIX: Fixed first toggle of flags in global settings when default is set to True
     * FIX: fix exception and loss of hosts in a folder when deleting all site connections
            of a distributed WATO setup
+    * FIX: check_ldap: Removed duplicate "-H" definition
 
     Event Console:
     * FIX: apply rewriting of application/hostname also when cancelling events

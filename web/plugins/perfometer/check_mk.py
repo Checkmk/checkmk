@@ -396,19 +396,12 @@ perfometers["check_mk-oracle_logswitches"] = perfometer_oracle_sessions
 def perfometer_cpu_utilization(row, check_command, perf_data):
     util = float(perf_data[0][1]) # is already percentage
     color = "#cf2"
-    if perf_data[0][3]:
-        warn = float(perf_data[0][3])
-        crit = float(perf_data[0][4])
-        if util < warn:
-            color = "#6f2"
-        elif util < crit:
-            color = "#9f2"
-
     return "%.0f%%" % util, perfometer_linear(util, color)
 
 #perfometer_linear(perc, color)
 perfometers["check_mk-h3c_lanswitch_cpu"] = perfometer_cpu_utilization
 perfometers["check_mk-winperf_processor.util"] = perfometer_cpu_utilization
+perfometers["check_mk-netapp_cpu"] = perfometer_cpu_utilization
 
 def perfometer_ps_perf(row, check_command, perf_data):
     perf_dict = dict([(p[0], float(p[1])) for p in perf_data])

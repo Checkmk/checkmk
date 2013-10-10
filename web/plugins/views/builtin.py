@@ -1193,7 +1193,7 @@ multisite_builtin_views.update({
                  'owner': '',
                  'painters': [('service_state', None),
                               ('service_icons', None),
-                              ('host', 'host'),
+                              ('host', 'service'),
                               ('svc_plugin_output', None),
                               ('perfometer', None)],
                  'public': True,

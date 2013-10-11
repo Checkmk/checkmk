@@ -1,4 +1,8 @@
 1.2.3i4:
+    Core:
+    * Create inventory check also for hosts without services, if they
+          have *no* ping tag.
+
     WATO:
     * Bulk inventory: speed up by use of cache files and doing stuff in
           groups of e.g. 10 hosts at once

@@ -2043,28 +2043,6 @@ define service {
 %s  service_description\t\tCheck_MK
 }
 """ % (active_service_template, hostname, extra_service_conf_of(hostname, "Check_MK")))
-        # Inventory checks - if user has configured them. Not for clusters.
-        if inventory_check_interval and not is_cluster(hostname) \
-            and not service_ignored(hostname,None,'Check_MK inventory'):
-            outfile.write("""
-define service {
-  use\t\t\t\t%s
-  host_name\t\t\t%s
-  normal_check_interval\t\t%d
-  retry_check_interval\t\t%d
-%s  service_description\t\tCheck_MK inventory
-}
-
-define servicedependency {
-  use\t\t\t\t%s
-  host_name\t\t\t%s
-  service_description\t\tCheck_MK
-  dependent_host_name\t\t%s
-  dependent_service_description\tCheck_MK inventory
-}
-""" % (inventory_check_template, hostname, inventory_check_interval, inventory_check_interval,
-       extra_service_conf_of(hostname, "Check_MK inventory"),
-       service_dependency_template, hostname, hostname))
 
     # legacy checks via legacy_checks
     legchecks = host_extra_conf(hostname, legacy_checks)
@@ -2217,6 +2195,33 @@ define service {
 
             # write service dependencies for custom checks
             outfile.write(get_dependencies(hostname,description))
+
+    # Inventory checks - if user has configured them. Not for clusters.
+    if inventory_check_interval and not is_cluster(hostname) \
+        and not service_ignored(hostname, None, 'Check_MK inventory') \
+        and not "ping" in tags_of_host(hostname): 
+        outfile.write("""
+define service {
+  use\t\t\t\t%s
+  host_name\t\t\t%s
+  normal_check_interval\t\t%d
+  retry_check_interval\t\t%d
+%s  service_description\t\tCheck_MK inventory
+}
+""" % (inventory_check_template, hostname, inventory_check_interval, 
+       inventory_check_interval,
+       extra_service_conf_of(hostname, "Check_MK inventory")))
+
+        if have_at_least_one_service:
+            outfile.write("""
+define servicedependency {
+  use\t\t\t\t%s
+  host_name\t\t\t%s
+  service_description\t\tCheck_MK
+  dependent_host_name\t\t%s
+  dependent_service_description\tCheck_MK inventory
+}
+""" % (service_dependency_template, hostname, hostname))
 
     # Levels for host check
     if is_cluster(hostname):

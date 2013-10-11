@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # encoding: utf-8
 
-import os, sys, getopt, signal, time, socket, select, traceback
+import os, sys, getopt, signal, time, socket, select, traceback, re
 
 VERSION="1.2.3i1"
 
@@ -44,6 +44,8 @@ g_sites = {}
 #                        'since': 1370420507.965436},
 #          'last_failed_connect': 0,
 #          'last_reset': 1370420492.879927,
+#          'last_reload' : 1370420492,
+#          'cache' : {},
 #          'socket': <socket._socketobject object at 0x7f5d0adc3910>,
 #          'state': 'ready'}}
 #
@@ -167,7 +169,7 @@ def send_heartbeat(sitename, sitestate):
             channel = next_channel
             # log("Sending heartbeat to channel %s/%d" % (sitename, channel["socket"].fileno()))
             try:
-                channel["socket"].send("GET status\nKeepAlive: on\nColumns: execute_service_checks\n\n")
+                channel["socket"].send("GET status\nKeepAlive: on\nColumns: program_start\n\n")
                 channel["state"] = "heartbeat"
                 channel["since"] = now
                 sitestate["heartbeat"]["since"] = now
@@ -184,8 +186,10 @@ def disconnect_from_site(sitename):
     log("Site %s is considered dead. Closing all connections." % sitename)
     sitestate = g_sites[sitename]
     sitestate["channels"] = []
+    sitestate["cache"] = {}
     sitestate["state"] = "starting"
     sitestate["heartbeat"] = { "since" : now, "channel" : None, "count" : 0}
+    sitestate["last_reload"] = now
     sitestate["last_reset"] = now
     for client in sitestate["clients"]:
         if client["state"] == "wait_for_response":
@@ -274,21 +278,54 @@ def get_new_requests(readable):
                             respond_client_with_error(client, 
                                 "Invalid request, you must specify ResponseHeader: fixed16.")
                         else:
-                            client["state"] = "wait_for_channel"
-                            client["since"] = time.time()
-                            client["request"] = request
+                            # Try to find a matching response in our cache
+                            if not respond_from_cache(sitename, sitestate, client, request):
+                                client["state"] = "wait_for_channel"
+                                client["since"] = time.time()
+                                client["request"] = cache_regex.sub("", request)
                 except Exception, e:
                     if opt_debug:
                         raise
                     log("Cannot read request from client %s/%d: %s" % 
                         (sitename, client["socket"].fileno(), e))
 
+cache_regex = re.compile("\nCache: *([^\n]*)")
+localtime_regex = re.compile("\nLocaltime:[^\n]*")
+
+def respond_from_cache(sitename, sitestate, client, request):
+    mo = cache_regex.search(request)
+    if not mo:
+        client["add_to_cache"] = False # do not cache the response
+        return False
+
+    # Get the cache time option. It is either a number of
+    # seconds (not implemented) or the word "reload", which
+    # means: cache until the configuration of the site changed
+    # due to a reload. Currently we simply ignore this option,
+    # since we only know "reload".
+    # cache_time = mo.group(1)
+
+    # Remove Localtime: header, since it contains a timestamp
+    # and therefore is always unique.
+    cleared_request = localtime_regex.sub("", request)
+
+    # Now lets look into our cache if it has a cached response
+    response = sitestate["cache"].get(cleared_request)
+    if response:
+        client["response"] = response
+        client["response_offset"] = 0
+        client["state"] = "response"
+        return True
+    else:
+        client["add_to_cache"] = cleared_request # get response into cache
+    return False
+
 def distribute_requests():
     for sitename, sitestate in g_sites.items():
         if sitestate["state"] != "ready":
             continue
         waiting_clients = [ client for client in sitestate["clients"] if client["state"] == "wait_for_channel"]
-        
+
         # Sort after waiting time, we should be fair to all...
         waiting_clients.sort(cmp = lambda a, b: cmp(a["since"], b["since"]))
 
@@ -443,8 +480,9 @@ def receive_response(sitename, channel):
         return
 
     # Response complete
+    sitestatus = g_sites[sitename]
     channel["state"] = "ready"
-    g_sites[sitename]["state"] = "ready" # at least one channel free
+    sitestatus["state"] = "ready" # at least one channel free
     channel["response"] = ""
 
     if client:
@@ -453,6 +491,10 @@ def receive_response(sitename, channel):
         client["response"] = response
         client["response_offset"] = 0
         client["state"] = "response"
+        if client["add_to_cache"]:
+            cleared_request = client["add_to_cache"]
+            sitestatus["cache"][cleared_request] = response
+            del client["add_to_cache"]
 
 def send_responses(writable):
     for sitename, sitestatus in g_sites.items():
@@ -494,24 +536,34 @@ def receive_heartbeat(sitename, channel):
             log("Channel %s/%d closed by foreign host while reading heartbeat" % 
                 (sitename, channel["socket"].fileno()))
             disconnect_from_site(sitename)
-        elif len(chunk) != 2 or chunk not in ["0\n", "1\n"]:
-            log("Channel %s/%d: invalid response \"%s\" to heartbeat" % (
-                sitename, channel["socket"].fileno(), chunk))
-            disconnect_from_site(sitename)
         else:
-            # Set site to ready if at least one other channel exists
-            if len(sitestate["channels"]) > 1:
-                sitestate["state"] = "ready"
-            sitestate["state"] = "ready" # at least one connection is up
-            channel["state"] = "ready"
-            sitestate["heartbeat"]["since"] = time.time()
-            sitestate["heartbeat"]["channel"] = None
-            sitestate["heartbeat"]["count"] += 1
+            # We expect a timestamp (integer): the time of the last
+            # configuration change.
+            if len(chunk) != 11 or not chunk[0].isdigit() or chunk[-1] != "\n":
+                log("Channel %s/%d: invalid response \"%s\" to heartbeat" % (
+                    sitename, channel["socket"].fileno(), chunk))
+                disconnect_from_site(sitename)
+            else:
+                last_reload = int(chunk[:-1])
+                # Set site to ready if at least one other channel exists
+                if len(sitestate["channels"]) > 1:
+                    sitestate["state"] = "ready"
+                sitestate["state"] = "ready" # at least one connection is up
+                channel["state"] = "ready"
+                sitestate["heartbeat"]["since"] = time.time()
+                sitestate["heartbeat"]["channel"] = None
+                sitestate["heartbeat"]["count"] += 1
+                if sitestate["last_reload"] != last_reload:
+                    if sitestate["cache"]:
+                        log("Site %s might have new configuration. Dropping cache" % sitename)
+                        sitestate["cache"] = {}
+                    sitestate["last_reload"] = last_reload
+
     except Exception, e:
         if opt_debug:
             raise
         log("Exception while reading heartbeat from channel %s/%d: %s" % 
-            (sitename, channel["socket"].fileno()), e)
+            (sitename, channel["socket"].fileno(), e))
 
 
 def handle_client_timeouts():
@@ -583,7 +635,9 @@ def dump_state():
         sf.write("[%s]\n" % sitename)
         sf.write("  State:               %s\n" % sitestate["state"])
         sf.write("  Last Reset:          %s\n" % format_time(sitestate["last_reset"]))
+        sf.write("  Site's last reload:  %s\n" % format_time(sitestate["last_reload"]))
         sf.write("  Last failed connect: %s\n" % format_time(sitestate["last_failed_connect"]))
+        sf.write("  Cached responses:    %d\n" % len(sitestate["cache"]))
         sf.write("  Channels:\n")
         for channel in sitestate["channels"]:
             sf.write("    %3d - %-18s-  client: %4s - since: %s\n" % 
@@ -743,6 +797,7 @@ def read_configuration():
                 opt_configfile, e))
 
     # Create state object for all sites
+    now = time.time()
     for sitename, siteconf in sites.items():
         siteconf.setdefault("channels", 5)
         siteconf.setdefault("heartbeat", (5, 2.0))
@@ -751,15 +806,17 @@ def read_configuration():
         siteconf.setdefault("connect_retry", 4.0)
         g_sites[sitename] = {
             "state": "starting",
-            "channels" : [],
+            "channels"    : [],
             "clients"     : [],
             "heartbeat"   : {
                 "since"     : time.time(),
                 "channel"   : None,
                 "count"     : 0,
             },
-            "last_reset" : time.time(),
+            "last_reset"  : now,
+            "last_reload" : int(now),
             "last_failed_connect" : 0,
+            "cache"       : {},
         }
         if siteconf["channels"] <= 1:
             raise bail_out("Invalid configuration for site %s: you need at least two channels" % sitename)

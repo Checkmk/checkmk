@@ -43,6 +43,7 @@
     * FIX: all log views are now correctly sorted from new to old
 
     Livestatus-Proxy:
+    * Implement caching of non-status requests (together with Multisite)
     * FIX: fix exception when printing error message
     * FIX: honor wait time (now called cooling period) after failed TCP connection
     * FIX: fix hanging if client cannot accept large chunks (seen on RH6.4)

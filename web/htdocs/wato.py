@@ -6928,7 +6928,16 @@ def mode_edit_site(phase):
                         minvalue = 0.1,
                         unit = _("sec"),
                         default_value = 4.0,
-                    )),
+                   )),
+                   ( "cache",
+                      Checkbox(title = _("Enable Caching"),
+                         label = _("Cache several non-status queries"),
+                          help = _("This option will enable the caching of several queries that "
+                                   "need no current data. This reduces the number of Livestatus "
+                                   "queries to sites and cuts down the response time of remote "
+                                   "sites with large latencies."),
+                          default_value = True,
+                   )),
                 ]
              )
           )

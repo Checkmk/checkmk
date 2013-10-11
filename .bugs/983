@@ -1,9 +1,9 @@
 Title: Multisite: cut down number of Livestatus queries
 Component: multisite
-State: open
+Class: nastiness
+State: done
 Date: 2013-10-10 23:24:22
 Targetversion: 1.2.3i3
-Class: nastiness
 
 Currently for each page one query of SET status is being done.
 On low-latency connections this hurts. We could either do without
@@ -29,3 +29,6 @@ if "\nCache:" in request:
 
 Cache: 500 --> Sekunden
 Cache: reload --> Bis config reload
+
+2013-10-11 03:59:21: changed state open -> done
+Done.

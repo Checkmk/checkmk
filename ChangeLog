@@ -4,6 +4,10 @@
     * FIX: livestatus table statehist: fixed rubbish entries whenever
            logfile instances got unloaded
 
+    Livestatus:
+    * FIX: check_mk snmp checks with a custom check interval no longer
+           have an incorrect staleness value
+
     Notifications:
     * mkeventd: new notification plugin for forwarding notifications
        to the Event Console. See inline docu in share/check_mk/notification/mkeventd

@@ -274,7 +274,7 @@ class BaseConnection:
         query += self.auth_header + self.add_headers
         query += "Localtime: %d\nOutputFormat: python\nKeepAlive: on\nResponseHeader: fixed16\n" % int(time.time())
         query += add_headers
-            
+
         if not query.endswith("\n"):
             query += "\n"
         query += "\n"
@@ -633,7 +633,7 @@ class MultiSiteConnection(Helpers):
                     q = query
                 else:
                     q = nocache_query
-                connection.send_query(q, add_headers + limit_header, 
+                connection.send_query(q, add_headers + limit_header,
                                       allow_cache = site.get("cache", False))
             except Exception, e:
                 self.deadsites[sitename] = {

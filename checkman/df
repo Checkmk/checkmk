@@ -147,9 +147,9 @@ parameters (dict): This check supports two types of parameters. The
  {"levels"}: Warning and critical level of filesystem usage. You need to
  supply two numbers. Depending of the type of number you can choose
  different kinds of levels as follows: Positive {integers} denote the
- amount of {used} space in {megabytes}. Positive {floating point numbers} 
+ amount of {used} space in {megabytes}. Positive {floating point numbers}
  denote the amount of used space in {precent}. {Negative} numbers impose
- limits on the amount of space {available}, again with the possibility 
+ limits on the amount of space {available}, again with the possibility
  to specify integers or floats to denote values in megabytes of precent.
  The default is {(80.0, 90.0)}, meaning 80% and 90%.
 
@@ -163,7 +163,7 @@ parameters (dict): This check supports two types of parameters. The
  The default for this is {20}. It is measured in {GB}.
 
  {"levels_low"}: When applying the magic factor the warn/crit levels
- will never drop below these numbers. The default is preset to 
+ will never drop below these numbers. The default is preset to
  {(50.0,60.0)} meaning 50% and 60%.
 
  {"trend_range"}: The time range over that trends are computed. This

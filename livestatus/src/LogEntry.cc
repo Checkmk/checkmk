@@ -317,7 +317,7 @@ inline bool LogEntry::handleExternalCommandEntry()
     return false;
 }
 
-inline bool LogEntry::handleTextEntry() 
+inline bool LogEntry::handleTextEntry()
 {
     if (!strncmp(_text, "LOG VERSION: 2.0", 16))
     {
@@ -326,7 +326,7 @@ inline bool LogEntry::handleTextEntry()
         return true;
     }
     else if (!strncmp(_text, "logging initial states", 22)
-           || !strncmp(_text, "logging intitial states", 23)) 
+           || !strncmp(_text, "logging intitial states", 23))
     {
         _logclass = LOGCLASS_PROGRAM;
         _type     = LOG_INITIAL_STATES;

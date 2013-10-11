@@ -7,7 +7,7 @@ description:
  This check monitors the output power (in Watt) of the
  (usually three) phases of an APC Symmetra power supply.
  You can define warning and critical levels of power, below which
- the phases must not drop. 
+ the phases must not drop.
 
 item:
  The index of the phase, e.g. {"1"}.

@@ -1,8 +1,14 @@
+1.2.3i4:
+
 1.2.3i3:
     Core:
     * FIX: fixed typo in core startup message "logging initial states"
     * FIX: livestatus table statehist: fixed rubbish entries whenever
            logfile instances got unloaded
+
+    Livestatus:
+    * FIX: check_mk snmp checks with a custom check interval no longer
+           have an incorrect staleness value
 
     Notifications:
     * mkeventd: new notification plugin for forwarding notifications
@@ -20,6 +26,7 @@
     * cpu_netapp: added Perf-O-Meter and PNP template
     * cisco_cpu: added Perf-O-Meter and PNP template
     * apc_symmetra: add input voltage to informational output
+    * agent_vsphere: new debug option --tracefile
     * FIX: windows_agent: fixed bug in cleanup of open thread handles
     * FIX: cups default printer is now monitored again in linux agent
     * FIX: host notification email in html format: fixed formating error
@@ -476,6 +483,8 @@
            of a distributed WATO setup
     * FIX: avoid Python exception for invalid parameters even in debug mode
     * FIX: check_ldap: Removed duplicate "-H" definition
+    * FIX: Fixed some output encoding problem in snapshot restore / deletion code
+    * FIX: Improved user provided variable validation in snapshot handling code
 
     Event Console:
     * FIX: apply rewriting of application/hostname also when cancelling events

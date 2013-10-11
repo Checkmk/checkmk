@@ -71,6 +71,7 @@ register_configvar(group,
             default_value = False),
     domain = "multisite")
 
+
 register_configvar(group,
     "buffered_http_stream",
     Checkbox(title = _("Buffered HTTP stream"),

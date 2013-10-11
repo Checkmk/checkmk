@@ -668,7 +668,7 @@ def search_livestatus(ty, q):
         filt.append('Or: %d\n' % (len(filt)))
 
     column = ty == 'service' and 'description' or 'name'
-    lq = "GET %ss\nColumns: %s\n%sLimit: %d\n" % \
+    lq = "GET %ss\nCache: reload\nColumns: %s\n%sLimit: %d\n" % \
             (ty, column, ''.join(filt), limit)
     html.live.set_prepend_site(True)
     data = html.live.query(lq)

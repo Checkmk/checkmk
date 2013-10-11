@@ -1,0 +1,34 @@
+Title: Multisite: cut down number of Livestatus queries
+Component: multisite
+Class: nastiness
+State: done
+Date: 2013-10-10 23:24:22
+Targetversion: 1.2.3i3
+
+Currently for each page one query of SET status is being done.
+On low-latency connections this hurts. We could either do without
+that or let liveproxyd cache that kind of query. We could make
+the Heartbeat of the liveproxyd query exactly the same columns
+as Multisite needs for its status-query and then simply answer
+with a cached result.
+
+Also we should cache queries needed for the search filters that
+are contained in many views. The caching could be done by
+the livproxyd.
+
+The caching should take into account if the core has been
+changed its configuration. For example the list of check
+commands, host groups and stuff can only change due to
+a configuration reload. So we can safely cache such a query.
+
+Question is, how the proxy could know that it should cache.
+A new Cache: header? But then the proxy would need to parse
+the headers completely. Or we simply make a:
+if "\nCache:" in request:
+    ....
+
+Cache: 500 --> Sekunden
+Cache: reload --> Bis config reload
+
+2013-10-11 03:59:21: changed state open -> done
+Done.

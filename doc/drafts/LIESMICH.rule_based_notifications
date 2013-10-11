@@ -178,3 +178,5 @@ wurde.
 Bei der Konfigerzeugung für Nagios/CMC muss man einen speziellen
 Benutzer anlegen, der für alles Kontakt ist.
 
+===> ACHTUNG: Es gibt jetzt ein englisches Dokument, das etwas aktueller
+ist und auch noch etwas zu den Bulk-Notifications schreibt.

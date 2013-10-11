@@ -73,9 +73,9 @@ apc_default_levels = { "levels": ( 95, 40, 1, 220 ) }
 
 def check_apc(item, params, info):
     BasicBatteryStatus, BasicOutputStatus, AdvBatteryCapacity, \
-    AdvBatteryTemperature, AdvBatteryCurrent, AdvOutputVoltage, \
+    AdvBatteryTemperature, AdvBatteryCurrent, AdvInputVoltage, AdvOutputVoltage, \
     AdvOutputCurrent, AdvBatteryRunTimeRemaining, AdvTestCalibrationResults \
-                                                = [ saveint(x) for x in info[0][:9] ]
+                                                = [ saveint(x) for x in info[0][:10] ]
 
     LastDiagnosticsDate = info[0][-1]
     RunTimeRemaining = AdvBatteryRunTimeRemaining / 100
@@ -157,6 +157,9 @@ def check_apc(item, params, info):
         state = 0
     single_states.append( (state, infotxt, ("batcurr", AdvBatteryCurrent, "", crit_batt_curr, 0) ) )
 
+    # 6a. Simply show input voltage (no performance data)
+    single_states.append( (0, "input voltage %dV" % AdvInputVoltage, None) )
+
     # 6. Check output voltage
     infotxt = "output voltage %dV" % AdvOutputVoltage
     if AdvOutputVoltage <= crit_voltage:
@@ -195,6 +198,17 @@ check_info['apc_symmetra'] = {
   "group"               : "apc_symentra",
   "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.318.1.3"),
   "snmp_info"           : (".1.3.6.1.4.1.318.1.1.1",
-                          [ "2.1.1.0", "4.1.1.0", "2.2.1.0", "2.2.2.0",
-                             "2.2.9.0", "4.2.1.0", "4.2.4.0", "2.2.3.0", "7.2.6.0", "7.2.4.0" ] )
+                          [
+                            "2.1.1.0", # BasicBatteryStatus,
+                            "4.1.1.0", # BasicOutputStatus,
+                            "2.2.1.0", # AdvBatteryCapacity,
+                            "2.2.2.0", # AdvBatteryTemperature,
+                            "2.2.9.0", # AdvBatteryCurrent,
+                            "3.2.1.0", # AdvInputVoltage,
+                            "4.2.1.0", # AdvOutputVoltage,
+                            "4.2.4.0", # AdvOutputCurrent,
+                            "2.2.3.0", # AdvBatteryRunTimeRemaining,
+                            "7.2.6.0", # AdvTestCalibrationResults
+                            "7.2.4.0", # LastDiagnosticsDate
+                        ] )
 }

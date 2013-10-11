@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import socket, time
+import socket, time, re
 
 # Python 2.3 does not have 'set' in normal namespace.
 # But it can be imported from 'sets'
@@ -51,6 +51,9 @@ r2 = conn.query_row("GET status")
 
 # Keep a global array of persistant connections
 persistent_connections = {}
+
+# Regular expression for removing Cache: headers if caching is not allowed
+remove_cache_regex = re.compile("\nCache:[^\n]*")
 
 # DEBUGGING PERSISTENT CONNECTIONS
 # import os
@@ -260,8 +263,10 @@ class BaseConnection:
         self.send_query(query, add_headers)
         return self.recv_response(query, add_headers)
 
-    def send_query(self, query, add_headers = "", do_reconnect=True):
+    def send_query(self, query, add_headers = "", do_reconnect=True, allow_cache=False):
         orig_query = query
+        if not allow_cache:
+            orig_query = remove_cache_regex.sub("", orig_query)
         if self.socket == None:
             self.connect()
         if not query.endswith("\n"):
@@ -269,6 +274,7 @@ class BaseConnection:
         query += self.auth_header + self.add_headers
         query += "Localtime: %d\nOutputFormat: python\nKeepAlive: on\nResponseHeader: fixed16\n" % int(time.time())
         query += add_headers
+            
         if not query.endswith("\n"):
             query += "\n"
         query += "\n"
@@ -289,7 +295,7 @@ class BaseConnection:
                 # Automatically try to reconnect in case of an error, but
                 # only once.
                 self.connect()
-                self.send_query(orig_query, add_headers, False)
+                self.send_query(orig_query, add_headers, False, allow_cache=True)
                 return
 
             raise MKLivestatusSocketError("RC1:" + str(e))
@@ -325,7 +331,7 @@ class BaseConnection:
                     timeout_at = now + self.timeout
                 time.sleep(0.1)
                 self.connect()
-                self.send_query(query, add_headers)
+                self.send_query(query, add_headers, allow_cache = True) # cache already removed
                 return self.recv_response(query, add_headers, timeout_at) # do not send query again -> danger of infinite loop
             else:
                 raise MKLivestatusSocketError(str(e))
@@ -620,9 +626,15 @@ class MultiSiteConnection(Helpers):
             limit_header = ""
 
         # First send all queries
+        nocache_query = remove_cache_regex.sub("", query)
         for sitename, site, connection in active_sites:
             try:
-                connection.send_query(query, add_headers + limit_header)
+                if site.get("cache"):
+                    q = query
+                else:
+                    q = nocache_query
+                connection.send_query(q, add_headers + limit_header, 
+                                      allow_cache = site.get("cache", False))
             except Exception, e:
                 self.deadsites[sitename] = {
                     "exception" : e,
@@ -638,7 +650,11 @@ class MultiSiteConnection(Helpers):
                 continue
 
             try:
-                r = connection.recv_response(query, add_headers + limit_header)
+                if site.get("cache"):
+                    q = query
+                else:
+                    q = nocache_query
+                r = connection.recv_response(q, add_headers + limit_header)
                 stillalive.append( (sitename, site, connection) )
                 if self.prepend_site:
                     r = [ [sitename] + l for l in r ]

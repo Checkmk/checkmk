@@ -1,0 +1,16 @@
+Title: Better error message when site cannot be deleted
+Component: wato
+State: open
+Date: 2013-10-11 16:32:01
+Targetversion: 1.2.3i3
+Class: nastiness
+
+When you are using D-WATO and want to delete a site, this
+is prohibited if folders or hosts are assigned to that site.
+If you try, then an error message is printed. But there is
+no list of the affected host and folders in question. It
+can be very hard to find that in a larger installation
+(e.g. some empty folder that has the site in its properties).
+
+Resolution: print out the exakt name of affected hosts an
+folders and the error message.

@@ -15,8 +15,8 @@ examples:
  ups_test_default = ( 5, 10 )
 
 inventory:
- The inventory process checks if the device has a system description OIDs 
- (.1.3.6.1.2.1.1.2.0) and if the name of this OID is known to the test. If 
+ The inventory process checks if the device has a system description OIDs
+ (.1.3.6.1.2.1.1.2.0) and if the name of this OID is known to the test. If
  this is true the system is inventorized.
 
 [parameters]

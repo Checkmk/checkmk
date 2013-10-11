@@ -34,6 +34,6 @@ examples:
 inventory:
  The inventory process checks if the device has a system description OIDs (.1.3.6.1.2.1.1.2.0)
  and if the name of this OID begins with "Emerson Network Power". In case the device does
- not have a system description OID it needs to be listed in the configuration variable 
+ not have a system description OID it needs to be listed in the configuration variable
  {snmp_without_sys_descr} to be inventorized
 

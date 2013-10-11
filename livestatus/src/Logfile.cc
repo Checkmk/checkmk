@@ -36,7 +36,7 @@
 #ifdef CMC
 #include "Core.h"
 extern Core *g_core;
-#endif 
+#endif
 
 
 Logfile::Logfile(const char *path, bool watch)

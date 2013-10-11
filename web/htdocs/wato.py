@@ -2676,7 +2676,7 @@ def mode_bulk_inventory(phase):
 
         hostnames = get_hostnames_from_checkboxes(filterfunc)
         items = [ "%s|%s" % (g_folder[".path"], hostname)
-             for hostname in hostnames 
+             for hostname in hostnames
              if (restrict_to_hosts == None or hostname in restrict_to_hosts) and
                  hostname not in skip_hosts ]
         for hostname in hostnames:

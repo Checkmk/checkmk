@@ -5086,19 +5086,23 @@ def mode_snapshot(phase):
                 make_action_link([("mode", "snapshot"),("_factory_reset","Yes")]), "factoryreset")
         return
 
-    elif phase == "action":
+    snapshots = []
+    if os.path.exists(snapshot_dir):
+        for f in os.listdir(snapshot_dir):
+            snapshots.append(f)
+    snapshots.sort(reverse=True)
+
+    if phase == "action":
         if html.has_var("_download_file"):
             download_file = html.var("_download_file")
-            if not download_file.startswith('wato-snapshot') and download_file != 'latest':
-                raise MKUserError(None, _("Invalid download file specified."))
 
             # Find the latest snapshot file
             if download_file == 'latest':
-                snapshots = os.listdir(snapshot_dir)
-                snapshots.sort()
                 if not snapshots:
                     return False
                 download_file = snapshots[-1]
+            elif download_file not in snapshots:
+                raise MKUserError(None, _("Invalid download file specified."))
 
             download_path = os.path.join(snapshot_dir, download_file)
             if os.path.exists(download_path):
@@ -5131,9 +5135,13 @@ def mode_snapshot(phase):
         # delete file
         elif html.has_var("_delete_file"):
             delete_file = html.var("_delete_file")
+
+            if delete_file not in snapshots:
+                raise MKUserError(None, _("Invalid file specified."))
+
             c = wato_confirm(_("Confirm deletion of snapshot"),
                              _("Are you sure you want to delete the snapshot <br><br>%s?") %
-                                delete_file
+                                htmllib.attrencode(delete_file)
                             )
             if c:
                 os.remove(os.path.join(snapshot_dir, delete_file))
@@ -5146,14 +5154,18 @@ def mode_snapshot(phase):
         # restore snapshot
         elif html.has_var("_restore_snapshot"):
             snapshot_file = html.var("_restore_snapshot")
+
+            if snapshot_file not in snapshots:
+                raise MKUserError(None, _("Invalid file specified."))
+
             c = wato_confirm(_("Confirm restore snapshot"),
                              _("Are you sure you want to restore the snapshot <br><br>%s ?") %
-                                snapshot_file
+                                htmllib.attrencode(snapshot_file)
                             )
             if c:
                 multitar.extract_from_file(snapshot_dir + snapshot_file, backup_paths)
                 log_pending(SYNCRESTART, None, "snapshot-restored",
-                     _("Restored snapshot %s") % snapshot_file)
+                     _("Restored snapshot %s") % htmllib.attrencode(snapshot_file))
                 return None, _("Successfully restored snapshot.")
             elif c == False: # not yet confirmed
                 return ""
@@ -5180,13 +5192,6 @@ def mode_snapshot(phase):
             return False
 
     else:
-        snapshots = []
-        if os.path.exists(snapshot_dir):
-            for f in os.listdir(snapshot_dir):
-                snapshots.append(f)
-        snapshots.sort(reverse=True)
-
-
         table.begin(_("Snapshots"), empty_text=_("There are no snapshots available."))
         for name in snapshots:
             table.row()

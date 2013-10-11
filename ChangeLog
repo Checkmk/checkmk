@@ -6,6 +6,7 @@
     WATO:
     * Bulk inventory: speed up by use of cache files and doing stuff in
           groups of e.g. 10 hosts at once
+    * Multisite connection: new button for cloning a connection
 
     Checks & Agents:
     * Linux agent RPM: remove dependency to package "time". That package

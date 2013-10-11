@@ -6825,9 +6825,11 @@ def mode_sites(phase):
         table.row()
         # Buttons
         edit_url = make_link([("mode", "edit_site"), ("edit", id)])
+        clone_url = make_link([("mode", "edit_site"), ("clone", id)])
         delete_url = html.makeactionuri([("_delete", id)])
         table.cell(_("Actions"), css="buttons")
         html.icon_button(edit_url, _("Properties"), "edit")
+        html.icon_button(clone_url, _("Clone this connection in order to create a new one"), "clone")
         html.icon_button(delete_url, _("Delete"), "delete")
 
         # Site-ID
@@ -6898,7 +6900,8 @@ def mode_sites(phase):
 
 def mode_edit_site(phase):
     sites = load_sites()
-    siteid = html.var("edit", None) # missing -> new site
+    siteid = html.var("edit") # missing -> new site
+    cloneid = html.var("clone")
     new = siteid == None
     if phase == "title":
         if new:
@@ -6910,7 +6913,9 @@ def mode_edit_site(phase):
         html.context_button(_("All Sites"), make_link([("mode", "sites")]), "back")
         return
 
-    if new:
+    if cloneid:
+        site = sites[cloneid]
+    elif new:
         site = {}
     else:
         site = sites.get(siteid, {})
@@ -7135,7 +7140,7 @@ def mode_edit_site(phase):
     forms.header(_("Basic settings"))
     forms.section(_("Site ID"), simple = not new)
     if new:
-        html.text_input("id", siteid)
+        html.text_input("id", siteid or cloneid)
         html.set_focus("id")
     else:
         html.write(siteid)

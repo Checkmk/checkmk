@@ -89,11 +89,14 @@ def do_automation(cmd, args):
 # "fixall" - find new, remove exceeding
 # "refresh" - drop all services and reinventorize
 def automation_inventory(args):
-    global opt_use_cachefile
-    opt_use_cachefile = False
+    global opt_use_cachefile, inventory_max_cachefile_age
     if args[0] == "--cache":
         opt_use_cachefile = True
+        inventory_max_cachefile_age = 1000000000
         args = args[1:]
+    else:
+        opt_use_cachefile = False
+        inventory_max_cachefile_age = -1
 
     if len(args) < 2:
         raise MKAutomationError("Need two arguments: new|remove|fixall|refresh HOSTNAME")
@@ -107,14 +110,17 @@ def automation_inventory(args):
     count_new = 0
 
     failed_hosts = {}
+    k = globals().keys()
+    if how == "refresh":
+        for hostname in hostnames:
+	    count_removed += remove_autochecks_of(hostname) # checktype could be added here
+	reread_autochecks()
+
     for hostname in hostnames:
         try:
-            if how == "refresh":
-                count_removed = remove_autochecks_of(hostname) # checktype could be added here
-                reread_autochecks()
-
             # Compute current state of new and existing checks
-            table = automation_try_inventory([hostname])
+            table = automation_try_inventory([hostname], leave_no_tcp=True)
+            
             # Create new list of checks
             new_items = []
             for entry in table:
@@ -145,12 +151,14 @@ def automation_inventory(args):
             count_new += len(new_items)
 
         except Exception, e:
+	    if opt_debug:
+                raise
             failed_hosts[hostname] = str(e)
 
     return (count_added, count_removed, count_kept, count_new), failed_hosts
 
 
-def automation_try_inventory(args):
+def automation_try_inventory(args, leave_no_tcp=False):
     global opt_use_cachefile, inventory_max_cachefile_age, check_max_cachefile_age
     if args[0] == '--cache':
         opt_use_cachefile = True
@@ -166,7 +174,7 @@ def automation_try_inventory(args):
     if is_cluster(hostname):
         already_added = set([])
         for node in nodes_of(hostname):
-            new_services = automation_try_inventory_node(node)
+            new_services = automation_try_inventory_node(node, leave_no_tcp=leave_no_tcp)
             for entry in new_services:
                 if host_of_clustered_service(node, entry[6]) == hostname:
                     # 1: check, 6: Service description
@@ -182,7 +190,7 @@ def automation_try_inventory(args):
                 already_added.add( (ct, descr) ) # make it unique
 
     else:
-        new_services = automation_try_inventory_node(hostname)
+        new_services = automation_try_inventory_node(hostname, leave_no_tcp=leave_no_tcp)
         for entry in new_services:
             host = host_of_clustered_service(hostname, entry[6])
             if host == hostname:
@@ -194,7 +202,7 @@ def automation_try_inventory(args):
 
 
 
-def automation_try_inventory_node(hostname):
+def automation_try_inventory_node(hostname, leave_no_tcp=False):
     global opt_use_cachefile, opt_no_tcp, opt_dont_submit
 
     try:
@@ -301,7 +309,8 @@ def automation_try_inventory_node(hostname):
             g_service_description = descr
             infotype = ct.split('.')[0]
             opt_use_cachefile = True
-            opt_no_tcp = True
+	    if not leave_no_tcp:
+	        opt_no_tcp = True
             opt_dont_submit = True
 
             try:

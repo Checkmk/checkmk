@@ -553,7 +553,7 @@ def read_cache_file(relpath, max_cache_age):
         raise MKGeneralException("Simulation mode and no cachefile present.")
 
     if opt_no_tcp:
-        raise MKGeneralException("Host is unreachable")
+        raise MKGeneralException("Host is unreachable, no usable cache file present")
         #Cache file '%s' missing or too old. TCP disallowed by you." % cachefile)
 
 

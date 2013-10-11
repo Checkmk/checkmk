@@ -155,6 +155,7 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) /etc/check_mk/multisite.mk
 /etc/check_mk/conf.d/README
 %config(noreplace) /etc/nagios/objects/*
+%config(noreplace) /etc/nagios/auth.serials
 /usr/bin/check_mk
 /usr/bin/cmk
 /usr/bin/mkp

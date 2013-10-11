@@ -458,7 +458,7 @@ function progress_scheduler(mode, url_prefix, timeout, items, end_url, success_s
             // Progressing
             progress_running = true;
             // Remove leading pipe signs (when having no folder set)
-            update_progress_title(progress_items[0].replace(/^\|*/g, ''));
+            update_progress_title(progress_items[0].replace(/^\|*/g, '').substr(0, 60));
             get_url(url_prefix + '&_transid=-1&_item=' + escape(progress_items[0]),
                 progress_handle_response,    // regular handler (http code 200)
                 [ mode, progress_items[0] ], // data to hand over to handlers

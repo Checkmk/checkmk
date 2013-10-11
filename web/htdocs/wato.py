@@ -2605,36 +2605,42 @@ def mode_bulk_inventory(phase):
         if html.var("_item"):
             how = html.var("how")
             try:
-                folderpath, hostname = html.var("_item").split("|")
+                site_id, folderpath, hostnamesstring = html.var("_item").split("|")
+                hostnames = hostnamesstring.split(";")
                 folder = g_folders[folderpath]
                 load_hosts(folder)
-                host = folder[".hosts"][hostname]
-                eff = effective_attributes(host, folder)
-                site_id = eff.get("site")
-                counts = check_mk_automation(site_id, "inventory", [how, hostname])
+                arguments = [how,] + hostnames
+                if html.var("use_cache"):
+                    arguments = [ "--cache" ] + arguments
+                counts, failed_hosts = check_mk_automation(site_id, "inventory", arguments)
                 #counts = ( 1, 2, 3, 4 )
                 result = repr([ 'continue', 1, 0 ] + list(counts)) + "\n"
-                result += _("Inventorized %s<br>\n") % hostname
-                mark_affected_sites_dirty(folder, hostname, sync=False, restart=True)
-                log_pending(AFFECTED, hostname, "bulk-inventory",
-                    _("Inventorized host: %d added, %d removed, %d kept, %d total services") % counts)
-                if "inventory_failed" in host:
-                    del host["inventory_failed"]
-                    save_hosts(folder) # Could be optimized, but difficult here
+                for hostname in hostnames:
+                    host = folder[".hosts"][hostname]
+                    if hostname in failed_hosts:
+                        result += _("Failed to inventorize %s: %s<br>") % (hostname, failed_hosts[hostname])
+                        if not host.get("inventory_failed"):
+                            host["inventory_failed"] = True
+                            save_hosts(folder)
+                    else:
+                        result += _("Inventorized %s<br>\n") % hostname
+                        mark_affected_sites_dirty(folder, hostname, sync=False, restart=True)
+                        log_pending(AFFECTED, hostname, "bulk-inventory",
+                            _("Inventorized host: %d added, %d removed, %d kept, %d total services") % counts)
+                        if "inventory_failed" in host:
+                            del host["inventory_failed"]
+                            save_hosts(folder) # Could be optimized, but difficult here
 
             except Exception, e:
                 result = repr([ 'failed', 1, 1, 0, 0, 0, 0, ]) + "\n"
                 if site_id:
                     msg = _("Error during inventory of %s on site %s<div class=exc>%s</div") % \
-                                     (hostname, site_id, e)
+                                     (", ".join(hostnames), site_id, e)
                 else:
-                    msg = _("Error during inventory of %s<div class=exc>%s</div>") % (hostname, e)
+                    msg = _("Error during inventory of %s<div class=exc>%s</div>") % (", ".join(hostnames), e)
                 if config.debug:
                     msg += "<br><pre>%s</pre><br>" % format_exception().replace("\n", "<br>")
                 result += msg
-                if not host.get("inventory_failed"):
-                    host["inventory_failed"] = True
-                    save_hosts(folder)
             html.write(result)
             return ""
         return
@@ -2667,6 +2673,8 @@ def mode_bulk_inventory(phase):
         skip_hosts = []
 
     # 'all' not set -> only inventorize checked hosts
+    hosts_to_inventorize = []
+
     if not html.var("all"):
         complete_folder = False
         if html.get_checkbox("only_failed"):
@@ -2675,27 +2683,54 @@ def mode_bulk_inventory(phase):
             filterfunc = None
 
         hostnames = get_hostnames_from_checkboxes(filterfunc)
-        items = [ "%s|%s" % (g_folder[".path"], hostname)
-             for hostname in hostnames
-             if (restrict_to_hosts == None or hostname in restrict_to_hosts) and
-                 hostname not in skip_hosts ]
         for hostname in hostnames:
+            if restrict_to_hosts and hostname not in restrict_to_hosts:
+                continue
+            if hostname in skip_hosts:
+                continue
             check_host_permissions(hostname)
+            host = g_folder[".hosts"][hostname]
+            eff = effective_attributes(host, g_folder)
+            site_id = eff.get("site")
+            hosts_to_inventorize.append( (site_id, g_folder[".path"], hostname) )
 
-    # all host in this folder, maybe recursively
+    # all host in this folder, maybe recursively. New: we always group
+    # a bunch of subsequent hosts of the same folder into one item.
+    # That saves automation calls and speeds up mass inventories.
     else:
         complete_folder = True
         entries = recurse_hosts(g_folder, html.get_checkbox("recurse"), html.get_checkbox("only_failed"))
         items = []
         hostnames = []
+        current_folder = None
+        num_hosts_in_current_chunk = 0
         for hostname, folder in entries:
             if restrict_to_hosts != None and hostname not in restrict_to_hosts:
                 continue
             if hostname in skip_hosts:
                 continue
             check_host_permissions(hostname, folder=folder)
-            items.append("%s|%s" % (folder[".path"], hostname))
-            hostnames.append(hostname)
+            host = folder[".hosts"][hostname]
+            eff = effective_attributes(host, folder)
+            site_id = eff.get("site")
+            hosts_to_inventorize.append( (site_id, folder[".path"], hostname) )
+
+    # Create a list of items for the progress bar, where we group
+    # subsequent hosts that are in the same folder and site
+    hosts_to_inventorize.sort()
+
+    current_site_and_folder = None
+    items = []
+    hosts_in_this_item = 0
+    bulk_size = int(html.var("bulk_size", 10))
+    for site_id, folder_path, hostname in hosts_to_inventorize:
+        if not items or (site_id, folder_path) != current_site_and_folder or hosts_in_this_item >= bulk_size:
+            items.append("%s|%s|%s" % (site_id, folder_path, hostname))
+            hosts_in_this_item = 1
+        else:
+            items[-1] += ";" + hostname
+            hosts_in_this_item += 1
+        current_site_and_folder = site_id, folder_path
 
 
     if html.var("_start"):
@@ -2740,6 +2775,12 @@ def mode_bulk_inventory(phase):
         html.checkbox("only_failed_invcheck", False, label=_("Only include hosts with a failed inventory check"))
         html.write("<br>")
         html.checkbox("only_ok_agent", False, label=_("Exclude hosts where the agent is unreachable"))
+
+        forms.section(_("Performance options"))
+        html.checkbox("use_cache", True, label=_("Use cached data if present"))
+        html.write("<br>")
+        html.write(_("Number of hosts to handle at once:") + " ")
+        html.number_input("bulk_size", 10, size=3)
 
         # Start button
         forms.end()

@@ -1,4 +1,7 @@
 1.2.3i4:
+    WATO:
+    * Bulk inventory: speed up by use of cache files and doing stuff in
+          groups of e.g. 10 hosts at once
 
 1.2.3i3:
     Core:

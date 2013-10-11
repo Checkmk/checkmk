@@ -3,6 +3,11 @@
     * Bulk inventory: speed up by use of cache files and doing stuff in
           groups of e.g. 10 hosts at once
 
+    Checks & Agents:
+    * Linux agent RPM: remove dependency to package "time". That package
+         is just needed for the binary mk-job, which is useful but not
+         neccessary.
+
 1.2.3i3:
     Core:
     * FIX: fixed typo in core startup message "logging initial states"
@@ -20,7 +25,7 @@
     * FIX: cleanup environment from notifications (needed for CMC)
 
     Checks & Agents:
-    * windows_agent: increased maximum plugin output buffer size to 2MB
+    * Windows agent: increased maximum plugin output buffer size to 2MB
     * check_icmp: New WATO rule for custom PING checks
     * agent_vsphere: now able to handle < > & ' " in login credentials
     * if/if64 and friends: add 95% percentiles to graphs

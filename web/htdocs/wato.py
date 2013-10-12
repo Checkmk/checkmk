@@ -7426,7 +7426,7 @@ def save_sites(sites, activate=True):
         rewrite_config_files_below(g_root_folder) # fix site attributes
         need_sidebar_reload()
 
-        if config.liveproxyd_enabled and restart_liveproxy:
+        if config.liveproxyd_enabled:
             save_liveproxyd_config(sites)
 
         # Call the sites saved hook

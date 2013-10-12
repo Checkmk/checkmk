@@ -13,6 +13,9 @@
          is just needed for the binary mk-job, which is useful but not
          neccessary.
 
+    Multisite:
+    * FIX: fix broken single-site setups due to new caching
+
 1.2.3i3:
     Core:
     * FIX: fixed typo in core startup message "logging initial states"

@@ -163,10 +163,11 @@ class Helpers:
 
 
 class BaseConnection:
-    def __init__(self, socketurl, persist = False):
+    def __init__(self, socketurl, persist = False, allow_cache = False):
         """Create a new connection to a MK Livestatus socket"""
         self.add_headers = ""
         self.persist = persist
+        self.allow_cache = allow_cache
         self.socketurl = socketurl
         self.socket = None
         self.timeout = None
@@ -263,10 +264,10 @@ class BaseConnection:
         self.send_query(query, add_headers)
         return self.recv_response(query, add_headers)
 
-    def send_query(self, query, add_headers = "", do_reconnect=True, allow_cache=False):
+    def send_query(self, query, add_headers = "", do_reconnect=True):
+        if not self.allow_cache:
+            query = remove_cache_regex.sub("", query)
         orig_query = query
-        if not allow_cache:
-            orig_query = remove_cache_regex.sub("", orig_query)
         if self.socket == None:
             self.connect()
         if not query.endswith("\n"):
@@ -295,7 +296,7 @@ class BaseConnection:
                 # Automatically try to reconnect in case of an error, but
                 # only once.
                 self.connect()
-                self.send_query(orig_query, add_headers, False, allow_cache=True)
+                self.send_query(orig_query, add_headers, False)
                 return
 
             raise MKLivestatusSocketError("RC1:" + str(e))
@@ -331,7 +332,7 @@ class BaseConnection:
                     timeout_at = now + self.timeout
                 time.sleep(0.1)
                 self.connect()
-                self.send_query(query, add_headers, allow_cache = True) # cache already removed
+                self.send_query(query, add_headers)
                 return self.recv_response(query, add_headers, timeout_at) # do not send query again -> danger of infinite loop
             else:
                 raise MKLivestatusSocketError(str(e))
@@ -355,8 +356,8 @@ class BaseConnection:
 
 
 class SingleSiteConnection(BaseConnection, Helpers):
-    def __init__(self, socketurl, persist = False):
-        BaseConnection.__init__(self, socketurl, persist)
+    def __init__(self, socketurl, persist = False, allow_cache = False):
+        BaseConnection.__init__(self, socketurl, persist, allow_cache)
         self.prepend_site = False
         self.auth_users = {}
         self.deadsites = {} # never filled, just for compatibility
@@ -420,7 +421,7 @@ class MultiSiteConnection(Helpers):
             try:
                 url = site["socket"]
                 persist = not temporary and site.get("persist", False)
-                connection = SingleSiteConnection(url, persist)
+                connection = SingleSiteConnection(url, persist, allow_cache=site.get("cache", False))
                 if "timeout" in site:
                     connection.set_timeout(int(site["timeout"]))
                 connection.connect()
@@ -626,15 +627,9 @@ class MultiSiteConnection(Helpers):
             limit_header = ""
 
         # First send all queries
-        nocache_query = remove_cache_regex.sub("", query)
         for sitename, site, connection in active_sites:
             try:
-                if site.get("cache"):
-                    q = query
-                else:
-                    q = nocache_query
-                connection.send_query(q, add_headers + limit_header,
-                                      allow_cache = site.get("cache", False))
+                connection.send_query(query, add_headers + limit_header)
             except Exception, e:
                 self.deadsites[sitename] = {
                     "exception" : e,
@@ -650,11 +645,7 @@ class MultiSiteConnection(Helpers):
                 continue
 
             try:
-                if site.get("cache"):
-                    q = query
-                else:
-                    q = nocache_query
-                r = connection.recv_response(q, add_headers + limit_header)
+                r = connection.recv_response(query, add_headers + limit_header)
                 stillalive.append( (sitename, site, connection) )
                 if self.prepend_site:
                     r = [ [sitename] + l for l in r ]

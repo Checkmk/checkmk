@@ -2199,7 +2199,7 @@ define service {
     # Inventory checks - if user has configured them. Not for clusters.
     if inventory_check_interval and not is_cluster(hostname) \
         and not service_ignored(hostname, None, 'Check_MK inventory') \
-        and not "ping" in tags_of_host(hostname): 
+        and not "ping" in tags_of_host(hostname):
         outfile.write("""
 define service {
   use\t\t\t\t%s
@@ -2208,7 +2208,7 @@ define service {
   retry_check_interval\t\t%d
 %s  service_description\t\tCheck_MK inventory
 }
-""" % (inventory_check_template, hostname, inventory_check_interval, 
+""" % (inventory_check_template, hostname, inventory_check_interval,
        inventory_check_interval,
        extra_service_conf_of(hostname, "Check_MK inventory")))
 

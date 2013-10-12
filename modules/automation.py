@@ -120,7 +120,7 @@ def automation_inventory(args):
         try:
             # Compute current state of new and existing checks
             table = automation_try_inventory([hostname], leave_no_tcp=True)
-            
+
             # Create new list of checks
             new_items = []
             for entry in table:

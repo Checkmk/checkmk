@@ -122,7 +122,6 @@ sites_mk           = defaults.default_config_dir + "/multisite.d/sites.mk"
 var_dir            = defaults.var_dir + "/wato/"
 log_dir            = var_dir + "log/"
 snapshot_dir       = var_dir + "snapshots/"
-sync_snapshot_file = defaults.tmp_dir + "/sync_snapshot.tar.gz"
 repstatus_file     = var_dir + "replication_status.mk"
 
 
@@ -3633,12 +3632,6 @@ def mode_changelog(phase):
         if is_distributed():
             # Distributed WATO: Show replication state of each site
 
-            # During bulk replication we rather create the sync snapshot now. Otherwise
-            # there is the danger, that it is created multiple times in parallel, thus
-            # wasting time.
-            if sitestatus_do_async_replication:
-                create_sync_snapshot()
-
             html.write("<h3>%s</h3>" % _("Distributed WATO - Replication Status"))
             repstatus = load_replication_status()
             sites = [(name, config.site(name)) for name in config.sitenames() ]
@@ -3912,9 +3905,9 @@ def log_pending(status, linkinfo, what, message):
                     changes["need_restart"] = True
             update_replication_status(siteid, changes)
 
-        # Make sure that a new snapshot for syncing will be created
-        # when times comes to syncing
-        remove_sync_snapshot()
+            # Make sure that a new snapshot for syncing will be created
+            # when times comes to syncing
+            remove_sync_snapshot(siteid)
 
 def cmc_rush_ahead():
     if defaults.omd_root:
@@ -5733,7 +5726,9 @@ def mode_globalvars(phase):
         else:
             return
 
+    render_global_configuration_variables(default_values, current_settings)
 
+def render_global_configuration_variables(default_values, current_settings):
     groupnames = g_configvar_groups.keys()
     groupnames.sort()
     html.write('<div class=globalvars>')
@@ -5752,9 +5747,10 @@ def mode_globalvars(phase):
 
             defaultvalue = default_values.get(varname, valuespec.default_value())
 
-            edit_url = make_link([("mode", "edit_configvar"), ("varname", varname)])
-            title = '<a href="%s" title="%s">%s</a>' % \
-                    (edit_url, html.strip_tags(valuespec.help() or ''), valuespec.title())
+            edit_url = make_link([("mode", "edit_configvar"), ("varname", varname), ("site", html.var("site", ""))])
+            title = '<a href="%s" class=%s title="%s">%s</a>' % \
+                    (edit_url, varname in current_settings and "modified" or "",
+                     html.strip_tags(valuespec.help() or ''), valuespec.title())
 
             if varname in current_settings:
                 to_text = valuespec.value_to_text(current_settings[varname])
@@ -5767,8 +5763,7 @@ def mode_globalvars(phase):
                 simple = False
             forms.section(title, simple=simple)
 
-            toggle_url = make_action_link([("mode", "globalvars"),
-                    ("_action", "toggle"), ("_varname", varname)])
+            toggle_url = html.makeactionuri([("_action", "toggle"), ("_varname", varname)])
             if varname in current_settings:
                 if isinstance(valuespec, Checkbox):
                     html.icon_button(toggle_url, _("Immediately toggle this setting"),
@@ -5788,16 +5783,31 @@ def mode_globalvars(phase):
 
 
 def mode_edit_configvar(phase):
+    siteid = html.var("site")
+    if siteid:
+        sites = load_sites()
+        site = sites[siteid]
+
     if phase == "title":
-        return _("Global configuration settings for Check_MK")
+        if siteid:
+            return _("Site-specific global configuration for %s" % siteid)
+        else:
+            return _("Global configuration settings for Check_MK")
 
     elif phase == "buttons":
-        html.context_button(_("Abort"), make_link([("mode", "globalvars")]), "abort")
+        if siteid:
+            html.context_button(_("Abort"), make_link([("mode", "edit_site_globals"), ("site", siteid)]), "abort")
+        else:
+            html.context_button(_("Abort"), make_link([("mode", "globalvars")]), "abort")
         return
 
     varname = html.var("varname")
     domain, valuespec, need_restart, allow_reset, in_global_settings = g_configvars[varname]
-    current_settings = load_configuration_settings()
+    if siteid:
+        current_settings = site.setdefault("globals", {})
+    else:
+        current_settings = load_configuration_settings()
+
     is_on_default = varname not in current_settings
 
     if phase == "action":
@@ -5819,24 +5829,44 @@ def mode_edit_configvar(phase):
             current_settings[varname] = new_value
             msg = _("Changed global configuration variable %s to %s.") \
                   % (varname, valuespec.value_to_text(new_value))
-        save_configuration_settings(current_settings)
-        if need_restart:
-            status = SYNCRESTART
-        else:
-            status = SYNC
 
-        pending_func  = g_configvar_domains[domain].get("pending")
-        if pending_func:
-            pending_func(msg)
+        if siteid:
+            save_sites(sites, activate=False)
+            changes = { "need_sync" : True }
+            if need_restart:
+                changes["need_restart"] = True
+            update_replication_status(siteid, changes)
+            log_pending(AFFECTED, None, "edit-configvar", msg)
+            return "edit_site_globals"
         else:
-            log_pending(status, None, "edit-configvar", msg)
-        return "globalvars"
+            save_configuration_settings(current_settings)
+            if need_restart:
+                status = SYNCRESTART
+            else:
+                status = SYNC
+
+            pending_func  = g_configvar_domains[domain].get("pending")
+            if pending_func:
+                pending_func(msg)
+            else:
+                log_pending(status, None, "edit-configvar", msg)
+            return "globalvars"
+
+    check_mk_vars = check_mk_local_automation("get-configuration", [], [varname])
 
     if varname in current_settings:
         value = current_settings[varname]
     else:
-        check_mk_vars = check_mk_local_automation("get-configuration", [], [varname])
+        if siteid:
+            globalsettings = load_configuration_settings()
+            check_mk_vars.update(globalsettings)
         value = check_mk_vars.get(varname, valuespec.default_value())
+
+    if siteid:
+        defvalue = check_mk_vars.get(varname, valuespec.default_value())
+    else:
+        defvalue = valuespec.default_value()
+
 
     html.begin_form("value_editor", method="POST")
     forms.header(valuespec.title())
@@ -5851,7 +5881,6 @@ def mode_edit_configvar(phase):
     html.help(valuespec.help())
 
     forms.section(_("Default setting"))
-    defvalue = valuespec.default_value()
     if is_on_default:
         html.write(_("This variable is at factory settings."))
     else:
@@ -6825,10 +6854,12 @@ def mode_sites(phase):
         table.row()
         # Buttons
         edit_url = make_link([("mode", "edit_site"), ("edit", id)])
+        globals_url = make_link([("mode", "edit_site_globals"), ("site", id)])
         clone_url = make_link([("mode", "edit_site"), ("clone", id)])
         delete_url = html.makeactionuri([("_delete", id)])
         table.cell(_("Actions"), css="buttons")
         html.icon_button(edit_url, _("Properties"), "edit")
+        html.icon_button(globals_url, _("Site-specific global configuration"), "configuration")
         html.icon_button(clone_url, _("Clone this connection in order to create a new one"), "clone")
         html.icon_button(delete_url, _("Delete"), "delete")
 
@@ -6898,6 +6929,90 @@ def mode_sites(phase):
 
     table.end()
 
+def mode_edit_site_globals(phase):
+    sites = load_sites()
+    siteid = html.var("site")
+    site = sites[siteid]
+
+    if phase == "title":
+        return _("Edit site-specific global settings of %s" % siteid)
+
+    elif phase == "buttons":
+        html.context_button(_("All Sites"), make_link([("mode", "sites")]), "back")
+        html.context_button(_("Connection"), make_link([("mode", "edit_site"), ("edit", siteid)]), "sites")
+        return
+
+    # The site's default values are the current global settings
+    check_mk_vars = [ varname for (varname, var) in g_configvars.items() if var[0] == "check_mk" ]
+    default_values = check_mk_local_automation("get-configuration", [], check_mk_vars)
+    default_values.update(load_configuration_settings())
+    current_settings = site.get("globals", {})
+
+    if phase == "action":
+        varname = html.var("_varname")
+        action = html.var("_action")
+        if varname:
+            domain, valuespec, need_restart, allow_reset, in_global_settings = g_configvars[varname]
+            def_value = default_values.get(varname, valuespec.default_value())
+
+            if action == "reset" and not isinstance(valuespec, Checkbox):
+                c = wato_confirm(
+                    _("Removing site-specific configuration variable"),
+                    _("Do you really want to remove the configuration variable <b>%s</b> "
+                      "of the specifi configuration of this site and that way use the global value "
+                      "of <b><tt>%s</tt></b>?") %
+                       (varname, valuespec.value_to_text(def_value)))
+            else:
+                if not html.check_transaction():
+                    return
+                c = True # no confirmation for direct toggle
+
+            if c:
+                if varname in current_settings:
+                    current_settings[varname] = not current_settings[varname]
+                else:
+                    current_settings[varname] = not def_value
+                msg = _("Changed site-specific configuration variable %s to %s." % (varname,
+                    current_settings[varname] and "on" or "off"))
+                site.setdefault("globals", {})[varname] = current_settings[varname]
+                save_sites(sites, activate=False)
+
+                changes = { "need_sync" : True }
+                if need_restart:
+                    changes["need_restart"] = True
+                update_replication_status(siteid, changes)
+                log_pending(AFFECTED, None, "edit-configvar", msg)
+                if action == "_reset":
+                    return "edit_site_globals", msg
+                else:
+                    return "edit_site_globals"
+            elif c == False:
+                return ""
+            else:
+                return None
+        else:
+            return
+        return
+
+    html.help(_("Here you can configure global settings, that should just be applied "
+                "on that remote site. <b>Note</b>: this only makes sense if the site "
+                "is a configuration slave."))
+
+    if site.get("replication") != "slave":
+        html.show_error(_("This site is not a replication slave. You cannot configure specific settings for it."))
+        return
+
+    render_global_configuration_variables(default_values, current_settings)
+
+def create_site_globals_file(siteid, tmp_dir):
+    if not os.path.exists(tmp_dir):
+        make_nagios_directory(tmp_dir)
+    sites = load_sites()
+    site = sites[siteid]
+    config = site.get("globals", {})
+    file(tmp_dir + "/sitespecific.mk", "w").write("%r\n" % config)
+
+
 def mode_edit_site(phase):
     sites = load_sites()
     siteid = html.var("edit") # missing -> new site
@@ -6911,6 +7026,8 @@ def mode_edit_site(phase):
 
     elif phase == "buttons":
         html.context_button(_("All Sites"), make_link([("mode", "sites")]), "back")
+        if not new:
+            html.context_button(_("Site-Globals"), make_link([("mode", "edit_site_globals"), ("site", siteid)]), "configuration")
         return
 
     if cloneid:
@@ -7290,7 +7407,7 @@ def load_sites():
         return {}
 
 
-def save_sites(sites):
+def save_sites(sites, activate=True):
     make_nagios_directory(multisite_dir)
 
     # Important: even write out sites if it's empty. The global 'sites'
@@ -7299,17 +7416,21 @@ def save_sites(sites):
     out = create_user_file(sites_mk, "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("sites = \\\n%s\n" % pprint.pformat(sites))
-    config.load_config() # make new site configuration active
-    update_distributed_wato_file(sites)
-    declare_site_attribute()
-    rewrite_config_files_below(g_root_folder) # fix site attributes
-    need_sidebar_reload()
 
-    if config.liveproxyd_enabled:
-        save_liveproxyd_config(sites)
+    # Do not activate when just the site's global settings have
+    # been edited
+    if activate:
+        config.load_config() # make new site configuration active
+        update_distributed_wato_file(sites)
+        declare_site_attribute()
+        rewrite_config_files_below(g_root_folder) # fix site attributes
+        need_sidebar_reload()
 
-    # Call the sites saved hook
-    call_hook_sites_saved(sites)
+        if config.liveproxyd_enabled and restart_liveproxy:
+            save_liveproxyd_config(sites)
+
+        # Call the sites saved hook
+        call_hook_sites_saved(sites)
 
 def save_liveproxyd_config(sites):
     path = defaults.default_config_dir + "/liveproxyd.mk"
@@ -7653,15 +7774,27 @@ def mark_affected_sites_dirty(folder, hostname=None, sync = True, restart = True
 #     for site_id, site in sites.items():
 #         update_replication_status(site_id, changes)
 
-def remove_sync_snapshot():
-    if os.path.exists(sync_snapshot_file):
-        os.remove(sync_snapshot_file)
+def remove_sync_snapshot(siteid):
+    path = sync_snapshot_file(siteid)
+    if os.path.exists(path):
+        os.remove(path)
 
-def create_sync_snapshot():
-    if not os.path.exists(sync_snapshot_file):
-        tmp_path = "%s-%s" % (sync_snapshot_file, id(html))
-        multitar.create(tmp_path, replication_paths)
-        os.rename(tmp_path, sync_snapshot_file)
+def sync_snapshot_file(siteid):
+    return defaults.tmp_dir + "/sync-%s.tar.gz" % siteid
+
+def create_sync_snapshot(siteid):
+    path = sync_snapshot_file(siteid)
+    if not os.path.exists(path):
+        tmp_path = "%s-%s" % (path, id(html))
+
+        # Add site-specific global settings.
+        site_tmp_dir = defaults.tmp_dir + "/sync-%s-specific-%s" % (siteid, id(html))
+        create_site_globals_file(siteid, site_tmp_dir)
+
+        paths = replication_paths + [("dir", "sitespecific", site_tmp_dir)]
+        multitar.create(tmp_path, paths)
+        shutil.rmtree(site_tmp_dir)
+        os.rename(tmp_path, path)
 
 def synchronize_site(site, restart):
     if site_is_local(site["id"]):
@@ -7674,7 +7807,7 @@ def synchronize_site(site, restart):
 
         return True
 
-    create_sync_snapshot()
+    create_sync_snapshot(site["id"])
     try:
         start = time.time()
         result = push_snapshot_to_site(site, restart)
@@ -7717,7 +7850,7 @@ def push_snapshot_to_site(site, do_restart):
         ("debug",      config.debug and "1" or ""),
     ])
     url = url_base + var_string
-    response_text = upload_file(url, sync_snapshot_file, site.get('insecure', False))
+    response_text = upload_file(url, sync_snapshot_file(site["id"]), site.get('insecure', False))
     try:
         response = eval(response_text)
         return response
@@ -7995,7 +8128,27 @@ def automation_push_snapshot():
         tarcontent = html.var('snapshot')
         if not tarcontent:
             raise MKGeneralException(_('Invalid call: The snapshot is missing.'))
+
         multitar.extract_from_buffer(tarcontent, replication_paths)
+
+        # We expect one file containing sitespecific global settings.
+        # That is contained in the sub-tarball "sitespecific.tar" and
+        # just contains one file: "sitespecific.mk". The contains a repr()
+        # of all global settings, that should override the ones in global.mk
+        # in various directories.
+        try:
+            tmp_dir = defaults.tmp_dir + "/sitespecific-%s" % id(html)
+            if not os.path.exists(tmp_dir):
+                make_nagios_directory(tmp_dir)
+            multitar.extract_from_buffer(tarcontent, [ ("dir", "sitespecific", tmp_dir) ])
+            site_globals = eval(file(tmp_dir + "/sitespecific.mk").read())
+            current_settings = load_configuration_settings()
+            current_settings.update(site_globals)
+            save_configuration_settings(current_settings)
+            shutil.rmtree(tmp_dir)
+        except Exception, e:
+            html.log("Warning: cannot extract site-specific global settings: %s" % e)
+
         log_commit_pending() # pending changes are lost
 
         call_hook_snapshot_pushed()
@@ -14005,6 +14158,7 @@ modes = {
    "edit_timeperiod"    : (["timeperiods"], mode_edit_timeperiod),
    "sites"              : (["sites"], mode_sites),
    "edit_site"          : (["sites"], mode_edit_site),
+   "edit_site_globals"  : (["sites"], mode_edit_site_globals),
    "users"              : (["users"], mode_users),
    "edit_user"          : (["users"], mode_edit_user),
    "user_attrs"         : (["users"], lambda phase: mode_custom_attrs(phase, "user")),

@@ -1,3 +1,8 @@
+1.2.3i5:
+    WATO:
+    * You can now have site-specific global settings when using
+      distributed WATO (available in the "Distributed Monitoring")
+
 1.2.3i4:
     Core:
     * Create inventory check also for hosts without services, if they

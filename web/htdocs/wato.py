@@ -2606,6 +2606,7 @@ def mode_bulk_inventory(phase):
             try:
                 site_id, folderpath, hostnamesstring = html.var("_item").split("|")
                 hostnames = hostnamesstring.split(";")
+                num_hosts = len(hostnames)
                 folder = g_folders[folderpath]
                 load_hosts(folder)
                 arguments = [how,] + hostnames
@@ -2613,7 +2614,7 @@ def mode_bulk_inventory(phase):
                     arguments = [ "--cache" ] + arguments
                 counts, failed_hosts = check_mk_automation(site_id, "inventory", arguments)
                 #counts = ( 1, 2, 3, 4 )
-                result = repr([ 'continue', 1, 0 ] + list(counts)) + "\n"
+                result = repr([ 'continue', num_hosts, 0 ] + list(counts)) + "\n"
                 for hostname in hostnames:
                     host = folder[".hosts"][hostname]
                     if hostname in failed_hosts:
@@ -2631,7 +2632,7 @@ def mode_bulk_inventory(phase):
                             save_hosts(folder) # Could be optimized, but difficult here
 
             except Exception, e:
-                result = repr([ 'failed', 1, 1, 0, 0, 0, 0, ]) + "\n"
+                result = repr([ 'failed', num_hosts, num_hosts, 0, 0, 0, 0, ]) + "\n"
                 if site_id:
                     msg = _("Error during inventory of %s on site %s<div class=exc>%s</div") % \
                                      (", ".join(hostnames), site_id, e)

@@ -435,6 +435,7 @@ function progress_clean_log() {
 function progress_scheduler(mode, url_prefix, timeout, items, end_url, success_stats, fail_stats, term_url, finished_txt) {
     // Initialize
     if (progress_items === null) {
+        total_num_items        = items.length;
         progress_items         = items;
         failed_items           = Array();
         progress_total_num     = items.length;
@@ -455,10 +456,15 @@ function progress_scheduler(mode, url_prefix, timeout, items, end_url, success_s
     // Regular processing when not paused and not already running
     if (!progress_paused && !progress_running) {
         if (progress_items.length > 0) {
+            num_items_left = progress_items.length;
+            perc = Math.round(100 - (100.0 * num_items_left / total_num_items));
+            // title = progress_items.length + " Items, " + progress_success_stats.length + " Stats, " + progress_fail_stats.length + " Failed.";
+            title = perc + "%";
             // Progressing
             progress_running = true;
             // Remove leading pipe signs (when having no folder set)
-            update_progress_title(progress_items[0].replace(/^\|*/g, '').substr(0, 60));
+            // update_progress_title(percentage + "%");
+            update_progress_title(title);
             get_url(url_prefix + '&_transid=-1&_item=' + escape(progress_items[0]),
                 progress_handle_response,    // regular handler (http code 200)
                 [ mode, progress_items[0] ], // data to hand over to handlers

@@ -1,4 +1,7 @@
 1.2.3i5:
+    Core:
+    * FIX: inventory check now honors settings for exit code
+
     Multisite:
     * Speed-O-Meter: now measure only service checks. Host checks
       are omitted, since they do not really matter and make the

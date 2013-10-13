@@ -2742,8 +2742,13 @@ def check_inventory(hostname):
     except Exception, e:
         if opt_debug:
             raise
-        sys.stdout.write("UNKNOWN - %s\n" % (e,))
-        sys.exit(3)
+        # Honor rule settings for "Status of the Check_MK service". In case of
+        # a problem we assume a connection error here.
+        spec = exit_code_spec(hostname)
+        what = isinstance(e, MKAgentError) and "connection" or "exception"
+        status = spec.get(what, 3)
+        sys.stdout.write("%s - %s\n" % (nagios_state_names[status], e))
+        sys.exit(status)
 
 
 def service_ignored(hostname, checktype, service_description):

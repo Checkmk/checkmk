@@ -30,7 +30,7 @@ diskstat_default_levels = {
 #    "read" :    (10, 20),   # MB/sec
 #    "write" :   (20, 40),   # MB/sec
 #    "average" : 15,         # min
-#    "latency" : (10, 20), # ms
+#    "latency" : (10, 20),   # ms
 #    "latency_perfdata" : True,
 }
 

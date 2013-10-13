@@ -1,7 +1,7 @@
 1.2.3i5:
     Core:
     * FIX: inventory check now honors settings for exit code
-    * FIX: avoid exception when only one node of a cluster has services
+    * FIX: avoid exception nodes of cluster have different agent type
 
     Multisite:
     * Speed-O-Meter: now measure only service checks. Host checks

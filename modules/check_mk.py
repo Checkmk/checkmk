@@ -4660,7 +4660,7 @@ def do_cleanup_autochecks():
     for host, lines in hostdata.items():
         lines.sort()
         fn = host.replace(":","_") + ".mk"
-        if opt_verbose:
+        if opt_debug:
             sys.stdout.write("Writing %s: %d checks\n" % (fn, len(lines)))
         newfiles.add(fn)
         f = file(fn, "w+")
@@ -4672,7 +4672,7 @@ def do_cleanup_autochecks():
     # 3. Remove obsolete files
     for f in glob.glob("*.mk"):
         if f not in newfiles:
-            if opt_verbose:
+            if opt_debug:
                 sys.stdout.write("Deleting %s\n" % f)
             os.remove(f)
 

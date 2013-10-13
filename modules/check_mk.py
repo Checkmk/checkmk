@@ -2784,8 +2784,6 @@ def in_boolean_serviceconf_list(hostname, service_description, conflist):
         if hosttags_match_taglist(tags_of_host(hostname), tags) and \
            in_extraconf_hostlist(hostlist, hostname) and \
            in_extraconf_servicelist(servlist, service_description):
-            if opt_verbose:
-                print "Ignoring service '%s' on host %s." % (service_description, hostname)
             return not negate
     return False # no match. Do not ignore
 

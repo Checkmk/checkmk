@@ -381,8 +381,9 @@ except Exception, e:
 # those checks that do not support inventory. It must be known before
 # we read in all the checks
 def no_inventory_possible(checkname, info):
-    sys.stderr.write("Sorry. No inventory possible for check type %s.\n" % checkname)
-    sys.exit(3)
+    if opt_verbose:
+        sys.stdout.write("%s does not support inventory. Skipping it.\n" % checkname)
+    return []
 
 
 #   +----------------------------------------------------------------------+

@@ -2,6 +2,7 @@
     Core:
     * FIX: inventory check now honors settings for exit code
     * FIX: avoid exception nodes of cluster have different agent type
+    * FIX: continue inventory, if one check does not support it
 
     Multisite:
     * Speed-O-Meter: now measure only service checks. Host checks

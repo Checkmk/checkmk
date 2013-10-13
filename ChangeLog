@@ -1,4 +1,9 @@
 1.2.3i5:
+    Multisite:
+    * Speed-O-Meter: now measure only service checks. Host checks
+      are omitted, since they do not really matter and make the
+      results less useful when using CMC.
+
     WATO:
     * You can now have site-specific global settings when using
       distributed WATO (available in the "Distributed Monitoring")

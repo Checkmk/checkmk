@@ -440,9 +440,9 @@ def ajax_speedometer():
         # Get the current rates and the program start time. If there
         # are more than one site, we simply add the start times.
         data = html.live.query_summed_stats("GET status\n"
-               "Columns: service_checks_rate host_checks_rate program_start")
-        current_rate = data[0] + data[1]
-        program_start = data[2]
+               "Columns: service_checks_rate program_start")
+        current_rate = data[0]
+        program_start = data[1]
 
         # Recompute the scheduled_rate only if it is not known (first call)
         # or if one of the sites has been restarted. The computed value cannot
@@ -451,16 +451,11 @@ def ajax_speedometer():
         # scheduled checks rate needs to loop over all hosts and services.
         if last_program_start != program_start:
 
-            # 1. First compute number of expected host checks per second
-            scheduled_rate = html.live.query_summed_stats(
-                        "GET hosts\n"
-                        "Stats: suminv check_interval\n")[0] / 60.0
-
-            # 2. Now get data of all active services and of passive/non-check_mk-services.
+            # 1. Get data of all active services and of passive/non-check_mk-services.
             # For passive services we assume that they are scheduled with the rate the
             # is configured via "check_interval". Nagios does not use this setting for i
             # passive checks, but we have no other option.
-            scheduled_rate += html.live.query_summed_stats(
+            scheduled_rate = html.live.query_summed_stats(
                         "GET services\n"
                         "Stats: suminv check_interval\n"
                         "Filter: active_checks_enabled = 1\n"
@@ -490,7 +485,7 @@ def ajax_speedometer():
                 scheduled_rate += float(num_services) / check_interval / 60.0
 
         percentage = 100.0 * current_rate / scheduled_rate;
-        title = _("Scheduled check rate: %.1f/s, current rate: %.1f/s, that is "
+        title = _("Scheduled service check rate: %.1f/s, current rate: %.1f/s, that is "
                   "%.0f%% of the scheduled rate" %
                   (scheduled_rate, current_rate, percentage))
 

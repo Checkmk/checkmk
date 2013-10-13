@@ -743,11 +743,11 @@ speedometer_show_speed(0, 0, 0);
 
 
 sidebar_snapins["speedometer"] = {
-    "title" : _("Speed-O-Meter"),
-    "description" : _("A gadget that shows your current check rate in relation to "
+    "title" : _("Service Speed-O-Meter"),
+    "description" : _("A gadget that shows your current service check rate in relation to "
                       "the scheduled check rate. If the Speed-O-Meter shows a speed "
-                      "of 100 percent, then all checks are being executed in exactly "
-                      "the rate that is configured (via check_interval)"),
+                      "of 100 percent, all service checks are being executed in exactly "
+                      "the rate that is desired."),
     "render" : render_speedometer,
     "allowed" : [ "admin", ],
     "styles" : """

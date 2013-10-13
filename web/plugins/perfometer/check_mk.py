@@ -188,9 +188,12 @@ def perfometer_check_mk_cpu_loads(row, check_command, perf_data):
     load = float(perf_data[0][1])
     return "%.1f" % load, perfometer_logarithmic(load, 4, 2, color)
 
-
 perfometers["check_mk-cpu.loads"] = perfometer_check_mk_cpu_loads
 perfometers["check_mk-ucd_cpu_load"] = perfometer_check_mk_cpu_loads
+perfometers["check_mk-statgrab_load"] = perfometer_check_mk_cpu_loads
+perfometers["check_mk-hpux_cpu"] = perfometer_check_mk_cpu_loads
+perfometers["check_mk-blade_bx_load"] = perfometer_check_mk_cpu_loads
+
 
 def perfometer_check_mk_ntp(row, check_command, perf_data, unit = "ms"):
     offset = float(perf_data[0][1])

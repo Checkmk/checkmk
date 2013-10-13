@@ -6,6 +6,10 @@
 
     Checks & Agents:
     * diskstat: removed (ever incorrect) latency computation for Linux
+    * statgrab_load: support predictive levels, add perf-o-meter
+    * ucd_cpu_load: support predictive levels
+    * hpux_cpu, blade_bx_load: support predictive levels, add perf-o-meter,
+       make WATO-configable
 
     WATO:
     * You can now have site-specific global settings when using

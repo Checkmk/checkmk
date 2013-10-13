@@ -24,32 +24,27 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# <<<hpux_cpu>>>
-#  2:23pm  up 196 days,  4:47,  5 users,  load average: 0.05, 0.04, 0.04
-#      8 logical processors (2 per socket)
+# Common code for all CPU load checks. Please do not mix this up
+# with CPU utilization. The load is at any time the current number
+# of processes in the running state (on some systems, like Linux,
+# also Disk wait is account for the load).
 
-cpuload_default_levels = (5, 10)
+def check_cpu_load_generic(params, load, num_cpus=1):
 
-def inventory_hpux_cpu_load(info):
-    if len(info) >= 1 and 'load' in info[0]:
-        return [(None, "cpuload_default_levels")]
+    # Prepare performance data
+    if type(params) == tuple:
+        warn, crit = [ p*num_cpus for p in params ]
+    else:
+        warn, crit = None, None
 
-def check_hpux_cpu_load(item, params, info):
-    load = [ float(l.strip(',')) for l in info[0][-3:] ]
-    # Assuming 1 cpu when none can be found in the agent output
-    try:
-        num_cpus = int(info[1][0])
-    except:
-        num_cpus = 1
+    perfdata = [ ('load' + str(z), l, warn, crit, 0, num_cpus )
+                 for (z,l) in [ (1,load[0]), (5,load[1]), (15, load[2]) ] ]
 
-    return check_cpu_load_generic(params, load, num_cpus)
-
-
-check_info["hpux_cpu"] = {
-    'check_function':          check_hpux_cpu_load,
-    'inventory_function':      inventory_hpux_cpu_load,
-    'service_description':     'CPU load',
-    'has_perfdata':            True,
-    "group":                   "cpu_load",
-    "includes":                "cpu_load.include",
-}
+    state, text, perf = check_levels(load[2], 'load15', params, factor = num_cpus)
+    perfdata += perf
+    infotext = "15min load %.2f" % load[2]
+    if num_cpus > 1:
+        infotext += " at %d CPUs" % num_cpus
+    if text:
+        infotext += ", " + text
+    return state, infotext, perfdata

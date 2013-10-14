@@ -77,6 +77,8 @@
     * FIX: check_mk_agent.linux: limit Livestatus check to 3 seconds
     * FIX: esx_vsphere_vm: fixed exception when memory info for vm is missing
     * FIX: esx_vsphere_hostsystem: Fixed typo in check output
+    * FIX: psperf.bat/ps: Plugin output processing no longer crashes when
+           the ps service is clustered
 
     Multisite:
     * Filtering in views by Hostalias is possible now too

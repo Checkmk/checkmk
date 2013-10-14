@@ -5,6 +5,7 @@
     * FIX: continue inventory, if one check does not support it
     * FIX: fix configuration of explicit SNMP community, allow unicode
     * FIX: avoid invalid cache of 2nd and up hosts in bulk inventory
+    * inventory check of SNMP devices now does scan per default (configurable)
 
     Multisite:
     * Speed-O-Meter: now measure only service checks. Host checks

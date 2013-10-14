@@ -243,6 +243,7 @@ explicit_snmp_communities          = {} # override the rule based configuration
 # Inventory and inventory checks
 inventory_check_interval           = None # Nagios intervals (4h = 240)
 inventory_check_severity           = 1    # warning
+inventory_check_do_scan            = True # include SNMP scan for SNMP devices
 inventory_max_cachefile_age        = 120  # secs.
 always_cleanup_autochecks          = True
 
@@ -2713,13 +2714,24 @@ def check_inventory(hostname):
     is_snmp = is_snmp_host(hostname)
     is_tcp  = is_tcp_host(hostname)
     check_table = get_check_table(hostname)
+    if is_snmp and inventory_check_do_scan:
+        try:
+            ipaddress = lookup_ipaddress(hostname)
+            snmp_checktypes = snmp_scan(hostname, ipaddress)
+        except:
+            if opt_debug:
+                raise
+            pass
+    else:
+        snmp_checktypes = []
+
     hosts_checktypes = set([ ct for (ct, item), params in check_table.items() ])
     try:
         for ct in inventorable_checktypes("all"):
             if check_uses_snmp(ct) and not is_snmp:
                 continue # Skip SNMP checks on non-SNMP hosts
-            elif check_uses_snmp(ct) and ct not in hosts_checktypes:
- 		continue # Do not look for new SNMP services (maybe change in future)
+            elif check_uses_snmp(ct) and ct not in hosts_checktypes and ct not in snmp_checktypes:
+ 		continue # Only try positive scans and existing types
             elif not check_uses_snmp(ct) and not is_tcp:
                 continue # Skip TCP checks on non-TCP hosts
 

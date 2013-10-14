@@ -1013,6 +1013,17 @@ register_configvar(group,
             (3, _("Unknown") ),
             ]))
 
+register_configvar(group,
+    "inventory_check_do_scan",
+    DropdownChoice(
+        title = _("Inventory check for SNMP devices"),
+        choices = [
+           ( True, _("Perform full SNMP scan always, detect new check types") ),
+           ( False, _("Just rely on existing check files, detect new items only") )
+        ]
+    ))
+
+
 _if_portstate_choices = [
                         ( '1', 'up(1)'),
                         ( '2', 'down(2)'),

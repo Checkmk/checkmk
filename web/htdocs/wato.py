@@ -2193,7 +2193,7 @@ def mode_inventory(phase, firsttime):
         config.need_permission("wato.services")
         check_host_permissions(hostname)
         if html.check_transaction():
-            cache_options = not html.var("_scan") and [ '--cache' ] or []
+            cache_options = html.var("_scan") and [ '@scan' ] or [ '@noscan' ]
             table = check_mk_automation(host[".siteid"], "try-inventory", cache_options + [hostname])
             table.sort()
             active_checks = {}
@@ -2229,7 +2229,7 @@ def show_service_table(host, firsttime):
     hostname = host[".name"]
 
     # Read current check configuration
-    cache_options = not html.var("_scan") and [ '--cache' ] or []
+    cache_options = html.var("_scan") and [ '@scan' ] or [ '@noscan' ]
 
     # We first try using the Cache (if the user has not pressed Full Scan).
     # If we do not find any data, we omit the cache and immediately try
@@ -2611,7 +2611,9 @@ def mode_bulk_inventory(phase):
                 load_hosts(folder)
                 arguments = [how,] + hostnames
                 if html.var("use_cache"):
-                    arguments = [ "--cache" ] + arguments
+                    arguments = [ "@cache" ] + arguments
+                if html.var("do_scan"):
+                    arguments = [ "@scan" ] + arguments
                 counts, failed_hosts = check_mk_automation(site_id, "inventory", arguments)
                 #counts = ( 1, 2, 3, 4 )
                 result = repr([ 'continue', num_hosts, 0 ] + list(counts)) + "\n"
@@ -2778,6 +2780,8 @@ def mode_bulk_inventory(phase):
 
         forms.section(_("Performance options"))
         html.checkbox("use_cache", True, label=_("Use cached data if present"))
+        html.write("<br>")
+        html.checkbox("do_scan", True, label=_("Do full SNMP scan for SNMP devices"))
         html.write("<br>")
         html.write(_("Number of hosts to handle at once:") + " ")
         html.number_input("bulk_size", 10, size=3)

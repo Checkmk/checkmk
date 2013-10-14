@@ -89,10 +89,20 @@ def do_automation(cmd, args):
 # "fixall" - find new, remove exceeding
 # "refresh" - drop all services and reinventorize
 def automation_inventory(args):
-    global opt_use_cachefile, inventory_max_cachefile_age
-    if args[0] == "--cache":
+    global opt_use_cachefile, inventory_max_cachefile_age, check_max_cachefile_age
+
+    # perform full SNMP scan on SNMP devices?
+    if args[0] == "@scan":
+        with_snmp_scan = True
+        args = args[1:]
+    else:
+        with_snmp_scan = False
+
+    # use cache files if present?
+    if args[0] == "@cache":
         opt_use_cachefile = True
         inventory_max_cachefile_age = 1000000000
+        check_max_cachefile_age = 1000000000
         args = args[1:]
     else:
         opt_use_cachefile = False
@@ -119,7 +129,7 @@ def automation_inventory(args):
     for hostname in hostnames:
         try:
             # Compute current state of new and existing checks
-            table = automation_try_inventory([hostname], leave_no_tcp=True)
+            table = automation_try_inventory([hostname], leave_no_tcp=True, with_snmp_scan=with_snmp_scan)
 
             # Create new list of checks
             new_items = []
@@ -158,13 +168,17 @@ def automation_inventory(args):
     return (count_added, count_removed, count_kept, count_new), failed_hosts
 
 
-def automation_try_inventory(args, leave_no_tcp=False):
+def automation_try_inventory(args, leave_no_tcp=False, with_snmp_scan=False):
     global opt_use_cachefile, inventory_max_cachefile_age, check_max_cachefile_age
-    if args[0] == '--cache':
+    if args[0] == '@noscan':
+        args = args[1:]
+        with_snmp_scan = False
         opt_use_cachefile = True
         check_max_cachefile_age = 1000000000
         inventory_max_cachefile_age = 1000000000
+    elif args[0] == '@scan':
         args = args[1:]
+        with_snmp_scan = True
 
     hostname = args[0]
 
@@ -174,7 +188,7 @@ def automation_try_inventory(args, leave_no_tcp=False):
     if is_cluster(hostname):
         already_added = set([])
         for node in nodes_of(hostname):
-            new_services = automation_try_inventory_node(node, leave_no_tcp=leave_no_tcp)
+            new_services = automation_try_inventory_node(node, leave_no_tcp=leave_no_tcp, with_snmp_scan=with_snmp_scan)
             for entry in new_services:
                 if host_of_clustered_service(node, entry[6]) == hostname:
                     # 1: check, 6: Service description
@@ -190,7 +204,7 @@ def automation_try_inventory(args, leave_no_tcp=False):
                 already_added.add( (ct, descr) ) # make it unique
 
     else:
-        new_services = automation_try_inventory_node(hostname, leave_no_tcp=leave_no_tcp)
+        new_services = automation_try_inventory_node(hostname, leave_no_tcp=leave_no_tcp, with_snmp_scan=with_snmp_scan)
         for entry in new_services:
             host = host_of_clustered_service(hostname, entry[6])
             if host == hostname:
@@ -202,7 +216,7 @@ def automation_try_inventory(args, leave_no_tcp=False):
 
 
 
-def automation_try_inventory_node(hostname, leave_no_tcp=False):
+def automation_try_inventory_node(hostname, leave_no_tcp=False, with_snmp_scan=False):
     global opt_use_cachefile, opt_no_tcp, opt_dont_submit
 
     try:
@@ -219,7 +233,7 @@ def automation_try_inventory_node(hostname, leave_no_tcp=False):
     snmp_error = None
     if is_snmp_host(hostname):
         try:
-            if opt_use_cachefile:
+            if not with_snmp_scan:
                 existing_checks = set([ cn for (cn, item) in get_check_table(hostname) ])
                 for cn in inventorable_checktypes("snmp"):
                     if cn in existing_checks:
@@ -230,7 +244,8 @@ def automation_try_inventory_node(hostname, leave_no_tcp=False):
                     if sys_descr == None:
                         raise MKSNMPError("Cannot get system description via SNMP. "
                                           "SNMP agent is not responding. Probably wrong "
-                                          "community or wrong SNMP version.")
+                                          "community or wrong SNMP version. IP address is %s" %
+                                           ipaddress)
 
                 found_services = do_snmp_scan([hostname], True, True)
 

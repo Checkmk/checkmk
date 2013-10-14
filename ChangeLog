@@ -27,6 +27,7 @@
     * You can now have site-specific global settings when using
       distributed WATO (available in the "Distributed Monitoring")
     * bulk inventory: display percentage in progress bar
+    * New option for full SNMP scan in bulk inventory
     * FIX: correct display of number of hosts in bulk inventory
 
 1.2.3i4:

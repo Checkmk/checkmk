@@ -548,7 +548,9 @@ def read_cache_file(relpath, max_cache_age):
                     sys.stderr.write("Using data from cachefile %s.\n" % cachefile)
                 return result
         elif opt_debug:
-            sys.stderr.write("Skipping cache file %s: Too old\n" % cachefile)
+            sys.stderr.write("Skipping cache file %s: Too old "
+                             "(age is %d sec, allowed is %d sec)\n" %
+                   (cachefile, cachefile_age(cachefile), max_cache_age))
 
     if simulation_mode and not opt_no_cache:
         raise MKGeneralException("Simulation mode and no cachefile present.")

@@ -8,6 +8,7 @@
     * Speed-O-Meter: now measure only service checks. Host checks
       are omitted, since they do not really matter and make the
       results less useful when using CMC.
+    * FIX: Fixed encoding problem in webservice column output
 
     Checks & Agents:
     * diskstat: removed (ever incorrect) latency computation for Linux

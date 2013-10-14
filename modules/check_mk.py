@@ -714,7 +714,7 @@ def snmp_base_command(what, hostname):
         command = 'snmpbulkwalk'
 
     # Handle V1 and V2C
-    if type(credentials) == str:
+    if type(credentials) in [ str, unicode ]:
         if is_bulkwalk_host(hostname):
             options = '-v2c'
         else:

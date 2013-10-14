@@ -283,11 +283,12 @@ check_info['esx_vsphere_counters.uptime'] = {
 
 # We assume that all ramdisks have the same size (in mb) on all hosts
 esx_vsphere_counters_ramdisk_sizes = {
-    'root':       32,
-    'etc':        28,
-    'tmp':        192,
-    'hostdstats': 319,
-    'snmptraps':  1,
+    'root':           32,
+    'etc':            28,
+    'tmp':            192,
+    'hostdstats':     319,
+    'snmptraps':      1,
+    'upgradescratch': 300,
 }
 
 def inventory_esx_vsphere_counters_ramdisk(info):

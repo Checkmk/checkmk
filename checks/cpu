@@ -69,7 +69,7 @@ check_info["cpu.loads"] = {
     "service_description"     : "CPU load",
     "has_perfdata"            : True,
     "group"                   : "cpu_load",
-    "includes"                : "cpu_load.include",
+    "includes"                : ["cpu_load.include"],
 }
 
 check_info["cpu.threads"] = {

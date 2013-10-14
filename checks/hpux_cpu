@@ -51,5 +51,5 @@ check_info["hpux_cpu"] = {
     'service_description':     'CPU load',
     'has_perfdata':            True,
     "group":                   "cpu_load",
-    "includes":                "cpu_load.include",
+    "includes":                ["cpu_load.include"],
 }

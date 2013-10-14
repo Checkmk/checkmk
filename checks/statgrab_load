@@ -48,5 +48,5 @@ check_info["statgrab_load"] = {
     'service_description':     'CPU load',
     'has_perfdata':            True,
     'group':                   'cpu_load',
-    "includes"                : "cpu_load.include",
+    "includes":                ["cpu_load.include"],
 }

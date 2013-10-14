@@ -16,6 +16,7 @@
     * ucd_cpu_load: support predictive levels
     * hpux_cpu, blade_bx_load: support predictive levels, add perf-o-meter,
        make WATO-configable
+    * check_sql: Database port can now be explicitly set
 
     WATO:
     * You can now have site-specific global settings when using

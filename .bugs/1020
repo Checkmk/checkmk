@@ -2,11 +2,22 @@ Title: cmk --snmpwalk does not always get all oids
 Component: core
 State: open
 Date: 2013-09-04 11:27:53
-Targetversion: 1.2.3
-Class: bug
+Targetversion: future
+Class: nastiness
 
 In some cases, on somehow broken devices, the cmk --snmpwalk feature does not
 get complete results. At the moment it walks the standard OIDs 1.2.6.1.2 and
 1.2.6.1.4.
 
 An option to try to fix this problem is to add the oid returned by .1.3.6.1.2.1.1.2.0 .
+
+Mathias: I think I remember that there are some devices that do *not*
+have a MIB at that OID. And also some devices that have multiple entries
+in .1.3.6.1.2.1.1.2.0.
+
+Because we need the whole thing only for development we could simple give
+the possibility to manually add further OIDs to fetch via the command line,
+e.g.
+
+cmk --snmpwalk --extra-oid 1.3.5.1.4.3.5.3.5 HOST
+

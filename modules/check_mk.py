@@ -610,6 +610,7 @@ def check_interval_of(hostname, checkname):
         if match is None or match == checkname:
             return minutes # use first match
 
+#.
 #   +----------------------------------------------------------------------+
 #   |                      ____  _   _ __  __ ____                         |
 #   |                     / ___|| \ | |  \/  |  _ \                        |
@@ -660,6 +661,7 @@ def is_snmpv2c_host(hostname):
 def is_usewalk_host(hostname):
     return in_binary_hostlist(hostname, usewalk_hosts)
 
+#.
 #   .--Classic SNMP--------------------------------------------------------.
 #   |        ____ _               _        ____  _   _ __  __ ____         |
 #   |       / ___| | __ _ ___ ___(_) ___  / ___|| \ | |  \/  |  _ \        |

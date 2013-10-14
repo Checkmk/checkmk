@@ -765,6 +765,11 @@ def snmp_get_oid(hostname, ipaddress, oid):
 
     snmp_process = os.popen(command, "r")
     line = snmp_process.readline().strip()
+    if not line:
+        if opt_debug:
+            sys.stdout.write("Error in response to snmpget.\n")
+        return None
+
     item, value = line.split("=", 1)
     value = value.strip()
     if opt_debug:
@@ -828,11 +833,13 @@ def snmp_scan(hostname, ipaddress):
         sys.stdout.write("Scanning host %s(%s) for SNMP checks..." % (hostname, ipaddress))
         sys.stdout.flush()
     if not in_binary_hostlist(hostname, snmp_without_sys_descr):
-        sys_descr = get_single_oid(hostname, ipaddress, ".1.3.6.1.2.1.1.1.0")
+        sys_descr_oid = ".1.3.6.1.2.1.1.1.0"
+        sys_descr = get_single_oid(hostname, ipaddress, sys_descr_oid)
         if sys_descr == None:
-            if opt_verbose:
-                sys.stderr.write("no SNMP answer\n")
-            return []
+            raise MKSNMPError("Cannot fetch system description OID %s" % sys_descr_oid)
+            # if opt_verbose:
+            #     sys.stderr.write("no SNMP answer\n")
+            # return []
 
     found = []
     for check_type, check in check_info.items():
@@ -2488,7 +2495,14 @@ def do_snmp_scan(hostnamelist, check_only=False, include_state=False):
         except:
             sys.stdout.write("Cannot resolve %s into IP address. Skipping.\n" % hostname)
             continue
-        checknames = snmp_scan(hostname, ipaddress)
+        try:
+            checknames = snmp_scan(hostname, ipaddress)
+        except Exception, e:
+            if opt_debug:
+                raise
+            sys.stdout.write("SNMP scan for %s failed: %s\n" % (hostname, e))
+            continue
+
         for checkname in checknames:
             if opt_debug:
                 sys.stdout.write("Trying inventory for %s on %s\n" % (checkname, hostname))
@@ -2715,19 +2729,16 @@ def check_inventory(hostname):
     is_snmp = is_snmp_host(hostname)
     is_tcp  = is_tcp_host(hostname)
     check_table = get_check_table(hostname)
-    if is_snmp and inventory_check_do_scan:
-        try:
+
+    try:
+        if is_snmp and inventory_check_do_scan:
             ipaddress = lookup_ipaddress(hostname)
             snmp_checktypes = snmp_scan(hostname, ipaddress)
-        except:
-            if opt_debug:
-                raise
-            pass
-    else:
-        snmp_checktypes = []
+        else:
+            snmp_checktypes = []
 
-    hosts_checktypes = set([ ct for (ct, item), params in check_table.items() ])
-    try:
+        hosts_checktypes = set([ ct for (ct, item), params in check_table.items() ])
+
         for ct in inventorable_checktypes("all"):
             if check_uses_snmp(ct) and not is_snmp:
                 continue # Skip SNMP checks on non-SNMP hosts
@@ -2761,7 +2772,10 @@ def check_inventory(hostname):
         # Honor rule settings for "Status of the Check_MK service". In case of
         # a problem we assume a connection error here.
         spec = exit_code_spec(hostname)
-        what = isinstance(e, MKAgentError) and "connection" or "exception"
+        if isinstance(e, MKAgentError) or isinstance(e, MKSNMPError):
+            what = "connection"
+        else:
+            what = "exception"
         status = spec.get(what, 3)
         sys.stdout.write("%s - %s\n" % (nagios_state_names[status], e))
         sys.exit(status)

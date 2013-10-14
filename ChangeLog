@@ -5,6 +5,8 @@
     * FIX: continue inventory, if one check does not support it
     * FIX: fix configuration of explicit SNMP community, allow unicode
     * FIX: avoid invalid cache of 2nd and up hosts in bulk inventory
+    * FIX: fixed error handling in SNMP scan, inventory check fails now
+       if SNMP agent is not responding
     * inventory check of SNMP devices now does scan per default (configurable)
 
     Multisite:

@@ -4,6 +4,7 @@
     * FIX: avoid exception nodes of cluster have different agent type
     * FIX: continue inventory, if one check does not support it
     * FIX: fix configuration of explicit SNMP community, allow unicode
+    * FIX: avoid invalid cache of 2nd and up hosts in bulk inventory
 
     Multisite:
     * Speed-O-Meter: now measure only service checks. Host checks

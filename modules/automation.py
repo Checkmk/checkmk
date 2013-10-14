@@ -308,6 +308,11 @@ def automation_try_inventory_node(hostname, leave_no_tcp=False):
             global g_service_description
             g_service_description = descr
             infotype = ct.split('.')[0]
+
+            # Sorry. The whole caching stuff is the most horrible hack in
+            # whole Check_MK. Nobody dares to clean it up, YET. But that
+            # day is getting nearer...
+            old_opt_use_cachefile = opt_use_cachefile
             opt_use_cachefile = True
 	    if not leave_no_tcp:
 	        opt_no_tcp = True
@@ -339,6 +344,8 @@ def automation_try_inventory_node(hostname, leave_no_tcp=False):
                     snmp_error = output
                 else:
                     tcp_error = output
+
+            opt_use_cachefile = old_opt_use_cachefile
 
             if exitcode == None:
                 check_function = check_info[ct]["check_function"]

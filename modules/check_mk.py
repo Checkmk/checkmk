@@ -826,10 +826,11 @@ def snmp_scan(hostname, ipaddress):
 
     if opt_verbose:
         sys.stdout.write("Scanning host %s(%s) for SNMP checks..." % (hostname, ipaddress))
+        sys.stdout.flush()
     if not in_binary_hostlist(hostname, snmp_without_sys_descr):
         sys_descr = get_single_oid(hostname, ipaddress, ".1.3.6.1.2.1.1.1.0")
         if sys_descr == None:
-            if opt_debug:
+            if opt_verbose:
                 sys.stderr.write("no SNMP answer\n")
             return []
 
@@ -4666,7 +4667,7 @@ def do_cleanup_autochecks():
                 hostchecks.append(line)
                 checks += 1
                 hostdata[hostname] = hostchecks
-    if opt_verbose:
+    if opt_debug:
         sys.stdout.write("Found %d checks from %d hosts.\n" % (checks, len(hostdata)))
 
     # 2. Write out new autochecks.

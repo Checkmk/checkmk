@@ -310,12 +310,13 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, params):
                 wa, cr = trend_mb
                 warn_perf, crit_perf = wa, cr
                 if trend >= wa:
-                    problems.append("growing too fast (levels at %s/%s per %.1fh)!" %
+                    problems.append("growing too fast (levels at %s/%s per %.1fh)(!" %
                        ( get_bytes_human_readable(wa * MB), get_bytes_human_readable(cr * MB), range))
                     status = max(1, status)
                     if trend >= cr:
                         status = 2
                         problems[-1] += "!"
+                    problems[-1] += ")"
             else:
                 wa, cr = None, None
 
@@ -331,12 +332,13 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, params):
                 else:
                     warn_perf, crit_perf = wa, cr
                 if trend >= wa:
-                    problems.append("growing too fast (levels at %.3f%%/%.3f%% per %.1fh)!" %
+                    problems.append("growing too fast (levels at %.3f%%/%.3f%% per %.1fh)(!" %
                        ( wa_perc, cr_perc, range))
                     status = max(1, status)
                     if trend >= cr:
                         status = 2
                         problems[-1] += "!"
+                    problems[-1] += ")"
 
             if levels.get("trend_perfdata"):
                 # New in 1.1.13i3: output trend not as MB / trend_range, but as
@@ -357,10 +359,10 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, params):
                     wa, cr = timeleft
                     if hours_left <= cr:
                         status = 2
-                        problems.append("only %.1fh until disk full!!" % hours_left)
+                        problems.append("only %.1fh until disk full(!!)" % hours_left)
                     elif hours_left <= wa:
                         status = max(status, 1)
-                        problems.append("only %.1fh until disk full!" % hours_left)
+                        problems.append("only %.1fh until disk full(!)" % hours_left)
                     elif hours_left <= wa * 2:
                         problems.append("time left: %.1fh" % hours_left)
 

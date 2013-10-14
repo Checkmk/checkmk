@@ -71,6 +71,7 @@ register_configvar(group,
             default_value = False),
     domain = "multisite")
 
+
 register_configvar(group,
     "buffered_http_stream",
     Checkbox(title = _("Buffered HTTP stream"),
@@ -990,8 +991,9 @@ register_configvar(group,
     "inventory_check_interval",
     Optional(
         Integer(title = _("Do inventory check every"),
-                label = _("minutes"),
-                min_value = 1),
+                unit = _("minutes"),
+                min_value = 1,
+                default_value = 120),
         title = _("Enable regular inventory checks"),
         help = _("If enabled, Check_MK will create one additional check per host "
                  "that does a regular check, if the inventory would find new services "

@@ -24,7 +24,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-VERSION=1.2.3i2
+VERSION=1.2.3i4
 NAME=check_mk
 LANG=
 LC_ALL=
@@ -812,9 +812,9 @@ do
 	       sed -ri 's@^export MK_LIBDIR="(.*)"@export MK_LIBDIR="'"$agentslibdir"'"@' $agent
 	       sed -ri 's@^export MK_CONFDIR="(.*)"@export MK_CONFDIR="'"$agentsconfdir"'"@' $agent
 	   done &&
-	   mkdir -p $DESTDIR$vardir/{autochecks,counters,precompiled,cache,logwatch,web,wato} &&
+	   mkdir -p $DESTDIR$vardir/{autochecks,counters,precompiled,cache,logwatch,web,wato,notify} &&
 	   if [ -z "$DESTDIR" ] && id "$nagiosuser" > /dev/null 2>&1 && [ $UID = 0 ] ; then
-	     chown -R $nagiosuser $DESTDIR$vardir/{counters,cache,logwatch}
+	     chown -R $nagiosuser $DESTDIR$vardir/{counters,cache,logwatch,notify}
 	     chown $nagiosuser $DESTDIR$vardir/web
            fi &&
 	   mkdir -p $DESTDIR$confdir/conf.d &&
@@ -1004,7 +1004,7 @@ EOF
 	   done &&
            # make htpasswd writable by apache, since we need this for
            # WATO. Also create an empty and Apache-writable auth.serials
-           serials_file=${htpasswd_file%/*}/auth.serials &&
+           serials_file=$DESTDIR${htpasswd_file%/*}/auth.serials &&
            touch "$serials_file" &&
            chown $wwwuser "$serials_file" &&
            chown $wwwuser "$htpasswd_file" &&

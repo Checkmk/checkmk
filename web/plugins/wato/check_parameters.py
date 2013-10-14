@@ -107,8 +107,14 @@ register_rule(group + '/' + subgroup_inventory,
         elements = [
             ('services', ListOfStrings(
                 title = _("Services (Regular Expressions)"),
-                help  = _('Matching the begining of the service names (regular expression). '
-                          'If no service is given, this rule will match all services.'),
+                help  = _('Regular expressions matching the begining of the internal name '
+                          'or the description of the service. '
+                          'If no name is given then this rule will match all services. The '
+                          'match is done on the <i>beginning</i> of the service name. It '
+                          'is done <i>case sensitive</i>. You can do a case insensitive match '
+                          'by prefixing the regular expression with <tt>(?i)</tt>. Example: '
+                          '<tt>(?i).*mssql</tt> matches all services that contain <tt>MSSQL</tt> '
+                          'or <tt>MsSQL</tt> or <tt>mssql</tt> or...'),
                 orientation = "horizontal",
             )),
             ('state', DropdownChoice(
@@ -2786,6 +2792,46 @@ register_check_parameters(
                  "alias.")),
     "first"
 )
+
+register_check_parameters(
+     subgroup_storage,
+    "multipath_count",
+    _("Multipath Count"),
+    Alternative(
+            title = _("Match type"),
+            elements = [
+                    FixedValue(
+                        None,
+                        title = _("OK if standby count is zero or equals active paths."),
+                        totext  = "",
+                    ),
+                    Dictionary(
+                        title = _("Custom settings"),
+                        elements = [ (element,
+                                      Tuple(
+                                          title = description,
+                                          elements = [
+                                              Integer(title = _("Warning if more than")),
+                                              Integer(title = _("Critical if more than")),
+                                          ]
+                                      )
+                                     ) for (element, description) in [
+                                             ("active",   _("Active paths")),
+                                             ("dead",     _("Dead paths")),
+                                             ("disabled", _("Disabled paths")),
+                                             ("standby",  _("Standby paths")),
+                                             ("unknown",  _("Unknown paths"))
+                                            ]
+                                    ]
+                        ),
+                    ]
+    ),
+    TextAscii(
+        title = _("Path ID")),
+    "first"
+)
+
+
 
 register_check_parameters(
      subgroup_storage,

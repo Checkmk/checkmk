@@ -89,52 +89,76 @@ def do_automation(cmd, args):
 # "fixall" - find new, remove exceeding
 # "refresh" - drop all services and reinventorize
 def automation_inventory(args):
+    global opt_use_cachefile, inventory_max_cachefile_age
+    if args[0] == "--cache":
+        opt_use_cachefile = True
+        inventory_max_cachefile_age = 1000000000
+        args = args[1:]
+    else:
+        opt_use_cachefile = False
+        inventory_max_cachefile_age = -1
+
     if len(args) < 2:
-        raise MKAutomationError("Need two arguments: [new|remove|fixall|refresh] HOSTNAME")
+        raise MKAutomationError("Need two arguments: new|remove|fixall|refresh HOSTNAME")
 
     how = args[0]
-    hostname = args[1]
+    hostnames = args[1:]
 
     count_added = 0
     count_removed = 0
     count_kept = 0
+    count_new = 0
+
+    failed_hosts = {}
+    k = globals().keys()
     if how == "refresh":
-        count_removed = remove_autochecks_of(hostname) # checktype could be added here
-        reread_autochecks()
+        for hostname in hostnames:
+	    count_removed += remove_autochecks_of(hostname) # checktype could be added here
+	reread_autochecks()
 
-    # Compute current state of new and existing checks
-    table = automation_try_inventory([hostname])
-    # Create new list of checks
-    new_items = []
-    for entry in table:
-        state_type, ct, checkgroup, item, paramstring = entry[:5]
-        if state_type in [ "legacy", "active", "manual", "ignored" ]:
-            continue # this is not an autocheck or ignored and currently not checked
+    for hostname in hostnames:
+        try:
+            # Compute current state of new and existing checks
+            table = automation_try_inventory([hostname], leave_no_tcp=True)
 
-        if state_type == "new":
-            if how in [ "new", "fixall", "refresh" ]:
-                count_added += 1
-                new_items.append((ct, item, paramstring))
+            # Create new list of checks
+            new_items = []
+            for entry in table:
+                state_type, ct, checkgroup, item, paramstring = entry[:5]
+                if state_type in [ "legacy", "active", "manual", "ignored" ]:
+                    continue # this is not an autocheck or ignored and currently not checked
 
-        elif state_type == "old":
-            # keep currently existing valid services in any case
-            new_items.append((ct, item, paramstring))
-            count_kept += 1
+                if state_type == "new":
+                    if how in [ "new", "fixall", "refresh" ]:
+                        count_added += 1
+                        new_items.append((ct, item, paramstring))
 
-        elif state_type in [ "obsolete", "vanished" ]:
-            # keep item, if we are currently only looking for new services
-            # otherwise fix it: remove ignored and non-longer existing services
-            if how not in [ "fixall", "remove" ]:
-                new_items.append((ct, item, paramstring))
-                count_kept += 1
-            else:
-                count_removed += 1
+                elif state_type == "old":
+                    # keep currently existing valid services in any case
+                    new_items.append((ct, item, paramstring))
+                    count_kept += 1
 
-    automation_write_autochecks_file(hostname, new_items)
-    return (count_added, count_removed, count_kept, len(new_items))
+                elif state_type in [ "obsolete", "vanished" ]:
+                    # keep item, if we are currently only looking for new services
+                    # otherwise fix it: remove ignored and non-longer existing services
+                    if how not in [ "fixall", "remove" ]:
+                        new_items.append((ct, item, paramstring))
+                        count_kept += 1
+                    else:
+                        count_removed += 1
+
+            automation_write_autochecks_file(hostname, new_items)
+            count_new += len(new_items)
+
+        except Exception, e:
+	    if opt_debug:
+                raise
+            failed_hosts[hostname] = str(e)
+
+    return (count_added, count_removed, count_kept, count_new), failed_hosts
 
 
-def automation_try_inventory(args):
+def automation_try_inventory(args, leave_no_tcp=False):
     global opt_use_cachefile, inventory_max_cachefile_age, check_max_cachefile_age
     if args[0] == '--cache':
         opt_use_cachefile = True
@@ -150,7 +174,7 @@ def automation_try_inventory(args):
     if is_cluster(hostname):
         already_added = set([])
         for node in nodes_of(hostname):
-            new_services = automation_try_inventory_node(node)
+            new_services = automation_try_inventory_node(node, leave_no_tcp=leave_no_tcp)
             for entry in new_services:
                 if host_of_clustered_service(node, entry[6]) == hostname:
                     # 1: check, 6: Service description
@@ -166,7 +190,7 @@ def automation_try_inventory(args):
                 already_added.add( (ct, descr) ) # make it unique
 
     else:
-        new_services = automation_try_inventory_node(hostname)
+        new_services = automation_try_inventory_node(hostname, leave_no_tcp=leave_no_tcp)
         for entry in new_services:
             host = host_of_clustered_service(hostname, entry[6])
             if host == hostname:
@@ -178,7 +202,7 @@ def automation_try_inventory(args):
 
 
 
-def automation_try_inventory_node(hostname):
+def automation_try_inventory_node(hostname, leave_no_tcp=False):
     global opt_use_cachefile, opt_no_tcp, opt_dont_submit
 
     try:
@@ -285,7 +309,8 @@ def automation_try_inventory_node(hostname):
             g_service_description = descr
             infotype = ct.split('.')[0]
             opt_use_cachefile = True
-            opt_no_tcp = True
+	    if not leave_no_tcp:
+	        opt_no_tcp = True
             opt_dont_submit = True
 
             try:

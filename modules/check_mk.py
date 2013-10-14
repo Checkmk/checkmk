@@ -381,8 +381,9 @@ except Exception, e:
 # those checks that do not support inventory. It must be known before
 # we read in all the checks
 def no_inventory_possible(checkname, info):
-    sys.stderr.write("Sorry. No inventory possible for check type %s.\n" % checkname)
-    sys.exit(3)
+    if opt_verbose:
+        sys.stdout.write("%s does not support inventory. Skipping it.\n" % checkname)
+    return []
 
 
 #   +----------------------------------------------------------------------+
@@ -658,42 +659,6 @@ def is_snmpv2c_host(hostname):
 
 def is_usewalk_host(hostname):
     return in_binary_hostlist(hostname, usewalk_hosts)
-
-def inline_snmp_get_oid(hostname, oid):
-    s = init_snmp_host(hostname)
-
-    if oid[-2:] == ".*":
-        oid_prefix = oid[:-2]
-        func       = s.getnext
-        what       = 'GETNEXT'
-    else:
-        oid_prefix = oid
-        func       = s.get
-        what       = 'GET'
-
-    if opt_debug:
-        sys.stdout.write("Executing SNMP %s of %s on %s\n" % (what, oid_prefix, hostname))
-
-    var_list = netsnmp.VarList(netsnmp.Varbind(oid))
-    res = s.get(var_list)
-
-    for var in var_list:
-        value = var.val
-
-        if what == "GETNEXT" and not var.tag.startswith(oid_prefix + "."):
-            # In case of .*, check if prefix is the one we are looking for
-            value = None
-
-        elif value == 'NULL' or var.type in [ 'NOSUCHINSTANCE', 'NOSUCHOBJECT' ]:
-            value = None
-
-        elif value is not None:
-            value = strip_snmp_value(value)
-
-        if opt_verbose and opt_debug:
-            sys.stdout.write("=> [%r] %s\n" % (value, var.type))
-
-        return value
 
 #   .--Classic SNMP--------------------------------------------------------.
 #   |        ____ _               _        ____  _   _ __  __ ____         |
@@ -2079,28 +2044,6 @@ define service {
 %s  service_description\t\tCheck_MK
 }
 """ % (active_service_template, hostname, extra_service_conf_of(hostname, "Check_MK")))
-        # Inventory checks - if user has configured them. Not for clusters.
-        if inventory_check_interval and not is_cluster(hostname) \
-            and not service_ignored(hostname,None,'Check_MK inventory'):
-            outfile.write("""
-define service {
-  use\t\t\t\t%s
-  host_name\t\t\t%s
-  normal_check_interval\t\t%d
-  retry_check_interval\t\t%d
-%s  service_description\t\tCheck_MK inventory
-}
-
-define servicedependency {
-  use\t\t\t\t%s
-  host_name\t\t\t%s
-  service_description\t\tCheck_MK
-  dependent_host_name\t\t%s
-  dependent_service_description\tCheck_MK inventory
-}
-""" % (inventory_check_template, hostname, inventory_check_interval, inventory_check_interval,
-       extra_service_conf_of(hostname, "Check_MK inventory"),
-       service_dependency_template, hostname, hostname))
 
     # legacy checks via legacy_checks
     legchecks = host_extra_conf(hostname, legacy_checks)
@@ -2253,6 +2196,33 @@ define service {
 
             # write service dependencies for custom checks
             outfile.write(get_dependencies(hostname,description))
+
+    # Inventory checks - if user has configured them. Not for clusters.
+    if inventory_check_interval and not is_cluster(hostname) \
+        and not service_ignored(hostname, None, 'Check_MK inventory') \
+        and not "ping" in tags_of_host(hostname):
+        outfile.write("""
+define service {
+  use\t\t\t\t%s
+  host_name\t\t\t%s
+  normal_check_interval\t\t%d
+  retry_check_interval\t\t%d
+%s  service_description\t\tCheck_MK inventory
+}
+""" % (inventory_check_template, hostname, inventory_check_interval,
+       inventory_check_interval,
+       extra_service_conf_of(hostname, "Check_MK inventory")))
+
+        if have_at_least_one_service:
+            outfile.write("""
+define servicedependency {
+  use\t\t\t\t%s
+  host_name\t\t\t%s
+  service_description\t\tCheck_MK
+  dependent_host_name\t\t%s
+  dependent_service_description\tCheck_MK inventory
+}
+""" % (service_dependency_template, hostname, hostname))
 
     # Levels for host check
     if is_cluster(hostname):
@@ -2773,8 +2743,13 @@ def check_inventory(hostname):
     except Exception, e:
         if opt_debug:
             raise
-        sys.stdout.write("UNKNOWN - %s\n" % (e,))
-        sys.exit(3)
+        # Honor rule settings for "Status of the Check_MK service". In case of
+        # a problem we assume a connection error here.
+        spec = exit_code_spec(hostname)
+        what = isinstance(e, MKAgentError) and "connection" or "exception"
+        status = spec.get(what, 3)
+        sys.stdout.write("%s - %s\n" % (nagios_state_names[status], e))
+        sys.exit(status)
 
 
 def service_ignored(hostname, checktype, service_description):
@@ -2810,8 +2785,6 @@ def in_boolean_serviceconf_list(hostname, service_description, conflist):
         if hosttags_match_taglist(tags_of_host(hostname), tags) and \
            in_extraconf_hostlist(hostlist, hostname) and \
            in_extraconf_servicelist(servlist, service_description):
-            if opt_verbose:
-                print "Ignoring service '%s' on host %s." % (service_description, hostname)
             return not negate
     return False # no match. Do not ignore
 
@@ -4687,7 +4660,7 @@ def do_cleanup_autochecks():
     for host, lines in hostdata.items():
         lines.sort()
         fn = host.replace(":","_") + ".mk"
-        if opt_verbose:
+        if opt_debug:
             sys.stdout.write("Writing %s: %d checks\n" % (fn, len(lines)))
         newfiles.add(fn)
         f = file(fn, "w+")
@@ -4699,7 +4672,7 @@ def do_cleanup_autochecks():
     # 3. Remove obsolete files
     for f in glob.glob("*.mk"):
         if f not in newfiles:
-            if opt_verbose:
+            if opt_debug:
                 sys.stdout.write("Deleting %s\n" % f)
             os.remove(f)
 

@@ -35,7 +35,7 @@
 
 # Note: This agent is still in development
 
-import httplib, pprint, sys, os, getopt, socket, time
+import httplib, pprint, sys, os, getopt, socket, time, datetime, re
 
 #execfile("soap_commands.py", globals(), globals())
 
@@ -144,27 +144,30 @@ OPTIONS:
                                 subquery.
   --debug                       Debug mode: let Python exceptions come through
 
+  --tracefile FILENAME          Log all outgoing and incoming data into the given tracefile
   -i MODULES, --modules MODULES Modules to query. This is a comma separated list of
-                                hostsystem, virtualmachine and storage. Default is to
-                                query all modules.
+                                hostsystem, virtualmachine, datastore and counters.
+                                Default is to query all modules.
 
-  -c, --dump-counters           Simply dumping out all available counters and their values.
-                                This mode is meant for debugging and diagnostic purposes.
 
 """)
+# TODO: implement
+#  -c, --dump-counters           Simply dumping out all available counters and their values.
+#                                This mode is meant for debugging and diagnostic purposes.
 
 short_options = 'hi:u:s:Dat:H:c'
 long_options  = [
     'help', 'user=', 'secret=', 'direct', 'agent', 'debug', 'modules=', 'timeout=', 'hostname=',
-    'dump-counters',
+    'dump-counters', 'tracefile=',
 ]
 
 opt_debug         = False
 opt_direct        = False
 opt_agent         = False
-opt_dump_counters = False
+opt_dump_counters = False # TODO: implement
 opt_timeout       = 60
 opt_hostname      = None
+opt_tracefile     = None
 
 error = None
 error_exit = 1
@@ -172,6 +175,7 @@ error_exit = 1
 host_address  = None
 user          = None
 secret        = None
+tracefile     = None
 query_objects = [ 'hostsystem', 'virtualmachine', 'datastore', 'counters', 'required' ]
 
 try:
@@ -183,6 +187,8 @@ except getopt.GetoptError, err:
 for o,a in opts:
     if o in [ '--debug' ]:
         opt_debug = True
+    elif o in [ '--tracefile' ]:
+        opt_tracefile = a
     elif o in [ '-D', '--direct' ]:
         opt_direct = True
     elif o in [ '-a', '--agent' ]:
@@ -268,18 +274,25 @@ if opt_agent:
 
 results = {}
 
-# Debugging stuff
-query_duration = 0
-query_start = 0
 esx_version_num = None
-esx_name = ""
+esx_name        = ""
 
-import re
+if opt_tracefile:
+    if os.path.exists(os.path.dirname(opt_tracefile)):
+        tracefile = file(opt_tracefile, "w")
+    elif opt_debug:
+        sys.stderr.write("Path for tracefile %s does not exist" % opt_tracefile)
+        sys.stderr.flush()
+
 def get_pattern(pattern, line):
     if not line:
         return []
     p = re.compile(pattern)
     return p.findall(line)
+
+if tracefile:
+    tracefile.write("Tracefile %s Host address: %s\n" %
+                    (datetime.datetime.now().strftime("%Y-%m-%d %H:%M"), host_address))
 
 try:
     my_cookie   = None
@@ -294,26 +307,31 @@ try:
         sys.stderr.write("Connecting to %s..." % host_address)
         sys.stderr.flush()
 
-    start = time.time()
-
     def query_server(soapdata):
         handle.putrequest("POST", request_uri)
         handle.putheader("Content-Length", "%d" % len(soapdata))
         handle.putheader("Content-Type", 'text/xml; charset="utf-8"')
         handle.putheader("SOAPAction", "urn:vim25/5.0")
-        handle.putheader("User-Agent", "VMware VI Client/5.0.0")
+        handle.putheader("User-Agent", "VMware VI Client/5.0.0") # TODO: set client version?
         if my_cookie:
             handle.putheader("Cookie", my_cookie)
-
         handle.endheaders()
+
         handle.send(soapdata)
 
+        time_sent     = time.time()
         response = handle.getresponse()
-        return response.status, response.reason, response.msg, response.read()
+        time_response = time.time()
+
+        body = response.read()
+        if tracefile:
+            tracefile.write("####   Sent  ####\n%s" % soapdata)
+            timing_info = "Response took: %f" % (time_response - time_sent)
+            tracefile.write("\n#### Received #### %s\n%s" % (timing_info, body))
+
+        return response.status, response.reason, response.msg, body
 
     def get_counter_instances():
-
-        import re
         p = re.compile("<counterId>([0-9]*)</counterId><instance>([^<]*)")
         m = p.findall( results["7_query_avail_perf_metric"] )
 
@@ -324,17 +342,25 @@ try:
 
         return counters_avail
 
-    for (used_by, name, soapdata) in soapdata_list:
+    for (objects, name, soapdata) in soapdata_list:
         # Only sent queries we actually need
-        for item in used_by:
-            if item in query_objects:
+        for entry in objects:
+            if entry in query_objects:
                 break
         else:
             continue
 
         # Prepare request data
         if name == "2_login":
-            soapdata = soapdata.replace("###user###", user).replace("###secret###", secret)
+            def encode_url(text):
+                for char, replacement in [ ( "&",  "&amp;"),
+                                           ( ">",  "&gt;" ),
+                                           ( "<",  "&lt;"),
+                                           ( "'",  "&apos;"),
+                                           ( "\"", "&quot;") ]:
+                    text = text.replace(char, replacement)
+                return text 
+            soapdata = soapdata.replace("###user###", encode_url(user)).replace("###secret###", encode_url(secret))
         elif name == "8_perf_counter_syntax":
             needed_ids = get_counters(esx_version_num)
             counter_data = []
@@ -351,6 +377,8 @@ try:
             soapdata = soapdata.replace("###counters###", "".join(counter_data))
 
         # Query data 
+        if tracefile:
+            tracefile.write("\n\nStart query: %s\n" % name)
         reply_code, reply_msg, reply_headers, reply_data = query_server(soapdata)
         results[name] = reply_data
 
@@ -370,16 +398,6 @@ except Exception, e:
     error = "Cannot connect to vSphere Server. Maybe you provided wrong " \
             "credentials. Please check your connection settings and try " \
             "again."
-
-# Debugging
-#try:
-#    os.mkdir("results")
-#except:
-#    pass
-#
-#for name, value in results.items():
-#    file("results/%s.%s" % (host, name), "w").write(value)
-
 
 if not error:
     try:
@@ -513,7 +531,6 @@ if not error:
         if "virtualmachine" in query_objects:
             vms = {}
 
-            start = time.time()
             elements = get_pattern("<objects>(.*?)</objects>", results["11_virtualmachine"])
             for entry in elements:
                 vm_data = get_pattern("<name>(.*?)</name><val.*?>(.*?)</val>", entry)
@@ -552,12 +569,13 @@ if not error:
                 running_on = hostsystem_name.get(data.get("runtime.host"), data.get("runtime.host"))
                 print "virtualmachine\t%s\t%s\t%s" % (data.get("name").replace(" ","_"), running_on, data.get("runtime.powerState"))
 
-        #print "query", query_duration
-        #print "processing", time.time() - start - query_duration
     except Exception, e:
         if opt_debug:
             raise
         error = "Error while processing received data"
+
+if tracefile:
+    tracefile.close()
 
 if error:
     sys.stderr.write(error + "\n")

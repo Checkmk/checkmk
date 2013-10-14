@@ -665,7 +665,8 @@ def notify_flexible(context, notification_table, write_into_spoolfile):
 
 
 def call_notification_script(plugin, parameters, context, write_into_spoolfile):
-    # Prepare environment
+
+    # Enter context into environment
     os.putenv("NOTIFY_PARAMETERS", " ".join(parameters))
     for nr, value in enumerate(parameters):
         os.putenv("NOTIFY_PARAMETER_%d" % (nr + 1), value)
@@ -674,19 +675,8 @@ def call_notification_script(plugin, parameters, context, write_into_spoolfile):
     # Export complete context to have all vars in environment.
     # Existing vars are replaced, some already existing might remain
     for key in context:
-        os.putenv('NOTIFY_' + key, context[key].encode('utf-8'))
-
-    # Remove service macros for host notifications
-    if context['WHAT'] == 'HOST':
-        for key in context.keys():
-            if 'SERVICE' in key:
-                os.unsetenv('NOTIFY_%s' % key)
-
-    # Remove exceeding arguments from previous plugin calls
-    for nr in range(len(parameters)+1, 101):
-        name = "NOTIFY_PARAMETER_%d" % nr
-        if name in os.environ:
-            os.putenv(name, "")
+        if context['WHAT'] == 'SERVICE' or 'SERVICE' not in key:
+            os.putenv('NOTIFY_' + key, context[key].encode('utf-8'))
 
     # Call actual script without any arguments
     if local_notifications_dir:
@@ -701,21 +691,33 @@ def call_notification_script(plugin, parameters, context, write_into_spoolfile):
         notify_log("  not in %s" % notifications_dir)
         if local_notifications_dir:
             notify_log("  and not in %s" % local_notifications_dir)
-        return 2
+        exitcode = 2
 
-    # Create spoolfile or actually call the plugin
-    if write_into_spoolfile:
-        create_spoolfile({"context": context, "plugin": plugin})
     else:
-        notify_log("Executing %s" % path)
-        out = os.popen(path + " 2>&1 </dev/null")
-        for line in out:
-            notify_log("Output: %s" % line.rstrip())
-        exitcode = out.close()
-        if exitcode:
-            notify_log("Plugin exited with code %d" % (exitcode >> 8))
-            return exitcode
-    return 0
+        # Create spoolfile or actually call the plugin
+        if write_into_spoolfile:
+            create_spoolfile({"context": context, "plugin": plugin})
+            exitcode = 0
+        else:
+            notify_log("Executing %s" % path)
+            out = os.popen(path + " 2>&1 </dev/null")
+            for line in out:
+                notify_log("Output: %s" % line.rstrip())
+            exitcode = out.close()
+            if exitcode:
+                notify_log("Plugin exited with code %d" % (exitcode >> 8))
+            else:
+                exitcode = 0
+
+    # Clear environment again
+    for key in context:
+        if context['WHAT'] == 'SERVICE' or 'SERVICE' not in key:
+            os.unsetenv('NOTIFY_' + key)
+        os.unsetenv("NOTIFY_PARAMETERS")
+        for nr, value in enumerate(parameters):
+            os.unsetenv("NOTIFY_PARAMETER_%d" % (nr + 1))
+        os.unsetenv("NOTIFY_LOGDIR")
+    return exitcode
 
 
 def check_notification_type(context, host_events, service_events):

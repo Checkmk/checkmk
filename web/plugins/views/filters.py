@@ -59,6 +59,9 @@ declare_filter(100, FilterText("hostregex",    _("Hostname"),        "host",    
 declare_filter(101, FilterText("host",    _("Hostname (exact match)"),             "host",    "host_name",          "host",    "="),
                           _("Exact match, used for linking"))
 
+declare_filter(102, FilterText("hostalias",   _("Hostalias"),      "host",     "host_alias",      "hostalias",    "~~"),
+                          _("Search field allowing regular expressions and partial matches"))
+
 declare_filter(200, FilterText("serviceregex", _("Service"),         "service", "service_description",   "service", "~~"),
                           _("Search field allowing regular expressions and partial matches"))
 
@@ -114,7 +117,7 @@ declare_filter(102, FilterIPAddress())
 # Helper that retrieves the list of host/service/contactgroups via Livestatus
 # use alias by default but fallback to name if no alias defined
 def all_groups(what):
-    groups = dict(html.live.query("GET %sgroups\nColumns: name alias\n" % what))
+    groups = dict(html.live.query("GET %sgroups\nCache: reload\nColumns: name alias\n" % what))
     return [ (name, groups[name] or name) for name in groups.keys() ]
 
 class FilterGroupCombo(Filter):
@@ -151,7 +154,7 @@ class FilterGroupCombo(Filter):
             if not self.enforce:
                 return ""
             # Take first group with the name we search
-            current_value = html.live.query_value("GET %sgroups\nColumns: name\nLimit: 1\n" % self.what, None)
+            current_value = html.live.query_value("GET %sgroups\nCache: reload\nColumns: name\nLimit: 1\n" % self.what, None)
 
         if current_value == None:
             return "" # no {what}group exists!
@@ -179,7 +182,7 @@ class FilterGroupCombo(Filter):
     def heading_info(self, infoname):
         current_value = self.current_value(infoname)
         if current_value:
-            alias = html.live.query_value("GET %sgroups\nColumns: alias\nFilter: name = %s\n" %
+            alias = html.live.query_value("GET %sgroups\nCache: reload\nColumns: alias\nFilter: name = %s\n" %
                 (self.what, current_value), current_value)
             return alias
 
@@ -216,9 +219,9 @@ class FilterQueryDropdown(Filter):
             return ""
 
 declare_filter(110, FilterQueryDropdown("host_check_command", _("Host check command"), "host", \
-        "GET commands\nColumns: name\n", "Filter: host_check_command = %s\n"))
+        "GET commands\nCache: reload\nColumns: name\n", "Filter: host_check_command = %s\n"))
 declare_filter(210, FilterQueryDropdown("check_command", _("Service check command"), "service", \
-        "GET commands\nColumns: name\n", "Filter: service_check_command = %s\n"))
+        "GET commands\nCache: reload\nColumns: name\n", "Filter: service_check_command = %s\n"))
 
 class FilterServiceState(Filter):
     def __init__(self, name, title, prefix):

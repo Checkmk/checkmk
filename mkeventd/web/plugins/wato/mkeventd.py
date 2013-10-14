@@ -1632,7 +1632,9 @@ register_configvar(group,
         help = _("If you select a contact group here, then all notifications of "
                  "hosts and services in that contact group will be sent to the "
                  "event console. <b>Note</b>: you still need to create a rule "
-                 "matching those messages in order to have events created."),
+                 "matching those messages in order to have events created. <b>Note (2)</b>: "
+                 "If you are using the Check_MK Micro Core then this setting is deprecated. "
+                 "Please use the notification plugin <i>Forward Notification to Event Console</i> instead."),
         default_value = '',
 
     ),

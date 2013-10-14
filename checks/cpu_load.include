@@ -1,0 +1,50 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Common code for all CPU load checks. Please do not mix this up
+# with CPU utilization. The load is at any time the current number
+# of processes in the running state (on some systems, like Linux,
+# also Disk wait is account for the load).
+
+def check_cpu_load_generic(params, load, num_cpus=1):
+
+    # Prepare performance data
+    if type(params) == tuple:
+        warn, crit = [ p*num_cpus for p in params ]
+    else:
+        warn, crit = None, None
+
+    perfdata = [ ('load' + str(z), l, warn, crit, 0, num_cpus )
+                 for (z,l) in [ (1,load[0]), (5,load[1]), (15, load[2]) ] ]
+
+    state, text, perf = check_levels(load[2], 'load15', params, factor = num_cpus)
+    perfdata += perf
+    infotext = "15min load %.2f" % load[2]
+    if num_cpus > 1:
+        infotext += " at %d CPUs" % num_cpus
+    if text:
+        infotext += ", " + text
+    return state, infotext, perfdata

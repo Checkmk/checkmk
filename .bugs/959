@@ -1,12 +1,9 @@
-Title: Livestatus/Nagios Core crashes, if nagios.log is not accessible
+Title: Livestatus/Nagios Core crashes, if nagios.log is too large
 Component: livestatus
 State: open
 Date: 2013-08-08 11:30:12
 Targetversion: future
 Class: bug
-
-vermutlich ist das die falsche Mailadresse, um Vorschläger oder Probleme 
-zu melden. Aber ich habe keine passende(re) gefunden.
 
 In Benutzung war: Nagios 3.3, Check_MK check_mk-1.2.2p2 sowie 
 mk-livestatus-1.2.2p2 auf einem Centos 5.5.
@@ -23,3 +20,8 @@ Fehlermeldung bzw. ein Eintrag in der Dokumentation angepasst werden
 könnten. Der Fehler ist in gewisser Weise selbst verschuldet, jedoch war 
 es nicht leicht, die Ursache zu finden.
 
+Lösung: Eventuell müssen wir die maximale Anzahl von Logzeilen,
+die wir untersuchen, beschränken. Wenn man z.B. sagt max.
+5 Mio Zeilen festlegt, dann sind dass etwa 500 MB Dateigröße.
+Das ganze könnte konfigurierbar sein, analog zu den schon
+vorhandenen Caching-Optionen.

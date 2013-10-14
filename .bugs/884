@@ -1,10 +1,13 @@
 Title: EC view recent event history: wrong sorting
 Component: ec
-State: open
+Class: bug
+State: done
 Date: 2013-02-12 17:53:17
 Targetversion: 1.2.3i2
-Class: bug
 
 This might be a bug in Multisite: The sorting is after time and
 for equal time after the line in the logfile. The latter sorting
 is ignored - however.
+
+2013-10-03 11:34:48: changed state open -> done
+Was a bug in Multisite that concerned all numeric sorters.

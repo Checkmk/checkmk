@@ -160,7 +160,7 @@ register_rule(group,
                  "number, a text, and performance data. Upper or lower levels may be defined "
                  "here. If they are not defined the number is taken as the state of the check."
                  "This check uses the active check <tt>check_sql</tt>."),
-        optional_keys = [ "levels", "levels_low", "perfdata" ],
+        optional_keys = [ "levels", "levels_low", "perfdata", "port" ],
         elements = [
             ( "description",
               TextUnicode(title = _("Service Description"),
@@ -178,6 +178,10 @@ register_rule(group,
                    default_value = "mysql",
                ),
             ),
+            ( "port",
+               Integer(title = _("Database Port"), allow_empty = True,
+                      help = _('The port the DBMS listens to'))
+            ),
             ( "name",
                TextAscii(title = _("Database Name"), allow_empty = False,
                       help = _('The name of the database on the DBMS'))
@@ -185,6 +189,14 @@ register_rule(group,
             ( "sql",
               TextAscii(title = _("SQL-Statement"), allow_empty = False,
                       help = _('The SQL-Statement which is sent to the DBMS'))
+            ),
+            ( "user",
+               TextAscii(title = _("Database User"), allow_empty = False,
+                      help = _('The username used to connect to the database'))
+            ),
+            ( "password",
+               Password(title = _("Database Password"), allow_empty = False,
+                      help = _('The password used to connect to the database'))
             ),
             ( "levels",
             Tuple(

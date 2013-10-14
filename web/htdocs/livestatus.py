@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import socket, time
+import socket, time, re
 
 # Python 2.3 does not have 'set' in normal namespace.
 # But it can be imported from 'sets'
@@ -51,6 +51,9 @@ r2 = conn.query_row("GET status")
 
 # Keep a global array of persistant connections
 persistent_connections = {}
+
+# Regular expression for removing Cache: headers if caching is not allowed
+remove_cache_regex = re.compile("\nCache:[^\n]*")
 
 # DEBUGGING PERSISTENT CONNECTIONS
 # import os
@@ -160,10 +163,11 @@ class Helpers:
 
 
 class BaseConnection:
-    def __init__(self, socketurl, persist = False):
+    def __init__(self, socketurl, persist = False, allow_cache = False):
         """Create a new connection to a MK Livestatus socket"""
         self.add_headers = ""
         self.persist = persist
+        self.allow_cache = allow_cache
         self.socketurl = socketurl
         self.socket = None
         self.timeout = None
@@ -261,6 +265,8 @@ class BaseConnection:
         return self.recv_response(query, add_headers)
 
     def send_query(self, query, add_headers = "", do_reconnect=True):
+        if not self.allow_cache:
+            query = remove_cache_regex.sub("", query)
         orig_query = query
         if self.socket == None:
             self.connect()
@@ -269,6 +275,7 @@ class BaseConnection:
         query += self.auth_header + self.add_headers
         query += "Localtime: %d\nOutputFormat: python\nKeepAlive: on\nResponseHeader: fixed16\n" % int(time.time())
         query += add_headers
+
         if not query.endswith("\n"):
             query += "\n"
         query += "\n"
@@ -349,8 +356,8 @@ class BaseConnection:
 
 
 class SingleSiteConnection(BaseConnection, Helpers):
-    def __init__(self, socketurl, persist = False):
-        BaseConnection.__init__(self, socketurl, persist)
+    def __init__(self, socketurl, persist = False, allow_cache = False):
+        BaseConnection.__init__(self, socketurl, persist, allow_cache)
         self.prepend_site = False
         self.auth_users = {}
         self.deadsites = {} # never filled, just for compatibility
@@ -414,7 +421,7 @@ class MultiSiteConnection(Helpers):
             try:
                 url = site["socket"]
                 persist = not temporary and site.get("persist", False)
-                connection = SingleSiteConnection(url, persist)
+                connection = SingleSiteConnection(url, persist, allow_cache=site.get("cache", False))
                 if "timeout" in site:
                     connection.set_timeout(int(site["timeout"]))
                 connection.connect()

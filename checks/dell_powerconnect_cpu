@@ -53,19 +53,22 @@ def check_dell_powerconnect_cpu(item, params, info):
     except ValueError:
         raise MKCounterWrapped("", "Ignoring empty data from SNMP agent")
     if int(enabled) == 1:
-        cpu_load = saveint(onesecondperc)
-        if cpu_load >= 0 <= 100:
+        cpu_util = saveint(onesecondperc)
+        if cpu_util >= 0 <= 100:
             status = 0
             output = ''
-            if cpu_load >= params[1]:
+            if cpu_util >= params[1]:
                 status = 2
                 output = ' (Above %d%%)' % params[1]
-            elif cpu_load >= params[0]:
+            elif cpu_util >= params[0]:
                 status = 1
                 output = ' (Above %d%%)' % params[0]
 
-            return (status, 'CPU utilization is %d%% %s' % (cpu_load, output),
-                   [('load', '%d%%' % cpu_load, params[0], params[1], 0, 100),
+            # Darn. It again happend. Someone mixed up load and utilization.
+            # We do *not* rename the performance variables here, in order not
+            # to mix up existing RRDs...
+            return (status, 'CPU utilization is %d%% %s' % (cpu_util, output),
+                   [('load', '%d%%' % cpu_util, params[0], params[1], 0, 100),
                     ('loadavg 60s', '%d%%' % saveint(oneminuteperc), params[0], params[1], 0, 100),
                     ('loadavg 5m', '%d%%' % saveint(fiveminutesperc), params[0], params[1], 0, 100),
                    ])

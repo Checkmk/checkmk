@@ -74,17 +74,22 @@ def ps_parse_info(info):
     wmic_info = {}
     cpu_cores = 1
     try:
+        is_wmic = False
         while True:
             line = lines.next()
             if line[-1] == '[wmic process]':
-                break
-            result.append(line)
-        # part of wmic data
-        headers = ["node"] + lines.next()[1:]
-        while True:
-            row = dict(zip(headers, lines.next()))
-            wmic_info[(row["node"], row["Name"])] = row
+                is_wmic = True
+                wmic_headers = ["node"] + lines.next()[1:]
+                continue
+            elif line[-1] == '[wmic process end]':
+                is_wmic = False
+                continue
 
+            if not is_wmic:
+                result.append(line)
+            else:
+                row = dict(zip(wmic_headers, line))
+                wmic_info[(row["node"], row["Name"])] = row
     except StopIteration:
         pass
 
@@ -96,7 +101,7 @@ def ps_parse_info(info):
             psinfo = wmic_info.get(tuple(line))
             # Get number of CPU cores from system idle process
             if psinfo:
-                if "ThreadCount" in headers and psinfo["Name"].lower() == "system idle process":
+                if "ThreadCount" in wmic_headers and psinfo["Name"].lower() == "system idle process":
                     cpucores = int(psinfo["ThreadCount"])
                 pid     = int(psinfo["ProcessId"])
                 if pid not in seen_pids:

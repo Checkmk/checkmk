@@ -4,23 +4,24 @@
 // |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+// |                                     |_____|                      |
+// |          __  __ _                   ____                         |
+// |         |  \/  (_) ___ _ __ ___    / ___|___  _ __ ___           |
+// |         | |\/| | |/ __| '__/ _ \  | |   / _ \| '__/ _ \          |
+// |         | |  | | | (__| | | (_) | | |__| (_) | | |  __/          |
+// |         |_|  |_|_|\___|_|  \___/   \____\___/|_|  \___|          |
 // |                                                                  |
 // | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
-// This file is part of Check_MK.
-// The official homepage is at http://mathias-kettner.de/check_mk.
+// This file is part of the Check_MK Micro Core.  Copyright by Mathias
+// Kettner,  Preysingstr. 74,  81667 München, Germany.  All rights are
+// reserved. You may *not* redistribute or modify this software unless
+// you have a  written  permission of the owner.  This file  is  *not*
+// available under GNU GPL. If you do not like this then please use  a
+// different monitoring core.
 //
-// check_mk is free software;  you can redistribute it and/or modify it
-// under the  terms of the  GNU General Public License  as published by
-// the Free Software Foundation in version 2.  check_mk is  distributed
-// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
-// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
-// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-// ails.  You should have  received  a copy of the  GNU  General Public
-// License along with GNU Make; see the file  COPYING.  If  not,  write
-// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-// Boston, MA 02110-1301 USA.
+// Please note: This software is experimental. Use at your own risk.
 
 #include <string.h>
 #include <time.h>
@@ -78,14 +79,7 @@ LogEntry::LogEntry(unsigned lineno, char *line, unsigned logclasses = LOGCLASS_A
         ((1 << LOGCLASS_COMMAND & logclasses) && handleExternalCommandEntry())
         )
     {
-        if (_host_name)
-            _host = find_host(_host_name);
-        if (_svc_desc)
-            _service = find_service(_host_name, _svc_desc);
-        if (_contact_name)
-            _contact = find_contact(_contact_name);
-        if (_command_name)
-            _command = find_command(_command_name);
+        updateReferences();
     }
     else {
         (1 << LOGCLASS_PROGRAM & logclasses) && handleProgrammEntry(); // Performance killer strstr!
@@ -246,13 +240,6 @@ inline bool LogEntry::handleStatusEntry()
     {
         _logclass = LOGCLASS_STATE;
         _type     = TIMEPERIOD_TRANSITION;
-        char *scan = _text;
-        _text = next_token(&scan, ':');
-        scan++;
-
-        _command_name  = next_token(&scan, ';');
-        _check_output  = next_token(&scan, ';');
-        _state_type    = next_token(&scan, ';');
         return true;
     }
 
@@ -330,13 +317,17 @@ inline bool LogEntry::handleExternalCommandEntry()
     return false;
 }
 
-inline bool LogEntry::handleTextEntry() {
-    if (!strncmp(_text, "LOG VERSION: 2.0", 16)){
+inline bool LogEntry::handleTextEntry()
+{
+    if (!strncmp(_text, "LOG VERSION: 2.0", 16))
+    {
         _logclass = LOGCLASS_PROGRAM;
         _type     = LOG_VERSION;
         return true;
     }
-    else if (!strncmp(_text, "logging initial states", 22)){
+    else if (!strncmp(_text, "logging initial states", 22)
+           || !strncmp(_text, "logging intitial states", 23))
+    {
         _logclass = LOGCLASS_PROGRAM;
         _type     = LOG_INITIAL_STATES;
         return true;
@@ -398,3 +389,25 @@ inline int LogEntry::hostStateToInt(char *s)
     }
 }
 
+
+unsigned LogEntry::updateReferences()
+{
+    unsigned updated = 0;
+    if (_host_name) {
+        _host = find_host(_host_name);
+        updated++;
+    }
+    if (_svc_desc) {
+        _service = find_service(_host_name, _svc_desc);
+        updated++;
+    }
+    if (_contact_name) {
+        _contact = find_contact(_contact_name);
+        updated++;
+    }
+    if (_command_name) {
+        _command = find_command(_command_name);
+        updated++;
+    }
+    return updated;
+}

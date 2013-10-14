@@ -97,6 +97,9 @@ def connect_to_livestatus(html):
             s = site["socket"]
             if type(s) == tuple and s[0] == "proxy":
                 site["socket"] = "unix:" + defaults.livestatus_unix_socket + "proxy/" + sitename
+                site["cache"] = s[1].get("cache", True)
+            else:
+                site["cache"] = False
 
             if siteconf.get("disabled", False):
                 html.site_status[sitename] = { "state" : "disabled", "site" : site }
@@ -108,9 +111,11 @@ def connect_to_livestatus(html):
         html.live = livestatus.MultiSiteConnection(enabled_sites, disabled_sites)
 
         # Fetch status of sites by querying the version of Nagios and livestatus
+        # This may be cached by a proxy for up to the next configuration reload.
         html.live.set_prepend_site(True)
         for sitename, v1, v2, ps, num_hosts, num_services in html.live.query(
               "GET status\n"
+              "Cache: reload\n"
               "Columns: livestatus_version program_version program_start num_hosts num_services"):
             html.site_status[sitename].update({
                 "state" : "online",

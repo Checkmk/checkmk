@@ -1,6 +1,6 @@
 Title: unify CPU load checks, avoid incompatible check parameters
 Component: checks
-State: open
+State: done
 Date: 2013-03-25 11:23:06
 Targetversion: 1.4.0
 Class: bug
@@ -8,3 +8,9 @@ Class: bug
 Several checks are in the group "cpu_load". All these checks need to
 support predecitve levels by using get_levels(). Resolution: work with
 an include file that does the actual checking.
+
+2013-10-13 23:48:43: changed state open -> done
+All three CPU load checks now use a new include file.
+
+2013-10-14 00:19:48: changed state done -> done
+Found yet more of those and fixed them.

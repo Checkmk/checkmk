@@ -1,10 +1,13 @@
 Title: Diskstat latency at many times on 1.0ms
 Component: checks
-State: open
+Class: bug
+State: done
 Date: 2013-08-20 12:48:52
 Targetversion: future
-Class: bug
 
 The graph for diskstat latency show on many times a latency from 1.0ms. But this is the wrong value.
 Compared to the ios graph, it seems possible that 1.0ms really is 0ms.
 There is a screenshot in owncloud://Technik/BUGs
+
+2013-10-13 22:18:58: changed state open -> done
+Removed latency computation for Linux diskstat. It was ever incorrect.

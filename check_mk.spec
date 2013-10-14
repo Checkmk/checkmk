@@ -43,7 +43,11 @@ This package is only needed on the Nagios server.
 
 %package agent
 Group:     System/Monitoring
-Requires:  xinetd, time
+# Requires:  xinetd, time
+# Better do not depend on time. It's just needed for the mk-job
+# Binary, which is useful but not neccessary to run the agent.
+# This dependency could cause more trouble then it helps.
+Requires:  xinetd
 Summary: Linux-Agent for check_mk
 AutoReq:   off
 AutoProv:  off
@@ -55,7 +59,8 @@ xinetd to run this agent.
 
 %package agent-scriptless
 Group:     System/Monitoring
-Requires:  xinetd, time
+# Requires:  xinetd, time
+Requires:  xinetd
 Summary: Linux-Agent for check_mk
 AutoReq:   off
 AutoProv:  off
@@ -69,7 +74,8 @@ own.
 
 %package caching-agent
 Group:     System/Monitoring
-Requires:  xinetd, time
+# Requires:  xinetd, time
+Requires:  xinetd
 Summary: Caching Linux-Agent for check_mk
 AutoReq:   off
 AutoProv:  off
@@ -155,6 +161,7 @@ rm -rf $RPM_BUILD_ROOT
 %config(noreplace) /etc/check_mk/multisite.mk
 /etc/check_mk/conf.d/README
 %config(noreplace) /etc/nagios/objects/*
+%config(noreplace) /etc/nagios/auth.serials
 /usr/bin/check_mk
 /usr/bin/cmk
 /usr/bin/mkp

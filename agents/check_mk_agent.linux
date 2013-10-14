@@ -89,7 +89,7 @@ function run_cached () {
 }
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.3i2
+echo Version: 1.2.3i4
 echo AgentOS: linux
 echo PluginsDirectory: $PLUGINSDIR
 echo LocalDirectory: $LOCALDIR
@@ -459,7 +459,7 @@ then
     do
         if [ -S "/omd/sites/$site/tmp/run/live" ] ; then
             echo "[$site]"
-            echo -e "GET status" | /omd/sites/$site/bin/unixcat /omd/sites/$site/tmp/run/live
+            echo -e "GET status" | waitmax 3 /omd/sites/$site/bin/unixcat /omd/sites/$site/tmp/run/live
         fi
     done
 fi

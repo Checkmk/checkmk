@@ -1,9 +1,9 @@
 Title: Problem with check_mk notify in manually setup check_mk
 Component: core
-State: open
+Class: bug
+State: done
 Date: 2013-03-01 12:42:36
 Targetversion: 1.2.3i2
-Class: bug
 
 When enable "Debug notifications" from wato (Global settings/Noificatoins)
 no notification email are sent, and no debug info is written.
@@ -22,3 +22,7 @@ directory needs to be created in setup.sh
 
 2013-09-23 bs: should be fixed, added creation of directory to setup.sh
 but TEST IS STILL OPEN, needs to wait for 1055 to be fixed
+
+2013-10-13 21:48:05: changed state open -> done
+We assume that it is fixed. Just the fix was not ported
+to the master branch! I've done that now.

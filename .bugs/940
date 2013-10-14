@@ -1,0 +1,9 @@
+Title: rrdtoolmodule.so installed two times in ~/lib/
+Component: core
+State: open
+Date: 2013-10-14 13:17:24
+Targetversion: future
+Class: nastiness
+
+The file rrdtoolmodule.so is installed in ~/lib/python (good)
+and also installed in ~/lib/python2.7/site-packages (bad)

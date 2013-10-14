@@ -16,5 +16,5 @@ description:
 
 perfdata:
  Four values: The round trip time (average) in milliseconds, the packet loss in
- percent, the maximum round trip time in milliseconds and the minimum round trip time 
+ percent, the maximum round trip time in milliseconds and the minimum round trip time
  in milliseconds.

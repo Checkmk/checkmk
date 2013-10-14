@@ -1,27 +1,119 @@
+1.2.3i5:
+    Core:
+    * FIX: inventory check now honors settings for exit code
+    * FIX: avoid exception nodes of cluster have different agent type
+    * FIX: continue inventory, if one check does not support it
+
+    Multisite:
+    * Speed-O-Meter: now measure only service checks. Host checks
+      are omitted, since they do not really matter and make the
+      results less useful when using CMC.
+    * FIX: Fixed encoding problem in webservice column output
+    * FIX: Fix output format python for several numeric columns
+
+    Checks & Agents:
+    * diskstat: removed (ever incorrect) latency computation for Linux
+    * statgrab_load: support predictive levels, add perf-o-meter
+    * ucd_cpu_load: support predictive levels
+    * hpux_cpu, blade_bx_load: support predictive levels, add perf-o-meter,
+       make WATO-configable
+    * check_sql: Database port can now be explicitly set
+    * FIX: esx_vsphere_counters: added missing ramdisk type upgradescratch
+
+    WATO:
+    * You can now have site-specific global settings when using
+      distributed WATO (available in the "Distributed Monitoring")
+    * bulk inventory: display percentage in progress bar
+    * FIX: correct display of number of hosts in bulk inventory
+
+1.2.3i4:
+    Core:
+    * Create inventory check also for hosts without services, if they
+          have *no* ping tag.
+
+    WATO:
+    * Bulk inventory: speed up by use of cache files and doing stuff in
+          groups of e.g. 10 hosts at once
+    * Multisite connection: new button for cloning a connection
+
+    Checks & Agents:
+    * Linux agent RPM: remove dependency to package "time". That package
+         is just needed for the binary mk-job, which is useful but not
+         neccessary.
+
+    Multisite:
+    * FIX: fix broken single-site setups due to new caching
+
 1.2.3i3:
     Core:
     * FIX: fixed typo in core startup message "logging initial states"
+    * FIX: livestatus table statehist: fixed rubbish entries whenever
+           logfile instances got unloaded
+
+    Livestatus:
+    * FIX: check_mk snmp checks with a custom check interval no longer
+           have an incorrect staleness value
+
+    Notifications:
+    * mkeventd: new notification plugin for forwarding notifications
+       to the Event Console. See inline docu in share/check_mk/notification/mkeventd
+       for documentation.
+    * FIX: cleanup environment from notifications (needed for CMC)
 
     Checks & Agents:
-    * windows_agent: increased maximum plugin output buffer size to 2MB
+    * Windows agent: increased maximum plugin output buffer size to 2MB
     * check_icmp: New WATO rule for custom PING checks
+    * agent_vsphere: now able to handle < > & ' " in login credentials
+    * if/if64 and friends: add 95% percentiles to graphs
+    * services: inventory now also matches against display names of services
+    * esx_vsphere_hostsystem.multipath: now able to set warn/crit levels
+    * cpu_netapp: added Perf-O-Meter and PNP template
+    * cisco_cpu: added Perf-O-Meter and PNP template
+    * apc_symmetra: add input voltage to informational output
+    * agent_vsphere: new debug option --tracefile
     * FIX: windows_agent: fixed bug in cleanup of open thread handles
     * FIX: cups default printer is now monitored again in linux agent
-    * FIX: host notification email in html format: fixed formating error 
+    * FIX: host notification email in html format: fixed formating error
            (typo in tag)
-
+    * FIX: netapp_volumes: better output when volume is missing
+    * FIX: winperf_phydisk: handle case where not performance counters are available
+    * FIX: check_mk_agent.linux: limit Livestatus check to 3 seconds
+    * FIX: esx_vsphere_vm: fixed exception when memory info for vm is missing
+    * FIX: esx_vsphere_hostsystem: Fixed typo in check output
+    * FIX: psperf.bat/ps: Plugin output processing no longer crashes when
+           the ps service is clustered
 
     Multisite:
+    * Filtering in views by Hostalias is possible now too
+       (however the filter is not displayed in any standard view - user needs
+       to enable it by customizing the needed views himself)
     * FIX: add missing service icons to view "All Services with this descr..."
     * FIX: ldap attribute plugins: fixed crash when parameters are None
     * FIX: avoid duplicate output of log message in log tables
+    * FIX: fixed problem with ldap userid encoding
+    * FIX: removed state-based colors from all Perf-O-Meters
+    * FIX: brocade_fcport pnp-template: fixed incorrect display of average values
+    * FIX: all log views are now correctly sorted from new to old
+
+    Livestatus-Proxy:
+    * Implement caching of non-status requests (together with Multisite)
+    * FIX: fix exception when printing error message
+    * FIX: honor wait time (now called cooling period) after failed TCP connection
+    * FIX: fix hanging if client cannot accept large chunks (seen on RH6.4)
 
     WATO:
     * Rule "State and count of processes": New configuration options:
            virtual and resident memory levels
+    * Added title of tests to LDAP diagnose table
+    * Bulk inventory: new checkbox to only include hosts that have a failed
+        inventory check.
+    * Bulk inventory: yet another checkbox for skipping hosts where the
+        Check_MK service is currently critical
+    * New rule: Multipath Count (used by esx_vsphere_hostsystem.multipath)
     * FIX: The rule "State and count of processes" is no longer available
            in "Parameters for inventorized check". This rule was solely
            intented for "Manual checks" configuration
+    * FIX: Trying to prevent auth.php errors while file is being updated
 
 1.2.3i2:
     Core:
@@ -395,6 +487,10 @@
 1.2.2p3:
     Core:
     * FIX: get_average(): Gracefully handle time anomlies of target systems
+    * FIX: notifications: /var/lib/check_mk/notify directory is now created 
+           correctly during setup from tgz file. (Without it notifications
+           did not get sent out.)
+    * FIX: add missing $DESTDIR to auth.serials in setup.sh
 
     Checks & Agents:
     * FIX: winperf_processor: fix case where CPU percent is exactly 100%
@@ -407,6 +503,9 @@
     * FIX: check_dns: parameter -A does not get an additional string
     * FIX: diskstat: Fixed wrong values for IO/s computation on linux hosts
     * FIX: blade_healts: Fixed wrong index checking resulting in exceptions
+    * FIX: notifications: /var/lib/check_mk/notify directory is now created 
+           correctly during setup from tgz file. (Without it notifications
+           did not get sent out.)
 
     Multisite:
     * FIX: LDAP: Disabling use of referrals in active directory configuration
@@ -419,6 +518,7 @@
     * FIX: Folder Tree Snapin: make folder filter also work for remote
            folders that do not exist locally
     * FIX: correctly display sub-minute check/retry intervals
+    * FIX: fix logic of some numeric sorters
 
     WATO:
     * FIX: fix layout of Auxiliary tags table
@@ -431,9 +531,13 @@
     * FIX: fix exception and loss of hosts in a folder when deleting all site connections
            of a distributed WATO setup
     * FIX: avoid Python exception for invalid parameters even in debug mode
+    * FIX: check_ldap: Removed duplicate "-H" definition
+    * FIX: Fixed some output encoding problem in snapshot restore / deletion code
+    * FIX: Improved user provided variable validation in snapshot handling code
 
     Event Console:
     * FIX: apply rewriting of application/hostname also when cancelling events
+    * FIX: check_mkevents now uses case insensitive host name matching
 
 1.2.2p2:
     Core:

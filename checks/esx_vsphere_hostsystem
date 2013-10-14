@@ -175,7 +175,7 @@ def check_esx_vsphere_hostsystem_state(item, params, info):
     elif overallStatus in [ "red", "gray"]:
         state = 2
         label['Satus'] = "(!!)"
-    messages.append("Enity state: %s%s" % (overallStatus, label['Status']))
+    messages.append("Entity state: %s%s" % (overallStatus, label['Status']))
 
     label['powerState'] = ''
     powerState = str(data['runtime.powerState'][0])
@@ -226,50 +226,51 @@ def esx_vsphere_multipath_convert(info):
 
 def inventory_esx_vsphere_hostsystem_multipath(info):
     data = esx_vsphere_multipath_convert(info).items()
-    return [ (x, y ) for x, y  in data]
+    return [ (x, None) for x, y  in data]
 
 def check_esx_vsphere_hostsystem_multipath(item, params, info):
-    dead = 0
-    disabled = 0
-    standby = 0
-    unknown = 0
-    active = 0
-    state = 0
-    dead_label = ""
-    disabled_label = ""
-    standby_label = ""
-    unknow_label = ""
+    state_infos = {
+        # alert_state, count, info
+        "active"   : [0, 0, ""],
+        "dead"     : [2, 0, ""],
+        "disabled" : [1, 0, ""],
+        "standby"  : [0, 0, ""],
+        "unknown"  : [2, 0, ""]
+    }
 
-    for path, states in  esx_vsphere_multipath_convert(info).items():
+    state   = 0
+    message = ""
+
+    for path, states in esx_vsphere_multipath_convert(info).items():
         if path == item:
+            # Collect states
             for path_state, path_type in states:
-                if path_state == "active":
-                    active += 1
-                elif path_state == "dead":
-                    dead += 1
-                    dead_label = "(!!)"
-                    state = 2
+                state_item = state_infos.get(path_state)
+                if state_item:
+                    state_item[1] += 1
+                    state = max(state_item[0], state)
 
-                elif path_state == "disabled":
-                    disabled += 1
-                    disabled_label = "(!)"
-                    state = max(1, state)
-
-                elif path_state == "standby":
-                    standby += 1
-
-                elif path_state == "unknown":
-                    state = 2
-                    unknow_label = "(!!)"
-                    unknown += 1
-
-            if standby > 0 and standby != active:
-                standby_label = "(!)"
-                state = max(1, state)
-
-            message = "Type %s, %d active, %d dead%s, %d disabled%s, %d standby%s, %s unknown%s" % \
-                     (path_type, active, dead, dead_label, disabled, disabled_label,
-                      standby, standby_label, unknown, unknow_label )
+            # Check warn, critical
+            if not params or type(params) == list:
+                if state_infos["standby"][1] > 0 and \
+                   state_infos["standby"][1] != state_infos["active"][1]:
+                    standby_label = "(!)"
+                    state = max(state_infos["standby"][1], state)
+            else:
+                for state_name, state_values in state_infos.items():
+                    if params.get(state_name):
+                        warn, crit = params.get(state_name)
+                        count = state_values[1]
+                        if count > crit:
+                            state = 2
+                            state_values[2] = "(!!)"
+                        elif count > warn:
+                            state = max(state, 1)
+                            state_values[2] = "(!)"
+            # Output message
+            message = "Type %s" % path_type
+            for element in "active", "dead", "disabled", "standby", "unknown":
+                message += ", %d %s%s" % ( state_infos[element][1], element, state_infos[element][2] )
             break
     else:
         return 3, "Path not found in agent output"
@@ -280,6 +281,6 @@ check_info['esx_vsphere_hostsystem.multipath'] = {
   "inventory_function"  : inventory_esx_vsphere_hostsystem_multipath,
   "check_function"      : check_esx_vsphere_hostsystem_multipath,
   "service_description" : "Multipath %s",
+  "group"               : "multipath_count"
 }
 
-#.

@@ -278,14 +278,15 @@ def get_host_info(hostname, ipaddress, checkname):
 	is_snmp_error = False
         for node in nodes:
             # If an error with the agent occurs, we still can (and must)
-            # try the other node.
+            # try the other nodes.
             try:
                 ipaddress = lookup_ipaddress(node)
                 new_info = get_realhost_info(node, ipaddress, checkname, cluster_max_cachefile_age)
-                if add_nodeinfo:
-                    new_info = [ [node] + line for line in new_info ]
-                info += new_info
-                at_least_one_without_exception = True
+                if new_info != None:
+                    if add_nodeinfo:
+                        new_info = [ [node] + line for line in new_info ]
+                    info += new_info
+                    at_least_one_without_exception = True
             except MKSkipCheck:
                 at_least_one_without_exception = True
             except MKAgentError, e:
@@ -553,7 +554,7 @@ def read_cache_file(relpath, max_cache_age):
         raise MKGeneralException("Simulation mode and no cachefile present.")
 
     if opt_no_tcp:
-        raise MKGeneralException("Host is unreachable")
+        raise MKGeneralException("Host is unreachable, no usable cache file present")
         #Cache file '%s' missing or too old. TCP disallowed by you." % cachefile)
 
 

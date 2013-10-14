@@ -12822,7 +12822,7 @@ def declare_bi_valuespecs(aggregation_rules):
                     CascadingDropdown(
                         title = _("Nodes to create:"),
                         help = _("When calling a rule you can use the place holder <tt>$1$</tt> "
-                                 "in the rule arguments. This will be replaced by the actual host "
+                                 "in the rule arguments. It will be replaced by the actual host "
                                  "names found by the search - one host name for each rule call."),
                         choices = subnode_choices,
                     ),
@@ -12852,7 +12852,7 @@ def declare_bi_valuespecs(aggregation_rules):
                     CascadingDropdown(
                         title = _("Nodes to create:"),
                         help = _("When calling a rule you can use the place holder <tt>$1$</tt> "
-                                 "in the rule arguments. This will be replaced by the actual host "
+                                 "in the rule arguments. It will be replaced by the actual host "
                                  "names found by the search - one host name for each rule call. If you "
                                  "have regular expression subgroups in the service pattern, then "
                                  "the place holders <tt>$2$</tt> will represent the first group match, "
@@ -12986,7 +12986,7 @@ def mode_bi_edit_rule(phase):
         ( "title",
            TextUnicode(
                title = _("Rule Title"),
-               help = _("The title of the BI nodes that are created from that rule. This will be "
+               help = _("The title of the BI nodes which are created from this rule. This will be "
                         "displayed as the name of the node in the BI view. For "
                         "top level nodes this title must be unique. You can insert "
                         "rule parameters like <tt>$FOO$</tt> or <tt>$BAR$</tt> here."),
@@ -13009,8 +13009,8 @@ def mode_bi_edit_rule(phase):
                        "be named like variables in programming languages. For example you can "
                        "make your rule have the two parameters <tt>HOST</tt> and <tt>INST</tt>. "
                        "When calling the rule - from an aggergation or a higher level rule - "
-                       "you will then specify two arbitrary values for that parameters. In the "
-                       "title of the rule, the host and service names you can then insert the "
+                       "you can then specify two arbitrary values for these parameters. In the "
+                       "title of the rule as well as the host and service names, you can insert the "
                        "actual value of the parameters by <tt>$HOST$</tt> and <tt>$INST$</tt> "
                        "(enclosed in dollar signs)."),
               orientation = "horizontal",

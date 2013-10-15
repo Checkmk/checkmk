@@ -30,6 +30,7 @@
     * FIX: esx_vsphere_hostsystem: fixed bug in handling of params
     * steelhead_perrs: New check for Rivergate Gateways
     * alcatel_power: Check for power supplies on Alcatel switches
+    * qnap_disks: New check for Hardisks in Qnap devices
 
     WATO:
     * You can now have site-specific global settings when using

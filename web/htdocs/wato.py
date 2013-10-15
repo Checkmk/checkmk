@@ -8266,7 +8266,7 @@ def load_notification_table():
                     ListOf(
                         Foldable(
                             Dictionary(
-                                optional_keys = [ "only_hosts", "only_services", "escalation" , "match_sl"],
+                                optional_keys = [ "service_blacklist", "only_hosts", "only_services", "escalation" , "match_sl"],
                                 columns = 1,
                                 headers = True,
                                 elements = [
@@ -8372,6 +8372,16 @@ def load_notification_table():
                                   ( "only_services",
                                     ListOfStrings(
                                         title = _("Limit to the following services"),
+                                        help = _("Configure regular expressions that match the beginning of the service names here. Prefix an "
+                                                 "entry with <tt>!</tt> in order to <i>exclude</i> that service."),
+                                        orientation = "horizontal",
+                                        valuespec = RegExp(size = 20),
+                                        validate = validate_only_services,
+                                    ),
+                                  ),
+                                  ( "service_blacklist",
+                                    ListOfStrings(
+                                        title = _("Blacklist the following services"),
                                         help = _("Configure regular expressions that match the beginning of the service names here. Prefix an "
                                                  "entry with <tt>!</tt> in order to <i>exclude</i> that service."),
                                         orientation = "horizontal",

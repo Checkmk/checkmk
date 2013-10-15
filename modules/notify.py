@@ -588,6 +588,21 @@ def should_notify(context, entry):
             notify_log(" - Skipping: service level %d not between %d and %d" % (sl, from_sl, to_sl))
             return False
 
+    # Skip blacklistet serivces
+    if entry.get("service_blacklist"):
+        servicedesc = context.get("SERVICEDESC")
+        if not servicedesc:
+            notify_log(" - Proceed: blacklist certain services, but this is a host notification")
+        else:
+            for s in entry["service_blacklist"]:
+                if re.match(s, servicedesc):
+                    notify_log(" - Skipping: service '%s' matches blacklist (%s)" % (
+                        servicedesc, ", ".join(entry["service_blacklist"])))
+                    return False
+                    
+
+
+
     # Check service, if configured
     if entry.get("only_services"):
         servicedesc = context.get("SERVICEDESC")

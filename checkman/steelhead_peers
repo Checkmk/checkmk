@@ -1,0 +1,13 @@
+title: Riverbed Steelhead Peer Connections
+agents: snmp
+catalog: hw/network/riverbed
+license: GPL
+distribution: check_mk
+description:
+ This is a simple check which checks the current connected peers
+ of a Riverbed Steelhead appliance which a not movible clients. 
+ As long the peer is connected the result will be {OK}. In all other cases
+ it is {critical}.
+
+inventory:
+ One check for each peer will be created.

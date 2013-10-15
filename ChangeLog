@@ -10,6 +10,7 @@
     * Automatically remove duplicate checks when monitoring with Agent+SNMP
        at the same time. TCP based ones have precedence.
     * inventory check of SNMP devices now does scan per default (configurable)
+    * FIX: Ignore snmp_check_interval cache in interactive situations (e.g.  -nv)
 
     Multisite:
     * Speed-O-Meter: now measure only service checks. Host checks

@@ -31,6 +31,10 @@ inventory:
  node found on the target host. If an entry matches, a new check will
  be created according to the entry (if it's not already existing).
 
+perfdata:
+ For status variables, no performance data is being output. Numeric
+ values are output as performance data.
+
 examples:
  # Examples for automatic inventorization of processes
  inventory_sap_values = [

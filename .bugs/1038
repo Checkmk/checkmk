@@ -1,9 +1,9 @@
 Title: problem with mrpe if lable has white space characters
 Component: checks
-State: open
+Class: bug
+State: wontfix
 Date: 2013-08-27 12:12:33
 Targetversion: future
-Class: bug
 
 habe heute eine seltsame Sache mit einigen MRPE Checks gehabt.  Falls die
 Checks Performance Daten liefern und das Label der Performance Daten
@@ -64,3 +64,9 @@ mrpe.diff
 +                perfdata.append(parts[1].strip())
              else:
                  perfdata = []
+
+2013-10-15 04:17:00: changed state open -> wontfix
+Check_MK unterstützt keine Leerzeichen in Variablennamen von 
+Perfdaten. Hat es noch nie. Auch der Microcore kann's nicht.
+Widerspricht dem Nagios-Standard. Die Spaces machen sowieso
+auch an vielen anderen Stellen Probleme.

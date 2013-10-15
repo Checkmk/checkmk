@@ -1,11 +1,14 @@
 Title: mismatch between check and check manpages for plugin sap
 Component: checks
-State: open
+Class: bug
+State: done
 Date: 2013-10-04 12:34:09
 Targetversion: 1.2.3i3
-Class: bug
 
 the sap checks provide perfdata
 but the manpages sap.dialog and sap.value tell, it does not
 
 perfdata need to be documented in the both manpages
+
+2013-10-15 04:42:11: changed state open -> done
+Done.

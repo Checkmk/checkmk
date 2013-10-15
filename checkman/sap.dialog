@@ -20,3 +20,8 @@ item:
 inventory:
  The check creates a check for each SAP system ID which at least provides
  the {SAP CCMS Monitor Templates/Dialog Overview/Dialog Response Time/ResponseTime}.
+
+perfdata:
+ As long as your R/3 has not been configured in an unusual way, four
+ values are output: (1) the number of users logged in, (2) the standard transaction's response time,
+ (3) The front end net time and (4) the response time - all in milliseconds

@@ -25,9 +25,14 @@
 # Boston, MA 02110-1301 USA.
 
 def check_sql_arguments(params):
-    args = " -H '$HOSTNAME$'"
+    args  = " --hostname '$HOSTNAME$'"
     args += " --dbms %s" % quote_shell_string(params["dbms"])
     args += " --name %s" % quote_shell_string(params["name"])
+    args += " --user '%s'" % params["user"]
+    args += " --password '%s'" % params["password"]
+
+    if "port" in params:
+        args += " --port %s" % params["port"]
 
     if "levels" in params:
         upper = params["levels"]

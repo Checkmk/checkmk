@@ -25,7 +25,7 @@
 
 $range = $CRIT[1];
 
-$opt[1] = "--vertical-label 'offset (ms)' -l -$range  -u $range --title '$hostname: NTP time offset to preferred peer' ";
+$opt[1] = "--vertical-label 'offset (ms)' -X 0 -l -$range  -u $range --title '$hostname: NTP time offset to preferred peer' ";
 
 $def[1] = "DEF:offset=$RRDFILE[1]:$DS[1]:MAX "; 
 $def[1] .= "DEF:jitter=$RRDFILE[2]:$DS[2]:MAX "; 

@@ -1,0 +1,17 @@
+Title: Delay sidebar reload after changes to site config
+Component: wato
+State: open
+Date: 2013-10-15 01:37:53
+Targetversion: 1.4.0
+Class: nastiness
+
+If you change the site configuration via WATO then the
+sidear is reloaded. But: at exactly the same time the
+liveproxyd is being restarted and all sites are down
+for 1-2 seconds. The sidebar is reloaded in exactly that
+point of time. Consequnce:
+
+- Tactical overview does not show remote hosts
+- Site status is [dead] for all remote sites.
+
+Can't we delay the reload for a small time?

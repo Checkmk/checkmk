@@ -46,6 +46,7 @@ OPTIONS:
                                 Default is 'postgres', other valid values are
                                 'mysql' and 'oracle'
   -H HOST,  --hostname HOST     Hostname or IP-Address where the database lives. Default is '127.0.0.1'
+  -P PORT,  --port PORT         Port used to connect to the database
   -n NAME,  --name NAME         Name of the database on the DBMS
   -w RANGE, --warning RANGE     lower and upper level for the warning state, separated by a colon
   -c RANGE, --critical RANGE    lower and upper level for the critical state, separated by a colon
@@ -65,10 +66,10 @@ def saverfloat(f):
 #
 # defining and collection input parameters
 #
-short_options = 'hu:p:d:n:H:w:c:v'
+short_options = 'hu:p:d:n:H:P:w:c:v'
 long_options  = [
     'help', 'user=', 'password=', 'dbms=', 'name=', 'warning=', 'critical=', 'hostname=',
-    'debug', 'verbose'
+    'port=', 'debug', 'verbose'
 ]
 
 try:
@@ -85,6 +86,7 @@ opt_name          = None
 opt_user          = opt_dbms
 opt_password      = None
 opt_hostname      = "127.0.0.1"
+opt_port          = None
 opt_sql           = None
 warn              = [ None, None ]
 crit              = [ None, None ]
@@ -105,6 +107,8 @@ try:
             opt_password = a
         elif o in [ '-H', '--hostname' ]:
             opt_hostname = a
+        elif o in [ '-P', '--port' ]:
+            opt_port = int(a)
         elif o in [ '-w', '--warning' ]:
             warn = map(saverfloat,a.split(":",2))
         elif o in [ '-c', '--critical' ]:
@@ -134,20 +138,26 @@ try:
     if opt_dbms == "postgres":
         import psycopg2 # postgres driver
         db = psycopg2
-        db_connection = db.connect(host=opt_hostname, database=opt_name, \
-            user=opt_user, password=opt_password )
+        if opt_port == None:
+            opt_port=5432
+        db_connection = db.connect(host=opt_hostname, port=opt_port, \
+            database=opt_name, user=opt_user, password=opt_password )
 
     elif opt_dbms == "mysql":
         import MySQLdb  # mysql driver
         db = MySQLdb
-        db_connection = db.connect(host=opt_hostname, db=opt_name, \
-            user=opt_user, passwd=opt_password )
+        if opt_port == None:
+            opt_port=3306
+        db_connection = db.connect(host=opt_hostname, port=opt_port, \
+            db=opt_name, user=opt_user, passwd=opt_password )
 
     elif opt_dbms == "oracle":
         sys.path.append('/usr/lib/python2.7/site-packages')
         import cx_Oracle
         db = cx_Oracle
-        cstring = opt_user+"/"+opt_password+"@"+opt_hostname+"/"+opt_name
+        if opt_port == None:
+            opt_port=1521
+        cstring = opt_user+"/"+opt_password+"@"+opt_hostname+":"+opt_port+"/"+opt_name
         db_connection = db.connect(cstring)
     else:
         print "UNKNOWN - dbms not found"
@@ -216,7 +226,7 @@ try:
             state = 2
     else:
         if number  in [ 0 ,1 ,2 ,3 ]:
-            state = number
+            state = int(number)
         else:
             print "UNKNOWN - <%s> is not a state, and no levels given" % str(number)
             sys.exit(3)

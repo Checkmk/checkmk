@@ -1,0 +1,17 @@
+Title: Reloading sidebar after config change erases Quicksearch
+Component: multisite
+State: open
+Date: 2013-10-15 01:34:28
+Targetversion: 1.2.3i3
+Class: nastiness
+
+If you active changes via WATO then the sidebar reloads.
+That way Quicksearch is emptied. This is nasty.
+
+1. You add a new host to the monitoring
+2. You activate the changes
+3. You type in the new hostname in Quicksearch
+4. The host name is erased right now because of the reload
+
+Does the Quicksearch need to be reloaded at the first place?
+It's now AJAX-enabled, isn't it?

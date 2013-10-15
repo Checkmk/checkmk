@@ -531,7 +531,7 @@ multisite_painters['svc_notification_number'] = {
     "title"     : _("Service notification number"),
     "short"     : _("N#"),
     "columns"   : [ "service_current_notification_number" ],
-    "paint"     : lambda row: ("", row["service_current_notification_number"]),
+    "paint"     : lambda row: ("", str(row["service_current_notification_number"])),
 }
 
 
@@ -959,7 +959,7 @@ multisite_painters['host_notification_number'] = {
     "title"     : _("Host notification number"),
     "short"     : _("N#"),
     "columns"   : [ "host_current_notification_number" ],
-    "paint"     : lambda row: ("", saveint(row["host_current_notification_number"])),
+    "paint"     : lambda row: ("", str(row["host_current_notification_number"])),
 }
 
 multisite_painters["host_flapping"] = {
@@ -1446,7 +1446,7 @@ multisite_painters["comment_id"] = {
     "title"   : _("Comment id"),
     "short"   : _("ID"),
     "columns" : ["comment_id"],
-    "paint"   : lambda row: (None, row["comment_id"]),
+    "paint"   : lambda row: (None, str(row["comment_id"])),
 }
 multisite_painters["comment_author"] = {
     "title"   : _("Comment author"),
@@ -1643,7 +1643,7 @@ multisite_painters["log_attempt"] = {
     "title"   : _("Log: number of check attempt"),
     "short"   : _("Att."),
     "columns" : ["log_attempt"],
-    "paint"   : lambda row: ("", row["log_attempt"]),
+    "paint"   : lambda row: ("", str(row["log_attempt"])),
 }
 multisite_painters["log_state_type"] = {
     "title"   : _("Log: type of state (hard/soft/stopped/started)"),

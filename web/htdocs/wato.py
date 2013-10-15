@@ -2193,7 +2193,7 @@ def mode_inventory(phase, firsttime):
         config.need_permission("wato.services")
         check_host_permissions(hostname)
         if html.check_transaction():
-            cache_options = not html.var("_scan") and [ '--cache' ] or []
+            cache_options = html.var("_scan") and [ '@scan' ] or [ '@noscan' ]
             table = check_mk_automation(host[".siteid"], "try-inventory", cache_options + [hostname])
             table.sort()
             active_checks = {}
@@ -2229,7 +2229,7 @@ def show_service_table(host, firsttime):
     hostname = host[".name"]
 
     # Read current check configuration
-    cache_options = not html.var("_scan") and [ '--cache' ] or []
+    cache_options = html.var("_scan") and [ '@scan' ] or [ '@noscan' ]
 
     # We first try using the Cache (if the user has not pressed Full Scan).
     # If we do not find any data, we omit the cache and immediately try
@@ -2611,7 +2611,9 @@ def mode_bulk_inventory(phase):
                 load_hosts(folder)
                 arguments = [how,] + hostnames
                 if html.var("use_cache"):
-                    arguments = [ "--cache" ] + arguments
+                    arguments = [ "@cache" ] + arguments
+                if html.var("do_scan"):
+                    arguments = [ "@scan" ] + arguments
                 counts, failed_hosts = check_mk_automation(site_id, "inventory", arguments)
                 #counts = ( 1, 2, 3, 4 )
                 result = repr([ 'continue', num_hosts, 0 ] + list(counts)) + "\n"
@@ -2778,6 +2780,8 @@ def mode_bulk_inventory(phase):
 
         forms.section(_("Performance options"))
         html.checkbox("use_cache", True, label=_("Use cached data if present"))
+        html.write("<br>")
+        html.checkbox("do_scan", True, label=_("Do full SNMP scan for SNMP devices"))
         html.write("<br>")
         html.write(_("Number of hosts to handle at once:") + " ")
         html.number_input("bulk_size", 10, size=3)
@@ -13060,7 +13064,7 @@ def declare_bi_valuespecs(aggregation_rules):
                     CascadingDropdown(
                         title = _("Nodes to create:"),
                         help = _("When calling a rule you can use the place holder <tt>$1$</tt> "
-                                 "in the rule arguments. This will be replaced by the actual host "
+                                 "in the rule arguments. It will be replaced by the actual host "
                                  "names found by the search - one host name for each rule call."),
                         choices = subnode_choices,
                     ),
@@ -13090,7 +13094,7 @@ def declare_bi_valuespecs(aggregation_rules):
                     CascadingDropdown(
                         title = _("Nodes to create:"),
                         help = _("When calling a rule you can use the place holder <tt>$1$</tt> "
-                                 "in the rule arguments. This will be replaced by the actual host "
+                                 "in the rule arguments. It will be replaced by the actual host "
                                  "names found by the search - one host name for each rule call. If you "
                                  "have regular expression subgroups in the service pattern, then "
                                  "the place holders <tt>$2$</tt> will represent the first group match, "
@@ -13224,7 +13228,7 @@ def mode_bi_edit_rule(phase):
         ( "title",
            TextUnicode(
                title = _("Rule Title"),
-               help = _("The title of the BI nodes that are created from that rule. This will be "
+               help = _("The title of the BI nodes which are created from this rule. This will be "
                         "displayed as the name of the node in the BI view. For "
                         "top level nodes this title must be unique. You can insert "
                         "rule parameters like <tt>$FOO$</tt> or <tt>$BAR$</tt> here."),
@@ -13247,8 +13251,8 @@ def mode_bi_edit_rule(phase):
                        "be named like variables in programming languages. For example you can "
                        "make your rule have the two parameters <tt>HOST</tt> and <tt>INST</tt>. "
                        "When calling the rule - from an aggergation or a higher level rule - "
-                       "you will then specify two arbitrary values for that parameters. In the "
-                       "title of the rule, the host and service names you can then insert the "
+                       "you can then specify two arbitrary values for these parameters. In the "
+                       "title of the rule as well as the host and service names, you can insert the "
                        "actual value of the parameters by <tt>$HOST$</tt> and <tt>$INST$</tt> "
                        "(enclosed in dollar signs)."),
               orientation = "horizontal",

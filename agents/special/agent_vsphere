@@ -146,8 +146,8 @@ OPTIONS:
 
   --tracefile FILENAME          Log all outgoing and incoming data into the given tracefile
   -i MODULES, --modules MODULES Modules to query. This is a comma separated list of
-                                hostsystem, virtualmachine and storage. Default is to
-                                query all modules.
+                                hostsystem, virtualmachine, datastore and counters.
+                                Default is to query all modules.
 
 
 """)

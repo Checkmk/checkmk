@@ -243,6 +243,7 @@ explicit_snmp_communities          = {} # override the rule based configuration
 # Inventory and inventory checks
 inventory_check_interval           = None # Nagios intervals (4h = 240)
 inventory_check_severity           = 1    # warning
+inventory_check_do_scan            = True # include SNMP scan for SNMP devices
 inventory_max_cachefile_age        = 120  # secs.
 always_cleanup_autochecks          = True
 
@@ -592,6 +593,9 @@ def is_tcp_host(hostname):
 def is_ping_host(hostname):
     return not is_snmp_host(hostname) and not is_tcp_host(hostname)
 
+def is_dual_host(hostname):
+    return is_tcp_host(hostname) and is_snmp_host(hostname)
+
 def check_period_of(hostname, service):
     periods = service_extra_conf(hostname, service, check_periods)
     if periods:
@@ -610,6 +614,7 @@ def check_interval_of(hostname, checkname):
         if match is None or match == checkname:
             return minutes # use first match
 
+#.
 #   +----------------------------------------------------------------------+
 #   |                      ____  _   _ __  __ ____                         |
 #   |                     / ___|| \ | |  \/  |  _ \                        |
@@ -660,6 +665,7 @@ def is_snmpv2c_host(hostname):
 def is_usewalk_host(hostname):
     return in_binary_hostlist(hostname, usewalk_hosts)
 
+#.
 #   .--Classic SNMP--------------------------------------------------------.
 #   |        ____ _               _        ____  _   _ __  __ ____         |
 #   |       / ___| | __ _ ___ ___(_) ___  / ___|| \ | |  \/  |  _ \        |
@@ -712,7 +718,7 @@ def snmp_base_command(what, hostname):
         command = 'snmpbulkwalk'
 
     # Handle V1 and V2C
-    if type(credentials) == str:
+    if type(credentials) in [ str, unicode ]:
         if is_bulkwalk_host(hostname):
             options = '-v2c'
         else:
@@ -762,6 +768,11 @@ def snmp_get_oid(hostname, ipaddress, oid):
 
     snmp_process = os.popen(command, "r")
     line = snmp_process.readline().strip()
+    if not line:
+        if opt_debug:
+            sys.stdout.write("Error in response to snmpget.\n")
+        return None
+
     item, value = line.split("=", 1)
     value = value.strip()
     if opt_debug:
@@ -823,12 +834,15 @@ def snmp_scan(hostname, ipaddress):
 
     if opt_verbose:
         sys.stdout.write("Scanning host %s(%s) for SNMP checks..." % (hostname, ipaddress))
+        sys.stdout.flush()
     if not in_binary_hostlist(hostname, snmp_without_sys_descr):
-        sys_descr = get_single_oid(hostname, ipaddress, ".1.3.6.1.2.1.1.1.0")
+        sys_descr_oid = ".1.3.6.1.2.1.1.1.0"
+        sys_descr = get_single_oid(hostname, ipaddress, sys_descr_oid)
         if sys_descr == None:
-            if opt_debug:
-                sys.stderr.write("no SNMP answer\n")
-            return []
+            raise MKSNMPError("Cannot fetch system description OID %s" % sys_descr_oid)
+            # if opt_verbose:
+            #     sys.stderr.write("no SNMP answer\n")
+            # return []
 
     found = []
     for check_type, check in check_info.items():
@@ -940,13 +954,16 @@ g_check_table_cache = {}
 # are used in the autochecks and assumed be make up the vast majority.
 g_singlehost_checks = None
 g_multihost_checks = None
-def get_check_table(hostname):
+def get_check_table(hostname, remove_duplicates=False):
     global g_singlehost_checks
     global g_multihost_checks
 
     # speed up multiple lookup of same host
     if hostname in g_check_table_cache:
-        return g_check_table_cache[hostname]
+        if remove_duplicates and is_dual_host(hostname):
+            return remove_duplicate_checks(g_check_table_cache[hostname])
+        else:
+            return g_check_table_cache[hostname]
 
     check_table = {}
 
@@ -1028,15 +1045,42 @@ def get_check_table(hostname):
                 deps.append(d)
 
     g_check_table_cache[hostname] = check_table
-    return check_table
+    if remove_duplicates and is_dual_host(hostname):
+        return remove_duplicate_checks(check_table)
+    else:
+        return check_table
+
+def remove_duplicate_checks(check_table):
+    have_with_tcp = {}
+    have_with_snmp = {}
+    without_duplicates = {}
+    for key, value in check_table.iteritems():
+        checkname = key[0]
+        descr = value[1]
+        if check_uses_snmp(checkname):
+            if descr in have_with_tcp:
+                continue
+            have_with_snmp[descr] = key
+        else:
+            if descr in have_with_snmp:
+                snmp_key = have_with_snmp[descr]
+                del without_duplicates[snmp_key]
+                del have_with_snmp[descr]
+            have_with_tcp[descr] = key
+        without_duplicates[key] = value
+    return without_duplicates
 
 
-def get_sorted_check_table(hostname):
+
+# remove_duplicates: Automatically remove SNMP based checks
+# if there already is a TCP based one with the same
+# description. E.g: df vs hr_fs.
+def get_sorted_check_table(hostname, remove_duplicates=False):
     # Convert from dictionary into simple tuple list. Then sort
     # it according to the service dependencies.
     unsorted = [ (checkname, item, params, descr, deps)
                  for ((checkname, item), (params, descr, deps))
-                 in get_check_table(hostname).items() ]
+                 in get_check_table(hostname, remove_duplicates=remove_duplicates).items() ]
     def cmp(a, b):
         if a[3] < b[3]:
             return -1
@@ -1909,7 +1953,7 @@ define servicedependency {
 
         return result
 
-    host_checks = get_check_table(hostname).items()
+    host_checks = get_check_table(hostname, remove_duplicates=True).items()
     host_checks.sort() # Create deterministic order
     aggregated_services_conf = set([])
     do_aggregation = host_is_aggregated(hostname)
@@ -2484,7 +2528,14 @@ def do_snmp_scan(hostnamelist, check_only=False, include_state=False):
         except:
             sys.stdout.write("Cannot resolve %s into IP address. Skipping.\n" % hostname)
             continue
-        checknames = snmp_scan(hostname, ipaddress)
+        try:
+            checknames = snmp_scan(hostname, ipaddress)
+        except Exception, e:
+            if opt_debug:
+                raise
+            sys.stdout.write("SNMP scan for %s failed: %s\n" % (hostname, e))
+            continue
+
         for checkname in checknames:
             if opt_debug:
                 sys.stdout.write("Trying inventory for %s on %s\n" % (checkname, hostname))
@@ -2711,13 +2762,21 @@ def check_inventory(hostname):
     is_snmp = is_snmp_host(hostname)
     is_tcp  = is_tcp_host(hostname)
     check_table = get_check_table(hostname)
-    hosts_checktypes = set([ ct for (ct, item), params in check_table.items() ])
+
     try:
+        if is_snmp and inventory_check_do_scan:
+            ipaddress = lookup_ipaddress(hostname)
+            snmp_checktypes = snmp_scan(hostname, ipaddress)
+        else:
+            snmp_checktypes = []
+
+        hosts_checktypes = set([ ct for (ct, item), params in check_table.items() ])
+
         for ct in inventorable_checktypes("all"):
             if check_uses_snmp(ct) and not is_snmp:
                 continue # Skip SNMP checks on non-SNMP hosts
-            elif check_uses_snmp(ct) and ct not in hosts_checktypes:
- 		continue # Do not look for new SNMP services (maybe change in future)
+            elif check_uses_snmp(ct) and ct not in hosts_checktypes and ct not in snmp_checktypes:
+ 		continue # Only try positive scans and existing types
             elif not check_uses_snmp(ct) and not is_tcp:
                 continue # Skip TCP checks on non-TCP hosts
 
@@ -2746,7 +2805,10 @@ def check_inventory(hostname):
         # Honor rule settings for "Status of the Check_MK service". In case of
         # a problem we assume a connection error here.
         spec = exit_code_spec(hostname)
-        what = isinstance(e, MKAgentError) and "connection" or "exception"
+        if isinstance(e, MKAgentError) or isinstance(e, MKSNMPError):
+            what = "connection"
+        else:
+            what = "exception"
         status = spec.get(what, 3)
         sys.stdout.write("%s - %s\n" % (nagios_state_names[status], e))
         sys.exit(status)
@@ -2871,7 +2933,7 @@ def find_check_plugins(checktype):
     return paths
 
 def get_precompiled_check_table(hostname):
-    host_checks = get_sorted_check_table(hostname)
+    host_checks = get_sorted_check_table(hostname, remove_duplicates=True)
     precomp_table = []
     for checktype, item, params, description, deps in host_checks:
         aggr_name = aggregated_service_name(hostname, description)
@@ -2977,7 +3039,7 @@ no_inventory_possible = None
         output.write("%s = %r\n" % (var, globals()[var]))
 
     output.write("\n# Checks for %s\n\n" % hostname)
-    output.write("def get_sorted_check_table(hostname):\n    return %r\n\n" % check_table)
+    output.write("def get_sorted_check_table(hostname, remove_duplicates=False):\n    return %r\n\n" % check_table)
 
     # Do we need to load the SNMP module? This is the case, if the host
     # has at least one SNMP based check. Also collect the needed check
@@ -4652,7 +4714,7 @@ def do_cleanup_autochecks():
                 hostchecks.append(line)
                 checks += 1
                 hostdata[hostname] = hostchecks
-    if opt_verbose:
+    if opt_debug:
         sys.stdout.write("Found %d checks from %d hosts.\n" % (checks, len(hostdata)))
 
     # 2. Write out new autochecks.

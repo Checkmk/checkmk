@@ -1,0 +1,36 @@
+title: HTTP Form Check
+agents: active
+catalog: agentless
+license: GPL
+distribution: check_mk
+description:
+ This check performs HTTP requests with some advanced features like
+ a) Detecting, populating and submitting HTML forms
+ b) Accepts and uses cookies
+ c) Follos HTTP redirects
+ d) Extends HTTP headers
+
+ Several hosts may be specified at once. For this case warning an critical levels may
+ be given and are applied to the number of successful responses.
+
+ This check can be configured by WATO.
+
+ See the {usage} page of the check for details about the invocation on the command line.
+
+Examples:
+ Call the page test.php, find the single form on that page and
+ submit it with default values:
+
+  ./check_form_submit -I localhost -u /test.php
+
+ Same as above, but expect the string "Hello" in the response
+ of the form:
+
+ ./check_form_submit -I localhost -u /test.php -e "Hello"
+
+ Login as omdadmin with password omd, in the OMD site named /event,
+ let the login redirect to the wato.py and expect the string WATO
+ in this response:
+
+ ./check_form_submit -I localhost -u /event -q '_origtarget=wato.py&_username=omdadmin&_password=omd' -e 'WATO'
+

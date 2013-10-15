@@ -7,12 +7,12 @@ description:
   This is an active check that connects to a database server, sends an SQL
   statement to that server, and checks for the following result:
 
-  The query must return three columns, a number, a text, and
+  The query must return three columns, a number, a text, and optional
   performance data in the third column.
   If upper and lower levels are given, the number is being checked
   against these levels and the according state is being computed.
   Otherwise the number ist treated as a Nagios state (0,1,2,3).
-  State, text and the performance data are being returned
+  State, text and the performance data are being returned.
 
   The check works with MySQL, Postgresql and Oracle databases using the
   python drivers MySQLdb, psycopg2 and cx_Oracle. For cx_Oracle the
@@ -20,5 +20,9 @@ description:
   LD_LIBRARY_PATH needs to be modified to point to the libclntsh.so of
   that package.
 
+  This check can be configured by WATO.
+
+  See the {usage} page of the check for details about the invocation on the command line.
+
 perfdata:
- One value: the third field of the database response.
+ Optionally, one value: the third field of the database response.

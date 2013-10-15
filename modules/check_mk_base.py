@@ -1032,7 +1032,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
     g_hostname = hostname
     num_success = 0
     error_sections = set([])
-    check_table = get_sorted_check_table(hostname)
+    check_table = get_sorted_check_table(hostname, remove_duplicates=True)
     problems = []
 
     for checkname, item, params, description, info in check_table:

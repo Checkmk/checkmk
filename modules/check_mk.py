@@ -593,6 +593,9 @@ def is_tcp_host(hostname):
 def is_ping_host(hostname):
     return not is_snmp_host(hostname) and not is_tcp_host(hostname)
 
+def is_dual_host(hostname):
+    return is_tcp_host(hostname) and is_snmp_host(hostname)
+
 def check_period_of(hostname, service):
     periods = service_extra_conf(hostname, service, check_periods)
     if periods:
@@ -951,13 +954,16 @@ g_check_table_cache = {}
 # are used in the autochecks and assumed be make up the vast majority.
 g_singlehost_checks = None
 g_multihost_checks = None
-def get_check_table(hostname):
+def get_check_table(hostname, remove_duplicates=False):
     global g_singlehost_checks
     global g_multihost_checks
 
     # speed up multiple lookup of same host
     if hostname in g_check_table_cache:
-        return g_check_table_cache[hostname]
+        if remove_duplicates and is_dual_host(hostname):
+            return remove_duplicate_checks(g_check_table_cache[hostname])
+        else:
+            return g_check_table_cache[hostname]
 
     check_table = {}
 
@@ -1039,15 +1045,42 @@ def get_check_table(hostname):
                 deps.append(d)
 
     g_check_table_cache[hostname] = check_table
-    return check_table
+    if remove_duplicates and is_dual_host(hostname):
+        return remove_duplicate_checks(check_table)
+    else:
+        return check_table
+
+def remove_duplicate_checks(check_table):
+    have_with_tcp = {}
+    have_with_snmp = {}
+    without_duplicates = {}
+    for key, value in check_table.iteritems():
+        checkname = key[0]
+        descr = value[1]
+        if check_uses_snmp(checkname):
+            if descr in have_with_tcp:
+                continue
+            have_with_snmp[descr] = key
+        else:
+            if descr in have_with_snmp:
+                snmp_key = have_with_snmp[descr]
+                del without_duplicates[snmp_key]
+                del have_with_snmp[descr]
+            have_with_tcp[descr] = key
+        without_duplicates[key] = value
+    return without_duplicates
 
 
-def get_sorted_check_table(hostname):
+
+# remove_duplicates: Automatically remove SNMP based checks
+# if there already is a TCP based one with the same
+# description. E.g: df vs hr_fs.
+def get_sorted_check_table(hostname, remove_duplicates=False):
     # Convert from dictionary into simple tuple list. Then sort
     # it according to the service dependencies.
     unsorted = [ (checkname, item, params, descr, deps)
                  for ((checkname, item), (params, descr, deps))
-                 in get_check_table(hostname).items() ]
+                 in get_check_table(hostname, remove_duplicates=remove_duplicates).items() ]
     def cmp(a, b):
         if a[3] < b[3]:
             return -1
@@ -1920,7 +1953,7 @@ define servicedependency {
 
         return result
 
-    host_checks = get_check_table(hostname).items()
+    host_checks = get_check_table(hostname, remove_duplicates=True).items()
     host_checks.sort() # Create deterministic order
     aggregated_services_conf = set([])
     do_aggregation = host_is_aggregated(hostname)
@@ -2900,7 +2933,7 @@ def find_check_plugins(checktype):
     return paths
 
 def get_precompiled_check_table(hostname):
-    host_checks = get_sorted_check_table(hostname)
+    host_checks = get_sorted_check_table(hostname, remove_duplicates=True)
     precomp_table = []
     for checktype, item, params, description, deps in host_checks:
         aggr_name = aggregated_service_name(hostname, description)
@@ -3006,7 +3039,7 @@ no_inventory_possible = None
         output.write("%s = %r\n" % (var, globals()[var]))
 
     output.write("\n# Checks for %s\n\n" % hostname)
-    output.write("def get_sorted_check_table(hostname):\n    return %r\n\n" % check_table)
+    output.write("def get_sorted_check_table(hostname, remove_duplicates=False):\n    return %r\n\n" % check_table)
 
     # Do we need to load the SNMP module? This is the case, if the host
     # has at least one SNMP based check. Also collect the needed check

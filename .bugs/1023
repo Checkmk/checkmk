@@ -8,21 +8,21 @@ Class: bug
 We use the option s.UseSprintValue = 1 to make the netsnmp libraries translate some values for us.
 Problem arises when some mibs are installed which lead to translated values, e.g.:
 
-OMD[ber]:~$ cmk --debug -nv bervm002.vm.bbf.local
+OMD[ber]:~$ cmk --debug -nv wasweisichfuereinhost
 Check_mk version 2013.10.14
 Connecting via TCP to 10.55.10.32:6556.
 CPU utilization      OK - 0.3% used, 16 CPUs
 Check_MK Agent Version OK - windows / 1.2.1i4
 Disk IO SUMMARY      OK - 0.00B/sec read, 225.21kB/sec write, IOs: 56.36/sec, Read Queue: 0.00, Write Queue: 0.26
-bervm002.vm.bbf.local 10.55.10.32 ('.1.3.6.1.4.1.232', ['11.1.3.0', '11.2.14.1.1.5.0', '2.2.2.1.0'])
-Executing BULKWALK of ".1.3.6.1.4.1.232.11.1.3" on bervm002.vm.bbf.local
+wasweisichfuereinhost 10.55.10.32 ('.1.3.6.1.4.1.232', ['11.1.3.0', '11.2.14.1.1.5.0', '2.2.2.1.0'])
+Executing BULKWALK of ".1.3.6.1.4.1.232.11.1.3" on wasweisichfuereinhost
 .1.3.6.1.4.1.232.11.1.3.0 => [unknown] 'INTEGER'
-Executing BULKWALK of ".1.3.6.1.4.1.232.11.2.14.1.1.5" on bervm002.vm.bbf.local
+Executing BULKWALK of ".1.3.6.1.4.1.232.11.2.14.1.1.5" on wasweisichfuereinhost
 .1.3.6.1.4.1.232.11.2.14.1.1.5.0 => [5.12] 'OCTETSTR'
 .1.3.6.1.4.1.232.11.2.14.1.1.5.1 => [2011.05.05] 'OCTETSTR'
 .1.3.6.1.4.1.232.11.2.14.1.1.5.2 => [2.07] 'OCTETSTR'
 .1.3.6.1.4.1.232.11.2.14.1.1.5.3 => [2.9] 'OCTETSTR'
-Executing BULKWALK of ".1.3.6.1.4.1.232.2.2.2.1" on bervm002.vm.bbf.local
+Executing BULKWALK of ".1.3.6.1.4.1.232.2.2.2.1" on wasweisichfuereinhost
 .1.3.6.1.4.1.232.2.2.2.1.0 => [CZ20258062] 'OCTETSTR'
 Traceback (most recent call last):
   File "/omd/sites/ber/share/check_mk/modules/check_mk.py", line 5701, in <module>
@@ -38,34 +38,34 @@ ValueError: invalid literal for int() with base 10: 'unknown'
 
 and without:
 
-OMD[ber]:~$ cmk --debug -nv bervm002.vm.bbf.local
+OMD[ber]:~$ cmk --debug -nv wasweisichfuereinhost
 Check_mk version 2013.10.14
 Connecting via TCP to 10.55.10.32:6556.
 CPU utilization      OK - 100.0% used, 16 CPUs
 Check_MK Agent Version OK - windows / 1.2.1i4
 Disk IO SUMMARY      OK - 0.00B/sec read, 97.94kB/sec write, IOs: 24.58/sec, Read Queue: 0.00, Write Queue: 0.13
-bervm002.vm.bbf.local 10.55.10.32 ('.1.3.6.1.4.1.232', ['11.1.3.0', '11.2.14.1.1.5.0', '2.2.2.1.0'])
-Executing BULKWALK of ".1.3.6.1.4.1.232.11.1.3" on bervm002.vm.bbf.local
+wasweisichfuereinhost 10.55.10.32 ('.1.3.6.1.4.1.232', ['11.1.3.0', '11.2.14.1.1.5.0', '2.2.2.1.0'])
+Executing BULKWALK of ".1.3.6.1.4.1.232.11.1.3" on wasweisichfuereinhost
 .1.3.6.1.4.1.232.11.1.3.0 => [1] 'INTEGER'
-Executing BULKWALK of ".1.3.6.1.4.1.232.11.2.14.1.1.5" on bervm002.vm.bbf.local
+Executing BULKWALK of ".1.3.6.1.4.1.232.11.2.14.1.1.5" on wasweisichfuereinhost
 .1.3.6.1.4.1.232.11.2.14.1.1.5.0 => [5.12] 'OCTETSTR'
 .1.3.6.1.4.1.232.11.2.14.1.1.5.1 => [2011.05.05] 'OCTETSTR'
 .1.3.6.1.4.1.232.11.2.14.1.1.5.2 => [2.07] 'OCTETSTR'
 .1.3.6.1.4.1.232.11.2.14.1.1.5.3 => [2.9] 'OCTETSTR'
-Executing BULKWALK of ".1.3.6.1.4.1.232.2.2.2.1" on bervm002.vm.bbf.local
+Executing BULKWALK of ".1.3.6.1.4.1.232.2.2.2.1" on wasweisichfuereinhost
 .1.3.6.1.4.1.232.2.2.2.1.0 => [CZ20258062] 'OCTETSTR'
 General Status       OK - General Status is Unknown (Firmware: 5.12, S/N: CZ20258062)
-bervm002.vm.bbf.local 10.55.10.32 ('.1.3.6.1.4.1.232.1.2.2.1.1', ['1', '2', '3', '6'])
-Executing BULKWALK of ".1.3.6.1.4.1.232.1.2.2.1.1.1" on bervm002.vm.bbf.local
+wasweisichfuereinhost 10.55.10.32 ('.1.3.6.1.4.1.232.1.2.2.1.1', ['1', '2', '3', '6'])
+Executing BULKWALK of ".1.3.6.1.4.1.232.1.2.2.1.1.1" on wasweisichfuereinhost
 .1.3.6.1.4.1.232.1.2.2.1.1.1.0 => [0] 'INTEGER'
 .1.3.6.1.4.1.232.1.2.2.1.1.1.1 => [1] 'INTEGER'
-Executing BULKWALK of ".1.3.6.1.4.1.232.1.2.2.1.1.2" on bervm002.vm.bbf.local
+Executing BULKWALK of ".1.3.6.1.4.1.232.1.2.2.1.1.2" on wasweisichfuereinhost
 .1.3.6.1.4.1.232.1.2.2.1.1.2.0 => [0] 'INTEGER'
 .1.3.6.1.4.1.232.1.2.2.1.1.2.1 => [0] 'INTEGER'
-Executing BULKWALK of ".1.3.6.1.4.1.232.1.2.2.1.1.3" on bervm002.vm.bbf.local
+Executing BULKWALK of ".1.3.6.1.4.1.232.1.2.2.1.1.3" on wasweisichfuereinhost
 .1.3.6.1.4.1.232.1.2.2.1.1.3.0 => [Intel Xeon] 'OCTETSTR'
 .1.3.6.1.4.1.232.1.2.2.1.1.3.1 => [Intel Xeon] 'OCTETSTR'
-Executing BULKWALK of ".1.3.6.1.4.1.232.1.2.2.1.1.6" on bervm002.vm.bbf.local
+Executing BULKWALK of ".1.3.6.1.4.1.232.1.2.2.1.1.6" on wasweisichfuereinhost
 .1.3.6.1.4.1.232.1.2.2.1.1.6.0 => [2] 'INTEGER'
 .1.3.6.1.4.1.232.1.2.2.1.1.6.1 => [2] 'INTEGER'
 HW CPU 0             OK - CPU0 "Intel Xeon" in slot 0 is in state "ok"
@@ -73,3 +73,4 @@ HW CPU 1             OK - CPU1 "Intel Xeon" in slot 0 is in state "ok"
 
 Can we switch of the Sprintf option to have the raw values?
 Which ones need to be translated on our own?
+

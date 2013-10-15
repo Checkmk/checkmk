@@ -9,6 +9,7 @@
       are omitted, since they do not really matter and make the
       results less useful when using CMC.
     * FIX: Fixed encoding problem in webservice column output
+    * FIX: Fixed searching hosts by aliases/adresses
 
     Checks & Agents:
     * diskstat: removed (ever incorrect) latency computation for Linux

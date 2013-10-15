@@ -653,20 +653,23 @@ def search_livestatus(ty, q):
     except:
         limit = 80
 
-    filt = []
-    for plugin in search_plugins:
-        if plugin['type'] == ty and 'filter_func' in plugin:
-            f = plugin['filter_func'](q)
-            if f:
-                filt.append(f)
-    if filt:
-        filt.append('Or: %d\n' % (len(filt)))
-
+    # We need to know which plugin lead to finding a particular host, so it
+    # is neccessary to make one query for each plugin - sorry. For example
+    # for the case, that a host can be found via alias or name.
+    data = []
     column = ty == 'service' and 'description' or 'name'
-    lq = "GET %ss\nCache: reload\nColumns: %s\n%sLimit: %d\n" % \
-            (ty, column, ''.join(filt), limit)
     html.live.set_prepend_site(True)
-    data = html.live.query(lq)
+    for plugin in search_plugins:
+        if plugin['type'] != ty or 'filter_func' not in plugin:
+            continue
+
+        f = plugin['filter_func'](q)
+        if f:
+            lq = "GET %ss\nCache: reload\nColumns: %s\n%sLimit: %d\n" % \
+                    (ty, column, f, limit)
+            data += [ [ plugin['id'] ] + row for row in html.live.query(lq) ]
+            if len(data) >= limit:
+                break
     html.live.set_prepend_site(False)
 
     # Some special plugins fetch host data, but do own livestatus
@@ -683,7 +686,7 @@ def search_livestatus(ty, q):
     def sort_data(data):
         sorted_data = set([])
         for entry in data:
-            entry = ('', entry[1])
+            entry = (entry[0], '', entry[2])
             if entry not in sorted_data:
                 sorted_data.add(entry)
         sorted_data = list(sorted_data)
@@ -704,17 +707,17 @@ def render_search_results(ty, objects):
     display_site = False
     for obj in objects:
         if only_site is None:
-            only_site = obj[0]
-        elif only_site != obj[0]:
+            only_site = obj[1]
+        elif only_site != obj[1]:
             display_site = True
             break
 
     for obj in objects:
-        if len(obj) == 2:
-            site, name = obj
+        if len(obj) == 3:
+            plugin, site, name = obj
             url = url_tmpl % {'name': name, 'site': site}
         else:
-            site, name, url = obj
+            plugin, site, name, url = obj
         html.write('<a id="result_%s" class="%s" href="%s" onClick="mkSearchClose()" target="main">%s' %
                     (name, ty, url, name))
         if display_site:
@@ -747,6 +750,11 @@ def ajax_search():
     except Exception, e:
         html.write(repr(e))
 
+def get_search_plugin(plugin_id):
+    for plugin in search_plugins:
+        if plugin['id'] == plugin_id:
+            return plugin
+
 def search_open():
     q = html.var('q').strip()
     if not q:
@@ -756,13 +764,38 @@ def search_open():
     if ty is None:
         return
 
+    cleaned_search_string = parse_search_query(q)[1]
+
     if len(data) == 1:
-        if len(data[0]) == 2:
-            url = search_url_tmpl(ty) % {'name': html.urlencode(data[0][1]), 'site': data[0][0]}
+        if len(data[0]) == 3:
+            # Check wether or not the plugin which found the first match registered
+            # an own url template, use this if provided.
+            plugin = get_search_plugin(data[0][0])
+            if 'url_tmpl' in plugin:
+                url_tmpl = plugin['url_tmpl']
+            else:
+                url_tmpl = search_url_tmpl(ty)
+            url = url_tmpl % {
+                'name'   : html.urlencode(data[0][2]),
+                'search' : html.urlencode(cleaned_search_string),
+                'site'   : data[0][1],
+            }
         else:
-            url = data[0][2]
+            url = data[0][3]
     else:
-        url = search_url_tmpl(ty, exact = False) % {'name': html.urlencode(parse_search_query(q)[1]), 'site': ''}
+        # Check wether or not the plugin which found the first match registered
+        # an own url template, use this if provided.
+        url_tmpl = search_url_tmpl(ty, exact = False)
+        if data:
+            plugin = get_search_plugin(data[0][0])
+            if 'url_tmpl' in plugin:
+                url_tmpl = plugin['url_tmpl']
+
+        url = url_tmpl % {
+            'name'   : html.urlencode(cleaned_search_string),
+            'search' : html.urlencode(cleaned_search_string),
+            'site'   : '',
+        }
 
     html.set_http_header('Location', url)
     from mod_python import apache

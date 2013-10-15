@@ -111,21 +111,25 @@ def search_filter_name(q, column = 'name'):
     return 'Filter: %s ~~ %s\n' % (column, q)
 
 search_plugins.append({
+    'id'          : 'name',
     'type'        : 'host',
     'filter_func' : search_filter_name,
 })
 
 search_plugins.append({
+    'id'          : 'name',
     'type'        : 'service',
     'filter_func' : lambda q: search_filter_name(q, 'description'),
 })
 
 search_plugins.append({
+    'id'          : 'name',
     'type'        : 'hostgroup',
     'filter_func' : search_filter_name,
 })
 
 search_plugins.append({
+    'id'          : 'name',
     'type'        : 'servicegroup',
     'filter_func' : search_filter_name,
 })
@@ -135,14 +139,18 @@ def search_filter_ipaddress(q):
         return 'Filter: address ~~ %s\n' % q
 
 search_plugins.append({
+    'id'          : 'address',
     'type'        : 'host',
     'filter_func' : search_filter_ipaddress,
+    'url_tmpl'    : 'view.py?view_name=searchhost&host_address=%(search)s&filled_in=filter'
 })
 
 def search_filter_alias(q):
     return 'Filter: alias ~~ %s\n' % q
 
 search_plugins.append({
+    'id'          : 'alias',
     'type'        : 'host',
     'filter_func' : search_filter_alias,
+    'url_tmpl'    : 'view.py?view_name=searchhost&hostalias=%(search)s&filled_in=filter'
 })

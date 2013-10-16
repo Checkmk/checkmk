@@ -6859,14 +6859,15 @@ def mode_sites(phase):
         table.row()
         # Buttons
         edit_url = make_link([("mode", "edit_site"), ("edit", id)])
-        globals_url = make_link([("mode", "edit_site_globals"), ("site", id)])
         clone_url = make_link([("mode", "edit_site"), ("clone", id)])
         delete_url = html.makeactionuri([("_delete", id)])
         table.cell(_("Actions"), css="buttons")
         html.icon_button(edit_url, _("Properties"), "edit")
-        html.icon_button(globals_url, _("Site-specific global configuration"), "configuration")
         html.icon_button(clone_url, _("Clone this connection in order to create a new one"), "clone")
         html.icon_button(delete_url, _("Delete"), "delete")
+        if site.get("replication"):
+            globals_url = make_link([("mode", "edit_site_globals"), ("site", id)])
+            html.icon_button(globals_url, _("Site-specific global configuration"), "configuration")
 
         # Site-ID
         table.cell(_("Site-ID"), id)
@@ -7023,6 +7024,13 @@ def mode_edit_site(phase):
     siteid = html.var("edit") # missing -> new site
     cloneid = html.var("clone")
     new = siteid == None
+    if cloneid:
+        site = sites[cloneid]
+    elif new:
+        site = {}
+    else:
+        site = sites.get(siteid, {})
+
     if phase == "title":
         if new:
             return _("Create new site connection")
@@ -7031,16 +7039,9 @@ def mode_edit_site(phase):
 
     elif phase == "buttons":
         html.context_button(_("All Sites"), make_link([("mode", "sites")]), "back")
-        if not new:
+        if not new and site.get("replication"):
             html.context_button(_("Site-Globals"), make_link([("mode", "edit_site_globals"), ("site", siteid)]), "configuration")
         return
-
-    if cloneid:
-        site = sites[cloneid]
-    elif new:
-        site = {}
-    else:
-        site = sites.get(siteid, {})
 
     vs_tcp_port = Tuple(
             title = _("TCP Port to connect to"),

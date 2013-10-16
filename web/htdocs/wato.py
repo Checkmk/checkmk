@@ -8382,8 +8382,7 @@ def load_notification_table():
                                   ( "service_blacklist",
                                     ListOfStrings(
                                         title = _("Blacklist the following services"),
-                                        help = _("Configure regular expressions that match the beginning of the service names here. Prefix an "
-                                                 "entry with <tt>!</tt> in order to <i>exclude</i> that service."),
+                                        help = _("Configure regular expressions that match the beginning of the service names here."),
                                         orientation = "horizontal",
                                         valuespec = RegExp(size = 20),
                                         validate = validate_only_services,

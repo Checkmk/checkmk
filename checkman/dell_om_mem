@@ -1,0 +1,18 @@
+title: Dell Open Manage Physical Memory Status
+agents: snmp
+catalog: hw/dell
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the current Status and the current failure mode of 
+ each RAM Module on a Dell server which have the open_manage packet
+ installed. 
+ The check returns a {CRIT} in case of an error state reported
+ by the device. The check also reports the size of the module.
+
+item:
+ The Name of the Modul port
+
+inventory:
+ One check is created for each Module
+

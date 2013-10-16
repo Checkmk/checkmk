@@ -34,6 +34,7 @@
     * steelhead_perrs: New check for Rivergate Gateways
     * alcatel_power: Check for power supplies on Alcatel switches
     * qnap_disks: New check for Hardisks in Qnap devices
+    * Dell Open Manage: SNNP Checks for Physical Disks, CPU and Memory
 
     WATO:
     * You can now have site-specific global settings when using

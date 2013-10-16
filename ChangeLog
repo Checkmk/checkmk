@@ -29,11 +29,12 @@
     * hpux_cpu, blade_bx_load: support predictive levels, add perf-o-meter,
        make WATO-configable
     * check_sql: Database port can now be explicitly set
-    * FIX: esx_vsphere_counters: added missing ramdisk type upgradescratch
-    * FIX: esx_vsphere_hostsystem: fixed bug in handling of params
     * steelhead_perrs: New check for Rivergate Gateways
     * alcatel_power: Check for power supplies on Alcatel switches
     * qnap_disks: New check for Hardisks in Qnap devices
+    * FIX: esx_vsphere_counters: added missing ramdisk type upgradescratch
+    * FIX: esx_vsphere_hostsystem: fixed bug in handling of params
+    * FIX: local: tolerate invalid output lines
 
     WATO:
     * You can now have site-specific global settings when using

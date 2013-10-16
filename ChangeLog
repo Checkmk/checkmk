@@ -32,6 +32,7 @@
     * steelhead_perrs: New check for Rivergate Gateways
     * alcatel_power: Check for power supplies on Alcatel switches
     * qnap_disks: New check for Hardisks in Qnap devices
+    * Dell Open Manage: SNNP Checks for Physical Disks, CPU and Memory
     * check_tcp: Now able to set custom service description
     * FIX: esx_vsphere_counters: added missing ramdisk type upgradescratch
     * FIX: esx_vsphere_hostsystem: fixed bug in handling of params

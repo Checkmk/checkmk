@@ -7428,6 +7428,7 @@ def save_sites(sites, activate=True):
         config.load_config() # make new site configuration active
         update_distributed_wato_file(sites)
         declare_site_attribute()
+        load_all_folders() # make sure that .siteid is present
         rewrite_config_files_below(g_root_folder) # fix site attributes
         need_sidebar_reload()
 

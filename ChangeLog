@@ -41,6 +41,7 @@
     * bulk inventory: display percentage in progress bar
     * New option for full SNMP scan in bulk inventory
     * FIX: correct display of number of hosts in bulk inventory
+    * FIX: nailed down ".siteid" exception when added new site
 
 1.2.3i4:
     Core:

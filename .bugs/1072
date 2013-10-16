@@ -1,0 +1,11 @@
+Title: Removing a tag: error message garbled up
+Component: wato
+State: open
+Date: 2013-10-15 21:30:44
+Targetversion: future
+Class: nastiness
+
+When you delete a tag group and the tag is still referred
+to by a folder, the affected folders are printed in a
+warning message. But the line feeds are fixed up. The first
+folder is printed indented, the following ones not.

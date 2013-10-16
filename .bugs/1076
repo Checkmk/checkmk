@@ -1,0 +1,11 @@
+Title: $COUNT$ empty in non-counting rule
+Component: ec
+State: open
+Date: 2013-10-16 23:17:16
+Targetversion: 1.4.0
+Class: bug
+
+If you use the placeholder $COUNT$ in actions or emails and have no counting
+rule, then the macro is not being replaced. Would should make a better macro
+replacement, that is not based on the actual fields of an event but on the
+declared fields, and apply default values for any missing field.

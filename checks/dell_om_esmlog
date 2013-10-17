@@ -24,39 +24,35 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+def inventory_dell_om_esmlogs(info):
+    if len(info) > 0:
+        return [ ( None, None ) ]
+    return []
 
-def inventory_local(info):
-    inventory = []
-    # Ignore invalid lines, tolerate bugs in local checks
-    # of unexperianced users
-    for line in info:
-        if len(line) >= 4:
-            inventory.append( (line[1], None) ) 
-    return inventory
+def check_dell_om_esmlogs(_no_item, _no_params, info):
+    status = int(info[0][0])
+    if status == 5:
+        state = 2
+        message = "ESM Log is full"
+    elif status == 3:
+        state = 0
+        message = "EMS Log is less then 80% full"
+    else:
+        state =1
+        message = "EMS log more then 80% full"
 
-def check_local(item, params, info):
-    for line in info:
-        # Ignore invalid lines, tolerate bugs in local checks
-        # of unexperianced users
-        if len(line) >= 2 and line[1] == item:
-            state = int(line[0])
-            perftxt = line[2]
-            output = " ".join(line[3:])
-            perfdata = []
-            if perftxt != "-":
-                # new: allow multiple perfdata by using | as separator
-                for entry in perftxt.split('|'):
-                    varname, valuetxt = entry.split('=')
-                    values = valuetxt.split(';')
-                    perfdata.append(tuple( [varname] + values ))
-            return (state, output, perfdata)
-    return (3, "Check output not found in local checks")
+    return state, message
 
 
-
-check_info["local"] = {
-    'check_function':          check_local,
-    'inventory_function':      inventory_local,
-    'service_description':     '%s',
-    'has_perfdata':            True,
+check_info["dell_om_esmlogs"] = {
+    "check_function"        : check_dell_om_esmlogs,
+    "inventory_function"    : inventory_dell_om_esmlogs,
+    "service_description"   : "ESM Log",
+    "has_perfdata"          : False,
+    # There is no other way to find out that openmanage is present.
+    "snmp_scan_function"    : lambda oid: oid('.1.3.6.1.4.1.674.10893.1.20.1.0'),
+    "snmp_info"             : ( ".1.3.6.1.4.1.674.10892.1.200.10.1.41", [
+                                        1, # eventlogStatus
+                              ]),
 }
+

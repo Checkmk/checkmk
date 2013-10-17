@@ -25,38 +25,27 @@
 # Boston, MA 02110-1301 USA.
 
 
-def inventory_local(info):
-    inventory = []
-    # Ignore invalid lines, tolerate bugs in local checks
-    # of unexperianced users
-    for line in info:
-        if len(line) >= 4:
-            inventory.append( (line[1], None) ) 
-    return inventory
-
-def check_local(item, params, info):
-    for line in info:
-        # Ignore invalid lines, tolerate bugs in local checks
-        # of unexperianced users
-        if len(line) >= 2 and line[1] == item:
-            state = int(line[0])
-            perftxt = line[2]
-            output = " ".join(line[3:])
-            perfdata = []
-            if perftxt != "-":
-                # new: allow multiple perfdata by using | as separator
-                for entry in perftxt.split('|'):
-                    varname, valuetxt = entry.split('=')
-                    values = valuetxt.split(';')
-                    perfdata.append(tuple( [varname] + values ))
-            return (state, output, perfdata)
-    return (3, "Check output not found in local checks")
+def inventory_steelhead_peers(info):
+    return [ ( x[0], None ) for x in info if x[-1] != "Steelhead Mobile" ]
 
 
+def check_steelhead_peers(item, _no_params, info):
+    for host, version, client, client_type in info:
+        if host == item:
+            return 0, "Version: %s, Client Address: %s (%s)" % \
+            ( version, client, client_type )
+    return 2, "Peer not connected"
 
-check_info["local"] = {
-    'check_function':          check_local,
-    'inventory_function':      inventory_local,
-    'service_description':     '%s',
-    'has_perfdata':            True,
+
+check_info['steelhead_peers'] = {
+    "check_function"          : check_steelhead_peers,
+    "inventory_function"      : inventory_steelhead_peers,
+    "service_description"     : "Peer %s",
+    "snmp_info"               : (".1.3.6.1.4.1.17163.1.1.2.6.1.1" , [ 
+                                  2, #Hostname 
+                                  3, #Version
+                                  4, #Clients
+                                  5, #Client Type
+                                ] ),
+    "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.17163.")
 }

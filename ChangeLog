@@ -21,6 +21,9 @@
     * FIX: Fix output format python for several numeric columns
     * FIX: Fixed searching hosts by aliases/adresses
 
+    Notifications:
+    * Blacklisting for services in the felixble notification system
+
     Checks & Agents:
     * diskstat: removed (ever incorrect) latency computation for Linux
     * statgrab_load: support predictive levels, add perf-o-meter
@@ -28,7 +31,14 @@
     * hpux_cpu, blade_bx_load: support predictive levels, add perf-o-meter,
        make WATO-configable
     * check_sql: Database port can now be explicitly set
+    * steelhead_perrs: New check for Rivergate Gateways
+    * alcatel_power: Check for power supplies on Alcatel switches
+    * qnap_disks: New check for Hardisks in Qnap devices
+    * Dell Open Manage: SNNP Checks for Physical Disks, CPU and Memory
+    * check_tcp: Now able to set custom service description
     * FIX: esx_vsphere_counters: added missing ramdisk type upgradescratch
+    * FIX: esx_vsphere_hostsystem: fixed bug in handling of params
+    * FIX: local: tolerate invalid output lines
 
     WATO:
     * You can now have site-specific global settings when using
@@ -36,6 +46,7 @@
     * bulk inventory: display percentage in progress bar
     * New option for full SNMP scan in bulk inventory
     * FIX: correct display of number of hosts in bulk inventory
+    * FIX: nailed down ".siteid" exception when added new site
 
 1.2.3i4:
     Core:

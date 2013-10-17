@@ -1,0 +1,8 @@
+Title: Quicksearch: Duplicate results
+Component: multisite
+State: open
+Date: 2013-10-16 13:41:13
+Targetversion: 1.4.0
+Class: bug
+
+In Version 1.2.3i4, the quicksearch repeats some of the results what means that some of the hosts are shown twice.

@@ -1509,6 +1509,7 @@ register_rule(group,
                 title = _("Do check every"),
                 unit = _("minutes"),
                 min_value = 1,
+                default_value = 1,
             ),
         ]
     )

@@ -239,6 +239,12 @@ register_rule(group,
                          help = _("If you specify a hostname here, then a dynamic DNS lookup "
                                   "will be done instead of using the IP address of the host "
                                   "as configured in your host properties."))),
+                   ( "svc_description",
+                     TextAscii(
+                         title = _("Custom service description"),
+                         allow_empty = False,
+                         help = _("Here you can specify a custom service description. "
+                                  "If this parameter is not set the service is named <tt>TCP Port {Portnumber}</tt>"))),
                    ( "response_time",
                      Tuple(
                          title = _("Expected response time"),

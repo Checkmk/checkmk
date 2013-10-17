@@ -1,0 +1,11 @@
+Title: BI: Triangle link is not specific enough
+Component: bi
+State: open
+Date: 2013-10-17 10:55:37
+Targetversion: 1.4.0
+Class: bug
+
+If you have two BI aggregates where the name of one is a
+prefix of the name of another, then klicking the triangle
+in Multisite on the shorter name will show both of the
+aggregates.

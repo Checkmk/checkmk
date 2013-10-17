@@ -2181,6 +2181,10 @@ def show_command_form(is_open, datasource):
     by_group = {}
     for command in multisite_commands:
         if what in command["tables"] and config.may(command["permission"]):
+            # Some special commands can be shown on special views using this option.
+            # It is currently only used in custom views, not shipped with check_mk.
+            if command.get('only_view') and html.var('view_name') != command['only_view']:
+                continue
             group = command.get("group", _("Various Commands"))
             by_group.setdefault(group, []).append(command)
 

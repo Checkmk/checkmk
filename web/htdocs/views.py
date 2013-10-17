@@ -637,8 +637,11 @@ def page_edit_view():
     html.write("<br />\n")
     html.checkbox("mobile", label=_('show this view in the Mobile GUI'))
     html.write("<br />\n")
-    html.checkbox("mustsearch", label=_('show data only on search') + "<br>")
+    html.checkbox("mustsearch", label=_('show data only on search'))
+    html.write("<br />\n")
     html.checkbox("hidebutton", label=_('do not show a context button to this view'))
+    html.write("<br />\n")
+    html.checkbox("force_checkboxes", label = _('always show the checkboxes'))
 
     forms.section(_("Automatic page reload"))
     html.write(_("Reload page every "))
@@ -880,6 +883,7 @@ def load_view_into_html_vars(view):
     html.set_var("hidden",           view["hidden"] and "on" or "")
     html.set_var("mobile",           view.get("mobile") and "on" or "")
     html.set_var("mustsearch",       view["mustsearch"] and "on" or "")
+    html.set_var("force_checkboxes", view.get("force_checkboxes", False) and "on" or "")
     html.set_var("hidebutton",       view.get("hidebutton",  False) and "on" or "")
     html.set_var("user_sortable",    view.get("user_sortable", True) and "on" or "")
 
@@ -1010,6 +1014,7 @@ def create_view(vs):
     hidden           = html.var("hidden", "") != ""
     mobile           = html.var("mobile", "") != ""
     mustsearch       = html.var("mustsearch", "") != ""
+    force_checkboxes = html.var("force_checkboxes", "") != ""
     hidebutton       = html.var("hidebutton", "") != ""
     column_headers   = html.var("column_headers")
     user_sortable    = html.var("user_sortable")
@@ -1093,6 +1098,7 @@ def create_view(vs):
         "hidden"          : hidden,
         "mobile"          : mobile,
         "mustsearch"      : mustsearch,
+        "force_checkboxes" : force_checkboxes,
         "hidebutton"      : hidebutton,
         "layout"          : layoutname,
         "num_columns"     : num_columns,
@@ -1254,7 +1260,7 @@ def show_view(view, show_heading = False, show_buttons = True,
     num_columns     = vo.get("num_columns",     view.get("num_columns",    1))
     browser_reload  = vo.get("refresh",         view.get("browser_reload", None))
 
-    show_checkboxes = html.var('show_checkboxes', '0') == '1'
+    show_checkboxes = view.get("force_checkboxes", html.var('show_checkboxes', '0') == '1')
 
     # Get the datasource (i.e. the logical table)
     datasource = multisite_datasources[view["datasource"]]
@@ -2175,6 +2181,10 @@ def show_command_form(is_open, datasource):
     by_group = {}
     for command in multisite_commands:
         if what in command["tables"] and config.may(command["permission"]):
+            # Some special commands can be shown on special views using this option.
+            # It is currently only used in custom views, not shipped with check_mk.
+            if command.get('only_view') and html.var('view_name') != command['only_view']:
+                continue
             group = command.get("group", _("Various Commands"))
             by_group.setdefault(group, []).append(command)
 

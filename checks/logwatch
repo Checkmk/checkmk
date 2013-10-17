@@ -451,8 +451,8 @@ def check_logwatch_ec(item, params, info):
             logs.setdefault(logfile, [])
 
         elif logfile and line:
-            # new regular line, skip context lines
-            if line[0] != '.':
+            # new regular line, skip context lines and ignore lines
+            if line[0] not in ['.', 'I']:
                 logs[logfile].append(line)
 
     # 2. Maybe filter logfiles if some should be excluded

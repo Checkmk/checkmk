@@ -1,0 +1,10 @@
+Title: Do averaging in the prediction algo
+Component: checks
+State: open
+Date: 2013-10-16 21:48:25
+Targetversion: future
+Class: feature
+
+We could add averaging directly into the prediction
+algo (it est averaging over time). So that we smoothing
+as well the reference data as the current check data.

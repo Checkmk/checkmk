@@ -240,7 +240,7 @@ register_rule(group,
                                   "will be done instead of using the IP address of the host "
                                   "as configured in your host properties."))),
                    ( "svc_description",
-                     TextAscii(
+                     TextUnicode(
                          title = _("Custom service description"),
                          allow_empty = False,
                          help = _("Here you can specify a custom service description. "

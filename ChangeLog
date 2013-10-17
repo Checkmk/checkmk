@@ -17,6 +17,8 @@
       are omitted, since they do not really matter and make the
       results less useful when using CMC.
     * Added host aliases filter to some views (host/service search)
+    * It is now possible to enforce checkboxes in views upon view loading
+      (needs to be confgured per view via the view editor)
     * FIX: Fixed encoding problem in webservice column output
     * FIX: Fix output format python for several numeric columns
     * FIX: Fixed searching hosts by aliases/adresses

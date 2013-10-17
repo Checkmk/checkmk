@@ -12,6 +12,9 @@
     * inventory check of SNMP devices now does scan per default (configurable)
     * FIX: Ignore snmp_check_interval cache in interactive situations (e.g.  -nv)
 
+    Event Console:
+    * check_mkevents now available as C binary: check_mkevents_c
+
     Multisite:
     * Speed-O-Meter: now measure only service checks. Host checks
       are omitted, since they do not really matter and make the

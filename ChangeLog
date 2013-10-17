@@ -45,6 +45,7 @@
     * Dell Open Manage: SNNP Checks for Physical Disks, CPU and Memory
     * check_tcp: Now able to set custom service description
     * Apache ActiveMQ: New Special Agent and Check to query ActiveMQ Queues
+    * check_ftp: can now be configured via Wato
     * FIX: esx_vsphere_counters: added missing ramdisk type upgradescratch
     * FIX: esx_vsphere_hostsystem: fixed bug in handling of params
     * FIX: local: tolerate invalid output lines
@@ -58,7 +59,7 @@
     * New option for full SNMP scan in bulk inventory
     * FIX: correct display of number of hosts in bulk inventory
     * FIX: nailed down ".siteid" exception when added new site
-    * Check_ftp: can now be configured via Wato
+    * FIX: fixed setting for locking mode from 'ait' to 'wait'
 
 1.2.3i4:
     Core:

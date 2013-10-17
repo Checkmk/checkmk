@@ -867,7 +867,7 @@ register_configvar(group,
                  "off locking altogether."),
         choices = [
             ('abort', _("Abort with an error")),
-            ('ait' ,  _("Wait until the other has finished") ),
+            ('wait' , _("Wait until the other has finished") ),
             (None ,   _("Disable locking") ),
             ]),
     need_restart = False

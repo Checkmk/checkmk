@@ -35,10 +35,10 @@ def check_mq_queues(item, params, info):
             msg = ""
             state = 0
             warn, crit = params['consumerCount']
-            if crit and crit <= consumerCount:
+            if crit and consumerCount < crit:
                 state = 2
                 label = "(!!)"
-            elif warn and warn <= consumerCount:
+            elif warn and consumerCount < warn:
                 state = 1
                 label = "(!)"
             if state > 0:

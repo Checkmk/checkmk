@@ -11,6 +11,9 @@
        at the same time. TCP based ones have precedence.
     * inventory check of SNMP devices now does scan per default (configurable)
 
+    Event Console:
+    * check_mkevents now available as C binary: check_mkevents_c
+
     Multisite:
     * Speed-O-Meter: now measure only service checks. Host checks
       are omitted, since they do not really matter and make the

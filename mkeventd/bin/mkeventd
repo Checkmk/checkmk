@@ -2000,9 +2000,11 @@ class StatusServer:
 
         method, table = parts
 
+        output_format     = "python"
+
         with lock_eventstatus:
             if method == "GET":
-                response = self.handle_get_request(table, query[1:])
+                response, output_format = self.handle_get_request(table, query[1:])
 
             elif method == "REPLICATE":
                 response = self.handle_replicate(table, client_ip)
@@ -2016,8 +2018,19 @@ class StatusServer:
             else:
                 raise MKClientError("Invalid method %s (allowed are GET, COMMAND and REPLICATE)" % method)
 
-        socket.send(repr(response))
-        socket.send("\n")
+        if output_format == "plain":
+            def format_column(value):
+                try:
+                    return value.encode("utf-8")
+                except Exception, e:
+                    return repr(value)
+            for line in response:
+                socket.send("\x02".join(map(lambda x: format_column(x), line)))
+                socket.send("\n")
+        else:
+            socket.send(repr(response))
+            socket.send("\n")
+
         socket.close()
 
     def handle_command_request(self, commandline):
@@ -2165,6 +2178,7 @@ class StatusServer:
         filters = []
         only_host = None
         limit = None
+        output_format = "python"
         for line in headerlines:
             try:
                 header, argument = line.rstrip().split(":", 1)
@@ -2175,6 +2189,8 @@ class StatusServer:
                     if name == "event_host" and opfunc == filter_operators['=']:
                         only_host = argument
                     filters.append((name, opfunc, argument))
+                elif header == "OutputFormat":
+                    output_format = argument 
                 elif header == "Limit":
                     limit = int(argument)
                 else:
@@ -2202,7 +2218,7 @@ class StatusServer:
         else:
             rows += list_rows
 
-        return rows
+        return rows, output_format
 
     def filter_row(self, headers, filters, list_row):
         row = dict(zip(headers, list_row))

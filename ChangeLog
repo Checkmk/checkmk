@@ -39,6 +39,7 @@
     * FIX: esx_vsphere_counters: added missing ramdisk type upgradescratch
     * FIX: esx_vsphere_hostsystem: fixed bug in handling of params
     * FIX: local: tolerate invalid output lines
+    * FIX: hp_proliant: Correct handling of missing snmp data
 
     WATO:
     * You can now have site-specific global settings when using

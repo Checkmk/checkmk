@@ -117,6 +117,25 @@ register_rule(group,
 
 
 register_rule(group,
+    "special_agents:activemq",
+    Tuple(
+        title = _("Apache ActiveMQ queues"),
+        help = _( "Configure the Server Address and the Portnumber of the target server"),
+        elements = [
+           TextAscii(title = _("Server Name")),
+           Integer( title = _("Port Number"), default_value=8161 ),
+           ListChoice(
+              choices = [
+                ("piggybag",  _("Run in piggybag mode")),
+              ],
+              allow_empty = True
+           )
+        ]
+    ),
+    match = "first")
+
+
+register_rule(group,
     "special_agents:random",
      FixedValue(
         {},

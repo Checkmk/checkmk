@@ -424,6 +424,38 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "mq_queues",
+    _("Apache ActiveMQ Queue lengths"),
+    Dictionary(
+        elements = [
+            ("size",
+            Tuple(
+               title = _("Levels for the queue length"),
+               help = _("Set the maximum and minimum length for the queue size"),
+               elements = [
+                  Integer(title="Warning at a size of"),
+                  Integer(title="Critical at a size of"),
+               ]
+            )),
+            ("consumerCount",
+            Tuple(
+               title = _("Levels for the consumer count"),
+               help = _("Consumer Count is the size of connected consumers to a queue"),
+               elements = [
+                  Integer(title="Warning less then"),
+                  Integer(title="Critical less then"),
+               ]
+            )),
+        ]
+    ),
+    TextAscii( title=_("Queue Name"), 
+    help=_("The name of the queue like in the Apache queue manager")),
+    "first", 
+)
+
+
+register_check_parameters(
+    subgroup_applications,
     "plesk_backups",
     _("Plesk Backups"),
     Dictionary(

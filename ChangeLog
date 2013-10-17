@@ -45,6 +45,7 @@
     * FIX: esx_vsphere_hostsystem: fixed bug in handling of params
     * FIX: local: tolerate invalid output lines
     * FIX: hp_proliant: Correct handling of missing snmp data
+    * FIX: logwatch.ec: No longer forwards "I" lines to event console
 
     WATO:
     * You can now have site-specific global settings when using

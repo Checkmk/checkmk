@@ -46,6 +46,7 @@
     * New option for full SNMP scan in bulk inventory
     * FIX: correct display of number of hosts in bulk inventory
     * FIX: nailed down ".siteid" exception when added new site
+    * Check_ftp: can now be configured via Wato
 
 1.2.3i4:
     Core:

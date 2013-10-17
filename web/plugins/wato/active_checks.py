@@ -92,6 +92,79 @@ register_rule(group,
     )
 )
 
+register_rule(group,
+    "active_checks:ftp",
+    Tuple(
+        title = _("Check FTP Services"),
+        elements = [
+            TextAscii ( title = _("Hostname"), allow_empty = False,
+                        help = _("The hostname of the FTP server you want to check"
+                                 "It is possible to use $HOSTNAME$ or $HOSTADDRESS$ ")
+            ),
+            Dictionary(
+            elements = [
+                ( "response_time",
+                  Tuple(
+                      title = _("Expected response time"),
+                      elements = [
+                          Float(
+                              title = _("Warning if above"),
+                              unit = "ms",
+                              default_value = 100.0),
+                          Float(
+                              title = _("Critical if above"),
+                              unit = "ms",
+                              default_value = 200.0),
+                      ])
+                 ),
+                 ( "timeout",
+                   Integer(
+                       title = _("Seconds before connection times out"),
+                       unit = _("sec"),
+                       default_value = 10,
+                   )
+                 ),
+                 ( "refuse_state",
+                   DropdownChoice(
+                       title = _("State for connection refusal"),
+                       choices = [ ('crit', _("CRITICAL")),
+                                   ('warn', _("WARNING")),
+                                   ('ok',   _("OK")),
+                                 ])
+                 ),
+
+                 ( "send_string",
+                   TextAscii(
+                       title = _("String to send"),
+                       size = 30)
+                 ),
+                 ( "expect",
+                   ListOfStrings(
+                       title = _("Strings to expect in response"),
+                       orientation = "horizontal",
+                       valuespec = TextAscii(size = 30),
+                   )
+                 ),
+
+                 ( "ssl",
+                   FixedValue(
+                       value = True,
+                       totext = _("use SSL"),
+                       title = _("Use SSL for the connection."))
+
+                 ),
+                 ( "cert_days",
+                   Integer(
+                       title = _("SSL certificate validation"),
+                       help = _("Minimum number of days a certificate has to be valid"),
+                       unit = _("days"),
+                       default_value = 30)
+                 ),
+            ]),
+        ]
+    )
+)
+
 
 register_rule(group,
     "active_checks:dns",

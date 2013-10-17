@@ -10,7 +10,6 @@ description:
  In case that the logfile more then 80% full, the check returns 
  a {WARN} state/
 
-
 inventory:
  One check will be created
 

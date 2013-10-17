@@ -1,0 +1,36 @@
+#!/usr/bin/python
+# encoding: utf-8
+from lxml import etree
+import sys
+
+if len(sys.argv) > 3:
+    piggybag_mode = True
+else:
+    piggybag_mode = False
+address = "http://%s:%s/admin/xml/queues.jsp" % (sys.argv[1], sys.argv[2])
+
+attributes = [ 'size', 'consumerCount', 'enqueueCount', 'dequeueCount' ]
+data = etree.parse(address).getroot()
+count = 0
+if not piggybag_mode:
+    print "<<<mq_queues>>>"
+for line in data:
+    count += 1
+    if piggybag_mode:
+        print "<<<<%s>>>>" % line.get('name')
+        print "<<<mq_queues>>>"
+    print "[[%s]]" % line.get('name')
+    stats = line.findall('stats')
+    values = ""
+    for job in attributes:
+        values +="%s " % stats[0].get(job)
+    print values
+
+if piggybag_mode:
+    print "<<<<>>>>"
+    print "<<<local>>>"
+    print "0 Actice_MQ - Found %s Queues in total" % count
+
+
+
+

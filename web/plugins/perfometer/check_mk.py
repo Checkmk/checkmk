@@ -709,3 +709,9 @@ def perfometer_esx_vsphere_hostsystem_cpu(row, command, perf):
     return "%d%%" % used_perc, perfometer_linear(used_perc, "#60f020")
 
 perfometers['check_mk-esx_vsphere_hostsystem.cpu_usage'] = perfometer_esx_vsphere_hostsystem_cpu
+
+def perfometer_mq_queues(row, command, perf):
+    size = int(perf[0][1])
+    return "%s Messages" % size, perfometer_logarithmic(size, 1, 2, "#701141")
+
+perfometers['check_mk-mq_queues'] = perfometer_mq_queues

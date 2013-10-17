@@ -24,29 +24,43 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def inventory_alcatel_power(info):
-    return [ (x[0], None) for x in info if x[2] in ['0x35000001', '0x45000004', '0x45000002']]  
+def check_ftp_arguments(params):
+    host, settings = params
+    args = ' -H %s' % quote_shell_string(host)
 
-def check_alcatel_power(item, _no_params, info):
-    for line in info:
-        if item == line[0]:
-            if line[2] not in ['0x35000001', '0x45000004', '0x45000002']:
-                return 3, "No Power supply connected to this port"
-            if int(line[1]) != 1:
-                return 2, "Supply in error condition (%s)" % line[1]
-            return 0, "Supply status OK"
-    return 3, "Supply not found"
+    if "response_time" in settings:
+        args += ' -w %f -c %f' % (
+            settings["response_time"][0]/1000.0,
+            settings["response_time"][1]/1000.0)
 
-check_info["alcatel_power"] = {
-    "check_function"        : check_alcatel_power,
-    "inventory_function"    : inventory_alcatel_power,
-    "service_description"   : "Power Supply %s",
-    "has_perfdata"          : False,
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.6486.800"),
-    "snmp_info"             : (".1.3.6.1.4.1.6486.800.1.1.1.1.1.1.1", 
-                               [OID_END, 
-                               2, # Error Status 
-                               5 # Device Type (0x35000001 == Power Supply)
-                               ]),
+    if "timeout" in settings:
+        args += ' -t %d' % settings["timeout"]
+
+    if "refuse_state" in settings:
+        args += ' -r %s' % settings["refuse_state"]
+
+    if settings.get("escape_send_string"):
+        args += ' --escape'
+
+    if "send_string" in settings:
+        args += ' -s %s' % quote_shell_string(settings["send_string"])
+
+    if "expect" in settings:
+        for s in settings["expect"]:
+            args += ' -e %s' % quote_shell_string(s)
+
+    if settings.get("ssl"):
+        args += ' --ssl'
+
+    if "cert_days" in settings:
+        args += ' -D %d' % settings["cert_days"]
+
+    return args
+
+active_check_info['ftp'] = {
+    "command_line"        : '$USER1$/check_ftp $ARG1$',
+    "argument_function"   : check_ftp_arguments,
+    "service_description" : lambda args: "FTP %s" % args[0],
+    "has_perfdata"        : True,
 }
 

@@ -28,4 +28,4 @@ check_mkevents: check_mkevents.cpp
 	g++ -O2 -o check_mkevents_c check_mkevents.cpp
 
 clean:
-	rm -f checkmk_events_c
+	rm -f check_mkevents_c

@@ -25,6 +25,18 @@
 # Boston, MA 02110-1301 USA.
 
 # Example output from agent:
+#TaskName             : \WebShopPictureUpload
+#Last Run Time        : 17.10.2013 23:00:00
+#Next Run Time        : 18.10.2013 23:00:00
+#Last Result          : 0
+#Scheduled Task State : Enabled
+#
+#TaskName             : \OfficeSoftwareProtectionPlatform\SvcRestartTask
+#Last Run Time        : N/A
+#Next Run Time        : Disabled
+#Last Result          : 1
+#Scheduled Task State : Disabled
+
 
 def windows_tasks_convert(info):
     data = {}

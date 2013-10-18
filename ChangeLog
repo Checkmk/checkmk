@@ -51,6 +51,11 @@
     * FIX: local: tolerate invalid output lines
     * FIX: hp_proliant: Correct handling of missing snmp data
     * FIX: logwatch.ec: No longer forwards "I" lines to event console
+    * windows_tasks: New Check to  monitor the Windows Task Scheduler
+    * sensatronics_temp: New Check for Sensatronic E4 Temperatur Sensor
+    * akcp_sensor_drycontact: New Check for AKCP drycontact Sensors
+    * FIX: hp_blade_blades: Fixed crash on inventory when receiving
+                             unexpected snmp data
 
     WATO:
     * You can now have site-specific global settings when using

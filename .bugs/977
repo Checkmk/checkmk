@@ -9,3 +9,8 @@ When you issue a command on hosts/services and confirm then you see a blue
 message with a link back to the view. In that situation there must be no
 reload of the view container. But this happens. If you wait long enough then
 hosts/services get visible again.
+
+An even better resolution would be to drop that intermediate page at
+all and instead print the result of the command in a kind of overlay
+window that goes away after a view seconds or when you hover over
+it. That saves one mouse click.

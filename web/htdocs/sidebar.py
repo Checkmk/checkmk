@@ -594,6 +594,7 @@ def page_edit_bookmark():
 
     html.footer()
 
+#.
 #   .--Quicksearch---------------------------------------------------------.
 #   |         ___        _      _                            _             |
 #   |        / _ \ _   _(_) ___| | _____  ___  __ _ _ __ ___| |__          |
@@ -712,17 +713,22 @@ def render_search_results(ty, objects):
             display_site = True
             break
 
+    # Remove duplicate entries, i.e. with the same name and
+    # the same URL.
+    unique = set([])
     for obj in objects:
         if len(obj) == 3:
             plugin, site, name = obj
             url = url_tmpl % {'name': name, 'site': site}
         else:
             plugin, site, name, url = obj
-        html.write('<a id="result_%s" class="%s" href="%s" onClick="mkSearchClose()" target="main">%s' %
-                    (name, ty, url, name))
-        if display_site:
-            html.write(' (%s)' % site)
-        html.write('</a>\n')
+        if not (name, url) in unique:
+            html.write('<a id="result_%s" class="%s" href="%s" onClick="mkSearchClose()" target="main">%s' %
+                        (name, ty, url, name))
+            if display_site:
+                html.write(' (%s)' % site)
+            html.write('</a>\n')
+            unique.add((name, url))
 
 def process_search(q):
     ty, q = parse_search_query(q)

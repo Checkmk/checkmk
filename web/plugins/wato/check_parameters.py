@@ -1381,8 +1381,6 @@ register_check_parameters(
     has_inventory = False,
 )
 
-
-
 register_check_parameters(
     subgroup_applications,
     "msx_queues",
@@ -1393,17 +1391,17 @@ register_check_parameters(
             Integer(title = _("Warning if above"), unit = _("E-Mails")),
             Integer(title = _("Critical if above"), unit = _("E-Mails"))
         ]),
-        OptionalDropdownChoice(
-            title = _("Explicit Queue Names"),
-            help = _("Select queue names that the rule should apply"),
-           choices = [
-              ( "Active Remote Delivery",  _("Active Remote Delivery") ),
-              ( "Retry Remote Delivery",   _("Retry Remote Delivery") ),
-              ( "Active Mailbox Delivery", _("Active Mailbox Delivery") ),
-              ( "Poison Queue Length",     _("Poison Queue Length") ),
-              ],
-           otherlabel = _("specify manually ->"),
-           explicit = TextAscii(allow_empty = False)),
+    OptionalDropdownChoice(
+        title = _("Explicit Queue Names"),
+        help = _("Select queue names that the rule should apply"),
+        choices = [
+            ( "Active Remote Delivery",  _("Active Remote Delivery") ),
+            ( "Retry Remote Delivery",   _("Retry Remote Delivery") ),
+            ( "Active Mailbox Delivery", _("Active Mailbox Delivery") ),
+            ( "Poison Queue Length",     _("Poison Queue Length") ),
+        ],
+        otherlabel = _("specify manually ->"),
+        explicit = TextAscii(allow_empty = False)),
     "first"
 )
 

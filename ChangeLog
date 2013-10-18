@@ -28,6 +28,8 @@
 
     BI:
     * FIX: Fix exception when showing BI tree in reporting time warp
+    * FIX: Fixed blue triangle link: would show more aggregations,
+       if one name was the prefix of another
 
     Notifications:
     * Blacklisting for services in the felixble notification system

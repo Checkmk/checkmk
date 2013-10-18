@@ -70,8 +70,8 @@ def check_windows_tasks(item, _no_params, info):
             msg.append("Service in state: %s%s" % ( last_result, label ) )
 
             if values['Scheduled Task State'] != 'Enabled':
-                msg.append("Task not Enabled(!)")
-                state = max(state,1)
+                msg.append("Task not Enabled(!!)")
+                state = 2
 
             return state, ", ".join(msg) 
     

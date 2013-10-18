@@ -1,9 +1,9 @@
 Title: active check check_dns by default asks the wrong DNS server
 Component: checks
-State: open
+Class: bug
+State: done
 Date: 2013-09-02 12:46:49
 Targetversion: 1.2.3i2
-Class: bug
 
 if I add a check_dns active check to a server by a wato rule without any additional
 parameters, I expect it to check the DNS server on *this* machine
@@ -13,3 +13,5 @@ to determine which DNS server to send the name query to
 the change would be the following:
 as long as -s is not entered separately in the rule, the -s parameter should be
 set to $HOSTADDRESS$
+
+2013-10-18 13:22:41: changed state open -> done

@@ -5,7 +5,56 @@ Date: 2013-08-30 15:48:55
 Targetversion: 1.2.3
 Class: bug
 
-Problems in Multisite GUI if apache is running with mpm
-prefork works
-so the package should depend on apache2-mpm
-but at least the deb for ubuntu 13.04 64bit does not, maybe others too
+Problems in Multisite GUI if apache is running with mpm prefork works so the
+package should depend on apache2-mpm but at least the deb for ubuntu 13.04
+64bit does not, maybe others too
+
+Here is the fix. Important for the future: when supporting a new distribution
+we must not copy the file from omdistro.org, but create one ourselves, since
+we have several changes in that file.
+
+
+diff --git a/distros/Makefile.UBUNTU_12.10 b/distros/Makefile.UBUNTU_12.10
+index af1cd7f..dc075b9 100644
+--- a/distros/Makefile.UBUNTU_12.10
++++ b/distros/Makefile.UBUNTU_12.10
+@@ -33,8 +33,8 @@ BUILD_PACKAGES += apache2-threaded-dev  # compiling mod_python
+ BUILD_PACKAGES += apache2      # compiling mod_python
+ BUILD_PACKAGES += libncurses5-dev # compiling mod-gearman
+ BUILD_PACKAGES += dietlibc-dev # is not really needed, but useful for cmk components
+-BUILD_PACKAGES   += libpcap-dev # needed for CMC
+-BUILD_PACKAGES   += gettext # needed for german l10n
++BUILD_PACKAGES += libpcap-dev # needed for CMC
++BUILD_PACKAGES += gettext # needed for german l10n
+ OS_PACKAGES     =
+ OS_PACKAGES    += time # needed for mk-job
+ OS_PACKAGES    += traceroute # needed for Check_MK parent scan
+diff --git a/distros/Makefile.UBUNTU_13.04 b/distros/Makefile.UBUNTU_13.04
+index 5895796..8cbe9b1 100644
+--- a/distros/Makefile.UBUNTU_13.04
++++ b/distros/Makefile.UBUNTU_13.04
+@@ -1,5 +1,6 @@
+ DISTRO_CODE     = raring
+ BUILD_PACKAGES  =
++BUILD_PACKAGES += smbclient
+ BUILD_PACKAGES += build-essential
+ BUILD_PACKAGES += dpatch
+ BUILD_PACKAGES += dnsutils
+@@ -31,6 +32,9 @@ BUILD_PACKAGES += snmp
+ BUILD_PACKAGES += apache2-threaded-dev  # compiling mod_python
+ BUILD_PACKAGES += apache2      # compiling mod_python
+ BUILD_PACKAGES += libncurses5-dev # compiling mod-gearman
++BUILD_PACKAGES += dietlibc-dev # is not really needed, but useful for cmk components
++BUILD_PACKAGES += libpcap-dev # needed for CMC
++BUILD_PACKAGES += gettext # needed for german l10n
+ OS_PACKAGES     =
+ OS_PACKAGES    += time # needed for mk-job
+ OS_PACKAGES    += traceroute # needed for Check_MK parent scan
+@@ -42,6 +46,7 @@ OS_PACKAGES    += fping
+ OS_PACKAGES    += graphviz
+ OS_PACKAGES    += libapache2-mod-fcgid
+ OS_PACKAGES    += libapache2-mod-proxy-html
++OS_PACKAGES    += apache2-mpm-prefork   # Multisite/mod_python crashes with mpm-worker!
+ OS_PACKAGES    += libboost-program-options1.49.0
+ OS_PACKAGES    += libdbi1
+ OS_PACKAGES    += libevent-1.4-2

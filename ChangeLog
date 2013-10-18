@@ -51,6 +51,8 @@
     * FIX: local: tolerate invalid output lines
     * FIX: hp_proliant: Correct handling of missing snmp data
     * FIX: logwatch.ec: No longer forwards "I" lines to event console
+    * FIX: hp_blade_blades: Fixed crash on inventory when receiving
+                             unexpected snmp data
 
     WATO:
     * You can now have site-specific global settings when using

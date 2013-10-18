@@ -49,6 +49,7 @@
     * check_tcp: Now able to set custom service description
     * Apache ActiveMQ: New Special Agent and Check to query ActiveMQ Queues
     * check_ftp: can now be configured via Wato
+    * FIX: Windows agent: gracefully handle garbled logstate.txt
     * FIX: esx_vsphere_counters: added missing ramdisk type upgradescratch
     * FIX: esx_vsphere_hostsystem: fixed bug in handling of params
     * FIX: local: tolerate invalid output lines

@@ -1483,7 +1483,7 @@ void save_logwatch_offsets()
     fclose(file);
 }
 
-void parse_logwatch_state_line(char *line) 
+void parse_logwatch_state_line(char *line)
 {
     /* Example: line = "M://log1.log|98374598374|0|16"; */
     rstrip(line);
@@ -1492,11 +1492,17 @@ void parse_logwatch_state_line(char *line)
     *p = 0;
     char *path = line;
     p++;
+
     char *token = strtok(p, "|");
+    if (!token) return; // Ignore invalid lines
     unsigned long long file_id = string_to_llu(token);
+
     token = strtok(NULL, "|");
+    if (!token) return;
     unsigned long long file_size = string_to_llu(token);
+
     token = strtok(NULL, "|");
+    if (!token) return;
     unsigned long long offset = string_to_llu(token);
 
     logwatch_textfile *tf = new logwatch_textfile();

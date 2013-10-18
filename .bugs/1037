@@ -1,9 +1,9 @@
 Title: check_mk_agent.exe unable to restart after a crash: logstate.txt 0 bytes
 Component: checks
-Class: bug
-State: open
+State: done
 Date: 2013-08-27 10:58:29
 Targetversion: 1.2.3i2
+Class: bug
 
 Host = Windows 7
 CMK Agent = Agent version 1.2.2p1
@@ -42,3 +42,7 @@ running on a VM server which has had problems, but the currupt logstate.txt
 file is always 123k in size and looks the same when edited.
 
 2013-08-28: user did supply original logstate.txt file, see feedback/gitbug folder
+
+2013-10-18 11:39:01: changed state open -> done
+Should be fixed now. We now simply ignore invalid lines in logstate.txt.
+Had no chance to test it, though.

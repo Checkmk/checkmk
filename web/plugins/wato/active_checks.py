@@ -98,8 +98,8 @@ register_rule(group,
         title = _("Check FTP Services"),
         elements = [
             TextAscii ( title = _("Hostname"), allow_empty = False,
-                        help = _("The hostname of the FTP server you want to check"
-                                 "It is possible to use $HOSTNAME$ or $HOSTADDRESS$ ")
+                        help = _("The hostname of the FTP server you want to check. "
+                                 "It is possible to use $HOSTNAME$.")
             ),
             Dictionary(
             elements = [

@@ -118,7 +118,8 @@ try:
             sys.exit(0)
 
     if args:
-        opt_sql = ' '.join(map(str,args))
+        opt_sql_tmp = ' '.join(map(str,args))
+        opt_sql = opt_sql_tmp.replace(r"\n", "\n")
     else:
         print "UNKNOWN - no SQL statement given"
         sys.exit(3)

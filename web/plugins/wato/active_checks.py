@@ -260,7 +260,7 @@ register_rule(group,
                       help = _('The name of the database on the DBMS'))
             ),
             ( "sql",
-              TextAscii(title = _("SQL-Statement"), allow_empty = False,
+              TextAreaUnicode(title = _("SQL-Statement"), allow_empty = False,
                       help = _('The SQL-Statement which is sent to the DBMS'))
             ),
             ( "user",

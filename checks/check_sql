@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 def check_sql_arguments(params):
-    args  = " --hostname '$HOSTNAME$'"
+    args  = " --hostname '$HOSTADDRESS$'"
     args += " --dbms %s" % quote_shell_string(params["dbms"])
     args += " --name %s" % quote_shell_string(params["name"])
     args += " --user '%s'" % params["user"]
@@ -48,7 +48,8 @@ def check_sql_arguments(params):
         args += " -w %s:%s" % (lower[0], upper[0])
         args += " -c %s:%s" % (lower[1], upper[1])
 
-    args += " %s" % quote_shell_string(params["sql"])
+    sql_tmp = params["sql"].replace("\n", r"\n")
+    args += " %s" % quote_shell_string(sql_tmp)
 
     return args
 

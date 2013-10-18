@@ -47,6 +47,8 @@
     * Apache ActiveMQ: New Special Agent and Check to query ActiveMQ Queues
     * FIX: hp_proliant: Correct handling of missing snmp data
     * FIX: logwatch.ec: No longer forwards "I" lines to event console
+    * windows_tasks: New Check to  monitor the Windows Task Scheduler
+    * sensatronics_temp: New Check for Sensatronic E4 Temperatur Sensor
 
     WATO:
     * You can now have site-specific global settings when using
@@ -2297,7 +2299,6 @@
       mount points). No external plugin is needed.
     * Windows agent: new section <<<fileinfo>>> for monitoring file sizes
       (and later possible ages)
-    * windows_tasks: New Check to  monitor the Windows Task Scheduler
     * logwatch: allow to classify messages based on their count (see
       man page of logwatch for details)
     * fileinfo: new check for monitoring age and size of files

@@ -3,7 +3,7 @@ Component: livestatus
 State: open
 Date: 2013-09-16 11:34:56
 Targetversion: 1.4.0
-Class: nastiness
+Class: bug
 
 When parsing lines like:
 

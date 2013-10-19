@@ -10156,15 +10156,16 @@ def change_host_tags_in_rules(folder, operations, mode):
             if type(operations) == list: # this list of tags to remove
                 for tag in operations:
                     if tag != None and (tag in tag_specs or "!"+tag in tag_specs):
-                        modified = True
                         if rulespec not in affected_rulespecs:
                             affected_rulespecs.append(rulespec)
-                        if tag in tag_specs and mode == "delete":
-                            rules_to_delete.add(nr)
-                        elif tag in tag_specs:
-                            tag_specs.remove(tag)
-                        elif "+"+tag in tag_specs:
-                            tag_specs.remove("!"+tag)
+                        if mode != "check":
+                            modified = True
+                            if tag in tag_specs and mode == "delete":
+                                rules_to_delete.add(nr)
+                            elif tag in tag_specs:
+                                tag_specs.remove(tag)
+                            elif "+"+tag in tag_specs:
+                                tag_specs.remove("!"+tag)
 
             # Removal or renamal of single tag choices
             else:
@@ -10176,10 +10177,10 @@ def change_host_tags_in_rules(folder, operations, mode):
                         continue
 
                     if old_tag in tag_specs or ("!" + old_tag) in tag_specs:
-                        modified = True
                         if rulespec not in affected_rulespecs:
                             affected_rulespecs.append(rulespec)
                         if mode != "check":
+                            modified = True
                             if old_tag in tag_specs:
                                 tag_specs.remove(old_tag)
                                 if new_tag:

@@ -1,5 +1,8 @@
 1.2.3i5:
     Core:
+    * Automatically remove duplicate checks when monitoring with Agent+SNMP
+       at the same time. TCP based ones have precedence.
+    * inventory check of SNMP devices now does scan per default (configurable)
     * FIX: inventory check now honors settings for exit code
     * FIX: avoid exception nodes of cluster have different agent type
     * FIX: continue inventory, if one check does not support it
@@ -8,9 +11,6 @@
     * FIX: fixed error handling in SNMP scan, inventory check fails now
            if SNMP agent is not responding
     * FIX: Ignore snmp_check_interval cache in interactive situations (e.g.  -nv)
-    * Automatically remove duplicate checks when monitoring with Agent+SNMP
-       at the same time. TCP based ones have precedence.
-    * inventory check of SNMP devices now does scan per default (configurable)
 
     Event Console:
     * check_mkevents now available as C binary: check_mkevents_c
@@ -66,6 +66,7 @@
     * FIX: correct display of number of hosts in bulk inventory
     * FIX: nailed down ".siteid" exception when added new site
     * FIX: fixed setting for locking mode from 'ait' to 'wait'
+    * FIX: avoid removal of tags from rules when not yet acknowledged
 
 1.2.3i4:
     Core:

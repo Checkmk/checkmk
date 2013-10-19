@@ -59,6 +59,7 @@
     * FIX: check_dns: default to querying the host itself
     * FIX: ps: do not output perfdata of CPU averaging (use ps.perf for that)
     * FIX: nfsexports: also support systems with rpcbind instead of portmap
+    * FIX: ups_in_freq: corrected spelling of service description
 
     WATO:
     * You can now have site-specific global settings when using

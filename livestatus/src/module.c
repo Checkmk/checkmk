@@ -50,7 +50,6 @@
 #include "auth.h"
 #include "data_encoding.h"
 #include "waittriggers.h"
-#include "livechecking.h"
 
 
 #ifndef AF_LOCAL
@@ -95,7 +94,6 @@ int g_unix_socket = -1;
 int g_max_fd_ever = 0;
 char g_socket_path[4096];
 char g_pnp_path[4096];
-char g_livecheck_path[4096];
 char g_logfile_path[4096];
 int g_debug_level = 0;
 int g_should_terminate = false;
@@ -376,18 +374,12 @@ int broker_check(int event_type, void *data)
 {
     int result = NEB_OK;
     if (event_type == NEBCALLBACK_SERVICE_CHECK_DATA) {
-        if (g_livecheck_enabled)
-            result = broker_service_livecheck(event_type, data);
-
         nebstruct_service_check_data *c = (nebstruct_service_check_data *)data;
         if (c->type == NEBTYPE_SERVICECHECK_PROCESSED) {
             g_counters[COUNTER_SERVICE_CHECKS]++;
         }
     }
     else if (event_type == NEBCALLBACK_HOST_CHECK_DATA) {
-        if (g_livecheck_enabled)
-            result = broker_host_livecheck(event_type, data);
-
         nebstruct_host_check_data *c = (nebstruct_host_check_data *)data;
         if (c->type == NEBTYPE_HOSTCHECK_PROCESSED) {
             g_counters[COUNTER_HOST_CHECKS]++;
@@ -523,7 +515,6 @@ int broker_process(int event_type __attribute__ ((__unused__)), void *data)
     struct nebstruct_process_struct *ps = (struct nebstruct_process_struct *)data;
     if (ps->type == NEBTYPE_PROCESS_EVENTLOOPSTART) {
         update_timeperiods_cache(time(0));
-        init_livecheck();
         start_threads();
     }
     return 0;
@@ -644,9 +635,6 @@ void livestatus_parse_arguments(const char *args_orig)
     /* there is no default PNP path */
     g_pnp_path[0] = 0;
 
-    /* also livecheck is disabled per default */
-    g_livecheck_path[0] = 0;
-
     if (!args_orig)
         return; // no arguments, use default options
 
@@ -751,15 +739,7 @@ void livestatus_parse_arguments(const char *args_orig)
                 }
             }
             else if (!strcmp(left, "livecheck")) {
-                strncpy(g_livecheck_path, right, sizeof(g_livecheck_path) - 1);
-                if (0 != access(g_livecheck_path, X_OK)) {
-                    logger(LG_INFO, "ERROR: %s is not executable. Disabling livecheck.", g_livecheck_path);
-                    g_livecheck_path[0] = 0;
-                }
-                g_livecheck_enabled = true;
-            }
-            else if (!strcmp(left, "num_livecheck_helpers")) {
-                g_num_livehelpers = atoi(right);
+                logger(LG_INFO, "Livecheck has been removed from Livestatus. Sorry.");
             }
             else if (!strcmp(left, "disable_statehist_filtering"))
             {
@@ -834,7 +814,6 @@ int nebmodule_deinit(int flags __attribute__ ((__unused__)), int reason __attrib
     close_unix_socket();
     store_deinit();
     deregister_callbacks();
-    deinit_livecheck();
     close_logfile();
     return 0;
 }

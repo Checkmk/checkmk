@@ -580,7 +580,6 @@ def render_performance():
 
     data = html.live.query("GET status\nColumns: service_checks_rate host_checks_rate "
                            "external_commands_rate connections_rate forks_rate "
-                           "livechecks_rate livecheck_overflows_rate "
                            "log_messages_rate cached_log_messages\n")
     for what, col, format in \
         [("Service checks",        0, "%.2f/s"),
@@ -588,10 +587,8 @@ def render_performance():
         ("External commands",      2, "%.2f/s"),
         ("Livestatus-conn.",       3, "%.2f/s"),
         ("Process creations",      4, "%.2f/s"),
-        ("Livechecks",             5, "%.2f/s"),
-        ("Livecheck overflows",    6, "%.2f/s"),
-        ("New log messages",       7, "%.2f/s"),
-        ("Cached log messages",    8, "%d")]:
+        ("New log messages",       5, "%.2f/s"),
+        ("Cached log messages",    6, "%d")]:
         write_line(what + ":", format % sum([row[col] for row in data]))
 
     if len(config.allsites()) == 1:

@@ -56,11 +56,14 @@ extern int num_cached_log_messages;
 extern int interval_length;
 extern int g_num_hosts;
 extern int g_num_services;
-extern int livechecks_performed;
-extern int livecheck_overflows;
 extern int g_num_clientthreads;
 extern int g_num_queued_connections;
 extern int g_num_active_connections;
+
+// Livecheck has been removed, but we still need to provide the
+// columns - for compatibility
+int livechecks_performed = 0;
+int livecheck_overflows = 0;
 
 extern circular_buffer external_command_buffer;
 extern int external_command_buffer_slots;

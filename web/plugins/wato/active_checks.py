@@ -98,8 +98,8 @@ register_rule(group,
         title = _("Check FTP Services"),
         elements = [
             TextAscii ( title = _("Hostname"), allow_empty = False,
-                        help = _("The hostname of the FTP server you want to check"
-                                 "It is possible to use $HOSTNAME$ or $HOSTADDRESS$ ")
+                        help = _("The hostname of the FTP server you want to check. "
+                                 "It is possible to use $HOSTNAME$.")
             ),
             Dictionary(
             elements = [
@@ -260,7 +260,7 @@ register_rule(group,
                       help = _('The name of the database on the DBMS'))
             ),
             ( "sql",
-              TextAscii(title = _("SQL-Statement"), allow_empty = False,
+              TextAreaUnicode(title = _("SQL-Statement"), allow_empty = False,
                       help = _('The SQL-Statement which is sent to the DBMS'))
             ),
             ( "user",

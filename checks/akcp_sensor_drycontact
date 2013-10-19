@@ -24,40 +24,29 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def check_sql_arguments(params):
-    args  = " --hostname '$HOSTADDRESS$'"
-    args += " --dbms %s" % quote_shell_string(params["dbms"])
-    args += " --name %s" % quote_shell_string(params["name"])
-    args += " --user '%s'" % params["user"]
-    args += " --password '%s'" % params["password"]
+def inventory_akcp_sensor_drycontact(info):
+    return [ ( x[0], None ) for x in info if x[2] == "1" ]
 
-    if "port" in params:
-        args += " --port %s" % params["port"]
+def check_akcp_sensor_drycontact(item, _no_params, info):
+    for line in info:
+        if item == line[0]:
+            state = saveint(line[1])
+            if state == 2:
+                return 0, "Drycontact OK"
+            return 2, "Drycontact on Error"
+    return 3, "Drycontact not found anymore"
 
-    if "levels" in params:
-        upper = params["levels"]
-    else:
-        upper = "", ""
-
-    if "levels_low" in params:
-        lower = params["levels_low"]
-    else:
-        lower = "", ""
-
-    if "levels" in params or "levels_low" in params:
-        args += " -w %s:%s" % (lower[0], upper[0])
-        args += " -c %s:%s" % (lower[1], upper[1])
-
-    sql_tmp = params["sql"].replace("\n", r"\n")
-    args += " %s" % quote_shell_string(sql_tmp)
-
-    return args
-
-
-active_check_info['sql'] = {
-    "command_line"        : '$USER1$/check_sql $ARG1$',
-    "argument_function"   : check_sql_arguments,
-    "service_description" : lambda args: args["description"],
-    "has_perfdata"        : True,
+check_info["akcp_sensor_drycontact"] = {
+    "check_function"        : check_akcp_sensor_drycontact,
+    "inventory_function"    : inventory_akcp_sensor_drycontact,
+    "service_description"   : "Device %s",
+    "has_perfdata"          : False,
+    'snmp_scan_function'    :  lambda oid: oid(".1.3.6.1.2.1.1.2.0") in\
+                         [ ".1.3.6.1.4.1.3854.1.2.2.1.1", ".1.3.6.1.4.1.3854.1" ],
+    'snmp_info'             : ( ".1.3.6.1.4.1.3854.1.2.2.1.18.1" , [ 
+                                                            1, #Sensor Name
+                                                            3, #Sensor Status (2 = OK, 4 = Not ok)
+                                                            5, #Sensor Online
+                                                            ] ),
 }
 

@@ -50,6 +50,9 @@
     * check_tcp: Now able to set custom service description
     * Apache ActiveMQ: New Special Agent and Check to query ActiveMQ Queues
     * check_ftp: can now be configured via Wato
+    * windows_tasks: New check to  monitor the Windows Task Scheduler
+    * sensatronics_temp: New check for Sensatronic E4 Temperatur Sensor
+    * akcp_sensor_drycontact: New Check for AKCP drycontact Sensors
     * FIX: Windows agent: gracefully handle garbled logstate.txt
     * FIX: esx_vsphere_counters: added missing ramdisk type upgradescratch
     * FIX: esx_vsphere_hostsystem: fixed bug in handling of params
@@ -61,7 +64,9 @@
     * FIX: nfsexports: also support systems with rpcbind instead of portmap
     * FIX: ups_in_freq: corrected spelling of service description
     * FIX: ups_bat_temp: renamed service description to "Temperature Battery",
-       in order to make it consistent with the other temperature checks
+           in order to make it consistent with the other temperature checks
+    * FIX: hp_blade_blades: Fixed crash on inventory when receiving
+           unexpected snmp data
 
     WATO:
     * You can now have site-specific global settings when using

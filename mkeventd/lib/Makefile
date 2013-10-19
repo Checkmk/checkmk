@@ -24,7 +24,7 @@
 
 all: check_mkevents_c
 
-check_mkevents_c:
+check_mkevents_c: check_mkevents.cc
 	g++ -O2 -o check_mkevents_c check_mkevents.cc
 
 clean:

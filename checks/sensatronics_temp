@@ -24,40 +24,37 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def check_sql_arguments(params):
-    args  = " --hostname '$HOSTADDRESS$'"
-    args += " --dbms %s" % quote_shell_string(params["dbms"])
-    args += " --name %s" % quote_shell_string(params["name"])
-    args += " --user '%s'" % params["user"]
-    args += " --password '%s'" % params["password"]
+sensatronics_temp_default_levels = ( 23.0, 25.0 )
+def inventory_sensatronics_temp(info):
+    return [ (x[0], sensatronics_temp_default_levels) for x in info if savefloat(x[1]) > 0 ]
 
-    if "port" in params:
-        args += " --port %s" % params["port"]
+def check_sensatronics_temp(item, params, info):
+    for line in info:
+        if line[0] == item:
+            warn, crit = params
+            temperatur = savefloat(line[1])
+            message = "Temperatur: %.2f°C" % temperatur
+            perf = [ ('temp', temperatur, warn, crit ) ]
+            if  temperatur > crit:
+                return 2, message, perf
+            elif temperatur > warn:
+                return 1, message, perf
+            return 0, message, perf
 
-    if "levels" in params:
-        upper = params["levels"]
-    else:
-        upper = "", ""
+    return 3, "Sensor not found"
 
-    if "levels_low" in params:
-        lower = params["levels_low"]
-    else:
-        lower = "", ""
-
-    if "levels" in params or "levels_low" in params:
-        args += " -w %s:%s" % (lower[0], upper[0])
-        args += " -c %s:%s" % (lower[1], upper[1])
-
-    sql_tmp = params["sql"].replace("\n", r"\n")
-    args += " %s" % quote_shell_string(sql_tmp)
-
-    return args
-
-
-active_check_info['sql'] = {
-    "command_line"        : '$USER1$/check_sql $ARG1$',
-    "argument_function"   : check_sql_arguments,
-    "service_description" : lambda args: args["description"],
-    "has_perfdata"        : True,
+check_info["sensatronics_temp"] = {
+    "check_function"        : check_sensatronics_temp,
+    "inventory_function"    : inventory_sensatronics_temp,
+    "service_description"   : "Sensor %s",
+    "has_perfdata"          : True,
+    "group"                 : "room_temperature",
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [".1.3.6.1.4.1.16174.1.1.1"] ,
+    "snmp_info"             : (".1.3.6.1.4.1.16174.1.1.1.3",
+                                    [ x for x in range(16) ],
+                                    [
+                                     "1.0", #Sensor Name
+                                     "2.0", #Sensor Value
+                                    ]),
 }
 

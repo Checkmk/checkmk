@@ -2,17 +2,18 @@ Title: Security issue if agent_vsphere exits with RC != 0
 Component: checks
 State: open
 Date: 2013-08-08 11:37:26
-Targetversion: 1.2.3i2
+Targetversion: 1.2.3i5
 Class: bug
 
 mit dem vSphere Agent ist mir noch ein kleines Security Problem aufgefallen.
-Ab und zu läuft der Agent bei uns in einen Fehler, der zu einem Critical des Check_mk führt.
-Dieser meldet dann:
+Ab und zu läuft der Agent bei uns in einen Fehler, der zu einem Critical
+des Check_mk führt.  Dieser meldet dann:
+
 CRIT - Program '/omd/sites/bsw/share/check_mk/agents/special/agent_vsphere -u '<username>' -s '<password>' -i hostsystem,virtualmachine,datastore,counters '<ip>'' exited with code 1, execution time 3.8 sec
 
 Da sollte man zumindest das Passwort ausfiltern.
 
-Lösung: evtl. kann der Prozess agent_vsphere das Argument im Speicher selbst
-durch **** ersetzen. Alternativ: Die Fehlermeldung Program... zeigt nur alles
-bis zum ersten Space.
+Lösung: evtl. kann der Prozess agent_vsphere das Argument im Speicher
+selbst durch **** ersetzen. Alternativ: Die Fehlermeldung Program... zeigt
+nur alles bis zum ersten Space.
 

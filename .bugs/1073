@@ -2,9 +2,11 @@ Title: Chrome: help switches on randomly
 Component: multisite
 State: open
 Date: 2013-10-15 23:42:57
-Targetversion: 1.2.3i3
+Targetversion: 1.2.3i5
 Class: bug
 
 The online help sometimes randomly switches on on Chrome on Windows.
 Never seen this on Firefox. Seems like the help.mk in the user profile
 correctly corresponds to the settings, so there it is no javascript problem?
+
+This seems hard to reproduce. We can use Chrome for a while...

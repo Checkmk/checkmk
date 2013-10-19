@@ -2,7 +2,7 @@ Title: parent scan fails after renaming a wato folder
 Component: wato
 State: open
 Date: 2013-08-09 16:33:23
-Targetversion: future
+Targetversion: 1.2.3i5
 Class: bug
 
 mir ist folgendes in der Entwickler Version 2013.06.17 aufgefallen.

@@ -2,7 +2,7 @@ Title: Package should have dependency to apache2-prefork
 Component: multisite
 State: open
 Date: 2013-08-30 15:48:55
-Targetversion: 1.2.3
+Targetversion: 1.2.3i5
 Class: bug
 
 Problems in Multisite GUI if apache is running with mpm prefork works so the

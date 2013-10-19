@@ -2,7 +2,7 @@ Title: HTML mails not rendered correctly in outlook
 Component: core
 State: open
 Date: 2013-06-27 13:58:29
-Targetversion: future
+Targetversion: 1.2.3i6
 Class: bug
 
 It seems that current outlook versions, like e.g. 2010, use some sort of stripped html.

@@ -1,9 +1,9 @@
 Title: inline_snmp uses MIBs (if installed) -> might break checks
 Component: core
-State: open
-Date: 2013-10-15 14:21:28
-Targetversion: 1.2.3i3
 Class: bug
+State: done
+Date: 2013-10-15 14:21:28
+Targetversion: 1.2.3i6
 
 We use the option s.UseSprintValue = 1 to make the netsnmp libraries translate some values for us.
 Problem arises when some mibs are installed which lead to translated values, e.g.:
@@ -74,3 +74,6 @@ HW CPU 1             OK - CPU1 "Intel Xeon" in slot 0 is in state "ok"
 Can we switch of the Sprintf option to have the raw values?
 Which ones need to be translated on our own?
 
+
+2013-10-18 20:48:05: changed state open -> done
+Already fixed.

@@ -2,7 +2,7 @@ Title: Livestatus/Nagios Core crashes, if nagios.log is too large
 Component: livestatus
 State: open
 Date: 2013-08-08 11:30:12
-Targetversion: future
+Targetversion: 1.2.3i5
 Class: bug
 
 In Benutzung war: Nagios 3.3, Check_MK check_mk-1.2.2p2 sowie 

@@ -2,7 +2,7 @@ Title: Logwatch in Windows Agent: Problem with EventId 0
 Component: checks
 State: open
 Date: 2013-08-09 14:16:36
-Targetversion: future
+Targetversion: 1.2.3i6
 Class: bug
 
 Ich überwache mit dem aktuellen Agent WinEventlogs und kann auf zwei

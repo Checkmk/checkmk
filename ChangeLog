@@ -57,6 +57,7 @@
     * FIX: hp_proliant: Correct handling of missing snmp data
     * FIX: logwatch.ec: No longer forwards "I" lines to event console
     * FIX: check_dns: default to querying the host itself
+    * FIX: ps: do not output perfdata of CPU averaging (use ps.perf for that)
 
     WATO:
     * You can now have site-specific global settings when using

@@ -1,9 +1,9 @@
 Title: Package should have dependency to apache2-prefork
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2013-08-30 15:48:55
 Targetversion: 1.2.3i5
-Class: bug
 
 Problems in Multisite GUI if apache is running with mpm prefork works so the
 package should depend on apache2-mpm but at least the deb for ubuntu 13.04
@@ -58,3 +58,6 @@ index 5895796..8cbe9b1 100644
  OS_PACKAGES    += libboost-program-options1.49.0
  OS_PACKAGES    += libdbi1
  OS_PACKAGES    += libevent-1.4-2
+
+2013-10-19 18:46:27: changed state open -> done
+Fixed in our OMD builds.

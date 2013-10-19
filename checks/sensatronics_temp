@@ -33,7 +33,7 @@ def check_sensatronics_temp(item, params, info):
         if line[0] == item:
             warn, crit = params
             temperatur = savefloat(line[1])
-            message = "Temperatur: %.2f°C" % temperatur
+            message = "Temperature: %.2f°C" % temperatur
             perf = [ ('temp', temperatur, warn, crit ) ]
             if  temperatur > crit:
                 return 2, message, perf
@@ -46,7 +46,7 @@ def check_sensatronics_temp(item, params, info):
 check_info["sensatronics_temp"] = {
     "check_function"        : check_sensatronics_temp,
     "inventory_function"    : inventory_sensatronics_temp,
-    "service_description"   : "Sensor %s",
+    "service_description"   : "Temperature %s",
     "has_perfdata"          : True,
     "group"                 : "room_temperature",
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [".1.3.6.1.4.1.16174.1.1.1"] ,

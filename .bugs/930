@@ -1,13 +1,16 @@
 Title: cleanup tmp/nagios/checkresults
 Component: core
-State: open
+Class: nastiness
+State: done
 Date: 2013-05-08 15:07:10
 Targetversion: future
-Class: nastiness
 
 If nagios stops/crashes/reloads while the service Check_MK creates an checkresult file
 the .ok file might be missing. Thus thrashing the checkresults directory since no
 one is interested in cleaning up this mess.
 
 Solution:
-cronjob in omd which regularly cleans files older than 1 hour
+Clean that directory when starting Nagios
+
+2013-10-18 21:48:01: changed state open -> done
+Done in omdistro.org.

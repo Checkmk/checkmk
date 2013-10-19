@@ -9977,7 +9977,7 @@ def rename_host_tags_after_confirmation(tag_id, operations):
             message += '<li><a href="%s">%s</a></li>' % (
                 make_link_to([("mode", "editfolder")], folder),
                 folder["title"])
-            message += "</ul>"
+        message += "</ul>"
 
     if affected_hosts:
         message += _("Hosts where this tag group is explicitely set "
@@ -10018,7 +10018,7 @@ def rename_host_tags_after_confirmation(tag_id, operations):
         else:
             wato_html_head(_("Confirm tag modifications"))
         html.write("<div class=really>")
-        html.write("<h3>" + _("Your modifications affects some objects") + "</h3>")
+        html.write("<h3>" + _("Your modifications affect some objects") + "</h3>")
         html.write(message)
         html.write("<br>" + _("WATO can repair things for you. It can rename tags in folders, host and rules. "
                               "Removed tag groups will be removed from hosts and folders, removed tags will be "

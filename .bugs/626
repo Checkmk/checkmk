@@ -5,5 +5,5 @@ Date: 2012-02-06 12:44:52
 Targetversion: 1.4.0
 Class: nastiness
 
-Damit sollen Connect Versuche verringert werden und Fehlermeldungen während eines Nagios
-Neustarts verhindert werden.
+Damit sollen Connect Versuche verringert werden und Fehlermeldungen während
+eines Nagios Neustarts verhindert werden.

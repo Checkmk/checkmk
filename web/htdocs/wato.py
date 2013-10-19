@@ -8329,8 +8329,8 @@ def load_notification_table():
                                         orientation = "horizontal",
                                         show_titles = False,
                                         elements = [
-                                          DropdownChoice(label = _("from:"),  choices = service_levels(), prefix_values = True),
-                                          DropdownChoice(label = _(" to:"),  choices = service_levels(), prefix_values = True),
+                                          DropdownChoice(label = _("from:"),  choices = service_levels, prefix_values = True),
+                                          DropdownChoice(label = _(" to:"),  choices = service_levels, prefix_values = True),
                                         ],
                                       ),
                                     ),

@@ -68,6 +68,7 @@
     * FIX: nailed down ".siteid" exception when added new site
     * FIX: fixed setting for locking mode from 'ait' to 'wait'
     * FIX: avoid removal of tags from rules when not yet acknowledged
+    * FIX: avoid need for apache restart when adding new service levels
 
 1.2.3i4:
     Core:

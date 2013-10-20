@@ -1,9 +1,9 @@
 Title: Invalid reload after command execution
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2013-06-23 11:21:05
 Targetversion: 1.2.3i5
-Class: bug
 
 When you issue a command on hosts/services and confirm then you see a blue
 message with a link back to the view. In that situation there must be no
@@ -14,3 +14,7 @@ An even better resolution would be to drop that intermediate page at
 all and instead print the result of the command in a kind of overlay
 window that goes away after a view seconds or when you hover over
 it. That saves one mouse click.
+
+2013-10-20 12:53:59: changed state open -> done
+Disabled reload after execution of actions and also
+during confirmation.

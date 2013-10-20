@@ -1,9 +1,9 @@
 Title: Security issue if agent_vsphere exits with RC != 0
 Component: checks
-State: open
+Class: bug
+State: done
 Date: 2013-08-08 11:37:26
 Targetversion: 1.2.3i5
-Class: bug
 
 mit dem vSphere Agent ist mir noch ein kleines Security Problem aufgefallen.
 Ab und zu läuft der Agent bei uns in einen Fehler, der zu einem Critical
@@ -17,3 +17,7 @@ Lösung: evtl. kann der Prozess agent_vsphere das Argument im Speicher
 selbst durch **** ersetzen. Alternativ: Die Fehlermeldung Program... zeigt
 nur alles bis zum ersten Space.
 
+
+2013-10-20 12:57:40: changed state open -> done
+Wurde schon dadurch gelöst, dass das Kommando nicht mehr ausgegeben
+wird.

@@ -1,4 +1,4 @@
-title: Etherbox: Sensor Smoke
+title: Etherbox / MessPC: Sensor Smoke
 catalog: hw/environment
 agents: snmp
 license: GPL

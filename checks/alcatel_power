@@ -25,12 +25,12 @@
 # Boston, MA 02110-1301 USA.
 
 def inventory_alcatel_power(info):
-    return [ (x[0], None) for x in info if x[2] in ['0x35000001', '0x45000004', '0x45000002']]  
+    return [ (x[0], None) for x in info if x[2] in ['0x35000001', '0x45000004', '0x45000002', '0x45000009']]  
 
 def check_alcatel_power(item, _no_params, info):
     for line in info:
         if item == line[0]:
-            if line[2] not in ['0x35000001', '0x45000004', '0x45000002']:
+            if line[2] not in ['0x35000001', '0x45000004', '0x45000002', '0x45000009']:
                 return 3, "No Power supply connected to this port"
             if int(line[1]) != 1:
                 return 2, "Supply in error condition (%s)" % line[1]

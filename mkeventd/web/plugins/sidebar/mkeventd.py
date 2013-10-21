@@ -36,9 +36,15 @@ def render_mkeventd_performance():
         html.write("<tr><td class=left>%s:</td>"
                    "<td class=right><strong>%s</strong></td></tr>" % (left, right))
 
+    try:
+        raw_data = mkeventd.query("GET status")
+    except:
+        html.write(_("Event Console is not running."))
+        return
+
     html.write("<table class=\"content_center mkeventd_performance\">\n")
 
-    raw_data = mkeventd.query("GET status")
+
     data = dict(zip(raw_data[0], raw_data[1]))
     columns = [
           (_("Received messages"),   "message",   "%.2f/s"),

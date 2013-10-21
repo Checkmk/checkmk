@@ -1060,3 +1060,139 @@ sidebar_snapins["custom_links"] = {
 }
 """
 }
+
+
+
+#Example Sidebar:
+#Heading1:
+#   * [[link1]]
+#   * [[link2]]
+#
+#----
+#
+#Heading2:
+#   * [[link3]]
+#   * [[link4]]
+
+def render_wiki():
+    import re
+    filename = defaults.omd_root + '/var/dokuwiki/data/pages/sidebar.txt'
+    html.javascript("""
+    function wiki_search()
+    {
+        var oInput = document.getElementById('wiki_search_field');
+        top.frames["main"].location.href = 
+           "/%s/wiki/doku.php?do=search&id=" + escape(oInput.value);
+    }
+    """ % defaults.omd_site)
+    
+    html.write('<form id="wiki_search" onSubmit="wiki_search()">')
+    html.write('<input id="wiki_search_field" type="text" name="wikisearch"></input>\n')
+    html.icon_button("#", _("Search"), "wikisearch", onclick="wiki_search();")
+    html.write('</form>')
+    html.write('<div id="wiki_side_clear"></div>')
+
+    start_ul = True
+    ul_started = False
+    try:
+        title = None
+        for line in file(filename).readlines():
+            line = line.strip()
+            if line == "":
+                if ul_started == True:
+                    html.end_foldable_container()
+                    start_ul = True
+                    ul_started = False
+            elif line.endswith(":"):
+                title = line[:-1]
+            elif line == "----":
+                pass
+                # html.write("<br>")
+
+            elif line.startswith("*"):
+                if start_ul == True:
+                    if title:
+                         html.begin_foldable_container("wikisnapin", title, True, title, indent=True)
+                    start_ul = False
+                    ul_started = True
+
+                erg = re.findall('\[\[(.*)\]\]', line)
+                if len(erg) == 0:
+                    continue
+                erg = erg[0].split('|')
+                if len(erg) > 1:
+                    link = erg[0]
+                    name = erg[1]
+                else:
+                    link = erg[0]
+                    name = erg[0]
+
+
+                if link.startswith("http://") or link.startswith("https://"):
+                    simplelink(name, link, "_blank")
+                else:
+                    erg = name.split(':')
+                    if len(erg) > 0:
+                        name = erg[-1]
+                    else:
+                        name = erg[0]
+                    bulletlink(name, "/%s/wiki/doku.php?id=%s" % (defaults.omd_site, link))
+
+            else:
+                html.write(line)
+
+        if ul_started == True:
+            html.write("</ul>")
+    except IOError:
+        html.write("You have to create a <a href='/%s/wiki/doku.php?id=%s'>sidebar</a> first" % defaults.omd_sites )
+   
+if defaults.omd_root:
+    sidebar_snapins["wiki"] = {
+        "title" : _("Wiki"),
+        "description" : _("Shows the Wiki Navigation of the OMD Site"),
+        "render" : render_wiki,
+        "allowed" : [ "admin", "user", "guest" ],
+        "styles" : """
+        #snapin_container_wiki div.content {
+            font-weight: bold;
+            color: white;
+        }
+
+        #wiki_navigation {
+            text-align: left;
+        }
+
+        #wiki_search {
+            width: 232px;
+            padding: 0;
+        }
+
+        #wiki_side_clear {
+            clear: both;
+        }
+
+        #wiki_search img.iconbutton {
+            width: 33px;
+            height: 26px;
+            margin-top: -25px;
+            left: 196px;
+            float:right;
+            z-index:100;
+        }
+
+        #wiki_search input {
+            margin:  0;
+            padding: 0px 5px;
+            font-size: 8pt;
+            width: 194px;
+            height: 25px;
+            background-image: url("images/search_field_bg.png");
+            background-repeat: no-repeat;
+            -moz-border-radius: 0px;
+            border-style: none;
+            float: left;
+        }
+        """
+    }
+    
+

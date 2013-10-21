@@ -771,7 +771,7 @@ class FilterHostTags(Filter):
 
             if op and val:
                 operator = op != 'is' and '!~' or '~'
-                headers.append('Filter: custom_variables %s TAGS %s' % (operator, val))
+                headers.append('Filter: host_custom_variables %s TAGS %s' % (operator, val))
 
         if headers:
             return '\n'.join(headers) + '\n'

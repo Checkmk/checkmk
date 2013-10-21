@@ -11236,7 +11236,7 @@ def mode_edit_rule(phase, new = False):
             ( "comment",
               TextUnicode(
                 title = _("Comment"),
-                help = _("An optional comment that helps you documenting the purpose of  "
+                help = _("An optional comment that helps you document the purpose of  "
                          "this rule"),
                 size = 80,
                 attrencode = True,

@@ -62,6 +62,7 @@ pagehandlers.update({
    "side"                     : sidebar.page_side,
    "sidebar_add_snapin"       : sidebar.page_add_snapin,
    "sidebar_snapin"           : sidebar.ajax_snapin,
+   "sidebar_fold"             : sidebar.ajax_fold,
    "sidebar_openclose"        : sidebar.ajax_openclose,
    "sidebar_move_snapin"      : sidebar.move_snapin,
    "sidebar_ajax_speedometer" : sidebar.ajax_speedometer,

@@ -535,6 +535,7 @@ function dragScroll(event) {
 
 function foldSidebar()
 {
+    sidebar_folded = true;
     document.getElementById('check_mk_sidebar').style.position = "relative";
     document.getElementById('check_mk_sidebar').style.left = "-265px";
     if (isWebkit()) {
@@ -545,7 +546,7 @@ function foldSidebar()
     }
     else
         parent.document.body.cols = "10,*";
-    sidebar_folded = true;
+    get_url('sidebar_fold.py?fold=yes');
 }
 
 
@@ -555,7 +556,9 @@ function unfoldSidebar()
     document.getElementById('check_mk_sidebar').style.left = "0";
     parent.document.body.cols = "280,*";
     sidebar_folded = false;
+    get_url('sidebar_fold.py?fold=');
 }
+
 
 
 /************************************************

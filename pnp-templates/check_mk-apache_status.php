@@ -76,27 +76,31 @@ foreach ($this->DS as $KEY=>$VAL) {
 # Requests per Second 
 #
 $i++;
-$def[$i]     = "";
-$opt[$i]     = " --title '$hostname: $servicedesc Requests/sec' ";
-$color = '#000000';
-foreach ($this->DS as $KEY=>$VAL) {
-    if($VAL['NAME'] == 'ReqPerSec') {
-        $def[$i]    .= rrd::def     ("var".$KEY, $VAL['RRDFILE'], $VAL['DS'], "AVERAGE");
-        $def[$i]    .= rrd::line1   ("var".$KEY, $color, rrd::cut($VAL['NAME'],16), 'STACK' );
-        $def[$i]    .= rrd::gprint  ("var".$KEY, array("LAST","MAX","AVERAGE"), "%6.1lf/s");
+if (isset($RRD["ReqPerSec"])) {
+    $def[$i]     = "";
+    $opt[$i]     = " --title '$hostname: $servicedesc Requests/sec' ";
+    $color = '#000000';
+    foreach ($this->DS as $KEY=>$VAL) {
+        if($VAL['NAME'] == 'ReqPerSec') {
+            $def[$i]    .= rrd::def     ("var".$KEY, $VAL['RRDFILE'], $VAL['DS'], "AVERAGE");
+            $def[$i]    .= rrd::line1   ("var".$KEY, $color, rrd::cut($VAL['NAME'],16), 'STACK' );
+            $def[$i]    .= rrd::gprint  ("var".$KEY, array("LAST","MAX","AVERAGE"), "%6.1lf/s");
+        }
     }
 }
 #
 # Bytes per Second 
 #
 $i++;
-$def[$i]     = "";
-$opt[$i]     = " --title '$hostname: $servicedesc Bytes per Second'";
-foreach ($this->DS as $KEY=>$VAL) {
-    if($VAL['NAME'] == 'BytesPerSec') {
-        $def[$i]    .= rrd::def     ("var".$KEY, $VAL['RRDFILE'], $VAL['DS'], "AVERAGE");
-        $def[$i]    .= rrd::line1   ("var".$KEY, rrd::color($KEY),rrd::cut($VAL['NAME'],16), 'STACK' );
-        $def[$i]    .= rrd::gprint  ("var".$KEY, array("LAST","MAX","AVERAGE"), "%6.1lf %sb/s");
+if (isset($RRD["ReqPerSec"])) {
+    $def[$i]     = "";
+    $opt[$i]     = " --title '$hostname: $servicedesc Bytes per Second'";
+    foreach ($this->DS as $KEY=>$VAL) {
+        if($VAL['NAME'] == 'BytesPerSec') {
+            $def[$i]    .= rrd::def     ("var".$KEY, $VAL['RRDFILE'], $VAL['DS'], "AVERAGE");
+            $def[$i]    .= rrd::line1   ("var".$KEY, rrd::color($KEY),rrd::cut($VAL['NAME'],16), 'STACK' );
+            $def[$i]    .= rrd::gprint  ("var".$KEY, array("LAST","MAX","AVERAGE"), "%6.1lf %sb/s");
+        }
     }
 }
 ?>

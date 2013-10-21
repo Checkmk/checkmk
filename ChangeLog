@@ -69,6 +69,10 @@
            in order to make it consistent with the other temperature checks
     * FIX: hp_blade_blades: Fixed crash on inventory when receiving
            unexpected snmp data
+    * FIX: apache_status: If ReqPerSec and BytesPerSec are not reported by
+           the agent, no PNP graphs for them are drawn.
+           (This is the case if ExtendedStatus set to Off in Apache config)
+
 
     WATO:
     * You can now have site-specific global settings when using

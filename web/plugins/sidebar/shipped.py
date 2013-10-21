@@ -1144,7 +1144,8 @@ def render_wiki():
         if ul_started == True:
             html.write("</ul>")
     except IOError:
-        html.write("You have to create a <a href='/%s/wiki/doku.php?id=%s'>sidebar</a> first" % defaults.omd_sites )
+        html.write("You have to create a <a href='/%s/wiki/doku.php?id=%s'>sidebar</a> first" % 
+           (defaults.omd_site, _("sidebar") ))
    
 if defaults.omd_root:
     sidebar_snapins["wiki"] = {
@@ -1186,7 +1187,7 @@ if defaults.omd_root:
             font-size: 8pt;
             width: 194px;
             height: 25px;
-            background-image: url("images/search_field_bg.png");
+            background-image: url("images/quicksearch_field_bg.png");
             background-repeat: no-repeat;
             -moz-border-radius: 0px;
             border-style: none;

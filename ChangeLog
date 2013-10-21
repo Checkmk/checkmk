@@ -28,6 +28,7 @@
     * FIX: Fixed searching hosts by aliases/adresses
     * FIX: Remove duplicate entries from Quicksearch
     * FIX: Avoid timed browser reload after execution of exections
+    * Wiki Sitebar Snapin: showing navigation and quicksearch. OMD only.
 
     BI:
     * FIX: Fix exception when showing BI tree in reporting time warp

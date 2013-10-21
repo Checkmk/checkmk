@@ -131,8 +131,9 @@ def save_user_config(user_config):
         config.save_user_file("sidebar", user_config)
 
 def sidebar_head():
-    html.write('<div id="side_header">'
-               '<a title="%s" target="main" href="%s">'
+    html.write('<div id="side_header">')
+    html.write('<div id="side_fold"></div>')
+    html.write('<a title="%s" target="main" href="%s">'
                '<div id="side_version">%s</div>'
                '</a>'
                '</div>\n' % (_("Go to main overview"), config.start_url, defaults.check_mk_version))

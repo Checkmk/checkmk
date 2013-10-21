@@ -23,7 +23,8 @@
     * Added host aliases filter to some views (host/service search)
     * It is now possible to enforce checkboxes in views upon view loading
       (needs to be confgured per view via the view editor)
-    * Wiki Sitebar Snapin: showing navigation and quicksearch. OMD only.
+    * Wiki Sidebar Snapin: showing navigation and quicksearch. OMD only.
+    * Sidebar can now be folded. Simply click somewhere at the left 10 pixels.
     * FIX: Fixed encoding problem in webservice column output
     * FIX: Fix output format python for several numeric columns
     * FIX: Fixed searching hosts by aliases/adresses

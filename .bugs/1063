@@ -1,8 +1,10 @@
 Title: manpage for check_form_submit is missing
 Component: checks
-State: open
+Class: nastiness
+State: done
 Date: 2013-10-08 17:26:07
 Targetversion: 1.2.3i3
-Class: nastiness
 
 manpage for check_form_submit needs to be written
+
+2013-10-18 21:12:07: changed state open -> done

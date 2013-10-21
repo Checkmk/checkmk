@@ -8329,8 +8329,8 @@ def load_notification_table():
                                         orientation = "horizontal",
                                         show_titles = False,
                                         elements = [
-                                          DropdownChoice(label = _("from:"),  choices = service_levels(), prefix_values = True),
-                                          DropdownChoice(label = _(" to:"),  choices = service_levels(), prefix_values = True),
+                                          DropdownChoice(label = _("from:"),  choices = service_levels, prefix_values = True),
+                                          DropdownChoice(label = _(" to:"),  choices = service_levels, prefix_values = True),
                                         ],
                                       ),
                                     ),
@@ -9977,7 +9977,7 @@ def rename_host_tags_after_confirmation(tag_id, operations):
             message += '<li><a href="%s">%s</a></li>' % (
                 make_link_to([("mode", "editfolder")], folder),
                 folder["title"])
-            message += "</ul>"
+        message += "</ul>"
 
     if affected_hosts:
         message += _("Hosts where this tag group is explicitely set "
@@ -10018,7 +10018,7 @@ def rename_host_tags_after_confirmation(tag_id, operations):
         else:
             wato_html_head(_("Confirm tag modifications"))
         html.write("<div class=really>")
-        html.write("<h3>" + _("Your modifications affects some objects") + "</h3>")
+        html.write("<h3>" + _("Your modifications affect some objects") + "</h3>")
         html.write(message)
         html.write("<br>" + _("WATO can repair things for you. It can rename tags in folders, host and rules. "
                               "Removed tag groups will be removed from hosts and folders, removed tags will be "
@@ -10156,15 +10156,16 @@ def change_host_tags_in_rules(folder, operations, mode):
             if type(operations) == list: # this list of tags to remove
                 for tag in operations:
                     if tag != None and (tag in tag_specs or "!"+tag in tag_specs):
-                        modified = True
                         if rulespec not in affected_rulespecs:
                             affected_rulespecs.append(rulespec)
-                        if tag in tag_specs and mode == "delete":
-                            rules_to_delete.add(nr)
-                        elif tag in tag_specs:
-                            tag_specs.remove(tag)
-                        elif "+"+tag in tag_specs:
-                            tag_specs.remove("!"+tag)
+                        if mode != "check":
+                            modified = True
+                            if tag in tag_specs and mode == "delete":
+                                rules_to_delete.add(nr)
+                            elif tag in tag_specs:
+                                tag_specs.remove(tag)
+                            elif "+"+tag in tag_specs:
+                                tag_specs.remove("!"+tag)
 
             # Removal or renamal of single tag choices
             else:
@@ -10176,10 +10177,10 @@ def change_host_tags_in_rules(folder, operations, mode):
                         continue
 
                     if old_tag in tag_specs or ("!" + old_tag) in tag_specs:
-                        modified = True
                         if rulespec not in affected_rulespecs:
                             affected_rulespecs.append(rulespec)
                         if mode != "check":
+                            modified = True
                             if old_tag in tag_specs:
                                 tag_specs.remove(old_tag)
                                 if new_tag:

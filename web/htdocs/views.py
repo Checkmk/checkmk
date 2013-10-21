@@ -1429,6 +1429,8 @@ def render_view(view, rows, datasource, group_painters, painters,
                 show_checkboxes, layout, num_columns, show_filters, show_footer, hide_filters,
                 browser_reload):
 
+    if html.transaction_valid() and html.do_actions():
+        html.set_browser_reload(0)
 
     # Show heading (change between "preview" mode and full page mode)
     if show_heading:
@@ -1528,8 +1530,8 @@ def render_view(view, rows, datasource, group_painters, painters,
             if show_buttons:
                 update_context_links(
                     # don't take display_options into account here ('c' is set during reload)
-                    row_count > 0 and should_show_command_form('C', datasource) \
-                    and not html.do_actions(),
+                    row_count > 0 and should_show_command_form('C', datasource), 
+                    # and not html.do_actions(),
                     can_display_checkboxes
                 )
 

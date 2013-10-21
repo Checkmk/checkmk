@@ -7,6 +7,8 @@ Class: nastiness
 
 The following packages need to be installed manually after ./configure has been called
 xorg-x11-server-Xvfb
-pythin-ldap
+python-ldap
 They are only set in OS_PACKAGES, but probably needed in BUILD_PACKAGES
+
+But what happens if they are missing? Are they needed during compilation?
 

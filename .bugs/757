@@ -1,9 +1,9 @@
 Title: Compilation of livecheck with dietlibc broken on SLES11SP1/2
 Component: livecheck
-State: open
+Class: nastiness
+State: done
 Date: 2012-05-25 10:28:46
 Targetversion: future
-Class: nastiness
 
 Generally we should enable compiling livecheck with dietlibc in
 all of our OMD builds (where diet is available). An then fix
@@ -48,3 +48,6 @@ make[2]: *** [livecheck] Error 1
 
 
 Important: same for 'mkevent'!
+
+2013-10-18 21:54:50: changed state open -> done
+Livechecks live cycle has ended.

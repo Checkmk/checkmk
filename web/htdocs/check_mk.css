@@ -158,7 +158,7 @@ label.image_button {
     top: 0px;
     background: transparent url('images/image_button_l.png') no-repeat;
     background-position: 0px -35px;
-    padding: 0 0 0 8px;
+    padding: 0 0 0 7.5px;
     height: 22px;
     margin-right: 5px;
     vertical-align: middle;

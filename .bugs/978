@@ -1,9 +1,13 @@
 Title: list index out of range  when deleting last site
 Component: wato
-State: open
+Class: nastiness
+State: works4me
 Date: 2013-09-17 18:05:17
 Targetversion: 1.4.0
-Class: nastiness
 
 Configure two sites in the Distributed Monitoring setup. Then delete
 both sites. After you delete the last one you can a WATO exception.
+
+2013-10-18 22:16:14: changed state open -> works4me
+Cannot reproduced. But could have been the same bug that has
+already been fixed recently.

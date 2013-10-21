@@ -1,12 +1,17 @@
 Title: ntp check does not disable dns lookups and uses ipv6 as default with newer ntp versions
 Component: checks
-State: open
+Class: bug
+State: wontfix
 Date: 2013-08-09 12:39:37
 Targetversion: future
-Class: bug
 
 check_mk_agents ntp check calls 'ntpq -p' as check command. This uses dns to resolve
 addresses of ntp servers and uses ipv6 as default if available. Both may lead to
 timeouts of the check. Calling 'ntpq -4np' might be a better choice.
 
 Solution not clear. -n introduces other problems.
+
+2013-10-18 11:19:19: changed state open -> wontfix
+Adding -n causes trouble when using pool.ntp.org and stuff,
+because the IP addresses are always changing. That make
+the ntp.peers check unhappy.

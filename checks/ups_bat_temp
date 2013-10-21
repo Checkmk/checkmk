@@ -52,7 +52,7 @@ def check_ups_bat_temp(item, params, info):
 check_info['ups_bat_temp'] = {
   "inventory_function"  : inventory_ups_bat_temp,
   "check_function"      : check_ups_bat_temp,
-  "service_description" : "Battery Temp",
+  "service_description" : "Temperature Battery",
   "has_perfdata"        : True,
   "group"               : "hw_temperature",
   "snmp_info"           : ( ".1.3.6.1.2.1.33.1", ["1.5", "2.7" ] ),

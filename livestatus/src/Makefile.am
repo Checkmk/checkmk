@@ -22,13 +22,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-bin_PROGRAMS = unixcat livecheck
+bin_PROGRAMS = unixcat
 unixcat_SOURCES = unixcat.c
 unixcat_LDADD = -lpthread
 
-livecheck_SOURCES = livecheck.c strutil.c check_icmp.c
-
-pkglib_LIBRARIES = livestatus.so 
+pkglib_LIBRARIES = livestatus.so
 
 livestatus_so_SOURCES = \
 	AndingFilter.cc ClientQueue.cc Column.cc ColumnsColumn.cc CustomVarsExplicitColumn.cc \
@@ -50,17 +48,10 @@ livestatus_so_SOURCES = \
 	OffsetStringHostMacroColumn.cc StatsColumn.cc IntAggregator.cc CountAggregator.cc \
 	DoubleAggregator.cc AttributelistColumn.cc AttributelistFilter.cc \
 	global_counters.c  module.c  logger.c waittriggers.c TimeperiodsCache.cc pnp4nagios.cc \
-	ContactgroupsColumn.cc opids.cc auth.cc livechecking.c
-
-livecheck$(EXEEXT): livecheck.c strutil.c check_icmp.c 
-if HAVE_DIET
-	diet -v $(CC) -Wno-deprecated-declarations $(CFLAGS) $(LDFLAGS) -I.. -s -o $@ $^
-else
-	$(CC) -x c -Wno-deprecated-declarations $(CFLAGS) $(LDFLAGS) -I.. -s -o $@ $^
-endif
+	ContactgroupsColumn.cc opids.cc auth.cc
 
 livestatus_so_CXXFLAGS = -I$(top_srcdir)/nagios -fPIC
-livestatus_so_CFLAGS   = $(livestatus_so_CXXFLAGS) 
+livestatus_so_CFLAGS   = $(livestatus_so_CXXFLAGS)
 
 livestatus.o: $(livestatus_so_OBJECTS) $(livestatus_so_DEPENDENCIES)
 	-rm -f plugin.so
@@ -72,8 +63,6 @@ install-data-local:
 	$(mkinstalldirs) $(DESTDIR)$(pkglibdir)
 	$(INSTALL_PROGRAM) livestatus.o $(DESTDIR)$(pkglibdir)
 	rm -f $(DESTDIR)$(pkglibdir)/livestatus.so
-	$(INSTALL_PROGRAM) livecheck $(DESTDIR)$(pkglibdir)
-	rm -f $(DESTDIR)$(bindir)/livecheck
 
 clean-local:
 	rm -f *~

@@ -1,6 +1,6 @@
-title: Dell Open Manage ESM log health
+title: Dell Open Manage: ESM log 
 agents: snmp
-catalog: hw/dell
+catalog: hw/server/dell
 license: GPL
 distribution: check_mk
 description:
@@ -9,7 +9,6 @@ description:
  The check returns a {CRIT} state in case the log file is 100% full.
  In case that the logfile more then 80% full, the check returns 
  a {WARN} state/
-
 
 inventory:
  One check will be created

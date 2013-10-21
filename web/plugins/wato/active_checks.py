@@ -92,6 +92,79 @@ register_rule(group,
     )
 )
 
+register_rule(group,
+    "active_checks:ftp",
+    Tuple(
+        title = _("Check FTP Services"),
+        elements = [
+            TextAscii ( title = _("Hostname"), allow_empty = False,
+                        help = _("The hostname of the FTP server you want to check. "
+                                 "It is possible to use $HOSTNAME$.")
+            ),
+            Dictionary(
+            elements = [
+                ( "response_time",
+                  Tuple(
+                      title = _("Expected response time"),
+                      elements = [
+                          Float(
+                              title = _("Warning if above"),
+                              unit = "ms",
+                              default_value = 100.0),
+                          Float(
+                              title = _("Critical if above"),
+                              unit = "ms",
+                              default_value = 200.0),
+                      ])
+                 ),
+                 ( "timeout",
+                   Integer(
+                       title = _("Seconds before connection times out"),
+                       unit = _("sec"),
+                       default_value = 10,
+                   )
+                 ),
+                 ( "refuse_state",
+                   DropdownChoice(
+                       title = _("State for connection refusal"),
+                       choices = [ ('crit', _("CRITICAL")),
+                                   ('warn', _("WARNING")),
+                                   ('ok',   _("OK")),
+                                 ])
+                 ),
+
+                 ( "send_string",
+                   TextAscii(
+                       title = _("String to send"),
+                       size = 30)
+                 ),
+                 ( "expect",
+                   ListOfStrings(
+                       title = _("Strings to expect in response"),
+                       orientation = "horizontal",
+                       valuespec = TextAscii(size = 30),
+                   )
+                 ),
+
+                 ( "ssl",
+                   FixedValue(
+                       value = True,
+                       totext = _("use SSL"),
+                       title = _("Use SSL for the connection."))
+
+                 ),
+                 ( "cert_days",
+                   Integer(
+                       title = _("SSL certificate validation"),
+                       help = _("Minimum number of days a certificate has to be valid"),
+                       unit = _("days"),
+                       default_value = 30)
+                 ),
+            ]),
+        ]
+    )
+)
+
 
 register_rule(group,
     "active_checks:dns",
@@ -187,7 +260,7 @@ register_rule(group,
                       help = _('The name of the database on the DBMS'))
             ),
             ( "sql",
-              TextAscii(title = _("SQL-Statement"), allow_empty = False,
+              TextAreaUnicode(title = _("SQL-Statement"), allow_empty = False,
                       help = _('The SQL-Statement which is sent to the DBMS'))
             ),
             ( "user",
@@ -232,6 +305,12 @@ register_rule(group,
            Dictionary(
                title = _("Optional parameters"),
                elements = [
+                   ( "svc_description",
+                     TextUnicode(
+                         title = _("Service description"),
+                         allow_empty = False,
+                         help = _("Here you can specify a service description. "
+                                  "If this parameter is not set, the service is named <tt>TCP Port {Portnumber}</tt>"))),
                    ( "hostname",
                      TextAscii(
                          title = _("DNS Hostname"),
@@ -239,12 +318,6 @@ register_rule(group,
                          help = _("If you specify a hostname here, then a dynamic DNS lookup "
                                   "will be done instead of using the IP address of the host "
                                   "as configured in your host properties."))),
-                   ( "svc_description",
-                     TextUnicode(
-                         title = _("Custom service description"),
-                         allow_empty = False,
-                         help = _("Here you can specify a custom service description. "
-                                  "If this parameter is not set the service is named <tt>TCP Port {Portnumber}</tt>"))),
                    ( "response_time",
                      Tuple(
                          title = _("Expected response time"),

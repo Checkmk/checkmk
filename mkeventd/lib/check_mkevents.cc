@@ -42,6 +42,12 @@ using namespace std;
 #define   PF_LOCAL PF_UNIX
 #endif
 
+void usage()
+{
+    printf("Usage: check_mkevents_c [-H REMOTE:PORT] [-a] HOST [APPLICATION]");
+    printf("\n -a    do not take into account acknowledged events.\n");
+}
+
 int main(int argc, char** argv)
 {
     // Parse arguments
@@ -70,6 +76,11 @@ int main(int argc, char** argv)
             host        = argv[i];
             break;
         }
+    }
+
+    if (!host) {
+        usage();
+        exit(3);
     }
 
     // Get omd environment
@@ -104,23 +115,28 @@ int main(int argc, char** argv)
         addr.sin_port = htons(remote_port);
 
         if(0 > connect(sock, (struct sockaddr*) &addr, sizeof(struct sockaddr_in))){
-            printf("UNKNOWN - Cannot connect to event daemon via TCP %s:%d\n",
-                   remote_hostaddress, remote_port);
+            printf("UNKNOWN - Cannot connect to event daemon via TCP %s:%d (%s)\n",
+                   remote_hostaddress, remote_port, strerror(errno));
             exit(3);
         }
     } else {
-        sock = socket(AF_UNIX, SOCK_STREAM , 0);
+        sock = socket(PF_LOCAL, SOCK_STREAM , 0);
+        if (sock < 0) {
+            printf("UNKNOWN - Cannot create client socket: %s\n", strerror(errno));
+            exit(3);
+        }
+
         tv.tv_sec = 3;
         setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)&tv, sizeof(struct timeval));
 
         struct sockaddr_un addr;
         memset(&addr, 0, sizeof(struct sockaddr_un));
-        addr.sun_family = AF_UNIX;
-        strncpy(addr.sun_path, unixsocket_path, sizeof(addr.sun_path)-1);
+        addr.sun_family = AF_LOCAL;
+        strncpy(addr.sun_path, unixsocket_path, sizeof(addr.sun_path));
 
-        if(0 > connect(sock, (struct sockaddr*) &addr, sizeof(struct sockaddr))){
-            printf("UNKNOWN - Cannot connect to event daemon via UNIX socket %s\n",
-                   unixsocket_path);
+        if(0 > connect(sock, (struct sockaddr*) &addr, sizeof(struct sockaddr_un))){
+            printf("UNKNOWN - Cannot connect to event daemon via UNIX socket %s (%s)\n",
+                   unixsocket_path, strerror(errno));
             exit(3);
         }
     }

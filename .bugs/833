@@ -1,0 +1,9 @@
+Title: It should be possible to submit wato confirmation prompts with enter
+Component: wato
+State: open
+Date: 2013-10-18 08:53:57
+Targetversion: 1.4.0
+Class: feature
+
+If you e.g. delete a Host, there is a confirmation promt asking if you really want to do this.
+The OK button has to be clicked with the mouse, but it would be easyer to push the return key.

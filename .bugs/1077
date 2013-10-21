@@ -1,0 +1,14 @@
+Title: BI: Host/Service search just show first host tag
+Component: bi
+Class: bug
+State: works4me
+Date: 2013-10-17 10:54:51
+Targetversion: 1.4.0
+
+In the WATO editor of BI when you use host/service search
+for creating nodes then only the first host tag selection
+is being shown. The rest ist missing.
+
+2013-10-17 12:25:30: changed state open -> works4me
+Was not a bug. Tags were just missing because of the test
+setup.

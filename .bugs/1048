@@ -1,9 +1,9 @@
 Title: Bug in staleness on dual config (SNMP + Agent)
 Component: core
-State: open
+Class: bug
+State: done
 Date: 2013-09-11 14:37:12
 Targetversion: 1.2.3i2
-Class: bug
 
 Host is defined Dual (SNMP + Check-MK-Agent)
 check interval for SNMP Checks is increased to e. g. 5 min, while checks of Agent run
@@ -11,3 +11,6 @@ default every minute
 The problem is: Services checked by SNMP get stale too early
 (in this case after 90 sec)
 should get stale after 900 sec 
+
+2013-10-18 11:17:00: changed state open -> done
+Fixed in both cores.

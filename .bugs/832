@@ -1,0 +1,14 @@
+Title: snmp infos are missing in wato inventory until clicking full scan
+Component: wato
+Class: bug
+State: wontfix
+Date: 2013-10-17 15:57:04
+Targetversion: 1.4.0
+
+When adding a hosts, either a tcp+snmp or snmp only, the Informationen from the snmp checks are missing
+after clicking "Save and go to services". They will not shown befor clicking on "Full Scan"
+
+2013-10-18 11:16:22: changed state open -> wontfix
+That as it's designed. Thats the reason why the button is there. 
+To avoid a full scan automatically happen every time you go
+to that page.

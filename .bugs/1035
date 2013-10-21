@@ -1,9 +1,9 @@
 Title: make nfsexports plugin work with rpcbind too
 Component: checks
-State: open
+Class: nastiness
+State: done
 Date: 2013-08-27 10:31:53
 Targetversion: 1.2.3
-Class: nastiness
 
 today i added the nfsexports plugin to my check_mk_agent and wondered
 why it doesn't find any exports.
@@ -41,3 +41,5 @@ index 185de07..d5ca96d 100755
  # any exports or have running daemons? then look for registered exports
  if [[ $EXPORTS ]]; then
 -- 1.8.1.2
+
+2013-10-18 21:30:00: changed state open -> done

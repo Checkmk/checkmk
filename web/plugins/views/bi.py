@@ -321,15 +321,20 @@ class BIGroupFilter(Filter):
 
 declare_filter( 90,  BIGroupFilter())
 
+# how is either "regex" or "exact"
 class BITextFilter(Filter):
-    def __init__(self, what):
+    def __init__(self, what, how="regex", suffix=""):
+        self.how = how
         self.column = "aggr_" + what
         label = ''
         if what == 'name':
             label = _('Aggregation name')
         elif what == 'output':
             label = _('Aggregation output')
-        Filter.__init__(self, self.column, label, "aggr", [self.column], [self.column])
+        if how == "exact":
+            label += _(" (exact match)")
+        Filter.__init__(self, self.column + suffix,
+                        label, "aggr", [self.column + suffix], [self.column])
 
     def variable_settings(self, row):
         return [ (self.htmlvars[0], row[self.column]) ]
@@ -344,10 +349,15 @@ class BITextFilter(Filter):
         val = html.var(self.htmlvars[0])
         if not val:
             return rows
-        reg = re.compile(val.lower())
-        return [ row for row in rows if reg.search(row[self.column].lower()) ]
+        if self.how == "regex":
+            reg = re.compile(val.lower())
+            return [ row for row in rows if reg.search(row[self.column].lower()) ]
+        else:
+            return [ row for row in rows if row[self.column] == val ]
 
-declare_filter(120, BITextFilter("name"))
+
+declare_filter(120, BITextFilter("name", suffix="_regex"))
+declare_filter(120, BITextFilter("name", how="exact"))
 declare_filter(121, BITextFilter("output"))
 
 class BIHostFilter(Filter):

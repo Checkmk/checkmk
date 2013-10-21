@@ -1,10 +1,15 @@
 Title: Multisite title shows only site-name (should show site alias)
 Component: multisite
-State: open
+Class: nastiness
+State: done
 Date: 2013-09-17 16:39:20
 Targetversion: 1.4.0
-Class: nastiness
 
 It would be more user friendly if the title of the window / tab would show
 the alias of the site instead of the site-id. The normal user does not
 see the site-id in many situations. In most cases the site-alias is used.
+
+2013-10-18 21:33:26: changed state open -> done
+A site has no alias. There is just an alias for a Multisite connectin
+in the central site. But the site has a global option "HTML-Title of HTML Multisite GUI".
+There you can add an arbitrary text.

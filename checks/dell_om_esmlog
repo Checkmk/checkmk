@@ -24,12 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def inventory_dell_om_esmlogs(info):
+def inventory_dell_om_esmlog(info):
     if len(info) > 0:
         return [ ( None, None ) ]
     return []
 
-def check_dell_om_esmlogs(_no_item, _no_params, info):
+def check_dell_om_esmlog(_no_item, _no_params, info):
     status = int(info[0][0])
     if status == 5:
         state = 2
@@ -44,9 +44,9 @@ def check_dell_om_esmlogs(_no_item, _no_params, info):
     return state, message
 
 
-check_info["dell_om_esmlogs"] = {
-    "check_function"        : check_dell_om_esmlogs,
-    "inventory_function"    : inventory_dell_om_esmlogs,
+check_info["dell_om_esmlog"] = {
+    "check_function"        : check_dell_om_esmlog,
+    "inventory_function"    : inventory_dell_om_esmlog,
     "service_description"   : "ESM Log",
     "has_perfdata"          : False,
     # There is no other way to find out that openmanage is present.

@@ -571,7 +571,6 @@ EOF
    make -j 8  2>&1 &&
    strip src/livestatus.o &&
    mkdir -p $DESTDIR$libdir &&
-   install -m 755 src/livecheck src/livestatus.o $DESTDIR$libdir &&
    mkdir -p $DESTDIR$bindir &&
    install -m 755 src/unixcat $DESTDIR$bindir &&
    popd

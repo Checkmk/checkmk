@@ -1459,7 +1459,7 @@ def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, 
 
             h += aggr_render_node(tree, tree[2]["title"], mc, show_host)
             if not is_empty:
-                h += '<ul id="%d:%s" %sclass="subtree">' % (expansion_level, path_id, style)
+                h += '<ul id="%d:%s" %sclass="subtree">' % (expansion_level or 0, path_id, style)
                 if not omit_content:
                     for node in tree[3]:
                         estate = node[1] != None and node[1] or node[0]

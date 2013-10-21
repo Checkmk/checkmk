@@ -384,7 +384,7 @@ def check_procs(item, params, info, with_perfdata):
             timedif, avg_cpu = get_average("ps.%s.cpu" % item, now, percent_cpu, params["cpu_average"], False)
             infotext += " (%d min average: %.1f%%)" % (params["cpu_average"], avg_cpu)
             percent_cpu = avg_cpu # use this for level comparison
-            if extended_perfdata:
+            if with_perfdata and extended_perfdata:
                 perfdata.append(("pcpuavg", avg_cpu, warn_cpu, crit_cpu, 0, params["cpu_average"]))
 
         if "cpulevels" in params:

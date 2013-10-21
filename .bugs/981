@@ -1,9 +1,9 @@
 Title: liveproxyd: keep site closed for a while after an error
 Component: livestatus
-State: open
+Class: todo
+State: done
 Date: 2013-10-09 18:48:24
 Targetversion: 1.2.3i3
-Class: todo
 
 When the livestatus proxy daemon cannot connect to a site
 for any reason, or if a heartbeat fails, it should mark
@@ -13,3 +13,6 @@ occurrs. That way we tackle:
 
 - flapping connections
 - problems with permament errors (cannot resolve hostname)
+
+2013-10-18 22:29:14: changed state open -> done
+There already is such a setting.

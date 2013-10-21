@@ -1,9 +1,12 @@
 Title: check ups_bat_temp uses upsIdentName as item name
 Component: checks
-State: open
+Class: nastiness
+State: wontfix
 Date: 2013-08-22 12:07:41
 Targetversion: future
-Class: nastiness
 
 it doesnt make sense to use an item for this test, but removing it would break existing rules
 in group hw_temperature
+
+2013-10-18 22:04:11: changed state open -> wontfix
+Exactly. That would make the check incompatible.

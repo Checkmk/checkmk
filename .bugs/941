@@ -1,9 +1,9 @@
 Title: check_tcp service description, duplicates
 Component: checks
-State: open
+Class: nastiness
+State: done
 Date: 2013-10-16 11:47:45
 Targetversion: future
-Class: nastiness
 
 Create two active tcp checks with the same port on one host
 Each service description is 'TCP Port 24'
@@ -14,3 +14,6 @@ Error creating configuration: ERROR: Duplicate service description (active check
  - 2nd occurrance: checktype = active(tcp), item = None
 
 
+
+2013-10-18 22:09:38: changed state open -> done
+Service description can now be specified.

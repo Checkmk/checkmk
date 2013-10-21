@@ -2,7 +2,7 @@ Title: windows_agent: loadlibrary call with *.rll fails
 Component: checks
 State: open
 Date: 2013-09-24 10:06:29
-Targetversion: 1.2.3i2
+Targetversion: 1.2.3i6
 Class: bug
 
 0.078000      - record 219666: process_eventlog_entries bytesread 448, event->Length 448

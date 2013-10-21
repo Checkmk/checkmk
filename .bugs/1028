@@ -1,9 +1,9 @@
 Title: flexible Notification / plain Text Email: Problem with Umlaut in Hostalias
 Component: core
-State: open
+Class: bug
+State: done
 Date: 2013-08-26 11:07:27
 Targetversion: 1.2.3i2
-Class: bug
 
 auf meiner Installation, omd Paket von Euch Version 1.2.3i1 ist folgender Fehler:
 
@@ -30,3 +30,7 @@ Da muss bestimmt in OMD etwas gefixt werden....
 Möglicherweise ein falches Encode. Evtl. Kodierung falsch gesetzt. Wir sollen
 ein try: um das encode machen und mehrere Variante probieren.
 
+
+2013-10-18 13:34:10: changed state open -> done
+Should be fixed meanwhile due to convert_context_to_unicode.
+Also my tests are positive.

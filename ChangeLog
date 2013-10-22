@@ -32,6 +32,8 @@
     * FIX: Remove duplicate entries from Quicksearch
     * FIX: Avoid timed browser reload after execution of exections
     * FIX: Hosttag filter now works in service related views
+    * FIX: Added code to prevent injection of bogus varnames
+           (This might break code which uses some uncommon chars for varnames)
 
     BI:
     * FIX: Fix exception when showing BI tree in reporting time warp
@@ -588,6 +590,7 @@
            folders that do not exist locally
     * FIX: correctly display sub-minute check/retry intervals
     * FIX: fix logic of some numeric sorters
+    * FIX: Improved user provided variable validation in view code
 
     WATO:
     * FIX: fix layout of Auxiliary tags table
@@ -603,6 +606,7 @@
     * FIX: check_ldap: Removed duplicate "-H" definition
     * FIX: Fixed some output encoding problem in snapshot restore / deletion code
     * FIX: Improved user provided variable validation in snapshot handling code
+    * FIX: Improved user provided variable validation in inventory dialog
 
     Event Console:
     * FIX: apply rewriting of application/hostname also when cancelling events

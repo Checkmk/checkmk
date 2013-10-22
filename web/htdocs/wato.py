@@ -2288,6 +2288,7 @@ def show_service_table(host, firsttime):
         first = True
         trclass = "even"
         for st, ct, checkgroup, item, paramstring, params, descr, state, output, perfdata in table:
+            item = html.attrencode(item or 'None')
             if state_type != st:
                 continue
             if first:
@@ -2307,7 +2308,7 @@ def show_service_table(host, firsttime):
 
             # Status, Checktype, Item, Description, Check Output
             html.write("<td class=\"%s\">%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td>" %
-                    (stateclass, statename, ct, item, descr, output))
+                    (stateclass, statename, ct, item, html.attrencode(descr), html.attrencode(output)))
 
             # Icon for Rule editor, Check parameters
             html.write("<td>")
@@ -13945,7 +13946,7 @@ def search_button():
 def changelog_button():
     pending = parse_audit_log("pending")
     if len(pending) > 0:
-        buttontext = "<b>%d " % len(pending) + _("Changes")  + "</b>"
+        buttontext = "%d " % len(pending) + _("Changes")
         hot = True
         icon = "wato_changes"
     else:

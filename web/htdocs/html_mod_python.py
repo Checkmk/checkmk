@@ -1,7 +1,9 @@
 from mod_python import Cookie, util, apache
 import htmllib
-import os, time, config, weblib
+import os, time, config, weblib, re
 import defaults
+
+varname_regex = re.compile('^[\w\d_-]+$')
 
 class html_mod_python(htmllib.html):
 
@@ -45,6 +47,12 @@ class html_mod_python(htmllib.html):
         for field in fields.list:
             varname = field.name
             value = field.value
+
+            # To prevent variours injections, we only allow a defined set
+            # of characters to be used in variables
+            if not varname_regex.match(varname):
+                continue
+
             # Multiple occurrance of a variable? Store in extra list dict
             if varname in self.vars:
                 if varname in self.listvars:

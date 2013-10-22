@@ -5288,7 +5288,7 @@ def mode_snapshot(phase):
 
             c = wato_confirm(_("Confirm deletion of snapshot"),
                              _("Are you sure you want to delete the snapshot <br><br>%s?") %
-                                htmllib.attrencode(delete_file)
+                                html.attrencode(delete_file)
                             )
             if c:
                 os.remove(os.path.join(snapshot_dir, delete_file))
@@ -5305,12 +5305,12 @@ def mode_snapshot(phase):
 
             c = wato_confirm(_("Confirm restore snapshot"),
                              _("Are you sure you want to restore the snapshot <br><br>%s ?") %
-                                htmllib.attrencode(snapshot_file)
+                                html.attrencode(snapshot_file)
                             )
             if c:
                 multitar.extract_from_file(snapshot_dir + snapshot_file, backup_paths)
                 log_pending(SYNCRESTART, None, "snapshot-restored",
-                     _("Restored snapshot %s") % htmllib.attrencode(snapshot_file))
+                     _("Restored snapshot %s") % html.attrencode(snapshot_file))
                 return None, _("Successfully restored snapshot.")
             elif c == False: # not yet confirmed
                 return ""

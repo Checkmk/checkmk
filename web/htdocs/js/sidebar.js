@@ -29,6 +29,8 @@ var weAreFirefox    = browser.indexOf("firefox") != -1 || browser.indexOf("namor
 var g_orig_title    = null;
 var g_content_loc   = null;
 
+var sidebar_folded = false;
+
 //
 // Sidebar styling and scrolling stuff
 //
@@ -461,10 +463,19 @@ function startDragScroll(event) {
   if (!event)
     event = window.event;
 
+  if (sidebar_folded) {
+      unfoldSidebar();
+      return false;
+  }
+  else if (!sidebar_folded && event.clientX < 10) {
+      foldSidebar();
+      return false;
+  }
+
+
   var target = getTarget(event);
   var button = getButton(event);
 
-  // Evtl. auch nur mit Shift Taste: (e.button == 0 && (e["shiftKey"])
   if (dragging === false && button == 'LEFT'
       && target.tagName != 'A'
       && target.tagName != 'INPUT'
@@ -521,6 +532,34 @@ function dragScroll(event) {
 
   return false;
 }
+
+function foldSidebar()
+{
+    sidebar_folded = true;
+    document.getElementById('check_mk_sidebar').style.position = "relative";
+    document.getElementById('check_mk_sidebar').style.left = "-265px";
+    if (isWebkit()) {
+        var oldcols = parent.document.body.cols.split(",");
+        var oldwidth = parseInt(oldcols[0]);
+        var new_width = 10.0 / 280.0 * oldwidth;
+        parent.document.body.cols = new_width.toString() + ",*";
+    }
+    else
+        parent.document.body.cols = "10,*";
+    get_url('sidebar_fold.py?fold=yes');
+}
+
+
+function unfoldSidebar()
+{
+    document.getElementById('check_mk_sidebar').style.position = "";
+    document.getElementById('check_mk_sidebar').style.left = "0";
+    parent.document.body.cols = "280,*";
+    sidebar_folded = false;
+    get_url('sidebar_fold.py?fold=');
+}
+
+
 
 /************************************************
  * Mausrad scrollen

@@ -112,27 +112,42 @@ def nagioscgilink(text, target):
 def heading(text):
     html.write("<h3>%s</h3>\n" % html.attrencode(text))
 
+# Load current state of user's sidebar. Convert from
+# old format (just a snapin list) to the new format
+# (dictionary) on the fly
 def load_user_config():
     path = config.user_confdir + "/sidebar.mk"
     try:
         user_config = eval(file(path).read())
+        if type(user_config) == list:
+            user_config = {
+                "snapins" : user_config,
+                "fold":     False,
+            }
     except:
-        user_config = config.sidebar
+        user_config = {
+            "snapins": config.sidebar,
+            "fold":    False,
+        }
 
     # Remove entries the user is not allowed for or which have state "off" (from legacy version)
     # silently skip configured but not existant snapins
-    return [ entry for entry in user_config
-                       if entry[0] in sidebar_snapins
-                          and entry[1] != "off"
-                          and config.may("sidesnap." + entry[0])]
+    user_config["snapins"] = [
+          entry for entry in user_config["snapins"]
+                if entry[0] in sidebar_snapins
+                   and entry[1] != "off"
+                   and config.may("sidesnap." + entry[0])]
+
+    return user_config
 
 def save_user_config(user_config):
     if config.may("general.configure_sidebar"):
         config.save_user_file("sidebar", user_config)
 
 def sidebar_head():
-    html.write('<div id="side_header">'
-               '<a title="%s" target="main" href="%s">'
+    html.write('<div id="side_header">')
+    html.write('<div id="side_fold"></div>')
+    html.write('<a title="%s" target="main" href="%s">'
                '<div id="side_version">%s</div>'
                '</a>'
                '</div>\n' % (_("Go to main overview"), config.start_url, defaults.check_mk_version))
@@ -171,6 +186,9 @@ def sidebar_foot():
         _("&copy; <a target=\"_blank\" href=\"http://mathias-kettner.de\">Mathias Kettner</a>"))
     html.write('</div>')
 
+    if load_user_config()["fold"]:
+        html.final_javascript("foldSidebar();")
+
 # Standalone sidebar
 def page_side():
     if not config.may("general.see_sidebar"):
@@ -195,7 +213,7 @@ def page_side():
         scrolling = ' class=scroll'
 
     html.write('<div id="side_content"%s>' % scrolling)
-    for name, state in user_config:
+    for name, state in user_config["snapins"]:
         if not name in sidebar_snapins or not config.may("sidesnap." + name):
             continue
         # Performs the initial rendering and might return an optional refresh url,
@@ -223,7 +241,7 @@ def page_side():
     html.write("if (contentFrameAccessible()) { update_content_location(); };\n")
     html.write("</script>\n")
 
-    html.write("</body>\n</html>")
+    html.body_end()
 
 def render_snapin(name, state):
     snapin = sidebar_snapins.get(name)
@@ -297,15 +315,22 @@ def snapin_exception(e):
                 "<h2>%s</h2>\n"
                 "<p>%s</p></div>" % (_('Error'), e))
 
+def ajax_fold():
+    config = load_user_config()
+    config["fold"] = not not html.var("fold")
+    save_user_config(config)
+
+
 def ajax_openclose():
     config = load_user_config()
-    new_config = []
-    for name, usage in config:
+    new_snapins = []
+    for name, usage in config["snapins"]:
         if html.var("name") == name:
             usage = html.var("state")
         if usage != "off":
-            new_config.append((name, usage))
-    save_user_config(new_config)
+            new_snapins.append((name, usage))
+    config["snapins"] = new_snapins
+    save_user_config(config)
 
 def ajax_snapin():
     # Update online state of the user (if enabled)
@@ -361,11 +386,11 @@ def move_snapin():
     snapname_to_move = html.var("name")
     beforename = html.var("before")
 
-    snapin_config = load_user_config()
+    user_config = load_user_config()
 
     # Get current state of snaping being moved (open, closed)
     snap_to_move = None
-    for name, state in snapin_config:
+    for name, state in user_config["snapins"]:
         if name == snapname_to_move:
             snap_to_move = name, state
     if not snap_to_move:
@@ -373,29 +398,32 @@ def move_snapin():
 
     # Build new config by removing snaping at current position
     # and add before "beforename" or as last if beforename is not set
-    new_config = []
-    for name, state in snapin_config:
+    new_snapins = []
+    for name, state in user_config["snapins"]:
         if name == snapname_to_move:
             continue # remove at this position
         elif name == beforename:
-            new_config.append(snap_to_move)
-        new_config.append( (name, state) )
+            new_snapins.append(snap_to_move)
+        new_snapins.append( (name, state) )
     if not beforename: # insert as last
-        new_config.append(snap_to_move)
-    save_user_config(new_config)
+        new_snapins.append(snap_to_move)
+
+    user_config["snapins"] = new_snapins
+    save_user_config(user_config)
 
 def page_add_snapin():
     if not config.may("general.configure_sidebar"):
         raise MKGeneralException(_("You are not allowed to change the sidebar."))
 
     html.header(_("Available snapins"), stylesheets=["pages", "sidebar", "status"])
-    used_snapins = [name for (name, state) in load_user_config()]
+    used_snapins = [name for (name, state) in load_user_config()["snapins"]]
 
     addname = html.var("name")
     if addname in sidebar_snapins and addname not in used_snapins and html.check_transaction():
-        user_config = load_user_config() + [(addname, "open")]
+        user_config = load_user_config()
+        user_config["snapins"].append((addname, "open"))
         save_user_config(user_config)
-        used_snapins = [name for (name, state) in load_user_config()]
+        used_snapins = [name for (name, state) in load_user_config()["snapins"]]
         html.reload_sidebar()
 
     names = sidebar_snapins.keys()

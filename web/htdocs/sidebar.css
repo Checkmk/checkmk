@@ -61,10 +61,25 @@ body.side {
 
 #side_header a {
     display: block;
-    width: 100%;
+    width: 255px;
     height: 55px;
     text-decoration: none;
+    margin-left: 10px; /* space for sidebar folding */
 }
+
+#side_fold {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    width: 10px;
+    height: 55px;
+}
+#side_fold:hover {
+    background-repeat: no-repeat;
+    background-position: -3px 7px;
+    background-image: url("images/side_fold.png");
+}
+
 
 #side_version {
     position: absolute;

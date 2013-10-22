@@ -1045,7 +1045,7 @@ def page_view():
         raise MKGeneralException(_("Missing the variable view_name in the URL."))
     view = html.available_views.get(view_name)
     if not view:
-        raise MKGeneralException(("No view defined with the name '%s'.") % view_name)
+        raise MKGeneralException(("No view defined with the name '%s'.") % htmllib.attrencode(view_name))
 
     show_view(view, True, True, True)
 

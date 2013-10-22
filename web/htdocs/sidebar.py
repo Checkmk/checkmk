@@ -565,7 +565,7 @@ def ajax_del_bookmark():
     try:
         del bookmarks[num]
     except IndexError:
-        raise MKGeneralException(_("Unknown bookmark id: %d. This is probably a problem with reload or browser history. Please try again.") % htmllib.attrencode(num))
+        raise MKGeneralException(_("Unknown bookmark id: %d. This is probably a problem with reload or browser history. Please try again.") % html.attrencode(num))
     save_bookmarks(bookmarks)
     render_bookmarks()
 
@@ -597,7 +597,7 @@ def page_edit_bookmark():
         raise MKGeneralException(_("Invalid bookmark id."))
     bookmarks = load_bookmarks()
     if n >= len(bookmarks):
-        raise MKGeneralException(_("Unknown bookmark id: %d. This is probably a problem with reload or browser history. Please try again.") % htmllib.attrencode(n))
+        raise MKGeneralException(_("Unknown bookmark id: %d. This is probably a problem with reload or browser history. Please try again.") % html.attrencode(n))
 
     if html.var("save") and html.check_transaction():
         title = html.var("title")

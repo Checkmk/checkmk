@@ -68,7 +68,7 @@ def link(text, target, frame="main"):
     if not (":" in target[:10]) and target[0] != '/':
         target = defaults.url_prefix + "check_mk/" + target
     return '<a onfocus="if (this.blur) this.blur();" target="%s" ' \
-           'class=link href="%s">%s</a>' % (frame, target, htmllib.attrencode(text))
+           'class=link href="%s">%s</a>' % (htmllib.attrencode(frame), htmllib.attrencode(target), htmllib.attrencode(text))
 
 def simplelink(text, target, frame="main"):
     html.write(link(text, target, frame) + "<br>\n")

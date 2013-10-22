@@ -37,6 +37,7 @@
     * FIX: correctly display sub-minute check/retry intervals
     * FIX: fix logic of some numeric sorters
     * FIX: Improved user provided variable validation in view code
+    * FIX: Improved user provided variable validation in bookmark sidebar snapin
 
     WATO:
     * FIX: fix layout of Auxiliary tags table

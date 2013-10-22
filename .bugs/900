@@ -1,9 +1,9 @@
 Title: Check_MK does not handle interval_length != 60 correctly
 Component: multisite
-State: open
+Class: nastiness
+State: wontfix
 Date: 2013-02-15 14:30:58
 Targetversion: future
-Class: nastiness
 
 Reveived via feedback@:
 
@@ -32,3 +32,8 @@ results in display within check_mk GUI:
 Service normal/retry check interval600s/180s
 
 It seems to be a bug in the display only, checks are running correctly.
+
+2013-10-21 20:56:06: changed state open -> wontfix
+Setting interval_length != 60 is not only deprecated, but also not
+neccessary any more. Floating point numbers can be used as an
+interval length, e.g. 0.01666 for one second.

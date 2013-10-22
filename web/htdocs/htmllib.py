@@ -346,6 +346,7 @@ class html:
         self.context_buttons_open = False
 
     def context_button(self, title, url, icon=None, hot=False, id=None, bestof=None, hover_title='', fkey=None):
+        title = self.attrencode(title)
         display = "block"
         if bestof:
             counts = self.get_button_counts()
@@ -360,22 +361,23 @@ class html:
             self.begin_context_buttons()
 
         if icon:
-            title = '<img src="images/icon_%s.png">%s' % (icon, title)
+            title = '<img src="images/icon_%s.png">%s' % (self.attrencode(icon), self.attrencode(title))
         if id:
-            idtext = " id='%s'" % id
+            idtext = " id='%s'" % self.attrencode(id)
         else:
             idtext = ""
-        self.write('<div%s style="display:%s" class="contextlink%s%s" ' % (idtext, display, hot and " hot" or "", (fkey and self.keybindings_enabled) and " button" or ""))
+        self.write('<div%s style="display:%s" class="contextlink%s%s" ' %
+            (idtext, display, hot and " hot" or "", (fkey and self.keybindings_enabled) and " button" or ""))
         self.context_button_hover_code(hot and "_hot" or "")
         self.write('>')
-        self.write('<a href="%s"' % url)
+        self.write('<a href="%s"' % self.attrencode(url))
         if hover_title:
-            self.write(' title="%s"' % hover_title)
+            self.write(' title="%s"' % self.attrencode(hover_title))
         if bestof:
             self.write(' onclick="count_context_button(this); document.location=this.href; " ')
         if fkey and self.keybindings_enabled:
             title += '<div class=keysym>F%d</div>' % fkey
-            self.add_keybinding([html.F1 + (fkey - 1)], "document.location='%s';" % url)
+            self.add_keybinding([html.F1 + (fkey - 1)], "document.location='%s';" % self.attrencode(url))
         self.write('>%s</a></div>\n' % title)
 
     def context_button_hover_code(self, what):

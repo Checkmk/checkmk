@@ -500,6 +500,8 @@ def page_edit_view():
         if cloneuser:
             mode  = 'clone'
             view = copy.deepcopy(html.multisite_views.get((cloneuser, viewname), None))
+            if not view:
+                raise MKUserError('cloneuser', _('The view does not exist.'))
             # Make sure, name is unique
             if cloneuser == config.user_id: # Clone own view
                 newname = viewname + "_clone"
@@ -1135,7 +1137,7 @@ def page_view():
         raise MKGeneralException(_("Missing the variable view_name in the URL."))
     view = html.available_views.get(view_name)
     if not view:
-        raise MKGeneralException(("No view defined with the name '%s'.") % view_name)
+        raise MKGeneralException(("No view defined with the name '%s'.") % html.attrencode(view_name))
 
     show_view(view, True, True, True)
 

@@ -11395,7 +11395,7 @@ def mode_edit_rule(phase, new = False):
 
     html.checkbox("negate_hosts", negate_hosts, label =
                  _("<b>Negate:</b> make rule apply for <b>all but</b> the above hosts"))
-    html.write("</div><br>")
+    html.write("</div>")
     html.help(_("You can enter a number of explicit host names that rule should or should "
                  "not apply to here. Leave this option disabled if you want the rule to "
                  "apply for all hosts specified by the given tags."))

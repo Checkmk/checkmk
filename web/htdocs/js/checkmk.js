@@ -1055,6 +1055,8 @@ function toggle_foldable_container(treename, id) {
     // Check, if we fold a NG-Norm
     var oNform = document.getElementById('nform.' + treename + '.' + id);
     if (oNform) {
+        var oImg = oNform.childNodes[0];
+        toggle_folding(oImg, oImg.src[oImg.src.length - 6] == '0');
         var oTr = oNform.parentNode.nextSibling;
         toggle_tree_state(treename, id, oTr);
     }

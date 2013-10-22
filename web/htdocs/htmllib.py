@@ -1155,48 +1155,6 @@ class html:
     def begin_foldable_container(self, treename, id, isopen, title, indent = True, first = False):
         self.folding_indent = indent
         # try to get persisted state of tree
-        tree_state = weblib.get_tree_states(treename)
-
-        if id in tree_state:
-            isopen = tree_state[id] == "on"
-
-        img_num = isopen and "90" or "00"
-        onclick = ' onclick="toggle_foldable_container(\'%s\', \'%s\')"' % (treename, id)
-        onclick += ' onmouseover="this.style.cursor=\'pointer\';" '
-        onclick += ' onmouseout="this.style.cursor=\'auto\';" '
-
-        if indent == "nform":
-            self.write('<tr class=heading><td id="nform.%s.%s" %s colspan=2>' % (treename, id, onclick))
-            self.write('%s</td></tr>' % title)
-        else:
-            self.write('<img align=absbottom class="treeangle" id="treeimg.%s.%s" '
-                       'src="images/tree_%s.png" %s>' %
-                    (treename, id, img_num, onclick))
-            if title.startswith('<'): # custom HTML code
-                self.write(title)
-                if indent != "form":
-                    self.write("<br>")
-            else:
-                self.write('<b class="treeangle title" class=treeangle %s>%s</b><br>' %
-                         (onclick, title))
-
-            indent_style = "padding-left: %dpx; " % (indent == True and 15 or 0)
-            if indent == "form":
-                self.write("</td></tr></table>")
-                indent_style += "margin: 0; "
-            self.write('<ul class="treeangle %s" style="%s" id="tree.%s.%s">' %
-                 (isopen and "open" or "closed", indent_style,  treename, id))
-
-        # give caller information about current toggling state (needed for nform)
-        return isopen
-
-    def end_foldable_container(self):
-        if self.folding_indent != "nform":
-            self.write("</ul>")
-
-    def begin_foldable_container(self, treename, id, isopen, title, indent = True, first = False):
-        self.folding_indent = indent
-        # try to get persisted state of tree
         tree_state = self.get_tree_states(treename)
 
         if id in tree_state:
@@ -1209,6 +1167,8 @@ class html:
 
         if indent == "nform":
             self.write('<tr class=heading><td id="nform.%s.%s" %s colspan=2>' % (treename, id, onclick))
+            self.write('<img align=absbottom class="treeangle nform" src="images/tree_%s.png">' % (
+                    isopen and "90" or "00"))
             self.write('%s</td></tr>' % title)
         else:
             self.write('<img align=absbottom class="treeangle" id="treeimg.%s.%s" '

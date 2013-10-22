@@ -245,6 +245,9 @@ img.treeangle {
     margin-right: 3px;
     margin-top: 0px;
 }
+img.treeangle.nform {
+    margin-left: -5px;
+}
 b.treeangle.title {
    font-weight: bold;
    color: #ffffff;

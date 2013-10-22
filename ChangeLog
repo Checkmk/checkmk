@@ -32,6 +32,8 @@
     * FIX: Remove duplicate entries from Quicksearch
     * FIX: Avoid timed browser reload after execution of exections
     * FIX: Hosttag filter now works in service related views
+    * FIX: Added code to prevent injection of bogus varnames
+           (This might break code which uses some uncommon chars for varnames)
 
     BI:
     * FIX: Fix exception when showing BI tree in reporting time warp

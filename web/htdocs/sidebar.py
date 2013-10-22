@@ -63,28 +63,28 @@ def load_plugins():
             snapin["allowed"])
 
 # Helper functions to be used by snapins
-def link(text, target, frame="main"):
+def link(text, url, target="main"):
     # Convert relative links into absolute links. We have three kinds
     # of possible links and we change only [3]
     # [1] protocol://hostname/url/link.py
     # [2] /absolute/link.py
     # [3] relative.py
-    if not (":" in target[:10]) and target[0] != '/':
-        target = defaults.url_prefix + "check_mk/" + target
+    if not (":" in url[:10]) and url[0] != '/':
+        url = defaults.url_prefix + "check_mk/" + url
     return '<a onfocus="if (this.blur) this.blur();" target="%s" ' \
-           'class=link href="%s">%s</a>' % (frame, target, html.attrencode(text))
+           'class=link href="%s">%s</a>' % (html.attrencode(target), html.attrencode(url), html.attrencode(text))
 
-def simplelink(text, target, frame="main"):
-    html.write(link(text, target, frame) + "<br>\n")
+def simplelink(text, url, target="main"):
+    html.write(link(text, url, target) + "<br>\n")
 
-def bulletlink(text, target, frame="main"):
-    html.write("<li class=sidebar>" + link(text, target, frame) + "</li>\n")
+def bulletlink(text, url, target="main"):
+    html.write("<li class=sidebar>" + link(text, url, target) + "</li>\n")
 
-def iconlink(text, target, icon):
+def iconlink(text, url, icon):
     linktext = '<img class=iconlink src="images/icon_%s.png">%s' % \
-         ( icon, text )
+         (html.attrencode(icon), html.attrencode(text))
     html.write('<a target=main class="iconlink link" href="%s">%s</a><br>' % \
-            (target, linktext))
+            (html.attrencode(url), linktext))
 
 def footnotelinks(links):
     html.write("<div class=footnotelink>")

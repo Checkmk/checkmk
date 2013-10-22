@@ -40,6 +40,8 @@
 
     Notifications:
     * Blacklisting for services in the felixble notification system
+    * FIX: mail with graph plugin: set explicit session.save_path for php
+           Fixes instances where the php command couldn't fetch any graphs
 
     Checks & Agents:
     * diskstat: removed (ever incorrect) latency computation for Linux

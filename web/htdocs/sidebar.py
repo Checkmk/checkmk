@@ -524,7 +524,10 @@ def ajax_add_bookmark():
 
 def page_edit_bookmark():
     html.header(_("Edit Bookmark"))
-    n = int(html.var("num"))
+    try:
+        n = int(html.var("num"))
+    except ValueError:
+        raise MKGeneralException(_("Invalid bookmark id."))
     bookmarks = load_bookmarks()
     if n >= len(bookmarks):
         raise MKGeneralException(_("Unknown bookmark id: %d. This is probably a problem with reload or browser history. Please try again.") % n)

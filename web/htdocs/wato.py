@@ -2226,6 +2226,7 @@ def show_service_table(host, firsttime):
         first = True
         trclass = "even"
         for st, ct, checkgroup, item, paramstring, params, descr, state, output, perfdata in table:
+            item = htmllib.attrencode(item or 'None')
             if state_type != st:
                 continue
             if first:
@@ -2245,7 +2246,8 @@ def show_service_table(host, firsttime):
 
             # Status, Checktype, Item, Description, Check Output
             html.write("<td class=\"%s\">%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td>" %
-                    (stateclass, statename, ct, item, descr, output))
+                    (stateclass, statename, ct, item,
+                     htmllib.attrencode(descr), htmllib.attrencode(output)))
 
             # Icon for Rule editor, Check parameters
             html.write("<td>")

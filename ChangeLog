@@ -53,6 +53,7 @@
     * FIX: check_ldap: Removed duplicate "-H" definition
     * FIX: Fixed some output encoding problem in snapshot restore / deletion code
     * FIX: Improved user provided variable validation in snapshot handling code
+    * FIX: Improved user provided variable validation in inventory dialog
 
     Event Console:
     * FIX: apply rewriting of application/hostname also when cancelling events

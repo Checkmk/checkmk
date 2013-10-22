@@ -557,9 +557,15 @@ def ajax_switch_masterstate():
         html.write(_("Command %s/%d not found") % (column, state))
 
 def ajax_del_bookmark():
-    num = int(html.var("num"))
+    try:
+        num = int(html.var("num"))
+    except ValueError:
+        raise MKGeneralException(_("Invalid bookmark id."))
     bookmarks = load_bookmarks()
-    del bookmarks[num]
+    try:
+        del bookmarks[num]
+    except IndexError:
+        raise MKGeneralException(_("Unknown bookmark id: %d. This is probably a problem with reload or browser history. Please try again.") % htmllib.attrencode(num))
     save_bookmarks(bookmarks)
     render_bookmarks()
 
@@ -591,7 +597,7 @@ def page_edit_bookmark():
         raise MKGeneralException(_("Invalid bookmark id."))
     bookmarks = load_bookmarks()
     if n >= len(bookmarks):
-        raise MKGeneralException(_("Unknown bookmark id: %d. This is probably a problem with reload or browser history. Please try again.") % n)
+        raise MKGeneralException(_("Unknown bookmark id: %d. This is probably a problem with reload or browser history. Please try again.") % htmllib.attrencode(n))
 
     if html.var("save") and html.check_transaction():
         title = html.var("title")

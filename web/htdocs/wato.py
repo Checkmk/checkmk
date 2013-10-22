@@ -13946,7 +13946,7 @@ def search_button():
 def changelog_button():
     pending = parse_audit_log("pending")
     if len(pending) > 0:
-        buttontext = "<b>%d " % len(pending) + _("Changes")  + "</b>"
+        buttontext = "%d " % len(pending) + _("Changes")
         hot = True
         icon = "wato_changes"
     else:

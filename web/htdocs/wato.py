@@ -7374,7 +7374,7 @@ def mode_edit_site(phase):
     forms.section(_("Replication method"))
     html.select("replication",
         [ ("none",  _("No replication with this site")),
-          ("peer",  _("Peer: synchronize configuration with this site")),
+          # ("peer",  _("Peer: synchronize configuration with this site")),
           ("slave", _("Slave: push configuration to this site"))
         ], site.get("replication", "none"))
     html.help( _("WATO replication allows you to manage several monitoring sites with a "

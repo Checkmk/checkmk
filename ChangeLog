@@ -92,6 +92,7 @@
     * New option for full SNMP scan in bulk inventory
     * bulk operations now also available when checkboxes are off
     * LDAP: Added test to validate the configured role sync groups
+    * Disabled replication type "peer" in site editor.
     * FIX: correct display of number of hosts in bulk inventory
     * FIX: nailed down ".siteid" exception when added new site
     * FIX: fixed setting for locking mode from 'ait' to 'wait'

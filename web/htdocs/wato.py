@@ -5627,12 +5627,30 @@ def mode_ldap_config(phase):
             else:
                 return (False, msg)
 
+        def test_groups_to_roles(address):
+            if 'groups_to_roles' not in config.ldap_active_plugins:
+                return True, _('Skipping this test (Plugin is not enabled)')
+
+            userdb.ldap_connect(enforce_new = True, enforce_server = address)
+            num = 0
+            for role_id, dn in config.ldap_active_plugins['groups_to_roles'].items():
+                if isinstance(dn, str):
+                    num += 1
+                    try:
+                        ldap_groups = userdb.ldap_get_groups('(distinguishedName=%s)' % dn)
+                        if not ldap_groups:
+                            return False, _('Could not find the group specified for role %s') % role_id
+                    except Exception, e:
+                        return False, _('Error while fetching group for role %s: %s') % (role_id, str(e))
+            return True, _('Found all %d groups.') % num
+
         tests = [
-            (_('Connect'),       test_connect),
-            (_('User Base-DN'),  test_user_base_dn),
-            (_('Count Users'),   test_user_count),
-            (_('Group Base-DN'), test_group_base_dn),
-            (_('Count Groups'),  test_group_count),
+            (_('Connect'),             test_connect),
+            (_('User Base-DN'),        test_user_base_dn),
+            (_('Count Users'),         test_user_count),
+            (_('Group Base-DN'),       test_group_base_dn),
+            (_('Count Groups'),        test_group_count),
+            (_('Sync-Plugin: Roles'),  test_groups_to_roles),
         ]
 
         for address in userdb.ldap_servers():
@@ -5645,7 +5663,7 @@ def mode_ldap_config(phase):
                     state, msg = test(address)
                 except Exception, e:
                     state = False
-                    msg = _('Exception: %s') % e
+                    msg = _('Exception: %s') % html.attrencode(e)
 
                 if state:
                     img = '<img src="images/icon_success.gif" alt="%s" />' % _('Success')

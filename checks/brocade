@@ -62,7 +62,7 @@ def check_brocade_fan(item, params, info):
         warn, crit = params.get("lower")
         if params.get("upper"):
             upperwarn, uppercrit  = params["upper"]
-        else
+        else:
             upperwarn, uppercrit = ( None, None )
 
     for snmp_item, name, value in info:

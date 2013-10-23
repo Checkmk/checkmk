@@ -5400,6 +5400,12 @@ def compute_check_parameters(host, checktype, item, params):
             if type(params) == dict and type(entry) == dict:
                 params.update(entry)
             else:
+                if type(entry) == dict:
+                    # The entry still has the reference from the rule..
+                    # If we don't make a deepcopy the rule might be modified by
+                    # a followup params.update(...)
+                    import copy
+                    entry = copy.deepcopy(entry)
                 params = entry
     return params
 

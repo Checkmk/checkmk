@@ -3074,6 +3074,9 @@ no_inventory_possible = None
     if need_snmp_module:
         output.write(stripped_python_file(modules_dir + "/snmp.py"))
 
+        if has_inline_snmp and use_inline_snmp:
+            output.write(stripped_python_file(modules_dir + "/inline_snmp.py"))
+
     if agent_simulator:
         output.write(stripped_python_file(modules_dir + "/agent_simulator.py"))
 

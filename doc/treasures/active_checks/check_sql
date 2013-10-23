@@ -158,7 +158,7 @@ try:
         db = cx_Oracle
         if opt_port == None:
             opt_port=1521
-        cstring = opt_user+"/"+opt_password+"@"+opt_hostname+":"+opt_port+"/"+opt_name
+        cstring = opt_user+"/"+opt_password+"@"+opt_hostname+":"+str(opt_port)+"/"+opt_name
         db_connection = db.connect(cstring)
     else:
         print "UNKNOWN - dbms not found"

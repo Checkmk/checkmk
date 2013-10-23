@@ -1292,23 +1292,23 @@ def show_hosts(folder):
                         'checkbox', _('Hide Checkboxes and bulk actions'), 'checkbox',
                         html.makeuri([('show_checkboxes', '0')])))
 
-            html.write(' ' + _("Selected hosts:\n"))
+        html.write(' ' + _("Selected hosts:\n"))
 
-            if not g_folder.get(".lock_hosts"):
-                if config.may("wato.manage_hosts"):
-                    html.button("_bulk_delete", _("Delete"))
-                if config.may("wato.edit_hosts"):
-                    html.button("_bulk_edit", _("Edit"))
-                    html.button("_bulk_cleanup", _("Cleanup"))
-            if config.may("wato.services"):
-                html.button("_bulk_inventory", _("Inventory"))
-            if not g_folder.get(".lock_hosts"):
-                if config.may("wato.parentscan"):
-                    html.button("_parentscan", _("Parentscan"))
-                if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
-                    move_to_folder_combo("host", None, top)
-                    if at_least_one_imported:
-                        html.button("_bulk_movetotarget", _("Move to Target Folders"))
+        if not g_folder.get(".lock_hosts"):
+            if config.may("wato.manage_hosts"):
+                html.button("_bulk_delete", _("Delete"))
+            if config.may("wato.edit_hosts"):
+                html.button("_bulk_edit", _("Edit"))
+                html.button("_bulk_cleanup", _("Cleanup"))
+        if config.may("wato.services"):
+            html.button("_bulk_inventory", _("Inventory"))
+        if not g_folder.get(".lock_hosts"):
+            if config.may("wato.parentscan"):
+                html.button("_parentscan", _("Parentscan"))
+            if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
+                move_to_folder_combo("host", None, top)
+                if at_least_one_imported:
+                    html.button("_bulk_movetotarget", _("Move to Target Folders"))
         html.write("</td></tr>\n")
 
     # Show table of hosts in this folder
@@ -1680,16 +1680,19 @@ def delete_folder_after_confirm(del_folder):
 # Create list of all hosts that are select with checkboxes in the current file.
 # This is needed for bulk operations.
 def get_hostnames_from_checkboxes(filterfunc = None):
+    show_checkboxes = html.var("show_checkboxes") == "1"
+
     entries = g_folder[".hosts"].items()
     entries.sort()
 
-    selected = weblib.get_rowselection('wato-folder-/'+g_folder['.path'])
+    if show_checkboxes:
+        selected = weblib.get_rowselection('wato-folder-/'+g_folder['.path'])
 
     selected_hosts = []
     search_text = html.var("search")
     for hostname, host in entries:
         if (not search_text or (search_text.lower() in hostname.lower())) \
-            and ('_c_' + hostname) in selected:
+            and (not show_checkboxes or ('_c_' + hostname) in selected):
                 if filterfunc == None or \
                    filterfunc(host):
                     selected_hosts.append(hostname)

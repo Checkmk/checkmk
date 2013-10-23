@@ -87,6 +87,7 @@
       distributed WATO (available in the "Distributed Monitoring")
     * bulk inventory: display percentage in progress bar
     * New option for full SNMP scan in bulk inventory
+    * bulk operations now also available when checkboxes are off
     * FIX: correct display of number of hosts in bulk inventory
     * FIX: nailed down ".siteid" exception when added new site
     * FIX: fixed setting for locking mode from 'ait' to 'wait'

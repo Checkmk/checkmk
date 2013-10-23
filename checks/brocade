@@ -71,10 +71,10 @@ def check_brocade_fan(item, params, info):
             label = ""
             value = saveint(value)
             perf = [ ('fan', value, warn, crit) ]
-            if value <= crit or ( uppercrit and value >= uppercrit ):
+            if value <= crit:
                 state = 2
                 label = "(Levels below: %d/%d)" % (warn, crit)
-            elif value <= warn or ( upperwarn and value >= upperwarn ):
+            elif value <= warn:
                 state = 1
                 label = "(Levels below: %d/%d)" % (warn, crit)
             elif uppercrit and value >= uppercrit:

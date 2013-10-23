@@ -1274,12 +1274,6 @@ def show_hosts(folder):
     def bulk_actions(at_least_one_imported, top, withsearch, colspan, odd, show_checkboxes):
         html.write('<tr class="data %s0">' % odd)
         html.write("<td class=bulksearch colspan=3>")
-        if withsearch:
-            html.text_input(top and "search" or "search")
-            html.button("_search", _("Search"))
-            html.set_focus("search")
-        html.write('</td>')
-        html.write("<td class=bulkactions colspan=%d>" % (colspan-3))
         if not show_checkboxes:
             html.write('<div id="%s_on" title="%s" class="togglebutton %s up" '
                        'onclick="location.href=\'%s\'"></div>' % (
@@ -1291,6 +1285,12 @@ def show_hosts(folder):
                        'onclick="location.href=\'%s\'"></div>' % (
                         'checkbox', _('Hide Checkboxes and bulk actions'), 'checkbox',
                         html.makeuri([('show_checkboxes', '0')])))
+        if withsearch:
+            html.text_input(top and "search" or "search")
+            html.button("_search", _("Search"))
+            html.set_focus("search")
+        html.write('</td>')
+        html.write("<td class=bulkactions colspan=%d>" % (colspan-3))
 
         html.write(' ' + _("Selected hosts:\n"))
 

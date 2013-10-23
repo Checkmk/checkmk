@@ -60,6 +60,7 @@ def check_genua_fan(item, params, info):
 check_info['genua_fan'] = {
     "inventory_function" : inventory_genua_fan,
     "check_function"     : check_genua_fan,
+    "group"              : "hw_fan",
     "service_description": "FAN %s",
     "has_perfdata"       : True,
     "snmp_info"          : [( ".1.3.6.1.4.1.3717.2.1.1.1.1",[

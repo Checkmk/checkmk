@@ -5130,8 +5130,9 @@ def do_check_keepalive():
         except Exception, e:
             if opt_debug:
                 raise
-            sys.stdout.write("UNKNOWN - %s\n3\n" % e)
-
+            total_check_output = "UNKNOWN - %s\n" % e
+            sys.stdout.write("%03d\n%08d\n%s" %
+                 (3, len(total_check_output), total_check_output))
 
 
 

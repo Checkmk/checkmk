@@ -478,39 +478,15 @@ def ajax_speedometer():
         # That way we save CPU resources since the computation of the
         # scheduled checks rate needs to loop over all hosts and services.
         if last_program_start != program_start:
-
-            # 1. Get data of all active services and of passive/non-check_mk-services.
-            # For passive services we assume that they are scheduled with the rate the
-            # is configured via "check_interval". Nagios does not use this setting for i
-            # passive checks, but we have no other option.
+            # These days, we configure the correct check interval for Check_MK checks.
+            # We do this correctly for active and for passive ones. So we can simply
+            # use the check_interval of all services. Hosts checks are ignored.
+            #
+            # Manually added services without check_interval could be a problem, but
+            # we have no control there.
             scheduled_rate = html.live.query_summed_stats(
                         "GET services\n"
-                        "Stats: suminv check_interval\n"
-                        "Filter: active_checks_enabled = 1\n"
-                        "Filter: check_command ~ ^check_mk-\n"
-                        "Negate:\n"
-                        "Filter: active_checks_enabled = 0\n"
-                        "And: 2\n"
-                        "Or: 2\n")[0] / 60.0
-
-            # 3. Acount for check_mk-checks. Here we need to check interval of the
-            # Check_MK services on the host. Its check rate applies to the passive
-            # checks. First get the check intervals of the check_mk checks:
-            intervals = html.live.query_table(
-                "GET services\n"
-                "Columns: host_name check_interval\n"
-                "Filter: description = Check_MK")
-
-            # Now get the number of passive check_mk checks for each host and convert
-            # it to a dict from host -> number of services
-            num_svcs = dict(html.live.query_table(
-                "GET services\n"
-                "Columns: host_name\n"
-                "Stats: check_command ~ ^check_mk-"))
-
-            for host_name, check_interval in intervals:
-                num_services = num_svcs.get(host_name, 0)
-                scheduled_rate += float(num_services) / check_interval / 60.0
+                        "Stats: suminv check_interval\n")[0] / 60.0
 
         percentage = 100.0 * current_rate / scheduled_rate;
         title = _("Scheduled service check rate: %.1f/s, current rate: %.1f/s, that is "

@@ -37,6 +37,8 @@
     * FIX: Hosttag filter now works in service related views
     * FIX: Added code to prevent injection of bogus varnames
            (This might break code which uses some uncommon chars for varnames)
+    * FIX: Fixed computation of perfometer values, which did not care about
+           the snmp_check_interval. Simplyfied computation of perfometer values
 
     BI:
     * FIX: Fix exception when showing BI tree in reporting time warp

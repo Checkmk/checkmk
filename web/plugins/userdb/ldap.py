@@ -608,7 +608,7 @@ def ldap_convert_simple(user_id, ldap_user, user, user_attr, attr):
     else:
         return {}
 
-def ldap_convert_mail(params, user_id, ldap_user, user):
+def ldap_convert_mail(plugin, params, user_id, ldap_user, user):
     mail = ''
     if ldap_user.get(params.get('attr', ldap_attr('mail'))):
         mail = ldap_user[params.get('attr', ldap_attr('mail'))][0].lower()
@@ -641,7 +641,7 @@ ldap_attribute_plugins['alias'] = {
     'help':  _('Populates the alias attribute of the WATO user by syncrhonizing an attribute '
                'from the LDAP user account. By default the LDAP attribute &quot;cn&quot; is used.'),
     'needed_attributes': lambda params: [ params.get('attr', ldap_attr('cn')) ],
-    'convert':           lambda params, user_id, ldap_user, user: \
+    'convert':           lambda plugin, params, user_id, ldap_user, user: \
                              ldap_convert_simple(user_id, ldap_user, user, 'alias',
                                                  params.get('attr', ldap_attr('cn'))),
     'lock_attributes':   [ 'alias' ],
@@ -657,7 +657,7 @@ ldap_attribute_plugins['alias'] = {
 # Checks wether or not the user auth must be invalidated (increasing the serial).
 # In first instance, it must parse the pw-changed field, then check wether or not
 # a date has been stored in the user before and then maybe increase the serial.
-def ldap_convert_auth_expire(params, user_id, ldap_user, user):
+def ldap_convert_auth_expire(plugin, params, user_id, ldap_user, user):
     changed_attr = params.get('attr', ldap_attr('pw_changed'))
     if not changed_attr in ldap_user:
         raise MKLDAPException(_('The "Authentication Expiration" attribute (%s) could not be fetched '
@@ -710,7 +710,7 @@ ldap_attribute_plugins['pager'] = {
                'of the WATO user accounts, which is then forwarded to Nagios and can be used'
                'for notifications. By default the LDAP attribute &quot;mobile&quot; is used.'),
     'needed_attributes': lambda params: [ params.get('attr', ldap_attr('mobile')) ],
-    'convert':           lambda params, user_id, ldap_user, user: \
+    'convert':           lambda plugin, params, user_id, ldap_user, user: \
                              ldap_convert_simple(user_id, ldap_user, user, 'pager',
                                                  params.get('attr', ldap_attr('mobile'))),
     'lock_attributes':   ['pager'],
@@ -729,10 +729,10 @@ def register_user_attribute_sync_plugins():
         ldap_attribute_plugins[attr] = {
             'title': val['valuespec'].title(),
             'help':  val['valuespec'].help(),
-            'needed_attributes': lambda params: [ params.get('attr', ldap_attr(attr)) ],
-            'convert':           lambda params, user_id, ldap_user, user: \
-                                         ldap_convert_simple(user_id, ldap_user, user, attr,
-                                                        params.get('attr', ldap_attr(attr))),
+            'needed_attributes': lambda params: [ params.get('attr', ldap_attr(attr)).lower() ],
+            'convert':           lambda plugin, params, user_id, ldap_user, user: \
+                                         ldap_convert_simple(user_id, ldap_user, user, plugin,
+                                                        params.get('attr', ldap_attr(plugin)).lower()),
             'lock_attributes': [ attr ],
             'parameters': [
                 ('attr', TextAscii(
@@ -745,7 +745,7 @@ def register_user_attribute_sync_plugins():
 
 register_user_attribute_sync_plugins()
 
-def ldap_convert_groups_to_contactgroups(params, user_id, ldap_user, user):
+def ldap_convert_groups_to_contactgroups(plugin, params, user_id, ldap_user, user):
     groups = []
     # 1. Fetch CNs of all LDAP groups of the user (use group_dn, group_filter)
     ldap_groups = ldap_user_groups(user_id, ldap_user['dn'], nested = params.get('nested', False))
@@ -777,7 +777,7 @@ ldap_attribute_plugins['groups_to_contactgroups'] = {
     ],
 }
 
-def ldap_convert_groups_to_roles(params, user_id, ldap_user, user):
+def ldap_convert_groups_to_roles(plugin, params, user_id, ldap_user, user):
     groups = []
     # 1. Fetch DNs of all LDAP groups of the user
     ldap_groups = [ g.lower() for g in ldap_user_groups(user_id, ldap_user['dn'],
@@ -911,7 +911,7 @@ def ldap_sync(add_to_changelog, only_username):
 
         # Gather config from convert functions of plugins
         for key, params in config.ldap_active_plugins.items():
-            user.update(ldap_attribute_plugins[key]['convert'](params or {}, user_id, ldap_user, user))
+            user.update(ldap_attribute_plugins[key]['convert'](key, params or {}, user_id, ldap_user, user))
 
         if not mode_create and user == users[user_id]:
             continue # no modification. Skip this user.

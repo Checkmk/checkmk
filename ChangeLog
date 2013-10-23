@@ -39,6 +39,7 @@
            (This might break code which uses some uncommon chars for varnames)
     * FIX: Fixed computation of perfometer values, which did not care about
            the snmp_check_interval. Simplyfied computation of perfometer values
+    * FIX: LDAP: Custom user attributes can now be synced again
 
     BI:
     * FIX: Fix exception when showing BI tree in reporting time warp

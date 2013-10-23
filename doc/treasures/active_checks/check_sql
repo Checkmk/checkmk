@@ -119,7 +119,7 @@ try:
 
     if args:
         opt_sql_tmp = ' '.join(map(str,args))
-        opt_sql = opt_sql_tmp.replace(r"\n", "\n")
+        opt_sql = opt_sql_tmp.replace(r"\n", "\n").replace('\;', ";")
     else:
         print "UNKNOWN - no SQL statement given"
         sys.exit(3)

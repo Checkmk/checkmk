@@ -68,23 +68,23 @@ def check_genua_state(item, _no_params, info):
         return(3, "Invalid Output from Agent")
 
     state = 0
-    output = "Node test:"
     carp_info = []
 
     for ifIndex, ifName, ifType, ifLinkState, ifCarpState in info[0]:
         if ifType == "6":
             carp_info.append((ifIndex, ifName, ifType, ifLinkState, ifCarpState))
 
-    if len(carp_info) != 2:
-        return(3, "Number of carp interfaces is %d, needs to be 2" % len(carp_info))
+    # critical if the carp interfaces dont have the same state
+    carp_states = [ 0, 0, 0 ]
+    for i in range (0, len(carp_info)):
+        carp_states[int(carp_info[i][4])] += 1
+        if carp_info[0][4] != carp_info[i][4]:
+            state = 2
 
-    # Output formatieren
-    output += " %s:%s %s:%s" % (carp_info[0][1], genua_state_str(carp_info[0][4])\
-                              , carp_info[1][1], genua_state_str(carp_info[1][4]))
-
-    # critical if the two carp interfaces dont have the same state
-    if carp_info[0][4] != carp_info[1][4]:
-        state = 2
+    output = "Number of carp IFs in states "
+    for i in ('0', '1', '2'):
+        output += genua_state_str(i)
+        output += ":%d " % carp_states[int(i)]
 
     return(state, output)
 

@@ -505,7 +505,7 @@ def ldap_get_groups(add_filt = None):
         filt = '(&%s%s)' % (filt, add_filt)
     return ldap_search(ldap_replace_macros(config.ldap_groupspec['dn']), filt, ['cn'])
 
-def ldap_user_groups(username, user_dn, attr = 'cn'):
+def ldap_user_groups(username, user_dn, attr = 'cn', nested = False):
     # When configured to convert user_ids to lower case, all user ids here are lower case.
     # Otherwise all user_ids are in the case which they are in LDAP. This should be ok
     # for this function! I removed the snippet below to reduce the number of ldap queries.
@@ -515,11 +515,12 @@ def ldap_user_groups(username, user_dn, attr = 'cn'):
     #   # so the username read from ldap might differ. Fix it here.
     #   user_dn, username = ldap_get_user(username, True)
 
-    if username in g_ldap_group_cache:
+    cache_key = '%s-%s' % (username, nested and 'n' or 'f')
+    if cache_key in g_ldap_group_cache:
         if attr == 'cn':
-            return g_ldap_group_cache[username][0]
+            return g_ldap_group_cache[cache_key][0]
         else:
-            return g_ldap_group_cache[username][1]
+            return g_ldap_group_cache[cache_key][1]
 
     # posixGroup objects use the memberUid attribute to specify the group memberships.
     # This is the username instead of the users DN. So the username needs to be used
@@ -531,7 +532,10 @@ def ldap_user_groups(username, user_dn, attr = 'cn'):
 
     # Apply configured group ldap filter and only reply with groups
     # having the current user as member
-    add_filt = '(%s=%s)' % (ldap_member_attr(), ldap.filter.escape_filter_chars(user_filter))
+    if config.ldap_connection['type'] and nested:
+        add_filt = '(member:1.2.840.113556.1.4.1941:=%s)' % ldap.filter.escape_filter_chars(user_dn)
+    else:
+        add_filt = '(%s=%s)' % (ldap_member_attr(), ldap.filter.escape_filter_chars(user_filter))
 
     # First get all groups
     groups_cn = []
@@ -540,7 +544,7 @@ def ldap_user_groups(username, user_dn, attr = 'cn'):
         groups_cn.append(group['cn'][0])
         groups_dn.append(dn)
 
-    g_ldap_group_cache.setdefault(username, (groups_cn, groups_dn))
+    g_ldap_group_cache.setdefault(cache_key, (groups_cn, groups_dn))
 
     if attr == 'cn':
         return groups_cn
@@ -744,7 +748,7 @@ register_user_attribute_sync_plugins()
 def ldap_convert_groups_to_contactgroups(params, user_id, ldap_user, user):
     groups = []
     # 1. Fetch CNs of all LDAP groups of the user (use group_dn, group_filter)
-    ldap_groups = ldap_user_groups(user_id, ldap_user['dn'])
+    ldap_groups = ldap_user_groups(user_id, ldap_user['dn'], nested = params.get('nested', False))
 
     # 2. Fetch all existing group names in WATO
     cg_names = load_group_information().get("contact", {}).keys()
@@ -759,20 +763,32 @@ ldap_attribute_plugins['groups_to_contactgroups'] = {
                'contactgroup must match the common name (cn) of the LDAP group.'),
     'convert':           ldap_convert_groups_to_contactgroups,
     'lock_attributes':   ['contactgroups'],
-    'no_param_txt': _('Add user to all contactgroups where the common name matches the group name.'),
+    'parameters': [
+        ('nested', FixedValue(
+                title    = _('Handle nested group memberships (Active Directory only at the moment)'),
+                help     = _('Once you enable this option, this plugin will not only handle direct '
+                             'group memberships, instead it will also dig into nested groups and treat '
+                             'the members of those groups as contact group members as well. Please mind '
+                             'that this feature might increase the execution time of your LDAP sync.'),
+                value    = True,
+                totext   = _('Nested group memberships are resolved'),
+            )
+        )
+    ],
 }
 
 def ldap_convert_groups_to_roles(params, user_id, ldap_user, user):
     groups = []
     # 1. Fetch DNs of all LDAP groups of the user
-    ldap_groups = [ g.lower() for g in ldap_user_groups(user_id, ldap_user['dn'], 'dn') ]
+    ldap_groups = [ g.lower() for g in ldap_user_groups(user_id, ldap_user['dn'],
+                                     attr = 'dn', nested = params.get('nested', False)) ]
 
     # 2. Load default roles from default user profile
     roles = config.default_user_profile['roles'][:]
 
     # 3. Loop all roles mentioned in params (configured to be synchronized)
     for role_id, dn in params.items():
-        if dn.lower() in ldap_groups and role_id not in roles:
+        if isinstance(dn, str) and dn.lower() in ldap_groups and role_id not in roles:
             roles.append(role_id)
 
     return {'roles': roles}
@@ -788,6 +804,19 @@ def ldap_list_roles_with_group_dn():
             size  = 80,
             enforce_suffix = ldap_replace_macros(config.ldap_groupspec.get('dn', '')),
         )))
+
+    elements.append(
+        ('nested', FixedValue(
+                title    = _('Handle nested group memberships (Active Directory only at the moment)'),
+                help     = _('Once you enable this option, this plugin will not only handle direct '
+                             'group memberships, instead it will also dig into nested groups and treat '
+                             'the members of those groups as contact group members as well. Please mind '
+                             'that this feature might increase the execution time of your LDAP sync.'),
+                value    = True,
+                totext   = _('Nested group memberships are resolved'),
+            )
+        )
+    )
     return elements
 
 ldap_attribute_plugins['groups_to_roles'] = {

@@ -219,7 +219,6 @@ table.validationerror img {
 }
 
 .wato table.data tr.data td.bulksearch {
-    text-align: right;
     padding-right: 0px;
     white-space: nowrap;
 }
@@ -227,6 +226,10 @@ table.validationerror img {
 .wato td.bulksearch input[type=text] {
     width: 150px;
     margin-right: 5px;
+}
+
+.wato table.data tr.data td.bulksearch div.togglebutton.checkbox {
+    margin-left: 0px;
 }
 
 

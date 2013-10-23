@@ -94,30 +94,6 @@ sidebar_snapins["admin_mini"] = {
 """,
 }
 
-
-#   +----------------------------------------------------------------------+
-#   |          _____     _     _              _____                        |
-#   |         |  ___|__ | | __| | ___ _ __   |_   _| __ ___  ___           |
-#   |         | |_ / _ \| |/ _` |/ _ \ '__|____| || '__/ _ \/ _ \          |
-#   |         |  _| (_) | | (_| |  __/ | |_____| || | |  __/  __/          |
-#   |         |_|  \___/|_|\__,_|\___|_|       |_||_|  \___|\___|          |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-
-def render_wato_folders():
-    if not config.wato_enabled:
-        html.write(_("WATO is disabled in <tt>multisite.mk</tt>."))
-    else:
-        html.write(_('This snapin is deprecated. Please use the WATO foldertree snapin instead.'))
-
-sidebar_snapins["wato"] = {
-    "title" : _("Hosts"),
-    "description" : _("A foldable tree showing all your WATO folders and files - "
-                      "allowing you to navigate in the tree while using views or being in WATO"),
-    "render" : render_wato_folders,
-    "allowed" : [ "admin", "user", "guest" ],
-}
-
 #   .----------------------------------------------------------------------.
 #   |            _____     _     _           _                             |
 #   |           |  ___|__ | | __| | ___ _ __| |_ _ __ ___  ___             |

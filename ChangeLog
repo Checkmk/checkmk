@@ -11,6 +11,8 @@
     * FIX: fixed error handling in SNMP scan, inventory check fails now
            if SNMP agent is not responding
     * FIX: Ignore snmp_check_interval cache in interactive situations (e.g.  -nv)
+    * FIX: check_mk config generation: on computing the checks parameters
+           there is no longer a small chance that existing rules get modified
 
     Event Console:
     * check_mkevents now available as C binary: check_mkevents_c

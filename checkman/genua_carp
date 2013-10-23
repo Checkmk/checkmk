@@ -14,7 +14,9 @@ description:
  For a cluster the check determines the number of carp interfaces on the cluster with
  the state master. If it is either {0} or {>1} the check is critical.
 
- The check is known to run with genuscreen version 3.0, others may also work.
+ The check is known to run with genuscreen version 3.0 and supports genuas regular
+ enterprise id 3717 as well as the id 3137 which was introduced in a bug in some 
+ versions of genuscreen.
 
 perfdata:
  None

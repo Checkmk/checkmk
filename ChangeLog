@@ -604,6 +604,7 @@
     * FIX: correctly display sub-minute check/retry intervals
     * FIX: fix logic of some numeric sorters
     * FIX: Improved user provided variable validation in view code
+    * FIX: Escaping html code in plugin output painters
 
     WATO:
     * FIX: fix layout of Auxiliary tags table

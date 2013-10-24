@@ -1,0 +1,79 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+
+# Warning- und Criticalwerte (u/min)
+genua_fan_default_levels = { "lower": ( 2000, 1000), "upper": (8000, 8400) }
+
+def inventory_genua_fan(info):
+        # remove empty elements due to alternative enterprise id in snmp_info
+        info = filter(None, info)
+
+	inventory = []
+	for fanNo, fanName, fanRPM, fanState in info[0]:
+		inventory.append( (fanName, "genua_fan_default_levels") )
+	return inventory
+
+def check_genua_fan(item, params, info):
+
+        # remove empty elements due to alternative enterprise id in snmp_info
+        info = filter(None, info)
+
+        fanStateStr = { "1":"OK", "2":"Warning", "3":"Critical", 
+                        "4":"Unkown", "5":"Unkown", "6":"Unkown"}
+
+	lowerwarn, lowercrit = params["lower"]
+	upperwarn, uppercrit = params["upper"]
+	for line in info[0]:
+            fanNo, fanName, fanRPM, fanState = line
+            if fanName != item: continue
+
+            rpm = saveint(fanRPM)
+
+            if rpm > uppercrit or rpm < lowercrit:
+                rpmstate = 2
+                rpmsym = "(!!)"
+            elif rpm > upperwarn or rpm < lowerwarn:
+                rpmstate = 1
+                rpmsym = "(!)"
+            else:
+                rpmstate = 0
+                rpmsym = ""
+
+            if fanState in ( "3", "4", "5", "6" ):
+                statestate = 2
+                statesym = "(!!)"
+            elif fanState == "2":
+                statestate = 1
+                statesym = "(!)"
+            else:
+                statestate = 0
+                statesym = ""
+
+            perfdata = [ ( 'rpm', fanRPM, upperwarn, uppercrit, 0, uppercrit ) ]
+            infotext = "State: %s %s, RPM: %s %s" % \
+                (fanStateStr[fanState], statesym, fanRPM, rpmsym)
+            state = max(statestate,rpmstate)
+            return (state, infotext, perfdata)
+
+	return (3, "UNKNOWN - FAN %s not found in SNMP data" % item)
+
+check_info['genua_fan'] = {
+    "inventory_function" : inventory_genua_fan,
+    "check_function"     : check_genua_fan,
+    "group"              : "hw_fan",
+    "service_description": "FAN %s",
+    "has_perfdata"       : True,
+    "snmp_info"          : [( ".1.3.6.1.4.1.3717.2.1.1.1.1",[
+                                "1", # "fanNo"
+                                "2", # "fanName"
+                                "3", # "fanRPM"
+                                "4"  # "fanState"
+                            ]),
+                            ( ".1.3.6.1.4.1.3137.2.1.1.1.1",[
+                                "1", # "fanNo"
+                                "2", # "fanName"
+                                "3", # "fanRPM"
+                                "4"  # "fanState"
+                          ])],
+    "snmp_scan_function" : lambda oid: "genuscreen" in oid(".1.3.6.1.2.1.1.1.0").lower()
+}

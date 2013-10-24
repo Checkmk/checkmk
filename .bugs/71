@@ -1,8 +1,12 @@
 Title: Disk IO read/write: Zu einem Check zusammenfassen
 Component: checks
-State: open
-Date: 2010-12-22 11:06:47
 Class: feature
+State: closed
+Date: 2010-12-22 11:06:47
+Targetversion: future
 
 Wir reden vom Linux-Check. Dann einen gemeinsamen PNP-Graphen mit dem
 Windows-Check machen. Ist doch doof, wenn In und Out getrennte Graphen geben.
+
+2013-10-24 09:51:34: changed state open -> closed
+Has been fixed a long time ago

@@ -1,8 +1,9 @@
 Title: Inventurcheck: retry-interval konfigurieren
 Component: core
-State: open
-Date: 2010-12-21 10:59:01
 Class: feature
+State: works4me
+Date: 2010-12-21 10:59:01
+Targetversion: future
 
 Eigentlich könnte der Inventurcheck doch - wenn er nicht OK ist -
 öfters laufen. Auf diese Art wird er schneller von selbst wieder grün,
@@ -12,3 +13,7 @@ es oft macht (gilt das auch für den SNMP-Scan?).
 
 Lösung könnte sein: in main.mk inventory_check_retry = 5. Und diesen
 Wert per Default auf 5 setzen (5 Minuten).
+
+2013-10-24 09:48:31: changed state open -> works4me
+This is already possible using the regular rule "Retry check interval for service checks".
+I see no reason to introduce a new option for this. Closing....

@@ -3173,6 +3173,27 @@ register_check_parameters(
 )
 
 register_check_parameters(
+    subgroup_os,
+    "pf_used_states",
+    _("Number of used states of OpenBSD PF engine"),
+    Dictionary(
+        elements = [
+            ("used",
+            Tuple(
+                title = _("Limits for the number of used states"),
+                elements = [
+                    Integer(title = _("warning if above")),
+                    Integer(title = _("critical if above")),
+                ]),
+            ),
+        ],
+        optional_keys = [None],
+    ),
+    None,
+    "first"
+)
+
+register_check_parameters(
     subgroup_environment,
     "pdu_gude",
     _("Levels for Gude PDU Devices"),

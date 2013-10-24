@@ -116,13 +116,13 @@ def inventory_lgp_pdu_aux(info):
     for id, pdu in info.iteritems():
         # Using SystemLabel as index. But it is not uniq in all cases.
         # Adding the Type-Index to prevent problems
-        inv.append((pdu['Type'] + '-' + pdu['TypeIndex'], None))
+        inv.append((pdu['Type'] + '-' + pdu['SystemLabel'] + '-' + pdu['TypeIndex'], None))
     return inv
 
 def check_lgp_pdu_aux(item, params, info):
     info = lgp_pdu_aux_fmt(info)
     for id, pdu in info.iteritems():
-        if item == pdu['Type'] + '-' + pdu['TypeIndex']:
+        if item == pdu['Type'] + '-' + pdu['SystemLabel'] + '-' + pdu['TypeIndex']:
             state    = 0
             output   = []
             perfdata = []

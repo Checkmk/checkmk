@@ -238,7 +238,8 @@ def paint_host_list(site, hosts):
     return "", h
 
 def format_plugin_output(output, row = None):
-    output =  output.replace("(!)", warn_marker) \
+    from htmllib import attrencode
+    output = attrencode(output).replace("(!)", warn_marker) \
               .replace("(!!)", crit_marker) \
               .replace("(?)", unknown_marker)
     if row and "[running on" in output:

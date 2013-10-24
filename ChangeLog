@@ -28,6 +28,8 @@
     * Wiki Sidebar Snapin: showing navigation and quicksearch. OMD only.
     * Sidebar can now be folded. Simply click somewhere at the left 10 pixels.
     * Foldable sections now have an animated triangle icon that shows the folding state
+    * Added new snapin "Folders", which interacts with the views snapin when
+      both are enabled. You can use it to open views in a specific folder context
     * LDAP: Added option to make group and role sync plugin handle nested
             groups (only in Active Directory at the moment). Enabling this
 	    feature might increase the sync time a lot - use only when really needed.

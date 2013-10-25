@@ -2296,9 +2296,12 @@ def show_service_table(host, firsttime):
                 continue
             if first:
                 html.write('<tr class=groupheader><td colspan=7><br>%s</td></tr>\n' % state_name)
-                html.write("<tr><th>" + _("Status") + "</th><th>" + _("Checktype") + "</th><th>" + _("Item") + "</th>"
-                           "<th>" + _("Service Description") + "</th><th>"
-                           + _("Current check") + "</th><th></th><th></th></tr>\n")
+                html.write("<tr><th>" + _("Status") + "</th>"
+                           "<th>" + _("Checktype") + "</th>"
+                           "<th>" + _("Item") + "</th>"
+                           "<th>" + _("Service Description") + "</th>"
+                           "<th>" + _("Current check") + "</th>"
+                           "<th></th><th></th><th></th></tr>\n")
                 first = False
             trclass = trclass == "even" and "odd" or "even"
             statename = nagios_short_state_names.get(state, "PEND")
@@ -2346,12 +2349,32 @@ def show_service_table(host, firsttime):
 
             html.write("</td>")
 
-            # Checkbox
+            # Permanently disable icon
+            html.write("<td>")
+            if state_type in ['new', 'old']:
+                url = make_link([
+                    ('mode', 'edit_ruleset'),
+                    ('varname', 'ignored_services'),
+                    ('host', hostname),
+                    ('item', mk_repr(descr)),
+                    ('mode', 'new_rule'),
+                    ('_new_host_rule', '1'),
+                    ('filled_in', 'new_rule'),
+                    ('rule_folder', ''),
+                    ('back_mode', 'inventory'),
+                ])
+                html.write('<a href="%s"><img title="%s" class=icon src="images/icon_ignore.png"></a>' %
+                    (url, _("Create rule to permanently disable this service")))
+            html.write("</td>")
+
+            # Temporary ignore checkbox
             html.write("<td>")
             if checkbox != None:
                 varname = "_%s_%s" % (ct, item)
-                html.checkbox(varname, checkbox)
-            html.write("</td></tr>\n")
+                html.checkbox(varname, checkbox, add_attr = ['title="%s"' % _('Temporary ignore this service')])
+            html.write("</td>")
+
+            html.write("</tr>\n")
     html.write("</table>\n")
     html.end_form()
 
@@ -11288,15 +11311,20 @@ def mode_edit_rule(phase, new = False):
 
     varname = html.var("varname")
     rulespec = g_rulespecs[varname]
+    back_mode = html.var('back_mode')
 
     if phase == "title":
         return _("%s rule %s") % (new and _("New") or _("Edit"), rulespec["title"])
 
     elif phase == "buttons":
-        var_list = [("mode", "edit_ruleset"), ("varname", varname), ("host", html.var("host",""))]
-        if html.var("item"):
-            var_list.append( ("item", html.var("item")) )
-        html.context_button(_("Abort"), make_link(var_list), "abort")
+        if not back_mode:
+            var_list = [("mode", "edit_ruleset"), ("varname", varname), ("host", html.var("host",""))]
+            if html.var("item"):
+                var_list.append( ("item", html.var("item")) )
+            backurl = make_link(var_list)
+        else:
+            backurl = make_link([('mode', back_mode), ("host", html.var("host",""))])
+        html.context_button(_("Abort"), backurl, "abort")
         return
 
     folder   = html.has_var("_new_host_rule") and g_folder or g_folders[html.var("rule_folder")]
@@ -11371,9 +11399,9 @@ def mode_edit_rule(phase, new = False):
                             "folder %s to %s") % (rulespec["title"], folder["title"],
                             new_rule_folder["title"]))
         else:
-            return "edit_ruleset"
+            return back_mode
 
-        return ("edit_ruleset",
+        return (back_mode,
            (new and _("Created new rule in ruleset '%s' in folder %s")
                 or _("Editor rule in ruleset '%s' in folder %s")) %
                       (rulespec["title"], new_rule_folder["title"]))

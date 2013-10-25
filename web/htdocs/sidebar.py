@@ -658,10 +658,7 @@ def search_url_tmpl(ty, exact = True):
         else:
             return 'view.py?view_name=svcgroups&servicegroup_name=%(name)s&site=%(site)s'
     elif ty == 'service':
-        if exact:
-            return 'view.py?view_name=servicedesc&service=%(name)s&site=%(site)s'
-        else:
-            return 'view.py?view_name=allservices&service=%(name)s&site=%(site)s'
+        return 'view.py?view_name=allservices&service=%(name)s&site=%(site)s'
 
 def search_livestatus(ty, q):
     try:

@@ -32,12 +32,12 @@
 #include "logger.h"
 #include "OutputBuffer.h"
 
-    StringColumnFilter::StringColumnFilter(StringColumn *column, int opid, char *value)
+StringColumnFilter::StringColumnFilter(StringColumn *column, int opid, char *value)
     : _column(column)
     , _ref_string(value)
     , _opid(abs(opid))
     , _negate(opid < 0)
-      , _regex(0)
+    , _regex(0)
 {
     if (_opid == OP_REGEX || _opid == OP_REGEX_ICASE) {
         if (strchr(value, '{') || strchr(value, '}')) {

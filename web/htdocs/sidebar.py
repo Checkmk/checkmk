@@ -63,28 +63,30 @@ def load_plugins():
             snapin["allowed"])
 
 # Helper functions to be used by snapins
-def link(text, target, frame="main"):
+def link(text, url, target="main", onclick = None):
     # Convert relative links into absolute links. We have three kinds
     # of possible links and we change only [3]
     # [1] protocol://hostname/url/link.py
     # [2] /absolute/link.py
     # [3] relative.py
-    if not (":" in target[:10]) and target[0] != '/':
-        target = defaults.url_prefix + "check_mk/" + target
+    if not (":" in url[:10]) and url[0] != '/':
+        url = defaults.url_prefix + "check_mk/" + url
+    onclick = onclick and (' onclick="%s"' % html.attrencode(onclick)) or ''
     return '<a onfocus="if (this.blur) this.blur();" target="%s" ' \
-           'class=link href="%s">%s</a>' % (frame, target, html.attrencode(text))
+           'class=link href="%s"%s>%s</a>' % \
+            (html.attrencode(target), html.attrencode(url), onclick, html.attrencode(text))
 
-def simplelink(text, target, frame="main"):
-    html.write(link(text, target, frame) + "<br>\n")
+def simplelink(text, url, target="main"):
+    html.write(link(text, url, target) + "<br>\n")
 
-def bulletlink(text, target, frame="main"):
-    html.write("<li class=sidebar>" + link(text, target, frame) + "</li>\n")
+def bulletlink(text, url, target="main", onclick = None):
+    html.write("<li class=sidebar>" + link(text, url, target, onclick) + "</li>\n")
 
-def iconlink(text, target, icon):
+def iconlink(text, url, icon):
     linktext = '<img class=iconlink src="images/icon_%s.png">%s' % \
-         ( icon, text )
+         (html.attrencode(icon), html.attrencode(text))
     html.write('<a target=main class="iconlink link" href="%s">%s</a><br>' % \
-            (target, linktext))
+            (html.attrencode(url), linktext))
 
 def footnotelinks(links):
     html.write("<div class=footnotelink>")
@@ -478,39 +480,15 @@ def ajax_speedometer():
         # That way we save CPU resources since the computation of the
         # scheduled checks rate needs to loop over all hosts and services.
         if last_program_start != program_start:
-
-            # 1. Get data of all active services and of passive/non-check_mk-services.
-            # For passive services we assume that they are scheduled with the rate the
-            # is configured via "check_interval". Nagios does not use this setting for i
-            # passive checks, but we have no other option.
+            # These days, we configure the correct check interval for Check_MK checks.
+            # We do this correctly for active and for passive ones. So we can simply
+            # use the check_interval of all services. Hosts checks are ignored.
+            #
+            # Manually added services without check_interval could be a problem, but
+            # we have no control there.
             scheduled_rate = html.live.query_summed_stats(
                         "GET services\n"
-                        "Stats: suminv check_interval\n"
-                        "Filter: active_checks_enabled = 1\n"
-                        "Filter: check_command ~ ^check_mk-\n"
-                        "Negate:\n"
-                        "Filter: active_checks_enabled = 0\n"
-                        "And: 2\n"
-                        "Or: 2\n")[0] / 60.0
-
-            # 3. Acount for check_mk-checks. Here we need to check interval of the
-            # Check_MK services on the host. Its check rate applies to the passive
-            # checks. First get the check intervals of the check_mk checks:
-            intervals = html.live.query_table(
-                "GET services\n"
-                "Columns: host_name check_interval\n"
-                "Filter: description = Check_MK")
-
-            # Now get the number of passive check_mk checks for each host and convert
-            # it to a dict from host -> number of services
-            num_svcs = dict(html.live.query_table(
-                "GET services\n"
-                "Columns: host_name\n"
-                "Stats: check_command ~ ^check_mk-"))
-
-            for host_name, check_interval in intervals:
-                num_services = num_svcs.get(host_name, 0)
-                scheduled_rate += float(num_services) / check_interval / 60.0
+                        "Stats: suminv check_interval\n")[0] / 60.0
 
         percentage = 100.0 * current_rate / scheduled_rate;
         title = _("Scheduled service check rate: %.1f/s, current rate: %.1f/s, that is "
@@ -557,9 +535,15 @@ def ajax_switch_masterstate():
         html.write(_("Command %s/%d not found") % (column, state))
 
 def ajax_del_bookmark():
-    num = int(html.var("num"))
+    try:
+        num = int(html.var("num"))
+    except ValueError:
+        raise MKGeneralException(_("Invalid bookmark id."))
     bookmarks = load_bookmarks()
-    del bookmarks[num]
+    try:
+        del bookmarks[num]
+    except IndexError:
+        raise MKGeneralException(_("Unknown bookmark id: %d. This is probably a problem with reload or browser history. Please try again.") % html.attrencode(num))
     save_bookmarks(bookmarks)
     render_bookmarks()
 
@@ -585,10 +569,13 @@ def ajax_add_bookmark():
 
 def page_edit_bookmark():
     html.header(_("Edit Bookmark"))
-    n = int(html.var("num"))
+    try:
+        n = int(html.var("num"))
+    except ValueError:
+        raise MKGeneralException(_("Invalid bookmark id."))
     bookmarks = load_bookmarks()
     if n >= len(bookmarks):
-        raise MKGeneralException(_("Unknown bookmark id: %d. This is probably a problem with reload or browser history. Please try again.") % n)
+        raise MKGeneralException(_("Unknown bookmark id: %d. This is probably a problem with reload or browser history. Please try again.") % html.attrencode(n))
 
     if html.var("save") and html.check_transaction():
         title = html.var("title")

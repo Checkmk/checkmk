@@ -357,14 +357,16 @@ div.statebullet {
 }
 
 div#snapinDragIndicator {
-  height:            2px;
+  height:            1.5px;
   line-height:       1px;
   font-size:         1px;
-  width:             249px;
+  width:             247px;
   background-color:  #fff;
-  margin:            0px 0px 0px 10px;
+  margin:            0px 0px 0px 11px;
   border-radius:     3px;
-  box-shadow:        0px 0px 5px #ffffff;
+  box-shadow:        0px 0px 3px #fff;
+  position:          relative;
+  top:               2px;
 }
 
 

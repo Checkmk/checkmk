@@ -1274,12 +1274,6 @@ def show_hosts(folder):
     def bulk_actions(at_least_one_imported, top, withsearch, colspan, odd, show_checkboxes):
         html.write('<tr class="data %s0">' % odd)
         html.write("<td class=bulksearch colspan=3>")
-        if withsearch:
-            html.text_input(top and "search" or "search")
-            html.button("_search", _("Search"))
-            html.set_focus("search")
-        html.write('</td>')
-        html.write("<td class=bulkactions colspan=%d>" % (colspan-3))
         if not show_checkboxes:
             html.write('<div id="%s_on" title="%s" class="togglebutton %s up" '
                        'onclick="location.href=\'%s\'"></div>' % (
@@ -1291,24 +1285,30 @@ def show_hosts(folder):
                        'onclick="location.href=\'%s\'"></div>' % (
                         'checkbox', _('Hide Checkboxes and bulk actions'), 'checkbox',
                         html.makeuri([('show_checkboxes', '0')])))
+        if withsearch:
+            html.text_input(top and "search" or "search")
+            html.button("_search", _("Search"))
+            html.set_focus("search")
+        html.write('</td>')
+        html.write("<td class=bulkactions colspan=%d>" % (colspan-3))
 
-            html.write(' ' + _("Selected hosts:\n"))
+        html.write(' ' + _("Selected hosts:\n"))
 
-            if not g_folder.get(".lock_hosts"):
-                if config.may("wato.manage_hosts"):
-                    html.button("_bulk_delete", _("Delete"))
-                if config.may("wato.edit_hosts"):
-                    html.button("_bulk_edit", _("Edit"))
-                    html.button("_bulk_cleanup", _("Cleanup"))
-            if config.may("wato.services"):
-                html.button("_bulk_inventory", _("Inventory"))
-            if not g_folder.get(".lock_hosts"):
-                if config.may("wato.parentscan"):
-                    html.button("_parentscan", _("Parentscan"))
-                if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
-                    move_to_folder_combo("host", None, top)
-                    if at_least_one_imported:
-                        html.button("_bulk_movetotarget", _("Move to Target Folders"))
+        if not g_folder.get(".lock_hosts"):
+            if config.may("wato.manage_hosts"):
+                html.button("_bulk_delete", _("Delete"))
+            if config.may("wato.edit_hosts"):
+                html.button("_bulk_edit", _("Edit"))
+                html.button("_bulk_cleanup", _("Cleanup"))
+        if config.may("wato.services"):
+            html.button("_bulk_inventory", _("Inventory"))
+        if not g_folder.get(".lock_hosts"):
+            if config.may("wato.parentscan"):
+                html.button("_parentscan", _("Parentscan"))
+            if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
+                move_to_folder_combo("host", None, top)
+                if at_least_one_imported:
+                    html.button("_bulk_movetotarget", _("Move to Target Folders"))
         html.write("</td></tr>\n")
 
     # Show table of hosts in this folder
@@ -1680,16 +1680,19 @@ def delete_folder_after_confirm(del_folder):
 # Create list of all hosts that are select with checkboxes in the current file.
 # This is needed for bulk operations.
 def get_hostnames_from_checkboxes(filterfunc = None):
+    show_checkboxes = html.var("show_checkboxes") == "1"
+
     entries = g_folder[".hosts"].items()
     entries.sort()
 
-    selected = weblib.get_rowselection('wato-folder-/'+g_folder['.path'])
+    if show_checkboxes:
+        selected = weblib.get_rowselection('wato-folder-/'+g_folder['.path'])
 
     selected_hosts = []
     search_text = html.var("search")
     for hostname, host in entries:
         if (not search_text or (search_text.lower() in hostname.lower())) \
-            and ('_c_' + hostname) in selected:
+            and (not show_checkboxes or ('_c_' + hostname) in selected):
                 if filterfunc == None or \
                    filterfunc(host):
                     selected_hosts.append(hostname)
@@ -2288,6 +2291,7 @@ def show_service_table(host, firsttime):
         first = True
         trclass = "even"
         for st, ct, checkgroup, item, paramstring, params, descr, state, output, perfdata in table:
+            item = html.attrencode(item or 'None')
             if state_type != st:
                 continue
             if first:
@@ -2307,7 +2311,7 @@ def show_service_table(host, firsttime):
 
             # Status, Checktype, Item, Description, Check Output
             html.write("<td class=\"%s\">%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td>" %
-                    (stateclass, statename, ct, item, descr, output))
+                    (stateclass, statename, ct, item, html.attrencode(descr), html.attrencode(output)))
 
             # Icon for Rule editor, Check parameters
             html.write("<td>")
@@ -5287,7 +5291,7 @@ def mode_snapshot(phase):
 
             c = wato_confirm(_("Confirm deletion of snapshot"),
                              _("Are you sure you want to delete the snapshot <br><br>%s?") %
-                                htmllib.attrencode(delete_file)
+                                html.attrencode(delete_file)
                             )
             if c:
                 os.remove(os.path.join(snapshot_dir, delete_file))
@@ -5304,12 +5308,12 @@ def mode_snapshot(phase):
 
             c = wato_confirm(_("Confirm restore snapshot"),
                              _("Are you sure you want to restore the snapshot <br><br>%s ?") %
-                                htmllib.attrencode(snapshot_file)
+                                html.attrencode(snapshot_file)
                             )
             if c:
                 multitar.extract_from_file(snapshot_dir + snapshot_file, backup_paths)
                 log_pending(SYNCRESTART, None, "snapshot-restored",
-                     _("Restored snapshot %s") % htmllib.attrencode(snapshot_file))
+                     _("Restored snapshot %s") % html.attrencode(snapshot_file))
                 return None, _("Successfully restored snapshot.")
             elif c == False: # not yet confirmed
                 return ""
@@ -5623,12 +5627,30 @@ def mode_ldap_config(phase):
             else:
                 return (False, msg)
 
+        def test_groups_to_roles(address):
+            if 'groups_to_roles' not in config.ldap_active_plugins:
+                return True, _('Skipping this test (Plugin is not enabled)')
+
+            userdb.ldap_connect(enforce_new = True, enforce_server = address)
+            num = 0
+            for role_id, dn in config.ldap_active_plugins['groups_to_roles'].items():
+                if isinstance(dn, str):
+                    num += 1
+                    try:
+                        ldap_groups = userdb.ldap_get_groups('(distinguishedName=%s)' % dn)
+                        if not ldap_groups:
+                            return False, _('Could not find the group specified for role %s') % role_id
+                    except Exception, e:
+                        return False, _('Error while fetching group for role %s: %s') % (role_id, str(e))
+            return True, _('Found all %d groups.') % num
+
         tests = [
-            (_('Connect'),       test_connect),
-            (_('User Base-DN'),  test_user_base_dn),
-            (_('Count Users'),   test_user_count),
-            (_('Group Base-DN'), test_group_base_dn),
-            (_('Count Groups'),  test_group_count),
+            (_('Connect'),             test_connect),
+            (_('User Base-DN'),        test_user_base_dn),
+            (_('Count Users'),         test_user_count),
+            (_('Group Base-DN'),       test_group_base_dn),
+            (_('Count Groups'),        test_group_count),
+            (_('Sync-Plugin: Roles'),  test_groups_to_roles),
         ]
 
         for address in userdb.ldap_servers():
@@ -5641,7 +5663,7 @@ def mode_ldap_config(phase):
                     state, msg = test(address)
                 except Exception, e:
                     state = False
-                    msg = _('Exception: %s') % e
+                    msg = _('Exception: %s') % html.attrencode(e)
 
                 if state:
                     img = '<img src="images/icon_success.gif" alt="%s" />' % _('Success')
@@ -7352,7 +7374,7 @@ def mode_edit_site(phase):
     forms.section(_("Replication method"))
     html.select("replication",
         [ ("none",  _("No replication with this site")),
-          ("peer",  _("Peer: synchronize configuration with this site")),
+          # ("peer",  _("Peer: synchronize configuration with this site")),
           ("slave", _("Slave: push configuration to this site"))
         ], site.get("replication", "none"))
     html.help( _("WATO replication allows you to manage several monitoring sites with a "
@@ -11394,7 +11416,7 @@ def mode_edit_rule(phase, new = False):
 
     html.checkbox("negate_hosts", negate_hosts, label =
                  _("<b>Negate:</b> make rule apply for <b>all but</b> the above hosts"))
-    html.write("</div><br>")
+    html.write("</div>")
     html.help(_("You can enter a number of explicit host names that rule should or should "
                  "not apply to here. Leave this option disabled if you want the rule to "
                  "apply for all hosts specified by the given tags."))
@@ -13945,7 +13967,7 @@ def search_button():
 def changelog_button():
     pending = parse_audit_log("pending")
     if len(pending) > 0:
-        buttontext = "<b>%d " % len(pending) + _("Changes")  + "</b>"
+        buttontext = "%d " % len(pending) + _("Changes")
         hot = True
         icon = "wato_changes"
     else:

@@ -11,6 +11,8 @@
     * FIX: fixed error handling in SNMP scan, inventory check fails now
            if SNMP agent is not responding
     * FIX: Ignore snmp_check_interval cache in interactive situations (e.g.  -nv)
+    * FIX: check_mk config generation: on computing the checks parameters
+           there is no longer a small chance that existing rules get modified
 
     Event Console:
     * check_mkevents now available as C binary: check_mkevents_c
@@ -26,12 +28,22 @@
     * Wiki Sidebar Snapin: showing navigation and quicksearch. OMD only.
     * Sidebar can now be folded. Simply click somewhere at the left 10 pixels.
     * Foldable sections now have an animated triangle icon that shows the folding state
+    * Added new snapin "Folders", which interacts with the views snapin when
+      both are enabled. You can use it to open views in a specific folder context
+    * LDAP: Added option to make group and role sync plugin handle nested
+            groups (only in Active Directory at the moment). Enabling this
+	    feature might increase the sync time a lot - use only when really needed.
     * FIX: Fixed encoding problem in webservice column output
     * FIX: Fix output format python for several numeric columns
     * FIX: Fixed searching hosts by aliases/adresses
     * FIX: Remove duplicate entries from Quicksearch
     * FIX: Avoid timed browser reload after execution of exections
     * FIX: Hosttag filter now works in service related views
+    * FIX: Added code to prevent injection of bogus varnames
+           (This might break code which uses some uncommon chars for varnames)
+    * FIX: Fixed computation of perfometer values, which did not care about
+           the snmp_check_interval. Simplyfied computation of perfometer values
+    * FIX: LDAP: Custom user attributes can now be synced again
 
     BI:
     * FIX: Fix exception when showing BI tree in reporting time warp
@@ -40,6 +52,8 @@
 
     Notifications:
     * Blacklisting for services in the felixble notification system
+    * FIX: mail with graph plugin: set explicit session.save_path for php
+           Fixes instances where the php command couldn't fetch any graphs
 
     Checks & Agents:
     * diskstat: removed (ever incorrect) latency computation for Linux
@@ -83,6 +97,9 @@
       distributed WATO (available in the "Distributed Monitoring")
     * bulk inventory: display percentage in progress bar
     * New option for full SNMP scan in bulk inventory
+    * bulk operations now also available when checkboxes are off
+    * LDAP: Added test to validate the configured role sync groups
+    * Disabled replication type "peer" in site editor.
     * FIX: correct display of number of hosts in bulk inventory
     * FIX: nailed down ".siteid" exception when added new site
     * FIX: fixed setting for locking mode from 'ait' to 'wait'
@@ -92,6 +109,9 @@
     Livestatus:
     * Removed "livecheck". It never was really stable. Nagios4 has something
       similar built in. And also the Check_MK Micro Core.
+    * table statehist: no longer computes an unmonitored state for hosts and
+                       services on certain instances. 
+                       (showed up as no hosts/services in the multisite gui)
 
 1.2.3i4:
     Core:
@@ -586,6 +606,8 @@
            folders that do not exist locally
     * FIX: correctly display sub-minute check/retry intervals
     * FIX: fix logic of some numeric sorters
+    * FIX: Improved user provided variable validation in view code
+    * FIX: Escaping html code in plugin output painters
 
     WATO:
     * FIX: fix layout of Auxiliary tags table
@@ -601,6 +623,7 @@
     * FIX: check_ldap: Removed duplicate "-H" definition
     * FIX: Fixed some output encoding problem in snapshot restore / deletion code
     * FIX: Improved user provided variable validation in snapshot handling code
+    * FIX: Improved user provided variable validation in inventory dialog
 
     Event Console:
     * FIX: apply rewriting of application/hostname also when cancelling events

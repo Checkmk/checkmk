@@ -329,14 +329,16 @@ def fetch_pnp_data(context, params):
     try:
         # Autodetect the path in OMD environments
         path = "%s/share/pnp4nagios/htdocs/index.php" % context['OMD_ROOT']
+        php_save_path = "-d session.save_path=%s/tmp/php/session" % context['OMD_ROOT']
     except:
         # Non-omd environment - use plugin argument 1
         path = context.get('PARAMETER_1', '')
+        php_save_path = "" # Using default path
 
     if not os.path.exists(path):
         raise GraphException('Unable to locate pnp4nagios index.php (%s)' % path)
 
-    return os.popen('REMOTE_USER="%s" php %s "%s"' %  (context['CONTACTNAME'], path, params)).read()
+    return os.popen('REMOTE_USER="%s" php %s %s "%s"' % (context['CONTACTNAME'], php_save_path, path, params)).read()
 
 def fetch_num_sources(context):
     svc_desc = context['WHAT'] == 'HOST' and '_HOST_' or context['SERVICEDESC']

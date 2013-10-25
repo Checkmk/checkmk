@@ -48,7 +48,7 @@ def check_sql_arguments(params):
         args += " -w %s:%s" % (lower[0], upper[0])
         args += " -c %s:%s" % (lower[1], upper[1])
 
-    sql_tmp = params["sql"].replace("\n", r"\n")
+    sql_tmp = params["sql"].replace("\n", r"\n").replace(";", "\;")
     args += " %s" % quote_shell_string(sql_tmp)
 
     return args

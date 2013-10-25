@@ -3074,6 +3074,9 @@ no_inventory_possible = None
     if need_snmp_module:
         output.write(stripped_python_file(modules_dir + "/snmp.py"))
 
+        if has_inline_snmp and use_inline_snmp:
+            output.write(stripped_python_file(modules_dir + "/inline_snmp.py"))
+
     if agent_simulator:
         output.write(stripped_python_file(modules_dir + "/agent_simulator.py"))
 
@@ -5127,8 +5130,9 @@ def do_check_keepalive():
         except Exception, e:
             if opt_debug:
                 raise
-            sys.stdout.write("UNKNOWN - %s\n3\n" % e)
-
+            total_check_output = "UNKNOWN - %s\n" % e
+            sys.stdout.write("%03d\n%08d\n%s" %
+                 (3, len(total_check_output), total_check_output))
 
 
 
@@ -5396,6 +5400,12 @@ def compute_check_parameters(host, checktype, item, params):
             if type(params) == dict and type(entry) == dict:
                 params.update(entry)
             else:
+                if type(entry) == dict:
+                    # The entry still has the reference from the rule..
+                    # If we don't make a deepcopy the rule might be modified by
+                    # a followup params.update(...)
+                    import copy
+                    entry = copy.deepcopy(entry)
                 params = entry
     return params
 

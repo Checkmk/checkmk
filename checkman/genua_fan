@@ -1,0 +1,37 @@
+title: Check for fan state and rpm on genua devices
+agents: snmp
+catalog: hw/network/genua
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state and rpm of fans found on genuscreen firewalls.
+ Lower and upper levels for the rpm may be given.
+
+ The check is known to run with genuscreen version 3.0 and 4.1, and supports
+ genuas regular enterprise id 3717 as well as the id 3137 which was
+ introduced in a bug in some versions of genuscreen.
+
+perfdata:
+ The rpm of the fans 
+
+inventory:
+ The inventory process checks if the device has a system description OID
+ of .1.3.6.1.2.1.1.2.0 and if the name of this OID contains "genuscreen"
+ (case insensitive).
+ If this is true and a fan is found, then the it is inventorized.
+
+item:
+ The name of the fan according to the snmp output
+
+[parameters]
+parameters(dict): parameters is a dictionary with two keys
+
+ {"lower"}: a tuple of lower warning and critical values for the fan rpm
+
+ {"upper"}: a tuple of upper warning and critical values for the fan rpm
+
+[configuration]
+genua_fan_default_levels(dict): This variable is preset to 
+
+ {{ "lower": ( 2000, 1000), "upper": (8000, 8400) }}
+

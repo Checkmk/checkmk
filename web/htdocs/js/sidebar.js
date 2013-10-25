@@ -791,8 +791,63 @@ function storeScrollPos() {
     setCookie('sidebarScrollPos', document.getElementById('side_content').scrollTop, null);
 }
 
+/************************************************
+ * WATO Folders snapin handling
+ *************************************************/
+
+// FIXME: Make this somehow configurable - use the start url?
+g_last_view   = 'dashboard.py?name=main';
+g_last_folder = '';
+
+// highlight the followed link (when both needed snapins are available)
+function highlight_link(link_obj, container_id) {
+    var this_snapin = document.getElementById(container_id);
+    if (container_id == 'snapin_container_wato_folders')
+        var other_snapin = document.getElementById('snapin_container_views');
+    else
+        var other_snapin = document.getElementById('snapin_container_wato_folders');
+
+    if (this_snapin && other_snapin) {
+        if (this_snapin.getElementsByClassName)
+            var links = this_snapin.getElementsByClassName('link');
+        else
+            var links = document.getElementsByClassName('link', this_snapin);
+
+        for (var i = 0; i < links.length; i++) {
+            links[i].style = 'font-weight:normal;';
+        }
+
+        link_obj.style = 'font-weight:bold;';
+    }
+}
+
+function wato_folders_clicked(link_obj, folderpath) {
+    g_last_folder = folderpath;
+    highlight_link(link_obj, 'snapin_container_wato_folders');
+    parent.frames[1].location = g_last_view + '&wato_folder=' + escape(g_last_folder);
+}
+
+function wato_views_clicked(link_obj) {
+    g_last_view = link_obj.href;
+
+    highlight_link(link_obj, 'snapin_container_views');
+
+    if (g_last_folder != '') {
+        // Navigate by using javascript, cancel following the default link
+        parent.frames[1].location = g_last_view + '&wato_folder=' + escape(g_last_folder);
+        return false;
+    } else {
+        // Makes use the url stated in href attribute
+        return true;
+    }
+}
+
+/************************************************
+ * WATO Foldertree (Standalone) snapin handling
+ *************************************************/
+
 /* Foldable Tree in snapin */
-function wato_tree_click(folderpath) {
+function wato_tree_click(link_obj, folderpath) {
     var topic  = document.getElementById('topic').value;
     var target = document.getElementById('target_' + topic).value;
 

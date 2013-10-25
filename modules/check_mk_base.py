@@ -369,7 +369,11 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_che
         else:
             table = get_snmp_table(hostname, ipaddress, oid_info)
         store_cached_checkinfo(hostname, check_type, table)
-        write_cache_file(cache_relpath, repr(table) + "\n")
+        # only write cache file in non interactive mode. Otherwise it would
+        # prevent the regular checking from getting status updates during
+        # interactive debugging, for example with cmk -nv.
+        if not opt_dont_submit:
+            write_cache_file(cache_relpath, repr(table) + "\n")
         return table
 
     # Note: even von SNMP-tagged hosts TCP based checks can be used, if

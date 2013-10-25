@@ -505,7 +505,7 @@ def ldap_get_groups(add_filt = None):
         filt = '(&%s%s)' % (filt, add_filt)
     return ldap_search(ldap_replace_macros(config.ldap_groupspec['dn']), filt, ['cn'])
 
-def ldap_user_groups(username, user_dn, attr = 'cn'):
+def ldap_user_groups(username, user_dn, attr = 'cn', nested = False):
     # When configured to convert user_ids to lower case, all user ids here are lower case.
     # Otherwise all user_ids are in the case which they are in LDAP. This should be ok
     # for this function! I removed the snippet below to reduce the number of ldap queries.
@@ -515,11 +515,12 @@ def ldap_user_groups(username, user_dn, attr = 'cn'):
     #   # so the username read from ldap might differ. Fix it here.
     #   user_dn, username = ldap_get_user(username, True)
 
-    if username in g_ldap_group_cache:
+    cache_key = '%s-%s' % (username, nested and 'n' or 'f')
+    if cache_key in g_ldap_group_cache:
         if attr == 'cn':
-            return g_ldap_group_cache[username][0]
+            return g_ldap_group_cache[cache_key][0]
         else:
-            return g_ldap_group_cache[username][1]
+            return g_ldap_group_cache[cache_key][1]
 
     # posixGroup objects use the memberUid attribute to specify the group memberships.
     # This is the username instead of the users DN. So the username needs to be used
@@ -531,7 +532,10 @@ def ldap_user_groups(username, user_dn, attr = 'cn'):
 
     # Apply configured group ldap filter and only reply with groups
     # having the current user as member
-    add_filt = '(%s=%s)' % (ldap_member_attr(), ldap.filter.escape_filter_chars(user_filter))
+    if config.ldap_connection['type'] and nested:
+        add_filt = '(member:1.2.840.113556.1.4.1941:=%s)' % ldap.filter.escape_filter_chars(user_dn)
+    else:
+        add_filt = '(%s=%s)' % (ldap_member_attr(), ldap.filter.escape_filter_chars(user_filter))
 
     # First get all groups
     groups_cn = []
@@ -540,7 +544,7 @@ def ldap_user_groups(username, user_dn, attr = 'cn'):
         groups_cn.append(group['cn'][0])
         groups_dn.append(dn)
 
-    g_ldap_group_cache.setdefault(username, (groups_cn, groups_dn))
+    g_ldap_group_cache.setdefault(cache_key, (groups_cn, groups_dn))
 
     if attr == 'cn':
         return groups_cn
@@ -604,7 +608,7 @@ def ldap_convert_simple(user_id, ldap_user, user, user_attr, attr):
     else:
         return {}
 
-def ldap_convert_mail(params, user_id, ldap_user, user):
+def ldap_convert_mail(plugin, params, user_id, ldap_user, user):
     mail = ''
     if ldap_user.get(params.get('attr', ldap_attr('mail'))):
         mail = ldap_user[params.get('attr', ldap_attr('mail'))][0].lower()
@@ -637,7 +641,7 @@ ldap_attribute_plugins['alias'] = {
     'help':  _('Populates the alias attribute of the WATO user by syncrhonizing an attribute '
                'from the LDAP user account. By default the LDAP attribute &quot;cn&quot; is used.'),
     'needed_attributes': lambda params: [ params.get('attr', ldap_attr('cn')) ],
-    'convert':           lambda params, user_id, ldap_user, user: \
+    'convert':           lambda plugin, params, user_id, ldap_user, user: \
                              ldap_convert_simple(user_id, ldap_user, user, 'alias',
                                                  params.get('attr', ldap_attr('cn'))),
     'lock_attributes':   [ 'alias' ],
@@ -653,7 +657,7 @@ ldap_attribute_plugins['alias'] = {
 # Checks wether or not the user auth must be invalidated (increasing the serial).
 # In first instance, it must parse the pw-changed field, then check wether or not
 # a date has been stored in the user before and then maybe increase the serial.
-def ldap_convert_auth_expire(params, user_id, ldap_user, user):
+def ldap_convert_auth_expire(plugin, params, user_id, ldap_user, user):
     changed_attr = params.get('attr', ldap_attr('pw_changed'))
     if not changed_attr in ldap_user:
         raise MKLDAPException(_('The "Authentication Expiration" attribute (%s) could not be fetched '
@@ -706,7 +710,7 @@ ldap_attribute_plugins['pager'] = {
                'of the WATO user accounts, which is then forwarded to Nagios and can be used'
                'for notifications. By default the LDAP attribute &quot;mobile&quot; is used.'),
     'needed_attributes': lambda params: [ params.get('attr', ldap_attr('mobile')) ],
-    'convert':           lambda params, user_id, ldap_user, user: \
+    'convert':           lambda plugin, params, user_id, ldap_user, user: \
                              ldap_convert_simple(user_id, ldap_user, user, 'pager',
                                                  params.get('attr', ldap_attr('mobile'))),
     'lock_attributes':   ['pager'],
@@ -725,10 +729,10 @@ def register_user_attribute_sync_plugins():
         ldap_attribute_plugins[attr] = {
             'title': val['valuespec'].title(),
             'help':  val['valuespec'].help(),
-            'needed_attributes': lambda params: [ params.get('attr', ldap_attr(attr)) ],
-            'convert':           lambda params, user_id, ldap_user, user: \
-                                         ldap_convert_simple(user_id, ldap_user, user, attr,
-                                                        params.get('attr', ldap_attr(attr))),
+            'needed_attributes': lambda params: [ params.get('attr', ldap_attr(attr)).lower() ],
+            'convert':           lambda plugin, params, user_id, ldap_user, user: \
+                                         ldap_convert_simple(user_id, ldap_user, user, plugin,
+                                                        params.get('attr', ldap_attr(plugin)).lower()),
             'lock_attributes': [ attr ],
             'parameters': [
                 ('attr', TextAscii(
@@ -741,10 +745,10 @@ def register_user_attribute_sync_plugins():
 
 register_user_attribute_sync_plugins()
 
-def ldap_convert_groups_to_contactgroups(params, user_id, ldap_user, user):
+def ldap_convert_groups_to_contactgroups(plugin, params, user_id, ldap_user, user):
     groups = []
     # 1. Fetch CNs of all LDAP groups of the user (use group_dn, group_filter)
-    ldap_groups = ldap_user_groups(user_id, ldap_user['dn'])
+    ldap_groups = ldap_user_groups(user_id, ldap_user['dn'], nested = params.get('nested', False))
 
     # 2. Fetch all existing group names in WATO
     cg_names = load_group_information().get("contact", {}).keys()
@@ -759,20 +763,32 @@ ldap_attribute_plugins['groups_to_contactgroups'] = {
                'contactgroup must match the common name (cn) of the LDAP group.'),
     'convert':           ldap_convert_groups_to_contactgroups,
     'lock_attributes':   ['contactgroups'],
-    'no_param_txt': _('Add user to all contactgroups where the common name matches the group name.'),
+    'parameters': [
+        ('nested', FixedValue(
+                title    = _('Handle nested group memberships (Active Directory only at the moment)'),
+                help     = _('Once you enable this option, this plugin will not only handle direct '
+                             'group memberships, instead it will also dig into nested groups and treat '
+                             'the members of those groups as contact group members as well. Please mind '
+                             'that this feature might increase the execution time of your LDAP sync.'),
+                value    = True,
+                totext   = _('Nested group memberships are resolved'),
+            )
+        )
+    ],
 }
 
-def ldap_convert_groups_to_roles(params, user_id, ldap_user, user):
+def ldap_convert_groups_to_roles(plugin, params, user_id, ldap_user, user):
     groups = []
     # 1. Fetch DNs of all LDAP groups of the user
-    ldap_groups = [ g.lower() for g in ldap_user_groups(user_id, ldap_user['dn'], 'dn') ]
+    ldap_groups = [ g.lower() for g in ldap_user_groups(user_id, ldap_user['dn'],
+                                     attr = 'dn', nested = params.get('nested', False)) ]
 
     # 2. Load default roles from default user profile
     roles = config.default_user_profile['roles'][:]
 
     # 3. Loop all roles mentioned in params (configured to be synchronized)
     for role_id, dn in params.items():
-        if dn.lower() in ldap_groups and role_id not in roles:
+        if isinstance(dn, str) and dn.lower() in ldap_groups and role_id not in roles:
             roles.append(role_id)
 
     return {'roles': roles}
@@ -788,6 +804,19 @@ def ldap_list_roles_with_group_dn():
             size  = 80,
             enforce_suffix = ldap_replace_macros(config.ldap_groupspec.get('dn', '')),
         )))
+
+    elements.append(
+        ('nested', FixedValue(
+                title    = _('Handle nested group memberships (Active Directory only at the moment)'),
+                help     = _('Once you enable this option, this plugin will not only handle direct '
+                             'group memberships, instead it will also dig into nested groups and treat '
+                             'the members of those groups as contact group members as well. Please mind '
+                             'that this feature might increase the execution time of your LDAP sync.'),
+                value    = True,
+                totext   = _('Nested group memberships are resolved'),
+            )
+        )
+    )
     return elements
 
 ldap_attribute_plugins['groups_to_roles'] = {
@@ -882,7 +911,7 @@ def ldap_sync(add_to_changelog, only_username):
 
         # Gather config from convert functions of plugins
         for key, params in config.ldap_active_plugins.items():
-            user.update(ldap_attribute_plugins[key]['convert'](params or {}, user_id, ldap_user, user))
+            user.update(ldap_attribute_plugins[key]['convert'](key, params or {}, user_id, ldap_user, user))
 
         if not mode_create and user == users[user_id]:
             continue # no modification. Skip this user.

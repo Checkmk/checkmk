@@ -3143,15 +3143,53 @@ register_check_parameters(
     subgroup_environment,
     "hw_fans",
     _("FAN speed of Hardware devices"),
-    Tuple(
-        help = _("Levels for the FAN speed of a hardware device like a switch"),
+    Dictionary(
         elements = [
-            Integer(title = _("warning if below"), unit = u"rpm", default_value = 3000),
-            Integer(title = _("critical if below"), unit = u"rpm", default_value = 2500),
-        ]),
+            ("lower",
+            Tuple(
+                help = _("Lower levels for the FAN speed of a hardware device"),
+                title = _("Lower levels"),
+                elements = [
+                    Integer(title = _("warning if below"), unit = u"rpm"),
+                    Integer(title = _("critical if below"), unit = u"rpm"),
+                ]),
+            ),
+            ( "upper",
+            Tuple(
+                help = _("Upper levels for the FAN speed of a hardware device"),
+                title = _("Upper levels"),
+                elements = [
+                    Integer(title = _("warning if above"), unit = u"rpm", default_value = 8000),
+                    Integer(title = _("critical if above"), unit = u"rpm", default_value = 8400),
+                ]),
+            ),
+        ],
+        optional_keys = ["upper"],
+    ),
     TextAscii(
         title = _("Fan Name"),
         help = _("The identificator of the fan.")),
+    "first"
+)
+
+register_check_parameters(
+    subgroup_os,
+    "pf_used_states",
+    _("Number of used states of OpenBSD PF engine"),
+    Dictionary(
+        elements = [
+            ("used",
+            Tuple(
+                title = _("Limits for the number of used states"),
+                elements = [
+                    Integer(title = _("warning if above")),
+                    Integer(title = _("critical if above")),
+                ]),
+            ),
+        ],
+        optional_keys = [None],
+    ),
+    None,
     "first"
 )
 

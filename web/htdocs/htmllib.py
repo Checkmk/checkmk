@@ -163,11 +163,13 @@ class html:
         else:
             enctype = ''
         if onsubmit:
-            onsubmit = ' onsubmit="%s"' % onsubmit
+            onsubmit = ' onsubmit="%s"' % self.attrencode(onsubmit)
         else:
             onsubmit = ''
+        enc_name = self.attrencode(name)
         self.write('<form id="form_%s" name="%s" class="%s" action="%s" method="%s"%s%s>\n' %
-                   (name, name, name, action, method, enctype, onsubmit))
+                   (enc_name, enc_name, enc_name, self.attrencode(action), self.attrencode(method),
+                    enctype, onsubmit))
         self.hidden_field("filled_in", name)
         if add_transid:
             self.hidden_field("_transid", str(self.fresh_transid()))
@@ -199,7 +201,7 @@ class html:
 
     def hidden_field(self, var, value, id = None, add_var = False):
         if value != None:
-            id = id and ' id="%s"' % id or ''
+            id = id and ' id="%s"' % self.attrencode(id) or ''
             self.write("<input type=\"hidden\" name=\"%s\" value=\"%s\"%s />" %
                                 (self.attrencode(var), self.attrencode(value), id))
             if add_var:
@@ -254,7 +256,7 @@ class html:
 
     def image_button(self, varname, title, cssclass = ''):
         if not self.mobile:
-            self.write('<label for="%s" class="image_button">' % varname)
+            self.write('<label for="%s" class="image_button">' % self.attrencode(varname))
         self.raw_button(varname, title, cssclass)
         if not self.mobile:
             self.write('</label>')
@@ -346,6 +348,7 @@ class html:
         self.context_buttons_open = False
 
     def context_button(self, title, url, icon=None, hot=False, id=None, bestof=None, hover_title='', fkey=None):
+        title = self.attrencode(title)
         display = "block"
         if bestof:
             counts = self.get_button_counts()
@@ -360,22 +363,23 @@ class html:
             self.begin_context_buttons()
 
         if icon:
-            title = '<img src="images/icon_%s.png">%s' % (icon, title)
+            title = '<img src="images/icon_%s.png">%s' % (self.attrencode(icon), self.attrencode(title))
         if id:
-            idtext = " id='%s'" % id
+            idtext = " id='%s'" % self.attrencode(id)
         else:
             idtext = ""
-        self.write('<div%s style="display:%s" class="contextlink%s%s" ' % (idtext, display, hot and " hot" or "", (fkey and self.keybindings_enabled) and " button" or ""))
+        self.write('<div%s style="display:%s" class="contextlink%s%s" ' %
+            (idtext, display, hot and " hot" or "", (fkey and self.keybindings_enabled) and " button" or ""))
         self.context_button_hover_code(hot and "_hot" or "")
         self.write('>')
-        self.write('<a href="%s"' % url)
+        self.write('<a href="%s"' % self.attrencode(url))
         if hover_title:
-            self.write(' title="%s"' % hover_title)
+            self.write(' title="%s"' % self.attrencode(hover_title))
         if bestof:
             self.write(' onclick="count_context_button(this); document.location=this.href; " ')
         if fkey and self.keybindings_enabled:
             title += '<div class=keysym>F%d</div>' % fkey
-            self.add_keybinding([html.F1 + (fkey - 1)], "document.location='%s';" % url)
+            self.add_keybinding([html.F1 + (fkey - 1)], "document.location='%s';" % self.attrencode(url))
         self.write('>%s</a></div>\n' % title)
 
     def context_button_hover_code(self, what):
@@ -481,7 +485,8 @@ class html:
         for value, text in options:
             if value == None: value = ""
             sel = value == current and " selected" or ""
-            self.write("<option value=\"%s\"%s>%s</option>\n" % (value, sel, text))
+            self.write("<option value=\"%s\"%s>%s</option>\n" %
+                (self.attrencode(value), sel, self.attrencode(text)))
         self.write("</select>\n")
         if varname:
             self.form_vars.append(varname)
@@ -494,7 +499,8 @@ class html:
             if value == None: value = ""
             sel = value == current and " selected" or ""
             self.write('<option style="background-image:url(images/icon_%s.png);" '
-                       'value=\"%s\"%s>%s</option>\n' % (icon, value, sel, text))
+                       'value=\"%s\"%s>%s</option>\n' %
+                        (icon, self.attrencode(value), sel, self.attrencode(text)))
         self.write("</select>\n")
         if varname:
             self.form_vars.append(varname)
@@ -516,12 +522,12 @@ class html:
             checked = self.var(varname) == value
         checked_text = checked and " checked" or ""
         if label:
-            id = "rb_%s_%s" % (varname, value)
+            id = "rb_%s_%s" % (varname, self.attrencode(value))
             idtxt = ' id="%s"' % id
         else:
             idtxt = ""
         self.write("<input type=radio name=%s value=\"%s\"%s%s>\n" %
-                      (varname, value, checked_text, idtxt))
+                      (varname, self.attrencode(value), checked_text, idtxt))
         if label:
             self.write('<label for="%s">%s</label>\n' % (id, label))
         self.form_vars.append(varname)

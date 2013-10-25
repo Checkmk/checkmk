@@ -111,9 +111,9 @@ def render_views():
                     html.begin_foldable_container("views", topic, False, topic, indent=True)
                     first = False
                 if topic == _('Dashboards'):
-                    bulletlink(title, 'dashboard.py?name=%s' % name)
+                    bulletlink(title, 'dashboard.py?name=%s' % name, onclick = "return wato_views_clicked(this)")
                 else:
-                    bulletlink(title, "view.py?view_name=%s" % name)
+                    bulletlink(title, "view.py?view_name=%s" % name, onclick = "return wato_views_clicked(this)")
         if not first: # at least one item rendered
             html.end_foldable_container()
 

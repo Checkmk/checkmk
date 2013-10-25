@@ -1,0 +1,112 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example Agent Output:
+# GENUA-MIB:
+
+#.1.3.6.1.4.1.3137.2.1.2.1.1.9 = INTEGER: 9
+#.1.3.6.1.4.1.3137.2.1.2.1.1.10 = INTEGER: 10
+#.1.3.6.1.4.1.3137.2.1.2.1.2.9 = STRING: "carp0"
+#.1.3.6.1.4.1.3137.2.1.2.1.2.10 = STRING: "carp1"
+#.1.3.6.1.4.1.3137.2.1.2.1.3.9 = INTEGER: 5
+#.1.3.6.1.4.1.3137.2.1.2.1.3.10 = INTEGER: 5
+#.1.3.6.1.4.1.3137.2.1.2.1.4.9 = INTEGER: 2
+#.1.3.6.1.4.1.3137.2.1.2.1.4.10 = INTEGER: 2
+#.1.3.6.1.4.1.3137.2.1.2.1.7.9 = INTEGER: 2
+#.1.3.6.1.4.1.3137.2.1.2.1.7.10 = INTEGER: 2
+
+
+def inventory_genua_state(info):
+    # remove empty elements due to two alternative enterprise ids in snmp_info
+    info = filter(None, info)
+    if info[0]:
+        numifs = 0
+        for ifIndex, ifName, ifType, ifLinkState, ifCarpState in info[0]:
+            if ifCarpState in [ "0", "1", "2" ]:
+                numifs += 1
+        # inventorize only if we find at least two carp interfaces
+        if numifs > 1:
+            return [(None, None)]
+    return None
+
+def genua_state_str(st):
+    names = {
+        '0' : 'init',
+        '1' : 'backup',
+        '2' : 'master',
+            }
+    return names.get(st, st)
+
+def check_genua_state(item, _no_params, info):
+
+    # remove empty elements due to two alternative enterprise ids in snmp_info
+    info = filter(None, info)
+    if not info[0]:
+        return(3, "Invalid Output from Agent")
+
+    state = 0
+    carp_info = []
+
+    for ifIndex, ifName, ifType, ifLinkState, ifCarpState in info[0]:
+        if ifType == "6":
+            carp_info.append((ifIndex, ifName, ifType, ifLinkState, ifCarpState))
+
+    # critical if the carp interfaces dont have the same state
+    carp_states = [ 0, 0, 0 ]
+    for i in range (0, len(carp_info)):
+        carp_states[int(carp_info[i][4])] += 1
+        if carp_info[0][4] != carp_info[i][4]:
+            state = 2
+
+    output = "Number of carp IFs in states "
+    for i in ('0', '1', '2'):
+        output += genua_state_str(i)
+        output += ":%d " % carp_states[int(i)]
+
+    return(state, output)
+
+check_info['genua_state_correlation'] = {
+    "inventory_function" : inventory_genua_state,
+    "check_function"     : check_genua_state,
+    "service_description": "Carp Correlation",
+    "has_perfdata"       : False,
+    "snmp_info"          : [( ".1.3.6.1.4.1.3717.2.1.2",[
+                                "1.1", # "ifIndex"
+                                "1.2", # "ifName"
+                                "1.3", # "ifType"
+                                "1.4", # "ifLinkState"
+                                "1.7", # "ifCarpState"
+                          ]),
+                          ( ".1.3.6.1.4.1.3137.2.1.2",[
+                                "1.1", # "ifIndex"
+                                "1.2", # "ifName"
+                                "1.3", # "ifType"
+                                "1.4", # "ifLinkState"
+                                "1.7", # "ifCarpState"
+                          ])],
+    "snmp_scan_function" : lambda oid: "genuscreen" in oid(".1.3.6.1.2.1.1.1.0").lower()
+    #"snmp_scan_function" : lambda oid: oid(".1.3.6.1.4.1.3717.2.1.2.1.7") != None
+}

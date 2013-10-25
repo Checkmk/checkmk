@@ -1,9 +1,16 @@
 Title: WATO: Hostlist in folder: enable checkboxes -> all should be checked
 Component: wato
-State: open
+State: done
 Date: 2013-10-09 20:39:38
 Targetversion: 1.4.0
 Class: nastiness
 
 When you enable the checkboxes in a WATO folder host list,
 then all boxes should initially be checked.
+
+Better solution: readd the bulk buttons also when there
+are no checkboxes at all.
+
+
+2013-10-23 03:05:33: changed state open -> done
+Bulk operations now also work without checkboxes

@@ -1,0 +1,10 @@
+Title: Part of services missing after save in WATO
+Component: wato
+State: open
+Date: 2013-10-25 16:26:45
+Targetversion: 1.2.2
+Class: bug
+
+When you save the service list of a host in WATO then sometimes
+some checks are not being saved and displayed as "missing" the
+next time you enter the services list.

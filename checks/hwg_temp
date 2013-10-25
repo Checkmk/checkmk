@@ -58,9 +58,9 @@ def check_hwg_temp(item, params, info):
                 state = 2
             elif current_state >= warn:
                 state = 1
-            elif status in (4, 2):
+            eelif status in ('4', '2'):
                 state = 1
-            elif status == 3:
+            elif status in('0', '3', '5'):
                 state = 2
 
             perfdata = [ ("temp", current, warn, crit, 0 ) ]

@@ -62,6 +62,7 @@
 
     Livestatus:
     * livestatus: fixed incorrect output formatting of comments_with_info column
+    * table statehist: fixed memory leak
 
 1.2.2p2:
     Core:

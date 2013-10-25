@@ -115,7 +115,7 @@ struct HostServiceState {
 
 extern Store *g_store;
 
-#define CLASSMASK_STATEHIST 0xC2
+#define CLASSMASK_STATEHIST 0xC6
 
 // Debug information
 int total_update_calls = 0;

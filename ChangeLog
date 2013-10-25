@@ -112,6 +112,7 @@
     * table statehist: no longer computes an unmonitored state for hosts and
                        services on certain instances. 
                        (showed up as no hosts/services in the multisite gui)
+    * table statehist: fixed memory leak
 
 1.2.3i4:
     Core:

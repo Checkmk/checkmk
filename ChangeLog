@@ -111,6 +111,9 @@
     Livestatus:
     * Removed "livecheck". It never was really stable. Nagios4 has something
       similar built in. And also the Check_MK Micro Core.
+    * table statehist: no longer computes an unmonitored state for hosts and
+                       services on certain instances. 
+                       (showed up as no hosts/services in the multisite gui)
 
 1.2.3i4:
     Core:

@@ -67,15 +67,13 @@ def saverfloat(f):
     else:
         return float(f)
 
-
-
 #
 # defining and collection input parameters
 #
 short_options = 'hou:i:p:d:n:H:P:w:c:v'
 long_options  = [
     'help', 'user=', 'password=', 'dbms=', 'name=', 'warning=', 'critical=', 'hostname=',
-    'port=', 'debug', 'verbose', 'inputvars='
+    'port=', 'debug', 'verbose', 'procedures', 'inputvars='
 ]
 
 try:

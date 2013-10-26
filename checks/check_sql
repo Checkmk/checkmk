@@ -24,6 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+#active_checks['sql'] = [
+#  ( {'dbms': 'postgres', 'description': u'SQL Test', 'user': 'golla', 'sql': 'testerer', 'password': 'toor', 'procedure': {'useprocs': True, 'input': '1223,456'}, 'name': 'messpc'}, [], ALL_HOSTS ),
+#  ] + active_checks['sql']
+
 def check_sql_arguments(params):
     args  = " --hostname '$HOSTADDRESS$'"
     args += " --dbms %s" % quote_shell_string(params["dbms"])
@@ -33,6 +37,13 @@ def check_sql_arguments(params):
 
     if "port" in params:
         args += " --port %s" % params["port"]
+
+    if "procedure" in params:
+        if params["procedure"]["useprocs"] == True:
+            args += " --procedure" 
+            if params["procedure"]["input"]:
+                args += " --inputvars %s" \
+                    % quote_shell_string(params["procedure"]["input"])
 
     if "levels" in params:
         upper = params["levels"]

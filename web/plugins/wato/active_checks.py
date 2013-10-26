@@ -229,11 +229,13 @@ register_rule(group,
     Dictionary(
         title = _("Check SQL Database"),
         help = _("This check connects to the specified database, sends a custom SQL-statement "
-                 "and checks that the result has a defined format containing three columns, a "
-                 "number, a text, and performance data. Upper or lower levels may be defined "
-                 "here. If they are not defined the number is taken as the state of the check."
+                 "or starts a procedure, and checks that the result has a defined format "
+                 "containing three columns, a number, a text, and performance data. Upper or "
+                 "lower levels may be defined here.  If they are not defined the number is taken "
+                 "as the state of the check.  If a procedure is used, input parameters of the "
+                 "procedures may by given as comma separated list. "
                  "This check uses the active check <tt>check_sql</tt>."),
-        optional_keys = [ "levels", "levels_low", "perfdata", "port" ],
+        optional_keys = [ "levels", "levels_low", "perfdata", "port", "procedure" ],
         elements = [
             ( "description",
               TextUnicode(title = _("Service Description"),
@@ -259,10 +261,6 @@ register_rule(group,
                TextAscii(title = _("Database Name"), allow_empty = False,
                       help = _('The name of the database on the DBMS'))
             ),
-            ( "sql",
-              TextAreaUnicode(title = _("SQL-Statement"), allow_empty = False,
-                      help = _('The SQL-Statement which is sent to the DBMS'))
-            ),
             ( "user",
                TextAscii(title = _("Database User"), allow_empty = False,
                       help = _('The username used to connect to the database'))
@@ -270,6 +268,35 @@ register_rule(group,
             ( "password",
                Password(title = _("Database Password"), allow_empty = False,
                       help = _('The password used to connect to the database'))
+            ),
+            ( "sql",
+              TextAscii(title = _("SQL-statement or procedure name"), allow_empty = False,
+                      help = _('The SQL-statement or procedure name which is executed on the DBMS'))
+            ),
+            ( "procedure",
+            Dictionary(
+                optional_keys = [ "input" ],
+                title = _("Use procedure call instead of sql statement"),
+                help = _("If you activate this option, a name of a stored "
+                    "procedure is used instead of an SQL statement. "
+                    "The procedure should return one output variable, "
+                    "which is evaluated in the check. If input parameters "
+                    "are required, they may be specified below."),
+                elements = [
+                        ("useprocs",
+                        FixedValue(
+                            value = True,
+                            totext = _("procedure call is used"),
+                        )),
+                        ("input",
+                        TextAscii(
+                            title = _("Input Parameters"),
+                            allow_empty = True,
+                            help = _("Input parameters, if required by the database procedure. "
+                                     "If several parameters are required, use commas to separate them."),
+                        )),
+                    ]
+                ),
             ),
             ( "levels",
             Tuple(

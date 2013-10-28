@@ -11311,7 +11311,7 @@ def mode_edit_rule(phase, new = False):
 
     varname = html.var("varname")
     rulespec = g_rulespecs[varname]
-    back_mode = html.var('back_mode')
+    back_mode = html.var('back_mode', 'edit_ruleset')
 
     if phase == "title":
         return _("%s rule %s") % (new and _("New") or _("Edit"), rulespec["title"])

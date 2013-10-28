@@ -4,5 +4,5 @@ rem directly supported by the normal ps check.
 
 echo ^<^<^<ps:sep^(44^)^>^>^>
 echo [wmic process]
-wmic process get ProcessId,name,pagefileusage,virtualsize,workingsetsize,usermodetime,kernelmodetime,ThreadCount /format:csv
+wmic process get ProcessId,name,pagefileusage,virtualsize,workingsetsize,usermodetime,kernelmodetime,ThreadCount,HandleCount /format:csv
 echo [wmic process end]

@@ -25,3 +25,12 @@ description:
 
 inventory:
  On each VM one check is generated.
+
+[parameters]
+parameters (dict): A dictionary with the following keys
+{"heartbeat_missing"}: vsphere state: red (see above)
+{"heartbeat_intermittend"}: vsphere state: yello (see above)
+{"heartbeat_no_tools"}: vsphere state: gray (see above)
+{"heartbeat_ok"}: vsphere state: gree (see above)
+
+ The value of each keys represents the alert level: 0(OK), 1(WARN), 2(CRIT), 3(UNKNOWN)

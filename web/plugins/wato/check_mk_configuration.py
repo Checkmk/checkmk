@@ -1390,8 +1390,8 @@ register_rule(group,
         title = _("Enable/disable passive checks for services"),
         help = _("This setting allows you to disable the processing of passiv check results for a "
                  "service."),
-        choices = [ ("1", _("Enable processing of passiv check results")),
-                    ("0", _("Disable processing of passiv check results")) ],
+        choices = [ ("1", _("Enable processing of passive check results")),
+                    ("0", _("Disable processing of passive check results")) ],
         ),
         itemtype = "service")
 

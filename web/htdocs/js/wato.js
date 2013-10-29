@@ -705,3 +705,50 @@ function wato_toggle_move_folder(event, oButton) {
         event.returnValue = false;
     return false;
 }
+
+// .--Host Diag-----------------------------------------------------------.
+// |              _   _           _     ____  _                           |
+// |             | | | | ___  ___| |_  |  _ \(_) __ _  __ _               |
+// |             | |_| |/ _ \/ __| __| | | | | |/ _` |/ _` |              |
+// |             |  _  | (_) \__ \ |_  | |_| | | (_| | (_| |              |
+// |             |_| |_|\___/|___/\__| |____/|_|\__,_|\__, |              |
+// |                                                  |___/               |
+// +----------------------------------------------------------------------+
+
+function handle_host_diag_result(ident, response_text) {
+    var img   = document.getElementById(ident + '_img');
+    var log   = document.getElementById(ident + '_log');
+    var retry = document.getElementById(ident + '_retry');
+
+    if (response_text[0] == "0")
+        img.src = "images/icon_success.gif";
+    else
+        img.src = "images/icon_failed.gif";
+
+    log.innerHTML = response_text.substr(1).replace(/\n/g, "<br>\n");
+
+    retry.src = "images/icon_retry.gif";
+    retry.style.display = 'inline';
+}
+
+function start_host_diag_test(ident, hostname) {
+    var log   = document.getElementById(ident + '_log');
+    var img   = document.getElementById(ident + '_img');
+    var retry = document.getElementById(ident + '_retry');
+
+    retry.style.display = 'none';
+
+    var vars = '';
+    vars = '&ipaddress=' + escape(document.getElementsByName('vs_host_p_ipaddress')[0].value);
+    vars += '&snmp_community=' + escape(document.getElementsByName('vs_host_p_snmp_community')[0].value);
+    vars += '&agent_port=' + escape(document.getElementsByName('vs_rules_p_agent_port')[0].value);
+    vars += '&snmp_timeout=' + escape(document.getElementsByName('vs_rules_p_snmp_timeout')[0].value);
+    vars += '&snmp_retries=' + escape(document.getElementsByName('vs_rules_p_snmp_retries')[0].value);
+    vars += '&datasource_program=' + escape(document.getElementsByName('vs_rules_p_datasource_program')[0].value);
+
+    img.src = "images/icon_loading.gif";
+    log.innerHTML = "...";
+    get_url("wato.py?mode=diag_host&host=" + escape(hostname) + "&_test=" + escape(ident)
+            + '&_transid=-1' + vars,
+              handle_host_diag_result, ident);
+}

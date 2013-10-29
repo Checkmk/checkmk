@@ -633,6 +633,12 @@ void TableStateHistory::answerQuery(Query *query)
         process(query, hst);
         it_hst++;
     }
+    it_hst = state_info.begin();
+    while (it_hst != state_info.end()) {
+        delete it_hst->second;
+        it_hst++;
+    }
+
     g_store->logCache()->unlockLogCache();
 }
 

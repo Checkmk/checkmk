@@ -72,6 +72,8 @@
     * windows_tasks: New check to  monitor the Windows Task Scheduler
     * sensatronics_temp: New check for Sensatronic E4 Temperatur Sensor
     * akcp_sensor_drycontact: New Check for AKCP drycontact Sensors
+    * esx_vsphere_vm.heartbeat: Heartbeat status alert level now configurable
+    * ps:  new configuration option: handle_count (windows only)
     * FIX: Windows agent: gracefully handle garbled logstate.txt
     * FIX: esx_vsphere_counters: added missing ramdisk type upgradescratch
     * FIX: esx_vsphere_hostsystem: fixed bug in handling of params
@@ -102,6 +104,12 @@
     * Disabled replication type "peer" in site editor.
     * Added "permanently ignore" button to inventory services dialog which 
       links directly to the disabled services view
+    * Added dignose page linked from host edit dialog. This can be used to test
+      connection capabilities of hosts
+    * The rule "Process inventory" now offers the same configuration options 
+      as its manual check equivalent "State and count of processes"
+    * New configuration option handle_count (windows only) in the rules
+      "Process inventory" and "State and count of processes"
     * FIX: correct display of number of hosts in bulk inventory
     * FIX: nailed down ".siteid" exception when added new site
     * FIX: fixed setting for locking mode from 'ait' to 'wait'
@@ -630,6 +638,10 @@
     Event Console:
     * FIX: apply rewriting of application/hostname also when cancelling events
     * FIX: check_mkevents now uses case insensitive host name matching
+
+    Livestatus:
+    * livestatus: fixed incorrect output formatting of comments_with_info column
+    * table statehist: fixed memory leak
 
 1.2.2p2:
     Core:

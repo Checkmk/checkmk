@@ -195,8 +195,8 @@ try:
             sys.stderr.write("SQL Statement: %s\n" % opt_sql)
     if opt_procedure:
         outvar = cursor.var(cx_Oracle.STRING)
-        opt_input.append("outvar")
-        cursor.callproc(opt_sql, opt_input)
+        #opt_input.append("outvar")
+        cursor.callproc(opt_sql, (outvar,))
         result =  outvar.getvalue()
     else:
         cursor.execute(opt_sql)
@@ -228,7 +228,7 @@ try:
         sys.exit(3)
 
     #row = result[0]
-    row = result.split(" ")
+    row = result.split(",")
     number = float(row[0])
     text = str(row[1])
 

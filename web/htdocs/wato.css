@@ -1126,6 +1126,18 @@ table.multisite_conn_method td input {
 |                                                  |___/               |
 +---------------------------------------------------------------------*/
 
+.wato .diag_host div.success {
+    margin-top: 0;
+}
+
+.wato .diag_host td > h3 {
+    margin-top: 0;
+}
+
+.wato .diag_host table.nform {
+    width: 212px;
+}
+
 .wato .diag_host .test {
     margin-bottom:15px;
 }
@@ -1140,6 +1152,14 @@ table.multisite_conn_method td input {
     background-color: #fff;
     /* below resize option is css3 */
     resize:both;
+}
+
+.wato .diag_host table.test td {
+    padding: 0;
+}
+
+.wato .diag_host table.test td.icons {
+    padding: 2px;
 }
 
 .wato .diag_host td.icons div {

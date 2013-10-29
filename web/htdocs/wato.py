@@ -2265,8 +2265,8 @@ def mode_diag_host(phase):
         ('ping',          _('Ping')),
         ('agent',         _('Agent')),
         ('snmpv1',        _('SNMPv1')),
-        ('snmpv2',        _('SNMPv2')),
-        ('snmpv2_nobulk', _('SNMPv2 (without Bulkwalk)'))
+        ('snmpv2',        _('SNMPv2c')),
+        ('snmpv2_nobulk', _('SNMPv2c (without Bulkwalk)'))
     ]
 
     host = g_folder[".hosts"].get(hostname)
@@ -2324,9 +2324,8 @@ def mode_diag_host(phase):
     html.write('<div class="diag_host">')
     html.write('<table><tr><td>')
     html.begin_form('diag_host', method = "POST")
-    forms.header(_('Host Diagnostic'))
+    forms.header(_('Host Properties'))
 
-    #value = current_settings.get(var, valuespec.default_value())
     forms.section(legend = False)
     vs_host.render_input("vs_host", host)
     html.help(vs_host.help())
@@ -2335,24 +2334,23 @@ def mode_diag_host(phase):
 
     html.write('<div style="margin-bottom:10px">')
     html.button("_save", _("Save"))
-    html.button("_try",  _("Test"))
     html.write('</div>')
 
     forms.header(_('Options'))
 
-    #value = current_settings.get(var, valuespec.default_value())
     value = {}
     forms.section(legend = False)
     vs_rules.render_input("vs_rules", value)
     html.help(vs_rules.help())
     forms.end()
 
+    html.button("_try",  _("Test"))
+
     html.hidden_fields()
     html.end_form()
 
     html.write('</td><td style="padding-left:10px;">')
 
-    html.write('<h2>' + _('Diagnostics') + '</h2>')
     if not html.var('_try'):
         html.message(_('You can diagnose the connection to a specific host using this dialog. '
                        'You can either test wether your current configuration is still working '
@@ -2409,6 +2407,10 @@ def mode_inventory(phase, firsttime):
                             make_link([("mode", "folder")]), "back")
         html.context_button(_("Host properties"),
                             make_link([("mode", "edithost"), ("host", hostname)]), "host")
+        if ".nodes" not in host:
+            # only display for non cluster hosts
+            html.context_button(_("Diagnose"),
+                  make_link([("mode", "diag_host"), ("host", hostname)]), "diagnose")
         html.context_button(_("Full Scan"), html.makeuri([("_scan", "yes")]))
 
     elif phase == "action":

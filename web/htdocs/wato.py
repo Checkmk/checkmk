@@ -1986,6 +1986,9 @@ def mode_edithost(phase, new, cluster):
                   make_link([("mode", "inventory"), ("host", hostname)]), "services")
             html.context_button(_("Rulesets"),
                   make_link([("mode", "ruleeditor"), ("host", hostname), ("local", "on")]), "rulesets")
+            if not cluster:
+                html.context_button(_("Diagnose"),
+                      make_link([("mode", "diag_host"), ("host", hostname)]), "diagnose")
 
     elif phase == "action":
         if not new and html.var("delete"): # Delete this host
@@ -2040,6 +2043,7 @@ def mode_edithost(phase, new, cluster):
 
         if hostname:
             go_to_services = html.var("services")
+            go_to_diag     = html.var("diag_host")
             if html.check_transaction():
                 if new:
                     g_folder[".hosts"][hostname] = host
@@ -2070,9 +2074,21 @@ def mode_edithost(phase, new, cluster):
                 else:
                     create_result = 'folder'
 
-                return go_to_services and "firstinventory" or create_result
+                if go_to_services:
+                    return "firstinventory"
+                elif go_to_diag:
+                    html.set_var("_try", "1")
+                    return "diag_host"
+                else:
+                    return create_result
             else:
-                return go_to_services and "inventory" or "folder"
+                if go_to_services:
+                    return "inventory"
+                elif go_to_diag:
+                    html.set_var("_try", "1")
+                    return "diag_host"
+                else:
+                    return "folder"
 
     else:
         # Show outcome of host validation. Do not validate new hosts
@@ -2130,6 +2146,8 @@ def mode_edithost(phase, new, cluster):
         if not g_folder.get(".lock_hosts"):
             html.image_button("services", _("Save &amp; go to Services"), "submit")
             html.image_button("save", _("Save &amp; Finish"), "submit")
+            if not cluster:
+                html.image_button("diag_host", _("Save &amp; Test"), "submit")
             if not new:
                 html.image_button("delete", _("Delete host!"), "submit")
         html.hidden_fields()
@@ -2156,6 +2174,207 @@ def delete_host_after_confirm(delname):
         return ""
     else:
         return None # browser reload
+
+#.
+#   .-Host Diag------------------------------------------------------------.
+#   |              _   _           _     ____  _                           |
+#   |             | | | | ___  ___| |_  |  _ \(_) __ _  __ _               |
+#   |             | |_| |/ _ \/ __| __| | | | | |/ _` |/ _` |              |
+#   |             |  _  | (_) \__ \ |_  | |_| | | (_| | (_| |              |
+#   |             |_| |_|\___/|___/\__| |____/|_|\__,_|\__, |              |
+#   |                                                  |___/               |
+#   +----------------------------------------------------------------------+
+#   | Verify or find out a hosts agent related configuration.              |
+#   '----------------------------------------------------------------------'
+
+def mode_diag_host(phase):
+    hostname = html.var("host")
+    if not hostname:
+        raise MKGeneralException(_('The hostname is missing.'))
+
+    if phase == 'title':
+        return _('Host Diagnostic')
+
+    elif phase == 'buttons':
+        global_buttons()
+        html.context_button(_("Host Properties"),
+                            make_link([("mode", "edithost"), ("host", hostname)]), "back")
+        return
+
+    vs_host = Dictionary(
+        required_keys = ['hostname'],
+        elements = [
+            ('hostname', FixedValue(hostname,
+                title = _('Hostname'),
+                allow_empty = False
+            )),
+            ('ipaddress', IPv4Address(
+                title = _('IP address'),
+                allow_empty = False
+            )),
+            ('snmp_community', TextAscii(
+                title = _("SNMP Community"),
+                allow_empty = False
+            )),
+        ]
+    )
+
+    vs_rules = Dictionary(
+        optional_keys = False,
+        elements = [
+            ('agent_port', Integer(
+                minvalue = 1,
+                maxvalue = 65535,
+                default_value = 6556,
+                title = _("Check_MK Agent Port (<a href=\"%s\">Rules</a>)") % \
+                    make_link([('mode', 'edit_ruleset'), ('varname', 'agent_ports')]),
+                help = _("This variable allows to specify the TCP port to "
+                         "be used to connect to the agent on a per-host-basis.")
+            )),
+            ('snmp_timeout', Integer(
+                title = _("SNMP-Timeout (<a href=\"%s\">Rules</a>)") % \
+                    make_link([('mode', 'edit_ruleset'), ('varname', 'snmp_timing')]),
+                help = _("A request is sent to the SNMP daemon, than wait up to this "
+                         "number of seconds until retrying."),
+                default_value = 1,
+                minvalue = 1,
+                maxvalue = 60,
+                unit = _("sec"),
+            )),
+            ('snmp_retries', Integer(
+                title = _("SNMP-Retries (<a href=\"%s\">Rules</a>)") % \
+                    make_link([('mode', 'edit_ruleset'), ('varname', 'snmp_timing')]),
+                default_value = 5,
+                minvalue = 0,
+                maxvalue = 50,
+            )),
+            ('datasource_program', TextAscii(
+                title = _("Datasource Program (<a href=\"%s\">Rules</a>)") % \
+                    make_link([('mode', 'edit_ruleset'), ('varname', 'datasource_programs')]),
+                help = _("For agent based checks Check_MK allows you to specify an alternative "
+                         "program that should be called by Check_MK instead of connecting the agent "
+                         "via TCP. That program must output the agent's data on standard output in "
+                         "the same format the agent would do. This is for example useful for monitoring "
+                         "via SSH. The command line may contain the placeholders <tt>&lt;IP&gt;</tt> and "
+                         "<tt>&lt;HOST&gt;</tt>.")
+            ))
+        ]
+    )
+
+    tests = [
+        ('ping',          _('Ping')),
+        ('agent',         _('Agent')),
+        ('snmpv1',        _('SNMPv1')),
+        ('snmpv2',        _('SNMPv2')),
+        ('snmpv2_nobulk', _('SNMPv2 (without Bulkwalk)'))
+    ]
+
+    host = g_folder[".hosts"].get(hostname)
+
+    if not host:
+        raise MKGeneralException(_('The given host does not exist.'))
+    if ".nodes" in host:
+        raise MKGeneralException(_('This view does not support cluster hosts.'))
+
+    if phase == 'action':
+        if not html.check_transaction():
+            return
+
+        _test = html.var('_test')
+        if _test:
+            # Execute a specific test
+            try:
+                if _test not in dict(tests).keys():
+                    raise MKGeneralException(_('Invalid test.'))
+                args = [
+                    html.var('ipaddress'),
+                    html.var('snmp_community'),
+                    html.var('agent_port'),
+                    html.var('snmp_timeout'),
+                    html.var('snmp_retries'),
+                    html.var('datasource_program'),
+                ]
+                result = check_mk_automation(host[".siteid"], "diag-host", [hostname, _test] + args)
+            except Exception, e:
+                result = (1, _("Exception: %s") % html.attrencode(str(e)))
+            # API is defined as follows: Two data fields, separated by space.
+            # First is the state: 0 or 1, 0 means success, 1 means failed.
+            # Second is treated as text output
+            html.write("%s %s" % (result[0], html.attrencode(result[1])))
+            return ""
+
+        elif html.var('_save'):
+            # Save the ipaddress and/or community
+            mark_affected_sites_dirty(g_folder, hostname)
+
+            new = vs_host.from_html_vars('vs_host')
+            vs_host.validate_value(new, 'vs_host')
+            if 'ipaddress' in new:
+                host['ipaddress'] = new['ipaddress']
+            if 'snmp_community' in new:
+                host['snmp_community'] = new['snmp_community']
+            log_pending(AFFECTED, hostname, "edit-host", _("Edited properties of host via diagnose [%s]") % hostname)
+            save_folder_and_hosts(g_folder)
+            reload_hosts(g_folder)
+            call_hook_hosts_changed(g_folder)
+            return 'edithost'
+
+        return
+
+    html.write('<div class="diag_host">')
+    html.write('<table><tr><td>')
+    html.begin_form('diag_host', method = "POST")
+    forms.header(_('Host Diagnostic'))
+
+    #value = current_settings.get(var, valuespec.default_value())
+    forms.section(legend = False)
+    vs_host.render_input("vs_host", host)
+    html.help(vs_host.help())
+
+    forms.end()
+
+    html.write('<div style="margin-bottom:10px">')
+    html.button("_save", _("Save"))
+    html.button("_try",  _("Test"))
+    html.write('</div>')
+
+    forms.header(_('Options'))
+
+    #value = current_settings.get(var, valuespec.default_value())
+    value = {}
+    forms.section(legend = False)
+    vs_rules.render_input("vs_rules", value)
+    html.help(vs_rules.help())
+    forms.end()
+
+    html.hidden_fields()
+    html.end_form()
+
+    html.write('</td><td style="padding-left:10px;">')
+
+    html.write('<h2>' + _('Diagnostics') + '</h2>')
+    if not html.var('_try'):
+        html.message(_('You can diagnose the connection to a specific host using this dialog. '
+                       'You can either test wether your current configuration is still working '
+                       'or investigate in which ways a host can be reached. Simply configure the '
+                       'connection options you like to try on the right side of the screen and '
+                       'press the "Test" button. The results will be displayed here.'))
+    else:
+        for ident, title in tests:
+            html.write('<h3>%s</h3>' % title)
+            html.write('<table class="data test"><tr class="data odd0">')
+            html.write('<td class="icons"><div>')
+            html.write('<img class="icon" id="%s_img" src="">' % ident)
+            html.write('<a href="javascript:start_host_diag_test(\'%s\', \'%s\');">'
+                       '<img class="icon retry" id="%s_retry" src="images/icon_retry_disabled.gif" title="%s"></a>' %
+                        (ident, hostname, ident, _('Retry this test')))
+            html.write('</div></td>')
+            html.write('<td><div class="log" id="%s_log"></div>' % ident)
+            html.write('</tr></table>')
+            html.javascript('start_host_diag_test("%s", "%s")' % (ident, hostname))
+
+    html.write('</td></tr></table>')
+    html.write('</div>')
 
 #.
 #   .-Inventory & Services-------------------------------------------------.
@@ -11317,7 +11536,7 @@ def mode_edit_rule(phase, new = False):
         return _("%s rule %s") % (new and _("New") or _("Edit"), rulespec["title"])
 
     elif phase == "buttons":
-        if not back_mode:
+        if back_mode == 'edit_ruleset':
             var_list = [("mode", "edit_ruleset"), ("varname", varname), ("host", html.var("host",""))]
             if html.var("item"):
                 var_list.append( ("item", html.var("item")) )
@@ -13633,7 +13852,6 @@ def mode_custom_attrs(phase, what):
 
     table.end()
 
-
 #.
 #   .-Hooks-&-API----------------------------------------------------------.
 #   |       _   _             _           ___        _    ____ ___         |
@@ -14187,6 +14405,7 @@ def is_alias_used(my_group, my_name, aliasname):
 #   '----------------------------------------------------------------------'
 
 modes = {
+   # ident,               permissions, handler function
    "main"               : ([], mode_main),
    "folder"             : (["hosts"], mode_folder),
    "newfolder"          : (["hosts", "manage_folders"], lambda phase: mode_editfolder(phase, True)),
@@ -14197,6 +14416,7 @@ modes = {
    "parentscan"         : (["hosts"], mode_parentscan),
    "firstinventory"     : (["hosts", "services"], lambda phase: mode_inventory(phase, True)),
    "inventory"          : (["hosts"], lambda phase: mode_inventory(phase, False)),
+   "diag_host"          : (["hosts", "diag_host"], mode_diag_host),
    "search"             : (["hosts"], mode_search),
    "search_results"     : (["hosts"], mode_search_results),
    "bulkinventory"      : (["hosts", "services"], mode_bulk_inventory),
@@ -14377,6 +14597,14 @@ def load_plugins():
            "from the monitoring. Please also add the permission "
            "<i>Modify existing hosts</i>."),
          [ "admin", "user" ])
+
+    config.declare_permission("wato.diag_host",
+         _("Host Diagnostic"),
+         _("Check wether or not the host is reachable, test the different methods "
+           "a host can be accessed, for example via agent, SNMPv1, SNMPv2 to find out "
+           "the correct monitoring configuration for that host."),
+         [ "admin", "user" ])
+
 
     config.declare_permission("wato.clone_hosts",
          _("Clone hosts"),

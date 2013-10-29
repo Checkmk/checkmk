@@ -1135,7 +1135,7 @@ table.multisite_conn_method td input {
     width: 700px;
     font-family: monospace, sans-serif;
     overflow-y: scroll;
-    padding: 12px;
+    padding: 12px 5px;
     vertical-align: top;
     background-color: #fff;
     /* below resize option is css3 */

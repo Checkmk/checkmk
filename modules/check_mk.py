@@ -5015,6 +5015,23 @@ def ip_to_dnsname(ip):
     except:
         return None
 
+def config_timestamp():
+    mtime = 0
+    for dirpath, dirnames, filenames in os.walk(check_mk_configdir):
+        for f in filenames:
+            mtime = max(mtime, os.stat(dirpath + "/" + f).st_mtime)
+    mtime = max(mtime, os.stat(default_config_dir + "/main.mk").st_mtime)
+    try:
+        mtime = max(mtime, os.stat(default_config_dir + "/final.mk").st_mtime)
+    except:
+        pass
+    try:
+        mtime = max(mtime, os.stat(default_config_dir + "/local.mk").st_mtime)
+    except:
+        pass
+    return mtime
+
+
 
 # Reset some global variable to their original value. This
 # is needed in keepalive mode.

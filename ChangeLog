@@ -101,6 +101,8 @@
     * New option for full SNMP scan in bulk inventory
     * bulk operations now also available when checkboxes are off
     * LDAP: Added test to validate the configured role sync groups
+    * LDAP: The sync hooks during activate changes can now be enabled/disabled
+      by configuration (Global Settings)
     * Disabled replication type "peer" in site editor.
     * Added "permanently ignore" button to inventory services dialog which 
       links directly to the disabled services view

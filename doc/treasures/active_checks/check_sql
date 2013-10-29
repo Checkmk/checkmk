@@ -55,7 +55,7 @@ OPTIONS:
   -w RANGE, --warning RANGE     lower and upper level for the warning state, separated by a colon
   -c RANGE, --critical RANGE    lower and upper level for the critical state, separated by a colon
   -o, --procedure               treat the main argument as a procedure instead of an SQL-Statement
-  -i CSV,   --inputvalues CSV   values of input variables if required by the procedure; csv-list
+  -i CSV,   --inputvars CSV     values of input variables if required by the procedure; csv-list
   --debug                       Debug mode: let Python exceptions come through
   -v, --verbose                 Verbose mode: print SQL statement and levels
 
@@ -73,7 +73,7 @@ def saverfloat(f):
 short_options = 'hou:i:p:d:n:H:P:w:c:v'
 long_options  = [
     'help', 'user=', 'password=', 'dbms=', 'name=', 'warning=', 'critical=', 'hostname=',
-    'port=', 'debug', 'verbose', 'procedures', 'inputvars='
+    'port=', 'debug', 'verbose', 'procedure', 'inputvars='
 ]
 
 try:
@@ -92,7 +92,7 @@ opt_password      = None
 opt_hostname      = "127.0.0.1"
 opt_port          = None
 opt_sql           = None
-opt_input         = None
+opt_input         = []
 opt_procedure     = False
 warn              = [ None, None ]
 crit              = [ None, None ]
@@ -121,7 +121,7 @@ try:
             crit = map(saverfloat,a.split(":",2))
         elif o in [ '-o', '--procedure' ]:
             opt_procedure = True
-        elif o in [ '-I', '--inputvalues' ]:
+        elif o in [ '-i', '--inputvars' ]:
             opt_input = a.split(",")
         elif o in [ '-h', '--help' ]:
             usage()
@@ -195,8 +195,8 @@ try:
             sys.stderr.write("SQL Statement: %s\n" % opt_sql)
     if opt_procedure:
         outvar = cursor.var(cx_Oracle.STRING)
-        opt_input.append("outvar")
-        cursor.callproc(opt_sql, opt_input)
+        #opt_input.append("outvar")
+        cursor.callproc(opt_sql, (outvar,))
         result =  outvar.getvalue()
     else:
         cursor.execute(opt_sql)
@@ -220,16 +220,18 @@ if opt_verbose:
 # processing of result
 #
 try:
-    if len(result) > 1:
-        print "UNKNOWN - SQL statement/procedure returned more than one line"
-        sys.exit(3)
-    elif len(result) == 0:
+    #if len(result) > 1:
+    #    print "UNKNOWN - SQL statement/procedure returned more than one line"
+    #    sys.exit(3)
+    if len(result) == 0:
         print "UNKNOWN - SQL statement/procedure returned no data"
         sys.exit(3)
 
-    row = result[0]
+    #row = result[0]
+    row = result.split(",")
     number = float(row[0])
     text = str(row[1])
+
     try:
         perf = row[2]
     except IndexError:

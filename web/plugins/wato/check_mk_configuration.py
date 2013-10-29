@@ -486,10 +486,12 @@ register_configvar(group,
                   'during each page rendering. Each connector can then specify if it wants to perform '
                   'any actions. For example the LDAP connector will start the sync once the cached user '
                   'information are too old.'),
-        default_value = [ 'wato_users', 'page' ],
+        default_value = [ 'wato_users', 'page', 'wato_pre_activate_changes', 'wato_snapshot_pushed' ],
         choices       = [
-            ('wato_users', 'When opening the users configuration page'),
-            ('page',       'During regular page processing'),
+            ('page',                      'During regular page processing'),
+            ('wato_users',                'When opening the users configuration page'),
+            ('wato_pre_activate_changes', 'Hook: Before activating the changed configuration'),
+            ('wato_snapshot_pushed',      'Hook: On a remote site, when it receives a new snapshot'),
         ],
         allow_empty   = True,
     ),

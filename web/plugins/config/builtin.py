@@ -210,7 +210,7 @@ staleness_threshold = 1.5
 #
 
 user_connectors       = ['htpasswd']
-userdb_automatic_sync = [ 'wato_users', 'page' ]
+userdb_automatic_sync = [ 'wato_users', 'page', 'wato_pre_activate_changes', 'wato_snapshot_pushed' ]
 ldap_connection       = {}
 ldap_userspec         = {}
 ldap_groupspec        = {}

@@ -2204,14 +2204,17 @@ def mode_inventory(phase, firsttime):
             for st, ct, checkgroup, item, paramstring, params, descr, state, output, perfdata in table:
                 if (html.has_var("_cleanup") or html.has_var("_fixall")) \
                     and st in [ "vanished", "obsolete" ]:
+                    html.debug("%s: %s/%s" % (st, ct, item))
                     pass
                 elif (html.has_var("_activate_all") or html.has_var("_fixall")) \
                     and st == "new":
                     active_checks[(ct, item)] = paramstring
                 else:
-                    varname = "_%s_%s" % (ct, item)
+                    varname = "_%s_%s" % (ct, html.varencode(item))
                     if html.var(varname, "") != "":
                         active_checks[(ct, item)] = paramstring
+                    else:
+                        html.debug("Ausgelassen: %s/%s (varname: %s, value: %s)" % (ct, item, varname, html.var(varname)))
 
             check_mk_automation(host[".siteid"], "set-autochecks", [hostname], active_checks)
             if host.get("inventory_failed"):
@@ -2370,8 +2373,8 @@ def show_service_table(host, firsttime):
             # Temporary ignore checkbox
             html.write("<td>")
             if checkbox != None:
-                varname = "_%s_%s" % (ct, item)
-                html.checkbox(varname, checkbox, add_attr = ['title="%s"' % _('Temporary ignore this service')])
+                varname = "_%s_%s" % (ct, html.varencode(item))
+                html.checkbox(varname, checkbox, add_attr = ['title="%s"' % _('Temporarily ignore this service')])
             html.write("</td>")
 
             html.write("</tr>\n")

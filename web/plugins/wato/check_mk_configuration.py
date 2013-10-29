@@ -486,10 +486,12 @@ register_configvar(group,
                   'during each page rendering. Each connector can then specify if it wants to perform '
                   'any actions. For example the LDAP connector will start the sync once the cached user '
                   'information are too old.'),
-        default_value = [ 'wato_users', 'page' ],
+        default_value = [ 'wato_users', 'page', 'wato_pre_activate_changes', 'wato_snapshot_pushed' ],
         choices       = [
-            ('wato_users', 'When opening the users configuration page'),
-            ('page',       'During regular page processing'),
+            ('page',                      'During regular page processing'),
+            ('wato_users',                'When opening the users configuration page'),
+            ('wato_pre_activate_changes', 'Before activating the changed configuration'),
+            ('wato_snapshot_pushed',      'On a remote site, when it receives a new configuration'),
         ],
         allow_empty   = True,
     ),
@@ -1388,8 +1390,8 @@ register_rule(group,
         title = _("Enable/disable passive checks for services"),
         help = _("This setting allows you to disable the processing of passiv check results for a "
                  "service."),
-        choices = [ ("1", _("Enable processing of passiv check results")),
-                    ("0", _("Disable processing of passiv check results")) ],
+        choices = [ ("1", _("Enable processing of passive check results")),
+                    ("0", _("Disable processing of passive check results")) ],
         ),
         itemtype = "service")
 

@@ -57,6 +57,8 @@ def do_automation(cmd, args):
                 result = automation_restart("restart")
             elif cmd == "scan-parents":
                 result = automation_scan_parents(args)
+            elif cmd == "diag-host":
+                result = automation_diag_host(args)
             else:
                 raise MKAutomationError("Automation command '%s' is not implemented." % cmd)
 
@@ -663,4 +665,69 @@ def automation_scan_parents(args):
     except Exception, e:
         raise MKAutomationError(str(e))
 
+def automation_diag_host(args):
+    hostname, test, ipaddress, snmp_community = args[:4]
+    agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
+    cmd = args[7]
 
+    if not ipaddress:
+        try:
+            ipaddress = lookup_ipaddress(hostname)
+        except:
+            raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
+
+    try:
+        if test == 'ping':
+            import subprocess
+            p = subprocess.Popen('ping -c 3 -W 5 %s 2>&1' % ipaddress, shell = True, stdout = subprocess.PIPE)
+            response = p.stdout.read()
+            return (p.wait(), response)
+
+        elif test == 'agent':
+            if not cmd:
+                cmd = get_datasource_program(hostname, ipaddress)
+
+            if cmd:
+                return 0, get_agent_info_program(cmd)
+            else:
+                return 0, get_agent_info_tcp(hostname, ipaddress, agent_port or None)
+
+        elif test.startswith('snmp'):
+            if snmp_community:
+                explicit_snmp_communities[hostname] = snmp_community
+
+            # override timing settings if provided
+            if snmp_timeout or snmp_retries:
+                timing = {}
+                if snmp_timeout:
+                    timing['timeout'] = snmp_timeout
+                if snmp_retries:
+                    timing['retries'] = snmp_retries
+                snmp_timing.insert(0, (timing, [], [hostname]))
+
+            # SNMP versions
+            global bulkwalk_hosts, snmpv2c_hosts
+            if test == 'snmpv2':
+                bulkwalk_hosts = [hostname]
+
+            elif test == 'snmpv2_nobulk':
+                bulkwalk_hosts = []
+                snmpv2c_hosts  = [hostname]
+            elif test == 'snmpv1':
+                bulkwalk_hosts = []
+                snmpv2c_hosts  = []
+
+            else:
+                return 1, "SNMP command not implemented"
+
+            data = get_snmp_table(hostname, ipaddress, ('.1.3.6.1.2.1.1', ['1.0', '4.0', '5.0', '6.0']))
+            if data:
+                return 0, 'sysDescr:\t%s\nsysContact:\t%s\nsysName:\t%s\nsysLocation:\t%s\n' % tuple(data[0])
+            else:
+                return 1, 'Got empty SNMP response'
+
+        else:
+            return 1, "Command not implemented"
+
+    except Exception, e:
+        return 1, str(e)

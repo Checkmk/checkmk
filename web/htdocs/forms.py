@@ -155,29 +155,30 @@ def container():
 def space():
     html.write('<tr><td colspan=2 style="height:15px;"></td></tr>')
 
-def section(title = None, checkbox = None, id = "", simple=False, hide = False):
+def section(title = None, checkbox = None, id = "", simple=False, hide = False, legend = True):
     global g_section_open
     if g_section_open:
         html.write('</td></tr>')
     if id:
         id = ' id="%s"' % id
-    html.write('<tr class="%s"%s%s><td class="legend%s">' %
+    html.write('<tr class="%s"%s%s>' %
             (g_section_isopen and "open" or "closed", id,
-             hide and ' style="display:none;"' or '',
-             simple and " simple" or ""))
-    if title:
-        html.write('<div class="title%s">%s<span class="dots">%s</span></div>' %
-                  (checkbox and " withcheckbox" or "", title, "."*100))
-    if checkbox:
-        html.write('<div class=checkbox>')
-        if type(checkbox) == str:
-            html.write(checkbox)
-        else:
-            name, inactive, attrname = checkbox
-            html.checkbox(name, inactive, onclick = 'wato_toggle_attribute(this, \'%s\')' % attrname)
-        html.write('</div>')
+             hide and ' style="display:none;"' or ''))
 
-    html.write('</td>')
+    if legend:
+        html.write('<td class="legend%s">' % (simple and " simple" or ""))
+        if title:
+            html.write('<div class="title%s">%s<span class="dots">%s</span></div>' %
+                      (checkbox and " withcheckbox" or "", title, "."*100))
+        if checkbox:
+            html.write('<div class=checkbox>')
+            if type(checkbox) == str:
+                html.write(checkbox)
+            else:
+                name, inactive, attrname = checkbox
+                html.checkbox(name, inactive, onclick = 'wato_toggle_attribute(this, \'%s\')' % attrname)
+            html.write('</div>')
+        html.write('</td>')
     html.write('<td class="content%s">' % (simple and " simple" or ""))
     g_section_open = True
 

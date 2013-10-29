@@ -138,26 +138,35 @@ def inventory_esx_vsphere_vm_hb_status(info):
     if 'guestHeartbeatStatus' in data:
         return [(None, None)]
 
-def check_esx_vsphere_vm_hb_status(_no_item, _no_params, info):
+def check_esx_vsphere_vm_hb_status(_no_item, params, info):
     data = esx_vsphere_vm_convert(info)
 
     vm_status = data['guestHeartbeatStatus'][0]
     state = 3
-    if vm_status == 'gray':
-        return 1, "No VMWare Tools installed"
-    elif vm_status == 'green':
-        state = 0
-    elif vm_status == 'red':
-        state = 2
-    elif vm_status == 'yellow':
-        state = 1
-    return state, "Heartbeat status is %s" % vm_status
+
+    vm_heartbeat_map = { "gray"   : (1, "heartbeat_no_tools"),
+                         "green"  : (0, "heartbeat_ok"),
+                         "red"    : (2, "heartbeat_missing"),
+                         "yellow" : (1, "heartbeat_intermittend") }
+    if vm_status in vm_heartbeat_map:
+        if params:
+            state = params.get(vm_heartbeat_map.get(vm_status)[1], 3)
+        else:
+            state = vm_heartbeat_map.get(vm_status)[0]
+        if vm_status == 'gray':
+            return state, "No VMWare Tools installed"
+        else:
+            return state, "Heartbeat status is %s" % vm_status
+    else:
+        return 3, "Unknown heartbeat status %s" % vm_status
+
 
 
 check_info['esx_vsphere_vm.heartbeat'] = {
   "inventory_function"  : inventory_esx_vsphere_vm_hb_status,
   "check_function"      : check_esx_vsphere_vm_hb_status,
   "service_description" : "ESX Heartbeat",
+  "group"               : "vm_heartbeat"
 }
 
 #.

@@ -258,6 +258,8 @@ register_rule(group + '/' + subgroup_networking,
 register_rule(group + '/' + subgroup_inventory,
     varname   = "inventory_processes_rules",
     title     = _('Process Inventory'),
+    help      = _("Keep in mind that all configuration parameters in this rule are only applied during the hosts inventory. "
+                  "Any changes later on require a host re-inventory"),
     valuespec = Dictionary(
         elements = [
             ('descr', TextAscii(
@@ -355,8 +357,59 @@ register_rule(group + '/' + subgroup_inventory,
                     ),
                 ],
             )),
+            ( "cpulevels",
+              Tuple(
+                title = _("Levels on CPU utilization"),
+                elements = [
+                   Percentage(title = _("Warning if above"), default_value = 90),
+                   Percentage(title = _("Critical if above"), default_value = 98),
+                ],
+            )),
+            ( "cpu_average",
+             Integer(
+                 title = _("CPU Averaging"),
+                 help = _("By activating averaging, Check_MK will compute the average of "
+                          "the CPU utilization over a given interval. If you have defined "
+                          "alerting levels then these will automatically be applied on the "
+                          "averaged value. This helps to mask out short peaks. "),
+                 unit = _("minutes"),
+                 minvalue = 1,
+                 default_value = 15,
+             )
+           ),
+           ( "virtual_levels",
+              Tuple(
+                title = _("Virtual memory usage"),
+                elements = [
+                    Filesize(title = _("Warning at")),
+                    Filesize(title = _("Critical at")),
+                ],
+           )),
+           ( "resident_levels",
+              Tuple(
+                title = _("Physical memory usage"),
+                elements = [
+                    Filesize(title = _("Warning at")),
+                    Filesize(title = _("Critical at")),
+                ],
+           )),
+            ('handle_count', Tuple(
+                title = _('Handle Count (Windows only)'),
+                help  = _("The number of object handles in the process's object table. This includes open handles to "
+                          "threads, files and other resources like registry keys"),
+                elements = [
+                    Integer(
+                        title = _("Warning above"),
+                        unit = _("handles"),
+                    ),
+                    Integer(
+                        title = _("Critical above"),
+                        unit = _("handles"),
+                    ),
+                ],
+            )),
         ],
-        optional_keys = [],
+        optional_keys = ['handle_count', 'cpulevels', 'cpu_average', 'virtual_levels', 'resident_levels'],
     ),
     match = 'all',
 )
@@ -1909,6 +1962,46 @@ register_check_parameters(
     None, None
 )
 
+register_check_parameters(
+    subgroup_os,
+    "vm_heartbeat",
+    _("Virtual machine heartbeat status"),
+     Dictionary(
+         optional_keys = False,
+         elements = [
+            ( "heartbeat_missing",
+               MonitoringState(
+                   title = _("No heartbeat"),
+                   help = _("Guest operating system may have stopped responding."),
+                   default_value = 2,
+               )
+            ),
+            ( "heartbeat_intermittend",
+               MonitoringState(
+                   title = _("Intermittent heartbeat"),
+                   help = _("May be due to high guest load."),
+                   default_value = 1,
+               )
+            ),
+             ( "heartbeat_no_tools",
+               MonitoringState(
+                   title = _("Heartbeat tools missing or not installed"),
+                   help = _("No VMWare Tools installed."),
+                   default_value = 1,
+               )
+            ),
+            ( "heartbeat_ok",
+               MonitoringState(
+                   title = _("Heartbeat OK"),
+                   help = _(" Guest operating system is responding normally."),
+                   default_value = 0,
+               )
+            ),
+         ]
+      ),
+    None,
+    "dict",
+)
 register_check_parameters(
     subgroup_applications,
     "esx_vsphere_objects",
@@ -3996,9 +4089,24 @@ register_check_parameters(
                         Filesize(title = _("Critical at")),
                     ],
                )),
+               ('handle_count', Tuple(
+                   title = _('Handle Count (Windows only)'),
+                   help  = _("The number of object handles in the process's object table. This includes open handles to "
+                             "threads, files and other resources like registry keys"),
+                   elements = [
+                       Integer(
+                           title = _("Warning above"),
+                           unit = _("handles"),
+                       ),
+                       Integer(
+                           title = _("Critical above"),
+                           unit = _("handles"),
+                       ),
+                   ],
+               )),
 
             ],
-            optional_keys = [ "user", "cpulevels", "cpu_average", "virtual_levels", "resident_levels" ]),
+            optional_keys = [ "user", "cpulevels", "cpu_average", "virtual_levels", "resident_levels", "handle_count" ]),
         forth = ps_convert_from_tuple,
     ),
     TextAscii(

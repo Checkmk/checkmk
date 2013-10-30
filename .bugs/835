@@ -1,0 +1,8 @@
+Title: BI doesent honours acknowledgement of services
+Component: wato
+State: open
+Date: 2013-10-30 10:49:32
+Targetversion: 1.2.3i5
+Class: bug
+They still appearing as critical
+

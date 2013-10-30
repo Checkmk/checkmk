@@ -24,24 +24,37 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-brocade_mlx_info = ('.1.3.6.1.4.1.1991.1.1.1.2.1.1', [ 1, 2, 3 ])
+brocade_mlx_info = [ ('.1.3.6.1.4.1.1991.1.1.1.2.1.1', [ 1, 2, 3 ]), # power supplies
+                     ('.1.3.6.1.4.1.1991.1.1.1.3.1.1', [ 1, 2, 3 ]), # fans
+                   ]
+
+def brocade_mlx_scan(oid):
+    return oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1991.1.")
+
+#############################################################################
+# Power Supplies
+#############################################################################
 
 def inventory_brocade_mlx_power(info):
+    print "inventory power" 
+    import pprint; pprint.pprint(info[0])
     inventory = []
-    for power_id, power_descr, power_state in info:
+    for power_id, power_descr, power_state in info[0]: 
         if power_descr == "":
             power_item = power_id
         else:
-            power_item = "%s %s" % (power_id, power_descr)
+            power_item = "%s: %s" % (power_id, power_descr)
         inventory.append( (power_item, None) )
     return inventory
 
 def check_brocade_mlx_power(item, _no_params, info):
-    for power_id, power_descr, power_state in info:
+    print "check power" 
+    import pprint; pprint.pprint(info[0])
+    for power_id, power_descr, power_state in info[0]:  
         if power_descr == "":
             power_item = power_id
         else:
-            power_item = "%s %s" % (power_id, power_descr)
+            power_item = "%s: %s" % (power_id, power_descr)
         if power_item == item:
             if power_state == "2":
                 return 0, "Power supply reports status 2 (normal)"
@@ -56,6 +69,49 @@ check_info["brocade_mlx.power"] = {
     "inventory_function"    : inventory_brocade_mlx_power,
     "service_description"   : "Power supply %s",
     "snmp_info"             : brocade_mlx_info,
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1991.1."),
+    "snmp_scan_function"    : brocade_mlx_scan,
     "has_perfdata"          : False,
 }
+
+#############################################################################
+# Fans
+#############################################################################
+
+def inventory_brocade_mlx_fan(info):
+    print "inventory fan" 
+    import pprint; pprint.pprint(info[1])
+    inventory = []
+    for fan_id, fan_descr, fan_state in info[1]: 
+        if fan_descr == "":
+            fan_item = fan_id
+        else:
+            fan_item = "%s: %s" % (fan_id, fan_descr)
+        inventory.append( (fan_item, None) )
+    return inventory
+
+def check_brocade_mlx_fan(item, _no_params, info):
+    print "check fan" 
+    import pprint; pprint.pprint(info[1])
+    for fan_id, fan_descr, fan_state in info[1]: 
+        if fan_descr == "":
+            fan_item = fan_id
+        else:
+            fan_item = "%s: %s" % (fan_id, fan_descr)
+        if fan_item == item:
+            if fan_state == "2":
+                return 0, "Fan reports status 2 (normal)"
+            elif fan_state == "3":
+                return 2, "Fan reports status 3 (failure)"
+            else:
+                return 3, "Fan reports unidentified status %s" % fan_state
+    return 3, "Fan %s not found" % item
+
+check_info["brocade_mlx.fan"] = {
+    "check_function"        : check_brocade_mlx_fan,
+    "inventory_function"    : inventory_brocade_mlx_fan,
+    "service_description"   : "Fan %s",
+    "snmp_info"             : brocade_mlx_info,
+    "snmp_scan_function"    : brocade_mlx_scan,
+    "has_perfdata"          : False,
+}
+

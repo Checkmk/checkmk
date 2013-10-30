@@ -1,6 +1,7 @@
 1.2.3i6:
-    Multisite:
-    * Improved performance of LDAP sync by refactoring the group sync code
+    Core & Setup:
+    * 0000: Das ist was neues...
+
 
 1.2.3i5:
     Core:

@@ -567,10 +567,11 @@ void TableStateHistory::answerQuery(Query *query)
         }
         case TIMEPERIOD_TRANSITION:
         {
+            char *save_ptr;
             char *buffer   = strdup(entry->_options);
-            char *tp_name  = strtok(buffer, ";");
-            strtok(NULL, ";");
-            char *tp_state = strtok(NULL, ";");
+            char *tp_name  = strtok_r(buffer, ";", &save_ptr);
+            strtok_r(NULL, ";", &save_ptr);
+            char *tp_state = strtok_r(NULL, ";", &save_ptr);
 
             _notification_periods[tp_name] = atoi(tp_state);
             state_info_t::iterator it_hst = state_info.begin();
@@ -768,10 +769,11 @@ inline int TableStateHistory::updateHostServiceState(Query *query, const LogEntr
     }
     case TIMEPERIOD_TRANSITION:
     {
+        char *save_ptr;
         char *buffer   = strdup(entry->_options);
-        char *tp_name  = strtok(buffer, ";");
-        strtok(NULL, ";");
-        char *tp_state = strtok(NULL, ";");
+        char *tp_name  = strtok_r(buffer, ";", &save_ptr);
+        strtok_r(NULL, ";", &save_ptr);
+        char *tp_state = strtok_r(NULL, ";", &save_ptr);
 
         // if no _host pointer is available the initial status of _in_notification_period (1) never changes
         if (hs_state->_host && !strcmp(tp_name, hs_state->_notification_period)) {

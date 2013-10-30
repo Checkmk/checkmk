@@ -1,4 +1,4 @@
-title: AKCP Drycontact Sensor 
+title: AKCP Drycontact Sensor
 agents: snmp
 catalog: hw/environment
 license: GPL
@@ -6,7 +6,7 @@ distribution:
 description:
  This check monitors the status of a AKCP Drycontact Sensor.
  The Sensor can have a state {OK} or {CRITICAL} and Check_MK display
- this states. 
+ this states.
 
 item:
  The item is the sensor description of the sensor as string.

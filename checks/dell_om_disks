@@ -100,7 +100,7 @@ def check_dell_om_disks(item, _no_params, info):
                 msg.append("Spare State: %s" % spare_state.get(sstate, 'ukn (%s)' %sstate ))
             if mt != 0:
                 msg.append("Media Type: %s" % media_type.get(mt,'ukn (%s)' % mt ))
-            
+
             return state, ", ".join(msg)
     return 3, "Device not found in SNMP tree"
 

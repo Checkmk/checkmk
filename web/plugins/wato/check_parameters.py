@@ -501,9 +501,9 @@ register_check_parameters(
             )),
         ]
     ),
-    TextAscii( title=_("Queue Name"), 
+    TextAscii( title=_("Queue Name"),
     help=_("The name of the queue like in the Apache queue manager")),
-    "first", 
+    "first",
 )
 
 

@@ -5,7 +5,7 @@ license: GPL
 distribution: check_mk
 description:
  This is a simple check which checks the current connected peers
- of a Riverbed Steelhead appliance which a not movible clients. 
+ of a Riverbed Steelhead appliance which a not movible clients.
  As long the peer is connected the result will be {OK}. In all other cases
  it is {critical}.
 

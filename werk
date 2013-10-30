@@ -595,7 +595,7 @@ def main_grep(args):
 
 def main_edit(args):
     if len(args) == 0:
-        werkid = str(g_last_werk)
+        werkid = int(g_last_werk)
         if werkid == None:
             bail_out("No last werk. Please specify id.")
 

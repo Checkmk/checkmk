@@ -2434,8 +2434,6 @@ def mode_inventory(phase, firsttime):
                     varname = "_%s_%s" % (ct, html.varencode(item))
                     if html.var(varname, "") != "":
                         active_checks[(ct, item)] = paramstring
-                    else:
-                        html.debug("Ausgelassen: %s/%s (varname: %s, value: %s)" % (ct, item, varname, html.var(varname)))
 
             check_mk_automation(host[".siteid"], "set-autochecks", [hostname], active_checks)
             if host.get("inventory_failed"):

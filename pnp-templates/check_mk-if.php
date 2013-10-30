@@ -162,17 +162,17 @@ $def[2] =
   "DEF:inu=$RRDFILE[2]:$DS[2]:MAX ".
   "DEF:innu=$RRDFILE[3]:$DS[3]:MAX ".
   "CDEF:in=inu,innu,+ ".
-  "AREA:inu#00ffc0:\"in unicast              \" ".
-  "GPRINT:inu:LAST:\"%8.2lf/s last  \" ".
-  "GPRINT:inu:AVERAGE:\"%8.2lf/s avg  \" ".
-  "GPRINT:inu:MAX:\"%8.2lf/s max\\n\" ".
-  "AREA:innu#00c080:\"in broadcast/multicast  \":STACK ".
-  "GPRINT:innu:LAST:\"%8.2lf/s last  \" ".
-  "GPRINT:innu:AVERAGE:\"%8.2lf/s avg  \" ".
-  "GPRINT:innu:MAX:\"%8.2lf/s max\\n\" ".
+  "AREA:inu#00ffc0:\"in unicast             \" ".
+  "GPRINT:inu:LAST:\"%9.1lf/s last \" ".
+  "GPRINT:inu:AVERAGE:\"%9.1lf/s avg \" ".
+  "GPRINT:inu:MAX:\"%9.1lf/s max\\n\" ".
+  "AREA:innu#00c080:\"in broadcast/multicast \":STACK ".
+  "GPRINT:innu:LAST:\"%9.1lf/s last \" ".
+  "GPRINT:innu:AVERAGE:\"%9.1lf/s avg \" ".
+  "GPRINT:innu:MAX:\"%9.1lf/s max\\n\" ".
   "VDEF:inperc=in,95,PERCENTNAN ".
-  "LINE:inperc#00cf00:\"95% percentile incoming \" ".
-  "GPRINT:inperc:\"%8.2lf/s\\n\" ".
+  "LINE:inperc#00cf00:\"in 95% percentile      \" ".
+  "GPRINT:inperc:\"%9.1lf/s\\n\" ".
 
   # outgoing
   "DEF:outu=$RRDFILE[7]:$DS[7]:MAX ".
@@ -180,17 +180,17 @@ $def[2] =
   "CDEF:minusoutu=0,outu,- ".
   "CDEF:minusoutnu=0,outnu,- ".
   "CDEF:minusout=minusoutu,minusoutnu,+ ".
-  "AREA:minusoutu#00c0ff:\"out unicast             \" ".
-  "GPRINT:outu:LAST:\"%8.2lf/s last  \" ".
-  "GPRINT:outu:AVERAGE:\"%8.2lf/s avg  \" ".
-  "GPRINT:outu:MAX:\"%8.2lf/s max\\n\" ".
-  "AREA:minusoutnu#0080c0:\"out broadcast/multicast \":STACK ".
-  "GPRINT:outnu:LAST:\"%8.2lf/s last  \" ".
-  "GPRINT:outnu:AVERAGE:\"%8.2lf/s avg  \"  ".
-  "GPRINT:outnu:MAX:\"%8.2lf/s max\\n\" ".
+  "AREA:minusoutu#00c0ff:\"out unicast            \" ".
+  "GPRINT:outu:LAST:\"%9.1lf/s last \" ".
+  "GPRINT:outu:AVERAGE:\"%9.1lf/s avg \" ".
+  "GPRINT:outu:MAX:\"%9.1lf/s max\\n\" ".
+  "AREA:minusoutnu#0080c0:\"out broadcast/multicast\":STACK ".
+  "GPRINT:outnu:LAST:\"%9.1lf/s last \" ".
+  "GPRINT:outnu:AVERAGE:\"%9.1lf/s avg \"  ".
+  "GPRINT:outnu:MAX:\"%9.1lf/s max\\n\" ".
   "VDEF:outperc=minusout,5,PERCENTNAN ".
-  "LINE:outperc#0000cf:\"95% percentile outgoing\" ".
-  "GPRINT:outperc:\"%8.2lf/s\\n\" ".
+  "LINE:outperc#0000cf:\"out 95% percentile     \" ".
+  "GPRINT:outperc:\"%9.1lf/s\\n\" ".
   "";
 
 # Graph 3: errors and discards

@@ -1117,6 +1117,19 @@ class html:
             ret += c
         return ret
 
+    # Escape a variable name so that it only uses allowed charachters for URL variables
+    def varencode(self, varname):
+        if varname == None:
+            return "None"
+
+        ret = ""
+        for c in varname:
+            if not c.isdigit() and not c.isalnum() and c != "_":
+                ret += "%%%02x" % ord(c)
+            else:
+                ret += c
+        return ret
+
     def u8(self, c):
         if ord(c) > 127:
             return "&#%d;" % ord(c)

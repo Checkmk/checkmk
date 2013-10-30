@@ -6,7 +6,7 @@ import socket, os, time, sys, getopt, signal, thread, pprint, re, \
 from pwd import getpwnam
 from grp import getgrnam
 
-VERSION="1.2.3i4"
+VERSION="1.2.3i5"
 
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
@@ -2190,7 +2190,7 @@ class StatusServer:
                         only_host = argument
                     filters.append((name, opfunc, argument))
                 elif header == "OutputFormat":
-                    output_format = argument 
+                    output_format = argument
                 elif header == "Limit":
                     limit = int(argument)
                 else:

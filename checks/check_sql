@@ -39,9 +39,9 @@ def check_sql_arguments(params):
         args += " --port %s" % params["port"]
 
     if "procedure" in params:
-        if params["procedure"]["useprocs"] == True:
-            args += " --procedure" 
-            if params["procedure"]["input"]:
+        if "procedure" in params and "useprocs" in params["procedure"]:
+            args += " --procedure"
+            if "input" in params["procedure"]:
                 args += " --inputvars %s" \
                     % quote_shell_string(params["procedure"]["input"])
 

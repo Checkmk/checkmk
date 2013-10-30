@@ -53,10 +53,10 @@ def check_dell_om_mem(item, _no_params, info):
            elif failuremode in [ 1, 8, 16 ]:
                state = 1
                label = "(!)"
-           
+
            size = get_bytes_human_readable(int(size)*1024)
            return state, msg + "Failuremode: %s%s, Size: %s" % \
-           (failure_mode[failuremode], label, size) 
+           (failure_mode[failuremode], label, size)
 
 
    return 3, "Module not found in SNMP tree"

@@ -12,7 +12,7 @@ description:
  introduced in a bug in some versions of genuscreen.
 
 perfdata:
- The rpm of the fans 
+ The rpm of the fans
 
 inventory:
  The inventory process checks if the device has a system description OID
@@ -31,7 +31,7 @@ parameters(dict): parameters is a dictionary with two keys
  {"upper"}: a tuple of upper warning and critical values for the fan rpm
 
 [configuration]
-genua_fan_default_levels(dict): This variable is preset to 
+genua_fan_default_levels(dict): This variable is preset to
 
  {{ "lower": ( 2000, 1000), "upper": (8000, 8400) }}
 

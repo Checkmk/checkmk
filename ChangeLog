@@ -1,3 +1,7 @@
+1.2.3i6:
+    Multisite:
+    * Improved performance of LDAP sync by refactoring the group sync code
+
 1.2.3i5:
     Core:
     * Automatically remove duplicate checks when monitoring with Agent+SNMP
@@ -72,6 +76,8 @@
     * windows_tasks: New check to  monitor the Windows Task Scheduler
     * sensatronics_temp: New check for Sensatronic E4 Temperatur Sensor
     * akcp_sensor_drycontact: New Check for AKCP drycontact Sensors
+    * esx_vsphere_vm.heartbeat: Heartbeat status alert level now configurable
+    * ps:  new configuration option: handle_count (windows only)
     * FIX: Windows agent: gracefully handle garbled logstate.txt
     * FIX: esx_vsphere_counters: added missing ramdisk type upgradescratch
     * FIX: esx_vsphere_hostsystem: fixed bug in handling of params
@@ -90,6 +96,7 @@
            the agent, no PNP graphs for them are drawn.
            (This is the case if ExtendedStatus set to Off in Apache config)
     * FIX: oracle_jobs: fixed issues with incorrect column count in check output
+    * FIX: if/if64/...: layout fix in PNP template for packets
 
 
     WATO:
@@ -99,9 +106,17 @@
     * New option for full SNMP scan in bulk inventory
     * bulk operations now also available when checkboxes are off
     * LDAP: Added test to validate the configured role sync groups
+    * LDAP: The sync hooks during activate changes can now be enabled/disabled
+      by configuration (Global Settings)
     * Disabled replication type "peer" in site editor.
     * Added "permanently ignore" button to inventory services dialog which 
       links directly to the disabled services view
+    * Added dignose page linked from host edit dialog. This can be used to test
+      connection capabilities of hosts
+    * The rule "Process inventory" now offers the same configuration options 
+      as its manual check equivalent "State and count of processes"
+    * New configuration option handle_count (windows only) in the rules
+      "Process inventory" and "State and count of processes"
     * FIX: correct display of number of hosts in bulk inventory
     * FIX: nailed down ".siteid" exception when added new site
     * FIX: fixed setting for locking mode from 'ait' to 'wait'
@@ -112,8 +127,9 @@
     * Removed "livecheck". It never was really stable. Nagios4 has something
       similar built in. And also the Check_MK Micro Core.
     * table statehist: no longer computes an unmonitored state for hosts and
-                       services on certain instances. 
+                       services on certain instances.
                        (showed up as no hosts/services in the multisite gui)
+    * table statehist: fixed SIGSEGV chance on larger queries
 
 1.2.3i4:
     Core:

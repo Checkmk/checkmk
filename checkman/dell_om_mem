@@ -4,9 +4,9 @@ catalog: hw/server/dell
 license: GPL
 distribution: check_mk
 description:
- This check monitors the current Status and the current failure mode of 
+ This check monitors the current Status and the current failure mode of
  each RAM Module on a Dell server which have the open_manage packet
- installed. 
+ installed.
  The check returns a {CRIT} in case of an error state reported
  by the device. The check also reports the size of the module.
 

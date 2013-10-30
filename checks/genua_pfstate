@@ -21,7 +21,7 @@ def inventory_genua_pfstate(info):
 
 
 def pfstate(st):
-    names = { 
+    names = {
 		'0' : 'notOK',
 		'1' : 'OK',
 		'2' : 'unknown',

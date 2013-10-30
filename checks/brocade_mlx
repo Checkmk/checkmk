@@ -28,7 +28,7 @@ brocade_mlx_info = ('.1.3.6.1.4.1.1991.1.1.1.2.1.1', [ 1, 2, 3 ])
 
 def inventory_brocade_mlx_power(info):
     inventory = []
-    for power_id, power_descr, power_state in info: 
+    for power_id, power_descr, power_state in info:
         if power_descr == "":
             power_item = power_id
         else:
@@ -37,7 +37,7 @@ def inventory_brocade_mlx_power(info):
     return inventory
 
 def check_brocade_mlx_power(item, _no_params, info):
-    for power_id, power_descr, power_state in info: 
+    for power_id, power_descr, power_state in info:
         if power_descr == "":
             power_item = power_id
         else:

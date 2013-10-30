@@ -581,7 +581,7 @@ def should_notify(context, entry):
                     notify_log(" - Skipping: service '%s' matches blacklist (%s)" % (
                         servicedesc, ", ".join(entry["service_blacklist"])))
                     return False
-                    
+
 
 
 

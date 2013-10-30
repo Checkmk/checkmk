@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 def inventory_alcatel_power(info):
-    return [ (x[0], None) for x in info if x[2] in ['0x35000001', '0x45000004', '0x45000002', '0x45000009']]  
+    return [ (x[0], None) for x in info if x[2] in ['0x35000001', '0x45000004', '0x45000002', '0x45000009']]
 
 def check_alcatel_power(item, _no_params, info):
     for line in info:
@@ -43,9 +43,9 @@ check_info["alcatel_power"] = {
     "service_description"   : "Power Supply %s",
     "has_perfdata"          : False,
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.6486.800"),
-    "snmp_info"             : (".1.3.6.1.4.1.6486.800.1.1.1.1.1.1.1", 
-                               [OID_END, 
-                               2, # Error Status 
+    "snmp_info"             : (".1.3.6.1.4.1.6486.800.1.1.1.1.1.1.1",
+                               [OID_END,
+                               2, # Error Status
                                5 # Device Type (0x35000001 == Power Supply)
                                ]),
 }

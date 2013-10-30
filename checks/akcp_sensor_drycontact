@@ -43,7 +43,7 @@ check_info["akcp_sensor_drycontact"] = {
     "has_perfdata"          : False,
     'snmp_scan_function'    :  lambda oid: oid(".1.3.6.1.2.1.1.2.0") in\
                          [ ".1.3.6.1.4.1.3854.1.2.2.1.1", ".1.3.6.1.4.1.3854.1" ],
-    'snmp_info'             : ( ".1.3.6.1.4.1.3854.1.2.2.1.18.1" , [ 
+    'snmp_info'             : ( ".1.3.6.1.4.1.3854.1.2.2.1.18.1" , [
                                                             1, #Sensor Name
                                                             3, #Sensor Status (2 = OK, 4 = Not ok)
                                                             5, #Sensor Online

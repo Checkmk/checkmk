@@ -18,7 +18,7 @@ def check_genua_fan(item, params, info):
         # remove empty elements due to alternative enterprise id in snmp_info
         info = filter(None, info)
 
-        fanStateStr = { "1":"OK", "2":"Warning", "3":"Critical", 
+        fanStateStr = { "1":"OK", "2":"Warning", "3":"Critical",
                         "4":"Unkown", "5":"Unkown", "6":"Unkown"}
 
 	lowerwarn, lowercrit = params["lower"]

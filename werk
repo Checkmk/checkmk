@@ -241,7 +241,7 @@ def quote_shell_string(s):
 def next_werk_id():
     my_werk_ids = get_werk_ids()
     if not my_werk_ids:
-        bail_out('You have no werk IDS left. You can reserve 10 additional werk IDS with "gb ids 10".')
+        bail_out('You have no werk IDS left. You can reserve 10 additional Werk IDS with "./werk ids 10".')
     return my_werk_ids[0]
 
 def add_comment(werk, title, comment):

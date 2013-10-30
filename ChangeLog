@@ -92,6 +92,7 @@
            the agent, no PNP graphs for them are drawn.
            (This is the case if ExtendedStatus set to Off in Apache config)
     * FIX: oracle_jobs: fixed issues with incorrect column count in check output
+    * FIX: if/if64/...: layout fix in PNP template for packets
 
 
     WATO:

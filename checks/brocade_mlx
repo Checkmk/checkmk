@@ -36,10 +36,8 @@ def brocade_mlx_scan(oid):
 #############################################################################
 
 def inventory_brocade_mlx_power(info):
-    print "inventory power" 
-    import pprint; pprint.pprint(info[0])
     inventory = []
-    for power_id, power_descr, power_state in info[0]: 
+    for power_id, power_descr, power_state in info[0]:
         if power_descr == "":
             power_item = power_id
         else:
@@ -48,9 +46,7 @@ def inventory_brocade_mlx_power(info):
     return inventory
 
 def check_brocade_mlx_power(item, _no_params, info):
-    print "check power" 
-    import pprint; pprint.pprint(info[0])
-    for power_id, power_descr, power_state in info[0]:  
+    for power_id, power_descr, power_state in info[0]:
         if power_descr == "":
             power_item = power_id
         else:
@@ -78,10 +74,8 @@ check_info["brocade_mlx.power"] = {
 #############################################################################
 
 def inventory_brocade_mlx_fan(info):
-    print "inventory fan" 
-    import pprint; pprint.pprint(info[1])
     inventory = []
-    for fan_id, fan_descr, fan_state in info[1]: 
+    for fan_id, fan_descr, fan_state in info[1]:
         if fan_descr == "":
             fan_item = fan_id
         else:
@@ -90,9 +84,7 @@ def inventory_brocade_mlx_fan(info):
     return inventory
 
 def check_brocade_mlx_fan(item, _no_params, info):
-    print "check fan" 
-    import pprint; pprint.pprint(info[1])
-    for fan_id, fan_descr, fan_state in info[1]: 
+    for fan_id, fan_descr, fan_state in info[1]:
         if fan_descr == "":
             fan_item = fan_id
         else:

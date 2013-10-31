@@ -40,6 +40,12 @@ else:
     def tty_colors(c):
         return ""
 
+grep_colors = [ 
+   tty_bold + tty_magenta,
+   tty_bold + tty_cyan,
+   tty_bold + tty_green,
+] 
+
 def get_tty_size():
     import termios,struct,fcntl
     try:

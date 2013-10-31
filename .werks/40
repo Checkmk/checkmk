@@ -1,0 +1,15 @@
+Title: Add agent plugin to test local hostname resolving
+Level: 1
+Component: checks
+Version: 1.2.3i6
+Date: 1383212574
+Class: feature
+
+In release 1.2.3i5 the Check DNS option in WATO has been
+cleaned up. It is only meant for really checking DNS servers,
+not the local resolver of a system.
+If you like to test the local name resolving on a specific
+host, you can deploy the agent plugin "resolve_hostname"
+on the host you like to run the check on. The name to be
+resolved needs to be changed in the first lines of this
+plugin.

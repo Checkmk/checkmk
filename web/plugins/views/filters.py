@@ -120,6 +120,46 @@ def all_groups(what):
     groups = dict(html.live.query("GET %sgroups\nCache: reload\nColumns: name alias\n" % what))
     return [ (name, groups[name] or name) for name in groups.keys() ]
 
+class FilterMultigroup(Filter):
+    def __init__(self, what, title):
+        htmlvars = [ what + "groups" ]
+        Filter.__init__(self, htmlvars[0], # name
+                              title,
+                              what,        # info, e.g. "service"
+                              htmlvars,
+                              [])          # no link info needed
+        self.what = what
+        self.htmlvar = htmlvars[0]
+
+    def double_height(self):
+        return True
+
+    def valuespec(self):
+        return DualListChoice(choices = all_groups(self.what), autoheight=False)
+
+    def selection(self):
+        current = html.var(self.htmlvar, "").strip().split("|")
+        if current == ['']:
+            return []
+        else:
+            return current
+
+    def display(self):
+        html.write('<div class=multigroup>')
+        self.valuespec().render_input(self.htmlvar, self.selection())
+        html.write('</div>')
+
+    def filter(self, infoname):
+        current = self.selection()
+        if len(current) == 0:
+            return "" # No group selected = all groups selected, filter unused
+        filters = ""
+        for group in current:
+            filters += "Filter: %s_groups >= %s\n" % (self.what, group)
+        filters += "Or: %d\n" % len(current)
+        return filters
+
+
 class FilterGroupCombo(Filter):
     def __init__(self, what, title, enforce):
         self.enforce = enforce
@@ -189,10 +229,13 @@ class FilterGroupCombo(Filter):
 
 declare_filter(104, FilterGroupCombo("host",            _("Hostgroup"),            False), _("Optional selection of host group"))
 declare_filter(104, FilterGroupCombo("host",            _("Hostgroup (enforced)"),            True),  _("Dropdown list, selection of host group is <b>enforced</b>"))
+declare_filter(105, FilterMultigroup("host",            _("Several Hostgroups")), _("Selection of multiple host groups"))
 declare_filter(204, FilterGroupCombo("service",         _("Servicegroup"),         False), _("Optional selection of service group"))
 declare_filter(205, FilterGroupCombo("service",         _("Servicegroup (enforced)"),         True),  _("Dropdown list, selection of service group is <b>enforced</b>"))
-declare_filter(106, FilterGroupCombo("host_contact",    _("Host Contactgroup"),    False), _("Optional selection of host contact group group"))
-declare_filter(206, FilterGroupCombo("service_contact", _("Service Contactgroup"), False), _("Optional selection of service contact group group"))
+declare_filter(205, FilterMultigroup("service",         _("Several Servicegroups")), _("Selection of multiple service groups"))
+
+declare_filter(106, FilterGroupCombo("host_contact",    _("Host Contactgroup"),    False), _("Optional selection of host contact group"))
+declare_filter(206, FilterGroupCombo("service_contact", _("Service Contactgroup"), False), _("Optional selection of service contact group"))
 
 declare_filter(107, FilterText("host_ctc", _("Host Contact"), "host", "host_contacts", "host_ctc", ">="))
 declare_filter(207, FilterText("service_ctc", _("Service Contact"), "service", "service_contacts", "service_ctc", ">="))

@@ -1293,6 +1293,7 @@ class MultiSelect(ListChoice):
 class DualListChoice(ListChoice):
     def __init__(self, **kwargs):
         ListChoice.__init__(self, **kwargs)
+        self._autoheight = kwargs.get("autoheight", True)
 
     def render_input(self, varprefix, value):
         self.load_elements()
@@ -1310,11 +1311,11 @@ class DualListChoice(ListChoice):
         html.write(_('Selected:'))
         html.write('</td></tr><tr><td>')
         html.sorted_select(varprefix + '_unselected', unselected,
-                           attrs = {'size': 5, 'style': 'height:auto'},
+                           attrs = {'size': 5, 'style': self._autoheight and 'height:auto' or ''},
                            onchange = 'vs_duallist_switch(this, \'%s\');' % varprefix)
         html.write('</td><td>')
         html.sorted_select(varprefix + '_selected', selected,
-                           attrs = {'size': 5, 'style': 'height:auto', 'multiple': 'multiple'},
+                           attrs = {'size': 5, 'style': self._autoheight and 'height:auto' or '', 'multiple': 'multiple'},
                            onchange = 'vs_duallist_switch(this, \'%s\');' % varprefix)
         html.write('</td></tr></table>')
         html.hidden_field(varprefix, '|'.join([k for k, v in selected]), id = varprefix, add_var = True)

@@ -1,4 +1,7 @@
 1.2.3i7:
+    Multisite:
+    * 0001 : New filters for selecting several host/service-groups at once...
+
 
 1.2.3i6:
     Core & Setup:

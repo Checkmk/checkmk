@@ -1,4 +1,7 @@
 1.2.3i6:
+    Checks & Agents:
+    * FIX 0020: Inventory problem with inventory_processes parameter...
+
     Multisite:
     * 0000: Improved performance of LDAP sync by refactoring the group sync code
 

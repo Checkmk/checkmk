@@ -149,6 +149,9 @@ def inventory_ps_common(invdata, info, handle_perfdata = False):
                               not in_extraconf_hostlist(hostlist, g_hostname)):
             continue
 
+        if len(inventry) == 7: # extend old inventory_processes
+            inventry += ([],)
+
         entries.append(inventry)
 
     # Handle new wato style inventory_processes_rules

@@ -1,9 +1,21 @@
+1.2.3i7:
+    Multisite:
+    * 0001 : New filters for selecting several host/service-groups at once...
+
+
 1.2.3i6:
+    Core & Setup:
+    * 0041 FIX : setup.py now handles non existing wwwuser gracefully...
+
     Checks & Agents:
-    * FIX 0020: Inventory problem with inventory_processes parameter...
+    * 0040 : Add agent plugin to test local hostname resolving...
+    * 0020 FIX : Inventory problem with inventory_processes parameter...
 
     Multisite:
-    * 0000: Improved performance of LDAP sync by refactoring the group sync code
+    * 0000 : Improved performance of LDAP sync by refactoring the group sync code
+
+    WATO:
+    * 0042 FIX : Removed debug outputs from service inventory...
 
 
 1.2.3i5:
@@ -88,7 +100,7 @@
     * FIX: local: tolerate invalid output lines
     * FIX: hp_proliant: Correct handling of missing snmp data
     * FIX: logwatch.ec: No longer forwards "I" lines to event console
-    * FIX: check_dns: default to querying the host itself
+    * FIX: check_dns: default to querying the DNS server on the localhost itself
     * FIX: ps: do not output perfdata of CPU averaging (use ps.perf for that)
     * FIX: nfsexports: also support systems with rpcbind instead of portmap
     * FIX: ups_in_freq: corrected spelling of service description

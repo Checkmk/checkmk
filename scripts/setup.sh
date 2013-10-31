@@ -24,7 +24,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-VERSION=1.2.3i5
+VERSION=1.2.3i6
 NAME=check_mk
 LANG=
 LC_ALL=
@@ -1006,8 +1006,8 @@ EOF
            # WATO. Also create an empty and Apache-writable auth.serials
            serials_file=$DESTDIR${htpasswd_file%/*}/auth.serials &&
            touch "$serials_file" &&
-           chown $wwwuser "$serials_file" &&
-           chown $wwwuser "$htpasswd_file" &&
+           (chown $wwwuser "$serials_file" || true) &&
+           (chown $wwwuser "$htpasswd_file" || true) &&
 	   create_sudo_configuration &&
            if [ "$enable_mkeventd" = yes ]
            then

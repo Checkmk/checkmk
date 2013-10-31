@@ -1,0 +1,10 @@
+Title: New filters for selecting several host/service-groups at once
+Level: 2
+Component: multisite
+Version: 1.2.3i7
+Date: 1383229744
+Class: feature
+
+There are two new filters that allow you to select not only one, but
+several host- and service groups at once. This filters are added to
+the builtin views "Host Search", "Service Search" and "All hosts".

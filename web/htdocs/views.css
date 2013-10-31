@@ -111,6 +111,15 @@ div.floatfilter .content > select#optservicegroup {
     width: 240px;
 }
 
+div.floatfilter .content .multigroup table {
+    margin-top: -6px;
+}
+
+div.floatfilter .content .multigroup select {
+    width: 148px;
+    height: 66px;
+}
+
 div.floatfilter .content .filtertime select {
     width: 136px;
 }

@@ -231,7 +231,9 @@ def git_commit(werk):
     title = werk["title"]
     for classid, classname, prefix in classes:
         if werk["class"] == classid:
-            title = prefix + title
+            if prefix:
+                title = "%s %s" % (prefix, title)
+
     os.system("git commit -a -m %s" % quote_shell_string(title + "\n\n" +  werk["description"]))
 
 def quote_shell_string(s):

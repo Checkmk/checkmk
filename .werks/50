@@ -1,0 +1,29 @@
+Title: New concept of favorite hosts and services plus matching filters and views
+Level: 2
+Component: multisite
+Version: 1.2.3i7
+Date: 1383411707
+Class: feature
+
+The new "Favorites" feature introduces a new pair of commands for hosts
+and services: <i>Add to favourites</i> and <i>Remove from favourites</i>.
+It allows you to manage your personal list of favourite hosts and
+services. This list is saved on a per-user-base. Objects on this list are
+marked with a star icon.
+
+The favourites-list can be used for filtering. Two new predefined views
+"Favourite hosts" and "Favourite services" are available for showing you
+favourite objects. Also the new filters have been added to several views.
+Please note, that when you make a host a favourite, the services of that host
+will not automatically get favourites as well. But you easily can use the
+"Service Search" view for listing all services on favorite hosts, if you
+like that behaviour.
+
+With a combination of the existing filters you can do many useful queries
+like "Show me all problems on my favourite hosts in host group X".
+
+The advantage of favourites as opposed to host- and service groups are:
+<ul>
+<li>No change to the monitoring configuration is neccessary and thus no restart of the core.</li>
+<li>Each user can manage his indiviual list.</li.
+</ul>

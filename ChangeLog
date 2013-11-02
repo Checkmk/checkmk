@@ -1,6 +1,7 @@
 1.2.3i7:
     Multisite:
     * 0001 : New filters for selecting several host/service-groups at once...
+    * 0050 : New concept of favorite hosts and services plus matching filters and views...
 
 
 1.2.3i6:

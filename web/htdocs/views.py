@@ -2229,6 +2229,7 @@ def core_command(what, row):
             cmdtag = "HOST"
 
     commands = None
+    title = None
     # Call all command actions. The first one that detects
     # itself to be executed (by examining the HTML variables)
     # will return a command to execute and a title for the

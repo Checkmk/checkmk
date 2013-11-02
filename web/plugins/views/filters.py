@@ -824,5 +824,59 @@ class FilterHostTags(Filter):
     def double_height(self):
         return True
 
-
 declare_filter(302, FilterHostTags())
+
+
+class FilterStarred(FilterTristate):
+    def __init__(self, what):
+        self.what = what
+        icon = '<img class="icon inline" src="images/icon_starred.png"> '
+        FilterTristate.__init__(self,
+            name   = what + "_favorites",
+            title  = icon  + (what == "host" and _("Favorite Hosts") or _("Favorite Services")),
+            info   = what,
+            column = what + "_favorite", # Column, not used
+            deflt  = -1,
+        )
+
+    def filter(self, infoname):
+        current = self.tristate_value()
+        if current == -1:
+            return ""
+        elif current:
+            aand, oor, eq = "And", "Or", "="
+        else:
+            aand, oor, eq = "Or", "And", "!="
+
+        stars = load_stars()
+        filters = ""
+        count = 0
+        if self.what == "host":
+            for star in stars:
+                if ";" in star:
+                    continue
+                filters += "Filter: host_name %s %s\n" % (eq, star)
+                count += 1
+        else:
+            for star in stars:
+                if ";" not in star:
+                    continue
+                h, s = star.split(";")
+                filters += "Filter: host_name %s %s\n" % (eq, h)
+                filters += "Filter: service_description %s %s\n" % (eq, s)
+                filters += "%s: 2\n" % aand
+                count += 1
+
+        # No starred object and show only starred -> show nothing
+        if count == 0 and current:
+            return "Filter: host_state = -4612\n"
+
+        # no starred object and show unstarred -> show everything
+        elif count == 0:
+            return ""
+
+        filters += "%s: %d\n" % (oor, count)
+        return filters
+
+declare_filter(501, FilterStarred("host"))
+declare_filter(501, FilterStarred("service"))

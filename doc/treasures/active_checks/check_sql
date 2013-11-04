@@ -228,12 +228,13 @@ try:
         sys.exit(3)
 
     #row = result[0]
-    row = result.split(",")
+    row = result[0].split(",")
     number = float(row[0])
     text = str(row[1])
 
     try:
         perf = row[2]
+        perf = "|"+row[2]
     except IndexError:
         if opt_debug:
             raise

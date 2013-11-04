@@ -1,0 +1,18 @@
+title: Brocade NetIron MLX devices: Module Overall Status
+agents: snmp
+catalog: hw/network/brocade 
+license: GPL
+distribution: check_mk
+description:
+ Checks the overall status of modules in Brocade NetIron MLX
+ switching / routing devices.
+
+ Returns {OK} on status 10 (running), {WARN} on status 0 (empty)
+ and {CRIT} on every other status.
+
+item:
+ If a module description is delivered by SNMP, the item is build from the 
+ module ID plus the description. Otherwise it is just the ID.
+
+inventory:
+ Finds one item per power supply.

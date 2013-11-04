@@ -1,4 +1,4 @@
-Title: cisco cpu check now recognizes new object cpmCPUTotal5minRev
+Title: cisco_cpu: check now recognizes new object cpmCPUTotal5minRev
 Level: 1
 Component: checks
 Version: 1.2.3i7

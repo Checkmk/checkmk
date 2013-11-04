@@ -1,4 +1,4 @@
-Title: check to monitor fan trays of cisco nexus switches
+Title: cisco_fantray: new check for monitoring fan trays of Cisco Nexus switches 
 Level: 1
 Component: checks
 Version: 1.2.3i7

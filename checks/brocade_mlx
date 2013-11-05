@@ -170,7 +170,7 @@ def check_brocade_mlx_module_mem(item, params, info):
                 status = 2
                 errorstring = " (!!)"
 
-            return status, "%s Bytes used (%0.1f%%%s) of total %s Bytes" % \
+            return status, "%s used (%0.1f%%%s) of total %s" % \
                 (get_bytes_human_readable(mem_used), mem_used_percent, \
                 errorstring, get_bytes_human_readable(mem_total)), \
                 perfdata

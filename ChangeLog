@@ -1,4 +1,7 @@
 1.2.3i7:
+    Multisite:
+    * 0043 FIX : LDAP: Improved error reporting during synchronisation...
+
 
 1.2.3i6:
     Core & Setup:

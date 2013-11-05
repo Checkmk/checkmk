@@ -195,8 +195,8 @@ def ldap_connect(enforce_new = False, enforce_server = None):
 
         # Got no connection to any server
         if ldap_connection is None:
-            raise MKLDAPException(_('The LDAP connector is unable to connect to the LDAP server.\n%s') %
-                                        ('<br />\n'.join(errors)))
+            raise MKLDAPException(_('LDAP connection failed:\n%s') %
+                                        ('\n'.join(errors)))
 
         # on success, store the connection options the connection has been made with
         ldap_connection_options = config.ldap_connection
@@ -316,6 +316,7 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
     # be as stable as it is needed. So we try to repeat the query for three times.
     tries_left = 2
     success = False
+    last_exc = None
     while not success:
         tries_left -= 1
         try:
@@ -345,6 +346,7 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
                                         'incomplete results. You should change the scope of operation '
                                         'within the ldap or adapt the limit settings of the LDAP server.'))
         except (ldap.SERVER_DOWN, ldap.TIMEOUT, MKLDAPException), e:
+            last_exc = e
             if tries_left:
                 ldap_log('  Received %r. Retrying with clean connection...' % e)
                 ldap_disconnect()
@@ -357,8 +359,14 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
 
     if not success:
         ldap_log('  FAILED')
-        raise MKLDAPException(_('Unable to successfully perform the LDAP search. '
-                                'Maybe there is a connection problem with the LDAP server.'))
+        if config.debug:
+            raise MKLDAPException(_('Unable to successfully perform the LDAP search '
+                                    '(Base: %s, Scope: %s, Filter: %s, Columns: %s): %s') %
+                                    (html.attrencode(base), html.attrencode(scope),
+                                    html.attrencode(filt), html.attrencode(','.join(columns))),
+                                    last_exc)
+        else:
+            raise MKLDAPException(_('Unable to successfully perform the LDAP search (%s)') % last_exc)
 
     ldap_log('  RESULT length: %d, duration: %0.3f' % (len(result), duration))
     return result

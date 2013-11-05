@@ -161,12 +161,12 @@ def write_changelog_line(chn, werk):
     prefix = ""
     for classid, classname, p in classes:
         if werk["class"] == classid and p:
-            prefix = p + " "
+            prefix = " " + p
     if werk["description"]:
         omit = "..."
     else:
         omit = ""
-    chn.write("    * %04d %s: %s%s\n" % (werk["id"], prefix, werk["title"], omit))
+    chn.write("    * %04d%s: %s%s\n" % (werk["id"], prefix, werk["title"], omit))
     if werk["class"].startswith("incomp"):
         chn.write("            NOTE: Please refer to the migration notes!\n")
 

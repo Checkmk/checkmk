@@ -670,8 +670,8 @@
     * FIX: check_mkevents now uses case insensitive host name matching
 
     Livestatus:
-    * livestatus: fixed incorrect output formatting of comments_with_info column
-    * table statehist: fixed memory leak
+    * FIX: fixed incorrect output formatting of comments_with_info column
+    * FIX: statehist table: fixed memory leak
 
 1.2.2p2:
     Core:

@@ -532,7 +532,7 @@ def ldap_group_members(filters, filt_attr = 'cn', nested = False):
         for dn, obj in ldap_search(ldap_replace_macros(config.ldap_groupspec['dn']), filt, ['cn', member_attr]):
             groups[dn] = {
                 'cn'      : obj['cn'][0],
-                'members' : obj[member_attr]
+                'members' : obj.get(member_attr, []),
             }
     else:
         # Nested querying is more complicated. We have no option to simply do a query for group objects

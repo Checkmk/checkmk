@@ -5,6 +5,7 @@ components = [
    ( "wato",          "WATO" ),
    ( "notifications", "Notifications" ),
    ( "bi",            "BI" ),
+   ( "reporting",     "Reporting & Availability" ),
    ( "ec",            "Event Console" ),
    ( "livestatus",    "Livestatus" ),
    ( "liveproxy",     "Livestatus-Proxy" ),

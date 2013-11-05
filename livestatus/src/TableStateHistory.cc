@@ -117,9 +117,6 @@ extern Store *g_store;
 
 #define CLASSMASK_STATEHIST 0xC6
 
-// Debug information
-int total_update_calls = 0;
-
 // Debugging logging is hard if debug messages are logged themselves...
 void debug_statehist(const char *loginfo, ...)
 {
@@ -347,56 +344,38 @@ void TableStateHistory::answerQuery(Query *query)
         return;
     }
 
-    // Set initial logentry
-    // Further logfile traversal is handled via getPreviousLogentry() / getNextLogentry()
+    // Determine initial logentry
+    LogEntry* entry;
     _entries = _it_logs->second->getEntriesFromQuery(query, g_store->logCache(), _since, _until, CLASSMASK_STATEHIST);
-    _it_entries = _entries->begin();
-
-    // Start at the logentry LOG VERSION: 2.0 which is logged in the first lines of each logfile
-    // If no entry is found there will be an UNMONITORED entry till the host or service appears
-    LogEntry* entry = _it_entries->second;
-    bool version_found = false;
-    while (entry != 0) {
-        if (entry->_time >= _since){
-            break;
+    _it_entries = _entries->end();
+    // Check last entry. If it's younger than _since -> use this logfile too
+    if (--_it_entries != _entries->begin()) {
+        entry = _it_entries->second;
+        if (entry->_time >= _since) {
+            _it_entries = _entries->begin();
         }
-        if (entry->_type == LOG_VERSION) {
-            version_found = true;
-            break;
-        }
-        entry = getNextLogentry();
     }
 
-//    if (!version_found) {
-//        query->setError(RESPONSE_CODE_INVALID_REQUEST, "Unable to find any LOG VERSION entries before query "
-//                "timeframe. Logfiles seem corrupted.");
-//        g_store->logCache()->unlockLogCache();
-//        return;
-//    }
-
+    // From now on use getPreviousLogentry() / getNextLogentry()
     HostServiceKey key;
     bool only_update = true;
     bool in_nagios_initial_states = false;
 
-    // Debug parameters
-    int total_calls_saved = 0;
-    total_update_calls = 0;
-    int logentry_counter = 0;
-
-
     while (0 != (entry = getNextLogentry()))
     {
-        logentry_counter++;
-//
-//      if (logentry_counter % 50000 == 0)
-//          logger(LOG_NOTICE, "Statehist Entry: %d", logentry_counter);
-
         if (entry->_time >= _until) {
             getPreviousLogentry();
             break;
         }
         if (only_update && entry->_time >= _since) {
             // Reached start of query timeframe. From now on let's produce real output
+            // Update _from time of every state entry
+            state_info_t::iterator it_hst = state_info.begin();
+            while (it_hst != state_info.end()) {
+                it_hst->second->_from  = _since;
+                it_hst->second->_until = _since;
+                it_hst++;
+            }
             only_update = false;
         }
 
@@ -473,7 +452,6 @@ void TableStateHistory::answerQuery(Query *query)
                     {
                         Filter *filter = *it;
                         if (!filter->accepts(state)) {
-                            // logger(LOG_NOTICE, "kann ich rausschmeissen: %s/%s", key.first.c_str(), key.second.c_str());
                             filtered_out = true;
                             break;
                         }
@@ -541,7 +519,8 @@ void TableStateHistory::answerQuery(Query *query)
                 }
 
                 // Log UNMONITORED state if this host or service just appeared within the query timeframe
-                if (!only_update) {
+                // It gets a grace period of ten minutes (nagios startup)
+                if  (!only_update && entry->_time - _since > 60 * 10) {
                     state->_debug_info = "UNMONITORED ";
                     state->_state      = -1;
                 }
@@ -555,7 +534,6 @@ void TableStateHistory::answerQuery(Query *query)
 
 
                 if (state_changed != 0) {
-                    total_calls_saved += state_info.size() - state->_services.size();
                     HostServices::iterator it_svc = state->_services.begin();
                     while (it_svc != state->_services.end()) {
                         updateHostServiceState(query, entry, *it_svc, only_update);
@@ -602,10 +580,6 @@ void TableStateHistory::answerQuery(Query *query)
         }
     }
 
-    //logger(LOG_DEBUG, "Processed statehist logentries: %d", logentry_counter);
-    //logger(LOG_DEBUG, "Total calls %d saved: %d", total_update_calls, total_calls_saved);
-    //logger(LOG_DEBUG, "Objects: %d, Blacklisted: %d", state_info.size(), object_blacklist.size());
-
     // Create final reports
     state_info_t::iterator it_hst = state_info.begin();
     while (it_hst != state_info.end())
@@ -634,6 +608,8 @@ void TableStateHistory::answerQuery(Query *query)
         process(query, hst);
         it_hst++;
     }
+
+    // Cleanup !
     it_hst = state_info.begin();
     while (it_hst != state_info.end()) {
         delete it_hst->second;
@@ -650,14 +626,14 @@ bool TableStateHistory::objectFilteredOut(Query *query, void *entry)
 
 inline int TableStateHistory::updateHostServiceState(Query *query, const LogEntry *entry, HostServiceState *hs_state, const bool only_update){
     int state_changed = 1;
-    total_update_calls++;
 
     // Revive host / service if it was unmonitored
     if (entry->_type != TIMEPERIOD_TRANSITION && hs_state->_has_vanished)
     {
         hs_state->_time  = hs_state->_last_known_time;
         hs_state->_until = hs_state->_last_known_time;
-        process(query, hs_state);
+        if (!only_update)
+            process(query, hs_state);
 
         hs_state->_may_no_longer_exist = false;
         hs_state->_has_vanished = false;

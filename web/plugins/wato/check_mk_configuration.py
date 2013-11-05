@@ -1707,8 +1707,8 @@ register_rule(group,
 register_rule(group,
     "extra_service_conf:notes_url",
     TextAscii(
-        label = _("Url:"),
-        title = _("Notes url for Services"),
+        label = _("URL:"),
+        title = _("Notes URL for Services"),
         help = _("With this setting you can set links to documentations "
                  "for each service"),
         ),
@@ -1717,8 +1717,8 @@ register_rule(group,
 register_rule(group,
     "extra_host_conf:notes_url",
     TextAscii(
-        label = _("Url:"),
-        title = _("Notes url for Hosts"),
+        label = _("URL:"),
+        title = _("Notes URL for Hosts"),
         help = _("With this setting you can set links to documentations "
                  "for Hosts"),
         ),

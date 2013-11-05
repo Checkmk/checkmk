@@ -11723,8 +11723,8 @@ def mode_edit_rule(phase, new = False):
                 html.write("</div>")
 
     # Value
-    forms.header(_("Patterns"))
     if valuespec:
+        forms.header(valuespec.title())
         value = rule[0]
         forms.section()
         try:
@@ -11743,6 +11743,7 @@ def mode_edit_rule(phase, new = False):
 
         valuespec.set_focus("ve")
     else:
+        forms.header(_("Positive / Negative"))
         forms.section("")
         for posneg, img in [ ("positive", "yes"), ("negative", "no")]:
             val = img == "yes"

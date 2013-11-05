@@ -23,7 +23,7 @@
 # Boston, MA 02110-1301 USA.
 
 SHELL           = /bin/bash
-VERSION        	= 1.2.2p2
+VERSION        	= 1.2.2p3
 NAME           	= check_mk
 RPM_TOPDIR     	= rpm.topdir
 RPM_BUILDROOT  	= rpm.buildroot
@@ -136,6 +136,7 @@ version:
           -o "$$(head -c 12 /etc/issue)" = "Ubuntu 12.04" \
           -o "$$(head -c 12 /etc/issue)" = "Ubuntu 12.10" \
           -o "$$(head -c 12 /etc/issue)" = "Ubuntu 13.04" \
+          -o "$$(head -c 12 /etc/issue)" = "Ubuntu 13.10" \
           -o "$$(head -c 20 /etc/issue)" = "Debian GNU/Linux 6.0" \
 	] \
           || { echo 'You are not on the reference system!' ; exit 1; }

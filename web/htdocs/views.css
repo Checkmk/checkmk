@@ -629,3 +629,35 @@ table.data.timewarp {
     width: 800px;
     margin-bottom: 20px;
 }
+
+div.av_levels_legend {
+    background-image: url("images/white_20percent.png");
+    background-repeat: repeat;
+    padding: 5px 15px;
+    border-radius: 5px;
+    margin-top: 10px;
+    text-align: right;
+}
+div.av_levels_legend h3 {
+    margin-top: 0px;
+    font-size: 13px;
+    color: black;
+}
+div.av_levels_legend div {
+    display: inline-block;
+    width: 50px;
+    white-space: nowrap;
+    margin-right: 5px;
+}
+div.av_levels_legend div.state {
+    text-align: center;
+    padding: 2px 0px;
+    font-size: 12px;
+}
+div.av_levels_legend div.level {
+    margin-right: 15px;
+    color: black;
+}
+div.av_levels_legend div:last-child {
+    margin-right: 0px;
+}

@@ -1,0 +1,16 @@
+Title: Visual colorization of availability according to levels
+Level: 2
+Component: reporting
+Version: 1.2.3i7
+Date: 1383662920
+Class: feature
+
+The availability reporting has now a new option called <i>Visual levels for
+the availability</i>.  Here you can define two percentual levels, which are
+called <i>Warning</i> and <i>Critical</i>.  If these levels are enabled, then
+the column <i>OK</i> or <i>UP</i> will be interpreted as the availability
+of the object in question and the color will change to yellow or red, if
+the actual percentual availability of that object is below those levels.
+
+That way you can create a tabular report of several items that show whether
+a certain availability has been reached.

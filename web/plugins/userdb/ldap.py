@@ -532,7 +532,7 @@ def ldap_group_members(filters, filt_attr = 'cn', nested = False):
         for dn, obj in ldap_search(ldap_replace_macros(config.ldap_groupspec['dn']), filt, ['cn', member_attr]):
             groups[dn] = {
                 'cn'      : obj['cn'][0],
-                'members' : obj[member_attr]
+                'members' : obj.get(member_attr, []),
             }
     else:
         # Nested querying is more complicated. We have no option to simply do a query for group objects
@@ -795,7 +795,7 @@ ldap_attribute_plugins['groups_to_contactgroups'] = {
 def ldap_convert_groups_to_roles(plugin, params, user_id, ldap_user, user):
     # Load the needed LDAP groups, which match the DNs mentioned in the role sync plugin config
     ldap_groups = dict(ldap_group_members([ dn for role_id, dn in params.items() if isinstance(dn, str) ],
-                                     filt_attr = 'dn', nested = params.get('nested', False)))
+                                     filt_attr = 'distinguishedname', nested = params.get('nested', False)))
 
     # Load default roles from default user profile
     roles = config.default_user_profile['roles'][:]

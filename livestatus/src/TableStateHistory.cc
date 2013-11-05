@@ -408,7 +408,7 @@ void TableStateHistory::answerQuery(Query *query)
 	}
     it_hst = state_info.begin();
     while (it_hst != state_info.end()) {
-        delete it_hst->second; 
+        delete it_hst->second;
         it_hst++;
     }
 

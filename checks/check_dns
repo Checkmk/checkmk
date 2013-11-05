@@ -35,7 +35,7 @@ def check_dns_arguments(params):
         args += ' -a %s' % quote_shell_string(settings["expected_address"])
 
     if settings.get("expected_authority"):
-        args += ' -A' 
+        args += ' -A'
 
     if "response_time" in settings:
         args += ' -w %d' % int(settings["response_time"][0])

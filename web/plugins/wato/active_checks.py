@@ -59,7 +59,7 @@ register_rule(group,
                          title  = _("Expect Authoritative DNS Server"),
                          totext = _("Expect Authoritative"),
                          help   = _("Optional expect the DNS server to be authoriative"
-                                    "for the lookup ")), 
+                                    "for the lookup ")),
                    ),
                    ( "response_time",
                      Tuple(

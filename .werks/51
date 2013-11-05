@@ -1,0 +1,15 @@
+Title: Option for showing timeline directly in availability table
+Level: 2
+Component: reporting
+Version: 1.2.3i7
+Date: 1383658513
+Class: feature
+
+In the reporting options of the <i>Availability</i> pages there is
+now a new option called <i>Show timeline of each object directly in table</i>. When
+this is enabled then for each host or services the timeline chart is being
+included directly in the availability table. When hovering over one of the
+colored sections a small popup will show the details about that section.
+
+Also new vertical bars indicate hours, days, weeks and months. Just hover
+over such a bar in order to see its precise date.

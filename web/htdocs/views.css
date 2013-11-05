@@ -519,7 +519,7 @@ table.data td.hostdown, table.timeline td.hostdown {
     color: white;
 }
 table.data td.unmonitored, table.timeline td.unmonitored {
-    background-color: #ddd;
+    background-color: #cacaca;
     color: #888;
 }
 table.data.availability tr.odd0 td.number {
@@ -549,19 +549,57 @@ div#avoptions_on {
     margin-right: 3px;
 }
 
+table.data tr.data > td.timeline {
+    width: 500px;
+    padding: 0px;
+}
 
 table.timeline {
-    width: 800px;
-    margin-bottom: 20px;
-    box-shadow: 0px 0px 1px #ccf;
     height: 30px;
     border-spacing: 0px;
     border-collapse: collapse;
 }
 
+table.timeline.standalone {
+    box-shadow: 0px 0px 1px #ccf;
+    margin-bottom: 20px;
+    width: 800px;
+}
+
+table.timeline.inline {
+    border-style: none;
+    width: 500px;
+}
+table.timeline.inline {
+    border-style: none;
+    width: 500px;
+    box-shadow: 0px 0px 1px #555 inset;
+}
+
 table.timeline td {
     padding: 0px;
+    border-style: none;
+}
+
+table.timeline.standalone td {
     border: 1px solid #444;
+}
+
+div.timelinerange {
+    position: relative;
+}
+
+/* We render the small vertical lines in a way that only
+   the left border is visible but the thing is thick 5 pixels.
+   That makes hovering over it more easy. */
+div.timelinerange div.timelinechoord {
+    position: absolute;
+    top: 0px;
+    width: 5px;
+    height: 30px;
+    border-style: none none none solid;
+    border-width: 0px 0px 0px 1px;
+    border-color: #666;
 }
 
 table.timelineevents {
@@ -574,6 +612,9 @@ table.timelineevents tr.hilite {
 div.timelinerange {
     width: 800px;
     float: none;
+}
+div.timelinerange.inline {
+    width: 500px;
 }
 div.timelinerange div {
     width: 300px;

@@ -1,3 +1,5 @@
+1.2.2p4:
+
 1.2.2p3:
     Core:
     * FIX: get_average(): Gracefully handle time anomlies of target systems

@@ -1,2 +1,2 @@
 SITE=${SITE:-$(omd sites --bare | head -n 1)}
-sudo rsync -a ./ /omd/sites/$SITE/lib/nagios/plugins
+sudo rsync -va ./ /omd/sites/$SITE/lib/nagios/plugins

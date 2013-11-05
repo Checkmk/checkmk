@@ -24,34 +24,31 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# oid(".1.3.6.1.4.1.9.9.109.1.1.1.1.5.1") is depreceated by
-# oid(".1.3.6.1.4.1.9.9.109.1.1.1.1.8.1"), we recognize both for now
+cisco_fan_states = ('', 'unknown', 'up', 'down', 'warning')
 
-cisco_cpu_default_levels = (80.0, 90.0)
+def inventory_cisco_fantray(info):
+    if info[0]:
+        return [ (line[0], None) for line in info ]
 
-def check_cisco_cpu(item, params, info):
-    if info[0][1]:
-        util = float(info[0][1])
-    else:
-        util = float(info[0][0])
-    infotext = "%2.1f%% utilization in the last 5 minutes" % util
-    warn, crit = params
-    perfdata = [("util", util, warn, crit, 0, 100)]
-    if util >= crit:
-        return (2, infotext + " (critical at %d%%)" % crit, perfdata)
-    elif util >= warn:
-        return (1, infotext + " (warning at %d%%)" % warn, perfdata)
-    else:
-        return (0, infotext, perfdata)
+def check_cisco_fantray(item, params, info):
+    for line in info:
+        if line[0] == item:
+            state = saveint(line[1])
+            status = [ "", "unknown", "up", "down", "warning" ]
+            if state == 2:
+                return (0, "State is %s (%d)" % (status[state], state))
+            elif state in ( 0, 1, 4 ):
+                return (1, "State is %s (%d)" % (status[state], state))
+            else:
+                return (2, "State is %s (%d)" % (status[state], state))
+    return (3, "item not found in snmp data")
 
-check_info["cisco_cpu"] = {
-    "check_function"        : check_cisco_cpu,
-    "inventory_function"    : lambda info: [(None, "cisco_cpu_default_levels")],
-    "service_description"   : "CPU utilization",
-    "has_perfdata"          : True,
-    "group"                 : "cpu_utilization",
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.4.1.9.9.109.1.1.1.1.8.1") \
-                                  or oid(".1.3.6.1.4.1.9.9.109.1.1.1.1.5.1"),
-    "snmp_info"		    : ( ".1.3.6.1.4.1.9.9.109.1.1.1.1", [ 5, 8 ]),
+
+check_info["cisco_fantray"] = {
+    'check_function':          check_cisco_fantray,
+    'inventory_function':      inventory_cisco_fantray,
+    'service_description':     'FAN %s',
+    'snmp_info':               ('.1.3.6.1.4.1.9.9.117.1.4.1.1.1',[ OID_END, '' ]),
+    'snmp_scan_function':      \
+     lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower(),
 }
-

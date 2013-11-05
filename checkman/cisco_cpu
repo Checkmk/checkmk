@@ -5,6 +5,15 @@ license: GPL
 distribution: check_mk
 description:
  Check CPU utilization of the last 5 minutes in percent on Cisco devices.
+ This check tests for two oids out of {cpmCPUTotalEntry}:
+
+ {.1.3.6.1.4.1.9.9.109.1.1.1.1.5.1 = cpmCPUTotal5min}
+
+ {.1.3.6.1.4.1.9.9.109.1.1.1.1.8.1 = cpmCPUTotal5minRev}
+
+ The latter is depreceated by cisco and will only be used if {cpmCPUTotal5minRev}
+ is unavailable.
+
 
 perfdata:
  Just one value: The CPU utilization of the last 5 minutes in percent.

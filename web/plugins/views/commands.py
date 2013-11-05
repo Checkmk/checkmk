@@ -77,8 +77,8 @@ multisite_commands.append({
     "permission"  : "action.notifications",
     "title"       : _("Notifications"),
     "render"      : lambda: \
-       html.button("_enable_notifications", _("Enable.")) == \
-       html.button("_disable_notifications", _("Disable.")),
+       html.button("_enable_notifications", _("Enable")) == \
+       html.button("_disable_notifications", _("Disable")),
     "action"      : command_notifications,
 })
 
@@ -102,8 +102,8 @@ multisite_commands.append({
     "permission"  : "action.enablechecks",
     "title"       : _("Active checks"),
     "render"      : lambda: \
-       html.button("_enable_checks", _("Enable.")) == \
-       html.button("_disable_checks", _("Disable.")),
+       html.button("_enable_checks", _("Enable")) == \
+       html.button("_disable_checks", _("Disable")),
     "action"      : command_enable_active,
 })
 
@@ -122,8 +122,8 @@ multisite_commands.append({
     "permission"  : "action.enablechecks",
     "title"       : _("Passive checks"),
     "render"      : lambda: \
-       html.button("_enable_passive_checks", _("Enable.")) == \
-       html.button("_disable_passive_checks", _("Disable.")),
+       html.button("_enable_passive_checks", _("Enable")) == \
+       html.button("_disable_passive_checks", _("Disable")),
     "action"      : command_enable_passive,
 })
 
@@ -504,3 +504,56 @@ multisite_commands.append({
       ( "DEL_%s_COMMENT;%d" % (cmdtag, spec),
         _("remove"))
 })
+
+#   .--Stars *-------------------------------------------------------------.
+#   |                   ____  _                                            |
+#   |                  / ___|| |_ __ _ _ __ ___  __/\__                    |
+#   |                  \___ \| __/ _` | '__/ __| \    /                    |
+#   |                   ___) | || (_| | |  \__ \ /_  _\                    |
+#   |                  |____/ \__\__,_|_|  |___/   \/                      |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def load_stars():
+    return set(config.load_user_file("favorites", []))
+
+def save_stars(stars):
+    config.save_user_file("favorites", list(stars))
+
+
+def command_star(cmdtag, spec, row):
+    star = html.var("_star") and 1 or 0
+    if star:
+        title = _("<b>add to you favorites</b>")
+    else:
+        title = _("<b>remove from your favorites</b>")
+    return "STAR;%d;%s" % (star, spec), title
+
+
+def command_executor_star(command, site):
+    foo, star, spec = command.split(";", 2)
+    stars = load_stars()
+    if star == "0" and spec in stars:
+        stars.remove(spec)
+    elif star == "1":
+        stars.add(spec)
+    save_stars(stars)
+
+config.declare_permission("action.star",
+    _("Use favorites"),
+    _("This permission allows a user to make certain host and services "
+      "his personal favorites. Favorites can be used for a having a fast "
+      "access to items that are needed on a regular base."),
+    [ "user", "admin" ])
+
+multisite_commands.append({
+    "tables"         : [ "host", "service" ],
+    "permission"     : "action.star",
+    "title"          : _("Favorites"),
+    "render"         : lambda: \
+       html.button("_star",   _("Add to Favorites")) == \
+       html.button("_unstar", _("Remove from Favorites")),
+    "action"         : command_star,
+    "executor"       : command_executor_star,
+})
+

@@ -40,6 +40,12 @@ else:
     def tty_colors(c):
         return ""
 
+grep_colors = [ 
+   tty_bold + tty_magenta,
+   tty_bold + tty_cyan,
+   tty_bold + tty_green,
+] 
+
 def get_tty_size():
     import termios,struct,fcntl
     try:
@@ -254,7 +260,7 @@ def add_comment(werk, title, comment):
 
 
 def usage():
-    sys.stdout.write("""Usage: gb COMMAND [ARGS...]
+    sys.stdout.write("""Usage: werk COMMAND [ARGS...]
 
 where COMMAND is one of:
 
@@ -268,7 +274,6 @@ where COMMAND is one of:
   grep [-v] KW1 KW2...   - show werks containing all of the given keywords (-v: verbose)
   edit [#]               - open werk # in editor (or newest werk)
   blame [#]              - show who worked on a werk
-  commit                 - commit all changed and new werks
 
 """)
     sys.exit(1)

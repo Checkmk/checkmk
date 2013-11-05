@@ -1,0 +1,17 @@
+Title: New rule for configuring the display_name of a service
+Level: 2
+Component: wato
+Version: 1.2.3i7
+Date: 1383666760
+Class: feature
+
+Thew new rule set <i>Alternative display name for Services</i> allows you
+to specify an alternative name to be displayed for certain services. It sets
+the configuration parameter <tt>display_name</tt>. This name is available as
+a column when creating new views or modifying existing ones. It is always
+visible in the details view of a service. In the availability reporting there
+is an option for using that name instead of the normal service description. It
+does not automatically replace the normal service name in all views.
+
+<b>Note</b>: The purpose of this rule set is to define unique names for several
+well-known services. It cannot rename services in general.

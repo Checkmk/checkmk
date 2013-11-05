@@ -1724,6 +1724,24 @@ register_rule(group,
         ),
     )
 
+register_rule(group,
+   "extra_service_conf:display_name",
+   TextUnicode(
+       title = _("Alternative display name for Services"),
+       help = _("This rule set allows you to specify an alternative name "
+                "to be displayed for certain services. This name is available as "
+                "a column when creating new views or modifying existing ones. "
+                "It is always visible in the details view of a service. In the "
+                "availability reporting there is an option for using that name "
+                "instead of the normal service description. It does <b>not</b> automatically "
+                "replace the normal service name in all views.<br><br><b>Note</b>: The "
+                "purpose of this rule set is to define unique names for several well-known "
+                "services. It cannot rename services in general."),
+       size = 64,
+   ),
+   itemtype = "service")
+
+
 group = "monconf/" + _("Inventory and Check_MK settings")
 
 register_rule(group,

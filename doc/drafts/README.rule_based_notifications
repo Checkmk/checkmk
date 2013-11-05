@@ -2,27 +2,28 @@ Starting point: Check_MK's "Flexible Notifications" are to a decent degree
 more flexible than Nagios' builtin notification system.  There are some
 situations, however, where even more flexiblity is desirable. Furthermore -
 if you have a larger number of users - the configuration of the notification
-profiles for each user is very inconveniant.
+profiles for each user is very inconvenient.
 
-This white pager suggest a new notification system that tackles these problems
-and is easily extendable for the future.
+This white paper suggests a new notification system that tackles these problems
+and is easily extendable in the future.
 
 RULE BASED NOTIFICATIONS
 ------------------------
 The basic idea is that notifications are processed by a rule based engine -
 very similar to the "Event Console". A notifcation is in the first place
-independent of an actual user. It goes as follows:
+independent of an actual user. It is handled as follows:
 
 1. The monitoring Core (Nagios/Icinga/CMC) creates a host or service *Alert*.
 
-2. That alert is being notified by a general global contact calles "checkmk-notify".
+2. The monitoring core notifies the global contact called "checkmk-notify" 
+   about the alert.
 
-3. That contact has "cmk --notify" configured as its notification command. By
+3. This contact has "cmk --notify" configured as its notification command. By
    means of an environment variable it gets the list of contacts of the object
    for later reference. The actual contacts themselves have notifications disabled.
-   This avoid duplicate notifications.
+   This avoids duplicate notifications.
 
-4. Now the notifications goes through a chain of notification rules, which
+4. Now the notification goes through a chain of notification rules, which
    can be edited via WATO (similar to the one in the Event Console). One difference
    to the EC is, that in the notification system *all* rules will be applied,
    even if a previous rule already matched. That is important in order to have
@@ -31,27 +32,27 @@ independent of an actual user. It goes as follows:
 
 RULES
 -----
-The rules have a structure similar to those in the Event Console. There are
-being edited by a dedicated WATO mdule. Each rule consits of a condition
+The rules have a structure similar to those in the Event Console. They are
+edited by a dedicated WATO module. Each rule consist of a condition
 and a notification action.
 
 The condition can be formed of:
-* whether a certain timeperiod is currenlty active
+* whether a certain timeperiod is currently active
 * the notification number (i.e. phase of escalation)
 * the service level (a number that can be attached to each host/service)
 * the event type (up, down, ok, crit, etc.)
 * a host specification like in WATO rules (using host tags, etc.)
 * a service specification using regular expressions (like in WATO rules)
 
-Further kinds of conditions that we can think of are:
+Further conditions that we can think of are:
 * The original state or the complete state transition (e.g. CRIT -> WARN vs. OK -> WARN)
 * the type of the check plugin, e.g. only checks of type "if" or "if64"
 * whether the host or service is contained in a certain host/service group
 * whether it's contained in a certain contact group
 * whether it has a certain contact
-* the value of a certain user defined custom variable
+* the value of a certain user-defined custom variable
 
-When all conditions of a rule are fullfilled, then it matches
+If all conditions of a rule are fullfilled, it matches
 and its action is executed. The action consist of:
 
 * Who should be notified?
@@ -66,7 +67,7 @@ and its action is executed. The action consist of:
 * The parameters of that plugin
 
 Note: the action is not immediately executed but added to the list of planned
-notifications. This list contains of triples of the following strucute:
+notifications. This list consists of triples of the following structure:
 
    Contact, Plugin, Parameters
 

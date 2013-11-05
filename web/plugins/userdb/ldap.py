@@ -795,7 +795,7 @@ ldap_attribute_plugins['groups_to_contactgroups'] = {
 def ldap_convert_groups_to_roles(plugin, params, user_id, ldap_user, user):
     # Load the needed LDAP groups, which match the DNs mentioned in the role sync plugin config
     ldap_groups = dict(ldap_group_members([ dn for role_id, dn in params.items() if isinstance(dn, str) ],
-                                     filt_attr = 'dn', nested = params.get('nested', False)))
+                                     filt_attr = 'distinguishedname', nested = params.get('nested', False)))
 
     # Load default roles from default user profile
     roles = config.default_user_profile['roles'][:]

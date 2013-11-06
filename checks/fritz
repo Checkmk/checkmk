@@ -1,0 +1,206 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | copyright mathias kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# this file is part of check_mk.
+# the official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  gnu general public license  as published by
+# the free software foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but without any warranty;  with-
+# out even the implied warranty of  merchantability  or  fitness for a
+# particular purpose. see the  gnu general public license for more de-
+# ails.  you should have  received  a copy of the  gnu  general public
+# license along with gnu make; see the file  copying.  if  not,  write
+# to the free software foundation, inc., 51 franklin st,  fifth floor,
+# boston, ma 02110-1301 usa.
+
+def fritz_parse_info(info):
+    data = {}
+    for l in info:
+        data[l[0]] = ' '.join(l[1:])
+    return data
+
+#
+# Internet connection
+#
+
+def inventory_fritz_conn(info):
+    data = fritz_parse_info(info)
+    if 'NewConnectionStatus' in data \
+       and 'NewExternalIPAddress' in data:
+        return [(None, {})]
+
+fritz_conn_states = {
+    'Connected':    0,
+    'Disconnected': 1,
+}
+
+def check_fritz_conn(_unused, _no_params, info):
+    data = fritz_parse_info(info)
+    state_txt = data['NewConnectionStatus']
+    nag_state = fritz_conn_states.get(state_txt)
+    if nag_state is None:
+        return 3, 'Got unhandled state output "%s"' % state_txt
+
+    output = 'State: %s' % state_txt
+    if state_txt == 'Connected':
+        output += ', WAN IP Address: %s' % data['NewExternalIPAddress']
+
+    last_err = data.get('NewLastConnectionError')
+    if last_err and last_err != 'ERROR_NONE':
+        output += ', Last Error: %s' % last_err
+
+    return nag_state, output
+
+check_info['fritz.conn'] = {
+  "inventory_function"  : inventory_fritz_conn,
+  "check_function"      : check_fritz_conn,
+  "service_description" : "Connection",
+  "has_perfdata"        : False,
+}
+
+
+#
+# Config
+#
+
+def inventory_fritz_config(info):
+    data = fritz_parse_info(info)
+    if 'NewDNSServer1' in data:
+        return [(None, {})]
+
+def check_fritz_config(_unused, _no_params, info):
+    data = fritz_parse_info(info)
+
+    output = []
+    for label, key in [
+            ('DNS-Server1', 'NewDNSServer1'),
+            ('DNS-Server2', 'NewDNSServer2'),
+            ('VoIP-DNS-Server1', 'NewVoipDNSServer1'),
+            ('VoIP-DNS-Server2', 'NewVoipDNSServer2'),
+            ('uPnP Config Enabled', 'NewUpnpControlEnabled'),
+        ]:
+        if key in data and data[key] != '0.0.0.0':
+            output.append('%s: %s' % (label, data[key]))
+
+    if not output:
+        return 3, 'Configuration info is missing'
+
+    return 0, ', '.join(output)
+
+check_info['fritz.config'] = {
+  "inventory_function"  : inventory_fritz_config,
+  "check_function"      : check_fritz_config,
+  "service_description" : "Configuration",
+  "has_perfdata"        : False,
+}
+
+#
+# Uptime
+#
+
+def inventory_fritz_uptime(info):
+    data = fritz_parse_info(info)
+    if 'NewUptime' in data:
+        return [ (None, {}) ]
+
+def check_fritz_uptime(_no_item, params, info):
+    data = fritz_parse_info(info)
+    return check_uptime_seconds(params, float(data['NewUptime']))
+
+check_info["fritz.uptime"] = {
+    'check_function':          check_fritz_uptime,
+    'inventory_function':      inventory_fritz_uptime,
+    'service_description':     'Uptime',
+    'has_perfdata':            True,
+    'includes':                [ 'uptime.include' ],
+    'group':                   'uptime',
+}
+
+#
+# WAN Interface Check
+#
+
+def fritz_wan_if_to_if64(data):
+    if data['NewLinkStatus'] == 'Up':
+        oper_status = '1'
+    else:
+        oper_status = '2'
+
+    return [
+        # ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, inucast,
+        # inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, outucast,
+        # outmcast, outbcast, ifOutDiscards, ifOutErrors, ifOutQLen, ifAlias, ifPhysAddress
+        ('0', 'WAN', '6', data['NewLayer1DownstreamMaxBitRate'], oper_status,
+         data['NewTotalBytesReceived'], '0', '0', '0', '0', '0',
+         data['NewTotalBytesSent'],     '0', '0', '0', '0', '0', '0',
+         'WAN', '')
+    ]
+
+def inventory_fritz_wan_if(info):
+    data = fritz_parse_info(info)
+    return inventory_if_common(fritz_wan_if_to_if64(data))
+
+def check_fritz_wan_if(item, params, info):
+    data = fritz_parse_info(info)
+    if 'assumed_speed_in' not in params:
+        params['assumed_speed_in'] = int(data['NewLayer1DownstreamMaxBitRate'])
+    if 'assumed_speed_out' not in params:
+        params['assumed_speed_out'] = int(data['NewLayer1UpstreamMaxBitRate'])
+    if 'unit' not in params:
+        params['unit'] = 'Bit'
+    return check_if_common(item, params, fritz_wan_if_to_if64(data))
+
+check_info["fritz.wan_if"] = {
+    'check_function':          check_fritz_wan_if,
+    'inventory_function':      inventory_fritz_wan_if,
+    'service_description':     'Interface %s',
+    'has_perfdata':            True,
+    'group':                   'if',
+    'default_levels_variable': 'if_default_levels',
+    'includes':                [ 'if.include' ],
+}
+
+#
+# Link
+#
+
+def inventory_fritz_link(info):
+    data = fritz_parse_info(info)
+    if 'NewLinkStatus' in data and 'NewPhysicalLinkStatus' in data:
+        return [ (None, {}) ]
+
+def check_fritz_link(_no_item, _no_params, info):
+    data = fritz_parse_info(info)
+
+    output = []
+    for label, key in [
+            ('Link Status',          'NewLinkStatus'),
+            ('Physical Link Status', 'NewPhysicalLinkStatus'),
+            ('Link Type',            'NewLinkType'),
+            ('WAN Access Type',      'NewWANAccessType'),
+        ]:
+        if key in data:
+            output.append('%s: %s' % (label, data[key]))
+
+    if not output:
+        return 3, 'Link info is missing'
+
+    return 0, ', '.join(output)
+
+check_info["fritz.link"] = {
+    'check_function':          check_fritz_link,
+    'inventory_function':      inventory_fritz_link,
+    'service_description':     'Link Info',
+    'has_perfdata':            False,
+}

@@ -146,4 +146,25 @@ register_rule(group,
     ),
     match = 'first')
 
-
+register_rule(group,
+    "special_agents:fritzbox",
+     Dictionary(
+        title = _("Check state of Fritz!Box Devices"),
+        help = _("This rule selects the Fritz!Box agent, which uses UPNP to gather information "
+                 "about configuration and connection status information "),
+        elements = [
+            ( "timeout",
+              Integer(
+                  title = _("Connection timeout"),
+                  help = _("The network timeout in seconds when communicating via UPNP."
+                           "The default is 10 seconds. Please note that this "
+                           "is not a total timeout, instead it is applied to each API call."),
+                  default_value = 10,
+                  minvalue = 1,
+                  unit = _("seconds"),
+              )
+            ),
+        ],
+        optional_keys = [ "timeout" ],
+    ),
+    match = 'first')

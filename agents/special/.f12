@@ -1,0 +1,2 @@
+SITE=${SITE:-$(omd sites --bare | head -n 1)}
+sudo cp -r * /omd/sites/$SITE/share/check_mk/agents/special

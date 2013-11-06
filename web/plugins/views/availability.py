@@ -51,6 +51,8 @@ def render_availability(view, datasource, filterheaders, display_options,
 
     else:
         title = _("Availability: ") + view_title(view)
+    title += " - " + range_title
+
     if 'H' in display_options:
         html.body_start(title, stylesheets=["pages","views","status"])
     if 'T' in display_options:
@@ -288,6 +290,20 @@ avoption_entries = [
      )
   ),
 
+  # Group by Host, Hostgroup or Servicegroup?
+  ( "grouping",
+    "single",
+    DropdownChoice(
+        title = _("Grouping"),
+        choices = [
+          ( None,             _("Do not group") ),
+          ( "host",           _("By Host")       ),
+          ( "host_groups",    _("By Host group") ),
+          ( "service_groups", _("By Service group") ),
+        ]
+    )
+  ),
+
   # Format of numbers
   ( "timeformat",
     "single",
@@ -352,7 +368,14 @@ avoption_entries = [
 
 
 def render_availability_options():
-    avoptions = config.load_user_file("avoptions", {
+    if html.var("_reset") and html.check_transaction():
+        config.save_user_file("avoptions", {})
+        for varname in html.vars.keys():
+            if varname.startswith("avo_"):
+                html.del_var(varname)
+            html.del_var("avoptions")
+
+    avoptions = {
         "range"          : (time.time() - 86400, time.time()),
         "downtimes"      : {
             "include" : "honor",
@@ -365,6 +388,7 @@ def render_availability_options():
             "unmonitored"         : True,
         },
         "timeformat"     : "percentage_2",
+        "labelling"      : [],
         "rangespec"      : "d0",
         "state_grouping" : {
             "warn"      : "warn",
@@ -376,15 +400,14 @@ def render_availability_options():
         "dont_merge"        : False,
         "show_timeline"     : False,
         "summary"           : "sum",
-    })
+        "av_levels"         : None,
+        "av_mode"           : False,
+        "grouping"          : None,
+    }
 
-    # Make sure that parameters are set that have not been present in the
-    # original version. This code can be dropped in a couple of years.
-    avoptions.setdefault("notification_period", "honor")
-    avoptions.setdefault("outage_statistics", ([], []))
-    avoptions.setdefault("av_levels", None)
-    avoptions.setdefault("av_mode", False)
-    avoptions.setdefault("labelling", [])
+    # Users of older versions might not have all keys set. The following
+    # trick will merge their options with our default options.
+    avoptions.update(config.load_user_file("avoptions", {}))
 
     is_open = False
     html.begin_form("avoptions")
@@ -422,6 +445,7 @@ def render_availability_options():
 
     html.write("<tr><td>")
     html.button("apply", _("Apply"), "submit")
+    html.button("_reset", _("Reset to defaults"), "submit")
     html.write("</td></tr></table>")
     html.write("</div>")
 
@@ -520,7 +544,6 @@ def get_availability_data(datasource, filterheaders, range, only_sites, limit, s
     else:
         av_filter += "Filter: service_description =\n"
 
-
     query = "GET statehist\n" + av_filter
 
     # Add Columns needed for object identification
@@ -533,7 +556,11 @@ def get_availability_data(datasource, filterheaders, range, only_sites, limit, s
     if include_output:
         columns.append("log_output")
     if "use_display_name" in avoptions["labelling"]:
-        columns.append("current_service_display_name")
+        columns.append("service_display_name")
+
+    # If we group by host/service group then make sure that that information is available
+    if avoptions["grouping"] not in [ None, "host" ]:
+        columns.append(avoptions["grouping"])
 
     add_columns = datasource.get("add_columns", [])
     rows = do_query_data(query, columns, add_columns, None, filterheaders, only_sites, limit = None)
@@ -570,6 +597,7 @@ bi_availability_columns = [
  ( "unmonitored",               "unmonitored",   _("N/A"),      _("During this time period no monitoring data is available") ),
 ]
 
+
 def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
     # Sort by site/host and service, while keeping native order
     by_host = {}
@@ -596,16 +624,28 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
     os_aggrs, os_states = avoptions.get("outage_statistics", ([],[]))
     need_statistics = os_aggrs and os_states
     show_timeline = avoptions["show_timeline"]
+    grouping = avoptions["grouping"]
 
     # Note: in case of timeline, we have data from exacly one host/service
     for site_host, site_host_entry in by_host.iteritems():
         for service, service_entry in site_host_entry.iteritems():
 
+            if grouping == "host":
+                group_ids = [site_host]
+            elif grouping:
+                group_ids = set([])
+            else:
+                group_ids = None
+
             # First compute timeline
             timeline_rows = []
             considered_duration = 0
             for span in service_entry:
-                display_name = span.get("current_service_display_name", service)
+                # Information about host/service groups are in the actual entries
+                if grouping and grouping != "host":
+                    group_ids.update(span[grouping]) # List of host/service groups
+
+                display_name = span.get("service_display_name", service)
                 state = span["state"]
                 if state == -1:
                     s = "unmonitored"
@@ -667,7 +707,8 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
 
             if not show_timeline:
                 timeline_rows = None
-            availability.append([site_host[0], site_host[1], service, display_name, states, considered_duration, statistics, timeline_rows])
+
+            availability.append([site_host[0], site_host[1], service, display_name, states, considered_duration, statistics, timeline_rows, group_ids])
 
     # Prepare number format function
     range, range_title = avoptions["range"]
@@ -925,6 +966,70 @@ def render_availability_table(availability, from_time, until_time, range_title, 
         html.message(_("No matching hosts/services."))
         return # No objects
 
+    grouping = avoptions["grouping"]
+
+    if not grouping:
+        render_availability_group(range_title, range_title, None, availability, from_time, until_time, what, avoptions, render_number)
+
+    else:
+        # Grouping is one of host/hostgroup/servicegroup
+        # 1. Get complete list of all groups
+        all_group_ids = get_av_groups(availability, grouping)
+
+        # 2. Compute Names for the groups and sort according to these names
+        if grouping != "host":
+            group_titles = dict(all_groups(grouping[:-7]))
+
+        titled_groups = []
+        for group_id in all_group_ids:
+            if grouping == "host":
+                titled_groups.append((group_id[1], group_id)) # omit the site name
+            else:
+                if group_id == ():
+                    title = _("Not contained in any group")
+                else:
+                    title = group_titles.get(group_id, group_id)
+                titled_groups.append((title, group_id)) ## ACHTUNG
+        titled_groups.sort(cmp = lambda a,b: cmp(a[1], b[1]))
+
+        # 3. Loop over all groups and render them
+        for title, group_id in titled_groups:
+            render_availability_group(title, range_title, group_id, availability, from_time, until_time, what, avoptions, render_number)
+
+    # Legend for Availability levels
+    av_levels = avoptions["av_levels"]
+    if av_levels:
+        warn, crit = av_levels
+        html.write('<div class="av_levels_legend">')
+        html.write('<h3>%s</h3>' % _("Availability levels"))
+        html.write('<div class="state state0">%s</div><div class=level>&ge; %.3f%%</div>' % (_("OK"), warn))
+        html.write('<div class="state state1">%s</div><div class=level>&ge; %.3f%%</div>' % (_("WARN"), crit))
+        html.write('<div class="state state2">%s</div><div class=level>&lt; %.3f%%</div>' % (_("CRIT"), crit))
+        html.write('</div>')
+
+
+
+def get_av_groups(availability, grouping):
+    all_group_ids = set([])
+    for site, host, service, display_name, states, considered_duration, statistics, timeline_rows, group_ids in availability:
+        all_group_ids.update(group_ids)
+        if len(group_ids) == 0:
+            all_group_ids.add(()) # null-tuple denotes ungrouped objects
+    return all_group_ids
+
+
+# When grouping is enabled, this function is called once for each group
+def render_availability_group(group_title, range_title, group_id, availability, from_time, until_time, what, avoptions, render_number):
+
+    # Filter out groups that we want to show this time
+    group_availability = []
+    for entry  in availability:
+        group_ids = entry[-1]
+        if group_id == () and group_ids:
+            continue # This is not an angrouped object
+        elif group_id and group_id not in group_ids:
+            continue # Not this group
+        group_availability.append(entry)
 
     # Some columns might be unneeded due to state treatment options
     sg = avoptions["state_grouping"]
@@ -932,10 +1037,7 @@ def render_availability_table(availability, from_time, until_time, range_title, 
 
     show_timeline = avoptions["show_timeline"]
     labelling = avoptions["labelling"]
-    if avoptions["av_levels"]: # and avoptions["timeformat"].startswith("percentage"):
-        av_levels = avoptions["av_levels"]
-    else:
-        av_levels = None
+    av_levels = avoptions["av_levels"]
 
     # Helper function, needed in row and in summary line
     def cell_active(sid):
@@ -959,9 +1061,9 @@ def render_availability_table(availability, from_time, until_time, range_title, 
     show_summary = what != "bi" and avoptions.get("summary")
     summary = {}
     summary_counts = {}
-    table.begin("av_items", _("Availability") + " " + range_title, css="availability",
+    table.begin("av_items", group_title, css="availability",
         searchable = False, limit = None)
-    for site, host, service, display_name, states, considered_duration, statistics, timeline_rows in availability:
+    for site, host, service, display_name, states, considered_duration, statistics, timeline_rows, group_ids in group_availability:
         table.row()
 
         if what != "bi":
@@ -1090,16 +1192,6 @@ def render_availability_table(availability, from_time, until_time, range_title, 
                         table.cell(title, "")
 
     table.end()
-
-    if av_levels:
-        warn, crit = av_levels
-        html.write('<div class="av_levels_legend">')
-        html.write('<h3>%s</h3>' % _("Availability levels"))
-        html.write('<div class="state state0">%s</div><div class=level>&ge; %.3f%%</div>' % (_("OK"), warn))
-        html.write('<div class="state state1">%s</div><div class=level>&ge; %.3f%%</div>' % (_("WARN"), crit))
-        html.write('<div class="state state2">%s</div><div class=level>&lt; %.3f%%</div>' % (_("CRIT"), crit))
-        html.write('</div>')
-
 
 def check_av_levels(number, av_levels, considered_duration):
     perc = 100 * float(number) / float(considered_duration)

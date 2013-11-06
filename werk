@@ -161,12 +161,12 @@ def write_changelog_line(chn, werk):
     prefix = ""
     for classid, classname, p in classes:
         if werk["class"] == classid and p:
-            prefix = " " + p
+            prefix = " " + p + ":"
     if werk["description"]:
         omit = "..."
     else:
         omit = ""
-    chn.write("    * %04d%s: %s%s\n" % (werk["id"], prefix, werk["title"], omit))
+    chn.write("    * %04d%s %s%s\n" % (werk["id"], prefix, werk["title"], omit))
     if werk["class"].startswith("incomp"):
         chn.write("            NOTE: Please refer to the migration notes!\n")
 
@@ -309,10 +309,17 @@ def list_werk(werk):
         bold = ""
     lines, cols = get_tty_size()
     title = werk["title"][:cols - 45]
-    sys.stdout.write("#%04d %-12s %-13s %s%s%s %-8s %s%s%s\n" %
+    sys.stdout.write("#%04d %-9s %s %-13s %s%s%s %-8s %s%s%s\n" %
             (int(werk["id"]),
-             werk["class"], werk["component"], tty_bold, werk["level"], tty_normal, 
+            time.strftime("%F", time.localtime(int(werk["date"]))),
+             colored_class(werk["class"], 7), werk["component"], tty_bold, werk["level"], tty_normal, 
              werk["version"], bold, title, tty_normal))
+
+def colored_class(classname, digits):
+    if classname == "fix":
+        return tty_bold + tty_red + ("%-" + str(digits) + "s") % classname + tty_normal
+    else:
+        return classname
 
 def show_werk(werk):
     list_werk(werk)
@@ -325,7 +332,7 @@ def main_list(args, format):
     # in one class are orred. Multiple types are anded.
     filters = {}
 
-    sort = lambda a,b: cmp(a['id'], b['id'])
+    sort = lambda a,b: cmp(a['date'], b['date'])
     reverse = False
     for a in args:
 
@@ -364,7 +371,7 @@ def main_list(args, format):
         if not skip:
             newwerks.append(werk)
     werks = newwerks
-            
+
     # Sort
     if sort:
         newwerks.sort(sort)

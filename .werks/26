@@ -1,0 +1,8 @@
+Title: snmptd_mkevent.py: fixed crash on startup
+Level: 1
+Component: ec
+Version: 1.2.3i7
+Date: 1383757771
+Class: fix
+
+

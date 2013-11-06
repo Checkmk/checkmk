@@ -1,0 +1,26 @@
+title: veeam client backup check
+agents: windows
+catalog: os/storage
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the status of backups of clients carried out by the Veeam
+ backup tool. In order to carry out the checks, the Veeam agent plugin
+ needs to be installed on the backup server. See special instructions in the
+ comment section of the two Veeam agent plugin scripts on how to install
+ the scripts.
+
+ The plugin sends data for all virtual machines as piggyback data in the agent 
+ output of the backup server.
+
+ This check is {OK} if the status of the backup is {success}, {Pending}
+ or {InProgress}. It is {WARN} if the status is {Warning}. It is {CRIT}
+ if the status of the backup is {Failed}.
+
+inventory:
+ A check will be created for all hosts known to check_mk and reported
+ by the Veeam agent plugin.
+
+perfdata:
+ Total Size, duration and the average speed of the backup will be recorded 
+ as performance data.

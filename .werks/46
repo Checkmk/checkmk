@@ -1,0 +1,11 @@
+Title: Allowing "-" chars in var names again
+Level: 2
+Component: multisite
+Version: 1.2.3i7
+Date: 1383751261
+Class: fix
+
+In last i-releases, we introduced a feature which checks
+for invalid URL variable names. It filters out variable
+names which contain unwanted chars. The "-" is not evil
+and should be allowed again.

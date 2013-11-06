@@ -2425,7 +2425,6 @@ def mode_inventory(phase, firsttime):
             for st, ct, checkgroup, item, paramstring, params, descr, state, output, perfdata in table:
                 if (html.has_var("_cleanup") or html.has_var("_fixall")) \
                     and st in [ "vanished", "obsolete" ]:
-                    html.debug("%s: %s/%s" % (st, ct, item))
                     pass
                 elif (html.has_var("_activate_all") or html.has_var("_fixall")) \
                     and st == "new":

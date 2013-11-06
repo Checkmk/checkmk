@@ -199,7 +199,6 @@ def inventory_brocade_mlx_module_cpu(info):
         # do not inventorize modules reported as empty
         # and: monitor cpu only on NI-MLX modules
         if module_state != "0" and module_descr.startswith("NI-MLX"):
-            # print "module %s" % module_id
             inventory.append( (combine_item(module_id, module_descr), "brocade_mlx_cpu_default_levels") )
     return inventory
 

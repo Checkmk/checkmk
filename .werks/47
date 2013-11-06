@@ -1,19 +1,20 @@
-Title: Add new collection of check to monitor Fritz!Box devices
+Title: Add new collection of checks to monitor Fritz!Box devices
 Level: 1
 Component: checks
 Version: 1.2.3i7
 Date: 1383759137
 Class: feature
 
-This feature introduces a special agent, which uses the uPnP API
-of Fritz!Box routers to retrieve several monitoring information,
-like the current connection state, bandwith, update and several
-other things.
+This feature introduces a special agent, which uses the uPnP API of Fritz!Box
+routers to retrieve several monitoring information, like the current connection
+state, bandwith, update and several other things.
 
 New checks are:
 
-fritz.conn - Connection State / Info
-fritz.config - Internet Connection related config
-fritz.uptime - Device Uptime
-fritz.wan_if - Traffic of the WAN network interface
-fritz.link - Network Link State / Info
+<table>
+<tr><td class=tt>fritz.conn</td><td>Connection State / Info</td></tr>
+<tr><td class=tt>fritz.config</td><td>Internet Connection related config.</td></tr>
+<tr><td class=tt>fritz.uptime</td><td>Device Uptime</td></tr>
+<tr><td class=tt>fritz.wan_if</td><td>Traffic of the WAN network interface</td></tr>
+<tr><td class=tt>fritz.link</td><td>Network Link State / Info</td></tr>
+</table>

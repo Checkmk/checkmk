@@ -51,13 +51,13 @@ def check_cisco_wlc(item, params, info):
 
     # Special treatment if this device is missing
     if params:
-        for name, mac, state, model in data:
-            for ap_name, ap_state in params.get("ap_name", []):
-                if name.startswith(ap_name):
-                    return ap_state, "Accesspoint not found (State set to %s by rule)" % nagios_state_names[ap_state]
-            for ap_model, ap_state in params.get("ap_model", []):
-                if mode.startswith(ap_model):
-                    return ap_state, "Accesspoint not found (State set to %s by rule)" % nagios_state_names[ap_state]
+        for ap_name, ap_state in params.get("ap_name", []):
+            if item.startswith(ap_name):
+                return ap_state, "Accesspoint 1 not found (State set to %s by rule)" % nagios_state_names[ap_state]
+        # If the device is missin, with cannot know the model
+        #for ap_model, ap_state in params.get("ap_model", []):
+        #    if mode.startswith(ap_model):
+        #        return ap_state, "Accesspoint 2 not found (State set to %s by rule)" % nagios_state_names[ap_state]
 
     return 2, "Accesspoint not found"
 

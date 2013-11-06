@@ -1,0 +1,15 @@
+Title: Allow grouping by host, host group or service group
+Level: 2
+Component: reporting
+Version: 1.2.3i7
+Date: 1383740357
+Class: feature
+
+Within the availability reporting there is now a new option <i>Grouping</i>
+for grouping by host, host group or service group. When grouping is enabled
+then one separate table will be rendered for each host or group that is part
+of the selected objects. For objects that are not part of any group (well, this
+cannot happen if you group by host) one additional table is being rendered.
+
+<b>Note</b>: objects that are part of more than one group will appear in
+more than one table.

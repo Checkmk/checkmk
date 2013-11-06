@@ -239,7 +239,7 @@ class Integer(ValueSpec):
             style = "text-align: right;"
         else:
             style = ""
-        html.number_input(varprefix, str(value), size = self._size, style = style)
+        html.number_input(varprefix, self._display_format % value, size = self._size, style = style)
         if self._unit:
             html.write("&nbsp;")
             html.write(self._unit)
@@ -869,10 +869,13 @@ class Percentage(Float):
             self._maxvalue = 101.0
         if "unit" not in kwargs:
             self._unit = "%"
+        if "display_format" not in kwargs:
+            self._display_format = "%.1f"
+
         self._allow_int = kwargs.get("allow_int", False)
 
     def value_to_text(self, value):
-        return "%.1f%%" % value
+        return (self._display_format + "%%") % value
 
     def validate_datatype(self, value, varprefix):
         if self._allow_int:

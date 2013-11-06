@@ -67,7 +67,7 @@ def render_availability(view, datasource, filterheaders, display_options,
 
     html.write(avoptions_html)
     if not html.has_user_errors():
-        rows = get_availability_data(datasource, filterheaders, range, only_sites, limit, timeline)
+        rows = get_availability_data(datasource, filterheaders, range, only_sites, limit, timeline, timeline or avoptions["show_timeline"], avoptions)
         what = "service" in datasource["infos"] and "service" or "host"
         do_render_availability(rows, what, avoptions, timeline, "")
 
@@ -109,6 +109,19 @@ avoption_entries = [
             ),
         ],
         default_value = "m1",
+    )
+  ),
+
+  # Labelling and Texts
+  ( "labelling",
+    "double",
+    ListChoice(
+        title = _("Labelling Options"),
+        choices = [
+            ( "omit_host",        _("Do not display the host name")),
+            ( "use_display_name", _("Use alternative display name for services")),
+            ( "omit_buttons",     _("Do not display icons for history and timeline")),
+        ]
     )
   ),
 
@@ -157,7 +170,7 @@ avoption_entries = [
     ),
   ),
 
-  # Optionally group some states togehter
+  # Optionally group some states together
   ( "state_grouping",
     "double",
     Dictionary(
@@ -203,6 +216,21 @@ avoption_entries = [
     ),
   ),
 
+  # Visual levels for the availability
+  ( "av_levels",
+    "double",
+    Optional(
+        Tuple(
+            elements = [
+                Percentage(title = _("Warning below"), default_value = 99, display_format="%.3f", size=7),
+                Percentage(title = _("Critical below"), default_value = 95, display_format="%.3f", size=7),
+            ]
+        ),
+        title = _("Visual levels for the availability (OK percentage)"),
+    )
+  ),
+
+
   # Show colummns for min, max, avg duration and count
   ( "outage_statistics",
     "double",
@@ -235,6 +263,15 @@ avoption_entries = [
             )
         ]
     )
+  ),
+
+  # Omit all non-OK columns
+  ( "av_mode",
+    "single",
+    Checkbox(
+        title = _("Availability"),
+        label = _("Just show the availability (i.e. OK/UP)"),
+    ),
   ),
 
 
@@ -303,6 +340,14 @@ avoption_entries = [
     )
   ),
 
+  # Timeline
+  ( "show_timeline",
+    "single",
+    Checkbox(
+        title = _("Timeline"),
+        label = _("Show timeline of each object directly in table")),
+  ),
+
 ]
 
 
@@ -327,14 +372,19 @@ def render_availability_options():
             "host_down" : "host_down",
         },
         "outage_statistics" : ([],[]),
-        "short_intervals" : 0,
-        "dont_merge" : False,
-        "summary" : "sum",
+        "short_intervals"   : 0,
+        "dont_merge"        : False,
+        "show_timeline"     : False,
+        "summary"           : "sum",
     })
+
     # Make sure that parameters are set that have not been present in the
     # original version. This code can be dropped in a couple of years.
     avoptions.setdefault("notification_period", "honor")
     avoptions.setdefault("outage_statistics", ([], []))
+    avoptions.setdefault("av_levels", None)
+    avoptions.setdefault("av_mode", False)
+    avoptions.setdefault("labelling", [])
 
     is_open = False
     html.begin_form("avoptions")
@@ -457,11 +507,11 @@ def compute_range(rangespec):
                     from_broken[0] -= 1
             return (time.mktime(from_broken), until_time), titles[1]
 
-def get_availability_data(datasource, filterheaders, range, only_sites, limit, timeline):
+def get_availability_data(datasource, filterheaders, range, only_sites, limit, single_object, include_output, avoptions):
     has_service = "service" in datasource["infos"]
     av_filter = "Filter: time >= %d\nFilter: time <= %d\n" % range
-    if timeline:
-        tl_site, tl_host, tl_service = timeline
+    if single_object:
+        tl_site, tl_host, tl_service = single_object
         av_filter += "Filter: host_name = %s\nFilter: service_description = %s\n" % (
                 tl_host, tl_service)
         only_sites = [ tl_site ]
@@ -480,8 +530,10 @@ def get_availability_data(datasource, filterheaders, range, only_sites, limit, t
     columns += [
       "duration", "from", "until", "state", "host_down", "in_downtime",
       "in_host_downtime", "in_notification_period", "is_flapping", ]
-    if timeline:
+    if include_output:
         columns.append("log_output")
+    if "use_display_name" in avoptions["labelling"]:
+        columns.append("current_service_display_name")
 
     add_columns = datasource.get("add_columns", [])
     rows = do_query_data(query, columns, add_columns, None, filterheaders, only_sites, limit = None)
@@ -543,6 +595,7 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
     availability = []
     os_aggrs, os_states = avoptions.get("outage_statistics", ([],[]))
     need_statistics = os_aggrs and os_states
+    show_timeline = avoptions["show_timeline"]
 
     # Note: in case of timeline, we have data from exacly one host/service
     for site_host, site_host_entry in by_host.iteritems():
@@ -552,6 +605,7 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
             timeline_rows = []
             considered_duration = 0
             for span in service_entry:
+                display_name = span.get("current_service_display_name", service)
                 state = span["state"]
                 if state == -1:
                     s = "unmonitored"
@@ -611,7 +665,9 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
                     else:
                         statistics[s] = [ 1, duration, duration ] # count, min, max
 
-            availability.append([site_host[0], site_host[1], service, states, considered_duration, statistics])
+            if not show_timeline:
+                timeline_rows = None
+            availability.append([site_host[0], site_host[1], service, display_name, states, considered_duration, statistics, timeline_rows])
 
     # Prepare number format function
     range, range_title = avoptions["range"]
@@ -640,12 +696,14 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
             return "%02d:%02d:%02d" % (hours, minn, sec)
 
     if timeline:
-        render_timeline(timeline_rows, from_time, until_time, considered_duration, timeline, range_title, render_number, what, timewarpcode)
+        render_timeline(timeline_rows, from_time, until_time, considered_duration, timeline, range_title, render_number, what, timewarpcode, style="standalone")
     else:
         render_availability_table(availability, from_time, until_time, range_title, what, avoptions, render_number)
 
+
+# style is either inline (just the timeline bar) or "standalone" (the complete page)
 def render_timeline(timeline_rows, from_time, until_time, considered_duration,
-                    timeline, range_title, render_number, what, timewarpcode):
+                    timeline, range_title, render_number, what, timewarpcode, style):
     if not timeline_rows:
         html.write('<div class=info>%s</div>' % _("No information available"))
         return
@@ -671,11 +729,12 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration,
     # Make sure that each cell is visible, if possible
     min_percentage = min(100.0 / len(timeline_rows), 1)
     rest_percentage = 100 - len(timeline_rows) * min_percentage
-    html.write('<div class=timelinerange>')
-    html.write('<div class=from>%s</div><div class=until>%s</div></div>' % (
-        render_date(from_time), render_date(until_time)))
+    html.write('<div class="timelinerange %s">' % style)
+    if style == "standalone":
+        html.write('<div class=from>%s</div><div class=until>%s</div></div>' % (
+            render_date(from_time), render_date(until_time)))
 
-    html.write('<table class=timeline>')
+    html.write('<table class="timeline %s">' % style)
     html.write('<tr class=timeline>')
     for row_nr, (row, state_id) in enumerate(timeline_rows):
         for sid, css, sname, help in availability_columns:
@@ -691,6 +750,10 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration,
                            'style="width: %.1f%%" title="%s" class="%s"></td>' % (
                            row_nr, row_nr, width, title, css))
     html.write('</tr></table>')
+
+    if style == "inline":
+        render_timeline_choords(from_time, until_time, width=500)
+        return
 
     # Render timewarped BI aggregate (might be empty)
     html.write(timewarpcode)
@@ -712,6 +775,96 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration,
         table.cell(_("Additional information"), row["log_output"])
 
     table.end()
+
+def render_timeline_choords(from_time, until_time, width):
+    duration = until_time - from_time
+    def render_choord(t, title):
+        pixel = width * (t - from_time) / float(duration)
+        html.write('<div title="%s" class="timelinechoord" style="left: %dpx"></div>' % (title, pixel))
+
+    # Now comes the difficult part: decide automatically, whether to use
+    # hours, days, weeks or months. Days and weeks needs to take local time
+    # into account. Months are irregular.
+    hours = duration / 3600
+    if hours < 12:
+        scale = "hours"
+    if hours < 48:
+        scale = "6hours"
+    elif hours < 24 * 14:
+        scale = "days"
+    elif hours < 24 * 60:
+        scale = "weeks"
+    else:
+        scale = "months"
+
+    broken = list(time.localtime(from_time))
+    while True:
+        next_choord, title = find_next_choord(broken, scale)
+        if next_choord >= until_time:
+            break
+        render_choord(next_choord, title)
+
+# Elements in broken:
+# 0: year
+# 1: month (1 = January)
+# 2: day of month
+# 3: hour
+# 4: minute
+# 5: second
+# 6: day of week (0 = monday)
+# 7: day of year
+# 8: isdst (0 or 1)
+def find_next_choord(broken, scale):
+    broken[4:6] = [0, 0] # always set min/sec to 00:00
+    old_dst = broken[8]
+
+    if scale == "hours":
+        epoch = time.mktime(broken)
+        epoch += 3600
+        broken[:] = list(time.localtime(epoch))
+        title = time.strftime("%H:%M",  broken)
+
+    elif scale == "6hours":
+        broken[3] = broken[3] / 6 * 6
+        epoch = time.mktime(broken)
+        epoch += 6 * 3600
+        broken[:] = list(time.localtime(epoch))
+        title = valuespec.weekdays[broken[6]] + time.strftime(" %H:%M", broken)
+
+    elif scale == "days":
+        broken[3] = 0
+        epoch = time.mktime(broken)
+        epoch += 24 * 3600
+        broken[:] = list(time.localtime(epoch))
+        title = valuespec.weekdays[broken[6]] + time.strftime(", %d.%m. 00:00", broken)
+
+    elif scale == "weeks":
+        broken[3] = 0
+        at_00 = int(time.mktime(broken))
+        at_monday = at_00 - 86400 * broken[6]
+        epoch = at_monday + 7 * 86400
+        broken[:] = list(time.localtime(epoch))
+        title = valuespec.weekdays[broken[6]] + time.strftime(", %d.%m.", broken)
+
+    else: # scale == "months":
+        broken[3] = 0
+        broken[2] = 0
+        broken[1] += 1
+        if broken[1] > 12:
+            broken[1] = 1
+            broken[0] += 1
+        epoch = time.mktime(broken)
+        title = "%s %d" % (month_names[broken[1]-1], broken[0])
+
+    dst = broken[8]
+    if old_dst == 1 and dst == 0:
+        epoch += 3600
+    elif old_dst == 0 and dst == 1:
+        epoch -= 3600
+    return epoch, title
+
+
+
 
 
 # Merge consecutive rows with same state
@@ -772,12 +925,22 @@ def render_availability_table(availability, from_time, until_time, range_title, 
         html.message(_("No matching hosts/services."))
         return # No objects
 
+
     # Some columns might be unneeded due to state treatment options
     sg = avoptions["state_grouping"]
     state_groups = [ sg["warn"], sg["unknown"], sg["host_down"] ]
 
+    show_timeline = avoptions["show_timeline"]
+    labelling = avoptions["labelling"]
+    if avoptions["av_levels"]: # and avoptions["timeformat"].startswith("percentage"):
+        av_levels = avoptions["av_levels"]
+    else:
+        av_levels = None
+
     # Helper function, needed in row and in summary line
     def cell_active(sid):
+        if sid not in [ "up", "ok" ] and avoptions["av_mode"]:
+            return False
         if sid == "outof_notification_period" and avoptions["notification_period"] != "honor":
             return False
         elif sid == "in_downtime" and avoptions["downtimes"]["include"] != "honor":
@@ -798,20 +961,23 @@ def render_availability_table(availability, from_time, until_time, range_title, 
     summary_counts = {}
     table.begin("av_items", _("Availability") + " " + range_title, css="availability",
         searchable = False, limit = None)
-    for site, host, service, states, considered_duration, statistics in availability:
+    for site, host, service, display_name, states, considered_duration, statistics, timeline_rows in availability:
         table.row()
 
         if what != "bi":
-            table.cell("", css="buttons")
-            history_url = history_url_of(site, host, service, from_time, until_time)
-            html.icon_button(history_url, _("Event History"), "history")
-
             timeline_url = html.makeuri([
                    ("timeline", "yes"),
                    ("timeline_site", site),
                    ("timeline_host", host),
                    ("timeline_service", service)])
-            html.icon_button(timeline_url, _("Timeline"), "timeline")
+
+            if not "omit_buttons" in labelling:
+                table.cell("", css="buttons")
+                history_url = history_url_of(site, host, service, from_time, until_time)
+                html.icon_button(history_url, _("Event History"), "history")
+                html.icon_button(timeline_url, _("Timeline"), "timeline")
+        else:
+            timeline_url = html.makeuri([("timeline", "1")])
 
         host_url = "view.py?" + html.urlencode_vars([("view_name", "hoststatus"), ("site", site), ("host", host)])
         if what == "bi":
@@ -819,17 +985,31 @@ def render_availability_table(availability, from_time, until_time, range_title, 
             table.cell(_("Aggregate"), '<a href="%s">%s</a>' % (bi_url, service))
             availability_columns = bi_availability_columns
         else:
-            table.cell(_("Host"), '<a href="%s">%s</a>' % (host_url, host))
+            if not "omit_host" in labelling:
+                table.cell(_("Host"), '<a href="%s">%s</a>' % (host_url, host))
             if what == "service":
                 service_url = "view.py?" + html.urlencode_vars([("view_name", "service"), ("site", site), ("host", host), ("service", service)])
-                table.cell(_("Service"), '<a href="%s">%s</a>' % (service_url, service))
+                if "use_display_name" in labelling:
+                    service_name = display_name
+                else:
+                    service_name = service
+                table.cell(_("Service"), '<a href="%s">%s</a>' % (service_url, service_name))
                 availability_columns = service_availability_columns
             else:
                 availability_columns = host_availability_columns
 
+        if show_timeline:
+            table.cell(_("Timeline"), css="timeline")
+            html.write('<a href="%s">' % timeline_url)
+            render_timeline(timeline_rows, from_time, until_time, considered_duration, (site, host, service), range_title, render_number, what, "", style="inline")
+            html.write('</a>')
+
         for sid, css, sname, help in availability_columns:
             if not cell_active(sid):
                 continue
+            if avoptions["av_mode"]:
+                sname = _("Avail.")
+
             number = states.get(sid, 0)
             if not number:
                 css = "unused"
@@ -840,6 +1020,9 @@ def render_availability_table(availability, from_time, until_time, range_title, 
                 else:
                     summary[sid] += number
 
+            # Apply visual availability levels (render OK in yellow/red, if too low)
+            if number and av_levels and sid in [ "ok", "up" ]:
+                css = "state%d" % check_av_levels(number, av_levels, considered_duration)
             table.cell(sname, render_number(number, considered_duration), css="number " + css, help=help)
 
             # Statistics?
@@ -867,10 +1050,15 @@ def render_availability_table(availability, from_time, until_time, range_title, 
 
     if show_summary:
         table.row(css="summary")
-        table.cell("")
-        table.cell("", _("Summary"))
+        if not "omit_buttons" in labelling:
+            table.cell("")
+        if not "omit_host" in labelling:
+            table.cell("", _("Summary"))
         if what == "service":
             table.cell("", "")
+
+        if show_timeline:
+            table.cell("")
 
         for sid, css, sname, help in availability_columns:
             if not cell_active(sid):
@@ -882,6 +1070,9 @@ def render_availability_table(availability, from_time, until_time, range_title, 
                     number *= considered_duration
             if not number:
                 css = "unused"
+
+            if number and av_levels and sid in [ "ok", "up" ]:
+                css = "state%d" % check_av_levels(number, av_levels, considered_duration)
             table.cell(sname, render_number(number, considered_duration), css="number " + css, help=help)
             os_aggrs, os_states = avoptions.get("outage_statistics", ([],[]))
             if sid in os_states:
@@ -899,6 +1090,26 @@ def render_availability_table(availability, from_time, until_time, range_title, 
                         table.cell(title, "")
 
     table.end()
+
+    if av_levels:
+        warn, crit = av_levels
+        html.write('<div class="av_levels_legend">')
+        html.write('<h3>%s</h3>' % _("Availability levels"))
+        html.write('<div class="state state0">%s</div><div class=level>&ge; %.3f%%</div>' % (_("OK"), warn))
+        html.write('<div class="state state1">%s</div><div class=level>&ge; %.3f%%</div>' % (_("WARN"), crit))
+        html.write('<div class="state state2">%s</div><div class=level>&lt; %.3f%%</div>' % (_("CRIT"), crit))
+        html.write('</div>')
+
+
+def check_av_levels(number, av_levels, considered_duration):
+    perc = 100 * float(number) / float(considered_duration)
+    warn, crit = av_levels
+    if perc < crit:
+        return 2
+    elif perc < warn:
+        return 1
+    else:
+        return 0
 
 
 

@@ -161,6 +161,7 @@ def on_failed_login(username):
 root_dir      = defaults.check_mk_configdir + "/wato/"
 multisite_dir = defaults.default_config_dir + "/multisite.d/wato/"
 
+#.
 #   .--Users---------------------------------------------------------------.
 #   |                       _   _                                          |
 #   |                      | | | |___  ___ _ __ ___                        |
@@ -460,6 +461,7 @@ def save_users(profiles):
     # Call the users_saved hook
     hooks.call("users-saved", users)
 
+#.
 #   .-Roles----------------------------------------------------------------.
 #   |                       ____       _                                   |
 #   |                      |  _ \ ___ | | ___  ___                         |
@@ -513,6 +515,7 @@ def load_roles():
                      'Initializing structure...' % (filename, e))
         return roles
 
+#.
 #   .-Groups---------------------------------------------------------------.
 #   |                    ____                                              |
 #   |                   / ___|_ __ ___  _   _ _ __  ___                    |
@@ -548,6 +551,7 @@ def load_group_information():
                      'Initializing structure...' % (filename, e))
         return {}
 
+#.
 #   .--Custom-Attrs.-------------------------------------------------------.
 #   |   ____          _                          _   _   _                 |
 #   |  / ___|   _ ___| |_ ___  _ __ ___         / \ | |_| |_ _ __ ___      |
@@ -595,6 +599,7 @@ def declare_custom_user_attrs():
             topic = attr.get('topic', 'personal'),
         )
 
+#.
 #   .----------------------------------------------------------------------.
 #   |                     _   _             _                              |
 #   |                    | | | | ___   ___ | | _____                       |
@@ -743,6 +748,9 @@ def hook_page():
 def ajax_sync():
     try:
         hook_sync(add_to_changelog = False, raise_exc = True)
-        html.write('OK')
+        html.write('OK\n')
     except Exception, e:
-        html.write('ERROR %s' % e)
+        if config.debug:
+            raise
+        else:
+            html.write('ERROR %s\n' % e)

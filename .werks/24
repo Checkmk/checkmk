@@ -1,0 +1,8 @@
+Title: cisco_wlc: removed configuration parameter ap_model
+Level: 1
+Component: checks
+Version: 1.2.3i7
+Date: 1383741998
+Class: fix
+
+

@@ -1223,17 +1223,6 @@ register_check_parameters(
                 ),
                 title = _("Access point name"),
             add_label = _("Add name"))
-           ),
-           ( "ap_model",
-            ListOf(
-                Tuple(
-                    elements = [
-                        TextAscii(title = _("AP model")),
-                        MonitoringState( title=_("State when missing"), default_value = 2)
-                    ]
-                ),
-                title = _("Access point device id"),
-            add_label = _("Add id"))
            )
         ]
     ),

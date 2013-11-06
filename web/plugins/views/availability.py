@@ -990,7 +990,7 @@ def render_availability_table(availability, from_time, until_time, range_title, 
                 else:
                     title = group_titles.get(group_id, group_id)
                 titled_groups.append((title, group_id)) ## ACHTUNG
-        titled_groups.sort()
+        titled_groups.sort(cmp = lambda a,b: cmp(a[1], b[1]))
 
         # 3. Loop over all groups and render them
         for title, group_id in titled_groups:

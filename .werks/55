@@ -11,5 +11,10 @@ then one separate table will be rendered for each host or group that is part
 of the selected objects. For objects that are not part of any group (well, this
 cannot happen if you group by host) one additional table is being rendered.
 
+The host and service groups are sorted according to their internal ID, but
+their aliasses are being displayed. That way you can defined your custom
+order of the groups in the report - by wisely choosing the internal IDs.
+
 <b>Note</b>: objects that are part of more than one group will appear in
 more than one table.
+

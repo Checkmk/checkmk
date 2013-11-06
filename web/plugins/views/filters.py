@@ -68,6 +68,8 @@ declare_filter(200, FilterText("serviceregex", _("Service"),         "service", 
 declare_filter(201, FilterText("service", _("Service (exact match)"),              "service", "service_description",   "service", "="),
                           _("Exact match, used for linking"))
 
+declare_filter(202, FilterText("service_display_name", _("Service alternative display name"),   "service", "service_display_name",   "service_display_name", "~~"),
+                          _("Alternative display name of the service, regex match"))
 
 declare_filter(101, FilterText("hostgroupnameregex",    _("Hostgroup)"),        "hostgroup",    "hostgroup_name",      "hostgroup_name",    "~~"),
                                _("Search field allowing regular expressions and partial matches on the names of hostgroups"))

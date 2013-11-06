@@ -37,9 +37,9 @@ inventory:
  Empty modules are omitted.
 
 [parameters]
-warn(int): {WARN} state is triggered, if the memory usage in percent is higher
+warn(float): {WARN} state is triggered, if the memory usage in percent is higher
     than this.
-crit(int): {CRIT} state is triggered, if the memory usage in percent is higher
+crit(float): {CRIT} state is triggered, if the memory usage in percent is higher
     than this.
 
 [configuration]

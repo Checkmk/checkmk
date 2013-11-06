@@ -2425,7 +2425,6 @@ def mode_inventory(phase, firsttime):
             for st, ct, checkgroup, item, paramstring, params, descr, state, output, perfdata in table:
                 if (html.has_var("_cleanup") or html.has_var("_fixall")) \
                     and st in [ "vanished", "obsolete" ]:
-                    html.debug("%s: %s/%s" % (st, ct, item))
                     pass
                 elif (html.has_var("_activate_all") or html.has_var("_fixall")) \
                     and st == "new":
@@ -11723,8 +11722,8 @@ def mode_edit_rule(phase, new = False):
                 html.write("</div>")
 
     # Value
-    forms.header(_("Patterns"))
     if valuespec:
+        forms.header(valuespec.title())
         value = rule[0]
         forms.section()
         try:
@@ -11743,6 +11742,7 @@ def mode_edit_rule(phase, new = False):
 
         valuespec.set_focus("ve")
     else:
+        forms.header(_("Positive / Negative"))
         forms.section("")
         for posneg, img in [ ("positive", "yes"), ("negative", "no")]:
             val = img == "yes"

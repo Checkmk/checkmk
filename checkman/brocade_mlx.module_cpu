@@ -20,7 +20,7 @@ item:
 
 examples:
  # set default levels to 70 and 80 percent:
- brocade_mlx_cpu_default_levels = (70.0, 80.0)
+ brocade_mlx_cpu_default_levels = { "levels": (70.0, 80.0) }
 
  # Check Module with ID 33 on a box called my-mlx-device with default levels
  checks += [
@@ -29,7 +29,7 @@ examples:
 
  # or use individual levels for warn and crit
  checks += [
-   ("my-mlx-device", "brocade_mlx.module_cpu", '33 NI-MLX-32_MR Management Module', (75.0, 85.0)),
+   ("my-mlx-device", "brocade_mlx.module_cpu", '33 NI-MLX-32_MR Management Module', { "levels": (75.0, 85.0) }),
  ]
 
 perfdata:
@@ -42,11 +42,9 @@ inventory:
  Empty modules are omitted.
 
 [parameters]
-warn(float): {WARN} state is triggered, if the CPU utilization in percent is higher
-    than this.
-crit(float): {CRIT} state is triggered, if the CPU utilization in percent is higher
-    than this.
+parameters (dict): with the element
+{"levels"}: (float, float): levels of CPU utilization for {WARN} and {CRIT} in percent
 
 [configuration]
-brocade_mlx_cpu_default_levels(float, float): The standard levels for {WARN} and 
-    {CRIT}. Defaults are (80.0, 90.0)
+brocade_mlx_cpu_default_levels(dict): The standard levels for {WARN} and 
+    {CRIT}, preset to { "levels": (80.0, 90.0) }

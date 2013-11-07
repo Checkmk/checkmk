@@ -1941,6 +1941,36 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_os,
+    "memory_multiitem",
+    _("Main memory usage of Devices with Modules"),
+    Dictionary(
+        help = _("The memory levels for the sub-module of this host, e.g. pluggable cards"),
+        elements = [
+            ("levels", Alternative(
+                title = _("Memory levels"),
+                elements = [
+                     Tuple(
+                         title = _("Specify levels in percentage of total RAM"),
+                         elements = [
+                             Percentage(title = _("Warning at a memory usage of"), default_value = 80.0, maxvalue = None),
+                             Percentage(title = _("Critical at a memory usage of"), default_value = 90.0, maxvalue = None)]),
+                     Tuple(
+                         title = _("Specify levels in absolute usage values"),
+                         elements = [
+                           Filesize(title = _("Warning if above")),
+                           Filesize(title = _("Critical if above"))]),
+                ])),
+            ],
+        optional_keys = []),
+    TextAscii(
+        title = _("Module name"),
+        allow_empty = False
+    ),
+    "match"
+)
+
+register_check_parameters(
+    subgroup_os,
     "esx_host_memory",
     _("Main memory usage of ESX host system"),
     Tuple(
@@ -2112,6 +2142,31 @@ register_check_parameters(
                  "the last check interval. The possible range is from 0% to 100%"),
         default_value = (90.0, 95.0)),
     None, None
+)
+
+register_check_parameters(
+    subgroup_os,
+    "cpu_utilization_multiitem",
+    _("CPU utilization of Devices with Modules"),
+    Dictionary(
+        help = _("The CPU utilization sums up the percentages of CPU time that is used "
+                 "for user processes and kernel routines over all available cores within "
+                 "the last check interval. The possible range is from 0% to 100%"),
+        elements =  [
+                        ("levels", Tuple(
+                            title = _("Alert on too high CPU utilization"),
+                            elements = [
+                                Percentage(title = _("Warning at a utilization of")),
+                                Percentage(title = _("Critical at a utilization of"))],
+                                default_value = (90.0, 95.0)),
+                        ),
+                    ]
+                ),
+    TextAscii(
+        title = _("Module name"),
+        allow_empty = False
+    ),
+    None
 )
 
 register_check_parameters(

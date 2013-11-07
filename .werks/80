@@ -1,0 +1,12 @@
+Title: Added new checks for Brocade NetIron MLX switching / routing devices
+Level: 2
+Component: checks
+Version: 1.2.3i7
+Date: 1383827175
+Class: feature
+
+It checks by SNMP
+the status of Power supplies and Fans
+the overall status of modules
+memory usage and cpu utilization of NI-MLX modules
+temperature measured by different temperature sensors

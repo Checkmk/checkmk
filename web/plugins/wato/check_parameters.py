@@ -3400,6 +3400,23 @@ register_check_parameters(
                     ),
                 ]
             )),
+            ("output_load",
+            Tuple(
+              title = _("Current Output Load"),
+              help = _("Indicates that the percentage load attached to the UPS "
+                       "This load affects the running time of all components being supplied "
+                       " with battery power."),
+              elements = [
+                 Percentage(
+                     title = _("Warning level"),
+                 ),
+                 Percentage(
+                     title = _("Critical level"),
+                 ),
+              ]
+
+            )
+            ),
             ("post_calibration_levels",
             Dictionary(
                 title = _("Levels of battery parameters after calibration"),
@@ -3428,7 +3445,7 @@ register_check_parameters(
                 optional_keys = False,
             )),
         ],
-        optional_keys = ['post_calibration_levels'],
+        optional_keys = ['post_calibration_levels', 'output_load'],
     ),
     None,
     "first"

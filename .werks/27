@@ -1,0 +1,7 @@
+Title: esx_vsphere_sensors: it is now possible override the state of sensors
+Level: 2
+Component: checks
+Version: 1.2.3i7
+Date: 1383817062
+Class: feature
+

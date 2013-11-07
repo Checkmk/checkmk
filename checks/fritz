@@ -60,13 +60,20 @@ def check_fritz_conn(_unused, _no_params, info):
     if last_err and last_err != 'ERROR_NONE':
         output += ', Last Error: %s' % last_err
 
-    return nag_state, output
+    perfdata = []
+    if data.get('NewUptime'):
+        conn_time = check_uptime_seconds({}, float(data['NewUptime']))
+        output += ', %s' % conn_time[1]
+        perfdata = conn_time[2]
+
+    return nag_state, output, perfdata
 
 check_info['fritz.conn'] = {
   "inventory_function"  : inventory_fritz_conn,
   "check_function"      : check_fritz_conn,
   "service_description" : "Connection",
-  "has_perfdata"        : False,
+  "includes"            : [ "uptime.include" ],
+  "has_perfdata"        : True,
 }
 
 
@@ -103,28 +110,6 @@ check_info['fritz.config'] = {
   "check_function"      : check_fritz_config,
   "service_description" : "Configuration",
   "has_perfdata"        : False,
-}
-
-#
-# Uptime
-#
-
-def inventory_fritz_uptime(info):
-    data = fritz_parse_info(info)
-    if 'NewUptime' in data:
-        return [ (None, {}) ]
-
-def check_fritz_uptime(_no_item, params, info):
-    data = fritz_parse_info(info)
-    return check_uptime_seconds(params, float(data['NewUptime']))
-
-check_info["fritz.uptime"] = {
-    'check_function':          check_fritz_uptime,
-    'inventory_function':      inventory_fritz_uptime,
-    'service_description':     'Uptime',
-    'has_perfdata':            True,
-    'includes':                [ 'uptime.include' ],
-    'group':                   'uptime',
 }
 
 #

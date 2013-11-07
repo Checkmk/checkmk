@@ -3484,6 +3484,49 @@ register_check_parameters(
 
 register_check_parameters(
    subgroup_environment,
+   "apc_ats_output",
+   _("APC Automatic Transfer Switch Output"),
+   Dictionary(
+       title = _("Levels for ATS Output parameters"),
+       optional_keys = True,
+       elements = [
+        ("output_voltage_max", 
+            Tuple(
+             title = _("Maximum Levels for Voltage"),
+             elements = [
+               Integer(title = _("Warning if above"), unit="Volt"),
+               Integer(title = _("Critical if above"), unit="Volt"),
+            ])),
+        ("output_voltage_min", 
+            Tuple(
+             title = _("Minimum Levels for Voltage"),
+             elements = [
+               Integer(title = _("Warning if below"), unit="Volt"),
+               Integer(title = _("Critical if below"), unit="Volt"),
+            ])),
+        ("load_perc_max", 
+            Tuple(
+             title = _("Maximum Levels for load in percent"),
+             elements = [
+               Percentage(title = _("Warning if above")),
+               Percentage(title = _("Critical if above")),
+            ])),
+        ("load_perc_min", 
+            Tuple(
+             title = _("Minimum Levels for load in percent"),
+             elements = [
+               Percentage(title = _("Warning if below")),
+               Percentage(title = _("Critical if below")),
+            ])),
+
+       ],
+   ),
+   TextAscii( title = _("ID of phase")),
+   "dict",
+)
+
+register_check_parameters(
+   subgroup_environment,
     "ups_capacity",
     _("UPS Capacity"),
     Dictionary(

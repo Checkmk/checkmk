@@ -1,10 +1,10 @@
-title: APC ATS ( Automatic Transfer Swichtes )
+title: APC ATS ( Automatic Transfer Switch ) status
 agents: snmp
 catalog: hw/power
 license: GPL
 distribution: check_mk
 description:
- Checks the status of APC Automatic Transfer Switch.
+ Checks the status of a APC Automatic Transfer Switch.
  This means it throws {CRIT} if:
  The power source has changed since last inventory,
  the communication status gets lost,

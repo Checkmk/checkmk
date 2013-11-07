@@ -1942,7 +1942,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_os,
     "memory_multiitem",
-    _("Mail memory usage of Devices with Modules"),
+    _("Main memory usage of Devices with Modules"),
     Dictionary(
         help = _("The memory levels for the sub-module of this host, e.g. pluggable cards"),
         elements = [

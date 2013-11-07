@@ -522,8 +522,9 @@ table.data td.unmonitored, table.timeline td.unmonitored {
     background-color: #cacaca;
     color: #888;
 }
-table.timeline td.oorep {
-    background-image: url("images/assume_bg.png");
+table.timeline td.ooservice {
+    background-color: #cacaca;
+    background-image: url("images/ooservice.png");
     background-repeat: repeat;
 }
 table.data.availability tr.odd0 td.number {

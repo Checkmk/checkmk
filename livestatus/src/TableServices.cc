@@ -211,8 +211,8 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
                 "The name of the notification period of the service. It this is empty, service problems are always notified.", (char *)(&svc.notification_period) - ref, indirect_offset));
     table->addColumn(new OffsetStringColumn(prefix + "check_period",
                 "The name of the check period of the service. It this is empty, the service is always checked.", (char *)(&svc.check_period) - ref, indirect_offset));
-    table->addColumn(new CustomVarsExplicitColumn(prefix + "reporting_period",
-                "The name of the reporting period of the service", (char *)(&svc.custom_variables) - ref, indirect_offset, "REPORTING_PERIOD"));
+    table->addColumn(new CustomVarsExplicitColumn(prefix + "service_period",
+                "The name of the service period of the service", (char *)(&svc.custom_variables) - ref, indirect_offset, "SERVICE_PERIOD"));
     table->addColumn(new OffsetStringColumn(prefix + "notes",
                 "Optional notes about the service", (char *)(&svc.notes) - ref, indirect_offset));
     table->addColumn(new OffsetStringServiceMacroColumn(prefix + "notes_expanded",
@@ -339,8 +339,8 @@ void TableServices::addColumns(Table *table, string prefix, int indirect_offset,
 
     table->addColumn(new OffsetTimeperiodColumn(prefix + "in_check_period",
                 "Whether the service is currently in its check period (0/1)", (char *)&svc.check_period_ptr - ref, indirect_offset));
-    table->addColumn(new CustomTimeperiodColumn(prefix + "in_reporting_period",
-                "Whether this service is currently in its reporting period (0/1)", (char *)(&svc.custom_variables) - ref, indirect_offset, "REPORTING_PERIOD"));
+    table->addColumn(new CustomTimeperiodColumn(prefix + "in_service_period",
+                "Whether this service is currently in its service period (0/1)", (char *)(&svc.custom_variables) - ref, indirect_offset, "SERVICE_PERIOD"));
     table->addColumn(new OffsetTimeperiodColumn(prefix + "in_notification_period",
                 "Whether the service is currently in its notification period (0/1)", (char *)&svc.notification_period_ptr - ref, indirect_offset));
 

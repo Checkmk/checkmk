@@ -99,8 +99,8 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
                 "Time period in which problems of this host will be notified. If empty then notification will be always", (char *)(&hst.notification_period) - ref, indirect_offset));
     table->addColumn(new OffsetStringColumn(prefix + "check_period",
                 "Time period in which this host will be checked. If empty then the host will always be checked.", (char *)(&hst.check_period) - ref, indirect_offset));
-    table->addColumn(new CustomVarsExplicitColumn(prefix + "reporting_period",
-                "The name of the reporting period of the host", (char *)(&hst.custom_variables) - ref, indirect_offset, "REPORTING_PERIOD"));
+    table->addColumn(new CustomVarsExplicitColumn(prefix + "service_period",
+                "The name of the service period of the host", (char *)(&hst.custom_variables) - ref, indirect_offset, "SERVICE_PERIOD"));
     table->addColumn(new OffsetStringColumn(prefix + "notes",
                 "Optional notes for this host", (char *)(&hst.notes) - ref, indirect_offset));
     table->addColumn(new OffsetStringHostMacroColumn(prefix + "notes_expanded",
@@ -242,8 +242,8 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
                 "Whether this host is currently in its notification period (0/1)", (char *)(&hst.notification_period_ptr) - ref, indirect_offset));
     table->addColumn(new OffsetTimeperiodColumn(prefix + "in_check_period",
                 "Whether this host is currently in its check period (0/1)", (char *)(&hst.check_period_ptr) - ref, indirect_offset));
-    table->addColumn(new CustomTimeperiodColumn(prefix + "in_reporting_period",
-                "Whether this host is currently in its reporting period (0/1)", (char *)(&hst.custom_variables) - ref, indirect_offset, "REPORTING_PERIOD"));
+    table->addColumn(new CustomTimeperiodColumn(prefix + "in_service_period",
+                "Whether this host is currently in its service period (0/1)", (char *)(&hst.custom_variables) - ref, indirect_offset, "SERVICE_PERIOD"));
 
     table->addColumn(new HostContactsColumn(prefix + "contacts",
                 "A list of all contacts of this host, either direct or via a contact group", indirect_offset));

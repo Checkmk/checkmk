@@ -3381,12 +3381,43 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_environment,
+    "hostsystem_sensors",
+    _("Hostsystem sensor alerts"),
+    ListOf(
+        Dictionary(
+        help     = _("This rule allows to override alert levels for the given sensor names."),
+        elements = [("name", TextAscii(title = _("Sensor name")) ),
+                    ("states", Dictionary(
+                        title = _("Custom states"),
+                        elements = [
+                                (element,
+                                  MonitoringState( title = "Sensor %s" %
+                                                   description, label = _("Set state to"),
+                                                   default_value = int(element) )
+                                ) for (element, description) in [
+                                         ("0", _("OK")),
+                                         ("1", _("WARNING")),
+                                         ("2", _("CRITICAL")),
+                                         ("3", _("UNKNOWN"))
+                                ]
+                        ],
+                    ))],
+        optional_keys = False
+        ),
+        add_label = _("Add sensor name")
+    ),
+    None,
+    "first"
+)
+
+register_check_parameters(
+    subgroup_environment,
     "temperature_auto",
     _("Temperature sensors with builtin levels"),
     None,
     TextAscii(
         title = _("Sensor ID"),
-        help = _("The identificator of the themal sensor.")),
+        help = _("The identificator of the thermal sensor.")),
     "first"
 )
 
@@ -3455,6 +3486,23 @@ register_check_parameters(
                     ),
                 ]
             )),
+            ("output_load",
+            Tuple(
+              title = _("Current Output Load"),
+              help = _("Indicates that the percentage load attached to the UPS "
+                       "This load affects the running time of all components being supplied "
+                       " with battery power."),
+              elements = [
+                 Percentage(
+                     title = _("Warning level"),
+                 ),
+                 Percentage(
+                     title = _("Critical level"),
+                 ),
+              ]
+
+            )
+            ),
             ("post_calibration_levels",
             Dictionary(
                 title = _("Levels of battery parameters after calibration"),
@@ -3483,7 +3531,7 @@ register_check_parameters(
                 optional_keys = False,
             )),
         ],
-        optional_keys = ['post_calibration_levels'],
+        optional_keys = ['post_calibration_levels', 'output_load'],
     ),
     None,
     "first"

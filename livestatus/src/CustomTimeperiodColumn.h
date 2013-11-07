@@ -22,28 +22,27 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef _TimeperiodsCache_h
-#define _TimeperiodsCache_h
+#ifndef CustomTimeperiodColumn_h
+#define CustomTimeperiodColumn_h
 
-#include <map>
+#include "IntColumn.h"
 #include "nagios.h"
 
-class TimeperiodsCache
+using namespace std;
+
+
+class CustomTimeperiodColumn : public IntColumn
 {
-    time_t _cache_time;
-    typedef std::map<timeperiod *, bool> _cache_t;
-    _cache_t _cache;
-    pthread_mutex_t _cache_lock;
+    int _offset; // within data structure (differs from host/service)
+    std::string _varname;
 
 public:
-    TimeperiodsCache();
-    ~TimeperiodsCache();
-    void update(time_t now);
-    bool inTimeperiod(timeperiod *tp);
-    bool inTimeperiod(const char *tpname);
-    void logCurrentTimeperiods();
+    CustomTimeperiodColumn(string name, string description, int offset, int indirect_offset, const char *varname)
+        : IntColumn(name, description, indirect_offset),  _offset(offset), _varname(varname) {}
+    int32_t getValue(void *data, Query *);
 private:
-    void logTransition(char *name, int from, int to);
+    customvariablesmember *getCVM(void *data);
 };
 
-#endif // _TimeperiodsCache_h
+
+#endif // CustomTimeperiodColumn_h

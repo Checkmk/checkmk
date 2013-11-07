@@ -276,6 +276,18 @@ avoption_entries = [
     ),
   ),
 
+  # How to deal with the reporting periods
+  ( "reporting_period",
+    "single",
+     DropdownChoice(
+         title = _("Service Time"),
+         choices = [
+            ( "honor",    _("Base report only on service times") ),
+            ( "ignore",   _("Include both service and non-service times" ) ),
+            ( "exclude",  _("Base report only on non-service times" ) ),
+         ]
+     )
+  ),
 
   # How to deal with times out of the notification period
   ( "notification_period",
@@ -283,7 +295,7 @@ avoption_entries = [
      DropdownChoice(
          title = _("Notification Period"),
          choices = [
-            ( "honor", _("Honor notification period") ),
+            ( "honor", _("Base report only on notification period") ),
             ( "ignore", _("Ignore notification period") ),
             ( "exclude", _("Exclude times out of notif. period" ) ),
          ]
@@ -381,7 +393,8 @@ def render_availability_options():
             "include" : "honor",
             "exclude_ok" : False,
         },
-        "notification_period" : "honor",
+        "notification_period" : "ignore",
+        "reporting_period"    : "honor",
         "consider"       : {
             "flapping"            : True,
             "host_down"           : True,
@@ -552,7 +565,7 @@ def get_availability_data(datasource, filterheaders, range, only_sites, limit, s
     # Columns for availability
     columns += [
       "duration", "from", "until", "state", "host_down", "in_downtime",
-      "in_host_downtime", "in_notification_period", "is_flapping", ]
+      "in_host_downtime", "in_notification_period", "in_reporting_period", "is_flapping", ]
     if include_output:
         columns.append("log_output")
     if "use_display_name" in avoptions["labelling"]:
@@ -574,6 +587,7 @@ host_availability_columns = [
  ( "flapping",                  "flapping",      _("Flapping"), None ),
  ( "in_downtime",               "downtime",      _("Downtime"), _("The host was in a scheduled downtime") ),
  ( "outof_notification_period", "",              _("OO/Notif"), _("Out of Notification Period") ),
+ ( "outof_reporting_period",    "oorep",         _("OO/Report"), _("Out of Reporting Period") ),
  ( "unmonitored",               "unmonitored",   _("N/A"),      _("During this time period no monitoring data is available") ),
 ]
 
@@ -586,6 +600,7 @@ service_availability_columns = [
  ( "host_down",                 "hostdown",      _("H.Down"),   _("The host was down") ),
  ( "in_downtime",               "downtime",      _("Downtime"), _("The host or service was in a scheduled downtime") ),
  ( "outof_notification_period", "",              _("OO/Notif"), _("Out of Notification Period") ),
+ ( "outof_reporting_period",    "oorep",         _("OO/Report"), _("Out of Reporting Period") ),
  ( "unmonitored",               "unmonitored",   _("N/A"),      _("During this time period no monitoring data is available") ),
 ]
 
@@ -647,10 +662,18 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
 
                 display_name = span.get("service_display_name", service)
                 state = span["state"]
+
                 if state == -1:
                     s = "unmonitored"
                     if not avoptions["consider"]["unmonitored"]:
                         continue
+
+                elif avoptions["reporting_period"] != "ignore" and \
+                    (( span["in_reporting_period"] and avoptions["reporting_period"] != "honor" )
+                    or \
+                    ( not span["in_reporting_period"] and avoptions["reporting_period"] == "honor" )):
+                    s = "outof_reporting_period"
+
                 elif span["in_notification_period"] == 0 and avoptions["notification_period"] == "exclude":
                     continue
                 elif span["in_notification_period"] == 0 and avoptions["notification_period"] == "honor":
@@ -783,7 +806,7 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration,
                 title = _("From %s until %s (%s) %s") % (
                     render_date(row["from"]), render_date(row["until"]),
                     render_number(row["duration"], considered_duration),
-                    sname)
+                    help and help or sname)
                 if row["log_output"]:
                     title += " - " + row["log_output"]
                 width = min_percentage + rest_percentage * row["duration"] / considered_duration
@@ -1044,6 +1067,8 @@ def render_availability_group(group_title, range_title, group_id, availability, 
         if sid not in [ "up", "ok" ] and avoptions["av_mode"]:
             return False
         if sid == "outof_notification_period" and avoptions["notification_period"] != "honor":
+            return False
+        elif sid == "outof_reporting_period" and avoptions["reporting_period"] == "ignore":
             return False
         elif sid == "in_downtime" and avoptions["downtimes"]["include"] != "honor":
             return False
@@ -1341,6 +1366,7 @@ def get_bi_timeline(tree, avoptions, timewarp):
                          "host_name" : "",
                          "service_description" : tree['title'],
                          "in_notification_period" : 1,
+                         "in_reporting_period" : 1,
                          "in_downtime" : 0,
                          "in_host_downtime" : 0,
                          "host_down" : 0,

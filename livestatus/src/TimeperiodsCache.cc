@@ -110,6 +110,17 @@ void TimeperiodsCache::update(time_t now)
     pthread_mutex_unlock(&_cache_lock);
 }
 
+bool TimeperiodsCache::inTimeperiod(const char *tpname)
+{
+    timeperiod *tp = timeperiod_list;
+    while (tp) {
+        if (!strcmp(tpname, tp->name))
+            return inTimeperiod(tp);
+        tp = tp->next;
+    }
+    return 1; // unknown timeperiod is assumed to be 7X24
+}
+
 
 bool TimeperiodsCache::inTimeperiod(timeperiod *tp)
 {

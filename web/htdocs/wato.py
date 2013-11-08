@@ -2295,8 +2295,8 @@ def mode_diag_host(phase):
             save_folder_and_hosts(g_folder)
             reload_hosts(g_folder)
             call_hook_hosts_changed(g_folder)
-            return 'edithost'
 
+            html.http_redirect(make_link([("mode", "edithost"), ("host", hostname), ("folder", g_folder[".path"])]))
         return
 
     html.write('<div class="diag_host">')

@@ -85,6 +85,7 @@ struct HostServiceState {
     int     _host_down;      // used if service
     int     _state;             // -1/0/1/2/3
     int     _in_notification_period;
+    int     _in_service_period;
     int     _in_downtime;
     int     _in_host_downtime;
     int     _is_flapping;
@@ -103,6 +104,7 @@ struct HostServiceState {
     // These pointers are 0, if there is no output (e.g. downtime)
     char        *_log_output;
     char        *_notification_period;  // may be "": -> no period known, we assume "always"
+    char        *_service_period;  // may be "": -> no period known, we assume "always"
     host        *_host;
     service     *_service;
     const char  *_host_name;            // Fallback if host no longer exists
@@ -147,10 +149,25 @@ void log_hst(HostServiceState *state)
         debug_statehist("debug_info %s", state->_debug_info);
     if (state->_notification_period)
         debug_statehist("notification period %s", state->_notification_period);
+    if (state->_service_period)
+        debug_statehist("service period %s", state->_service_period);
     debug_statehist("from  %d", state->_from);
     debug_statehist("until %d", state->_until);
     debug_statehist("duration %d", state->_duration);
 }
+
+
+#ifndef CMC
+const char *getCustomVariable(customvariablesmember *cvm, const char *name)
+{
+    while (cvm) {
+        if (!strcmp(cvm->variable_name, name))
+            return cvm->variable_value;
+        cvm = cvm->next;
+    }
+    return "";
+}
+#endif
 
 HostServiceState::~HostServiceState()
 {
@@ -187,6 +204,10 @@ TableStateHistory::TableStateHistory()
             "Shows if the host or service is within its notification period", (char *)&(ref->_in_notification_period) - (char *)ref, -1));
     addColumn(new OffsetStringColumn("notification_period",
             "The notification period of the host or service in question", (char *)&(ref->_notification_period) - (char *)ref, -1));
+    addColumn(new OffsetIntColumn("in_service_period",
+            "Shows if the host or service is within its service period", (char *)&(ref->_in_service_period) - (char *)ref, -1));
+    addColumn(new OffsetStringColumn("service_period",
+            "The service period of the host or service in question", (char *)&(ref->_service_period) - (char *)ref, -1));
     addColumn(new OffsetStringColumn("debug_info",
             "Debug information", (char *)&(ref->_debug_info) - (char *)ref, -1));
     addColumn(new OffsetStringColumn("host_name",
@@ -501,6 +522,23 @@ void TableStateHistory::answerQuery(Query *query)
                 else
                     state->_notification_period = (char *)"";
 
+                // Same for service period. For Nagios this is a bit different, since this
+                // is no native field but just a custom variable
+                if (state->_service != 0)
+                    #ifdef CMC
+                    state->_service_period = (char *)state->_service->servicePeriod()->name();
+                    #else
+                    state->_service_period = (char *)getCustomVariable(state->_service->custom_variables, "SERVICE_PERIOD");
+                    #endif
+                else if (state->_host != 0)
+                    #ifdef CMC
+                    state->_service_period = (char *)state->_host->servicePeriod()->name();
+                    #else
+                    state->_service_period = (char *)getCustomVariable(state->_host->custom_variables, "SERVICE_PERIOD");
+                    #endif
+                else
+                    state->_service_period = (char *)"";
+
 
                 // Determine initial in_notification_period status
                 _notification_periods_t::const_iterator tmp_period = _notification_periods.find(state->_notification_period);
@@ -508,6 +546,13 @@ void TableStateHistory::answerQuery(Query *query)
                     state->_in_notification_period = tmp_period->second;
                 else
                     state->_in_notification_period = 1;
+
+                // Same for service period
+                tmp_period = _notification_periods.find(state->_service_period);
+                if (tmp_period != _notification_periods.end())
+                    state->_in_service_period = tmp_period->second;
+                else
+                    state->_in_service_period = 1;
 
                 // If this key is a service try to find its host and apply its _in_host_downtime and _host_down parameters
                 if (!state->_is_host) {
@@ -642,6 +687,7 @@ inline int TableStateHistory::updateHostServiceState(Query *query, const LogEntr
         hs_state->_debug_info = "UNMONITORED";
         hs_state->_in_downtime = 0;
         hs_state->_in_notification_period = 0;
+        hs_state->_in_service_period = 0;
         hs_state->_is_flapping = 0;
         if (hs_state->_log_output)
             free(hs_state->_log_output);
@@ -654,6 +700,14 @@ inline int TableStateHistory::updateHostServiceState(Query *query, const LogEntr
         }
         else // No notification period information available -> within notification period
             hs_state->_in_notification_period = 1;
+
+        // Same for service period
+        it_status = _notification_periods.find(hs_state->_service_period);
+        if (it_status != _notification_periods.end()) {
+            hs_state->_in_service_period = it_status->second;
+        }
+        else // No service period information available -> within service period
+            hs_state->_in_service_period = 1;
     }
 
     // Update basic information
@@ -761,6 +815,16 @@ inline int TableStateHistory::updateHostServiceState(Query *query, const LogEntr
                 hs_state->_in_notification_period = new_status;
             }
         }
+        // same for service period
+        if (hs_state->_host && !strcmp(tp_name, hs_state->_service_period)) {
+            int new_status = atoi(tp_state);
+            if (new_status != hs_state->_in_service_period) {
+                if (!only_update)
+                    process(query, hs_state);
+                hs_state->_debug_info = "TIMEPERIOD ";
+                hs_state->_in_service_period = new_status;
+            }
+        }
         free(buffer);
         break;
     }
@@ -845,3 +909,4 @@ Column *TableStateHistory::column(const char *colname)
     string with_current = string("current_") + colname;
     return Table::column(with_current.c_str());
 }
+

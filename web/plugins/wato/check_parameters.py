@@ -1941,6 +1941,36 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_os,
+    "memory_multiitem",
+    _("Main memory usage of Devices with Modules"),
+    Dictionary(
+        help = _("The memory levels for the sub-module of this host, e.g. pluggable cards"),
+        elements = [
+            ("levels", Alternative(
+                title = _("Memory levels"),
+                elements = [
+                     Tuple(
+                         title = _("Specify levels in percentage of total RAM"),
+                         elements = [
+                             Percentage(title = _("Warning at a memory usage of"), default_value = 80.0, maxvalue = None),
+                             Percentage(title = _("Critical at a memory usage of"), default_value = 90.0, maxvalue = None)]),
+                     Tuple(
+                         title = _("Specify levels in absolute usage values"),
+                         elements = [
+                           Filesize(title = _("Warning if above")),
+                           Filesize(title = _("Critical if above"))]),
+                ])),
+            ],
+        optional_keys = []),
+    TextAscii(
+        title = _("Module name"),
+        allow_empty = False
+    ),
+    "match"
+)
+
+register_check_parameters(
+    subgroup_os,
     "esx_host_memory",
     _("Main memory usage of ESX host system"),
     Tuple(
@@ -2112,6 +2142,31 @@ register_check_parameters(
                  "the last check interval. The possible range is from 0% to 100%"),
         default_value = (90.0, 95.0)),
     None, None
+)
+
+register_check_parameters(
+    subgroup_os,
+    "cpu_utilization_multiitem",
+    _("CPU utilization of Devices with Modules"),
+    Dictionary(
+        help = _("The CPU utilization sums up the percentages of CPU time that is used "
+                 "for user processes and kernel routines over all available cores within "
+                 "the last check interval. The possible range is from 0% to 100%"),
+        elements =  [
+                        ("levels", Tuple(
+                            title = _("Alert on too high CPU utilization"),
+                            elements = [
+                                Percentage(title = _("Warning at a utilization of")),
+                                Percentage(title = _("Critical at a utilization of"))],
+                                default_value = (90.0, 95.0)),
+                        ),
+                    ]
+                ),
+    TextAscii(
+        title = _("Module name"),
+        allow_empty = False
+    ),
+    None
 )
 
 register_check_parameters(
@@ -3326,12 +3381,43 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_environment,
+    "hostsystem_sensors",
+    _("Hostsystem sensor alerts"),
+    ListOf(
+        Dictionary(
+        help     = _("This rule allows to override alert levels for the given sensor names."),
+        elements = [("name", TextAscii(title = _("Sensor name")) ),
+                    ("states", Dictionary(
+                        title = _("Custom states"),
+                        elements = [
+                                (element,
+                                  MonitoringState( title = "Sensor %s" %
+                                                   description, label = _("Set state to"),
+                                                   default_value = int(element) )
+                                ) for (element, description) in [
+                                         ("0", _("OK")),
+                                         ("1", _("WARNING")),
+                                         ("2", _("CRITICAL")),
+                                         ("3", _("UNKNOWN"))
+                                ]
+                        ],
+                    ))],
+        optional_keys = False
+        ),
+        add_label = _("Add sensor name")
+    ),
+    None,
+    "first"
+)
+
+register_check_parameters(
+    subgroup_environment,
     "temperature_auto",
     _("Temperature sensors with builtin levels"),
     None,
     TextAscii(
         title = _("Sensor ID"),
-        help = _("The identificator of the themal sensor.")),
+        help = _("The identificator of the thermal sensor.")),
     "first"
 )
 
@@ -3400,6 +3486,23 @@ register_check_parameters(
                     ),
                 ]
             )),
+            ("output_load",
+            Tuple(
+              title = _("Current Output Load"),
+              help = _("Indicates that the percentage load attached to the UPS "
+                       "This load affects the running time of all components being supplied "
+                       " with battery power."),
+              elements = [
+                 Percentage(
+                     title = _("Warning level"),
+                 ),
+                 Percentage(
+                     title = _("Critical level"),
+                 ),
+              ]
+
+            )
+            ),
             ("post_calibration_levels",
             Dictionary(
                 title = _("Levels of battery parameters after calibration"),
@@ -3428,10 +3531,53 @@ register_check_parameters(
                 optional_keys = False,
             )),
         ],
-        optional_keys = ['post_calibration_levels'],
+        optional_keys = ['post_calibration_levels', 'output_load'],
     ),
     None,
     "first"
+)
+
+register_check_parameters(
+   subgroup_environment,
+   "apc_ats_output",
+   _("APC Automatic Transfer Switch Output"),
+   Dictionary(
+       title = _("Levels for ATS Output parameters"),
+       optional_keys = True,
+       elements = [
+        ("output_voltage_max", 
+            Tuple(
+             title = _("Maximum Levels for Voltage"),
+             elements = [
+               Integer(title = _("Warning if above"), unit="Volt"),
+               Integer(title = _("Critical if above"), unit="Volt"),
+            ])),
+        ("output_voltage_min", 
+            Tuple(
+             title = _("Minimum Levels for Voltage"),
+             elements = [
+               Integer(title = _("Warning if below"), unit="Volt"),
+               Integer(title = _("Critical if below"), unit="Volt"),
+            ])),
+        ("load_perc_max", 
+            Tuple(
+             title = _("Maximum Levels for load in percent"),
+             elements = [
+               Percentage(title = _("Warning if above")),
+               Percentage(title = _("Critical if above")),
+            ])),
+        ("load_perc_min", 
+            Tuple(
+             title = _("Minimum Levels for load in percent"),
+             elements = [
+               Percentage(title = _("Warning if below")),
+               Percentage(title = _("Critical if below")),
+            ])),
+
+       ],
+   ),
+   TextAscii( title = _("ID of phase")),
+   "dict",
 )
 
 register_check_parameters(

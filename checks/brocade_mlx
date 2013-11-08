@@ -138,7 +138,7 @@ check_info["brocade_mlx.module_status"] = {
 # Modules Memory
 #############################################################################
 
-brocade_mlx_mem_default_levels = (80.0, 90.0)
+brocade_mlx_mem_default_levels = { "levels": (80.0, 90.0) }
 
 def inventory_brocade_mlx_module_mem(info):
     inventory = []
@@ -150,51 +150,56 @@ def inventory_brocade_mlx_module_mem(info):
     return inventory
 
 def check_brocade_mlx_module_mem(item, params, info):
-    warn, crit = params
+    warn, crit = params["levels"]
     for module_id, module_descr, module_state, mem_total, mem_avail in info[2]:
         if combine_item(module_id, module_descr) == item:
             mem_avail = saveint(mem_avail)
             mem_total = saveint(mem_total)
             mem_used  = mem_total - mem_avail
             mem_used_percent = savefloat(mem_used) / savefloat(mem_total) * 100
-            warn_absolut = int(mem_total * warn / 100)
-            crit_absolut = int(mem_total * crit / 100)
+
+            if type(warn) is int:
+                warn_absolut = warn
+            else:
+                warn_absolut = int(mem_total * warn / 100)
+
+            if type(crit) is int:
+                crit_absolut = crit
+            else:
+                crit_absolut = int(mem_total * crit / 100)
+
             perfdata = [ ('memused', str(mem_used) + 'Bytes', warn_absolut, crit_absolut, 0, mem_total) ]
 
             status = 0
-            errorstring = ""
-            if mem_used_percent > warn:
+            if mem_used > warn_absolut:
                 status = 1
-                errorstring = " (!)"
-            if mem_used_percent > crit:
+            if mem_used > crit_absolut:
                 status = 2
-                errorstring = " (!!)"
 
-            return status, "%s used (%0.1f%%%s) of total %s" % \
+            return status, "%s used (%0.1f%%) of total %s" % \
                 (get_bytes_human_readable(mem_used), mem_used_percent, \
-                errorstring, get_bytes_human_readable(mem_total)), \
-                perfdata
+                get_bytes_human_readable(mem_total)), perfdata
 
     return 3, "Module %s not found" % item
 
 check_info["brocade_mlx.module_mem"] = {
     "check_function"        : check_brocade_mlx_module_mem,
     "inventory_function"    : inventory_brocade_mlx_module_mem,
-    "service_description"   : "Line module %s Memory",
+    "service_description"   : "Memory Module %s",
     "snmp_info"             : brocade_mlx_info,
     "snmp_scan_function"    : brocade_mlx_scan,
     "has_perfdata"          : True,
+    "group"                 : "memory_multiitem",
 }
 
 #############################################################################
 # Modules CPU Utilization
 #############################################################################
 
-brocade_mlx_cpu_default_levels = (80.0, 90.0)
+brocade_mlx_cpu_default_levels = { "levels" : (80.0, 90.0) }
 
 def inventory_brocade_mlx_module_cpu(info):
     inventory = []
-    #import pprint; pprint.pprint(info[3])
     for module_id, module_descr, module_state, mem_total, mem_avail in info[2]: 
         # do not inventorize modules reported as empty
         # and: monitor cpu only on NI-MLX modules
@@ -203,7 +208,7 @@ def inventory_brocade_mlx_module_cpu(info):
     return inventory
 
 def check_brocade_mlx_module_cpu(item, params, info):
-    warn, crit = params
+    warn, crit = params["levels"]
     for module_id, module_descr, module_state, mem_total, mem_avail in info[2]:
         if combine_item(module_id, module_descr) == item:
             cpu_util1 = ""
@@ -238,7 +243,7 @@ def check_brocade_mlx_module_cpu(item, params, info):
                 status = 2
                 errorstring = "(!!)"
 
-            return status, "CPU Utilization was %s/%s/%s%s/%s%% for the last 1/5/60/300 sec" % \
+            return status, "CPU utilization was %s/%s/%s%s/%s%% for the last 1/5/60/300 sec" % \
                 (cpu_util1, cpu_util5, cpu_util60, errorstring, cpu_util300), perfdata
 
     return 3, "Module %s not found" % item
@@ -246,10 +251,11 @@ def check_brocade_mlx_module_cpu(item, params, info):
 check_info["brocade_mlx.module_cpu"] = {
     "check_function"        : check_brocade_mlx_module_cpu,
     "inventory_function"    : inventory_brocade_mlx_module_cpu,
-    "service_description"   : "Line module %s CPU",
+    "service_description"   : "CPU utilization Module %s",
     "snmp_info"             : brocade_mlx_info,
     "snmp_scan_function"    : brocade_mlx_scan,
     "has_perfdata"          : True,
+    "group"                 : "cpu_utilization_multiitem",
 }
 
 #############################################################################
@@ -276,7 +282,7 @@ def check_brocade_mlx_temp(item, params, info):
             if temp_value > crit:
                 status = 2
 
-            perfdata = [ ('temperature', str(temp_value) + '°C', warn, crit, 0, '') ]
+            perfdata = [ ('temperature', str(temp_value) + 'C', warn, crit, '', '') ]
 
             return status, "Temperature is %s°C" % temp_value, perfdata
 
@@ -288,6 +294,7 @@ check_info["brocade_mlx.temperature"] = {
     "service_description"   : "%s",
     "snmp_info"             : brocade_mlx_info,
     "snmp_scan_function"    : brocade_mlx_scan,
-    "has_perfdata"          : False,
+    "has_perfdata"          : True,
+    "group"                 : "hw_temperature",
 }
 

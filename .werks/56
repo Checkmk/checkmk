@@ -1,0 +1,35 @@
+Title: New concept of service periods in availability reporting
+Level: 2
+Component: reporting
+Version: 1.2.3i7
+Date: 1383846114
+Class: feature
+
+There is now a pair of new WATO rules called <i>Service period for hosts</i>
+and <i>Service period for services</i>. With these you can define a timeperiod
+for a host and/or service within that object is expected to be available in
+terms of availability reporting. An object that is out of its service period
+is still being monitored and also notified. But in the reporting there is now
+a new option box <i>Service Time</i> for handling this new information. You
+have either:
+
+<ul>
+<li><i>Base report only on service times</i> - All phase out of the service period
+of the object in question is not taken into account when computing percentages. It is
+still visible in the timeline but grayed out. This enabled you to compute the availability
+of on object just within a define time frame.</li>
+<li><i>Base report only on non-service times</i> - This does quite the opposite: It
+just shows the times where the object is <i>out of</i> its service time.</li>
+<li><i>Include both service and non-service times</i> - This simply ignores the service
+time</li>
+</ul>
+
+Please note, that any change to a timeperiod definition always affects future
+times, never the past. <b>But</b>: it is possible to select an alternative
+timeperiod for a host and object an rerun the reporting. If that timeperiod
+aready had existed during the reporting time range then everything works
+as expected.
+
+<b>Note</b>: The service period make use of new Livestatus columns. You thus
+need to update all of your monitoring nodes in order to use the availability
+reporting - even if you do not use this new feature.

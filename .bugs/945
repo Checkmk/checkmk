@@ -1,0 +1,10 @@
+Title: windows_agent: processing of eventlog messages is time consuming
+Component: checks
+State: open
+Date: 2013-11-07 10:42:10
+Targetversion: future
+Class: nastiness
+
+To resolve the text from an eventlog entry the windows agent opens
+the corresponding dll file and reads the text for the given event id.
+It seems that for each line the dll is opened again by LoadLibrary()

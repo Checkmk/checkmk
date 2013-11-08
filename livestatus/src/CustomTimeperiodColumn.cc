@@ -22,28 +22,29 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef _TimeperiodsCache_h
-#define _TimeperiodsCache_h
+#include "CustomTimeperiodColumn.h"
+#include "TimeperiodsCache.h"
 
-#include <map>
-#include "nagios.h"
+extern TimeperiodsCache *g_timeperiods_cache;
 
-class TimeperiodsCache
+// Get the name of a timeperiod from a custom variable and
+// lookup the current state of that period
+int32_t CustomTimeperiodColumn::getValue(void *data, Query *)
 {
-    time_t _cache_time;
-    typedef std::map<timeperiod *, bool> _cache_t;
-    _cache_t _cache;
-    pthread_mutex_t _cache_lock;
+    customvariablesmember *cvm = getCVM(data);
+    while (cvm) {
+        if (cvm->variable_name == _varname)
+            return g_timeperiods_cache->inTimeperiod(cvm->variable_value);
+        cvm = cvm->next;
+    }
+    return 1; // assume 7X24
+}
 
-public:
-    TimeperiodsCache();
-    ~TimeperiodsCache();
-    void update(time_t now);
-    bool inTimeperiod(timeperiod *tp);
-    bool inTimeperiod(const char *tpname);
-    void logCurrentTimeperiods();
-private:
-    void logTransition(char *name, int from, int to);
-};
+customvariablesmember *CustomTimeperiodColumn::getCVM(void *data)
+{
+    if (!data) return 0;
+    data = shiftPointer(data);
+    if (!data) return 0;
+    return *(customvariablesmember **)((char *)data + _offset);
+}
 
-#endif // _TimeperiodsCache_h

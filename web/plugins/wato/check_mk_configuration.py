@@ -1785,6 +1785,36 @@ register_rule(group,
     itemtype = "service")
 group = "monconf/" + _("Various")
 
+register_rule(group,
+    "extra_host_conf:service_period",
+    TimeperiodSelection(
+        title = _("Service period for hosts"),
+        help = _("When it comes to availability reporting, you might want the report "
+                 "to cover only certain time periods, e.g. only Monday to Friday "
+                 "from 8:00 to 17:00. You can do this by specifying a service period "
+                 "for hosts or services. In the reporting you can then decide to "
+                 "include, exclude or ignore such periods und thus e.g. create a report "
+                 "of the availability just within or without these times. <b>Note</b>: Changes in the "
+                 "actual <i>definition</i> of a time period will only be reflected in "
+                 "times <i>after</i> that change. Selecting a different service period "
+                 "will also be reflected in the past.")),
+    )
+
+register_rule(group,
+    "extra_service_conf:service_period",
+    TimeperiodSelection(
+        title = _("Service period for services"),
+        help = _("When it comes to availability reporting, you might want the report "
+                 "to cover only certain time periods, e.g. only Monday to Friday "
+                 "from 8:00 to 17:00. You can do this by specifying a service period "
+                 "for hosts or services. In the reporting you can then decide to "
+                 "include, exclude or ignore such periods und thus e.g. create a report "
+                 "of the availability just within or without these times. <b>Note</b>: Changes in the "
+                 "actual <i>definition</i> of a time period will only be reflected in "
+                 "times <i>after</i> that change. Selecting a different service period "
+                 "will also be reflected in the past.")),
+    itemtype = "service")
+
 class MonitoringIcon(ValueSpec):
     def __init__(self, **kwargs):
         ValueSpec.__init__(self, **kwargs)

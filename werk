@@ -162,7 +162,7 @@ def write_changelog_line(chn, werk):
     for classid, classname, p in classes:
         if werk["class"] == classid and p:
             prefix = " " + p + ":"
-    if werk["description"]:
+    if werk["description"] and len(werk["description"])> 3:
         omit = "..."
     else:
         omit = ""

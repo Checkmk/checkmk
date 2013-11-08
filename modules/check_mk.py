@@ -1765,6 +1765,15 @@ def create_nagios_config(outfile = sys.stdout, hostnames = None):
     if summary_service_notification_periods != []:
         raise MKGeneralException("summary_service_notification_periods is not longer supported. Please use extra_summary_service_conf['notification_period'] instead.")
 
+    # Map service_period to _SERVICE_PERIOD. This field das not exist in Nagios/Icinga.
+    # The CMC has this field natively.
+    if "service_period" in extra_host_conf:
+        extra_host_conf["_SERVICE_PERIOD"] = extra_host_conf["service_period"]
+        del extra_host_conf["service_period"]
+    if "service_period" in extra_service_conf:
+        extra_service_conf["_SERVICE_PERIOD"] = extra_service_conf["service_period"]
+        del extra_service_conf["service_period"]
+
     if filesystem_levels != []:
         raise MKGeneralException("filesystem_levels is not longer supported.\n"
                 "Please use check_parameters instead.\n"

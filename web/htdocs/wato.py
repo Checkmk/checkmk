@@ -2295,8 +2295,8 @@ def mode_diag_host(phase):
             save_folder_and_hosts(g_folder)
             reload_hosts(g_folder)
             call_hook_hosts_changed(g_folder)
-            return 'edithost'
 
+            html.http_redirect(make_link([("mode", "edithost"), ("host", hostname), ("folder", g_folder[".path"])]))
         return
 
     html.write('<div class="diag_host">')
@@ -11746,7 +11746,7 @@ def mode_edit_rule(phase, new = False):
 
     # Value
     if valuespec:
-        forms.header(valuespec.title())
+        forms.header(valuespec.title() or _("Value"))
         value = rule[0]
         forms.section()
         try:

@@ -713,6 +713,9 @@ class html:
     def set_browser_reload(self, secs):
         self.browser_reload = secs
 
+    def http_redirect(self, url):
+        raise MKGeneralException("http_redirect not implemented")
+
     def set_browser_redirect(self, secs, url):
         self.browser_reload   = secs
         self.browser_redirect = url

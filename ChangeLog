@@ -21,7 +21,10 @@
 
     WATO:
     * 0053 New rule for configuring the display_name of a service...
-    * 0048 FIX: Fixed locking issue on host diagnose page...
+    * 0048 FIX: Fixed locking issue on host diagnose page
+
+    Notifications:
+    * 0032 FIX: mail notification plugin: replace windows forbidden characters in mail images
 
     Reporting & Availability:
     * 0051 Option for showing timeline directly in availability table...

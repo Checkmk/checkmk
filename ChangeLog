@@ -10,6 +10,7 @@
     * 0080 Added new checks for Brocade NetIron MLX switching / routing devices...
     * 0091 apc_ats_output: new check for output measurements on APC ATS devices
     * 0024 FIX: cisco_wlc: removed configuration parameter ap_model
+    * 0065 FIX: veeam_client: check behaviour improved when backup is in progress
 
     Multisite:
     * 0001 New filters for selecting several host/service-groups at once...
@@ -21,7 +22,7 @@
 
     WATO:
     * 0053 New rule for configuring the display_name of a service...
-    * 0048 FIX: Fixed locking issue on host diagnose page...
+    * 0048 FIX: Fixed locking issue on host diagnose page
 
     Reporting & Availability:
     * 0051 Option for showing timeline directly in availability table...

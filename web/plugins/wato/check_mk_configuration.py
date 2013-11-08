@@ -1493,7 +1493,7 @@ def get_snmp_checktypes():
    types = [ (cn, (c['title'] != cn and '%s: ' % cn or '') + c['title'])
              for (cn, c) in checks.items() if c['snmp'] ]
    types.sort()
-   return types
+   return [ (None, _('All SNMP Checks')) ] + types
 
 register_rule(group,
     "snmp_check_interval",
@@ -1505,7 +1505,7 @@ register_rule(group,
         elements = [
             DropdownChoice(
                 title = _("Checktype"),
-                choices = [ (None, _('All SNMP Checks')) ] + get_snmp_checktypes(),
+                choices = get_snmp_checktypes,
             ),
             Integer(
                 title = _("Do check every"),

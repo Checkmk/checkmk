@@ -679,7 +679,7 @@ def automation_diag_host(args):
     try:
         if test == 'ping':
             import subprocess
-            p = subprocess.Popen('ping -c 3 -W 5 %s 2>&1' % ipaddress, shell = True, stdout = subprocess.PIPE)
+            p = subprocess.Popen('ping -A -i 0.2 -c 2 -W 5 %s 2>&1' % ipaddress, shell = True, stdout = subprocess.PIPE)
             response = p.stdout.read()
             return (p.wait(), response)
 

@@ -2354,6 +2354,8 @@ def mode_diag_host(phase):
 
 def ajax_diag_host():
     try:
+        prepare_folder_info()
+
         if not html.check_transaction():
             return
 
@@ -2392,7 +2394,8 @@ def ajax_diag_host():
         # Second is treated as text output
         html.write("%s %s" % (result[0], html.attrencode(result[1])))
     except Exception, e:
-        html.write("1 %s" % _("Exception: %s") % html.attrencode(str(e)))
+        import traceback
+        html.write("1 %s" % _("Exception: %s") % html.attrencode(traceback.format_exc()))
 
 #.
 #   .-Inventory & Services-------------------------------------------------.

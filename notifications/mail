@@ -409,6 +409,9 @@ def main():
             svc_desc = '_HOST_'
         else:
             svc_desc = context['SERVICEDESC'].replace(' ', '_')
+            # replace forbidden windows characters < > ? " : | \ / *
+            for token in ["<", ">", "?", "\"", ":", "|", "\\", "/", "*"] :
+                svc_desc = svc_desc.replace(token, "x%s" % ord(token))
         name = '%s-%s-%d.png' % (context['HOSTNAME'], svc_desc, source)
 
         attachments.append(('img', name, content, 'inline'))

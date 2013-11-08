@@ -1,0 +1,8 @@
+Title: Fixed locking issue on host diagnose page
+Level: 1
+Component: wato
+Version: 1.2.3i7
+Date: 1383902500
+Class: fix
+
+

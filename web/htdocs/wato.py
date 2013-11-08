@@ -2187,6 +2187,15 @@ def delete_host_after_confirm(delname):
 #   | Verify or find out a hosts agent related configuration.              |
 #   '----------------------------------------------------------------------'
 
+def diag_host_tests():
+    return [
+        ('ping',          _('Ping')),
+        ('agent',         _('Agent')),
+        ('snmpv1',        _('SNMPv1')),
+        ('snmpv2',        _('SNMPv2c')),
+        ('snmpv2_nobulk', _('SNMPv2c (without Bulkwalk)'))
+    ]
+
 def mode_diag_host(phase):
     hostname = html.var("host")
     if not hostname:
@@ -2261,14 +2270,6 @@ def mode_diag_host(phase):
         ]
     )
 
-    tests = [
-        ('ping',          _('Ping')),
-        ('agent',         _('Agent')),
-        ('snmpv1',        _('SNMPv1')),
-        ('snmpv2',        _('SNMPv2c')),
-        ('snmpv2_nobulk', _('SNMPv2c (without Bulkwalk)'))
-    ]
-
     host = g_folder[".hosts"].get(hostname)
 
     if not host:
@@ -2280,30 +2281,7 @@ def mode_diag_host(phase):
         if not html.check_transaction():
             return
 
-        _test = html.var('_test')
-        if _test:
-            # Execute a specific test
-            try:
-                if _test not in dict(tests).keys():
-                    raise MKGeneralException(_('Invalid test.'))
-                args = [
-                    html.var('ipaddress'),
-                    html.var('snmp_community'),
-                    html.var('agent_port'),
-                    html.var('snmp_timeout'),
-                    html.var('snmp_retries'),
-                    html.var('datasource_program'),
-                ]
-                result = check_mk_automation(host[".siteid"], "diag-host", [hostname, _test] + args)
-            except Exception, e:
-                result = (1, _("Exception: %s") % html.attrencode(str(e)))
-            # API is defined as follows: Two data fields, separated by space.
-            # First is the state: 0 or 1, 0 means success, 1 means failed.
-            # Second is treated as text output
-            html.write("%s %s" % (result[0], html.attrencode(result[1])))
-            return ""
-
-        elif html.var('_save'):
+        if html.var('_save'):
             # Save the ipaddress and/or community
             mark_affected_sites_dirty(g_folder, hostname)
 
@@ -2358,7 +2336,7 @@ def mode_diag_host(phase):
                        'connection options you like to try on the right side of the screen and '
                        'press the "Test" button. The results will be displayed here.'))
     else:
-        for ident, title in tests:
+        for ident, title in diag_host_tests():
             html.write('<h3>%s</h3>' % title)
             html.write('<table class="data test"><tr class="data odd0">')
             html.write('<td class="icons"><div>')
@@ -2373,6 +2351,48 @@ def mode_diag_host(phase):
 
     html.write('</td></tr></table>')
     html.write('</div>')
+
+def ajax_diag_host():
+    try:
+        if not html.check_transaction():
+            return
+
+        if not config.may('wato.diag_host'):
+            raise MKAuthException(_('You are not permitted to perform this action.'))
+
+        hostname = html.var("host")
+        if not hostname:
+            raise MKGeneralException(_('The hostname is missing.'))
+
+        host = g_folder[".hosts"].get(hostname)
+
+        if not host:
+            raise MKGeneralException(_('The given host does not exist.'))
+        if ".nodes" in host:
+            raise MKGeneralException(_('This view does not support cluster hosts.'))
+
+        _test = html.var('_test')
+        if not _test:
+            raise MKGeneralException(_('The test is missing.'))
+
+        # Execute a specific test
+        if _test not in dict(diag_host_tests()).keys():
+            raise MKGeneralException(_('Invalid test.'))
+        args = [
+            html.var('ipaddress'),
+            html.var('snmp_community'),
+            html.var('agent_port'),
+            html.var('snmp_timeout'),
+            html.var('snmp_retries'),
+            html.var('datasource_program'),
+        ]
+        result = check_mk_automation(host[".siteid"], "diag-host", [hostname, _test] + args)
+        # API is defined as follows: Two data fields, separated by space.
+        # First is the state: 0 or 1, 0 means success, 1 means failed.
+        # Second is treated as text output
+        html.write("%s %s" % (result[0], html.attrencode(result[1])))
+    except Exception, e:
+        html.write("1 %s" % _("Exception: %s") % html.attrencode(str(e)))
 
 #.
 #   .-Inventory & Services-------------------------------------------------.

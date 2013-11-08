@@ -748,7 +748,7 @@ function start_host_diag_test(ident, hostname) {
 
     img.src = "images/icon_loading.gif";
     log.innerHTML = "...";
-    get_url("wato.py?mode=diag_host&host=" + escape(hostname) + "&_test=" + escape(ident)
+    get_url("wato_ajax_diag_host.py?host=" + escape(hostname) + "&_test=" + escape(ident)
             + '&_transid=-1' + vars,
               handle_host_diag_result, ident);
 }

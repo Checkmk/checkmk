@@ -11750,7 +11750,7 @@ def mode_edit_rule(phase, new = False):
 
     # Value
     if valuespec:
-        forms.header(valuespec.title())
+        forms.header(valuespec.title() or _("Value"))
         value = rule[0]
         forms.section()
         try:

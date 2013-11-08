@@ -30,7 +30,7 @@
     * 0056 New concept of service periods in availability reporting...
 
     Event Console:
-    * 0026 FIX: snmptd_mkevent.py: fixed crash on startup
+    * 0026 FIX: snmpd_mkevent.py: fixed crash on startup
 
     Livestatus:
     * 0023 FIX: table statehist: code cleanup / minor performance improvements

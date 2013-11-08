@@ -32,8 +32,8 @@ $def[1] .= "GPRINT:var1:LAST:\"%5.1lf%%\" ";
 $def[1] .= "GPRINT:var1:AVERAGE:\"(Avg\: %5.1lf%%,\" ";
 $def[1] .= "GPRINT:var1:MIN:\"Min\: %5.1lf%%,\" ";
 $def[1] .= "GPRINT:var1:MAX:\"Max\: %5.1lf%%)\" ";
-$def[1] .= "HRULE:$CRIT[1]#FFFF00 ";
-$def[1] .= "HRULE:$WARN[1]#FF0000 ";
-$def[1] .= "HRULE:$MIN[1]#FFFF00 ";
-$def[1] .= "HRULE:$MAX[1]#FF0000 ";
+#$def[1] .= "HRULE:$CRIT[1]#FFFF00 ";
+#$def[1] .= "HRULE:$WARN[1]#FF0000 ";
+#$def[1] .= "HRULE:$MIN[1]#FFFF00 ";
+#$def[1] .= "HRULE:$MAX[1]#FF0000 ";
 ?>

@@ -117,12 +117,20 @@ def inventory_brocade_mlx_module(info):
 def check_brocade_mlx_module(item, _no_params, info):
     for module_id, module_descr, module_state, mem_total, mem_avail in info[2]:
         if combine_item(module_id, module_descr) == item:
-            if module_state == "10":
-                return 0, "Module reports status 10 (running)"
-            elif module_state == "0":
+            if module_state == "0":
                 return 1, "Module reports status 0 (empty)"
+            elif module_state == "2":
+                return 1, "Module reports status 2 (going down)"
+            elif module_state == "3":
+                return 2, "Module reports status 3 (rejected)"
+            elif module_state == "4":
+                return 2, "Module reports status 4 (bad)"
+            elif module_state == "9":
+                return 1, "Module reports status 9 (coming up)"
+            elif module_state == "10":
+                return 0, "Module reports status 10 (running)"
             else:
-                return 2, "Module reports status %s" % module_state
+                return 3, "Module reports unidentified status %s" % module_state
     return 3, "Module %s not found" % item
 
 check_info["brocade_mlx.module_status"] = {
@@ -262,7 +270,7 @@ check_info["brocade_mlx.module_cpu"] = {
 # Temperature Sensors
 #############################################################################
 
-brocade_mlx_temperature_default_levels = (100, 120)
+brocade_mlx_temperature_default_levels = (50, 60)
 
 def inventory_brocade_mlx_temp(info):
     inventory = []
@@ -273,7 +281,8 @@ def inventory_brocade_mlx_temp(info):
 def check_brocade_mlx_temp(item, params, info):
     warn, crit = params
     for temp_descr, temp_value in info[4]:
-        temp_value = saveint(temp_value)
+        # Info from the MIB: "Each unit is 0.5 degrees Celcius."
+        temp_value = int(saveint(temp_value) / 2)
         if temp_descr == item:
 
             status = 0

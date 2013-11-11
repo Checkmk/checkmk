@@ -1,0 +1,11 @@
+Title: Fixed logwatch permission check when using liveproxy
+Level: 1
+Component: multisite
+Version: 1.2.3i7
+Date: 1384182853
+Class: fix
+
+When using the liveproxy daemon and logwatch together, the
+permission check for non administrative users always failed.
+As a result normal users could not access logfiles, which
+they should be allowed to see.

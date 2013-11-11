@@ -9,6 +9,7 @@
     * 0090 apc_ats_status: New Check for monitoring APC Automatic Transfer Switches
     * 0080 Added new checks for Brocade NetIron MLX switching / routing devices...
     * 0091 apc_ats_output: new check for output measurements on APC ATS devices
+    * 0068 check_sql: support for mssql databases included
     * 0024 FIX: cisco_wlc: removed configuration parameter ap_model
     * 0065 FIX: veeam_client: check behaviour improved when backup is in progress
     * 0066 FIX: veeam_jobs: check behaviour improved when backup is in progress

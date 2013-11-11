@@ -48,7 +48,7 @@ OPTIONS:
   -p PASS,  --password PASS     Password for database access
   -d DBMS,  --dbms DBMS         Name of the database management system.
                                 Default is 'postgres', other valid values are
-                                'mysql' and 'oracle'
+                                'mysql', 'mssql' and 'oracle'
   -H HOST,  --hostname HOST     Hostname or IP-Address where the database lives. Default is '127.0.0.1'
   -P PORT,  --port PORT         Port used to connect to the database
   -n NAME,  --name NAME         Name of the database on the DBMS
@@ -162,6 +162,14 @@ try:
         db_connection = db.connect(host=opt_hostname, port=opt_port, \
             db=opt_name, user=opt_user, passwd=opt_password )
 
+    elif opt_dbms == "mssql":
+        import pymssql  # mssql driver
+        db = pymssql
+        if opt_port == None:
+            opt_port=1433
+        db_connection = db.connect(host=opt_hostname+":"+opt_port, \
+            database=opt_name, user=opt_user, passwd=opt_password )
+
     elif opt_dbms == "oracle":
         sys.path.append('/usr/lib/python2.7/site-packages')
         import cx_Oracle
@@ -197,10 +205,11 @@ try:
         outvar = cursor.var(cx_Oracle.STRING)
         #opt_input.append("outvar")
         cursor.callproc(opt_sql, (outvar,))
-        result =  outvar.getvalue()
+        res =  outvar.getvalue()
+        result = res[0].split(",")
     else:
         cursor.execute(opt_sql)
-        result = cursor.fetchmany(2)
+        result = cursor.fetchone()
     cursor.close()
     db_connection.close()
 
@@ -227,14 +236,11 @@ try:
         print "UNKNOWN - SQL statement/procedure returned no data"
         sys.exit(3)
 
-    #row = result[0]
-    row = result[0].split(",")
-    number = float(row[0])
-    text = str(row[1])
+    number = float(result[0])
+    text = str(result[1])
 
     try:
-        perf = row[2]
-        perf = "|"+row[2]
+        perf = "|"+str(result[2])
     except IndexError:
         if opt_debug:
             raise

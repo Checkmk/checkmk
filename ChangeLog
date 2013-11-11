@@ -30,6 +30,7 @@
     * 0048 FIX: Fixed locking issue on host diagnose page
     * 0033 FIX: WATO forms: incorrect handling of checkbox state
     * 0205 FIX: Allowing star chars in variable names to fix role/permission editing...
+    * 0207 FIX: Explicit communities were not written to config files in all cases
 
     Notifications:
     * 0032 FIX: mail notification plugin: replace windows forbidden characters in mail images

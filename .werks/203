@@ -1,0 +1,11 @@
+Title: Changed sidebar reload interval to be more random
+Level: 1
+Component: multisite
+Version: 1.2.3i7
+Date: 1384155428
+Class: fix
+
+The sidebar is refreshed every 30 seconds. In the past, the
+sidebar has been refreshed at the 0th and 30th second of a
+minute. With many users, there occured load peaks during
+sidebar refresh. This changes the reload to be more random.

@@ -40,6 +40,7 @@
     * 0026 FIX: snmpd_mkevent.py: fixed crash on startup
 
     Livestatus:
+    * 0067 livedump: new option to mark the mode at the beginning of the dump and documentation fixes...
     * 0023 FIX: table statehist: code cleanup / minor performance improvements
 
 

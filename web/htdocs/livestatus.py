@@ -672,7 +672,7 @@ class MultiSiteConnection(Helpers):
     # Return connection to localhost (UNIX), if available
     def local_connection(self):
         for sitename, site, connection in self.connections:
-            if site["socket"].startswith("unix:"):
+            if site["socket"].startswith("unix:") and "liveproxy" not in site["socket"]:
                 return connection
         raise MKLivestatusConfigError("No livestatus connection to local host")
 

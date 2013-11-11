@@ -697,8 +697,14 @@ function switch_site(switchvar) {
        everything is affected by the switch */
 }
 
+var g_seconds_to_update = null;
+
 function sidebar_scheduler() {
-    var timestamp = Date.parse(new Date()) / 1000;
+    if (g_seconds_to_update == null)
+        g_seconds_to_update = sidebar_update_interval;
+    else
+        g_seconds_to_update -= 1;
+
     var newcontent = "";
     var to_be_updated = [];
 
@@ -710,7 +716,7 @@ function sidebar_scheduler() {
             // from this url
             var url = refresh_snapins[i][1];
 
-            if (timestamp % sidebar_update_interval == 0) {
+            if (g_seconds_to_update <= 0) {
                 get_url(url, updateContents, "snapin_" + name);
             }
         } else {
@@ -721,7 +727,7 @@ function sidebar_scheduler() {
 
     // Are there any snapins to be bulk updates?
     if(to_be_updated.length > 0) {
-        if (timestamp % sidebar_update_interval == 0) {
+        if (g_seconds_to_update <= 0) {
             var url = 'sidebar_snapin.py?names=' + to_be_updated.join(',');
             if (sidebar_restart_time !== null)
                 url += '&since=' + sidebar_restart_time;
@@ -735,8 +741,11 @@ function sidebar_scheduler() {
         }
     }
 
-    if (g_sidebar_notify_interval !== null && timestamp % g_sidebar_notify_interval == 0) {
-        update_messages();
+    if (g_sidebar_notify_interval !== null) {
+        var timestamp = Date.parse(new Date()) / 1000;
+        if (timestamp % g_sidebar_notify_interval == 0) {
+            update_messages();
+        }
     }
 
     // Detect page changes and re-register the mousemove event handler
@@ -745,6 +754,10 @@ function sidebar_scheduler() {
         registerEdgeListeners(parent.frames[1]);
         update_content_location();
     }
+
+    if (g_seconds_to_update <= 0)
+        g_seconds_to_update = sidebar_update_interval;
+
     setTimeout(function(){sidebar_scheduler();}, 1000);
 }
 

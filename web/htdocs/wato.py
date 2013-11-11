@@ -761,7 +761,7 @@ def save_hosts(folder = None):
         out.write(pprint.pformat(ipaddresses))
         out.write(")\n")
 
-    if len(ipaddresses) > 0:
+    if len(explicit_snmp_communities) > 0:
         out.write("\n# Explicit SNMP communities\n")
         out.write("explicit_snmp_communities.update(")
         out.write(pprint.pformat(explicit_snmp_communities))

@@ -3,7 +3,7 @@ import htmllib
 import os, time, config, weblib, re
 import defaults
 
-varname_regex = re.compile('^[\w\d_.%+-]+$')
+varname_regex = re.compile('^[\w\d_.%+-*]+$')
 
 class html_mod_python(htmllib.html):
 

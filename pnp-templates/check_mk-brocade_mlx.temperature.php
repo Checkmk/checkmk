@@ -1,0 +1,1 @@
+check_mk-dell_powerconnect_temp.php

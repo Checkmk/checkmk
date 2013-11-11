@@ -82,6 +82,7 @@ register_rule(group + '/' + subgroup_applications,
              ),
           ]
       ),
+      title = _("Logfile pattern rules"),
       help = _('<p>You can define one or several patterns (regular expressions) in each logfile pattern rule. '
                'These patterns are applied to the selected logfiles to reclassify the '
                'matching log messages. The first pattern which matches a line will '

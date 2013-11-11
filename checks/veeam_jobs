@@ -24,17 +24,19 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-state = { "Success": 0, "Failed": 2, "Warning":1, "InProgress":0, "Pending":0 }
 
 def inventory_veeam_jobs(info):
     return [ (x[0], None) for x in info ]
-
 
 def check_veeam_jobs(item, params, info):
     for line in info:
         if line[0] == item:
             if line[3] == "Success":
                 state = 0
+            elif line[2] =="Working":
+                state = 0
+                line.pop(7)
+                line.pop(6)
             elif line[3] == "Failed":
                 state = 2
             else:

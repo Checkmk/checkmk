@@ -23,4 +23,5 @@ inventory:
 
 perfdata:
  Total Size, duration and the average speed of the backup will be recorded 
- as performance data.
+ as performance data. Duration will not be recorded if the status of the backup
+ is {Pending} or {InProgress}.

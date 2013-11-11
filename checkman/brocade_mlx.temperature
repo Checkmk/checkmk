@@ -14,8 +14,8 @@ item:
  The description of the temperature sensor as provided by SNMP.
 
 examples:
- # set default levels to 70°C and 80°C:
- brocade_mlx_temperature_default_levels = (70, 80)
+ # set default levels to 30°C and 40°C:
+ brocade_mlx_temperature_default_levels = (30, 40)
 
  # Check a sensor with description Switch Fabric module 0, sensor 1 temperature
  # on a box called my-mlx-device with default levels
@@ -25,7 +25,7 @@ examples:
 
  # or use individual levels for warn and crit
  checks += [
-   ("my-mlx-device", "brocade_mlx.temperature", 'Switch Fabric module 0, sensor 1 temperature', (80, 100)
+   ("my-mlx-device", "brocade_mlx.temperature", 'Switch Fabric module 0, sensor 1 temperature', (40, 50)
  ]
 
 perfdata:
@@ -40,4 +40,4 @@ crit(int): {CRIT} state is triggered, if the temperature is higher than this.
 
 [configuration]
 brocade_mlx_temperature_default_levels(int, int): The standard levels for {WARN}
-    and {CRIT}. Defaults are (100, 120)
+    and {CRIT}. Defaults are (50, 60)

@@ -10,7 +10,8 @@ description:
  comment section of the two Veeam agent plugin scripts on how to install
  the scripts.
 
- This check is {OK} if the result of the backup is {Success}.
+ This check is {OK} if the result of the backup is {Success} or the state
+ of the backup is {Working}..
  It is {CRIT} if the result of the backup is {Failed}. It is
  {UNKNOWN} in all other cases.
 

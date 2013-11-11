@@ -353,8 +353,8 @@ def ajax_snapin():
             snapin = sidebar_snapins.get(snapname)
 
             # When restart snapins are about to be refreshed, only render
-            # them, when core restarted after they have been redendered
-            # before
+            # them, when the core has been restarted after their initial
+            # rendering
             if not snapin.get('refresh') and snapin.get('restart'):
                 since = float(html.var('since', 0))
                 newest = since

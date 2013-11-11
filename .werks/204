@@ -1,0 +1,12 @@
+Title: Reduced I/O on logins with access time recording or failed login counts
+Level: 1
+Component: multisite
+Version: 1.2.3i7
+Date: 1384158368
+Class: fix
+
+In previous versions, these optional features were loading the whole user
+configuration just to read / change one attribute of one user, which is kept
+in a single file. This mechanism has been recoded to only use this single
+custom attribute file. Should reduce I/O in large installations during
+multisite processing.

@@ -45,6 +45,7 @@
     * 0023 FIX: table statehist: code cleanup / minor performance improvements
 
 
+
 1.2.3i6:
     Core & Setup:
     * 0041 FIX: setup.py now handles non existing wwwuser gracefully...

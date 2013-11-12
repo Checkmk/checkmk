@@ -1,0 +1,8 @@
+Title: LDAP: Fixed problem syncing contactgroups of a user with umlauts in CN
+Level: 1
+Component: multisite
+Version: 1.2.3i7
+Date: 1384261370
+Class: fix
+
+

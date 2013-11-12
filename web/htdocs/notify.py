@@ -27,7 +27,7 @@
 import config, forms, time, lib, userdb
 from valuespec import *
 
-def get_popup_messages(user_id = None):
+def get_gui_messages(user_id = None):
     if user_id is None:
         user_id = config.user_id
     path = config.config_dir + "/" + user_id + '/messages.mk'
@@ -47,23 +47,23 @@ def get_popup_messages(user_id = None):
             updated = True
 
     if updated:
-        save_popup_messages(messages)
+        save_gui_messages(messages)
 
     return messages
 
-def delete_popup_message(msg_id):
-    messages = get_popup_messages()
+def delete_gui_message(msg_id):
+    messages = get_gui_messages()
     for index, msg in enumerate(messages):
         if msg['id'] == msg_id:
             messages.pop(index)
-    save_popup_messages(messages)
+    save_gui_messages(messages)
 
-def save_popup_messages(messages, user_id = None):
+def save_gui_messages(messages, user_id = None):
     if user_id is None:
         user_id = config.user_id
     path = config.config_dir + "/" + user_id + '/messages.mk'
     make_nagios_directory(os.path.dirname(path))
-    file(path, 'w').write(repr(messages))
+    file(path, 'w').write(repr(messages) + "\n")
 
 loaded_with_language = False
 def load_plugins():
@@ -76,9 +76,13 @@ def load_plugins():
 
     global notify_methods
     notify_methods = {
-        'popup': {
-            'title':  _('Popup Message in the GUI'),
-            'handler': notify_popup,
+        'gui_popup': {
+            'title':  _('Popup Message in the GUI (shows up alert window)'),
+            'handler': notify_gui_msg,
+        },
+        'gui_hint': {
+            'title':  _('Send hint to message inbox (bottom of sidebar)'),
+            'handler': notify_gui_msg,
         },
     }
 
@@ -218,7 +222,8 @@ def page_notify():
 #   |                          |___/                 |___/                 |
 #   +----------------------------------------------------------------------+
 
-def notify_popup(user_id, msg):
-    messages = get_popup_messages(user_id)
-    messages.append(msg)
-    save_popup_messages(messages, user_id)
+def notify_gui_msg(user_id, msg):
+    messages = get_gui_messages(user_id)
+    if msg not in messages:
+        messages.append(msg)
+        save_gui_messages(messages, user_id)

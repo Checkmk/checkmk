@@ -155,17 +155,27 @@ def sidebar_head():
                '</div>\n' % (_("Go to main overview"), config.start_url, defaults.check_mk_version))
 
 def render_messages():
-    for msg in notify.get_popup_messages():
-        html.write('<div class="popup_msg" id="message-%s">' % msg['id'])
-        html.write('<a href="javascript:void(0)" class="close" onclick="message_close(\'%s\')">x</a>' % msg['id'])
-        html.write(html.attrencode(msg['text']).replace('\n', '<br />\n'))
-        html.write('</div>\n')
+    for msg in notify.get_gui_messages():
+        if 'gui_hint' in msg['methods']:
+            html.write('<div class="popup_msg" id="message-%s">' % msg['id'])
+            html.write('<a href="javascript:void(0)" class="close" onclick="message_close(\'%s\')">x</a>' % msg['id'])
+            html.write(html.attrencode(msg['text']).replace('\n', '<br />\n'))
+            html.write('</div>\n')
+        if 'gui_popup' in msg['methods']:
+            html.javascript('alert(\'%s\'); mark_message_read("%s")' %
+                (html.attrencode(msg['text']).replace('\n', '\\n'), msg['id']))
 
 def ajax_get_messages():
     render_messages()
 
 def ajax_message_read():
-    notify.delete_popup_message(html.var('id'))
+    try:
+        notify.delete_gui_message(html.var('id'))
+        html.write("OK")
+    except:
+        if config.debug:
+            raise
+        html.write("ERROR")
 
 def sidebar_foot():
     html.write('<div id="side_footer">')

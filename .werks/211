@@ -1,0 +1,12 @@
+Title: GUI Notify: Added notify method "popup" to really create popup windows
+Level: 1
+Component: multisite
+Version: 1.2.3i7
+Date: 1384266662
+Class: feature
+
+The messages were named popups before, but were not really poups, as they were
+only shown at the bottom of the sidebar as small hints. Both functions are now
+available as notification methods. Popups will show up as alert windows and be
+marked as read after closing the alert window and hints are only shown at the
+bottom of the sidebar now.

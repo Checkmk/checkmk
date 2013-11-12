@@ -940,6 +940,7 @@ function handle_update_messages(_unused, code) {
     var c = document.getElementById('messages');
     if (c) {
         c.innerHTML = code;
+        executeJSbyObject(c);
         update_message_trigger();
     }
 }
@@ -955,12 +956,21 @@ function update_messages() {
     get_url('sidebar_get_messages.py', handle_update_messages);
 }
 
+function get_hint_messages(c) {
+    var hints;
+    if (c.getElementsByClassName)
+        hints = c.getElementsByClassName('popup_msg');
+    else
+        hints = document.getElementsByClassName('popup_msg', c);
+    return hints;
+}
+
 function update_message_trigger() {
     var c = document.getElementById('messages');
     if (c) {
         var b = document.getElementById('msg_button');
-        var num = c.children.length;
-        if (c.children.length > 0) {
+        var hints = get_hint_messages(c);
+        if (hints.length > 0) {
             // are there pending messages? make trigger visible
             b.style.display = 'inline';
 
@@ -972,12 +982,19 @@ function update_message_trigger() {
                 b.appendChild(l);
             }
 
-            l.innerHTML = '' + c.children.length;
+            l.innerHTML = '' + hints.length;
         } else {
             // no messages: hide the trigger
             b.style.display = 'none';
         }
     }
+}
+
+function mark_message_read(msg_id) {
+    get_url('sidebar_message_read.py?id=' + msg_id);
+
+    // Update the button state
+    update_message_trigger();
 }
 
 function read_message() {
@@ -986,7 +1003,8 @@ function read_message() {
         return;
 
     // extract message from teh message container
-    var msg = c.children[0];
+    var hints = get_hint_messages(c);
+    var msg = hints[0];
     c.removeChild(msg);
 
     // open the next message in a window
@@ -994,10 +1012,7 @@ function read_message() {
 
     // tell server that the message has been read
     var msg_id = msg.id.replace('message-', '');
-    get_url('sidebar_message_read.py?id=' + msg_id);
-
-    // Update the button state
-    update_message_trigger();
+    mark_message_read(msg_id);
 }
 
 function message_close(msg_id) {

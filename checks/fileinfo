@@ -164,17 +164,17 @@ def check_fileinfo_groups(item, params, info):
     return fileinfo_check_function(check_definition, params)
 
 def fileinfo_check_function(check_definition, params):
+    import operator
     state = 0
     infos = []
     perfdata = []
     for what, val, verbfunc in check_definition:
         infos.append("%s is %s" % (what, verbfunc(val)))
         warn, crit = "", ""
-        for how, comp in [ ("min", "<" ), ("max", ">") ]:
+        for how, comp, cfunc in [ ("min", "<", operator.lt), ("max", ">", operator.gt) ]:
             p = params.get(how + what)
             if p:
                 warn, crit = p
-                cfunc = eval("lambda a,b: a %s b" % comp)
                 if cfunc(val, crit):
                     state = 2
                     infos[-1] += " (%s %s)(!!)" % (comp, verbfunc(crit))

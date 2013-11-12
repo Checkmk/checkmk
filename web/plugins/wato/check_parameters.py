@@ -969,6 +969,42 @@ register_check_parameters(
                     ]
                 )
             ),
+            ("minsize_smallest",
+                Tuple(
+                    title = _("Minimal size of smallest file"),
+                    elements = [
+                      Filesize(title = _("Warning if below")),
+                      Filesize(title = _("Critical if below")),
+                    ]
+                )
+            ),
+            ("maxsize_smallest",
+                Tuple(
+                    title = _("Maximal size of smallest file"),
+                    elements = [
+                      Filesize(title = _("Warning if below")),
+                      Filesize(title = _("Critical if below")),
+                    ]
+                )
+            ),
+            ("minsize_largest",
+                Tuple(
+                    title = _("Minimal size of largest file"),
+                    elements = [
+                      Filesize(title = _("Warning if above")),
+                      Filesize(title = _("Critical if above")),
+                    ]
+                )
+            ),
+            ("maxsize_largest",
+                Tuple(
+                    title = _("Maximal size of largest file"),
+                    elements = [
+                      Filesize(title = _("Warning if above")),
+                      Filesize(title = _("Critical if above")),
+                    ]
+                )
+            ),
             ("minsize",
                 Tuple(
                     title = _("Minimal size"),

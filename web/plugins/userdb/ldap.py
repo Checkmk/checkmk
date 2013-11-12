@@ -560,7 +560,7 @@ def ldap_group_members(filters, filt_attr = 'cn', nested = False):
                 'cn'      : cn,
             }
             for user_dn, obj in ldap_search(ldap_replace_macros(config.ldap_userspec['dn']), filt, columns = ['dn']):
-                groups[dn]['members'].append(user_dn.encode('utf-8'))
+                groups[dn]['members'].append(user_dn)
 
     g_ldap_group_cache[cache_key] = groups
     return groups

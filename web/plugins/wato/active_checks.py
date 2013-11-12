@@ -476,7 +476,8 @@ register_rule(group,
         elements = [
             TextUnicode(
                 title = _("Name"),
-                help = _("Will be used in the service description"),
+                help = _("Will be used in the service description. If the name starts with"
+                         "a caret (^) the service description will not be prefixed with HTTP." ),
                 allow_empty = False),
             Alternative(
                 title = _("Mode of the Check"),

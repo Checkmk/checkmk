@@ -1,0 +1,9 @@
+Title: check_http: Default service description prefix can be avoided
+Level: 1
+Component: checks
+Version: 1.2.3i7
+Date: 1384270642
+Class: feature
+
+If the check_http service description is prefixed with a caret,
+the default prefix HTTP will not be used.

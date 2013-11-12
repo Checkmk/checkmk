@@ -1765,6 +1765,15 @@ def create_nagios_config(outfile = sys.stdout, hostnames = None):
     if summary_service_notification_periods != []:
         raise MKGeneralException("summary_service_notification_periods is not longer supported. Please use extra_summary_service_conf['notification_period'] instead.")
 
+    # Map service_period to _SERVICE_PERIOD. This field das not exist in Nagios/Icinga.
+    # The CMC has this field natively.
+    if "service_period" in extra_host_conf:
+        extra_host_conf["_SERVICE_PERIOD"] = extra_host_conf["service_period"]
+        del extra_host_conf["service_period"]
+    if "service_period" in extra_service_conf:
+        extra_service_conf["_SERVICE_PERIOD"] = extra_service_conf["service_period"]
+        del extra_service_conf["service_period"]
+
     if filesystem_levels != []:
         raise MKGeneralException("filesystem_levels is not longer supported.\n"
                 "Please use check_parameters instead.\n"
@@ -5014,6 +5023,23 @@ def ip_to_dnsname(ip):
         return dnsname
     except:
         return None
+
+def config_timestamp():
+    mtime = 0
+    for dirpath, dirnames, filenames in os.walk(check_mk_configdir):
+        for f in filenames:
+            mtime = max(mtime, os.stat(dirpath + "/" + f).st_mtime)
+    mtime = max(mtime, os.stat(default_config_dir + "/main.mk").st_mtime)
+    try:
+        mtime = max(mtime, os.stat(default_config_dir + "/final.mk").st_mtime)
+    except:
+        pass
+    try:
+        mtime = max(mtime, os.stat(default_config_dir + "/local.mk").st_mtime)
+    except:
+        pass
+    return mtime
+
 
 
 # Reset some global variable to their original value. This

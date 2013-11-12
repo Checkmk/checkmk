@@ -1,0 +1,12 @@
+Title: veeam_client: new check to monitor status of veeam clients with special agent plugin
+Level: 1
+Component: checks
+Version: 1.2.3i7
+Date: 1383751157
+Class: feature
+
+This new check monitors client operations of the veeam backup tool. It comes with the
+check script, template for pnp4nagios, and a special windows agent plugin which needs
+to be installed on the veeam server. It monitors the state of the backup operation,
+and stores the total backup size, backup duration and data thruput of the backup as
+performance data.

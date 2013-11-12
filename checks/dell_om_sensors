@@ -37,7 +37,7 @@ def check_dell_om_sensors(item, _no_params, info):
     }
     for line in info:
         if line[0] == item:
-            reading = int(line[2]) / 10.0 
+            reading = int(line[2]) / 10.0
             msg = "Current: %.2fC Sensor: %s (Type: %s) " % \
             ( reading, line[4], probe_types[int(line[3])] )
             perf = [ ('temp', reading )]

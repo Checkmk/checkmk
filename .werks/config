@@ -1,0 +1,24 @@
+components = [
+   ( "core",          "Core & Setup" ),
+   ( "checks",        "Checks & Agents" ),
+   ( "multisite",     "Multisite" ),
+   ( "wato",          "WATO" ),
+   ( "notifications", "Notifications" ),
+   ( "bi",            "BI" ),
+   ( "reporting",     "Reporting & Availability" ),
+   ( "ec",            "Event Console" ),
+   ( "livestatus",    "Livestatus" ),
+   ( "liveproxy",     "Livestatus-Proxy" ),
+]
+
+classes = [
+  ( "feature",      "New Feature",          "" ),
+  ( "fix",          "Bug Fix",              "FIX" ),
+  ( "incomp",       "Incompatible Change",  "" ),
+]
+
+levels = [
+  ( '1',              "Trivial Change" ),
+  ( '2',              "Non-Trivial Change" ),
+  ( '3',              "Major New Feature" ),
+]

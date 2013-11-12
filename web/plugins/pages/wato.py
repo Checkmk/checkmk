@@ -34,4 +34,5 @@ pagehandlers.update({
     "automation"            : wato.page_automation,
     "user_profile"          : wato.page_user_profile,
     "ajax_set_foldertree"   : wato.ajax_set_foldertree,
+    "wato_ajax_diag_host"   : wato.ajax_diag_host,
 })

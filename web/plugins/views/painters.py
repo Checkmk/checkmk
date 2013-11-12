@@ -482,6 +482,14 @@ multisite_painters["service_description"] = {
     "sorter"  : 'svcdescr',
 }
 
+multisite_painters["service_display_name"] = {
+    "title"   : _("Service alternative dislay name"),
+    "short"   : _("Display name"),
+    "columns" : ["service_display_name"],
+    "paint"   : lambda row: (None, row["service_display_name"]),
+    "sorter"  : 'svcdispname',
+}
+
 multisite_painters["svc_state_age"] = {
     "title"   : _("The age of the current service state"),
     "short"   : _("Age"),

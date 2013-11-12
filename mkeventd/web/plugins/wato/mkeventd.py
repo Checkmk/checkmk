@@ -1133,7 +1133,7 @@ def log_mkeventd(what, message):
 def mkeventd_changes_button():
     pending = parse_audit_log("mkeventd")
     if len(pending) > 0:
-        buttontext = "<b>%d " % len(pending) + _("Changes")  + "</b>"
+        buttontext = "%d " % len(pending) + _("Changes")
         hot = True
         icon = "mkeventd"
     else:

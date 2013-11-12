@@ -1,3 +1,71 @@
+1.2.3i7:
+    Checks & Agents:
+    * 0060 cisco_fantray: new check for monitoring fan trays of Cisco Nexus switches
+    * 0061 cisco_cpu: check now recognizes new object cpmCPUTotal5minRev...
+    * 0063 veeam_client: new check to monitor status of veeam clients with special agent plugin...
+    * 0064 veeam_jobs: new check to monitor the backup jobs of the veeam backup tool...
+    * 0047 Add new collection of checks to monitor Fritz!Box devices...
+    * 0027 esx_vsphere_sensors: it is now possible override the state of sensors
+    * 0090 apc_ats_status: New Check for monitoring APC Automatic Transfer Switches
+    * 0080 Added new checks for Brocade NetIron MLX switching / routing devices...
+    * 0091 apc_ats_output: new check for output measurements on APC ATS devices
+    * 0068 check_sql: support for mssql databases included
+    * 0024 FIX: cisco_wlc: removed configuration parameter ap_model
+    * 0065 FIX: veeam_client: check behaviour improved when backup is in progress
+    * 0066 FIX: veeam_jobs: check behaviour improved when backup is in progress
+
+    Multisite:
+    * 0001 New filters for selecting several host/service-groups at once...
+    * 0050 New concept of favorite hosts and services plus matching filters and views...
+    * 0043 FIX: LDAP: Improved error reporting during synchronisation...
+    * 0044 FIX: LDAP: Fixed error with empty groups during non nested group sync...
+    * 0045 FIX: LDAP: Fixed error when synchronizing non nested groups to roles
+    * 0046 FIX: Allowing "-" chars in var names again...
+    * 0049 FIX: Fixed check-mk-automation call on each new created apache thread...
+    * 0203 FIX: Changed sidebar reload interval to be more random...
+    * 0204 FIX: Reduced I/O on logins with access time recording or failed login counts...
+    * 0206 FIX: Fixed logwatch permission check when using liveproxy...
+
+    WATO:
+    * 0053 New rule for configuring the display_name of a service...
+    * 0048 FIX: Fixed locking issue on host diagnose page
+    * 0033 FIX: WATO forms: incorrect handling of checkbox state
+    * 0205 FIX: Allowing star chars in variable names to fix role/permission editing...
+    * 0207 FIX: Explicit communities were not written to config files in all cases
+
+    Notifications:
+    * 0032 FIX: mail notification plugin: replace windows forbidden characters in mail images
+
+    Reporting & Availability:
+    * 0051 Option for showing timeline directly in availability table...
+    * 0052 Visual colorization of availability according to levels...
+    * 0054 New labelling options for availability table...
+    * 0055 Allow grouping by host, host group or service group...
+    * 0056 New concept of service periods in availability reporting...
+
+    Event Console:
+    * 0026 FIX: snmpd_mkevent.py: fixed crash on startup
+
+    Livestatus:
+    * 0067 livedump: new option to mark the mode at the beginning of the dump and documentation fixes...
+    * 0023 FIX: table statehist: code cleanup / minor performance improvements
+
+
+1.2.3i6:
+    Core & Setup:
+    * 0041 FIX: setup.py now handles non existing wwwuser gracefully...
+
+    Checks & Agents:
+    * 0040 Add agent plugin to test local hostname resolving...
+    * 0020 FIX: Inventory problem with inventory_processes parameter...
+
+    Multisite:
+    * 0000 Improved performance of LDAP sync by refactoring the group sync code
+
+    WATO:
+    * 0042 FIX: Removed debug outputs from service inventory...
+
+
 1.2.3i5:
     Core:
     * Automatically remove duplicate checks when monitoring with Agent+SNMP
@@ -72,13 +140,15 @@
     * windows_tasks: New check to  monitor the Windows Task Scheduler
     * sensatronics_temp: New check for Sensatronic E4 Temperatur Sensor
     * akcp_sensor_drycontact: New Check for AKCP drycontact Sensors
+    * esx_vsphere_vm.heartbeat: Heartbeat status alert level now configurable
+    * ps:  new configuration option: handle_count (windows only)
     * FIX: Windows agent: gracefully handle garbled logstate.txt
     * FIX: esx_vsphere_counters: added missing ramdisk type upgradescratch
     * FIX: esx_vsphere_hostsystem: fixed bug in handling of params
     * FIX: local: tolerate invalid output lines
     * FIX: hp_proliant: Correct handling of missing snmp data
     * FIX: logwatch.ec: No longer forwards "I" lines to event console
-    * FIX: check_dns: default to querying the host itself
+    * FIX: check_dns: default to querying the DNS server on the localhost itself
     * FIX: ps: do not output perfdata of CPU averaging (use ps.perf for that)
     * FIX: nfsexports: also support systems with rpcbind instead of portmap
     * FIX: ups_in_freq: corrected spelling of service description
@@ -90,6 +160,7 @@
            the agent, no PNP graphs for them are drawn.
            (This is the case if ExtendedStatus set to Off in Apache config)
     * FIX: oracle_jobs: fixed issues with incorrect column count in check output
+    * FIX: if/if64/...: layout fix in PNP template for packets
 
 
     WATO:
@@ -99,7 +170,17 @@
     * New option for full SNMP scan in bulk inventory
     * bulk operations now also available when checkboxes are off
     * LDAP: Added test to validate the configured role sync groups
+    * LDAP: The sync hooks during activate changes can now be enabled/disabled
+      by configuration (Global Settings)
     * Disabled replication type "peer" in site editor.
+    * Added "permanently ignore" button to inventory services dialog which 
+      links directly to the disabled services view
+    * Added diagnose page linked from host edit dialog. This can be used to test
+      connection capabilities of hosts
+    * The rule "Process inventory" now offers the same configuration options 
+      as its manual check equivalent "State and count of processes"
+    * New configuration option handle_count (windows only) in the rules
+      "Process inventory" and "State and count of processes"
     * FIX: correct display of number of hosts in bulk inventory
     * FIX: nailed down ".siteid" exception when added new site
     * FIX: fixed setting for locking mode from 'ait' to 'wait'
@@ -110,6 +191,10 @@
     Livestatus:
     * Removed "livecheck". It never was really stable. Nagios4 has something
       similar built in. And also the Check_MK Micro Core.
+    * table statehist: no longer computes an unmonitored state for hosts and
+                       services on certain instances.
+                       (showed up as no hosts/services in the multisite gui)
+    * table statehist: fixed SIGSEGV chance on larger queries
 
 1.2.3i4:
     Core:
@@ -626,6 +711,10 @@
     Event Console:
     * FIX: apply rewriting of application/hostname also when cancelling events
     * FIX: check_mkevents now uses case insensitive host name matching
+
+    Livestatus:
+    * FIX: fixed incorrect output formatting of comments_with_info column
+    * FIX: statehist table: fixed memory leak
 
 1.2.2p2:
     Core:

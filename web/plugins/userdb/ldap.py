@@ -82,7 +82,8 @@ ldap_filter_map = {
     },
 }
 
-#   .----------------------------------------------------------------------.
+#.
+#   .-General LDAP code----------------------------------------------------.
 #   |                      _     ____    _    ____                         |
 #   |                     | |   |  _ \  / \  |  _ \                        |
 #   |                     | |   | | | |/ _ \ | |_) |                       |
@@ -194,8 +195,8 @@ def ldap_connect(enforce_new = False, enforce_server = None):
 
         # Got no connection to any server
         if ldap_connection is None:
-            raise MKLDAPException(_('The LDAP connector is unable to connect to the LDAP server.\n%s') %
-                                        ('<br />\n'.join(errors)))
+            raise MKLDAPException(_('LDAP connection failed:\n%s') %
+                                        ('\n'.join(errors)))
 
         # on success, store the connection options the connection has been made with
         ldap_connection_options = config.ldap_connection
@@ -315,6 +316,7 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
     # be as stable as it is needed. So we try to repeat the query for three times.
     tries_left = 2
     success = False
+    last_exc = None
     while not success:
         tries_left -= 1
         try:
@@ -344,6 +346,7 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
                                         'incomplete results. You should change the scope of operation '
                                         'within the ldap or adapt the limit settings of the LDAP server.'))
         except (ldap.SERVER_DOWN, ldap.TIMEOUT, MKLDAPException), e:
+            last_exc = e
             if tries_left:
                 ldap_log('  Received %r. Retrying with clean connection...' % e)
                 ldap_disconnect()
@@ -356,8 +359,14 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
 
     if not success:
         ldap_log('  FAILED')
-        raise MKLDAPException(_('Unable to successfully perform the LDAP search. '
-                                'Maybe there is a connection problem with the LDAP server.'))
+        if config.debug:
+            raise MKLDAPException(_('Unable to successfully perform the LDAP search '
+                                    '(Base: %s, Scope: %s, Filter: %s, Columns: %s): %s') %
+                                    (html.attrencode(base), html.attrencode(scope),
+                                    html.attrencode(filt), html.attrencode(','.join(columns))),
+                                    last_exc)
+        else:
+            raise MKLDAPException(_('Unable to successfully perform the LDAP search (%s)') % last_exc)
 
     ldap_log('  RESULT length: %d, duration: %0.3f' % (len(result), duration))
     return result
@@ -505,53 +514,59 @@ def ldap_get_groups(add_filt = None):
         filt = '(&%s%s)' % (filt, add_filt)
     return ldap_search(ldap_replace_macros(config.ldap_groupspec['dn']), filt, ['cn'])
 
-def ldap_user_groups(username, user_dn, attr = 'cn', nested = False):
-    # When configured to convert user_ids to lower case, all user ids here are lower case.
-    # Otherwise all user_ids are in the case which they are in LDAP. This should be ok
-    # for this function! I removed the snippet below to reduce the number of ldap queries.
-    # Before removal, this query was executed for every user again, just to fetch the DN
-    # and the username.
-    #   # The given username might be wrong case. The ldap search is case insensitive,
-    #   # so the username read from ldap might differ. Fix it here.
-    #   user_dn, username = ldap_get_user(username, True)
-
-    cache_key = '%s-%s' % (username, nested and 'n' or 'f')
+def ldap_group_members(filters, filt_attr = 'cn', nested = False):
+    cache_key = '%s-%s-%s' % (filters, nested and 'n' or 'f', filt_attr)
     if cache_key in g_ldap_group_cache:
-        if attr == 'cn':
-            return g_ldap_group_cache[cache_key][0]
-        else:
-            return g_ldap_group_cache[cache_key][1]
+        return g_ldap_group_cache[cache_key]
 
-    # posixGroup objects use the memberUid attribute to specify the group memberships.
-    # This is the username instead of the users DN. So the username needs to be used
-    # for filtering here.
-    if ldap_member_attr().lower() == 'memberuid':
-        user_filter = username
+    # When not searching for nested memberships, it is easy. Simply query the group
+    # for the memberships in one single query.
+    if not nested:
+        filt = ldap_filter('groups')
+        if filters:
+            add_filt = '(|%s)' % ''.join([ '(%s=%s)' % (filt_attr, f) for f in filters ])
+            filt = '(&%s%s)' % (filt, add_filt)
+
+        member_attr = ldap_member_attr().lower()
+        groups = {}
+        for dn, obj in ldap_search(ldap_replace_macros(config.ldap_groupspec['dn']), filt, ['cn', member_attr]):
+            groups[dn] = {
+                'cn'      : obj['cn'][0],
+                'members' : obj.get(member_attr, []),
+            }
     else:
-        user_filter = user_dn
+        # Nested querying is more complicated. We have no option to simply do a query for group objects
+        # to make them resolve the memberships here. So we need to query all users with the nested
+        # memberof filter to get all group memberships of that group. We need one query for each group.
+        groups = {}
+        for filter_val in filters:
+            if filt_attr == 'cn':
+                result = ldap_search(ldap_replace_macros(config.ldap_groupspec['dn']),
+                                     '(&%s(cn=%s))' % (ldap_filter('groups'), filter_val),
+                                     columns = ['dn'])
+                if not result:
+                    continue # Skip groups which can not be found
+                dn = result[0][0]
+                cn = filter_val
+            else:
+                dn = filter_val
+                # in case of asking with DNs in nested mode, the resulting objects have the
+                # cn set to None for all objects. We do not need it in that case.
+                cn = None
 
-    # Apply configured group ldap filter and only reply with groups
-    # having the current user as member
-    if config.ldap_connection['type'] and nested:
-        add_filt = '(member:1.2.840.113556.1.4.1941:=%s)' % ldap.filter.escape_filter_chars(user_dn)
-    else:
-        add_filt = '(%s=%s)' % (ldap_member_attr(), ldap.filter.escape_filter_chars(user_filter))
+            filt = '(&%s(memberOf:1.2.840.113556.1.4.1941:=%s))' % (ldap_filter('users'), dn)
+            groups[dn] = {
+                'members' : [],
+                'cn'      : cn,
+            }
+            for user_dn, obj in ldap_search(ldap_replace_macros(config.ldap_userspec['dn']), filt, columns = ['dn']):
+                groups[dn]['members'].append(user_dn)
 
-    # First get all groups
-    groups_cn = []
-    groups_dn = []
-    for dn, group in ldap_get_groups(add_filt):
-        groups_cn.append(group['cn'][0])
-        groups_dn.append(dn)
+    g_ldap_group_cache[cache_key] = groups
+    return groups
 
-    g_ldap_group_cache.setdefault(cache_key, (groups_cn, groups_dn))
-
-    if attr == 'cn':
-        return groups_cn
-    else:
-        return groups_dn
-
-#   .----------------------------------------------------------------------.
+#.
+#   .-Attributes-----------------------------------------------------------.
 #   |              _   _   _        _ _           _                        |
 #   |             / \ | |_| |_ _ __(_) |__  _   _| |_ ___  ___             |
 #   |            / _ \| __| __| '__| | '_ \| | | | __/ _ \/ __|            |
@@ -746,15 +761,15 @@ def register_user_attribute_sync_plugins():
 register_user_attribute_sync_plugins()
 
 def ldap_convert_groups_to_contactgroups(plugin, params, user_id, ldap_user, user):
-    groups = []
-    # 1. Fetch CNs of all LDAP groups of the user (use group_dn, group_filter)
-    ldap_groups = ldap_user_groups(user_id, ldap_user['dn'], nested = params.get('nested', False))
-
-    # 2. Fetch all existing group names in WATO
+    # 1. Fetch all existing group names in WATO
     cg_names = load_group_information().get("contact", {}).keys()
 
-    # Only add groups which are already contactgroups in wato
-    return {'contactgroups': [ g for g in ldap_groups if g in cg_names]}
+    # 2. Load all LDAP groups which have a CN matching one contact
+    #    group which exists in WATO
+    ldap_groups = ldap_group_members(cg_names, nested = params.get('nested', False))
+
+    # 3. Only add groups which the user is member of
+    return {'contactgroups': [ g['cn'] for dn, g in ldap_groups.items() if ldap_user['dn'] in g['members']]}
 
 ldap_attribute_plugins['groups_to_contactgroups'] = {
     'title': _('Contactgroup Membership'),
@@ -778,17 +793,20 @@ ldap_attribute_plugins['groups_to_contactgroups'] = {
 }
 
 def ldap_convert_groups_to_roles(plugin, params, user_id, ldap_user, user):
-    groups = []
-    # 1. Fetch DNs of all LDAP groups of the user
-    ldap_groups = [ g.lower() for g in ldap_user_groups(user_id, ldap_user['dn'],
-                                     attr = 'dn', nested = params.get('nested', False)) ]
+    # Load the needed LDAP groups, which match the DNs mentioned in the role sync plugin config
+    ldap_groups = dict(ldap_group_members([ dn for role_id, dn in params.items() if isinstance(dn, str) ],
+                                     filt_attr = 'distinguishedname', nested = params.get('nested', False)))
 
-    # 2. Load default roles from default user profile
+    # Load default roles from default user profile
     roles = config.default_user_profile['roles'][:]
 
-    # 3. Loop all roles mentioned in params (configured to be synchronized)
+    # Loop all roles mentioned in params (configured to be synchronized)
     for role_id, dn in params.items():
-        if isinstance(dn, str) and dn.lower() in ldap_groups and role_id not in roles:
+        if not isinstance(dn, str):
+            continue # skip non configured ones
+
+        # if group could be found and user is a member, add the role
+        if dn in ldap_groups and ldap_user['dn'] in ldap_groups[dn]['members']:
             roles.append(role_id)
 
     return {'roles': roles}
@@ -828,7 +846,8 @@ ldap_attribute_plugins['groups_to_roles'] = {
     'parameters':        ldap_list_roles_with_group_dn,
 }
 
-#   .----------------------------------------------------------------------.
+#.
+#   .-Hooks----------------------------------------------------------------.
 #   |                     _   _             _                              |
 #   |                    | | | | ___   ___ | | _____                       |
 #   |                    | |_| |/ _ \ / _ \| |/ / __|                      |

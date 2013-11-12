@@ -110,7 +110,8 @@ def ps_parse_info(info):
                     resi    = int(psinfo["WorkingSetSize"]) / 1024 # Bytes -> KB
                     userc   = int(psinfo["UserModeTime"])   # do not resolve counter here!
                     kernelc = int(psinfo["KernelModeTime"]) # do not resolve counter here!
-                    line[1:1] = [ "(unknown,%d,%d,@%d/%d/%d)" % (virt, resi, pid, userc, kernelc) ]
+                    handlec = int(psinfo.get("HandleCount", 0)) # Only in newer psperf.bat versions
+                    line[1:1] = [ "(unknown,%d,%d,@%d/%d/%d/%d)" % (virt, resi, pid, userc, kernelc, handlec) ]
             info.append(line)
         return cpu_cores, info
     else:
@@ -148,6 +149,9 @@ def inventory_ps_common(invdata, info, handle_perfdata = False):
                               not in_extraconf_hostlist(hostlist, g_hostname)):
             continue
 
+        if len(inventry) == 7: # extend old inventory_processes
+            inventry += ([],)
+
         entries.append(inventry)
 
     # Handle new wato style inventory_processes_rules
@@ -164,9 +168,12 @@ def inventory_ps_common(invdata, info, handle_perfdata = False):
         if handle_perfdata != v['perfdata']:
             continue
 
-        entries.append((v['descr'], v['match'], v['user']) + v['levels'])
+        extra_options = []
+        for token in [ 'cpulevels', 'cpu_average', 'virtual_levels', 'resident_levels', 'handle_count' ]:
+            extra_options.append( (token, v.get(token)) )
+        entries.append((v['descr'], v['match'], v['user']) + v['levels'] +  (extra_options,) )
 
-    for servicedesc, pattern, userspec, warnmin, okmin, okmax, warnmax in entries:
+    for servicedesc, pattern, userspec, warnmin, okmin, okmax, warnmax, extra_options in entries:
         num_perc_s = servicedesc.count("%s")
         for line in info:
             # First entry in line is the node name or None for non-clusters
@@ -198,15 +205,22 @@ def inventory_ps_common(invdata, info, handle_perfdata = False):
 
                 # Problem here: We need to instantiate all subexpressions
                 # with their actual values of the found process.
+                extra_keys = {}
+                for key, value in extra_options:
+                    if value:
+                        extra_keys[key] = value
+
                 i_pattern = instantiate_regex_pattern(pattern, matches)
-                inv = ( i_servicedesc, ( i_pattern, i_userspec, warnmin, okmin, okmax, warnmax ) )
-                inv = ( i_servicedesc, {
+                inv_keys = {
                     "process" : i_pattern,
                     "user"    : i_userspec,
                     "warnmin" : warnmin,
                     "okmin"   : okmin,
                     "okmax"   : okmax,
-                    "warnmax" : warnmax } )
+                    "warnmax" : warnmax }
+                inv_keys.update(extra_keys)
+                inv = ( i_servicedesc, inv_keys )
+
                 if inv not in inventory:
                     inventory.append(inv)
 
@@ -302,6 +316,7 @@ def check_procs(item, params, info, with_perfdata):
     count = 0
     virtual_size   = 0
     resident_size  = 0
+    handle_count   = 0
     percent_cpu    = 0.0
     extended_perfdata = False
 
@@ -319,12 +334,13 @@ def check_procs(item, params, info, with_perfdata):
                     virtual_size += int(addinfo[1])  # kB
                     resident_size += int(addinfo[2]) # kB
                     if addinfo[3].startswith('@'): # wmic counters :-(
-                        pid, user_c, kernel_c = map(int, addinfo[3][1:].split('/'))
+                        pid, user_c, kernel_c, handle_c = map(int, addinfo[3][1:].split('/'))
                         timedif, user_per_sec   = get_counter("ps_wmic.user.%d" % pid, now, user_c)
                         timedif, kernel_per_sec = get_counter("ps_wmic.kernel.%d" % pid, now, kernel_c)
                         user_perc = user_per_sec / 100000.0 / cpu_cores
                         kernel_perc = kernel_per_sec / 100000.0 / cpu_cores
                         percent_cpu += user_perc + kernel_perc
+                        handle_count += handle_c
                     else:
                         percent_cpu += savefloat(addinfo[3])
                     extended_perfdata = True
@@ -395,6 +411,17 @@ def check_procs(item, params, info, with_perfdata):
                 state = max(state, 1)
                 infotext += "(!)"
 
+        # only check handle_count if provided by wmic counters
+        if handle_count:
+            infotext += ", %d process handles" % handle_count
+            if "handle_count" in params:
+                warn_handle, crit_handle = params["handle_count"]
+                if handle_count >= crit_handle:
+                    state = 2
+                    infotext += "(!!)"
+                elif handle_count >= warn_handle:
+                    state = max(state, 1)
+                    infotext += "(!)"
 
     return state, infotext, perfdata
 

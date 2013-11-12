@@ -1,0 +1,10 @@
+Title: veeam_jobs: new check to monitor the backup jobs of the veeam backup tool
+Level: 1
+Component: checks
+Version: 1.2.3i7
+Date: 1383751852
+Class: feature
+
+This check monitors the status of the backups jobs run by the Veeam
+backup tool. In order to carry out the check, the Veeam agent plugin
+for windows needs to be installed on the backup server.

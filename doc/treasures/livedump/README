@@ -30,10 +30,10 @@ NSCA users will now this. This is easily done by:
 ./livedump -TC > some_file.cfg
 
 and then copying that file to your objects or conf.d directory on
-your target nagios. Note: The option -C will add some templates
+your target nagios. Note: The option -T will add some templates
 to the configuration that are used by the created host and service
 definitions. If you import data from more than on source those
-template will be duplicate. Use -T in that case in order to avoid
+template will be duplicate. Use -C only in that case in order to avoid
 duplication.
 
 Now restart your target system and new hosts and services will appear

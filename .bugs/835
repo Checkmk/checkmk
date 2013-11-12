@@ -1,0 +1,18 @@
+Title: BI doesent honours acknowledgement of services
+Component: wato
+State: discuss
+Date: 2013-10-30 10:49:32
+Targetversion: 1.2.3i5
+Class: feature
+
+They still appearing as critical
+
+2013-11-05 09:40:43: changed state open -> discuss
+by bs: is'nt this a "works as designed"?
+only because of someone working on a problem, an application (aggregation) is still unavailable and should be shown as unavailable (e. g. in Hotline Callcenter)
+
+2013-11-05 09:51:20: changed state discuss -> discuss
+one more note by bs: maybe we better should add the acknoleged icon to the aggregation
+and keep state unchanged
+this would be e. g. very helpful for telefone hotline: They could tell customers:
+Yes we have a known problem with application xyz and there is already someone working on

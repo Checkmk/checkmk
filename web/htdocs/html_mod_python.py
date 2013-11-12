@@ -3,7 +3,7 @@ import htmllib
 import os, time, config, weblib, re
 import defaults
 
-varname_regex = re.compile('^[\w\d_-]+$')
+varname_regex = re.compile('^[\w\d_.%+-\\\*]+$')
 
 class html_mod_python(htmllib.html):
 
@@ -124,6 +124,10 @@ class html_mod_python(htmllib.html):
         if type(msg) != str:
             msg = repr(msg)
         self.req.log_error(msg, apache.APLOG_WARNING)
+
+    def http_redirect(self, url):
+        self.set_http_header('Location', url)
+        raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
 
     # Needs to set both, headers_out and err_headers_out to be sure to send
     # the header on all responses

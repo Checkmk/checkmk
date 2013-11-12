@@ -1081,11 +1081,11 @@ def render_wiki():
     function wiki_search()
     {
         var oInput = document.getElementById('wiki_search_field');
-        top.frames["main"].location.href = 
+        top.frames["main"].location.href =
            "/%s/wiki/doku.php?do=search&id=" + escape(oInput.value);
     }
     """ % defaults.omd_site)
-    
+
     html.write('<form id="wiki_search" onSubmit="wiki_search()">')
     html.write('<input id="wiki_search_field" type="text" name="wikisearch"></input>\n')
     html.icon_button("#", _("Search"), "wikisearch", onclick="wiki_search();")
@@ -1144,9 +1144,9 @@ def render_wiki():
         if ul_started == True:
             html.write("</ul>")
     except IOError:
-        html.write("You have to create a <a href='/%s/wiki/doku.php?id=%s'>sidebar</a> first" % 
+        html.write("You have to create a <a href='/%s/wiki/doku.php?id=%s'>sidebar</a> first" %
            (defaults.omd_site, _("sidebar") ))
-   
+
 if defaults.omd_root:
     sidebar_snapins["wiki"] = {
         "title" : _("Wiki"),
@@ -1195,5 +1195,5 @@ if defaults.omd_root:
         }
         """
     }
-    
+
 

@@ -1,32 +1,29 @@
-Michael Gorn.
+Starting point: Check_MK's "Flexible Notifications" are to a decent degree
+more flexible than Nagios' builtin notification system.  There are some
+situations, however, where even more flexiblity is desirable. Furthermore -
+if you have a larger number of users - the configuration of the notification
+profiles for each user is very inconvenient.
 
-Starting point: Check_MK's "Flexible Notifications" are to a decent
-degree more flexible than Nagios' builtin notification system.
-There are some situations' however, where even more flexiblity
-is desirable. Furthermore - if you have a larger number of users
-then the configuration of the notification profiles for each user
-is very inconveniant.
-
-This white pager suggest a new notificatin system that tackles
-these problems and is easily extendable for the future.
+This white paper suggests a new notification system that tackles these problems
+and is easily extendable in the future.
 
 RULE BASED NOTIFICATIONS
 ------------------------
-The basic idea is that notifications are processed by a rule
-based engine - very similar to the "Event Console". A notifcation
-is in the first place independent of an actual user. It goes
-as follows:
+The basic idea is that notifications are processed by a rule based engine -
+very similar to the "Event Console". A notifcation is in the first place
+independent of an actual user. It is handled as follows:
 
 1. The monitoring Core (Nagios/Icinga/CMC) creates a host or service *Alert*.
 
-2. That alert is being notified by a general global contact calles "checkmk-notify".
+2. The monitoring core notifies the global contact called "checkmk-notify" 
+   about the alert.
 
-3. That contact has "cmk --notify" configured as its notification command. By
+3. This contact has "cmk --notify" configured as its notification command. By
    means of an environment variable it gets the list of contacts of the object
    for later reference. The actual contacts themselves have notifications disabled.
-   This avoid duplicate notifications.
+   This avoids duplicate notifications.
 
-4. Now the notifications goes through a chain of notification rules, which
+4. Now the notification goes through a chain of notification rules, which
    can be edited via WATO (similar to the one in the Event Console). One difference
    to the EC is, that in the notification system *all* rules will be applied,
    even if a previous rule already matched. That is important in order to have
@@ -35,27 +32,27 @@ as follows:
 
 RULES
 -----
-The rules have a structure similar to those in the Event Console. There are
-being edited by a dedicated WATO mdule. Each rule consits of a condition
+The rules have a structure similar to those in the Event Console. They are
+edited by a dedicated WATO module. Each rule consist of a condition
 and a notification action.
 
 The condition can be formed of:
-* whether a certain timeperiod is currenlty active
+* whether a certain timeperiod is currently active
 * the notification number (i.e. phase of escalation)
 * the service level (a number that can be attached to each host/service)
 * the event type (up, down, ok, crit, etc.)
 * a host specification like in WATO rules (using host tags, etc.)
 * a service specification using regular expressions (like in WATO rules)
 
-Further kinds of conditions that we can think of are:
+Further conditions that we can think of are:
 * The original state or the complete state transition (e.g. CRIT -> WARN vs. OK -> WARN)
 * the type of the check plugin, e.g. only checks of type "if" or "if64"
 * whether the host or service is contained in a certain host/service group
 * whether it's contained in a certain contact group
 * whether it has a certain contact
-* the value of a certain user defined custom variable
+* the value of a certain user-defined custom variable
 
-When all conditions of a rule are fullfilled, then it matches
+If all conditions of a rule are fullfilled, it matches
 and its action is executed. The action consist of:
 
 * Who should be notified?
@@ -69,9 +66,8 @@ and its action is executed. The action consist of:
 
 * The parameters of that plugin
 
-Note: the action is not immediately executed but added to the
-list of planned notifications. This list contains of triples
-of the following strucute:
+Note: the action is not immediately executed but added to the list of planned
+notifications. This list consists of triples of the following structure:
 
    Contact, Plugin, Parameters
 
@@ -81,21 +77,18 @@ Also each rule has a checkbox:
 
 CANCELLING RULES
 ----------------
-In ord to be able to better configure exceptions there could be
-a second type of rules: cancelling rules. They have the same
-structure as the normal rules when in comes to conditions.
-Also the selection of the contacts is the same. The plugins
-section is now not a choice of once, but a list of checkboxes
-where several plugins can be selected. No plugin parameters
-need to be confiured here.
+In order to be able to better configure exceptions there could be a second
+type of rules: cancelling rules. They have the same structure as the normal
+rules when in comes to conditions.  Also the selection of the contacts is
+the same. The plugins section is now not a single plugin, but a list of
+checkboxes where several plugins can be selected. No plugin parameters need
+to be configured here.
 
-When a cancelling rule matches then all previously selected
-notifications to the specified users with the specified
-plugins are cancelled. Such a rule could mean e.g.
-"Do not notifiy Hubert during the Weekend via SMS".
+When a cancelling rule matches, all previously selected notifications
+to the specified users with the specified plugins are cancelled. Such a rule
+could mean, e.g.,  "Do not notifiy Hubert during the Weekend via SMS".
 
-The order of the normal and cancelling rules is honored.
-Example:
+The order of the normal and cancelling rules is honored.  Example:
 
 Rule 1 ...
 Rule 2 ...
@@ -105,44 +98,43 @@ Rule 5 -> cancel notifcation to B via plugin P
 
 --> only A is going to be notified with P
 
-Note: Since always *all* Rules are applied - even if one already
-matched - you need to specify the exceptions *after* the general
-case. This is the opposite way as in the Event Console.
+Note: Since *all* rules are always applied - even if one already matched -
+you need to specify the exceptions *after* the general case. This is the
+opposite way as in the Event Console.
 
-Normal rules and cancelling rules can follow each other in an
-arbitrary order. That way you can first create a notifcation
-to all contacts, then remove a list of contacts and finally
-add again one single contact to the notification list.
+Normal rules and cancelling rules can appear in arbitrary order. So you can 
+first create a notifcation to all contacts, then
+remove a list of contacts and finally add one single contact to the
+notification list again.
 
-After all rules have been tries and the notifcation table
-is finalized, all notifications are being sent out. Duplicates
-are removed, of course.
+After all rules have been tried and the notifcation table is finalized,
+all notifications are sent out. Duplicates are removed, of course.
+
 
 USER-RULES
 ----------
 We want to keep the current feature that a user is able to configure
-is notifications himself. Therefore each user has his/her own chain
-of notification rules. They have the same structure as the global
-ones except that the user cannot specify any contact other then
-himself as a target.
+its notifications himself. Therefore each user has his/her own chain of
+notification rules. They have the same structure as the global ones except
+that the user cannot specify any contact other then himself as a target.
 
-The user rules are always executed after the global rules. As
-state above a notification created by a global rule can be locked
-against a cancelling by the user.
+The user rules are always executed after the global rules. As state above
+a notification created by a global rule can be locked against a cancelling
+rule by the user.
 
-User user can:
+A user can:
 - add notifications
-- cancell notifications that have their origin in global rules
+- cancel notifications that have their origin in global rules
 
-Note: that way a user can "subscribe" to notifications
-of certain hosts and services - regardless of whether he is
-a contact of that object in the monitoring.
+Note: in this way a user can "subscribe" to notifications of certain hosts
+and services - regardless of whether he is a contact of that object in
+the monitoring.
 
 
 FALLBACK
 --------
-When a notification is matched by no rule then - as a fallback - an
-email is being sent to a globally configured address - to make sure
+If a notification is not matched by any rule, then - as a fallback - an
+email is sent to a globally configured address - to make sure
 that no notifiation is being lost due to a misconfiguration.
 
 
@@ -150,114 +142,124 @@ IMPLEMENTATION IN WATO
 ----------------------
 Within WATO the new notifcation system looks like this:
 
-* A new global option enabled the "Rule based Notifications".
-  In some future release that option might be removed together
+* A new global option enables the "Rule based Notifications".
+  In some future release this option might be removed together
   with the current "Flexible Notifications". In the first version
   this defaults to "off".
 
-* If they are enabled, then the notification options in the users
+* If enabled, the notification options in the users
   settings of all users change. The current block of options is
-  completely being removed. Instead a new button "Notifications"
-  will bring the user/admin to the user-owned chain of notification
+  removed. Instead a new button "Notifications"
+  will lead the user/admin to the user-owned chain of notification
   rules. There is no switch for enabling/disabling notifications
-  anymore. This can be done by a rule, if needed.
+  anymore. This can be done by a rule if needed.
 
-* If currently there are alrady flexible notifications configured,
+* If flexible notifications are configured already,
   they will *not* be converted. But they are kept in the configuration
   in case you switch the rule based system off again later.
 
-* A new WATO module shows the global notification rules. That is
-  almost identical with that of the user specific rules.
+* A new WATO module shows the global notification rules. The view is
+  almost identical to the view of the user specific rules.
 
   In the module you can create, modify and delete rules and change
-  their order - just like in the Event Console. We also can create
+  their order - just like in the Event Console. We can also create
   a simulation field for trying out the rule chain.
 
 
 IMPLEMENTATION IN CHECK_MK
 --------------------------
-cmk --notify needs to detetec a rule based notifcation. This could
-be tied to the special contact name "checkmk-notify". It is then
-executing the chain of rules, which is saved the usual way in
-configuration variable of check_mk (like in main.mk). In addtion
-all user specify rules are being applied.
+cmk --notify needs to detect a rule based notifcation. It is then
+executing the chain of rules, which is saved in the usual way in a
+configuration variable of check_mk (e.g., in main.mk). In addition
+all user specific rules are applied.
 
-In notify.log you get an exact documentation, why which rule triggered
+In notify.log you get an exact documentation why which rule was triggered
 or not (presumed you have a high enough log level).
 
 During the configuration generation for Nagios/CMC a special user
 needs to be created who is contact for everything.
 
 
-BULK NOTIFICATIONS
-------------------
-The idea of "bulk notifications" or "notification aggregation" is to cut
-down the number of notifications in cases where some general problem causes
-hundreds or thousands of similar alerts at the same time. In some cases this
-problem can be tackled with Nagios "service dependencies".  The problem is
-that this is very tedious to configure and includes the risk of blocking
-critical notification per mistake.
+Specific implementation tasks
+-----------------------------
+A) WATO
 
-The bulk notification feature would collect all notifications of the same
-channel and target user for a certain time into a pool and then send *one*
-notification email/sms/whatever that contains all those notifications. A
-typical time frame of such a pooling could be 1 minute. Assuming that your
-check period is one minute, that would mean that all alerts that origin from
-the same problem would be packed into one single notification.
+[1] Create a new WATO module where a table of notification rules can be edited:
+    a) load_..() and save_() functions that read and write conf.d/wato/notifications.mk.
+    b) display the table of current notification rules with icons for edit/clone/delete
+    c) functionality for deleting a rule
+    d) arrows for changing the order of the rules
+    e) a mode of the page which edits a user's specific rule
+    f) a mode of the page showing all global and users rules
 
-In order to make you not blind to *other* problems that happen during such a
-burst of alerts the pooling could be done on a per-checktype or per-hostgroup
-or per-whatever base. It also could take the service level of objects into
-account so that e.g. all alerts of the level "Tier 3" is bulked by 5 minutes,
-the alerts of "Tier 1" would not be bulked by sent independently.
+[2] Page for editing the details of one notification rule
+    a) support for the modes new, clone and edit
+    b) edit all of the supported conditions (similar to EC)
+    c) edit supported outcome types
+    d) alternatively edit a cancelling rule
+    e) special mode for editing a user's rule
+    f) Checkbox for allowing users to deactivate this notification
 
-The configuration of the notification aggregation could be done as a parameter
-to the notification rules. Example:
+[3] Global settings: new option of enabling rule based notifications. The
+    default value is off. In the future we will default this to on.
+    The settings allow to configure a default email address. If this is
+    set, it will receive notifications in case no rule matches.
 
-Condition:
-- Service Level <= 10 (Tier 3)
+[5] New WATO permission for the permission to create own notification rules.
 
-Notification:
-- Send to all configured monitoring contacts
-- Send via Email
+[6] User settings: When rule based notifications are turned on, the
+    complete section "Notifications" is dropped. Insteadm a button
+    "Notifications" appears where the admin can edit the individual rules
+    for this user. Storage of these rules will be directly in the contacts
+    definition in conf.d/wato/contacts.mk.
 
-Aggregation:
-- Aggregate up to 2 minutes
-- Aggregate by check type
-
-Possible options for the aggregation:
- - time range (e.g. collect notifications up to 2 minutes)
- - force separate notifications for different
-   [ ] hosts
-   [ ] check types
-   [ ] states (WARN, CRIT, etc.)
-   [ ] service descriptions
-   [ ] service levels
+[7] Personal settings: button for editing the personal notification rules
+    if allowed.
 
 
-OVERRIDING
-----------
-If there is a global rule that configures a notification without aggregation,
-then a later rule can override that and add an aggregation. That way a user
-can enable bulk notifications for otherwise un-bulked ones.
 
-Vice versa: if in a rule notifications are aggregated and a later rule
-(e.g. one of a user) has aggregation disabled, that setting has precedence.
+B) CONFIGURATION CREATION
 
-IMPLEMENTATION
---------------
-In order to send bulk notifications the notification plugin
-API needs to be extended. Currently each plugin expects information
-about *one* alert only in environment varibles like
-NOTIFY_HOSTNAME and NOTIFY_HOSTSTATE. A plugin supporting
-bulk notifications would need another API allowing to handle
-a *list* of such alerts. Instead of environment variable we
-could have the plugin reading lines like
-NOTIFY_HOSTNAME=foo
-NOTIFY_HOSTATE=2
+[11] Nagios configuration: When the rule based notifications are turned on, then
+     a) A new dummy contact "checkmk-notify" is created
+     b) This contact is contact of all host/services
+     c) This contact has cmk --notify as its command, just like the flex. nots.
+     d) all timeperiods and options are set to "on"
+     e) add the list of contacts of a host/service to the environment variables
 
-A plugin should tell Check_MK that is using that new API by
-putting some information into its first or second comment line.
-That way the notification configurator can make sure that the
-user can only select those plugins for bulk notification that
-support it.
+[12] CMC configuration: It sets a new CMC global variable to rule based notifications
+     No dummy contact is being created.
+
+
+C) CHECK_MK MICRO CORE
+
+[21] If rule based notifications are turned on, then the CMC does
+     a) send *one* notification regardless of the contacts of an object
+     b) set additional variable for the affected contacts
+     c) creates a logfile entry in the history that reflects this
+
+
+D) NOTIFICATION
+
+[31] The cmk --notify know rule based mode from the global variable
+
+[32] It loads all global rules and all user specific rules from global
+     contacts-variable.
+
+[33] Process the rules:
+     a) check the rule condition while taking into account the notification context
+     b) positive rule: build up the notification table
+     c) negative rule: cancel notifications
+     d) notification debugging turned on: explain why rules match or don't match
+
+[34] If no rule has matched, create one default notification with the plugin
+     email to the global default email address.
+
+[35] Execute the resulting notification plugins like in the current notification
+     system. Take logging and spooling into account.
+
+[36] Take email-Adresses, users aliases, and names from the contacts variable, as
+     they are not available in the notification context.
+
+
+

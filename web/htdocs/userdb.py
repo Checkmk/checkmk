@@ -124,25 +124,14 @@ def user_locked(username):
 def update_user_access_time():
     if not config.save_user_access_times:
         return
-
-    users = load_users(lock = True)
-    users[html.user]['last_seen'] = time.time()
-    save_users(users)
+    save_custom_attr(html.user, 'last_seen', repr(time.time()))
 
 def on_succeeded_login(username):
-    users = load_users(lock = True)
-    changed = False
+    num_failed = load_custom_attr(username, 'num_failed', saveint)
+    if num_failed != None and num_failed != 0:
+        save_custom_attr(username, 'num_failed', '0')
 
-    if users[username].get('num_failed', 0) != 0:
-        users[username]["num_failed"] = 0
-        changed = True
-
-    if config.save_user_access_times:
-        users[username]['last_seen'] = time.time()
-        changed = True
-
-    if changed:
-        save_users(users)
+    update_user_access_time()
 
 def on_failed_login(username):
     users = load_users(lock = True)
@@ -161,6 +150,7 @@ def on_failed_login(username):
 root_dir      = defaults.check_mk_configdir + "/wato/"
 multisite_dir = defaults.default_config_dir + "/multisite.d/wato/"
 
+#.
 #   .--Users---------------------------------------------------------------.
 #   |                       _   _                                          |
 #   |                      | | | |___  ___ _ __ ___                        |
@@ -302,12 +292,14 @@ def load_users(lock = False):
             id = d
 
             # read special values from own files
-            for val, conv_func in [ ('num_failed', saveint), ('last_seen', savefloat) ]:
-                if id in result:
-                    try:
-                        result[id][val] = conv_func(file(dir + d + '/' + val + '.mk').read().strip())
-                    except IOError:
-                        pass
+            if id in result:
+                num_failed = load_custom_attr(d, 'num_failed', saveint)
+                if num_failed != None:
+                    result[id]['num_failed'] = num_failed
+
+                last_seen = load_custom_attr(d, 'last_seen',  savefloat)
+                if last_seen != None:
+                    result[id]['last_seen'] = last_seen
 
             # read automation secrets and add them to existing
             # users or create new users automatically
@@ -325,6 +317,17 @@ def load_users(lock = False):
                     }
 
     return result
+
+def load_custom_attr(userid, key, conv_func, default = None):
+    basedir = defaults.var_dir + "/web/" + userid
+    try:
+        return conv_func(file(basedir + '/' + key + '.mk').read().strip())
+    except IOError:
+        return default
+
+def save_custom_attr(userid, key, val):
+    basedir = defaults.var_dir + "/web/" + userid
+    create_user_file('%s/%s.mk' % (basedir, key), 'w').write('%s\n' % val)
 
 def get_online_user_ids():
     online_threshold = time.time() - config.user_online_maxage
@@ -421,17 +424,14 @@ def save_users(profiles):
             os.remove(auth_file)
 
         # Write out the users serial
-        serial_file = user_dir + '/serial.mk'
-        create_user_file(serial_file, 'w').write('%d\n' % user.get('serial', 0))
+        save_custom_attr(id, 'serial', str(user.get('serial', 0)))
 
         # Write out the users number of failed login
-        failed_file = user_dir + '/num_failed.mk'
-        create_user_file(failed_file, 'w').write('%d\n' % user.get('num_failed', 0))
+        save_custom_attr(id, 'num_failed', str(user.get('num_failed', 0)))
 
         # Write out the last seent time
         if 'last_seen' in user:
-            last_seen_file = user_dir + '/last_seen.mk'
-            create_user_file(last_seen_file, 'w').write(repr(user['last_seen']) + '\n')
+            save_custom_attr(id, 'last_seen', repr(user['last_seen']))
 
     # Remove settings directories of non-existant users.
     # Beware: we removed this since it leads to violent destructions
@@ -460,6 +460,7 @@ def save_users(profiles):
     # Call the users_saved hook
     hooks.call("users-saved", users)
 
+#.
 #   .-Roles----------------------------------------------------------------.
 #   |                       ____       _                                   |
 #   |                      |  _ \ ___ | | ___  ___                         |
@@ -513,6 +514,7 @@ def load_roles():
                      'Initializing structure...' % (filename, e))
         return roles
 
+#.
 #   .-Groups---------------------------------------------------------------.
 #   |                    ____                                              |
 #   |                   / ___|_ __ ___  _   _ _ __  ___                    |
@@ -548,6 +550,7 @@ def load_group_information():
                      'Initializing structure...' % (filename, e))
         return {}
 
+#.
 #   .--Custom-Attrs.-------------------------------------------------------.
 #   |   ____          _                          _   _   _                 |
 #   |  / ___|   _ ___| |_ ___  _ __ ___         / \ | |_| |_ _ __ ___      |
@@ -595,6 +598,7 @@ def declare_custom_user_attrs():
             topic = attr.get('topic', 'personal'),
         )
 
+#.
 #   .----------------------------------------------------------------------.
 #   |                     _   _             _                              |
 #   |                    | | | | ___   ___ | | _____                       |
@@ -743,6 +747,9 @@ def hook_page():
 def ajax_sync():
     try:
         hook_sync(add_to_changelog = False, raise_exc = True)
-        html.write('OK')
+        html.write('OK\n')
     except Exception, e:
-        html.write('ERROR %s' % e)
+        if config.debug:
+            raise
+        else:
+            html.write('ERROR %s\n' % e)

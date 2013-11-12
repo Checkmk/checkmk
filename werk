@@ -1,0 +1,772 @@
+#!/usr/bin/python
+
+import sys, os, time, termios, tty, subprocess
+
+# colored output, if stdout is a tty
+if sys.stdout.isatty():
+    tty_red       = '\033[31m'
+    tty_green     = '\033[32m'
+    tty_yellow    = '\033[33m'
+    tty_blue      = '\033[34m'
+    tty_magenta   = '\033[35m'
+    tty_cyan      = '\033[36m'
+    tty_white     = '\033[37m'
+    tty_bgred     = '\033[41m'
+    tty_bgyellow  = '\033[43m'
+    tty_bgblue    = '\033[44m'
+    tty_bgmagenta = '\033[45m'
+    tty_bgcyan    = '\033[46m'
+    tty_bgwhite   = '\033[47m'
+    tty_bold      = '\033[1m'
+    tty_underline = '\033[4m'
+    tty_normal    = '\033[0m'
+    def tty_colors(codes):
+        return '\033[%sm' % (';'.join([str(c) for c in codes]))
+else:
+    tty_red       = ''
+    tty_green     = ''
+    tty_yellow    = ''
+    tty_blue      = ''
+    tty_magenta   = ''
+    tty_cyan      = ''
+    tty_white     = ''
+    tty_bgblue    = ''
+    tty_bgmagenta = ''
+    tty_bgcyan    = ''
+    tty_bold      = ''
+    tty_underline = ''
+    tty_normal    = ''
+    tty_ok        = 'OK'
+    def tty_colors(c):
+        return ""
+
+grep_colors = [ 
+   tty_bold + tty_magenta,
+   tty_bold + tty_cyan,
+   tty_bold + tty_green,
+] 
+
+def get_tty_size():
+    import termios,struct,fcntl
+    try:
+        ws = struct.pack("HHHH", 0, 0, 0, 0)
+        ws = fcntl.ioctl(sys.stdout.fileno(), termios.TIOCGWINSZ, ws)
+        lines, columns, x, y = struct.unpack("HHHH", ws)
+        if lines > 0 and columns > 0:
+            return lines, columns
+    except:
+        pass
+    return (24, 99999)
+
+def bail_out(text):
+    sys.stderr.write(text + "\n")
+    sys.exit(1)
+
+def goto_werksdir():
+    global g_base_dir 
+    g_base_dir = os.path.abspath('.')
+    while not os.path.exists(".werks") and os.path.abspath('.') != '/':
+        os.chdir("..")
+
+    try:
+        os.chdir(".werks")
+    except:
+        sys.stderr.write("Cannot find directory .werks\n")
+        sys.exit(1)
+
+def load_config():
+    global g_last_werk
+    execfile("config", globals(), globals())
+    try:
+        g_last_werk = int(file(".last").read())
+    except:
+        g_last_werk = None
+
+
+def load_werks():
+    global g_werks
+    g_werks = {}
+    check_modified()
+    for entry in os.listdir("."):
+        try:
+            werkid = int(entry)
+            try:
+                g_werks[werkid] = load_werk(werkid)
+            except:
+                sys.stderr.write("SKIPPING INVALID werk %d\n" % werkid)
+        except:
+            continue
+
+def save_last_werkid(id):
+    try:
+        file(".last", "w").write("%d\n" % int(id))
+    except:
+        pass
+
+g_current_version = None
+def parse_changelog():
+    global g_current_version
+    ch = file("../ChangeLog")
+    version = ch.readline().strip().rstrip(":")
+    if len(version) not in [ 6, 7, 8 ] or \
+       not version[0].isdigit() or \
+       version[1] != '.':
+       bail_out("Invalid version number '%s' in ChangeLog" % version)
+    g_current_version = version
+
+
+def rewrite_changelog(*args):
+    # Rewrite just section with current version
+    chn = file("../ChangeLog.new", "w")
+    chn.write("%s:\n" % g_current_version)
+
+    ch = file("../ChangeLog")
+    ch.readline() # skip current version
+    while True:
+        line = ch.readline()
+        if not line[0].isspace():
+            break
+
+    oldlines = [line] + ch.readlines()
+
+    werks = [ werk for werkid, werk in g_werks.items() if werk["version"] == g_current_version ]
+    werks.sort(cmp = lambda a,b: cmp(a["class"] == "fix", b["class"] == "fix") or cmp(a["date"], b["date"]))
+
+    werks_by_comp = {}
+    for werk in werks:
+        comp = werk["component"]
+        werks_by_comp.setdefault(comp, []).append(werk)
+
+    comps_sorted = werks_by_comp.items()
+    comps_sorted.sort(cmp = lambda a,b: cmp(component_sort_key(a[0]), component_sort_key(b[0])))
+
+    first = True
+    for compid, werks in comps_sorted:
+        if first:
+            first = False
+        else:
+            chn.write("\n")
+        compname = dict(components).get(compid, compid)
+        chn.write("    %s:\n" % compname)
+        for werk in werks:
+            write_changelog_line(chn, werk)
+
+    chn.write("\n\n")
+    chn.write("".join(oldlines))
+    chn.close()
+    ch.close()
+    os.rename("../ChangeLog.new", "../ChangeLog")
+
+def write_changelog_line(chn, werk):
+    prefix = ""
+    for classid, classname, p in classes:
+        if werk["class"] == classid and p:
+            prefix = " " + p + ":"
+    if werk["description"] and len(werk["description"])> 3:
+        omit = "..."
+    else:
+        omit = ""
+    chn.write("    * %04d%s %s%s\n" % (werk["id"], prefix, werk["title"], omit))
+    if werk["class"].startswith("incomp"):
+        chn.write("            NOTE: Please refer to the migration notes!\n")
+
+def component_sort_key(comp):
+    for nr, component in enumerate(components):
+        if comp == component[0]:
+            return nr
+    return len(components)
+
+
+
+
+def check_modified():
+    global g_modified
+    g_modified = set([])
+    for line in os.popen("git status --porcelain"):
+        if line[0] in "AM" and ".werks/" in line:
+            try:
+                id = line.rsplit("/", 1)[-1].strip()
+                g_modified.add(int(id))
+            except:
+                pass
+
+def werk_is_modified(werkid):
+    return werkid in g_modified
+
+
+def load_werk(werkid):
+    werk = { 
+        "id"             : werkid,
+        "state"          : "unknown",
+        "title"          : "unknown",
+        "component"      : "general",
+        "targetversion"  : "future",
+    }
+    
+    f = file(str(werkid))
+    for line in f:
+        line = line.strip()
+        if line == "":
+            break
+        header, value = line.split(":", 1)
+        werk[header.strip().lower()] = value.strip()
+
+    description = ""
+    for line in f:
+        description += line
+
+    werk["description"] = description
+    return werk
+
+def save_werk(werk):
+    f = file(str(werk["id"]), "w")
+    f.write("Title: %s\n" % werk["title"])
+    for key, val in werk.items():
+        if key not in [ "title", "description", "id" ]:
+            f.write("%s%s: %s\n" % (key[0].upper(), key[1:], val))
+    f.write("\n")
+    f.write(werk["description"])
+    f.close()
+    git_add(werk)
+    save_last_werkid(werk["id"])
+    rewrite_changelog()
+
+def git_add(werk):
+    os.system("git add %d" % werk["id"])
+
+def git_commit(werk, custom_files):
+    title = werk["title"]
+    for classid, classname, prefix in classes:
+        if werk["class"] == classid:
+            if prefix:
+                title = "%s %s" % (prefix, title)
+
+    if custom_files:
+        files_to_commit = custom_files
+        default_files   = [ ".werks", "ChangeLog" ]
+        # Get top level
+        info = subprocess.Popen(["git", "rev-parse", "--show-toplevel"], stdout=subprocess.PIPE)
+        git_top_level = info.communicate()[0].split()[0]
+        for entry in default_files:
+            files_to_commit.append("%s/%s" % (git_top_level, entry))
+
+        os.chdir(g_base_dir)
+        os.system("git commit %s -m %s" % (" ".join(files_to_commit),
+                                           quote_shell_string(title + "\n\n" +  werk["description"])))
+
+    else:
+        os.system("git commit -a -m %s" % quote_shell_string(title + "\n\n" +  werk["description"]))
+
+def quote_shell_string(s):
+    return "'" + s.replace("'", "'\"'\"'") + "'"
+
+
+def next_werk_id():
+    my_werk_ids = get_werk_ids()
+    if not my_werk_ids:
+        bail_out('You have no werk IDS left. You can reserve 10 additional Werk IDS with "./werk ids 10".')
+    return my_werk_ids[0]
+
+def add_comment(werk, title, comment):
+    werk["description"] += """
+%s: %s
+%s""" % (time.strftime("%F %T"), title, comment)
+    
+
+
+def usage():
+    sys.stdout.write("""Usage: werk COMMAND [ARGS...]
+
+where COMMAND is one of:
+
+  ids [#]                - Shows the number of reserved werk IDS. With a number
+                           given as parameter the command will reserve new werk IDS.
+  list [-r] [STATE]      - list werks (-r: reverse)
+  new                    - create a new werk
+  show [# #..]           - show several werks, or 'all' for all, of leave out for last
+  resolve ID             - change a werks state
+  delete #..             - delete werk(s)
+  grep [-v] KW1 KW2...   - show werks containing all of the given keywords (-v: verbose)
+  edit [#]               - open werk # in editor (or newest werk)
+  blame [#]              - show who worked on a werk
+
+""")
+    sys.exit(1)
+
+def num_color(n, colors, inverse):
+    if inverse:
+        b = 40
+    else:
+        b = 30
+
+    c = colors[n-1]
+    return tty_colors([b + c, 1])
+
+def list_werk(werk):
+    if werk_is_modified(werk["id"]):
+        bold = tty_bold + tty_cyan + "(*) "
+    else:
+        bold = ""
+    lines, cols = get_tty_size()
+    title = werk["title"][:cols - 45]
+    sys.stdout.write("#%04d %-9s %s %-13s %s%s%s %-8s %s%s%s\n" %
+            (int(werk["id"]),
+            time.strftime("%F", time.localtime(int(werk["date"]))),
+             colored_class(werk["class"], 7), werk["component"], tty_bold, werk["level"], tty_normal, 
+             werk["version"], bold, title, tty_normal))
+
+def colored_class(classname, digits):
+    if classname == "fix":
+        return tty_bold + tty_red + ("%-" + str(digits) + "s") % classname + tty_normal
+    else:
+        return classname
+
+def show_werk(werk):
+    list_werk(werk)
+    sys.stdout.write("\n%s\n" % werk["description"])
+
+def main_list(args, format):
+    werks = g_werks.values()
+
+    # arguments are tags from state, component and class. Multiple values
+    # in one class are orred. Multiple types are anded.
+    filters = {}
+
+    sort = lambda a,b: cmp(a['date'], b['date'])
+    reverse = False
+    for a in args:
+
+        if a == '-r':
+            reverse = True
+            continue
+
+        hit = False
+        for tp, values in [
+          ( "component",      components ), 
+          ( "level",          levels ), 
+          ( "class",          classes ),
+          ]:
+            for v in values:
+                if type(v) == tuple:
+                    v = v[0]
+                if v.startswith(a):
+                    entries = filters.get(tp, [])
+                    entries.append(v)
+                    filters[tp] = entries
+                    hit = True
+                    break
+            if hit:
+                break
+        if not hit:
+            bail_out("No such component, state, class or target version: %s" % a)
+
+    # Filter
+    newwerks = []
+    for werk in werks:
+        skip = False
+        for tp, entries in filters.items():
+            if werk[tp] not in entries:
+                skip = True
+                break
+        if not skip:
+            newwerks.append(werk)
+    werks = newwerks
+
+    # Sort
+    if sort:
+        newwerks.sort(sort)
+    if reverse:
+        newwerks.reverse()
+
+    # Output
+    if format == "console":
+        for werk in werks:
+            list_werk(werk)
+    else:
+        output_csv(werks)
+
+
+# CSV Table has the following columns:
+# Component;ID;Title;Class;Effort
+def output_csv(werks):
+    def line(*l):
+        sys.stdout.write('"' + '";"'.join(map(str, l)) + '"\n')
+
+    nr = 1
+    for entry in components:
+        if len(entry) == 2:
+            name, alias = entry
+        else:
+            name = entry
+            alias = entry
+
+        line("", "", "", "", "")
+
+        total_effort = 0
+        for werk in werks:
+            if werk["component"] == name:
+                total_effort += werk_effort(werk)
+        line("", "%d. %s" % (nr, alias), "", total_effort)
+        nr += 1
+
+        for werk in werks:
+            if werk["component"] == name:
+                line(werk["id"], werk["title"], werk_class(werk), werk_effort(werk))
+                line("", werk["description"].replace("\n", " ").replace('"', "'"), "", "")
+
+def werk_class(werk):
+    cl = werk["class"]
+    for entry in classes:
+        if entry == cl:
+            return cl
+        elif type(entry) == tuple and entry[0] == cl:
+            return entry[1]
+    return cl
+
+def werk_effort(werk):
+    return int(werk.get("effort", "0"))
+
+def main_show(args):
+    ids = args
+    if len(ids) == 0:
+        if g_last_werk == None:
+            bail_out("No last werk known. Please specify id.")
+        ids = [ g_last_werk ]
+    elif ids[0] == 'all':
+        ids = [ id for (id, werk) in g_werks.items() ]
+        
+    for id in ids:
+        if id != ids[0]:
+            sys.stdout.write("-------------------------------------------------------------------------------\n")
+        try:
+            show_werk(g_werks[int(id)])
+        except 1:
+            sys.stderr.write("Skipping invalid werk id '%s'\n" % id)
+    save_last_werkid(ids[-1])
+
+def get_input(what, default = ""):
+    sys.stdout.write("%s: " % what)
+    sys.stdout.flush()
+    value = sys.stdin.readline().strip()
+    if value == "":
+        return default
+    else:
+        return value
+    
+def get_long_input(what):
+    sys.stdout.write("Enter %s. End with CTRL-D.\n" % what)
+    usertext = sys.stdin.read()
+    # remove leading and trailing empty lines
+    while usertext.startswith("\n"):
+        usertext = usertext[1:]
+    while usertext.endswith("\n\n"):
+        usertext = usertext[:-1]
+    return usertext
+
+def getch():
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+    try:
+        tty.setraw(sys.stdin.fileno())
+        ch = sys.stdin.read(1)
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+    if ord(ch) == 3:
+        raise KeyboardInterrupt()
+    return ch
+
+def input_choice(what, choices):
+    ctc = {}
+    texts = []
+    for choice in choices:
+        if type(choice) == tuple:
+            choice = choice[0]
+        for c in str(choice):
+            if c not in ".-_/" and c not in ctc:
+                ctc[c] = choice
+                texts.append(str(choice).replace(c, tty_bold + c + tty_normal, 1))
+                break
+
+    while True:
+        sys.stdout.write("%s (%s): " % (what, ", ".join(texts)))
+        sys.stdout.flush()
+        c = getch()
+        if c in ctc:
+            sys.stdout.write(" %s%s%s\n" % (
+                        tty_bold, ctc[c], tty_normal))
+            return ctc[c]
+        else:
+            sys.stdout.write("\n")
+
+def main_new(args):
+    werk = {}
+    werk["id"]      = next_werk_id()
+    werk["date"]    = int(time.time())
+    werk["version"] = g_current_version
+    werk["title"]   = get_input("Title")
+    if  werk["title"] == "":
+        sys.stderr.write("Cancelled.\n")
+        sys.exit(0)
+    werk["class"]         = input_choice("Class",     classes)
+    werk["component"]     = input_choice("Component", components)
+    werk["level"]         = input_choice("Level",     levels)
+    werk["description"]   = u"\n"
+
+    g_werks[werk["id"]] = werk
+    save_werk(werk)
+    invalidate_my_werkid(werk["id"])
+    edit_werk(werk["id"], args)
+
+    sys.stdout.write("Werk saved with id %d.\n" % werk["id"])
+
+def main_blame(args):
+    if len(args) == 0:
+        if g_last_werk == None:
+            bail_out("No last werk, please specify id.")
+        id = g_last_werk
+    else:
+        if len(args) != 1:
+            usage()
+        id = int(args[0])
+
+    werk = g_werks.get(id)
+    if not werk:
+        bail_out("No such werk.\n")
+    save_last_werkid(id)
+
+    os.system("git blame %d" % id)
+
+def main_resolve(args):
+    if len(args) == 0:
+        if g_last_werk == None:
+            bail_out("No last werk, please specify id.")
+        id = g_last_werk
+    else:
+        if len(args) != 1:
+            usage()
+        id = int(args[0])
+
+    werk = g_werks.get(id)
+    if not werk:
+        bail_out("No such werk.\n")
+
+    show_werk(werk)
+    state = input_choice("State", states.keys())
+
+    comment = get_long_input("comment")
+    add_comment(werk, "changed state %s -> %s" % (werk["state"], state), comment)
+    werk["state"] = state
+    save_werk(werk)
+
+def main_delete(args):
+    for ids in args:
+        if 0 == os.system("git rm %s" % ids):
+            sys.stdout.write("Delete werk %s (%s)\n" % (ids, g_werks[int(ids)]["descriptions"]))
+
+def grep(line, kw, n):
+    lc = kw.lower()
+    i = line.lower().find(lc)
+    if i == -1:
+        return None
+    else:
+        col = grep_colors[n % len(grep_colors)]
+        return line[0:i] + col + line[i:i+len(kw)] + tty_normal + line[i+len(kw):]
+    
+
+def main_grep(args):
+    if '-v' in args:
+        verbose = True
+        args = [ a for a in args if a != '-v' ]
+    else:
+        verbose = False
+
+    if len(args) == 0:
+        usage()
+
+    for werk in g_werks.values():
+        one_kw_didnt_match = False
+        title = werk["title"]
+        lines = werk["description"].split("\n")
+        bodylines = set([])
+
+        # *all* of the keywords must match in order for the
+        # werk to be displayed
+        i = 0
+        for kw in args:
+            i += 1
+            this_kw_matched = False
+
+            # look for keyword in title
+            match = grep(title, kw, i)
+            if match:
+                werk["title"] = match
+                title = match
+                this_kw_matched = True
+
+            # look for keyword in description
+            for j, line in enumerate(lines):
+                match = grep(line, kw, i)
+                if match:
+                    bodylines.add(j)
+                    lines[j] = match
+                    this_kw_matched = True
+
+            if not this_kw_matched:
+                one_kw_didnt_match = True
+
+
+        if not one_kw_didnt_match:
+            list_werk(werk)
+            if verbose:
+                for x in sorted(list(bodylines)):
+                    sys.stdout.write("  %s\n" % lines[x])
+
+
+def main_edit(args):
+    if len(args) == 0:
+        werkid = int(g_last_werk)
+        if werkid == None:
+            bail_out("No last werk. Please specify id.")
+    else:
+        try:
+            werkid = int(args[0])
+            args = args[1:]
+        except:
+            werkid = int(g_last_werk)
+            if werkid == None:
+                bail_out("No last werk. Please specify id.")
+
+    edit_werk(werkid, args)
+    save_last_werkid(werkid)
+
+
+def edit_werk(werkid, custom_files = []):
+    if not os.path.exists(str(werkid)):
+        bail_out("No werk with this id.")
+    editor = os.getenv("EDITOR")
+    if not editor:
+        for p in [ "/usr/bin/editor", "/usr/bin/vim", "/bin/vi" ]:
+            if os.path.exists(p):
+                editor = p
+                break
+    if not editor:
+        bail_out("No editor available (please set EDITOR).\n")
+
+    if 0 == os.system("bash -c '%s +8 %s'" % (editor, werkid)):
+        load_werks()
+        werk = g_werks[werkid]
+        git_add(g_werks[werkid])
+        rewrite_changelog()
+        git_commit(werk, custom_files)
+
+
+def main_commit(args):
+    if len(g_modified) == 0:
+        bail_out("No new or modified werk.")
+    else:
+        sys.stdout.write("Commiting:\n")
+        for id in g_modified:
+            list_werk(g_werks[id])
+        if 0 == os.system("git commit -m 'Updated werk entries %s' ." % (
+              ", ".join(["#%04d" % id for id in g_modified]))):
+            sys.stdout.write("--> Successfully committed %d werks.\n" % len(g_modified))
+        else:
+            bail_out("Cannot commit.")
+
+
+def get_werk_ids():
+    try:
+        return eval(file('.my_ids', 'r').read())
+    except:
+        return []
+
+
+def invalidate_my_werkid(id):
+    ids = get_werk_ids()
+    ids.remove(id)
+    store_werk_ids(ids)
+
+
+def store_werk_ids(l):
+    file('.my_ids', 'w').write(repr(l) + "\n")
+
+
+def main_fetch_ids(args):
+    if not args:
+        sys.stdout.write('You have %d reserved IDs.\n' % (len(get_werk_ids())))
+        sys.exit(0)
+    elif len(args) == 1:
+        num = int(args[0])
+    else:
+        usage()
+
+    # Get the start werk_id to reserve
+    try:
+        first_free = int(eval(file('first_free').read()))
+    except:
+        first_free = 0
+    new_first_free = first_free + num
+
+    # Store the werk_ids to reserve
+    my_ids = get_werk_ids() + range(first_free, first_free + num)
+    store_werk_ids(my_ids)
+
+    # Store the new reserved werk ids
+    file('first_free', 'w').write(str(new_first_free) + "\n")
+
+    sys.stdout.write('Reserved %d additional IDs now. You have %d reserved IDs now.\n' %
+                                                                      (num, len(my_ids)))
+
+    if 0 == os.system("git commit -m 'Reserved %d Werk IDS' ." % num):
+        sys.stdout.write("--> Successfully committed reserved werk IDS. Please push it soon!\n")
+    else:
+        bail_out("Cannot commit.")
+
+
+#                    _
+#    _ __ ___   __ _(_)_ __
+#   | '_ ` _ \ / _` | | '_ \
+#   | | | | | | (_| | | | | |
+#   |_| |_| |_|\__,_|_|_| |_|
+#
+
+goto_werksdir()
+load_config()
+load_werks()
+parse_changelog()
+
+if len(sys.argv) < 2:
+    usage()
+
+cmd = sys.argv[1]
+commands = {
+  "list"    : lambda args: main_list(args, "console"),
+  "export"  : lambda args: main_list(args, "csv"),
+  "show"    : main_show,
+  "new"     : main_new,
+  "blame"   : main_blame,
+  "delete"  : main_delete,
+  "grep"    : main_grep,
+  "edit"    : main_edit,
+  "ids"     : main_fetch_ids,
+  "rewrite" : rewrite_changelog,
+}
+
+hits = []
+for name, func in commands.items():
+    if name == cmd:
+        hits = [ (name, func) ]
+        break
+    elif name.startswith(cmd):
+        hits.append((name, func))
+
+if len(hits) < 1:
+    usage()
+
+elif len(hits) > 1:
+    sys.stderr.write("Command '%s' is ambigous. Possible are: %s\n" % \
+            (cmd, ", ".join([ n for (n,f) in hits])))
+
+else:
+    hits[0][1](sys.argv[2:])
+

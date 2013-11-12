@@ -327,26 +327,9 @@ def notify_data_available():
     readable, writeable, exceptionable = select.select([0], [], [], None)
     return not not readable
 
-def notify_config_timestamp():
-    mtime = 0
-    for dirpath, dirnames, filenames in os.walk(check_mk_configdir):
-        for f in filenames:
-            mtime = max(mtime, os.stat(dirpath + "/" + f).st_mtime)
-    mtime = max(mtime, os.stat(default_config_dir + "/main.mk").st_mtime)
-    try:
-        mtime = max(mtime, os.stat(default_config_dir + "/final.mk").st_mtime)
-    except:
-        pass
-    try:
-        mtime = max(mtime, os.stat(default_config_dir + "/local.mk").st_mtime)
-    except:
-        pass
-    return mtime
-
-
 
 def notify_keepalive():
-    config_timestamp = notify_config_timestamp()
+    last_config_timestamp = config_timestamp()
 
     # Send signal that we are ready to receive the next notification, but
     # not after a config-reload-restart (see below)
@@ -369,8 +352,7 @@ def notify_keepalive():
             # CMK_NOTIFY_RESTART=1
 
             if notify_data_available():
-                current_config_timestamp = notify_config_timestamp()
-                if current_config_timestamp > config_timestamp:
+                if last_config_timestamp != config_timestamp():
                     notify_log("Configuration has changed. Restarting myself.")
                     os.putenv("CMK_NOTIFY_RESTART", "1")
                     os.execvp("cmk", sys.argv)
@@ -599,7 +581,7 @@ def should_notify(context, entry):
                     notify_log(" - Skipping: service '%s' matches blacklist (%s)" % (
                         servicedesc, ", ".join(entry["service_blacklist"])))
                     return False
-                    
+
 
 
 

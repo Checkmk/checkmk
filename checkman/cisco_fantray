@@ -1,0 +1,17 @@
+title: Cisco switches: FAN health status
+agents: snmp
+catalog: hw/network/cisco
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state of fans on Cisco devices like the
+ nexus series of switches. The following states are returned by the
+ device: {1}: unknown, {2}: up, {3}: down, {4}: warning. They are evaluated
+ by the check as follows: {1}: WARN, {2}: OK, {3}: CRIT, {4}: WARN.
+
+item:
+ The id of the sensor as provided by the snmp agent of the device.
+
+inventory:
+ One check for each sensor is created by the inventory.
+

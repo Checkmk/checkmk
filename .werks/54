@@ -1,0 +1,21 @@
+Title: New labelling options for availability table
+Level: 2
+Component: reporting
+Version: 1.2.3i7
+Date: 1383668860
+Class: feature
+
+In the availability reporting options there is now a new box called
+<i>Labelling Options</i> with three new check boxes:
+
+<ul>
+<li><i>Do not display the host name</i>: This simply removes the column with the host name.
+This is useful when you know that your report is about services of a single host anyway.</li>
+<li><i>Use alternative display name for services</i>: When you have configured alternative
+display names for (some of) your services then you can have this names being used instead
+of the normal ones.</li>
+<li><i>Do not display icons for history and timeline</i>: this simply removes the left-most
+column with the icons. This is useful when you want to export the resulting table into
+some report (by simply copying or screenshoting the HTML output).</li>
+</ul>
+

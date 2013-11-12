@@ -630,9 +630,13 @@ def get_agent_info_program(commandline):
     return output
 
 # Get data in case of TCP
-def get_agent_info_tcp(hostname, ipaddress):
+def get_agent_info_tcp(hostname, ipaddress, port = None):
     if not ipaddress:
         raise MKGeneralException("Cannot contact agent: host '%s' has no IP address." % hostname)
+
+    if port is None:
+        port = agent_port_of(hostname)
+
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
@@ -641,8 +645,8 @@ def get_agent_info_tcp(hostname, ipaddress):
             pass # some old Python versions lack settimeout(). Better ignore than fail
         if opt_debug:
             sys.stderr.write("Connecting via TCP to %s:%d.\n" % (
-                    ipaddress, agent_port_of(hostname)))
-        s.connect((ipaddress, agent_port_of(hostname)))
+                    ipaddress, port))
+        s.connect((ipaddress, port))
         try:
             s.setblocking(1)
         except:
@@ -656,8 +660,7 @@ def get_agent_info_tcp(hostname, ipaddress):
                 break
         s.close()
         if len(output) == 0: # may be caused by xinetd not allowing our address
-            raise MKAgentError("Empty output from agent at TCP port %d" %
-                  agent_port_of(hostname))
+            raise MKAgentError("Empty output from agent at TCP port %d" % port)
         return output
     except MKAgentError, e:
         raise
@@ -665,7 +668,7 @@ def get_agent_info_tcp(hostname, ipaddress):
         raise
     except Exception, e:
         raise MKAgentError("Cannot get data from TCP port %s:%d: %s" %
-                           (ipaddress, agent_port_of(hostname), e))
+                           (ipaddress, port, e))
 
 
 # Gets all information about one host so far cached.

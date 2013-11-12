@@ -30,13 +30,17 @@ import sys, getopt
 def usage():
     sys.stderr.write("""Check_MK SQL Test
 
-USAGE: check_sql [OPTIONS] SQL-Statement
+USAGE: check_sql [OPTIONS] SQL-Statement|SQL-Procedure
        check_sql -h
 
 ARGUMENTS:
-  SQL-Statement                 Valid SQL-Statement for the selected database
+  SQL-Statement|Procedure       Valid SQL-Statement for the selected database
                                 The statement must return at least a number and a string,
                                 plus optional performance data.
+                                Alternatively: If the the "-o" option is given, treat the argument as
+                                a procedure name. The procedure must return one output variable,
+                                which content is evaluated the same way as the output of the
+                                SQL-Statement
 
 OPTIONS:
   -h, --help                    Show this help message and exit
@@ -44,12 +48,14 @@ OPTIONS:
   -p PASS,  --password PASS     Password for database access
   -d DBMS,  --dbms DBMS         Name of the database management system.
                                 Default is 'postgres', other valid values are
-                                'mysql' and 'oracle'
+                                'mysql', 'mssql' and 'oracle'
   -H HOST,  --hostname HOST     Hostname or IP-Address where the database lives. Default is '127.0.0.1'
   -P PORT,  --port PORT         Port used to connect to the database
   -n NAME,  --name NAME         Name of the database on the DBMS
   -w RANGE, --warning RANGE     lower and upper level for the warning state, separated by a colon
   -c RANGE, --critical RANGE    lower and upper level for the critical state, separated by a colon
+  -o, --procedure               treat the main argument as a procedure instead of an SQL-Statement
+  -i CSV,   --inputvars CSV     values of input variables if required by the procedure; csv-list
   --debug                       Debug mode: let Python exceptions come through
   -v, --verbose                 Verbose mode: print SQL statement and levels
 
@@ -61,15 +67,13 @@ def saverfloat(f):
     else:
         return float(f)
 
-
-
 #
 # defining and collection input parameters
 #
-short_options = 'hu:p:d:n:H:P:w:c:v'
+short_options = 'hou:i:p:d:n:H:P:w:c:v'
 long_options  = [
     'help', 'user=', 'password=', 'dbms=', 'name=', 'warning=', 'critical=', 'hostname=',
-    'port=', 'debug', 'verbose'
+    'port=', 'debug', 'verbose', 'procedure', 'inputvars='
 ]
 
 try:
@@ -88,6 +92,8 @@ opt_password      = None
 opt_hostname      = "127.0.0.1"
 opt_port          = None
 opt_sql           = None
+opt_input         = []
+opt_procedure     = False
 warn              = [ None, None ]
 crit              = [ None, None ]
 
@@ -113,6 +119,10 @@ try:
             warn = map(saverfloat,a.split(":",2))
         elif o in [ '-c', '--critical' ]:
             crit = map(saverfloat,a.split(":",2))
+        elif o in [ '-o', '--procedure' ]:
+            opt_procedure = True
+        elif o in [ '-i', '--inputvars' ]:
+            opt_input = a.split(",")
         elif o in [ '-h', '--help' ]:
             usage()
             sys.exit(0)
@@ -121,7 +131,7 @@ try:
         opt_sql_tmp = ' '.join(map(str,args))
         opt_sql = opt_sql_tmp.replace(r"\n", "\n").replace('\;', ";")
     else:
-        print "UNKNOWN - no SQL statement given"
+        print "UNKNOWN - no SQL statement/procedure name given"
         sys.exit(3)
 
 except Exception, e:
@@ -152,6 +162,14 @@ try:
         db_connection = db.connect(host=opt_hostname, port=opt_port, \
             db=opt_name, user=opt_user, passwd=opt_password )
 
+    elif opt_dbms == "mssql":
+        import pymssql  # mssql driver
+        db = pymssql
+        if opt_port == None:
+            opt_port=1433
+        db_connection = db.connect(host=opt_hostname+":"+opt_port, \
+            database=opt_name, user=opt_user, passwd=opt_password )
+
     elif opt_dbms == "oracle":
         sys.path.append('/usr/lib/python2.7/site-packages')
         import cx_Oracle
@@ -178,9 +196,20 @@ except Exception, e:
 #
 try:
     if opt_verbose:
-        sys.stderr.write("\nSQL Statement:\n %s" % opt_sql)
-    cursor.execute(opt_sql)
-    rows = cursor.fetchmany(2)
+        if opt_procedure:
+            sys.stderr.write("SQL Procedure Name: %s\n" % opt_sql)
+            sys.stderr.write("Input Values: %s\n" % opt_input)
+        else:
+            sys.stderr.write("SQL Statement: %s\n" % opt_sql)
+    if opt_procedure:
+        outvar = cursor.var(cx_Oracle.STRING)
+        #opt_input.append("outvar")
+        cursor.callproc(opt_sql, (outvar,))
+        res =  outvar.getvalue()
+        result = res[0].split(",")
+    else:
+        cursor.execute(opt_sql)
+        result = cursor.fetchone()
     cursor.close()
     db_connection.close()
 
@@ -188,30 +217,30 @@ except Exception, e:
     if opt_debug:
         raise
     if len(e.args) > 1:
-        print "UNKNOWN - Error while executing SQL statement: [%d] %s" % (e.args[0], e.args[1])
+        print "UNKNOWN - Error while executing SQL statement/procedure: [%d] %s" % (e.args[0], e.args[1])
     else:
-        print "UNKNOWN - Error while executing SQL statement: %s" % e
+        print "UNKNOWN - Error while executing SQL statement/procedure: %s" % e
     sys.exit(3)
 
 if opt_verbose:
-    sys.stderr.write("\nSQL Result:\n %s\n\n" % rows)
+    sys.stderr.write("\nSQL Result:\n %s\n\n" % result)
 
 #
 # processing of result
 #
 try:
-    if len(rows) > 1:
-        print "UNKNOWN - SQL statement returned more than one line"
-        sys.exit(3)
-    elif len(rows) == 0:
-        print "UNKNOWN - SQL statement returned no data"
+    #if len(result) > 1:
+    #    print "UNKNOWN - SQL statement/procedure returned more than one line"
+    #    sys.exit(3)
+    if len(result) == 0:
+        print "UNKNOWN - SQL statement/procedure returned no data"
         sys.exit(3)
 
-    row = rows[0]
-    number = float(row[0])
-    text = str(row[1])
+    number = float(result[0])
+    text = str(result[1])
+
     try:
-        perf = row[2]
+        perf = "|"+str(result[2])
     except IndexError:
         if opt_debug:
             raise

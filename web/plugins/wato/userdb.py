@@ -26,5 +26,12 @@
 
 import userdb
 
-api.register_hook('pre-activate-changes', lambda hosts: userdb.hook_sync())
-api.register_hook('snapshot-pushed', userdb.hook_sync)
+def sync_pre_activate_changes(_unused):
+    if 'wato_pre_activate_changes' in config.userdb_automatic_sync:
+        userdb.hook_sync()
+api.register_hook('pre-activate-changes', sync_pre_activate_changes)
+
+def sync_snapshot_pushed():
+    if 'wato_snapshot_pushed' in config.userdb_automatic_sync:
+        userdb.hook_sync()
+api.register_hook('snapshot-pushed', sync_snapshot_pushed)

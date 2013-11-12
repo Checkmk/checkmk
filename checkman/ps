@@ -170,3 +170,6 @@ parameters (dict): Or the parameters can be given in the new, dictionary based s
 {"okmax"}: see above
 {"cpulevels"}: (float, float): levels of CPU usage for {WARN} and {CRIT} in percent
 {"cpu_average"}: int: build average over CPU usage for the given time in minutes
+{"virtual_levels"}: (int, int): levels for the virtual memory usage in bytes
+{"resident_levels"}: (int, int): levels for the resident memory usage in bytes
+{"handle_count"}: (int, int): levels for the process handle count (only applies to windows)

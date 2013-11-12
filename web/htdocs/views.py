@@ -1532,7 +1532,7 @@ def render_view(view, rows, datasource, group_painters, painters,
             if show_buttons:
                 update_context_links(
                     # don't take display_options into account here ('c' is set during reload)
-                    row_count > 0 and should_show_command_form('C', datasource), 
+                    row_count > 0 and should_show_command_form('C', datasource),
                     # and not html.do_actions(),
                     can_display_checkboxes
                 )
@@ -2229,6 +2229,7 @@ def core_command(what, row):
             cmdtag = "HOST"
 
     commands = None
+    title = None
     # Call all command actions. The first one that detects
     # itself to be executed (by examining the HTML variables)
     # will return a command to execute and a title for the

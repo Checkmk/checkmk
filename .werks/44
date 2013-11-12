@@ -1,0 +1,8 @@
+Title: LDAP: Fixed error with empty groups during non nested group sync
+Level: 1
+Component: multisite
+Version: 1.2.3i7
+Date: 1383659982
+Class: fix
+
+Latest release introduced a problem when syncing with empty groups

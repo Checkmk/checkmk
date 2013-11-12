@@ -323,7 +323,7 @@ table.data tr.data > td {
     height: 22px;
     vertical-align: middle;
 }
-table.data tr.data td:last-child {
+table.data tr.data > td:last-child {
     border-right-style: none;
 }
 

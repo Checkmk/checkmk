@@ -33,9 +33,11 @@ def dump_templates():
     sys.stdout.write("""
 define host {
     name                    livedump-host
+    use                     check_mk_default
     register                0
     active_checks_enabled   0
     passive_checks_enabled  1
+
 }
 
 define service {
@@ -226,6 +228,8 @@ def usage():
   -h, --help                Show this cruft
   -V, --version             Show version and exit
   -T, --dump-templates      Also dump host/service templates
+  -M, --mark-mode           Puts the mode (state/configuration dump) in the first
+                            line for use with livedump-ssh-recv and similar scripts
 
   -s, --socket S            connect to Livestatus-socket at S
                              -s tcp:10.11.0.55:6557
@@ -255,14 +259,15 @@ def print_version():
 #   | Main entry point, getopt, etc.                                       |
 #   '----------------------------------------------------------------------'
 
-short_options = 'hVvc:H:S:O:TC'
+short_options = 'hVvc:H:S:O:TCM'
 long_options = [ "help", "version", "verbose", "debug", "socket=", 
                  "host-header=", "host-only-header=", "service-header=",
-                 "dump-templates", "config", "state" ]  
+                 "dump-templates", "config", "state", "mark-mode" ]  
 
 opt_verbose = False
 opt_debug = False
 opt_socket = None
+opt_mark_mode = False
 opt_host_headers = ""
 opt_host_only_headers = ""
 opt_service_headers = ""
@@ -299,6 +304,8 @@ for o,a in opts:
         opt_service_headers += a + "\n"
     elif o in [ '-T', '--dump-templates' ]:
         opt_dump_templates = True
+    elif o in [ '-M', '--mark-mode' ]:
+        opt_mark_mode = True
 
 
 # Main modes
@@ -306,8 +313,12 @@ try:
     connect()
     for o, a in opts:
         if o in [ '-C', '--config' ]:
+            if opt_mark_mode:
+                print "config"
             livedump_config()
             sys.exit(0)
+    if opt_mark_mode:
+        print "status"
     livedump_state()
 
 except Exception, e:

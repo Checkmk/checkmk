@@ -1,0 +1,9 @@
+Title: livedump: new option to mark the mode at the beginning of the dump and documentation fixes
+Level: 1
+Component: livestatus
+Version: 1.2.3i7
+Date: 1384184962
+Class: feature
+
+livedump now has an option to mark the mode of the dump (config or status) in the first 
+line of the dump to be read by the livedump receiver livedump-ssh-recv 

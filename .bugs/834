@@ -1,0 +1,8 @@
+Title: CSV Export for reporting
+Component: multisite
+State: open
+Date: 2013-10-30 10:21:43
+Targetversion: 1.2.3i5
+Class: bug
+
+Clicking on export to csv does not work. 

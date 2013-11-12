@@ -1,0 +1,8 @@
+Title: LDAP: Fixed error when synchronizing non nested groups to roles
+Level: 1
+Component: multisite
+Version: 1.2.3i7
+Date: 1383663022
+Class: fix
+
+

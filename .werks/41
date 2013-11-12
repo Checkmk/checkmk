@@ -1,0 +1,8 @@
+Title: setup.py now handles non existing wwwuser gracefully
+Level: 1
+Component: core
+Version: 1.2.3i6
+Date: 1383213401
+Class: fix
+
+

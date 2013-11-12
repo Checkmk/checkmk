@@ -82,6 +82,7 @@ register_rule(group + '/' + subgroup_applications,
              ),
           ]
       ),
+      title = _("Logfile pattern rules"),
       help = _('<p>You can define one or several patterns (regular expressions) in each logfile pattern rule. '
                'These patterns are applied to the selected logfiles to reclassify the '
                'matching log messages. The first pattern which matches a line will '
@@ -258,6 +259,8 @@ register_rule(group + '/' + subgroup_networking,
 register_rule(group + '/' + subgroup_inventory,
     varname   = "inventory_processes_rules",
     title     = _('Process Inventory'),
+    help      = _("Keep in mind that all configuration parameters in this rule are only applied during the hosts inventory. "
+                  "Any changes later on require a host re-inventory"),
     valuespec = Dictionary(
         elements = [
             ('descr', TextAscii(
@@ -355,8 +358,59 @@ register_rule(group + '/' + subgroup_inventory,
                     ),
                 ],
             )),
+            ( "cpulevels",
+              Tuple(
+                title = _("Levels on CPU utilization"),
+                elements = [
+                   Percentage(title = _("Warning if above"), default_value = 90),
+                   Percentage(title = _("Critical if above"), default_value = 98),
+                ],
+            )),
+            ( "cpu_average",
+             Integer(
+                 title = _("CPU Averaging"),
+                 help = _("By activating averaging, Check_MK will compute the average of "
+                          "the CPU utilization over a given interval. If you have defined "
+                          "alerting levels then these will automatically be applied on the "
+                          "averaged value. This helps to mask out short peaks. "),
+                 unit = _("minutes"),
+                 minvalue = 1,
+                 default_value = 15,
+             )
+           ),
+           ( "virtual_levels",
+              Tuple(
+                title = _("Virtual memory usage"),
+                elements = [
+                    Filesize(title = _("Warning at")),
+                    Filesize(title = _("Critical at")),
+                ],
+           )),
+           ( "resident_levels",
+              Tuple(
+                title = _("Physical memory usage"),
+                elements = [
+                    Filesize(title = _("Warning at")),
+                    Filesize(title = _("Critical at")),
+                ],
+           )),
+            ('handle_count', Tuple(
+                title = _('Handle Count (Windows only)'),
+                help  = _("The number of object handles in the process's object table. This includes open handles to "
+                          "threads, files and other resources like registry keys"),
+                elements = [
+                    Integer(
+                        title = _("Warning above"),
+                        unit = _("handles"),
+                    ),
+                    Integer(
+                        title = _("Critical above"),
+                        unit = _("handles"),
+                    ),
+                ],
+            )),
         ],
-        optional_keys = [],
+        optional_keys = ['handle_count', 'cpulevels', 'cpu_average', 'virtual_levels', 'resident_levels'],
     ),
     match = 'all',
 )
@@ -448,9 +502,9 @@ register_check_parameters(
             )),
         ]
     ),
-    TextAscii( title=_("Queue Name"), 
+    TextAscii( title=_("Queue Name"),
     help=_("The name of the queue like in the Apache queue manager")),
-    "first", 
+    "first",
 )
 
 
@@ -1170,17 +1224,6 @@ register_check_parameters(
                 ),
                 title = _("Access point name"),
             add_label = _("Add name"))
-           ),
-           ( "ap_model",
-            ListOf(
-                Tuple(
-                    elements = [
-                        TextAscii(title = _("AP model")),
-                        MonitoringState( title=_("State when missing"), default_value = 2)
-                    ]
-                ),
-                title = _("Access point device id"),
-            add_label = _("Add id"))
            )
         ]
     ),
@@ -1899,6 +1942,36 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_os,
+    "memory_multiitem",
+    _("Main memory usage of Devices with Modules"),
+    Dictionary(
+        help = _("The memory levels for the sub-module of this host, e.g. pluggable cards"),
+        elements = [
+            ("levels", Alternative(
+                title = _("Memory levels"),
+                elements = [
+                     Tuple(
+                         title = _("Specify levels in percentage of total RAM"),
+                         elements = [
+                             Percentage(title = _("Warning at a memory usage of"), default_value = 80.0, maxvalue = None),
+                             Percentage(title = _("Critical at a memory usage of"), default_value = 90.0, maxvalue = None)]),
+                     Tuple(
+                         title = _("Specify levels in absolute usage values"),
+                         elements = [
+                           Filesize(title = _("Warning if above")),
+                           Filesize(title = _("Critical if above"))]),
+                ])),
+            ],
+        optional_keys = []),
+    TextAscii(
+        title = _("Module name"),
+        allow_empty = False
+    ),
+    "match"
+)
+
+register_check_parameters(
+    subgroup_os,
     "esx_host_memory",
     _("Main memory usage of ESX host system"),
     Tuple(
@@ -1909,6 +1982,46 @@ register_check_parameters(
     None, None
 )
 
+register_check_parameters(
+    subgroup_os,
+    "vm_heartbeat",
+    _("Virtual machine heartbeat status"),
+     Dictionary(
+         optional_keys = False,
+         elements = [
+            ( "heartbeat_missing",
+               MonitoringState(
+                   title = _("No heartbeat"),
+                   help = _("Guest operating system may have stopped responding."),
+                   default_value = 2,
+               )
+            ),
+            ( "heartbeat_intermittend",
+               MonitoringState(
+                   title = _("Intermittent heartbeat"),
+                   help = _("May be due to high guest load."),
+                   default_value = 1,
+               )
+            ),
+             ( "heartbeat_no_tools",
+               MonitoringState(
+                   title = _("Heartbeat tools missing or not installed"),
+                   help = _("No VMWare Tools installed."),
+                   default_value = 1,
+               )
+            ),
+            ( "heartbeat_ok",
+               MonitoringState(
+                   title = _("Heartbeat OK"),
+                   help = _(" Guest operating system is responding normally."),
+                   default_value = 0,
+               )
+            ),
+         ]
+      ),
+    None,
+    "dict",
+)
 register_check_parameters(
     subgroup_applications,
     "esx_vsphere_objects",
@@ -2030,6 +2143,31 @@ register_check_parameters(
                  "the last check interval. The possible range is from 0% to 100%"),
         default_value = (90.0, 95.0)),
     None, None
+)
+
+register_check_parameters(
+    subgroup_os,
+    "cpu_utilization_multiitem",
+    _("CPU utilization of Devices with Modules"),
+    Dictionary(
+        help = _("The CPU utilization sums up the percentages of CPU time that is used "
+                 "for user processes and kernel routines over all available cores within "
+                 "the last check interval. The possible range is from 0% to 100%"),
+        elements =  [
+                        ("levels", Tuple(
+                            title = _("Alert on too high CPU utilization"),
+                            elements = [
+                                Percentage(title = _("Warning at a utilization of")),
+                                Percentage(title = _("Critical at a utilization of"))],
+                                default_value = (90.0, 95.0)),
+                        ),
+                    ]
+                ),
+    TextAscii(
+        title = _("Module name"),
+        allow_empty = False
+    ),
+    None
 )
 
 register_check_parameters(
@@ -3244,12 +3382,43 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_environment,
+    "hostsystem_sensors",
+    _("Hostsystem sensor alerts"),
+    ListOf(
+        Dictionary(
+        help     = _("This rule allows to override alert levels for the given sensor names."),
+        elements = [("name", TextAscii(title = _("Sensor name")) ),
+                    ("states", Dictionary(
+                        title = _("Custom states"),
+                        elements = [
+                                (element,
+                                  MonitoringState( title = "Sensor %s" %
+                                                   description, label = _("Set state to"),
+                                                   default_value = int(element) )
+                                ) for (element, description) in [
+                                         ("0", _("OK")),
+                                         ("1", _("WARNING")),
+                                         ("2", _("CRITICAL")),
+                                         ("3", _("UNKNOWN"))
+                                ]
+                        ],
+                    ))],
+        optional_keys = False
+        ),
+        add_label = _("Add sensor name")
+    ),
+    None,
+    "first"
+)
+
+register_check_parameters(
+    subgroup_environment,
     "temperature_auto",
     _("Temperature sensors with builtin levels"),
     None,
     TextAscii(
         title = _("Sensor ID"),
-        help = _("The identificator of the themal sensor.")),
+        help = _("The identificator of the thermal sensor.")),
     "first"
 )
 
@@ -3318,6 +3487,23 @@ register_check_parameters(
                     ),
                 ]
             )),
+            ("output_load",
+            Tuple(
+              title = _("Current Output Load"),
+              help = _("Indicates that the percentage load attached to the UPS "
+                       "This load affects the running time of all components being supplied "
+                       " with battery power."),
+              elements = [
+                 Percentage(
+                     title = _("Warning level"),
+                 ),
+                 Percentage(
+                     title = _("Critical level"),
+                 ),
+              ]
+
+            )
+            ),
             ("post_calibration_levels",
             Dictionary(
                 title = _("Levels of battery parameters after calibration"),
@@ -3346,10 +3532,53 @@ register_check_parameters(
                 optional_keys = False,
             )),
         ],
-        optional_keys = ['post_calibration_levels'],
+        optional_keys = ['post_calibration_levels', 'output_load'],
     ),
     None,
     "first"
+)
+
+register_check_parameters(
+   subgroup_environment,
+   "apc_ats_output",
+   _("APC Automatic Transfer Switch Output"),
+   Dictionary(
+       title = _("Levels for ATS Output parameters"),
+       optional_keys = True,
+       elements = [
+        ("output_voltage_max", 
+            Tuple(
+             title = _("Maximum Levels for Voltage"),
+             elements = [
+               Integer(title = _("Warning if above"), unit="Volt"),
+               Integer(title = _("Critical if above"), unit="Volt"),
+            ])),
+        ("output_voltage_min", 
+            Tuple(
+             title = _("Minimum Levels for Voltage"),
+             elements = [
+               Integer(title = _("Warning if below"), unit="Volt"),
+               Integer(title = _("Critical if below"), unit="Volt"),
+            ])),
+        ("load_perc_max", 
+            Tuple(
+             title = _("Maximum Levels for load in percent"),
+             elements = [
+               Percentage(title = _("Warning if above")),
+               Percentage(title = _("Critical if above")),
+            ])),
+        ("load_perc_min", 
+            Tuple(
+             title = _("Minimum Levels for load in percent"),
+             elements = [
+               Percentage(title = _("Warning if below")),
+               Percentage(title = _("Critical if below")),
+            ])),
+
+       ],
+   ),
+   TextAscii( title = _("ID of phase")),
+   "dict",
 )
 
 register_check_parameters(
@@ -3996,9 +4225,24 @@ register_check_parameters(
                         Filesize(title = _("Critical at")),
                     ],
                )),
+               ('handle_count', Tuple(
+                   title = _('Handle Count (Windows only)'),
+                   help  = _("The number of object handles in the process's object table. This includes open handles to "
+                             "threads, files and other resources like registry keys"),
+                   elements = [
+                       Integer(
+                           title = _("Warning above"),
+                           unit = _("handles"),
+                       ),
+                       Integer(
+                           title = _("Critical above"),
+                           unit = _("handles"),
+                       ),
+                   ],
+               )),
 
             ],
-            optional_keys = [ "user", "cpulevels", "cpu_average", "virtual_levels", "resident_levels" ]),
+            optional_keys = [ "user", "cpulevels", "cpu_average", "virtual_levels", "resident_levels", "handle_count" ]),
         forth = ps_convert_from_tuple,
     ),
     TextAscii(

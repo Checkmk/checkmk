@@ -1,0 +1,9 @@
+Title: WATO Git Version Control - Software Update
+Component: wato
+State: open
+Date: 2013-10-30 14:30:49
+Targetversion: 1.2.3i6
+Class: nastiness
+
+Each software update modifies the file ~/etc/check_mk/defaults (check_mk_version)
+This change is not commited -> warning box on WATO activate changes

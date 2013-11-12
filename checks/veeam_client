@@ -1,0 +1,74 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+state = { "Success": 0, "Failed": 2, "Warning":1, "InProgress":0, "Pending":0 }
+
+def inventory_veeam_client(info):
+    if info[0][0] == "Status":
+        return [ (None, None) ]
+
+def check_veeam_client(item, params, info):
+    if not info[0][0] == "Status":
+        return 3, "No status data found in first line of agent data"
+    result = ""
+    starttime = ""
+    stoptime = ""
+    duration_string = ""
+    infotxt = ""
+    perfdata = []
+    for line in info:
+        if line[0] == "Status":
+            result = line[1]
+            infotxt += line[0] + ":" + line[1] + " "
+        elif line[0] == "DurationDDHHMMSS" and result != "InProgress" and result != "Pending":
+            duration_string = line[1]
+            spur = map(saveint, duration_string.split(":") )
+            if len(spur) == 4:
+                duration = str(spur[0]*86400 + spur[1] * 3600 + spur[2] * 60 + spur[3])
+            else:
+                duration = "0"
+            perfdata.append(("duration", duration+"s", 0, 0, 0))
+        elif line[0] == "AvgSpeedBps":
+            avgspeed = saveint(line[1])
+            perfdata.append(("avgspeed", avgspeed, 0, 0, 0))
+        elif line[0] == "TotalSizeByte":
+            totalsize = saveint(line[1])
+            perfdata.append(("totalsize", totalsize, 0, 0, 0))
+        else:
+            if (result == "InProgress" or result == "Pending") and line[0] == "StopTime":
+                infotxt += line[0] + ": - "
+            else:
+                infotxt += line[0] + ":" + line[1] + " "
+
+    return (state[result], infotxt, perfdata)
+
+check_info["veeam_client"] = {
+    'check_function':          check_veeam_client,
+    'inventory_function':      inventory_veeam_client,
+    'service_description':     'VEEAM Client',
+    'has_perfdata':            True,
+}
+

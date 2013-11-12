@@ -583,8 +583,8 @@ class html:
             form_name = self.form_name
 
         return self.has_var("filled_in") and (
-            self.form_name == None or \
-            self.form_name in self.list_var("filled_in"))
+            form_name == None or \
+            form_name in self.list_var("filled_in"))
 
 
     # Get value of checkbox. Return True, False or None. None means
@@ -594,7 +594,7 @@ class html:
     def get_checkbox(self, varname, form_name = None):
         if self.has_var(varname):
             return not not self.var(varname)
-        elif not self.form_filled_in():
+        elif not self.form_filled_in(form_name):
             return None
         else:
             # Form filled in but variable missing -> Checkbox not checked
@@ -712,6 +712,9 @@ class html:
 
     def set_browser_reload(self, secs):
         self.browser_reload = secs
+
+    def http_redirect(self, url):
+        raise MKGeneralException("http_redirect not implemented")
 
     def set_browser_redirect(self, secs, url):
         self.browser_reload   = secs
@@ -1115,6 +1118,19 @@ class html:
             elif ord(c) <= 32 or ord(c) > 127 or c in [ '#', '+', '"', "'", "=", "&", ":", "%" ]:
                 c = "%%%02x" % ord(c)
             ret += c
+        return ret
+
+    # Escape a variable name so that it only uses allowed charachters for URL variables
+    def varencode(self, varname):
+        if varname == None:
+            return "None"
+
+        ret = ""
+        for c in varname:
+            if not c.isdigit() and not c.isalnum() and c != "_":
+                ret += "%%%02x" % ord(c)
+            else:
+                ret += c
         return ret
 
     def u8(self, c):

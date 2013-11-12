@@ -51,7 +51,7 @@ def windows_tasks_convert(info):
             last_task = value
             data[last_task] = {}
     return data
-       
+
 def inventory_windows_tasks(info):
     info = windows_tasks_convert(info)
     return [ (n, None) for n, v in info.items() if v['Scheduled Task State'] == "Enabled"]
@@ -73,8 +73,8 @@ def check_windows_tasks(item, _no_params, info):
                 msg.append("Task not Enabled(!!)")
                 state = 2
 
-            return state, ", ".join(msg) 
-    
+            return state, ", ".join(msg)
+
     return 3, "Task not found on server"
 
 check_info["windows_tasks"] = {

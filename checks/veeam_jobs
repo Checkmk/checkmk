@@ -1,0 +1,58 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def inventory_veeam_jobs(info):
+    return [ (x[0], None) for x in info ]
+
+def check_veeam_jobs(item, params, info):
+    for line in info:
+        if line[0] == item:
+            if line[3] == "Success":
+                state = 0
+            elif line[2] =="Working":
+                state = 0
+                line.pop(7)
+                line.pop(6)
+            elif line[3] == "Failed":
+                state = 2
+            else:
+                state = 3
+            infotxt = "Result: %s, " % line[3]
+            line.pop(3)
+            line.pop(0)
+            infotxt += ", ".join(map(str,line) )
+            return (state, infotxt )
+
+    return 3, "item not found in agent output"
+
+check_info["veeam_jobs"] = {
+    'check_function':          check_veeam_jobs,
+    'inventory_function':      inventory_veeam_jobs,
+    'service_description':     'VEEAM Job',
+    'has_perfdata':            False,
+}
+

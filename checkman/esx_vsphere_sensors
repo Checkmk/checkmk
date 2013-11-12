@@ -12,3 +12,14 @@ description:
 inventory:
   One check per ESX Host System will be created.
 
+examples:
+ check_parameters = [
+  ([{'states': {'2': 0, '1': 0}, 'name': 'VMware Rollup Health'}], [], ALL_HOSTS, ["Hardware Sensors"]),
+ ]
+
+[parameters]
+a list of (dict): with the following keys
+
+ {"name"}: The name of the sensor in question
+
+ {"states"}: A dictionary with with the optional keys for each sensor state and its new value

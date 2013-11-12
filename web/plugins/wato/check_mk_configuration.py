@@ -486,10 +486,12 @@ register_configvar(group,
                   'during each page rendering. Each connector can then specify if it wants to perform '
                   'any actions. For example the LDAP connector will start the sync once the cached user '
                   'information are too old.'),
-        default_value = [ 'wato_users', 'page' ],
+        default_value = [ 'wato_users', 'page', 'wato_pre_activate_changes', 'wato_snapshot_pushed' ],
         choices       = [
-            ('wato_users', 'When opening the users configuration page'),
-            ('page',       'During regular page processing'),
+            ('page',                      'During regular page processing'),
+            ('wato_users',                'When opening the users configuration page'),
+            ('wato_pre_activate_changes', 'Before activating the changed configuration'),
+            ('wato_snapshot_pushed',      'On a remote site, when it receives a new configuration'),
         ],
         allow_empty   = True,
     ),
@@ -1388,8 +1390,8 @@ register_rule(group,
         title = _("Enable/disable passive checks for services"),
         help = _("This setting allows you to disable the processing of passiv check results for a "
                  "service."),
-        choices = [ ("1", _("Enable processing of passiv check results")),
-                    ("0", _("Disable processing of passiv check results")) ],
+        choices = [ ("1", _("Enable processing of passive check results")),
+                    ("0", _("Disable processing of passive check results")) ],
         ),
         itemtype = "service")
 
@@ -1491,7 +1493,7 @@ def get_snmp_checktypes():
    types = [ (cn, (c['title'] != cn and '%s: ' % cn or '') + c['title'])
              for (cn, c) in checks.items() if c['snmp'] ]
    types.sort()
-   return types
+   return [ (None, _('All SNMP Checks')) ] + types
 
 register_rule(group,
     "snmp_check_interval",
@@ -1503,7 +1505,7 @@ register_rule(group,
         elements = [
             DropdownChoice(
                 title = _("Checktype"),
-                choices = [ (None, _('All SNMP Checks')) ] + get_snmp_checktypes(),
+                choices = get_snmp_checktypes,
             ),
             Integer(
                 title = _("Do check every"),
@@ -1705,8 +1707,8 @@ register_rule(group,
 register_rule(group,
     "extra_service_conf:notes_url",
     TextAscii(
-        label = _("Url:"),
-        title = _("Notes url for Services"),
+        label = _("URL:"),
+        title = _("Notes URL for Services"),
         help = _("With this setting you can set links to documentations "
                  "for each service"),
         ),
@@ -1715,12 +1717,30 @@ register_rule(group,
 register_rule(group,
     "extra_host_conf:notes_url",
     TextAscii(
-        label = _("Url:"),
-        title = _("Notes url for Hosts"),
+        label = _("URL:"),
+        title = _("Notes URL for Hosts"),
         help = _("With this setting you can set links to documentations "
                  "for Hosts"),
         ),
     )
+
+register_rule(group,
+   "extra_service_conf:display_name",
+   TextUnicode(
+       title = _("Alternative display name for Services"),
+       help = _("This rule set allows you to specify an alternative name "
+                "to be displayed for certain services. This name is available as "
+                "a column when creating new views or modifying existing ones. "
+                "It is always visible in the details view of a service. In the "
+                "availability reporting there is an option for using that name "
+                "instead of the normal service description. It does <b>not</b> automatically "
+                "replace the normal service name in all views.<br><br><b>Note</b>: The "
+                "purpose of this rule set is to define unique names for several well-known "
+                "services. It cannot rename services in general."),
+       size = 64,
+   ),
+   itemtype = "service")
+
 
 group = "monconf/" + _("Inventory and Check_MK settings")
 
@@ -1764,6 +1784,36 @@ register_rule(group,
              "cluster and the physical nodes after changing this ruleset."),
     itemtype = "service")
 group = "monconf/" + _("Various")
+
+register_rule(group,
+    "extra_host_conf:service_period",
+    TimeperiodSelection(
+        title = _("Service period for hosts"),
+        help = _("When it comes to availability reporting, you might want the report "
+                 "to cover only certain time periods, e.g. only Monday to Friday "
+                 "from 8:00 to 17:00. You can do this by specifying a service period "
+                 "for hosts or services. In the reporting you can then decide to "
+                 "include, exclude or ignore such periods und thus e.g. create a report "
+                 "of the availability just within or without these times. <b>Note</b>: Changes in the "
+                 "actual <i>definition</i> of a time period will only be reflected in "
+                 "times <i>after</i> that change. Selecting a different service period "
+                 "will also be reflected in the past.")),
+    )
+
+register_rule(group,
+    "extra_service_conf:service_period",
+    TimeperiodSelection(
+        title = _("Service period for services"),
+        help = _("When it comes to availability reporting, you might want the report "
+                 "to cover only certain time periods, e.g. only Monday to Friday "
+                 "from 8:00 to 17:00. You can do this by specifying a service period "
+                 "for hosts or services. In the reporting you can then decide to "
+                 "include, exclude or ignore such periods und thus e.g. create a report "
+                 "of the availability just within or without these times. <b>Note</b>: Changes in the "
+                 "actual <i>definition</i> of a time period will only be reflected in "
+                 "times <i>after</i> that change. Selecting a different service period "
+                 "will also be reflected in the past.")),
+    itemtype = "service")
 
 class MonitoringIcon(ValueSpec):
     def __init__(self, **kwargs):

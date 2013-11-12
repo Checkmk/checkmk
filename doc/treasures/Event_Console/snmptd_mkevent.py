@@ -43,7 +43,8 @@ import time
 import sys
 import re
 
-site_name = os.environ.pop('OMD_SITE')
+# Insert here the name of your omd site
+site_name = "TESTSITE"
 deamon_path = "/omd/sites/%s/tmp/run/mkeventd/events" % site_name
 
 data = []
@@ -58,11 +59,11 @@ for line in sys.stdin:
     data.append(line)
 
 msg = " ".join(data[2:])
-host, ip = data[:2] 
+host, ip = data[:2]
 if match_host:
     host = match_host.strip()
 
-#Write to mkevent Socket    
+#Write to mkevent Socket
 out = open(deamon_path, "w")
 timestamp = time.strftime("%b %d %H:%M:%S", time.localtime(time.time()))
 out.write("<5>%s %s trap: %s\n" % (timestamp, host, msg))

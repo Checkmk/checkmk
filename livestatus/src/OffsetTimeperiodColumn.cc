@@ -32,8 +32,8 @@
 extern TimeperiodsCache *g_timeperiods_cache;
 
 
-    OffsetTimeperiodColumn::OffsetTimeperiodColumn(string name, string description, int offset, int indirect_offset)
-: OffsetIntColumn(name, description, offset, indirect_offset)
+OffsetTimeperiodColumn::OffsetTimeperiodColumn(string name, string description, int offset, int indirect_offset)
+    : OffsetIntColumn(name, description, offset, indirect_offset)
 {
 }
 

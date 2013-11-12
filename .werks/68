@@ -1,0 +1,8 @@
+Title: check_sql: support for mssql databases included
+Level: 1
+Component: checks
+Version: 1.2.3i7
+Date: 1384191118
+Class: feature
+
+

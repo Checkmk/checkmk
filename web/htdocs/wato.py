@@ -372,13 +372,14 @@ def lock_exclusive():
 
 
 def git_command(args):
-    command = "cd '%s' && git %s 2>&1" % (defaults.default_config_dir, " ".join(args))
+    encoded_args = " ".join([ a.encode("utf-8") for a in args ])
+    command = "cd '%s' && git %s 2>&1" % (defaults.default_config_dir, encoded_args)
     p = os.popen(command)
     output = p.read()
     status = p.close()
     if status != None:
         raise MKGeneralException(_("Error executing GIT command %s: %s") %
-                (command, output))
+                (command.decode('utf-8'), output))
 
 def shell_quote(s):
     return "'" + s.replace("'", "'\"'\"'") + "'"
@@ -761,7 +762,7 @@ def save_hosts(folder = None):
         out.write(pprint.pformat(ipaddresses))
         out.write(")\n")
 
-    if len(ipaddresses) > 0:
+    if len(explicit_snmp_communities) > 0:
         out.write("\n# Explicit SNMP communities\n")
         out.write("explicit_snmp_communities.update(")
         out.write(pprint.pformat(explicit_snmp_communities))

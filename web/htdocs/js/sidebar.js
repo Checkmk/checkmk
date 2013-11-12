@@ -697,8 +697,14 @@ function switch_site(switchvar) {
        everything is affected by the switch */
 }
 
+var g_seconds_to_update = null;
+
 function sidebar_scheduler() {
-    var timestamp = Date.parse(new Date()) / 1000;
+    if (g_seconds_to_update == null)
+        g_seconds_to_update = sidebar_update_interval;
+    else
+        g_seconds_to_update -= 1;
+
     var newcontent = "";
     var to_be_updated = [];
 
@@ -710,7 +716,7 @@ function sidebar_scheduler() {
             // from this url
             var url = refresh_snapins[i][1];
 
-            if (timestamp % sidebar_update_interval == 0) {
+            if (g_seconds_to_update <= 0) {
                 get_url(url, updateContents, "snapin_" + name);
             }
         } else {
@@ -721,7 +727,7 @@ function sidebar_scheduler() {
 
     // Are there any snapins to be bulk updates?
     if(to_be_updated.length > 0) {
-        if (timestamp % sidebar_update_interval == 0) {
+        if (g_seconds_to_update <= 0) {
             var url = 'sidebar_snapin.py?names=' + to_be_updated.join(',');
             if (sidebar_restart_time !== null)
                 url += '&since=' + sidebar_restart_time;
@@ -735,8 +741,11 @@ function sidebar_scheduler() {
         }
     }
 
-    if (g_sidebar_notify_interval !== null && timestamp % g_sidebar_notify_interval == 0) {
-        update_messages();
+    if (g_sidebar_notify_interval !== null) {
+        var timestamp = Date.parse(new Date()) / 1000;
+        if (timestamp % g_sidebar_notify_interval == 0) {
+            update_messages();
+        }
     }
 
     // Detect page changes and re-register the mousemove event handler
@@ -745,6 +754,10 @@ function sidebar_scheduler() {
         registerEdgeListeners(parent.frames[1]);
         update_content_location();
     }
+
+    if (g_seconds_to_update <= 0)
+        g_seconds_to_update = sidebar_update_interval;
+
     setTimeout(function(){sidebar_scheduler();}, 1000);
 }
 
@@ -927,6 +940,7 @@ function handle_update_messages(_unused, code) {
     var c = document.getElementById('messages');
     if (c) {
         c.innerHTML = code;
+        executeJSbyObject(c);
         update_message_trigger();
     }
 }
@@ -942,12 +956,21 @@ function update_messages() {
     get_url('sidebar_get_messages.py', handle_update_messages);
 }
 
+function get_hint_messages(c) {
+    var hints;
+    if (c.getElementsByClassName)
+        hints = c.getElementsByClassName('popup_msg');
+    else
+        hints = document.getElementsByClassName('popup_msg', c);
+    return hints;
+}
+
 function update_message_trigger() {
     var c = document.getElementById('messages');
     if (c) {
         var b = document.getElementById('msg_button');
-        var num = c.children.length;
-        if (c.children.length > 0) {
+        var hints = get_hint_messages(c);
+        if (hints.length > 0) {
             // are there pending messages? make trigger visible
             b.style.display = 'inline';
 
@@ -959,12 +982,19 @@ function update_message_trigger() {
                 b.appendChild(l);
             }
 
-            l.innerHTML = '' + c.children.length;
+            l.innerHTML = '' + hints.length;
         } else {
             // no messages: hide the trigger
             b.style.display = 'none';
         }
     }
+}
+
+function mark_message_read(msg_id) {
+    get_url('sidebar_message_read.py?id=' + msg_id);
+
+    // Update the button state
+    update_message_trigger();
 }
 
 function read_message() {
@@ -973,7 +1003,8 @@ function read_message() {
         return;
 
     // extract message from teh message container
-    var msg = c.children[0];
+    var hints = get_hint_messages(c);
+    var msg = hints[0];
     c.removeChild(msg);
 
     // open the next message in a window
@@ -981,10 +1012,7 @@ function read_message() {
 
     // tell server that the message has been read
     var msg_id = msg.id.replace('message-', '');
-    get_url('sidebar_message_read.py?id=' + msg_id);
-
-    // Update the button state
-    update_message_trigger();
+    mark_message_read(msg_id);
 }
 
 function message_close(msg_id) {

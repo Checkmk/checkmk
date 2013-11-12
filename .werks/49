@@ -1,0 +1,9 @@
+Title: Fixed check-mk-automation call on each new created apache thread
+Level: 1
+Component: multisite
+Version: 1.2.3i7
+Date: 1383917888
+Class: fix
+
+Especially for large installation, with a lot of active users, this
+could really lead into performance problems

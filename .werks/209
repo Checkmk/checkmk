@@ -1,0 +1,8 @@
+Title: Cleaned up bad code in fileinfo.groups check
+Level: 1
+Component: checks
+Version: 1.2.3i7
+Date: 1384258634
+Class: fix
+
+

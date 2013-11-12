@@ -56,8 +56,8 @@ def check_netapp_fcpio(item, params, info):
 	write_msg = ' (!!)'
 
 
-    infotext = "%s read%s, %s write%s in last %d sec" % (get_filesize_human_readable(avg_read), \
-    read_msg, get_filesize_human_readable(avg_write), write_msg, timedif)
+    infotext = "%s read%s, %s write%s in last %d sec" % (get_bytes_human_readable(avg_read), \
+    read_msg, get_bytes_human_readable(avg_write), write_msg, timedif)
 
     return(state, infotext, perfdata)
 

@@ -640,6 +640,9 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
     need_statistics = os_aggrs and os_states
     show_timeline = avoptions["show_timeline"]
     grouping = avoptions["grouping"]
+    timeline_rows = [] # Need this as a global variable if just one service is affected
+    total_duration = 0
+    considered_duration = 0
 
     # Note: in case of timeline, we have data from exacly one host/service
     for site_host, site_host_entry in by_host.iteritems():

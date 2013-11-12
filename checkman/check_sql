@@ -15,8 +15,8 @@ description:
   Otherwise the number ist treated as a Nagios state (0,1,2,3).
   State, text and the performance data are being returned.
 
-  The check works with MySQL, Postgresql and Oracle databases using the
-  python drivers MySQLdb, psycopg2 and cx_Oracle. For cx_Oracle the
+  The check works with MySQL, Postgresql, MSSQL and Oracle databases using the
+  python drivers MySQLdb, psycopg2, pymssqlm and cx_Oracle. For cx_Oracle the
   Oracle instantclient needs to be installed as well, and the
   LD_LIBRARY_PATH needs to be modified to point to the libclntsh.so of
   that package.

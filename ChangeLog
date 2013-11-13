@@ -16,6 +16,7 @@
     * 0065 FIX: veeam_client: check behaviour improved when backup is in progress
     * 0066 FIX: veeam_jobs: check behaviour improved when backup is in progress
     * 0209 FIX: Cleaned up bad code in fileinfo.groups check
+    * 0003 FIX: ps: Remove exceeding [ and ] in service description when using process inventory...
 
     Multisite:
     * 0001 New filters for selecting several host/service-groups at once...

@@ -1,0 +1,10 @@
+Title: df: do not display negative levels
+Component: checks
+State: open
+Date: 2013-11-13 15:20:04
+Targetversion: future
+Class: nastiness
+
+The df check can now use negative levels. This means *free* spac.
+But in the check output this should be made clear and not just
+printed negative values.

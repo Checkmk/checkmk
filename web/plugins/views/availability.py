@@ -31,6 +31,9 @@ from valuespec import *
 def render_availability(view, datasource, filterheaders, display_options,
                         only_sites, limit):
 
+    if handle_edit_annotations():
+        return
+
     # We need the availability options now, but cannot display the
     # form code for that yet.
     html.plug()
@@ -54,9 +57,18 @@ def render_availability(view, datasource, filterheaders, display_options,
     title += " - " + range_title
 
     if 'H' in display_options:
-        html.body_start(title, stylesheets=["pages","views","status"])
+        html.body_start(title, stylesheets=["pages","views","status"], force=True)
     if 'T' in display_options:
         html.top_heading(title)
+
+    handle_delete_annotations()
+
+    # Remove variables for editing annotations, otherwise they will make it into the uris
+    html.del_all_vars("editanno_")
+    html.del_all_vars("anno_")
+    if html.var("filled_in") == "editanno":
+        html.del_var("filled_in")
+
     if 'B' in display_options:
         html.begin_context_buttons()
         togglebutton("avoptions", html.has_user_errors(), "painteroptions", _("Configure details of the report"))
@@ -68,6 +80,7 @@ def render_availability(view, datasource, filterheaders, display_options,
         html.end_context_buttons()
 
     html.write(avoptions_html)
+    
     if not html.has_user_errors():
         rows = get_availability_data(datasource, filterheaders, range, only_sites, limit, timeline, timeline or avoptions["show_timeline"], avoptions)
         what = "service" in datasource["infos"] and "service" or "host"
@@ -622,6 +635,9 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
         by_host.setdefault(site_host, {})
         by_host[site_host].setdefault(service, []).append(row)
 
+    # Load annotations
+    annotations = load_annotations()
+
     # Now compute availability table. We have the following possible states:
     # 1. "unmonitored"
     # 2. "monitored"
@@ -774,6 +790,8 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
     else:
         render_availability_table(availability, from_time, until_time, range_title, what, avoptions, render_number)
 
+    render_annotations(annotations, from_time, until_time, by_host, what, avoptions, omit_service = timeline)
+
 
 # style is either inline (just the timeline bar) or "standalone" (the complete page)
 def render_timeline(timeline_rows, from_time, until_time, considered_duration,
@@ -836,10 +854,18 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration,
     table.begin("av_timeline", "", css="timelineevents")
     for row_nr, (row, state_id) in enumerate(timeline_rows):
         table.row()
+        table.cell(_("Links"), css="buttons")
         if what == "bi":
-            table.cell(_("Links"), css="buttons")
             url = html.makeuri([("timewarp", str(int(row["from"])))])
             html.icon_button(url, _("Time warp - show BI aggregate during this time period"), "timewarp")
+        else:
+            url = html.makeuri([("anno_site", tl_site),
+                                ("anno_host", tl_host),
+                                ("anno_service", tl_service),
+                                ("anno_from", row["from"]),
+                                ("anno_until", row["until"])])
+            html.icon_button(url, _("Create an annotation for this period"), "annotation")
+
         table.cell(_("From"), render_date(row["from"]), css="nobr narrow")
         table.cell(_("Until"), render_date(row["until"]), css="nobr narrow")
         table.cell(_("Duration"), render_number(row["duration"], considered_duration), css="narrow number")
@@ -1435,5 +1461,234 @@ def compute_tree_state(tree, status):
     bi.load_assumptions()
     tree_state = bi.execute_tree(tree, status_info)
     return tree_state
+
+#.
+#   .--Annotations---------------------------------------------------------.
+#   |         _                      _        _   _                        |
+#   |        / \   _ __  _ __   ___ | |_ __ _| |_(_) ___  _ __  ___        |
+#   |       / _ \ | '_ \| '_ \ / _ \| __/ _` | __| |/ _ \| '_ \/ __|       |
+#   |      / ___ \| | | | | | | (_) | || (_| | |_| | (_) | | | \__ \       |
+#   |     /_/   \_\_| |_|_| |_|\___/ \__\__,_|\__|_|\___/|_| |_|___/       |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  This code deals with retrospective annotations and downtimes.       |
+#   '----------------------------------------------------------------------'
+
+# Example for annotations:
+# {
+#   ( "mysite", "foohost", "myservice" ) : # service might be None
+#       [
+#         {
+#            "from"       : 1238288548,
+#            "until"      : 1238292845,
+#            "text"       : u"Das ist ein Text über mehrere Zeilen, oder was weiß ich",
+#            "downtime"   : True, # Treat as scheduled Downtime,
+#            "date"       : 12348854885, # Time of entry
+#            "author"     : "mk",
+#         },
+#         # ... further entries
+#      ]
+# }
+
+
+def save_annotations(annotations):
+    file(defaults.var_dir + "/web/statehist_annotations.mk", "w").write(repr(annotations) + "\n")
+
+def load_annotations(lock = False):
+    path = defaults.var_dir + "/web/statehist_annotations.mk"
+    if os.path.exists(path):
+        if lock:
+            aquire_lock(path)
+        return eval(file(path).read())
+    else:
+        return {}
+
+def update_annotations(site_host_svc, annotation):
+    annotations = load_annotations(lock = True)
+    entries = annotations.get(site_host_svc, [])
+    new_entries = []
+    for entry in entries:
+        if  entry["from"] == annotation["from"] \
+            and entry["until"] == annotation["until"]:
+            continue # Skip existing entries with same identity
+        new_entries.append(entry)
+    new_entries.append(annotation)
+    annotations[site_host_svc] = new_entries
+    save_annotations(annotations)
+
+
+def find_annotation(annotations, site_host_svc, fromtime, untiltime):
+    entries = annotations.get(site_host_svc)
+    if not entries:
+        return None
+    for annotation in entries:
+        if annotation["from"] == fromtime \
+            and annotation["until"] == untiltime:
+            return annotation
+    return None
+
+def delete_annotation(annotations, site_host_svc, fromtime, untiltime):
+    entries = annotations.get(site_host_svc)
+    if not entries:
+        return
+    found = None
+    for nr, annotation in enumerate(entries):
+        if annotation["from"] == fromtime \
+            and annotation["until"] == untiltime:
+            found = nr
+            break
+    if found != None:
+        del entries[nr]
+
+
+def render_annotations(annotations, from_time, until_time, by_host, what, avoptions, omit_service):
+    format = "%H:%M:%S"
+    if time.localtime(from_time)[:3] != time.localtime(until_time-1)[:3]:
+        format = "%Y-%m-%d " + format
+    def render_date(ts):
+        return time.strftime(format, time.localtime(ts))
+
+    annos_to_render = []
+    for site_host, avail_entries in by_host.iteritems():
+        for service in avail_entries.keys():
+            site_host_svc = site_host[0], site_host[1], (service or None)
+            for annotation in annotations.get(site_host_svc, []):
+                if (annotation["from"] >= from_time and annotation["from"] <= until_time) or \
+                   (annotation["until"] >= from_time and annotation["until"] <= until_time):
+                   annos_to_render.append((site_host_svc, annotation))
+
+    annos_to_render.sort(cmp=lambda a,b: cmp(a[1]["from"], b[1]["from"]) or cmp(a[0], b[0]))
+
+    labelling = avoptions["labelling"]
+
+    table.begin(title = _("Annotations"), omit_if_empty = True)
+    for (site_id, host, service), annotation in annos_to_render:
+        table.row()
+        table.cell("", css="buttons")
+        anno_vars = [
+          ( "anno_site", site_id ),
+          ( "anno_host", host ),
+          ( "anno_service", service or "" ),
+          ( "anno_from", int(annotation["from"]) ),
+          ( "anno_until", int(annotation["until"]) ),
+        ]
+        edit_url = html.makeuri(anno_vars)
+        html.icon_button(edit_url, _("Edit this annotation"), "edit")
+        delete_url = html.makeactionuri([("_delete_annotation", "1")] + anno_vars)
+        html.icon_button(delete_url, _("Delete this annotation"), "delete")
+
+        if not omit_service:
+            if not "omit_host" in labelling:
+                host_url = "view.py?" + html.urlencode_vars([("view_name", "hoststatus"), ("site", site_id), ("host", host)])
+                table.cell(_("Host"), '<a href="%s">%s</a>' % (host_url, host))
+
+            if service:
+                service_url = "view.py?" + html.urlencode_vars([("view_name", "service"), ("site", site_id), ("host", host), ("service", service)])
+                # TODO: honor use_display_name. But we have no display names here...
+                service_name = service
+                table.cell(_("Service"), '<a href="%s">%s</a>' % (service_url, service_name))
+
+        table.cell(_("From"), render_date(annotation["from"]), css="nobr narrow")
+        table.cell(_("Until"), render_date(annotation["until"]), css="nobr narrow")
+        table.cell(_("Annotation"), html.attrencode(annotation["text"]))
+        table.cell(_("Author"), annotation["author"])
+        table.cell(_("Entry"), render_date(annotation["date"]), css="nobr narrow")
+    table.end()
+
+
+
+def edit_annotation():
+    site_id = html.var("anno_site") or ""
+    hostname = html.var("anno_host")
+    service = html.var("anno_service") or None
+    fromtime = float(html.var("anno_from"))
+    untiltime = float(html.var("anno_until"))
+    site_host_svc = (site_id, hostname, service)
+
+    # Find existing annotation with this specification
+    annotations = load_annotations()
+    annotation = find_annotation(annotations, site_host_svc, fromtime, untiltime)
+    if not annotation:
+        annotation = {
+        "from"    : fromtime,
+        "until"   : untiltime,
+        "text"    : "",
+        }
+    annotation["host"] = hostname
+    annotation["service"] = service
+    annotation["site"] = site_id
+
+    html.plug()
+
+    title = _("Edit annotation of ") + hostname
+    if service:
+        title += "/" + service
+    html.body_start(title, stylesheets=["pages","views","status"])
+    html.top_heading(title)
+
+    html.begin_context_buttons()
+    html.context_button(_("Abort"), html.makeuri([("anno_host", "")]), "abort")
+    html.end_context_buttons()
+
+    value = forms.edit_dictionary([
+        ( "site",    TextAscii(title = _("Site")) ),
+        ( "host",    TextUnicode(title = _("Hostname")) ),
+        ( "service", Optional(TextUnicode(allow_empty=False), sameline = True, title = _("Service")) ),
+        ( "from",    AbsoluteDate(title = _("Start-Time"), include_time = True) ),
+        ( "until",   AbsoluteDate(title = _("End-Time"), include_time = True) ),
+        ( "text",    TextAreaUnicode(title = _("Annotation"), allow_empty = False) ), ],
+        annotation,
+        varprefix = "editanno_",
+        formname = "editanno",
+        focus = "text")
+
+    if value:
+        site_host_svc = value["site"], value["host"], value["service"]
+        del value["site"]
+        del value["host"]
+        value["date"] = time.time()
+        value["author"] = config.user_id
+        update_annotations(site_host_svc, value)
+        html.drain() # omit previous HTML code, not needed
+        html.unplug()
+        html.del_all_vars(prefix = "editanno_")
+        html.del_var("filled_in")
+        return False
+
+    html.unplug() # show HTML code
+
+    html.bottom_footer()
+    html.body_end()
+    return True
+
+
+# Called at the beginning of every availability page
+def handle_delete_annotations():
+    if html.var("_delete_annotation"):
+        site_id = html.var("anno_site") or ""
+        hostname = html.var("anno_host")
+        service = html.var("anno_service") or None
+        fromtime = float(html.var("anno_from"))
+        untiltime = float(html.var("anno_until"))
+        site_host_svc = (site_id, hostname, service)
+
+        annotations = load_annotations()
+        annotation = find_annotation(annotations, site_host_svc, fromtime, untiltime)
+        if not annotation:
+            return
+
+        if not html.confirm(_("Are you sure that you want to delete the annotation '%s'" % annotation["text"])):
+            return
+
+        delete_annotation(annotations, site_host_svc, fromtime, untiltime)
+        save_annotations(annotations)
+
+def handle_edit_annotations():
+    if html.var("anno_host") and not html.var("_delete_annotation"):
+        finished = edit_annotation()
+    else:
+        finished = False
+
+    return finished
 
 

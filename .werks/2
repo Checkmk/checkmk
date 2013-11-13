@@ -1,0 +1,19 @@
+Title: You can now annotate events in the availability reporting
+Level: 2
+Component: reporting
+Version: 1.2.3i7
+Date: 1384336231
+Class: feature
+
+In the availability reporting there is now the possibility for annotating outages. In fact you
+can attach an annotation to any arbitrary span of time of a host or service. For creating new
+annotations you need to go to the "Timeline" view of a host or service. At each single period
+there is now a new icon for creating an annotation (or changing an existing one).
+
+Once the editor dialog is open you can decide to modify the time span, for example in order to
+make the annotation cover a larger time period.
+
+In any availability view all annotations that match the shown period of
+time and selection of hosts and services are being displayed.
+
+The annotations are saved globally and are shared amongst all users.

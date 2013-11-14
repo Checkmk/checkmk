@@ -1,0 +1,8 @@
+Title: table statehist: no more missing entries if only one logfile exists
+Level: 1
+Component: livestatus
+Version: 1.2.3i7
+Date: 1384426471
+Class: fix
+
+

@@ -1,0 +1,8 @@
+Title: fixed bug in multisite command execution
+Level: 2
+Component: ec
+Version: 1.2.3i7
+Date: 1384441145
+Class: fix
+
+The command STAR (set/unset favorites) got called on every action command

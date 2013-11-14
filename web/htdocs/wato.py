@@ -7576,7 +7576,8 @@ def mode_edit_site(phase):
     if type(method) == str and method.startswith("unix:"):
         method = ('unix', method[5:])
     elif type(method) == str and method.startswith("tcp:"):
-        method = ('tcp', tuple(method.split(":")[1:]))
+        parts = method.split(":")[1:]
+        method = ('tcp', (parts[0], int(parts[1])))
     vs_conn_method.render_input("method", method)
 
     html.help( _("When connecting to remote site please make sure "

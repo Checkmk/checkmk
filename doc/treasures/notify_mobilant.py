@@ -67,6 +67,6 @@ try:
     else:
         sys.stderr.write("Error sending SMS to %s: %s\n" % (to, exitcodes.get(response, "Invalid exit code %s" % response)))
         sys.stderr.write("URL was %s\n" % url)
-except 1: # Exception, e:
+except Exception, e:
     sys.stderr.write("Error sending SMS to %s. Exception: %s%s\n" % e)
 

@@ -1,0 +1,11 @@
+Title: Checkboxes for hosts/services were missing on modified views
+Level: 2
+Component: multisite
+Version: 1.2.3i7
+Date: 1384445099
+Class: fix
+
+If you have modified a view then activating the checkbox for hosts
+or services would not work anymore. This bug was introduced by the
+new option for forcing the checkboxes to be enabled in a view. This
+has now been fixed.

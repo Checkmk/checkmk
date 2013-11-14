@@ -1262,7 +1262,8 @@ def show_view(view, show_heading = False, show_buttons = True,
     num_columns     = vo.get("num_columns",     view.get("num_columns",    1))
     browser_reload  = vo.get("refresh",         view.get("browser_reload", None))
 
-    show_checkboxes = view.get("force_checkboxes", html.var('show_checkboxes', '0') == '1')
+    force_checkboxes = view.get("force_checkboxes", False)
+    show_checkboxes = force_checkboxes or html.var('show_checkboxes', '0') == '1'
 
     # Get the datasource (i.e. the logical table)
     datasource = multisite_datasources[view["datasource"]]

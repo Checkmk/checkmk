@@ -1,0 +1,9 @@
+Title: Hidding snmpv3 credentials in wato
+Level: 1
+Component: wato
+Version: 1.2.3i7
+Date: 1384423412
+Class: fix
+
+The Authentication passoword and the Privacy pass pharase are now not longer shown as
+plaintext for all admins with wato access.

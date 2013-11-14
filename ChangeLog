@@ -42,6 +42,7 @@
     * 0094 FIX: Hide SNMPv3 credentials in WATO...
 
     Notifications:
+    * 0005 Added notification script for sending SMS via mobilant.com...
     * 0032 FIX: mail notification plugin: replace windows forbidden characters in mail images
 
     Reporting & Availability:

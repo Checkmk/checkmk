@@ -122,11 +122,15 @@ def check_http_arguments(params):
         args = " -I $HOSTADDRESS$" + args
     return args
 
+def check_http_desc(params):
+    if params[0].startswith("^"):
+        return params[0][1:]
+    return "HTTP %s" % params[0]
 
 active_check_info['http'] = {
     "command_line"        : '$USER1$/check_http $ARG1$',
     "argument_function"   : check_http_arguments,
-    "service_description" : lambda params: "HTTP %s" % params[0],
+    "service_description" : check_http_desc,
     "has_perfdata"        : True,
 }
 

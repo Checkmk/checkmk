@@ -720,10 +720,14 @@ function handle_host_diag_result(ident, response_text) {
     var log   = document.getElementById(ident + '_log');
     var retry = document.getElementById(ident + '_retry');
 
-    if (response_text[0] == "0")
+    if (response_text[0] == "0") {
         img.src = "images/icon_success.gif";
-    else
+        log.className = "log diag_success";
+    }
+    else {
         img.src = "images/icon_failed.gif";
+        log.className = "log diag_failed";
+    }
 
     log.innerHTML = response_text.substr(1).replace(/\n/g, "<br>\n");
 

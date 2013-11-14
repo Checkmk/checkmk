@@ -351,6 +351,7 @@ void TableStateHistory::answerQuery(Query *query)
     // Switch to last logfile (we have at least one)
     _it_logs = g_store->logCache()->logfiles()->end();
     --_it_logs;
+    _logfiles_t::iterator newest_log = _it_logs;
 
     // Now find the log where 'since' starts.
     while (_it_logs != g_store->logCache()->logfiles()->begin() && _it_logs->first >= _since) {
@@ -368,14 +369,18 @@ void TableStateHistory::answerQuery(Query *query)
     // Determine initial logentry
     LogEntry* entry;
     _entries = _it_logs->second->getEntriesFromQuery(query, g_store->logCache(), _since, _until, CLASSMASK_STATEHIST);
-    _it_entries = _entries->end();
-    // Check last entry. If it's younger than _since -> use this logfile too
-    if (--_it_entries != _entries->begin()) {
-        entry = _it_entries->second;
-        if (entry->_time >= _since) {
-            _it_entries = _entries->begin();
+    if (_it_logs != newest_log) {
+        _it_entries = _entries->end();
+        // Check last entry. If it's younger than _since -> use this logfile too
+        if (--_it_entries != _entries->begin()) {
+            entry = _it_entries->second;
+            if (entry->_time >= _since) {
+                _it_entries = _entries->begin();
+            }
         }
-    }
+    } else
+        _it_entries = _entries->begin();
+
 
     // From now on use getPreviousLogentry() / getNextLogentry()
     HostServiceKey key;

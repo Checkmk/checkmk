@@ -1,0 +1,13 @@
+Title: df: dynamic filesystem levels now reorder levels automatically
+Level: 1
+Component: checks
+Version: 1.2.3i7
+Date: 1384355214
+Class: feature
+
+When defining several step for dynamic filesystem levels, e.g. one for
+disk greater then 10GB, of for disks greater then 100GB and one for
+filesystems greater then 0B (the rest), then you had to make sure that
+the step for lagers disks would appear later. Otherwise they would be
+ignored. This is now fixed and Check_MK automatically chooses the correct
+step for a disk - regardless of the order.

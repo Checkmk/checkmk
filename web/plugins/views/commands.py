@@ -522,12 +522,13 @@ def save_stars(stars):
 
 
 def command_star(cmdtag, spec, row):
-    star = html.var("_star") and 1 or 0
-    if star:
-        title = _("<b>add to you favorites</b>")
-    else:
-        title = _("<b>remove from your favorites</b>")
-    return "STAR;%d;%s" % (star, spec), title
+    if html.var("_star") or html.var("_unstar"):
+        star = html.var("_star") and 1 or 0
+        if star:
+            title = _("<b>add to you favorites</b>")
+        else:
+            title = _("<b>remove from your favorites</b>")
+        return "STAR;%d;%s" % (star, spec), title
 
 
 def command_executor_star(command, site):

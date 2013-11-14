@@ -1933,7 +1933,7 @@ _snmpv3_basic_elements = [
           ],
           title = _("Authentication protocol")),
      TextAscii(title = _("Security name")),
-     TextAscii(title = _("Authentication password"))]
+     Password(title = _("Authentication password"))]
 
 register_rule(group,
     "snmp_communities",
@@ -1954,7 +1954,7 @@ register_rule(group,
                          ( "AES", _("AES") ),
                       ],
                       title = _("Privacy protocol")),
-                 TextAscii(title = _("Privacy pass phrase")),
+                 Password(title = _("Privacy pass phrase")),
                    ])],
         title = _("SNMP communities of monitored hosts"),
         help = _("By default Check_MK uses the community \"public\" to contact hosts via SNMP. This rule "

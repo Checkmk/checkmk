@@ -1,0 +1,11 @@
+Title: Added notification script for sending SMS via mobilant.com
+Level: 1
+Component: notifications
+Version: 1.2.3i7
+Date: 1384427169
+Class: feature
+
+in doc/treasures there is now a notify_mobilant.py. This can send
+SMS via Internet/HTTP using the commercial SMS sending service
+mobilant.com. You need to edit the script and enter your mobilant
+key. Please refer to instructions directly in the script.

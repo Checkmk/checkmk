@@ -9,5 +9,4 @@ When you save the service list of a host in WATO then sometimes
 some checks are not being saved and displayed as "missing" the
 next time you enter the services list.
 
-2013-11-12 16:34:43: changed state open -> done
-has already been fixed.
+2013-11-13 17:40:29: changed state open -> done

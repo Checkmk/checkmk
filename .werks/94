@@ -1,0 +1,9 @@
+Title: Hide SNMPv3 credentials in WATO
+Level: 1
+Component: wato
+Version: 1.2.3i7
+Date: 1384423412
+Class: fix
+
+The authentication password and the privacy pass phrase are now not longer shown as
+plaintext in WATO.

@@ -167,8 +167,8 @@ try:
         db = pymssql
         if opt_port == None:
             opt_port=1433
-        db_connection = db.connect(host=opt_hostname+":"+opt_port, \
-            database=opt_name, user=opt_user, passwd=opt_password )
+        db_connection = db.connect(host=opt_hostname+":"+str(opt_port), \
+            database=opt_name, user=opt_user, password=opt_password )
 
     elif opt_dbms == "oracle":
         sys.path.append('/usr/lib/python2.7/site-packages')
@@ -232,7 +232,7 @@ try:
     #if len(result) > 1:
     #    print "UNKNOWN - SQL statement/procedure returned more than one line"
     #    sys.exit(3)
-    if len(result) == 0:
+    if result == None or len(result) == 0:
         print "UNKNOWN - SQL statement/procedure returned no data"
         sys.exit(3)
 

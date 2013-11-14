@@ -201,7 +201,7 @@ def inventory_ps_common(invdata, info, handle_perfdata = False):
                 # It is allowed (1.1.4) that the pattern contains more subexpressions then the
                 # service description. In that case only the first subexpressions are used as
                 # item.
-                i_servicedesc = i_servicedesc % (matches[:num_perc_s])
+                i_servicedesc = i_servicedesc % tuple(matches[:num_perc_s])
 
                 # Problem here: We need to instantiate all subexpressions
                 # with their actual values of the found process.

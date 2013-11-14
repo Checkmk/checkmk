@@ -664,8 +664,8 @@ class html:
             self.write("</x>")
         self.form_vars.append(varname)
 
-    def html_head(self, title, javascripts = [], stylesheets = ["pages"]):
-        if not self.header_sent:
+    def html_head(self, title, javascripts = [], stylesheets = ["pages"], force=False):
+        if not self.header_sent or force:
             self.write(
                 u'''<!DOCTYPE HTML>
 <html><head>
@@ -906,9 +906,13 @@ class html:
         if varname in self.listvars:
             del self.listvars[varname]
 
-    def del_all_vars(self):
-        self.vars = {}
-        self.listvars = {}
+    def del_all_vars(self, prefix = None):
+        if not prefix:
+            self.vars = {}
+            self.listvars = {}
+        else:
+            self.vars = dict([(k,v) for (k,v) in self.vars.iteritems() if not k.startswith(prefix)])
+            self.listvars = dict([(k,v) for (k,v) in self.listvars.iteritems() if not k.startswith(prefix)])
 
     def javascript(self, code):
         self.write("<script language=\"javascript\">\n%s\n</script>\n" % code)
@@ -1029,11 +1033,12 @@ class html:
             self.lowlevel_write("<pre>%s</pre>\n" % pprint.pformat(element))
 
 
-    def debug_vars(self):
+    def debug_vars(self, prefix = None):
         self.lowlevel_write('<table onmouseover="this.style.display=\'none\';" class=debug_vars>')
         self.lowlevel_write("<tr><th colspan=2>POST / GET Variables</th></tr>")
         for name, value in sorted(self.vars.items()):
-            self.write("<tr><td class=left>%s</td><td class=right>%s</td></tr>\n" % (name, value))
+            if not prefix or name.startswith(prefix):
+                self.write("<tr><td class=left>%s</td><td class=right>%s</td></tr>\n" % (name, value))
         self.write("</ul>")
 
     def var(self, varname, deflt = None):

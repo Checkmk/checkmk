@@ -37,6 +37,10 @@ examples:
     "maxage_oldest": (100, 120),
     "minage_newest": (10, 20),
     "maxage_newest": (30, 40),
+    "minsize_largest": (2048, 1024),
+    "maxsize_largest": (2048, 1024),
+    "minsize_largest": (10240, 20480),
+    "maxsize_largest": (10240, 20480),
    }, ALL_HOSTS, ["File group"]),
  ]
 
@@ -73,6 +77,18 @@ parameters (dict): This check uses dictionary based
 
  {"maxage_newest"}: Pair of integers for the maximum file
  age in seconds for the newest file found with file group pattern.
+
+ {"minsize_smallest"}: Pair of integers for the minimum file
+ size in bytes for the smallest file found with the file group pattern.
+
+ {"maxsize_smallest"}: Pair of integers for the maximum file
+ size in bytes for the smallest file found with the file group pattern.
+
+ {"minsize_largest"}: Pair of integers for the minimum file
+ size in bytes for the largest file found with the file group pattern.
+
+ {"maxsize_largest"}: Pair of integers for the maximum file
+ size in bytes for the largest file found with the file group pattern.
 
  {"minsize"}: The minimum size for the aggregation of all files in bytes (pair of
  integers).

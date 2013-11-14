@@ -1486,10 +1486,13 @@ def get_bytes_human_readable(b, base=1024.0, bytefrac=True, unit="B"):
         return '%s%.0f%s' % (prefix, b, unit)
 
 # Similar to get_bytes_human_readable, but optimized for file
-# sizes
+# sizes. Really only use this for files. We assume that for smaller
+# files one wants to compare the exact bytes of a file, so the
+# threshold to show the value as MB/GB is higher as the one of
+# get_bytes_human_readable().
 def get_filesize_human_readable(size):
     if size < 4 * 1024 * 1024:
-        return str(size)
+        return "%dB" % int(size)
     elif size < 4 * 1024 * 1024 * 1024:
         return "%.2fMB" % (float(size) / (1024 * 1024))
     else:

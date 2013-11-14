@@ -1,0 +1,12 @@
+Title: ps: Remove exceeding [ and ] in service description when using process inventory
+Level: 1
+Component: checks
+Version: 1.2.3i7
+Date: 1384340695
+Class: fix
+
+When using the process inventory with regular expressions that contain
+groups, like <tt>"/sbin/getty .* (tty.)"</tt>, the matched group is inserted as
+a replacement for <tt>%s</tt> in the service description. The bug resulted
+in additional brackets. It was <tt>"[tty2]"</tt> instead of just <tt>"tty2"</tt>.
+This has been fixed.

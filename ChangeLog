@@ -59,6 +59,7 @@
     Livestatus:
     * 0067 livedump: new option to mark the mode at the beginning of the dump and documentation fixes...
     * 0023 FIX: table statehist: code cleanup / minor performance improvements
+    * 0034 FIX: table statehist: no more missing entries if only one logfile exists
 
 
 1.2.3i6:

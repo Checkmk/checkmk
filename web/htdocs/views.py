@@ -1464,7 +1464,7 @@ def render_view(view, rows, datasource, group_painters, painters,
                        # Take into account: permissions, display_options
                        row_count > 0 and command_form,
                        # Take into account: layout capabilities
-                       can_display_checkboxes, show_checkboxes,
+                       can_display_checkboxes and not view.get("force_checkboxes"), show_checkboxes,
                        # Show link to availability. This exists only for plain hosts
                        # and services table. The grouping tables have columns that statehist
                        # is missing. That way some of the filters might fail.
@@ -1791,9 +1791,10 @@ def show_context_links(thisview, active_filters, show_filters, display_options,
         togglebutton_off("commands", "commands", hidden = enable_commands)
 
         selection_enabled = enable_commands and enable_checkboxes
-        toggler("checkbox", "checkbox", _("Enable/Disable checkboxes for selecting rows for commands"),
-                "location.href='%s';" % html.makeuri([('show_checkboxes', show_checkboxes and '0' or '1')]),
-                show_checkboxes, hidden = not selection_enabled)
+        if not thisview.get("force_checkboxes"):
+            toggler("checkbox", "checkbox", _("Enable/Disable checkboxes for selecting rows for commands"),
+                    "location.href='%s';" % html.makeuri([('show_checkboxes', show_checkboxes and '0' or '1')]),
+                    show_checkboxes, hidden = True) # not selection_enabled)
         togglebutton_off("checkbox", "checkbox", hidden = selection_enabled)
         html.javascript('g_selection_enabled = %s;' % (selection_enabled and 'true' or 'false'))
 

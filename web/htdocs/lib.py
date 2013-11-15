@@ -256,7 +256,8 @@ def format_plugin_output(output, row = None):
         output = output[:a] + "running on " + h + output[e+1:]
 
     output = re.sub("http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
-                     lambda p: '<a href="%(group)s">%(group)s</a>' % { "group": p.group(0) }, output)
+                     lambda p: '<a href="%s">%s</a>' %
+                        (p.group(0), len(p.group(0)) > 40 and p.group(0)[:40] + "..." or p.group(0)), output)
 
     return output
 

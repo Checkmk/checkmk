@@ -24,13 +24,22 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import datetime, time
+
+veeam_client_default_levels = { "age": ( 108000, 172800 ) } # 30h/2d
+
 state = { "Success": 0, "Failed": 2, "Warning":1, "InProgress":0, "Pending":0 }
 
 def inventory_veeam_client(info):
     if info[0][0] == "Status":
-        return [ (None, None) ]
+        return [ (None, veeam_client_default_levels) ]
 
 def check_veeam_client(item, params, info):
+    if params.get("age"):
+        warn, crit = params['age']
+    else:
+        warn, crit = veeam_default_levels.get("age")
+
     if not info[0][0] == "Status":
         return 3, "No status data found in first line of agent data"
     result = ""
@@ -57,18 +66,39 @@ def check_veeam_client(item, params, info):
         elif line[0] == "TotalSizeByte":
             totalsize = saveint(line[1])
             perfdata.append(("totalsize", totalsize, 0, 0, 0))
-        else:
-            if (result == "InProgress" or result == "Pending") and line[0] == "StopTime":
+        elif line[0] == "StopTime":
+            if (result == "InProgress" or result == "Pending"):
                 infotxt += line[0] + ": - "
             else:
-                infotxt += line[0] + ":" + line[1] + " "
+                now = datetime.datetime.now()
+                date, time = line[1].split(" ")
+                day, month, year = map(int, date.split("."))
+                hour, minute, second = map(int, time.split(":"))
+                stoptime = datetime.datetime( year, month, day, hour, minute, second)
+                warndiff = datetime.timedelta(seconds=warn)
+                critdiff = datetime.timedelta(seconds=crit)
 
-    return (state[result], infotxt, perfdata)
+                if critdiff < now - stoptime:
+                    stopstate = 2
+                    stopsym = "( >%s ago)(!!)" % get_age_human_readable(crit)
+                elif warndiff < now - stoptime:
+                    stopstate = 1
+                    stopsym = "( >%s ago)(!)" % get_age_human_readable(warn)
+                else:
+                    stopstate = 0
+                    stopsym = ""
+            infotxt += line[0] + ":" + line[1] + stopsym + " "
+        else:
+            infotxt += line[0] + ":" + line[1] + " "
+
+    status = max(state[result], stopstate)
+    return (status, infotxt, perfdata)
 
 check_info["veeam_client"] = {
     'check_function':          check_veeam_client,
     'inventory_function':      inventory_veeam_client,
     'service_description':     'VEEAM Client',
+    'group':                   'veeam_backup',
     'has_perfdata':            True,
 }
 

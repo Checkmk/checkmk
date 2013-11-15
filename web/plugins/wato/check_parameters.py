@@ -2410,6 +2410,26 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "veeam_backup",
+    _("Veeam Time since last Backup"),
+    Dictionary(
+        elements = [
+        ("age",
+          Tuple(
+            title = _("Time since end of last backup"),
+            elements = [
+                Age(title = _("Warning if older than"), default_value = 108000),
+                Age(title = _("Critical if older than"), default_value = 172800)
+            ]
+          )
+        )]
+    ),
+    None,
+    None
+)
+
+register_check_parameters(
+    subgroup_applications,
     "mssql_counters_locks",
     _("MSSQL Locks"),
     Dictionary(

@@ -40,6 +40,7 @@
     * 0205 FIX: Allowing star chars in variable names to fix role/permission editing...
     * 0207 FIX: Explicit communities were not written to config files in all cases
     * 0094 FIX: Hidding snmpv3 credentials in wato...
+    * 0095 FIX: Fixed problem with portnumber in Wato Distributed Monitoring dialog
 
     Notifications:
     * 0032 FIX: mail notification plugin: replace windows forbidden characters in mail images

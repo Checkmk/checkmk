@@ -561,7 +561,7 @@ def main_resolve(args):
 def main_delete(args):
     for ids in args:
         if 0 == os.system("git rm %s" % ids):
-            sys.stdout.write("Delete werk %s (%s)\n" % (ids, g_werks[int(ids)]["descriptions"]))
+            sys.stdout.write("Deleted werk %s (%s).\n" % (ids, g_werks[int(ids)]["description"]))
 
 def grep(line, kw, n):
     lc = kw.lower()

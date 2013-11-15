@@ -1,0 +1,8 @@
+Title: Fixed loading of sites with configured tcp socket in WATO
+Level: 1
+Component: wato
+Version: 1.2.3i7
+Date: 1384468641
+Class: fix
+
+

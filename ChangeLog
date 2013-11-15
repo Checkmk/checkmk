@@ -37,6 +37,7 @@
 
     WATO:
     * 0053 New rule for configuring the display_name of a service...
+    * 0008 Test - Please ignore...
     * 0048 FIX: Fixed locking issue on host diagnose page
     * 0033 FIX: WATO forms: incorrect handling of checkbox state
     * 0205 FIX: Allowing star chars in variable names to fix role/permission editing...
@@ -64,9 +65,6 @@
     * 0067 livedump: new option to mark the mode at the beginning of the dump and documentation fixes...
     * 0023 FIX: table statehist: code cleanup / minor performance improvements
     * 0034 FIX: table statehist: no more missing entries if only one logfile exists
-
-    Livestatus-Proxy:
-    * 0007 TEST - This is a test...
 
 
 1.2.3i6:

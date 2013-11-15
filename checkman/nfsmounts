@@ -5,7 +5,7 @@ license: GPL
 distribution: check_mk
 description:
  This check probes the availability of NFS mounts. The Linux agent sends the
- status of all NFS mounts, if the command line utility {maxwait} is available
+ status of all NFS mounts, if the command line utility {waitmax} is available
  (it is is used to avoid hanging if the NFS server is not responding). The
  probe is done by trying a {stat -f} (system call {statfs(2)}) on the mount
  point. If that lasts longer then 2 seconds, then the server is considered

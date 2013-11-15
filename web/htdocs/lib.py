@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import grp, pprint, os, errno, gettext, marshal, fcntl, __builtin__
+import grp, pprint, os, errno, gettext, marshal, re, fcntl, __builtin__
 
 #Workarround when the file is included outsite multisite
 try:
@@ -254,6 +254,10 @@ def format_plugin_output(output, row = None):
         hosts = output[a+12:e].replace(" ","").split(",")
         css, h = paint_host_list(row["site"], hosts)
         output = output[:a] + "running on " + h + output[e+1:]
+
+    output = re.sub("http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
+                     lambda p: '<a href="%s">%s</a>' %
+                        (p.group(0), len(p.group(0)) > 40 and p.group(0)[:40] + "..." or p.group(0)), output)
 
     return output
 

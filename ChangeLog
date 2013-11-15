@@ -13,6 +13,7 @@
     * 0208 fileinfo.groups: Added minimum/maximum file size parameters...
     * 0093 check_http: Default service description prefix can be avoided...
     * 0004 df: dynamic filesystem levels now reorder levels automatically...
+    * 0069 veeam_client: limits for time since last backup introduced
     * 0024 FIX: cisco_wlc: removed configuration parameter ap_model
     * 0065 FIX: veeam_client: check behaviour improved when backup is in progress
     * 0066 FIX: veeam_jobs: check behaviour improved when backup is in progress
@@ -32,6 +33,8 @@
     * 0204 FIX: Reduced I/O on logins with access time recording or failed login counts...
     * 0206 FIX: Fixed logwatch permission check when using liveproxy...
     * 0210 FIX: LDAP: Fixed problem syncing contactgroups of a user with umlauts in CN
+    * 0035 FIX: display http[s] links in plugin output
+    * 0006 FIX: Checkboxes for hosts/services were missing on modified views...
 
     WATO:
     * 0053 New rule for configuring the display_name of a service...
@@ -39,10 +42,12 @@
     * 0033 FIX: WATO forms: incorrect handling of checkbox state
     * 0205 FIX: Allowing star chars in variable names to fix role/permission editing...
     * 0207 FIX: Explicit communities were not written to config files in all cases
-    * 0094 FIX: Hidding snmpv3 credentials in wato...
     * 0095 FIX: Fixed problem with portnumber in Wato Distributed Monitoring dialog
+    * 0094 FIX: Hide SNMPv3 credentials in WATO...
+    * 0212 FIX: Fixed loading of sites with configured tcp socket in WATO
 
     Notifications:
+    * 0005 Added notification script for sending SMS via mobilant.com...
     * 0032 FIX: mail notification plugin: replace windows forbidden characters in mail images
 
     Reporting & Availability:
@@ -55,10 +60,12 @@
 
     Event Console:
     * 0026 FIX: snmpd_mkevent.py: fixed crash on startup
+    * 0036 FIX: fixed bug in multisite command execution...
 
     Livestatus:
     * 0067 livedump: new option to mark the mode at the beginning of the dump and documentation fixes...
     * 0023 FIX: table statehist: code cleanup / minor performance improvements
+    * 0034 FIX: table statehist: no more missing entries if only one logfile exists
 
 
 1.2.3i6:

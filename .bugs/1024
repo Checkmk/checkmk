@@ -1,0 +1,15 @@
+Title: notifications_enabled rules do generate integers / bools
+Component: wato
+State: open
+Date: 2013-11-13 12:19:02
+Targetversion: 1.2.3i6
+Class: cleanup
+
+The values are currently strings, "0" or "1". It would be much better
+to have integers being generated.
+
+Affects at least these rules:
+extra_host_conf:flap_detection_enabled
+extra_service_conf:flap_detection_enabled
+extra_host_conf:notifications_enabled
+extra_service_conf:notifications_enabled

@@ -17,11 +17,29 @@ description:
  or {InProgress}. It is {WARN} if the status is {Warning}. It is {CRIT}
  if the status of the backup is {Failed}.
 
-inventory:
- A check will be created for all hosts known to check_mk and reported
- by the Veeam agent plugin.
+ In addition {WARN} and {CRIT} levels can be set for the time since the end
+ of the last backup.
+
+examples:
+ # sets the warning and critical levels to 5 and 10 days, respectively
+  veeam_client_default_levels = { "age": ( 432000, 864000 ) }
 
 perfdata:
  Total Size, duration and the average speed of the backup will be recorded 
  as performance data. Duration will not be recorded if the status of the backup
  is {Pending} or {InProgress}.
+
+inventory:
+ A check will be created for all hosts known to check_mk and reported
+ by the Veeam agent plugin.
+
+[parameters]
+parameters(tuple): parameters is a dictionary with one value
+
+  {"age"}: a tuple of warning and critical limits for the time since last
+  backup in seconds
+
+
+[configuration]
+veeam_client_default_levels (dict): This variable is preset to 
+{{ "age": ( 108000, 172800 ) } }

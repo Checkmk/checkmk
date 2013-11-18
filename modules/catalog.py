@@ -6,6 +6,7 @@ manpage_catalog_titles = {
             "bintec"     : "Bintec",
             "cbl"        : "Communication by light (CBL)",
             "cisco"      : "Cisco Systems (also IronPort)",
+            "casa"       : "Casa",
             "decru"      : "Decru",
             "dell"       : "DELL",
             "f5"         : "F5 Networks",

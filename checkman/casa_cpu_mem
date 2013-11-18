@@ -1,0 +1,23 @@
+title: CASA module: CPU memory
+agents: snmp
+catalog: hw/network/casa
+license: GPL
+distribution: check_mk
+description:
+ This check shows the current and total cpu memory of module in a casa device
+
+item:
+ The description of the cpu module as provided by the device.
+
+perfdata:
+ One value is returned: The amount of memory used (in Bytes),
+ together with warn and crit levels and maximum value
+
+[parameters]
+parameters (dict): with the element
+{"levels"}: (float/int, float/int): levels of memory usage for {WARN} and {CRIT},
+            whereas {int} are treated as absolute and {float} as percentage values
+
+inventory:
+ One check for each cpu module is created by the inventory.
+

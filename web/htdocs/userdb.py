@@ -664,12 +664,12 @@ def hook_sync(connector_id = None, add_to_changelog = False, only_username = Non
                 if config.debug:
                     import traceback
                     html.show_error(
-                        "<h3>" + _("Error executing sync hook") + "</h3>"
+                        "<h3>" + _("Error during sync") + "</h3>"
                         "<pre>%s</pre>" % (traceback.format_exc())
                     )
                 else:
                     html.show_error(
-                        "<h3>" + _("Error executing sync hook") + "</h3>"
+                        "<h3>" + _("Error during sync") + "</h3>"
                         "<pre>%s</pre>" % (e)
                     )
                 no_errors = False
@@ -678,7 +678,7 @@ def hook_sync(connector_id = None, add_to_changelog = False, only_username = Non
                     raise
                 import traceback
                 html.show_error(
-                    "<h3>" + _("Error executing sync hook") + "</h3>"
+                    "<h3>" + _("Error during sync") + "</h3>"
                     "<pre>%s</pre>" % (traceback.format_exc())
                 )
                 no_errors = False
@@ -697,7 +697,7 @@ def hook_save(users):
             if config.debug:
                 import traceback
                 html.show_error(
-                    "<h3>" + _("Error executing save hook") + "</h3>"
+                    "<h3>" + _("Error during saving") + "</h3>"
                     "<pre>%s</pre>" % (traceback.format_exc())
                 )
             else:

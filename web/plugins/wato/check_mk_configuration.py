@@ -530,7 +530,13 @@ register_configvar(group,
             )),
             ("use_ssl", FixedValue(
                 title  = _("Use SSL"),
-                help   = _("Connect to the LDAP server with a SSL encrypted connection."),
+                help   = _("Connect to the LDAP server with a SSL encrypted connection. You might need "
+                           "to configure the OpenLDAP installation on your monitoring server to accept "
+                           "the certificates of the LDAP server. This is normally done via system wide "
+                           "configuration of the CA certificate which signed the certificate of the LDAP "
+                           "server. Please refer to the <a target=\"_blank\" "
+                           "href=\"http://mathias-kettner.de/checkmk_multisite_ldap_integration.html\">"
+                           "documentation</a> for details."),
                 value  = True,
                 totext = _("Encrypt the network connection using SSL."),
             )),

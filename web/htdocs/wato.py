@@ -5847,10 +5847,15 @@ def mode_ldap_config(phase):
 
     html.write('<h2>' + _('Diagnostics') + '</h2>')
     if not html.var('_test'):
-        html.message(_('You can verify the single parts of your ldap configuration using this '
+        html.message('<p>%s</p><p>%s</p>' %
+                    (_('You can verify the single parts of your ldap configuration using this '
                        'dialog. Simply make your configuration in the form on the left side and '
                        'hit the "Save & Test" button to execute the tests. After '
-                       'the page reload, you should see the results of the test here.'))
+                       'the page reload, you should see the results of the test here.'),
+                     _('If you need help during configuration or experience problems, please refer '
+                       'to the Multisite <a target="_blank" '
+                       'href="http://mathias-kettner.de/checkmk_multisite_ldap_integration.html">'
+                       'LDAP Documentation</a>.')))
     else:
         def test_connect(address):
             conn, msg = userdb.ldap_connect_server(address)
@@ -8742,8 +8747,11 @@ def mode_users(phase):
             elif c == False:
                 return ""
         elif html.var('_sync'):
-            if userdb.hook_sync(add_to_changelog = True):
-                return None, _('The user synchronization completed successfully.')
+            try:
+                if userdb.hook_sync(add_to_changelog = True, raise_exc = True):
+                    return None, _('The user synchronization completed successfully.')
+            except Exception, e:
+                raise MKUserError(None, str(e))
 
         return None
 

@@ -949,9 +949,21 @@ def ldap_sync(add_to_changelog, only_username):
             wato.log_pending(wato.SYNCRESTART, None, "edit-users",
                              _("LDAP Connector: Created user %s" % user_id))
         else:
+            details = []
+            if added:
+                details.append(_('Added: %s') % ', '.join(added))
+            if removed:
+                details.append(_('Removed: %s') % ', '.join(removed))
+            if changed:
+                if 'ldap_pw_last_changed' in changed and 'serial' in changed:
+                    details.append(_('Password Changed'))
+                    changed.remove('ldap_pw_last_changed')
+                    changed.remove('serial')
+                if changed:
+                    details.append(('Changed: %s') % ', '.join(changed))
+
             wato.log_pending(wato.SYNCRESTART, None, "edit-users",
-                 _("LDAP Connector: Modified user %s (Added: %s, Removed: %s, Changed: %s)" %
-                    (user_id, ', '.join(added), ', '.join(removed), ', '.join(changed))))
+                 _("LDAP Connector: Modified user %s (%s)") % (user_id, ', '.join(details)))
 
     duration = time.time() - start_time
     ldap_log('SYNC FINISHED - Duration: %0.3f sec' % duration)

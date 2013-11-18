@@ -293,6 +293,8 @@ def process_logfile(logfile, patterns):
             line = line.replace("\1", "\nCONT:")
         if level == "I":
             level = "."
+        if opt_nocontext and level == '.':
+            continue
         outputtxt += "%s%s %s%s\n" % (color, level, line[:-1], tty_normal)
 
     new_offset = os.lseek(fl, 0, 1) # os.SEEK_CUR not available in Python 2.4
@@ -328,6 +330,7 @@ for filenames, patterns in config:
     opt_regex = None
     opt_overflow = 'C'
     opt_overflow_level = 2
+    opt_nocontext = False
     try:
         options = [ o.split('=', 1) for o in filenames if '=' in o ]
         for key, value in options:
@@ -344,6 +347,8 @@ for filenames, patterns in config:
                 opt_regex = re.compile(value)
             elif key == 'iregex':
                 opt_regex = re.compile(value, re.I)
+            elif key == 'nocontext':
+                opt_nocontext = True
             else:
                 raise Exception("Invalid option %s" % key)
     except Exception, e:

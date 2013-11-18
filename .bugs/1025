@@ -1,0 +1,11 @@
+Title: HTML tags are interpreted on Global Settings page
+Component: wato
+State: open
+Date: 2013-11-14 23:58:41
+Targetversion: 1.2.3i6
+Class: bug
+
+Mail template, parameters in mail command or
+page title might contain < or > chars which are interpreted 
+as html tags on the global settings page. These tags should
+really be escaped somehow.

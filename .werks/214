@@ -1,0 +1,11 @@
+Title: Logwatch: context lines can now be disabled using nocontext=1
+Level: 1
+Component: checks
+Version: 1.2.3i7
+Date: 1384783276
+Class: feature
+
+Each line which comes together with a line matching a logwatch pattern
+is proceeded to the monitoring host as context line. This can now be
+disabled using the linux agent plugin by adding the option "nocontext=1"
+to the header line of a logfile configuration in logwatch.cfg

@@ -1,0 +1,25 @@
+title: CASA module: CPU temperature
+agents: snmp
+catalog: hw/network/casa
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the cpu temperature of a casa module.
+
+item:
+ The description of the cpu as provided by the device.
+
+perfdata:
+ The actual temperature in degree, together with it's warn and crit levels
+
+inventory:
+ One check for each cpu is created by the inventory.
+
+[parameters]
+parameters (tuple): A pair of numbers for warning and critical level
+
+ warning (int): The temperature that triggers a {WARN} state
+
+ critical (int): The temperature that triggers a {CRIT} state
+
+

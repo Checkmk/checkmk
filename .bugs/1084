@@ -1,0 +1,9 @@
+Title: cmk -L should also list active checks
+Component: checks
+State: open
+Date: 2013-11-15 08:23:05
+Targetversion: future
+Class: nastiness
+
+cmk -L should not only list Check_MK based checks but also active
+checks that can be configured via Check_MK, like check_http.

@@ -1129,6 +1129,8 @@ class html:
     def varencode(self, varname):
         if varname == None:
             return "None"
+        if type(varname) == int:
+            return varname
 
         ret = ""
         for c in varname:

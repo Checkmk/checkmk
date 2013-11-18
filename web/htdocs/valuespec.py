@@ -239,7 +239,7 @@ class Integer(ValueSpec):
             style = "text-align: right;"
         else:
             style = ""
-        html.number_input(varprefix, self._display_format % value, size = self._size, style = style)
+        html.number_input(varprefix, self._display_format % saveint(value), size = self._size, style = style)
         if self._unit:
             html.write("&nbsp;")
             html.write(self._unit)

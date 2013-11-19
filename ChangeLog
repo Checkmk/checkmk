@@ -48,8 +48,8 @@
     * 0094 FIX: Hide SNMPv3 credentials in WATO...
     * 0212 FIX: Fixed loading of sites with configured tcp socket in WATO
     * 0095 FIX: Fixed problem with portnumber in Wato Distributed Monitoring dialog
-    * 0096 FIX: Fixed exception in wato
     * 0213 FIX: LDAP: Various small improvements for handling the LDAP user connector
+    * 0039 FIX: Encoding bug on rendering global settings...
 
     Notifications:
     * 0005 Added notification script for sending SMS via mobilant.com...

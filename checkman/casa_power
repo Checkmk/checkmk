@@ -1,0 +1,14 @@
+title: CASA: Power module status
+agents: snmp
+catalog: hw/network/casa
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the power module state of a casa device.
+
+item:
+ The index of the power module as provided by the device.
+
+inventory:
+ One check for each power module is created by the inventory.
+

@@ -1,0 +1,64 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def inventory_casa_fan(info):
+    inventory = []
+    for nr, speed in info[0]:
+        inventory.append( (nr, None) )
+    return inventory
+
+def check_casa_fan(item, no_params, info):
+    for idx, (nr, speed) in enumerate(info[0]):
+        if item == nr:
+            fan_status = info[1][idx][1]
+            if fan_status == "1":
+                return (0, "%s RPM" % speed)
+            elif fan_status == "3":
+                return (1, "%s RPM, running over threshold (!)" % speed)
+            elif fan_status == "2":
+                return (1, "%s RPM, running under threshold (!)" % speed)
+            elif fan_status == "0":
+                return (3, "%s RPM, unknown fan status (!)" % speed)
+            elif fan_status == "4":
+                return (2, "FAN Failure (!!)")
+    else:
+        return (3, "Fan %s not found in snmp output" % item)
+
+
+check_info["casa_fan"] = {
+    "check_function"        : check_casa_fan,
+    "inventory_function"    : inventory_casa_fan,
+    "service_description"   : "Fan %s",
+    "has_perfdata"          : False,
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in 
+                                 [".1.3.6.1.4.1.20858.2.400", ".1.3.6.1.4.1.20858.2.50"],
+    "snmp_info"             : [
+               ( ".1.3.6.1.4.1.20858.10.31.1.1.1.2", [ OID_END, '' ] ), # FAN Speed
+               ( ".1.3.6.1.4.1.20858.10.33.1.4.1.4", [ OID_END, '' ] ), # FAN State
+                              ]
+}
+

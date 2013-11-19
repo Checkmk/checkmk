@@ -2588,6 +2588,4 @@ class FileUpload(ValueSpec):
         html.upload_file(varprefix)
 
     def from_html_vars(self, varprefix):
-        x = html.uploaded_file(varprefix)
-        html.debug(x)
-        return x
+        return html.uploaded_file(varprefix)

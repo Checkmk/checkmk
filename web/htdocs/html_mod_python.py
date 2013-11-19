@@ -41,8 +41,9 @@ class html_mod_python(htmllib.html):
         self.cookies = Cookie.get_cookies(self.req)
 
     def read_get_vars(self):
-        self.vars = {}
+        self.vars     = {}
         self.listvars = {} # for variables with more than one occurrance
+        self.uploads  = {}
         fields = util.FieldStorage(self.req, keep_blank_values = 1)
         for field in fields.list:
             varname = field.name
@@ -64,6 +65,12 @@ class html_mod_python(htmllib.html):
             # URL simpler.
             self.vars[varname] = value
 
+            # put uploaded file infos into separate storage
+            if field.filename is not None:
+                self.uploads[varname] = (field.filename, field.type, field.value)
+
+    def uploaded_file(self, varname, default = None):
+        return self.uploads.get(varname, default)
 
     def lowlevel_write(self, text):
         if self.io_error:

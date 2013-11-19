@@ -1241,4 +1241,5 @@ class html:
         self.load_tree_states()
         self.treestates[tree] = val
 
-
+    def uploaded_file(self, varname, default = None):
+        raise MKGeneralException("uploaded_file not implemented")

@@ -2569,4 +2569,25 @@ class PasswordSpec(TextAscii):
             html.icon_button("#", _(u"Randomize password"), "random",
                 onclick="vs_passwordspec_randomize(this);")
 
+class FileUpload(ValueSpec):
+    def __init__(self, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+        self._allow_empty = kwargs.get('allow_empty', True)
 
+    def canonical_value(self):
+        if self._allow_empty:
+            return None
+        else:
+            return ''
+
+    def validate_value(self, value, varprefix):
+        if not self._allow_empty and value == None:
+            raise MKUserError(varprefix, _('Please select a file.'))
+
+    def render_input(self, varprefix, value):
+        html.upload_file(varprefix)
+
+    def from_html_vars(self, varprefix):
+        x = html.uploaded_file(varprefix)
+        html.debug(x)
+        return x

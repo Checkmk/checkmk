@@ -1,9 +1,12 @@
 Title: Turnoff context in logwatch
 Component: checks
-State: open
+Class: feature
+State: done
 Date: 2012-08-06 16:02:17
 Targetversion: future
-Class: feature
 
 It should be possible to turn the saving of context logentries from logwatch off.
 In some cases are there hunderts of not needed entries and the 500kb limit are full with only one error line
+
+2013-11-19 13:53:52: changed state open -> done
+Has been implemented as option for windows and linux agent.

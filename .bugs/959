@@ -25,3 +25,6 @@ die wir untersuchen, beschränken. Wenn man z.B. sagt max.
 5 Mio Zeilen festlegt, dann sind dass etwa 500 MB Dateigröße.
 Das ganze könnte konfigurierbar sein, analog zu den schon
 vorhandenen Caching-Optionen.
+Wichtig hierbei ist, dem Nutzer den Fehler darzustellen und eventuell
+auch einen Eintrag im Logfile zu erzeugen. Der Nutzer sollte dann darauf
+hingewiesen werden seine Logging-/Rotations-Einstellungen zu aendern.

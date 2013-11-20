@@ -1,0 +1,9 @@
+Title: Supporting float values as SNMP timeout value now
+Level: 1
+Component: wato
+Version: 1.2.3i7
+Date: 1384938098
+Class: feature
+
+In some cases it is useful to define a more specific value than
+full seconds. So WATO accepts float values for the timeout now.

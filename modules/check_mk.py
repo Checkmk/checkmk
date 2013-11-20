@@ -745,7 +745,7 @@ def snmp_base_command(what, hostname):
     # Configuration of timing and retries
     settings = snmp_timing_of(hostname)
     if "timeout" in settings:
-        options += " -t %d" % settings["timeout"]
+        options += " -t %0.2f" % settings["timeout"]
     if "retries" in settings:
         options += " -r %d" % settings["retries"]
 

@@ -2027,13 +2027,14 @@ register_rule(group,
                  "for the SNMP access to devices."),
         elements = [
             ( "timeout",
-              Integer(
+              Float(
                   title = _("Timeout between retries"),
                   help = _("A request is sent to the SNMP daemon, than wait up to this "
                            " number of seconds until retrying."),
                   default_value = 1,
-                  minvalue = 1,
+                  minvalue = 0.5,
                   maxvalue = 60,
+                  allow_int = True,
                   unit = _("sec"),
               ),
             ),

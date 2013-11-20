@@ -1,0 +1,12 @@
+Title: Added option to make HTML escape in plugin outputs configurable
+Level: 1
+Component: multisite
+Version: 1.2.3i7
+Date: 1384935234
+Class: feature
+
+It is now possible to disable the HTML escaping in plugin outputs and
+log messages. This is useful if one really wants to use HTML codes
+provided by check plugins or log messages. Disabling the escaping
+makes it possible to inject HTML / script code into multisite, so
+be careful.

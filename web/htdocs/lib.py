@@ -245,7 +245,11 @@ def paint_host_list(site, hosts):
     return "", h
 
 def format_plugin_output(output, row = None):
-    output = html.attrencode(output).replace("(!)", warn_marker) \
+    import config
+    if config.escape_plugin_output:
+        output = html.attrencode(output)
+
+    output = output.replace("(!)", warn_marker) \
               .replace("(!!)", crit_marker) \
               .replace("(?)", unknown_marker)
     if row and "[running on" in output:
@@ -255,9 +259,10 @@ def format_plugin_output(output, row = None):
         css, h = paint_host_list(row["site"], hosts)
         output = output[:a] + "running on " + h + output[e+1:]
 
-    output = re.sub("http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
-                     lambda p: '<a href="%s">%s</a>' %
-                        (p.group(0), len(p.group(0)) > 40 and p.group(0)[:40] + "..." or p.group(0)), output)
+    if config.escape_plugin_output:
+        output = re.sub("http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
+                         lambda p: '<a href="%s">%s</a>' %
+                            (p.group(0), len(p.group(0)) > 40 and p.group(0)[:40] + "..." or p.group(0)), output)
 
     return output
 

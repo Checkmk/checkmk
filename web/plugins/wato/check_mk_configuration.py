@@ -216,6 +216,19 @@ register_configvar(group,
     domain = "multisite")
 
 register_configvar(group,
+    "escape_plugin_output",
+    Checkbox(title = _("Escape HTML codes in plugin output"),
+             label = _("Prevent loading HTML from plugin output or log messages"),
+             help = _("By default, for security reasons, Multisite does not interpret any HTML "
+                      "code received from external sources, like plugin output or log messages. "
+                      "If you are really sure what you are doing and need to have HTML codes, like "
+                      "links rendered, disable this option. Be aware, you might open the way "
+                      "for several injection attacks."),
+            default_value = True),
+    domain = "multisite")
+
+
+register_configvar(group,
     "multisite_draw_ruleicon",
     Checkbox(title = _("Show icon for WATO parameter editor"),
              label = _("Show WATO icon"),

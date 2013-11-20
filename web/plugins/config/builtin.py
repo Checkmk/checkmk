@@ -202,6 +202,9 @@ pagetitle_date_format = None
 # appear in a stale state
 staleness_threshold = 1.5
 
+# Escape HTML in plugin output / log messages
+escape_plugin_output = True
+
 #     _   _               ____  ____
 #    | | | |___  ___ _ __|  _ \| __ )
 #    | | | / __|/ _ \ '__| | | |  _ \

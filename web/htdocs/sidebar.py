@@ -152,7 +152,7 @@ def sidebar_head():
     html.write('<a title="%s" target="main" href="%s">'
                '<div id="side_version">%s</div>'
                '</a>'
-               '</div>\n' % (_("Go to main overview"), config.start_url, defaults.check_mk_version))
+               '</div>\n' % (_("Go to main overview"), html.attrencode(config.start_url), defaults.check_mk_version))
 
 def render_messages():
     for msg in notify.get_gui_messages():

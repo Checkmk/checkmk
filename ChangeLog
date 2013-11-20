@@ -56,6 +56,7 @@
     * 0213 FIX: LDAP: Various small improvements for handling the LDAP user connector
     * 0039 FIX: Encoding bug on rendering global settings...
     * 0219 FIX: Improved output of long contact group names in WATO folders
+    * 0220 FIX: Added HTML escaping to several global settings attributes
 
     Notifications:
     * 0005 Added notification script for sending SMS via mobilant.com...

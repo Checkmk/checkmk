@@ -671,14 +671,14 @@ class html:
 <html><head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />\n''')
             self.write('<title>')
-            self.write(title)
+            self.write(self.attrencode(title))
             self.write('</title>\n')
 
             # If the variable _link_target is set, then all links in this page
             # should be targetted to the HTML frame named by _link_target. This
             # is e.g. useful in the dash-board
             if self.link_target:
-                self.write('<base target="%s">\n' % self.link_target)
+                self.write('<base target="%s">\n' % self.attrencode(self.link_target))
 
             # Load all specified style sheets and all user style sheets in htdocs/css
             for css in [ "check_mk" ] + stylesheets:

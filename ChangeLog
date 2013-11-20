@@ -1,4 +1,7 @@
 1.2.3i7:
+    Core & Setup:
+    * 0217 FIX: Improved error handling of SNMP commands...
+
     Checks & Agents:
     * 0060 cisco_fantray: new check for monitoring fan trays of Cisco Nexus switches
     * 0061 cisco_cpu: check now recognizes new object cpmCPUTotal5minRev...

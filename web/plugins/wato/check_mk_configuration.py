@@ -2032,7 +2032,7 @@ register_rule(group,
                   help = _("A request is sent to the SNMP daemon, than wait up to this "
                            " number of seconds until retrying."),
                   default_value = 1,
-                  minvalue = 0.5,
+                  minvalue = 0.1,
                   maxvalue = 60,
                   allow_int = True,
                   unit = _("sec"),

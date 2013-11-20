@@ -401,10 +401,11 @@ def snmp_decode_string(text):
 def snmpwalk_on_suboid(hostname, ip, oid):
     portspec = snmp_port_spec(hostname)
     command = snmp_walk_command(hostname) + \
-             " -OQ -OU -On -Ot %s%s %s 2>/dev/null" % (ip, portspec, oid)
+             " -OQ -OU -On -Ot %s%s %s" % (ip, portspec, oid)
     if opt_debug:
         sys.stderr.write('   Running %s\n' % (command,))
-    snmp_process = os.popen(command, "r").xreadlines()
+
+    snmp_process = subprocess.Popen(command, shell = True, stdout = subprocess.PIPE)
 
     # Ugly(1): in some cases snmpwalk inserts line feed within one
     # dataset. This happens for example on hexdump outputs longer
@@ -414,8 +415,8 @@ def snmpwalk_on_suboid(hostname, ip, oid):
     # a continuation line.
     rowinfo = []
     try:
-        while True: # walk through all lines
-            line = snmp_process.next().strip()
+        for line in snmp_process.stdout.xreadlines():
+            line = line.strip()
             parts = line.split('=', 1)
             if len(parts) < 2:
                 continue # broken line, must contain =
@@ -437,9 +438,9 @@ def snmpwalk_on_suboid(hostname, ip, oid):
     except StopIteration:
         pass
 
-    exitstatus = snmp_process.close()
+    exitstatus = snmp_process.wait()
     if exitstatus:
         if opt_verbose:
             sys.stderr.write(tty_red + tty_bold + "ERROR: " + tty_normal + "SNMP error\n")
-        raise MKSNMPError("SNMP Error on %s" % ip)
+        raise MKSNMPError("SNMP Error on %s (Exit-Code: %d)" % (ip, exitstatus))
     return rowinfo

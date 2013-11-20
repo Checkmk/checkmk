@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import os, sys, socket, time, getopt, glob, re, stat, py_compile, urllib, inspect
+import subprocess
 
 # These variable will be substituted at 'make dist' time
 check_mk_version  = '(inofficial)'
@@ -761,13 +762,20 @@ def snmp_get_oid(hostname, ipaddress, oid):
 
     portspec = snmp_port_spec(hostname)
     command = snmp_base_command(commandtype, hostname) + \
-              " -On -OQ -Oe -Ot %s%s %s 2>/dev/null" % (ipaddress, portspec, oid_prefix)
+              " -On -OQ -Oe -Ot %s%s %s" % (ipaddress, portspec, oid_prefix)
 
     if opt_debug:
         sys.stdout.write("Running '%s'\n" % command)
 
-    snmp_process = os.popen(command, "r")
-    line = snmp_process.readline().strip()
+    snmp_process = subprocess.Popen(command, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    exitstatus = snmp_process.wait()
+    if exitstatus:
+        if opt_verbose:
+            sys.stderr.write(tty_red + tty_bold + "ERROR: " + tty_normal + "SNMP error\n")
+            sys.stderr.write(snmp_process.stderr.read())
+        return None
+
+    line = snmp_process.stdout.readline().strip()
     if not line:
         if opt_debug:
             sys.stdout.write("Error in response to snmpget.\n")

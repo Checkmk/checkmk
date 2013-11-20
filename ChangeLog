@@ -19,6 +19,7 @@
     * 0069 veeam_client: limits for time since last backup introduced
     * 0214 Logwatch: context lines can now be disabled using nocontext=1...
     * 0038 New checks for casa: casa_cpu_mem casa_cpu_temp casa_cpu_util casa_fan casa_power
+    * 0097 New Check for Areca Raid Controllers
     * 0024 FIX: cisco_wlc: removed configuration parameter ap_model
     * 0065 FIX: veeam_client: check behaviour improved when backup is in progress
     * 0066 FIX: veeam_jobs: check behaviour improved when backup is in progress

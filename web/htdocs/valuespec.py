@@ -231,7 +231,7 @@ class Integer(ValueSpec):
         else:
             return 0
 
-    def render_input(self, varprefix, value):
+    def render_input(self, varprefix, value, convfunc = saveint):
         if self._label:
             html.write(self._label)
             html.write("&nbsp;")
@@ -239,7 +239,7 @@ class Integer(ValueSpec):
             style = "text-align: right;"
         else:
             style = ""
-        html.number_input(varprefix, self._display_format % saveint(value), size = self._size, style = style)
+        html.number_input(varprefix, self._display_format % convfunc(value), size = self._size, style = style)
         if self._unit:
             html.write("&nbsp;")
             html.write(self._unit)
@@ -839,6 +839,9 @@ class Float(Integer):
         self._decimal_separator = kwargs.get("decimal_separator", ".")
         self._display_format = kwargs.get("display_format", "%.2f")
         self._allow_int = kwargs.get("allow_int", False)
+
+    def render_input(self, varprefix, value):
+        Integer.render_input(self, varprefix, value, convfunc = savefloat)
 
     def canonical_value(self):
         return float(Integer.canonical_value(self))

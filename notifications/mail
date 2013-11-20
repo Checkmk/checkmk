@@ -22,21 +22,20 @@ tmpl_head_html = '''
 body {
     background-color: #426D8A;
     padding: 5px;
+    font-family: arial,helvetica,sans-serif;
+    font-size: 10px;
 }
-table.data {
+table {
     border-spacing: 0px;
-    margin: 0;
-    padding: 0;
     border-collapse: collapse;
-    empty-cells: show;
+    margin: 5px 0 0 0;
+    padding: 0;
     width: 100%;
-}
-
-table.data {
     color: black;
+    empty-cells: show;
 }
 
-table.data th {
+table th {
     font-weight: normal;
     border-right: 1px solid #ccc;
     background-color: #999;
@@ -46,37 +45,29 @@ table.data th {
     font-size: 9pt;
     height: 14px;
 }
-table.data th:last-child {
+table th:last-child {
     border-right-style: none;
 }
 
-table.data tr.data > td {
+table tr > td {
     border-right: 1px solid #ccc;
     padding: 2px 4px;
     height: 22px;
     vertical-align: middle;
 }
-table.data tr.data td:last-child {
+table tr td:last-child {
     border-right-style: none;
 }
 
-table.data a {
+table a {
     text-decoration: none;
     color: black;
 }
-table.data a:hover {
+table a:hover {
     text-decoration: underline;
 }
 
-table.data.single {
-    margin-top: 5px;
-    border-spacing: 1px;
-    padding: 0;
-    border-collapse: collapse;
-    empty-cells: show;
-}
-
-table.data.single tr.data td {
+table tr td {
     padding-bottom: 4px;
     padding: 4px 5px 2px 5px;
     text-align: left;
@@ -85,16 +76,16 @@ table.data.single tr.data td {
     vertical-align: top;
     font-size: 9pt;
 }
-table.data.single tr.data td.left {
+table tr td.left {
     width: 10%;
     white-space: nowrap;
     vertical-align: top;
     padding-right: 20px;
 }
-table.data.single tr.even0 td.left {
+table tr.even0 td.left {
     background-color: #bbb;
 }
-table.data.single tr.odd0 td.left {
+table tr.odd0 td.left {
     background-color: #ccc;
 }
 
@@ -114,49 +105,40 @@ tr.odd3  { background-color: #ffe0a0; }
 tr.even3 { background-color: #ffefaf; }
 
 td.state {
-    text-align: center;
     font-weight: bold;
 }
 
-/* OK/UP */
 .state0, .stateOK, .hstate0, .hstateUP, .state0 a, .hstate0 a {
-        background-color: #0b3; color: #fff;
+    background-color: #0b3; color: #fff;
 }
 
-.hstate {
-        white-space: nowrap;
-}
-/* WARN */
 .state1, .stateWARNING, .state1 a, tr.groupheader td.state1 {
         background-color: #ff0; color: #000;
 }
 
-/* CRIT/DOWN */
 .state2, .stateCRITICAL, .hstate1, .hstateDOWN, .state2 a, .hstate2 a {
         background-color: #f00; color: #fff;
 }
 
-/* UNKNOWN / UNREACH */
 .state3, .stateUNKNOWN, .hstate2, .hstateUNREACHABLE, .state3 a, .hstate2 a {
         background-color: #f80; color: #fff;
 }
 
-/* PENDING */
 .statep, .statePENDING, .hstatep, .hstatePENDING, .statep a, .hstatep a {
         background-color: #888; color: #fff;
 }
 
-/* in DOWNTIME */
 .stated, .stateDOWNTIME, .hstated, .hstateDOWNTIME, .stated a, .hstated a {
         background-color: #0af; color: #fff;
 }
 
 td.graphs {
     width: 617px;
+    padding: 10px;
 }
 
-td.graphs img {
-    margin: 10px;
+img {
+    margin-right: 10px;
 }
 </style>
 </head>
@@ -182,30 +164,30 @@ $LONGHOSTOUTPUT$
 '''
 
 tmpl_host_html = tmpl_head_html + '''
-<table class="data single">
-<tr class="data even0">
+<table>
+<tr class="even0">
     <th colspan=2>Object Information</th>
 </tr>
-<tr class="data odd0">
+<tr class="odd0">
     <td class=left>Name</td>
     <td>$LINKEDHOSTNAME$ ($HOSTALIAS$)</td>
 </tr>
-<tr class="data even0">
+<tr class="even0">
     <td class=left>Address</td>
     <td>$HOSTADDRESS$</td>
 </tr>
 <tr>
     <th colspan=2>State</th>
 </tr>
-<tr class="data odd0">
+<tr class="odd0">
     <td class=left>State</td>
-    <td class="state hstate">
+    <td class="state">
         <span class="hstate$LASTHOSTSTATE$">$LASTHOSTSTATE$</span> &rarr;
         <span class="hstate$HOSTSTATEID$">$HOSTSTATE$ ($NOTIFICATIONTYPE$)</span>
         since $LASTHOSTSTATECHANGE_REL$
     </td>
 </tr>
-<tr class="data even0">
+<tr class="even0">
     <td class="left">Output</td>
     <td>$HOSTOUTPUT$</td>
 </tr>
@@ -230,34 +212,34 @@ $LONGSERVICEOUTPUT$
 '''
 
 tmpl_service_html = tmpl_head_html + '''
-<table class="data single">
-<tr class="data even0">
+<table>
+<tr class="even0">
     <th colspan=2>Object Information</th>
 </tr>
-<tr class="data odd0">
+<tr class="odd0">
     <td class=left>Hostname</td>
     <td>$LINKEDHOSTNAME$ ($HOSTALIAS$)</td>
 </tr>
-<tr class="data even0">
+<tr class="even0">
     <td class=left>Address</td>
     <td>$HOSTADDRESS$</td>
 </tr>
-<tr class="data odd0">
+<tr class="odd0">
     <td class=left>Service description</td>
     <td>$LINKEDSERVICEDESC$</td>
 </tr>
 <tr>
     <th colspan=2>State</th>
 </tr>
-<tr class="data odd0">
+<tr class="odd0">
     <td class=left>State</td>
-    <td class="state svcstate">
+    <td class="state">
         <span class="state$LASTSERVICESTATE$">$LASTSERVICESTATE$</span> &rarr;
         <span class="state$SERVICESTATEID$">$SERVICESTATE$ ($NOTIFICATIONTYPE$)</span>
         since $LASTSERVICESTATECHANGE_REL$
     </td>
 </tr>
-<tr class="data even0">
+<tr class="even0">
     <td class="left">Output</td>
     <td>$SERVICEOUTPUT$</td>
 </tr>
@@ -422,7 +404,7 @@ def main():
     if graph_code:
         context['GRAPH_CODE'] = (
             '<tr><th colspan=2>Graphs</th></tr>'
-            '<tr class="data even0"><td colspan=2 class=graphs>%s</td></tr>' % graph_code
+            '<tr class="even0"><td colspan=2 class=graphs>%s</td></tr>' % graph_code
         )
     else:
         context['GRAPH_CODE'] = ''

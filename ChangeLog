@@ -19,6 +19,7 @@
     * 0069 veeam_client: limits for time since last backup introduced
     * 0214 Logwatch: context lines can now be disabled using nocontext=1...
     * 0038 New checks for casa: casa_cpu_mem casa_cpu_temp casa_cpu_util casa_fan casa_power
+    * 0097 New Check for Areca Raid Controllers
     * 0024 FIX: cisco_wlc: removed configuration parameter ap_model
     * 0065 FIX: veeam_client: check behaviour improved when backup is in progress
     * 0066 FIX: veeam_jobs: check behaviour improved when backup is in progress
@@ -55,10 +56,13 @@
     * 0095 FIX: Fixed problem with portnumber in Wato Distributed Monitoring dialog
     * 0213 FIX: LDAP: Various small improvements for handling the LDAP user connector
     * 0039 FIX: Encoding bug on rendering global settings...
+    * 0219 FIX: Improved output of long contact group names in WATO folders
+    * 0220 FIX: Added HTML escaping to several global settings attributes
 
     Notifications:
     * 0005 Added notification script for sending SMS via mobilant.com...
     * 0032 FIX: mail notification plugin: replace windows forbidden characters in mail images
+    * 0218 FIX: Fixed rendering of HTML mails for Outlook (at least 2013)...
 
     Reporting & Availability:
     * 0051 Option for showing timeline directly in availability table...

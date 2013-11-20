@@ -1,0 +1,70 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# 1  Raid Set # 00        3 2250.5GB    0.0GB 123                Normal
+# ( # Name Disks TotalCap  FreeCap DiskChannels State )
+
+def inventory_arc_raid_status(info):
+    return [ ( x[0], saveint(x[-5]) ) for x in info ]
+
+def check_arc_raid_status(item, params, info):
+    for line in info:
+        if line[0] == item:
+            messages = []
+            state = 0
+
+            raid_state = line[-1]
+            label = ""
+            if raid_state in [ "Degarde", "Incompleted" ]:
+                state = 2
+                label = "(!!)"
+            elif raid_state == "Rebuilding":
+                state = 1
+                label = "(!)"
+            elif raid_state != "Normal":
+                state = 2
+                label = "(!!)"
+            messages.append("Raid in state: %s%s" % ( raid_state, label ))
+
+            # Check the number of disks
+            i_disks = params
+            c_disks = saveint(line[-5])
+            if i_disks != c_disks:
+                message.append("Number of disks has changed from %d to %d(!!)" % ( i_disks, c_disks ))
+                state = 2
+
+            return state, ", ".join(messages)
+
+    return 3, "Array not found"
+
+check_info["arc_raid_status"] = {
+    "check_function"        : check_arc_raid_status,
+    "inventory_function"    : inventory_arc_raid_status,
+    "service_description"   : "Raid Array #%s",
+    "has_perfdata"          : False,
+}
+

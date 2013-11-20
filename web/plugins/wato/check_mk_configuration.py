@@ -187,7 +187,8 @@ register_configvar(group,
                        "is shown in the main (right) frame. You can replace this with any other "
                        "URL you like here."),
               size = 80,
-              default_value = "dashboard.py"),
+              default_value = "dashboard.py",
+              attrencode = True),
     domain = "multisite")
 
 register_configvar(group,
@@ -197,7 +198,8 @@ register_configvar(group,
                        "using OMD then you can embed a <tt>%s</tt>. This will be replaced by the name "
                        "of the OMD site."),
               size = 80,
-              default_value = u"Check_MK %s"),
+              default_value = u"Check_MK %s",
+              attrencode = True),
     domain = "multisite")
 
 register_configvar(group,
@@ -297,7 +299,8 @@ register_configvar(group,
                     title = _("Adhoc comment"),
                     help    = _("The comment which is automatically sent with an adhoc downtime"),
                     size = 80,
-                    allow_empty = False
+                    allow_empty = False,
+                    attrencode = True,
                     )),
             ],
         ),
@@ -347,6 +350,7 @@ register_configvar(group,
             help    = _("Configure the name of the environment variable to read "
                         "from the incoming HTTP requests"),
             default_value = 'REMOTE_USER',
+            attrencode = True,
         ),
         title = _("Authenticate users by incoming HTTP requests"),
         label = _("Activate HTTP header authentication (Warning: Only activate "
@@ -523,6 +527,7 @@ register_configvar(group,
                 help = _("Set the host address of the LDAP server. Might be an IP address or "
                          "resolvable hostname."),
                 allow_empty = False,
+                attrencode = True,
             )),
             ('failover_servers', ListOfStrings(
                 title = _('Failover Servers'),
@@ -656,6 +661,7 @@ register_configvar(group,
                          "base DN."),
                 size = 80,
                 default_value = lambda: userdb.ldap_filter('users', False),
+                attrencode = True,
             )),
             ("filter_group", LDAPDistinguishedName(
                 title = _("Filter Group"),
@@ -676,6 +682,7 @@ register_configvar(group,
                           "unique values to make an user identifyable by the value of this "
                           "attribute."),
                 default_value = lambda: userdb.ldap_attr('user_id'),
+                attrencode = True,
             )),
             ("lower_user_ids", FixedValue(
                 title  = _("Lower Case User-IDs"),
@@ -722,11 +729,13 @@ register_configvar(group,
                          "subset of the groups below the given base DN."),
                 size = 80,
                 default_value = lambda: userdb.ldap_filter('groups', False),
+                attrencode = True,
             )),
             ("member", TextAscii(
                 title = _("Member Attribute"),
                 help  = _("The attribute used to identify users group memberships."),
                 default_value = lambda: userdb.ldap_attr('member'),
+                attrencode = True,
             )),
         ],
         optional_keys = ['scope', 'filter', 'member'],
@@ -1486,7 +1495,13 @@ register_rule(
           ( "tcp" ,       _("TCP Connect"), Integer(label = _("to port:"), minvalue=1, maxvalue=65535, default_value=80 )),
           ( "ok",         _("Always assume host to be up") ),
           ( "agent",      _("Use the status of the Check_MK Agent") ),
-          ( "service",    _("Use the status of the service..."), TextUnicode(label = ":", size=45, allow_empty=False )),
+          ( "service",    _("Use the status of the service..."),
+            TextUnicode(
+                label = ":",
+                size = 45,
+                allow_empty = False,
+                attrencode = True,
+            )),
           ( "custom",     _("Use a custom check plugin..."), PluginCommandLine() ),
         ],
         default_value = "ping",
@@ -1504,6 +1519,7 @@ register_rule(group,
         help = _("This ruleset is deprecated and will be removed soon: "
                  "it changes the default check_command for a host check. You need to "
                  "define that command manually in your monitoring configuration."),
+        attrencode = True,
     ),
 )
 
@@ -1730,7 +1746,8 @@ register_rule(group,
         title = _("Notes URL for Services"),
         help = _("With this setting you can set links to documentations "
                  "for each service"),
-        ),
+        attrencode = True,
+    ),
     itemtype = "service")
 
 register_rule(group,
@@ -1740,8 +1757,9 @@ register_rule(group,
         title = _("Notes URL for Hosts"),
         help = _("With this setting you can set links to documentations "
                  "for Hosts"),
-        ),
-    )
+        attrencode = True,
+    ),
+)
 
 register_rule(group,
    "extra_service_conf:display_name",
@@ -1757,6 +1775,7 @@ register_rule(group,
                 "purpose of this rule set is to define unique names for several well-known "
                 "services. It cannot rename services in general."),
        size = 64,
+       attrencode = True,
    ),
    itemtype = "service")
 
@@ -1951,7 +1970,7 @@ _snmpv3_basic_elements = [
              ( "sha", _("SHA1") ),
           ],
           title = _("Authentication protocol")),
-     TextAscii(title = _("Security name")),
+     TextAscii(title = _("Security name"), attrencode = True),
      Password(title = _("Authentication password"))]
 
 register_rule(group,
@@ -1960,7 +1979,8 @@ register_rule(group,
        elements = [
            TextAscii(
                title = _("SNMP community (SNMP Versions 1 and 2c)"),
-               allow_empty = False),
+               allow_empty = False,
+               attrencode = True),
            Tuple(
                title = _("Credentials for SNMPv3"),
                elements = _snmpv3_basic_elements),

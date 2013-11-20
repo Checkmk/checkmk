@@ -60,7 +60,9 @@ register_configvar(group,
                  "wato.py?mode=edit_configvar&varname=notification_service_subject",
                  "wato.py?mode=edit_configvar&varname=notification_common_body",
                  )),
-        size = 50),
+        size = 50,
+        attrencode = True,
+    ),
     domain = "check_mk")
 
 register_configvar(group,
@@ -72,7 +74,9 @@ register_configvar(group,
                   "be available in <a href=\"%s\"><tt>notification_common_body</tt></a>." % (
                  "wato.py?mode=edit_configvar&varname=notification_common_body",
                  )),
-        size = 50),
+        size = 50,
+        attrencode = True,
+    ),
     domain = "check_mk")
 
 register_configvar(group,
@@ -84,7 +88,9 @@ register_configvar(group,
                   "be available in <a href=\"%s\"><tt>notification_common_body</tt></a>." % (
                  "wato.py?mode=edit_configvar&varname=notification_common_body",
                  )),
-        size = 50),
+        size = 50,
+        attrencode = True,
+    ),
     domain = "check_mk")
 
 
@@ -126,6 +132,7 @@ register_configvar(group,
                   "<tt><b>$OMD_ROOT$</b></tt>: the home directory of the OMD site (only on OMD) "
                   "<tt><b>$OMD_SITE$</b></tt>: the name of the OMD site (only on OMD) "
                  ),
+        attrencode = True,
     ),
     domain = "check_mk")
 
@@ -138,6 +145,7 @@ register_configvar(group,
                   "notification_common_body</tt></a> when host notifications are sent." %
                   "wato.py?mode=edit_configvar&varname=notification_common_body"
                  ),
+        attrencode = True,
     ),
     domain = "check_mk")
 
@@ -149,5 +157,6 @@ register_configvar(group,
                   "notification_common_body</tt></a> when service notifications are sent." %
                   "wato.py?mode=edit_configvar&varname=notification_common_body"
                  ),
+        attrencode = True,
     ),
     domain = "check_mk")

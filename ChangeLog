@@ -55,6 +55,7 @@
     * 0095 FIX: Fixed problem with portnumber in Wato Distributed Monitoring dialog
     * 0213 FIX: LDAP: Various small improvements for handling the LDAP user connector
     * 0039 FIX: Encoding bug on rendering global settings...
+    * 0219 FIX: Improved output of long contact group names in WATO folders
 
     Notifications:
     * 0005 Added notification script for sending SMS via mobilant.com...

@@ -393,7 +393,11 @@ table.validationerror img {
     position: absolute;
     bottom: 23px;
     left: 20px;
+    width: 140px;
     color: #bde;
+    overflow:hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .wato div.floatfolder .title {

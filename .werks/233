@@ -1,0 +1,11 @@
+Title: Interface Checks: Counters are now skipped when interface is down
+Level: 1
+Component: checks
+Version: 1.2.3i7
+Date: 1385028294
+Class: fix
+
+In most cases it was no problem to check the counter values, as they
+are reset to zero for most devices. But for some devices, the counters
+are still having values - and maybe also change. To handle this, we
+simply ignore the counter values for down interfaces.

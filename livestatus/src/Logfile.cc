@@ -174,7 +174,7 @@ long Logfile::freeMessages(unsigned logclasses)
 
 inline bool Logfile::processLogLine(uint32_t lineno, unsigned logclasses)
 {
-    LogEntry *entry = new LogEntry(lineno, _linebuffer, logclasses);
+    LogEntry *entry = new LogEntry(lineno, _linebuffer);
     // ignored invalid lines
     if (entry->_logclass == LOGCLASS_INVALID) {
         delete entry;

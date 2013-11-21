@@ -83,7 +83,7 @@ struct LogEntry
     contact     *_contact;
     command     *_command;
 
-    LogEntry(unsigned lineno, char *line, unsigned logclasses);
+    LogEntry(unsigned lineno, char *line);
     ~LogEntry();
     unsigned updateReferences();
 

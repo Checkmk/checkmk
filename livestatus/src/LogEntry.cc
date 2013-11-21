@@ -31,7 +31,7 @@
 #include "strutil.h"
 #include "logger.h"
 
-LogEntry::LogEntry(unsigned lineno, char *line, unsigned logclasses = LOGCLASS_ALL)
+LogEntry::LogEntry(unsigned lineno, char *line)
 {
     // zero all elements as fast as possible -> default values
     bzero(this, sizeof(LogEntry));
@@ -68,25 +68,19 @@ LogEntry::LogEntry(unsigned lineno, char *line, unsigned logclasses = LOGCLASS_A
     _time = atoi(_msg+1);
     _text = _msg + 13; // also skip space after timestamp
 
-    // If LOGCLASS_INFO is in logclasses we can't thin out the function calls
-    logclasses = 1 << LOGCLASS_INFO & logclasses ? LOGCLASS_ALL : logclasses;
-
     // now classify the log message. Some messages
     // refer to other table, some do not.
-    if (((1 << LOGCLASS_ALERT & logclasses) && handleStatusEntry()) ||
-        ((1 << LOGCLASS_NOTIFICATION & logclasses) && handleNotificationEntry()) ||
-        ((1 << LOGCLASS_PASSIVECHECK & logclasses) && handlePassiveCheckEntry()) ||
-        ((1 << LOGCLASS_COMMAND & logclasses) && handleExternalCommandEntry())
+    if (handleStatusEntry() ||
+        handleNotificationEntry() ||
+        handlePassiveCheckEntry() ||
+        handleExternalCommandEntry()
         )
     {
         updateReferences();
     }
     else {
-        (1 << LOGCLASS_PROGRAM & logclasses) && handleProgrammEntry(); // Performance killer strstr!
-        (1 << LOGCLASS_TEXT    & logclasses) && handleTextEntry();
+        handleTextEntry() || handleProgrammEntry(); // Performance killer strstr in handleProgrammEntry!
     }
-
-
     // rest is LOGCLASS_INFO
 }
 

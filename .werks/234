@@ -5,4 +5,6 @@ Version: 1.2.3i7
 Date: 1385028795
 Class: fix
 
-
+The WATO ruleset for network interface inventory now reflects the default
+settings for the interface state and types. Furthermore there is now a button
+for selecting or deselecting all types at once.

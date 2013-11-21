@@ -4142,10 +4142,7 @@ def do_snmpwalk_on(hostname, filename):
             sys.stdout.write("Walk on \"%s\"..." % oid)
             sys.stdout.flush()
 
-        if has_inline_snmp and use_inline_snmp:
-            results = inline_snmpwalk_on_suboid(hostname, oid, strip_values = False)
-        else:
-            results = snmpwalk_on_suboid(hostname, ip, oid)
+        results = snmpwalk_on_suboid(hostname, ip, oid, hex_plain = True)
 
         for oid, value in results:
             out.write("%s %s\n" % (oid, value))

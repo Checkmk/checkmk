@@ -1,0 +1,14 @@
+Title: stored snmpwalks now get correct encoding of binary values
+Level: 2
+Component: checks
+Version: 1.2.3i7
+Date: 1385036527
+Class: fix
+
+In stored snmpwalks up to now binary values were stored in their binary
+representation which caused problems when reading them. Now they are
+stored in their ASCII representation.
+
+Furthermore for producing stored walks the inline snmp is never used.
+Storedwalks are allways created by the command line tools no regard what
+the Global Setting is set to.

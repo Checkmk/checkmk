@@ -1206,6 +1206,7 @@ class ListChoice(ValueSpec):
         self._loaded_at = None
         self._render_function = kwargs.get("render_function",
                   lambda id, val: val)
+        self._toggle_all = kwargs.get("toggle_all", False)
 
     # In case of overloaded functions with dynamic elements
     def load_elements(self):
@@ -1225,7 +1226,10 @@ class ListChoice(ValueSpec):
 
     def render_input(self, varprefix, value):
         self.load_elements()
-        html.write("<table class=listchoice>")
+        if self._toggle_all:
+            html.write("<a href=\"javascript:vs_list_choice_toggle_all('%s')\">%s</a>" % 
+                        (varprefix, _("Check / Uncheck all")))
+        html.write("<table id=\"%s_tbl\" class=listchoice>" % varprefix)
         for nr, (key, title) in enumerate(self._elements):
             if nr % self._columns == 0:
                 if nr > 0:
@@ -1263,7 +1267,6 @@ class ListChoice(ValueSpec):
         if not self._allow_empty and not value:
             raise MKUserError(varprefix, _('You have to select at least one element.'))
         ValueSpec.custom_validate(self, value, varprefix)
-
 
 # A alternative way of editing list choices
 class MultiSelect(ListChoice):

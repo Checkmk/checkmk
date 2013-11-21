@@ -1,9 +1,13 @@
-Title: fixed problem with invalid logline classification
+Title: Fixed missing entries in log file or availability view
 Level: 2
 Component: livestatus
 Version: 1.2.3i7
 Date: 1384968812
 Class: fix
 
-Two consecutive logfile queries, each with different logclasses,
-could lead to invalid/missing logfile entries.
+This problem occurred for example when you first visited the
+global logfile and afterwards used the availability reporting.
+
+This problem was due a bug in livestatus that affected the tables <tt>log</tt>
+and <tt>statehist</tt>.  Two consecutive logfile queries, each with different
+logclasses, could lead to invalid/missing logfile entries.

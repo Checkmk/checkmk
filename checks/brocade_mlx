@@ -161,6 +161,9 @@ def check_brocade_mlx_module_mem(item, params, info):
     warn, crit = params["levels"]
     for module_id, module_descr, module_state, mem_total, mem_avail in info[2]:
         if combine_item(module_id, module_descr) == item:
+            if module_state != "10":
+                return 3, "Module is not in state 10 (running)"
+
             mem_avail = saveint(mem_avail)
             mem_total = saveint(mem_total)
             mem_used  = mem_total - mem_avail
@@ -219,6 +222,9 @@ def check_brocade_mlx_module_cpu(item, params, info):
     warn, crit = params["levels"]
     for module_id, module_descr, module_state, mem_total, mem_avail in info[2]:
         if combine_item(module_id, module_descr) == item:
+            if module_state != "10":
+                return 3, "Module is not in state 10 (running)"
+
             cpu_util1 = ""
             cpu_util5 = ""
             cpu_util60 = ""

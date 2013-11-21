@@ -242,13 +242,18 @@ register_rule(group + '/' + subgroup_networking,
         ("portstates", ListChoice(title = _("Network interface port states to inventorize"),
               help = _("When doing inventory on switches or other devices with network interfaces "
                        "then only ports found in one of the configured port states will be added to the monitoring."),
-              choices = _if_portstate_choices)),
+              choices = _if_portstate_choices,
+              toggle_all = True,
+              default_value = ['1'],
+        )),
         ("porttypes", ListChoice(title = _("Network interface port types to inventorize"),
               help = _("When doing inventory on switches or other devices with network interfaces "
                        "then only ports of the specified types will be created services for."),
               choices = _if_porttype_choices,
-              columns = 3)),
-
+              columns = 3,
+              toggle_all = True,
+              default_value = [ '6', '32', '62', '117' ]
+        )),
         ],
         help = _('This rule can be used to control the inventory for network ports. '
                  'You can configure the port types and port states for inventory'

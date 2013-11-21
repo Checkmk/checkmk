@@ -1711,6 +1711,19 @@ function valuespec_listof_fixarrows(oTbody) {
     }
 }
 
+function vs_list_choice_toggle_all(varprefix) {
+    var tbl = document.getElementById(varprefix + "_tbl");
+    var checkboxes = tbl.getElementsByTagName("input");
+    if (!checkboxes)
+        return;
+
+    // simply use state of first texbox as base
+    var state = ! checkboxes[0].checked;
+    for (var i = 0; i < checkboxes.length; i++) {
+        checkboxes[i].checked = state;
+    }
+}
+
 function vs_textascii_button(img, text, how) {
     var oInput = img.previousElementSibling;
     while (oInput.tagName == "A")

@@ -444,6 +444,14 @@ def check_if_common_single(item, params, info, force_counter_wrap = False):
             speed_b_in  = assumed_speed_in  and assumed_speed_in / 8  or ref_speed
             speed_b_out = assumed_speed_out and assumed_speed_out / 8 or ref_speed
 
+            # When the interface is reported as down, there is no need to try to handle,
+            # the performance counters. Most devices do reset the counter values to zero,
+            # but we spotted devices, which do report error packes even for down interfaces.
+            # To deal with it, we simply skip over all performance counter checks for down
+            # interfaces.
+            if operstatus == "down":
+                return state, infotext
+
             # Performance counters
             this_time = time.time()
             rates = []

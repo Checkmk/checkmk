@@ -1,14 +1,18 @@
-Title: stored snmpwalks now get correct encoding of binary values
-Level: 2
+Title: Fixed corruption in SNMP walks created with cmk --snmpwalk
+Level: 1
 Component: checks
 Version: 1.2.3i7
 Date: 1385036527
 Class: fix
 
-In stored snmpwalks up to now binary values were stored in their binary
-representation which caused problems when reading them. Now they are
-stored in their ASCII representation.
+In some situations SNMP walks created with <tt>cmk --snmpwalk</tt> were
+broken and caused an exception when trying to use them. This has been
+fixed.
 
-Furthermore for producing stored walks the inline snmp is never used.
-Storedwalks are allways created by the command line tools no regard what
+In stored snmpwalks up to now binary values were stored in their binary
+representation which caused problems when reading them. Now they are stored
+in their ASCII representation.
+
+Furthermore for producing stored walks the inline SNMP is never used.
+Stored walks are always created by the command line tools, no regard what
 the Global Setting is set to.

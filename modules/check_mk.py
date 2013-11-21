@@ -3417,7 +3417,6 @@ def manpage_display_header(cat):
     return " -> ".join([manpage_catalog_titles.get(e,e) for e in cat ])
 
 def run_dialog(args):
-    import subprocess
     env = {
         "TERM": os.getenv("TERM", "linux"),
         "LANG": "de_DE.UTF-8"

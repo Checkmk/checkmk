@@ -26,6 +26,8 @@
 
 # This module is needed only for SNMP based checks
 
+import subprocess
+
 OID_END    =  0
 OID_STRING = -1
 OID_BIN    = -2

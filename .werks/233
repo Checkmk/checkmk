@@ -1,4 +1,4 @@
-Title: Fixed missing entries in log file or availability view
+Title: Fixed missing entries in log file and availability view
 Level: 2
 Component: livestatus
 Version: 1.2.3i7

@@ -1,8 +1,25 @@
-Title: table headers are now omitted if all fields are empty and no table action is set
+Title: module table.py: table headers are omitted if all header fields are empty
 Level: 1
 Component: wato
 Version: 1.2.3i7
 Date: 1385120851
 Class: feature
 
+Html tables rendered with the help of the table module always displayed the <th> fields,
+even if none if this fields were filled. For example:
 
+C+:
+table.begin(searchable = False)
+# Firma
+table.row()
+table.cell("", "Company")
+table.cell("", "Yummifood")
+# Adresse
+table.row()
+table.cell("", "Address")
+table.cell("", "Yummistreet 7, 12345 Yummiville")
+table.end()
+C-:
+
+This created a table with empty headers.
+The new feature omits this headerline if it's not used otherwise, e.g. by a table action.

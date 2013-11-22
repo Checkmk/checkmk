@@ -1,8 +1,8 @@
-Title: Inventory problem with inventory_processes parameter
+Title: Fixed problem where the inventory_processes parameter was not working
 Level: 2
 Component: checks
 Version: 1.2.3i6
 Date: 1383209203
 Class: fix
 
-
+An updated version of the ps check was unable to process the inventory_processes parameter

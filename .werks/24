@@ -1,8 +1,10 @@
-Title: cisco_wlc: removed configuration parameter ap_model
+Title: cisco_wlc: removed check configuration parameter ap_model
 Level: 1
 Component: checks
 Version: 1.2.3i7
 Date: 1383741998
 Class: fix
 
-
+The parameter ap_model couldn't work at all, because the item name
+of the cisco_wlc only reflected the access point name.
+Therefore, a missing access point could only be detected by its name.

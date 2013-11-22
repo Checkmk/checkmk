@@ -300,6 +300,7 @@ def handler(req, profiling = True):
 
         # Set all permissions, read site config, and similar stuff
         config.login(html.user)
+        html.load_help_visible()
 
         # Initialize the multiste i18n. This will be replaced by
         # language settings stored in the user profile after the user

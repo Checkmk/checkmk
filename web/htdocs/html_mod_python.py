@@ -17,6 +17,8 @@ class html_mod_python(htmllib.html):
         self.user = req.user
         self.read_get_vars()
         self.read_cookies()
+
+    def load_help_visible(self):
         try:
             self.help_visible = config.load_user_file("help", False)  # cache for later usage
         except:

@@ -1,0 +1,11 @@
+Title: Postfix mailqueue check should use more flexible thresholds
+Component: checks
+State: open
+Date: 2013-11-22 13:15:25
+Targetversion: 1.2.3i6
+Class: nastiness
+
+The check is currently only using absolute levels, which is OK for the first moment, but
+in fact it is not really a problem when having several hundret mails in the queue, as long
+as all mails are processed after a short time. Only a queue which remains filled is
+a problem. Some kind of dynamic calculation should be better, a rate or similar.

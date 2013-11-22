@@ -1,0 +1,13 @@
+Title: Context help toggled on/off randomly
+Level: 1
+Component: multisite
+Version: 1.2.3i7
+Date: 1385127740
+Class: fix
+
+During browsing different multisite pages, it could happen
+that the help switched on/off randomly.
+
+The setting was loaded before having the correct user
+context loaded. Now setting that option after the user has
+been logged in.

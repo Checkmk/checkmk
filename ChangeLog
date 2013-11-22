@@ -76,7 +76,7 @@
     * 0002 You can now annotate events in the availability reporting...
 
     Event Console:
-    * 0026 FIX: snmpd_mkevent.py: fixed crash on startup
+    * 0026 FIX: snmptd_mkevent.py: fixed crash on startup
     * 0036 FIX: fixed bug in multisite command execution...
 
     Livestatus:

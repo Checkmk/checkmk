@@ -1,9 +1,9 @@
-Title: checkman: alcatel power - now with correct classification
+Title: checkman browser (cmk -m) was not working properly in network subtree
 Level: 1
 Component: checks
 Version: 1.2.3i7
 Date: 1384788936
 Class: fix
 
-This incorrect classification broke the checkman browser (cmk -m) 
-in the network devices subtree
+The alcatel_power manpage had an incorrect classification and broke
+the checkman browser <tt>cmk -m</tt> in the network devices subtree

@@ -1,8 +1,8 @@
-Title: New checks for casa: casa_cpu_mem casa_cpu_temp casa_cpu_util casa_fan casa_power
+Title: casa_cpu_mem casa_cpu_temp casa_cpu_util casa_fan casa_power: New checks for casa Cable Modem Termination Systems
 Level: 2
 Component: checks
 Version: 1.2.3i7
 Date: 1384789903
 Class: feature
 
-
+These checks are for the 10G and 3K series of the casa Cable Modem Termination Systems (CMTS).

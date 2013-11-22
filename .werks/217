@@ -1,12 +1,12 @@
-Title: Improved error handling of SNMP commands
+Title: More verbose error output for SNMP errors on the command line
 Level: 1
 Component: core
 Version: 1.2.3i7
 Date: 1384939712
 Class: fix
 
-In the past, in normal SNMP mode, the stderr output of all
-snmp related commands was completely suppressed. It was hard
+In the past, in non-inline SNMP mode, the stderr output of all
+SNMP related commands was completely suppressed. It was hard
 to find out the source of problems in some cases, for example
 timeouts. The execution of those programs has been changed to
 output stderr messages for walks in all cases and for gets only

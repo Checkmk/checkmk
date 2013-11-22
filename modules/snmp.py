@@ -26,20 +26,22 @@
 
 # This module is needed only for SNMP based checks
 
+import subprocess
+
 OID_END    =  0
 OID_STRING = -1
 OID_BIN    = -2
 
-def strip_snmp_value(value):
+def strip_snmp_value(value, hex_plain = False):
     v = value.strip()
     if v.startswith('"'):
         v = v[1:-1]
         if len(v) > 2 and is_hex_string(v):
-            return convert_from_hex(v)
+            return not hex_plain and convert_from_hex(v) or value
         else:
             return v.strip()
     else:
-        return v.strip()
+        return v
 
 def is_hex_string(value):
     # as far as I remember, snmpwalk puts a trailing space within
@@ -398,7 +400,7 @@ def snmp_decode_string(text):
 #   | Non-inline SNMP handling code. Kept for compatibility.               |
 #   '----------------------------------------------------------------------'
 
-def snmpwalk_on_suboid(hostname, ip, oid):
+def snmpwalk_on_suboid(hostname, ip, oid, hex_plain = False):
     portspec = snmp_port_spec(hostname)
     command = snmp_walk_command(hostname) + \
              " -OQ -OU -On -Ot %s%s %s" % (ip, portspec, oid)
@@ -433,7 +435,7 @@ def snmpwalk_on_suboid(hostname, ip, oid):
                     value += " " + nextline
                     if value[-1] == '"':
                         break
-            rowinfo.append((oid, strip_snmp_value(value)))
+            rowinfo.append((oid, strip_snmp_value(value, hex_plain)))
 
     except StopIteration:
         pass

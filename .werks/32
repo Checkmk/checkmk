@@ -1,8 +1,11 @@
-Title: mail notification plugin: replace windows forbidden characters in mail images
+Title: Fixed problem when forwarding notification mails in windows
 Level: 2
 Component: notifications
 Version: 1.2.3i7
 Date: 1383911035
 Class: fix
 
-
+Some filenames for the inline images in notifaction mails could contain
+forbidden characters, e.g. fs_/home
+When forwarding the mails the images got removed.
+This has been fixed by quoting these special filenames from now on.

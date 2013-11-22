@@ -5,3 +5,6 @@ Version: 1.2.3i7
 Date: 1383817062
 Class: feature
 
+Some sensors of an esx hostsystem might report wrong values, or are simply not
+that crucial. For these instances the new rule allows to set the reported
+sensor level to a different level

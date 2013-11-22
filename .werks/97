@@ -1,4 +1,4 @@
-Title: New Check for Areca Raid Controllers
+Title: arc_raid_status: New check for Areca RAID controllers
 Level: 1
 Component: checks
 Version: 1.2.3i7

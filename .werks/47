@@ -1,4 +1,4 @@
-Title: Add new collection of checks to monitor Fritz!Box devices
+Title: fritz.conn fritz.config fritz.uptime fritz.wan_if fritz.link: New checks for monitoring Fritz!Box devices
 Level: 1
 Component: checks
 Version: 1.2.3i7

@@ -172,33 +172,30 @@ def end():
         html.write(" %s" % table["css"])
     html.write('">\n')
 
+    html.write("  <tr>")
+    first_col = True
+    for header, help in table["headers"]:
+        if help:
+            header = '<span title="%s">%s</span>' % (html.attrencode(help), header)
+        html.write("  <th>")
 
-    use_headers = [ header for header in table["headers"] if header[0] != "" ]
-    if use_headers or actions_enabled:
-        html.write("  <tr>")
-        first_col = True
-        for header, help in table["headers"]:
-            if help:
-                header = '<span title="%s">%s</span>' % (html.attrencode(help), header)
-            html.write("  <th>")
+        # Add the table action link
+        if first_col:
+            if actions_enabled:
+                if actions_visible:
+                    state = '0'
+                    help  = _('Hide table actions')
+                    img   = 'table_actions_on'
+                else:
+                    state = '1'
+                    help  = _('Display table actions')
+                    img   = 'table_actions_off'
+                html.icon_button(html.makeuri([('_%s_actions' % table_id, state)]),
+                    help, img, cssclass = 'toggle_actions')
+            first_col = False
 
-            # Add the table action link
-            if first_col:
-                if actions_enabled:
-                    if actions_visible:
-                        state = '0'
-                        help  = _('Hide table actions')
-                        img   = 'table_actions_on'
-                    else:
-                        state = '1'
-                        help  = _('Display table actions')
-                        img   = 'table_actions_off'
-                    html.icon_button(html.makeuri([('_%s_actions' % table_id, state)]),
-                        help, img, cssclass = 'toggle_actions')
-                first_col = False
-
-            html.write("%s</th>\n" % header)
-        html.write("  </tr>\n")
+        html.write("%s</th>\n" % header)
+    html.write("  </tr>\n")
 
     if actions_enabled and actions_visible:
         html.write('<tr class="data even0 actions"><td colspan=%d>' % num_cols)

@@ -636,11 +636,11 @@ def main_edit(args):
             if werkid == None:
                 bail_out("No last werk. Please specify id.")
 
-    edit_werk(werkid, args)
+    edit_werk(werkid, args, commit = False)
     save_last_werkid(werkid)
 
 
-def edit_werk(werkid, custom_files = []):
+def edit_werk(werkid, custom_files = [], commit = True):
     if not os.path.exists(str(werkid)):
         bail_out("No werk with this id.")
     editor = os.getenv("EDITOR")
@@ -657,7 +657,8 @@ def edit_werk(werkid, custom_files = []):
         werk = g_werks[werkid]
         git_add(g_werks[werkid])
         rewrite_changelog()
-        git_commit(werk, custom_files)
+        if commit:
+            git_commit(werk, custom_files)
 
 
 def main_commit(args):

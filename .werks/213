@@ -5,4 +5,5 @@ Version: 1.2.3i7
 Date: 1384777799
 Class: fix
 
-
+The messages written to the WATO log have a more friendly wording now.
+The exception handling in case of synchronisation errors has been improved.

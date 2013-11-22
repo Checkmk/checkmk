@@ -1,8 +1,11 @@
-Title: Explicit communities were not written to config files in all cases
+Title: Explicit communities were not saved in all cases
 Level: 1
 Component: wato
 Version: 1.2.3i7
 Date: 1384183647
 Class: fix
 
-
+Explicit communities were not written to config files in all cases.
+This resulted in the WATO host edit dialog being reset to the
+previous state. It only worked, when at least one host in the folder
+had an explicit IP address configured

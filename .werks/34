@@ -1,8 +1,9 @@
-Title: table statehist: no more missing entries if only one logfile exists
+Title: Availability no longer showes incorrect entries when only one logfile exists
 Level: 1
 Component: livestatus
 Version: 1.2.3i7
 Date: 1384426471
 Class: fix
 
-
+Whenever only one logfile was present, e.g. new site, the statehist table 
+had a problem in determining the correct start point of the query.

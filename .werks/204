@@ -5,8 +5,11 @@ Version: 1.2.3i7
 Date: 1384158368
 Class: fix
 
+This change reduces the disk I/O produced by users accessing the multisite
+when the user access time recording is enabled. It should reduce I/O in installations
+with a large userbase.
+
 In previous versions, these optional features were loading the whole user
 configuration just to read / change one attribute of one user, which is kept
 in a single file. This mechanism has been recoded to only use this single
-custom attribute file. Should reduce I/O in large installations during
-multisite processing.
+custom attribute file.

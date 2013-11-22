@@ -1,8 +1,9 @@
-Title: table statehist: code cleanup / minor performance improvements
+Title: Fixed incorrect starttime of table statehist entries
 Level: 1
 Component: livestatus
 Version: 1.2.3i7
 Date: 1383651560
 Class: fix
 
-
+In certain instances the starttime of the reported statehist entries was
+earlier than the statehist query requested by the <tt>Filter: time > 1385111407</tt>

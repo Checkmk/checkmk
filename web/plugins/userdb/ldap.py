@@ -220,12 +220,12 @@ def ldap_default_bind(conn):
                                 'Please fix this in the '
                                 '<a href="wato.py?mode=ldap_config">LDAP connection settings</a>.'))
 
-def ldap_bind(username, password, catch = True, conn = None):
+def ldap_bind(user_dn, password, catch = True, conn = None):
     if conn is None:
         conn = ldap_connection
-    ldap_log('LDAP_BIND %s' % username)
+    ldap_log('LDAP_BIND %s' % user_dn)
     try:
-        conn.simple_bind_s(username, password)
+        conn.simple_bind_s(user_dn, password)
         ldap_log('  SUCCESS')
     except ldap.LDAPError, e:
         ldap_log('  FAILED (%s)' % e)

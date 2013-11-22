@@ -1,0 +1,8 @@
+Title: table headers are now omitted if all fields are empty and no table action is set
+Level: 1
+Component: wato
+Version: 1.2.3i7
+Date: 1385120851
+Class: feature
+
+

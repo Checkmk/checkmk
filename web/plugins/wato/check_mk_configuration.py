@@ -658,13 +658,17 @@ register_configvar(group,
                 title = _("Search Filter"),
                 help = _("Using this option you can define an optional LDAP filter which is used during "
                          "LDAP searches. It can be used to only handle a subset of the users below the given "
-                         "base DN."),
+                         "base DN.<br><br>Some common examples:<br><br> "
+                         "All user objects in LDAP:<br> "
+                         "<code>(&(objectclass=user)(objectcategory=person))</code><br> "
+                         "Members of a group:<br> "
+                         "<code>(&(objectclass=user)(objectcategory=person)(memberof=CN=cmk-users,OU=Groups,DC=corp,DC=de))</code><br>"),
                 size = 80,
                 default_value = lambda: userdb.ldap_filter('users', False),
                 attrencode = True,
             )),
             ("filter_group", LDAPDistinguishedName(
-                title = _("Filter Group"),
+                title = _("Filter Group (Only use in special situations)"),
                 help = _("Using this option you can define the DN of a group object which is used to filter the users. "
                          "Only members of this group will then be synchronized. This is a filter which can be "
                          "used to extend capabilities of the regular \"Search Filter\". Using the search filter "
@@ -673,7 +677,8 @@ register_configvar(group,
                          "directories. But some directories do not have such attributes because the memberships "
                          "are stored in the group objects as e.g. \"member\" attributes. You should use the "
                          "regular search filter whenever possible and only use this filter when it is really "
-                         "neccessary."),
+                         "neccessary. Finally you can say, you should not use this option when using Active Directory. "
+                         "This option is neccessary in OpenLDAP directories when you like to filter by group membership."),
                 size = 80,
             )),
             ("user_id", TextAscii(

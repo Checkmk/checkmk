@@ -6,11 +6,17 @@ distribution: check_mk
 description:
  This check measures the usage of filesystems. The usage
  is checked against a warning and a critical level, which
- can be specified in numerous ways. Beware: on Linux and UNIX systems
- the filesystem might reserve a certain amount for root (typical is 5%).
- This checks considers that reserved space as used. This is consistent with
- the percentage-column in the output of {df}. So your filesystem might
- be at 100% in a situation where root still has 5% free space available.
+ can be specified in numerous ways.
+
+ Beware: on Linux and UNIX systems the filesystem might reserve a certain amount for 
+ root (typical is 5%). This checks considers that reserved space as used. This is 
+ consistent with the percentage-column in the output of {df} on most distributions.
+ So your filesystem might be at 100% in a situation where root still has 5% free 
+ space available. On some distributions, {df} seems to use the user allocatable space
+ instead of the total filesystem size as base for the percentage calculation, this might
+ result in differences between the percentage values shown by that {df} version and
+ the value shown in Check_MK. From our point of view, the calculation of Check_MK is
+ more accurate.
 
  {Trends:} This checks supports filesystem {trends}. This means that the {df} check
  is able to compute the {change} of the used space over the time and can

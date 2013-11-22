@@ -1076,6 +1076,9 @@ class html:
     def attrencode(self, value):
         if type(value) == int:
             return str(value)
+        elif type(value) not in [str, unicode]:
+            value = str(value)
+
         new = ""
         for c in value:
             if c == '"':

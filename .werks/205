@@ -1,4 +1,4 @@
-Title: Allowing star chars in variable names to fix role/permission editing
+Title: NagVis related permissions of roles can be edited again
 Level: 1
 Component: wato
 Version: 1.2.3i7
@@ -7,3 +7,5 @@ Class: fix
 
 A security related change broke editing NagVis related permissions within
 WATO. This has been fixed now.
+
+Allowing star chars in variable names to fix role/permission editing

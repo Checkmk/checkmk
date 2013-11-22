@@ -42,6 +42,7 @@ def inventory_fritz_conn(info):
 
 fritz_conn_states = {
     'Connected':    0,
+    'Connecting':   1,
     'Disconnected': 1,
 }
 

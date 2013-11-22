@@ -1,11 +1,16 @@
-Title: Allowing "-" chars in var names again
+Title: Fixed editing contactgroup assignments of hosts or folders with "-" in names
 Level: 2
 Component: multisite
 Version: 1.2.3i7
 Date: 1383751261
 Class: fix
 
+Contactgroups can have "-" chars in the name. On the host/folder
+pages of WATO, contactgroups can be assigned to hosts/folders. When
+assigning contactgroups with "-" in the name, the assignment has not
+been saved.
+
 In last i-releases, we introduced a feature which checks
 for invalid URL variable names. It filters out variable
 names which contain unwanted chars. The "-" is not evil
-and should be allowed again.
+and is allowed again now.

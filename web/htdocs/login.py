@@ -175,7 +175,10 @@ def do_login():
                 raise MKUserError('_password', _('No password given.'))
 
             origtarget = html.var('_origtarget')
-            if not origtarget or "logout.py" in origtarget:
+            # Disallow redirections to:
+            #  - logout.py: Happens after login
+            #  - Full qualified URLs (http://...) to prevent redirection attacks
+            if not origtarget or "logout.py" in origtarget or '://' in origtarget:
                 origtarget = defaults.url_prefix + 'check_mk/'
 
             # None        -> User unknown, means continue with other connectors

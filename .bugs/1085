@@ -1,0 +1,9 @@
+Title: Personal settings: name of language de missing
+Component: multisite
+State: open
+Date: 2013-11-25 10:36:27
+Targetversion: future
+Class: nastiness
+
+In the personal setting when you want to select a language,
+instead of "German" there is just a "de".

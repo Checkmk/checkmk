@@ -417,8 +417,9 @@ def snmpwalk_on_suboid(hostname, ip, oid, hex_plain = False):
     # a continuation line.
     rowinfo = []
     try:
-        for line in snmp_process.stdout.xreadlines():
-            line = line.strip()
+        line_iter = snmp_process.stdout.xreadlines()
+        while True:
+            line = line_iter.next().strip()
             parts = line.split('=', 1)
             if len(parts) < 2:
                 continue # broken line, must contain =
@@ -431,7 +432,7 @@ def snmpwalk_on_suboid(hostname, ip, oid, hex_plain = False):
 
             if len(value) > 0 and value[0] == '"' and value[-1] != '"': # to be continued
                 while True: # scan for end of this dataset
-                    nextline = snmp_process.next().strip()
+                    nextline = line_iter.next().strip()
                     value += " " + nextline
                     if value[-1] == '"':
                         break

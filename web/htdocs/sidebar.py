@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import config, defaults, livestatus, views, pprint, os, copy, userdb
-import notify
+import notify, urlparse
 from lib import *
 
 # Constants to be used in snapins
@@ -562,16 +562,39 @@ def ajax_add_bookmark():
     href = html.var("href")
     if title and href:
         bookmarks = load_bookmarks()
-        # We try to remove http://hostname/some/path/check_mk from the
-        # URI. That keeps the configuration files (bookmarks) portable.
-        # Problem here: We have not access to our own URL, only to the
-        # path part. The trick: we use the Referrer-field from our
-        # request. That points to the sidebar.
         referer = html.req.headers_in.get("Referer")
+
         if referer:
-            while '/' in referer and referer.split('/')[0] == href.split('/')[0]:
-                referer = referer.split('/', 1)[1]
-                href = href.split('/', 1)[1]
+            ref_p = urlparse.urlsplit(referer)
+            url_p = urlparse.urlsplit(href)
+
+            # If http/https or user, pw, host, port differ, don't try to shorten
+            # the URL to be linked. Simply use the full URI
+            if ref_p.scheme == url_p.scheme and ref_p.netloc == url_p.netloc:
+                # We try to remove http://hostname/some/path/check_mk from the
+                # URI. That keeps the configuration files (bookmarks) portable.
+                # Problem here: We have not access to our own URL, only to the
+                # path part. The trick: we use the Referrer-field from our
+                # request. That points to the sidebar.
+                referer = ref_p.path
+                href    = url_p.path
+                if url_p.query:
+                    href += '?' + url_p.query
+                removed = 0
+                while '/' in referer and referer.split('/')[0] == href.split('/')[0]:
+                    referer = referer.split('/', 1)[1]
+                    href = href.split('/', 1)[1]
+                    removed += 1
+
+                if removed == 1:
+                    # removed only the first "/". This should be an absolute path.
+                    href = '/' + href
+                elif '/' in referer:
+                    # there is at least one other directory layer in the path, make
+                    # the link relative to the sidebar.py's topdir. e.g. for pnp
+                    # links in OMD setups
+                    href = '../' + href
+
         bookmarks.append((title, href))
         save_bookmarks(bookmarks)
     render_bookmarks()

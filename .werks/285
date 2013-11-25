@@ -1,0 +1,10 @@
+Title: Fixed bookmarking of absolute URLs or PNP/NagVis URLs in sidebar snapin
+Level: 1
+Component: multisite
+Version: 1.2.3i7
+Date: 1385367764
+Class: fix
+
+In previous versions, the URLs not pointing to multisite pages, bookmarked with
+the sidebar snapin, could not be used, as they pointed to non existing URLs. This
+was caused by th URL shortening algorithm used within the bookmark snapin.

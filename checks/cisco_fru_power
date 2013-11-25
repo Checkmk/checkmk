@@ -1,0 +1,102 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# .1.3.6.1.4.1.9.9.13.1.5.1.2.1 "removed"
+# .1.3.6.1.4.1.9.9.13.1.5.1.2.2 "AC Power Supply"
+# .1.3.6.1.4.1.9.9.13.1.5.1.3.1 5
+# .1.3.6.1.4.1.9.9.13.1.5.1.3.2 1
+# .1.3.6.1.4.1.9.9.13.1.5.1.4.1 1
+# .1.3.6.1.4.1.9.9.13.1.5.1.4.2 2
+
+# OID     1.3.6.1.4.1.9.9.117.1.1.2.1.2
+# Type    PowerOperType
+# 1:offEnvOther
+# 2:on
+# 3:offAdmin
+# 4:offDenied
+# 5:offEnvPower
+# 6:offEnvTemp
+# 7:offEnvFan
+# 8:failed
+# 9:onButFanFail
+# 10:offCooling
+# 11:offConnectorRating
+# 12:onButInlinePowerFail
+#
+# OID     1.3.6.1.4.1.9.9.117.1.1.2.1.1
+# Type    PowerAdminType
+# 1:on
+# 2:off
+# 3:inlineAuto
+# 4:inlineOn
+# 5:powerCycle
+#
+
+power_oper_type = ('', 'offEnvOther', 'on', 'offAdmin', 'offDenied', 
+                    'offEnvPower', 'offEnvTemp', 'offEnvFan', 'failed',
+                    'onButFanFail', 'offCooling', 'offConnectorRating',
+                    'onButInlinePowerFail' )
+
+power_admin_type = ( '', 'on', 'off', 'inlineAuto', 'inlineOn', 'powercycle')
+
+def inventory_cisco_fru_power(info):
+    return [ (line[0], None )  for line in info ]
+
+def check_cisco_fru_power(item, params, info):
+    for line in info:
+        if line[0] == item:
+            admin_state, oper_state  = map(saveint, line[1:3])
+            output = 'Admin-State: %s, Oper-State: %s' % (power_admin_type[admin_state],
+                                                            power_oper_type[oper_state])
+            admin_sym = ""
+            oper_sym = ""
+            if admin_state == 1 and oper_state == 2:
+                state = 0
+            elif admin_state == 2 or oper_state in ( 4,5,6,7,8,12):
+                state = 2
+                if admin_state == 2:
+                    admin_sym = "(!!)"
+                if oper_state in ( 4,5,6,7,8,12):
+                    oper_sym = "(!!)"
+            else:
+                state = 1
+                if admin_state not in (1,2):
+                    admin_sym = "(!)"
+                if oper_state not in (2,4,5,6,7,8,12):
+                    oper_sym = "(!)"
+            return (state, "Admin-State: %s%s, Oper-State: %s%s" % \
+                (power_admin_type[admin_state],admin_sym,power_oper_type[oper_state],oper_sym))
+
+    return (3, "item not found in snmp data")
+
+check_info["cisco_fru_power"] = {
+    'check_function':          check_cisco_fru_power,
+    'inventory_function':      inventory_cisco_fru_power,
+    'service_description':     'FRU Power %s',
+    'snmp_info':               ('.1.3.6.1.4.1.9.9.117.1.1.2.1', [ OID_END, '1', '2'] ),
+    'snmp_scan_function':      \
+     lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower(),
+}

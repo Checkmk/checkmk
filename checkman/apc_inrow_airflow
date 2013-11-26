@@ -1,0 +1,16 @@
+title: APC InRow Cooling Airflow
+agents: snmp
+catalog: hw/enviroment
+license: GPL
+distribution: check_mk
+description:
+  The current Airflow for a InRow Cooling devices. 
+
+examples:
+ apc_inrow_airflow_default_levels = { 
+     "level_low" : ( 5.0 , 2.0 ), 
+     "level_high" : ( 10.0, 11.0 ) 
+    }
+
+perfdata:
+ flow: The current flow in liter/s

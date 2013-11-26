@@ -1,0 +1,68 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+def inventory_apc_mod_pdu_modules(info):
+    return [ (x[0], None) for x in info if x[0] != '' ]
+
+def check_apc_mod_pdu_modules(item, _no_params, info):
+    apc_states = {
+        1 : "normal",
+        2 : "warning",
+        3 : "notPresent",
+        6 : "unknown",
+    }
+    for name, status, current_power in info:
+        if name == item:
+            status = saveint(status)
+            current_power = savefloat(current_power)/100
+            message = "Status %s, current: %.2fkw " % \
+            ( apc_states.get(status, 6), current_power )
+
+            perf = [
+              ("current_power", current_power )
+            ]
+            if status == 2:
+                return 1, message,perf
+            if status in [ 3, 6 ]:
+                return 2, message,perf
+            if status == 1:
+                return 0, message,perf
+            return 3, message
+    return 3, "Module not found"
+
+check_info["apc_mod_pdu_modules"] = {
+    "check_function"        : check_apc_mod_pdu_modules,
+    "inventory_function"    : inventory_apc_mod_pdu_modules,
+    "service_description"   : "Module %s",
+    "snmp_info"             : (".1.3.6.1.4.1.318.1.1.22.2.6.1", [ 
+                                                        4, #isxModularDistModuleOutputName
+                                                        6, #isxModularDistModuleOutputStatus
+                                                        20, #isxModularDistModuleOutputTotalPower
+                                                        ]),
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.318.1.3.24.1" ,
+    "has_perfdata"          : True,
+}
+

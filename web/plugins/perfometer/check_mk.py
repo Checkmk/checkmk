@@ -275,6 +275,7 @@ perfometers["check_mk-fsc_temp"] = perfometer_temperature
 perfometers["check_mk-viprinet_temp"] = perfometer_temperature
 perfometers["check_mk-hwg_temp"] = perfometer_temperature
 perfometers["check_mk-sensatronics_temp"] = perfometer_temperature
+perfometers["check_mk-apc_inrow_temperature"] = perfometer_temperature
 
 def perfometer_blower(row, check_command, perf_data):
     rpm = saveint(perf_data[0][1])
@@ -716,3 +717,23 @@ def perfometer_mq_queues(row, command, perf):
     return "%s Messages" % size, perfometer_logarithmic(size, 1, 2, "#701141")
 
 perfometers['check_mk-mq_queues'] = perfometer_mq_queues
+
+def perfometer_apc_mod_pdu_modules(row, check_command, perf_data):
+    value = int(savefloat(perf_data[0][1]) * 100)
+    return "%skw" % perf_data[0][1], perfometer_logarithmic(value, 500, 2, "#3366CC")
+
+perfometers["check_mk-apc_mod_pdu_modules"] = perfometer_apc_mod_pdu_modules
+
+# Aiflow in l/s
+def perfometer_airflow_ls(row, check_command, perf_data):
+    value = int(float(perf_data[0][1])*100)
+    return "%sl/s" % perf_data[0][1], perfometer_logarithmic(value, 1000, 2, '#3366cc')
+
+perfometers["check_mk-apc_inrow_airflow"] = perfometer_airflow_ls
+
+def perfometer_fanspeed(row, check_command, perf_data):
+    value = float(perf_data[0][1])
+    return "%.2f%%" % value, perfometer_linear(value, "silver")
+
+perfometers["check_mk-apc_inrow_fanspeed"]  = perfometer_fanspeed
+

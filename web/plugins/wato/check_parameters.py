@@ -3644,6 +3644,36 @@ register_check_parameters(
 
 register_check_parameters(
    subgroup_environment,
+   "airflow",
+   _("Airflow levels"),
+   Dictionary(
+      title = _("Levels for airflow"),
+      elements = [
+      ("level_low",
+        Tuple(
+          title = _("Lower levels"),
+          elements = [
+            Integer(title = _( "Warning if below"), unit=_("l/s")),
+            Integer(title = _( "Critical if below"), unit=_("l/s"))
+          ]
+        )
+      ),
+      ("level_high",
+        Tuple(
+          title = _("Higher levels"),
+          elements = [
+            Integer(title = _( "Warning if above"), unit=_("l/s")),
+            Integer(title = _( "Critical if above"), unit=_("l/s"))
+          ]
+        )
+      ),
+      ]
+   ),
+   None,
+   None,
+)
+register_check_parameters(
+   subgroup_environment,
     "ups_capacity",
     _("UPS Capacity"),
     Dictionary(

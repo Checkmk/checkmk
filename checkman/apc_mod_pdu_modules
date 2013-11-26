@@ -1,0 +1,13 @@
+title: APC Modular Power Distribution Unit
+agents: snmp
+catalog: hw/power
+license: GPL
+distribution: check_mk
+description:
+ Checks the status of the modules attached to the PDU system.
+ The check goes to {CRIT} if one of the modules goes in unkown or not presend state.
+ It goes to {WARN} if the devices reports an warning state for the module.
+ The check also reports the current output in kw
+
+perfdata:
+ current_power: The current ouput in kw

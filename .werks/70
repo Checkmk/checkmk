@@ -1,0 +1,8 @@
+Title: cmciii_lcp_airin cmciii_lcp_airout cmciii_lcp_fans cmciii_lcp_waterflow cmciii_lcp_waterin cmciii_lcp_waterout: new checks for the Rittal CMC-III LCP device
+Level: 1
+Component: checks
+Version: 1.2.3i7
+Date: 1385483959
+Class: feature
+
+

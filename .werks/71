@@ -1,0 +1,8 @@
+Title: livedump: new option to include contact_groups instead of contacts when dumping configuration
+Level: 1
+Component: multisite
+Version: 1.2.3i7
+Date: 1385485919
+Class: feature
+
+

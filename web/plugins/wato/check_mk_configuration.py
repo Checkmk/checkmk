@@ -519,7 +519,7 @@ register_configvar(group,
     "ldap_connection",
     Dictionary(
         title = _("LDAP Connection Settings"),
-        help  = _("This option configures all LDAP specific connection options. These options "
+        help  = _("This section configures all LDAP specific connection options. These options "
                   "are used by the LDAP user connector."),
         elements = [
             ("server", TextAscii(
@@ -600,7 +600,7 @@ register_configvar(group,
                     LDAPDistinguishedName(
                         title = _("Bind DN"),
                         help  = _("Specify the distinguished name to be used to bind to "
-                                  "the LDAP directory."),
+                                  "the LDAP directory, e. g. <tt>CN=ldap,OU=users,DC=example,DC=com</tt>"),
                         size = 63,
                     ),
                     Password(
@@ -634,19 +634,20 @@ register_configvar(group,
     "ldap_userspec",
     Dictionary(
         title = _("LDAP User Settings"),
-        help  = _("This option configures all user related LDAP options. These options "
+        help  = _("This section configures all user related LDAP options. These options "
                   "are used by the LDAP user connector to find the needed users in the LDAP directory."),
         elements = [
             ("dn", LDAPDistinguishedName(
                 title = _("User Base DN"),
-                help  = _("The base distinguished name to be used when performing user account "
-                          "related queries to the LDAP server."),
+                help  = _("Give a base distinguished name here, e. g. <tt>OU=users,DC=example,DC=com</tt><br> "
+                          "All user accounts to synchronize must be located below this one."),
                 size = 80,
             )),
             ("scope", DropdownChoice(
                 title = _("Search Scope"),
-                help  = _("Scope to be used in LDAP searches. In most cases \"sub\" is the best choice. "
-                          "It searches for matching objects in the given base and the whole subtree."),
+                help  = _("Scope to be used in LDAP searches. In most cases <tt>Search whole subtree below "
+                          "the base DN</tt> is the best choice. "
+                          "It searches for matching objects recursively."),
                 choices = [
                     ("sub",  _("Search whole subtree below the base DN")),
                     ("base", _("Search only the entry at the base DN")),
@@ -660,9 +661,9 @@ register_configvar(group,
                          "LDAP searches. It can be used to only handle a subset of the users below the given "
                          "base DN.<br><br>Some common examples:<br><br> "
                          "All user objects in LDAP:<br> "
-                         "<code>(&(objectclass=user)(objectcategory=person))</code><br> "
+                         "<tt>(&(objectclass=user)(objectcategory=person))</tt><br> "
                          "Members of a group:<br> "
-                         "<code>(&(objectclass=user)(objectcategory=person)(memberof=CN=cmk-users,OU=Groups,DC=corp,DC=de))</code><br>"),
+                         "<tt>(&(objectclass=user)(objectcategory=person)(memberof=CN=cmk-users,OU=groups,DC=example,DC=com))</tt><br>"),
                 size = 80,
                 default_value = lambda: userdb.ldap_filter('users', False),
                 attrencode = True,
@@ -673,12 +674,14 @@ register_configvar(group,
                          "Only members of this group will then be synchronized. This is a filter which can be "
                          "used to extend capabilities of the regular \"Search Filter\". Using the search filter "
                          "you can only define filters which directly apply to the user objects. To filter by "
-                         "group memberships, you can use the \"memberOf\" attribute of the user objects in some "
+                         "group memberships, you can use the <tt>memberOf</tt> attribute of the user objects in some "
                          "directories. But some directories do not have such attributes because the memberships "
-                         "are stored in the group objects as e.g. \"member\" attributes. You should use the "
+                         "are stored in the group objects as e.g. <tt>member</tt> attributes. You should use the "
                          "regular search filter whenever possible and only use this filter when it is really "
                          "neccessary. Finally you can say, you should not use this option when using Active Directory. "
-                         "This option is neccessary in OpenLDAP directories when you like to filter by group membership."),
+                         "This option is neccessary in OpenLDAP directories when you like to filter by group membership.<br><br>"
+                         "If using, give a plain distinguished name of a group here, e. g. "
+                         "<tt>CN=cmk-users,OU=groups,DC=example,DC=com</tt>"),
                 size = 80,
             )),
             ("user_id", TextAscii(
@@ -706,20 +709,21 @@ register_configvar(group,
     "ldap_groupspec",
     Dictionary(
         title = _("LDAP Group Settings"),
-        help  = _("This option configures all group related LDAP options. These options "
+        help  = _("This section configures all group related LDAP options. These options "
                   "are only needed when using group related attribute synchonisation plugins."),
         elements = [
             ("dn", LDAPDistinguishedName(
                 title = _("Group Base DN"),
-                help  = _("The base distinguished name to be used when performing group account "
-                          "related queries to the LDAP server."),
+                help  = _("Give a base distinguished name here, e. g. <tt>OU=groups,DC=example,DC=com</tt><br> "
+                          "All groups used must be located below this one."),
                 size = 80,
             )),
             ("scope", DropdownChoice(
                 title = _("Search Scope"),
-                help  = _("Scope to be used in group related LDAP searches. In most cases \"sub\" "
+                help  = _("Scope to be used in group related LDAP searches. In most cases "
+                          "<tt>Search whole subtree below the base DN</tt> "
                           "is the best choice. It searches for matching objects in the given base "
-                          "and the whole subtree."),
+                          "recursively."),
                 choices = [
                     ("sub",  _("Search whole subtree below the base DN")),
                     ("base", _("Search only the entry at the base DN")),
@@ -731,7 +735,8 @@ register_configvar(group,
                 title = _("Search Filter"),
                 help = _("Using this option you can define an optional LDAP filter which is used "
                          "during group related LDAP searches. It can be used to only handle a "
-                         "subset of the groups below the given base DN."),
+                         "subset of the groups below the given base DN.<br><br> "
+                         "e. g. <tt>(objectclass=group)</tt>"),
                 size = 80,
                 default_value = lambda: userdb.ldap_filter('groups', False),
                 attrencode = True,
@@ -771,7 +776,8 @@ register_configvar(group,
         title = _('LDAP Cache Livetime'),
         help  = _('This option defines the maximum age for using the cached LDAP data. The time of the '
                   'last LDAP synchronisation is saved and checked on every request to the multisite '
-                  'interface. Once the cache gets outdated, a new synchronisation job is started.'),
+                  'interface. Once the cache gets outdated, a new synchronisation job is started.<br><br>'
+                  'Please note: Passwords of the users are never stored in WATO and therefor never cached!'),
         minvalue = 1,
         default_value = 300,
     ),

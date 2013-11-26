@@ -15,12 +15,10 @@ description:
 inventory:
   The check generates one item for the sessions connected to the MySQL daemon.
 
+perfdata:
+  The check generates perfdata for the total and running sessions, and the
+  connection rate.
 
 [configuration]
 warn(int): number of sessions at which the check goes warn
 crit(int): number of sessions for a critical state
-
-
-perfdata:
-  The check generates perfdata for the total and running sessions, and the
-  connection rate.

@@ -82,7 +82,8 @@ def render_availability(view, datasource, filterheaders, display_options,
     html.write(avoptions_html)
     
     if not html.has_user_errors():
-        rows = get_availability_data(datasource, filterheaders, range, only_sites, limit, timeline, timeline or avoptions["show_timeline"], avoptions)
+        rows = get_availability_data(datasource, filterheaders, range, only_sites,
+                                     limit, timeline, timeline or avoptions["show_timeline"], avoptions)
         what = "service" in datasource["infos"] and "service" or "host"
         do_render_availability(rows, what, avoptions, timeline, "")
 
@@ -654,7 +655,7 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
     availability = []
     os_aggrs, os_states = avoptions.get("outage_statistics", ([],[]))
     need_statistics = os_aggrs and os_states
-    show_timeline = avoptions["show_timeline"]
+    show_timeline = avoptions["show_timeline"] or timeline
     grouping = avoptions["grouping"]
     timeline_rows = [] # Need this as a global variable if just one service is affected
     total_duration = 0
@@ -757,7 +758,8 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
             if not show_timeline:
                 timeline_rows = None
 
-            availability.append([site_host[0], site_host[1], service, display_name, states, considered_duration, total_duration, statistics, timeline_rows, group_ids])
+            availability.append([site_host[0], site_host[1], service, display_name, states,
+                                considered_duration, total_duration, statistics, timeline_rows, group_ids])
 
     # Prepare number format function
     range, range_title = avoptions["range"]
@@ -786,7 +788,8 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
             return "%02d:%02d:%02d" % (hours, minn, sec)
 
     if timeline:
-        render_timeline(timeline_rows, from_time, until_time, total_duration, timeline, range_title, render_number, what, timewarpcode, style="standalone")
+        render_timeline(timeline_rows, from_time, until_time, total_duration,
+                        timeline, range_title, render_number, what, timewarpcode, style="standalone")
     else:
         render_availability_table(availability, from_time, until_time, range_title, what, avoptions, render_number)
 

@@ -5,7 +5,7 @@ Version: 1.2.3i7
 Date: 1385120851
 Class: feature
 
-Html tables rendered with the help of the table module always displayed the <th> fields,
+Html tables rendered with the help of the table module always displayed the &lt;th&gt; fields,
 even if none if this fields were filled. For example:
 
 C+:

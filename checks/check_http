@@ -125,8 +125,8 @@ def check_http_arguments(params):
 def check_http_desc(params):
     if params[0].startswith("^"):
         return params[0][1:]
-    if params[1].get("ssl"):
-        return "HTTPS %s" % params[0]
+    #if params[1].get("ssl"):
+    #    return "HTTPS %s" % params[0]
     return "HTTP %s" % params[0]
 
 active_check_info['http'] = {

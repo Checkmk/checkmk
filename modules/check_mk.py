@@ -4495,9 +4495,9 @@ NOTES:
   compressed tar file. --restore *erases* the current configuration
   and data and replaces it with that from the backup file.
 
-  --flush deletes all runtime data belonging to a host (not
-  inventory data). This includes the state of performance counters,
-  cached agent output,  and logfiles. Precompiled host checks
+  --flush deletes all runtime data belonging to a host. This includes
+  the inventorized checks, the state of performance counters,
+  cached agent output, and logfiles. Precompiled host checks
   are not deleted.
 
   -P, --package brings you into packager mode. Packages are

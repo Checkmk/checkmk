@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def inventory_cmciii_pu_io(info):
+def inventory_cmciii_pu_canbus(info):
     inventory = []
     for oid_num in range(0, len(info[0])):
         if re.match('.*DescName$',info[0][oid_num]):
@@ -32,50 +32,36 @@ def inventory_cmciii_pu_io(info):
             inventory.append((item, None))
     return inventory
 
-def check_cmciii_pu_io(item, params, info):
+def check_cmciii_pu_canbus(item, params, info):
     for oid_num in range(0, len(info[0])):
         if re.match(item,info[0][oid_num]):
             descr = info[1][oid_num]
-            if re.match('^Input.*$',info[0][oid_num]):
-                value = info[1][oid_num+1]
-                logic = info[1][oid_num+2]
-                delay = info[1][oid_num+3]
-                status = info[1][oid_num+4]
-                if value == "0":
-                    state = 0
-                    sym = ""
-                else:
-                    state = 1
-                    sym = "(!)"
-                infotext =  "Input: %s, Value %s%s, Logic %s, Delay %s, Status %s" \
-                    % ( descr, value, sym, logic, delay, status )
-                return (state, infotext)
-            elif re.match('^Output.*$',info[0][oid_num]):
-                relay = info[1][oid_num+1]
-                logic = info[1][oid_num+2]
-                status = info[1][oid_num+3]
-                if status == "Off":
-                    state = 0
-                    sym = ""
-                else:
-                    state = 1
-                    sym = "(!)"
-                infotext =  "Output: %s, Relay %s, Logic %s, Status %s%s" \
-                    % ( descr, relay, logic, status, sym )
-                return (state, infotext)
+            value = re.sub(" ","",info[1][oid_num+1])
+            crit = info[1][oid_num+2].split(" ")[0]
+            warn = info[1][oid_num+3].split(" ")[0]
+            status = info[1][oid_num+5]
+            if status.lower() == "ok":
+                state = 0
+            else:
+                state = 2
+            infotext =  "%s: %s (%s/%s), Status %s" \
+                % ( descr, value, warn, crit, status )
+            perfdata = [ ("current", value, warn, crit, 0 ) ]
+
+            return (state, infotext, perfdata)
 
     return(3,"no valid SNMP data found for unit")
 
 
-check_info['cmciii_pu_io'] = {
-    "check_function"      : check_cmciii_pu_io,
-    "inventory_function"  : inventory_cmciii_pu_io,
-    "has_perfdata"        : False,
-    "service_description" : "PU IO Unit %s",
+check_info['cmciii_pu_canbus'] = {
+    "check_function"      : check_cmciii_pu_canbus,
+    "inventory_function"  : inventory_cmciii_pu_canbus,
+    "has_perfdata"        : True,
+    "service_description" : "PU %s",
     "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Rittal") and \
-                                oid(".1.3.6.1.4.1.2606.7.4.2.2.1.3.1.17").startswith("Input 1.DescName"),
+                                oid(".1.3.6.1.4.1.2606.7.4.2.2.1.3.1.39").startswith("System.CAN1 Current.DescName"),
     "snmp_info"           : (
-      ".1.3.6.1.4.1.2606.7.4.2.2.1", [ "3.1", "10.1" ], [OID_END]+range(17,33)
+      ".1.3.6.1.4.1.2606.7.4.2.2.1", [ "3.1", "10.1" ], [OID_END]+range(39,52)
     )
 }
 

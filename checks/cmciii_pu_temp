@@ -24,21 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Table columns:
-# 0: index
-# 1: sensor type (10 = temperature)
-# 2: sensor state (4 = ok)
-# 3: current value (temperature)
-# 4: critical level
-# 5: warn low level
-# 6: warn level
-# 7: description
-
-def inventory_cmciii_temp(info):
+def inventory_cmciii_pu_temp(info):
     if info[0][1]:
         return [ (None, None)]
 
-def check_cmciii_temp(item, params, info):
+def check_cmciii_pu_temp(item, params, info):
     line = info[0]
     stati = {
        "OK" : 0,
@@ -68,13 +58,14 @@ def check_cmciii_temp(item, params, info):
     state = stati.get(status, 3)
     return (state, info_text + levels_text, perfdata)
 
-check_info['cmciii_temp'] = {
-    "check_function"      : check_cmciii_temp,
-    "inventory_function"  : inventory_cmciii_temp,
+check_info['cmciii_pu_temp'] = {
+    "check_function"      : check_cmciii_pu_temp,
+    "inventory_function"  : inventory_cmciii_pu_temp,
     "has_perfdata"        : True,
-    "service_description" : "Temperature",
+    "service_description" : "PU Temperature",
     "group"               : "room_temperature",
-    "snmp_scan_function"  : lambda oid: "Rittal CMC III PU" in oid(".1.3.6.1.2.1.1.1.0"),
+    "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Rittal") and \
+                                oid(".1.3.6.1.4.1.2606.7.4.2.2.1.3.1.1").startswith("Temperature.DescName"),
     "snmp_info"           : (
        ".1.3.6.1.4.1.2606.7.4.2.2.1.10.1",
        [ "1", # DescName

@@ -563,6 +563,7 @@ def main_delete(args):
     for ids in args:
         if 0 == os.system("git rm %s" % ids):
             sys.stdout.write("Deleted werk %s (%s).\n" % (ids, g_werks[int(ids)]["description"]))
+    rewrite_changelog()
 
 def grep(line, kw, n):
     lc = kw.lower()

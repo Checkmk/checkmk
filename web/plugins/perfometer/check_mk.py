@@ -408,6 +408,7 @@ perfometers["check_mk-h3c_lanswitch_cpu"] = perfometer_cpu_utilization
 perfometers["check_mk-winperf_processor.util"] = perfometer_cpu_utilization
 perfometers["check_mk-netapp_cpu"] = perfometer_cpu_utilization
 perfometers["check_mk-cisco_cpu"] = perfometer_cpu_utilization
+perfometers["check_mk-juniper_cpu"] = perfometer_cpu_utilization
 
 def perfometer_ps_perf(row, check_command, perf_data):
     perf_dict = dict([(p[0], float(p[1])) for p in perf_data])

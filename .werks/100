@@ -1,0 +1,8 @@
+Title: juniper_cpu: New check for CPU utilization on Juniper switches
+Level: 1
+Component: checks
+Version: 1.2.3i7
+Date: 1385566659
+Class: feature
+
+

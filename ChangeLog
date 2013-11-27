@@ -24,6 +24,8 @@
     * 0098 apc_inrow_airflow, apc_inrow_fanspeed, apc_inrow_temp: New checks for APC inrow devices
     * 0099 apc_mod_pdu_modules: New check for APC Modular Power Distribution Unit
     * 0100 juniper_cpu: New check for CPU utilization on Juniper switches
+    * 0070 cmciii_lcp_airin cmciii_lcp_airout cmciii_lcp_fans cmciii_lcp_waterflow cmciii_lcp_waterin cmciii_lcp_waterout: new checks for the Rittal CMC-III LCP device
+    * 0072 cmciii_pu_access cmciii_pu_canbus cmciii_pu_io cmciii_pu_temp: New checks for the Rittal CMC-III PU Unit
     * 0024 FIX: cisco_wlc: removed check configuration parameter ap_model...
     * 0065 FIX: veeam_client: check behaviour improved when backup is in progress
     * 0066 FIX: veeam_jobs: check behaviour improved when backup is in progress
@@ -93,25 +95,14 @@
     * 0233 FIX: Fixed missing entries in log file and availability view...
 
 
-<<<<<<< HEAD
     * 0026 FIX: snmptd_mkevent.py: fixed crash on startup
     * 0036 FIX: fixed bug in multisite command execution...
-
-    Livestatus:
-    * 0067 livedump: new option to mark the mode at the beginning of the dump and documentation fixes...
-    * 0023 FIX: table statehist: code cleanup / minor performance improvements
-    * 0034 FIX: table statehist: no more missing entries if only one logfile exists
-    * 0233 FIX: Fixed missing entries in log file and availability view...
-=======
-    * 0026 FIX: snmpd_mkevent.py: fixed crash on startup
-    * 0036 FIX: Fixed bug where multsite commands did not work properly...
 
     Livestatus:
     * 0067 livedump: new option to mark the mode at the beginning of the dump and documentation fixes...
     * 0023 FIX: Fixed incorrect starttime of table statehist entries...
     * 0034 FIX: Availability no longer showes incorrect entries when only one logfile exists...
     * 0233 FIX: Fixed missing entries in log file or availability view...
->>>>>>> 76d0c2c483e7807fec360708fb2ad5b03479dead
 
 
 1.2.3i6:

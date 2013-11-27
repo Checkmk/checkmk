@@ -1,0 +1,8 @@
+Title: cmciii_pu_access cmciii_pu_canbus cmciii_pu_io cmciii_pu_temp: New checks for the Rittal CMC-III PU Unit
+Level: 1
+Component: checks
+Version: 1.2.3i7
+Date: 1385566173
+Class: feature
+
+

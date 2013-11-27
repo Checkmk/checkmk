@@ -21,6 +21,7 @@
     * 0038 casa_cpu_mem casa_cpu_temp casa_cpu_util casa_fan casa_power: New checks for casa Cable Modem Termination Systems...
     * 0097 arc_raid_status: New check for Areca RAID controllers
     * 0070 cmciii_lcp_airin cmciii_lcp_airout cmciii_lcp_fans cmciii_lcp_waterflow cmciii_lcp_waterin cmciii_lcp_waterout: new checks for the Rittal CMC-III LCP device
+    * 0072 cmciii_pu_access cmciii_pu_canbus cmciii_pu_io cmciii_pu_temp: New checks for the Rittal CMC-III PU Unit
     * 0024 FIX: cisco_wlc: removed check configuration parameter ap_model...
     * 0065 FIX: veeam_client: check behaviour improved when backup is in progress
     * 0066 FIX: veeam_jobs: check behaviour improved when backup is in progress

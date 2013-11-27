@@ -96,30 +96,44 @@ def livedump_config():
         encode_row(row)
         check_commands.add(row["check_command"])
         row["contactsstring"] = (",".join(row["contacts"])).encode("utf-8")
-
+        row["contact_groups"] = (",".join(row["contact_groups"])).encode("utf-8")
 
     # Dump host config
     query = \
          "GET hosts\n" \
          "Columns: name alias address groups check_command " \
-         "max_check_attempts contacts\n" + \
+         "max_check_attempts contacts contact_groups\n" + \
          opt_host_headers + \
          opt_host_only_headers
     for row in g_connection.query_table_assoc(query):
         prepare_row(row)
         row["groupstring"] = ",".join(row["groups"])
-        sys.stdout.write(
-           "define host {\n"
-           "  use                livedump-host\n"
-           "  host_name          %(name)s\n"
-           "  alias              %(alias)s\n"
-           "  address            %(address)s\n"
-           "  host_groups        %(groupstring)s\n" 
-           "  contacts           %(contactsstring)s\n"
-           "  check_command      %(check_command)s\n"
-           "  max_check_attempts %(max_check_attempts)d\n"
-           "}\n\n"
-           % row)
+        if opt_groups:
+            sys.stdout.write(
+               "define host {\n"
+               "  use                livedump-host\n"
+               "  host_name          %(name)s\n"
+               "  alias              %(alias)s\n"
+               "  address            %(address)s\n"
+               "  host_groups        %(groupstring)s\n" 
+               "  contact_groups     %(contact_groups)s\n"
+               "  check_command      %(check_command)s\n"
+               "  max_check_attempts %(max_check_attempts)d\n"
+               "}\n\n"
+               % row)
+        else:
+            sys.stdout.write(
+               "define host {\n"
+               "  use                livedump-host\n"
+               "  host_name          %(name)s\n"
+               "  alias              %(alias)s\n"
+               "  address            %(address)s\n"
+               "  host_groups        %(groupstring)s\n" 
+               "  contacts           %(contactsstring)s\n"
+               "  check_command      %(check_command)s\n"
+               "  max_check_attempts %(max_check_attempts)d\n"
+               "}\n\n"
+               % row)
 
     # Dump service config
     query = \
@@ -212,6 +226,9 @@ output=%(plugin_output)s|%(perf_data)s
 def omd_root():
     return os.getenv("OMD_ROOT")
 
+def omd_site():
+    return os.getenv("OMD_SITE")
+
 def verbose(x):
     if opt_verbose:
         sys.stderr.write("%s\n" % x)
@@ -259,10 +276,11 @@ def print_version():
 #   | Main entry point, getopt, etc.                                       |
 #   '----------------------------------------------------------------------'
 
-short_options = 'hVvc:H:S:O:TCM'
+short_options = 'hVvc:H:S:O:TCMG'
 long_options = [ "help", "version", "verbose", "debug", "socket=", 
                  "host-header=", "host-only-header=", "service-header=",
-                 "dump-templates", "config", "state", "mark-mode" ]  
+                 "dump-templates", "config", "state", "mark-mode",
+                 "include-groups" ]  
 
 opt_verbose = False
 opt_debug = False
@@ -272,6 +290,7 @@ opt_host_headers = ""
 opt_host_only_headers = ""
 opt_service_headers = ""
 opt_dump_templates = False
+opt_groups = False
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -306,7 +325,8 @@ for o,a in opts:
         opt_dump_templates = True
     elif o in [ '-M', '--mark-mode' ]:
         opt_mark_mode = True
-
+    elif o in [ '-G', '--include-groups' ]:
+        opt_groups = True
 
 # Main modes
 try:
@@ -314,7 +334,7 @@ try:
     for o, a in opts:
         if o in [ '-C', '--config' ]:
             if opt_mark_mode:
-                print "config"
+                print "config", omd_site()
             livedump_config()
             sys.exit(0)
     if opt_mark_mode:

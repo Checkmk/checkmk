@@ -654,7 +654,7 @@ ldap_attribute_plugins['email'] = {
 ldap_attribute_plugins['alias'] = {
     'title': _('Alias'),
     'help':  _('Populates the alias attribute of the WATO user by syncrhonizing an attribute '
-               'from the LDAP user account. By default the LDAP attribute &quot;cn&quot; is used.'),
+               'from the LDAP user account. By default the LDAP attribute <tt>cn</tt> is used.'),
     'needed_attributes': lambda params: [ params.get('attr', ldap_attr('cn')) ],
     'convert':           lambda plugin, params, user_id, ldap_user, user: \
                              ldap_convert_simple(user_id, ldap_user, user, 'alias',
@@ -712,7 +712,7 @@ ldap_attribute_plugins['auth_expire'] = {
             title = _("LDAP attribute to be used as indicator"),
             help  = _("When the value of this attribute changes for a user account, all "
                       "current authenticated sessions of the user are invalidated and the "
-                      "user must login again. By default this field uses the fields whcih "
+                      "user must login again. By default this field uses the fields which "
                       "hold the time of the last password change of the user."),
             default_value = lambda: ldap_attr('pw_changed'),
         )),
@@ -723,7 +723,7 @@ ldap_attribute_plugins['pager'] = {
     'title': _('Pager'),
     'help':  _('This plugin synchronizes a field of the users ldap account to the pager attribute '
                'of the WATO user accounts, which is then forwarded to Nagios and can be used'
-               'for notifications. By default the LDAP attribute &quot;mobile&quot; is used.'),
+               'for notifications. By default the LDAP attribute <tt>mobile</tt> is used.'),
     'needed_attributes': lambda params: [ params.get('attr', ldap_attr('mobile')) ],
     'convert':           lambda plugin, params, user_id, ldap_user, user: \
                              ldap_convert_simple(user_id, ldap_user, user, 'pager',
@@ -816,8 +816,9 @@ def ldap_list_roles_with_group_dn():
     for role_id, role in load_roles().items():
         elements.append((role_id, LDAPDistinguishedName(
             title = role['alias'] + ' - ' + _("Specify the Group DN"),
-            help  = _("Distinguished Name of the LDAP group to add users this role. This group must "
-                      "be defined within the scope of the "
+            help  = _("Distinguished Name of the LDAP group to add users this role. "
+                      "e. g. <tt>CN=cmk-users,OU=groups,DC=example,DC=com</tt><br> "
+                      "This group must be defined within the scope of the "
                       "<a href=\"wato.py?mode=ldap_config&varname=ldap_groupspec\">LDAP Group Settings</a>."),
             size  = 80,
             enforce_suffix = ldap_replace_macros(config.ldap_groupspec.get('dn', '')),
@@ -840,7 +841,10 @@ def ldap_list_roles_with_group_dn():
 ldap_attribute_plugins['groups_to_roles'] = {
     'title': _('Roles'),
     'help':  _('Configures the roles of the user depending on its group memberships '
-               'in LDAP.'),
+               'in LDAP.<br><br>'
+               'Please note: Additionally the user is assigned to the '
+               '<a href="wato.py?mode=edit_configvar&varname=default_user_profile&site=&folder=">Default Roles</a>. '
+               'Deactivate them if unwanted.'),
     'convert':           ldap_convert_groups_to_roles,
     'lock_attributes':   ['roles'],
     'parameters':        ldap_list_roles_with_group_dn,

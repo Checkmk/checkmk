@@ -1,0 +1,63 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+def inventory_cmciii_lcp_fans(info):
+    if info:
+        inventory = []
+        for i in range(1,7):
+            if info[0][i*4-1].lower() != "off":
+                inventory.append((i , None) )
+        return inventory
+
+def check_cmciii_lcp_fans(item, params, info):
+    for i in range(1,7):
+        if item == i:
+            status = info[0][i*4-1]
+            lowlevel = re.sub(" .*$", "", info[0][0])
+
+            info_text = "%s RPM: %s, Status: %s" % \
+                    (info[0][i*4-3], info[0][i*4-2], info[0][i*4-1])
+
+            perfdata = [ ("rpm", re.sub(" ","", info[0][i*4-2]), lowlevel+":", 0, 0 ) ]
+
+            if status.lower() == "ok":
+                state = 0
+            else:
+                state = 2
+
+            return (state, info_text, perfdata)
+
+    return (3, "no SNMP data found")
+
+check_info['cmciii_lcp_fans'] = {
+    "check_function"      : check_cmciii_lcp_fans,
+    "inventory_function"  : inventory_cmciii_lcp_fans,
+    "has_perfdata"        : True,
+    "service_description" : "LCP Fanunit FAN %s",
+    "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Rittal LCP") and \
+                                oid(".1.3.6.1.4.1.2606.7.4.2.2.1.3.2.6").startswith("Air.Temperature.DescName"),
+    "snmp_info"           : ( '.1.3.6.1.4.1.2606.7.4.2.2.1.10.2', range(34, 59)),
+}

@@ -36,9 +36,9 @@ def check_cmciii_pu_canbus(item, params, info):
     for oid_num in range(0, len(info[0])):
         if re.match(item,info[0][oid_num]):
             descr = info[1][oid_num]
-            value = info[1][oid_num+1]
-            crit = info[1][oid_num+2]
-            warn = info[1][oid_num+3]
+            value = re.sub(" ","",info[1][oid_num+1])
+            crit = info[1][oid_num+2].split(" ")[0]
+            warn = info[1][oid_num+3].split(" ")[0]
             status = info[1][oid_num+5]
             if status.lower() == "ok":
                 state = 0

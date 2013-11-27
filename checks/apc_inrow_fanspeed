@@ -29,7 +29,7 @@ def inventory_apc_inrow_fanspeed(info):
 
 def check_apc_inrow_fanspeed(_no_item, _no_params, info):
     value = savefloat(info[0][0]) / 10
-    return 0, "Currently %.2f%%" % value, [ ("fanspeed", value ) ]
+    return 0, "Current: %.2f%%" % value, [ ("fanspeed", value ) ]
 
 check_info["apc_inrow_fanspeed"] = {
     "check_function"        : check_apc_inrow_fanspeed,

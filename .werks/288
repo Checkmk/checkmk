@@ -1,0 +1,10 @@
+Title: Error messages of datasource programs (e.g. VSphere Agent) are now visible within WATO
+Level: 1
+Component: core
+Version: 1.2.3i7
+Date: 1385636887
+Class: fix
+
+In previous versions, the error messages produced by datasource programs, e.g. during service
+inventory or host diagnose, were not visible in WATO. The messages are now processed to be
+shown in the GUI when an error occured.

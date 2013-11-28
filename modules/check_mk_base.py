@@ -613,21 +613,23 @@ def get_agent_info(hostname, ipaddress, max_cache_age):
 
 # Get data in case of external program
 def get_agent_info_program(commandline):
+    import subprocess
     if opt_verbose:
         sys.stderr.write("Calling external program %s\n" % commandline)
     try:
-        sout = os.popen(commandline + " 2>/dev/null")
-        output = sout.read()
-        exitstatus = sout.close()
+        p = subprocess.Popen(commandline, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        exitstatus = p.wait()
+        stdout = p.stdout.read()
+        stderr = p.stderr.read()
     except Exception, e:
         raise MKAgentError("Could not execute '%s': %s" % (commandline, e))
 
     if exitstatus:
-        if exitstatus >> 8 == 127:
+        if exitstatus == 127:
             raise MKAgentError("Program '%s' not found (exit code 127)" % (commandline,))
         else:
-            raise MKAgentError("Agent exited with code %d" % (exitstatus >> 8,))
-    return output
+            raise MKAgentError("Agent exited with code %d: %s" % (exitstatus, stderr))
+    return stdout
 
 # Get data in case of TCP
 def get_agent_info_tcp(hostname, ipaddress, port = None):

@@ -1531,7 +1531,7 @@ def render_assume_icon(site, host, service):
          (_("Assume another state for this item (reload page to activate)"),
          # MIST: DAS HIER MUSS verfünftig für Javascript encodiert werden.
          # Das Ausgangsmaterial sind UTF-8 kodierte str-Objekte.
-          site, host, service != None and service or '')
+          site, host, service != None and service.replace('\\', '\\\\') or '')
     current = str(ass).lower()
     return u'<img state="%s" class=assumption %s src="images/assume_%s.png">\n' % (current, mousecode, current)
 

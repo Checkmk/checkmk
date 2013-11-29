@@ -246,6 +246,7 @@ inventory_check_interval           = None # Nagios intervals (4h = 240)
 inventory_check_severity           = 1    # warning
 inventory_check_do_scan            = True # include SNMP scan for SNMP devices
 inventory_max_cachefile_age        = 120  # secs.
+inventory_check_autotrigger        = True # Automatically trigger inv-check after automation-inventory
 always_cleanup_autochecks          = True
 
 # Nagios templates and other settings concerning generation

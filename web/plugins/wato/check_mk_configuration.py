@@ -1064,6 +1064,20 @@ register_configvar(group,
         ]
     ))
 
+register_configvar(group,
+    "inventory_check_autotrigger",
+    Checkbox(
+        title = _("Inventory triggers inventory check"),
+        label = _("Automatically schedule inventory check after service configuration changes"),
+        help = _("When this option is enabled then after each change of the service "
+                 "configuration of a host via WATO - may it be via manual changes or a bulk "
+                 "inventory - the inventory check is automatically rescheduled in order "
+                 "to reflect the new service state correctly immediately."),
+        default_value = True,
+    ))
+
+
+
 
 _if_portstate_choices = [
                         ( '1', 'up(1)'),

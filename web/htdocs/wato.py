@@ -12159,7 +12159,7 @@ def PredictiveLevels(**args):
     dif = args.get("default_difference", (2.0, 4.0))
     return Dictionary(
         title = _("Predictive Levels"),
-        optional_keys = [ "weight", "levels_upper", "levels_lower" ],
+        optional_keys = [ "weight", "levels_upper", "levels_upper_min", "levels_lower", "levels_lower_max" ],
         default_keys = [ "levels_upper" ],
         columns = 1,
         headers = "sup",
@@ -12168,9 +12168,10 @@ def PredictiveLevels(**args):
                 DropdownChoice(
                     title = _("Base prediction on"),
                     choices = [
-                        ( "wday", _("Day of the week (1-7, 1 is Monday)") ),
-                        ( "day",  _("Day of the month (1-31)") ),
-                        ( "hour", _("Hour of the day (0-23)") ),
+                        ( "wday",   _("Day of the week (1-7, 1 is Monday)") ),
+                        ( "day",    _("Day of the month (1-31)") ),
+                        ( "hour",   _("Hour of the day (0-23)") ),
+                        ( "minute", _("Minute of the hour (0-59)") ),
                     ]
              )),
              ( "horizon",
@@ -12188,7 +12189,7 @@ def PredictiveLevels(**args):
              # )),
              ( "levels_upper",
                CascadingDropdown(
-                   title = _("Dynamic levels (upper bound)"),
+                   title = _("Dynamic levels - upper bound"),
                    choices = [
                        ( "absolute",
                          _("Absolute difference from prediction"),
@@ -12216,9 +12217,20 @@ def PredictiveLevels(**args):
                       )),
                    ]
              )),
+             ( "levels_upper_min",
+                Tuple(
+                    title = _("Limit for upper bound dynamic levels"),
+                    help = _("Regardless of how the dynamic levels upper bound are computed according to the prediction: "
+                             "the will never be set below the following limits. This avoids false alarms "
+                             "during times where the predicted levels would be very low."),
+                    elements = [
+                        Float(title = _("Warning level is at least")),
+                        Float(title = _("Critical level is at least")),
+                    ]
+              )),
              ( "levels_lower",
                CascadingDropdown(
-                   title = _("Dynamic levels (lower bound)"),
+                   title = _("Dynamic levels - lower bound"),
                    choices = [
                        ( "absolute",
                          _("Absolute difference from prediction"),
@@ -12246,7 +12258,6 @@ def PredictiveLevels(**args):
                       )),
                    ]
              )),
-
         ]
     )
 

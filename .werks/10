@@ -1,0 +1,17 @@
+Title: Fix computation of hour-of-the-day and day-of-month prediction
+Level: 1
+Component: core
+Version: 1.2.3i7
+Date: 1385736766
+Class: fix
+
+This fix addresses two problems in the implementation of the predictive levels:
+
+<ul>
+<li>When you selected a prediction for <i>Hour of the day</i> you would get 24
+single predictions and 24 separated graphs. This has been replaced by one single
+predection for the whole day, which is much more conveniant.</li>
+<li>The implementation of the <i>Day of the month</i> was broken. It would create
+a prediction of just one day instead. This is fixed now.</li>
+</ul>
+

@@ -1,0 +1,15 @@
+Title: Introduce optional lower limit for predicted levels
+Level: 1
+Component: core
+Version: 1.2.3i7
+Date: 1385736954
+Class: feature
+
+When configuring predictive levels while using relative levels or those
+based on the standard deviation then time periods with a very low
+reference (e.g. a CPU load below 1) would result in very narrow levels
+and lead to frequent false alarms.
+
+Now you can set a lower limit for the levels, for example such that they
+would never go below 5 and 10 for warn and crit - regardless of the
+current predicted value.

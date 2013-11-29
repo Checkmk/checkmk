@@ -122,25 +122,35 @@ def group_by_wday(t):
 def group_by_day(t):
     return "everyday", (t - time.timezone) % 86400
 
+def group_by_day_of_month(t):
+    broken = time.localtime(t)
+    mday = broken[2]
+    return str(mday), (t - time.timezone) % 86400
+
 def group_by_everyhour(t):
     return "everyhour", (t - time.timezone) % 3600
 
 prediction_periods = {
     "wday" : {
-        "slice" : 86400,
+        "slice" : 86400, # 7 slices
         "groupby" : group_by_wday,
         "valid" : 7,
     },
     "day" : {
-        "slice" : 86400,
+        "slice" : 86400, # 31 slices
+        "groupby" : group_by_day_of_month,
+        "valid" : 28,
+    },
+    "hour" : {
+        "slice" : 86400, # 1 slice
         "groupby" : group_by_day,
         "valid" : 1,
     },
-    "hour" : {
-        "slice" : 3600,
+    "minute" : {
+        "slice" : 3600, # 1 slice
         "groupby" : group_by_everyhour,
-        "valid" : 1,
-    }
+        "valid" : 24,
+    },
 }
 
 
@@ -314,15 +324,21 @@ def get_predictive_levels(dsname, params, cf, levels_factor=1.0):
             if p in params:
                 how, (warn, crit) = params[p]
                 if how == "absolute":
-                    levels.append((ref_value + (sig * warn * levels_factor), ref_value + (sig * crit * levels_factor)))
+                    this_levels = (ref_value + (sig * warn * levels_factor), ref_value + (sig * crit * levels_factor))
                 elif how == "relative":
-                    levels.append((ref_value + sig * (ref_value * warn / 100),
-                                   ref_value + sig * (ref_value * crit / 100)))
+                    this_levels = (ref_value + sig * (ref_value * warn / 100),
+                                   ref_value + sig * (ref_value * crit / 100))
                 else: #  how == "stdev":
-                    levels.append((ref_value + sig * (stdev * warn),
-                                  ref_value + sig * (stdev * crit)))
+                    this_levels = (ref_value + sig * (stdev * warn),
+                                  ref_value + sig * (stdev * crit))
+
+                if what == "upper" and "levels_upper_min" in params:
+                    limit_warn, limit_crit = params["levels_upper_min"]
+                    this_levels = (max(limit_warn, this_levels[0]), max(limit_crit, this_levels[1]))
+                levels.append(this_levels)
             else:
                 levels.append((None, None))
+
 
     # print levels
     return ref_value, levels

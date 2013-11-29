@@ -1,0 +1,10 @@
+Title: winperf_processor mem.win: Handling no/empty agent responses correctly now
+Level: 1
+Component: checks
+Version: 1.2.3i7
+Date: 1385730268
+Class: fix
+
+When a host where these checks were running on was checked, both checks went in
+an UNKNOWN state and created an invalid plugin output. Now the check handles this
+situation with a nicer error message.

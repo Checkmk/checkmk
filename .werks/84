@@ -1,0 +1,10 @@
+Title: brocade_mlx: single checks now instead of sub checks
+Level: 1
+Component: checks
+Version: 1.2.3i7
+Date: 1385730876
+Class: feature
+
+Checks for Brocade MLX devices are now split into single checks. Up to now
+they had been realized as sub checks. 
+This step improves performance and maintainability.

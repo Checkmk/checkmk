@@ -67,7 +67,7 @@ fi
 
 # Filesystem usage for UFS and VXFS
 echo '<<<df>>>'
-for fs in ufs vxfs
+for fs in ufs vxfs samfs
 do
     df -l -k -F $fs 2>/dev/null | sed 1d | \
     while read Filesystem kbytes used avail capacity Mountedon

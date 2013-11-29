@@ -41,6 +41,8 @@ def inventory_winperf_util(info):
 
 # params: levels for warn / crit in percentage
 def check_winperf_util(_no_item, params, info):
+    if not info:
+        return 3, "Got no information from agent"
     this_time = int(float(info[0][0]))
 
     for line in info[1:]:

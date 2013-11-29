@@ -86,6 +86,9 @@ def inventory_mem_win(info):
 
 def check_mem_windows(item, params, info):
     meminfo = parse_proc_meminfo(info)
+    if "MemTotal" not in meminfo or \
+        "PageTotal" not in meminfo:
+        return 3, "Got no information from agent"
     perfdata = []
     infotxts = []
     MB = 1024.0 * 1024

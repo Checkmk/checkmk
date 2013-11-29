@@ -1361,7 +1361,7 @@ def pnp_cleanup(s):
 #   | These functions are used in some of the checks.                      |
 #   +----------------------------------------------------------------------+
 
-# Generic function for checking a value against levels. This also support
+# Generic function for checking a value against levels. This also supports
 # predictive levels.
 # value:   currently measured value
 # dsname:  name of the datasource in the RRD that corresponds to this value

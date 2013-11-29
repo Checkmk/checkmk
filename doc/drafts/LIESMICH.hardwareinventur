@@ -208,3 +208,10 @@ sind ja einfach anzuzeigen. Wenn aber etwas gebraucht wird wie "Version von
 RPM-Paket X", dann ist das X ja variabel. Dies könnten wir evtl. lösen,
 in dem wir den bestehenden Mechanismus zum Anzeigen von Service-Daten in
 Hosttabellen verwenden.
+
+
+-------------------------------------------------------------------------------
+                                 N O T I Z E N
+-------------------------------------------------------------------------------
+
+- Das ganze muss natürlich auch auf Workstations funktionieren!

@@ -286,7 +286,6 @@ def compose_item(name):
 
 def inventory_brocade_mlx_temp(info):
     inventory = []
-    import pprint; pprint.pprint(info[4])
     for temp_descr, temp_id, temp_value in info[4]:
         temp_descr = compose_item(temp_descr)
         if ((temp_descr, "brocade_mlx_temperature_default_levels") not in inventory):

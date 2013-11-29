@@ -4,39 +4,40 @@ catalog: hw/network/brocade
 license: GPL
 distribution: check_mk
 description:
- Checks the temperature sensors in Brocade NetIron MLX switching / routing 
- devices.
+ Checks the temperature sensors of one module in Brocade NetIron MLX switching /
+ routing devices.
 
- {WARN} or {CRIT} is returned, if the temperature is above given thresholds.
+ {WARN} or {CRIT} is returned, if at least one of the temperatures is above given
+ thresholds.
  {OK} is returned otherwise.
 
 item:
- The description of the temperature sensor as provided by SNMP.
+ The description of the module as provided by SNMP.
 
 examples:
  # set default levels to 30°C and 40°C:
  brocade_mlx_temperature_default_levels = (30, 40)
 
- # Check a sensor with description Switch Fabric module 0, sensor 1 temperature
- # on a box called my-mlx-device with default levels
+ # Check sensors of Switch Fabric module 0 on a box called my-mlx-device with
+ # default levels
  checks += [
-   ("my-mlx-device", "brocade_mlx.temperature", 'Switch Fabric module 0, sensor 1 temperature', brocade_mlx_temperature_default_levels)
+   ("my-mlx-device", "brocade_mlx.temperature", 'Switch Fabric module 0', brocade_mlx_temperature_default_levels)
  ]
 
  # or use individual levels for warn and crit
  checks += [
-   ("my-mlx-device", "brocade_mlx.temperature", 'Switch Fabric module 0, sensor 1 temperature', (40, 50)
+   ("my-mlx-device", "brocade_mlx.temperature", 'Switch Fabric module 0', (40, 50)
  ]
 
 perfdata:
- one value is returned: The temperature in °C, together with warn and crit levels
+ one value per sensor is returned: The temperature in °C, together with warn and crit levels
 
 inventory:
- Finds one item per temperature sensor
+ Finds one item per module
 
 [parameters]
-warn(int): {WARN} state is triggered, if the temperature is higher than this.
-crit(int): {CRIT} state is triggered, if the temperature is higher than this.
+warn(int): {WARN} state is triggered, if at least one temperature is higher than this.
+crit(int): {CRIT} state is triggered, if at least one temperature is higher than this.
 
 [configuration]
 brocade_mlx_temperature_default_levels(int, int): The standard levels for {WARN}

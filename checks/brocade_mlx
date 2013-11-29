@@ -30,7 +30,8 @@ brocade_mlx_info = [ ('.1.3.6.1.4.1.1991.1.1.1.2.1.1', [ 1, 2, 3 ]), # power sup
                                    # modules (id, descr, overall status, MemoryTotal, MemoryAvailable)
                      ('.1.3.6.1.4.1.1991.1.1.2.11.1.1.5', [ OID_END, "" ]), 
                                    # modules (Rest of OId starting with module ID, CpuUtilPercent)
-                     ('.1.3.6.1.4.1.1991.1.1.2.13.1.1', [ 3, 4 ]),   # temperature sensors (descr, temperature)
+                     ('.1.3.6.1.4.1.1991.1.1.2.13.1.1', [ 3, OID_END, 4 ]),
+                                   # temperature sensors (descr, sensor ID, temperature)
                    ]
 
 def brocade_mlx_scan(oid):
@@ -278,35 +279,58 @@ check_info["brocade_mlx.module_cpu"] = {
 
 brocade_mlx_temperature_default_levels = (50, 60)
 
+def compose_item(name):
+    name = re.sub(" *temperature", "", name)
+    name = re.sub(", sensor [0-9]+", "", name)
+    return name
+
 def inventory_brocade_mlx_temp(info):
     inventory = []
-    for temp_descr, temp_value in info[4]:
-        inventory.append( (temp_descr, "brocade_mlx_temperature_default_levels") )
+    import pprint; pprint.pprint(info[4])
+    for temp_descr, temp_id, temp_value in info[4]:
+        temp_descr = compose_item(temp_descr)
+        if ((temp_descr, "brocade_mlx_temperature_default_levels") not in inventory):
+            inventory.append( (temp_descr, "brocade_mlx_temperature_default_levels") )
     return inventory
 
 def check_brocade_mlx_temp(item, params, info):
     warn, crit = params
-    for temp_descr, temp_value in info[4]:
+    status = 0
+    message = ""
+    perfdata = []
+
+    for temp_descr, temp_id, temp_value in info[4]:
         # Info from the MIB: "Each unit is 0.5 degrees Celcius."
-        temp_value = int(saveint(temp_value) / 2)
-        if temp_descr == item:
+        temp_value = int(temp_value) / 2
+        current_item = compose_item(temp_descr)
+        if current_item == item:
+            # OID_END needs to be used for sensor id because especially
+            # Active management modules may have more temperature sensors
+            # with the same description
+            temp_id = re.sub("[0-9]+\.", "", temp_id)
+            #print "%s : %s : %s" % (temp_descr, temp_id, temp_value);
 
-            status = 0
-            if temp_value > warn:
+            if (message != ""):
+                message += ", "
+            message += "Sensor %s: %s°C" % (temp_id, temp_value)
+            if temp_value > warn and status < 1:
                 status = 1
-            if temp_value > crit:
+                message += "(!)"
+            if temp_value > crit and status < 2:
                 status = 2
+                message += "(!!)"
 
-            perfdata = [ ('temperature', str(temp_value) + 'C', warn, crit, '', '') ]
+            perfdata.append( ('sensor%s' % temp_id, str(temp_value) + 'C', warn, crit, '', '') )
 
-            return status, "Temperature is %s°C" % temp_value, perfdata
-
-    return 3, "temp supply %s not found" % item
+    if (message == ""):
+        return 3, "Temperature sensors for %s not found" % item
+    else:
+        return status, message, perfdata
 
 check_info["brocade_mlx.temperature"] = {
     "check_function"        : check_brocade_mlx_temp,
     "inventory_function"    : inventory_brocade_mlx_temp,
-    "service_description"   : "%s",
+    "service_description"   : "Temperature %s",
     "snmp_info"             : brocade_mlx_info,
     "snmp_scan_function"    : brocade_mlx_scan,
     "has_perfdata"          : True,

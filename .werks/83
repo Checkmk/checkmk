@@ -1,0 +1,10 @@
+Title: brocade_mlx: Temperature sensors of one module now in one common check
+Level: 1
+Component: checks
+Version: 1.2.3i7
+Date: 1385723866
+Class: feature
+
+Up to now, in Brocade MLX devices, each temperature sensor got an own check.
+Now the temperature sensors of one module are grouped together in one 
+common check and one common PNP graph. Should improve readability.

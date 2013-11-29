@@ -3139,6 +3139,39 @@ register_check_parameters(
 )
 
 register_check_parameters(
+    subgroup_applications,
+    "winperf_ts_sessions",
+    _("Windows Terminal Server Sessions"),
+    Dictionary(
+         help = _("This check monitors number of active and inactive terminal "
+                  "server sessions."),
+         elements = [
+             ( "active",
+               Tuple(
+                   title = _("Number of active sessions"),
+                   elements = [
+                       Integer(title = _("Warning if above"),  unit = _("sessions"), default_value = 100),
+                       Integer(title = _("Critical if above"), unit = _("sessions"), default_value = 200),
+                    ],
+               ),
+            ),
+            ( "inactive",
+               Tuple(
+                   title = _("Number of inactive sessions"),
+                   help = _("Levels for the number of sessions that are currently inactive"),
+                   elements = [
+                       Integer(title = _("Warning if above"),  unit = _("sessions"), default_value = 10),
+                       Integer(title = _("Critical if above"), unit = _("sessions"), default_value = 20),
+                    ],
+               ),
+            ),
+         ]
+    ),
+    None,
+    None
+)
+
+register_check_parameters(
     subgroup_storage,
     "raid",
     _("RAID: overall state"),

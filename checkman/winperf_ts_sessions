@@ -1,0 +1,27 @@
+title: Microsoft Terminal Server Sessions
+agents: linux
+catalog: os/kernel
+license: GPL
+distribution: check_mk
+description:
+  This check monitors the number of active and inactive Microsoft Terminal
+  Server Sessions using the windows performance counters (agent section
+  {<<<winperf_ts_sessions>>>}).
+
+  To make this check work, you need to configure the agent via it's .ini
+  file to forward the terminal service session related counters. Take a
+  look at the windows monitoring documentation for details.
+
+  It allows to set {WARN} and {CRIT} tresholds on the active and idle session.
+
+inventory:
+  The check generates service per host.
+
+perfdata:
+  The check generates perfdata for the active and inactive sessions.
+
+[parameters]
+paramaeters(dict): A dictionary with the following optional keys:
+
+  {"active"}: A tuple of warn and crit thresholds
+  {"inactive"}: A tuple of warn and crit thresholds

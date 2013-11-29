@@ -1,0 +1,11 @@
+Title: Inline SNMP: Check_MK check helpers are closing UDP sockets now
+Level: 1
+Component: core
+Version: 1.2.3i7
+Date: 1385736912
+Class: fix
+
+In previous versions, the Check-Helpers in Check_MK were opening UDP
+sockets for each host and caching them during their runtime. This resulted
+in too many open sockets with a large amount of hosts. Now closing all
+the sockets after an action iteration.

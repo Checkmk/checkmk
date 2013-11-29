@@ -5069,6 +5069,10 @@ def cleanup_globals():
     global g_walk_cache
     g_walk_cache = {}
 
+    if 'g_snmp_sessions' in globals():
+        global g_snmp_sessions
+        g_snmp_sessions = {}
+
 
 # Diagnostic function for detecting global variables that have
 # changed during checking. This is slow and canno be used

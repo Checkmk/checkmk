@@ -1,0 +1,14 @@
+Title: Automatically schedule inventory check after service config change
+Level: 2
+Component: wato
+Version: 1.2.3i7
+Date: 1385731404
+Class: feature
+
+Now after each change of the service configuration of a host via WATO -
+may it be via manual changes or a bulk inventory - the inventory check
+is automatically rescheduled in order to reflect the new service state
+correctly immediately.
+
+You can switch off this behaviour via a new global option called <i>Inventory
+triggers inventory check</i>. The default setting is <b>on</b>.

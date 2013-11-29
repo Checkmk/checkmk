@@ -277,6 +277,25 @@ perfometers["check_mk-hwg_temp"] = perfometer_temperature
 perfometers["check_mk-sensatronics_temp"] = perfometer_temperature
 perfometers["check_mk-apc_inrow_temperature"] = perfometer_temperature
 
+def perfometer_temperature_multi(row, check_command, perf_data):
+    display_value = -1
+    display_color = "#60f020"
+
+    for sensor, value, uom, warn, crit, min, max in perf_data:
+        value=saveint(value)
+        if value > display_value:
+            display_value=value
+
+    if display_value > saveint(warn):
+        display_color = "#FFC840"
+    if display_value > saveint(crit):
+        display_color = "#FF0000"
+
+    display_string = "%s °C" % display_value
+    return display_string, perfometer_linear(display_value, display_color)
+
+perfometers["check_mk-brocade_mlx_temp"] = perfometer_temperature_multi
+
 def perfometer_blower(row, check_command, perf_data):
     rpm = saveint(perf_data[0][1])
     perc = rpm / 10000.0 * 100.0
@@ -409,6 +428,7 @@ perfometers["check_mk-winperf_processor.util"] = perfometer_cpu_utilization
 perfometers["check_mk-netapp_cpu"] = perfometer_cpu_utilization
 perfometers["check_mk-cisco_cpu"] = perfometer_cpu_utilization
 perfometers["check_mk-juniper_cpu"] = perfometer_cpu_utilization
+perfometers["check_mk-brocade_mlx.module_cpu"] = perfometer_cpu_utilization
 
 def perfometer_ps_perf(row, check_command, perf_data):
     perf_dict = dict([(p[0], float(p[1])) for p in perf_data])
@@ -700,6 +720,7 @@ def perfometer_simple_mem_usage(row, command, perf):
 
 perfometers['check_mk-db2_mem'] = perfometer_simple_mem_usage
 perfometers['check_mk-esx_vsphere_hostsystem.mem_usage'] = perfometer_simple_mem_usage
+perfometers['check_mk-brocade_mlx.module_mem'] = perfometer_simple_mem_usage
 
 def perfometer_vmguest_mem_usage(row, command, perf):
     used = float(perf[0][1])

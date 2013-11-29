@@ -1,0 +1,73 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# <<<winperf_ts_sessions>>>
+# 1385714515.93 2102
+# 2 1 rawcount
+# 4 1 rawcount
+# 6 0 rawcount
+
+# Counters, relative to the base ID (2102)
+# 2 Total number of Terminal Services sessions.
+# 4 Number of active Terminal Services sessions.
+# 6 Number of inactive Terminal Services sessions.
+
+def inventory_winperf_ts_sessions(info):
+    if len(info) > 1:
+        return [ (None, {}) ]
+
+def check_winperf_ts_sessions(_unused, params, info):
+    if not info or len(info) == 1:
+        return 3, "Performance counters not available"
+    total, active, inactive = [ int(l[0]) for l in info[1:4] ]
+
+    state = 0
+    state_txt = []
+    for val, key, title in [ (active, 'active', 'Active'),
+                             (inactive, 'inactive', 'Inactive') ]:
+        txt = '%d %s' % (val, title)
+        if key in params:
+            if val > params[key][0]:
+                state = max(state, 2)
+                txt += ' (!!)'
+            elif val > params[key][1]:
+                state = max(state, 1)
+                txt += ' (!)'
+        state_txt.append(txt)
+
+    perfdata = [ ('active', active, ), ('inactive', inactive) ]
+    return state, ", ".join(state_txt), perfdata
+
+check_config_variables.append("winperf_ts_sessions")
+
+check_info["winperf_ts_sessions"] = {
+    'check_function':          check_winperf_ts_sessions,
+    'inventory_function':      inventory_winperf_ts_sessions,
+    'service_description':     'Sessions',
+    'has_perfdata':            True,
+    'group':                   'winperf_ts_sessions',
+}

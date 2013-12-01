@@ -87,7 +87,7 @@ def check_veeam_client(item, params, info):
                 else:
                     stopstate = 0
                     stopsym = ""
-            infotxt += line[0] + ":" + line[1] + stopsym + " "
+                infotxt += line[0] + ":" + line[1] + stopsym + " "
         else:
             infotxt += line[0] + ":" + line[1] + " "
 

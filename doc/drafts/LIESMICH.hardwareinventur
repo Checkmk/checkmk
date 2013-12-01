@@ -1,0 +1,217 @@
+Check_MK Hardware+Software Inventur
+-----------------------------------
+
+Idee: Check_MK wird ausgebaut zum Inventurisierungssystem. Das ganze passiert wie
+mit den Check-Plugins Schritt für Schritt. Aus Sicht des Benutzers stellt sich das
+wie folgt dar:
+
+-------------------------------------------------------------------------------
+                         F U N K T I O N A L I T Ä T
+-------------------------------------------------------------------------------
+
+1. Man Installiert auf seinen Rechnern neue Versionen der Check_MK-Agenten oder
+alternativ ein neues Plugin mk_inventory oder sowas.
+
+2. Man löst auf der Kommandozeile cmk --hwinventory HOST oder cmk -W HOST aus.
+Alternativ gibt es dafür eine Funktion in WATO. Über eine Regel kann man auch
+festlegen, dass dies mit dem Check_MK Inventory-Check automatisch mitläuft.
+Oder man macht einen separaten aktiven Check dafür mit einem Interval von
+per Default 4 Stunden.
+
+3. Dabei werden von dem Host Daten über Hard- und Software gesammelt und
+diese pro Host auf dem Monitoringserver gespeichert. Die Daten sind baumartig
+hierarchisch strukturiert und sauber typisiert (Ganzzahl, Fließkommazahl, 
+Enumeration aus Liste, etc.).
+
+4. In Multisite gibt es zu jedem Host, der Inventurdaten hat, ein neues
+Icon. Damit kommt man zu einer Seite, in der man den Baum eines Hosts
+interaktiv aufklappen und ansehen kann.
+
+5. In Multisite gibt es eine neue View, in der man in den Inventurdaten
+suchen kann, z.B. alle Hosts, die eine bestimmte Software enthalten,
+oder dergleichen.
+
+6. Man kann einen Funktion global konfigurieren, die jeden Update der
+Inventurdaten eines Hosts an ein Skript übergibt. Dieses kann die Daten
+dann an eine CMBD senden (z.B. i-doit).
+
+
+
+
+
+-------------------------------------------------------------------------------
+                            U M S E T Z U N G
+-------------------------------------------------------------------------------
+
+[1] Agenten
+
+Wir schreiben sowohl für Linux, als auch für Windows ein Plugin mk_hwinventory,
+welches Daten sammelt, die von aktuellen Checks nicht ermittelt werden. Ein 
+Beispiel dafür für Linux:
+
+Code im Plugin:
+
+if which dpkg-query ; then
+    echo '<<<deb_packages>>>'
+    dpkg-query -W -f='${binary:Package} ${Version}\n'
+fi
+
+
+Die Ausgabe sieht dann so aus:
+<<<deb_packages>>>
+account-plugin-aim 3.6.0.3-0ubuntu1
+account-plugin-facebook 0.8-0ubuntu2.2
+account-plugin-flickr 0.8-0ubuntu2.2
+account-plugin-google 0.8-0ubuntu2.2
+account-plugin-icons 0.8-0ubuntu2.2
+account-plugin-identica 0.8-0ubuntu2.2
+account-plugin-jabber 3.6.0.3-0ubuntu1
+account-plugin-salut 3.6.0.3-0ubuntu1
+account-plugin-twitter 0.8-0ubuntu2.2
+account-plugin-windows-live 0.8-0ubuntu2.2
+
+Damit die Menge der Daten, die vom Agenten übertragen wird, nicht
+unnötige aufgebläht wird, überträgt der Agent die Inventurdaten nur
+in einem einstellbaren Turnus. Dazu wird bei Linux die run_cached-Funktion
+so erweitert, dass sie eine --once Option bekommt. Diese führt dazu,
+dass das Ergebnis eines asynchronen Laufes nur ein einziges Mal
+ausgeliefert wird. In den Sektionsheader wird der Schlüssel :persist
+eingebaut (Beispiel: <<<deb_packages:persist(1440)>>>). Dieser signalisiert
+Check_MK, dass diese Sektion persistiert werden soll. Wenn bei einem
+Agentenlauf die Sektion fehlt, wird sie einfach aus diesem Persistenzspeicher
+geholt. Die Zahl in Klammern ist die Anzahl von Minuten, für die
+das gültig sein soll. Wenn innerhalb dieser Zeit keine neuen Daten
+kommen, wird das persistierte Verworfen und gilt als veraltet.
+Im aktuellen Windows-Agenten muss das analog umgesetzt werden.
+
+Im Check_mk werden diese Daten abgelegt nach var/check_mk/persist/HOSTNAME/SECTION
+
+
+[2] Eintrag in die "Datenbank"
+
+Pro Host wird ein logischer Baum angelegt, in dem die Inventurdaten gespeichert
+werden. Diese kann von Check_MK aus leicht in eine Python-Struktur eingelesen
+werden und wieder gespeichert werden. Die Speicherung kann im Prototyp wie
+üblich mit repr() erfolgen. Später kann man evtl. eine MongoDB einsetzen,
+falls die Recherchefunktionen sonst nicht performant genug sind.
+
+Hier ist ein Beispiel für eine sehr rudimentäre, gekürzte Struktur:
+{
+    "software": {
+        "os" : {
+            "brand"        : "windows",
+            "product"      : "2008 R2",
+            "version"      : "6.1.7601",
+            "servicepack"  : "SP1",
+            "language"     : "en",
+            "architecture" : "x86_64",
+        },
+        "packager" : "rpm",
+        "packages" : [
+            ( "l9ibmofoo_bar", "14.3.6b" ),
+            ( ... ),
+        ],
+        "applications" : {
+        },
+        "filesystems" : {
+            "C:\" : {
+                "size" : 9600100939,
+            },
+        },
+    },
+    "hardware" : {
+        "system" : {
+            "manufacturer" : "VMware, Inc.",
+            "product" : "VMware Virtual Platform",
+            "servicetag" : "VMware-423896679ad84101-a2e16c481830174a",
+        },
+        "cpu" : {
+            "cores" : 4,
+            "model" : "Intel(R) Core(TM) i7-3930K CPU @ 3.20GH",
+        },
+        "memory" : {
+            "ram" : 10249929400000,
+            "swap" : 29384920000000,
+        },
+
+        "storage" : {
+            "raid_controllers" : [
+            ]
+        }
+    }
+}
+
+
+Im Check_MK-Hauptmodul wird eine Funktion entwickelt, die zunächst die
+Agentenausgabe beschafft. Dabei wird der Cache-Verwendet, damit kein
+Livezugriff auf den Agenten das Monitoring beinträchtigt. Die Ausgabe
+wird wie üblich vorgeparst und dann in ein Dictionary gepackt, welches
+alle Sektionen enthält. Bei SNMP-Geräten wird ein analoges Verfahren
+gewählt. Dabei können Inventur-Plugins bestimmte OID-Bäume abbonieren,
+analog zu den SNMP-basierten Checks.
+
+Nun werden der Reihe nach alle (neu zu schreibenden) Inventur-Plugins
+aufgerufen. Diese bekommen als Argumente den zu füllenden Baum und
+die oben beschriebene Info. Eine mögliche Funktion könnte so aussehen:
+
+def inventary_foo(info, tree):
+    if "deb_packages" in info:
+        packages = dict(info["deb_packages"])
+        tree["software"]["packager"] = "rpm"
+        tree["software"]["packages"] = packages
+
+
+Es kann auch Plugins geben, die keine Daten aus info auswerten,
+sondern direkt in den Baum schauen und weitere Daten daraus
+ableiten. So könnte man z.B. aus der RPM-Liste ermitteln, dass
+auf einem System eine Apache installiert ist.
+
+
+Die Baumstruktur wird ebenfalls über eine Art Plugins aufgebaut.
+Damit wird sichergestellt, dass der Baum alle Äste enthält, bevor
+die Inventurplugins aufgerufen werden. In den Strukturdefinitionen
+wird auch festgelegt, wie die einzelnen Äste später dargestellt werden.
+Dazu muss man noch ein Konzept entwickeln.
+
+
+[3] Hooks und Eintrag in CMDB
+
+Nachdem der Baum für einen Host gefüllt und auf Platte geschrieben wurde,
+werden frei definierbare Hookskripten ausgefürt. So ein Hook kann dann
+in die CMDB den Update der Daten eines Hosts schreiben. Dazu stellt die
+CMDB z.B. einen Webservice bereit, welcher in JSON-Syntax den Baum erhält
+und diesen dann komplett oder teilweise in eigene Datenstrukturen ablegt.
+
+
+[4] Ansicht der Daten in Multisite: Baumdarstellung
+
+In Multisite erstellen wir ein Custom-Icon, welches erkennt, ob zu einem
+Host Inventurdaten vorhanden sind. Dieses bringt einen zu einer Seite, in
+der die Daten Baumartig dargestellt sind. Das ganze kann analog zu BI
+aufbaut sein, mit kleinen Dreiecken, die auf- und zuklappen.
+
+
+[5] Ansicht der Daten in Multisite: Suchfunktion und Tabellen
+
+Damit man auch ohne CMDB in den Daten recherchieren kann, integrieren wir
+eine Ansicht in Multisite. Die Idee ist, dass man nicht eine komplett
+eigene Inventur-Ansicht macht, sondern das vorhandene Konzept der Views
+nutzt. Dieses ermöglicht heute schon flexibel eigene Ansichten zu definieren
+und dabei Sortierung, Gruppierung, Spalten und mehr zu definieren.
+
+Dazu erstellt man Filter und Painter (Spalten) speziell für Inventurdaten.
+Das Schöne daran: In Ansichten kann man Filter und Daten aus dem
+Monitoring und der Inventurisierung mischen.
+
+Noch ein Problem bei den Spalten: Dinge wie z.B. der Name des Betriebssystems
+sind ja einfach anzuzeigen. Wenn aber etwas gebraucht wird wie "Version von
+RPM-Paket X", dann ist das X ja variabel. Dies könnten wir evtl. lösen,
+in dem wir den bestehenden Mechanismus zum Anzeigen von Service-Daten in
+Hosttabellen verwenden.
+
+
+-------------------------------------------------------------------------------
+                                 N O T I Z E N
+-------------------------------------------------------------------------------
+
+- Das ganze muss natürlich auch auf Workstations funktionieren!

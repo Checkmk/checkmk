@@ -246,6 +246,7 @@ inventory_check_interval           = None # Nagios intervals (4h = 240)
 inventory_check_severity           = 1    # warning
 inventory_check_do_scan            = True # include SNMP scan for SNMP devices
 inventory_max_cachefile_age        = 120  # secs.
+inventory_check_autotrigger        = True # Automatically trigger inv-check after automation-inventory
 always_cleanup_autochecks          = True
 
 # Nagios templates and other settings concerning generation
@@ -5067,6 +5068,10 @@ def cleanup_globals():
     g_inactive_timerperiods = None
     global g_walk_cache
     g_walk_cache = {}
+
+    if 'g_snmp_sessions' in globals():
+        global g_snmp_sessions
+        g_snmp_sessions = {}
 
 
 # Diagnostic function for detecting global variables that have

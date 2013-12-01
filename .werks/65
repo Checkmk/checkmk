@@ -1,8 +1,0 @@
-Title: veeam_client: check behaviour improved when backup is in progress
-Level: 1
-Component: checks
-Version: 1.2.3i7
-Date: 1383946322
-Class: fix
-
-

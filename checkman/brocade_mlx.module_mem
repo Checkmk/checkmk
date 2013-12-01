@@ -38,7 +38,9 @@ inventory:
 
 [parameters]
 parameters (dict): with the element
-{"levels"}: (float, float): levels of memory usage for {WARN} and {CRIT} in percent
+{"levels"}: (int or float, int or float): Levels of memory usage for {WARN} and {CRIT}.
+  If a value is given as float, it is interpreted as percentage.
+  If a value is given as int, it is interpreted as an absolute value in megabytes.
 
 [configuration]
 brocade_mlx_mem_default_levels(dict): The standard levels for {WARN} and 

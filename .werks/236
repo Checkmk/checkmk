@@ -1,0 +1,16 @@
+Title: windows_agent: each script can now be configured to run sync / async
+Level: 2
+Component: checks
+Version: 1.2.3i7
+Date: 1385576416
+Class: feature
+
+The windows agent got two new configuration options <br>
+For the <tt>[local]</tt> and <tt>plugins</tt> sections the parameter
+<tt>execution</tt>, which allows to configure if a script should be executed
+afterwards or while the agent collect its general data.
+<br>
+The <tt>[global]</tt> section now has the parameter <tt>async_script_execution</tt>
+where you can configure whether 'delayed' scripts should be executed sequential or parallel.
+You can find more information in our official documentation at the page "Monitoring Windows".
+

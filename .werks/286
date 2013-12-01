@@ -1,0 +1,14 @@
+Title: esx_vsphrere_counters.ramdisk: Better handling for non existant ramdisks
+Level: 1
+Component: checks
+Version: 1.2.3i7
+Date: 1385621928
+Class: fix
+
+We sadly do not get the total ramdisk sizes from the ESX host, so we need to assume
+that equal named ramdisks on the ESX hosts are all of the same size. The known
+disks are configured in the check.
+
+In the past, all ramdisks changed to <tt>UNKNOWN</tt>, once at least one ramdisk
+was not known to the check. This has been changed now, to show only the not handled
+ramdisk as UNKNOWN.

@@ -1,0 +1,8 @@
+Title: winperf_ts_sessions: New check to monitor Microsoft Terminal Server sessions
+Level: 1
+Component: checks
+Version: 1.2.3i7
+Date: 1385735024
+Class: feature
+
+This check can be used to monitor the number of active and inactive user sessions.

@@ -24,13 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-brocade_mlx_info = [ ('.1.3.6.1.4.1.1991.1.1.1.2.1.1', [ 1, 2, 3 ]), # power supplies (id, descr, state)
-                     ('.1.3.6.1.4.1.1991.1.1.1.3.1.1', [ 1, 2, 3 ]), # fans (id, descr, state)
-                     ('.1.3.6.1.4.1.1991.1.1.2.2.1.1', [ 1, 2, 12, 24, 25 ]),
+brocade_mlx_info = [ ('.1.3.6.1.4.1.1991.1.1.2.2.1.1', [ 1, 2, 12, 24, 25 ]),
                                    # modules (id, descr, overall status, MemoryTotal, MemoryAvailable)
                      ('.1.3.6.1.4.1.1991.1.1.2.11.1.1.5', [ OID_END, "" ]), 
                                    # modules (Rest of OId starting with module ID, CpuUtilPercent)
-                     ('.1.3.6.1.4.1.1991.1.1.2.13.1.1', [ 3, 4 ]),   # temperature sensors (descr, temperature)
                    ]
 
 def brocade_mlx_scan(oid):
@@ -42,65 +39,6 @@ def combine_item(id, descr):
     else:
         return "%s %s" % (id, descr)
 
-#############################################################################
-# Power Supplies
-#############################################################################
-
-def inventory_brocade_mlx_power(info):
-    inventory = []
-    for power_id, power_descr, power_state in info[0]:
-        inventory.append( (combine_item(power_id, power_descr), None) )
-    return inventory
-
-def check_brocade_mlx_power(item, _no_params, info):
-    for power_id, power_descr, power_state in info[0]:
-        if combine_item(power_id, power_descr) == item:
-            if power_state == "2":
-                return 0, "Power supply reports status 2 (normal)"
-            elif power_state == "3":
-                return 2, "Power supply reports status 3 (failure)"
-            else:
-                return 3, "Power supply reports unidentified status %s" % power_state
-    return 3, "Power supply %s not found" % item
-
-check_info["brocade_mlx.power"] = {
-    "check_function"        : check_brocade_mlx_power,
-    "inventory_function"    : inventory_brocade_mlx_power,
-    "service_description"   : "Power supply %s",
-    "snmp_info"             : brocade_mlx_info,
-    "snmp_scan_function"    : brocade_mlx_scan,
-    "has_perfdata"          : False,
-}
-
-#############################################################################
-# Fans
-#############################################################################
-
-def inventory_brocade_mlx_fan(info):
-    inventory = []
-    for fan_id, fan_descr, fan_state in info[1]:
-        inventory.append( (combine_item(fan_id, fan_descr), None) )
-    return inventory
-
-def check_brocade_mlx_fan(item, _no_params, info):
-    for fan_id, fan_descr, fan_state in info[1]:
-        if combine_item(fan_id, fan_descr) == item:
-            if fan_state == "2":
-                return 0, "Fan reports status 2 (normal)"
-            elif fan_state == "3":
-                return 2, "Fan reports status 3 (failure)"
-            else:
-                return 3, "Fan reports unidentified status %s" % fan_state
-    return 3, "Fan %s not found" % item
-
-check_info["brocade_mlx.fan"] = {
-    "check_function"        : check_brocade_mlx_fan,
-    "inventory_function"    : inventory_brocade_mlx_fan,
-    "service_description"   : "Fan %s",
-    "snmp_info"             : brocade_mlx_info,
-    "snmp_scan_function"    : brocade_mlx_scan,
-    "has_perfdata"          : False,
-}
 
 #############################################################################
 # Modules Overall Status
@@ -108,14 +46,14 @@ check_info["brocade_mlx.fan"] = {
 
 def inventory_brocade_mlx_module(info):
     inventory = []
-    for module_id, module_descr, module_state, mem_total, mem_avail in info[2]: 
+    for module_id, module_descr, module_state, mem_total, mem_avail in info[0]: 
         # do not inventorize modules reported as empty
         if module_state != "0":
             inventory.append( (combine_item(module_id, module_descr), None) )
     return inventory
 
 def check_brocade_mlx_module(item, _no_params, info):
-    for module_id, module_descr, module_state, mem_total, mem_avail in info[2]:
+    for module_id, module_descr, module_state, mem_total, mem_avail in info[0]:
         if combine_item(module_id, module_descr) == item:
             if module_state == "0":
                 return 1, "Module reports status 0 (empty)"
@@ -150,7 +88,7 @@ brocade_mlx_mem_default_levels = { "levels": (80.0, 90.0) }
 
 def inventory_brocade_mlx_module_mem(info):
     inventory = []
-    for module_id, module_descr, module_state, mem_total, mem_avail in info[2]: 
+    for module_id, module_descr, module_state, mem_total, mem_avail in info[0]: 
         # do not inventorize modules reported as empty
         # and: monitor memory only on NI-MLX modules
         if module_state != "0" and module_descr.startswith("NI-MLX"):
@@ -159,7 +97,7 @@ def inventory_brocade_mlx_module_mem(info):
 
 def check_brocade_mlx_module_mem(item, params, info):
     warn, crit = params["levels"]
-    for module_id, module_descr, module_state, mem_total, mem_avail in info[2]:
+    for module_id, module_descr, module_state, mem_total, mem_avail in info[0]:
         if combine_item(module_id, module_descr) == item:
             if module_state != "10":
                 return 3, "Module is not in state running"
@@ -211,7 +149,7 @@ brocade_mlx_cpu_default_levels = { "levels" : (80.0, 90.0) }
 
 def inventory_brocade_mlx_module_cpu(info):
     inventory = []
-    for module_id, module_descr, module_state, mem_total, mem_avail in info[2]: 
+    for module_id, module_descr, module_state, mem_total, mem_avail in info[0]: 
         # do not inventorize modules reported as empty
         # and: monitor cpu only on NI-MLX modules
         if module_state != "0" and module_descr.startswith("NI-MLX"):
@@ -220,7 +158,7 @@ def inventory_brocade_mlx_module_cpu(info):
 
 def check_brocade_mlx_module_cpu(item, params, info):
     warn, crit = params["levels"]
-    for module_id, module_descr, module_state, mem_total, mem_avail in info[2]:
+    for module_id, module_descr, module_state, mem_total, mem_avail in info[0]:
         if combine_item(module_id, module_descr) == item:
             if module_state != "10":
                 return 3, "Module is not in state running"
@@ -229,7 +167,7 @@ def check_brocade_mlx_module_cpu(item, params, info):
             cpu_util5 = ""
             cpu_util60 = ""
             cpu_util300 = ""
-            for oid_end, cpu_util in info[3]:
+            for oid_end, cpu_util in info[1]:
                 if oid_end == "%s.1.1" % module_id:
                     cpu_util1 = saveint(cpu_util)
                 if oid_end == "%s.1.5" % module_id:
@@ -270,46 +208,5 @@ check_info["brocade_mlx.module_cpu"] = {
     "snmp_scan_function"    : brocade_mlx_scan,
     "has_perfdata"          : True,
     "group"                 : "cpu_utilization_multiitem",
-}
-
-#############################################################################
-# Temperature Sensors
-#############################################################################
-
-brocade_mlx_temperature_default_levels = (50, 60)
-
-def inventory_brocade_mlx_temp(info):
-    inventory = []
-    for temp_descr, temp_value in info[4]:
-        inventory.append( (temp_descr, "brocade_mlx_temperature_default_levels") )
-    return inventory
-
-def check_brocade_mlx_temp(item, params, info):
-    warn, crit = params
-    for temp_descr, temp_value in info[4]:
-        # Info from the MIB: "Each unit is 0.5 degrees Celcius."
-        temp_value = int(saveint(temp_value) / 2)
-        if temp_descr == item:
-
-            status = 0
-            if temp_value > warn:
-                status = 1
-            if temp_value > crit:
-                status = 2
-
-            perfdata = [ ('temperature', str(temp_value) + 'C', warn, crit, '', '') ]
-
-            return status, "Temperature is %s°C" % temp_value, perfdata
-
-    return 3, "temp supply %s not found" % item
-
-check_info["brocade_mlx.temperature"] = {
-    "check_function"        : check_brocade_mlx_temp,
-    "inventory_function"    : inventory_brocade_mlx_temp,
-    "service_description"   : "%s",
-    "snmp_info"             : brocade_mlx_info,
-    "snmp_scan_function"    : brocade_mlx_scan,
-    "has_perfdata"          : True,
-    "group"                 : "hw_temperature",
 }
 

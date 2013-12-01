@@ -1,0 +1,11 @@
+Title: Fixed assuming states of services with backslashes in descriptions
+Level: 1
+Component: bi
+Version: 1.2.3i7
+Date: 1385630366
+Class: fix
+
+There was a bug which prevented assumind states for services with backslashes
+in the service descriptions. In former versions, this was not possible. One
+could click on the assumption icon, but after reloading the page, the
+assumed state had not been set.

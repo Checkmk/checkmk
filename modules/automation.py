@@ -465,6 +465,21 @@ def automation_write_autochecks_file(hostname, table):
     for ct, item, paramstring in table:
         f.write("  (%r, %r, %r, %s),\n" % (hostname, ct, item, paramstring))
     f.write("]\n")
+    if inventory_check_autotrigger and inventory_check_interval:
+        schedule_inventory_check(hostname)
+
+def schedule_inventory_check(hostname):
+    try:
+        import socket
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.connect(livestatus_unix_socket)
+        now = int(time.time())
+        command = "SCHEDULE_FORCED_SVC_CHECK;%s;Check_MK inventory;%d" % (hostname, now)
+        s.send("COMMAND [%d] %s\n" % (now, command))
+    except Exception, e:
+        if opt_debug:
+            raise
+
 
 def automation_parse_autochecks_file(hostname):
     def split_python_tuple(line):

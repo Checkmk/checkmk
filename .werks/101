@@ -1,0 +1,8 @@
+Title: liebert_chiller_status: New check for Liebert Chiller devices
+Level: 1
+Component: checks
+Version: 1.2.3i7
+Date: 1385658944
+Class: feature
+
+

@@ -141,12 +141,18 @@ struct eventlog_config_entry {
     int hide_context;
 };
 
-// Definitions for scripts
-enum caching_method {
-    CACHE_ASYNC,
-    CACHE_SYNC,
-    CACHE_OFF,
+// How single scripts are executed
+enum script_execution_mode {
+    SYNC, // inline
+    ASYNC // delayed
 };
+
+// How delayed scripts are executed
+enum script_async_execution {
+    PARALLEL,
+    SEQUENTIAL
+};
+
 
 // States for plugin and local scripts
 enum script_status {
@@ -159,47 +165,55 @@ enum script_status {
 };
 
 enum script_type {
-    TYPE_PLUGIN,
-    TYPE_LOCAL
+    PLUGIN,
+    LOCAL
 };
 
 struct script_container {
-    char         *path;
-    int           max_age;
-    int           timeout;
-    int           max_retries;
-    int           retry_count;
-    time_t        buffer_time;
-    char         *buffer;
-    char         *buffer_work;
-    script_type   type;
-    script_status status;
-    script_status last_problem;
-    volatile bool should_terminate;
-    HANDLE        worker_thread;
-    HANDLE        job_object;
+    char                  *path;
+    int                    max_age;
+    int                    timeout;
+    int                    max_retries;
+    int                    retry_count;
+    time_t                 buffer_time;
+    char                  *buffer;
+    char                  *buffer_work;
+    script_type            type;
+    script_execution_mode  execution_mode;
+    script_status          status;
+    script_status          last_problem;
+    volatile bool          should_terminate;
+    HANDLE                 worker_thread;
+    HANDLE                 job_object;
 };
 
 struct retry_config{
     char         *pattern;
     int           retries;
 };
-typedef vector<retry_config*> retry_config_t;
-retry_config_t retry_configs_local, retry_configs_plugin;
+typedef vector<retry_config*> retry_count_configs_t;
+retry_count_configs_t retry_configs_local, retry_configs_plugin;
 
 struct timeout_config {
     char         *pattern;
     int           timeout;
 };
-typedef vector<timeout_config*> timeout_config_t;
-timeout_config_t timeout_configs_local, timeout_configs_plugin;
+typedef vector<timeout_config*> timeout_configs_t;
+timeout_configs_t timeout_configs_local, timeout_configs_plugin;
 
 struct cache_config {
     char         *pattern;
     int           max_age;
 };
-typedef vector<cache_config*> cache_config_t;
-cache_config_t cache_configs_local, cache_configs_plugin;
+typedef vector<cache_config*> cache_configs_t;
+cache_configs_t cache_configs_local, cache_configs_plugin;
+
+struct execution_mode_config {
+    char                  *pattern;
+    script_execution_mode  mode;
+};
+typedef vector<execution_mode_config*> execution_mode_configs_t;
+execution_mode_configs_t execution_mode_configs_local, execution_mode_configs_plugin;
 
 typedef map<string, script_container*> script_containers_t;
 script_containers_t script_containers;
@@ -232,7 +246,9 @@ void crash_log(const char *format, ...);
 //  | Global variables                                                     |
 //  '----------------------------------------------------------------------'
 
-caching_method g_caching_method = CACHE_OFF;
+script_execution_mode  g_default_script_execution_mode  = SYNC;
+script_async_execution g_default_script_async_execution = SEQUENTIAL;
+
 bool verbose_mode               = false;
 bool g_crash_debug              = false;
 bool do_tcp                     = false;
@@ -321,7 +337,7 @@ typedef vector<char*> fileinfo_paths_t;
 fileinfo_paths_t g_fileinfo_paths;
 
 // Pointer to open crash log file, if crash_debug = on
-FILE  *g_connectionlog_file = 0;
+HANDLE g_connectionlog_file;
 struct timeval g_crashlog_start;
 bool   g_found_crash = false;
 
@@ -1539,20 +1555,20 @@ void update_script_statistics()
     memset(&g_script_stat, 0, sizeof(g_script_stat));
     while (it != script_containers.end()) {
         cont = it->second;
-        if (cont->type == TYPE_PLUGIN)
+        if (cont->type == PLUGIN)
             g_script_stat.pl_count++;
         else
             g_script_stat.lo_count++;
 
         switch (cont->last_problem) {
             case SCRIPT_TIMEOUT:
-                if (cont->type == TYPE_PLUGIN)
+                if (cont->type == PLUGIN)
                     g_script_stat.pl_timeouts++;
                 else
                     g_script_stat.lo_timeouts++;
                 break;
             case SCRIPT_ERROR:
-                if (cont->type == TYPE_PLUGIN)
+                if (cont->type == PLUGIN)
                     g_script_stat.pl_errors++;
                 else
                     g_script_stat.lo_errors++;
@@ -2079,61 +2095,70 @@ bool handle_fileinfo_config_variable(char *var, char *value)
 bool handle_script_config_variable(char *var, char *value, script_type type)
 {
     if (!strncmp(var, "timeout ", 8)) {
-        char* script_pattern  = lstrip(var + 8);
-        timeout_config* entry = new timeout_config();
+        char *script_pattern  = lstrip(var + 8);
+        timeout_config *entry = new timeout_config();
         entry->pattern        = strdup(script_pattern);
         entry->timeout        = atoi(value);
-        if (type == TYPE_PLUGIN)
+        if (type == PLUGIN)
             timeout_configs_plugin.push_back(entry);
         else
             timeout_configs_local.push_back(entry);
     }
     else if (!strncmp(var, "cache_age ", 10)) {
-        char* plugin_pattern = lstrip(var + 10);
+        char *plugin_pattern = lstrip(var + 10);
         cache_config* entry  = new cache_config();
         entry->pattern       = strdup(plugin_pattern);
         entry->max_age       = atoi(value);
-        if (type == TYPE_PLUGIN)
+        if (type == PLUGIN)
             cache_configs_plugin.push_back(entry);
         else
             cache_configs_local.push_back(entry);
     } else if (!strncmp(var, "retry_count ", 12)) {
-        char* plugin_pattern = lstrip(var + 12);
-        retry_config* entry  = new retry_config();
+        char *plugin_pattern = lstrip(var + 12);
+        retry_config *entry  = new retry_config();
         entry->pattern       = strdup(plugin_pattern);
         entry->retries       = atoi(value);
-        if (type == TYPE_PLUGIN)
+        if (type == PLUGIN)
             retry_configs_plugin.push_back(entry);
         else
             retry_configs_local.push_back(entry);
+    } else if (!strncmp(var, "execution ", 10)) {
+        char *plugin_pattern = lstrip(var + 10);
+        execution_mode_config *entry  = new execution_mode_config();
+        entry->pattern       = strdup(plugin_pattern);
+        entry->mode          = !strncmp(value, "async", 5) ? ASYNC : SYNC;
+        if (type == PLUGIN)
+            execution_mode_configs_plugin.push_back(entry);
+        else
+            execution_mode_configs_local.push_back(entry);
     }
     return true;
 }
 
 bool handle_plugin_config_variable(char *var, char *value)
 {
-    return handle_script_config_variable(var, value, TYPE_PLUGIN);
+    return handle_script_config_variable(var, value, PLUGIN);
 }
 
 bool handle_local_config_variable(char *var, char *value)
 {
-    return handle_script_config_variable(var, value, TYPE_LOCAL);
+    return handle_script_config_variable(var, value, LOCAL);
 }
 
 int get_script_timeout(char *name, script_type type)
 {
-    timeout_config_t* configs = type == TYPE_PLUGIN ? &timeout_configs_plugin : &timeout_configs_local;
-    for (timeout_config_t::iterator it = configs->begin();
+    timeout_configs_t* configs = type == PLUGIN ? &timeout_configs_plugin : &timeout_configs_local;
+    for (timeout_configs_t::iterator it = configs->begin();
             it != configs->end(); it++)
         if (globmatch((*it)->pattern, name))
             return (*it)->timeout;
-    return type == TYPE_PLUGIN ? DEFAULT_PLUGIN_TIMEOUT : DEFAULT_LOCAL_TIMEOUT;
+    return type == PLUGIN ? DEFAULT_PLUGIN_TIMEOUT : DEFAULT_LOCAL_TIMEOUT;
 }
 
 int get_script_cache_age(char *name, script_type type)
 {
-    cache_config_t* configs = type == TYPE_PLUGIN ? &cache_configs_plugin : &cache_configs_local;
-    for (cache_config_t::iterator it = configs->begin();
+    cache_configs_t* configs = type == PLUGIN ? &cache_configs_plugin : &cache_configs_local;
+    for (cache_configs_t::iterator it = configs->begin();
             it != configs->end(); it++)
         if (globmatch((*it)->pattern, name))
             return (*it)->max_age;
@@ -2142,14 +2167,23 @@ int get_script_cache_age(char *name, script_type type)
 
 int get_script_max_retries(char *name, script_type type)
 {
-    retry_config_t* configs = type == TYPE_PLUGIN ? &retry_configs_plugin : &retry_configs_local;
-    for (retry_config_t::iterator it = configs->begin();
+    retry_count_configs_t* configs = type == PLUGIN ? &retry_configs_plugin : &retry_configs_local;
+    for (retry_count_configs_t::iterator it = configs->begin();
             it != configs->end(); it++)
         if (globmatch((*it)->pattern, name))
             return (*it)->retries;
     return 0;
 }
 
+script_execution_mode get_script_execution_mode(char *name, script_type type)
+{
+    execution_mode_configs_t* configs = type == PLUGIN ? &execution_mode_configs_plugin : &execution_mode_configs_local;
+    for (execution_mode_configs_t::iterator it = configs->begin();
+            it != configs->end(); it++)
+        if (globmatch((*it)->pattern, name))
+            return (*it)->mode;
+    return g_default_script_execution_mode;
+}
 
 //   .----------------------------------------------------------------------.
 //   |     ____                    _                                        |
@@ -2373,83 +2407,38 @@ DWORD WINAPI ScriptWorkerThread(LPVOID lpParam)
     return 0;
 }
 
-// Run all programs in given dir. If dry_run is set, only create the script_container and return
-void run_external_programs(char *dirname, script_type type, bool dry_run = false)
+
+void run_script_container(script_container *cont)
 {
-    DIR *dir = opendir(dirname);
+    if ( (cont->type == PLUGIN && ! enabled_sections && SECTION_PLUGINS) ||
+         (cont->type == LOCAL  && ! enabled_sections && SECTION_LOCAL) )
+        return;
+
     time_t now = time(0);
-    if (dir) {
-        struct dirent *de;
-        while (0 != (de = readdir(dir))) {
-            char *name = de->d_name;
-
-            if (name[0] != '.' && !banned_exec_name(name)) {
-                char path[512];
-                snprintf(path, sizeof(path), "%s\\%s", dirname, name);
-                char newpath[512];
-                // If the path in question is a directory -> return
-                DWORD dwAttr = GetFileAttributes(path);
-                if(dwAttr != 0xffffffff && (dwAttr & FILE_ATTRIBUTE_DIRECTORY)) {
-                    continue;
-                }
-
-                char *command = add_interpreter(path, newpath);
-                // Look if there is already an script_container available for this program
-                script_container* cont = NULL;
-                script_containers_t::iterator it_cont = script_containers.find(string(command));
-                if (it_cont == script_containers.end()) {
-                    // create new entry for this program
-                    cont = new script_container();
-                    cont->path             = strdup(command);
-                    cont->buffer_time      = 0;
-                    cont->buffer           = NULL;
-                    cont->buffer_work      = NULL;
-                    cont->type             = type;
-                    cont->should_terminate = 0;
-                    cont->timeout          = get_script_timeout(name, type);
-                    cont->max_retries      = get_script_max_retries(name, type);
-                    cont->max_age          = get_script_cache_age(name, type);
-                    cont->status           = SCRIPT_IDLE;
-                    cont->last_problem     = SCRIPT_NONE;
-                    script_containers[cont->path] = cont;
-                    if (dry_run)
-                        continue;
-                } else
-                    cont = it_cont->second;
-
-                if (now - cont->buffer_time >= cont->max_age) {
-                    // Check if the thread within this cont is still collecting data
-                    // or a thread has finished but its data wasnt processed yet
-                    if (cont->status == SCRIPT_COLLECT || cont->status == SCRIPT_FINISHED) {
-                        crash_log("Thread skip start: %s ; reason: %s", cont->path,
-                                cont->status == SCRIPT_COLLECT ? "thread already running" : "new data available");
-                        continue;
-                    }
-                    cont->buffer_time = time(0);
-                    cont->status = SCRIPT_COLLECT;
-                    crash_log("Thread start: %s", cont->path);
-
-                    if (cont->worker_thread != INVALID_HANDLE_VALUE)
-                        CloseHandle(cont->worker_thread);
-                    cont->worker_thread  = CreateThread(
-                            NULL,                 // default security attributes
-                            0,                    // use default stack size
-                            ScriptWorkerThread,   // thread function name
-                            cont,                 // argument to thread function
-                            0,                    // use default creation flags
-                            NULL);                // returns the thread identifier
-                    if (g_caching_method == CACHE_OFF || g_caching_method == CACHE_SYNC) {
-                        crash_log("Thread wait (%s): %s",
-                                 (g_caching_method == CACHE_OFF ? "CACHE OFF" : "CACHE SYNC"), cont->path);
-                        WaitForSingleObject(cont->worker_thread, INFINITE);
-                        crash_log("Thread finished: %s", cont->path);
-                    }
-                } else
-                    crash_log("Thread skip - using cache: %s", cont->path);
-
-            }
+    if (now - cont->buffer_time >= cont->max_age) {
+        // Check if the thread within this cont is still collecting data
+        // or a thread has finished but its data wasnt processed yet
+        if (cont->status == SCRIPT_COLLECT || cont->status == SCRIPT_FINISHED) {
+            return;
         }
-        closedir(dir);
+        cont->buffer_time = time(0);
+        cont->status = SCRIPT_COLLECT;
+
+        if (cont->worker_thread != INVALID_HANDLE_VALUE)
+            CloseHandle(cont->worker_thread);
+        cont->worker_thread  = CreateThread(
+                NULL,                 // default security attributes
+                0,                    // use default stack size
+                ScriptWorkerThread,   // thread function name
+                cont,                 // argument to thread function
+                0,                    // use default creation flags
+                NULL);                // returns the thread identifier
+
+        if (cont->execution_mode == SYNC ||
+            cont->execution_mode == ASYNC && g_default_script_async_execution == SEQUENTIAL)
+        {
+            WaitForSingleObject(cont->worker_thread, INFINITE);
+        }
     }
 }
 
@@ -2538,16 +2527,11 @@ void section_mrpe(SOCKET &out)
 //  |                                                                      |
 //  '----------------------------------------------------------------------'
 
-void section_local_collect()
-{
-    run_external_programs(g_local_dir, TYPE_LOCAL);
-}
-
 void section_local(SOCKET &out)
 {
     crash_log("<<<local>>>");
     output(out, "<<<local>>>\n");
-    output_external_programs(out, TYPE_LOCAL);
+    output_external_programs(out, LOCAL);
 }
 
 //  .----------------------------------------------------------------------.
@@ -2559,14 +2543,9 @@ void section_local(SOCKET &out)
 //  |                                 |___/                                |
 //  '----------------------------------------------------------------------'
 
-void section_plugins_collect()
-{
-    run_external_programs(g_plugins_dir, TYPE_PLUGIN);
-}
-
 void section_plugins(SOCKET &out)
 {
-    output_external_programs(out, TYPE_PLUGIN);
+    output_external_programs(out, PLUGIN);
 }
 
 
@@ -2850,7 +2829,14 @@ void open_crash_log()
             g_found_crash = true;
         }
 
-        g_connectionlog_file = fopen(g_connection_log, "w");
+        // Threads are not allowed to access the crash_log
+        g_connectionlog_file = CreateFile(TEXT(g_connection_log),
+            GENERIC_WRITE,            // open for reading
+            0,                        // do not share
+            NULL,                     // no security
+            CREATE_ALWAYS,            // existing file only
+            FILE_ATTRIBUTE_NORMAL,    // normal file
+            NULL);
         gettimeofday(&g_crashlog_start, 0);
         time_t now = time(0);
         struct tm *t = localtime(&now);
@@ -2866,10 +2852,10 @@ void close_crash_log()
     if (g_crash_debug) {
         WaitForSingleObject(crashlogMutex, INFINITE);
         crash_log("Closing crash log (no crash this time)");
-        fclose(g_connectionlog_file);
-        g_connectionlog_file = 0;
-        unlink(g_success_log);
-        rename(g_connection_log, g_success_log);
+
+        CloseHandle(g_connectionlog_file);
+        DeleteFile(g_success_log);
+        MoveFile(g_connection_log, g_success_log);
         ReleaseMutex(crashlogMutex);
     }
 }
@@ -2888,7 +2874,8 @@ void crash_log(const char *format, ...)
 //    printf("\n");
 //    va_end (args);
 
-    if (g_connectionlog_file) {
+    char buffer[1024];
+    if (g_connectionlog_file != INVALID_HANDLE_VALUE) {
         gettimeofday(&tv, 0);
         long int ellapsed_usec = tv.tv_usec - g_crashlog_start.tv_usec;
         long int ellapsed_sec  = tv.tv_sec - g_crashlog_start.tv_sec;
@@ -2899,10 +2886,18 @@ void crash_log(const char *format, ...)
 
         va_list ap;
         va_start(ap, format);
-        fprintf(g_connectionlog_file, "%ld.%06ld ", ellapsed_sec, ellapsed_usec);
-        vfprintf(g_connectionlog_file, format, ap);
-        fputs("\n", g_connectionlog_file);
-        fflush(g_connectionlog_file);
+
+        DWORD dwBytesWritten = 0;
+        snprintf(buffer, sizeof(buffer), "%ld.%06ld ", ellapsed_sec, ellapsed_usec);
+        DWORD dwBytesToWrite = (DWORD)strlen(buffer);
+        WriteFile(g_connectionlog_file, buffer, dwBytesToWrite, &dwBytesWritten, NULL);
+
+        vsnprintf(buffer, sizeof(buffer), format, ap);
+        dwBytesToWrite = (DWORD)strlen(buffer);
+        WriteFile(g_connectionlog_file, buffer, dwBytesToWrite, &dwBytesWritten, NULL);
+
+        WriteFile(g_connectionlog_file, "\n", 1, &dwBytesWritten, NULL);
+        FlushFileBuffers(g_connectionlog_file);
     }
     ReleaseMutex(crashlogMutex);
 }
@@ -3118,13 +3113,27 @@ bool handle_global_config_variable(char *var, char *value)
         parse_execute(value);
         return true;
     }
+    else if (!strcmp(var, "async_script_execution")) {
+        if (!strcmp(value, "parallel"))
+            g_default_script_async_execution = PARALLEL;
+        else if (!strcmp(value, "sequential"))
+            g_default_script_async_execution = SEQUENTIAL;
+        return true;
+    }
+    // Do no longer use this!
     else if (!strcmp(var, "caching_method")) {
-        if (!strcmp(value, "async"))
-            g_caching_method = CACHE_ASYNC;
-        else if (!strcmp(value, "sync"))
-            g_caching_method = CACHE_SYNC;
-        else if (!strcmp(value, "off"))
-            g_caching_method = CACHE_OFF;
+        if (!strcmp(value, "async")) {
+            g_default_script_async_execution = PARALLEL;
+            g_default_script_execution_mode  = ASYNC;
+        }
+        else if (!strcmp(value, "sync")) {
+            g_default_script_async_execution = SEQUENTIAL;
+            g_default_script_execution_mode  = ASYNC;
+        }
+        else if (!strcmp(value, "off")) {
+            g_default_script_async_execution = SEQUENTIAL;
+            g_default_script_execution_mode  = SYNC;
+        }
         return true;
     }
     else if (!strcmp(var, "crash_debug")) {
@@ -3730,54 +3739,93 @@ DWORD WINAPI DataCollectionThread( LPVOID lpParam )
     do
     {
         g_data_collection_retriggered = false;
-        if (enabled_sections & SECTION_PLUGINS) {
-            section_plugins_collect();
-        }
-        if (enabled_sections & SECTION_LOCAL) {
-            section_local_collect();
-        }
+        for (script_containers_t::iterator it_cont = script_containers.begin();
+                it_cont != script_containers.end(); it_cont++)
+            if (it_cont->second->execution_mode == ASYNC)
+                run_script_container(it_cont->second);
     } while (g_data_collection_retriggered);
     return 0;
 }
 
-void start_external_data_collection()
+void determine_available_scripts(script_type type)
 {
+    char *dirname = type == PLUGIN ? g_plugins_dir : g_local_dir;
+    DIR  *dir     = opendir(dirname);
+    if (dir) {
+        struct dirent *de;
+        while (0 != (de = readdir(dir))) {
+            char *name = de->d_name;
 
-    // If the thread is still running, just tell him to do another cycle
-    // This can only apply to CACHE_SYNC and CACHE_ASYNC, since in
-    // CACHE_OFF mode we always wait till the thread has finished
-    DWORD dwExitCode = 0;
-    if(GetExitCodeThread(g_collection_thread, &dwExitCode))
-    {
-        if (dwExitCode == STILL_ACTIVE) {
-            g_data_collection_retriggered = true;
-            return;
+            if (name[0] != '.' && !banned_exec_name(name)) {
+                char path[512];
+                snprintf(path, sizeof(path), "%s\\%s", dirname, name);
+                char newpath[512];
+                // If the path in question is a directory -> continue
+                DWORD dwAttr = GetFileAttributes(path);
+                if(dwAttr != 0xffffffff && (dwAttr & FILE_ATTRIBUTE_DIRECTORY)) {
+                    continue;
+                }
+
+                char *command = add_interpreter(path, newpath);
+                // Look if there is already an script_container available for this program
+                script_container* cont = NULL;
+                script_containers_t::iterator it_cont = script_containers.find(string(command));
+                if (it_cont == script_containers.end()) {
+                    // create new entry for this program
+                    cont = new script_container();
+                    cont->path             = strdup(command);
+                    cont->buffer_time      = 0;
+                    cont->buffer           = NULL;
+                    cont->buffer_work      = NULL;
+                    cont->type             = type;
+                    cont->should_terminate = 0;
+                    cont->execution_mode   = get_script_execution_mode(name, type);
+                    cont->timeout          = get_script_timeout(name, type);
+                    cont->max_retries      = get_script_max_retries(name, type);
+                    cont->max_age          = get_script_cache_age(name, type);
+                    cont->status           = SCRIPT_IDLE;
+                    cont->last_problem     = SCRIPT_NONE;
+                    script_containers[cont->path] = cont;
+                }
+            }
         }
+        closedir(dir);
     }
+}
 
-    if (g_collection_thread != INVALID_HANDLE_VALUE)
-        CloseHandle(g_collection_thread);
-    crash_log("Start thread for collecting local/plugin data");
-    g_collection_thread = CreateThread(NULL, // default security attributes
-            0,                    // use default stack size
-            DataCollectionThread, // thread function name
-            NULL,                 // argument to thread function
-            0,                    // use default creation flags
-            NULL);                // returns the thread identifier
+void collect_script_data(script_execution_mode mode)
+{
+    if (mode == SYNC) {
+        crash_log("Collecting sync local/plugin data");
+        for (script_containers_t::iterator it_cont = script_containers.begin();
+             it_cont != script_containers.end(); it_cont++) 
+            if (it_cont->second->execution_mode == SYNC)
+                run_script_container(it_cont->second);
+    } else if (mode == ASYNC) {
+        // If the thread is still running, just tell him to do another cycle
+        DWORD dwExitCode = 0;
+        if(GetExitCodeThread(g_collection_thread, &dwExitCode))
+        {
+            if (dwExitCode == STILL_ACTIVE) {
+                g_data_collection_retriggered = true;
+                return;
+            }
+        }
 
-    // If CACHE_OFF is set are waiting till the thread has finished
-    if (g_caching_method == CACHE_OFF)
-        WaitForSingleObject(g_collection_thread, INFINITE);
+        if (g_collection_thread != INVALID_HANDLE_VALUE)
+            CloseHandle(g_collection_thread);
+        crash_log("Start async thread for collecting local/plugin data");
+        g_collection_thread = CreateThread(NULL, // default security attributes
+                0,                    // use default stack size
+                DataCollectionThread, // thread function name
+                NULL,                 // argument to thread function
+                0,                    // use default creation flags
+                NULL);                // returns the thread identifier
+    }
 }
 
 void do_adhoc()
 {
-
-    // If caching is activated do an initial data collection run on startup
-    // Otherwise we might miss some important data on the first inventory
-    if (g_caching_method != CACHE_OFF)
-        start_external_data_collection();
-
     do_tcp = true;
     printf("Listening for TCP connections on port %d\n", g_port);
     printf("Close window or press Ctrl-C to exit\n");
@@ -3797,6 +3845,9 @@ void output_data(SOCKET &out)
         output_crash_log(out);
 
     update_script_statistics();
+    // Check if there are new scripts available
+    determine_available_scripts(PLUGIN);
+    determine_available_scripts(LOCAL);
 
     if (enabled_sections & SECTION_CHECK_MK)
         section_check_mk(out);
@@ -3819,10 +3870,8 @@ void output_data(SOCKET &out)
     if (enabled_sections & SECTION_LOGFILES)
         section_logfiles(out);
 
-    // Collect local / plugins data for later usage
-    // These sections are handled in seperate threads and processes
-    if (g_caching_method == CACHE_OFF)
-        start_external_data_collection();
+    // Start data collection of SYNC scripts
+    collect_script_data(SYNC);
 
     if (enabled_sections & SECTION_PLUGINS)
         section_plugins(out);
@@ -3840,8 +3889,8 @@ void output_data(SOCKET &out)
         force_tcp_output = false;
     }
 
-    if (g_caching_method != CACHE_OFF)
-        start_external_data_collection();
+    // Start data collection of ASYNC scripts
+    collect_script_data(ASYNC);
 }
 
 
@@ -3852,7 +3901,7 @@ void cleanup()
 
     unregister_all_eventlogs(); // frees a few bytes
 
-    for (execute_suffixes_t::iterator it_ex = g_execute_suffixes.begin(); 
+    for (execute_suffixes_t::iterator it_ex = g_execute_suffixes.begin();
             it_ex != g_execute_suffixes.end(); it_ex++)
         free(*it_ex);
     g_execute_suffixes.clear();

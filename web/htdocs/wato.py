@@ -2209,6 +2209,8 @@ def mode_diag_host(phase):
         global_buttons()
         html.context_button(_("Host Properties"),
                             make_link([("mode", "edithost"), ("host", hostname)]), "back")
+        html.context_button(_("Services"),
+                            make_link([("mode", "inventory"), ("host", hostname)]), "services")
         return
 
     vs_host = Dictionary(

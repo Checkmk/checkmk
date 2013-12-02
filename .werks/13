@@ -1,0 +1,14 @@
+Title: Solaris Agent: implement cached async plugins and local checks
+Level: 1
+Component: checks
+Version: 1.2.3i7
+Date: 1385982276
+Class: feature
+
+The Solaris agent now supports the same method of asynchronously
+executing local checks and plugins as the Linux agent. Simply
+create directories below <tt>/usr/lib/check_mk_agent/local</tt>
+and <tt>/usr/lib/check_mk_agent/plugins</tt> whose names are a
+number of seconds (e.g. <tt>/usr/lib/check_mk_agent/plugins/3600</tt>).
+The plugins in those subdirectories will be executed at most every
+that number of seconds and also will be run in the background.

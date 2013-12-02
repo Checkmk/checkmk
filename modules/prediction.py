@@ -122,25 +122,35 @@ def group_by_wday(t):
 def group_by_day(t):
     return "everyday", (t - time.timezone) % 86400
 
+def group_by_day_of_month(t):
+    broken = time.localtime(t)
+    mday = broken[2]
+    return str(mday), (t - time.timezone) % 86400
+
 def group_by_everyhour(t):
     return "everyhour", (t - time.timezone) % 3600
 
 prediction_periods = {
     "wday" : {
-        "slice" : 86400,
+        "slice" : 86400, # 7 slices
         "groupby" : group_by_wday,
         "valid" : 7,
     },
     "day" : {
-        "slice" : 86400,
+        "slice" : 86400, # 31 slices
+        "groupby" : group_by_day_of_month,
+        "valid" : 28,
+    },
+    "hour" : {
+        "slice" : 86400, # 1 slice
         "groupby" : group_by_day,
         "valid" : 1,
     },
-    "hour" : {
-        "slice" : 3600,
+    "minute" : {
+        "slice" : 3600, # 1 slice
         "groupby" : group_by_everyhour,
-        "valid" : 1,
-    }
+        "valid" : 24,
+    },
 }
 
 

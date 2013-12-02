@@ -12168,9 +12168,10 @@ def PredictiveLevels(**args):
                 DropdownChoice(
                     title = _("Base prediction on"),
                     choices = [
-                        ( "wday", _("Day of the week (1-7, 1 is Monday)") ),
-                        ( "day",  _("Day of the month (1-31)") ),
-                        ( "hour", _("Hour of the day (0-23)") ),
+                        ( "wday",   _("Day of the week (1-7, 1 is Monday)") ),
+                        ( "day",    _("Day of the month (1-31)") ),
+                        ( "hour",   _("Hour of the day (0-23)") ),
+                        ( "minute", _("Minute of the hour (0-59)") ),
                     ]
              )),
              ( "horizon",

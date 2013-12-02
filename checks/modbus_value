@@ -24,39 +24,42 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Example output from agent:
+# <<<modbus_value>>>
+# 856 1827893 counter active_energy
+# 790 11204 gauge active_power
 
-ups_out_load_default_levels = (85, 90) # warning / critical
+modbus_value_default_levels = ( None, None )
+def inventory_modbus_value(info):
+    return [ (x[-1], "modbus_value_default_levels") for x in info ]
 
-def inventory_ups_out_load(info):
-    if len(info) > 0:
-        return [ ( x[0], "ups_out_load_default_levels") for x in info if int(x[1]) > 0]
+def check_modbus_value(item, params, info):
+    for cid, value, ctype, name in info:
+        if name == item:
+            value = saveint(value)
+            message_end = ""
+            if ctype == "gauge":
+                now = time.time()
+                timedif, value = get_counter( "modbus.value."+name, now, value )
+                message_end = "in last %.0fsec " % timedif
+            warn, crit = params
+            state = 0
+            if crit and crit >= value:
+                state = 2
+                message_end += "(Levels Warning/Critical at %s/%s)"
+            if warn and warn >= value:
+                state = 1
+                message_end += "(Levels Warning/Critical at %s/%s)"
+            message = "Current: %.2f %s (%s)" % ( value, message_end, cid )
+            return state, message, [ (name, value, warn, crit ) ]
 
-def check_ups_out_load(item, params, info):
-    warn, crit = params
-    for line in info:
-	if line[0] == item:
-	    power = int(line[1])
-	    perfdata = [ ( "out_load", power, warn, crit, 100 ) ]
-	    infotext = "load: %d (warn/crit at %d/%d) " % \
-	 	(power, warn, crit)
+    return 3, "Value not found in Agent output"
 
-	    if power >= crit:
-		return (2, infotext, perfdata)
-	    elif power >= warn:
-		return (1, infotext, perfdata)
-	    else:
-		return (0, infotext, perfdata)
-
-    return (3, "Phase %s not found in SNMP output" % item)
-
-check_info['ups_out_load'] = {
-  "inventory_function"  : inventory_ups_out_load,
-  "check_function"      : check_ups_out_load,
-  "service_description" : "OUT load phase %s",
-  "has_perfdata"        : True,
-  "snmp_info"           : ( ".1.3.6.1.2.1.33.1.4.4.1", [ 0, 5 ] ),
-  "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in \
-                         [ ".1.3.6.1.4.1.534.1", ".1.3.6.1.4.1.705.1",".1.3.6.1.4.1.705.1.2", ".1.3.6.1.4.1.818.1.100.1.1",
-                           ".1.3.6.1.2.1.33", ".1.3.6.1.2.1.33.2", ".1.3.6.1.4.1.5491.6",
-                           ".1.3.6.1.4.1.476.1.42" ]
+check_info["modbus_value"] = {
+    "check_function"        : check_modbus_value,
+    "inventory_function"    : inventory_modbus_value,
+    "service_description"   : "Value %s",
+    "has_perfdata"          : True,
+    "group"                 : "modbus_value",
 }
+

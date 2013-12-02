@@ -233,15 +233,19 @@ def compute_levels(params, ref_value, stdev):
         if p in params:
             how, (warn, crit) = params[p]
             if how == "absolute":
-                levels.append((ref_value + (sig * warn), ref_value + (sig * crit)))
+                this_levels = (ref_value + (sig * warn), ref_value + (sig * crit))
 
             elif how == "relative":
-                levels.append((ref_value + sig * (ref_value * warn / 100),
-                               ref_value + sig * (ref_value * crit / 100)))
+                this_levels = (ref_value + sig * (ref_value * warn / 100),
+                               ref_value + sig * (ref_value * crit / 100))
 
             else: #  how == "stdev":
-                levels.append((ref_value + sig * (stdev * warn),
-                              ref_value + sig * (stdev * crit)))
+                this_levels = (ref_value + sig * (stdev * warn),
+                              ref_value + sig * (stdev * crit))
+            if what == "upper" and "levels_upper_min" in params:
+                limit_warn, limit_crit = params["levels_upper_min"]
+                this_levels = (max(limit_warn, this_levels[0]), max(limit_crit, this_levels[1]))
+            levels.append(this_levels)
         else:
             levels.append((None, None))
     return levels

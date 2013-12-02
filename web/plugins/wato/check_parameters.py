@@ -3705,6 +3705,22 @@ register_check_parameters(
    None,
    None,
 )
+
+
+register_check_parameters(
+  subgroup_environment,
+  "modbus_value",
+  _("Modubus Performance Values"),
+  Tuple(
+     elements = [
+         Integer(title = _("Warning if above")),
+         Integer(title = _("Critical if above"))
+        ]
+  ),
+  TextAscii( title = _("Value Name") ),
+  None
+)
+
 register_check_parameters(
    subgroup_environment,
     "ups_capacity",

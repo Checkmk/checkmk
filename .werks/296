@@ -1,0 +1,10 @@
+Title: Fixed moving of snapins while in scrolled sidebar
+Level: 1
+Component: multisite
+Version: 1.2.3i7
+Date: 1385991237
+Class: fix
+
+Release 1.2.3i2 introduced a bug where a snapin was flipping
+several pixels above the current mouse position when moving
+a snapin while the sidebar is scrolled down.

@@ -20,12 +20,12 @@ examples:
 
  # Check Module with ID 33 on a box called my-mlx-device with default levels
  checks += [
-   ("my-mlx-device", "brocade_mlx.module_mem", '33 NI-MLX-32_MR Management Module', brocade_mlx_mem_default_levels),
+   ("my-mlx-device", "brocade_mlx.module_mem", '33 NI-MLX-32_MR Management', brocade_mlx_mem_default_levels),
  ]
 
  # or use individual levels for warn and crit
  checks += [
-   ("my-mlx-device", "brocade_mlx.module_mem", '33 NI-MLX-32_MR Management Module', { "levels": (75.0, 85.0) }),
+   ("my-mlx-device", "brocade_mlx.module_mem", '33 NI-MLX-32_MR Management', { "levels": (75.0, 85.0) }),
  ]
 
 perfdata:

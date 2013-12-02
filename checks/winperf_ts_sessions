@@ -62,8 +62,6 @@ def check_winperf_ts_sessions(_unused, params, info):
     perfdata = [ ('active', active, ), ('inactive', inactive) ]
     return state, ", ".join(state_txt), perfdata
 
-check_config_variables.append("winperf_ts_sessions")
-
 check_info["winperf_ts_sessions"] = {
     'check_function':          check_winperf_ts_sessions,
     'inventory_function':      inventory_winperf_ts_sessions,

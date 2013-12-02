@@ -1,0 +1,15 @@
+Title: Fixed problem with new created tag groups with "/" in title
+Level: 1
+Component: wato
+Version: 1.2.3i7
+Date: 1385989575
+Class: fix
+
+If you used <tt>/</tt> chars in the tag group titles before, the text before
+the first <tt>/</tt> was moved from the title to the topic field. This was not
+intended. This has been fixed now.
+
+However, there is still some issue with this: If you have existing tag groups with
+slashes in their title, the same problem will happen. Thist must be fixed by hand
+for the moment.
+

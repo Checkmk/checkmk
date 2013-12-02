@@ -10071,8 +10071,9 @@ def mode_edit_hosttag(phase):
                 raise MKUserError("title", _("Please specify a title for your host tag group."))
 
             topic = forms.get_input(vs_topic, "topic")
-            if topic != '':
-                title = '%s/%s' % (topic, title)
+            # always put at least "/" as prefix to the title, the title
+            # will then be split by the first "/' in future
+            title = '%s/%s' % (topic, title)
 
             new_choices = forms.get_input(vs_choices, "choices")
             have_none_tag = False

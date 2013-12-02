@@ -27,8 +27,8 @@
 export LC_ALL=C
 unset LANG
 
-export MK_LIBDIR="/change/me"
-export MK_CONFDIR="/change/me"
+export MK_LIBDIR="/usr/lib/check_mk_agent"
+export MK_CONFDIR="/etc/check_mk"
 
 # All executables in PLUGINSDIR will simply be executed and their
 # ouput appended to the output of the agent. Plugins define their own
@@ -48,8 +48,51 @@ else
     exec <&- 2>/dev/null
 fi
 
+function file_age() {
+    /usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($^T-$mtime);' "$1"
+}
+    
+    
+
+
+# Runs a command asynchronous by use of a cache file
+function run_cached () {
+    if [ "$1" = -s ] ; then local section="echo '<<<$2>>>' ; " ; shift ; fi
+    local NAME=$1
+    local MAXAGE=$2
+    shift 2
+    local CMDLINE="$section$@"
+
+    if [ ! -d $MK_CONFDIR/cache ]; then mkdir -p $MK_CONFDIR/cache ; fi
+    CACHEFILE="$MK_CONFDIR/cache/$NAME.cache"
+
+    # Check if the creation of the cache takes suspiciously long and return
+    # nothing if the age (access time) of $CACHEFILE.new is twice the MAXAGE
+    if [ -e "$CACHEFILE.new" ] ; then
+        AGE=$(file_age "$CACHEFILE.new")
+        if [ $AGE -ge $((MAXAGE * 2)) ] ; then
+            return
+        fi
+    fi
+
+    # Check if cache file exists and is recent enough
+    if [ -s "$CACHEFILE" ] ; then
+        AGE=$(file_age "$CACHEFILE")
+        if [ $AGE -le $MAXAGE ] ; then local USE_CACHEFILE=1 ; fi
+        # Output the file in any case, even if it is
+        # outdated. The new file will not yet be available
+        cat "$CACHEFILE"
+    fi
+
+    # Cache file outdated and new job not yet running? Start it
+    if [ -z "$USE_CACHEFILE" -a ! -e "$CACHEFILE.new" ] ; then
+        echo "set -o noclobber ; exec > $CACHEFILE.new || exit 1 ; $CMDLINE && mv $CACHEFILE.new $CACHEFILE || rm -f $CACHEFILE $CACHEFILE.new" | nohup bash 2>/dev/null &
+    fi
+}
+
+
 echo '<<<check_mk>>>'
-echo Version: 1.2.3i6
+echo Version: 2013.12.02
 echo AgentOS: solaris
 
 
@@ -183,42 +226,20 @@ then
 fi
 
 
-if cd $PLUGINSDIR 2>/dev/null
-then
-    for skript in $(ls)
-    do
-        if [ -x "$skript" ] ; then
-            ./$skript
-    fi
-  done
-fi
-
-
 # Fileinfo-Check: put patterns for files into $MK_CONFDIR/fileinfo.cfg
 if [ -f "$MK_CONFDIR/fileinfo.cfg" ]
 then
     echo '<<<fileinfo:sep(124)>>>'
-    echo ''
-    nawk 'BEGIN{print srand()}'
-    file=$(ls $(cat "$MK_CONFDIR/fileinfo.cfg"))
-    size=$(ls -nl $file | nawk '{print $5}')
-    date=$(truss -v lstat -t lstat ls -d $file 2>&1 | nawk '/mt = /{printf "%d\n", $9}')
-    echo ${file}'|'${size}'|'${date}
+    /usr/bin/perl -e 'print time."\n"'
+    ls $(cat "$MK_CONFDIR/fileinfo.cfg") | \
+        /usr/bin/perl -e '
+           while(my $file = <>) {
+               $file =~ s/\n$//;
+               ($device, $inode, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat($file); 
+               print("$file|$size|$mtime\n"); 
+           }'
 fi
 
-
-# Local
-if cd $LOCALDIR 2>/dev/null
-then
-    echo '<<<local>>>'
-    for skript in $(ls)
-    do
-        if [ -x "$skript" ]
-        then
-            ./$skript
-        fi
-    done
-fi
 
 
 # MK's Remote Plugin Executor
@@ -232,3 +253,42 @@ then
         echo "$descr $? $OUTPUT"
     done
 fi
+
+# Local checks
+if cd $LOCALDIR 2>/dev/null
+then
+    echo '<<<local>>>'
+    for skript in $(ls)
+    do
+        if [ -x "$skript" ] ; then
+            ./$skript
+        fi
+    done
+
+    # Call some plugins only every X'th second
+    for skript in [1-9]*/* ; do
+        if [ -x "$skript" ] ; then
+            run_cached local_${skript//\//\#} ${skript%/*} "$skript"
+        fi
+    done
+
+fi
+
+# Plugins
+if cd $PLUGINSDIR 2>/dev/null
+then
+    for skript in $(ls)
+    do
+        if [ -x "$skript" ] ; then
+            ./$skript
+        fi
+    done
+
+    # Call some plugins only every X'th second
+    for skript in [1-9]*/* ; do
+        if [ -x "$skript" ] ; then
+            run_cached plugins_${skript//\//\#} ${skript%/*} "$skript"
+        fi
+    done
+fi
+

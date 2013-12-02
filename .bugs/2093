@@ -1,0 +1,12 @@
+Title: esx_vsphere_counters_ramdisk: Sizes seem not to be consistent over all systems
+Component: checks
+State: open
+Date: 2013-12-02 09:12:56
+Targetversion: 1.2.3i6
+Class: cleanup
+
+The problem: The agent can not provide the sizes of the ram disks. The check has
+a mapping table with the sizes of the ram disks. The assumption was that all
+ram disks have a fixed size on all systems. This seems to be wrong.
+At the moment, this can be overridden via main.mk, not via WATO. Make this configurable
+via WATO.

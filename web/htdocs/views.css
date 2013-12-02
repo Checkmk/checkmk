@@ -482,7 +482,7 @@ table.views td.buttons {
 
 /* Availability */
 table.data.availability {
-    width: auto;
+    width: 100%;
 }
 
 table.data.availability td.number {

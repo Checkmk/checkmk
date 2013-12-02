@@ -1198,7 +1198,7 @@ def render_availability_group(group_title, range_title, group_id, availability, 
             # Apply visual availability levels (render OK in yellow/red, if too low)
             if number and av_levels and sid in [ "ok", "up" ]:
                 css = "state%d" % check_av_levels(number, av_levels, considered_duration)
-            table.cell(sname, render_number(number, considered_duration), css="number " + css, help=help)
+            table.cell(sname, render_number(number, considered_duration), css="narrow number " + css, help=help)
 
             # Statistics?
             x_cnt, x_min, x_max = statistics.get(sid, (None, None, None))

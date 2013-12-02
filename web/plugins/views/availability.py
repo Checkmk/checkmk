@@ -1240,7 +1240,7 @@ def render_availability_group(group_title, range_title, group_id, availability, 
                 continue
             number = summary.get(sid, 0)
             if show_summary == "average" or avoptions["timeformat"].startswith("percentage"):
-                number /= len(availability)
+                number /= len(group_availability)
                 if avoptions["timeformat"].startswith("percentage"):
                     number *= considered_duration
             if not number:
@@ -1256,7 +1256,7 @@ def render_availability_group(group_title, range_title, group_id, availability, 
                     if aggr == "cnt":
                         count = summary_counts.get(sid, 0)
                         if show_summary == "average":
-                            count = float(count) / len(availability)
+                            count = float(count) / len(group_availability)
                             text = "%.2f" % count
                         else:
                             text = str(count)

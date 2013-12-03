@@ -35,8 +35,10 @@ def check_veeam_jobs(item, params, info):
                 state = 0
             elif line[2] =="Working":
                 state = 0
-                line.pop(7)
-                line.pop(6)
+                if len(line) == 8:
+                    line.pop(7)
+                if len(line) == 7:
+                    line.pop(6)
             elif line[3] == "Failed":
                 state = 2
             elif line[2] == "Stopped" and line[3] == "Warning":

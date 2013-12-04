@@ -2318,7 +2318,7 @@ def mode_diag_host(phase):
     forms.end()
 
     html.write('<div style="margin-bottom:10px">')
-    html.button("_save", _("Save"))
+    html.button("_save", _("Save & Exit"))
     html.write('</div>')
 
     forms.header(_('Options'))

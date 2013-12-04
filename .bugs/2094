@@ -1,0 +1,23 @@
+Title: BI-Cache vs. Apache-Memory - make debugging easier
+Component: docu
+State: open
+Date: 2013-12-04 09:54:12
+Targetversion: 1.2.3i6
+Class: todo
+
+It is hard to diagnose memory problems caused by the BI-Cache which increases
+the memory of the sites apache processes dramatically. While building the cache,
+there are often opened a lot of other apache processes, which might lead into
+system memory issues, swapping etc.
+
+There is no single value/check to point the user to this issue/solution.
+
+It would be nice to have a clearer view on the number of apache processes and
+their consumed memory.
+
+At the moment it is neccessary to install the apache_status agent plugin
+and create a ps.perf check which monitors the site apaches processes to get
+all information.
+
+Another soultion would be to reduce the number of maximum allowed apache
+processes within OMD.

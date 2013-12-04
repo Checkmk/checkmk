@@ -264,8 +264,8 @@ def format_plugin_output(output, row = None):
 
     if config.escape_plugin_output:
         output = re.sub("http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
-                         lambda p: '<a href="%s">%s</a>' %
-                            (p.group(0), len(p.group(0)) > 40 and p.group(0)[:40] + "..." or p.group(0)), output)
+                         lambda p: '<a href="%s"><img class=pluginurl align=absmiddle title="%s" src="images/pluginurl.png"></a>' %
+                            (p.group(0), p.group(0)), output)
 
     return output
 

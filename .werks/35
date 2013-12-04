@@ -1,11 +1,12 @@
-Title: http[s] links are display again in the plugin output
+Title: Convert HTTP(S) links in plugin output into clickable icon
 Level: 1
 Component: multisite
 Version: 1.2.3i7
 Date: 1384432725
 Class: fix
 
-The multisite GUI now translates html links into <tt>&lt;a href= ..&gt;</tt>
-This feature has been introduced to allow at least basic html support in plugin outputs.
+The Multisite GUI now translates HTTP links that are contained in the output
+of plugins into an icon that contains a clickable <tt>href</tt> to that link.
+This feature has been introduced to allow at least basic HTML support in plugin outputs.
 If you want to have full html support in plugin output (including the security risks it brings)
 you can disable the option "Escape HTML codes in plugin output" in the global settings.

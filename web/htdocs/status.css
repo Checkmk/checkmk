@@ -98,6 +98,13 @@ b.stmark {
     border: 1px solid #666;
 }
 
+/* inline icon in plugin output for URLs */
+img.pluginurl {
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+}
+
 /* *some* problem */
 .states, .hstates {
     background-image: url("images/someproblem.png");

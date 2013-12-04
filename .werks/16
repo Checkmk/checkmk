@@ -24,3 +24,12 @@ number of seconds. If the last modification of the file is older than
 that number, it will be ignored. This will usually set the corresponding
 services in the monitoring to <b>UNKNOWN</b>. That way you can make sure
 that you will be alarmed if no fresh monitoring data is available.
+
+Here is an example for a spool file using a [check_local|<tt>local</tt>] section:
+
+F+:C:\Program Files\Check_MK\spool\600_foobar.txt
+<<<local>>>
+0 Service_FOO V=1 This Check is OK
+1 Bar_Service - This is WARNING and has no performance data
+2 NotGood V=120;50;100;0;1000 A critical check
+F-:

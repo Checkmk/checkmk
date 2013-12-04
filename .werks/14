@@ -1,0 +1,8 @@
+Title: Fix styling of tables: always use complete width
+Level: 1
+Component: reporting
+Version: 1.2.3i7
+Date: 1386000623
+Class: fix
+
+This is important of you have a view with more than one group.

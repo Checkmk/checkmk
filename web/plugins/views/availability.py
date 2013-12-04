@@ -1198,7 +1198,7 @@ def render_availability_group(group_title, range_title, group_id, availability, 
             # Apply visual availability levels (render OK in yellow/red, if too low)
             if number and av_levels and sid in [ "ok", "up" ]:
                 css = "state%d" % check_av_levels(number, av_levels, considered_duration)
-            table.cell(sname, render_number(number, considered_duration), css="number " + css, help=help)
+            table.cell(sname, render_number(number, considered_duration), css="narrow number " + css, help=help)
 
             # Statistics?
             x_cnt, x_min, x_max = statistics.get(sid, (None, None, None))
@@ -1240,7 +1240,7 @@ def render_availability_group(group_title, range_title, group_id, availability, 
                 continue
             number = summary.get(sid, 0)
             if show_summary == "average" or avoptions["timeformat"].startswith("percentage"):
-                number /= len(availability)
+                number /= len(group_availability)
                 if avoptions["timeformat"].startswith("percentage"):
                     number *= considered_duration
             if not number:
@@ -1256,7 +1256,7 @@ def render_availability_group(group_title, range_title, group_id, availability, 
                     if aggr == "cnt":
                         count = summary_counts.get(sid, 0)
                         if show_summary == "average":
-                            count = float(count) / len(availability)
+                            count = float(count) / len(group_availability)
                             text = "%.2f" % count
                         else:
                             text = str(count)

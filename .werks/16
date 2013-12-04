@@ -25,7 +25,7 @@ that number, it will be ignored. This will usually set the corresponding
 services in the monitoring to <b>UNKNOWN</b>. That way you can make sure
 that you will be alarmed if no fresh monitoring data is available.
 
-Here is an example for a spool file using a [check_local|<tt>local</tt>] section:
+Here is an example for a spool file using a [localchecks|<tt>local</tt>] section:
 
 F+:C:\Program Files\Check_MK\spool\600_foobar.txt
 <<<local>>>

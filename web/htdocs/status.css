@@ -91,7 +91,7 @@ table.data td.perfometer.stale div.title {
 
 /* inline state markers in check output */
 b.stmark {
-    margin-left: 4px;
+    margin-left: 2px;
     padding: 1px 3px;
     border-radius: 4px;
     font-size: 7pt;

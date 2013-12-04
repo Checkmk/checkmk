@@ -226,6 +226,7 @@ def pnp_cleanup(s):
         .replace('/', '_') \
         .replace('\\', '_')
 
+ok_marker      = '<b class="stmark state0">OK</b>'
 warn_marker    = '<b class="stmark state1">WARN</b>'
 crit_marker    = '<b class="stmark state2">CRIT</b>'
 unknown_marker = '<b class="stmark state3">UNKN</b>'
@@ -251,7 +252,9 @@ def format_plugin_output(output, row = None):
 
     output = output.replace("(!)", warn_marker) \
               .replace("(!!)", crit_marker) \
-              .replace("(?)", unknown_marker)
+              .replace("(?)", unknown_marker) \
+              .replace("(.)", ok_marker)
+
     if row and "[running on" in output:
         a = output.index("[running on")
         e = output.index("]", a)

@@ -1,0 +1,51 @@
+Title: local: New state type P for state computation based on perfdata
+Level: 1
+Component: checks
+Version: 1.2.3i7
+Date: 1386165155
+Class: feature
+
+The section <tt>&lt;&lt;&lt;local&gt;&gt;&gt;</tt> now allows a new state
+marker <tt>P</tt> (next to <tt>0</tt>, <tt>1</tt>, <tt>2</tt> and <tt>3</tt>).
+When setting this marker, the check plugin computes the state according to the
+levels contained in the performance data. Take the following example:
+
+F+:
+<<<local>>>
+P Environment temp=30;28;35|humidity=33;40:60;35:70;0;100 This is a text
+F-:
+
+The check will first check the variable <tt>temp</tt>. It's current value
+is <tt>30</tt>. The levels are at <tt>28</tt> and <tt>35</tt> for warning and
+critical, resp. Because 30 is greater then 28 this will trigger a warning.
+
+The second performance value <tt>humidity</tt> has both lower and upper
+levels for warning and critical - separated by a colon. The
+current value is 33, which is lower than the lower critical level
+of <tt>35</tt>. This will make this variable und thus the total check critical.
+
+H2:Notes
+
+<ul>
+<li>It is allowed to use fractional values like <tt>35.12</tt>.</li>
+<li>If the current value exactly matches a level, the <i>better</i> state is being used. This
+is not consistent with the usual levels in Check_MK checks, but is neccessary if you want
+to have just one single value to be OK.</li>
+<li>When using <tt>P</tt> then the current values of all variables are appended to the plugin output.
+If you want you can omit the your additional text at all in that case.</li>
+<li>When you use <tt>P</tt> and do not supply performance data or do not supply levels, the
+status will always be <b>OK</b>.</li>
+</ul>
+
+Example for a <tt>local</tt> line without a text:
+
+F+:
+<<<local>>>
+P Environment temp=30;28;35|humidity=33;40:60;35:70;0;100
+F-:
+
+The output will be:
+
+C+:
+Environment          CRIT - temp 30.0 > 28.0(!), humidity 33.0 < 35.0(!!)
+C-:

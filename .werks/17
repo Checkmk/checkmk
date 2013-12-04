@@ -47,5 +47,5 @@ F-:
 The output will be:
 
 C+:
-Environment          CRIT - temp 30.0 > 28.0(!), humidity 33.0 < 35.0(!!)
+CRIT - temp 30.0 > 28.0(!), humidity 33.0 < 35.0(!!)
 C-:

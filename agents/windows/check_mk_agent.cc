@@ -91,9 +91,10 @@
 #define SECTION_SYSTEMTIME   0x00000100
 #define SECTION_PLUGINS      0x00000200
 #define SECTION_LOCAL        0x00000400
-#define SECTION_MRPE         0x00000800
-#define SECTION_FILEINFO     0x00001000
-#define SECTION_LOGFILES     0x00002000
+#define SECTION_SPOOL        0x00000800
+#define SECTION_MRPE         0x00001000
+#define SECTION_FILEINFO     0x00002000
+#define SECTION_LOGFILES     0x00004000
 
 // Limits for static global arrays
 #define MAX_EVENTLOGS                 128
@@ -306,6 +307,7 @@ char g_agent_directory[256];
 char g_current_directory[256];
 char g_plugins_dir[256];
 char g_local_dir[256];
+char g_spool_dir[256];
 char g_config_file[256];
 char g_crash_log[256];
 char g_connection_log[256];
@@ -2549,6 +2551,74 @@ void section_plugins(SOCKET &out)
 }
 
 
+// .-----------------------------------------------------------------------.
+// |                      ____                    _                        |
+// |                     / ___| _ __   ___   ___ | |                       |
+// |                     \___ \| '_ \ / _ \ / _ \| |                       |
+// |                      ___) | |_) | (_) | (_) | |                       |
+// |                     |____/| .__/ \___/ \___/|_|                       |
+// |                           |_|                                         |
+// '-----------------------------------------------------------------------'
+void section_spool(SOCKET &out)
+{
+    crash_log("<<<spool>>>");
+    // Look for files in the spool directory and append these files to
+    // the agent output. The name of the files may begin with a number
+    // of digits. If this is the case then it is interpreted as a time
+    // in seconds: the maximum allowed age of the file. Outdated files
+    // are simply being ignored.
+    DIR  *dir = opendir(g_spool_dir);
+    if (dir) {
+        WIN32_FIND_DATA filedata;
+        char path[512];
+        char buffer[4096];
+        time_t now = time(0);
+
+        struct dirent *de;
+        while (0 != (de = readdir(dir))) {
+            char *name = de->d_name;
+            if (name[0] == '.')
+                continue;
+
+            snprintf(path, sizeof(path), "%s\\%s", g_spool_dir, name);
+            int max_age = -1;
+            if (isdigit(*name))
+                max_age = atoi(name);
+
+            if (max_age >= 0) {
+                HANDLE h = FindFirstFileEx(path, FindExInfoStandard, &filedata, FindExSearchNameMatch, NULL, 0);
+                if (h != INVALID_HANDLE_VALUE) {
+                    double mtime = file_time(&(filedata.ftLastWriteTime));
+                    FindClose(h);
+                    int age = now - mtime;
+                    if (age > max_age) {
+                        crash_log("    %s: skipping outdated file: age is %d sec, max age is %d sec.",
+                            name, age, max_age);
+                        continue;
+                    }
+                }
+                else {
+                    crash_log("    %s: cannot determine file age", name);
+                    continue;
+                }
+            }
+            crash_log("    %s", name);
+
+            // Output file in blocks of 4kb
+            FILE *file = fopen(path, "r");
+            if (file) {
+                int bytes_read;
+                while (0 < (bytes_read = fread(buffer, 1, sizeof(buffer)-1, file))) {
+                    buffer[bytes_read] = 0;
+                    output(out, "%s", buffer);
+                }
+                fclose(file);
+            }
+        }
+        closedir(dir);
+    }
+}
+
 
 
 //  .----------------------------------------------------------------------.
@@ -2578,6 +2648,7 @@ void section_check_mk(SOCKET &out)
     output(out, "ConfigFile: %s\n",       g_config_file);
     output(out, "AgentDirectory: %s\n",   g_agent_directory);
     output(out, "PluginsDirectory: %s\n", g_plugins_dir);
+    output(out, "SpoolDirectory: %s\n",   g_spool_dir);
     output(out, "LocalDirectory: %s\n",   g_local_dir);
     output(out, "ScriptStatistics: Plugin C:%d E:%d T:%d "
             "Local C:%d E:%d T:%d\n",
@@ -3167,6 +3238,8 @@ bool handle_global_config_variable(char *var, char *value)
                 enabled_sections |= SECTION_PLUGINS;
             else if (!strcmp(word, "local"))
                 enabled_sections |= SECTION_LOCAL;
+            else if (!strcmp(word, "spool"))
+                enabled_sections |= SECTION_SPOOL;
             else if (!strcmp(word, "mrpe"))
                 enabled_sections |= SECTION_MRPE;
             else if (!strcmp(word, "fileinfo"))
@@ -3680,6 +3753,7 @@ void output(SOCKET &out, const char *format, ...)
 }
 
 
+
 //   .----------------------------------------------------------------------.
 //   |                        __  __       _                                |
 //   |                       |  \/  | __ _(_)_ __                           |
@@ -3716,7 +3790,11 @@ void do_test()
 {
     do_tcp = false;
     SOCKET dummy;
+    open_crash_log();
+    crash_log("Started in test mode.");
+    output(dummy, "Enabld: %08x\n", enabled_sections);
     output_data(dummy);
+    close_crash_log();
 }
 
 
@@ -3798,13 +3876,14 @@ void collect_script_data(script_execution_mode mode)
     if (mode == SYNC) {
         crash_log("Collecting sync local/plugin data");
         for (script_containers_t::iterator it_cont = script_containers.begin();
-             it_cont != script_containers.end(); it_cont++) 
+             it_cont != script_containers.end(); it_cont++)
             if (it_cont->second->execution_mode == SYNC)
                 run_script_container(it_cont->second);
-    } else if (mode == ASYNC) {
+    }
+    else if (mode == ASYNC) {
         // If the thread is still running, just tell him to do another cycle
         DWORD dwExitCode = 0;
-        if(GetExitCodeThread(g_collection_thread, &dwExitCode))
+        if (GetExitCodeThread(g_collection_thread, &dwExitCode))
         {
             if (dwExitCode == STILL_ACTIVE) {
                 g_data_collection_retriggered = true;
@@ -3877,6 +3956,8 @@ void output_data(SOCKET &out)
         section_plugins(out);
     if (enabled_sections & SECTION_LOCAL)
         section_local(out);
+    if (enabled_sections & SECTION_SPOOL)
+        section_spool(out);
     if (enabled_sections & SECTION_MRPE)
         section_mrpe(out);
     if (enabled_sections & SECTION_SYSTEMTIME)
@@ -3958,13 +4039,14 @@ void get_agent_dir(char *buffer, int size)
 
 }
 
-void determine_directories() 
+void determine_directories()
 {
     // Determine directories once and forever
     getcwd(g_current_directory, sizeof(g_current_directory));
     get_agent_dir(g_agent_directory, sizeof(g_agent_directory));
     snprintf(g_plugins_dir, sizeof(g_plugins_dir), "%s\\plugins", g_agent_directory);
     snprintf(g_local_dir, sizeof(g_local_dir), "%s\\local", g_agent_directory);
+    snprintf(g_spool_dir, sizeof(g_spool_dir), "%s\\spool", g_agent_directory);
     snprintf(g_logwatch_statefile, sizeof(g_logwatch_statefile), "%s\\logstate.txt", g_agent_directory);
 }
 

@@ -129,11 +129,10 @@ OPTIONS:
   -s SECRET, --secret SECRET    Secret/Password for vSphere login
   -D, --direct                  Assume a directly queried host system (no vCenter). In
                                 This we expect data about only one HostSystem to be
-                                Found and do not create piggy host data for that host.
+                                found and do not create piggy host data for that host.
   -p,                           Skip placeholder virtualmachines. These backup vms are created
                                 by the Site Recovery Manager (SRM) and are identified by not
                                 having any assigned virtual disks.
-                                Found and do not create piggy host data for that host.
   -H, --hostname                Specify a hostname. This is neccessary if this is
                                 different from HOST. It is being used when outputting
                                 the hosts power state.

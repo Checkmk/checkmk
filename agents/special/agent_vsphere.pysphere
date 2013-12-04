@@ -53,6 +53,9 @@ OPTIONS:
   -D, --direct                  Assume a directly queried host system (no vCenter). In
                                 This we expect data about only one HostSystem to be
                                 Found and do not create piggy host data for that host.
+  -p,                           Skip placeholder virtualmachines. These backup vms are created
+                                by the Site Recovery Manager (SRM) and are identified by not
+                                having any assigned virtual disks.
   -H, --hostname                Specify a hostname. This is neccessary if this is
                                 different from HOST. It is being used in --direct
                                 mode as the name of the host system when outputting
@@ -79,7 +82,7 @@ OPTIONS:
 
 """)
 
-short_options = 'hi:u:s:Dat:H:c'
+short_options = 'hi:u:s:Dat:H:cp'
 long_options  = [
     'help', 'user=', 'secret=', 'direct', 'agent', 'debug', 'modules=', 'timeout=', 'hostname=',
     'dump-counters', 'profile'
@@ -91,12 +94,13 @@ except getopt.GetoptError, err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
-opt_debug         = False
-opt_direct        = False
-opt_agent         = False
-opt_dump_counters = False
-opt_timeout       = 60
-opt_hostname      = None
+opt_debug               = False
+opt_direct              = False
+opt_agent               = False
+opt_dump_counters       = False
+opt_timeout             = 60
+opt_hostname            = None
+opt_skip_placeholder_vm = False
 
 g_profile         = None
 g_profile_path    = "vsphere_profile.out"
@@ -117,6 +121,8 @@ for o,a in opts:
         opt_direct = True
     elif o in [ '-a', '--agent' ]:
         opt_agent = True
+    elif o in [ '-p' ]:
+        opt_skip_placeholder_vm = True
     elif o in [ '-u', '--user' ]:
         user = a
     elif o in [ '-s', '--secret' ]:
@@ -547,6 +553,27 @@ def output_mors(what, properties, direct=False):
     if not mors:
         return
 
+    # Filter placeholder virtual machines
+    if obj_type == MORTypes.VirtualMachine and opt_skip_placeholder_vm:
+        used_mors = []
+        for mor in mors:
+            found_virtual_disk = False
+            for p in mor.PropSet:
+                if p.Name == "config.hardware.device":
+                    try:
+                        devices = p.Val.get_element_VirtualDevice()
+                        for entry in devices:
+                            if entry.typecode.type == ('urn:vim25', 'VirtualDisk'):
+                                found_virtual_disk = True
+                                break
+                    except:
+                        # If this property fails it is something different -> let it pass
+                        found_virtual_disk = True
+                        break
+            if found_virtual_disk:
+                used_mors.append(mor)
+        mors = used_mors
+
     for mor in mors:
         sections = []
         count += 1
@@ -609,7 +636,7 @@ def output_datastores():
         property_names += [
         "summary.maintenanceMode",
         ]
-        
+
     # print inspect.getmembers(MORTypes)
     print "<<<esx_vsphere_datastores:sep(%d)>>>" % ord('\t')
     for mor in host._retrieve_properties_traversal(property_names=property_names, obj_type=MORTypes.Datastore):
@@ -699,7 +726,7 @@ vm_propertys = {
       "summary.quickStats.overallCpuDemand": str,
       "summary.quickStats.staticCpuEntitlement": str,
       "summary.quickStats.distributedCpuEntitlement": str,
-      
+
       # Memory
       "summary.quickStats.guestMemoryUsage": str,
       "summary.quickStats.hostMemoryUsage": str,
@@ -715,6 +742,8 @@ vm_propertys = {
       # Virtual machine configuration
       "config.hardware.memoryMB": str,
       "config.hardware.numCPU": str,
+      "config.hardware.device": lambda x: "unused", # unused in check
+                                                    # we need it to determine placeholder vms
       #"config.hardware.hwVersion": str,
       #"config.hardware.guestId": str,
       #"config.hardware.uuid": str,

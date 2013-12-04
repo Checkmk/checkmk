@@ -103,8 +103,7 @@ register_rule(group,
                FixedValue(True, title = _("Skip placeholder VMs"), totext="",
                           help = _("Placeholder VMs are created by the Site Recovery Manager(SRM) and act as backup "
                                    "virtual machines in case the default vm is unable to start. This option tells the "
-                                   "vsphere agent to exclude placeholder vms in its output. This option only works "
-                                   "when querying a host system"
+                                   "vsphere agent to exclude placeholder vms in its output."
                           ))
              ),
              ( "direct",

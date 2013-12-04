@@ -8,6 +8,5 @@ Class: feature
 When using a Site Recovery Manager (SRM) some of the virtualmachines are only
 used as fallback. The new agent_vsphere option -p allows to suppress any output
 regarding placeholder vms.
-Right now this option only works when querying a host system.
 Placeholder vms are identified by not having an assigned VirtualDisk Device.
 The option is also configurable via the WATO rule "Check state of VMWare ESX via vSphere"

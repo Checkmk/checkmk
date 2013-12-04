@@ -2410,8 +2410,8 @@ DWORD WINAPI ScriptWorkerThread(LPVOID lpParam)
 
 void run_script_container(script_container *cont)
 {
-    if ( (cont->type == PLUGIN && ! enabled_sections && SECTION_PLUGINS) ||
-         (cont->type == LOCAL  && ! enabled_sections && SECTION_LOCAL) )
+    if ( (cont->type == PLUGIN && !(enabled_sections & SECTION_PLUGINS)) ||
+         (cont->type == LOCAL  && !(enabled_sections & SECTION_LOCAL)) )
         return;
 
     time_t now = time(0);

@@ -8,10 +8,10 @@ description:
  is checked against a warning and a critical level, which
  can be specified in numerous ways.
 
- Beware: on Linux and UNIX systems the filesystem might reserve a certain amount for 
- root (typical is 5%). This checks considers that reserved space as used. This is 
+ Beware: on Linux and UNIX systems the filesystem might reserve a certain amount for
+ root (typical is 5%). This checks considers that reserved space as used. This is
  consistent with the percentage-column in the output of {df} on most distributions.
- So your filesystem might be at 100% in a situation where root still has 5% free 
+ So your filesystem might be at 100% in a situation where root still has 5% free
  space available. On some distributions, {df} seems to use the user allocatable space
  instead of the total filesystem size as base for the percentage calculation, this might
  result in differences between the percentage values shown by that {df} version and

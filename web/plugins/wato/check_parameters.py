@@ -3640,28 +3640,28 @@ register_check_parameters(
        title = _("Levels for ATS Output parameters"),
        optional_keys = True,
        elements = [
-        ("output_voltage_max", 
+        ("output_voltage_max",
             Tuple(
              title = _("Maximum Levels for Voltage"),
              elements = [
                Integer(title = _("Warning if above"), unit="Volt"),
                Integer(title = _("Critical if above"), unit="Volt"),
             ])),
-        ("output_voltage_min", 
+        ("output_voltage_min",
             Tuple(
              title = _("Minimum Levels for Voltage"),
              elements = [
                Integer(title = _("Warning if below"), unit="Volt"),
                Integer(title = _("Critical if below"), unit="Volt"),
             ])),
-        ("load_perc_max", 
+        ("load_perc_max",
             Tuple(
              title = _("Maximum Levels for load in percent"),
              elements = [
                Percentage(title = _("Warning if above")),
                Percentage(title = _("Critical if above")),
             ])),
-        ("load_perc_min", 
+        ("load_perc_min",
             Tuple(
              title = _("Minimum Levels for load in percent"),
              elements = [

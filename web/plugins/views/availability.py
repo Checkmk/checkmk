@@ -80,7 +80,7 @@ def render_availability(view, datasource, filterheaders, display_options,
         html.end_context_buttons()
 
     html.write(avoptions_html)
-    
+
     if not html.has_user_errors():
         rows = get_availability_data(datasource, filterheaders, range, only_sites,
                                      limit, timeline, timeline or avoptions["show_timeline"], avoptions)

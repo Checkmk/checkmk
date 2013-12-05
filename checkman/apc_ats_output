@@ -13,9 +13,9 @@ item:
  The internal number of the power phase
 examples:
  apc_ats_output_default_levels = {
-     'load_perc_max': (85, 95), 
-     'output_voltage_min': (100, 50), 
-     'output_voltage_max': (240, 250), 
+     'load_perc_max': (85, 95),
+     'output_voltage_min': (100, 50),
+     'output_voltage_max': (240, 250),
      'load_perc_min': (10.0, 5.0)
      }
 

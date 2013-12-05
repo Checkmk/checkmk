@@ -10,7 +10,7 @@ description:
  comment section of the two Veeam agent plugin scripts on how to install
  the scripts.
 
- The plugin sends data for all virtual machines as piggyback data in the agent 
+ The plugin sends data for all virtual machines as piggyback data in the agent
  output of the backup server.
 
  This check is {OK} if the status of the backup is {success}, {Pending}
@@ -25,7 +25,7 @@ examples:
   veeam_client_default_levels = { "age": ( 432000, 864000 ) }
 
 perfdata:
- Total Size, duration and the average speed of the backup will be recorded 
+ Total Size, duration and the average speed of the backup will be recorded
  as performance data. Duration will not be recorded if the status of the backup
  is {Pending} or {InProgress}.
 
@@ -41,5 +41,5 @@ parameters(tuple): parameters is a dictionary with one value
 
 
 [configuration]
-veeam_client_default_levels (dict): This variable is preset to 
+veeam_client_default_levels (dict): This variable is preset to
 {{ "age": ( 108000, 172800 ) } }

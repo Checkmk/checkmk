@@ -1227,7 +1227,7 @@ class ListChoice(ValueSpec):
     def render_input(self, varprefix, value):
         self.load_elements()
         if self._toggle_all:
-            html.write("<a href=\"javascript:vs_list_choice_toggle_all('%s')\">%s</a>" % 
+            html.write("<a href=\"javascript:vs_list_choice_toggle_all('%s')\">%s</a>" %
                         (varprefix, _("Check / Uncheck all")))
         html.write("<table id=\"%s_tbl\" class=listchoice>" % varprefix)
         for nr, (key, title) in enumerate(self._elements):

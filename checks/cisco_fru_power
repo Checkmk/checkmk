@@ -55,7 +55,7 @@
 # 5:powerCycle
 #
 
-power_oper_type = ('', 'offEnvOther', 'on', 'offAdmin', 'offDenied', 
+power_oper_type = ('', 'offEnvOther', 'on', 'offAdmin', 'offDenied',
                     'offEnvPower', 'offEnvTemp', 'offEnvFan', 'failed',
                     'onButFanFail', 'offCooling', 'offConnectorRating',
                     'onButInlinePowerFail' )

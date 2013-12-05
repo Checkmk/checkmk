@@ -1,21 +1,21 @@
 title: Brocade NetIron MLX devices: NI-MLX Module CPU Utilization
 agents: snmp
-catalog: hw/network/brocade 
+catalog: hw/network/brocade
 license: GPL
 distribution: check_mk
 description:
- Checks the Module CPU Utilization of a NI-MLX module in Brocade 
+ Checks the Module CPU Utilization of a NI-MLX module in Brocade
  NetIron MLX switching / routing devices.
 
- {WARN} or {CRIT} is returned, if the usage in the last 60 sec was above 
+ {WARN} or {CRIT} is returned, if the usage in the last 60 sec was above
  given thresholds. {OK} is returned otherwise.
 
- Please note: Even if the check reports and graphs the CPU Utilization in 
+ Please note: Even if the check reports and graphs the CPU Utilization in
  the last 1/5/60/300 sec, the thresholds are only checked against the value
  of the last 60 sec. The other values are informational only.
 
 item:
- If a module description is delivered by SNMP, the item is build from the 
+ If a module description is delivered by SNMP, the item is build from the
  module ID plus the description. Otherwise it is just the ID.
 
 examples:
@@ -33,7 +33,7 @@ examples:
  ]
 
 perfdata:
- four value are returned, cpu_util1, cpu_util5, cpu_util60 and cpu_util300: 
+ four value are returned, cpu_util1, cpu_util5, cpu_util60 and cpu_util300:
  The CPU Utilization (in percent) in the last 1/5/60/300 sec.
  cpu_util60 together with warn and crit levels.
 
@@ -46,5 +46,5 @@ parameters (dict): with the element
 {"levels"}: (float, float): levels of CPU utilization for {WARN} and {CRIT} in percent
 
 [configuration]
-brocade_mlx_cpu_default_levels(dict): The standard levels for {WARN} and 
+brocade_mlx_cpu_default_levels(dict): The standard levels for {WARN} and
     {CRIT}, preset to { "levels": (80.0, 90.0) }

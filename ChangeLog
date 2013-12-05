@@ -1,4 +1,6 @@
 1.2.3i7p1:
+    Checks & Agents:
+    * 0103 FIX: services: Fixed bug with service inventory defined in main.mk...
 
 
 1.2.3i7:

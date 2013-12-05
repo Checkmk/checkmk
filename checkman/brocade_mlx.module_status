@@ -1,6 +1,6 @@
 title: Brocade NetIron MLX devices: Module Overall Status
 agents: snmp
-catalog: hw/network/brocade 
+catalog: hw/network/brocade
 license: GPL
 distribution: check_mk
 description:
@@ -13,7 +13,7 @@ description:
  Returns {UNKN} on every other status.
 
 item:
- If a module description is delivered by SNMP, the item is build from the 
+ If a module description is delivered by SNMP, the item is build from the
  module ID plus the description. Otherwise it is just the ID.
 
 inventory:

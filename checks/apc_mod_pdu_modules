@@ -57,7 +57,7 @@ check_info["apc_mod_pdu_modules"] = {
     "check_function"        : check_apc_mod_pdu_modules,
     "inventory_function"    : inventory_apc_mod_pdu_modules,
     "service_description"   : "Module %s",
-    "snmp_info"             : (".1.3.6.1.4.1.318.1.1.22.2.6.1", [ 
+    "snmp_info"             : (".1.3.6.1.4.1.318.1.1.22.2.6.1", [
                                                         4, #isxModularDistModuleOutputName
                                                         6, #isxModularDistModuleOutputStatus
                                                         20, #isxModularDistModuleOutputTotalPower

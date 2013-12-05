@@ -32,7 +32,7 @@ def parse_casa_info_util(info):
         data[entity_names[entry_nr]] = {
                                 "cpu_util"        : info[1][idx][1],
                          }
-    return data 
+    return data
 
 def inventory_casa_cpu_util(info):
     data = parse_casa_info_util(info)
@@ -73,7 +73,7 @@ check_info["casa_cpu_util"] = {
     "service_description"   : "Utilization %s",
     "has_perfdata"          : True,
     "group"                 : "cpu_utilization_multiitem",
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in 
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in
                                  [".1.3.6.1.4.1.20858.2.400", ".1.3.6.1.4.1.20858.2.50"],
     "snmp_info"             : [
                ( ".1.3.6.1.2.1.47.1.1.1.1.2",        [ OID_END, '' ] ), # Entity descriptions, quite long...

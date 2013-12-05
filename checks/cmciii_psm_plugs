@@ -37,7 +37,7 @@ def inventory_cmciii_psm_plugs(info):
                 unit_oid = line_num
                 unit_id = str(bus_id) + "-" + str(unit_oid)
             elif line_num % 5 == 0 and line_num - unit_oid != 5 \
-                         and unit_id != "" and bus[line_num + 3] != "": 
+                         and unit_id != "" and bus[line_num + 3] != "":
                 item = unit_id+"-"+str(line_num)
                 inventory.append((item, None))
     return inventory

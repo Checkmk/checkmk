@@ -124,7 +124,8 @@ def rewrite_changelog(*args):
     ch.readline() # skip current version
     while True:
         line = ch.readline()
-        if not line[0].isspace():
+        # Konfliktmarker einfach ignorieren
+        if line[0] not in [ '\n', ' ', '\t', '<', '>', '=' ]:
             break
 
     oldlines = [line] + ch.readlines()

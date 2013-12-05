@@ -1,0 +1,12 @@
+Title: cisco_fru_power: Trying not to inventorize not plugged in FRUs
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.3i7p1
+Date: 1386259723
+Targetversion: future
+
+In the previous version, the check did inventorize all FRUs reported
+by the device. The devices also send information for slots which have
+no FRU plugged in. This change tries to ignore all not plugged in slots.

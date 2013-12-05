@@ -1,4 +1,7 @@
 1.2.3i8:
+    Checks & Agents:
+    * 0103 FIX: services: Fixed bug with service inventory defined in main.mk...
+
     Reporting & Availability:
     * 0018 New option for displaying a legend for the colors used in the timeline...
 

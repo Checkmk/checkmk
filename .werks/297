@@ -1,0 +1,11 @@
+Title: mk-job is now also usable on CentOS 5+
+Level: 1
+Component: checks
+Version: 1.2.3i7
+Date: 1385998226
+Class: fix
+
+The mk-job script failed with an error on CentOS 5+ systems,
+because the /usr/bin/time command does not support the "--quiet"
+option. This option seems to be useless when writing to a file,
+therefor we removed this option now.

@@ -24,22 +24,82 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Example output from agent:
+# 0 Service_FOO V=1 This Check is OK
+# 1 Bar_Service - This is WARNING and has no performance data
+# 2 NotGood V=120;50;100;0;1000 A critical check
+# P Some_other_Service value1=10;30;50|value2=20;10:20;0:50;0;100 Result is computed from two values
+# P This_is_OK foo=18;20;50
+# P Some_yet_other_Service temp=40;30;50|humidity=28;50:100;0:50;0;100
+# P Has-no-var - This has no variable
+# P No-Text hirn=-8;-20
+
+
+# Compute state according to warn/crit levels contained in the
+# performance data.
+def local_compute_state(perfdata):
+    texts = []
+
+    def outof_levels(value, levels):
+        if levels == None:
+            return
+
+        if ':' in levels:
+            lower, upper = map(float, levels.split(':'))
+        else:
+            lower = None
+            upper = float(levels)
+        if value > upper:
+            return " %s > %s" % (value, upper)
+        elif lower != None and value < lower:
+            return " %s < %s" % (value, lower)
+
+    worst = 0
+    for entry in perfdata:
+        if len(entry) < 3:
+            continue # No levels attached
+        varname = entry[0]
+        value = float(entry[1])
+        warn = entry[2]
+        if len(entry) >= 4:
+            crit = entry[3]
+        else:
+            crit = None
+
+        text = outof_levels(value, crit)
+        if text:
+            worst = 2
+            text = "%s%s(!!)" % (varname, text)
+            texts.append(text)
+
+        else:
+            text = outof_levels(value, warn)
+            if text:
+                worst = max(worst, 1)
+                text = "%s%s(!)" % (varname, text)
+                texts.append(text)
+
+            else:
+                texts.append("%s is %s(.)" % (varname, value))
+
+    return worst, texts
 
 def inventory_local(info):
     inventory = []
     # Ignore invalid lines, tolerate bugs in local checks
-    # of unexperianced users
+    # of unexperianced users. Lines with P do not need to
+    # supply a text
     for line in info:
-        if len(line) >= 4:
+        if len(line) >= 4 or len(line) == 3 and line[0] == 'P':
             inventory.append( (line[1], None) )
     return inventory
 
 def check_local(item, params, info):
     for line in info:
         # Ignore invalid lines, tolerate bugs in local checks
-        # of unexperianced users
+        # of unexperienced users
         if len(line) >= 2 and line[1] == item:
-            state = int(line[0])
+            statechar = line[0]
             perftxt = line[2]
             output = " ".join(line[3:])
             perfdata = []
@@ -49,9 +109,15 @@ def check_local(item, params, info):
                     varname, valuetxt = entry.split('=')
                     values = valuetxt.split(';')
                     perfdata.append(tuple( [varname] + values ))
+            if statechar == 'P':
+                state, texts = local_compute_state(perfdata)
+                if output:
+                    texts = [output] + texts
+                output = ", ".join(texts)
+            else:
+                state = int(statechar)
             return (state, output, perfdata)
     return (3, "Check output not found in local checks")
-
 
 
 check_info["local"] = {

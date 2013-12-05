@@ -2674,7 +2674,7 @@ multisite_builtin_views.update({
                'hidebutton': True,
                'icon' : 'aggr',
                'layout': 'table',
-               'linktitle': 'Single-Host Problems',
+               'linktitle': _('Single-Host Problems'),
                'mustsearch': False,
                'name': 'aggr_hostproblems',
                'num_columns': 1,
@@ -2699,7 +2699,7 @@ multisite_builtin_views.update({
                                 'opthostgroup',
                                 'aggr_effective_state'],
                'sorters': [('aggr_group', False), ('site_host', False)],
-               'title': 'Single-Host Problems',
+               'title': _('Single-Host Problems'),
                'topic': _('Business Intelligence')},
 
 # Shows a single aggregation which has to be set via aggr_name=<Name>

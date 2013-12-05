@@ -1,0 +1,12 @@
+Title: vsphere monitoring: new option to skip placeholder vms in agent output
+Level: 1
+Component: checks
+Version: 1.2.3i7
+Date: 1386151727
+Class: feature
+
+When using a Site Recovery Manager (SRM) some of the virtualmachines are only
+used as fallback. The new agent_vsphere option -p allows to suppress any output
+regarding placeholder vms.
+Placeholder vms are identified by not having an assigned VirtualDisk Device.
+The option is also configurable via the WATO rule "Check state of VMWare ESX via vSphere"

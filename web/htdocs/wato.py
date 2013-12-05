@@ -2209,6 +2209,8 @@ def mode_diag_host(phase):
         global_buttons()
         html.context_button(_("Host Properties"),
                             make_link([("mode", "edithost"), ("host", hostname)]), "back")
+        html.context_button(_("Services"),
+                            make_link([("mode", "inventory"), ("host", hostname)]), "services")
         return
 
     vs_host = Dictionary(
@@ -2316,7 +2318,7 @@ def mode_diag_host(phase):
     forms.end()
 
     html.write('<div style="margin-bottom:10px">')
-    html.button("_save", _("Save"))
+    html.button("_save", _("Save & Exit"))
     html.write('</div>')
 
     forms.header(_('Options'))
@@ -10069,8 +10071,9 @@ def mode_edit_hosttag(phase):
                 raise MKUserError("title", _("Please specify a title for your host tag group."))
 
             topic = forms.get_input(vs_topic, "topic")
-            if topic != '':
-                title = '%s/%s' % (topic, title)
+            # always put at least "/" as prefix to the title, the title
+            # will then be split by the first "/' in future
+            title = '%s/%s' % (topic, title)
 
             new_choices = forms.get_input(vs_choices, "choices")
             have_none_tag = False

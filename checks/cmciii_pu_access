@@ -55,7 +55,7 @@ check_info['cmciii_pu_access'] = {
     "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Rittal") and \
                                 oid(".1.3.6.1.4.1.2606.7.4.2.2.1.3.1.11").startswith("Access.DescName"),
     "snmp_info"           : (
-      ".1.3.6.1.4.1.2606.7.4.2.2.1.10.1", range(11,16) 
+      ".1.3.6.1.4.1.2606.7.4.2.2.1.10.1", range(11,16)
     )
 }
 

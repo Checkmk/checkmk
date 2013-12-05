@@ -43,7 +43,6 @@ def check_cmciii_psm_current(item, params, info):
     current = info[unit+4][bus]
     max_current = info[unit+5][bus]
     min_current = info[unit+6][bus]
-    print descr, typ, current
     status = info[unit+7][bus].lower()
     if status == "ok":
         state = 0

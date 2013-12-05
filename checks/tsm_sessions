@@ -36,7 +36,11 @@ def check_tsm_sessions(item, params, info):
     state = 0
     warn, crit = params
     count = 0
-    for sid, client_name, proc_state, wait in info:
+    for entry in info:
+        if len(entry) == 4:
+            sid, client_name, proc_state, wait = entry
+        else:
+            sid, proc_state, wait = entry
         if proc_state in ['RecvW', 'MediaW']:
             wait = saveint(wait)
             if wait >= crit:

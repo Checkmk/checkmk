@@ -24,35 +24,43 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# <<<veeam_jobs:sep(9) >>>
+# BACKUP_RIS      Backup  Stopped Success 27.10.2013 22:00:17     27.10.2013 22:06:12
+# BACKUP_R43-local_HXWH44 Backup  Stopped Success 26.10.2013 18:00:20     26.10.2013 18:46:03
+# BACKUP_R43-Pool4_HXWH44 Backup  Stopped Failed  26.10.2013 23:13:13     27.10.2013 00:51:17
+# BACKUP_R43-Pool3_HXWH44 Backup  Stopped Failed  27.10.2013 02:59:29     27.10.2013 08:59:51
+# REPL_KNESXIDMZ  Replica Stopped Success 27.10.2013 44:00:01     27.10.2013 44:44:26
+# BACKUP_KNESXI   Backup  Stopped Success 28.10.2013 05:00:04     28.10.2013 05:32:15
+# BACKUP_KNESXit  Backup  Stopped Success 26.10.2013 22:30:02     27.10.2013 02:37:30
+# BACKUP_R43-Pool5_HXWH44 Backup  Stopped Success 27.10.2013 23:00:00     27.10.2013 23:04:53
+# BACKUP_R43-Pool2_HXWH44 Backup  Stopped Failed  27.10.2013 02:37:45     27.10.2013 02:45:35
+
 
 def inventory_veeam_jobs(info):
     return [ (x[0], None) for x in info ]
 
-def check_veeam_jobs(item, params, info):
+def check_veeam_jobs(item, _no_params, info):
     for line in info:
         if line[0] == item:
             if line[3] == "Success":
                 state = 0
-            elif line[2] =="Working":
+            elif line[2] == "Working":
                 state = 0
-                line.pop(7)
-                line.pop(6)
+                line = line[:6]
             elif line[3] == "Failed":
                 state = 2
+            elif line[2] == "Stopped" and line[3] == "Warning":
+                state = 1
             else:
                 state = 3
             infotxt = "Result: %s, " % line[3]
-            line.pop(3)
-            line.pop(0)
-            infotxt += ", ".join(map(str,line) )
-            return (state, infotxt )
+            infotxt += ", ".join(line[1:3] + line[4:])
+            return (state, infotxt)
 
-    return 3, "item not found in agent output"
+    return 3, "No such job found"
 
 check_info["veeam_jobs"] = {
     'check_function':          check_veeam_jobs,
     'inventory_function':      inventory_veeam_jobs,
-    'service_description':     'VEEAM Job',
-    'has_perfdata':            False,
+    'service_description':     'VEEAM Job %s',
 }
-

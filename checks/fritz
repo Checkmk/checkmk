@@ -47,6 +47,8 @@ fritz_conn_states = {
 }
 
 def check_fritz_conn(_unused, _no_params, info):
+    if not info:
+        return 3, 'Connection info is missing'
     data = fritz_parse_info(info)
     state_txt = data['NewConnectionStatus']
     nag_state = fritz_conn_states.get(state_txt)
@@ -138,6 +140,8 @@ def inventory_fritz_wan_if(info):
     return inventory_if_common(fritz_wan_if_to_if64(data))
 
 def check_fritz_wan_if(item, params, info):
+    if not info:
+        return 3, 'Interface info is missing'
     data = fritz_parse_info(info)
     if 'assumed_speed_in' not in params:
         params['assumed_speed_in'] = int(data['NewLayer1DownstreamMaxBitRate'])

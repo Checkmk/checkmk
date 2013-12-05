@@ -1,0 +1,11 @@
+Title: Fixed summary computation in availability when grouping is used
+Level: 1
+Component: reporting
+Version: 1.2.3i7
+Date: 1386000955
+Class: fix
+
+In the availability view the summary line was computed wrong in cased
+you had more than one group (e.g. by grouping after the service
+group). That has been fixed.
+

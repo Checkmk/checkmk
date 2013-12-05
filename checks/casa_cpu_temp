@@ -33,13 +33,13 @@ def parse_casa_info_temp(info):
     for idx, entry in enumerate(info[1]):
         entry_nr = int(entry[0])
         def beautify_module_text(text):
-            return text.replace("temperature sensor", "") 
+            return text.replace("temperature sensor", "")
         data[beautify_module_text(entity_names[entry_nr])] = {
                                 "temp_value"      : temp_value.get(entry_nr),
                                 "temp_status"     : temp_status.get(entry_nr),
                                 "temp_unit"       : temp_unit.get(entry_nr),
                             }
-    return data 
+    return data
 
 def inventory_casa_cpu_temp(info):
     data = parse_casa_info_temp(info)
@@ -70,7 +70,7 @@ def check_casa_cpu_temp(item, params, info):
                     error_text = "(!)"
             perfdata.append( ("temp", value, warn, crit, 0, 100) )
             infotext = "%.1f°C %s%s" % (value, error_text, levels_text)
-        else: 
+        else:
             state = 2
             infotext = "Sensor failure!"
         return (state, infotext, perfdata)
@@ -84,7 +84,7 @@ check_info["casa_cpu_temp"] = {
     "service_description"   : "Temperature %s",
     "group"                 : "hw_temperature",
     "has_perfdata"          : True,
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in 
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in
                                  [".1.3.6.1.4.1.20858.2.400", ".1.3.6.1.4.1.20858.2.50"],
     "snmp_info"             : [
                ( ".1.3.6.1.2.1.47.1.1.1.1.2",        [ OID_END, '' ] ), # Entity descriptions, quite long...

@@ -232,7 +232,7 @@ register_configvar(group,
 
 register_configvar(group,
     "multisite_draw_ruleicon",
-    Checkbox(title = _("Show icon for WATO parameter editor"),
+    Checkbox(title = _("Show icon linking to WATO parameter editor for services"),
              label = _("Show WATO icon"),
              help = _("When enabled a rule editor icon is displayed for each "
                       "service in the multisite views. It is only displayed if the user "

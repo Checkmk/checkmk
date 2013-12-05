@@ -505,24 +505,24 @@ table.data.availability tr.summary td {
     padding-top: 1px;
 }
 
-table.data td.flapping, table.timeline td.flapping {
+table.data td.flapping, table.timeline td.flapping, div.avlegend.timeline div.state.flapping {
     /* background-image: url("images/bg_flapping.png");
     background-repeat: repeat; */
     background-color: #f0f;
 }
 
-table.data td.downtime, table.timeline td.downtime {
+table.data td.downtime, table.timeline td.downtime, div.avlegend.timeline div.state.downtime {
     background-color: #0af;
 }
-table.data td.hostdown, table.timeline td.hostdown {
+table.data td.hostdown, table.timeline td.hostdown, div.avlegend.timeline div.state.hostdown {
     background-color: #048;
     color: white;
 }
-table.data td.unmonitored, table.timeline td.unmonitored {
+table.data td.unmonitored, table.timeline td.unmonitored, div.avlegend.timeline div.state.unmonitored  {
     background-color: #cacaca;
     color: #888;
 }
-table.timeline td.ooservice {
+table.timeline td.ooservice, div.avlegend.timeline div.state.ooservice {
     background-color: #cacaca;
     background-image: url("images/ooservice.png");
     background-repeat: repeat;
@@ -635,7 +635,7 @@ table.data.timewarp {
     margin-bottom: 20px;
 }
 
-div.av_levels_legend {
+div.avlegend {
     background-image: url("images/white_20percent.png");
     background-repeat: repeat;
     padding: 5px 15px;
@@ -643,26 +643,33 @@ div.av_levels_legend {
     margin-top: 10px;
     text-align: right;
 }
-div.av_levels_legend h3 {
+div.avlegend h3 {
     margin-top: 0px;
     font-size: 13px;
     color: black;
 }
-div.av_levels_legend div {
+div.avlegend div {
     display: inline-block;
     width: 50px;
     white-space: nowrap;
     margin-right: 5px;
 }
-div.av_levels_legend div.state {
+div.avlegend div.state {
     text-align: center;
     padding: 2px 0px;
     font-size: 12px;
 }
-div.av_levels_legend div.level {
+div.avlegend div:last-child {
+    margin-right: 0px;
+}
+div.avlegend.levels div.level {
     margin-right: 15px;
     color: black;
 }
-div.av_levels_legend div:last-child {
-    margin-right: 0px;
+
+div.avlegend.timeline div.state {
+    width: 75px;
+}
+div.avlegend.timeline div.state.ooservice {
+    color: black;
 }

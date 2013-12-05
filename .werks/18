@@ -1,0 +1,10 @@
+Title: New option for displaying a legend for the colors used in the timeline
+Level: 1
+Component: reporting
+Version: 1.2.3i7
+Date: 1386241423
+Class: feature
+
+The availability has now a new labelling option <i>Display legend for timeline</i>. If this is
+enabled and a timeline is being displayed, then at the end of the page a small legend is shown,
+which explains all of the possible colors in the timeline.

@@ -1,4 +1,7 @@
 1.2.3i8:
+    Checks & Agents:
+    * 0299 FIX: borcade_mlx_fan: Prettified output, handling "other" state now
+
 
 1.2.3i7:
     Core & Setup:

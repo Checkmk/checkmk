@@ -64,10 +64,14 @@ def check_brocade_mlx_module(item, _no_params, info):
                 return 2, "Module reports status 3 (rejected)"
             elif module_state == "4":
                 return 2, "Module reports status 4 (bad)"
+            elif module_state == "8":
+                return 1, "Module reports status 8 (configured / stacking)"
             elif module_state == "9":
                 return 1, "Module reports status 9 (coming up)"
             elif module_state == "10":
                 return 0, "Module reports status 10 (running)"
+            elif module_state == "11":
+                return 1, "Module reports status 11 (blocked for full height card)"
             else:
                 return 3, "Module reports unidentified status %s" % module_state
     return 3, "Module %s not found" % item

@@ -1,0 +1,10 @@
+Title: brocade_mlx: now handles more different module states
+Level: 1
+Component: checks
+Version: 1.2.3i7
+Date: 1386233089
+Class: feature
+
+If a module in a Brocade MLX device reports status configured/stacking or
+blocked for full height card the check now returns WARN and a meaningful
+message (instead of UNKNOWN before)

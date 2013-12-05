@@ -49,11 +49,13 @@ def check_brocade_mlx_fan(item, _no_params, info):
     for fan_id, fan_descr, fan_state in info:
         if combine_item(fan_id, fan_descr) == item:
             if fan_state == "2":
-                return 0, "Fan reports status 2 (normal)"
+                return 0, "Fan reports state: normal"
             elif fan_state == "3":
-                return 2, "Fan reports status 3 (failure)"
+                return 2, "Fan reports state: failure"
+            elif fan_state == "1":
+                return 3, "Fan reports state: other"
             else:
-                return 3, "Fan reports unidentified status %s" % fan_state
+                return 3, "Fan reports an unknown state (%s)" % fan_state
     return 3, "Fan %s not found" % item
 
 check_info["brocade_mlx_fan"] = {

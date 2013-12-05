@@ -1,6 +1,7 @@
 1.2.3i8:
     Checks & Agents:
     * 0299 FIX: borcade_mlx_fan: Prettified output, handling "other" state now
+    * 0300 FIX: cisco_fru_power: Trying not to inventorize not plugged in FRUs...
 
 
 1.2.3i7:

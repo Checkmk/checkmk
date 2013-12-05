@@ -152,7 +152,7 @@ def inventory_windows_services(info):
             if type(entry) == str:
                 inventory += add_matching_services(name, description, state, start_type, entry)
             elif type(entry) == tuple:
-                inventory += add_services_with_tags(name, description, tate, start_type, entry)
+                inventory += add_services_with_tags(name, description, state, start_type, entry)
             else:
                 raise MKGeneralException("Invalid entry %r in inventory_services" % entry)
 

@@ -7,6 +7,9 @@
     Reporting & Availability:
     * 0018 New option for displaying a legend for the colors used in the timeline...
 
+    Event Console:
+    * 0301 Handling messages of special syslog format correctly...
+
 
 1.2.3i7:
     Core & Setup:

@@ -1052,7 +1052,8 @@ register_configvar(group,
             (1, _("Warning") ),
             (2, _("Critical") ),
             (3, _("Unknown") ),
-            ]))
+            ],
+        default_value = 1))
 
 register_configvar(group,
     "inventory_check_do_scan",

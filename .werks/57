@@ -1,0 +1,13 @@
+Title: Fix exception in WATO host editor on custom tag without topic
+Level: 2
+Component: wato
+Version: 1.2.3i8
+Date: 1386520925
+Class: fix
+
+When you've defined a host tag group in WATO that has no topic,
+then the host edit dialog would be interrupted with an exception.
+A simple workaround to this is to alwasy define a topic.
+
+The problem has now been fixed. It had shortly been introduced by fixing a
+problem appearing when you used a slash in the name of a tag group.

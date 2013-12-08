@@ -4,6 +4,9 @@
     * 0299 FIX: borcade_mlx_fan: Prettified output, handling "other" state now
     * 0300 FIX: cisco_fru_power: Trying not to inventorize not plugged in FRUs...
 
+    WATO:
+    * 0057 FIX: Fix exception in WATO host editor on custom tag without topic...
+
     Reporting & Availability:
     * 0018 New option for displaying a legend for the colors used in the timeline...
 

@@ -5096,7 +5096,7 @@ def declare_host_tag_attributes():
                 if len(entry) >= 4:
                     depends_on_tags = entry[3]
 
-                if topic is None:
+                if not topic:
                     topic = _('Host tags')
 
                 declare_host_attribute(

@@ -8,6 +8,7 @@
 
     Multisite:
     * 0302 FIX: Fixed highlight of choosen elements in foldertee/views snapin in Chrome/IE
+    * 0239 FIX: Fixed incorrect html formatting when displaying host or service comments...
 
     WATO:
     * 0057 FIX: Fix exception in WATO host editor on custom tag without topic...

@@ -1,0 +1,9 @@
+Title: Fixed incorrect html formatting when displaying host or service comments
+Level: 1
+Component: multisite
+Version: 1.2.3i8
+Date: 1386594095
+Class: fix
+
+The comment icon in a multisite view was not drawn correctly whenever
+a comment for this host or service had a single quote.

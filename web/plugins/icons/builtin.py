@@ -380,6 +380,7 @@ def paint_comments(what, row, tags, custom_vars):
         text = ""
         for c in comments:
             id, author, comment, ty, timestamp = c
+            comment = comment.replace("\n", "<br>").replace("'","&#39;")
             text += "%s %s: \"%s\" \n" % (paint_age(timestamp, True, 0, 'abs')[1], author, comment)
         return link_to_view('<img class=icon title=\'%s\' ' \
                             'src="images/icon_comment.gif">' %

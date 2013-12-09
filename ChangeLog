@@ -4,6 +4,9 @@
     * 0299 FIX: borcade_mlx_fan: Prettified output, handling "other" state now
     * 0300 FIX: cisco_fru_power: Trying not to inventorize not plugged in FRUs...
 
+    Multisite:
+    * 0302 FIX: Fixed highlight of choosen elements in foldertee/views snapin in Chrome/IE
+
     Reporting & Availability:
     * 0018 New option for displaying a legend for the colors used in the timeline...
 

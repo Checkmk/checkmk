@@ -959,11 +959,11 @@ class EventServer:
         # once we got here we have a real parsed trap which we convert to an event now
         event = {
             'time'        : time.time(),
-            'host'        : host,
+            'host'        : host.replace('\n', ''),
             'priority'    : 5,  # notice
             'facility'    : 31, # not used by syslog -> we use this for all traps
-            'application' : application,
-            'text'        : ', '.join([ '%s: %s' % item for item in trap ])
+            'application' : application.replace('\n', ''),
+            'text'        : ', '.join([ '%s: %s' % (item[0], str(item[1]).replace('\n', '')) for item in trap ])
         }
         self.process_event(event)
 
@@ -1121,7 +1121,7 @@ class EventServer:
     def process_raw_lines(self, data, address = None):
         lines = data.splitlines()
         for line in lines:
-            line = line.rstrip()
+            line = line.rstrip().replace('\0', '')
             # Convert to Unicode, first assume UTF-8, then latin-1
             try:
                 line = line.decode("utf-8")

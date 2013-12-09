@@ -557,7 +557,7 @@ if not error:
             for key in sorted(vms.keys()):
                 data = vms[key]
                 if data.get("name"):
-                    print "<<<<%s>>>>" % data.get("name")
+                    print "<<<<%s>>>>" % data.get("name").replace(" ", "_")
                     print "<<<esx_vsphere_vm>>>"
                     entries = list(data.items())
                     entries.sort()
@@ -580,7 +580,7 @@ if not error:
             for key in sorted(vms.keys()):
                 data = vms[key]
                 running_on = hostsystem_name.get(data.get("runtime.host"), data.get("runtime.host"))
-                print "virtualmachine\t%s\t%s\t%s" % (data.get("name").replace(" ","_"), running_on, data.get("runtime.powerState"))
+                print "virtualmachine\t%s\t%s\t%s" % (data.get("name").replace(" ", "_"), running_on, data.get("runtime.powerState"))
 
     except Exception, e:
         if opt_debug:

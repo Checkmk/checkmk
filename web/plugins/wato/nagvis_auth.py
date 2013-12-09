@@ -43,6 +43,13 @@ config.declare_permission(
 )
 
 config.declare_permission(
+    'nagvis.Rotation_view_*',
+    _('Use all map rotations'),
+    _('Grants read access to all rotations.'),
+    [ 'guest' ]
+)
+
+config.declare_permission(
     'nagvis.Map_edit_*',
     _('Edit all maps'),
     _('Grants modify access to all maps.'),

@@ -117,6 +117,12 @@ def create_non_existing_user(connector_id, username):
     # Call the sync function for this new user
     hook_sync(connector_id = connector_id, only_username = username)
 
+# FIXME: Can we improve this easily? Would be nice not to have to call "load_users".
+# Maybe a directory listing of profiles or a list of a small file would perform better
+# than having to load the users, contacts etc. during each http request to multisite
+def user_exists(username):
+    return username in load_users().keys()
+
 def user_locked(username):
     users = load_users()
     return users[username].get('locked', False)

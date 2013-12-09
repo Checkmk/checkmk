@@ -67,9 +67,10 @@ def load_secret():
 # Load the password serial of the user. This serial identifies the current config
 # state of the user account. If either the password is changed or the account gets
 # locked the serial is increased and all cookies get invalidated.
-def load_serial(user_id):
-    users = userdb.load_users()
-    return users.get(user_id, {}).get('serial', 0)
+# Better use the value from the "serials.mk" file, instead of loading the whole
+# user database via load_users() for performance reasons.
+def load_serial(username):
+    return userdb.load_custom_attr(username, 'serial', saveint, 0)
 
 # Generates the hash to be added into the cookie value
 def generate_hash(username, now, serial):
@@ -105,8 +106,7 @@ def check_auth_cookie(cookie_name):
     #    del_auth_cookie()
     #    return ''
 
-    users = userdb.load_users().keys()
-    if not username in users:
+    if not userdb.user_exists(username):
         raise MKAuthException(_('Username is unknown'))
 
     # Validate the hash

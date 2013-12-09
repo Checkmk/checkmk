@@ -5,4 +5,6 @@ Version: 1.2.3i8
 Date: 1386595064
 Class: fix
 
-
+The processing performance of each multisite page might decrease 
+when having a large amount of users. This commit tries to reduce
+the time taken by processing the user information.

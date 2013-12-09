@@ -1,0 +1,8 @@
+Title: mssql: Server instances with underline in name are now supported.
+Level: 1
+Component: checks
+Version: 1.2.3i8
+Date: 1386594495
+Class: fix
+
+Thanks to a patch from H.Schniggendiller

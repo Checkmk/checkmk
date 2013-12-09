@@ -15,6 +15,7 @@
 
     Event Console:
     * 0301 Handling messages of special syslog format correctly...
+    * 0303 FIX: Old log entries were shown in event history first...
 
 
 1.2.3i7:

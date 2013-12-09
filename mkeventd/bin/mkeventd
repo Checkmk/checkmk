@@ -521,6 +521,15 @@ def get_event_history(filters, limit):
     timestamps = [ int(fn[:-4]) for fn in os.listdir(log_dir)
                    if fn.endswith(".log") ]
     timestamps.sort()
+    # Use the later logfiles first, to get the newer log entries
+    # first. When a limit is reached, the newer entries should
+    # be processed in most cases. We assume that now.
+    # To keep a consistent order of log entries, we should care
+    # about sorting the log lines in reverse, but that seems to
+    # already be done by the GUI, so we don't do that twice. Skipping
+    # this # will lead into some lines of a single file to be limited in
+    # wrong order. But this should be better than before.
+    timestamps.reverse()
     for ts in timestamps:
         if limit != None and limit <= 0:
             break

@@ -1,0 +1,13 @@
+Title: Old log entries were shown in event history first
+Level: 1
+Component: ec
+Version: 1.2.3i8
+Date: 1386577048
+Class: fix
+
+In previous versions, when the event history views had a limit
+applied, like it is configured by default, it happened that
+too old entries were read first. When reaching the limit of entries,
+the processing stopped and newer events were ignored.
+
+The order of the log files during processing has now been changed.

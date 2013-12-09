@@ -112,6 +112,7 @@ def strip_bad_chars(x):
     s = "".join([c for c in x if c > ' ' and c < 'z'])
 
     if type(x) == unicode:
+        s = unicode(s)
         return s.translate({
             ord(u"'"): None,
             ord(u"&"): None,

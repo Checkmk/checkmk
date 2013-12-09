@@ -293,6 +293,7 @@ esx_vsphere_counters_ramdisk_sizes = {
     'snmptraps':      1,
     'upgradescratch': 300,
     'ibmscratch':     300,
+    'sfcbtickets':    1,
 }
 
 def inventory_esx_vsphere_counters_ramdisk(info):

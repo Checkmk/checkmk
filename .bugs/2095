@@ -1,0 +1,13 @@
+Title: Add mechanism to cleanup a users profile
+Component: multisite
+State: open
+Date: 2013-12-09 11:06:47
+Targetversion: 1.2.3i6
+Class: feature
+
+below var/check_mk/web/<user>/, there are several files being created during
+working with multisite. For example the file sidebar.mk is being created once
+the user starts customizing the sidebar. It should be possible to remove the
+customized sidebar to use the default sidebar again.
+
+Same for other files like buttoncounts, treestates, view options, ...

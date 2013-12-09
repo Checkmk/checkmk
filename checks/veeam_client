@@ -88,7 +88,7 @@ def check_veeam_client(item, params, info):
                     stopstate = 0
                     stopsym = ""
                 infotxt += line[0] + ":" + line[1] + stopsym + " "
-        else:
+        elif len(line) == 2:
             infotxt += line[0] + ":" + line[1] + " "
 
     status = max(state[result], stopstate)

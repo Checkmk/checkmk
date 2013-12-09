@@ -7,6 +7,9 @@
     Multisite:
     * 0302 FIX: Fixed highlight of choosen elements in foldertee/views snapin in Chrome/IE
 
+    WATO:
+    * 0057 FIX: Fix exception in WATO host editor on custom tag without topic...
+
     Reporting & Availability:
     * 0018 New option for displaying a legend for the colors used in the timeline...
 

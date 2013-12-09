@@ -1,6 +1,6 @@
 title: Brocade NetIron MLX devices: Temperature Sensors
 agents: snmp
-catalog: hw/network/brocade 
+catalog: hw/network/brocade
 license: GPL
 distribution: check_mk
 description:

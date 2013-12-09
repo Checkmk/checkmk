@@ -1,6 +1,6 @@
 title: Brocade NetIron MLX devices: Fans
 agents: snmp
-catalog: hw/network/brocade 
+catalog: hw/network/brocade
 license: GPL
 distribution: check_mk
 description:
@@ -11,7 +11,7 @@ description:
  and {UNKN} on every other status.
 
 item:
- If a fan description is delivered by SNMP, the item is build from the 
+ If a fan description is delivered by SNMP, the item is build from the
  fan ID plus the description. Otherwise it is just the ID.
 
 inventory:

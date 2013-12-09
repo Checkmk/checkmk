@@ -1,0 +1,19 @@
+Title: Escaping several unwanted chars from incoming log messages
+Level: 1
+Component: ec
+Version: 1.2.3i8
+Date: 1386579742
+Class: fix
+
+There are several kind of chars which are not wanted to be included
+in log messages. For example the null byte is nothing to be expected
+in log messages. We simply remove those chars now from the log messages.
+
+Single log lines do not contain new line chars (\n), since they are 
+already processed as single lines. But snmp traps might contain those
+chars, which might break e.g. processing the log history (resulting
+in error messages "Invalid line XX in history file..."). The newline
+chars are now simply removed from the incoming data.
+This might change incoming values, but this seems to be better than 
+before. In future, when trap the parsing/processing code is extended
+by single value matching etc., we might be able to clean this up.

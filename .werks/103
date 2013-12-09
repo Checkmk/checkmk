@@ -1,0 +1,8 @@
+Title: services: Fixed bug with service inventory defined in main.mk
+Level: 1
+Component: checks
+Version: 1.2.3i8
+Date: 1386253170
+Class: fix
+
+There was an error message while inventory when using main.mk based config.

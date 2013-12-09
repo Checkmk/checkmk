@@ -1,0 +1,24 @@
+Title: Handling messages of special syslog format correctly
+Level: 1
+Component: ec
+Version: 1.2.3i8
+Date: 1386320542
+Class: feature
+
+The syslog RFCs allow different formats of syslog messages. The
+message parsing code in the event console does support several
+formats and should be able to deal with all formats allowed by
+the specifications. However, one format was not supported in
+past versions. Those messages were simply dropped and only seen
+in the logs of the event console, when rule execution debugging
+is enabled.
+
+These log entries look as follows:
+
+<tt><5>SYSTEM_INFO: [WLAN-1] Performing Background Scan : channel 12, active, 28 TU</tt>
+
+The specific part here is the missing date/time and missing hostname
+information, which is sent by most syslog clients. The parser has been
+changed to be able to parse this format. The event console adds the
+current date/time to the event and the IP address of the sending
+client as host information.

@@ -62,7 +62,7 @@ def check_juniper_cpu(item, params, info):
 
            message = "%d%% 1min%s, %d%% 5min%s, %d%% 15min%s" % \
                      ( util1, label1, util5, label5, util15, label15 )
-           return state, message, perf 
+           return state, message, perf
     return 3, "Information not found in output"
 
 check_info["juniper_cpu"] = {

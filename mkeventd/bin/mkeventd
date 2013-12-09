@@ -6,7 +6,7 @@ import socket, os, time, sys, getopt, signal, thread, pprint, re, \
 from pwd import getpwnam
 from grp import getgrnam
 
-VERSION="1.2.3i6"
+VERSION="1.2.3i7"
 
 #   .--Declarations--------------------------------------------------------.
 #   |       ____            _                 _   _                        |
@@ -521,6 +521,15 @@ def get_event_history(filters, limit):
     timestamps = [ int(fn[:-4]) for fn in os.listdir(log_dir)
                    if fn.endswith(".log") ]
     timestamps.sort()
+    # Use the later logfiles first, to get the newer log entries
+    # first. When a limit is reached, the newer entries should
+    # be processed in most cases. We assume that now.
+    # To keep a consistent order of log entries, we should care
+    # about sorting the log lines in reverse, but that seems to
+    # already be done by the GUI, so we don't do that twice. Skipping
+    # this # will lead into some lines of a single file to be limited in
+    # wrong order. But this should be better than before.
+    timestamps.reverse()
     for ts in timestamps:
         if limit != None and limit <= 0:
             break
@@ -950,11 +959,11 @@ class EventServer:
         # once we got here we have a real parsed trap which we convert to an event now
         event = {
             'time'        : time.time(),
-            'host'        : host,
+            'host'        : host.replace('\n', ''),
             'priority'    : 5,  # notice
             'facility'    : 31, # not used by syslog -> we use this for all traps
-            'application' : application,
-            'text'        : ', '.join([ '%s: %s' % item for item in trap ])
+            'application' : application.replace('\n', ''),
+            'text'        : ', '.join([ '%s: %s' % (item[0], str(item[1]).replace('\n', '')) for item in trap ])
         }
         self.process_event(event)
 
@@ -991,22 +1000,23 @@ class EventServer:
 
             # Accept new connection on event unix socket
             if self._eventsocket in readable:
-                client_socket, addr_info = self._eventsocket.accept()
-                client_sockets[client_socket.fileno()] = (client_socket, "")
+                client_socket, address = self._eventsocket.accept()
+                client_sockets[client_socket.fileno()] = (self._eventsocket.accept(), address, "")
 
             # Same for the TCP syslog socket
             if self._syslog_tcp and self._syslog_tcp in readable:
-                client_socket, addr_info = self._syslog_tcp.accept()
-                client_sockets[client_socket.fileno()] = (client_socket, "")
+                client_socket, address = self._syslog_tcp.accept()
+                client_sockets[client_socket.fileno()] = (client_socket, address, "")
 
             # Read data from existing event unix socket connections
-            for fd, (cs, previous_data) in client_sockets.items():
+            for fd, (cs, address, previous_data) in client_sockets.items():
                 if fd in readable:
                     # Receive next part of data
                     try:
                         new_data = cs.recv(4096)
                     except:
                         new_data = ""
+                        address  = None
 
                     # Put together with incomplete messages from last time
                     data = previous_data + new_data
@@ -1018,19 +1028,19 @@ class EventServer:
                         # Do we have any complete messages?
                         if '\n' in data:
                             complete, rest = data.rsplit("\n", 1)
-                            self.process_raw_lines(complete + "\n")
+                            self.process_raw_lines(complete + "\n", address)
                         else:
                             rest = data # keep for next time
 
                     # Only complete messages
                     else:
                         if data:
-                            self.process_raw_lines(data)
+                            self.process_raw_lines(data, address)
                         rest = ""
 
                     # Connection still open?
                     if new_data:
-                        client_sockets[fd] = (cs, rest)
+                        client_sockets[fd] = (cs, address, rest)
                     else:
                         cs.close()
                         del client_sockets[fd]
@@ -1068,7 +1078,7 @@ class EventServer:
 
             # Read events from builtin syslog server
             if self._syslog != None and self._syslog.fileno() in readable:
-                self.process_raw_lines(self._syslog.recv(4096))
+                self.process_raw_lines(*self._syslog.recvfrom(4096))
 
             # Read events from builtin snmptrap server
             if self._snmptrap != None and self._snmptrap.fileno() in readable:
@@ -1108,10 +1118,10 @@ class EventServer:
         g_perfcounters.count_time("processing", elapsed)
 
     # Takes several lines of messages, handles encoding and processes them separated
-    def process_raw_lines(self, data):
+    def process_raw_lines(self, data, address = None):
         lines = data.splitlines()
         for line in lines:
-            line = line.rstrip()
+            line = line.rstrip().replace('\0', '')
             # Convert to Unicode, first assume UTF-8, then latin-1
             try:
                 line = line.decode("utf-8")
@@ -1119,7 +1129,7 @@ class EventServer:
                 line = line.decode("latin-1")
 
             if line:
-                self.process_raw_data(self.process_line, line)
+                self.process_raw_data(self.process_line, (line, address))
 
     def do_housekeeping(self):
         with lock_eventstatus:
@@ -1450,11 +1460,14 @@ class EventServer:
                 syslog_facilities[facility], syslog_priorities[priority], count,
                     (100.0 * count / float(total_count))))
 
-    def process_line(self, line):
+    def process_line(self, (line, address)):
         line = line.rstrip()
         if g_config["debug_rules"]:
-            log(u"Processing message '%s'" % line)
-        self.process_event(self.parse_event(line))
+            if address:
+                log(u"Processing message from %r: '%s'" % (address, line))
+            else:
+                log(u"Processing message '%s'" % line)
+        self.process_event(self.parse_event(line, address))
 
     def process_event(self, event):
         # Rule optimizer
@@ -1748,7 +1761,7 @@ class EventServer:
         return backedhost
 
 
-    def parse_event(self, line):
+    def parse_event(self, line, address):
         event = {}
         try:
             # Variant 1: plain syslog message without priority/facility:
@@ -1770,7 +1783,15 @@ class EventServer:
             #  - Leap seconds MUST NOT be used.
             # <166>2013-04-05T13:49:31.685Z esx Vpxa: message....
 
-            # Variant 2,3,4,5
+            # Variant 6: syslog message without date / host:
+            # <5>SYSTEM_INFO: [WLAN-1] Triggering Background Scan
+
+            # FIXME: Would be better to parse the syslog messages in another way:
+            # Split the message by the first ":", then split the syslog header part
+            # and detect which information are present. Take a look at the syslog RFCs
+            # for details.
+
+            # Variant 2,3,4,5,6
             if line.startswith('<'):
                 i = line.find('>')
                 prio = int(line[1:i])
@@ -1795,6 +1816,15 @@ class EventServer:
                 rfc3339_part, event['host'], line = line.split(' ', 2)
                 event['time'] = time.mktime(time.strptime(rfc3339_part[:19], '%Y-%m-%dT%H:%M:%S'))
                 event.update(self.parse_syslog_info(line))
+
+            # Variant 6
+            elif len(line.split(': ', 1)[0].split(' ')) == 1:
+                event.update(self.parse_syslog_info(line))
+                # There is no datetime information in the message, use current time
+                event['time'] = time.time()
+                # There is no host information, use the provided address
+                if address and type(address) == tuple:
+                    event["host"] = address[0]
 
             # Variant 1,2,4
             else:
@@ -1825,8 +1855,6 @@ class EventServer:
                     # A further problem here: we do not now wether the message is in DST or not
                     event["time"] = time.mktime((year, month, day, hours, minutes, seconds, 0, 0, lt.tm_isdst))
 
-
-
         except Exception, e:
             if g_config["debug_rules"]:
                 log('Got non-syslog message "%s" (%s)' % (line, e) )
@@ -1840,7 +1868,12 @@ class EventServer:
                 "time"        : time.time(),
             }
 
-        event["host"] = self.translate_hostname(event["host"])
+        try:
+            event["host"] = self.translate_hostname(event["host"])
+        except Exception, e:
+            if g_config["debug_rules"]:
+                log('Unable to parse host "%s" (%s)' % (event.get("host"), e))
+            event["host"] = ""
 
         if g_config["debug_rules"]:
             log('Parsed message:\n' +

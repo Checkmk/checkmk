@@ -2318,7 +2318,7 @@ def mode_diag_host(phase):
     forms.end()
 
     html.write('<div style="margin-bottom:10px">')
-    html.button("_save", _("Save"))
+    html.button("_save", _("Save & Exit"))
     html.write('</div>')
 
     forms.header(_('Options'))
@@ -5096,7 +5096,7 @@ def declare_host_tag_attributes():
                 if len(entry) >= 4:
                     depends_on_tags = entry[3]
 
-                if topic is None:
+                if not topic:
                     topic = _('Host tags')
 
                 declare_host_attribute(

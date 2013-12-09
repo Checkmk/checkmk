@@ -1,0 +1,35 @@
+Title: Linux+Windows agent: allow spooling plugin outputs via files
+Level: 2
+Component: checks
+Version: 1.2.3i7
+Date: 1386155805
+Class: feature
+
+The Windows and Linux agent now have a new feature for sending the contents of
+files as a part of the agent output. This is useful for generating monitoring
+data asychronously, e.g. by a cron job.
+
+Simply let the job create or update a file in the directory
+<tt>/etc/check_mk/spool</tt> (Linux) or in the subdirection <tt>spool</tt>
+of the agent directory (Windows). If that directory is missing, simply
+create it. The agent will then add the contents of all files contained in
+that directory to its output.  You can use any filename you like. Just files
+beginning with a dot are ignored.  This is an easy way to have applications
+on the host drop monitoring data into Check_MK. Especially conveniant is
+using a local <tt>&lt;&lt;&lt;local&gt;&gt;&gt;</tt> section here.
+
+If you prefix the file name with a number (e.g. <tt>600MyOutput</tt>
+or <tt>3600_app_data.txt</tt>) then that number is interpreted as a
+number of seconds. If the last modification of the file is older than
+that number, it will be ignored. This will usually set the corresponding
+services in the monitoring to <b>UNKNOWN</b>. That way you can make sure
+that you will be alarmed if no fresh monitoring data is available.
+
+Here is an example for a spool file using a [localchecks|<tt>local</tt>] section:
+
+F+:C:\Program Files\Check_MK\spool\600_foobar.txt
+<<<local>>>
+0 Service_FOO V=1 This Check is OK
+1 Bar_Service - This is WARNING and has no performance data
+2 NotGood V=120;50;100;0;1000 A critical check
+F-:

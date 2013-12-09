@@ -80,7 +80,7 @@ def render_availability(view, datasource, filterheaders, display_options,
         html.end_context_buttons()
 
     html.write(avoptions_html)
-    
+
     if not html.has_user_errors():
         rows = get_availability_data(datasource, filterheaders, range, only_sites,
                                      limit, timeline, timeline or avoptions["show_timeline"], avoptions)
@@ -134,9 +134,10 @@ avoption_entries = [
     ListChoice(
         title = _("Labelling Options"),
         choices = [
-            ( "omit_host",        _("Do not display the host name")),
-            ( "use_display_name", _("Use alternative display name for services")),
-            ( "omit_buttons",     _("Do not display icons for history and timeline")),
+            ( "omit_host",               _("Do not display the host name")),
+            ( "use_display_name",        _("Use alternative display name for services")),
+            ( "omit_buttons",            _("Do not display icons for history and timeline")),
+            ( "display_timeline_legend", _("Display legend for timeline")),
         ]
     )
   ),
@@ -789,7 +790,7 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
 
     if timeline:
         render_timeline(timeline_rows, from_time, until_time, total_duration,
-                        timeline, range_title, render_number, what, timewarpcode, style="standalone")
+                        timeline, range_title, render_number, what, timewarpcode, avoptions, style="standalone")
     else:
         render_availability_table(availability, from_time, until_time, range_title, what, avoptions, render_number)
 
@@ -798,7 +799,7 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
 
 # style is either inline (just the timeline bar) or "standalone" (the complete page)
 def render_timeline(timeline_rows, from_time, until_time, considered_duration,
-                    timeline, range_title, render_number, what, timewarpcode, style):
+                    timeline, range_title, render_number, what, timewarpcode, avoptions, style):
     if not timeline_rows:
         html.write('<div class=info>%s</div>' % _("No information available"))
         return
@@ -878,6 +879,11 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration,
         table.cell(_("Additional information"), row["log_output"])
 
     table.end()
+
+    # Legend for timeline
+    if "display_timeline_legend" in avoptions["labelling"]:
+        render_timeline_legend(what)
+
 
 def render_timeline_choords(from_time, until_time, width):
     duration = until_time - from_time
@@ -1071,13 +1077,33 @@ def render_availability_table(availability, from_time, until_time, range_title, 
     av_levels = avoptions["av_levels"]
     if av_levels:
         warn, crit = av_levels
-        html.write('<div class="av_levels_legend">')
+        html.write('<div class="avlegend levels">')
         html.write('<h3>%s</h3>' % _("Availability levels"))
         html.write('<div class="state state0">%s</div><div class=level>&ge; %.3f%%</div>' % (_("OK"), warn))
         html.write('<div class="state state1">%s</div><div class=level>&ge; %.3f%%</div>' % (_("WARN"), crit))
         html.write('<div class="state state2">%s</div><div class=level>&lt; %.3f%%</div>' % (_("CRIT"), crit))
         html.write('</div>')
 
+    # Legend for timeline
+    if "display_timeline_legend" in avoptions["labelling"] and avoptions["show_timeline"]:
+        render_timeline_legend(what)
+
+
+def render_timeline_legend(what):
+    html.write('<div class="avlegend timeline">')
+    html.write('<h3>%s</h3>' % _('Timeline colors'))
+    html.write('<div class="state state0">%s</div>' % (what == "host" and _("UP") or _("OK")))
+    if what != "host":
+        html.write('<div class="state state1">%s</div>'    % _("WARN"))
+    html.write('<div class="state state2">%s</div>' % (what == "host" and _("DOWN") or _("CRIT")))
+    html.write('<div class="state state3">%s</div>' % (what == "host" and _("UNREACH") or _("UNKNOWN")))
+    html.write('<div class="state flapping">%s</div>' % _("Flapping"))
+    if what != "host":
+        html.write('<div class="state hostdown">%s</div>' % _("H.Down"))
+    html.write('<div class="state downtime">%s</div>' % _("Downtime"))
+    html.write('<div class="state ooservice">%s</div>' % _("OO/Service"))
+    html.write('<div class="state unmonitored">%s</div>' % _("unmonitored"))
+    html.write('</div>')
 
 
 def get_av_groups(availability, grouping):
@@ -1176,7 +1202,7 @@ def render_availability_group(group_title, range_title, group_id, availability, 
         if show_timeline:
             table.cell(_("Timeline"), css="timeline")
             html.write('<a href="%s">' % timeline_url)
-            render_timeline(timeline_rows, from_time, until_time, total_duration, (site, host, service), range_title, render_number, what, "", style="inline")
+            render_timeline(timeline_rows, from_time, until_time, total_duration, (site, host, service), range_title, render_number, what, "", avoptions, style="inline")
             html.write('</a>')
 
         for sid, css, sname, help in availability_columns:

@@ -827,10 +827,10 @@ function highlight_link(link_obj, container_id) {
             var links = document.getElementsByClassName('link', this_snapin);
 
         for (var i = 0; i < links.length; i++) {
-            links[i].style = 'font-weight:normal;';
+            links[i].style.fontWeight = 'normal';
         }
 
-        link_obj.style = 'font-weight:bold;';
+        link_obj.style.fontWeight = 'bold';
     }
 }
 

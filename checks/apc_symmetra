@@ -184,7 +184,7 @@ def check_apc(item, params, info):
 
     # 9. Adv Output load (load in percent)
     load_state = 0
-    loadwarn, loadcrit = None, None 
+    loadwarn, loadcrit = None, None
     label = ""
     if params.get('output_load'):
         loadwarn, loadcrit = params['output_load']

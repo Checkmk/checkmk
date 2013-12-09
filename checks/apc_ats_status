@@ -51,9 +51,9 @@ def check_apc_ats_status(_no_item, source, info):
         state = 2
         messages.append("Communication Status: lost(!!)")
 
-    # current redundancy state of the ATS. 
+    # current redundancy state of the ATS.
     # Lost(1) indicates that the ATS is unable to switch over to the alternate power source
-    # if the current source fails. Redundant(2) indicates that the ATS will switch 
+    # if the current source fails. Redundant(2) indicates that the ATS will switch
     # over to the alternate power source if the current source fails.
     if redundancy != 2:
         state = 2
@@ -62,8 +62,8 @@ def check_apc_ats_status(_no_item, source, info):
         messages.append("Device fully redundant")
 
     # current state of the ATS. atsOverCurrent(1) indicates that the ATS has i
-    # exceeded the output current threshold and will not allow a switch 
-    # over to the alternate power source if the current source fails. 
+    # exceeded the output current threshold and will not allow a switch
+    # over to the alternate power source if the current source fails.
     # atsCurrentOK(2) indicates that the output current is below the output current threshold.
     if overcurrent == 1:
         state = 2

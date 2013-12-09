@@ -41,7 +41,7 @@ def check_casa_power(item, no_params, info):
         return (0, "Power supply OK")
     elif status == "3": # not sure if this state is possible
         return (1, "Power supply working over threshold (!)")
-    elif status == "2": # not sure if this state is possible 
+    elif status == "2": # not sure if this state is possible
         return (0, "Power supply working under threshold (!)") # OK, backup power..
     elif status == "0":
         return (3, "Power supply - Unknown status (!)")
@@ -54,10 +54,10 @@ check_info["casa_power"] = {
     "inventory_function"    : inventory_casa_power,
     "service_description"   : "Power %s",
     "has_perfdata"          : False,
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in 
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in
                                  [".1.3.6.1.4.1.20858.2.400", ".1.3.6.1.4.1.20858.2.50"],
-    "snmp_info"             : 
+    "snmp_info"             :
                ( ".1.3.6.1.4.1.20858.10.33.1.5.1.4", [ '' ] ), # Power State
-                              
+
 }
 

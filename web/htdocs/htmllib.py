@@ -70,6 +70,7 @@ class html:
         self.help_visible = False
         self.treestates = {}
         self.treestates_for_id = None
+        self.caches = {}
 
     RETURN = 13
     SHIFT = 16
@@ -1246,3 +1247,16 @@ class html:
 
     def uploaded_file(self, varname, default = None):
         raise MKGeneralException("uploaded_file not implemented")
+
+    #
+    # Per request caching
+    #
+
+    def set_cache(self, name, value):
+        self.caches[name] = value
+
+    def is_cached(self, name):
+        return name in self.caches
+
+    def get_cached(self, name):
+        return self.caches.get(name)

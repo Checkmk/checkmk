@@ -88,9 +88,6 @@ def auth_cookie_value(username, serial):
 def set_auth_cookie(username, serial):
     html.set_cookie(site_cookie_name(), auth_cookie_value(username, serial))
 
-def get_cookie_value():
-    return auth_cookie_value(config.user_id, load_serial(config.user_id))
-
 def renew_cookie(cookie_name, username, serial):
     # Do not renew if:
     # a) The _ajaxid var is set

@@ -185,6 +185,9 @@ def load_users(lock = False):
         file(filename, "a")
         aquire_lock(filename)
 
+    if html.is_cached('users'):
+        return html.get_cached('users')
+
     # First load monitoring contacts from Check_MK's world. If this is
     # the first time, then the file will be empty, which is no problem.
     # Execfile will the simply leave contacts = {} unchanged.
@@ -315,6 +318,9 @@ def load_users(lock = False):
                         "roles" : ["guest"],
                         "automation_secret" : secret,
                     }
+
+    # populate the users cache
+    html.set_cache('users', result)
 
     return result
 
@@ -456,6 +462,9 @@ def save_users(profiles):
     # This lock is set by load_users() only in the case something is expected
     # to be written (like during user syncs, wato, ...)
     release_lock(root_dir + "contacts.mk")
+
+    # populate the users cache
+    html.set_cache('users', users)
 
     # Call the users_saved hook
     hooks.call("users-saved", users)

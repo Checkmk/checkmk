@@ -8,6 +8,7 @@
 
     Multisite:
     * 0302 FIX: Fixed highlight of choosen elements in foldertee/views snapin in Chrome/IE
+    * 0307 FIX: Increased performance of multisite GUI with a large userbase
 
     WATO:
     * 0057 FIX: Fix exception in WATO host editor on custom tag without topic...

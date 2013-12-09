@@ -17,11 +17,13 @@
 '
 ' This check has been developed with MSSQL Server 2008 R2. It should work with
 ' older versions starting from at least MSSQL Server 2005.
+'
+' 16.10.2013 Instanzen mit Unterstrich im Namen   -- H.Schniggendiller
 ' -----------------------------------------------------------------------------
 
 Option Explicit
 
-Dim WMI, prop, instId, instVersion, instIds, instName, output, WMIservice, colRunningServices, objService
+Dim WMI, prop, instId, instIdx, instVersion, instIds, instName, output, WMIservice, colRunningServices, objService
 
 WScript.Timeout = 10
 
@@ -71,11 +73,11 @@ For Each prop In WMI.ExecQuery("SELECT * FROM SqlServiceAdvancedProperty WHERE "
     
 
     Set colRunningServices = WMIservice.ExecQuery("SELECT State FROM Win32_Service WHERE Name = '" & prop.ServiceName & "'")
-    instId      = Replace(prop.ServiceName, "$", "_")
+    instId      = Replace(prop.ServiceName, "$", "__")
     instVersion = prop.PropertyStrValue
-    
+    instIdx = Replace(instId, "__", "_")
     addOutput( "<<<mssql_versions>>>" )
-    addOutput( instId & "  " & instVersion )
+    addOutput( instIdx & "  " & instVersion )
     
     ' Now query the server instance for the databases
     ' Use name as key and always empty value for the moment
@@ -106,9 +108,10 @@ For Each instId In instIds.Keys
     ' At this place one could implement to use other authentication mechanism
     CONN.Properties("Integrated Security").Value = "SSPI"
 
-    If InStr(instId, "_") <> 0 Then
-        instName = Split(instId, "_")(1)
-    Else
+    If InStr(instId, "__") <> 0 Then
+        instName = Split(instId, "__")(1)
+		instId = Replace(instId, "__", "_")
+	Else
         instName = instId
     End If
 
@@ -117,7 +120,8 @@ For Each instId In instIds.Keys
         CONN.Properties("Data Source").Value = "(local)"
     Else
         CONN.Properties("Data Source").Value = hostname & "\" & instName
-    End If
+	End If
+			'WScript.echo (CONN)
 
     CONN.Open
     
@@ -217,4 +221,3 @@ Set CONN = nothing
 
 ' finally output collected data
 WScript.echo output
-

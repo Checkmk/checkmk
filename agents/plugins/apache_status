@@ -20,7 +20,7 @@
 
 import os, sys, urllib2, re
 
-config_dir = os.getenv("MK_CONFDIR", "/etc/check_mk")  
+config_dir = os.getenv("MK_CONFDIR", "/etc/check_mk")
 config_file = config_dir + "/apache_status.conf"
 if not os.path.exists(config_file):
     config_file = config_dir + "/apache_status.cfg"
@@ -116,6 +116,9 @@ for server in servers:
         for line in fd.read().split('\n'):
             if not line.strip():
                 continue
+            if line.lstrip()[0] == '<':
+                # seems to be html output. Skip this server.
+                break
             print address, port, line
     except urllib2.HTTPError, e:
         sys.stderr.write('HTTP-Error (%s:%d): %s %s\n' % (address, port, e.code, e))

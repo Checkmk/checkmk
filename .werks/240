@@ -1,0 +1,9 @@
+Title: Virtualmachine names with space no longer have missing piggyback data
+Level: 1
+Component: checks
+Version: 1.2.3i8
+Date: 1386608073
+Class: fix
+
+Every space character in a virtualmachines name needs to be converted to an underline character.
+This didn't apply to the piggyback data section for the VM.

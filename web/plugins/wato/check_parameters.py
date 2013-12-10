@@ -114,7 +114,7 @@ register_rule(group + '/' + subgroup_inventory,
                           'match is done on the <i>beginning</i> of the service name. It '
                           'is done <i>case sensitive</i>. You can do a case insensitive match '
                           'by prefixing the regular expression with <tt>(?i)</tt>. Example: '
-                          '<tt>(?i).*mssql</tt> matches all services that contain <tt>MSSQL</tt> '
+                          '<tt>(?i).*mssql</tt> matches all services which contain <tt>MSSQL</tt> '
                           'or <tt>MsSQL</tt> or <tt>mssql</tt> or...'),
                 orientation = "horizontal",
             )),

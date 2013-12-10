@@ -744,7 +744,14 @@ def search_livestatus(ty, q):
 
     return data
 
-def render_search_results(ty, objects):
+def format_result(name, ty, url, site, display_site):
+    html.write('<a id="result_%s" class="%s" href="%s" onClick="mkSearchClose()" target="main">%s' %
+                (name, ty, url, name))
+    if display_site:
+        html.write(' (%s)' % site)
+    html.write('</a>\n')
+
+def render_search_results(ty, objects, format_func = format_result):
     url_tmpl = search_url_tmpl(ty)
 
     # When results contain infos from several sites, display
@@ -768,11 +775,7 @@ def render_search_results(ty, objects):
         else:
             plugin, site, name, url = obj
         if not (name, url) in unique:
-            html.write('<a id="result_%s" class="%s" href="%s" onClick="mkSearchClose()" target="main">%s' %
-                        (name, ty, url, name))
-            if display_site:
-                html.write(' (%s)' % site)
-            html.write('</a>\n')
+            format_func(name, ty, url, site, display_site)
             unique.add((name, url))
 
 def process_search(q):
@@ -801,9 +804,9 @@ def ajax_search():
     except Exception, e:
         html.write(repr(e))
 
-def get_search_plugin(plugin_id):
+def get_search_plugin(ty, plugin_id):
     for plugin in search_plugins:
-        if plugin['id'] == plugin_id:
+        if plugin['type'] == ty and plugin['id'] == plugin_id:
             return plugin
 
 def search_open():
@@ -821,7 +824,7 @@ def search_open():
         if len(data[0]) == 3:
             # Check wether or not the plugin which found the first match registered
             # an own url template, use this if provided.
-            plugin = get_search_plugin(data[0][0])
+            plugin = get_search_plugin(ty, data[0][0])
             if 'url_tmpl' in plugin:
                 url_tmpl = plugin['url_tmpl']
             else:
@@ -838,7 +841,7 @@ def search_open():
         # an own url template, use this if provided.
         url_tmpl = search_url_tmpl(ty, exact = False)
         if data:
-            plugin = get_search_plugin(data[0][0])
+            plugin = get_search_plugin(ty, data[0][0])
             if 'url_tmpl' in plugin:
                 url_tmpl = plugin['url_tmpl']
 

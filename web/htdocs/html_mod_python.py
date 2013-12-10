@@ -3,8 +3,6 @@ import htmllib
 import os, time, config, weblib, re
 import defaults
 
-varname_regex = re.compile('^[\w\d_.%+-\\\*]+$')
-
 class html_mod_python(htmllib.html):
 
     def __init__(self, req):
@@ -43,36 +41,8 @@ class html_mod_python(htmllib.html):
         self.cookies = Cookie.get_cookies(self.req)
 
     def read_get_vars(self):
-        self.vars     = {}
-        self.listvars = {} # for variables with more than one occurrance
-        self.uploads  = {}
         fields = util.FieldStorage(self.req, keep_blank_values = 1)
-        for field in fields.list:
-            varname = field.name
-            value = field.value
-
-            # To prevent variours injections, we only allow a defined set
-            # of characters to be used in variables
-            if not varname_regex.match(varname):
-                continue
-
-            # Multiple occurrance of a variable? Store in extra list dict
-            if varname in self.vars:
-                if varname in self.listvars:
-                    self.listvars[varname].append(value)
-                else:
-                    self.listvars[varname] = [ self.vars[varname], value ]
-            # In the single-value-store the last occurrance of a variable
-            # has precedence. That makes appending variables to the current
-            # URL simpler.
-            self.vars[varname] = value
-
-            # put uploaded file infos into separate storage
-            if field.filename is not None:
-                self.uploads[varname] = (field.filename, field.type, field.value)
-
-    def uploaded_file(self, varname, default = None):
-        return self.uploads.get(varname, default)
+        self.parse_field_storage(fields)
 
     def lowlevel_write(self, text):
         if self.io_error:

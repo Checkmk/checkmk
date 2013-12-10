@@ -34,6 +34,9 @@ try:
 except NameError:
     from sets import Set as set
 
+# Only parse variable adhering to the following regular expressions
+varname_regex = re.compile('^[\w\d_.%+-\\\*]+$')
+
 # Information about uri
 class InvalidUserInput(Exception):
     def __init__(self, varname, text):
@@ -1245,13 +1248,42 @@ class html:
         self.load_tree_states()
         self.treestates[tree] = val
 
+    def parse_field_storage(self, fields):
+        self.vars     = {}
+        self.listvars = {} # for variables with more than one occurrance
+        self.uploads  = {}
+
+        for field in fields.list:
+            varname = field.name
+            value = field.value
+
+            # To prevent variours injections, we only allow a defined set
+            # of characters to be used in variables
+            if not varname_regex.match(varname):
+                continue
+
+            # put uploaded file infos into separate storage
+            if field.filename is not None:
+                self.uploads[varname] = (field.filename, field.type, field.value)
+
+            else: # normal variable
+                # Multiple occurrance of a variable? Store in extra list dict
+                if varname in self.vars:
+                    if varname in self.listvars:
+                        self.listvars[varname].append(value)
+                    else:
+                        self.listvars[varname] = [ self.vars[varname], value ]
+                # In the single-value-store the last occurrance of a variable
+                # has precedence. That makes appending variables to the current
+                # URL simpler.
+                self.vars[varname] = value
+
     def uploaded_file(self, varname, default = None):
-        raise MKGeneralException("uploaded_file not implemented")
+        return self.uploads.get(varname, default)
 
     #
     # Per request caching
     #
-
     def set_cache(self, name, value):
         self.caches[name] = value
 

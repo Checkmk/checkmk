@@ -765,7 +765,7 @@ def main_fetch_ids(args):
         usage()
 
     if current_branch() != "master":
-        bail_out("It is not allowed to reserver IDs on any other branch than the master.\n")
+        bail_out("It is not allowed to reserve IDs on any other branch than the master.")
 
     # Get the start werk_id to reserve
     try:

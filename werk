@@ -752,6 +752,9 @@ def store_werk_ids(l):
     file('.my_ids', 'w').write(repr(l) + "\n")
 
 
+def current_branch():
+    return [ l for l in os.popen("git branch") if l.startswith("*") ][0].split()[-1]
+
 def main_fetch_ids(args):
     if not args:
         sys.stdout.write('You have %d reserved IDs.\n' % (len(get_werk_ids())))
@@ -760,6 +763,9 @@ def main_fetch_ids(args):
         num = int(args[0])
     else:
         usage()
+
+    if current_branch() != "master":
+        bail_out("It is not allowed to reserver IDs on any other branch than the master.\n")
 
     # Get the start werk_id to reserve
     try:

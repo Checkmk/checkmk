@@ -12341,7 +12341,7 @@ def HostnameTranslation(**kwargs):
                   help = _("Please specify a regular expression in the first field. This expression should at "
                            "least contain one subexpression exclosed in brackets - for example <tt>vm_(.*)_prod</tt>. "
                            "In the second field you specify the translated host name and can refer to the first matched "
-                           "group with <tt>\1</tt>, the second with <tt>\2</tt> and so on, for example <tt>\1.example.org</tt>"),
+                           "group with <tt>\\1</tt>, the second with <tt>\\2</tt> and so on, for example <tt>\\1.example.org</tt>"),
                   elements = [
                       RegExpUnicode(
                           title = _("Regular expression"),

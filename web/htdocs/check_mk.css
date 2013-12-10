@@ -88,6 +88,10 @@ input, select, textarea {
     margin-top: 0px;
 }
 
+input[type=file] {
+    color: black;
+}
+
 form {
     margin: 0px;
 }

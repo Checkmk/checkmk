@@ -1,0 +1,23 @@
+Title: Its not possible to add contacts groups to foulders if a minus is in name
+Component: wato
+State: open
+Date: 2013-12-10 10:09:51
+Targetversion: 1.2.3i6
+Class: bug
+
+From the german mailing list:
+ 
+
+Habe etwas merkwürdiges entdeckt in Check_MK 1.2.3i6. Das Hinzufügen von Contactgroups zu Foldern, egal ob die Contactgroups über ldap gezogen oder lokal angelegt wurden, schlägt fehl.
+
+ 
+
+Heißt beispielsweise eine Contactgroup „all-admins“ verschwindet der Haken bei Contactgroups eines Folders wieder, nenne ich sie dagegen „alladmins“ bleibt das Häkchen bestehen.
+
+ 
+
+Ich vermute, dass es an einer Wato-Funktion liegt und beim Parsen des Namens etwas fehlschlägt, weil das Hinzufügen von Contactgroups zu Foldern in den .wato Files funktioniert.
+
+ 
+
+Der Fehler ist reproduzierbar.

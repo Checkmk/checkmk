@@ -14,4 +14,4 @@ item:
 
 inventory:
  All logical units are automatically inventorized. All states other than
- {OK} are considere critical.
+ {OK} or {VERIFYING} are considere critical.

@@ -10,6 +10,7 @@
 
     WATO:
     * 0057 FIX: Fix exception in WATO host editor on custom tag without topic...
+    * 0019 FIX: Fixed wording in WATO rule for MSSQL check
 
 
 1.2.3i7:

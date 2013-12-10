@@ -1,0 +1,20 @@
+title: Raritan PX-2000 family PDU plug state
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state of the plugs of the Raritan PX-2000
+ family of intelligent rack power distribution units (iPDUs).
+ It has been tested with the model PX2-2180CR.
+ As default plugs which are switched {on} are in the state {OK},
+ other states are in the state {CRIT}.
+ The required state can be configured to {off}. Then these plugs are in
+ the state {OK} when they are switched off, and {CRIT} otherwise.
+
+item:
+ The ID Number of the plug as given by the device
+
+inventory:
+ One service per plug will be created
+

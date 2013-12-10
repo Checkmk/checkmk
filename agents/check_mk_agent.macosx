@@ -91,7 +91,7 @@ fi
 if type tmutil >/dev/null
 then
     echo '<<<timemachine>>>'
-    tmutil latestbackup
+    tmutil latestbackup 2>&1
 fi
 
 ###############################

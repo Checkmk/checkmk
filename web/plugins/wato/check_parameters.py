@@ -114,7 +114,7 @@ register_rule(group + '/' + subgroup_inventory,
                           'match is done on the <i>beginning</i> of the service name. It '
                           'is done <i>case sensitive</i>. You can do a case insensitive match '
                           'by prefixing the regular expression with <tt>(?i)</tt>. Example: '
-                          '<tt>(?i).*mssql</tt> matches all services that contain <tt>MSSQL</tt> '
+                          '<tt>(?i).*mssql</tt> matches all services which contain <tt>MSSQL</tt> '
                           'or <tt>MsSQL</tt> or <tt>mssql</tt> or...'),
                 orientation = "horizontal",
             )),
@@ -2424,6 +2424,26 @@ register_check_parameters(
             title = _("Time since end of last backup"),
             elements = [
                 Age(title = _("Warning if older than"), default_value = 108000),
+                Age(title = _("Critical if older than"), default_value = 172800)
+            ]
+          )
+        )]
+    ),
+    None,
+    None
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "backup_timemachine",
+    _("Age of timemachine backup"),
+    Dictionary(
+        elements = [
+        ("age",
+          Tuple(
+            title = _("Maximum age of latest timemachine backup"),
+            elements = [
+                Age(title = _("Warning if older than"), default_value = 86400),
                 Age(title = _("Critical if older than"), default_value = 172800)
             ]
           )

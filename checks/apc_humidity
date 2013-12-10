@@ -24,34 +24,37 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-apc_powerswitch_warning_states = (2,)
-apc_powerswitch_critical_states  = ()
+
+apc_humidity_default_levels = (35, 40, 60, 65)
 
 
-def inventory_apc_powerswitch(info):
-    return [ (x[0],saveint(x[2])) for x in info if x[1] == "1" ]
+def inventory_apc_humidity(info):
+    return [(line[0], "apc_humidity_default_levels") for line in info]
 
-def check_apc_powerswitch(item, params, info):
-    state_name = {
-        1 : 'on',
-        2 : 'off',
-    }
-    r_state = 0
+def check_apc_humidity(item, params, info):
     for line in info:
         if line[0] == item:
-            state = saveint(line[2])
-            if state in apc_powerswitch_warning_states:
-                r_state = 1
-            if state in apc_powerswitch_critical_states:
-                r_state = 2
-            return(r_state, 'Port %s has status %s' % (line[1], state_name[state]))
+            humidity = saveint(line[1])
+            warnlow, critlow, warnhigh, crithigh = params
+            infotext = "%s%%" % humidity + " (warn/crit below %.1f/%.1f or above %.1f/%.1f %%" % \
+                        (critlow, warnlow, warnhigh, crithigh) + ")"
+            perfdata = [ ( "humidity", humidity, critlow, warnlow, warnhigh, crithigh ) ]
+            if humidity <= critlow or humidity >= crithigh:
+                return (2, "Humidity is: " + infotext, perfdata )
+            elif humidity <= warnlow or humidity >= warnhigh:
+                return (1, "Humidity is: " + infotext, perfdata )
+            else:
+                return (0, "Humidity is: " + infotext, perfdata )
 
-    return 3, "Port not found"
+    return (3, "sensor not found in SNMP data")
 
-check_info['apc_powerswitch'] = {
-    'check_function' : check_apc_powerswitch,
-    'inventory_function' : inventory_apc_powerswitch,
-    'snmp_scan_function' : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.318.1.3.4"),
-    'service_description' : 'Power Outlet Port %s',
-    'snmp_info' : ( '.1.3.6.1.4.1.318.1.1.12.3.5.1.1', [1, 2, 4] ),
+
+check_info["apc_humidity"] = {
+    'check_function':          check_apc_humidity,
+    'inventory_function':      inventory_apc_humidity,
+    'service_description':     'Humidity %s',
+    'has_perfdata':            True,
+    'snmp_info':               ('.1.3.6.1.4.1.318.1.1.10.4.2.3.1', ['3', '6']),
+    'snmp_scan_function':      lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.318.1.3"),
+    'group':                   'humidity',
 }

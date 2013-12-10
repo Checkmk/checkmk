@@ -66,9 +66,9 @@ def check_3ware_units(item, _no_params, info):
 
             infotext = "%s (type: %s, size: %sGB%s)" % (status, unit_type, size, complete_txt)
 
-            if status == "OK":
+            if status in [ "OK", "VERIFYING" ]:
                 return (0, "unit status is " + infotext)
-            elif status in [ "INITIALIZING", "VERIFY-PAUSED", "VERIFYING", "REBUILDING" ]:
+            elif status in [ "INITIALIZING", "VERIFY-PAUSED", "REBUILDING" ]:
                 return (1, "unit status is " + infotext)
             else:
                 return (2, "unit status is " + infotext)

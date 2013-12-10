@@ -11240,7 +11240,8 @@ def folder_selection(folder, depth=0):
         title_prefix = ""
     sel = [ (folder[".path"], title_prefix + folder["title"]) ]
 
-    for subfolder in folder[".folders"].values():
+    subfolders = sorted(folder[".folders"].values(), cmp = lambda x,y : cmp(x.get("title").lower(), y.get("title").lower()))
+    for subfolder in subfolders:
         sel += folder_selection(subfolder, depth + 1)
     return sel
 

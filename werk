@@ -74,6 +74,7 @@ def goto_werksdir():
         sys.stderr.write("Cannot find directory .werks\n")
         sys.exit(1)
 
+
 def load_config():
     global g_last_werk
     execfile("config", globals(), globals())
@@ -108,7 +109,7 @@ def parse_changelog():
     global g_current_version
     ch = file("../ChangeLog")
     version = ch.readline().strip().rstrip(":")
-    if len(version) not in [ 6, 7, 8 ] or \
+    if len(version) not in [ 6, 7, 8, 9, 10 ] or \
        not version[0].isdigit() or \
        version[1] != '.':
        bail_out("Invalid version number '%s' in ChangeLog" % version)
@@ -231,6 +232,12 @@ def save_werk(werk):
     git_add(werk)
     save_last_werkid(werk["id"])
     rewrite_changelog()
+
+def change_werk_version(werk_id, new_version):
+    werk = g_werks[werk_id]
+    werk["version"] = new_version
+    save_werk(werk)
+    git_add(werk)
 
 def git_add(werk):
     os.system("git add %d" % werk["id"])
@@ -678,6 +685,56 @@ def main_commit(args):
             bail_out("Cannot commit.")
 
 
+def main_pick(args):
+    if len(args) == 0:
+        bail_out("Please specify at least one commit ID to cherry-pick.")
+    if args[0] == '-n':
+        no_commit = True
+        args = args[1:]
+    else:
+        no_commit = False
+
+    for commit_id in args:
+        werk_cherry_pick(commit_id, no_commit)
+
+
+def werk_cherry_pick(commit_id, no_commit):
+    # Create a copy of our current ChangeLog in order to deal
+    # with merge conflicts (different branches use different version
+    # numbers).
+    old_changelog = file("../ChangeLog").read()
+
+    # Cherry-pick the commit in question from the other branch
+    os.system("git cherry-pick --no-commit '%s'" % commit_id)
+
+    # Find werks that have been cherry-picked and change their version
+    # to our current version
+    load_werks() # might have changed
+    for line in os.popen("git status --porcelain"):
+        # M  .werks/103
+        #  M ChangeLog
+        #  M werk
+        status, filename = line.strip().split(None, 1)
+        if filename.startswith(".werks/") and filename[7].isdigit():
+            werk_id = int(filename[7:])
+            change_werk_version(werk_id, g_current_version)
+            sys.stdout.write("Changed version of werk #%04d to %s.\n" % (werk_id, g_current_version))
+
+    # Move back our saved ChangeLog and rewrite it so the new werk appears
+    file("../ChangeLog", "w").write(old_changelog)
+    rewrite_changelog()
+    os.system("git add ../ChangeLog")
+
+    # Commit
+    if not no_commit:
+        os.system("git commit -C '%s'" % commit_id)
+
+    else:
+        sys.stdout.write("We don't commit yet. Here is the status:\n")
+        sys.stdout.write("Please commit with git commit -C '%s'\n\n" % commit_id)
+        os.system("git status")
+
+
 def get_werk_ids():
     try:
         return eval(file('.my_ids', 'r').read())
@@ -744,16 +801,18 @@ if len(sys.argv) < 2:
 
 cmd = sys.argv[1]
 commands = {
-  "list"    : lambda args: main_list(args, "console"),
-  "export"  : lambda args: main_list(args, "csv"),
-  "show"    : main_show,
-  "new"     : main_new,
-  "blame"   : main_blame,
-  "delete"  : main_delete,
-  "grep"    : main_grep,
-  "edit"    : main_edit,
-  "ids"     : main_fetch_ids,
-  "rewrite" : rewrite_changelog,
+  "list"        : lambda args: main_list(args, "console"),
+  "export"      : lambda args: main_list(args, "csv"),
+  "show"        : main_show,
+  "new"         : main_new,
+  "blame"       : main_blame,
+  "delete"      : main_delete,
+  "grep"        : main_grep,
+  "edit"        : main_edit,
+  "ids"         : main_fetch_ids,
+  "rewrite"     : rewrite_changelog,
+  "pick"        : main_pick,
+  "cherry-pick" : main_pick,
 }
 
 hits = []

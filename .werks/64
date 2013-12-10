@@ -1,4 +1,4 @@
-Title: veeam_jobs: new check to monitor the backup jobs of the veeam backup tool
+Title: veeam_jobs: new check to monitor the backup jobs of the Veeam backup tool
 Level: 1
 Component: checks
 Version: 1.2.3i7

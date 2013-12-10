@@ -47,11 +47,11 @@ def check_veeam_client(item, params, info):
     stoptime = ""
     duration_string = ""
     infotxt = ""
-    perfdata = []
     for line in info:
         if line[0] == "Status":
             result = line[1]
-            infotxt += line[0] + ":" + line[1] + " "
+            perfdata = []
+            infotxt = line[0] + ":" + line[1] + " "
         elif line[0] == "DurationDDHHMMSS" and result != "InProgress" and result != "Pending":
             duration_string = line[1]
             spur = map(saveint, duration_string.split(":") )

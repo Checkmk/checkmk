@@ -1,0 +1,8 @@
+Title: apc_humidity: New Check for humidity levels on APC Devices
+Level: 1
+Component: checks
+Version: 1.2.3i8
+Date: 1386665341
+Class: feature
+
+

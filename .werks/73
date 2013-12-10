@@ -1,0 +1,8 @@
+Title: moxa_iologik_register: new check to monitor moxa e2000 series registers
+Level: 1
+Component: checks
+Version: 1.2.3i8
+Date: 1386663142
+Class: feature
+
+

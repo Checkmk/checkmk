@@ -1,0 +1,16 @@
+title: Moxa IOLogik Register Check 
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the status of registers found on the moxa iologik e2000
+ series. It has been tested on the e2242 devices.
+
+ The check expects the value of the registers to be an integer in the range
+ {0-2} and takes these values as the state of the check. The name of the
+ register is taken as the status detail of the check.
+ If the value is not out of 0,1,2 the check state is {UNKNOWN}.
+
+inventory:
+ A check will be created for all registers found on the device.

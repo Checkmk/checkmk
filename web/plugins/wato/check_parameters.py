@@ -2435,6 +2435,26 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "backup_timemachine",
+    _("Age of timemachine backup"),
+    Dictionary(
+        elements = [
+        ("age",
+          Tuple(
+            title = _("Maximum age of latest timemachine backup"),
+            elements = [
+                Age(title = _("Warning if older than"), default_value = 86400),
+                Age(title = _("Critical if older than"), default_value = 172800)
+            ]
+          )
+        )]
+    ),
+    None,
+    None
+)
+
+register_check_parameters(
+    subgroup_applications,
     "mssql_counters_locks",
     _("MSSQL Locks"),
     Dictionary(

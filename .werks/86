@@ -1,0 +1,8 @@
+Title: timemachine: new check
+Level: 2
+Component: checks
+Version: 1.2.3i8
+Date: 1386679588
+Class: feature
+
+Checks the age of latest backup by timemachine on MAC OS and compares the age against given levels.

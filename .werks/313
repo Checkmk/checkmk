@@ -1,0 +1,13 @@
+Title: Avoid duplicate reading of configuration file on --create-rrd
+Level: 1
+Component: core
+Class: fix
+State: unknown
+Version: 1.2.3i8
+Date: 1386770107
+Targetversion: future
+
+The Check_MK Micro Core calls Check_MK with <tt>cmk --create-rrd --keepalive</tt>.
+That read in the configuration files (<tt>main.mk</tt> etc.) twice. This could have
+lead to various anomalities such as duplicate hosts when you have removed the
+default <tt>all_hosts = </tt> from your <tt>main.mk</tt>. This has been fixed now.

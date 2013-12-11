@@ -5524,7 +5524,8 @@ if __name__ == "__main__":
                      "cmc-file=", "browse-man", "list-man", "update-dns-cache" ]
 
     non_config_options = ['-L', '--list-checks', '-P', '--package', '-M', '--notify',
-                          '--man', '-V', '--version' ,'-h', '--help', '--automation']
+                          '--man', '-V', '--version' ,'-h', '--help', '--automation',
+                          '--create-rrd' ]
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)

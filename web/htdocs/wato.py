@@ -2463,6 +2463,8 @@ def mode_inventory(phase, firsttime):
                     varname = "_%s_%s" % (ct, html.varencode(item))
                     if html.var(varname, "") != "":
                         active_checks[(ct, item)] = paramstring
+                if st == "clustered":
+                    active_checks[(ct, item)] = paramstring
 
             check_mk_automation(host[".siteid"], "set-autochecks", [hostname], active_checks)
             if host.get("inventory_failed"):

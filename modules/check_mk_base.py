@@ -618,9 +618,13 @@ def get_agent_info_program(commandline):
         sys.stderr.write("Calling external program %s\n" % commandline)
     try:
         p = subprocess.Popen(commandline, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-        exitstatus = p.wait()
-        stdout = p.stdout.read()
-        stderr = p.stderr.read()
+        stdout = ""
+        stderr = ""
+        while p.poll() is None:
+            response = p.communicate()
+            stdout += response[0]
+            stderr += response[1]
+        exitstatus = p.returncode
     except Exception, e:
         raise MKAgentError("Could not execute '%s': %s" % (commandline, e))
 

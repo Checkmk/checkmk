@@ -1,0 +1,8 @@
+Title: apache_status: Improved handling of unexpeted data sent by agents
+Level: 1
+Component: checks
+Version: 1.2.3i8
+Date: 1386752436
+Class: fix
+
+Now the check should also handle unexpected ascii responses from the agent.

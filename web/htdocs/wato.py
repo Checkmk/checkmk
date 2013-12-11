@@ -5549,7 +5549,7 @@ def mode_snapshot(phase):
 
         # upload snapshot
         elif html.uploads.get("_upload_file"):
-            uploaded_file = html.uploads.get("_upload_file")
+            uploaded_file = html.uploaded_file("_upload_file")
             if uploaded_file[0] == "":
                 raise MKUserError(None, _("Please select a file for upload."))
             if html.check_transaction():
@@ -8438,7 +8438,7 @@ def automation_push_snapshot():
                 message += ", ".join([e[-1] for e in pending[:10]])
                 raise MKGeneralException(message)
 
-        tarcontent = html.uploads.get("snapshot")
+        tarcontent = html.uploaded_file("snapshot")
         if not tarcontent:
             raise MKGeneralException(_('Invalid call: The snapshot is missing.'))
         tarcontent = tarcontent[2]

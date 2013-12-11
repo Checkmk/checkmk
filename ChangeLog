@@ -15,6 +15,7 @@
     WATO:
     * 0057 FIX: Fix exception in WATO host editor on custom tag without topic...
     * 0019 FIX: Fixed wording in WATO rule for MSSQL check
+    * 0311 FIX: Fixed "Inventory failed" message when trying an inventory on clusters via WATO...
 
 
 1.2.3i7:

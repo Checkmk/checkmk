@@ -2491,7 +2491,7 @@ def show_service_table(host, firsttime):
     try:
         table = check_mk_automation(host[".siteid"], "try-inventory", cache_options + [hostname])
         if len(table) == 0 and cache_options != []:
-            table = check_mk_automation(host[".siteid"], "try-inventory", [hostname])
+            table = check_mk_automation(host[".siteid"], "try-inventory", [ '@scan', hostname ])
             html.set_var("_scan", "on")
     except Exception, e:
         if config.debug:

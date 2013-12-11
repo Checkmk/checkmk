@@ -5548,12 +5548,12 @@ def mode_snapshot(phase):
                 return None, _("Created snapshot <tt>%s</tt>.") % filename
 
         # upload snapshot
-        elif html.has_var("_upload_file"):
-            if html.var("_upload_file") == "":
+        elif html.uploads.get("_upload_file"):
+            uploaded_file = html.uploads.get("_upload_file")
+            if uploaded_file[0] == "":
                 raise MKUserError(None, _("Please select a file for upload."))
-                return None
             if html.check_transaction():
-                multitar.extract_from_buffer(html.var("_upload_file"), backup_paths)
+                multitar.extract_from_buffer(uploaded_file[2], backup_paths)
                 log_pending(SYNCRESTART, None, "snapshot-restored",
                     _("Restored from uploaded file"))
                 return None, _("Successfully restored configuration.")
@@ -8438,9 +8438,10 @@ def automation_push_snapshot():
                 message += ", ".join([e[-1] for e in pending[:10]])
                 raise MKGeneralException(message)
 
-        tarcontent = html.var('snapshot')
+        tarcontent = html.uploads.get("snapshot")
         if not tarcontent:
             raise MKGeneralException(_('Invalid call: The snapshot is missing.'))
+        tarcontent = tarcontent[2]
 
         multitar.extract_from_buffer(tarcontent, replication_paths)
 

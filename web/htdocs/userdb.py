@@ -392,27 +392,29 @@ def save_users(profiles):
                             for p, val in profile.items()
                             if p in multisite_keys + multisite_attributes(profile.get('connector'))])
 
-    filename = root_dir + "contacts.mk"
+    filename = root_dir + "contacts.mk.new"
 
     # Check_MK's monitoring contacts
     out = create_user_file(filename, "w")
     out.write("# Written by Multisite UserDB\n# encoding: utf-8\n\n")
     out.write("contacts.update(\n%s\n)\n" % pprint.pformat(contacts))
     out.close()
+    os.rename(filename, filename[:-4])
 
     # Users with passwords for Multisite
     make_nagios_directory(multisite_dir)
-    filename = multisite_dir + "users.mk"
+    filename = multisite_dir + "users.mk.new"
     out = create_user_file(filename, "w")
     out.write("# Written by Multisite UserDB\n# encoding: utf-8\n\n")
     out.write("multisite_users = \\\n%s\n" % pprint.pformat(users))
     out.close()
+    os.rename(filename, filename[:-4])
 
     # Execute user connector save hooks
     hook_save(profiles)
 
     # Write out the users serials
-    serials_file = '%s/auth.serials' % os.path.dirname(defaults.htpasswd_file)
+    serials_file = '%s/auth.serials.new' % os.path.dirname(defaults.htpasswd_file)
     out = create_user_file(serials_file, "w")
     def encode_utf8(value):
         if type(value) == unicode:
@@ -422,6 +424,7 @@ def save_users(profiles):
     for user_id, user in profiles.items():
         out.write('%s:%d\n' % (encode_utf8(user_id), user.get('serial', 0)))
     out.close()
+    os.rename(serials_file, serials_file[:-4])
 
     # Write user specific files
     for id, user in profiles.items():

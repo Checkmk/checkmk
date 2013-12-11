@@ -1,0 +1,13 @@
+Title: Trying to prevent read/write conflicts with a large user base
+Level: 1
+Component: wato
+Version: 1.2.3i8
+Date: 1386749884
+Class: fix
+
+When having a large amount of users, it might happen, that the user
+configuration files are read while they are written e.g. by an automated
+LDAP sync or some other modification to the user database. With bad
+timing, the file could be read while being incomplete which might result
+in syntax errors or similar unexpected situations. This changes the way
+the files are being written to a more save way.

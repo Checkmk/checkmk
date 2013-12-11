@@ -1,0 +1,10 @@
+Title: Fixed possible locking issue when using datasource program with long output
+Level: 1
+Component: core
+Version: 1.2.3i7p1
+Date: 1386751376
+Class: fix
+
+Version 1.2.3i7 introducted a problem where datasource programs producing a long
+output could lock up the check execution. This resulted in failed checks and 
+non inventorized services on the affected host.

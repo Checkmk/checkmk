@@ -181,6 +181,7 @@ def automation_try_inventory(args, leave_no_tcp=False, with_snmp_scan=False):
     elif args[0] == '@scan':
         args = args[1:]
         with_snmp_scan = True
+        leave_no_tcp = True
 
     hostname = args[0]
 
@@ -191,6 +192,7 @@ def automation_try_inventory(args, leave_no_tcp=False, with_snmp_scan=False):
         already_added = set([])
         for node in nodes_of(hostname):
             new_services = automation_try_inventory_node(node, leave_no_tcp=leave_no_tcp, with_snmp_scan=with_snmp_scan)
+
             for entry in new_services:
                 if host_of_clustered_service(node, entry[6]) == hostname:
                     # 1: check, 6: Service description

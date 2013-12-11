@@ -3242,6 +3242,26 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_environment,
+    "plugs",
+    _("State of PDU Plugs"),
+    DropdownChoice(
+        help = _("This rule sets the required state of a PDU plug. It is meant to "
+                 "be independent of the hardware manufacturer."),
+        title = _("Required plug state"),
+        choices = [
+                  ( "on", "Plug is ON" ),
+                  ( "off", "Plug is OFF" ),
+                  ],
+        default_value = "on"
+    ),
+    TextAscii(
+        title = _("Plug Item ID number"),
+        allow_empty = True),
+     None
+)
+
+register_check_parameters(
+    subgroup_environment,
     "room_temperature",
     _("Room temperature (external thermal sensors)"),
     Tuple(
@@ -4135,6 +4155,26 @@ register_check_parameters(
     TextAscii(
         title = _("Instance name"),
         allow_empty = True),
+    "first"
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "windows_updates",
+    _("WSUS"),
+    Tuple(
+        title = _("Parameters for the Windows Update Check with WSUS"),
+        elements = [
+                Integer(title = _("Warning level for important updates")),
+                Integer(title = _("Critical level for important updates")),
+                Integer(title = _("Warning level for optional updates")),
+                Integer(title = _("Critical level for optional updates")),
+                Age(title = _("Warning level for time until forced reboot"), default_value = 604800),
+                Age(title = _("Critical level for time until forced reboot"), default_value = 172800),
+                Checkbox(title = _("display all important updates verbosely"), default_value = True),
+              ],
+    ),
+    None,
     "first"
 )
 

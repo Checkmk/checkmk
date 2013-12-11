@@ -5,5 +5,5 @@ Version: 1.2.3i7
 Date: 1383564852
 Class: feature
 
-Cisco has depreceated the object named cpmCPUTotal5min by cpmCPUTotal5minRev.
+Cisco has depreceated the snmp object named cpmCPUTotal5min by cpmCPUTotal5minRev.
 Both objects are now recognized by the check, with priority to cpmCPUTotal5minRev.

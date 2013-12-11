@@ -1,0 +1,13 @@
+Title: Parameters for clustered services can now be configured on the cluster host
+Level: 1
+Component: wato
+Version: 1.2.3i8
+Date: 1386692048
+Class: fix
+
+The check parameters of a clustered service were taken from one of the clusters node.
+Any parameters for the cluster got ignored.
+
+This fix allows to configure the parameters of a clustered service on the cluster itself.
+However, if the clustered service has no configured parameters, the parameters from the nodes
+are used instead.

@@ -1,7 +1,7 @@
 Title: Fixed possible locking issue when using datasource program with long output
 Level: 1
 Component: core
-Version: 1.2.3i7p1
+Version: 1.2.3i7p2
 Date: 1386751376
 Class: fix
 

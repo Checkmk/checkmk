@@ -13398,7 +13398,7 @@ def declare_bi_valuespecs(aggregation_rules):
                         choices = [
                             ( None, _("All Hosts")),
                         ],
-                        explicit = TextAscii(),
+                        explicit = TextAscii(size = 60),
                         otherlabel = _("Regex for host name"),
                         default_value = None,
                     ),
@@ -13423,7 +13423,7 @@ def declare_bi_valuespecs(aggregation_rules):
                         choices = [
                             ( None, _("All Hosts")),
                         ],
-                        explicit = TextAscii(),
+                        explicit = TextAscii(size = 60),
                         otherlabel = _("Regex for host name"),
                         default_value = None,
                     ),
@@ -13431,6 +13431,7 @@ def declare_bi_valuespecs(aggregation_rules):
                         title = _("Service Regex:"),
                         help = _("Subexpressions enclosed in <tt>(</tt> and <tt>)</tt> will be available "
                                  "as arguments <tt>$2$</tt>, <tt>$3$</tt>, etc."),
+                        size = 80,
                     ),
                     CascadingDropdown(
                         title = _("Nodes to create:"),

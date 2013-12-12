@@ -11734,8 +11734,10 @@ def mode_edit_rule(phase, new = False):
                 html.help(rulespec["itemhelp"])
             else:
                 html.help(_("You can make the rule apply only to certain services of the "
-                             "specified hosts. Do this by specifying explicit items to match "
-                             "here. <b>Note:</b> the match is done on the <u>beginning</u> "
+                             "specified hosts. Do this by specifying explicit <b>items</b> to "
+                             "match here. <b>Hint:</b> make sure to enter the item only, "
+                             "not the full Service description. "
+                             "<b>Note:</b> the match is done on the <u>beginning</u> "
                              "of the item in question. Regular expressions are interpreted, "
                              "so appending a <tt>$</tt> will force an exact match."))
         else:
@@ -13398,7 +13400,7 @@ def declare_bi_valuespecs(aggregation_rules):
                         choices = [
                             ( None, _("All Hosts")),
                         ],
-                        explicit = TextAscii(),
+                        explicit = TextAscii(size = 60),
                         otherlabel = _("Regex for host name"),
                         default_value = None,
                     ),
@@ -13423,7 +13425,7 @@ def declare_bi_valuespecs(aggregation_rules):
                         choices = [
                             ( None, _("All Hosts")),
                         ],
-                        explicit = TextAscii(),
+                        explicit = TextAscii(size = 60),
                         otherlabel = _("Regex for host name"),
                         default_value = None,
                     ),
@@ -13431,6 +13433,7 @@ def declare_bi_valuespecs(aggregation_rules):
                         title = _("Service Regex:"),
                         help = _("Subexpressions enclosed in <tt>(</tt> and <tt>)</tt> will be available "
                                  "as arguments <tt>$2$</tt>, <tt>$3$</tt>, etc."),
+                        size = 80,
                     ),
                     CascadingDropdown(
                         title = _("Nodes to create:"),

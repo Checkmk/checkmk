@@ -732,7 +732,7 @@ def search_livestatus(ty, q):
     def sort_data(data):
         sorted_data = set([])
         for entry in data:
-            entry = (entry[0], '', entry[2])
+            entry = tuple(entry)
             if entry not in sorted_data:
                 sorted_data.add(entry)
         sorted_data = list(sorted_data)

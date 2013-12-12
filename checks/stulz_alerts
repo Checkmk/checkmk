@@ -24,21 +24,23 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def inventory_liebert_chiller_status(info):
-    return [(None,None)]
+def inventory_stulz_alerts(info):
+    return [ (x[0], None ) for x in info ]
 
-def check_liebert_chiller_status(_no_item, _no_params, info):
-    status = info[0][0]
-    if status not in [ "5", "7" ]:
-        return 2, "Device is in a non OK state"
-    return 0, "Device is in a OK state"
+def check_stulz_alerts(item, _no_params, info):
+    for line in info:
+        if line[0] == item:
+            if line[1] != '0':
+                return 2, "Device is in alert state"
+            return 0, "No alerts on device"
+    return 3, "No information found about the device"
 
-
-check_info["liebert_chiller_status"] = {
-    "check_function"        : check_liebert_chiller_status,
-    "inventory_function"    : inventory_liebert_chiller_status,
-    "service_description"   : "Chiller status",
+check_info["stulz_alerts"] = {
+    "check_function"        : check_stulz_alerts,
+    "inventory_function"    : inventory_stulz_alerts,
+    "service_description"   : "Alerts %s ",
     "has_perfdata"          : False,
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.476.1.42.4.3.20"),
-    "snmp_info"             : (".1.3.6.1.4.1.476.1.42.4.3.20.1.1.20", [ 2 ])
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.29462.10",
+    "snmp_info"             : ( ".1.3.6.1.4.1.29462.10.2.1.4.4.1.1.1.1010", [ OID_END, 1] ),
 }
+

@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,21 +23,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def inventory_liebert_chiller_status(info):
-    return [(None,None)]
+$opt[1] = "--vertical-label \"Celsius\"  -l 0 -u 40 --title \"Temperature $servicedesc\" ";
 
-def check_liebert_chiller_status(_no_item, _no_params, info):
-    status = info[0][0]
-    if status not in [ "5", "7" ]:
-        return 2, "Device is in a non OK state"
-    return 0, "Device is in a OK state"
-
-
-check_info["liebert_chiller_status"] = {
-    "check_function"        : check_liebert_chiller_status,
-    "inventory_function"    : inventory_liebert_chiller_status,
-    "service_description"   : "Chiller status",
-    "has_perfdata"          : False,
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.476.1.42.4.3.20"),
-    "snmp_info"             : (".1.3.6.1.4.1.476.1.42.4.3.20.1.1.20", [ 2 ])
-}
+$def[1] = "DEF:var1=$RRDFILE[1]:$DS[1]:MAX ";
+$def[1] .= "AREA:var1#2080ff:\"Temperature\:\" ";
+$def[1] .= "GPRINT:var1:LAST:\"%2.0lfC\" ";
+$def[1] .= "LINE1:var1#000080:\"\" ";
+$def[1] .= "GPRINT:var1:MAX:\"(Max\: %2.0lfC,\" ";
+$def[1] .= "GPRINT:var1:AVERAGE:\"Avg\: %2.0lfC)\" ";
+$def[1] .= "HRULE:$WARN[1]#FFFF00:\"Warning\: $WARN[1]C\" ";
+$def[1] .= "HRULE:$CRIT[1]#FF0000:\"Critical\: $CRIT[1]C\" ";
+?>

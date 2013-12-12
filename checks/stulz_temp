@@ -24,21 +24,33 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def inventory_liebert_chiller_status(info):
-    return [(None,None)]
+stulz_temp_default_levels = ( 25, 28 )
 
-def check_liebert_chiller_status(_no_item, _no_params, info):
-    status = info[0][0]
-    if status not in [ "5", "7" ]:
-        return 2, "Device is in a non OK state"
-    return 0, "Device is in a OK state"
+def inventory_stulz_temp(info):
+    return [ (x[0], "stulz_temp_default_levels" ) for x in info ]
 
+def check_stulz_temp(item, params, info):
+    for line in info:
+        if line[0] == item:
+            warn, crit = params
+            temp = saveint(line[1])/10
+            state = 0
+            if temp >= crit:
+                state = 2
+            elif temp >= warn:
+                state = 1
+            message = " Current Temperature: %d°C" % temp
+            perf = [ ('temp', temp, warn, crit ) ]
+            return state, message, perf
+    return 3, "No information found about the device"
 
-check_info["liebert_chiller_status"] = {
-    "check_function"        : check_liebert_chiller_status,
-    "inventory_function"    : inventory_liebert_chiller_status,
-    "service_description"   : "Chiller status",
-    "has_perfdata"          : False,
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.476.1.42.4.3.20"),
-    "snmp_info"             : (".1.3.6.1.4.1.476.1.42.4.3.20.1.1.20", [ 2 ])
+check_info["stulz_temp"] = {
+    "check_function"        : check_stulz_temp,
+    "inventory_function"    : inventory_stulz_temp,
+    "service_description"   : "Temperature %s ",
+    "has_perfdata"          : True,
+    "group"                 : "room_temperature",
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.29462.10",
+    "snmp_info"             : ( ".1.3.6.1.4.1.29462.10.2.1.1.1.1.1.1.1.1192", [ OID_END, 1] ),
 }
+

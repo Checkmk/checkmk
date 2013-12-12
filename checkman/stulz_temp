@@ -1,4 +1,4 @@
-title: Stulz clima unit alerts
+title: Stulz clima unit Temperatures
 agents: snmp
 catalog: hw/environment
 license: GPL

@@ -1,0 +1,8 @@
+Title: cisco_qos: no longer crashes when the qos policy name is not set
+Level: 1
+Component: checks
+Version: 1.2.3i8
+Date: 1386866017
+Class: fix
+
+When no policy name is set in the cisco device the policy map id is used instead.

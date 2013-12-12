@@ -206,7 +206,7 @@ def check_cisco_qos(item, params, info):
         if policy_map_id is None:
             return 3, 'Invalid policy map id'
 
-        policy_name = policies[policy_map_id]
+        policy_name = policies.get(policy_map_id)
         policy_id   = this_policy_id
         objects_id  = this_objects_id
 
@@ -314,7 +314,10 @@ def check_cisco_qos(item, params, info):
                 state = max(1, state)
                 infotext += '(!)'
 
-    infotext += ', Policy-Name: %s, Int-Bandwidth: %s' % (policy_name, format_value(bw))
+    if policy_name:
+        infotext += ', Policy-Name: %s, Int-Bandwidth: %s' % (policy_name, format_value(bw))
+    else:
+        infotext += ', Policy-Map-ID: %s, Int-Bandwidth: %s' % (policy_map_id, format_value(bw))
     return (state, infotext.lstrip(', '), perfdata)
 
 check_info["cisco_qos"] = {

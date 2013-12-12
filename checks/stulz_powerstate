@@ -30,18 +30,21 @@ def inventory_stulz_powerstate(info):
 def check_stulz_powerstate(item, _no_params, info):
     for line in info:
         if line[0] == item:
-            if line[1] != '0':
+            if line[1] != '1':
                 message = "Device powered off"
+                power_state = 2
             else:
                 message = "Device powered on" 
-            return 0, message
+                power_state = 6
+
+            return 0, message, [ ('state', power_state ) ]
     return 3, "No information found about the device"
 
 check_info["stulz_powerstate"] = {
     "check_function"        : check_stulz_powerstate,
     "inventory_function"    : inventory_stulz_powerstate,
     "service_description"   : "State %s ",
-    "has_perfdata"          : False,
+    "has_perfdata"          : True,
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.29462.10",
     "snmp_info"             : ( ".1.3.6.1.4.1.29462.10.2.1.4.1.1.1.1013", [ OID_END, 1] ),
 }

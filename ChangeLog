@@ -18,6 +18,9 @@
     * 0019 FIX: Fixed wording in WATO rule for MSSQL check
     * 0311 FIX: Fixed "Inventory failed" message when trying an inventory on clusters via WATO...
 
+    Event Console:
+    * 0089 FIX: CSV export of event console was broken...
+
 
 1.2.3i7:
     Core & Setup:

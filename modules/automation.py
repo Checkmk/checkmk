@@ -430,7 +430,7 @@ def automation_set_autochecks(args):
             existing = automation_parse_autochecks_file(node)
             for ct, item, params, paramstring in existing:
                 descr = service_description(ct, item)
-                if node == host_of_clustered_service(node, descr):
+                if hostname != host_of_clustered_service(node, descr):
                     new_autochecks.append((ct, item, paramstring))
             for (ct, item), paramstring in new_items.items():
                 new_autochecks.append((ct, item, paramstring))

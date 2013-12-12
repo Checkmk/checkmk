@@ -1,0 +1,12 @@
+Title: Multisite python profiler can not handle POST data.
+Component: multisite
+State: open
+Date: 2013-12-11 16:22:53
+Targetversion: future
+Class: bug
+
+Any POST data vanishs by the second run of the index.handler(apache._profiling_req) function
+GET parameters of the same query are preserved.
+
+Enabling the global option "Profile Requests" successfully shuts down most of the formulars
+which are using the POST method. This also applies to the snapshot synchronisation.

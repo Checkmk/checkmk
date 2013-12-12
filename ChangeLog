@@ -1,6 +1,7 @@
 1.2.3i8:
     Core & Setup:
     * 0087 FIX: Fixed possible locking issue when using datasource program with long output...
+    * 0313 FIX: Avoid duplicate reading of configuration file on --create-rrd...
 
     Checks & Agents:
     * 0306 esx_vsphere_counters: added missing ramdisk levels sfcbtickets

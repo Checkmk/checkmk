@@ -1,10 +1,10 @@
-title: Hyperview Server: State of VMs
+title: Hyper-V Server: State of VMs
 agents: windows
-catalog: app/hyperview
+catalog: os/services
 license: GPL
 distribution: check_mk
 description:
- This checks queries a hyperview server via an agent plugin (hyperv_vms.ps1) and
+ This checks queries a Microsoft Hyper-V Server via an agent plugin (hyperv_vms.ps1) and
  checks if the current state of the VM equals to the state detected during the inventory.
  The check produces an error after the state has changed.
 

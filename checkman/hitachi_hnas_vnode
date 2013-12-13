@@ -1,0 +1,22 @@
+title: Hitachi HNAS: Status of Virtual Nodes (VNodes or EVS) 
+agents: snmp
+catalog: hw/storage/hitachi
+license: GPL
+distribution: check_mk
+description:
+ Checks the status of Virtual Nodes (VNodes, also called EVS) in Hitachi 
+ HNAS storage systems.
+ It was tested against Hitachi HNAS Modell 3090 but probably will work
+ for other HNAS devices too - give it a try.
+
+ Returns {OK} if the reported state is "onLine". Returns {CRIT} on state 
+ "offLine" and {UNKN} on every other state.
+
+ The PNode it runs on and the admin status are displayed just for info.
+
+inventory:
+ Creates one check for every VNode in the HNAS system.
+
+item:
+ If SNMP returns a name of the VNode, the item is build up combining the ID
+ and this name. Otherwise it's just the ID.

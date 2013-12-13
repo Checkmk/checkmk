@@ -1,0 +1,20 @@
+title: Hitachi HNAS: Status of Physical Nodes (PNodes)
+agents: snmp
+catalog: hw/storage/hitachi
+license: GPL
+distribution: check_mk
+description:
+ Checks the status of Physical Nodes (PNodes) in Hitachi HNAS storage systems.
+ It was tested against Hitachi HNAS Modell 3090 but probably will work
+ for other HNAS devices too - give it a try.
+
+ Returns {OK} if the reported state is "up" or "online". Returns {WARN} on
+ state "notUp". Returns {CRIT} on state "dormant" or "dead" and
+ {UNKN} on every other state.
+
+inventory:
+ Creates one check for every PNode in the HNAS system.
+
+item:
+ If SNMP returns a name of the PNode, the item is build up combining the ID
+ and this name. Otherwise it's just the ID.

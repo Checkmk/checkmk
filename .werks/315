@@ -1,0 +1,8 @@
+Title: hitachi_hnas_quorumdevice, hitachi_hnas_pnode, hitachi_hnas_vnode: New checks for Hitachi HNAS devices
+Level: 2
+Component: checks
+Version: 1.2.3i8
+Date: 1386940068
+Class: feature
+
+

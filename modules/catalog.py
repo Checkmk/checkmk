@@ -29,6 +29,7 @@ manpage_catalog_titles = {
             "fujitsu"    : "Fujitsu",
             "mcdata"     : "McDATA",
             "netapp"     : "NetApp",
+            "hitachi"    : "Hitachi",
         "phone"       : "Telephony",
 
     "app"      : "Applications",

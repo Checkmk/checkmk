@@ -1,0 +1,17 @@
+title: Hitachi HNAS: Status of Quorum Device
+agents: snmp
+catalog: hw/storage/hitachi
+license: GPL
+distribution: check_mk
+description:
+ Checks the status of the quorum device in Hitachi HNAS storage systems.
+ It was tested against Hitachi HNAS Modell 3090 but probably will work
+ for other HNAS devices too - give it a try.
+
+ Returns {OK} if the reported state is 4 "configured". Returns {WARN} on
+ every other state according to BlueArc.3319.06 MIB and {UNKN} on every 
+ state not defined in the MIB.
+
+inventory:
+ Finds exactly one check on every HNAS having a Quorum Device.
+

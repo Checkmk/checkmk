@@ -1167,6 +1167,8 @@ class html:
 
     # remove all HTML-tags
     def strip_tags(self, ht):
+        if type(ht) not in [str, unicode]:
+            return ht
         while True:
             x = ht.find('<')
             if x == -1:

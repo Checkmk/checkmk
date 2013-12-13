@@ -510,7 +510,7 @@ def notify_via_email(context, write_into_spoolfile):
 
     notify_log(substitute_context(notification_log_template, context))
 
-    if "SERVICEDESC" in context:
+    if "SERVICEDESC" in context and context['SERVICEDESC'].strip():
         subject_t = notification_service_subject
         body_t = notification_service_body
     else:

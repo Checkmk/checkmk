@@ -1,0 +1,8 @@
+Title: raritan_pdu_inlet: new check to monitor inlet sensors of the Raritan PX-2000 PDUs
+Level: 1
+Component: checks
+Version: 1.2.3i8
+Date: 1386934866
+Class: feature
+
+

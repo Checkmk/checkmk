@@ -1,0 +1,22 @@
+title: Raritan PX-2000 family PDU inlet sensor state
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state of the inlet sensors of the Raritan PX-2000
+ family of intelligent rack power distribution units (iPDUs).
+ It has been tested with the model PX2-2180CR.
+ The check displays the measured value of the sensor and the state given
+ by the device.
+ Upper and lower warning and critical limits for the values can be configured 
+ in the device itself and the device state is determined accordingly.
+ The state of the check reflects the state of the device.
+
+item:
+ The ID Number of the inlet and the sensor type.
+
+inventory:
+ During inventory all available sensors of the inlet and their type are
+ determined. One check per sensor is created.
+

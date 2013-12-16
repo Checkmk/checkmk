@@ -53,7 +53,7 @@ if [ "$1" = -d ]
 then
     set -xv
 else
-    exec <&- 2>/dev/null
+    exec </dev/null 2>/dev/null
 fi
 
 # Runs a command asynchronous by use of a cache file
@@ -386,7 +386,7 @@ fi
 # Heartbeat monitoring
 # Different handling for heartbeat clusters with and without CRM
 # for the resource state
-if [ -S /var/run/heartbeat/crm/cib_ro -o -S /var/run/crm/cib_ro ]; then
+if [ -S /var/run/heartbeat/crm/cib_ro -o -S /var/run/crm/cib_ro ] || pgrep crmd > /dev/null 2>&1; then
   echo '<<<heartbeat_crm>>>'
   crm_mon -1 -r | grep -v ^$ | sed 's/^ //; /^\sResource Group:/,$ s/^\s//; s/^\s/_/g'
 fi

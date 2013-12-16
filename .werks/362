@@ -1,0 +1,12 @@
+Title: sms: now searching PATH for sendsms and smssend commands
+Level: 1
+Component: notifications
+Class: feature
+State: unknown
+Version: 1.2.5i1
+Date: 1387207352
+Targetversion: future
+
+In previous versions the notification plugin only used the sendsms
+command and was only searching in /usr/bin and /usr/local/bin.
+This is more flexible now.

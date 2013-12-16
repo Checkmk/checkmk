@@ -1,0 +1,10 @@
+Title: brocade_mlx*: Several cleanups, fixed bug in brocade_mlx_fan where only the first worst state was shown in output
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387210262
+Targetversion: future
+
+

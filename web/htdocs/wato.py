@@ -10908,7 +10908,7 @@ def mode_rulesets(phase):
     html.write('</div>')
 
 def create_new_rule_form(rulespec, hostname = None, item = None, varname = None):
-    html.begin_form("new_rule", add_transid = False, method = "POST")
+    html.begin_form("new_rule", add_transid = False)
 
     html.write('<table>')
     if hostname:

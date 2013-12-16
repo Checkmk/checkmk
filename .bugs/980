@@ -1,9 +1,9 @@
 Title: Hooks users-saved called duplicate when doing WATO sync
 Component: wato
-State: open
+Class: nastiness
+State: done
 Date: 2013-10-08 18:24:47
 Targetversion: 1.2.3i3
-Class: nastiness
 
 When doing a replicated WATO sync, then the hook users-saved is
 being called twice. We should elimiate that. Especially because
@@ -28,3 +28,6 @@ there might be involved lengthy LDAP syncs
 [Tue Oct 08 09:23:31 2013] [warn] [client 127.0.0.1] CALLING HOOK activate-changes
 [Tue Oct 08 09:23:32 2013] [warn] [client 127.0.0.1] FINISHED HOOK activate-changes
 [Tue Oct 08 09:23:32 2013] [warn] [client 127.0.0.1] RESTARTED
+
+2013-12-16 12:06:40: changed state open -> done
+Removed the snapshot-pushed hook.

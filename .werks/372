@@ -1,0 +1,12 @@
+Title: megaraid_ldisks: Ignoring adapters without configured logical disks
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387218819
+Targetversion: future
+
+Previous versions of this check did simply fail with an exception if an
+adapter has no logical disks configured. This change makes the inventory
+function simply ignore those adapters.

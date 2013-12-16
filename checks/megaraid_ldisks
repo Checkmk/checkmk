@@ -31,12 +31,14 @@
 # State: Optimal
 # Stripe Size: 64kB
 # Number Of Drives:2
+# Adapter 1: No Virtual Drive Configured.
 
 def inventory_megaraid_ldisks(info):
     inventory = []
     adapter = None
     for line in info:
-        if line[0] == "Adapter":
+        l = ' '.join(line)
+        if line[0] == "Adapter" and not l.endswith('No Virtual Drive Configured.'):
             adapter = int(line[1])
         elif line[0] == "Virtual" and (line[1] == "Disk:" or line[1] == "Drive:"):
             disk = int(line[2])

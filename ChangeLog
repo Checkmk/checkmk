@@ -60,6 +60,7 @@
 
     Livestatus:
     * 0335 FIX: Parse state of downtime notification log entries correctly...
+    * 0336 FIX: Limit the number of lines read from a single logfile...
 
 
 1.2.3i7:

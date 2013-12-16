@@ -1,0 +1,24 @@
+Title: Limit the number of lines read from a single logfile
+Level: 2
+Component: livestatus
+Version: 1.2.4b1
+Date: 1387197814
+Class: fix
+
+If for some reason you have very large history logfiles with millions of
+entries then Livestatus would consume large amounts of memory while parsing
+these when you access the <tt>log</tt> table. This could lead to a hanging
+system or even a crash.
+
+In order to avoid such situations the number of lines that are read from each
+individual file are now limited. The default limit is one million lines. You
+can change this default by defining the variable <tt>max_lines_per_logfile/tt>
+in your <tt>nagios.cfg</tt>. The following example sets the maximum number
+to 20 million lines:
+
+F+:
+broker_module=/some/path/livestatus.o max_lines_per_logfile=20000000 ...
+F-:
+
+When using the Check_MK Micro Core the configuration can be done
+via WATO global setting <i>Maximum number of parsed lines per log file</i>.

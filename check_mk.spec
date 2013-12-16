@@ -245,6 +245,7 @@ fi
 %define reload_xinetd if [ -x /etc/init.d/xinetd ] ; then if pgrep -x xinetd >/dev/null ; then echo "Reloading xinetd..." ; /etc/init.d/xinetd reload ; else echo "Starting xinetd..." ; /etc/init.d/xinetd start ; fi ; fi
 
 %define activate_xinetd if which chkconfig >/dev/null 2>&1 ; then echo "Activating startscript of xinetd" ; chkconfig xinetd on ; fi
+%define cleanup_rpmnew if [ -f /etc/xinetd.d/check_mk.rpmnew ] ; then rm /etc/xinetd.d/check_mk.rpmnew ; fi
 
 %pre agent
 if [ ! -x /etc/init.d/xinetd ] ; then
@@ -264,6 +265,7 @@ if [ ! -x /etc/init.d/xinetd ] ; then
 fi
 
 %post agent
+%cleanup_rpmnew
 %activate_xinetd
 %reload_xinetd
 
@@ -291,6 +293,7 @@ if [ ! -x /etc/init.d/xinetd ] ; then
 fi
 
 %post caching-agent
+%cleanup_rpmnew
 %activate_xinetd
 %reload_xinetd
 

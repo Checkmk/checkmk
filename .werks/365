@@ -1,0 +1,11 @@
+Title: RPMs: Cleaning up xinetd checkmk.rpmnew file after updating package
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387211537
+Targetversion: future
+
+These files should not be left there after an RPM update, because they could
+be loaded by xinetd. Removing these files now in %post section of RPM package.

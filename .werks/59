@@ -1,0 +1,14 @@
+Title: agent_vpshere: new option for supporting ESX 4.1
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387191682
+Targetversion: future
+
+The current fast implementation of the ESX vSphere agent for Check_MK does not
+yet support ESX versions older than 5.0.  The most promiment such version is
+ESX 4.1. There is now a new option <i>Support ESX 4.1 (using slower PySphere
+implementation)</i> in the WATO rule for the ESX agent that forces using the
+old pysphere-based agent.

@@ -47,12 +47,14 @@ def agent_vsphere_arguments(params, hostname, ipaddress):
     elif direct:
         args += ' --direct --hostname ' + quote_shell_string(hostname)
 
-    if params.get("skip_placeholder_vms"):
+    if params.get("skip_placeholder_vms", True):
         args += " -p"
 
     if "timeout" in params:
         args += ' --timeout %d' % params["timeout"]
 
+    if params.get("use_pysphere"):
+        args += ' --pysphere'
 
     args += " " + quote_shell_string(ipaddress)
     return args

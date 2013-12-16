@@ -45,80 +45,99 @@ register_rule(group,
 
 register_rule(group,
     "special_agents:vsphere",
-     Dictionary(
+     Transform(
+         valuespec = Dictionary(
+            elements = [
+                ( "user",
+                  TextAscii(
+                      title = _("vSphere User name"),
+                      allow_empty = False,
+                  )
+                ),
+                ( "secret",
+                  Password(
+                      title = _("vSphere secret"),
+                      allow_empty = False,
+                  )
+                ),
+                ( "tcp_port",
+                  Integer(
+                       title = _("TCP Port number"),
+                       help = _("Port number for connecting to vSphere"),
+                       default_value = 4711,
+                       minvalue = 1,
+                       maxvalue = 65535,
+                  )
+                ),
+                ( "timeout",
+                  Integer(
+                      title = _("Connection timeout"),
+                      help = _("The network timeout in seconds when communicating with vSphere or "
+                               "to the Check_MK Agent. The default is 60 seconds. Please note that this "
+                               "is not a total timeout but is applied to each individual network transation."),
+                      default_value = 60,
+                      minvalue = 1,
+                      unit = _("seconds"),
+                  )
+                ),
+                ( "infos",
+                  Transform(
+                      ListChoice(
+                         choices = [
+                             ( "hostsystem",     _("Host Systems") ),
+                             ( "virtualmachine", _("Virtual Machines") ),
+                             ( "datastore",      _("Datastores") ),
+                             ( "counters",       _("Performance Counters") ),
+                         ],
+                         default_value = [ "hostsystem", "virtualmachine", "datastore", "counters" ],
+                         allow_empty = False,
+                       ),
+                       forth = lambda v: [ x.replace("storage", "datastore") for x in v ],
+                       title = _("Retrieve information about..."),
+                    )
+                 ),
+                 ( "direct",
+                   DropdownChoice(
+                       title = _("Type of query"),
+                       choices = [
+                           ( True,    _("Queried host is a host system" ) ),
+                           ( False,   _("Queried host is the vCenter") ),
+                           ( "agent", _("Queried host is the vCenter with Check_MK Agent installed") ),
+                       ],
+                       default = True,
+                   )
+                ),
+                ( "skip_placeholder_vms",
+                   Checkbox(
+                       title = _("Placeholder VMs"),
+                       label = _("Do no monitor placeholder VMs"),
+                       default_value = True,
+                       true_label = _("ignore"),
+                       false_label = _("monitor"),
+                       help = _("Placeholder VMs are created by the Site Recovery Manager(SRM) and act as backup "
+                                "virtual machines in case the default vm is unable to start. This option tells the "
+                                "vsphere agent to exclude placeholder vms in its output."
+                       ))
+                ),
+                ( "use_pysphere",
+                  Checkbox(
+                    title = _("Compatibility mode"),
+                    label = _("Support ESX 4.1 (using slower PySphere implementation)"),
+                    true_label = _("Support 4.1"),
+                    false_label = _("fast"),
+                    help = _("The current very performant implementation of the ESX special agent "
+                             "does not support older ESX versions than 5.0. Please use the slow "
+                             "compatibility mode for those old hosts."),
+                  )
+                ),
+            ],
+            optional_keys = [ "tcp_port", "timeout", ],
+        ),
         title = _("Check state of VMWare ESX via vSphere"),
         help = _("This rule selects the vSphere agent instead of the normal Check_MK Agent "
                  "and allows monitoring of VMWare ESX via the vSphere API. You can configure "
                  "your connection settings here."),
-        elements = [
-            ( "user",
-              TextAscii(
-                  title = _("vSphere User name"),
-                  allow_empty = False,
-              )
-            ),
-            ( "secret",
-              Password(
-                  title = _("vSphere secret"),
-                  allow_empty = False,
-              )
-            ),
-            ( "tcp_port",
-              Integer(
-                   title = _("TCP Port number"),
-                   help = _("Port number for connecting to vSphere"),
-                   default_value = 4711,
-                   minvalue = 1,
-                   maxvalue = 65535,
-              )
-            ),
-            ( "timeout",
-              Integer(
-                  title = _("Connection timeout"),
-                  help = _("The network timeout in seconds when communicating with vSphere or "
-                           "to the Check_MK Agent. The default is 60 seconds. Please note that this "
-                           "is not a total timeout but is applied to each individual network transation."),
-                  default_value = 60,
-                  minvalue = 1,
-                  unit = _("seconds"),
-              )
-            ),
-            ( "infos",
-              Transform(
-                  ListChoice(
-                     choices = [
-                         ( "hostsystem",     _("Host Systems") ),
-                         ( "virtualmachine", _("Virtual Machines") ),
-                         ( "datastore",      _("Datastores") ),
-                         ( "counters",       _("Performance Counters") ),
-                     ],
-                     default_value = [ "hostsystem", "virtualmachine" ],
-                     allow_empty = False,
-                   ),
-                   forth = lambda v: [ x.replace("storage", "datastore") for x in v ],
-                   title = _("Retrieve information about..."),
-                )
-             ),
-             ( "skip_placeholder_vms",
-               FixedValue(True, title = _("Skip placeholder VMs"), totext="",
-                          help = _("Placeholder VMs are created by the Site Recovery Manager(SRM) and act as backup "
-                                   "virtual machines in case the default vm is unable to start. This option tells the "
-                                   "vsphere agent to exclude placeholder vms in its output."
-                          ))
-             ),
-             ( "direct",
-               DropdownChoice(
-                   title = _("Type of query"),
-                   choices = [
-                       ( True,    _("Queried host is a host system" ) ),
-                       ( False,   _("Queried host is the vCenter") ),
-                       ( "agent", _("Queried host is the vCenter with Check_MK Agent installed") ),
-                   ],
-                   default = True,
-               )
-            )
-        ],
-        optional_keys = [ "tcp_port", "timeout", "skip_placeholder_vms" ],
+        forth = lambda a: dict(a.items() + [("skip_placeholder_vms", True), ("use_pysphere" , False)])
     ),
     match = 'first')
 

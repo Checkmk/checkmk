@@ -180,18 +180,18 @@ def get_languages():
     # Add the hard coded english language to the language list
     # It must be choosable even if the administrator changed the default
     # language to a custom value
-    languages = [ (None, _('English')) ]
+    languages = set([ (None, _('English')) ])
 
     for lang_dir in get_language_dirs():
         try:
-            languages += [ (val, get_language_alias(val))
-                for val in os.listdir(lang_dir) if not '.' in val ]
+            languages.update([ (val, get_language_alias(val))
+                for val in os.listdir(lang_dir) if not '.' in val ])
         except OSError:
             # Catch "OSError: [Errno 2] No such file or
             # directory:" when directory not exists
             pass
 
-    return languages
+    return list(languages)
 
 def load_language(lang):
     # Make current language globally known to all of our modules

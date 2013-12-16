@@ -1,0 +1,42 @@
+# bash completion for check_mk
+# 
+# This is a pretty basic version. If anyone out there got time to
+# really realize a completion for all check_mk options we would
+# really integrate this into the default installation.
+
+have check_mk &&
+_check_mk() {
+    # declaration des variables locales
+    local cur prev hostnames
+
+    COMPREPLY=()
+    _get_comp_words_by_ref cur prev
+
+    case $prev in
+        -I|-II|-d|--check-inventory)
+        hostnames=$(check_mk --list-hosts)
+        COMPREPLY=( $(compgen -W "${hostnames}" -- ${cur}) )
+        return 0
+        ;;
+    esac
+
+ # complete using basic options
+    COMPREPLY=( $( compgen -W '-I -II -u --cleanup-autochecks -N -C --compile \
+        -U --update -O --reload -R --restart -D --dump -d --check-inventory --list-hosts \
+        --list-tag -L --list-checks -M --man --paths -X --check-config --backup --restore \
+        --flush --donate --snmpwalk --snmpget --scan-parents -P --package --localize -V \
+        --version -h --help -v -p -n -c --cache --no-cache --no-tcp --fake-dns --usewalk \
+        --debug --procs --checks' -- "$cur" ) )
+
+    return 0
+
+} &&
+complete -F _check_mk check_mk
+
+# Local variables:
+# mode: shell-script
+# sh-basic-offset: 4
+# sh-indent-comment: t
+# indent-tabs-mode: nil
+# End:
+# ex: ts=4 sw=4 et filetype=sh

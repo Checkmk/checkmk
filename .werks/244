@@ -1,0 +1,14 @@
+Title: New features for WATO page Backup & Restore
+Level: 2
+Component: wato
+Version: 1.2.4b1
+Date: 1387198415
+Class: feature
+
+The WATO "Backup & Restore" feature now allows the user to select what kind of data
+is included in the snapshot. In previous versions only the Check_MK configuration
+and the local authentication data where included. In the new version logs, performance data and various
+other historic data can also be included.
+It is also possible to set an optional comment in the created snapshot.
+
+For further information please refer to the official documentation.

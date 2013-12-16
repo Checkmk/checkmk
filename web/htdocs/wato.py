@@ -3904,7 +3904,7 @@ def mode_changelog(phase):
 
         elif transaction_already_checked or html.check_transaction():
             config.need_permission("wato.activate")
-            create_snapshot()
+            create_snapshot({"comment": "Activated changes by %s" % config.user_id})
 
             # Do nothing here, but let site status table be shown in a mode
             # were in each site that is not up-to-date an asynchronus AJAX
@@ -5504,14 +5504,136 @@ def effective_attributes(host, folder):
 #   | Mode for backup/restore/creation of snapshots                        |
 #   '----------------------------------------------------------------------'
 
+# Returns status information for snapshots or snapshots in progress
+def get_snapshot_status(name):
+    status = {}
+    try:
+        status["name"] = "%s %s" % (name[14:24], name[25:33].replace("-",":"))
+        path_status = "%s/workdir/%s.status" % (snapshot_dir, name)
+        path_pid    = "%s/workdir/%s.pid"    % (snapshot_dir, name)
+        # Check if this process is still running
+        if os.path.exists(path_pid):
+            if os.path.exists(path_pid) and not os.path.exists("/proc/%s" % open(path_pid).read()):
+                status["progress_status"] = _("ERROR: Snapshot progress no longer running")
+                status["broken"] = True
+            else:
+                status["progress_status"] = _("Snapshot build currently in progress")
+
+        if os.path.exists(path_status):
+            tokens = file(path_status, "r").read().split("\n",1)
+            status["comment"] = tokens[0].split(":",1)[1]
+            file_info = {}
+            files = tokens[1].splitlines()
+            for filename in files:
+                name, info = filename.split(":",1)
+                file_info[name] = { "size" :info }
+            status["files"] = file_info
+        else: # tarfile is finished, read comment
+            # Legacy snapshots
+            if name.endswith(".tar.gz"):
+                status["type"] = "legacy"
+                status["type_text"] = _("Snapshot created with old version")
+                status["comment"]   = _("Snapshot created with old version")
+                try:
+                    tarfile.open(snapshot_dir + name, "r:gz").getmembers()
+                except:
+                    raise
+            # New snapshots
+            else:
+                status["files"] = multitar.list_tar_content(snapshot_dir + name)
+                if "comment" in status["files"]:
+                    status["comment"] = multitar.get_file_content(snapshot_dir + name, "comment")
+                if "created_by" in status["files"]:
+                    status["created_by"] = multitar.get_file_content(snapshot_dir + name, "created_by")
+                if "type" in status["files"]:
+                    status["type"] = multitar.get_file_content(snapshot_dir + name, "type")
+                    status["type_text"] = status["type"] == "automatic" and _("Automatically created") or _("Manually created")
+                else:
+                    status["type"] = "legacy"
+                    status["type_text"] = _("Snapshot created with old version")
+                    status["comment"]   = _("Snapshot created with old version")
+                try:
+                    tarfile.open(snapshot_dir + name, "r").getmembers()
+                except:
+                    raise
+    except:
+        status["broken"] = True
+        pass
+    return status
+
+def mode_snapshot_detail(phase):
+    snapshot_name = html.var("_snapshot_name")
+    status = get_snapshot_status(snapshot_name)
+    if phase == "title":
+        return _("Snapshot details of %s")  % status["name"]
+    elif phase == "buttons":
+        home_button()
+        html.context_button(_("Back"), make_link([("mode", "snapshot")]), "back")
+        return
+    elif phase == "action":
+        return
+
+    if status.get("info"):
+        html.write("<table><tr><th>%s</th><th>%s</th></tr>" % (_("Content"), _("Status")))
+        for token in status["info"].split("\n"):
+            pair = token.split(":",1)
+            if len(pair) == 2:
+                html.write("<tr><td>%s</td><td>%s</td></tr>" % (backup_domains.get(pair[0],{}).get("title") or pair[0], pair[1]))
+        html.write("</table>")
+    else:
+        other_content = []
+
+        html.begin_form("snapshot_details", method="POST")
+        forms.header(_("Snapshot %s") % snapshot_name)
+
+        for entry in [ ("comment", _("Comment")), ("created_by", _("Created by")) ]:
+            if status.get(entry[0]):
+                forms.section(entry[1])
+                html.write(status.get(entry[0]))
+
+        forms.section(_("Content"))
+        files = multitar.list_tar_content(snapshot_dir + snapshot_name)
+        if not files:
+            html.write(_("Snapshot is empty!"))
+        else:
+            html.write("<table>")
+            html.write("<tr><th align='left'>%s</th><th align='right'>%s</th></tr>" % (_("Description"), _("Size")))
+            domain_keys = files.keys()
+            domain_keys.sort()
+            for key in domain_keys:
+                if key in ["comment", "type", "created_by"]:
+                    continue
+                try:
+                    domain_id = key[:-7]
+                    if domain_id in backup_domains:
+                        html.write("<tr><td>%s</td>"  % backup_domains.get(domain_id)["title"])
+                        html.write("<td align='right'>%s</td></tr>" % files[key]["size"])
+                    else:
+                        other_content.append(key)
+                except:
+                    other_content.append(key)
+            if other_content:
+                html.write("<tr><td>%s</td></tr>" % _("Other content"))
+                for key in other_content:
+                    html.write("<tr><td>%s</td>"  % key)
+                    html.write("<td align='right'>%s</td></tr>" % files[key]["size"])
+            html.write("</table>")
+        forms.end()
+    delete_url = make_action_link([("mode", "snapshot"), ("_delete_file", snapshot_name)])
+    html.buttonlink(delete_url, _("Delete Snapshot"))
+    download_url = make_action_link([("mode", "snapshot"), ("_download_file", snapshot_name)])
+    html.buttonlink(download_url, _("Download Snapshot"))
+    if not status.get("progress_status") and not status.get("broken"):
+        restore_url = make_action_link([("mode", "snapshot"), ("_restore_snapshot", snapshot_name)])
+        html.buttonlink(restore_url, _("Restore Snapshot"))
+
+
 def mode_snapshot(phase):
     if phase == "title":
         return _("Backup & Restore")
     elif phase == "buttons":
         home_button()
         changelog_button()
-        html.context_button(_("Create Snapshot"),
-                make_action_link([("mode", "snapshot"),("_create_snapshot","Yes")]), "snapshot")
         html.context_button(_("Factory Reset"),
                 make_action_link([("mode", "snapshot"),("_factory_reset","Yes")]), "factoryreset")
         return
@@ -5521,6 +5643,31 @@ def mode_snapshot(phase):
         for f in os.listdir(snapshot_dir):
             snapshots.append(f)
     snapshots.sort(reverse=True)
+
+    # Generate valuespec for snapshot options
+    # Sort domains by group
+    domains_grouped = {}
+    for domainname, data in backup_domains.items():
+        domains_grouped.setdefault(data.get("group","Other"), {}).update({domainname: data})
+    backup_groups = []
+    for idx, key in enumerate(sorted(domains_grouped.keys())):
+        value = domains_grouped[key]
+        choices = []
+        default_values = []
+        for entry in sorted(value.keys()):
+            choices.append( (entry,value[entry]["title"]) )
+            if value[entry].get("default"):
+                default_values.append(entry) 
+        choices.sort(key = lambda x: x[1])
+        backup_groups.append( ("group_%d" % idx, ListChoice(title = key, choices = choices, default_value = default_values) ) )
+
+    # Optional snapshot comment
+    backup_groups.append(("comment", TextUnicode(title = _("Comment"), size=80)))
+    snapshot_vs = Dictionary(
+        elements =  backup_groups,
+        optional_keys = []
+    )
+
 
     if phase == "action":
         if html.has_var("_download_file"):
@@ -5544,8 +5691,27 @@ def mode_snapshot(phase):
         # create snapshot
         elif html.has_var("_create_snapshot"):
             if html.check_transaction():
-                filename = create_snapshot()
-                return None, _("Created snapshot <tt>%s</tt>.") % filename
+                # create snapshot
+                store_domains = {}
+
+                snapshot_options = snapshot_vs.from_html_vars("snapshot_options")
+                snapshot_vs.validate_value(snapshot_options, "snapshot_options")
+
+                for key, value in snapshot_options.items():
+                    if key.startswith("group_"):
+                        for entry in value:
+                            store_domains[entry] = backup_domains[entry]
+
+                snapshot_data = {}
+                snapshot_name = "wato-snapshot-%s.tar" %  \
+                                time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(time.time()))
+                snapshot_data["comment"]       = snapshot_options.get("comment") or "Snapshot created by %s" % config.user_id
+                snapshot_data["type"]          = "manual"
+                snapshot_data["snapshot_name"] = snapshot_name
+                snapshot_data["domains"]       = store_domains
+                snapshot_data["wait"]          = False
+
+                return None, _("Created snapshot <tt>%s</tt>.") % create_snapshot(snapshot_data)
 
         # upload snapshot
         elif html.uploads.get("_upload_file"):
@@ -5553,7 +5719,16 @@ def mode_snapshot(phase):
             if uploaded_file[0] == "":
                 raise MKUserError(None, _("Please select a file for upload."))
             if html.check_transaction():
-                multitar.extract_from_buffer(uploaded_file[2], backup_paths)
+                # Legacy snapshot support
+                stream = StringIO.StringIO()
+                stream.write(uploaded_file[2])
+                stream.seek(0)
+                tar = tarfile.open(None, "r", stream)
+                if "comment" in map(lambda x: x.name, tar.getmembers()): # new version
+                    multitar.extract_from_buffer(uploaded_file[2], backup_domains)
+                else:
+                    multitar.extract_from_buffer(uploaded_file[2], backup_paths)
+
                 log_pending(SYNCRESTART, None, "snapshot-restored",
                     _("Restored from uploaded file"))
                 return None, _("Successfully restored configuration.")
@@ -5571,6 +5746,11 @@ def mode_snapshot(phase):
                             )
             if c:
                 os.remove(os.path.join(snapshot_dir, delete_file))
+                # Remove any files in workdir
+                for ext in [ ".pid", ".status", ".subtar", ".work" ]:
+                    tmp_name = "%s/workdir/%s%s" % (snapshot_dir, os.path.basename(delete_file), ext)
+                    if os.path.exists(tmp_name):
+                        os.remove(tmp_name)
                 return None, _("Snapshot deleted.")
             elif c == False: # not yet confirmed
                 return ""
@@ -5587,7 +5767,10 @@ def mode_snapshot(phase):
                                 html.attrencode(snapshot_file)
                             )
             if c:
-                multitar.extract_from_file(snapshot_dir + snapshot_file, backup_paths)
+                if snapshot_file.endswith(".tar.gz"): # Old snapshot type
+                    multitar.extract_from_file(snapshot_dir + snapshot_file, backup_paths)
+                else:
+                    multitar.extract_from_file(snapshot_dir + snapshot_file, backup_domains)
                 log_pending(SYNCRESTART, None, "snapshot-restored",
                      _("Restored snapshot %s") % html.attrencode(snapshot_file))
                 return None, _("Successfully restored snapshot.")
@@ -5609,53 +5792,101 @@ def mode_snapshot(phase):
         return None
 
     else:
-        table.begin("snapshots", _("Snapshots"), empty_text=_("There are no snapshots available."))
-        for name in snapshots:
-            table.row()
-            # Buttons
-            table.cell(_("Actions"), css="buttons")
-            html.icon_button(make_action_link(
-               [("mode","snapshot"),("_restore_snapshot", name)]), _("Restore"), "restore")
-            html.icon_button(make_action_link(
-               [("mode","snapshot"),("_delete_file", name)]), _("Delete"), "delete")
-            # Snapshot name
-            table.cell(_("Filename"), '<a href="%s">%s</a>' %
-                       (make_action_link([("mode","snapshot"),("_download_file", name)]), name))
-            # Age and Size
-            st = os.stat(snapshot_dir + name)
-            age = time.time() - st.st_mtime
-            table.cell(_("Age"), html.age_text(age), css="number")
-            table.cell(_("Size"), "%d" % st.st_size, css="number"),
-        table.end()
+        snapshots = []
+        if os.path.exists(snapshot_dir):
+            for f in os.listdir(snapshot_dir):
+                if os.path.isfile(snapshot_dir + f):
+                    snapshots.append(f)
+        snapshots.sort(reverse=True)
+
+        # Render snapshot domain options
+        html.begin_form("create_snapshot", method="POST")
+        forms.header(_("Create snapshot"))
+        forms.section(_("Elements to save"))
+        forms.input(snapshot_vs, "snapshot_options", {})
+        html.write("<br><br>")
+        html.hidden_fields()
+        forms.end()
+        html.button("_create_snapshot", _("Create snapshot"), "submit")
+        html.end_form()
+        html.write("<br>")
 
         html.write("<h3>" + _("Restore from uploaded file") + "</h3>")
         html.begin_form("upload_form", method = "POST")
         html.upload_file("_upload_file")
         html.button("upload_button", _("Restore from file"), "submit")
+
+        table.begin("snapshots", _("Snapshots"), empty_text=_("There are no snapshots available."))
+        for name in snapshots:
+            status = get_snapshot_status(name)
+            table.row()
+            # Snapshot name
+            table.cell(_("From"), '<a href="%s">%s</a>' %
+                       (make_link([("mode","snapshot_detail"),("_snapshot_name", name)]), status["name"]))
+
+            # Comment
+            table.cell(_("Comment"), status.get("comment",""))
+
+            # Age and Size
+            st = os.stat(snapshot_dir + name)
+            age = time.time() - st.st_mtime
+            table.cell(_("Size"), "%d" % st.st_size, css="number"),
+
+            # Status icons
+            table.cell(_("Status"))
+            if status.get("broken"):
+                html.icon( _("This snapshot is broken"), "validation_error")
+            elif status.get("progress_status"):
+                html.icon( status.get("progress_status"), "timeperiods")
+        table.end()
+
         html.hidden_fields()
         html.end_form()
 
+def get_backup_domains(modes, extra_domains = {}):
+    domains = {}
+    for mode in modes:
+        for domain, value in backup_domains.items():
+            if mode in value:
+                domains.update({domain: value})
+    domains.update(extra_domains)
+    return domains
 
-def create_snapshot():
-    make_nagios_directory(snapshot_dir)
-
-    snapshot_name = "wato-snapshot-%s.tar.gz" %  \
-                    time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(time.time()))
-    multitar.create(snapshot_dir + snapshot_name, backup_paths)
-
-    log_audit(None, "snapshot-created", _("Created snapshot %s") % snapshot_name)
-
-    # Maintenance, remove old snapshots
+def do_snapshot_maintenance():
     snapshots = []
     for f in os.listdir(snapshot_dir):
-        if f.startswith('wato-snapshot-') and f.endswith('.tar.gz'):
-            snapshots.append(f)
+        if f.startswith('wato-snapshot-'):
+            status = get_snapshot_status(f)
+            # only remove automatic and legacy snapshots
+            if status.get("type") in [ "automatic", "legacy" ]:
+                snapshots.append(f)
+
     snapshots.sort(reverse=True)
     while len(snapshots) > config.wato_max_snapshots:
         log_audit(None, "snapshot-removed", _("Removed snapshot %s") % snapshots[-1])
         os.remove(snapshot_dir + snapshots.pop())
 
+
+def create_snapshot(data = {}):
+    make_nagios_directory(snapshot_dir)
+
+    snapshot_name = data.get("name") or "wato-snapshot-%s.tar" %  \
+                    time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(time.time()))
+    snapshot_data = {}
+    snapshot_data["comment"]       = data.get("comment", _("Snapshot created by %s") % config.user_id)
+    snapshot_data["created_by"]    = data.get("created_by", config.user_id)
+    snapshot_data["type"]          = data.get("type", "automatic")
+    snapshot_data["snapshot_name"] = snapshot_name
+    snapshot_data["domains"]       = data.get("domains", get_backup_domains(["default"]))
+    snapshot_data["wait"]          = data.get("wait", False)
+
+    check_mk_local_automation("create-snapshot", [], snapshot_data)
+
+    log_audit(None, "snapshot-created", _("Created snapshot %s") % snapshot_name)
+    do_snapshot_maintenance()
+
     return snapshot_name
+
 
 def factory_reset():
     # Darn. What makes things complicated here is that we need to conserve htpasswd,
@@ -14492,6 +14723,7 @@ modes = {
    "auditlog"           : (["auditlog"], mode_auditlog),
    "snapshot"           : (["snapshots"], mode_snapshot),
    "globalvars"         : (["global"], mode_globalvars),
+   "snapshot_detail"    : (["snapshots"], mode_snapshot_detail),
    "edit_configvar"     : (["global"], mode_edit_configvar),
    "ldap_config"        : (["global"], mode_ldap_config),
    "ruleeditor"         : (["rulesets"], mode_ruleeditor),

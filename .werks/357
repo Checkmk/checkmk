@@ -1,0 +1,11 @@
+Title: megaraid_bbu: Fixed expected state checking
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387198439
+Targetversion: future
+
+The check was unable to check the hard coded expected states. This
+made the check never raise expected alerts.

@@ -90,10 +90,15 @@ def check_megaraid_bbu(item, _no_params, info):
         # if your bbu chipset fails and you still get a partial response this will lead
         # to a false result. but people asked for it :>
         try:
-            if controller[varname] != refvalue:
-    	        broken.append("%s is %s, but should be %s(%s)" % (varname, value, refvalue, "!" * refstate))
+            value = controller[varname]
+            if value != refvalue:
+                text = '%s is %s' % (varname, value)
+                if refstate:
+                    text += ' (%s)' % ("!" * refstate)
+                text += ' (Expected: %s)' % refvalue
+    	        broken.append(text)
     	        state = max(state, refstate)
-        except:
+        except KeyError:
             pass
 
     if controller.get("Learn Cycle Active") == "Yes":
@@ -103,11 +108,6 @@ def check_megaraid_bbu(item, _no_params, info):
 	return (state, ", ".join(broken) + charge)
     else:
 	return (0, "all states as expected" + charge)
-
-    return (3, "Check not implemented")
-
-
-
 
 check_info["megaraid_bbu"] = {
     'check_function':          check_megaraid_bbu,

@@ -1,9 +1,9 @@
 Title: windows_agent: loadlibrary call with *.rll fails
 Component: checks
-State: open
+Class: bug
+State: wontfix
 Date: 2013-09-24 10:06:29
 Targetversion: 1.2.3i6
-Class: bug
 
 0.078000      - record 219666: process_eventlog_entries bytesread 448, event->Length 448
 0.078000      - record 219667: DLLs to load: C:\Program Files\Microsoft SQL Server\MSSQL10_50.MSSQLSERVER\MSSQL\Binn\Resources\1031\sqlevn70.rll
@@ -13,3 +13,10 @@ rll files are Windows Resource Libraries ( used for localisation )
 
 The loadlibrary call in the check_mk_agent fails when loading the sqlevn70.rll
 file, leading to an incorrect localized (not localized at all...) message
+
+2013-12-16 10:49:37: changed state open -> wontfix
+There is no documentation in the internet of how to correctly
+load *.rll files. It could even be the case the that file should
+be loaded by the DLL itself. Since this seems to be hard to
+fix and the error message seems to be present at least unlocalized
+or incomplete, we close this bug.

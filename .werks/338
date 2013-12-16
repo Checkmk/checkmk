@@ -1,0 +1,13 @@
+Title: Introduce time limit on availability queries
+Level: 2
+Component: reporting
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387203559
+Targetversion: future
+
+The availability view now imposes an upper limit on the execution of the
+underlying livestatus query. The default is 30 seconds. This can be configured
+in the reporting options. This limit keeps the system usable in situations
+where a query over a long time range would need a very long time to execute.

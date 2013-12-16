@@ -391,6 +391,17 @@ avoption_entries = [
         label = _("Show timeline of each object directly in table")),
   ),
 
+  # Timelimit
+  ( "timelimit",
+    "single",
+    Age(
+        title = _("Query Time Limit"),
+        default_value = 30,
+        unit = _("sec"),
+        help = _("Limit the execution time of the query, in order to "
+                 "avoid a hanging system."),
+    ),
+   )
 ]
 
 
@@ -431,6 +442,7 @@ def render_availability_options():
         "av_levels"         : None,
         "av_mode"           : False,
         "grouping"          : None,
+        "timelimit"         : 30,
     }
 
     # Users of older versions might not have all keys set. The following
@@ -573,6 +585,7 @@ def get_availability_data(datasource, filterheaders, range, only_sites, limit, s
         av_filter += "Filter: service_description =\n"
 
     query = "GET statehist\n" + av_filter
+    query += "Timelimit: %d\n" % avoptions["timelimit"]
 
     # Add Columns needed for object identification
     columns = [ "host_name", "service_description" ]

@@ -8264,11 +8264,12 @@ def global_replication_state():
         return "clean"
 
 def find_host_sites(site_ids, folder, hostname):
-    host = folder[".hosts"][hostname]
-    if "site" in host and host["site"]:
-        site_ids.add(host["site"])
-    elif folder[".siteid"]:
-        site_ids.add(folder[".siteid"])
+    if hostname in folder[".hosts"]:
+        host = folder[".hosts"][hostname]
+        if "site" in host and host["site"]:
+            site_ids.add(host["site"])
+        elif folder[".siteid"]:
+            site_ids.add(folder[".siteid"])
 
 # Scan recursively for references to sites
 # in folders and hosts

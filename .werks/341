@@ -1,0 +1,10 @@
+Title: Avoid rare exception in WATO when deleting a host
+Level: 1
+Component: wato
+Version: 1.2.4b1
+Date: 1387211472
+Class: fix
+
+When deleting a host in an environment with distributed WATO under
+circumstances that are unclear an exception could happen in a function called
+<tt>find_host_sites</tt>. This exception is now handled correctly.

@@ -2407,7 +2407,7 @@ def prepare_paint(p, row):
     # Tooltip
     if content != '' and tooltip:
         cla, txt = multisite_painters[tooltip]["paint"](row)
-        tooltiptext = html.strip_tags(txt)
+        tooltiptext = html.utf8_to_entities(html.strip_tags(txt))
         content = '<span title="%s">%s</span>' % (tooltiptext, content)
     return tdclass, content
 

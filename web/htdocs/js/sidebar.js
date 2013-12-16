@@ -26,7 +26,6 @@ var browser         = navigator.userAgent.toLowerCase();
 var weAreIEF__k     = ((browser.indexOf("msie") != -1) && (browser.indexOf("opera") == -1));
 var weAreOpera      = browser.indexOf("opera") != -1;
 var weAreFirefox    = browser.indexOf("firefox") != -1 || browser.indexOf("namoroka") != -1;
-var g_orig_title    = null;
 var g_content_loc   = null;
 
 var sidebar_folded = false;
@@ -363,8 +362,8 @@ function contentFrameAccessible() {
 
 function update_content_location() {
     // init the original frameset title
-    if (g_orig_title == null) {
-        g_orig_title = window.parent.document.title;
+    if (typeof(window.parent.orig_title) == 'undefined') {
+        window.parent.orig_title = window.parent.document.title;
     }
 
     var content_frame = window.parent.frames[1];
@@ -372,9 +371,9 @@ function update_content_location() {
     // Change the title to add the right frame title to reflect the
     // title of the content URL in the framesets title (window title or tab title)
     if (content_frame.document.title != '') {
-        var page_title = g_orig_title + ' - ' + content_frame.document.title;
+        var page_title = window.parent.orig_title + ' - ' + content_frame.document.title;
     } else {
-        var page_title = g_orig_title;
+        var page_title = window.parent.orig_title;
     }
     window.parent.document.title = page_title;
 

@@ -138,7 +138,9 @@ def heartbeat_crm_parse_resources(info):
     resource = ''
     mode = 'single'
     for line in info:
-        if not blockStart and ' '.join(line) == 'Full list of resources:':
+        if ' '.join(line) == 'Failed actions:':
+            blockStart = False
+        elif not blockStart and ' '.join(line) == 'Full list of resources:':
             blockStart = True
         elif blockStart:
             if ' '.join(line[0:2]) == 'Resource Group:':

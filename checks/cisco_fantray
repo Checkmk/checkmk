@@ -27,7 +27,7 @@
 cisco_fan_states = ('', 'unknown', 'up', 'down', 'warning')
 
 def inventory_cisco_fantray(info):
-    if info[0]:
+    if info and info[0]:
         return [ (line[0], None) for line in info ]
 
 def check_cisco_fantray(item, params, info):

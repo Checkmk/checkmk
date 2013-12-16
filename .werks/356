@@ -1,0 +1,13 @@
+Title: Fixed exception caused by utf8 chars in tooltip text
+Level: 1
+Component: multisite
+Version: 1.2.4b1
+Date: 1387197640
+Class: fix
+
+When displaying a view with a column showing utf8 chars in
+the tooltip text, this resulted in an exception:
+
+<tt>UnicodeDecodeError: 'ascii' codec can't decode byte 0xc3 in position 19: ordinal not in range(128)</tt>
+
+This has been fixed now.

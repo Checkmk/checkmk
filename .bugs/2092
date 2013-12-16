@@ -1,10 +1,13 @@
 Title: Impossible to change availability time range when too long to process the page
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2013-11-28 11:58:45
 Targetversion: 1.2.3i6
-Class: bug
 
 It is impossible to fix time ranges set by the user in the GUI, when the currently choosen
 range results in a never loading availability page, since the settings can only be changed 
 that page that never loads.
+
+2013-12-16 15:23:48: changed state open -> done
+By imposing a time limit on the query.

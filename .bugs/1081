@@ -1,0 +1,13 @@
+Title: Own host tag groups without topics are sorted in own group
+Component: wato
+Class: bug
+State: done
+Date: 2013-12-16 11:33:59
+Targetversion: 1.2.4
+
+Create a tag group. Do not set a topic. That tag group will be 
+displayed in an own folder with the title "Host Tags". That folder
+is thus duplicate.
+
+2013-12-16 12:36:31: changed state open -> done
+This occured in the rule editor. has been fixed now

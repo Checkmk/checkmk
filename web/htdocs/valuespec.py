@@ -598,11 +598,21 @@ class Filename(TextAscii):
             self._default_path = kwargs["default"]
         else:
             self._default_path = "/tmp/foo"
+        if "trans_func" in kwargs:
+            self._trans_func = kwargs["trans_func"]
+        else:
+            self._trans_func = None
 
     def canonical_value(self):
         return self._default_path
 
     def validate_value(self, value, varprefix):
+        # The transformation function only changes the value for validation. This is
+        # usually a function which is later also used within the code which uses
+        # this variable to e.g. replace macros
+        if self._trans_func:
+            value = self._trans_func(value)
+
         if len(value) == 0:
             raise MKUserError(varprefix, _("Please enter a filename."))
 

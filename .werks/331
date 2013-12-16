@@ -1,0 +1,9 @@
+Title: LDAP diagnostic LOG can now have the $OMD_SITE$ macro configured via WATO
+Level: 1
+Component: wato
+Version: 1.2.4b1
+Date: 1387192477
+Class: fix
+
+The macro was configurable via plain config files for a long time, but it
+could not be configured via WATO. This is now possible.

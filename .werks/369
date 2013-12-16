@@ -1,0 +1,10 @@
+Title: cups_queues: Fixed bug checking the last queue reported by agent
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387215298
+Targetversion: future
+
+An exception occured when checking the last queue reported by the agent.

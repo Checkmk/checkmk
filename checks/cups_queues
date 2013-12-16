@@ -67,7 +67,7 @@ def check_cups_queues(item, params, info):
             status = ' '.join(line[2:4])
 
             # If the next line does not start with "printer" append it as additional output
-            if not info[num+1][0] in [ 'printer', '---' ]:
+            if len(info) > num+1 and not info[num+1][0] in [ 'printer', '---' ]:
                 statusoutput += " (%s)" % " ".join(info[num+1])
 
             if status == "disabled since":

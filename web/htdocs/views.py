@@ -261,7 +261,9 @@ def load_views():
                 for name, view in views.items():
                     view["owner"] = user
                     view["name"] = name
-                    html.multisite_views[(user, name)] = view
+
+                    if view['datasource'] in multisite_datasources:
+                        html.multisite_views[(user, name)] = view
         except SyntaxError, e:
             raise MKGeneralException(_("Cannot load views from %s/views.mk: %s") % (dirpath, e))
 

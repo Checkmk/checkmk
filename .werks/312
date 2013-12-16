@@ -1,0 +1,11 @@
+Title: Hiding views related to not existing datasources, like the EC now
+Level: 1
+Component: multisite
+Version: 1.2.3i8
+Date: 1387180830
+Class: fix
+
+Customized views loading information from datasources which do not exist
+anymore in multisite are now skipped during loading. In previous version,
+these views resulted in exceptions / error messages in the GUI.
+

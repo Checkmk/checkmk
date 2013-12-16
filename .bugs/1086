@@ -1,9 +1,9 @@
 Title: Exception in views when EC views are missing
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2013-12-03 10:12:05
 Targetversion: future
-Class: bug
 
 When you enabled the Event Console, modify an EC view and afterwards
 disabled the EC again, then the views the modified views base on
@@ -11,3 +11,6 @@ are missing - and also the columns and filters. This leads to exceptions
 in other views.
 
 Solution: validate views, catch exceptions.
+
+2013-12-16 09:00:27: changed state open -> done
+Has just been fixed. Only views for existing datasources are loaded into multisite now.

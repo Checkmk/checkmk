@@ -9695,6 +9695,8 @@ def group_hosttags_by_topic(hosttags):
     tags = {}
     for entry in hosttags:
         topic, title = parse_hosttag_title(entry[1])
+        if not topic:
+            topic = _('Host tags')
         tags.setdefault(topic, [])
         tags[topic].append((entry[0], title) + entry[2:])
     return sorted(tags.items(), key = lambda x: x[0])
@@ -11863,7 +11865,7 @@ def render_condition_editor(tag_specs, varprefix=""):
     make_foldable = len(hosttags) > 1
     for topic, grouped_tags in hosttags:
         if make_foldable:
-            html.begin_foldable_container("topic", topic, True, "<b>%s</b>" % (topic or _('Host tags')))
+            html.begin_foldable_container("topic", topic, True, "<b>%s</b>" % (topic))
         html.write("<table class=\"hosttags\">")
 
         # Show main tags

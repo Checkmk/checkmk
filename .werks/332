@@ -1,0 +1,7 @@
+Title: Own host tag groups without topics resulted in two groups "Host tags" in the rule editor
+Level: 1
+Component: wato
+Version: 1.2.4b1
+Date: 1387193799
+Class: fix
+

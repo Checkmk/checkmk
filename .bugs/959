@@ -1,9 +1,9 @@
 Title: Livestatus/Nagios Core crashes, if nagios.log is too large
 Component: livestatus
-State: open
+Class: bug
+State: done
 Date: 2013-08-08 11:30:12
 Targetversion: 1.2.3i5
-Class: bug
 
 In Benutzung war: Nagios 3.3, Check_MK check_mk-1.2.2p2 sowie 
 mk-livestatus-1.2.2p2 auf einem Centos 5.5.
@@ -28,3 +28,6 @@ vorhandenen Caching-Optionen.
 Wichtig hierbei ist, dem Nutzer den Fehler darzustellen und eventuell
 auch einen Eintrag im Logfile zu erzeugen. Der Nutzer sollte dann darauf
 hingewiesen werden seine Logging-/Rotations-Einstellungen zu aendern.
+
+2013-12-16 13:43:27: changed state open -> done
+Max Zeilen konfigurierbar, default ist 1000000.

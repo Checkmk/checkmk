@@ -169,13 +169,6 @@ g_html_head_open = False
 wato_styles = [ "pages", "wato", "status" ]
 
 def page_handler():
-
-    # Distributed WATO: redirect to better peer, if possible. Only the
-    # Sites administration is available locally.
-    peer = preferred_peer()
-    if do_peer_redirect(peer):
-        return
-
     global g_html_head_open
     g_html_head_open = False
     global g_git_messages
@@ -280,13 +273,6 @@ def page_handler():
     html.header(modefunc("title"), stylesheets = wato_styles)
     html.write("<script type='text/javascript' src='js/wato.js'></script>")
     html.write("<div class=wato>\n")
-
-    if peer == False:
-        html.show_error("<b>%s</b><br>%s" % (
-            _("Primary system unreachable"),
-            _("The primary system is currently unreachable. Please make sure "
-              "that you synchronize changes back as soon as it is available "
-              "again.")))
 
     try:
         # Show contexts buttons
@@ -1790,7 +1776,7 @@ def mode_editfolder(phase, new):
             save_folder(new_folder)
             reload_folder(new_folder)
             call_hook_folder_created(new_folder)
-            # Note: sites are not marked as dirty. Only peers will be synced.
+            # Note: sites are not marked as dirty.
             # The creation of a folder without hosts has not effect on the
             # monitoring.
             log_pending(AFFECTED, new_folder, "new-folder", _("Created new folder %s") % title)
@@ -3998,12 +3984,11 @@ def mode_changelog(phase):
                    and "<a target=\"_blank\" href='%s'>%s</a>" % tuple([site.get("multisiteurl")]*2) or ""))
 
                 # Type
+                sitetype = ''
                 if is_local:
                     sitetype = _("local")
                 elif site["replication"] == "slave":
                     sitetype = _("Slave")
-                else:
-                    sitetype = _("Peer")
                 html.write("<td>%s</td>" % sitetype)
 
                 need_restart = srs.get("need_restart")
@@ -4152,9 +4137,7 @@ def log_audit(linkinfo, what, message):
 # RESTART     -> Restart and sync neccessary
 # SYNCRESTART -> Do sync and restart
 # AFFECTED    -> affected sites are already marked for sync+restart
-#                by mark_affected_sites_dirty(). But we need to
-#                mark our peers for sync, regardless of any affected
-#                sites. Peers need always to be up-to-date.
+#                by mark_affected_sites_dirty().
 # LOCALRESTART-> Called after inventory. In distributed mode, affected
 #                sites have already been marked for restart. Do nothing here.
 #                In non-distributed mode mark for restart
@@ -4181,8 +4164,6 @@ def log_pending(status, linkinfo, what, message):
             if site_is_local(siteid):
                 if status in [ RESTART, SYNCRESTART ]:
                     changes["need_restart"] = True
-            elif site.get("replication") == "peer" and status == AFFECTED:
-                changes["need_sync"] = True
             else:
                 if status in [ SYNC, SYNCRESTART ]:
                     changes["need_sync"] = True
@@ -7018,11 +6999,10 @@ def find_usages_of_timeperiod(tpname):
 #   | Mode for managing sites.                                             |
 #   '----------------------------------------------------------------------'
 
-# Sort given sites argument by peer/local, followed by slaves
+# Sort given sites argument by local, followed by slaves
 def sort_sites(sites):
     def custom_sort(a,b):
         return cmp(a[1].get("replication","peer"), b[1].get("replication","peer")) or \
-              -cmp(a[1].get("repl_priority",0), b[1].get("repl_priority",0)) or \
                cmp(a[1].get("alias"), b[1].get("alias"))
     sites.sort(cmp = custom_sort)
 
@@ -7123,7 +7103,7 @@ def mode_sites(phase):
                 html.show_error(error)
             html.write("<div class=message>")
             html.write("<h3>%s</h3>" % _("Login credentials"))
-            html.write(_("For the initial login into the slave/peer site %s "
+            html.write(_("For the initial login into the slave site %s "
                          "we need once your administration login for the Multsite "
                          "GUI on that site. Your credentials will only be used for "
                          "the initial handshake and not be stored. If the login is "
@@ -7218,15 +7198,9 @@ def mode_sites(phase):
         # Replication
         if site.get("replication") == "slave":
             repl = _("Slave")
-        elif site.get("replication") == "peer":
-            repl = _("Peer")
         else:
             repl = ""
         table.cell(_("Replication"), repl)
-
-        # Replication Priority
-        table.cell(_("Prio"), (site.get("replication") != "slave" and
-                    str(site.get("repl_priority", 0)) or ""), css="number")
 
         # Login-Button for Replication
         table.cell(_("Login"))
@@ -7507,18 +7481,11 @@ def mode_edit_site(phase):
         if repl:
             new_site["replication"] = repl
 
-        # Replication Priority
-        if not repl or repl != "slave":
-            try:
-                new_site["repl_priority"] = int(html.var("repl_priority", 0))
-            except:
-                raise MKUserError("repl_priority", _("Replication Priority '%s' is not a valid number.") % html.var("repl_priority",""))
-
         multisiteurl = html.var("multisiteurl", "").strip()
         if repl:
             if not multisiteurl:
                 raise MKUserError("multisiteurl",
-                    _("Please enter the Multisite URL of the slave/peer site."))
+                    _("Please enter the Multisite URL of the slave site."))
             if not multisiteurl.endswith("/check_mk/"):
                 raise MKUserError("multisiteurl",
                     _("The Multisite URL must end with /check_mk/"))
@@ -7658,22 +7625,13 @@ def mode_edit_site(phase):
     forms.section(_("Replication method"))
     html.select("replication",
         [ ("none",  _("No replication with this site")),
-          # ("peer",  _("Peer: synchronize configuration with this site")),
           ("slave", _("Slave: push configuration to this site"))
         ], site.get("replication", "none"))
     html.help( _("WATO replication allows you to manage several monitoring sites with a "
                 "logically centralized WATO. Slave sites receive their configuration "
-                "from master sites. Several master sites can build a peer-to-peer "
-                "replication pool for sake of redundancy.<br><br>Note: Slave sites "
+                "from master sites. <br><br>Note: Slave sites "
                 "do not need any replication configuration. They will be remote-controlled "
                 "by the master sites."))
-
-    forms.section(_("Peer replication priority"))
-    html.number_input("repl_priority", site.get("repl_priority", 0), size=2)
-    html.help(_("The replication priority is used to determine the master site "
-                "from the available peers and local sites. "
-                "The site with the highest number takes precedence."))
-
 
     forms.section(_("Multisite-URL of remote site"))
     html.text_input("multisiteurl", site.get("multisiteurl", ""), size=60)
@@ -8247,78 +8205,6 @@ def ajax_replication():
 
     html.write(answer)
 
-def preferred_peer():
-    local_site = None
-    best_peer = None
-    best_working_peer = None
-
-    for site_id, site in config.allsites().items():
-        if site.get("replication") == "slave":
-            continue # Ignore slave sites
-
-        if not site.get("replication") and not site_is_local(site_id):
-           continue # Ignore sites without distributed WATO
-
-        # a) No peer found yet
-        # b) Replication priority of current site is greater than best peer
-        # c) On same priority -> use higher alphabetical order
-        if best_peer == None \
-           or site.get("repl_priority",0) > best_peer.get("repl_priority",0) \
-           or (site_id < best_peer["id"] and site.get("repl_priority",0) == best_peer.get("repl_priority",0)):
-            best_peer = site
-            if site_is_local(site_id):
-                best_working_peer = site
-                local_site = site
-            else:
-                ss = html.site_status.get(site_id, {})
-                status = ss.get("state", "unknown")
-                if status == "online":
-                    best_working_peer = site
-
-    if best_working_peer: # Good
-        if best_working_peer == local_site:
-            if best_peer != best_working_peer:
-                return False # Only better peer is broken
-            else:
-                return None # Means we are the blessed one
-        else:
-            return best_working_peer
-
-    return None # no peer, not even a local site...
-
-
-
-def do_peer_redirect(peer):
-    if is_distributed():
-        current_mode = html.var("mode") or "main"
-        if peer:
-            rel_url = html.makeuri([])
-            frameset_url = "index.py?" + html.urlencode_vars([("start_url", rel_url)])
-            url = peer["multisiteurl"] + frameset_url
-
-            html.header(_("Access to standby system"), stylesheets = wato_styles)
-            if global_replication_state() != "clean":
-                html.show_error(_("You are currently accessing a standby "
-                  "system while the primary system is available. "
-                  "Furthermore you have local changes in the standby system "
-                  "that are not replicated "
-                  "to all sites. Please first <a href='%s'>replicate</a> "
-                  "your changes before switching to the <a target=_parent href='%s'>primary system.</a>") %
-                     ("wato.py?mode=changelog", url))
-
-            if current_mode not in [ "sites", "edit_site", "changelog" ]:
-                html.show_error(_("You have accessed a site that is currently "
-                                  "in standby mode. The only accessible modules "
-                                  "are the <a href='%s'>site management</a> "
-                                  "and the <a href='%s'>replication</a>. "
-                                  "Please proceed on the currently active system "
-                                  "<a target='_parent' href='%s'>%s</a>.") %
-                                ("wato.py?mode=sites", "wato.py?mode=changelog",
-                                url, peer["alias"]))
-                html.footer()
-                return True
-
-
 #.
 #   .-Automation-Webservice------------------------------------------------.
 #   |          _         _                        _   _                    |
@@ -8329,7 +8215,7 @@ def do_peer_redirect(peer):
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 #   | These function implement a web service with that a master can call   |
-#   | automation functions on slaves and peers.                            |
+#   | automation functions on slaves.                                      |
 #   '----------------------------------------------------------------------'
 
 def page_automation_login():
@@ -8415,11 +8301,7 @@ def automation_push_snapshot():
 
         if mode == "slave" and is_distributed():
             raise MKGeneralException(_("Configuration error. You treat us as "
-               "a <b>slave</b>, but we are a <b>peer</b>!"))
-
-        elif mode == "peer" and not is_distributed():
-            raise MKGeneralException(_("Configuration error. You treat us as "
-               "a peer, but we have no peer configuration!"))
+               "a <b>slave</b>, but we have an own distributed WATO configuration!"))
 
         # In peer mode, we have a replication configuration ourselves and
         # we have a site ID our selves. Let's make sure that ID matches
@@ -14744,7 +14626,7 @@ def load_plugins():
     config.declare_permission("wato.automation",
         _("Site remote automation"),
         _("This permission is needed for a remote administration of the site "
-          "as a distributed WATO slave or peer."),
+          "as a distributed WATO slave."),
         [ "admin", ])
 
     config.declare_permission("wato.users",

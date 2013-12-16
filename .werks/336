@@ -14,7 +14,7 @@ system or even a crash.
 
 In order to avoid such situations the number of lines that are read from each
 individual file are now limited. The default limit is one million lines. You
-can change this default by defining the variable <tt>max_lines_per_logfile/tt>
+can change this default by defining the variable <tt>max_lines_per_logfile</tt>
 in your <tt>nagios.cfg</tt>. The following example sets the maximum number
 to 20 million lines:
 

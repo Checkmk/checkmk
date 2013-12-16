@@ -1,0 +1,8 @@
+Title: Fixed exception in event simulator when one match group did not match
+Level: 1
+Component: ec
+Version: 1.2.5i1
+Date: 1387203915
+Class: fix
+
+

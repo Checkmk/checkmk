@@ -1,0 +1,19 @@
+Title: Fix email notifications containing non-ASCII characters in some situtations
+Level: 2
+Component: notifications
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387186122
+Targetversion: future
+
+On some systems the locale C.UTF-8 was not always available. One of these is
+Debien Squeeze. Sending a notification email containing non-ASCII characters
+like german Umlauts failed in these situations.
+
+This now has been fixed by scanning all available encodings (output of locale
+-a) and selecting an existing UTF-8 encoding. Please make sure that at least
+one such encoding exists.
+
+This fix also makes sure that the output of a failed mail submission is
+being logged in the notification log (if you have enabled it).

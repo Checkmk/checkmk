@@ -34,7 +34,7 @@
 # hostname, servicedesc, hoststate, servicestate, output in
 # the form %(variable)s
 
-import pprint, urllib, select
+import pprint, urllib, select, subprocess
 
 # Default settings
 notification_logdir   = var_dir + "/notify"
@@ -246,7 +246,7 @@ def process_context(context, write_into_spoolfile, use_method = None):
             elif method == "email":
                 # We are searching for a specific
                 # but this contact does not offer any
-                notify_log("ERROR: contact %r do not have any plugins (required: %s)" % (contact, use_method))
+                notify_log("ERROR: contact %r does not have any plugins (required: %s)" % (contact, use_method))
                 return 2
             else:
                 found_plugin = {}
@@ -261,9 +261,12 @@ def process_context(context, write_into_spoolfile, use_method = None):
                 method = ('flexible', [found_plugin])
 
         if type(method) == tuple and method[0] == 'flexible':
+            notify_log("Preparing flexible notifications for %s" % context["CONTACTNAME"])
             return notify_flexible(context, method[1], write_into_spoolfile)
         else:
+            notify_log("Sending plain email to %s" % context["CONTACTNAME"])
             return notify_via_email(context, write_into_spoolfile)
+
     except Exception, e:
         notify_log("ERROR: %s\n%s" % (e, format_exception()))
         sys.stderr.write("ERROR: %s\n" % e)
@@ -505,6 +508,7 @@ def notify_notify(context):
 
 def notify_via_email(context, write_into_spoolfile):
     if write_into_spoolfile:
+        notify_log("Spooled this notification.")
         create_spoolfile({"context": context})
         return 0
 
@@ -520,24 +524,44 @@ def notify_via_email(context, write_into_spoolfile):
     subject = substitute_context(subject_t, context)
     context["SUBJECT"] = subject
     body = substitute_context(notification_common_body + body_t, context)
-    command = substitute_context(notification_mail_command, context) + " >/dev/null 2>&1"
+    command = substitute_context(notification_mail_command, context)
     command_utf8 = command.encode("utf-8")
-    if notification_logging >= 2:
-        notify_log("Executing command: %s" % command)
     notify_log(body)
-    # Make sure that mail(x) is using UTF-8. More then
-    # setting the locale cannot be done here. We hope that
-    # C.UTF-8 is always available. Please check the output
-    # of 'locale -a' on your system if you are curious.
-    os.putenv("LANG", "C.UTF-8")
+
+    # Make sure that mail(x) is using UTF-8. Otherwise we cannot send notifications
+    # with non-ASCII characters. Unfortunately we do not know whether C.UTF-8 is
+    # available. If e.g. nail detects a non-Ascii character in the mail body and
+    # the specified encoding is not available, it will silently not send the mail!
+    # Our resultion in future: use /usr/sbin/sendmail directly.
+    # Our resultion in the present: look with locale -a for an existing UTF encoding
+    # and use that.
+    for encoding in os.popen("locale -a"):
+        l = encoding.lower()
+        if "utf8" in l or "utf-8" in l or "utf.8" in l:
+            encoding = encoding.strip()
+            os.putenv("LANG", encoding)
+            if notification_logging >= 2:
+                notify_log("Setting locale for mail to %s." % encoding)
+            break
+    else:
+        notify_log("No UTF-8 encoding found in your locale -a! Please provide C.UTF-8 encoding.")
+
     if notification_logging >= 2:
         file(var_dir + "/notify/body.log", "w").write(body.encode("utf-8"))
 
     # Important: we must not output anything on stdout or stderr. Data of stdout
     # goes back into the socket to the CMC in keepalive mode and garbles the
     # handshake signal.
-    return os.popen(command_utf8, "w").write(body.encode("utf-8"))
+    if notification_logging >= 2:
+        notify_log("Executing command: %s" % command)
 
+    p = subprocess.Popen(command_utf8, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, stdin=subprocess.PIPE)
+    stdout_txt, stderr_txt = p.communicate(body.encode("utf-8"))
+    exitcode = p.returncode
+    if exitcode != 0:
+        notify_log("ERROR: could not deliver mail. Exit code of command is %r" % exitcode)
+        for line in (stdout_txt + stderr_txt).splitlines():
+            notify_log("mail: %s" % line.rstrip())
 
 
 

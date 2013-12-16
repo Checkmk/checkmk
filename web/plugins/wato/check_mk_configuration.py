@@ -791,6 +791,7 @@ register_configvar(group,
         Filename(
             label = _("Absolute path to log file"),
             default = defaults.var_dir + '/web/ldap-debug.log',
+            trans_func = userdb.ldap_replace_macros,
         ),
           title = _("LDAP connection diagnostics"),
           label = _("Activate logging of LDAP transactions into a logfile"),

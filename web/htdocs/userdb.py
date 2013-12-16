@@ -664,6 +664,7 @@ def hook_login(username, password):
 # Is called on:
 #   a) before rendering the user management page in WATO
 #   b) a user is created during login (only for this user)
+#   c) Before activating the changes in WATO
 def hook_sync(connector_id = None, add_to_changelog = False, only_username = None, raise_exc = False):
     if connector_id:
         connectors = [ get_connector(connector_id) ]

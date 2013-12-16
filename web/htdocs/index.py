@@ -180,16 +180,14 @@ def load_all_plugins():
 __builtin__.load_all_plugins = load_all_plugins
 
 # Main entry point for all HTTP-requests (called directly by mod_apache)
-def handler(req, profiling = True):
+def handler(req, fields = None, profiling = True):
     req.content_type = "text/html; charset=UTF-8"
     req.header_sent = False
-
 
     # Create an object that contains all data about the request and
     # helper functions for creating valid HTML. Parse URI and
     # store results in the request object for later usage.
-    html = html_mod_python(req)
-
+    html = html_mod_python(req, fields)
     html.enable_debug = config.debug
     html.id = {} # create unique ID for this request
     __builtin__.html = html
@@ -213,13 +211,19 @@ def handler(req, profiling = True):
         # profiling can be enabled in multisite.mk
         if profiling and config.profile:
             import cProfile # , pstats, sys, StringIO, tempfile
-            # the profiler looses the memory about all modules. We need to park
-            # the request object in the apache module. This seems to be persistent.
+            # the profiler looses the memory about all modules. We need to hand over
+            # the request object in the apache module.
             # Ubuntu: install python-profiler when using this feature
-            apache._profiling_req = req
             profilefile = defaults.var_dir + "/web/multisite.profile"
-            retcode = cProfile.run("import index; from mod_python import apache; index.handler(apache._profiling_req, False)", profilefile)
-            file(profilefile + ".py", "w").write("#!/usr/bin/python\nimport pstats\nstats = pstats.Stats(%r)\nstats.sort_stats('time').print_stats()\n" % profilefile)
+            retcode = cProfile.runctx(
+                "import index; "
+                "index.handler(profile_req, profile_fields, False)",
+                {'profile_req': req, 'profile_fields': html.fields}, {}, profilefile)
+            file(profilefile + ".py", "w").write(
+                "#!/usr/bin/python\n"
+                "import pstats\n"
+                "stats = pstats.Stats(%r)\n"
+                "stats.sort_stats('time').print_stats()\n" % profilefile)
             os.chmod(profilefile + ".py", 0755)
             release_all_locks()
             return apache.OK

@@ -1,12 +1,17 @@
 Title: Painter log_type paints wrong data
 Component: multisite
-State: open
+Class: bug
+State: wontfix
 Date: 2013-10-24 16:14:43
 Targetversion: 1.2.3i6
-Class: bug
 
 This painter should contain SERVICE_ALERT / HOST_ALERT / ...
 however the painter displayed
 Warning: Check result queue contained results for
 
 -> livestatus issue
+
+2013-12-16 11:01:10: changed state open -> wontfix
+This works as designed. We cannot change anything here, since that
+would make everything incompatible. Root case is that Nagios puts
+informational stuff into the same logfile as object history.

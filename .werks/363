@@ -1,0 +1,11 @@
+Title: mysql_capacity: Did use wrong calculated warn / crit thresholds
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387208376
+Targetversion: future
+
+The warn / crit values are given as MB, but the check did not use them
+as MB values. The thresholds were always applied wrong.

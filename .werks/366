@@ -1,0 +1,11 @@
+Title: heartbeat_crm: Agent code is now compatible to pacemaker 1.1.9
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387212198
+Targetversion: future
+
+The paths /var/run/heartbeat/crm/cib_ro or /var/run/crm/cib_ro do not seem
+to be existing anymore. Instead testing whether or not crmd is running.

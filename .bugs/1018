@@ -1,8 +1,11 @@
 Title: Remove peer replication from WATO -> useless, senseless, confusing
 Component: wato
-State: open
+Class: nastiness
+State: done
 Date: 2013-08-23 12:26:21
 Targetversion: 1.2.3
-Class: nastiness
 
 It confuses people. This feature does not seem to matter.
+
+2013-12-16 11:44:13: changed state open -> done
+Has been removed from GUI some time ago. Removed code fragments from WATO.

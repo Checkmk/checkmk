@@ -1,0 +1,12 @@
+Title: Improved performance of WATO slave push with a large user base
+Level: 1
+Component: wato
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387192025
+Targetversion: future
+
+When having a large number of users (several thousands) and pushing them to a
+slave site, the user database hook was executed twice, which resulted in a
+senseless duplicate calculation of things. This has been resolved now.

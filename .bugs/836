@@ -1,8 +1,11 @@
 Title: libpcap is missing in debian
 Component: core
-State: open
+Class: bug
+State: done
 Date: 2013-11-07 17:42:36
 Targetversion: 1.2.2
-Class: bug
 
 On Debian with cmc, the libpcap is missing but needed by the icmphelper. Leads to GBs of logfiles and high cpu load from cmc
+
+2013-12-16 09:28:53: changed state open -> done
+Just added the runtime dependency to our builds

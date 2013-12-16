@@ -40,6 +40,7 @@ def inventory_mysql_size(info):
     return inventory
 
 def check_mysql_size(item, params, info):
+    # size and avail are given as bytes
     for dbname, size, avail in info:
         if item == dbname:
             size = int(size)
@@ -49,13 +50,13 @@ def check_mysql_size(item, params, info):
                 warn, crit = params # in MB
                 warn_b = warn * 1048576
                 crit_b = crit * 1048576
-                perfdata = [("size", size, warn, crit)]
-		if size > crit:
+                perfdata = [("size", size, warn_b, crit_b)]
+		if size > crit_b:
                    state = 2
-                   infotext += " (critical at %s)" % get_bytes_human_readable(crit)
-                elif size > warn:
+                   infotext += " (critical at %s)" % get_bytes_human_readable(crit_b)
+                elif size > warn_b:
                    state = 1
-                   infotext += " (warning at %s)" % get_bytes_human_readable(crit)
+                   infotext += " (warning at %s)" % get_bytes_human_readable(crit_b)
             else:
                 state = 0
                 perfdata = [("size", size)]
@@ -69,6 +70,4 @@ check_info['mysql_capacity'] = {
     "service_description"     : "MySQL DB %s Size",
     "has_perfdata"            : True,
     "group"                   : "dbsize",
-#    "default_levels_variable" : "filesystem_default_levels",
-#    "includes"                : [ "dbsize.include" ],
 }

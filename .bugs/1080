@@ -1,10 +1,14 @@
 Title: Add bookmark add invalid URL with missing variables
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2013-12-16 11:30:14
 Targetversion: 1.2.4
-Class: bug
 
 Example: Go to a ruleset and click and "Create rule". Now
 create a bookmark. That will now simply link to wato.py - 
 without any further variables.
+
+2013-12-16 16:09:39: changed state open -> done
+Done for this single situation. Is "broken" for each POST page,
+but we need POST in most situations.

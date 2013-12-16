@@ -1,9 +1,9 @@
 Title: Livestatus: parse DOWNTIMESTOPPED (UP) into correct state UP
 Component: livestatus
-State: open
+Class: bug
+State: done
 Date: 2013-09-16 11:34:56
 Targetversion: 1.4.0
-Class: bug
 
 When parsing lines like:
 
@@ -12,3 +12,6 @@ When parsing lines like:
 Livestatus sets 3 as the state (meaning invalid). It should extract the (UP) however
 and set the state 0.
 
+
+2013-12-16 12:35:09: changed state open -> done
+Fixed. Nagios uses log enries with varying order.

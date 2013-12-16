@@ -240,8 +240,12 @@ inline bool LogEntry::handleStatusEntry()
     return false;
 }
 
-
-
+// Examples of host notifications. Beware CUSTOM and DOWNTIME notifications
+// have a different column order. This can be considered as a bug. But we
+// need to parse that anyway.
+// HOST NOTIFICATION: omdadmin;localhost;check-mk-notify;DOWNTIMESTOPPED (UP);mk
+// HOST NOTIFICATION: omdadmin;localhost;CUSTOM (UP);check-mk-notify;OK - 127.0.0.1: rta 0.055ms, lost 0%;omdadmin;TEST
+// HOST NOTIFICATION: omdadmin;localhost;DOWN;check-mk-notify;Manually set to Down by omdadmin
 inline bool LogEntry::handleNotificationEntry()
 {
     if (!strncmp(_text, "HOST NOTIFICATION: ", 19)
@@ -255,17 +259,31 @@ inline bool LogEntry::handleNotificationEntry()
 
         _contact_name  = next_token(&scan, ';');
         _host_name     = next_token(&scan, ';');
-        if (svc) {
+        if (svc)
             _svc_desc = next_token(&scan, ';');
-            _state_type = save_next_token(&scan, ';');
+
+        _state_type = save_next_token(&scan, ';');
+        _command_name  = next_token(&scan, ';');
+
+        if (svc)
             _state = serviceStateToInt(_state_type);
-        }
-        else {
-            _state_type = save_next_token(&scan, ';');
+        else
             _state = hostStateToInt(_state_type);
+
+        // If that state is not parsable then we assume that the order
+        // is swapped
+        if ((svc && _state == 4) ||
+            (!svc && _state == 3))
+        {
+            char *swap = _state_type;
+            _state_type = _command_name;
+            _command_name = swap;
+            if (svc)
+                _state = serviceStateToInt(_state_type);
+            else
+                _state = hostStateToInt(_state_type);
         }
 
-        _command_name  = next_token(&scan, ';');
         _check_output  = next_token(&scan, ';');
         return true;
     }
@@ -370,7 +388,7 @@ inline int LogEntry::serviceStateToInt(char *s)
 inline int LogEntry::hostStateToInt(char *s)
 {
     char *last = s + strlen(s) - 1;
-    if (*last == ')')
+    if (*last == ')') // handle CUSTOM (UP) and DOWNTIMESTOPPED (DOWN)
         last--;
 
     // UP, DOWN, UNREACHABLE, RECOVERY

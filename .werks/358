@@ -1,0 +1,11 @@
+Title: df: now ignores filesystems with a reported size of '-'
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387202921
+Targetversion: future
+
+Previous versions of the check raised an exception because the '-'
+could not be converted via int().

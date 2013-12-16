@@ -1,0 +1,11 @@
+Title: Generating selection id is hopefully now compatible to more systems
+Level: 1
+Component: multisite
+Version: 1.2.5i1
+Date: 1387213529
+Class: fix
+
+The default mechanism to get a selection id is to generate a UUID by reading
+the contents of the file /proc/sys/kernel/random/uuid. This might be not
+existing on some special systems. So we use the uuid python module as
+fallback now.

@@ -2875,8 +2875,6 @@ def in_boolean_serviceconf_list(hostname, service_description, conflist):
 def remove_autochecks_of(hostname, checktypes = None): # None = all
     removed = 0
     for fn in glob.glob(autochecksdir + "/*.mk"):
-        if opt_debug:
-            sys.stdout.write("Scanning %s...\n" % fn)
         lines = []
         count = 0
         for line in file(fn):
@@ -4722,8 +4720,6 @@ def do_cleanup_autochecks():
     os.chdir(autochecksdir)
     checks = 0
     for fn in glob.glob("*.mk"):
-        if opt_debug:
-            sys.stdout.write("Scanning %s...\n" % fn)
         for line in file(fn):
             testline = line.lstrip().replace("'", '"')
             if testline.startswith('("'):
@@ -4741,8 +4737,6 @@ def do_cleanup_autochecks():
     for host, lines in hostdata.items():
         lines.sort()
         fn = host.replace(":","_") + ".mk"
-        if opt_debug:
-            sys.stdout.write("Writing %s: %d checks\n" % (fn, len(lines)))
         newfiles.add(fn)
         f = file(fn, "w+")
         f.write("[\n")

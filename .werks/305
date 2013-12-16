@@ -1,7 +1,7 @@
 Title: apache_status: Fixed exception when agent reports HTML code as apache-status data
 Level: 1
 Component: checks
-Version: 1.2.3i8
+Version: 1.2.4b1
 Date: 1386581355
 Class: fix
 

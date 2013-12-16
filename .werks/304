@@ -1,7 +1,7 @@
 Title: Escaping several unwanted chars from incoming log messages
 Level: 1
 Component: ec
-Version: 1.2.3i8
+Version: 1.2.4b1
 Date: 1386579742
 Class: fix
 

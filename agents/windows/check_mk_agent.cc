@@ -1067,7 +1067,6 @@ bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, ch
         dwFlags |= FORMAT_MESSAGE_FROM_HMODULE;
 
     DWORD len = FormatMessageW(
-            // DWORD len = FormatMessage(
         dwFlags,
         dll,
         event->EventID,
@@ -1075,46 +1074,46 @@ bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, ch
         wmsgbuffer,
         // msgbuffer,
         2048,
-        (char **)strings);
+        (char **)strings
+    );
 
-            if (dll)
-            FreeLibrary(dll);
+    if (dll)
+        FreeLibrary(dll);
 
-            if (len)
-            {
-            // convert message to UTF-8
-            len = WideCharToMultiByte(CP_UTF8, 0, wmsgbuffer, -1, msgbuffer, sizeof(msgbuffer), NULL, NULL);
-            }
+    if (len) {
+        // convert message to UTF-8
+        len = WideCharToMultiByte(CP_UTF8, 0, wmsgbuffer, -1, msgbuffer, sizeof(msgbuffer), NULL, NULL);
+    }
 
-            if (len == 0) // message could not be converted
-            {
-                // if conversion was not successfull while trying to load a DLL, we return a
-                // failure. Our parent function will then retry later without a DLL path.
-                if (dllpath)
-                    return false;
+    if (len == 0) // message could not be converted
+    {
+        // if conversion was not successfull while trying to load a DLL, we return a
+        // failure. Our parent function will then retry later without a DLL path.
+        if (dllpath)
+            return false;
 
-                // if message cannot be converted, then at least output the text strings.
-                // We render all messages one after the other into msgbuffer, separated
-                // by spaces.
-                memset(msgbuffer, 0, sizeof(msgbuffer)); // avoids problems with 0-termination
-                char *w = msgbuffer;
-                int sizeleft = sizeof(msgbuffer) - 1; // leave one byte for termination
-                int n = 0;
-                while (strings[n]) // string array is zero terminated
-                {
-                    WCHAR *s = strings[n];
-                    DWORD len = WideCharToMultiByte(CP_UTF8, 0, s, -1, w, sizeleft, NULL, NULL);
-                    if (!len)
-                        break;
-                    sizeleft -= len;
-                    w += len;
-                    if (sizeleft <= 0)
-                        break;
-                    n++;
-                    if (strings[n])
-                        *w++ = ' ';
-                }
-            }
+        // if message cannot be converted, then at least output the text strings.
+        // We render all messages one after the other into msgbuffer, separated
+        // by spaces.
+        memset(msgbuffer, 0, sizeof(msgbuffer)); // avoids problems with 0-termination
+        char *w = msgbuffer;
+        int sizeleft = sizeof(msgbuffer) - 1; // leave one byte for termination
+        int n = 0;
+        while (strings[n]) // string array is zero terminated
+        {
+            WCHAR *s = strings[n];
+            DWORD len = WideCharToMultiByte(CP_UTF8, 0, s, -1, w, sizeleft, NULL, NULL);
+            if (!len)
+                break;
+            sizeleft -= len;
+            w += len;
+            if (sizeleft <= 0)
+                break;
+            n++;
+            if (strings[n])
+                *w++ = ' ';
+        }
+    }
 
     // replace newlines with spaces. check_mk expects one message each line.
     char *w = msgbuffer;

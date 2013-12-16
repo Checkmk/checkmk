@@ -5,7 +5,7 @@ import defaults
 
 class html_mod_python(htmllib.html):
 
-    def __init__(self, req):
+    def __init__(self, req, fields):
 
         # All URIs end in .py. We strip away the .py and get the
         # name of the page.
@@ -13,6 +13,10 @@ class html_mod_python(htmllib.html):
         self.req = req
         htmllib.html.__init__(self)
         self.user = req.user
+        if fields:
+            self.fields = fields
+        else:
+            self.fields = util.FieldStorage(self.req, keep_blank_values = 1)
         self.read_get_vars()
         self.read_cookies()
 
@@ -41,8 +45,7 @@ class html_mod_python(htmllib.html):
         self.cookies = Cookie.get_cookies(self.req)
 
     def read_get_vars(self):
-        fields = util.FieldStorage(self.req, keep_blank_values = 1)
-        self.parse_field_storage(fields)
+        self.parse_field_storage(self.fields)
 
     def lowlevel_write(self, text):
         if self.io_error:

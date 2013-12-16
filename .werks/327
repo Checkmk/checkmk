@@ -1,0 +1,12 @@
+Title: Most forms did now work with "Profile Requests" enabled
+Level: 1
+Component: multisite
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387188456
+Targetversion: future
+
+In multisite profiling mode all POST requests were not working in
+the latest versions. The POST vars were not available during processing
+the profiled page.

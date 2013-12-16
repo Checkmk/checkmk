@@ -53,9 +53,10 @@ OPTIONS:
   -D, --direct                  Assume a directly queried host system (no vCenter). In
                                 This we expect data about only one HostSystem to be
                                 Found and do not create piggy host data for that host.
-  -p,                           Skip placeholder virtualmachines. These backup vms are created
+  -p                            Skip placeholder virtualmachines. These backup vms are created
                                 by the Site Recovery Manager (SRM) and are identified by not
                                 having any assigned virtual disks.
+  --pysphere                    Does nothing. For compatibility with new agent.
   -H, --hostname                Specify a hostname. This is neccessary if this is
                                 different from HOST. It is being used in --direct
                                 mode as the name of the host system when outputting
@@ -85,7 +86,7 @@ OPTIONS:
 short_options = 'hi:u:s:Dat:H:cp'
 long_options  = [
     'help', 'user=', 'secret=', 'direct', 'agent', 'debug', 'modules=', 'timeout=', 'hostname=',
-    'dump-counters', 'profile'
+    'dump-counters', 'profile', 'pysphere',
 ]
 
 try:

@@ -1,9 +1,9 @@
 Title: agent_vsphere (new) not compatible with esx 4.1
 Component: checks
-State: open
+Class: bug
+State: done
 Date: 2013-10-29 17:31:13
 Targetversion: future
-Class: bug
 
 Tracefile shows these instances
 <soapenv:Fault><faultcode>ServerFaultCode</faultcode><faultstring></faultstring><detail><InvalidPropertyFault xmlns="urn:vim25" xsi:type="InvalidProperty"><name>summary.maintenanceMode</name></InvalidPropertyFault></detail></soapenv:Fault>
@@ -15,3 +15,7 @@ Need to create the soap requests more dynamically...
 
 Workaround:
 Old agent agent_vsphere.pysphere
+
+2013-12-16 12:00:39: changed state open -> done
+There is now a new option for selecting the old agent.
+See according werk.

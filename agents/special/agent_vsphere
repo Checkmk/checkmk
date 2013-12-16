@@ -130,9 +130,11 @@ OPTIONS:
   -D, --direct                  Assume a directly queried host system (no vCenter). In
                                 This we expect data about only one HostSystem to be
                                 found and do not create piggy host data for that host.
-  -p,                           Skip placeholder virtualmachines. These backup vms are created
+  -p                            Skip placeholder virtualmachines. These backup vms are created
                                 by the Site Recovery Manager (SRM) and are identified by not
                                 having any assigned virtual disks.
+  --pysphere                    Fallback to old pysphere based special agent. It supports
+                                ESX 4.1 but is very slow.
   -H, --hostname                Specify a hostname. This is neccessary if this is
                                 different from HOST. It is being used when outputting
                                 the hosts power state.
@@ -160,7 +162,7 @@ OPTIONS:
 short_options = 'hi:u:s:Dat:H:cp'
 long_options  = [
     'help', 'user=', 'secret=', 'direct', 'agent', 'debug', 'modules=', 'timeout=', 'hostname=',
-    'dump-counters', 'tracefile=',
+    'dump-counters', 'tracefile=', "pysphere",
 ]
 
 opt_debug               = False
@@ -170,6 +172,7 @@ opt_dump_counters       = False
 opt_timeout             = 60
 opt_hostname            = None
 opt_skip_placeholder_vm = False
+opt_pysphere            = False
 opt_tracefile           = None
 
 error = None
@@ -196,8 +199,10 @@ for o,a in opts:
         opt_direct = True
     elif o in [ '-a', '--agent' ]:
         opt_agent = True
-    elif o in [ '-p' ]:
+    elif o == '-p':
         opt_skip_placeholder_vm = True
+    elif o == '--pysphere':
+        opt_pysphere = True
     elif o in [ '-u', '--user' ]:
         user = a
     elif o in [ '-s', '--secret' ]:
@@ -216,7 +221,8 @@ for o,a in opts:
 
 
 # vCenter only supports the classical slow vSphere agent (based on pysphere)
-if not opt_direct:
+# Also we do not support ESX 4.1 (yet).
+if not opt_direct or opt_pysphere:
     path_vsphere_pysphere = os.path.dirname(os.path.abspath(__file__))
     cmd = [ "%s/agent_vsphere.pysphere" % path_vsphere_pysphere ]
     import subprocess

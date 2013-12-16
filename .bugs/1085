@@ -1,9 +1,12 @@
 Title: Personal settings: name of language de missing
 Component: multisite
-State: open
+Class: nastiness
+State: done
 Date: 2013-11-25 10:36:27
 Targetversion: future
-Class: nastiness
 
 In the personal setting when you want to select a language,
 instead of "German" there is just a "de".
+
+2013-12-16 11:26:00: changed state open -> done
+Just added the missing alias file

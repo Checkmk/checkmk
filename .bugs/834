@@ -1,8 +1,11 @@
 Title: CSV Export for reporting
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2013-10-30 10:21:43
 Targetversion: 1.2.3i5
-Class: bug
 
 Clicking on export to csv does not work. 
+
+2013-12-16 09:32:36: changed state open -> done
+CSV export for availability has never been created. Simply removed the CSV export icon from those views

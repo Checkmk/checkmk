@@ -1,0 +1,10 @@
+Title: Removed CSV export icon from availability views
+Level: 1
+Component: multisite
+Version: 1.2.3i8
+Date: 1387182799
+Class: fix
+
+The "Export as CSV" links on availability views resulted in broken pages and no exported
+data. The CSV export has not been created for those views yet, so the export icon has
+been removed for now.

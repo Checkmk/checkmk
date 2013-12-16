@@ -810,7 +810,7 @@ class html:
         h += '<a target="_top" href="%s"><img class=statusicon src="images/status_pageurl.png" title="%s"></a>\n' % \
              ("index.py?" + self.urlencode_vars([("start_url", self.makeuri([]))]), _("URL to this page including sidebar"))
 
-        if self.myfile == "view":
+        if self.myfile == "view" and self.var('mode') != 'availability':
             # h += '<a target="_top" href="%s"><img class=statusicon src="images/status_frameurl.png" title="%s"></a>\n' % \
             #     (self.makeuri([("output_format", "json_export")]), _("Export as JSON"))
             h += '<a target="_top" href="%s"><img class=statusicon src="images/icon_download_csv.png" title="%s"></a>\n' % \

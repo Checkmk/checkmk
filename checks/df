@@ -37,8 +37,7 @@ def inventory_df(info):
         if line[1] in inventory_df_exclude_fs:
             continue # ignore this filesystem type
 
-        size_kb = int(line[2])
-        if size_kb == 0 or line[5] == '-':
+        if line[2] == '-' or int(line[2]) == 0 or line[5] == '-':
             continue # exclude filesystems without size
 
         mountpoint = " ".join(line[6:]).replace('\\', '/') # Windows \ is replaced with /

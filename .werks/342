@@ -1,0 +1,13 @@
+Title: postgres_stat_database: make agent compatible with PostgreSQL 8.4.x
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387212475
+Targetversion: future
+
+The SQL query that was used in the agent plugin <tt>mk_postgres</tt>
+was not compatible with PostgreSQL 8.4.x, because there is not column
+<tt>conflicts</tt>.  This column is not used by the check anyway, so it has
+been removed (thanks to Alexander Keller).

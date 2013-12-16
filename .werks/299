@@ -1,7 +1,7 @@
 Title: borcade_mlx_fan: Prettified output, handling "other" state now
 Level: 1
 Component: checks
-Version: 1.2.3i8
+Version: 1.2.5i1
 Date: 1386259077
 Class: fix
 

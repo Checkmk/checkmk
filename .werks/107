@@ -1,7 +1,7 @@
 Title: stulz_alerts, stulz_powerstate, stulz_temp, stulz_humidity: New Checks for Stulz clima devices
 Level: 1
 Component: checks
-Version: 1.2.3i8
+Version: 1.2.5i1
 Date: 1386854932
 Class: feature
 

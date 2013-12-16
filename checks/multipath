@@ -128,7 +128,14 @@
 # \_ round-robin 0 [prio=-1][enabled]
 #  \_ 4:0:0:11 sdt  65:48  [active][undef]
 
-
+# And a completely new situation:
+# <<<multipath>>>
+# Nov 05 17:17:03 | DM multipath kernel driver not loaded
+# Nov 05 17:17:03 | /etc/multipath.conf does not exist, blacklisting all devices.
+# Nov 05 17:17:03 | A sample multipath.conf file is located at
+# Nov 05 17:17:03 | /usr/share/doc/device-mapper-multipath-0.4.9/multipath.conf
+# Nov 05 17:17:03 | You can run /sbin/mpathconf to create or modify /etc/multipath.conf
+# Nov 05 17:17:03 | DM multipath kernel driver not loaded
 
 def parse_multipath_output(info, only_uuid = None):
     # only_uuid --> look only for data of this uuid or alias
@@ -171,7 +178,10 @@ def parse_multipath_output(info, only_uuid = None):
         l = " ".join(line)
 
         # Skip output when multipath is not present
-        if l.endswith('DM multipath kernel driver not loaded'):
+        if l.endswith('DM multipath kernel driver not loaded') \
+           or l.endswith('does not exist, blacklisting all devices.') \
+           or l.endswith('A sample multipath.conf file is located at') \
+           or l.endswith('multipath.conf'):
             uuid = None
             continue
 

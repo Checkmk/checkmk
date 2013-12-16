@@ -1,0 +1,11 @@
+Title: multipath: Inventory handles non loaded kernel module now
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387205073
+Targetversion: future
+
+The handling for not loaded multipath kernel module and not existing
+multipath.conf was not working in all cases. This has been improved now.

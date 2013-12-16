@@ -59,6 +59,9 @@
     * 0304 FIX: Escaping several unwanted chars from incoming log messages...
     * 0089 FIX: CSV export of event console was broken...
 
+    Livestatus:
+    * 0335 FIX: Parse state of downtime notification log entries correctly...
+
 
 1.2.3i7:
     Core & Setup:

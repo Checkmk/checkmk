@@ -1,0 +1,8 @@
+Title: hitachi_hnas_cpu: New check for CPU utilization of Hitachi HNAS devices
+Level: 2
+Component: checks
+Version: 1.2.5i1
+Date: 1387211739
+Class: feature
+
+

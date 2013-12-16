@@ -1,0 +1,11 @@
+Title: Now using /dev/null instead of closing stdin in linux agent
+Level: 2
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387212325
+Targetversion: future
+
+Some programs might not be working when stdin is closed. A more portable
+approach seems to use /dev/null as stdin.

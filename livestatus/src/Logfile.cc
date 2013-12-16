@@ -38,6 +38,8 @@
 extern Core *g_core;
 #endif
 
+extern unsigned long g_max_lines_per_logfile;
+
 
 Logfile::Logfile(const char *path, bool watch)
   : _path(strdup(path))
@@ -145,9 +147,12 @@ void Logfile::load(LogCache *logcache, time_t since, time_t until, unsigned logc
 void Logfile::loadRange(FILE *file, unsigned missing_types,
         LogCache *logcache, time_t since, time_t until, unsigned logclasses)
 {
-    //logger(LOG_NOTICE, "Read logfile: %s", this->_path);
     while (fgets(_linebuffer, MAX_LOGLINE, file))
     {
+        if (_lineno >= g_max_lines_per_logfile) {
+            logger(LG_ERR, "More than %u lines in %s. Ignoring the rest!", g_max_lines_per_logfile, this->_path);
+            return;
+        }
         _lineno++;
         if (processLogLine(_lineno, missing_types)) {
             logcache->handleNewMessage(this, since, until, logclasses); // memory management

@@ -100,6 +100,7 @@ int g_should_terminate = false;
 pthread_t g_mainthread_id;
 pthread_t *g_clientthread_id;
 unsigned long g_max_cached_messages = 500000;
+unsigned long g_max_lines_per_logfile = 1000000; // do never read more than that number of lines from a logfile
 unsigned long g_max_response_size = 100 * 1024 * 1024; // limit answer to 10 MB
 int g_thread_running = 0;
 int g_thread_pid = 0;
@@ -660,6 +661,10 @@ void livestatus_parse_arguments(const char *args_orig)
             else if (!strcmp(left, "max_cached_messages")) {
                 g_max_cached_messages = strtoul(right, 0, 10);
                 logger(LG_INFO, "Setting max number of cached log messages to %lu", g_max_cached_messages);
+            }
+            else if (!strcmp(left, "max_lines_per_logfile")) {
+                g_max_lines_per_logfile = strtoul(right, 0, 10);
+                logger(LG_INFO, "Setting max number lines per logfile to %lu", g_max_lines_per_logfile);
             }
             else if (!strcmp(left, "thread_stack_size")) {
                 g_thread_stack_size = strtoul(right, 0, 10);

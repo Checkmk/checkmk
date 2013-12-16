@@ -14,6 +14,7 @@
     * 0075 raritan_pdu_inlet: new check to monitor inlet sensors of the Raritan PX-2000 PDUs
     * 0315 hitachi_hnas_quorumdevice, hitachi_hnas_pnode, hitachi_hnas_vnode: New checks for Hitachi HNAS devices
     * 0316 hitachi_hnas_cpu: New check for CPU utilization of Hitachi HNAS devices
+    * 0373 wut_webtherm: Supporting several other devices now
     * 0103 FIX: services: Fixed bug with service inventory defined in main.mk...
     * 0299 FIX: borcade_mlx_fan: Prettified output, handling "other" state now
     * 0300 FIX: cisco_fru_power: Trying not to inventorize not plugged in FRUs...

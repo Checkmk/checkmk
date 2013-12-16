@@ -1,0 +1,12 @@
+Title: Parse state of downtime notification log entries correctly
+Level: 1
+Component: livestatus
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387193798
+Targetversion: future
+
+The state information of log messages of notifications that are
+triggered by downtimes was not correctly parsed. This has been
+fixed.

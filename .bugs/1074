@@ -1,11 +1,14 @@
 Title: Predictive monitoring does not take into account DST
 Component: checks
-State: open
+Class: bug
+State: wontfix
 Date: 2013-10-16 21:43:31
 Targetversion: future
-Class: bug
 
 The predictive monitoring appearantly does not handle daylight saving time
 correctly.
 
 This is really hard to fix.
+
+2013-12-16 15:40:11: changed state open -> wontfix
+Will be fixed in the master branch.

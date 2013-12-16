@@ -1,0 +1,14 @@
+Title: Fix semantics of columns num_services_hard_*
+Level: 1
+Component: livestatus
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387218771
+Targetversion: future
+
+In the tables <tt>hosts</tt> and <tt>servicegroups</tt> the columns
+<tt>num_services_hard_warn</tt>, <tt>num_services_hard_crit</tt> and
+<tt>num_services_hard_unknown<tt> did not correctly reflect the
+hard status but in most cases just the soft status - effectively
+ignoring the <tt>_hard_</tt>. This has now been fixed.

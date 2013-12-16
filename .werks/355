@@ -1,0 +1,12 @@
+Title: heartbeat_crm: Now handling "Failed actions:" output in agent
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387197335
+Targetversion: future
+
+When there is a "Failed actions:" info block provided by the agent,
+the inventory code of the check failed with an exception. This has
+been fixed now.

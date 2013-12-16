@@ -1,0 +1,12 @@
+Title: Fixed too long page title during performing several actions
+Level: 1
+Component: multisite
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387196080
+Targetversion: future
+
+The page title reflects the current page. A bug caused this page title
+to be appended to the current title instead of being replaced. This resulted
+in too long page titles when performing e.g. actions in WATO

@@ -1,0 +1,11 @@
+Title: cisco_fantray: Fixed error on Cisco devices which do not support this check
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387196790
+Targetversion: future
+
+When doing an inventory on cisco devices which did not support this check, the
+check created an error message.

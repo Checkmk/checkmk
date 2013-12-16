@@ -1159,12 +1159,6 @@ class html:
         else:
             return text.encode("utf-8")
 
-        # Old code is soooooooo slow...
-        n = ""
-        for c in text:
-            n += self.u8(c)
-        return n
-
     # remove all HTML-tags
     def strip_tags(self, ht):
         if type(ht) not in [str, unicode]:

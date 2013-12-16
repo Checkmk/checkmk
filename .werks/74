@@ -1,7 +1,7 @@
 Title: raritan_pdu_plugs: new check for Raritan PX-2000 family PDUs
 Level: 1
 Component: checks
-Version: 1.2.3i8
+Version: 1.2.4b1
 Date: 1386689897
 Class: feature
 

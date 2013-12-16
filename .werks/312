@@ -1,7 +1,7 @@
 Title: Hiding views related to not existing datasources, like the EC now
 Level: 1
 Component: multisite
-Version: 1.2.3i8
+Version: 1.2.4b1
 Date: 1387180830
 Class: fix
 

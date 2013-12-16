@@ -1,7 +1,7 @@
 Title: Virtualmachine names with space no longer have missing piggyback data
 Level: 1
 Component: checks
-Version: 1.2.3i8
+Version: 1.2.4b1
 Date: 1386608073
 Class: fix
 

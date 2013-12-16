@@ -1,0 +1,12 @@
+Title: postgres_sessions: make agent plugin compatible with PostgreSQL 9.2
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387213935
+Targetversion: future
+
+Problem is that newer PostgreSQL versions have the column <tt>query</tt>
+instead of <tt>current_query</tt>. The plugin now simply tries both
+variants.

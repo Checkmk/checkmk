@@ -1,0 +1,45 @@
+Title: Livestatus is not compatible to Nagios 4
+Component: livestatus
+State: open
+Date: 2013-12-16 14:00:17
+Targetversion: future
+Class: feature
+
+Configuration
+
+CentOS release 6.4 (Final)
+Linux nagios 2.6.32-358.el6.i686 #1 SMP Thu Feb 21 21:50:49 UTC 2013 i686 i686 i386 GNU/Linux
+
+nagios 4.0.1 (compiled from sources) 
+centreon 2.4.4
+nagvis 1.7.10
+
+check_mk-1.2.2p3 (compiled from sources)
+
+messages from nagios.log.
+
+unable to launch nagios with mk-livestatus.o 
+
+[1385845101] Nagios 4.0.1 starting... (PID=15009)
+[1385845101] Local time is Sat Nov 30 21:58:21 CET 2013
+[1385845101] LOG VERSION: 2.0
+[1385845101] qh: Socket '/usr/local/nagios/var/rw/nagios.qh' successfully initia
+lized
+[1385845101] qh: core query handler registered
+[1385845101] nerd: Channel hostchecks registered successfully
+[1385845101] nerd: Channel servicechecks registered successfully
+[1385845101] nerd: Channel opathchecks registered successfully
+[1385845101] nerd: Fully initialized and ready to rock!
+[1385845101] wproc: Successfully registered manager as @wproc with query handler
+[1385845101] wproc: Registry request: name=Core Worker 15013;pid=15013
+[1385845101] wproc: Registry request: name=Core Worker 15012;pid=15012
+[1385845101] wproc: Registry request: name=Core Worker 15011;pid=15011
+[1385845101] wproc: Registry request: name=Core Worker 15010;pid=15010
+[1385845101] Error: Could not load module '/usr/local/lib/mk-livestatus/livestatus.o' -> /usr/local/lib/mk-livestatus/livestatus.o: undefined symbol: last_command_check
+[1385845101] Error: Failed to load module '/usr/local/lib/mk-livestatus/livestatus.o'.
+
+
+
+-------------------------------------
+Livestatus needs to know for which nagios core to compile and use different
+headers.

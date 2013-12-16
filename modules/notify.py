@@ -535,7 +535,7 @@ def notify_via_email(context, write_into_spoolfile):
     # Our resultion in future: use /usr/sbin/sendmail directly.
     # Our resultion in the present: look with locale -a for an existing UTF encoding
     # and use that.
-    for encoding in os.popen("locale -a"):
+    for encoding in os.popen("locale -a 2>/dev/null"):
         l = encoding.lower()
         if "utf8" in l or "utf-8" in l or "utf.8" in l:
             encoding = encoding.strip()

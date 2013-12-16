@@ -29,6 +29,7 @@ check_includes['hr_fs'] = [ "df.include" ]
 def inventory_hr_fs(info):
     mplist = []
     for hrtype, hrdescr, hrunits, hrsize, hrused in info:
+        hrdescr = snmp_decode_string(hrdescr)
         if hrtype in [ ".1.3.6.1.2.1.25.2.1.4" ] and \
                 hrdescr not in inventory_df_exclude_mountpoints and \
                 saveint(hrsize) != 0:
@@ -38,6 +39,7 @@ def inventory_hr_fs(info):
 def check_hr_fs(item, params, info):
     fslist = []
     for hrtype, hrdescr, hrunits, hrsize, hrused in info:
+        hrdescr = snmp_decode_string(hrdescr)
         if "patterns" in params or item == hrdescr:
             unit_size = saveint(hrunits)
             hrsize = saveint(hrsize)

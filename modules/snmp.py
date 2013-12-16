@@ -387,7 +387,7 @@ def snmp_decode_string(text):
     if encoding:
         return text.decode(encoding).encode("utf-8")
     else:
-        return text
+        return text.decode('latin1').encode('utf-8')
 
 #   .--Classic SNMP--------------------------------------------------------.
 #   |        ____ _               _        ____  _   _ __  __ ____         |

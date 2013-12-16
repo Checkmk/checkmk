@@ -1,8 +1,11 @@
 Title: problem with strange encoding of Umlauts when querying windows SNMP agent
 Component: checks
-State: open
+Class: bug
+State: done
 Date: 2013-10-31 15:37:33
 Targetversion: future
-Class: bug
 
 for detailed description and snmp walk see ticket 13, customer geobasis
+
+2013-12-16 10:07:04: changed state open -> done
+Using encoding configured via the rule "snmp_character_encodings" now. Defaulting to latin-1 now.

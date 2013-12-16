@@ -1,9 +1,9 @@
 Title: parent scan fails after renaming a wato folder
 Component: wato
-State: open
+Class: bug
+State: works4me
 Date: 2013-08-09 16:33:23
 Targetversion: 1.2.3i5
-Class: bug
 
 mir ist folgendes in der Entwickler Version 2013.06.17 aufgefallen.
 Kurzes Beispiel:
@@ -18,3 +18,7 @@ Versucht der Parent Scan in WATO die Hosts unter dem alten Ordner Namen
 (Main Directory\Kunde\Hosts )zu finden und schlägt fehl. Alle bestehenden
 Regeln wurden, einwandfrei auf den neuen Ordner angepasst.  Hoffe das war
 euch noch nicht bekannt, habe in der Bug Liste nichts dazu gefunden.
+
+2013-12-16 09:46:23: changed state open -> works4me
+I am unable to reproduce this problem with the current code. Assumint that
+this has already been fixed.

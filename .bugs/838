@@ -1,9 +1,9 @@
 Title: Its not possible to add contacts groups to foulders if a minus is in name
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2013-12-10 10:09:51
 Targetversion: 1.2.3i6
-Class: bug
 
 From the german mailing list:
  
@@ -21,3 +21,6 @@ Ich vermute, dass es an einer Wato-Funktion liegt und beim Parsen des Namens etw
  
 
 Der Fehler ist reproduzierbar.
+
+2013-12-16 09:36:27: changed state open -> done
+This bug has already been fixed some days/weeks ago.

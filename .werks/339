@@ -1,0 +1,11 @@
+Title: blade_bays blade_blades blade_blowers blade_health blade_mediatray blade_powerfan blade_powermod: fix scan function
+Level: 2
+Component: checks
+Version: 1.2.4b1
+Date: 1387205955
+Class: fix
+
+Due to a previous precision in the scan function API the scan functions of
+the blade_* checks where never successful anymore. That way those checks
+were not detected on new devices.  This has been fixed.  Existing checks
+were not affected.

@@ -1,0 +1,27 @@
+Title: New header for limiting the execution time of a query
+Level: 1
+Component: livestatus
+Version: 1.2.4b1
+Date: 1387199727
+Class: feature
+
+The new Livestatus header Timelimit: sets an upper limit
+for the execution time of a query. Specify the timeout as
+a number of seconds. The following query will stop after
+5000 lines of output. If that takes longer than 30 seconds,
+then the query <b>fails with no output</b>:
+
+F+:query.lql
+GET log
+Columns: message
+Timelimit: 30
+Limit: 5000
+F-:
+
+Please note, that <tt>Limit:</tt> and <tt>Timelimit:</tt> have
+a different behaviour when the limit is reached:
+
+<li class=list><tt>Limit:</tt> end the query, output all rows that
+have been found so far.</li>
+<li class=list><tt>Timelimit:</tt> abort the query with an error,
+do not output any lines.</li>

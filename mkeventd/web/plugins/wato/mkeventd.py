@@ -923,7 +923,7 @@ def mode_mkeventd_rules(phase):
                         icon = "rulematch"
                         have_match = True
                     if groups:
-                        msg += _(" Match groups: %s") % ",".join(groups)
+                        msg += _(" Match groups: %s") % ",".join([ g or _('&lt;None&gt;') for g in groups ])
                     html.icon(msg, icon)
 
             table.cell(_("ID"), '<a href="%s">%s</a>' % (edit_url, rule["id"]))

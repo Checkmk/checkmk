@@ -758,11 +758,3 @@ def perfometer_fanspeed(row, check_command, perf_data):
     return "%.2f%%" % value, perfometer_linear(value, "silver")
 
 perfometers["check_mk-apc_inrow_fanspeed"]  = perfometer_fanspeed
-
-
-def perfometer_modbus_value(row, check_command, perf_data):
-    value = int(perf_data[0][1])
-    return perf_data[0][1], perfometer_logarithmic(value, value*3, 2, '#3366cc')
-
-perfometers['check_mk-modbus_value'] = perfometer_modbus_value
-

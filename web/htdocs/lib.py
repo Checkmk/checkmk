@@ -126,7 +126,14 @@ def savefloat(f):
 
 # Generates a unique id
 def gen_id():
-    return file('/proc/sys/kernel/random/uuid').read().strip()
+    try:
+        return file('/proc/sys/kernel/random/uuid').read().strip()
+    except IOError:
+        # On platforms where the above file does not exist we try to
+        # use the python uuid module which seems to be a good fallback
+        # for those systems. Well, if got python < 2.5 you are lost for now.
+        import uuid
+        return str(uuid.uuid4())
 
 # Load all files below share/check_mk/web/plugins/WHAT into a
 # specified context (global variables). Also honors the

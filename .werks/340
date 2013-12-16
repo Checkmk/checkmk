@@ -1,0 +1,10 @@
+Title: blade_health: fix check, it was totally broken
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387206421
+Targetversion: future
+
+Thanks to a patch from Christof Musik.

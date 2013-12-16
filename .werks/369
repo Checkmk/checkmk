@@ -6,3 +6,4 @@ Date: 1387215298
 Class: fix
 
 An exception occured when checking the last queue reported by the agent.
+This resulted in an UNKNOWN state.

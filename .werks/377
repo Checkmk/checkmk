@@ -1,0 +1,10 @@
+Title: check_http: Certificate Age mode now supports SNI
+Level: 1
+Component: checks
+Version: 1.2.4b1
+Date: 1387272159
+Class: feature
+
+The WATO configuration dialog did not provide the option to enable
+SNI for the "Certificate Age" checking mode. This option has been
+added now.

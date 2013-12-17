@@ -1,0 +1,8 @@
+Title: Fixed syntax error in exception handler of LDAP search code
+Level: 1
+Component: multisite
+Version: 1.2.4b1
+Date: 1387268423
+Class: fix
+
+The exceptions are generated correctly now to show the real error message.

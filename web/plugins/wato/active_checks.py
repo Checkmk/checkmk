@@ -733,6 +733,13 @@ register_rule(group,
                                     default_value = 443,
                                 )
                             ),
+                            ( "sni",
+                              FixedValue(
+                                  value = True,
+                                  totext = _("enable SNI"),
+                                  title = _("Enable SSL/TLS hostname extension support (SNI)"),
+                              )
+                            ),
                         ],
                         required_keys = [ "cert_days" ],
                     ),

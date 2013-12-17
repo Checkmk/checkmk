@@ -3159,7 +3159,7 @@ no_inventory_possible = None
         output.write("def is_snmpv2c_host(hostname):\n   return %r\n\n" % is_snmpv2c_host(hostname))
         output.write("def is_bulkwalk_host(hostname):\n   return %r\n\n" % is_bulkwalk_host(hostname))
         output.write("def snmp_timing_of(hostname):\n   return %r\n\n" % snmp_timing_of(hostname))
-        output.write("def snmp_credentials_of(hostname):\n   return %r\n\n" % snmp_credentials_of(hostname))
+        output.write("def snmp_credentials_of(hostname):\n   return %s\n\n" % pprint.pformat(snmp_credentials_of(hostname)))
         output.write("def snmp_port_of(hostname):\n   return %r\n\n" % snmp_port_of(hostname))
     else:
         output.write("def snmp_port_spec(hostname):\n    return %r\n\n" % snmp_port_spec(hostname))

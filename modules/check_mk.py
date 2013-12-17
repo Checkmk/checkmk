@@ -170,6 +170,11 @@ if __name__ == "__main__":
             if not os.path.exists(check_mk_configfile):
                 sys.stderr.write("Missing configuration file %s.\n" % check_mk_configfile)
                 sys.exit(1)
+
+            # Also rewrite the location of the conf.d directory
+            if os.path.exists(check_mk_basedir + "/conf.d"):
+                check_mk_configdir = check_mk_basedir + "/conf.d"
+
         else:
             sys.stderr.write("Missing argument to option -c.\n")
             sys.exit(1)

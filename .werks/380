@@ -1,0 +1,10 @@
+Title: jolokia_metrics.mem: PNP-Template now handles non existant max values
+Level: 1
+Component: checks
+Version: 1.2.4b1
+Date: 1387277786
+Class: fix
+
+With some application servers the maximum values for memory are not provided
+by the agent. The checks did already handle this, but the PNP graph could
+not be displayed in this case.

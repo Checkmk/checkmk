@@ -1,0 +1,10 @@
+Title: smart.stats: Remove duplicate disks
+Level: 1
+Component: checks
+Version: 1.2.4b1
+Date: 1387279511
+Class: fix
+
+In same cases a disk has two physical paths and thus is seen
+two times by the <tt>smart</tt> plugin for Linux. This plugin
+has now been fixed and no longer outputs duplicate entries.

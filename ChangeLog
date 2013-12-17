@@ -57,6 +57,7 @@
     * 0109 FIX: cisco_fantray: Prevent inventory for not available fans
     * 0110 FIX: cisco_fru_power:  Prevent inventory for not available FRUs
     * 0350 FIX: nfsmounts: correctly handle mount points with spaces...
+    * 0387 FIX: df*: Negative filesystem space levels get a more clear text in check output...
 
     Multisite:
     * 0371 Added log class filter to hostsvcevents view

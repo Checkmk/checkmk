@@ -603,7 +603,7 @@ def output_mors(what, properties, direct=False):
             if type(value) == tuple:
                 sections.append(value)
             else:
-                if name == 'runtime.host':
+                if name == 'runtime.host' and value:
                     running_on = value
                 elif name == 'runtime.powerState':
                     power_state = value

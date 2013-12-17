@@ -1,11 +1,14 @@
 Title: EC: owner field is not being used
 Component: ec
-State: open
+Class: nastiness
+State: wontfix
 Date: 2013-09-27 11:18:36
 Targetversion: future
-Class: nastiness
 
 The EC has a field "owner" for each event. When is this field
 being used? I fear that it isn't used at all. We could use this
 in order to store the name of the last one that has updated
 the event.
+
+2013-12-17 18:49:37: changed state open -> wontfix
+Wont fix this, at least for 1.2.4.

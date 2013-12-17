@@ -1,12 +1,15 @@
 Title: LDAP - removing users.mk and keeping contacts.mk switches all users to htpasswd related
 Component: multisite
-State: open
+Class: nastiness
+State: wontfix
 Date: 2013-02-08 09:26:24
 Targetversion: 1.2.2
-Class: nastiness
 
 The fact that a user belongs to the ldap connector is stored in the
 users.mk. When one deletes the users.mk and leaves the roles.mk untouched
 all users are converted to "htpasswd" users. This might be ok, since the
 removal of files is a inner modification, but we could easily add a
 field to the contacts.mk which also marks the users as ldap users.
+
+2013-12-17 18:44:01: changed state open -> wontfix
+Is ok

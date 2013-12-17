@@ -53,6 +53,9 @@
     * 0348 FIX: genua_pfstate: fix syntax error in check man page
     * 0349 FIX: winperf.cpuusage: update man page: this check is deprecated
     * 0383 FIX: solaris_mem: Is now compatible to more systems...
+    * 0109 FIX: cisco_fantray: Prevent inventory for not available fans
+    * 0110 FIX: cisco_fru_power:  Prevent inventory for not available FRUs
+    * 0350 FIX: nfsmounts: correctly handle mount points with spaces...
 
     Multisite:
     * 0371 Added log class filter to hostsvcevents view

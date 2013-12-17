@@ -1,0 +1,8 @@
+Title: cisco_fantray: Prevent inventory for not available fans
+Level: 1
+Component: checks
+Version: 1.2.4b1
+Date: 1387286606
+Class: fix
+
+

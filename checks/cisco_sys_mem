@@ -33,9 +33,9 @@ def inventory_cisco_sys_mem(info):
     if info:
         return [ (None, "cisco_mem_default_levels") ]
     else:
-        return (3, "no snmp data found")
+        return []
 
-def check_cisco_sys_mem(item, params, info):
+def check_cisco_sys_mem(_no_item, params, info):
     warn, crit = params
     if info[0][0]:
        mem_used =  float(info[0][0])
@@ -56,7 +56,7 @@ check_info["cisco_sys_mem"] = {
     "inventory_function"    : inventory_cisco_sys_mem,
     "service_description"   : "Supervisor Mem Used",
     "has_perfdata"          : True,
-    "group"                 : "cisco_sys_mem",
+    "group"                 : "memory",
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.4.1.9.9.305.1.1.2.0"),
     "snmp_info"		    : ( ".1.3.6.1.4.1.9.9.305.1.1.2", "0" ),
 }

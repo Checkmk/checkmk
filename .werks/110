@@ -1,0 +1,10 @@
+Title: cisco_fru_power:  Prevent inventory for not available FRUs
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387286933
+Targetversion: future
+
+

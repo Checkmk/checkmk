@@ -1,4 +1,4 @@
-Title: Inline SNMP now longer throws an exception when using SNMPv3 credentials
+Title: Inline SNMP no longer throws an exception when using SNMPv3 credentials
 Level: 1
 Component: checks
 Class: fix

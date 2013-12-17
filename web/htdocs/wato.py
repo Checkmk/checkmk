@@ -11772,9 +11772,7 @@ def get_rule_conditions(ruleset):
                 itemspec = ListChoice(choices = itemenum, columns = 3)
                 item_list = [ x+"$" for x in itemspec.from_html_vars("item") ]
             else:
-                vs = ListOfStrings(valuespec = RegExpUnicode(
-                    title = ruleset["itemspec"].title(),
-                ))
+                vs = ListOfStrings(valuespec = RegExpUnicode())
                 item_list = vs.from_html_vars("itemlist")
                 vs.validate_value(item_list, "itemlist")
 

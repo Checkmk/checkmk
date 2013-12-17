@@ -1,0 +1,11 @@
+Title: df*: Negative filesystem space levels get a more clear text in check output
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387303116
+Targetversion: future
+
+Instead of just displaying negative values, the text "levels at free space below XX.XX/YY.YY)
+is displayed in plugin output.

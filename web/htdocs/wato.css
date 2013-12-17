@@ -362,6 +362,7 @@ table.validationerror img {
     position: absolute;
     top: 28px;
     right: 19px;
+    z-index: 500;
 }
 
 .wato div.floatfolder div.infos img {
@@ -420,6 +421,13 @@ table.validationerror img {
     text-decoration: none;
     position: relative;
     top: -2px;
+}
+
+.wato img.authicon {
+    width: 28px;
+    height: 28px;
+    margin-right: 10px;
+    vertical-align: middle;
 }
 
 .wato div.move_dialog {

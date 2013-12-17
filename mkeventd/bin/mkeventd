@@ -2366,7 +2366,6 @@ def run_eventd():
             time.sleep(1)
 
 
-
 #.
 #   .--EventStatus---------------------------------------------------------.
 #   |       _____                 _   ____  _        _                     |
@@ -3265,6 +3264,13 @@ try:
         os.remove(g_eventsocket_path)
 
     g_event_server.output_hash_stats()
+
+    # Closing fds which might be still open
+    for fd in [ opt_syslog_fd, opt_syslog_tcp_fd, opt_snmptrap_fd ]:
+        try:
+            os.close(fd)
+        except:
+            pass
 
     log("Successfully shut down.")
     os.remove(g_pid_file)

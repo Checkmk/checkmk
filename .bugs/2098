@@ -1,0 +1,9 @@
+Title: Add try-out button to active check rule editor
+Component: wato
+State: open
+Date: 2013-12-17 12:26:03
+Targetversion: future
+Class: feature
+
+ich hätte da einen Vorschlag zu Active Checks.
+Wir wärs wenn man zu den Rules noch einen Try-it-out Button macht? dann sieht man sofort ob der Check fehlschlägt oder funktioniert.

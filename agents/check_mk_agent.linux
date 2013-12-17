@@ -138,6 +138,7 @@ then
 
     echo '<<<nfsmounts>>>'
     sed -n '/ nfs4\? /s/[^ ]* \([^ ]*\) .*/\1/p' < /proc/mounts |
+        sed 's/\\040/ /g' |
         while read MP
 	do
 	 if [ $STAT_VERSION != $STAT_BROKE ]; then

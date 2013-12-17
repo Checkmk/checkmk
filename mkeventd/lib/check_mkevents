@@ -65,8 +65,8 @@ try:
     else:
         application = None
 except:
-    sys.stdout.write("Usage: check_mkevents [-H REMOTE:PORT] [-a] HOST [APPLICATION]\n")
-    sys.stdout.write("\n -a    do not take into account acknowledged events.\n")
+    sys.stdout.write("Usage: check_mkevents [-H (REMOTE:PORT|/path/to/unix/socket)] [-a] HOST [APPLICATION]\n")
+    sys.stdout.write("\n -a        do not take into account acknowledged events.\n")
     sys.stdout.write("\n")
     sys.exit(3)
 

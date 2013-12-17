@@ -2,7 +2,7 @@ Title: ps check outputs wrong cpu usage
 Component: checks
 State: open
 Date: 2013-12-17 13:10:37
-Targetversion: 1.2.4
+Targetversion: 1.2.5i1
 Class: bug
 
 The check uses the average cpu usage since start of the process:

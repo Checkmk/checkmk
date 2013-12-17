@@ -53,6 +53,8 @@
     * 0347 FIX: smart.stats: Remove duplicate disks...
     * 0109 FIX: cisco_fantray: Prevent inventory for not available fans
     * 0110 FIX: cisco_fru_power:  Prevent inventory for not available FRUs
+    * 0349 FIX: winperf.cpuusage: update man page: this check is deprecated
+    * 0383 FIX: solaris_mem: Is now compatible to more systems...
 
     Multisite:
     * 0371 Added log class filter to hostsvcevents view

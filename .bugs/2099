@@ -1,0 +1,23 @@
+Title: ps check outputs wrong cpu usage
+Component: checks
+State: open
+Date: 2013-12-17 13:10:37
+Targetversion: 1.2.5i1
+Class: bug
+
+The check uses the average cpu usage since start of the process:
+
+
+***
+       CODE        HEADER    DESCRIPTION
+
+       %cpu        %CPU      cpu utilization of the process in "##.#" format.
+                             Currently, it is the CPU time used divided by the
+                             time the process has been running
+                             (cputime/realtime ratio), expressed as a
+                             percentage.  It will not add up to 100% unless
+                             you are lucky.  (alias pcpu).
+***
+
+This is totally wrong. Better would be to use the raw counter values from ps and
+keep an eye on the counters on our own.

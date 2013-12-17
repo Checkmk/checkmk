@@ -363,8 +363,8 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
             raise MKLDAPException(_('Unable to successfully perform the LDAP search '
                                     '(Base: %s, Scope: %s, Filter: %s, Columns: %s): %s') %
                                     (html.attrencode(base), html.attrencode(scope),
-                                    html.attrencode(filt), html.attrencode(','.join(columns))),
-                                    last_exc)
+                                    html.attrencode(filt), html.attrencode(','.join(columns)),
+                                    last_exc))
         else:
             raise MKLDAPException(_('Unable to successfully perform the LDAP search (%s)') % last_exc)
 

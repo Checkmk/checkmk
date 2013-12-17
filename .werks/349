@@ -1,0 +1,8 @@
+Title: winperf.cpuusage: update man page: this check is deprecated
+Level: 1
+Component: checks
+Version: 1.2.4b1
+Date: 1387282751
+Class: fix
+
+

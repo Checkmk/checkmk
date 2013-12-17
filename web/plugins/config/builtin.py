@@ -219,7 +219,9 @@ ldap_userspec         = {
     'scope'           : 'sub',
     'user_id_umlauts' : 'replace',
 }
-ldap_groupspec        = {}
+ldap_groupspec        = {
+    'scope'           : 'sub',
+}
 ldap_active_plugins   = {'email': {}, 'alias': {}, 'auth_expire': {}}
 ldap_cache_livetime   = 300
 ldap_debug_log        = None

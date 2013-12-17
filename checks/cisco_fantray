@@ -30,7 +30,7 @@ def inventory_cisco_fantray(info):
     if info and info[0]:
         #Some Cisco switches reporting not available fans as down,
         #so we cant invenorize fans reported as down
-        return [ (line[0], None) for line in info if line[1] != '3' 
+        return [ (line[0], None) for line in info if line[1] != '3' ]
 
 def check_cisco_fantray(item, params, info):
     for line in info:

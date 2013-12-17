@@ -215,7 +215,10 @@ escape_plugin_output = True
 user_connectors       = ['htpasswd']
 userdb_automatic_sync = [ 'wato_users', 'page', 'wato_pre_activate_changes', 'wato_snapshot_pushed' ]
 ldap_connection       = {}
-ldap_userspec         = {}
+ldap_userspec         = {
+    'scope'           : 'sub',
+    'user_id_umlauts' : 'replace',
+}
 ldap_groupspec        = {}
 ldap_active_plugins   = {'email': {}, 'alias': {}, 'auth_expire': {}}
 ldap_cache_livetime   = 300

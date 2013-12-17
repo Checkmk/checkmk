@@ -4,6 +4,19 @@
 #
 ####
 
+###
+## http://blogs.technet.com/b/heyscriptingguy/archive/2006/12/04/how-can-i-expand-the-width-of-the-windows-powershell-console.aspx
+
+$pshost = get-host
+$pswindow = $pshost.ui.rawui
+
+$newsize = $pswindow.buffersize
+$newsize.height = 300
+$newsize.width = 150
+$pswindow.buffersize = $newsize
+
+###
+
 Write-Host –NoNewLine "<<<win_printers>>>"
 $Data_Set1 = Get-WMIObject Win32_PerfFormattedData_Spooler_PrintQueue | Select Name, @{Expression={$_.jobs};Label="CurrentJobs"}
 $Data_Set2 = Get-WmiObject win32_printer | select name, printerstatus, detectederrorstate

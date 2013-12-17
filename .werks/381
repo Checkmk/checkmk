@@ -1,0 +1,14 @@
+Title: win_printers: Fixed creation of duplicate services
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387278488
+Targetversion: future
+
+Longer printer names were stripped and could result in duplicate services
+found. This patch extends the terminal width of the agent plugin and prevents
+stripping of chars.
+
+Thanks to Andreas Döhler for submitting the patch.

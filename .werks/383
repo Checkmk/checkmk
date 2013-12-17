@@ -1,0 +1,23 @@
+Title: solaris_mem: Is now compatible to more systems
+Level: 1
+Component: checks
+Version: 1.2.4b1
+Date: 1387283624
+Class: fix
+
+Depending on the system, the agent might provide memory information
+of slightly different format:
+
+SunOS hosta 5.10 Generic_142900-03 sun4u sparc SUNW,UltraAX-i2
+Memory: 512M phys mem, 353M free mem, 2000M total swap, 2000M free swap
+
+SunOS hostb 5.10 Generic_142900-03 sun4u sparc SUNW,Sun-Fire-480R
+Memory: 10G phys mem, 1905M free mem, 8002M total swap, 8002M free swap
+
+SunOS hostc 5.6 Generic_105181-21 sun4u sparc SUNW,Ultra-1
+Memory: 640M real, 10M free, 293M swap in use, 349M swap free
+
+SunOS hostd 5.8 Generic_108528-09 sun4u sparc SUNW,Ultra-60
+Memory: 2048M real, 913M free, 723M swap in use, 2863M swap free
+
+The check is now compatible to all of them.

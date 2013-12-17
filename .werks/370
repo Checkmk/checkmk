@@ -1,0 +1,10 @@
+Title: brocade_mlx_module*: Improved output of checks
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.4b1
+Date: 1387217440
+Targetversion: future
+
+

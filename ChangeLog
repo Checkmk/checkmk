@@ -51,6 +51,7 @@
     * 0381 FIX: win_printers: Fixed creation of duplicate services...
     * 0347 FIX: smart.stats: Remove duplicate disks...
     * 0348 FIX: genua_pfstate: fix syntax error in check man page
+    * 0349 FIX: winperf.cpuusage: update man page: this check is deprecated
 
     Multisite:
     * 0371 Added log class filter to hostsvcevents view

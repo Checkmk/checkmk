@@ -1,0 +1,8 @@
+Title: check_mk -c: Now also rewrites the location of conf.d directory
+Level: 1
+Component: core
+Version: 1.2.4b1
+Date: 1387274477
+Class: fix
+
+

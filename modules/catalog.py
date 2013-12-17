@@ -30,6 +30,7 @@ manpage_catalog_titles = {
             "mcdata"     : "McDATA",
             "netapp"     : "NetApp",
             "hitachi"    : "Hitachi",
+            "emc"        : "EMC",
         "phone"       : "Telephony",
 
     "app"      : "Applications",

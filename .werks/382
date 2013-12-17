@@ -1,0 +1,11 @@
+Title: Active HTTP check now supports multiline regexp matching
+Level: 1
+Component: wato
+Version: 1.2.4b1
+Date: 1387280779
+Class: feature
+
+Previous versions of the configuration form did not provide the
+option to form regex patterns accross multi lines. The used
+check_http plugin provides the option "-l" to realize this. The
+WATO form now has a checkbox to make it possible to use this.

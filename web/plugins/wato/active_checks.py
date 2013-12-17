@@ -631,15 +631,20 @@ register_rule(group,
                               )
                             ),
                             ( "expect_regex",
-                              Tuple(
-                                  title = _("Regular expression to expect in content"),
-                                  orientation = "vertical",
-                                  show_titles = False,
-                                  elements = [
-                                      RegExp(label = _("Regular expression: ")),
-                                      Checkbox(label = _("Case insensitive")),
-                                      Checkbox(label = _("return CRITICAL if found, OK if not")),
-                                  ])
+                              Transform(
+                                Tuple(
+                                    orientation = "vertical",
+                                    show_titles = False,
+                                    elements = [
+                                        RegExp(label = _("Regular expression: ")),
+                                        Checkbox(label = _("Case insensitive")),
+                                        Checkbox(label = _("return CRITICAL if found, OK if not")),
+                                        Checkbox(label = _("Multiline string matching")),
+                                    ]
+                                ),
+                                forth = lambda x: len(x) == 3 and tuple(list(x) + [False]) or x,
+                                title = _("Regular expression to expect in content"),
+                              ),
                             ),
                             ( "post_data",
                               Tuple(

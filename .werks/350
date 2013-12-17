@@ -1,0 +1,15 @@
+Title: nfsmounts: correctly handle mount points with spaces
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387293636
+Targetversion: future
+
+If you have a space in the name of your <b>moint point</b> (not in the name
+of the export) then the Linux agent would show this mount point always as
+<tt>hanging</tt>. The reason is that in <tt>/proc/mounts</tt> spaces are
+displayed as <tt>\040</tt>. This has now been fixed in the agent, which
+outputs spaces correctly. Also the according check has been modified so that
+it can deal with spaces in the names of the mount points.

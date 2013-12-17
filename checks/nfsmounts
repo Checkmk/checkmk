@@ -24,22 +24,26 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Example out from agent:
+# <<<nfsmounts>>>
+# /foobar hanging 0 0 0 0
+# /with spaces ok 217492 123563 112515 524288
 
 def inventory_nfsmounts(info):
-    return [ (line[0], None) for line in info ]
+    return [ (" ".join(line[:-5]), None) for line in info ]
 
 def check_nfsmounts(item, _no_params, info):
     for line in info:
-        mountpoint = line[0]
+        mountpoint = " ".join(line[:-5])
         if mountpoint == item:
-            size_blocks = int(line[2])
-            free_blocks = int(line[4]) # for non-root user
-            blocksize = int(line[5])
+            size_blocks = int(line[-4])
+            free_blocks = int(line[-2]) # for non-root user
+            blocksize = int(line[-1])
 
             if size_blocks < 0 or free_blocks < 0 or blocksize > 1024*1024:
                 return (2, "Stale NFS handle")
 
-            if line[1] == 'ok':
+            if line[-5] == 'ok':
                 gb = 1024 * 1024 * 1024.0
                 size_gb = (size_blocks * blocksize) / gb
                 if size_gb == 0:

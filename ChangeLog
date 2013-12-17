@@ -74,6 +74,7 @@
     * 0332 FIX: Own host tag groups without topics resulted in two groups "Host tags" in the rule editor
     * 0361 FIX: The page linked by "new rule" can now be bookmarked again
     * 0341 FIX: Avoid rare exception in WATO when deleting a host...
+    * 0376 FIX: LDAP: Default configuration of attributes is reflected within WATO now
 
     Notifications:
     * 0362 sms: now searching PATH for sendsms and smssend commands...

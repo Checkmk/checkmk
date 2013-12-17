@@ -1,0 +1,14 @@
+Title: Linux agent: fix detaching of background plugins
+Level: 2
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387270406
+Targetversion: future
+
+The asynchronous execution of background processes in the Linux agent has
+been fixed. Before it could have happened that the agent starts background
+processes but - however - waits for all of them to finish until finishing
+itself. This has now been fixed. All plugins started with run_cached are
+now correctly detached from the agent.

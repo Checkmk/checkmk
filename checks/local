@@ -116,6 +116,9 @@ def check_local(item, params, info):
                 output = ", ".join(texts)
             else:
                 state = int(statechar)
+                if state not in range(0, 4):
+                    output += ", local check has sent invalid state %d" % state
+                    state = 3
             return (state, output, perfdata)
     return (3, "Check output not found in local checks")
 

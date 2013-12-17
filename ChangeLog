@@ -56,6 +56,7 @@
     * 0109 FIX: cisco_fantray: Prevent inventory for not available fans
     * 0110 FIX: cisco_fru_power:  Prevent inventory for not available FRUs
     * 0350 FIX: nfsmounts: correctly handle mount points with spaces...
+    * 0351 FIX: local: Catch invalid state codes and map to 3 (UNKNOWN)...
 
     Multisite:
     * 0371 Added log class filter to hostsvcevents view

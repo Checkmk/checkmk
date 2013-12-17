@@ -8990,7 +8990,11 @@ def mode_users(phase):
                 if userdb.hook_sync(add_to_changelog = True, raise_exc = True):
                     return None, _('The user synchronization completed successfully.')
             except Exception, e:
-                raise MKUserError(None, str(e))
+                if config.debug:
+                    import traceback
+                    raise MKUserError(None, traceback.format_exc().replace('\n', '<br>\n'))
+                else:
+                    raise MKUserError(None, str(e))
 
         return None
 

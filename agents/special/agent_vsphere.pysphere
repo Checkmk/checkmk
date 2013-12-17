@@ -640,12 +640,15 @@ def output_datastores():
 
     # print inspect.getmembers(MORTypes)
     print "<<<esx_vsphere_datastores:sep(%d)>>>" % ord('\t')
-    for mor in host._retrieve_properties_traversal(property_names=property_names, obj_type=MORTypes.Datastore):
-	for entry in mor.PropSet:
-	    if entry.Name == "name":
-                print '[%s]' % entry.Val
-            else:
-                print '%s\t%s' % (entry.Name.split(".")[1], entry.Val)
+    rows = host._retrieve_properties_traversal(property_names=property_names, obj_type=MORTypes.Datastore)
+    # if the user has no permission to host / datastores, rows is None, skip it then
+    if rows:
+        for mor in rows:
+            for entry in mor.PropSet:
+                if entry.Name == "name":
+                    print '[%s]' % entry.Val
+                else:
+                    print '%s\t%s' % (entry.Name.split(".")[1], entry.Val)
 
 def conv_multipath(value):
     return " ".join(["%s %s" % (p.Name, p.PathState) for p in value.HostMultipathStateInfoPath])

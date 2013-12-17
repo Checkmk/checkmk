@@ -1,0 +1,10 @@
+Title: check_mk -c: Now also rewrites the location of conf.d directory
+Level: 1
+Component: core
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387274477
+Targetversion: future
+
+

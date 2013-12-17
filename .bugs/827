@@ -1,9 +1,9 @@
 Title: Wato Folder creation from non admins
 Component: wato
-State: open
+Class: nastiness
+State: done
 Date: 2013-04-08 14:53:45
 Targetversion: 1.2.3
-Class: nastiness
 
 Ich/mein User ist nicht admin, hat aber Rechte im WATO-Ordner
 Ich lege einen neuen WATO-Unterordner an, ohne dass ich spezielle
@@ -13,3 +13,6 @@ keine Rechte darauf.
 Dies ist aber lediglich ein Anzeigefehler... ein Page-Reload reicht
 schon... das Schloss verschwindet und die Vererbten Permissions werden
 angezeigt - alles paletti!
+
+2013-12-17 18:17:46: changed state open -> done
+This should have been solved today.

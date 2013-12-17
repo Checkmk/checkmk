@@ -1,9 +1,9 @@
 Title: Implement paged ldap search to fix problems with response size limits
 Component: multisite
-State: open
+Class: nastiness
+State: done
 Date: 2013-04-29 10:22:57
 Targetversion: 1.2.3
-Class: nastiness
 
 At the moment we have only implemented a simple ldap search. In some directories,
 like active directory it leads into a SIZE_LIMIT_EXCEEDED exception when
@@ -11,3 +11,6 @@ a query results in more than 1000 response objects.
 
 The solution here is to implement a paged ldap search. An example can be
 seen here: http://www.novell.com/coolsolutions/tip/18274.html
+
+2013-12-17 18:15:52: changed state open -> done
+This has already been implemented a long time ago.

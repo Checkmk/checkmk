@@ -1,0 +1,10 @@
+Title: Added all active checks to check_mk -L output
+Level: 1
+Component: core
+Version: 1.2.4b1
+Date: 1387301984
+Class: feature
+
+check_mk -L did list all tcp and snmp based check, but the
+active checks were missing. They have been added now.
+

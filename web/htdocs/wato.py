@@ -11654,7 +11654,9 @@ def get_rule_conditions(ruleset):
                 itemspec = ListChoice(choices = itemenum, columns = 3)
                 item_list = [ x+"$" for x in itemspec.from_html_vars("item") ]
             else:
-                vs = ListOfStrings(valuespec = ruleset["itemspec"])
+                vs = ListOfStrings(valuespec = RegExpUnicode(
+                    title = ruleset["itemspec"].title(),
+                ))
                 item_list = vs.from_html_vars("itemlist")
                 vs.validate_value(item_list, "itemlist")
 
@@ -11892,7 +11894,7 @@ def mode_edit_rule(phase, new = False):
             else:
                 ListOfStrings(
                     orientation = "horizontal",
-                    valuespec = TextAscii(size = 30)).render_input("itemlist", item_list)
+                    valuespec = RegExpUnicode(size = 30)).render_input("itemlist", item_list)
 
                 html.write("<br><br>")
                 html.help(_("The entries here are regular expressions to match the beginning. "

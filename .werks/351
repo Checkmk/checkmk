@@ -1,0 +1,12 @@
+Title: local: Catch invalid state codes and map to 3 (UNKNOWN)
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387304385
+Targetversion: future
+
+If the the state of a line of the <tt>local</tt> section is
+not in the allowed range (from <tt>0</tt> to <tt>3</tt>) then
+we now assume <tt>3</tt>. Up to now Check_MK ran into an exception.

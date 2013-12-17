@@ -1,0 +1,12 @@
+Title: Better error handling for invalid service regex in rule conditions
+Level: 2
+Component: wato
+Class: fix
+State: unknown
+Version: 1.2.4b1
+Date: 1387299554
+Targetversion: future
+
+Previous versions of the rule editor in WATO did not check whether or not
+the regular expressions provided for matching services are valid. This
+change adds a regular expression validation.

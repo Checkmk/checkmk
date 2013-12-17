@@ -197,11 +197,23 @@ def get_filesystem_levels(host, mountpoint, size_gb, params):
     crit_mb     = savefloat(size_mb * crit_scaled / 100)
     levels["levels_mb"] = (warn_mb, crit_mb)
     if type(warn) == float:
-        levels["levels_text"] = "(levels at %.2f/%.2f%%)" % (warn_scaled, crit_scaled)
+        if warn_scaled < 0 and crit_scaled < 0:
+            label = 'levels at free space below'
+            warn_scaled *= -1
+            crit_scaled *= -1
+        else:
+            label = 'levels at'
+        levels["levels_text"] = "(%s %.2f/%.2f%%)" % (label, warn_scaled, crit_scaled)
     else:
+        if warn * mega < 0 and crit * mega < 0:
+            label = 'levels at free space below'
+            warn *= -1
+            crit *= -1
+        else:
+            label = 'levels at'
         warn_hr = get_bytes_human_readable(warn * mega)
         crit_hr = get_bytes_human_readable(crit * mega)
-        levels["levels_text"] = "(levels at %s/%s)" % ( warn_hr, crit_hr )
+        levels["levels_text"] = "(%s %s/%s)" % (label, warn_hr, crit_hr)
 
     return levels
 

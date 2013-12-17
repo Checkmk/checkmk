@@ -1,0 +1,15 @@
+Title: Trying to prevent problem when restarting mkeventd
+Level: 1
+Component: ec
+Version: 1.2.4b1
+Date: 1387297403
+Class: fix
+
+In some situation, when restarting the mkeventd, the old process has
+been stopped, but when the new process comes up, the builtin syslog
+server can not open the port, because it is somehow still opened.
+The error message is:
+
+Cannot bind TCP socket for syslog-tcp to port: Address already in use
+
+This change tries to prevent the problem.

@@ -23,6 +23,7 @@ if which smartctl > /dev/null 2>&1 ; then
     fi
 
     echo '<<<smart>>>'
+    SEEN=
     for D in /dev/disk/by-id/{scsi,ata}-*; do
         [ "$D" != "${D%scsi-\*}" ] && continue
         [ "$D" != "${D%ata-\*}" ] && continue
@@ -44,6 +45,12 @@ if which smartctl > /dev/null 2>&1 ; then
         if [ "$MODEL" = "iSCSI_Disk" ] || ["$MODEL" = "LOGICAL_VOLUME" ]; then
             continue
         fi
+
+	# Avoid duplicate entries for same device
+	if [ "${SEEN//.$N./}" != "$SEEN" ] ; then
+            continue
+        fi
+        SEEN="$SEEN.$N."
 
         # strip device name for final output
         DNAME=${D#/dev/disk/by-id/scsi-}

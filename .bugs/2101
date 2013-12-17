@@ -1,0 +1,9 @@
+Title: sidebar content is missing space at bottom
+Component: multisite
+State: open
+Date: 2013-12-17 18:13:50
+Targetversion: future
+Class: nastiness
+
+The sidebar height is set too low. There should really be a space below
+the last snapin to have some small border like 5px.

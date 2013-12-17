@@ -827,6 +827,10 @@ def get_folder_aliaspath(folder, show_main = True):
 #   '----------------------------------------------------------------------'
 
 def mode_folder(phase):
+    auth_message = check_folder_permissions(g_folder, "read", False)
+    auth_read = auth_message == True
+    auth_write = check_folder_permissions(g_folder, "write", False) == True
+
     global g_folder
     if phase == "title":
         return g_folder["title"]
@@ -835,16 +839,17 @@ def mode_folder(phase):
         global_buttons()
         if config.may("wato.rulesets") or config.may("wato.seeall"):
             html.context_button(_("Rulesets"),        make_link([("mode", "ruleeditor")]), "rulesets")
-        html.context_button(_("Folder Properties"), make_link_to([("mode", "editfolder")], g_folder), "edit")
-        if not g_folder.get(".lock_subfolders") and config.may("wato.manage_folders"):
+        if auth_read:
+            html.context_button(_("Folder Properties"), make_link_to([("mode", "editfolder")], g_folder), "edit")
+        if not g_folder.get(".lock_subfolders") and config.may("wato.manage_folders") and auth_write:
             html.context_button(_("New folder"),        make_link([("mode", "newfolder")]), "newfolder")
-        if not g_folder.get(".lock_hosts") and config.may("wato.manage_hosts"):
+        if not g_folder.get(".lock_hosts") and config.may("wato.manage_hosts") and auth_write:
             html.context_button(_("New host"),    make_link([("mode", "newhost")]), "new")
             html.context_button(_("New cluster"), make_link([("mode", "newcluster")]), "new_cluster")
         if config.may("wato.services"):
             html.context_button(_("Bulk Inventory"), make_link([("mode", "bulkinventory"), ("all", "1")]),
                         "inventory")
-        if not g_folder.get(".lock_hosts") and config.may("wato.parentscan"):
+        if not g_folder.get(".lock_hosts") and config.may("wato.parentscan") and auth_write:
             html.context_button(_("Parent scan"), make_link([("mode", "parentscan"), ("all", "1")]),
                         "parentscan")
         search_button()
@@ -955,6 +960,9 @@ def mode_folder(phase):
     else:
         render_folder_path()
 
+        if not auth_read:
+            html.message('<img class=authicon src="images/icon_autherr.png"> %s' % auth_message)
+
         lock_messages = []
         if g_folder.get(".lock_hosts"):
             if g_folder[".lock_hosts"] == True:
@@ -982,7 +990,7 @@ def mode_folder(phase):
         if True == check_folder_permissions(g_folder, "read", False):
             have_something = show_hosts(g_folder) or have_something
 
-        if not have_something:
+        if not have_something and auth_write:
             menu_items = []
             if not g_folder.get(".lock_hosts"):
                 menu_items.extend([
@@ -1098,7 +1106,7 @@ def check_folder_permissions(folder, how, exception=True, user = None, users = N
         if c in cgs:
             return True
 
-    reason = _("Sorry, you have no permissions to access the folder <b>%s</b>. ") % folder["title"]
+    reason = _("Sorry, you have no permissions to the folder <b>%s</b>. ") % folder["title"]
     if not cgs:
         reason += _("The folder has no contact groups assigned to.")
     else:
@@ -1107,6 +1115,7 @@ def check_folder_permissions(folder, how, exception=True, user = None, users = N
             reason += _("Your contact groups are <b>%s</b>.") %  ", ".join(user_cgs)
         else:
             reason += _("But you are not a member of any contact group.")
+    reason += _("You may enter the folder as you might have permission on a subfolders, though.")
 
     if exception:
         raise MKAuthException(reason)
@@ -1152,18 +1161,24 @@ def show_subfolders(folder):
 
         html.write('<div class="floatfolder%s" id="folder_%s"' % (
             auth_read and " unlocked" or " locked", entry['.name']))
-        if auth_write:
-            html.write(' onclick="wato_open_folder(event, \'%s\');"' % enter_url)
+        html.write(' onclick="wato_open_folder(event, \'%s\');"' % enter_url)
         html.write('>')
 
         # Only make folder openable when permitted to edit
-        if auth_read:
-            html.write(
-                '<div class=hoverarea onmouseover="wato_toggle_folder(event, this, true);" '
-                'onmouseout="wato_toggle_folder(event, this, false)">'
-            )
+        if not auth_read:
+            html.write('<img class="icon autherr" src="images/icon_autherr.png" title="%s">' % \
+                       (html.strip_tags(auth_message)))
 
-            if auth_read:
+        if True: # auth_read:
+            if not auth_read:
+                html.write('<div class=hoverarea>')
+
+            else:
+                html.write(
+                    '<div class=hoverarea onmouseover="wato_toggle_folder(event, this, true);" '
+                    'onmouseout="wato_toggle_folder(event, this, false)">'
+                )
+
                 html.icon_button(
                     edit_url,
                     _("Edit the properties of this folder"),
@@ -1200,9 +1215,6 @@ def show_subfolders(folder):
                     )
             html.write('</div>')
 
-        else:
-            html.write('<img class="icon autherr" src="images/icon_autherr.png" title="%s">' % \
-                       (html.strip_tags(auth_message)))
         html.write('<div class=infos>')
         # Show contact groups of the folder
         effective = effective_attributes(None, entry)

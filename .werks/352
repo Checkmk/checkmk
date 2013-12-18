@@ -1,0 +1,14 @@
+Title: Avoid Livestatus connections on pages that do not need them
+Level: 2
+Component: multisite
+Class: feature
+State: unknown
+Version: 1.2.5i1
+Date: 1387360535
+Targetversion: future
+
+In many pages in Multisite and especially WATO Livestatus connections
+are not neccessary. In previous versions the connection was built
+up anyway. Now this is done only when needed. That cuts down the total
+rate of Livestatus connections and also speeds up installations with
+many sites.

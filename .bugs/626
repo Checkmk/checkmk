@@ -1,9 +1,11 @@
 Title: Seiten ohne Livestatus Anfragen sollen keine Livestatus Verbindung versuchen
 Component: multisite
-State: open
+Class: nastiness
+State: done
 Date: 2012-02-06 12:44:52
 Targetversion: 1.4.0
-Class: nastiness
 
 Damit sollen Connect Versuche verringert werden und Fehlermeldungen während
 eines Nagios Neustarts verhindert werden.
+
+2013-12-18 10:55:24: changed state open -> done

@@ -1,0 +1,14 @@
+Title: check_ftp: cleanup configuration via WATO, remove Hostname field
+Level: 2
+Component: checks
+Version: 1.2.4b1
+Date: 1387374334
+Class: fix
+
+The <tt>check_ftp</tt> active check does not longer need nor allow to
+specify a host name. The host name is always present: the host the check is
+mapped onto. Also the specification of an alternative host name would not
+be consistent with any of the other networking checks.
+
+If you need an FTP check on a specific host then please add that host to
+the monitoring. Exceptions can alsway be done via <tt>custom_checks</tt>.

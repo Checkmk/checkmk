@@ -1215,6 +1215,9 @@ def convert_perf_data(p):
 
 
 def submit_check_result(host, servicedesc, result, sa):
+    if not result:
+        result = 3, "Check plugin did not return any result"
+
     if len(result) >= 3:
         state, infotext, perfdata = result[:3]
     else:

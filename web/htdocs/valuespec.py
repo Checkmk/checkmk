@@ -2606,3 +2606,103 @@ class FileUpload(ValueSpec):
 
     def from_html_vars(self, varprefix):
         return html.uploaded_file(varprefix)
+
+class IconSelector(ValueSpec):
+    def __init__(self, **kwargs):
+        self._prefix      = kwargs.get('prefix', 'icon_')
+        self._subdir      = kwargs.get('subdir', '')
+        self._num_cols    = kwargs.get('num_cols', 12)
+        self._allow_empty = kwargs.get('allow_empty', True)
+        if self._subdir:
+            self._html_path = os.path.join('images', self._subdir)
+        else:
+            self._html_path = 'images'
+        self._empty_img = kwargs.get('emtpy_img', 'empty')
+
+        self._exclude = [
+            'trans',
+            'empty',
+        ]
+
+    def available_icons(self):
+        if defaults.omd_root:
+            dirs = [
+                os.path.join(defaults.omd_root, "local/share/check_mk/web/htdocs/images", self._subdir),
+                os.path.join(defaults.omd_root, "share/check_mk/web/htdocs/images", self._subdir),
+            ]
+        else:
+            dirs = [ os.path.join(defaults.web_dir, "htdocs/images", self._subdir) ]
+
+        icons = set([])
+        for dir in dirs:
+            if os.path.exists(dir):
+                icons.update([ i[len(self._prefix):-4] for i in os.listdir(dir)
+                           if i[-4:] == '.png' and os.path.isfile(dir + "/" + i)
+                              and i.startswith(self._prefix) ])
+
+        for exclude in self._exclude:
+            try:
+                icons.remove(exclude)
+            except KeyError:
+                pass
+
+        icons = list(icons)
+        icons.sort()
+        return icons
+
+    def render_icon(self, icon, onclick = '', title = '', id = ''):
+        path = "%s/%s%s.png" % (self._html_path, self._prefix, html.attrencode(icon))
+
+        if onclick:
+            html.write('<a href="javascript:void(0)" onclick="%s">' % onclick)
+        html.write('<img align=absmiddle id="%s" class=icon title="%s" src="%s">' % (id, title, path))
+        if onclick:
+            html.write('</a>')
+
+    def render_input(self, varprefix, value):
+        if not value:
+            value = self._empty_img
+
+        html.write('<div class="popup_container">')
+        html.hidden_field(varprefix + "_value", value or '', varprefix + "_value")
+        self.render_icon(value, 'toggle_popup(event, \'%s\')' % varprefix,
+                        _('Choose another Icon'), id = varprefix + '_img')
+        if not value:
+            html.write('<a href="javascript:void(0)" onclick="toggle_popup(event, \'%s\')">%s</a>' %
+                            (varprefix, _('Select an Icon')))
+        html.write('<div id="%s_popup" class="popup" style="display:none">' % varprefix)
+        html.write('<table>')
+        empty = self._allow_empty and ['empty'] or []
+        for nr, icon in enumerate(empty + self.available_icons()):
+            if nr == 0:
+                html.write('<tr>')
+            elif nr % self._num_cols == 0:
+                html.write('</tr><tr>')
+
+            html.write('<td>')
+            self.render_icon(icon,
+                onclick = 'vs_iconselector_select(event, \'%s\', \'%s\')' % (varprefix, icon),
+                title = _('Choose this Icon'), id = varprefix + '_i_' + icon)
+            html.write('</td>')
+        html.write('</tr>')
+        html.write('</table>')
+        html.write('</div>')
+        html.write('</div>')
+
+    def from_html_vars(self, varprefix):
+        icon = html.var(varprefix + '_value')
+        if icon == 'empty':
+            return None
+        else:
+            return icon
+
+    def value_to_text(self, value):
+        self.render_icon(value)
+
+    def validate_datatype(self, value, varprefix):
+        if value is not None and type(value) != str:
+            raise MKUserError(varprefix, _("The type is %s, but should be str") % type(value))
+
+    def validate_value(self, value, varprefix):
+        if value and value not in self.available_icons():
+            raise MKUserError(varprefix, _("The selected icon image does not exist."))

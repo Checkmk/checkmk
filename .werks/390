@@ -1,0 +1,12 @@
+Title: Added an icon selector to the view editor
+Level: 2
+Component: multisite
+Version: 1.2.4b1
+Date: 1387370265
+Class: feature
+
+Each view can have a small icon which is used, for example, in
+context buttons linking to these views. The icons had to be
+configured by putting the icon name to a text field. This was
+not user friendly. This change adds an icon chooser to the
+view editor.

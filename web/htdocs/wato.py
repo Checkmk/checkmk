@@ -1213,7 +1213,7 @@ def show_subfolders(folder):
                         style = 'display:none',
                         onclick = 'wato_toggle_move_folder(event, this);'
                     )
-                    html.write('<div id="move_dialog_%s" class=move_dialog style="display:none">' % entry['.name'])
+                    html.write('<div id="move_dialog_%s" class="popup move_dialog" style="display:none">' % entry['.name'])
                     html.write('<span>%s</span>' % _('Move this folder to:'))
                     move_to_folder_combo("folder", entry, False, multiple = True)
                     html.write('</div>')

@@ -44,7 +44,6 @@ def mrpe_parse_perfdata(perfinfo):
 
 
 def check_mrpe(item, params, info):
-
     # This check is cluster-aware. An item might be found
     # more than once. In that case we use the best of the
     # multiple statuses.
@@ -91,7 +90,13 @@ def check_mrpe(item, params, info):
             if best_state in [ None, 2 ] \
                or (state < best_state and state != 2):
                 infotext = "\\n".join(output)
-                perf_parsed = map(mrpe_parse_perfdata, perfdata)
+                perf_parsed = []
+                for perfvalue in perfdata:
+                    try:
+                        perf_parsed.append(mrpe_parse_perfdata(perfvalue))
+                    except:
+                        pass
+
                 # name of check command needed for PNP to choose the correct template
                 if check_name:
                     perf_parsed.append(check_name)

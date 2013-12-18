@@ -1,8 +1,0 @@
-title: Kemp Loadmaster HA
-agents: snmp
-catalog: app/kemp
-license: GPL
-distribution: check_mk
-description:
- This Check only output the HA state and the current Firmware Version.
- No Alarms are triggert. 

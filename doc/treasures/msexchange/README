@@ -1,0 +1,26 @@
+Exchange Monitoring:
+
+How to get the counter IDS 
+regedit: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Perflib\009\Counter
+The id is the number befor the name.
+or with lodctr
+
+----------------------------------------------------------------------
+counters = 111111:msx_dc_access
+MSExchange ADAccess Domain Controllers
+----------------------------------------------------------------------
+counters = 11111:msx_dumpster
+MSExchangeTransport Dumpster
+----------------------------------------------------------------------
+counters = 68312:msx_queued_mailbox
+MSExchangeIS Mailbox
+----------------------------------------------------------------------
+counters = 64848:msx_activesync
+MSExchange ActiveSync
+----------------------------------------------------------------------
+counters = 66210:msx_rpc_clientaccess
+MSExchange RpcClientAccess
+----------------------------------------------------------------------
+counters = 66804:msx_db_reads_avg_latency
+MSExchange Database
+----------------------------------------------------------------------

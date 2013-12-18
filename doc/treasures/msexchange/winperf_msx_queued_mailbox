@@ -1,0 +1,63 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+
+def winperf_msx_queued_mailbox_convert(info):
+    i = 84
+    data = {}
+    servers = info[1][2:] 
+    for server in servers:
+        data[server] = int(info[i][2])
+        i += 1
+    return data
+
+winperf_msx_queued_mailbox_default = ( 40, 50 )
+
+def inventory_winperf_msx_queued_mailbox(info):
+    return [ (x, 'winperf_msx_queued_mailbox_default') for x in info[1][2:] ]
+
+def check_winperf_msx_queued_mailbox(item, params, info):
+    try:
+        value = winperf_msx_queued_mailbox_convert(info)[item]
+        warn, crit = params
+        message = "%s entries" % value
+        perf = [ ('queued', value )]
+        if value >= crit:
+            return 2, message, perf
+        if value >= warn:
+            return 1, message, perf
+        return 0, message, perf
+    except:
+        return 3, "Instance not found in agent Ouput"
+
+check_info["winperf_msx_queued_mailbox"] = {
+    "check_function"        : check_winperf_msx_queued_mailbox,
+    "inventory_function"    : inventory_winperf_msx_queued_mailbox,
+    "service_description"   : "Queue Submission %s",
+    "has_perfdata"          : True,
+}
+

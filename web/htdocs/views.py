@@ -2645,6 +2645,13 @@ def get_host_tags(row):
             return  val
     return ""
 
+def get_custom_var(row, key):
+    for name, val in zip(row["custom_variable_names"],
+                         row["custom_variable_values"]):
+        if name == key:
+            return  val
+    return ""
+
 def is_stale(row):
     return row.get('service_staleness', row.get('host_staleness', 0)) >= config.staleness_threshold
 
@@ -2679,6 +2686,9 @@ def cmp_string_list(column, r1, r2):
 
 def cmp_simple_number(column, r1, r2):
     return cmp(r1.get(column), r2.get(column))
+
+def cmp_custom_variable(r1, r2, key, cmp_func):
+    return cmp(get_custom_var(r1, key), get_custom_var(r2, key))
 
 def declare_simple_sorter(name, title, column, func):
     multisite_sorters[name] = {

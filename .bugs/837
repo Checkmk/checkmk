@@ -7,3 +7,9 @@ Class: nastiness
 
 Its not possible to see the service levels on Hosts/ Services in Multisite. The Reason is,
 that they are no part of the livestatus output. With cmc its not possible to looking into the configfile to see the sl.
+
+Create:
+- Painter
+- Filter
+- Add Detail views of Host / Service
+- Change Global Settings Group

@@ -105,14 +105,15 @@ multisite_painter_options["ts_date"] = {
 }
 
 # This helper function returns the value of the given custom var
-def paint_custom_host_var(what, row):
-    custom_vars = dict(zip(row["host_custom_variable_names"],
-                           row["host_custom_variable_values"]))
+def paint_custom_var(what, key, row):
+    if what:
+        what += '_'
+    custom_vars = dict(zip(row[what + "custom_variable_names"],
+                           row[what + "custom_variable_values"]))
 
-    if what in custom_vars:
-        return what, custom_vars[what]
-    return what,  ""
-
+    if key in custom_vars:
+        return key, custom_vars[key]
+    return key,  ""
 
 #    ___
 #   |_ _|___ ___  _ __  ___
@@ -812,6 +813,14 @@ multisite_painters["svc_is_stale"] = {
     "sorter"  : 'svc_staleness',
 }
 
+multisite_painters["svc_servicelevel"] = {
+    "title"   : _("Service service level"),
+    "short"   : _("Service Level"),
+    "columns" : [ "service_custom_variable_names", "service_custom_variable_values" ],
+    "paint"   : lambda row: paint_custom_var('service', 'EC_SL', row),
+    "sorter"  : 'servicelevel',
+}
+
 #   _   _           _
 #  | | | | ___  ___| |_ ___
 #  | |_| |/ _ \/ __| __/ __|
@@ -1253,6 +1262,14 @@ multisite_painters["host_is_stale"] = {
     "columns" : ["host_staleness"],
     "paint"   : paint_is_stale,
     "sorter"  : 'svc_staleness',
+}
+
+multisite_painters["host_servicelevel"] = {
+    "title"   : _("Host service level"),
+    "short"   : _("Service Level"),
+    "columns" : [ "host_custom_variable_names", "host_custom_variable_values" ],
+    "paint"   : lambda row: paint_custom_var('host', 'EC_SL', row),
+    "sorter"  : 'servicelevel',
 }
 
 #    _   _           _

@@ -1,0 +1,13 @@
+Title: Added sorter / filter for host/service service levels
+Level: 1
+Component: multisite
+Class: feature
+State: unknown
+Version: 1.2.5i1
+Date: 1387374041
+Targetversion: future
+
+The service level attribute of hosts and services can now be
+shown in multisite views. It has been added to the detail
+page of hosts and services.
+

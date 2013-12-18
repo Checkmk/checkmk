@@ -1,0 +1,83 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+#<<<winperf_msx_db_reads_avg_latency>>>
+#1387274514.76 66804
+#3 instances: Information_Store msexchangerepl edgetransport
+#2 0 0 0 nodata
+#4 0 0 0 nodata
+#6 0 0 0 nodata
+#8 0 0 0 nodata
+#10 0 0 0 rawcount
+#12 0 0 0 rawcount
+#14 0 0 0 nodata
+#16 36126 0 0 nodata
+#18 36126 0 0 nodata
+#20 0 0 0 nodata
+#22 0 0 0 nodata
+#24 0 0 0 nodata
+#26 0 0 0 nodata
+#28 0 0 0 nodata
+#30 0 0 0 nodata
+#32 0 0 0 nodata
+#34 0 0 0 nodata
+#...
+
+def winperf_msx_db_reads_avg_latency_convert(info):
+    i = 274
+    data = {}
+    instances = info[1][2:] 
+    for instance in instances:
+        data[instance] = int(info[i][2])
+        i += 1
+    return data
+
+winperf_msx_db_reads_avg_latency_default = ( 20, 25 )
+def inventory_winperf_msx_db_reads_avg_latency(info):
+    return [ (x, 'winperf_msx_db_reads_avg_latency_default') for x in info[1][2:] ]
+
+def check_winperf_msx_db_reads_avg_latency(item, params, info):
+    info = winperf_msx_db_reads_avg_latency_convert(info)
+    for instance, counter in info.items():
+        state = 0
+        if instance == item:
+            warn, crit = params
+            if counter >= crit:
+                state = 2
+            elif counter >= warn:
+                state = 1
+            perf = [('avg', counter, warn, crit )]
+            return state, "%sms AVG Database Reads Latency" % counter, perf 
+    return 3, "Configuration problem"
+
+check_info["winperf_msx_db_reads_avg_latency"] = {
+    "check_function"        : check_winperf_msx_db_reads_avg_latency,
+    "inventory_function"    : inventory_winperf_msx_db_reads_avg_latency,
+    "service_description"   : "MSX DB Read AVG %s",
+    "has_perfdata"          : True,
+}
+

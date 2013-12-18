@@ -8454,8 +8454,6 @@ def ajax_activation():
 def cmc_rush_ahead_activation():
     return
 
-
-
 def cmc_reload():
     log_audit(None, "activate-config", "Reloading Check_MK Micro Core on the fly")
     html.live.command("[%d] RELOAD_CONFIG" % time.time())

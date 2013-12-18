@@ -76,7 +76,7 @@ check_info['cmciii_io'] = {
     "inventory_function"  : inventory_cmciii_io,
     "has_perfdata"        : False,
     "service_description" : "IO Unit %s",
-    "snmp_scan_function"  : lambda oid: "Rittal CMC III PU" in oid(".1.3.6.1.2.1.1.1.0"),
+    "snmp_scan_function"  : lambda oid: "Rittal CMC III PU" in oid(".1.3.6.1.2.1.1.1.0").replace("-", " "),
     "snmp_info"           : (
       ".1.3.6.1.4.1.2606.7.4.2.2.1.10", [OID_END]+range(1,9)    # read complete subtree :(
     )

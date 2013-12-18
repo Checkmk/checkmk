@@ -1,0 +1,14 @@
+Title: Tolerate debug output in check plugins when using CMC
+Level: 1
+Component: core
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387369455
+Targetversion: future
+
+When using the Check_MK Micro Core and at the same time check plugins output
+debug information to stdout, the communication with the core was garbled
+up and the check helper died with an exception. This fix eliminates any
+unauthorized output to stdout be removing the filedescriptor to a save place
+and replacing stdout with <tt>/dev/null</tt>.

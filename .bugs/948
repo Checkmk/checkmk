@@ -1,9 +1,9 @@
 Title: auth.serials not synchronized between sites
 Component: multisite
-State: open
+Class: nastiness
+State: closed
 Date: 2013-07-12 15:52:33
 Targetversion: future
-Class: nastiness
 
 In a distributed setup a password change on one site is
 not being distributed to the others. Also the file
@@ -12,3 +12,6 @@ change the user cannot use his cookie for the authentication
 on remote sites anymore.
 
 Solution: unclear. Currently no good idea.
+
+2013-12-18 13:29:40: changed state open -> closed
+Will be done soon upon a customer request.

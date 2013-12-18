@@ -1,0 +1,10 @@
+Title: cmctc.temp: also detect older CMC devices
+Level: 1
+Component: checks
+Class: feature
+State: unknown
+Version: 1.2.5i1
+Date: 1387365130
+Targetversion: future
+
+

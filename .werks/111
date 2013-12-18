@@ -1,0 +1,10 @@
+Title: kemp_loadmaster_ha, kemp_loadmaster_realserver, kemp_loadmaster_services: New Checks for Kemp Loadbalancer
+Level: 1
+Component: checks
+Class: feature
+State: unknown
+Version: 1.2.5i1
+Date: 1387373450
+Targetversion: future
+
+

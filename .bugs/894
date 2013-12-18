@@ -1,9 +1,13 @@
 Title: never read automation_secret.mk from Multisite
 Component: multisite
-State: open
+Class: nastiness
+State: wontfix
 Date: 2013-06-20 16:12:17
 Targetversion: future
-Class: nastiness
 
 That file should be "write only" from the point of view of Multisite
 and only be read by external skripts.
+
+2013-12-18 14:47:04: changed state open -> wontfix
+We need to use the single files to prevent loading the whole user-db during regular
+page processing. This saves a lot of time.

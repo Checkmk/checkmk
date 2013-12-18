@@ -59,7 +59,7 @@ check-spaces:
 	@if grep -q '[[:space:]]$$' $(SOURCE_FILES) ; then echo $$? ; figlet "Space error" \
           ; echo "Aborting due to trailing spaces. Please use 'make healspaces' to repair." \
           ; echo "Affected files: " \
-          ; grep -l '[ 	]$$' $(SOURCE_FILES) \
+          ; grep -l '[[:space:]]$$' $(SOURCE_FILES) \
           ; exit 1 ; fi
 	@echo OK
 
@@ -234,7 +234,7 @@ SOURCE_FILES = checkman/* modules/* checks/* notifications/* $$(find -name Makef
 
 healspaces:
 	@echo "Removing trailing spaces from code lines..."
-	@sed -ri 's/[ 	]+$$//g' $(SOURCE_FILES)
+	@sed -ri 's/[[:space:]]+$$//g' $(SOURCE_FILES)
 
 setup:
 

@@ -126,6 +126,12 @@ multisite_sorters["host"] = {
     "cmp"     : cmp_host_tags,
 }
 
+multisite_sorters['servicelevel'] = {
+    'title'   : _("Servicelevel"),
+    'columns' : [ 'custom_variable_names', 'custom_variable_values' ],
+    'cmp'     : lambda r1, r2: cmp_custom_variable(r1, r2, 'EC_SL', cmp_simple_number)
+}
+
 #                      name           title                    column                       sortfunction
 declare_simple_sorter("svcdescr",                _("Service description"),         "service_description",        cmp_simple_string)
 declare_simple_sorter("svcdispname",             _("Service alternative display name"),   "service_display_name",  cmp_simple_string)
@@ -157,6 +163,7 @@ declare_1to1_sorter("svc_is_active",              cmp_simple_number)
 declare_1to1_sorter("svc_group_memberlist",       cmp_string_list)
 declare_1to1_sorter("svc_acknowledged",           cmp_simple_number)
 declare_1to1_sorter("svc_staleness",              cmp_simple_number)
+declare_1to1_sorter("svc_servicelevel",           cmp_simple_number)
 
 def cmp_perfdata_nth_value(r1, r2, n):
     return cmp(savefloat(get_perfdata_nth_value(r1, n)), savefloat(get_perfdata_nth_value(r2, n)))
@@ -245,6 +252,7 @@ declare_1to1_sorter("host_childs",            cmp_string_list)
 declare_1to1_sorter("host_group_memberlist",  cmp_string_list)
 declare_1to1_sorter("host_contacts",          cmp_string_list)
 declare_1to1_sorter("host_contact_groups",    cmp_string_list)
+declare_1to1_sorter("host_servicelevel",      cmp_simple_number)
 
 def cmp_host_problems(r1, r2):
     return cmp(r1["host_num_services"] - r1["host_num_services_ok"] - r1["host_num_services_pending"],

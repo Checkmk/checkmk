@@ -160,3 +160,40 @@ register_configvar(group,
         attrencode = True,
     ),
     domain = "check_mk")
+
+
+register_configvar(group,
+    "mkeventd_service_levels",
+    ListOf(
+        Tuple(
+            elements = [
+                Integer(
+                    title = _("internal ID"),
+                    minvalue = 0,
+                    maxvalue = 100,
+                ),
+                TextUnicode(
+                    title = _("Name / Description"),
+                    allow_empty = False,
+                    attrencode = True,
+                ),
+            ],
+            orientation = "horizontal",
+        ),
+        title = _("Service Levels"),
+        help = _("Here you can configure the list of possible service levels for hosts, services and "
+                 "events. A service level can be assigned to a host or service by configuration. "
+                 "The event console can configure each created event to have a specific service level. "
+                 "Internally the level is represented as an integer number. Note: a higher number represents "
+                 "a higher service level. This is important when filtering views "
+                 "by the service level.<p>You can also attach service levels to hosts "
+                 "and services in the monitoring. These levels will then be sent to the "
+                 "Event Console when you forward notifications to it and will override the "
+                 "setting of the matching rule."),
+        allow_empty = False,
+        default_value = [ (0, _("(no service level)")) ],
+    ),
+    domain = "multisite",
+    allow_reset = False,
+)
+

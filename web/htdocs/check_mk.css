@@ -513,3 +513,33 @@ table.listchoice td input[type=checkbox] {
     display: inline-block;
     height: 12px;
 }
+
+div.popup_container {
+    position: relative;
+}
+
+div.popup {
+    padding:10px;
+    background-color: #45829D;
+
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    z-index: 200;
+
+    width: -moz-max-content;
+    width: intrinsic;
+
+    -webkit-border-radius: 5px;
+    border-radius: 5px;
+    border-radius: 5px;
+    border: 1px solid #fff;
+    
+    color: #fff;
+}
+
+div.popup span {
+    display: block;
+    margin-bottom: 5px;
+    color: white;
+}

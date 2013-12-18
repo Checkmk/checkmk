@@ -1,0 +1,9 @@
+Title: Config option mkeventd_service_levels named bad
+Component: multisite
+State: open
+Date: 2013-12-18 13:51:47
+Targetversion: future
+Class: cleanup
+
+This naming is not correct. The option is not only related to the event console
+these days. This should maybe renamed to service_levels one day.

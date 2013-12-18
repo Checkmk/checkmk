@@ -1789,6 +1789,20 @@ function vs_duallist_switch(field, varprefix) {
     helper.value = texts.join('|')
 }
 
+function vs_iconselector_select(event, varprefix, value) {
+    // set value of valuespec
+    var obj = document.getElementById(varprefix + '_value');
+    obj.value = value;
+
+    var src_img = document.getElementById(varprefix + '_i_' + value);
+
+    // Set the new choosen icon in the valuespecs image
+    var img = document.getElementById(varprefix + '_img');
+    img.src = src_img.src;
+
+    toggle_popup(event, varprefix);
+}
+
 function help_enable() {
     var aHelp = document.getElementById('helpbutton');
     aHelp.style.display = "inline-block";
@@ -2092,4 +2106,40 @@ function keybindings_check_keylist(keylist)
             return false;
     }
     return true;
+}
+
+//   .--Popups--------------------------------------------------------------.
+//   |                  ____                                                |
+//   |                 |  _ \ ___  _ __  _   _ _ __  ___                    |
+//   |                 | |_) / _ \| '_ \| | | | '_ \/ __|                   |
+//   |                 |  __/ (_) | |_) | |_| | |_) \__ \                   |
+//   |                 |_|   \___/| .__/ \__,_| .__/|___/                   |
+//   |                            |_|         |_|                           |
+//   +----------------------------------------------------------------------+
+
+function toggle_popup(event, id)
+{
+    if(!event)
+        event = window.event;
+
+    var obj = document.getElementById(id + '_popup');
+    if(obj) {
+        if(obj.style.display == 'none') {
+            obj.style.display = 'block';
+        } else {
+            obj.style.display = 'none';
+        }
+        obj = null;
+    }
+
+    if (event.stopPropagation)
+        event.stopPropagation();
+    event.cancelBubble = true;
+
+    // Disable the default events for all the different browsers
+    if (event.preventDefault)
+        event.preventDefault();
+    else
+        event.returnValue = false;
+    return false;
 }

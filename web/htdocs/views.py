@@ -544,15 +544,19 @@ def page_edit_view():
         title = _('Edit View')
 
     vs = {
-        'title'       : TextUnicode(size = 50, allow_empty = False),
-        'linktitle'   : TextUnicode(size = 26),
-        'topic'       : TextUnicode(size = 50),
-        'description' : TextAreaUnicode(rows = 4, cols = 50),
+        #               edit      attribute
+        #               optional  valuespec
+        'title'       : (True,    TextUnicode(size = 50, allow_empty = False)),
+        'linktitle'   : (True,    TextUnicode(size = 26)),
+        'topic'       : (True,    TextUnicode(size = 50)),
+        'description' : (True,    TextAreaUnicode(rows = 4, cols = 50)),
+        'icon'        : (False,   IconSelector()),
     }
 
     if mode != 'create':
-        for key, valuespec in vs.items():
-            vs[key] = OptionalEdit(valuespec)
+        for key, (edit_opt, valuespec) in vs.items():
+            if edit_opt:
+                vs[key] = (edit_opt, OptionalEdit(valuespec))
 
     # handle case of save or try or press on search button
     if html.var("save") or html.var("try") or html.var("search"):
@@ -614,22 +618,22 @@ def page_edit_view():
     forms.space()
 
     forms.section(_("Title"))
-    vs['title'].render_input('view_title', view.get('title'))
+    vs['title'][1].render_input('view_title', view.get('title'))
 
     forms.section(_("Topic"))
-    vs['topic'].render_input('view_topic', view.get('topic'))
+    vs['topic'][1].render_input('view_topic', view.get('topic'))
     html.help(_("The view will be sorted under this topic in the Views snapin. "))
 
     forms.section(_("Description"))
-    vs['description'].render_input('view_description', view.get('description'))
+    vs['description'][1].render_input('view_description', view.get('description'))
 
     forms.section(_("Button Text"))
-    vs['linktitle'].render_input('view_linktitle', view.get('linktitle'))
+    vs['linktitle'][1].render_input('view_linktitle', view.get('linktitle'))
     html.help(_("If you define a text here, then it will be used in "
                 "buttons to the view instead of of view title."))
 
     forms.section(_("Button Icon"))
-    html.text_input("view_icon", size=14)
+    vs['icon'][1].render_input('view_icon', view.get('icon'))
 
     forms.space()
 
@@ -980,7 +984,7 @@ def create_view(vs):
         override = True
 
     view = {}
-    for key, valuespec in vs.items():
+    for key, (opt_edit, valuespec) in vs.items():
         val = valuespec.from_html_vars('view_' + key)
         valuespec.validate_value(val, 'view_' + key)
         if not override or val != base_view.get(key):
@@ -991,10 +995,6 @@ def create_view(vs):
             view['linktitle'] = view['title']
         if not view['topic']:
             view['topic'] = _("Other")
-
-    icon = html.var("view_icon")
-    if not icon:
-        icon = None
 
     datasourcename = html.var("datasource")
     datasource = multisite_datasources[datasourcename]
@@ -1096,7 +1096,6 @@ def create_view(vs):
     view.update({
         "name"            : name,
         "owner"           : config.user_id,
-        "icon"            : icon,
         "datasource"      : datasourcename,
         "public"          : public,
         "hidden"          : hidden,
@@ -2646,6 +2645,13 @@ def get_host_tags(row):
             return  val
     return ""
 
+def get_custom_var(row, key):
+    for name, val in zip(row["custom_variable_names"],
+                         row["custom_variable_values"]):
+        if name == key:
+            return  val
+    return ""
+
 def is_stale(row):
     return row.get('service_staleness', row.get('host_staleness', 0)) >= config.staleness_threshold
 
@@ -2680,6 +2686,9 @@ def cmp_string_list(column, r1, r2):
 
 def cmp_simple_number(column, r1, r2):
     return cmp(r1.get(column), r2.get(column))
+
+def cmp_custom_variable(r1, r2, key, cmp_func):
+    return cmp(get_custom_var(r1, key), get_custom_var(r2, key))
 
 def declare_simple_sorter(name, title, column, func):
     multisite_sorters[name] = {

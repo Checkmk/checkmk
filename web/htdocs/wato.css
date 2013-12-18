@@ -430,33 +430,15 @@ table.validationerror img {
     vertical-align: middle;
 }
 
-.wato div.move_dialog {
-    padding:10px;
-    background-color: #45829D;
-
+.wato div.popup.move_dialog {
     position: relative;
     left:105px;
     top:35px;
-    z-index: 200;
     height: 190px;
-
-    width: -moz-max-content;
-    width: intrinsic;
-
-    -webkit-border-radius: 5px;
-    border-radius: 5px;
-    border-radius: 5px;
-    border: 1px solid #fff;
 }
 
-.wato div.move_dialog select[multiple] {
+.wato div.popup.move_dialog select[multiple] {
     height: 170px;
-}
-
-.wato div.move_dialog span {
-    display: block;
-    margin-bottom: 2px;
-    color: white;
 }
 
 .wato div.hoverarea {

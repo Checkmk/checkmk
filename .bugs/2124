@@ -1,0 +1,8 @@
+Title: Bulk inventory hosts create same message in log
+Component: wato
+State: open
+Date: 2013-12-18 17:07:16
+Targetversion: 1.2.4
+Class: bug
+
+hosts invenvorized as bundle, e.g. 10, create all the same text in log

@@ -1,9 +1,9 @@
 Title: Activate Changes on Global Settings page: confusing for mkeventd settings
 Component: wato
-State: open
+Class: nastiness
+State: done
 Date: 2013-12-10 15:47:14
 Targetversion: 1.2.3i6
-Class: nastiness
 
 When changing mkeventd related options via global settings dialog, the dialog does not show
 the activate changes button. But the changes are only applied when switching the page to
@@ -12,3 +12,6 @@ activating the changes. This is very unfriendly.
 
 This should be changed! maybe this way: Add multiple possible "activate changes" buttons,
 one for the general settings and one for the mkeventd.
+
+2013-12-18 10:37:22: changed state open -> done
+Has just been implemented.

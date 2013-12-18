@@ -1,0 +1,12 @@
+title: Kemp Loadmaster Services
+agents: snmp
+catalog: app/kemp
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state of the services running on a Kemp Loadmaster.
+ It will return {OK} if the service is in state 'in Service' or 'redirect',
+ {WARn} if the service is in state 'sorry', {CRIT} if in state 'out of Service',  'failed' or 'errormsg'. Otherwise it will result in {UKN}.
+
+inventory:
+ One service will be created for each service running on the device

@@ -1577,11 +1577,14 @@ filesystem_elements = [
                 ]
                 )
     ),
+    # Beware: this is a nasty hack that helps us to detect new-style paramters.
+    # Something hat has todo with float/int conversion and has not been documented
+    # by the one who implemented this.
     ( "flex_levels",
       FixedValue(
           None,
           totext = "",
-          title = _("Hidden identifier key for flexible level usage")
+          title = "",
           )),
     (  "magic",
        Float(
@@ -2054,7 +2057,7 @@ register_check_parameters(
             ( "heartbeat_ok",
                MonitoringState(
                    title = _("Heartbeat OK"),
-                   help = _(" Guest operating system is responding normally."),
+                   help = _("Guest operating system is responding normally."),
                    default_value = 0,
                )
             ),

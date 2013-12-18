@@ -1,0 +1,14 @@
+Title: mrpe: tolerate performance variable names with spaces
+Level: 1
+Component: checks
+Version: 1.2.4b1
+Date: 1387367800
+Class: fix
+
+Some bizarre legacy check plugins use spaces in the names of their performance
+variables. Nagios allows this under certain circumstances. The <tt>mrpe</tt>
+check would fail with an exception, though.
+
+The fix now tolerates spaces, but uses just the last component of the variable
+name in that case. All RRD graphs will be created correctly, though with an
+incomplete name. In most cases that should be OK.

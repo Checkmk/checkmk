@@ -5111,6 +5111,17 @@ def do_check_keepalive():
 
     signal.signal(signal.SIGALRM, signal.SIG_IGN) # Prevent ALRM from CheckHelper.cc
 
+    # Prevent against plugins that output debug information (but shouldn't).
+    # Their stdout will interfer with communication with the Micro Core.
+    # We do this with a trick:
+    # 1. move the filedescriptor 1 to a parking position
+    # 2. re-open 0 on /dev/null
+    # 3. Send our answers to the Micro Core with the parked FD.
+    cmc_result_fd = os.dup(1)
+    devnull = os.open("/tmp/dev_null", os.O_WRONLY | os.O_CREAT)
+    os.dup2(devnull, 1)
+    os.close(devnull)
+
     global total_check_output
     total_check_output = ""
     if opt_debug:
@@ -5126,9 +5137,6 @@ def do_check_keepalive():
             break
         hostname = hostname.strip()
         if hostname == "*":
-            if opt_debug:
-                sys.stdout.write("Restarting myself...\n")
-            sys.stdout.flush()
             os.execvp("cmk", sys.argv)
         elif not hostname:
             break
@@ -5160,9 +5168,8 @@ def do_check_keepalive():
                 status = 3
                 total_check_output = "UNKNOWN - Check_MK timed out after %d seconds\n" % timeout
 
-            sys.stdout.write("%03d\n%08d\n%s" %
+            os.write(cmc_result_fd, "%03d\n%08d\n%s" %
                  (status, len(total_check_output), total_check_output))
-            sys.stdout.flush()
             total_check_output = ""
             cleanup_globals()
 
@@ -5181,7 +5188,7 @@ def do_check_keepalive():
             if opt_debug:
                 raise
             total_check_output = "UNKNOWN - %s\n" % e
-            sys.stdout.write("%03d\n%08d\n%s" %
+            os.write(cmc_result_fd, "%03d\n%08d\n%s" %
                  (3, len(total_check_output), total_check_output))
 
 

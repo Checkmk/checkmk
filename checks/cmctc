@@ -82,7 +82,8 @@ check_info['cmctc.temp'] = {
     "has_perfdata"        : True,
     "service_description" : "Temperature %s",
     "group"               : "room_temperature",
-    "snmp_scan_function"  : lambda oid: "CMC-TC" in oid(".1.3.6.1.2.1.1.1.0"),
+    "snmp_scan_function"  : lambda oid: "CMC-TC" in oid(".1.3.6.1.2.1.1.1.0") or \
+                                        "Rittal CMC" in oid(".1.3.6.1.2.1.1.1.0"),
     "snmp_info"           : (
        # Base to all IO units
        ".1.3.6.1.4.1.2606.4.2",

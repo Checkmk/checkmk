@@ -152,6 +152,10 @@ div.snapin {
     overflow: hidden;
 }
 
+div.snapin:last-child {
+    margin-bottom: 10px;
+}
+
 /* Header of the snapin */
 div.snapin div.head {
     width: 260px;

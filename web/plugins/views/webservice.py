@@ -134,6 +134,7 @@ def render_csv(rows, view, group_painters, painters, num_columns, show_checkboxe
         else:
             html.write(csv_separator)
         content = p[0]["name"]
+        content = type(content) in [ int, float ] and str(content) or content
         stripped = html.strip_tags(content).replace('\n', '').replace('"', '""')
         html.write('"%s"' % stripped.encode("utf-8"))
 
@@ -146,6 +147,7 @@ def render_csv(rows, view, group_painters, painters, num_columns, show_checkboxe
             else:
                 html.write(csv_separator)
             tdclass, content = paint_painter(p[0], row)
+            content = type(content) in [ int, float ] and str(content) or content
             stripped = html.strip_tags(content).replace('\n', '').replace('"', '""')
             html.write('"%s"' % stripped.encode("utf-8"))
 

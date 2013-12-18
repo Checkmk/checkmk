@@ -68,18 +68,36 @@ bi_aggregation_functions["best"] = {
         ]),
 }
 
+def vs_count_ok_count(title, defval, defvalperc):
+    return Alternative(
+        title = title,
+        style = "dropdown",
+        match = lambda x: str(x).endswith("%") and 1 or 0,
+        elements = [
+            Integer(
+                title = _("Explicit number"),
+                label=_("Number of OK-nodes"),
+                min_value = 0,
+                default_value = defval
+            ),
+            Transform(
+                Percentage(
+                    label=_("Percent of OK-nodes"),
+                    display_format = "%.0f",
+                    default_value = defvalperc),
+                title = _("Percentage"),
+                forth = lambda x: float(x[:-1]),
+                back = lambda x: "%d%%" % x,
+            ),
+        ]
+    )
+
 bi_aggregation_functions["count_ok"] = {
     "title"     : _("Count the number of nodes in state OK"),
     "valuespec" : Tuple(
         elements = [
-            Integer(
-                label = _("Required number of OK-nodes for a total state of OK:"),
-                default_value = 2,
-                min_value = 0),
-            Integer(
-                label = _("Required number of OK-nodes for a total state of WARN:"),
-                default_value = 1,
-                min_value = 0),
+            vs_count_ok_count(_("Required number of OK-nodes for a total state of OK:"), 2, 50),
+            vs_count_ok_count(_("Required number of OK-nodes for a total state of WARN:"), 1, 25),
         ]),
 }
 

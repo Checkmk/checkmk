@@ -28,7 +28,7 @@ def check_ftp_arguments(params):
     if type(params) == tuple:
         host, settings = params
     else:
-        host = "$HOSTNAME$"
+        host = "$HOSTADDRESS$"
         settings = params
 
     args = ' -H %s' % quote_shell_string(host)

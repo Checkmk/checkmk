@@ -1,0 +1,7 @@
+Title: Enable mkeventd per default in our builds
+Component: core
+State: open
+Date: 2013-12-18 17:05:37
+Targetversion: 1.2.5i1
+Class: todo
+

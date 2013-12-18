@@ -51,22 +51,24 @@ int32_t ServicelistStateColumn::getValue(int logictype, servicesmember *mem, Que
 {
     contact *auth_user = query->authUser();
     int32_t result = 0;
+    int lt;
 
     while (mem) {
         service *svc = mem->service_ptr;
         if (!auth_user || g_table_services->isAuthorized(auth_user, svc)) {
+            int lt = logictype;
             int state;
             int has_been_checked;
             if (logictype >= 60) {
                 state = svc->last_hard_state;
-                logictype -= 64;
+                lt -= 64;
             }
             else
                 state = svc->current_state;
 
             has_been_checked = svc->has_been_checked;
 
-            switch (logictype) {
+            switch (lt) {
                 case SLSC_WORST_STATE:
                     if (svcStateIsWorse(state, result))
                         result = state;
@@ -79,7 +81,7 @@ int32_t ServicelistStateColumn::getValue(int logictype, servicesmember *mem, Que
                         result++;
                     break;
                 default:
-                    if (has_been_checked && state == logictype)
+                    if (has_been_checked && state == lt)
                         result++;
                     break;
             }

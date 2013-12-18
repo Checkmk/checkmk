@@ -89,6 +89,8 @@ def check_http_arguments(params):
         args += ' -s %s' % quote_shell_string(settings["expect_string"])
 
     if "expect_regex" in settings:
+        if len(settings['expect_regex']) >= 4 and settings['expect_regex'][3]:
+            args += ' -l '
         if settings['expect_regex'][1]:
             args += ' -R'
         else:

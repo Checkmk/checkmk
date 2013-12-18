@@ -1,0 +1,21 @@
+Title: Fix folder visibility in WATO for unpriviledged users
+Level: 2
+Component: wato
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387276017
+Targetversion: future
+
+In WATO if you are an unpriviledged user you might have write access to some
+lower subfolders but not to the upper folders.  This is perfectly common,
+because that way the monitoring administrator can delegate tasks for certain
+classes of hosts to his collegues.
+
+Previously, however, you couldn't navigate to the lower folders without
+faking the URL. This has been fixed now. If you are located in a folder
+without having permissions to it you won't see any hosts of that folder,
+but still you see the subfolders and also can enter these.
+
+Also this fix removes that buttons for actions on a folder if you do
+not have write permissions to it.

@@ -1,0 +1,10 @@
+Title: agent_vsphere.pysphere: Trying to deal with permissions only on some guests/hosts
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387272959
+Targetversion: future
+
+

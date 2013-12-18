@@ -363,8 +363,8 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
             raise MKLDAPException(_('Unable to successfully perform the LDAP search '
                                     '(Base: %s, Scope: %s, Filter: %s, Columns: %s): %s') %
                                     (html.attrencode(base), html.attrencode(scope),
-                                    html.attrencode(filt), html.attrencode(','.join(columns))),
-                                    last_exc)
+                                    html.attrencode(filt), html.attrencode(','.join(columns)),
+                                    last_exc))
         else:
             raise MKLDAPException(_('Unable to successfully perform the LDAP search (%s)') % last_exc)
 
@@ -399,6 +399,36 @@ def ldap_replace_macros(tmpl):
 
     return dn
 
+def ldap_rewrite_user_id(user_id):
+    if config.ldap_userspec.get('lower_user_ids', False):
+        user_id = user_id.lower()
+
+    umlauts = config.ldap_userspec.get('user_id_umlauts', 'replace')
+    new = ""
+    for c in user_id:
+        if c == u'ü':
+            new += 'ue'
+        elif c == u'ö':
+            new += 'oe'
+        elif c == u'ä':
+            new += 'ae'
+        elif c == u'ß':
+            new += 'ss'
+        elif c == u'Ü':
+            new += 'UE'
+        elif c == u'Ö':
+            new += 'OE'
+        elif c == u'Ä':
+            new += 'AE'
+        else:
+            new += c
+    if umlauts == 'replace':
+        user_id = new
+    elif umlauts == 'skip' and user_id != new:
+        return None # This makes the user being skipped
+
+    return user_id
+
 def ldap_user_id_attr():
     return config.ldap_userspec.get('user_id', ldap_attr('user_id'))
 
@@ -430,11 +460,9 @@ def ldap_get_user(username, no_escape = False):
 
     if result:
         dn = result[0][0]
-        user_id = result[0][1][ldap_user_id_attr()][0]
-
-        if config.ldap_userspec.get('lower_user_ids', False):
-            user_id = user_id.lower()
-
+        user_id = ldap_rewrite_user_id(result[0][1][ldap_user_id_attr()][0])
+        if user_id is None:
+            return None
         g_ldap_user_cache[username] = (dn, user_id)
 
         if no_escape:
@@ -488,13 +516,10 @@ def ldap_get_users(add_filter = ''):
         if ldap_user_id_attr() not in ldap_user:
             raise MKLDAPException(_('The configured User-ID attribute "%s" does not '
                                     'exist for the user "%s"') % (ldap_user_id_attr(), dn))
-        user_id = ldap_user[ldap_user_id_attr()][0]
-
-        if config.ldap_userspec.get('lower_user_ids', False):
-            user_id = user_id.lower()
-
-        ldap_user['dn'] = dn # also add the DN
-        result[user_id] = ldap_user
+        user_id = ldap_rewrite_user_id(ldap_user[ldap_user_id_attr()][0])
+        if user_id:
+            ldap_user['dn'] = dn # also add the DN
+            result[user_id] = ldap_user
 
     return result
 

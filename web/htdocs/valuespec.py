@@ -317,6 +317,7 @@ class TextAscii(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._label         = kwargs.get("label")
         self._size          = kwargs.get("size", 25) # also possible: "max"
+        self._cssclass      = kwargs.get("cssclass", "text")
         self._strip         = kwargs.get("strip", True)
         self._allow_empty   = kwargs.get("allow_empty", True)
         self._read_only     = kwargs.get("read_only")
@@ -342,7 +343,7 @@ class TextAscii(ValueSpec):
             html.write(self._label)
             html.write("&nbsp;")
 
-        html.text_input(varprefix, value, size = self._size, read_only = self._read_only)
+        html.text_input(varprefix, value, size = self._size, read_only = self._read_only, cssclass = self._cssclass)
         self.render_buttons()
 
     def render_buttons(self):
@@ -414,7 +415,7 @@ class ID(TextAscii):
 
 class RegExp(TextAscii):
     def __init__(self, **kwargs):
-        TextAscii.__init__(self, attrencode = True, **kwargs)
+        TextAscii.__init__(self, attrencode = True, cssclass = 'text regexp', **kwargs)
         self._mingroups = kwargs.get("mingroups", 0)
         self._maxgroups = kwargs.get("maxgroups")
 

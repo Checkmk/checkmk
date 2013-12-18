@@ -1,0 +1,16 @@
+title: EMC Isilon: ClusterHealth
+agents: snmp
+catalog: hw/storagehw/emc
+license: GPL
+distribution: check_mk
+description:
+ Checks the ClusterHealth (Overall Status) of an EMC Isilon Storage
+ System as reported by SNMP.
+
+ Returns {OK} on status ok, {CRIT} on status attn, down or invalid
+ and {UNKN} on every other status.
+
+inventory:
+ Finds exactly one service on each EMC Isilon System, named
+ Cluster Health
+

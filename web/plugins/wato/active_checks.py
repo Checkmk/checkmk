@@ -631,15 +631,20 @@ register_rule(group,
                               )
                             ),
                             ( "expect_regex",
-                              Tuple(
-                                  title = _("Regular expression to expect in content"),
-                                  orientation = "vertical",
-                                  show_titles = False,
-                                  elements = [
-                                      RegExp(label = _("Regular expression: ")),
-                                      Checkbox(label = _("Case insensitive")),
-                                      Checkbox(label = _("return CRITICAL if found, OK if not")),
-                                  ])
+                              Transform(
+                                Tuple(
+                                    orientation = "vertical",
+                                    show_titles = False,
+                                    elements = [
+                                        RegExp(label = _("Regular expression: ")),
+                                        Checkbox(label = _("Case insensitive")),
+                                        Checkbox(label = _("return CRITICAL if found, OK if not")),
+                                        Checkbox(label = _("Multiline string matching")),
+                                    ]
+                                ),
+                                forth = lambda x: len(x) == 3 and tuple(list(x) + [False]) or x,
+                                title = _("Regular expression to expect in content"),
+                              ),
                             ),
                             ( "post_data",
                               Tuple(
@@ -732,6 +737,13 @@ register_rule(group,
                                     maxvalue = 65535,
                                     default_value = 443,
                                 )
+                            ),
+                            ( "sni",
+                              FixedValue(
+                                  value = True,
+                                  totext = _("enable SNI"),
+                                  title = _("Enable SSL/TLS hostname extension support (SNI)"),
+                              )
                             ),
                         ],
                         required_keys = [ "cert_days" ],

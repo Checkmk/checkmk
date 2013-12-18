@@ -5,7 +5,7 @@ license: GPL
 distribution: check_mk
 description:
  This check monitors the CPU utilization on a Windows system using the
- windows performance counters (agent section {<<<winperf_processor>>>}).
+ windows performance counters (agent section {winperf_processor}).
  This check replaces {winperf.cpuusage} which is outdated since version {1.1.11i1}
 
  Setting a level for warning or a critical state is possible, but might

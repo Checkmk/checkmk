@@ -1,0 +1,11 @@
+Title: Inline SNMP no longer throws an exception when using SNMPv3 credentials
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387273469
+Targetversion: future
+
+During the generation of the monitoring configuration an exception was thrown, when the
+snmp host had SNMPv3 credentials set and the global settings "Use Inline SNMP" was activated.

@@ -1,12 +1,16 @@
 Title: Add some security mechanism to prevent accidential removal of ldap users profile
 Component: multisite
-State: open
+Class: nastiness
+State: done
 Date: 2013-02-07 16:13:52
 Targetversion: 1.2.2
-Class: nastiness
 
 It might happen that users are not visible to the ldap sync (maybe by temporary
 misconfiguration). When a sync detects that one user is suddenly missing, it
 removes the user from the configuration as also the htpasswd mechanism does.
 This could lead in bad situations where customized things in multisite get lost,
 maybe we find a way to prevent this somehow...?
+
+2013-12-17 17:33:05: changed state open -> done
+The profile folder deletion has been commented out a longer time ago. The problem should
+be solved for the moment.

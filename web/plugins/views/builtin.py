@@ -1907,7 +1907,7 @@ multisite_builtin_views.update({
                              ],
             'play_sounds': False,
             'public': True,
-            'show_filters': ['logtime', 'log_state', 'log_state'],
+            'show_filters': ['logtime', 'log_state', 'log_class'],
             'sorters': [('log_time', True), ('log_lineno', True)],
             'title': _('Events of host & services')},
   'logfile': {'browser_reload': 0,

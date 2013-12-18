@@ -1,0 +1,19 @@
+Title: LDAP: Now handling user-ids with umlauts
+Level: 1
+Component: multisite
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387270969
+Targetversion: future
+
+User-IDs with umlauts seem to be used in some installations. We added one new configuration
+options to handle those User-IDs. The default is now that multisite replaces the umlauts
+ü, ö, ä, ß with two letters ue, oe, ae, ss. Other umlauts are left untouched. Another option
+is that users with umlauts are simply skipped and not synced into multisite.
+
+Please note: Users with umlauts need to login with their umlaut login name. After login, the
+username is always used without umlauts within multisite.
+
+Maybe we make multisite handle umlauts correctly one day, but for the moment this change
+could have too many unwanted results.

@@ -1,9 +1,9 @@
 Title: Makefiles von REDHAT/CENTOS 6.4 - Missing packages
 Component: core
-State: open
+Class: nastiness
+State: works4me
 Date: 2013-03-19 11:28:02
 Targetversion: 1.2.3
-Class: nastiness
 
 The following packages need to be installed manually after ./configure has been called
 xorg-x11-server-Xvfb
@@ -12,3 +12,6 @@ They are only set in OS_PACKAGES, but probably needed in BUILD_PACKAGES
 
 But what happens if they are missing? Are they needed during compilation?
 
+
+2013-12-17 17:31:47: changed state open -> works4me
+I see no reason why this should result in a problem. Please provide error output if this is really a problem.

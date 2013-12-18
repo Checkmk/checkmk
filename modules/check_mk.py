@@ -170,6 +170,11 @@ if __name__ == "__main__":
             if not os.path.exists(check_mk_configfile):
                 sys.stderr.write("Missing configuration file %s.\n" % check_mk_configfile)
                 sys.exit(1)
+
+            # Also rewrite the location of the conf.d directory
+            if os.path.exists(check_mk_basedir + "/conf.d"):
+                check_mk_configdir = check_mk_basedir + "/conf.d"
+
         else:
             sys.stderr.write("Missing argument to option -c.\n")
             sys.exit(1)
@@ -445,30 +450,45 @@ if __name__ == "__main__":
 def output_check_info():
     print "Available check types:"
     print
-    print "                      plugin   perf-  in- "
-    print "Name                  type     data   vent.  service description"
+    print "                                 plugin  perf-  in- "
+    print "Name                             type    data   vent.  service description"
     print "-------------------------------------------------------------------------"
 
-    checks_sorted = check_info.items()
+    checks_sorted = check_info.items() + active_check_info.items()
     checks_sorted.sort()
     for check_type, check in checks_sorted:
         try:
+            if 'command_line' in check:
+                what = 'active'
+                ty_color = tty_blue
+            elif check_uses_snmp(check_type):
+                what = 'snmp'
+                ty_color = tty_magenta
+            else:
+                what = 'tcp'
+                ty_color = tty_yellow
+
             if check.get("has_perfdata", False):
                 p = tty_green + tty_bold + "yes" + tty_normal
             else:
                 p = "no"
-            if check["inventory_function"] == None:
+
+            if what == 'active':
+                i = '-'
+            elif check["inventory_function"] == None:
                 i = "no"
             else:
                 i = tty_blue + tty_bold + "yes" + tty_normal
 
-            if check_uses_snmp(check_type):
-                typename = tty_magenta + "snmp" + tty_normal
+            if what == 'active':
+                descr = '-'
             else:
-                typename = tty_yellow + "tcp " + tty_normal
+                descr = check["service_description"]
 
-            print (tty_bold + "%-19s" + tty_normal + "   %s     %-3s    %-3s    %s") % \
-                  (check_type, typename, p, i, check["service_description"])
+            print (tty_bold + "%-32s" + tty_normal
+                   + ty_color + " %-6s " + tty_normal
+                   + " %-3s    %-3s    %s") % \
+                  (check_type, what, p, i, descr)
         except Exception, e:
             sys.stderr.write("ERROR in check_type %s: %s\n" % (check_type, e))
 
@@ -3159,7 +3179,7 @@ no_inventory_possible = None
         output.write("def is_snmpv2c_host(hostname):\n   return %r\n\n" % is_snmpv2c_host(hostname))
         output.write("def is_bulkwalk_host(hostname):\n   return %r\n\n" % is_bulkwalk_host(hostname))
         output.write("def snmp_timing_of(hostname):\n   return %r\n\n" % snmp_timing_of(hostname))
-        output.write("def snmp_credentials_of(hostname):\n   return %r\n\n" % snmp_credentials_of(hostname))
+        output.write("def snmp_credentials_of(hostname):\n   return %s\n\n" % pprint.pformat(snmp_credentials_of(hostname)))
         output.write("def snmp_port_of(hostname):\n   return %r\n\n" % snmp_port_of(hostname))
     else:
         output.write("def snmp_port_spec(hostname):\n    return %r\n\n" % snmp_port_spec(hostname))

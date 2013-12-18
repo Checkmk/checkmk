@@ -289,6 +289,12 @@ def saveint(x):
     except:
         return 0
 
+def tryint(x):
+    try:
+        return int(x)
+    except:
+        return x
+
 def set_is_disjoint(a, b):
     for elem in a:
         if elem in b:

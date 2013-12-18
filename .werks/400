@@ -1,0 +1,10 @@
+Title: WATO BI editor now supports percentages for count_ok
+Level: 2
+Component: wato
+Version: 1.2.4b1
+Date: 1387376299
+Class: fix
+
+The WATO module for BI aggregates now can correctly show and edit aggregation
+functions of the type <tt>count_ok</tt> that are using percentages instead
+of explicit numbers, e.g. <tt>count_ok!60%!30%</tt>.

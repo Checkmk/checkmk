@@ -1245,8 +1245,6 @@ def aggr_countok(nodes, needed_for_ok=2, needed_for_warn=1):
 
     # counts can be specified as integer (e.g. '2') or
     # as percentages (e.g. '70%').
-
-
     if num_ok >= aggr_countok_convert(needed_for_ok, len(states)):
         return { "state" : 0, "output" : "" }
     elif num_ok >= aggr_countok_convert(needed_for_warn, len(states)):

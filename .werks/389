@@ -1,0 +1,12 @@
+Title: Showing LDAP settings on site specific global settings page now
+Level: 1
+Component: wato
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387358901
+Targetversion: future
+
+The site specific global settings page should show all configuration
+options. Independent of the fact that they are related to LDAP or
+the event console. This has been fixed now.

@@ -1,0 +1,13 @@
+Title: Catch exception when check plugins do not return a state
+Level: 1
+Component: core
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387363842
+Targetversion: future
+
+When a broken check plugin does not return a proper state then
+Check_MK broke with an exception. This is now better handled.
+The check now goes into <i>UNKNOWN</i> state with the message
+<tt>Check plugin did not return any result</tt>.

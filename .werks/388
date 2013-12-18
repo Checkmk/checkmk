@@ -1,0 +1,11 @@
+Title: Moved Event Console related settings to own settings page
+Level: 2
+Component: ec
+Version: 1.2.4b1
+Date: 1387358820
+Class: feature
+
+The event console global settings configuration has been moved to
+its own configuration page to clearify which settings need a reload
+of the event console daemon and which ones need a restart of the
+monitoring core.

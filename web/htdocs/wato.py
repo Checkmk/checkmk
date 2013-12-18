@@ -6279,7 +6279,7 @@ def mode_globalvars(phase):
 
     render_global_configuration_variables(default_values, current_settings)
 
-def render_global_configuration_variables(default_values, current_settings):
+def render_global_configuration_variables(default_values, current_settings, show_all  = False):
     groupnames = g_configvar_groups.keys()
     groupnames.sort()
     html.write('<div class=globalvars>')
@@ -6287,7 +6287,8 @@ def render_global_configuration_variables(default_values, current_settings):
         forms.header(groupname, isopen=False)
 
         for domain, varname, valuespec in g_configvar_groups[groupname]:
-            if not g_configvars[varname][4]:
+            if not show_all and (not g_configvars[varname][4]
+                                 or not g_configvar_domains[domain].get('in_global_settings', True)):
                 continue # do not edit via global settings
             if domain == "check_mk" and varname not in default_values:
                 if config.debug:
@@ -6335,20 +6336,24 @@ def render_global_configuration_variables(default_values, current_settings):
     html.write('</div>')
 
 
-def mode_edit_configvar(phase):
+def mode_edit_configvar(phase, what = 'globalvars'):
     siteid = html.var("site")
     if siteid:
         sites = load_sites()
         site = sites[siteid]
 
     if phase == "title":
-        if siteid:
+        if what == 'mkeventd':
+            return _("Event Console Configuration")
+        elif siteid:
             return _("Site-specific global configuration for %s" % siteid)
         else:
             return _("Global configuration settings for Check_MK")
 
     elif phase == "buttons":
-        if siteid:
+        if what == 'mkeventd':
+            html.context_button(_("Abort"), make_link([("mode", "mkeventd_config")]), "abort")
+        elif siteid:
             html.context_button(_("Abort"), make_link([("mode", "edit_site_globals"), ("site", siteid)]), "abort")
         else:
             html.context_button(_("Abort"), make_link([("mode", "globalvars")]), "abort")
@@ -6403,7 +6408,10 @@ def mode_edit_configvar(phase):
                 pending_func(msg)
             else:
                 log_pending(status, None, "edit-configvar", msg)
-            return "globalvars"
+            if what == 'mkeventd':
+                return 'mkeventd_config'
+            else:
+                return "globalvars"
 
     check_mk_vars = check_mk_local_automation("get-configuration", [], [varname])
 
@@ -6470,9 +6478,12 @@ g_configvar_domains = {
 # configdir: Directory to store the global.mk in (applies to check_mk, multisite, mkeventd)
 # pending:   Handler function to create the pending log entry
 # load:      Optional handler to load/parse the file
-# save:      Optional handler to save the file
-def register_configvar_domain(domain, configdir = None, pending = None, save = None, load = None):
-    g_configvar_domains[domain] = {}
+# save:      Optional handler to save the filea
+# in_global_settings: Set to False to hide whole section from global settings dialog
+def register_configvar_domain(domain, configdir = None, pending = None, save = None, load = None, in_global_settings = True):
+    g_configvar_domains[domain] = {
+        'in_global_settings': in_global_settings,
+    }
     for k in [ 'configdir', 'pending', 'save', 'load' ]:
         if locals()[k] is not None:
             g_configvar_domains[domain][k] = locals()[k]
@@ -7556,7 +7567,7 @@ def mode_edit_site_globals(phase):
         html.show_error(_("This site is not a replication slave. You cannot configure specific settings for it."))
         return
 
-    render_global_configuration_variables(default_values, current_settings)
+    render_global_configuration_variables(default_values, current_settings, show_all = True)
 
 def create_site_globals_file(siteid, tmp_dir):
     if not os.path.exists(tmp_dir):
@@ -12622,11 +12633,15 @@ def HostnameTranslation(**kwargs):
                           TextUnicode(
                                title = _("Original hostname"),
                                size = 30,
-                               allow_empty = False),
+                               allow_empty = False,
+                               attrencode = True,
+                          ),
                           TextUnicode(
                                title = _("Translated hostname"),
                                size = 30,
-                               allow_empty = False),
+                               allow_empty = False,
+                               attrencode = True,
+                          ),
                       ],
                   ),
                   title = _("Explicit host name mapping"),

@@ -1,0 +1,14 @@
+Title: New button in service list for refreshing all services
+Level: 2
+Component: wato
+Version: 1.2.4b1
+Date: 1387363388
+Class: feature
+
+In the list of a hosts's services there is now always a new button <i>Automatic
+Refresh (Tabula Rasa)</i>. This button does the same as the bulk inventory
+with the Tabula Rasa option, but just for that single host: It removes all
+autochecks and reinventorizes the host. This is a conveniant way to reset
+network interface checks to OK after some ports have changed from down to
+up or vice versa.  Also changes in the mount options of Linux filesystems
+can thus be acknowledged.

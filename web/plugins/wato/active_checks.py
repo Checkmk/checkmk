@@ -94,14 +94,8 @@ register_rule(group,
 
 register_rule(group,
     "active_checks:ftp",
-    Tuple(
-        title = _("Check FTP Services"),
-        elements = [
-            TextAscii ( title = _("Hostname"), allow_empty = False,
-                        help = _("The hostname of the FTP server you want to check. "
-                                 "It is possible to use $HOSTNAME$.")
-            ),
-            Dictionary(
+    Transform(
+        Dictionary(
             elements = [
                 ( "response_time",
                   Tuple(
@@ -161,8 +155,9 @@ register_rule(group,
                        default_value = 30)
                  ),
             ]),
-        ]
-    )
+            forth = lambda x: type(x) == tuple and x[1] or x,
+            title = _("Check FTP Service"),
+        )
 )
 
 

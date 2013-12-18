@@ -25,7 +25,12 @@
 # Boston, MA 02110-1301 USA.
 
 def check_ftp_arguments(params):
-    host, settings = params
+    if type(params) == tuple:
+        host, settings = params
+    else:
+        host = "$HOSTADDRESS$"
+        settings = params
+
     args = ' -H %s' % quote_shell_string(host)
 
     if "response_time" in settings:
@@ -60,7 +65,7 @@ def check_ftp_arguments(params):
 active_check_info['ftp'] = {
     "command_line"        : '$USER1$/check_ftp $ARG1$',
     "argument_function"   : check_ftp_arguments,
-    "service_description" : lambda args: "FTP %s" % args[0],
+    "service_description" : lambda args: type(args) == tuple and ("FTP %s" % args[0]) or "FTP",
     "has_perfdata"        : True,
 }
 

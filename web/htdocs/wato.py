@@ -13476,7 +13476,7 @@ def convert_rule_from_bi(rule, ruleid):
     crule.update(rule)
     crule["nodes"] = map(convert_node_from_bi, rule["nodes"])
     parts = rule["aggregation"].split("!")
-    crule["aggregation"] = (parts[0], tuple(map(saveint, parts[1:])))
+    crule["aggregation"] = (parts[0], tuple(map(tryint, parts[1:])))
     crule["id"] = ruleid
     return crule
 

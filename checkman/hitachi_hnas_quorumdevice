@@ -9,7 +9,7 @@ description:
  for other HNAS devices too - give it a try.
 
  Returns {OK} if the reported state is 4 "configured". Returns {WARN} on
- every other state according to BlueArc.3319.06 MIB and {UNKN} on every 
+ every other state according to BlueArc.3319.06 MIB and {UNKN} on every
  state not defined in the MIB.
 
 inventory:

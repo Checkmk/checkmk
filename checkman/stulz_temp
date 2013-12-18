@@ -13,5 +13,5 @@ inventory:
  The inventory will create one service per device.
 
 [parameters]
-warn(int): Warning level for the temperature. 
+warn(int): Warning level for the temperature.
 crit(int): Critical level for the temperature.

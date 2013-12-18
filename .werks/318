@@ -1,0 +1,8 @@
+Title: hitachi_hnas_fan: New check for fans in Hitachi HNAS systems
+Level: 2
+Component: checks
+Version: 1.2.5i1
+Date: 1387381163
+Class: feature
+
+

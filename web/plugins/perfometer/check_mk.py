@@ -760,3 +760,9 @@ def perfometer_fanspeed(row, check_command, perf_data):
     return "%.2f%%" % value, perfometer_linear(value, "silver")
 
 perfometers["check_mk-apc_inrow_fanspeed"]  = perfometer_fanspeed
+
+def perfometer_fanspeed_logarithmic(row, check_command, perf_data):
+    value = float(perf_data[0][1])
+    return "%d rpm" % value, perfometer_logarithmic(value, 5000, 2, "silver")
+
+perfometers["check_mk-hitachi_hnas_fan"]  = perfometer_fanspeed_logarithmic

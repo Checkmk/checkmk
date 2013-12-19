@@ -3,6 +3,7 @@
     * 0314 FIX: Fix CMC not executing any Check_MK checks after config reload...
 
     Multisite:
+    * 0246 FIX: brocade_fcport: fixed duplicate definition in pnp-template
     * 0393 FIX: LDAP: Enabled paged LDAP search by default now with a page size of 1000...
 
     WATO:

@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,23 +23,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+$opt[1] = "--vertical-label \"rpm\" --title \"$hostname / $servicedesc\" ";
 
-def inventory_kemp_loadmaster_ha(info):
-    return [ ( None, None ) ]
-
-def check_kemp_loadmaster_ha(_no_item, _no_params, info):
-    states = ( 'none', 'Master', 'Standby', 'Passive' )
-    state = states[saveint(info[0][0])]
-    firmware = info[0][1]
-    return 0, "Device is: %s (Firmware: %s)" % ( state, firmware )
-
-
-check_info["kemp_loadmaster_ha"] = {
-    "check_function"        : check_kemp_loadmaster_ha,
-    "inventory_function"    : inventory_kemp_loadmaster_ha,
-    "service_description"   : "HA State",
-    "has_perfdata"          : False,
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.12196.250.10" or oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.2021.250.10",
-    "snmp_info"             : ( ".1.3.6.1.4.1.12196.13.0", [ 9, 10 ] ),
-}
-
+$def[1] = "DEF:var1=$RRDFILE[1]:$DS[1]:MAX ";
+$def[1] .= "AREA:var1#2080ff:\"Speed\:\" ";
+$def[1] .= "GPRINT:var1:LAST:\"%2.0lf rpm\" ";
+$def[1] .= "LINE1:var1#000080:\"\" ";
+$def[1] .= "GPRINT:var1:MAX:\"(Max\: %2.0lf rpm,\" ";
+$def[1] .= "GPRINT:var1:AVERAGE:\"Avg\: %2.0lf rpm)\" ";
+?>

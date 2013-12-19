@@ -6171,7 +6171,7 @@ def mode_ldap_config(phase):
                 if isinstance(dn, str):
                     num += 1
                     try:
-                        ldap_groups = userdb.ldap_get_groups('(distinguishedName=%s)' % dn)
+                        ldap_groups = userdb.ldap_get_groups(dn)
                         if not ldap_groups:
                             return False, _('Could not find the group specified for role %s') % role_id
                     except Exception, e:

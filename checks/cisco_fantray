@@ -24,33 +24,35 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-cisco_fan_states = ('', 'unknown', 'up', 'down', 'warning')
+
+cisco_fantray_state_names = { 
+    '1': 3, "status is reported as 'unknown'",
+    '2': 0, "powered on", 
+    '3': 2, "powered down", 
+    '4': 2, "partial failure, needs replacement as soon as possible." 
+}
 
 def inventory_cisco_fantray(info):
-    if info and info[0]:
-        #Some Cisco switches reporting not available fans as down,
-        #so we cant invenorize fans reported as down
-        return [ (line[0], None) for line in info if line[1] != '3' ]
+    inventory = []
+    for fan_id, state in info:
+        if state != '3': # skip fans reported as down (might be missing)
+            inventory.append((fan_id, None))
+    return inventory
 
-def check_cisco_fantray(item, params, info):
-    for line in info:
-        if line[0] == item:
-            state = saveint(line[1])
-            status = [ "", "unknown", "up", "down", "warning" ]
-            if state == 2:
-                return (0, "State is %s (%d)" % (status[state], state))
-            elif state in ( 0, 1, 4 ):
-                return (1, "State is %s (%d)" % (status[state], state))
-            else:
-                return (2, "State is %s (%d)" % (status[state], state))
-    return (3, "item not found in snmp data")
+def check_cisco_fantray(item, _no_params, info):
+    for fan_id, state in info:
+        if fan_id == item:
+            result, state_name = \
+                cisco_fantray_state_names.get(state, (3, "unexpected(%s)" % state))
+            return result, state_name
+
+    return (3, "No information about fan with this ID")
 
 
 check_info["cisco_fantray"] = {
-    'check_function':          check_cisco_fantray,
-    'inventory_function':      inventory_cisco_fantray,
-    'service_description':     'FAN %s',
-    'snmp_info':               ('.1.3.6.1.4.1.9.9.117.1.4.1.1.1',[ OID_END, '' ]),
-    'snmp_scan_function':      \
-     lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower(),
+    'check_function'      : check_cisco_fantray,
+    'inventory_function'  : inventory_cisco_fantray,
+    'service_description' : 'FAN %s',
+    'snmp_info'           : ('.1.3.6.1.4.1.9.9.117.1.4.1.1.1', [ OID_END, '' ]),
+    'snmp_scan_function'  : lambda oid: "cisco" in oid(".1.3.6.1.2.1.1.1.0").lower(),
 }

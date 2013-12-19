@@ -24,19 +24,25 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
+# Example output from agent:
+# <<<uptime>>>
+# 15876.96 187476.72
+
 def inventory_uptime(info):
-    if len(info) >= 1 and len(info[0]) >= 1:
+    if info:
         return [ (None, {}) ]
 
 def check_uptime(_no_item, params, info):
-    return check_uptime_seconds(params, float(info[0][0]))
+    uptime_sec = float(info[0][0])
+    return check_uptime_seconds(params, uptime_sec)
 
 
 check_info["uptime"] = {
-    'check_function':          check_uptime,
-    'inventory_function':      inventory_uptime,
-    'service_description':     'Uptime',
-    'has_perfdata':            True,
-    'includes':                [ 'uptime.include' ],
-    'group':                   'uptime',
+    'check_function'      : check_uptime,
+    'inventory_function'  : inventory_uptime,
+    'service_description' : 'Uptime',
+    'has_perfdata'        : True,
+    'includes'            : [ 'uptime.include' ],
+    'group'               : 'uptime',
 }

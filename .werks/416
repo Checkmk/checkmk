@@ -1,0 +1,12 @@
+Title: When doing user sync on user page rendering, contact group memberships are shown correctly now
+Level: 1
+Component: wato
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387464490
+Targetversion: future
+
+When performing user syncs on user configuration page, the memberships of users were not displayed
+correctly. This has been fixed now
+

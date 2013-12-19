@@ -1,0 +1,12 @@
+Title: LDAP: Auth expiration plugin now checks users for being disabled (in AD)
+Level: 1
+Component: multisite
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387459423
+Targetversion: future
+
+The authentication expiration ldap sync plugin now also checks wether or not
+a user has been disabled in LDAP. This only works with Active Directory based
+LDAPs at the moment.

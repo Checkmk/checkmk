@@ -1,0 +1,12 @@
+Title: LDAP: Enabled paged LDAP search by default now with a page size of 1000
+Level: 1
+Component: multisite
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387458430
+Targetversion: future
+
+This seems to be a better default option for most users. If your LDAP server
+does not support paged LDAP searching, simply disable the paged search in
+your LDAP Settings.

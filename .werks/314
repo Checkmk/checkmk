@@ -1,0 +1,14 @@
+Title: Fix CMC not executing any Check_MK checks after config reload
+Level: 2
+Component: core
+Version: 1.2.4b2
+Date: 1387453914
+Class: fix
+
+CMC uses Check_MK in the <tt>--keepalive</tt> mode. That mode mixed up
+it's filedescriptors after a configuration reload. That resultet in the
+output of the checks not arriving at the CMC. The CMC waited and considered
+the helper as busy. All Check_MK based checks got stale. A restart fixed
+that.
+
+That problem is now solved.

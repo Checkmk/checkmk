@@ -1,0 +1,10 @@
+Title: brocade_fcport: fixed error in pnp-template
+Level: 1
+Component: multisite
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387458091
+Targetversion: future
+
+Error was caused through a duplicate definition of a parameter.

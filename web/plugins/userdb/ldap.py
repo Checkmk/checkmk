@@ -438,6 +438,9 @@ def ldap_member_attr():
 def ldap_bind_credentials_configured():
     return config.ldap_connection.get('bind', ('', ''))[0] != ''
 
+def ldap_user_base_dn_configured():
+    return config.ldap_userspec.get('dn', '') != ''
+
 def ldap_group_base_dn_configured():
     return config.ldap_groupspec.get('dn', '') != ''
 
@@ -943,7 +946,7 @@ def ldap_sync(add_to_changelog, only_username):
     # requests to e.g. the page hook would cause duplicate calculations
     file(g_ldap_sync_time_file, 'w').write('%s\n' % time.time())
 
-    if not config.ldap_connection:
+    if not config.ldap_connection or not ldap_user_base_dn_configured():
         return # silently skip sync without configuration
 
     # Flush ldap related before each sync to have a caching only for the

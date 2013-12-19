@@ -215,6 +215,7 @@ escape_plugin_output = True
 user_connectors       = ['htpasswd']
 userdb_automatic_sync = [ 'wato_users', 'page', 'wato_pre_activate_changes', 'wato_snapshot_pushed' ]
 ldap_connection       = {
+    'type'            : 'ad',
     'page_size'       : 1000,
 }
 ldap_userspec         = {

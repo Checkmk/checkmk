@@ -6098,6 +6098,8 @@ def mode_ldap_config(phase):
                 return (False, msg)
 
         def test_user_base_dn(address):
+            if not userdb.ldap_user_base_dn_configured():
+                return (False, _('The User Base DN is not configured.'))
             userdb.ldap_connect(enforce_new = True, enforce_server = address)
             if userdb.ldap_user_base_dn_exists():
                 return (True, _('The User Base DN could be found.'))
@@ -6110,6 +6112,8 @@ def mode_ldap_config(phase):
                                  'to configure proper bind credentials.'))
 
         def test_user_count(address):
+            if not userdb.ldap_user_base_dn_configured():
+                return (False, _('The User Base DN is not configured.'))
             userdb.ldap_connect(enforce_new = True, enforce_server = address)
             try:
                 ldap_users = userdb.ldap_get_users()

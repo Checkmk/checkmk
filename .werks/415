@@ -1,0 +1,10 @@
+Title: LDAP: The LDAP Settings dialog is now disabled when the LDAP Connector is disabled
+Level: 1
+Component: wato
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387459797
+Targetversion: future
+
+

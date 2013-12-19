@@ -1,0 +1,8 @@
+Title: hitachi_hnas_fpga: new check for Hitachi HNAS storage systems
+Level: 2
+Component: checks
+Version: 1.2.5i1
+Date: 1387465079
+Class: feature
+
+

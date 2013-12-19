@@ -2201,9 +2201,9 @@ register_check_parameters(
                         ("levels", Tuple(
                             title = _("Alert on too high CPU utilization"),
                             elements = [
-                                Percentage(title = _("Warning at a utilization of")),
-                                Percentage(title = _("Critical at a utilization of"))],
-                                default_value = (90.0, 95.0)),
+                                Percentage(title = _("Warning at a utilization of"), default_value=90.0),
+                                Percentage(title = _("Critical at a utilization of"), default_value=95.0)],
+                            ),
                         ),
                     ]
                 ),
@@ -2213,6 +2213,30 @@ register_check_parameters(
     ),
     None
 )
+
+register_check_parameters(
+    subgroup_os,
+    "fpga_utilization",
+    _("FPGA utilization"),
+    Dictionary(
+        help = _("Give FPGA utilization levels in percent. The possible range is from 0% to 100%."),
+        elements =  [
+                        ("levels", Tuple(
+                            title = _("Alert on too high FPGA utilization"),
+                            elements = [
+                                Percentage(title = _("Warning at a utilization of"), default_value = 80.0),
+                                Percentage(title = _("Critical at a utilization of"), default_value = 90.0)],
+                            ),
+                        ),
+                    ]
+                ),
+    TextAscii(
+        title = _("FPGA"),
+        allow_empty = False
+    ),
+    None
+)
+
 
 register_check_parameters(
     subgroup_os,

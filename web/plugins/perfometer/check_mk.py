@@ -431,6 +431,7 @@ perfometers["check_mk-cisco_cpu"] = perfometer_cpu_utilization
 perfometers["check_mk-juniper_cpu"] = perfometer_cpu_utilization
 perfometers["check_mk-brocade_mlx.module_cpu"] = perfometer_cpu_utilization
 perfometers["check_mk-hitachi_hnas_cpu"] = perfometer_cpu_utilization
+perfometers["check_mk-hitachi_hnas_fpga"] = perfometer_cpu_utilization
 perfometers["check_mk-hr_cpu"] = perfometer_cpu_utilization
 
 def perfometer_ps_perf(row, check_command, perf_data):

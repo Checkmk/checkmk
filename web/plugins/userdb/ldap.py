@@ -709,6 +709,15 @@ ldap_attribute_plugins['alias'] = {
 # In first instance, it must parse the pw-changed field, then check wether or not
 # a date has been stored in the user before and then maybe increase the serial.
 def ldap_convert_auth_expire(plugin, params, user_id, ldap_user, user):
+    # Special handling for active directory: Is the user enabled / disabled?
+    if config.ldap_connection['type'] == 'ad' and ldap_user.get('useraccountcontrol'):
+        # see http://www.selfadsi.de/ads-attributes/user-userAccountControl.htm for details
+        if saveint(ldap_user['useraccountcontrol'][0]) & 2:
+            return {
+                'locked': True,
+                'serial': user.get('serial', 0) + 1,
+            }
+
     changed_attr = params.get('attr', ldap_attr('pw_changed'))
     if not changed_attr in ldap_user:
         raise MKLDAPException(_('The "Authentication Expiration" attribute (%s) could not be fetched '
@@ -730,12 +739,20 @@ def ldap_convert_auth_expire(plugin, params, user_id, ldap_user, user):
 
     return {}
 
+def ldap_attrs_auth_expire(params):
+    attrs = [ params.get('attr', ldap_attr('pw_changed')) ]
+
+    # Fetch user account flags to check locking
+    if config.ldap_connection['type'] == 'ad':
+        attrs.append('useraccountcontrol')
+    return attrs
+
 ldap_attribute_plugins['auth_expire'] = {
     'title': _('Authentication Expiration'),
     'help':  _('This plugin fetches all information which are needed to check wether or '
                'not an already authenticated user should be deauthenticated, e.g. because '
                'the password has changed in LDAP or the account has been locked.'),
-    'needed_attributes': lambda params: [ params.get('attr', ldap_attr('pw_changed')) ],
+    'needed_attributes': ldap_attrs_auth_expire,
     'convert':           ldap_convert_auth_expire,
     # When a plugin introduces new user attributes, it should declare the output target for
     # this attribute. It can either be written to the multisites users.mk or the check_mk

@@ -26,10 +26,10 @@
 
 
 cisco_fantray_state_names = { 
-    '1': 3, "status is reported as 'unknown'",
-    '2': 0, "powered on", 
-    '3': 2, "powered down", 
-    '4': 2, "partial failure, needs replacement as soon as possible." 
+    '1': (3, "status is reported as 'unknown'"),
+    '2': (0, "powered on"),
+    '3': (2, "powered down"),
+    '4': (2, "partial failure, needs replacement as soon as possible.")
 }
 
 def inventory_cisco_fantray(info):

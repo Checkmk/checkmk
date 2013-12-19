@@ -1,0 +1,10 @@
+Title: esx_vsphere_sensors: Fix garbled output in case of placeholder VMs
+Level: 1
+Component: checks
+Version: 1.2.4b2
+Date: 1387461316
+Class: fix
+
+When using placeholder VMs in the section of <tt>esx_vsphere_sensors</tt> appeared
+some debug output. That lead to assuming an <tt>UNKNOWN</tt> state for the sensors
+check. This has been fixed.

@@ -435,6 +435,12 @@ def ldap_user_id_attr():
 def ldap_member_attr():
     return config.ldap_groupspec.get('member', ldap_attr('member'))
 
+def ldap_bind_credentials_configured():
+    return config.ldap_connection.get('bind', ('', ''))[0] != ''
+
+def ldap_group_base_dn_configured():
+    return config.ldap_groupspec.get('dn', '') != ''
+
 def ldap_user_base_dn_exists():
     try:
         result = ldap_search(ldap_replace_macros(config.ldap_userspec['dn']), columns = ['dn'], scope = 'base')
@@ -524,10 +530,15 @@ def ldap_get_users(add_filter = ''):
     return result
 
 def ldap_group_base_dn_exists():
+    group_base_dn = ldap_replace_macros(config.ldap_groupspec['dn'])
+    if not group_base_dn:
+        return False
+
     try:
-        result = ldap_search(ldap_replace_macros(config.ldap_groupspec['dn']), columns = ['dn'], scope = 'base')
+        result = ldap_search(group_base_dn, columns = ['dn'], scope = 'base')
     except Exception, e:
         return False
+
     if not result:
         return False
     else:

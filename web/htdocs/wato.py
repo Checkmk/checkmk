@@ -6126,8 +6126,13 @@ def mode_ldap_config(phase):
             userdb.ldap_connect(enforce_new = True, enforce_server = address)
             if userdb.ldap_user_base_dn_exists():
                 return (True, _('The User Base DN could be found.'))
+            elif userdb.ldap_bind_credentials_configured():
+                return (False, _('The User Base DN could not be found. Maybe the provided '
+                                 'user (provided via bind credentials) has no permission to '
+                                 'access the Base DN or the credentials are wrong.'))
             else:
-                return (False, _('The User Base DN could not be found.'))
+                return (False, _('The User Base DN could not be found. Seems you need '
+                                 'to configure proper bind credentials.'))
 
         def test_user_count(address):
             userdb.ldap_connect(enforce_new = True, enforce_server = address)
@@ -6137,12 +6142,21 @@ def mode_ldap_config(phase):
             except Exception, e:
                 ldap_users = None
                 msg = str(e)
+                if 'successful bind must be completed' in msg:
+                    if not userdb.ldap_bind_credentials_configured():
+                        return (False, _('Please configure proper bind credentials.'))
+                    else:
+                        return (False, _('Maybe the provided user (provided via bind credentials) has not '
+                                         'enough permissions or the credentials are wrong.'))
+
             if ldap_users and len(ldap_users) > 0:
                 return (True, _('Found %d users for synchronization.') % len(ldap_users))
             else:
                 return (False, msg)
 
         def test_group_base_dn(address):
+            if not userdb.ldap_group_base_dn_configured():
+                return (False, _('The Group Base DN is not configured, not fetching any groups.'))
             userdb.ldap_connect(enforce_new = True, enforce_server = address)
             if userdb.ldap_group_base_dn_exists():
                 return (True, _('The Group Base DN could be found.'))
@@ -6150,6 +6164,8 @@ def mode_ldap_config(phase):
                 return (False, _('The Group Base DN could not be found.'))
 
         def test_group_count(address):
+            if not userdb.ldap_group_base_dn_configured():
+                return (False, _('The Group Base DN is not configured, not fetching any groups.'))
             userdb.ldap_connect(enforce_new = True, enforce_server = address)
             try:
                 ldap_groups = userdb.ldap_get_groups()
@@ -6157,6 +6173,12 @@ def mode_ldap_config(phase):
             except Exception, e:
                 ldap_groups = None
                 msg = str(e)
+                if 'successful bind must be completed' in msg:
+                    if not userdb.ldap_bind_credentials_configured():
+                        return (False, _('Please configure proper bind credentials.'))
+                    else:
+                        return (False, _('Maybe the provided user (provided via bind credentials) has not '
+                                         'enough permissions or the credentials are wrong.'))
             if ldap_groups and len(ldap_groups) > 0:
                 return (True, _('Found %d groups for synchronization.') % len(ldap_groups))
             else:

@@ -1,4 +1,7 @@
 1.2.4b2:
+    WATO:
+    * 0392 FIX: LDAP: Improved error messages of LDAP configuration test...
+
 
 1.2.4b1:
     Core & Setup:

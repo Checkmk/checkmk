@@ -105,6 +105,7 @@ opt_cleanup_autochecks       = False
 fake_dns                     = False
 opt_keepalive                = False
 opt_cmc_relfilename          = "config"
+opt_keepalive_fd             = None
 
 # register SIGINT handler for consistenct CTRL+C handling
 def interrupt_handler(signum, frame):

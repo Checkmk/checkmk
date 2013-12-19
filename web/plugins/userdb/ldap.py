@@ -547,11 +547,19 @@ def ldap_group_base_dn_exists():
     else:
         return len(result) == 1
 
-def ldap_get_groups(add_filt = None):
+def ldap_get_groups(specific_dn = None):
     filt = ldap_filter('groups')
-    if add_filt:
-        filt = '(&%s%s)' % (filt, add_filt)
-    return ldap_search(ldap_replace_macros(config.ldap_groupspec['dn']), filt, ['cn'])
+    dn   = ldap_replace_macros(config.ldap_groupspec['dn'])
+
+    if specific_dn:
+        # When using AD, the groups can be filtered by the DN attribute. With
+        # e.g. OpenLDAP this is not possible. In that case, change the DN.
+        if config.ldap_connection['type'] == 'ad':
+            filt = '(&%s(distinguishedName=%s))' % (filt, specific_dn)
+        else:
+            dn = specific_dn
+
+    return ldap_search(dn, filt, ['cn'])
 
 def ldap_group_members(filters, filt_attr = 'cn', nested = False):
     cache_key = '%s-%s-%s' % (filters, nested and 'n' or 'f', filt_attr)

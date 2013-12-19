@@ -276,6 +276,7 @@ perfometers["check_mk-viprinet_temp"] = perfometer_temperature
 perfometers["check_mk-hwg_temp"] = perfometer_temperature
 perfometers["check_mk-sensatronics_temp"] = perfometer_temperature
 perfometers["check_mk-apc_inrow_temperature"] = perfometer_temperature
+perfometers["check_mk-hitachi_hnas_temp"] = perfometer_temperature
 
 def perfometer_temperature_multi(row, check_command, perf_data):
     display_value = -1

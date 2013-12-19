@@ -5531,7 +5531,10 @@ def effective_attributes(host, folder):
 def get_snapshot_status(name):
     status = {}
     try:
-        status["name"] = "%s %s" % (name[14:24], name[25:33].replace("-",":"))
+        if name == "uploaded_snapshot":
+            status["name"] = _("uploaded snapshot")
+        else:
+            status["name"] = "%s %s" % (name[14:24], name[25:33].replace("-",":"))
         path_status = "%s/workdir/%s.status" % (snapshot_dir, name)
         path_pid    = "%s/workdir/%s.pid"    % (snapshot_dir, name)
         # Check if this process is still running
@@ -5642,10 +5645,11 @@ def mode_snapshot_detail(phase):
                     html.write("<td align='right'>%s</td></tr>" % files[key]["size"])
             html.write("</table>")
         forms.end()
-    delete_url = make_action_link([("mode", "snapshot"), ("_delete_file", snapshot_name)])
-    html.buttonlink(delete_url, _("Delete Snapshot"))
-    download_url = make_action_link([("mode", "snapshot"), ("_download_file", snapshot_name)])
-    html.buttonlink(download_url, _("Download Snapshot"))
+    if snapshot_name != "uploaded_snapshot":
+        delete_url = make_action_link([("mode", "snapshot"), ("_delete_file", snapshot_name)])
+        html.buttonlink(delete_url, _("Delete Snapshot"))
+        download_url = make_action_link([("mode", "snapshot"), ("_download_file", snapshot_name)])
+        html.buttonlink(download_url, _("Download Snapshot"))
     if not status.get("progress_status") and not status.get("broken"):
         restore_url = make_action_link([("mode", "snapshot"), ("_restore_snapshot", snapshot_name)])
         html.buttonlink(restore_url, _("Restore Snapshot"))
@@ -5663,6 +5667,8 @@ def mode_snapshot(phase):
 
     snapshots = []
     if os.path.exists(snapshot_dir):
+        if not html.var("_restore_snapshot") and os.path.exists("%s/uploaded_snapshot" % snapshot_dir):
+            os.remove("%s/uploaded_snapshot" % snapshot_dir)
         for f in os.listdir(snapshot_dir):
             snapshots.append(f)
     snapshots.sort(reverse=True)
@@ -5742,19 +5748,9 @@ def mode_snapshot(phase):
             if uploaded_file[0] == "":
                 raise MKUserError(None, _("Please select a file for upload."))
             if html.check_transaction():
-                # Legacy snapshot support
-                stream = StringIO.StringIO()
-                stream.write(uploaded_file[2])
-                stream.seek(0)
-                tar = tarfile.open(None, "r", stream)
-                if "comment" in map(lambda x: x.name, tar.getmembers()): # new version
-                    multitar.extract_from_buffer(uploaded_file[2], backup_domains)
-                else:
-                    multitar.extract_from_buffer(uploaded_file[2], backup_paths)
-
-                log_pending(SYNCRESTART, None, "snapshot-restored",
-                    _("Restored from uploaded file"))
-                return None, _("Successfully restored configuration.")
+                file("%s/uploaded_snapshot" % snapshot_dir, "w").write(uploaded_file[2])
+                html.set_var("_snapshot_name", "uploaded_snapshot")
+                return "snapshot_detail"
 
         # delete file
         elif html.has_var("_delete_file"):
@@ -5841,6 +5837,8 @@ def mode_snapshot(phase):
 
         table.begin("snapshots", _("Snapshots"), empty_text=_("There are no snapshots available."))
         for name in snapshots:
+            if name == "uploaded_snapshot":
+                continue
             status = get_snapshot_status(name)
             table.row()
             # Snapshot name

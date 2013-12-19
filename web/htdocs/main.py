@@ -50,8 +50,8 @@ def page_index():
 </html>
 """ % (heading, start_url))
 
-# This function does nothing. The sites have already
-# been reconfigured according to the variable _site_switch,
-# because that variable is processed by connect_to_livestatus()
+# This function does almost nothing. It just makes sure that
+# a livestatus-connection is built up, since connect_to_livestatus()
+# handles the _site_switch variable.
 def ajax_switch_site():
-    pass
+    html.live

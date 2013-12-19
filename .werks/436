@@ -1,0 +1,9 @@
+Title: Fix broken Site status switching via sidebar snapin
+Level: 2
+Component: multisite
+Version: 1.2.4b2
+Date: 1387462864
+Class: fix
+
+The bug was introduced in 1.2.4b1 due to the new handling
+(and avoiding) of unneccessary livestatus connects.

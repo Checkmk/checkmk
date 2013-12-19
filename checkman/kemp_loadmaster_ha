@@ -4,5 +4,6 @@ catalog: app/kemp
 license: GPL
 distribution: check_mk
 description:
- This Check only output the HA state and the current Firmware Version.
- No Alarms are triggert. 
+ This Check monitors the HA state and the current Firmware Version.
+ It is known to run on Kemp Loadmaster LM-2600 and LM-3600.
+ No Alarms are triggerd. 

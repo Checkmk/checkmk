@@ -1,0 +1,11 @@
+Title: Backup & Restore: Snapshot comments now support unicode character
+Level: 1
+Component: wato
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387475087
+Targetversion: future
+
+Unicode comments got truncated in the snapshot file because
+of an incorrect byte count in the original unicode string.

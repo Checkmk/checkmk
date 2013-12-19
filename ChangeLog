@@ -1,4 +1,7 @@
 1.2.4b2:
+    Multisite:
+    * 0393 FIX: LDAP: Enabled paged LDAP search by default now with a page size of 1000...
+
     WATO:
     * 0392 FIX: LDAP: Improved error messages of LDAP configuration test...
 

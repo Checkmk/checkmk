@@ -6062,6 +6062,11 @@ def mode_ldap_config(phase):
 
     current_settings = load_configuration_settings()
 
+    if not userdb.connector_enabled('ldap'):
+        html.message(_('The LDAP user connector is disabled. You need to enable it to be able '
+                       'to configure the LDAP settings.'))
+        return
+
     if phase == 'action':
         if not html.check_transaction():
             return

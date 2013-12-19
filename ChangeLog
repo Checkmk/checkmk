@@ -15,6 +15,7 @@
     * 0392 FIX: LDAP: Improved error messages of LDAP configuration test...
     * 0415 FIX: LDAP: The LDAP Settings dialog is now disabled when the LDAP Connector is disabled
     * 0416 FIX: When doing user sync on user page rendering, contact group memberships are shown correctly now...
+    * 0417 FIX: LDAP: Fixed "Sync-Plugin: Roles" test with OpenLDAP
 
 
 1.2.4b1:

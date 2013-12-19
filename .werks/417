@@ -1,0 +1,8 @@
+Title: LDAP: Fixed "Sync-Plugin: Roles" test with OpenLDAP
+Level: 1
+Component: wato
+Version: 1.2.4b2
+Date: 1387465190
+Class: fix
+
+

@@ -544,7 +544,6 @@ if not error:
 
             def is_placeholder_vm(devices):
                 elements = get_pattern("<VirtualDevice xsi:type=\"([^\"]+)", devices)
-                pprint.pprint(elements)
                 if "VirtualDisk" not in elements:
                     return True
                 return False

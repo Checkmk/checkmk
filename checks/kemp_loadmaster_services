@@ -42,10 +42,10 @@ def check_kemp_loadmaster_services(item, _no_params, info):
         if line[0] == item:
             service_state, conns = map(saveint, line[1:])
             message = "State: %s" % (service_states[service_state-1])
-            perfdata = [ ('conn_sec', conns) ]
+            perfdata = [ ('conns', conns) ]
             state = 3
             if service_state in [ 1, 6 ]:
-                message +=  ", Connections: %s/s" % conns
+                message +=  ", Active Connections: %s" % conns
                 state = 0
             if service_state ==  5:
                 state = 1

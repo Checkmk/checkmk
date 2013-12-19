@@ -1,0 +1,18 @@
+title: Hitachi HNAS: Status of Power Supplies (PSUs)
+agents: snmp
+catalog: hw/storage/hitachi
+license: GPL
+distribution: check_mk
+description:
+ Checks the status of Power Supplies (PSUs) in Hitachi HNAS storage systems.
+ It was tested against Hitachi HNAS Modell 3090 but probably will work
+ for other HNAS devices too - give it a try.
+
+ Returns {OK} if the reported state is "ok". Returns {WARN} on state "notFitted".
+ Returns {CRIT} on state "failed" and {UNKN} on every other state.
+
+inventory:
+ Creates one check for every PSU in the HNAS system.
+
+item:
+ The ID of the PNode plus the ID of the PSU, separated by a dot. E. g. 1.2

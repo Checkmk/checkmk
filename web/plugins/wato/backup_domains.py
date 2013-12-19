@@ -95,6 +95,8 @@ else:
           "paths"       : [
                             ("dir",  "var/nagios/archive"),
                             ("file", "var/nagios/nagios.log"),
+                            ("dir",  "var/icinga/archive"),
+                            ("file", "var/icinga/icinga.log"),
                             ("dir",  "var/check_mk/core/archive"),
                             ("file", "var/check_mk/core/history"),
                           ],
@@ -121,20 +123,20 @@ else:
         },
         "mkeventstatus": {
           "group"       : _("Configuration"),
-          "title"       : _("Event Console Configuration and Current State"),
+          "title"       : _("Event Console Configuration"),
           "prefix"      : defaults.omd_root,
           "paths"       : [
                             ("dir",  "etc/check_mk/mkeventd.d"),
-                            ("file", "var/mkeventd/status"),
                           ],
           "default"     : True
         },
         "mkeventhistory": {
           "group"       : _("Historic Data"),
-          "title"       : _("Event Console Archive"),
+          "title"       : _("Event Console Archive and Current State"),
           "prefix"      : defaults.omd_root,
           "paths"       : [
                             ("dir",  "var/mkeventd/history"),
+                            ("file", "var/mkeventd/status"),
                           ],
         },
         "dokuwiki": {

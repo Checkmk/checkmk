@@ -5117,10 +5117,14 @@ def do_check_keepalive():
     # 1. move the filedescriptor 1 to a parking position
     # 2. re-open 0 on /dev/null
     # 3. Send our answers to the Micro Core with the parked FD.
-    cmc_result_fd = os.dup(1)
-    devnull = os.open("/tmp/dev_null", os.O_WRONLY | os.O_CREAT)
-    os.dup2(devnull, 1)
-    os.close(devnull)
+    # BEWARE: this must not happen after we have execve'd ourselves!
+    if opt_keepalive_fd:
+        keepalive_fd = opt_keepalive_fd
+    else:
+        keepalive_fd = os.dup(1)
+        devnull = os.open("/tmp/dev_null", os.O_WRONLY | os.O_CREAT)
+        os.dup2(devnull, 1)
+        os.close(devnull)
 
     global total_check_output
     total_check_output = ""
@@ -5131,17 +5135,17 @@ def do_check_keepalive():
 
     while True:
         cleanup_globals()
-        hostname = sys.stdin.readline()
+        hostname = keepalive_read_line()
         g_initial_times = os.times()
         if not hostname:
             break
         hostname = hostname.strip()
         if hostname == "*":
-            os.execvp("cmk", sys.argv)
+            os.execvp("cmk", sys.argv + [ "--keepalive-fd=%d" % keepalive_fd ])
         elif not hostname:
             break
 
-        timeout = int(sys.stdin.readline())
+        timeout = int(keepalive_read_line())
         try: # catch non-timeout exceptions
             try: # catch timeouts
                 signal.signal(signal.SIGALRM, check_timeout)
@@ -5168,7 +5172,7 @@ def do_check_keepalive():
                 status = 3
                 total_check_output = "UNKNOWN - Check_MK timed out after %d seconds\n" % timeout
 
-            os.write(cmc_result_fd, "%03d\n%08d\n%s" %
+            os.write(keepalive_fd, "%03d\n%08d\n%s" %
                  (status, len(total_check_output), total_check_output))
             total_check_output = ""
             cleanup_globals()
@@ -5188,9 +5192,26 @@ def do_check_keepalive():
             if opt_debug:
                 raise
             total_check_output = "UNKNOWN - %s\n" % e
-            os.write(cmc_result_fd, "%03d\n%08d\n%s" %
+            os.write(keepalive_fd, "%03d\n%08d\n%s" %
                  (3, len(total_check_output), total_check_output))
 
+
+# Just one lines from stdin. But: make sure that
+# nothing more is read - not even into some internal
+# buffer of sys.stdin! We do this by reading every
+# single byte. I know that this is not performant,
+# but we just read hostnames - not much data.
+
+def keepalive_read_line():
+    line = ""
+    while True:
+        byte = os.read(0, 1)
+        if byte == '\n':
+            return line
+        elif not byte: # EOF
+            return ''
+        else:
+            line += byte
 
 
 #   +----------------------------------------------------------------------+
@@ -5538,7 +5559,7 @@ if __name__ == "__main__":
                      "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
                      "flush", "package", "localize", "donate", "snmpwalk", "snmptranslate",
                      "usewalk", "scan-parents", "procs=", "automation=", "notify",
-                     "snmpget=", "profile", "keepalive", "create-rrd",
+                     "snmpget=", "profile", "keepalive", "keepalive-fd=", "create-rrd",
                      "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
                      "man", "nowiki", "config-check", "backup=", "restore=",
                      "check-inventory=", "paths", "cleanup-autochecks", "checks=",
@@ -5587,6 +5608,8 @@ if __name__ == "__main__":
             fake_dns = a
         elif o == '--keepalive':
             opt_keepalive = True
+        elif o == '--keepalive-fd':
+            opt_keepalive_fd = int(a)
         elif o == '--usewalk':
             opt_use_snmp_walk = True
         elif o == '--procs':

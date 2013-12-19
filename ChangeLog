@@ -16,6 +16,7 @@
     * 0415 FIX: LDAP: The LDAP Settings dialog is now disabled when the LDAP Connector is disabled
     * 0416 FIX: When doing user sync on user page rendering, contact group memberships are shown correctly now...
     * 0417 FIX: LDAP: Fixed "Sync-Plugin: Roles" test with OpenLDAP
+    * 0248 FIX: Backup & Restore: Snapshot comments now support unicode character...
 
 
 1.2.4b1:

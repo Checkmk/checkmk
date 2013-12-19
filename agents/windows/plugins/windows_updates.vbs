@@ -17,6 +17,22 @@
 
 Option Explicit
 
+function readFromRegistry (strRegistryKey, strDefault )
+    Dim WSHShell, value
+
+    On Error Resume Next
+    Set WSHShell = CreateObject("WScript.Shell")
+    value = WSHShell.RegRead( strRegistryKey )
+
+    if err.number <> 0 then
+        readFromRegistry=strDefault
+    else
+        readFromRegistry=value
+    end if
+
+    set WSHShell = nothing
+end function
+
 Dim result, reboot, numImp, numOpt, important, opti
 Dim updtSearcher, colDownloads, objEntry
 
@@ -29,6 +45,9 @@ updateNeeded = True
 
 Dim WSHShell
 Set WSHShell = CreateObject("WScript.Shell")
+
+Dim RebootTime
+Dim RegPath
 
 Dim scriptname, scriptpath, strFolder
 
@@ -65,6 +84,9 @@ If updateNeeded Then
 
     Set updtSearcher = CreateObject("Microsoft.Update.Session").CreateUpdateSearcher
 
+    RegPath = "HKEY_LOCAL_MACHINE\SOFTWARE\MICROSOFT\Windows\CurrentVersion\WindowsUpdate\Auto Update\"
+    RebootTime = ReadFromRegistry(RegPath & "NextFeaturedUpdatesNotificationTime","no_key")
+
     reboot = 0
     numImp = 0
     numOpt = 0
@@ -98,6 +120,7 @@ If updateNeeded Then
     objFile.WriteLine(reboot & " " & numImp & " " & numOpt)
     objFile.WriteLine(important)
     objFile.WriteLine(opti)
+    objFile.WriteLine(RebootTime)
     objFile.Close
 
 End If

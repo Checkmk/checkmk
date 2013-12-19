@@ -32,10 +32,13 @@
 # Update f�r WMDRM-f�hige Medienplayer (KB891122); Windows Media Player 11; Windows Search 4.0 f�r Windows XP (KB940157); Microsoft Base Smartcard-Kryptografiedienstanbieter-Paket: x86 (KB909520); Update f�r die Microsoft .NET Framework 3.5 Service Pack 1- und .NET Framework 3.5-Produktfamilie (KB951847) x86
 
 # First row:  Reboot_required, num_important, num_optional
-# Second row: List of all important updates
-# Thirt row:  List of all optional updates
+# Second row: List of all important updates (optional)
+# Third row:  List of all optional updates (optional)
+# Last row:  Date and time of forced update (optional)
 
-windows_updates_default_params = (None, None, None, None)
+import datetime
+
+windows_updates_default_params = (None, None, None, None, None, None, True)
 
 def inventory_windows_updates(info):
     if info and len(info[0]) == 3:
@@ -45,36 +48,76 @@ def check_windows_updates(_unused, params, info):
     if info and len(info[0]) == 3:
         status = 0
         reboot_required, num_imp, num_opt = map(saveint, info[0])
-        imp_warn, imp_crit, opt_warn, opt_crit = params
+        imp_warn, imp_crit, opt_warn, opt_crit = params[0:4]
+        if len(params) == 7:
+            force_warn, force_crit, verbose = params[4:7]
+        else:
+            force_warn = 604800
+            force_crit = 172800
+            verbose = True
         important = ''
-        if len(info) >= 2:
-            important = ' '.join(info[1])
         optional = ''
-        if len(info) >= 3:
+
+        last = 1
+        if num_imp != 0:
+            important = ' '.join(info[1])
+            last += 1
+        if num_opt != 0 and num_imp != 0:
+            last += 1
             optional = ' '.join(info[2])
+        elif num_opt != 0:
+            last += 1
+            optional = ' '.join(info[1])
+
+        # the last element may be the forced_reboot time
+        forced_reboot = ""
+        print len(info), last
+        if len(info) - 1 == last:
+            forced_reboot = info[last]
 
         txt = []
         perfdata = []
         for label, updates, cur, warn, crit in [ ('important', important, num_imp, imp_warn, imp_crit),
                                                  ('optional',  optional,  num_opt, opt_warn, opt_crit) ]:
-            this_txt = '%d %s' % (cur, label)
-            if label == 'important' and cur > 0:
-                this_txt += ' (%s)' % updates
+            this_txt = '%d %s updates' % (cur, label)
             if crit and cur >= crit:
-                this_txt += ' (>=%d (!!))' % crit
+                this_txt += ' >=%d (!!)' % crit
                 if status < 2:
                     status = 2
             elif warn and cur >= warn:
-                this_txt += ' (>=%d (!))' % warn
+                this_txt += ' >=%d (!)' % warn
                 if status < 1:
                     status = 1
+            if label == 'important' and cur > 0 and verbose:
+                this_txt += ', (%s) --- ' % updates
             txt.append(this_txt)
             perfdata.append((label, cur, warn, crit))
 
-        if reboot_required == 1:
+        if forced_reboot != "":
+            date, time = forced_reboot
+            year, month, day = map(int, date.split("-"))
+            hour, minute, second = map(int, time.split(":"))
+            force_date = datetime.datetime( year, month, day, hour, minute, second)
+            now = datetime.datetime.now()
+            diff_warn = datetime.timedelta(seconds=force_warn)
+            diff_crit = datetime.timedelta(seconds=force_crit)
+            nix = datetime.timedelta(seconds=0)
+            if force_date - now > nix:
+                sym = ""
+                if diff_crit > force_date - now:
+                    status = 2
+                    sym = "(!!)"
+                elif diff_warn > force_date - now:
+                    if status < 1:
+                        status = 1
+                    sym = "(!)"
+                boot_txt = ('Reboot enforced on %s to finish updates %s') \
+                              % ( " ".join(forced_reboot), sym )
+                txt.append(boot_txt)
+        elif reboot_required == 1:
             if status < 1:
                 status = 1
-            txt.append('A reboot is required to finish update installations (!)')
+            txt.append('Reboot required to finish updates (!)')
 
         return (status, ', '.join(txt), perfdata)
 
@@ -85,5 +128,6 @@ check_info["windows_updates"] = {
     'check_function':          check_windows_updates,
     'inventory_function':      inventory_windows_updates,
     'service_description':     'System Updates',
+    'group':                   'windows_updates',
     'has_perfdata':            True,
 }

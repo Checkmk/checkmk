@@ -781,7 +781,7 @@ def automation_create_snapshot(args):
                 if domain:
                     statusinfo[domain] = infotext
                 statusfile = file(filename_status, "w")
-                statusfile.write("comment:%s\n" % data.get("comment"," "))
+                statusfile.write("comment:%s\n" % data.get("comment"," ").encode("utf-8"))
                 status_list = list(statusinfo.items())
                 status_list.sort()
                 for status in status_list:
@@ -849,8 +849,8 @@ def automation_create_snapshot(args):
         # Add comment to tar file
         if data.get("comment"):
             tarinfo       = get_basic_tarinfo("comment")
-            tarinfo.size  = len(data.get("comment"))
-            tar_in_progress.addfile(tarinfo, cStringIO.StringIO(data.get("comment")))
+            tarinfo.size  = len(data.get("comment").encode("utf-8"))
+            tar_in_progress.addfile(tarinfo, cStringIO.StringIO(data.get("comment").encode("utf-8")))
 
         if data.get("created_by"):
             tarinfo       = get_basic_tarinfo("created_by")
@@ -895,4 +895,3 @@ def automation_create_snapshot(args):
 
     except Exception, e:
         raise MKAutomationError(str(e))
-

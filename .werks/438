@@ -1,0 +1,10 @@
+Title: Remove test-code, Micro Core only worked once per host
+Level: 2
+Component: core
+Version: 1.2.4b2
+Date: 1387556838
+Class: fix
+
+Due to remaining test-code the file <tt>/tmp/dev_null</tt> was created
+instead of <tt>/dev/null</tt>. That way only the first site using
+Check_MK Micro Core was working. This has been fixed.

@@ -1,3 +1,5 @@
+1.2.4b3:
+
 1.2.4b2:
     Core & Setup:
     * 0314 FIX: Fix CMC not executing any Check_MK checks after config reload...

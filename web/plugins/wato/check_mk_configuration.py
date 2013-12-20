@@ -1865,7 +1865,7 @@ group = "monconf/" + _("Various")
 register_rule(group,
      "clustered_services_mapping",
      TextAscii( 
-        title = _("Explicit mapping of Clusterd Services"),
+        title = _("Explicit mapping of Clustered Services"),
         help = _( "It's possible to have overlaping nodes between multiple clusters."
                   "With this rule the direct mapping of services from nodes to the "
                   "favored Cluster can be done."),

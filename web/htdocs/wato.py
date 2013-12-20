@@ -2464,7 +2464,7 @@ def mode_inventory(phase, firsttime):
 
             if html.var("_refresh"):
                 counts, failed_hosts = check_mk_automation(host[".siteid"], "inventory", [ "@scan", "refresh", hostname ])
-                count_added, count_removed, count_kept, count_new = counts
+                count_added, count_removed, count_kept, count_new = counts[hostname]
                 message = _("Refreshed check configuration of host [%s] with %d services") % \
                             (hostname, count_added)
                 log_pending(LOCALRESTART, hostname, "refresh-autochecks", message)
@@ -2918,23 +2918,31 @@ def mode_bulk_inventory(phase):
                 if html.var("do_scan"):
                     arguments = [ "@scan" ] + arguments
                 counts, failed_hosts = check_mk_automation(site_id, "inventory", arguments)
-                #counts = ( 1, 2, 3, 4 )
-                result = repr([ 'continue', num_hosts, 0 ] + list(counts)) + "\n"
+                # sum up host individual counts to have a total count
+                sum_counts = [ 0, 0, 0, 0 ]
+                result_txt = ''
                 for hostname in hostnames:
+                    sum_counts[0] += counts[hostname][0]
+                    sum_counts[1] += counts[hostname][1]
+                    sum_counts[2] += counts[hostname][2]
+                    sum_counts[3] += counts[hostname][3]
                     host = folder[".hosts"][hostname]
                     if hostname in failed_hosts:
-                        result += _("Failed to inventorize %s: %s<br>") % (hostname, failed_hosts[hostname])
+                        result_txt += _("Failed to inventorize %s: %s<br>") % (hostname, failed_hosts[hostname])
                         if not host.get("inventory_failed"):
                             host["inventory_failed"] = True
                             save_hosts(folder)
                     else:
-                        result += _("Inventorized %s<br>\n") % hostname
+                        result_txt += _("Inventorized %s<br>\n") % hostname
                         mark_affected_sites_dirty(folder, hostname, sync=False, restart=True)
                         log_pending(AFFECTED, hostname, "bulk-inventory",
-                            _("Inventorized host: %d added, %d removed, %d kept, %d total services") % counts)
+                            _("Inventorized host: %d added, %d removed, %d kept, %d total services") %
+                                                                                tuple(counts[hostname]))
                         if "inventory_failed" in host:
                             del host["inventory_failed"]
                             save_hosts(folder) # Could be optimized, but difficult here
+
+                result = repr([ 'continue', num_hosts, 0 ] + sum_counts) + "\n" + result_txt
 
             except Exception, e:
                 result = repr([ 'failed', num_hosts, num_hosts, 0, 0, 0, 0, ]) + "\n"

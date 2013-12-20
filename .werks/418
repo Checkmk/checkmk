@@ -1,0 +1,11 @@
+Title: LDAP: Fixed broken role sync plugin with OpenLDAP
+Level: 1
+Component: wato
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387526157
+Targetversion: future
+
+The role sync plugin simply did not sync the roles of users even
+if the group memberships in the OpenLDAP directory were OK.

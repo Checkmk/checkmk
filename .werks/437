@@ -5,17 +5,19 @@ Version: 1.2.5i1
 Date: 1387549981
 Class: feature
 
-Do you know the plugin output <i>invalid output from agent, invalid check parameters or ...</i>?
-The option for debugging such failed checks has been converted from an absolute
-path to a simple Checkbox. The target path for the log file is now hardcoded
-and will be printed by the failed check in the plugin output.
+Do you know the plugin output <i>invalid output from agent, invalid check
+parameters or ...</i>?  The option for debugging such failed checks has
+been converted from an absolute path to a simple Checkbox. The target path
+for the log file is now hardcoded and will be printed by the failed check
+in the plugin output. The advantage is that when using OMD the option
+will work on all sites of a distributed environment and will log to
+<tt>var/log/check_mk/crashed-checks.log</tt> within the site.
 
-Existing configuration will not be touched, though, and honor the configured
+Existing configurations will not be touched, though, and honor the configured
 path - as long as you do not change the option via WATO. <tt>main.mk</tt> still
 allows the old way:
 
 F+:main.mk
-
 # Hard code path to log file
 debug_log = "/var/log/foo.log"
 

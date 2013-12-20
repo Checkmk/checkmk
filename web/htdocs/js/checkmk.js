@@ -467,8 +467,18 @@ function pnp_response_handler(data, code) {
     }
     response = null;
 
-    if(!valid_response)
-        fallback_graphs(data);
+    if(!valid_response) {
+        if (code.match(/_login/)) {
+            // Login failed! This usually happens when one uses a distributed
+            // multisite setup but the transparent authentication is somehow
+            // broken. Display an error message trying to assist.
+            var container = document.getElementById(data['container']);
+            container.innerHTML = '<div class="error">Unable to fetch graphs of the host. Maybe you have a '
+                                + 'distributed setup and not set up the authentication correctly yet.</div>';
+        } else {
+            fallback_graphs(data);
+        }
+    }
 }
 
 // Fallback bei doofer/keiner Antwort

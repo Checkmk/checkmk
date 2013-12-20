@@ -566,21 +566,36 @@ def ldap_group_members(filters, filt_attr = 'cn', nested = False):
     if cache_key in g_ldap_group_cache:
         return g_ldap_group_cache[cache_key]
 
-    # When not searching for nested memberships, it is easy. Simply query the group
-    # for the memberships in one single query.
+    # When not searching for nested memberships, it is easy when using the an AD base LDAP.
+    # The group objects can be queried using the attribute distinguishedname. Therefor we
+    # create an alternating match filter to match that attribute when searching by DNs.
+    # In OpenLDAP the distinguishedname is no user attribute, therefor it can not be used
+    # as filter expression. We have to do one ldap query per group. Maybe, in the future,
+    # we change the role sync plugin parameters to snapins to make this part a little easier.
     if not nested:
-        filt = ldap_filter('groups')
-        if filters:
-            add_filt = '(|%s)' % ''.join([ '(%s=%s)' % (filt_attr, f) for f in filters ])
-            filt = '(&%s%s)' % (filt, add_filt)
-
-        member_attr = ldap_member_attr().lower()
         groups = {}
-        for dn, obj in ldap_search(ldap_replace_macros(config.ldap_groupspec['dn']), filt, ['cn', member_attr]):
-            groups[dn] = {
-                'cn'      : obj['cn'][0],
-                'members' : [ m.encode('utf-8') for m in obj.get(member_attr,[]) ],
-            }
+        filt = ldap_filter('groups')
+        member_attr = ldap_member_attr().lower()
+
+        if config.ldap_connection['type'] == 'ad' or filt_attr != 'distinguishedname':
+            if filters:
+                add_filt = '(|%s)' % ''.join([ '(%s=%s)' % (filt_attr, f) for f in filters ])
+                filt = '(&%s%s)' % (filt, add_filt)
+
+            for dn, obj in ldap_search(ldap_replace_macros(config.ldap_groupspec['dn']), filt, ['cn', member_attr]):
+                groups[dn] = {
+                    'cn'      : obj['cn'][0],
+                    'members' : [ m.encode('utf-8') for m in obj.get(member_attr,[]) ],
+                }
+        else:
+            # Special handling for OpenLDAP when searching for groups by DN
+            for f_dn in filters:
+                for dn, obj in ldap_search(ldap_replace_macros(f_dn), filt, ['cn', member_attr]):
+                    groups[f_dn] = {
+                        'cn'      : obj['cn'][0],
+                        'members' : [ m.encode('utf-8') for m in obj.get(member_attr,[]) ],
+                    }
+
     else:
         # Nested querying is more complicated. We have no option to simply do a query for group objects
         # to make them resolve the memberships here. So we need to query all users with the nested
@@ -861,8 +876,7 @@ def ldap_convert_groups_to_roles(plugin, params, user_id, ldap_user, user):
     ldap_groups = dict(ldap_group_members([ dn for role_id, dn in params.items() if isinstance(dn, str) ],
                                      filt_attr = 'distinguishedname', nested = params.get('nested', False)))
 
-    # Load default roles from default user profile
-    roles = config.default_user_profile['roles'][:]
+    roles = set([])
 
     # Loop all roles mentioned in params (configured to be synchronized)
     for role_id, dn in params.items():
@@ -871,9 +885,14 @@ def ldap_convert_groups_to_roles(plugin, params, user_id, ldap_user, user):
 
         # if group could be found and user is a member, add the role
         if dn in ldap_groups and ldap_user['dn'] in ldap_groups[dn]['members']:
-            roles.append(role_id)
+            roles.add(role_id)
 
-    return {'roles': roles}
+    # Load default roles from default user profile when the user got no role
+    # by the role sync plugin
+    if not roles:
+        roles = config.default_user_profile['roles'][:]
+
+    return {'roles': list(roles)}
 
 def ldap_list_roles_with_group_dn():
     elements = []

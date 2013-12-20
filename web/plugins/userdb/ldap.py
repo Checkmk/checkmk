@@ -332,7 +332,7 @@ def ldap_search(base, filt = '(objectclass=*)', columns = [], scope = None):
                     for key, val in obj.iteritems():
                         # Convert all keys to lower case!
                         new_obj[key.lower().decode('utf-8')] = [ i.decode('utf-8') for i in val ]
-                    result.append((dn, new_obj))
+                    result.append((dn.lower(), new_obj))
                 success = True
             except ldap.NO_SUCH_OBJECT, e:
                 raise MKLDAPException(_('The given base object "%s" does not exist in LDAP (%s))') % (base, e))
@@ -585,7 +585,7 @@ def ldap_group_members(filters, filt_attr = 'cn', nested = False):
             for dn, obj in ldap_search(ldap_replace_macros(config.ldap_groupspec['dn']), filt, ['cn', member_attr]):
                 groups[dn] = {
                     'cn'      : obj['cn'][0],
-                    'members' : [ m.encode('utf-8') for m in obj.get(member_attr,[]) ],
+                    'members' : [ m.encode('utf-8').lower() for m in obj.get(member_attr,[]) ],
                 }
         else:
             # Special handling for OpenLDAP when searching for groups by DN
@@ -593,7 +593,7 @@ def ldap_group_members(filters, filt_attr = 'cn', nested = False):
                 for dn, obj in ldap_search(ldap_replace_macros(f_dn), filt, ['cn', member_attr]):
                     groups[f_dn] = {
                         'cn'      : obj['cn'][0],
-                        'members' : [ m.encode('utf-8') for m in obj.get(member_attr,[]) ],
+                        'members' : [ m.encode('utf-8').lower() for m in obj.get(member_attr,[]) ],
                     }
 
     else:
@@ -622,7 +622,7 @@ def ldap_group_members(filters, filt_attr = 'cn', nested = False):
                 'cn'      : cn,
             }
             for user_dn, obj in ldap_search(ldap_replace_macros(config.ldap_userspec['dn']), filt, columns = ['dn']):
-                groups[dn]['members'].append(user_dn)
+                groups[dn]['members'].append(user_dn.lower)
 
     g_ldap_group_cache[cache_key] = groups
     return groups
@@ -882,6 +882,7 @@ def ldap_convert_groups_to_roles(plugin, params, user_id, ldap_user, user):
     for role_id, dn in params.items():
         if not isinstance(dn, str):
             continue # skip non configured ones
+        dn = dn.lower() # lower case matching for DNs!
 
         # if group could be found and user is a member, add the role
         if dn in ldap_groups and ldap_user['dn'] in ldap_groups[dn]['members']:

@@ -1,0 +1,8 @@
+Title: Users are not logged out anymore during changing their own passwords
+Level: 1
+Component: multisite
+Version: 1.2.4b3
+Date: 1387548439
+Class: fix
+
+The login cookie is now automatically updated with the new valid value.

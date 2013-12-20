@@ -105,7 +105,7 @@
 
 import sys, pprint, socket, re, subprocess, time, datetime,  \
        shutil, tarfile, StringIO, math, fcntl, pickle, random
-import config, table, multitar, userdb, hooks, weblib
+import config, table, multitar, userdb, hooks, weblib, login
 from lib import *
 from valuespec import *
 import forms
@@ -12804,15 +12804,13 @@ def page_user_profile():
                     else:
                         users[config.user_id]['serial'] += 1
 
+                    # Set the new cookie to prevent logout for the current user
+                    login.set_auth_cookie(config.user_id, users[config.user_id]['serial'])
+
             userdb.save_users(users)
             success = True
 
-            if password:
-                html.javascript(
-                    "if(top) top.location.reload(); "
-                    "else document.location.reload();")
-            else:
-                html.reload_sidebar()
+            html.reload_sidebar()
         except MKUserError, e:
             html.add_user_error(e.varname, e.message)
 

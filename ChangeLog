@@ -1,3 +1,5 @@
+1.2.4b4:
+
 1.2.4b3:
     Multisite:
     * 0421 FIX: UserDB: Fixed lost passwords when changing users in large user databases...

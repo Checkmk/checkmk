@@ -1,4 +1,7 @@
 1.2.4b3:
+    WATO:
+    * 0249 FIX: Backup & Restore: fixed bug when uploading legacy snapshots...
+
 
 1.2.4b2:
     Core & Setup:

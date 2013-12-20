@@ -5555,15 +5555,18 @@ def get_snapshot_status(name):
                 file_info[name] = { "size" :info }
             status["files"] = file_info
         else: # tarfile is finished, read comment
+            # Determine snapshot type: legacy / new
+            is_legacy_snapshot = True
+            try:
+                tarfile.open(snapshot_dir + name, "r:gz") 
+            except:
+                is_legacy_snapshot = False
+
             # Legacy snapshots
-            if name.endswith(".tar.gz"):
+            if is_legacy_snapshot:
                 status["type"] = "legacy"
                 status["type_text"] = _("Snapshot created with old version")
                 status["comment"]   = _("Snapshot created with old version")
-                try:
-                    tarfile.open(snapshot_dir + name, "r:gz").getmembers()
-                except:
-                    raise
             # New snapshots
             else:
                 status["files"] = multitar.list_tar_content(snapshot_dir + name)
@@ -5578,10 +5581,12 @@ def get_snapshot_status(name):
                     status["type"] = "legacy"
                     status["type_text"] = _("Snapshot created with old version")
                     status["comment"]   = _("Snapshot created with old version")
-                try:
-                    tarfile.open(snapshot_dir + name, "r").getmembers()
-                except:
-                    raise
+            try:
+                # Simple validity check - try to read snapshot content
+                # Note: Opening it with "r" works on tar and tar.gz
+                tarfile.open(snapshot_dir + name, "r").getmembers()
+            except:
+                raise
     except:
         status["broken"] = True
         pass
@@ -5786,7 +5791,8 @@ def mode_snapshot(phase):
                                 html.attrencode(snapshot_file)
                             )
             if c:
-                if snapshot_file.endswith(".tar.gz"): # Old snapshot type
+                status = get_snapshot_status(snapshot_file)
+                if status["type"] == "legacy":
                     multitar.extract_from_file(snapshot_dir + snapshot_file, backup_paths)
                 else:
                     multitar.extract_from_file(snapshot_dir + snapshot_file, backup_domains)

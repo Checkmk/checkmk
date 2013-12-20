@@ -131,7 +131,7 @@ def extract_domains(tar, domains):
             else:
                 return check_exists_or_writable(path_tokens[:-1])
 
-        # The complete tar.gz file never fits in stringIO buffer..
+        # The complete tar file never fits in stringIO buffer..
         tar.extract(tar_member, restore_dir)
         subtar = tarfile.open("%s/%s" % (restore_dir, tar_member.name))
 

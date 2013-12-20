@@ -96,6 +96,8 @@ def check_dell_om_disks(item, _no_params, info):
             msg.append("state %s%s" % ( pdisk_state.get(dstate, 'ukn (%s)' % dstate ), label ))
             msg.append("Bus Type: %s" % bus_type.get(btype,'unk (%s)' % btype) )
 
+			if sstate == 3 and dstate == 1:
+				state = 0
             if sstate != 5:
                 msg.append("Spare State: %s" % spare_state.get(sstate, 'ukn (%s)' %sstate ))
             if mt != 0:

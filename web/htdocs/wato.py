@@ -5566,7 +5566,7 @@ def get_snapshot_status(name):
             # Determine snapshot type: legacy / new
             is_legacy_snapshot = True
             try:
-                tarfile.open(snapshot_dir + name, "r:gz") 
+                tarfile.open(snapshot_dir + name, "r:gz")
             except:
                 is_legacy_snapshot = False
 

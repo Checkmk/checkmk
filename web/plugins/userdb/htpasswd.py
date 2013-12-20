@@ -107,7 +107,8 @@ def htpasswd_save(users):
     # users from htpasswd are lost. If you start managing users with
     # WATO, you should continue to do so or stop doing to for ever...
     # Locked accounts get a '!' before their password. This disable it.
-    out = create_user_file(defaults.htpasswd_file, "w")
+    filename = defaults.htpasswd_file + '.new'
+    out = create_user_file(filename, "w")
     for id, user in users.items():
         # only process users which are handled by htpasswd connector
         if user.get('connector', 'htpasswd') != 'htpasswd':
@@ -119,6 +120,8 @@ def htpasswd_save(users):
             else:
                 locksym = ""
             out.write("%s:%s%s\n" % (id, locksym, user["password"]))
+    out.close()
+    os.rename(filename, filename[:-4])
 
 multisite_user_connectors.append({
     'id':          'htpasswd',

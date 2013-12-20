@@ -5122,7 +5122,7 @@ def do_check_keepalive():
         keepalive_fd = opt_keepalive_fd
     else:
         keepalive_fd = os.dup(1)
-        devnull = os.open("/tmp/dev_null", os.O_WRONLY | os.O_CREAT)
+        devnull = os.open("/dev/null", os.O_WRONLY | os.O_CREAT)
         os.dup2(devnull, 1)
         os.close(devnull)
 

@@ -1,8 +1,15 @@
-Title: Explicit mapping of clustered services can now be done with Wato.
+Title: Explicit mapping of clustered services can now be done with WATO
 Level: 1
 Component: wato
 Version: 1.2.5i1
 Date: 1387534743
 Class: feature
 
+Up to now WATO assumed that one host can be assigned at most to one cluster.
+Now you can have one node in multiple clusters. With the new WATO ruleset
+<i>Explicit mapping of Clustered Services</i> you can now specify explicitely,
+to which of the clusters services of a node should be mapped.
 
+If you are used to use <tt>main.mk</tt> then you might know
+<tt>clustered_services_of['myhost']</tt>, which does exactly the same,
+but is not accessible via WATO.

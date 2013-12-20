@@ -2450,16 +2450,30 @@ def mode_inventory(phase, firsttime):
             table.sort()
             active_checks = {}
             new_target = "folder"
-            for st, ct, checkgroup, item, paramstring, params, descr, state, output, perfdata in table:
-                if (html.has_var("_cleanup") or html.has_var("_fixall")) \
-                    and st in [ "vanished", "obsolete" ]:
-                    pass
-                elif (html.has_var("_activate_all") or html.has_var("_fixall")) \
-                    and st == "new":
-                    active_checks[(ct, item)] = paramstring
-                else:
-                    varname = "_%s_%s" % (ct, html.varencode(item))
-                    if html.var(varname, "") != "":
+
+            if html.var("_refresh"):
+                counts, failed_hosts = check_mk_automation(host[".siteid"], "inventory", [ "@scan", "refresh", hostname ])
+                count_added, count_removed, count_kept, count_new = counts[hostname]
+                message = _("Refreshed check configuration of host [%s] with %d services") % \
+                            (hostname, count_added)
+                log_pending(LOCALRESTART, hostname, "refresh-autochecks", message)
+
+            else:
+                table = check_mk_automation(host[".siteid"], "try-inventory", cache_options + [hostname])
+                table.sort()
+                active_checks = {}
+                for st, ct, checkgroup, item, paramstring, params, descr, state, output, perfdata in table:
+                    if (html.has_var("_cleanup") or html.has_var("_fixall")) \
+                        and st in [ "vanished", "obsolete" ]:
+                        pass
+                    elif (html.has_var("_activate_all") or html.has_var("_fixall")) \
+                        and st == "new":
+                        active_checks[(ct, item)] = paramstring
+                    else:
+                        varname = "_%s_%s" % (ct, html.varencode(item))
+                        if html.var(varname, "") != "":
+                            active_checks[(ct, item)] = paramstring
+                    if st == "clustered":
                         active_checks[(ct, item)] = paramstring
                 if st == "clustered":
                     active_checks[(ct, item)] = paramstring
@@ -2893,23 +2907,31 @@ def mode_bulk_inventory(phase):
                 if html.var("do_scan"):
                     arguments = [ "@scan" ] + arguments
                 counts, failed_hosts = check_mk_automation(site_id, "inventory", arguments)
-                #counts = ( 1, 2, 3, 4 )
-                result = repr([ 'continue', num_hosts, 0 ] + list(counts)) + "\n"
+                # sum up host individual counts to have a total count
+                sum_counts = [ 0, 0, 0, 0 ]
+                result_txt = ''
                 for hostname in hostnames:
+                    sum_counts[0] += counts[hostname][0]
+                    sum_counts[1] += counts[hostname][1]
+                    sum_counts[2] += counts[hostname][2]
+                    sum_counts[3] += counts[hostname][3]
                     host = folder[".hosts"][hostname]
                     if hostname in failed_hosts:
-                        result += _("Failed to inventorize %s: %s<br>") % (hostname, failed_hosts[hostname])
+                        result_txt += _("Failed to inventorize %s: %s<br>") % (hostname, failed_hosts[hostname])
                         if not host.get("inventory_failed"):
                             host["inventory_failed"] = True
                             save_hosts(folder)
                     else:
-                        result += _("Inventorized %s<br>\n") % hostname
+                        result_txt += _("Inventorized %s<br>\n") % hostname
                         mark_affected_sites_dirty(folder, hostname, sync=False, restart=True)
                         log_pending(AFFECTED, hostname, "bulk-inventory",
-                            _("Inventorized host: %d added, %d removed, %d kept, %d total services") % counts)
+                            _("Inventorized host: %d added, %d removed, %d kept, %d total services") %
+                                                                                tuple(counts[hostname]))
                         if "inventory_failed" in host:
                             del host["inventory_failed"]
                             save_hosts(folder) # Could be optimized, but difficult here
+
+                result = repr([ 'continue', num_hosts, 0 ] + sum_counts) + "\n" + result_txt
 
             except Exception, e:
                 result = repr([ 'failed', num_hosts, num_hosts, 0, 0, 0, 0, ]) + "\n"
@@ -5525,15 +5547,18 @@ def get_snapshot_status(name):
                 file_info[name] = { "size" :info }
             status["files"] = file_info
         else: # tarfile is finished, read comment
+            # Determine snapshot type: legacy / new
+            is_legacy_snapshot = True
+            try:
+                tarfile.open(snapshot_dir + name, "r:gz") 
+            except:
+                is_legacy_snapshot = False
+
             # Legacy snapshots
-            if name.endswith(".tar.gz"):
+            if is_legacy_snapshot:
                 status["type"] = "legacy"
                 status["type_text"] = _("Snapshot created with old version")
                 status["comment"]   = _("Snapshot created with old version")
-                try:
-                    tarfile.open(snapshot_dir + name, "r:gz").getmembers()
-                except:
-                    raise
             # New snapshots
             else:
                 status["files"] = multitar.list_tar_content(snapshot_dir + name)
@@ -5548,10 +5573,12 @@ def get_snapshot_status(name):
                     status["type"] = "legacy"
                     status["type_text"] = _("Snapshot created with old version")
                     status["comment"]   = _("Snapshot created with old version")
-                try:
-                    tarfile.open(snapshot_dir + name, "r").getmembers()
-                except:
-                    raise
+            try:
+                # Simple validity check - try to read snapshot content
+                # Note: Opening it with "r" works on tar and tar.gz
+                tarfile.open(snapshot_dir + name, "r").getmembers()
+            except:
+                raise
     except:
         status["broken"] = True
         pass
@@ -5756,7 +5783,8 @@ def mode_snapshot(phase):
                                 html.attrencode(snapshot_file)
                             )
             if c:
-                if snapshot_file.endswith(".tar.gz"): # Old snapshot type
+                status = get_snapshot_status(snapshot_file)
+                if status["type"] == "legacy":
                     multitar.extract_from_file(snapshot_dir + snapshot_file, backup_paths)
                 else:
                     multitar.extract_from_file(snapshot_dir + snapshot_file, backup_domains)

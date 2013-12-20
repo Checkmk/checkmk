@@ -951,13 +951,18 @@ register_configvar(group,
 
 register_configvar(group,
     "debug_log",
-    Optional(Filename(label = _("Absolute path to log file")),
-          title = _("Logfile for debugging errors in checks"),
-          label = _("Activate logging errors into a logfile"),
-          help = _("If this option is used and set to a filename, Check_MK will create a debug logfile "
-                   "containing details about failed checks (those which have state UNKNOWN "
-                   "and the output UNKNOWN - invalid output from plugin.... Per default no "
-                   "logfile is written.")),
+    Transform(
+        Checkbox(
+            label = _("Write exceptions to <tt>%s/crashed-checks.log</tt>" % defaults.log_dir),
+        ),
+        title = _("Log exceptions in check plugins"),
+        help = _("If this option is enabled Check_MK will create a debug logfile at "
+                 "<tt>%s/chrashed-checks.log</tt>"
+                 "containing details about failed checks (those which have the state <i>UNKNOWN "
+                 "and the output UNKNOWN - invalid output from plugin</i>...) Per default no "
+                 "logfile is written.") % defaults.log_dir,
+        forth = lambda x: not not x,
+    ),
     need_restart = True)
 
 register_configvar(group,

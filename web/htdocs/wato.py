@@ -6276,7 +6276,7 @@ def mode_globalvars(phase):
             domain, valuespec, need_restart, allow_reset, in_global_settings = g_configvars[varname]
             def_value = default_values.get(varname, valuespec.default_value())
 
-            if action == "reset" and not isinstance(valuespec, Checkbox):
+            if action == "reset" and not is_a_checkbox(valuespec):
                 c = wato_confirm(
                     _("Resetting configuration variable"),
                     _("Do you really want to reset the configuration variable <b>%s</b> "
@@ -6357,14 +6357,14 @@ def render_global_configuration_variables(default_values, current_settings, show
 
             toggle_url = html.makeactionuri([("_action", "toggle"), ("_varname", varname)])
             if varname in current_settings:
-                if isinstance(valuespec, Checkbox):
+                if is_a_checkbox(valuespec):
                     html.icon_button(toggle_url, _("Immediately toggle this setting"),
                         "snapin_switch_" + (current_settings[varname] and "on" or "off"),
                         cssclass="modified")
                 else:
                     html.write('<a class=modified href="%s">%s</a>' % (edit_url, to_text))
             else:
-                if isinstance(valuespec, Checkbox):
+                if is_a_checkbox(valuespec):
                     html.icon_button(toggle_url, _("Immediately toggle this setting"),
                     # "snapin_greyswitch_" + (defaultvalue and "on" or "off"))
                     "snapin_switch_" + (defaultvalue and "on" or "off"))
@@ -6408,7 +6408,7 @@ def mode_edit_configvar(phase, what = 'globalvars'):
 
     if phase == "action":
         if html.var("_reset"):
-            if not isinstance(valuespec, Checkbox):
+            if not is_a_checkbox(valuespec):
                 c = wato_confirm(
                     _("Resetting configuration variable"),
                     _("Do you really want to reset this configuration variable "
@@ -7551,7 +7551,7 @@ def mode_edit_site_globals(phase):
             domain, valuespec, need_restart, allow_reset, in_global_settings = g_configvars[varname]
             def_value = default_values.get(varname, valuespec.default_value())
 
-            if action == "reset" and not isinstance(valuespec, Checkbox):
+            if action == "reset" and not is_a_checkbox(valuespec):
                 c = wato_confirm(
                     _("Removing site-specific configuration variable"),
                     _("Do you really want to remove the configuration variable <b>%s</b> "
@@ -14656,6 +14656,15 @@ def is_alias_used(my_group, my_name, aliasname):
             return False, _("This alias is already used in the role %s.") % key
 
     return True, None
+
+# Checks if a valuespec is a Checkbox
+def is_a_checkbox(vs):
+    if isinstance(vs, Checkbox):
+        return True
+    elif isinstance(vs, Transform):
+        return is_a_checkbox(vs._valuespec)
+    else:
+        return False
 
 #.
 #   .-Plugins--------------------------------------------------------------.

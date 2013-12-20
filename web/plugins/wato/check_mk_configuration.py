@@ -1863,6 +1863,12 @@ register_rule(group,
 group = "monconf/" + _("Various")
 
 register_rule(group,
+     "clustered_services_mapping",
+     TextAscii( title = _("Clustered services of") ),
+     itemtype = "service",
+     )
+
+register_rule(group,
     "extra_host_conf:service_period",
     TimeperiodSelection(
         title = _("Service period for hosts"),

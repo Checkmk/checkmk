@@ -309,6 +309,7 @@ timeperiods                          = {} # needed for WATO
 clusters                             = {}
 clustered_services                   = []
 clustered_services_of                = {} # new in 1.1.4
+clustered_services_mapping           = [] # new for 1.2.5i1 Wato Rule
 datasource_programs                  = []
 service_aggregations                 = []
 service_dependencies                 = []
@@ -943,6 +944,10 @@ def host_of_clustered_service(hostname, servicedesc):
     the_clusters = clusters_of(hostname)
     if not the_clusters:
         return hostname
+
+    cluster_mapping = service_extra_conf(hostname, servicedesc, clustered_services_mapping)
+    if cluster_mapping:
+        return cluster_mapping[0]
 
     # 1. New style: explicitly assigned services
     for cluster, conf in clustered_services_of.items():

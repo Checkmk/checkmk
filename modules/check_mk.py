@@ -233,7 +233,7 @@ simulation_mode                    = False
 agent_simulator                    = False
 perfdata_format                    = "pnp" # also possible: "standard"
 check_mk_perfdata_with_times       = True
-debug_log                          = None
+debug_log                          = False
 monitoring_host                    = None # deprecated
 max_num_processes                  = 50
 
@@ -638,14 +638,14 @@ def check_interval_of(hostname, checkname):
             return minutes # use first match
 
 #.
-#   +----------------------------------------------------------------------+
+#   .--SNMP----------------------------------------------------------------.
 #   |                      ____  _   _ __  __ ____                         |
 #   |                     / ___|| \ | |  \/  |  _ \                        |
 #   |                     \___ \|  \| | |\/| | |_) |                       |
 #   |                      ___) | |\  | |  | |  __/                        |
 #   |                     |____/|_| \_|_|  |_|_|                           |
 #   |                                                                      |
-#   +----------------------------------------------------------------------+
+#   '----------------------------------------------------------------------'
 
 # Determine SNMP community for a specific host.  It the host is found
 # int the map snmp_communities, that community is returned. Otherwise
@@ -2942,7 +2942,8 @@ def reread_autochecks():
     read_all_autochecks()
     checks = autochecks + checks
 
-#   +----------------------------------------------------------------------+
+#.
+#   .--Precompile----------------------------------------------------------.
 #   |          ____                                     _ _                |
 #   |         |  _ \ _ __ ___  ___ ___  _ __ ___  _ __ (_) | ___           |
 #   |         | |_) | '__/ _ \/ __/ _ \| '_ ` _ \| '_ \| | |/ _ \          |
@@ -2950,6 +2951,9 @@ def reread_autochecks():
 #   |         |_|   |_|  \___|\___\___/|_| |_| |_| .__/|_|_|\___|          |
 #   |                                            |_|                       |
 #   +----------------------------------------------------------------------+
+#   |  Create one specializes Python file per host and bytecompile it.     |
+#   '----------------------------------------------------------------------'
+
 
 # Find files to be included in precompile host check for a certain
 # check (for example df or mem.used). In case of checks with a period
@@ -3070,7 +3074,7 @@ no_inventory_possible = None
                  'perfdata_format', 'aggregation_output_format',
                  'aggr_summary_hostname', 'nagios_command_pipe_path',
                  'check_result_path', 'check_submission', 'monitoring_core',
-                 'var_dir', 'counters_directory', 'tcp_cache_dir', 'tmp_dir',
+                 'var_dir', 'counters_directory', 'tcp_cache_dir', 'tmp_dir', 'log_dir',
                  'snmpwalks_dir', 'check_mk_basedir', 'nagios_user', 'rrd_path', 'rrdcached_socket',
                  'omd_root',
                  'www_group', 'cluster_max_cachefile_age', 'check_max_cachefile_age',
@@ -3266,7 +3270,9 @@ no_inventory_possible = None
     output.write("    sys.stdout.write(\"Traceback: %s\\n\" % traceback.format_exc())\n")
 
     # debug logging
-    output.write("    if debug_log:\n")
+    output.write("\n    if debug_log:\n")
+    output.write("        if debug_log == True:\n")
+    output.write("            debug_log = log_dir + \"/crashed-checks.log\"\n")
     output.write("        l = file(debug_log, \"a\")\n")
     output.write("        l.write((\"Exception in precompiled check:\\n\"\n")
     output.write("                \"  Check_MK Version: %s\\n\"\n")

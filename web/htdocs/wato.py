@@ -2450,18 +2450,6 @@ def mode_inventory(phase, firsttime):
             table.sort()
             active_checks = {}
             new_target = "folder"
-<<<<<<< HEAD
-            for st, ct, checkgroup, item, paramstring, params, descr, state, output, perfdata in table:
-                if (html.has_var("_cleanup") or html.has_var("_fixall")) \
-                    and st in [ "vanished", "obsolete" ]:
-                    pass
-                elif (html.has_var("_activate_all") or html.has_var("_fixall")) \
-                    and st == "new":
-                    active_checks[(ct, item)] = paramstring
-                else:
-                    varname = "_%s_%s" % (ct, html.varencode(item))
-                    if html.var(varname, "") != "":
-=======
 
             if html.var("_refresh"):
                 counts, failed_hosts = check_mk_automation(host[".siteid"], "inventory", [ "@scan", "refresh", hostname ])
@@ -2486,7 +2474,6 @@ def mode_inventory(phase, firsttime):
                         if html.var(varname, "") != "":
                             active_checks[(ct, item)] = paramstring
                     if st == "clustered":
->>>>>>> 29799d8... FIX Fixed numbers shown in log entries of bulk inventory
                         active_checks[(ct, item)] = paramstring
                 if st == "clustered":
                     active_checks[(ct, item)] = paramstring

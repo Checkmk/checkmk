@@ -1,0 +1,11 @@
+Title: UserDB: Fixed lost passwords when changing users in large user databases
+Level: 1
+Component: multisite
+Version: 1.2.4b3
+Date: 1387542360
+Class: fix
+
+This issue affects local users whose passwords are stored in the local htpasswd
+file. When saving users after modification, the htpasswd file might corrupt and
+invalidate all passwords of all users. This has been fixed now.
+

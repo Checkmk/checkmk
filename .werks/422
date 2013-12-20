@@ -1,0 +1,11 @@
+Title: Fixed numbers shown in log entries of bulk inventory
+Level: 1
+Component: wato
+Version: 1.2.4b3
+Date: 1387545192
+Class: fix
+
+For all hosts inventorized in one single bulk operation the counts in
+the created log entry were equal. This were the summarized number of
+services found, kept, removed or new ones. Now the numbers show the
+individual counts again.

@@ -105,7 +105,7 @@
 
 import sys, pprint, socket, re, subprocess, time, datetime,  \
        shutil, tarfile, StringIO, math, fcntl, pickle, random
-import config, table, multitar, userdb, hooks, weblib
+import config, table, multitar, userdb, hooks, weblib, login
 from lib import *
 from valuespec import *
 import forms
@@ -2464,7 +2464,7 @@ def mode_inventory(phase, firsttime):
 
             if html.var("_refresh"):
                 counts, failed_hosts = check_mk_automation(host[".siteid"], "inventory", [ "@scan", "refresh", hostname ])
-                count_added, count_removed, count_kept, count_new = counts
+                count_added, count_removed, count_kept, count_new = counts[hostname]
                 message = _("Refreshed check configuration of host [%s] with %d services") % \
                             (hostname, count_added)
                 log_pending(LOCALRESTART, hostname, "refresh-autochecks", message)
@@ -2918,23 +2918,31 @@ def mode_bulk_inventory(phase):
                 if html.var("do_scan"):
                     arguments = [ "@scan" ] + arguments
                 counts, failed_hosts = check_mk_automation(site_id, "inventory", arguments)
-                #counts = ( 1, 2, 3, 4 )
-                result = repr([ 'continue', num_hosts, 0 ] + list(counts)) + "\n"
+                # sum up host individual counts to have a total count
+                sum_counts = [ 0, 0, 0, 0 ]
+                result_txt = ''
                 for hostname in hostnames:
+                    sum_counts[0] += counts[hostname][0]
+                    sum_counts[1] += counts[hostname][1]
+                    sum_counts[2] += counts[hostname][2]
+                    sum_counts[3] += counts[hostname][3]
                     host = folder[".hosts"][hostname]
                     if hostname in failed_hosts:
-                        result += _("Failed to inventorize %s: %s<br>") % (hostname, failed_hosts[hostname])
+                        result_txt += _("Failed to inventorize %s: %s<br>") % (hostname, failed_hosts[hostname])
                         if not host.get("inventory_failed"):
                             host["inventory_failed"] = True
                             save_hosts(folder)
                     else:
-                        result += _("Inventorized %s<br>\n") % hostname
+                        result_txt += _("Inventorized %s<br>\n") % hostname
                         mark_affected_sites_dirty(folder, hostname, sync=False, restart=True)
                         log_pending(AFFECTED, hostname, "bulk-inventory",
-                            _("Inventorized host: %d added, %d removed, %d kept, %d total services") % counts)
+                            _("Inventorized host: %d added, %d removed, %d kept, %d total services") %
+                                                                                tuple(counts[hostname]))
                         if "inventory_failed" in host:
                             del host["inventory_failed"]
                             save_hosts(folder) # Could be optimized, but difficult here
+
+                result = repr([ 'continue', num_hosts, 0 ] + sum_counts) + "\n" + result_txt
 
             except Exception, e:
                 result = repr([ 'failed', num_hosts, num_hosts, 0, 0, 0, 0, ]) + "\n"
@@ -5531,7 +5539,10 @@ def effective_attributes(host, folder):
 def get_snapshot_status(name):
     status = {}
     try:
-        status["name"] = "%s %s" % (name[14:24], name[25:33].replace("-",":"))
+        if name == "uploaded_snapshot":
+            status["name"] = _("uploaded snapshot")
+        else:
+            status["name"] = "%s %s" % (name[14:24], name[25:33].replace("-",":"))
         path_status = "%s/workdir/%s.status" % (snapshot_dir, name)
         path_pid    = "%s/workdir/%s.pid"    % (snapshot_dir, name)
         # Check if this process is still running
@@ -5552,15 +5563,18 @@ def get_snapshot_status(name):
                 file_info[name] = { "size" :info }
             status["files"] = file_info
         else: # tarfile is finished, read comment
+            # Determine snapshot type: legacy / new
+            is_legacy_snapshot = True
+            try:
+                tarfile.open(snapshot_dir + name, "r:gz") 
+            except:
+                is_legacy_snapshot = False
+
             # Legacy snapshots
-            if name.endswith(".tar.gz"):
+            if is_legacy_snapshot:
                 status["type"] = "legacy"
                 status["type_text"] = _("Snapshot created with old version")
                 status["comment"]   = _("Snapshot created with old version")
-                try:
-                    tarfile.open(snapshot_dir + name, "r:gz").getmembers()
-                except:
-                    raise
             # New snapshots
             else:
                 status["files"] = multitar.list_tar_content(snapshot_dir + name)
@@ -5575,10 +5589,12 @@ def get_snapshot_status(name):
                     status["type"] = "legacy"
                     status["type_text"] = _("Snapshot created with old version")
                     status["comment"]   = _("Snapshot created with old version")
-                try:
-                    tarfile.open(snapshot_dir + name, "r").getmembers()
-                except:
-                    raise
+            try:
+                # Simple validity check - try to read snapshot content
+                # Note: Opening it with "r" works on tar and tar.gz
+                tarfile.open(snapshot_dir + name, "r").getmembers()
+            except:
+                raise
     except:
         status["broken"] = True
         pass
@@ -5642,10 +5658,11 @@ def mode_snapshot_detail(phase):
                     html.write("<td align='right'>%s</td></tr>" % files[key]["size"])
             html.write("</table>")
         forms.end()
-    delete_url = make_action_link([("mode", "snapshot"), ("_delete_file", snapshot_name)])
-    html.buttonlink(delete_url, _("Delete Snapshot"))
-    download_url = make_action_link([("mode", "snapshot"), ("_download_file", snapshot_name)])
-    html.buttonlink(download_url, _("Download Snapshot"))
+    if snapshot_name != "uploaded_snapshot":
+        delete_url = make_action_link([("mode", "snapshot"), ("_delete_file", snapshot_name)])
+        html.buttonlink(delete_url, _("Delete Snapshot"))
+        download_url = make_action_link([("mode", "snapshot"), ("_download_file", snapshot_name)])
+        html.buttonlink(download_url, _("Download Snapshot"))
     if not status.get("progress_status") and not status.get("broken"):
         restore_url = make_action_link([("mode", "snapshot"), ("_restore_snapshot", snapshot_name)])
         html.buttonlink(restore_url, _("Restore Snapshot"))
@@ -5663,6 +5680,8 @@ def mode_snapshot(phase):
 
     snapshots = []
     if os.path.exists(snapshot_dir):
+        if not html.var("_restore_snapshot") and os.path.exists("%s/uploaded_snapshot" % snapshot_dir):
+            os.remove("%s/uploaded_snapshot" % snapshot_dir)
         for f in os.listdir(snapshot_dir):
             snapshots.append(f)
     snapshots.sort(reverse=True)
@@ -5742,19 +5761,9 @@ def mode_snapshot(phase):
             if uploaded_file[0] == "":
                 raise MKUserError(None, _("Please select a file for upload."))
             if html.check_transaction():
-                # Legacy snapshot support
-                stream = StringIO.StringIO()
-                stream.write(uploaded_file[2])
-                stream.seek(0)
-                tar = tarfile.open(None, "r", stream)
-                if "comment" in map(lambda x: x.name, tar.getmembers()): # new version
-                    multitar.extract_from_buffer(uploaded_file[2], backup_domains)
-                else:
-                    multitar.extract_from_buffer(uploaded_file[2], backup_paths)
-
-                log_pending(SYNCRESTART, None, "snapshot-restored",
-                    _("Restored from uploaded file"))
-                return None, _("Successfully restored configuration.")
+                file("%s/uploaded_snapshot" % snapshot_dir, "w").write(uploaded_file[2])
+                html.set_var("_snapshot_name", "uploaded_snapshot")
+                return "snapshot_detail"
 
         # delete file
         elif html.has_var("_delete_file"):
@@ -5790,7 +5799,8 @@ def mode_snapshot(phase):
                                 html.attrencode(snapshot_file)
                             )
             if c:
-                if snapshot_file.endswith(".tar.gz"): # Old snapshot type
+                status = get_snapshot_status(snapshot_file)
+                if status["type"] == "legacy":
                     multitar.extract_from_file(snapshot_dir + snapshot_file, backup_paths)
                 else:
                     multitar.extract_from_file(snapshot_dir + snapshot_file, backup_domains)
@@ -5841,6 +5851,8 @@ def mode_snapshot(phase):
 
         table.begin("snapshots", _("Snapshots"), empty_text=_("There are no snapshots available."))
         for name in snapshots:
+            if name == "uploaded_snapshot":
+                continue
             status = get_snapshot_status(name)
             table.row()
             # Snapshot name
@@ -6203,7 +6215,7 @@ def mode_ldap_config(phase):
                 if isinstance(dn, str):
                     num += 1
                     try:
-                        ldap_groups = userdb.ldap_get_groups('(distinguishedName=%s)' % dn)
+                        ldap_groups = userdb.ldap_get_groups(dn)
                         if not ldap_groups:
                             return False, _('Could not find the group specified for role %s') % role_id
                     except Exception, e:
@@ -12792,15 +12804,13 @@ def page_user_profile():
                     else:
                         users[config.user_id]['serial'] += 1
 
+                    # Set the new cookie to prevent logout for the current user
+                    login.set_auth_cookie(config.user_id, users[config.user_id]['serial'])
+
             userdb.save_users(users)
             success = True
 
-            if password:
-                html.javascript(
-                    "if(top) top.location.reload(); "
-                    "else document.location.reload();")
-            else:
-                html.reload_sidebar()
+            html.reload_sidebar()
         except MKUserError, e:
             html.add_user_error(e.varname, e.message)
 

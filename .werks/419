@@ -1,0 +1,10 @@
+Title: LDAP: The default user profile roles are only assigned to users without roles
+Level: 1
+Component: wato
+Version: 1.2.4b2
+Date: 1387526213
+Class: fix
+
+In previous releases the roles of the default user profile were assigned to all
+users synced with LDAP. This was not correct and has now been changed. Only users
+which do not get a role assigned by the role sync plugin get the default role(s).

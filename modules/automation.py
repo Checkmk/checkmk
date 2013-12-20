@@ -118,19 +118,18 @@ def automation_inventory(args):
     how = args[0]
     hostnames = args[1:]
 
-    count_added = 0
-    count_removed = 0
-    count_kept = 0
-    count_new = 0
-
+    counts = {}
     failed_hosts = {}
     k = globals().keys()
     if how == "refresh":
         for hostname in hostnames:
-	    count_removed += remove_autochecks_of(hostname) # checktype could be added here
+            counts.setdefault(hostname, [0, 0, 0, 0]) # added, removed, kept, new
+            counts[hostname][1] += remove_autochecks_of(hostname) # checktype could be added here
 	reread_autochecks()
 
     for hostname in hostnames:
+        counts.setdefault(hostname, [0, 0, 0, 0]) # added, removed, kept, new
+
         try:
             # Compute current state of new and existing checks
             table = automation_try_inventory([hostname], leave_no_tcp=True, with_snmp_scan=with_snmp_scan)
@@ -144,32 +143,32 @@ def automation_inventory(args):
 
                 if state_type == "new":
                     if how in [ "new", "fixall", "refresh" ]:
-                        count_added += 1
+                        counts[hostname][0] += 1
                         new_items.append((ct, item, paramstring))
 
                 elif state_type == "old":
                     # keep currently existing valid services in any case
                     new_items.append((ct, item, paramstring))
-                    count_kept += 1
+                    counts[hostname][2] += 1
 
                 elif state_type in [ "obsolete", "vanished" ]:
                     # keep item, if we are currently only looking for new services
                     # otherwise fix it: remove ignored and non-longer existing services
                     if how not in [ "fixall", "remove" ]:
                         new_items.append((ct, item, paramstring))
-                        count_kept += 1
+                        counts[hostname][2] += 1
                     else:
-                        count_removed += 1
+                        counts[hostname][1] += 1
 
             automation_write_autochecks_file(hostname, new_items)
-            count_new += len(new_items)
+            counts[hostname][3] += len(new_items)
 
         except Exception, e:
 	    if opt_debug:
                 raise
             failed_hosts[hostname] = str(e)
 
-    return (count_added, count_removed, count_kept, count_new), failed_hosts
+    return counts, failed_hosts
 
 
 def automation_try_inventory(args, leave_no_tcp=False, with_snmp_scan=False):
@@ -768,7 +767,7 @@ def automation_create_snapshot(args):
         filename_work   = "%s/%s.work"   % (work_dir, snapshot_name)
         filename_status = "%s/%s.status" % (work_dir, snapshot_name)
         filename_pid    = "%s/%s.pid"    % (work_dir, snapshot_name)
-        filename_subtar = "%s/%s.subtar" % (work_dir, snapshot_name)
+        filename_subtar = ""
         current_domain  = ""
 
         file(filename_target, "w").close()
@@ -781,14 +780,14 @@ def automation_create_snapshot(args):
                 if domain:
                     statusinfo[domain] = infotext
                 statusfile = file(filename_status, "w")
-                statusfile.write("comment:%s\n" % data.get("comment"," "))
+                statusfile.write("comment:%s\n" % data.get("comment"," ").encode("utf-8"))
                 status_list = list(statusinfo.items())
                 status_list.sort()
                 for status in status_list:
                     statusfile.write("%s:%s\n" % status)
             lock_status_file.release()
 
-        # Set intitial status info
+        # Set initial status info
         statusinfo = {}
         for name in data.get("domains", {}).keys():
             statusinfo[name] = "TODO"
@@ -819,7 +818,7 @@ def automation_create_snapshot(args):
         def cleanup():
             for filename in [filename_work, filename_status,
                              filename_pid, filename_subtar]:
-                if os.path.exists(filename):
+                if filename and os.path.exists(filename):
                     os.unlink(filename)
 
         def check_should_abort():
@@ -849,8 +848,8 @@ def automation_create_snapshot(args):
         # Add comment to tar file
         if data.get("comment"):
             tarinfo       = get_basic_tarinfo("comment")
-            tarinfo.size  = len(data.get("comment"))
-            tar_in_progress.addfile(tarinfo, cStringIO.StringIO(data.get("comment")))
+            tarinfo.size  = len(data.get("comment").encode("utf-8"))
+            tar_in_progress.addfile(tarinfo, cStringIO.StringIO(data.get("comment").encode("utf-8")))
 
         if data.get("created_by"):
             tarinfo       = get_basic_tarinfo("created_by")
@@ -862,6 +861,9 @@ def automation_create_snapshot(args):
         tarinfo       = get_basic_tarinfo("type")
         tarinfo.size  = len(snapshot_type)
         tar_in_progress.addfile(tarinfo, cStringIO.StringIO(snapshot_type))
+
+        # Close tar in progress, all other files are included via command line tar
+        tar_in_progress.close()
 
         # Process domains (sorted)
         subtar_update_thread = thread.start_new_thread(update_subtar_size, (1,))
@@ -876,23 +878,28 @@ def automation_create_snapshot(args):
 
             paths = map(lambda x: x[1] == "" and "." or x[1], paths)
 
-            command = "cd %s ; tar czf %s --force-local -C %s %s" %  (prefix, filename_subtar, prefix, " ".join(paths))
+            # Create tar.gz subtar
+            filename_subtar = "%s.tar.gz" % name
+            command = "cd %s ; tar czf %s --ignore-failed-read --force-local -C %s %s" %  (work_dir, filename_subtar, prefix, " ".join(paths))
             proc = subprocess.Popen(command, shell=True)
             proc.wait()
 
-            tarinfo        = get_basic_tarinfo("%s.tar.gz" %name)
-            tarinfo.size   = os.stat(filename_subtar).st_size
+            subtar_size   = os.stat("%s/%s" % (work_dir, filename_subtar)).st_size
+
+            # Append tar.gz subtar to snapshot
+            command = "cd %s ; tar --append --file=%s %s ; rm %s" % (work_dir, filename_work, filename_subtar, filename_subtar)
+            proc = subprocess.Popen(command, shell=True)
+            proc.wait()
 
             current_domain = ""
-            tar_in_progress.addfile(tarinfo, file(filename_subtar))
-            update_status_file(name, "Finished / Size: %d" % tarinfo.size)
+            update_status_file(name, "Finished / Size: %d" % subtar_size)
 
         current_domain = None
-        tar_in_progress.close()
 
         shutil.move(filename_work, filename_target)
         cleanup()
 
     except Exception, e:
         raise MKAutomationError(str(e))
+
 

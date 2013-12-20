@@ -118,19 +118,18 @@ def automation_inventory(args):
     how = args[0]
     hostnames = args[1:]
 
-    count_added = 0
-    count_removed = 0
-    count_kept = 0
-    count_new = 0
-
+    counts = {}
     failed_hosts = {}
     k = globals().keys()
     if how == "refresh":
         for hostname in hostnames:
-	    count_removed += remove_autochecks_of(hostname) # checktype could be added here
+            counts.setdefault(hostname, [0, 0, 0, 0]) # added, removed, kept, new
+            counts[hostname][1] += remove_autochecks_of(hostname) # checktype could be added here
 	reread_autochecks()
 
     for hostname in hostnames:
+        counts.setdefault(hostname, [0, 0, 0, 0]) # added, removed, kept, new
+
         try:
             # Compute current state of new and existing checks
             table = automation_try_inventory([hostname], leave_no_tcp=True, with_snmp_scan=with_snmp_scan)
@@ -144,32 +143,32 @@ def automation_inventory(args):
 
                 if state_type == "new":
                     if how in [ "new", "fixall", "refresh" ]:
-                        count_added += 1
+                        counts[hostname][0] += 1
                         new_items.append((ct, item, paramstring))
 
                 elif state_type == "old":
                     # keep currently existing valid services in any case
                     new_items.append((ct, item, paramstring))
-                    count_kept += 1
+                    counts[hostname][2] += 1
 
                 elif state_type in [ "obsolete", "vanished" ]:
                     # keep item, if we are currently only looking for new services
                     # otherwise fix it: remove ignored and non-longer existing services
                     if how not in [ "fixall", "remove" ]:
                         new_items.append((ct, item, paramstring))
-                        count_kept += 1
+                        counts[hostname][2] += 1
                     else:
-                        count_removed += 1
+                        counts[hostname][1] += 1
 
             automation_write_autochecks_file(hostname, new_items)
-            count_new += len(new_items)
+            counts[hostname][3] += len(new_items)
 
         except Exception, e:
 	    if opt_debug:
                 raise
             failed_hosts[hostname] = str(e)
 
-    return (count_added, count_removed, count_kept, count_new), failed_hosts
+    return counts, failed_hosts
 
 
 def automation_try_inventory(args, leave_no_tcp=False, with_snmp_scan=False):

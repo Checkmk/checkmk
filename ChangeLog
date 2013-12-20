@@ -1,6 +1,7 @@
 1.2.4b3:
     WATO:
     * 0249 FIX: Backup & Restore: fixed bug when uploading legacy snapshots...
+    * 0250 FIX: Fixed error on creating very large WATO snapshots...
 
 
 1.2.4b2:

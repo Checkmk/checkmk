@@ -1,0 +1,8 @@
+Title: Fixed error on creating very large WATO snapshots
+Level: 1
+Component: wato
+Version: 1.2.4b3
+Date: 1387541661
+Class: fix
+
+The snapshot creating process could crash when the data in the snapshots exceeds several gigabytes.

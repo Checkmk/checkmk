@@ -768,7 +768,7 @@ def automation_create_snapshot(args):
         filename_work   = "%s/%s.work"   % (work_dir, snapshot_name)
         filename_status = "%s/%s.status" % (work_dir, snapshot_name)
         filename_pid    = "%s/%s.pid"    % (work_dir, snapshot_name)
-        filename_subtar = "%s/%s.subtar" % (work_dir, snapshot_name)
+        filename_subtar = ""
         current_domain  = ""
 
         file(filename_target, "w").close()
@@ -788,7 +788,7 @@ def automation_create_snapshot(args):
                     statusfile.write("%s:%s\n" % status)
             lock_status_file.release()
 
-        # Set intitial status info
+        # Set initial status info
         statusinfo = {}
         for name in data.get("domains", {}).keys():
             statusinfo[name] = "TODO"
@@ -819,7 +819,7 @@ def automation_create_snapshot(args):
         def cleanup():
             for filename in [filename_work, filename_status,
                              filename_pid, filename_subtar]:
-                if os.path.exists(filename):
+                if filename and os.path.exists(filename):
                     os.unlink(filename)
 
         def check_should_abort():
@@ -863,6 +863,9 @@ def automation_create_snapshot(args):
         tarinfo.size  = len(snapshot_type)
         tar_in_progress.addfile(tarinfo, cStringIO.StringIO(snapshot_type))
 
+        # Close tar in progress, all other files are included via command line tar
+        tar_in_progress.close()
+
         # Process domains (sorted)
         subtar_update_thread = thread.start_new_thread(update_subtar_size, (1,))
         domains = map(lambda x: x, data.get("domains").items())
@@ -876,22 +879,28 @@ def automation_create_snapshot(args):
 
             paths = map(lambda x: x[1] == "" and "." or x[1], paths)
 
-            command = "cd %s ; tar czf %s --force-local -C %s %s" %  (prefix, filename_subtar, prefix, " ".join(paths))
+            # Create tar.gz subtar
+            filename_subtar = "%s.tar.gz" % name
+            command = "cd %s ; tar czf %s --ignore-failed-read --force-local -C %s %s" %  (work_dir, filename_subtar, prefix, " ".join(paths))
             proc = subprocess.Popen(command, shell=True)
             proc.wait()
 
-            tarinfo        = get_basic_tarinfo("%s.tar.gz" %name)
-            tarinfo.size   = os.stat(filename_subtar).st_size
+            subtar_size   = os.stat("%s/%s" % (work_dir, filename_subtar)).st_size
+
+            # Append tar.gz subtar to snapshot
+            command = "cd %s ; tar --append --file=%s %s ; rm %s" % (work_dir, filename_work, filename_subtar, filename_subtar)
+            proc = subprocess.Popen(command, shell=True)
+            proc.wait()
 
             current_domain = ""
-            tar_in_progress.addfile(tarinfo, file(filename_subtar))
-            update_status_file(name, "Finished / Size: %d" % tarinfo.size)
+            update_status_file(name, "Finished / Size: %d" % subtar_size)
 
         current_domain = None
-        tar_in_progress.close()
 
         shutil.move(filename_work, filename_target)
         cleanup()
 
     except Exception, e:
         raise MKAutomationError(str(e))
+
+

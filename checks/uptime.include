@@ -31,7 +31,7 @@
 #    "max" : ( 86400 * 7, 86400 * 14),  # Maximum required uptime (warn, crit)
 # }
 
-def check_uptime_sec(params, uptime_sec):
+def check_uptime_seconds(params, uptime_sec):
     seconds  = uptime_sec % 60
     rem      = uptime_sec / 60
     minutes  = rem % 60

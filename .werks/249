@@ -1,0 +1,11 @@
+Title: Backup & Restore: fixed bug when uploading legacy snapshots
+Level: 1
+Component: wato
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387534673
+Targetversion: future
+
+Uploaded legacy snapshots couldn't get classified correctly as tar.gz files,
+which resulted in an extraction error.

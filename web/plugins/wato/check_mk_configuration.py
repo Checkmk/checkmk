@@ -1863,6 +1863,17 @@ register_rule(group,
 group = "monconf/" + _("Various")
 
 register_rule(group,
+     "clustered_services_mapping",
+     TextAscii( 
+        title = _("Explicit mapping of Clustered Services"),
+        help = _( "It's possible to have overlaping nodes between multiple clusters."
+                  "With this rule the direct mapping of services from nodes to the "
+                  "favored Cluster can be done."),
+     ),
+     itemtype = "service",
+     )
+
+register_rule(group,
     "extra_host_conf:service_period",
     TimeperiodSelection(
         title = _("Service period for hosts"),

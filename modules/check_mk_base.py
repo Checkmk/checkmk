@@ -306,7 +306,7 @@ def get_host_info(hostname, ipaddress, checkname):
         return info
     else:
         info = get_realhost_info(hostname, ipaddress, checkname, check_max_cachefile_age)
-        if add_nodeinfo:
+        if info != None and add_nodeinfo:
             return [ [ None ] + line for line in info ]
         else:
             return info

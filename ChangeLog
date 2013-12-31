@@ -1,6 +1,7 @@
 1.2.4b4:
     Core & Setup:
     * 0401 FIX: Fix rule precedence in WATO-configured manual checks...
+    * 0402 FIX: Fix exception in case of missing agent sections of cluster-aware checks...
 
 
 1.2.4b3:

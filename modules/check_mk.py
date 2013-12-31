@@ -5341,9 +5341,21 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
                             params[key] = value
 
             static.append((taglist, hostlist, checktype, item, params))
+
+    # Note: We need to reverse the order of the static_checks. This is because
+    # users assume that earlier rules have precedence over later ones. For static
+    # checks that is important if there are two rules for a host with the same
+    # combination of check type and item. When the variable 'checks' is evaluated,
+    # *later* rules have precedence. This is not consistent with the rest, but a
+    # result of this "historic implementation".
+    static.reverse()
+
+    # Now prepend to checks. That makes that checks variable have precedence
+    # over WATO.
     checks = static + checks
 
-    # Read autochecks and append them to explicit checks
+    # Read autochecks and prepend them to explicit checks. That way autochecks
+    # will have the *least* precedence!
     if with_autochecks:
         read_all_autochecks()
         checks = autochecks + checks

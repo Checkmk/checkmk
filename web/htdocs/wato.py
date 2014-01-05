@@ -2244,8 +2244,8 @@ def mode_diag_host(phase):
             ('snmp_timeout', Integer(
                 title = _("SNMP-Timeout (<a href=\"%s\">Rules</a>)") % \
                     make_link([('mode', 'edit_ruleset'), ('varname', 'snmp_timing')]),
-                help = _("A request is sent to the SNMP daemon, than wait up to this "
-                         "number of seconds until retrying."),
+                help = _("After a request is sent to the remote SNMP agent we will wait up to this "
+                         "number of seconds until assuming the answer get lost and retrying."),
                 default_value = 1,
                 minvalue = 1,
                 maxvalue = 60,
@@ -2569,8 +2569,8 @@ def show_service_table(host, firsttime):
                            "<th></th><th></th><th></th></tr>\n")
                 first = False
             trclass = trclass == "even" and "odd" or "even"
-            statename = nagios_short_state_names.get(state, "PEND")
-            if statename == "PEND":
+            statename = nagios_short_state_names.get(state, _("PEND"))
+            if statename == _("PEND"):
                 stateclass = "state svcstate statep"
                 state = 0 # for tr class
             else:
@@ -14873,7 +14873,7 @@ def load_plugins():
 
     config.declare_permission("wato.diag_host",
          _("Host Diagnostic"),
-         _("Check wether or not the host is reachable, test the different methods "
+         _("Check whether or not the host is reachable, test the different methods "
            "a host can be accessed, for example via agent, SNMPv1, SNMPv2 to find out "
            "the correct monitoring configuration for that host."),
          [ "admin", "user" ])

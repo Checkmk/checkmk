@@ -31,37 +31,40 @@
 #    "max" : ( 86400 * 7, 86400 * 14),  # Maximum required uptime (warn, crit)
 # }
 
-def check_uptime_seconds(params, uptime):
-    seconds = uptime % 60
-    rem = uptime / 60
-    minutes = rem % 60
-    hours = (rem % 1440) / 60
-    days = rem / 1440
-    now = int(time.time())
-    since = time.strftime("%c", time.localtime(now - uptime))
-    state = 0
-    infotext = "up since %s (%dd %02d:%02d:%02d)" % (since, days, hours, minutes, seconds)
+def check_uptime_seconds(params, uptime_sec):
+    seconds  = uptime_sec % 60
+    rem      = uptime_sec / 60
+    minutes  = rem % 60
+    hours    = (rem % 1440) / 60
+    days     = rem / 1440
+    since    = time.strftime("%c", time.localtime(time.time() - uptime_sec))
 
-    if params == None: # legacy
+    state    = 0
+    infotext = "up since %s (%dd %02d:%02d:%02d)" % \
+                (since, days, hours, minutes, seconds)
+
+    if params == None: # legacy: support older versions of parameters
         params = {}
 
     if "min" in params:
         warn, crit = params["min"]
-        if uptime < crit:
+        if uptime_sec < crit:
             state = 2
-        elif uptime < warn:
+        elif uptime_sec < warn:
             state = max(state, 1)
+
         if state:
             infotext += ", not up long enough!"
 
     if "max" in params:
         warn, crit = params["max"]
-        if uptime > crit:
+        if uptime_sec > crit:
             state = 2
-        elif uptime > warn:
+        elif uptime_sec > warn:
             state = max(state, 1)
-        if uptime > warn:
+
+        if uptime_sec > warn:
             infotext += ", up too long!"
 
-    return (state,  infotext, [ ("uptime", uptime) ])
+    return (state,  infotext, [ ("uptime", uptime_sec) ])
 

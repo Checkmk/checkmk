@@ -1,0 +1,10 @@
+Title: New mkp package for web applications: iNag / nagstatus / nagios status.dat
+Level: 1
+Component: multisite
+Version: 1.2.5i1
+Date: 1387460746
+Class: feature
+
+This mkp package is not in the official check_mk build.
+You can find it in the check_mk git under doc/treasures/webapps.
+For further information please refer to the README in the webapps dir.

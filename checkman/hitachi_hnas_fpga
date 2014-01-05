@@ -1,0 +1,45 @@
+title: Hitachi HNAS: Utilization of Field Programmable Gate Arrays (FPGAs)
+agents: snmp
+catalog: hw/storagehw/hitachi
+license: GPL
+distribution: check_mk
+description:
+ Checks the Utilization of Field Programmable Gate Arrays (FPGAs) in
+ Hitachi HNAS storage systems.
+
+ {WARN} or {CRIT} is returned, if the usage is above
+ given thresholds. {OK} is returned otherwise.
+
+item:
+ The ID of the PNode, a dot, the ID of the FPGA, a space, the name of the FPGA. 
+ E. g.: 1.0 wlog
+
+examples:
+ # set default levels to 70 and 80 percent:
+ hitachi_hnas_fpga_default_levels = { "levels": (70.0, 80.0) }
+
+ # Check Utilization of FPGA 0 wlog on PNode with ID 1 on a HNAS called my-hnas
+ # with default levels
+ checks += [
+   ("my-hnas", "hitachi_hnas_fpga", '1.0 wlog', hitachi_hnas_fpga_default_levels)
+ ]
+
+ # or use individual levels for warn and crit
+ checks += [
+   ("my-hnas", "hitachi_hnas_fpga", '1.0 wlog', {'levels': (75.0, 85.0)})
+ ]
+
+perfdata:
+ One value fpga_util is returned which represents the FPGA Utilization (in percent)
+ together with warn and crit levels.
+
+inventory:
+ Finds one item per FPGA
+
+[parameters]
+parameters (dict): with the element
+{"levels"}: (float, float): levels of FPGA utilization for {WARN} and {CRIT} in percent
+
+[configuration]
+hitachi_hnas_fpga_default_levels(dict): The standard levels for {WARN} and
+    {CRIT}, preset to { "levels": (80.0, 90.0) }

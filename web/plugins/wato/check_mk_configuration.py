@@ -615,7 +615,7 @@ register_configvar(group,
                 help = _("LDAP searches can be performed in paginated mode, for example to improve "
                          "the performance. This enables pagination and configures the size of the pages."),
                 minvalue = 1,
-                default_value = 100,
+                default_value = 1000,
             )),
             ("response_timeout", Integer(
                 title = _("Response Timeout (sec)"),
@@ -625,6 +625,7 @@ register_configvar(group,
             )),
         ],
         optional_keys = ['no_persistent', 'use_ssl', 'bind', 'page_size', 'response_timeout', 'failover_servers'],
+        default_keys = ['page_size']
     ),
     domain = "multisite",
     in_global_settings = False,
@@ -950,13 +951,18 @@ register_configvar(group,
 
 register_configvar(group,
     "debug_log",
-    Optional(Filename(label = _("Absolute path to log file")),
-          title = _("Logfile for debugging errors in checks"),
-          label = _("Activate logging errors into a logfile"),
-          help = _("If this option is used and set to a filename, Check_MK will create a debug logfile "
-                   "containing details about failed checks (those which have state UNKNOWN "
-                   "and the output UNKNOWN - invalid output from plugin.... Per default no "
-                   "logfile is written.")),
+    Transform(
+        Checkbox(
+            label = _("Write exceptions to <tt>%s/crashed-checks.log</tt>" % defaults.log_dir),
+        ),
+        title = _("Log exceptions in check plugins"),
+        help = _("If this option is enabled Check_MK will create a debug logfile at "
+                 "<tt>%s/chrashed-checks.log</tt>"
+                 "containing details about failed checks (those which have the state <i>UNKNOWN "
+                 "and the output UNKNOWN - invalid output from plugin</i>...) Per default no "
+                 "logfile is written.") % defaults.log_dir,
+        forth = lambda x: not not x,
+    ),
     need_restart = True)
 
 register_configvar(group,
@@ -1860,6 +1866,17 @@ register_rule(group,
              "cluster and the physical nodes after changing this ruleset."),
     itemtype = "service")
 group = "monconf/" + _("Various")
+
+register_rule(group,
+     "clustered_services_mapping",
+     TextAscii( 
+        title = _("Explicit mapping of Clustered Services"),
+        help = _( "It's possible to have overlaping nodes between multiple clusters."
+                  "With this rule the direct mapping of services from nodes to the "
+                  "favored Cluster can be done."),
+     ),
+     itemtype = "service",
+     )
 
 register_rule(group,
     "extra_host_conf:service_period",

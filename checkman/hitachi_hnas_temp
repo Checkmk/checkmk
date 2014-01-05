@@ -1,0 +1,21 @@
+title: Hitachi HNAS: Status and Measured Value of Temperature Sensors
+agents: snmp
+catalog: hw/storagehw/hitachi
+license: GPL
+distribution: check_mk
+description:
+ Checks the status of temperature sensors in an Hitachi HNAS storage system. 
+ Displays the measured temperature.
+
+ Returns {OK} if the status is reported to be ok, {WARN} on status tempWarning
+ or tempSensorWarning, {CRIT} on status tempSevere or tempSensorFailed and {UNKN} 
+ on every other.
+
+item:
+ The ID of the PNode plus the ID of the sensor, separated by a dot. E. g. 1.2
+
+perfdata:
+ One value: The measured temperature in °C
+
+inventory:
+ Finds one item per temperature sensor

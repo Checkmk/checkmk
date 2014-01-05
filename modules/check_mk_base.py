@@ -105,6 +105,7 @@ opt_cleanup_autochecks       = False
 fake_dns                     = False
 opt_keepalive                = False
 opt_cmc_relfilename          = "config"
+opt_keepalive_fd             = None
 
 # register SIGINT handler for consistenct CTRL+C handling
 def interrupt_handler(signum, frame):
@@ -1107,11 +1108,19 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
                     print "Cannot compute check result: %s" % e
                 dont_submit = True
             except Exception, e:
-                result = (3, "invalid output from agent, invalid check parameters or error in implementation of check %s. Please set <tt>debug_log</tt> to a filename in <tt>main.mk</tt> for enabling exception logging." % checkname)
+                text = "invalid output from agent, invalid check parameters or error in implementation of check %s." % checkname
+                if not debug_log:
+                    text += " Please enable \"Log exceptions in check plugins\" for further information."
+                else:
+                    debug_log_file = debug_log
+                    if debug_log_file == True:
+                        debug_log_file = log_dir + "/crashed-checks.log"
+                    text += " A trace has been written to %s." % debug_log_file 
+                result = 3, text
                 if debug_log:
                     try:
                         import traceback, pprint
-                        l = file(debug_log, "a")
+                        l = file(debug_log_file, "a")
                         l.write(("Invalid output from plugin or error in check:\n"
                                 "  Check_MK Version: %s\n"
                                 "  Date:             %s\n"

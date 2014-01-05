@@ -233,7 +233,7 @@ simulation_mode                    = False
 agent_simulator                    = False
 perfdata_format                    = "pnp" # also possible: "standard"
 check_mk_perfdata_with_times       = True
-debug_log                          = None
+debug_log                          = False
 monitoring_host                    = None # deprecated
 max_num_processes                  = 50
 
@@ -309,6 +309,7 @@ timeperiods                          = {} # needed for WATO
 clusters                             = {}
 clustered_services                   = []
 clustered_services_of                = {} # new in 1.1.4
+clustered_services_mapping           = [] # new for 1.2.5i1 Wato Rule
 datasource_programs                  = []
 service_aggregations                 = []
 service_dependencies                 = []
@@ -649,7 +650,6 @@ def check_interval_of(hostname, checkname):
 #   |  the separate module snmp.py.                                        |
 #   '----------------------------------------------------------------------'
 
-
 # Determine SNMP community for a specific host.  It the host is found
 # int the map snmp_communities, that community is returned. Otherwise
 # the snmp_default_community is returned (wich is preset with
@@ -938,6 +938,10 @@ def host_of_clustered_service(hostname, servicedesc):
     the_clusters = clusters_of(hostname)
     if not the_clusters:
         return hostname
+
+    cluster_mapping = service_extra_conf(hostname, servicedesc, clustered_services_mapping)
+    if cluster_mapping:
+        return cluster_mapping[0]
 
     # 1. New style: explicitly assigned services
     for cluster, conf in clustered_services_of.items():
@@ -3073,7 +3077,7 @@ no_inventory_possible = None
                  'perfdata_format', 'aggregation_output_format',
                  'aggr_summary_hostname', 'nagios_command_pipe_path',
                  'check_result_path', 'check_submission', 'monitoring_core',
-                 'var_dir', 'counters_directory', 'tcp_cache_dir', 'tmp_dir',
+                 'var_dir', 'counters_directory', 'tcp_cache_dir', 'tmp_dir', 'log_dir',
                  'snmpwalks_dir', 'check_mk_basedir', 'nagios_user', 'rrd_path', 'rrdcached_socket',
                  'omd_root',
                  'www_group', 'cluster_max_cachefile_age', 'check_max_cachefile_age',
@@ -3269,7 +3273,9 @@ no_inventory_possible = None
     output.write("    sys.stdout.write(\"Traceback: %s\\n\" % traceback.format_exc())\n")
 
     # debug logging
-    output.write("    if debug_log:\n")
+    output.write("\n    if debug_log:\n")
+    output.write("        if debug_log == True:\n")
+    output.write("            debug_log = log_dir + \"/crashed-checks.log\"\n")
     output.write("        l = file(debug_log, \"a\")\n")
     output.write("        l.write((\"Exception in precompiled check:\\n\"\n")
     output.write("                \"  Check_MK Version: %s\\n\"\n")
@@ -5138,10 +5144,14 @@ def do_check_keepalive():
     # 1. move the filedescriptor 1 to a parking position
     # 2. re-open 0 on /dev/null
     # 3. Send our answers to the Micro Core with the parked FD.
-    cmc_result_fd = os.dup(1)
-    devnull = os.open("/tmp/dev_null", os.O_WRONLY | os.O_CREAT)
-    os.dup2(devnull, 1)
-    os.close(devnull)
+    # BEWARE: this must not happen after we have execve'd ourselves!
+    if opt_keepalive_fd:
+        keepalive_fd = opt_keepalive_fd
+    else:
+        keepalive_fd = os.dup(1)
+        devnull = os.open("/dev/null", os.O_WRONLY | os.O_CREAT)
+        os.dup2(devnull, 1)
+        os.close(devnull)
 
     global total_check_output
     total_check_output = ""
@@ -5152,17 +5162,17 @@ def do_check_keepalive():
 
     while True:
         cleanup_globals()
-        hostname = sys.stdin.readline()
+        hostname = keepalive_read_line()
         g_initial_times = os.times()
         if not hostname:
             break
         hostname = hostname.strip()
         if hostname == "*":
-            os.execvp("cmk", sys.argv)
+            os.execvp("cmk", sys.argv + [ "--keepalive-fd=%d" % keepalive_fd ])
         elif not hostname:
             break
 
-        timeout = int(sys.stdin.readline())
+        timeout = int(keepalive_read_line())
         try: # catch non-timeout exceptions
             try: # catch timeouts
                 signal.signal(signal.SIGALRM, check_timeout)
@@ -5189,7 +5199,7 @@ def do_check_keepalive():
                 status = 3
                 total_check_output = "UNKNOWN - Check_MK timed out after %d seconds\n" % timeout
 
-            os.write(cmc_result_fd, "%03d\n%08d\n%s" %
+            os.write(keepalive_fd, "%03d\n%08d\n%s" %
                  (status, len(total_check_output), total_check_output))
             total_check_output = ""
             cleanup_globals()
@@ -5209,9 +5219,26 @@ def do_check_keepalive():
             if opt_debug:
                 raise
             total_check_output = "UNKNOWN - %s\n" % e
-            os.write(cmc_result_fd, "%03d\n%08d\n%s" %
+            os.write(keepalive_fd, "%03d\n%08d\n%s" %
                  (3, len(total_check_output), total_check_output))
 
+
+# Just one lines from stdin. But: make sure that
+# nothing more is read - not even into some internal
+# buffer of sys.stdin! We do this by reading every
+# single byte. I know that this is not performant,
+# but we just read hostnames - not much data.
+
+def keepalive_read_line():
+    line = ""
+    while True:
+        byte = os.read(0, 1)
+        if byte == '\n':
+            return line
+        elif not byte: # EOF
+            return ''
+        else:
+            line += byte
 
 
 #.
@@ -5577,7 +5604,7 @@ if __name__ == "__main__":
                      "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
                      "flush", "package", "localize", "donate", "snmpwalk", "snmptranslate",
                      "usewalk", "scan-parents", "procs=", "automation=", "notify",
-                     "snmpget=", "profile", "keepalive", "create-rrd",
+                     "snmpget=", "profile", "keepalive", "keepalive-fd=", "create-rrd",
                      "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
                      "man", "nowiki", "config-check", "backup=", "restore=",
                      "check-inventory=", "paths", "cleanup-autochecks", "checks=",
@@ -5626,6 +5653,8 @@ if __name__ == "__main__":
             fake_dns = a
         elif o == '--keepalive':
             opt_keepalive = True
+        elif o == '--keepalive-fd':
+            opt_keepalive_fd = int(a)
         elif o == '--usewalk':
             opt_use_snmp_walk = True
         elif o == '--procs':

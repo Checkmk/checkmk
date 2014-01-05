@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,14 +23,17 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+$opt[1] = "--vertical-label 'Utilization %' -l0  -u 100 --title \"$hostname / $servicedesc\" ";
+#
+$def[1] =  "DEF:util=$RRDFILE[1]:$DS[1]:AVERAGE " ;
+$def[1] .= "CDEF:idle=100,util,- ";
 
-def check_snia_sml(item, params, info):
-    return (3, "Sorry. Check not implemented in this version.")
+$def[1] .= "AREA:util#60f020:\"Utilization\":STACK " ;
+$def[1] .= "GPRINT:util:MIN:\"Min\: %2.1lf%%\" " ;
+$def[1] .= "GPRINT:util:MAX:\"Max\: %2.1lf%%\" " ;
+$def[1] .= "GPRINT:util:LAST:\"Last\: %2.1lf%%\" " ;
 
+$def[1] .= "LINE:idle#ffffff:\"Idle\" " ;
+$def[1] .= "GPRINT:idle:LAST:\"%2.1lf%%\" " ;
 
-
-check_info["snia_sml"] = {
-    'check_function':          check_snia_sml,
-    'service_description':     '%s',
-    'group':                   'obsolete',
-}
+?>

@@ -1,0 +1,17 @@
+Installing this mkp package results in the following new features
+
+* INAG support (iPhone nagios app)
+Only works with basic auth activated
+
+* Nagstatus support (Windows sidebar / desktop gadget)
+http://monitoringhost/site/check_mk/nagios_webapps.py?cmd=nagstatus.xml&_username=XXXXXX&_secret=MAWSYCJAMAICCFBADFDS
+
+* Get Logfile of last 24 hours
+http://monitoringhost/site/check_mk/nagios_webapps.py?cmd=nagios.log&_username=XXXXXX&_secret=MAWSYCJAMAICCFBADFDS
+
+* Get nagios status.dat
+http://monitoringhost/site/check_mk/nagios_webapps.py?cmd=status.dat&_username=XXXXXX&_secret=MAWSYCJAMAICCFBADFDS
+
+Note:
+All of this features also work in distributed setups
+So you can aquire on big status.dat file which reflects the state of several sites.

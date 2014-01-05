@@ -1,0 +1,25 @@
+title: Hitachi HNAS: Status and Speed of Fans
+agents: snmp
+catalog: hw/storagehw/hitachi
+license: GPL
+distribution: check_mk
+description:
+ Checks the fitted status and speed status of a fan in an Hitachi HNAS storage
+ system. Displays speed of the fan.
+
+ Returns {OK} if the fitted status is reported to be ok, {WARN} on status
+ okIdWrong, {CRIT} on status notFitted and {UNKN} on every other.
+
+ Returns {OK} if the speed status is reported to be ok, {WARN} on status
+ warning, {CRIT} on status severe and {UNKN} on every other.
+
+ The worst of both is the status returned by this Check.
+
+item:
+ The ID of the PNode plus the ID of the Fan, separated by a dot. E. g. 1.2
+
+perfdata:
+ One value: The speed of the fan (rpm).
+
+inventory:
+ Finds one item per fan

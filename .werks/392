@@ -1,0 +1,11 @@
+Title: LDAP: Improved error messages of LDAP configuration test
+Level: 1
+Component: wato
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387458361
+Targetversion: future
+
+Replaced several internal exception / cryptic errors with (hopefully)
+better understandable error messages in LDAP configuration test dialog.

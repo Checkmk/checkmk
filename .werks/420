@@ -1,0 +1,12 @@
+Title: LDAP: Roles/Groups are now synced even if case of DNs do not match
+Level: 1
+Component: multisite
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1387527273
+Targetversion: future
+
+Most LDAP related filters are case insentive. To match user expectations
+the distinguished name matching used during group / role sync has been
+changed to be case insensitive.

@@ -473,10 +473,10 @@ def save_users(profiles):
     release_lock(root_dir + "contacts.mk")
 
     # populate the users cache
-    html.set_cache('users', users)
+    html.set_cache('users', profiles)
 
     # Call the users_saved hook
-    hooks.call("users-saved", users)
+    hooks.call("users-saved", profiles)
 
 #.
 #   .-Roles----------------------------------------------------------------.

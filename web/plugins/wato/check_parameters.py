@@ -1501,8 +1501,8 @@ def get_filesystem_valuespec(what):
     vs_subgroup =  [
                     Tuple( title = _("Percentage %s") % title,
                         elements = [
-                            Percentage(title = _("Warning if %s") % course, unit = _("%"), minvalue = 0.0),
-                            Percentage(title = _("Critical if %s") % course, unit = _("%"), minvalue = 0.0),
+                            Percentage(title = _("Warning if %s") % course, unit = "%", minvalue = 0.0),
+                            Percentage(title = _("Critical if %s") % course, unit = "%", minvalue = 0.0),
                         ]
                     ),
                     Tuple( title = _("Absolute %s") % title,
@@ -3601,7 +3601,7 @@ register_check_parameters(
                     Integer(
                         title = _("Critical Battery Capacity"),
                         help = _("The battery capacity in percent at and below which a critical state is triggered"),
-                        unit = _("%"),
+                        unit = "%",
                         default_value = 95,
                     ),
                     Integer(
@@ -3627,9 +3627,9 @@ register_check_parameters(
             ("output_load",
             Tuple(
               title = _("Current Output Load"),
-              help = _("Indicates that the percentage load attached to the UPS "
+              help = _("Here you can set levels on the current percentual output load of the UPS. "
                        "This load affects the running time of all components being supplied "
-                       " with battery power."),
+                       "with battery power."),
               elements = [
                  Percentage(
                      title = _("Warning level"),
@@ -3765,13 +3765,13 @@ register_check_parameters(
                     Integer(
                         title = _("Warning Level"),
                         help = _("The battery capacity in percent at and below which a warning state is triggered"),
-                        unit = _("%"),
+                        unit = "%",
                         default_value = 95,
                     ),
                     Integer(
                         title = _("Critical Level"),
                         help = _("The battery capacity in percent at and below which a critical state is triggered"),
-                        unit = _("%"),
+                        unit = "%",
                         default_value = 90,
                     ),
                 ],

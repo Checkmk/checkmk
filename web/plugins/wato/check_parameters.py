@@ -401,8 +401,8 @@ register_rule(group + '/' + subgroup_inventory,
            )),
             ('handle_count', Tuple(
                 title = _('Handle Count (Windows only)'),
-                help  = _("The number of object handles in the process's object table. This includes open handles to "
-                          "threads, files and other resources like registry keys"),
+                help  = _("The number of object handles in the processes object table. This includes open handles to "
+                          "threads, files and other resources like registry keys."),
                 elements = [
                     Integer(
                         title = _("Warning above"),
@@ -1987,9 +1987,10 @@ register_check_parameters(
 register_check_parameters(
     subgroup_os,
     "memory_multiitem",
-    _("Main memory usage of Devices with Modules"),
+    _("Main memory usage of devices with modules"),
     Dictionary(
-        help = _("The memory levels for the sub-module of this host, e.g. pluggable cards"),
+        help = _("The memory levels for one specific module of this host. This is relevant for hosts that have "
+                 "several distinct memory areas, e.g. pluggable cards"),
         elements = [
             ("levels", Alternative(
                 title = _("Memory levels"),
@@ -4417,7 +4418,7 @@ register_check_parameters(
                ('handle_count', Tuple(
                    title = _('Handle Count (Windows only)'),
                    help  = _("The number of object handles in the process's object table. This includes open handles to "
-                             "threads, files and other resources like registry keys"),
+                             "threads, files and other resources like registry keys."),
                    elements = [
                        Integer(
                            title = _("Warning above"),

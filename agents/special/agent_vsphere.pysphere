@@ -183,16 +183,16 @@ def get_agent_info_tcp(hostname):
     return output
 
 error_exit = 1
-if opt_agent:
-    sys.stdout.write(get_agent_info_tcp(host_address))
-    sys.stdout.flush()
-    error_exit = 0 # do not fail if vSphere fails
-
 
 try:
     from pysphere import VIServer, VIProperty, MORTypes
     from pysphere.resources import VimService_services as VI
-except: 
+except:
+    # Get check_mk agent output even if pysphere is missing
+    if opt_agent:
+        sys.stdout.write(get_agent_info_tcp(host_address))
+        sys.stdout.flush()
+        error_exit = 0 # do not fail if vSphere fails
     sys.stderr.write("pysphere API not found. Please install and try again.\n")
     sys.exit(error_exit)
 
@@ -769,6 +769,11 @@ print "<<<esx_vsphere_objects:sep(9)>>>"
 for entry in object_collection:
     print "\t".join(entry)
 host.disconnect()
+
+# Get check_mk agent output
+if opt_agent:
+    sys.stdout.write(get_agent_info_tcp(host_address))
+    sys.stdout.flush()
 
 if g_profile:
     output_profile()

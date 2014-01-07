@@ -4,6 +4,9 @@
     * 0402 FIX: Fix exception in case of missing agent sections of cluster-aware checks...
     * 0426 FIX: Fixed processing of cached agent plugins / local scripts...
 
+    Checks & Agents:
+    * 0251 FIX: agent_vsphere / check_mk agent: fixed outdated systemtime of check_mk agent...
+
     Multisite:
     * 0425 FIX: Fix login loop bug in distributed environments with different auth secrets
 

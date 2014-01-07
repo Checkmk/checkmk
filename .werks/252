@@ -1,0 +1,13 @@
+Title: ESX vSphere configuration: Fixed non-working configuration parameters
+Level: 1
+Component: wato
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1389110171
+Targetversion: future
+
+The configuration parameters "Placeholder VMs" and "Compatilibity mode" where
+always saved as their default value. <br>
+Skip Placeholder VMs - true
+Compatibility mode - false

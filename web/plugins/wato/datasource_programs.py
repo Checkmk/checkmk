@@ -137,7 +137,7 @@ register_rule(group,
         help = _("This rule selects the vSphere agent instead of the normal Check_MK Agent "
                  "and allows monitoring of VMWare ESX via the vSphere API. You can configure "
                  "your connection settings here."),
-        forth = lambda a: dict(a.items() + [("skip_placeholder_vms", True), ("use_pysphere" , False)])
+        forth = lambda a: dict([("skip_placeholder_vms", True), ("use_pysphere" , False)] + a.items())
     ),
     match = 'first')
 

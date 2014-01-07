@@ -278,10 +278,6 @@ def get_agent_info_tcp(hostname):
             raise
     return output
 
-if opt_agent:
-    sys.stdout.write(get_agent_info_tcp(host_address))
-    sys.stdout.flush()
-    error_exit = 0
 
 results = {}
 
@@ -591,6 +587,11 @@ if not error:
         if opt_debug:
             raise
         error = "Error while processing received data"
+
+if opt_agent:
+    sys.stdout.write(get_agent_info_tcp(host_address))
+    sys.stdout.flush()
+    error_exit = 0
 
 if tracefile:
     tracefile.close()

@@ -32,7 +32,7 @@ brocade_mlx_states = {
     8:  (1, "Configured / Stacking"),
     9:  (1, "In power-up cycle"),
     10: (0, "Running"),
-    11: (1, "Blocked for full height card"),
+    11: (0, "Blocked for full height card"),
 }
 
 brocade_mlx_info = [
@@ -103,8 +103,8 @@ def inventory_brocade_mlx_module_mem(info):
     inventory = []
     for module_id, module_descr, module_state, mem_total, mem_avail in info[0]:
         # do not inventorize modules reported as empty
-        # and: monitor memory only on NI-MLX modules
-        if module_state != "0" and module_descr.startswith("NI-MLX"):
+        # and: monitor cpu only on NI-MLX and BR-MLX modules
+        if module_state != "0" and ( module_descr.startswith("NI-MLX") or module_descr.startswith("BR-MLX") ):
             inventory.append( (brocade_mlx_combine_item(module_id, module_descr), "brocade_mlx_mem_default_levels") )
     return inventory
 
@@ -171,8 +171,8 @@ def inventory_brocade_mlx_module_cpu(info):
     inventory = []
     for module_id, module_descr, module_state, mem_total, mem_avail in info[0]:
         # do not inventorize modules reported as empty
-        # and: monitor cpu only on NI-MLX modules
-        if module_state != "0" and module_descr.startswith("NI-MLX"):
+        # and: monitor cpu only on NI-MLX and BR-MLX modules
+        if module_state != "0" and ( module_descr.startswith("NI-MLX") or module_descr.startswith("BR-MLX") ):
             inventory.append( (brocade_mlx_combine_item(module_id, module_descr), "brocade_mlx_cpu_default_levels") )
     return inventory
 

@@ -1,0 +1,11 @@
+Title: brocade_mlx: enhancing checks (BR-MLX modules, more OK states)
+Level: 2
+Component: checks
+Class: feature
+State: unknown
+Version: 1.2.4b6
+Date: 1389122496
+Targetversion: future
+
+CPU and Memory Checks now look on BR-MLX modules too
+Status "Blocked for full height card" is an OK state now

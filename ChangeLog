@@ -1,5 +1,6 @@
 1.2.4b6:
     Checks & Agents:
+    * 0321 brocade_mlx: enhancing checks (BR-MLX modules, more OK states)...
     * 0432 FIX: stulz_humidity: Fixed syntax error...
 
 

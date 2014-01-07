@@ -10,6 +10,9 @@
     Multisite:
     * 0425 FIX: Fix login loop bug in distributed environments with different auth secrets
 
+    WATO:
+    * 0252 FIX: ESX vSphere configuration: Fixed non-working configuration parameters...
+
     Event Console:
     * 0427 FIX: Fixed exception when handling connections from event unix socket...
 

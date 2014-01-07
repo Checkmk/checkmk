@@ -1,0 +1,8 @@
+Title: Improved error handling in case of incorrect auth config in distributed WATO environments
+Level: 1
+Component: multisite
+Version: 1.2.4b3
+Date: 1387559719
+Class: fix
+
+

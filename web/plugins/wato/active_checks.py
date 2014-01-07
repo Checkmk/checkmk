@@ -1126,7 +1126,7 @@ register_rule(group,
                            "when the check results are not arriving in time. Staleness will still grey out the "
                            "test after the corrsponding interval. If you dont want that, you might want to adjust "
                            "the staleness interval as well. The staleness interval is calculated from the normal "
-                           "check interval multiplied by the stateness value in the <tt>Global Settings</tt>. "
+                           "check interval multiplied by the staleness value in the <tt>Global Settings</tt>. "
                            "The normal check interval can be configured in a separate rule for your check."),
                   optional_keys = False,
                   elements = [

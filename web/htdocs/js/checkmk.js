@@ -119,19 +119,23 @@ function hilite_icon(oImg, onoff) {
 }
 
 
-function get_url(url, handler, data, errorHandler) {
+function get_url(url, handler, data, errorHandler, addAjaxId) {
     if (window.XMLHttpRequest) {
         var AJAX = new XMLHttpRequest();
     } else {
         var AJAX = new ActiveXObject("Microsoft.XMLHTTP");
     }
 
+    var addAjaxId = (typeof addAjaxId === "undefined") ? true : addAjaxId;
+
     // Dynamic part to prevent caching
-    var dyn = "_ajaxid="+Math.floor(Date.parse(new Date()) / 1000);
-    if (url.indexOf('\?') !== -1) {
-        dyn = "&"+dyn;
-    } else {
-        dyn = "?"+dyn;
+    if (addAjaxId) {
+        var dyn = "_ajaxid="+Math.floor(Date.parse(new Date()) / 1000);
+        if (url.indexOf('\?') !== -1) {
+            dyn = "&"+dyn;
+        } else {
+            dyn = "?"+dyn;
+        }
     }
 
     if (!AJAX) {
@@ -467,8 +471,18 @@ function pnp_response_handler(data, code) {
     }
     response = null;
 
-    if(!valid_response)
-        fallback_graphs(data);
+    if(!valid_response) {
+        if (code.match(/_login/)) {
+            // Login failed! This usually happens when one uses a distributed
+            // multisite setup but the transparent authentication is somehow
+            // broken. Display an error message trying to assist.
+            var container = document.getElementById(data['container']);
+            container.innerHTML = '<div class="error">Unable to fetch graphs of the host. Maybe you have a '
+                                + 'distributed setup and not set up the authentication correctly yet.</div>';
+        } else {
+            fallback_graphs(data);
+        }
+    }
 }
 
 // Fallback bei doofer/keiner Antwort
@@ -507,7 +521,7 @@ function render_pnp_graphs(container, site, host, service, pnpview, base_url, pn
                  'host':      host,      'service':  service,
                  'with_link': with_link, 'view':     pnpview};
     get_url(pnp_url + 'index.php/json?&host=' + encodeURIComponent(host) + '&srv=' + encodeURIComponent(service) + '&source=0&view=' + pnpview,
-        pnp_response_handler, data, pnp_error_response_handler);
+        pnp_response_handler, data, pnp_error_response_handler, false);
 }
 
 // Renders contents for the PNP hover menus

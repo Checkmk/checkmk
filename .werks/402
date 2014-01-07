@@ -1,0 +1,10 @@
+Title: Fix exception in case of missing agent sections of cluster-aware checks
+Level: 1
+Component: core
+Version: 1.2.4b4
+Date: 1388497781
+Class: fix
+
+If you configure (by mistake) an <tt>ps</tt> check on an SNMP device - which
+obviously does not have that agent information - Check_MK would crash with
+an exception. This has been fixed.

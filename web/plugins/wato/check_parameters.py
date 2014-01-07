@@ -401,8 +401,8 @@ register_rule(group + '/' + subgroup_inventory,
            )),
             ('handle_count', Tuple(
                 title = _('Handle Count (Windows only)'),
-                help  = _("The number of object handles in the process's object table. This includes open handles to "
-                          "threads, files and other resources like registry keys"),
+                help  = _("The number of object handles in the processes object table. This includes open handles to "
+                          "threads, files and other resources like registry keys."),
                 elements = [
                     Integer(
                         title = _("Warning above"),
@@ -1501,8 +1501,8 @@ def get_filesystem_valuespec(what):
     vs_subgroup =  [
                     Tuple( title = _("Percentage %s") % title,
                         elements = [
-                            Percentage(title = _("Warning if %s") % course, unit = _("%"), minvalue = 0.0),
-                            Percentage(title = _("Critical if %s") % course, unit = _("%"), minvalue = 0.0),
+                            Percentage(title = _("Warning if %s") % course, unit = "%", minvalue = 0.0),
+                            Percentage(title = _("Critical if %s") % course, unit = "%", minvalue = 0.0),
                         ]
                     ),
                     Tuple( title = _("Absolute %s") % title,
@@ -1987,9 +1987,10 @@ register_check_parameters(
 register_check_parameters(
     subgroup_os,
     "memory_multiitem",
-    _("Main memory usage of Devices with Modules"),
+    _("Main memory usage of devices with modules"),
     Dictionary(
-        help = _("The memory levels for the sub-module of this host, e.g. pluggable cards"),
+        help = _("The memory levels for one specific module of this host. This is relevant for hosts that have "
+                 "several distinct memory areas, e.g. pluggable cards"),
         elements = [
             ("levels", Alternative(
                 title = _("Memory levels"),
@@ -3601,7 +3602,7 @@ register_check_parameters(
                     Integer(
                         title = _("Critical Battery Capacity"),
                         help = _("The battery capacity in percent at and below which a critical state is triggered"),
-                        unit = _("%"),
+                        unit = "%",
                         default_value = 95,
                     ),
                     Integer(
@@ -3627,9 +3628,9 @@ register_check_parameters(
             ("output_load",
             Tuple(
               title = _("Current Output Load"),
-              help = _("Indicates that the percentage load attached to the UPS "
+              help = _("Here you can set levels on the current percentual output load of the UPS. "
                        "This load affects the running time of all components being supplied "
-                       " with battery power."),
+                       "with battery power."),
               elements = [
                  Percentage(
                      title = _("Warning level"),
@@ -3765,13 +3766,13 @@ register_check_parameters(
                     Integer(
                         title = _("Warning Level"),
                         help = _("The battery capacity in percent at and below which a warning state is triggered"),
-                        unit = _("%"),
+                        unit = "%",
                         default_value = 95,
                     ),
                     Integer(
                         title = _("Critical Level"),
                         help = _("The battery capacity in percent at and below which a critical state is triggered"),
-                        unit = _("%"),
+                        unit = "%",
                         default_value = 90,
                     ),
                 ],
@@ -4417,7 +4418,7 @@ register_check_parameters(
                ('handle_count', Tuple(
                    title = _('Handle Count (Windows only)'),
                    help  = _("The number of object handles in the process's object table. This includes open handles to "
-                             "threads, files and other resources like registry keys"),
+                             "threads, files and other resources like registry keys."),
                    elements = [
                        Integer(
                            title = _("Warning above"),

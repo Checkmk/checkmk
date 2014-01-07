@@ -1,0 +1,15 @@
+Title: Changed user profiles (e.g. pw changes) are now replicated in distributed setups
+Level: 2
+Component: wato
+Class: feature
+State: unknown
+Version: 1.2.4b4
+Date: 1389106579
+Targetversion: future
+
+When a user changed its password or its user profile attributes in previous versions, these
+changes were only applied on the local (central) site in a distributed WATO setup. These
+changes were only replicated to the slave sites when an administrator started replicating
+other things to the slave sites. This has been changed now. When a user changes the profile
+in a distributed setup, a sync dialog is opened and the sync of this user profile is
+started for each slave site.

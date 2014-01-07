@@ -1,0 +1,14 @@
+Title: printer suply levels for ricoh
+Component: checks
+State: open
+Date: 2014-01-07 11:08:41
+Targetversion: future
+Class: bug
+
+Prinzipiell funktioniert der Check check_mk-printer_supply_ricoh gut allerdings haben wir festgestellt, dass er die Patronen verkehrt auswertet.
+
+Sprich wo 80% die Patrone voll ist erreicht die Auswertung 20% im  Monitoring System und geht auf Warnung.
+
+Sprich nach Tausch ist der Drucker sofort auf kritisch und beim leer werden auf 100% voll.
+
+ 

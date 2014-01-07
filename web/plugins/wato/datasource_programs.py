@@ -181,7 +181,7 @@ register_rule(group,
             ( "timeout",
               Integer(
                   title = _("Connection timeout"),
-                  help = _("The network timeout in seconds when communicating via UPNP."
+                  help = _("The network timeout in seconds when communicating via UPNP. "
                            "The default is 10 seconds. Please note that this "
                            "is not a total timeout, instead it is applied to each API call."),
                   default_value = 10,

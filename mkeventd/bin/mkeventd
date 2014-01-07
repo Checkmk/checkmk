@@ -1001,7 +1001,7 @@ class EventServer:
             # Accept new connection on event unix socket
             if self._eventsocket in readable:
                 client_socket, address = self._eventsocket.accept()
-                client_sockets[client_socket.fileno()] = (self._eventsocket.accept(), address, "")
+                client_sockets[client_socket.fileno()] = (client_socket, address, "")
 
             # Same for the TCP syslog socket
             if self._syslog_tcp and self._syslog_tcp in readable:

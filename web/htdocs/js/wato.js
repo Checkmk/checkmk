@@ -616,6 +616,70 @@ function wato_randomize_secret(id, len) {
     oInput.value = secret;
 }
 
+// .-Profile Repl----------------------------------------------------------.
+// |          ____             __ _ _        ____            _             |
+// |         |  _ \ _ __ ___  / _(_) | ___  |  _ \ ___ _ __ | |            |
+// |         | |_) | '__/ _ \| |_| | |/ _ \ | |_) / _ \ '_ \| |            |
+// |         |  __/| | | (_) |  _| | |  __/ |  _ <  __/ |_) | |            |
+// |         |_|   |_|  \___/|_| |_|_|\___| |_| \_\___| .__/|_|            |
+// |                                                  |_|                  |
+// +-----------------------------------------------------------------------+
+
+var profile_replication_progress = new Array();
+
+function wato_do_profile_replication(siteid, est, progress_text) {
+    get_url("wato_ajax_profile_repl.py?site=" + siteid,
+            wato_profile_replication_result, siteid);
+    profile_replication_progress[siteid] = 20; // 10 of 10 10ths
+    setTimeout("profile_replication_step('"+siteid+"', "+est+", '"+progress_text+"');", est/20);
+}
+
+function profile_replication_set_status(siteid, image, text) {
+    var oImg = document.getElementById("site-" + siteid).childNodes[0];
+    oImg.title = text;
+    oImg.src = 'images/icon_'+image+'.png';
+}
+
+function profile_replication_step(siteid, est, progress_text) {
+    if (profile_replication_progress[siteid] > 0) {
+        profile_replication_progress[siteid]--;
+        var perc = (20.0 - profile_replication_progress[siteid]) * 100 / 20;
+        var img;
+        if (perc >= 75)
+            img = 'repl_75';
+        else if (perc >= 50)
+            img = 'repl_50';
+        else if (perc >= 25)
+            img = 'repl_25';
+        else
+            img = 'repl_pending';
+        profile_replication_set_status(siteid, img, progress_text);
+        setTimeout("profile_replication_step('"+siteid+"',"+est+", '"+progress_text+"');", est/20);
+    }
+}
+
+// g_num_replsites is set by the page code in wato.py to the number async jobs started
+// in total
+function wato_profile_replication_result(siteid, code) {
+    profile_replication_progress[siteid] = 0;
+    var oDiv = document.getElementById("site-" + siteid);
+    if (code[0] == "0")
+        profile_replication_set_status(siteid, 'repl_success', code.substr(2));
+    else
+        profile_replication_set_status(siteid, 'repl_failed', code.substr(2));
+    g_num_replsites--;
+
+    if (0 == g_num_replsites) {
+        setTimeout(wato_profile_replication_finish, 1000);
+    }
+}
+
+function wato_profile_replication_finish() {
+    // check if we have a sidebar-main frame setup
+    if (this.parent && parent && parent.frames[1] == this)
+        parent.frames[0].location.reload(); // reload sidebar
+}
+
 // ----------------------------------------------------------------------------
 // Folderlist
 // ----------------------------------------------------------------------------

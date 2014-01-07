@@ -1,0 +1,10 @@
+Title: Fix login loop bug in distributed environments with different auth secrets
+Level: 1
+Component: multisite
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1389078376
+Targetversion: future
+
+

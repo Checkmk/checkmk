@@ -1,0 +1,12 @@
+Title: Fixed processing of cached agent plugins / local scripts
+Level: 2
+Component: core
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1389082939
+Targetversion: future
+
+Werk #0345 introduced a bug which resulted in cached plugins / local scripts
+were executed, the cache was storred, but never processed. This change
+fixes the names of such cache files to make them being processed again.

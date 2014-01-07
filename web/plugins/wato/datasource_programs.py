@@ -152,7 +152,7 @@ register_rule(group,
            Integer( title = _("Port Number"), default_value=8161 ),
            ListChoice(
               choices = [
-                ("piggybag",  _("Run in piggybag mode")),
+                ("piggybag",  _("Run in piggyback mode")),
               ],
               allow_empty = True
            )

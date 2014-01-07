@@ -1,4 +1,7 @@
 1.2.4b4:
+    Multisite:
+    * 0425 FIX: Fix login loop bug in distributed environments with different auth secrets
+
 
 1.2.4b3:
     Multisite:

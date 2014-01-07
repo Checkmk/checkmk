@@ -3423,7 +3423,7 @@ register_check_parameters(
         elements = [
             ("lower",
             Tuple(
-                help = _("Lower levels for the FAN speed of a hardware device"),
+                help = _("Lower levels for the fan speed of a hardware device"),
                 title = _("Lower levels"),
                 elements = [
                     Integer(title = _("warning if below"), unit = u"rpm"),
@@ -3737,7 +3737,7 @@ register_check_parameters(
       ),
       ("level_high",
         Tuple(
-          title = _("Higher levels"),
+          title = _("Upper levels"),
           elements = [
             Integer(title = _( "Warning if above"), unit=_("l/s")),
             Integer(title = _( "Critical if above"), unit=_("l/s"))

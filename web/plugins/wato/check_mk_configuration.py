@@ -646,8 +646,8 @@ register_configvar(group,
             )),
             ("scope", DropdownChoice(
                 title = _("Search Scope"),
-                help  = _("Scope to be used in LDAP searches. In most cases <tt>Search whole subtree below "
-                          "the base DN</tt> is the best choice. "
+                help  = _("Scope to be used in LDAP searches. In most cases <i>Search whole subtree below "
+                          "the base DN</i> is the best choice. "
                           "It searches for matching objects recursively."),
                 choices = [
                     ("sub",  _("Search whole subtree below the base DN")),

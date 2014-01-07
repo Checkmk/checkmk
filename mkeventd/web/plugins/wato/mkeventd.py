@@ -1385,7 +1385,7 @@ if mkeventd_enabled:
     config.declare_permission_section("mkeventd", _("Event Console"))
 
     config.declare_permission("mkeventd.config",
-       _("Configuration of event console "),
+       _("Configuration of Event Console "),
        _("This permission allows to configure the global settings "
          "of the event console."),
          ["admin"])

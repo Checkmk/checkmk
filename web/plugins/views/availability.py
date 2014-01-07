@@ -1719,7 +1719,7 @@ def handle_delete_annotations():
         if not annotation:
             return
 
-        if not html.confirm(_("Are you sure that you want to delete the annotation '%s'" % annotation["text"])):
+        if not html.confirm(_("Are you sure that you want to delete the annotation '%s'?" % annotation["text"])):
             return
 
         delete_annotation(annotations, site_host_svc, fromtime, untiltime)

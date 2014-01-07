@@ -8450,7 +8450,6 @@ def synchronize_site(site, restart):
         update_replication_status(site["id"], { "result" : str(e) })
         raise
 
-
 # Isolated restart without prior synchronization. Currently this
 # is only being called for the local site.
 def restart_site(site):
@@ -8479,6 +8478,40 @@ def push_snapshot_to_site(site, do_restart):
     except:
         raise MKAutomationException(_("Garbled automation response from site %s: '%s'") %
             (site["id"], response_text))
+
+def push_user_profile_to_site(site, user_id, profile):
+    url = site["multisiteurl"] + "automation.py?" + html.urlencode_vars([
+        ("command",    "push-profile"),
+        ("secret",     site["secret"]),
+        ("siteid",     site['id']),
+        ("debug",      config.debug and "1" or ""),
+    ])
+    content = html.urlencode_vars([
+        ('user_id', user_id),
+        ('profile', mk_repr(profile)),
+    ])
+
+    response = get_url(url, site.get('insecure', False), post_data = content)
+    if not response:
+        raise MKAutomationException("Empty output from remote site.")
+
+    try:
+        response = mk_eval(response)
+    except:
+        # The remote site will send non-Python data in case of an error.
+        raise MKAutomationException('Invalid response: %s' % response)
+    return response
+
+def synchronize_profile(site, user_id):
+    users = userdb.load_users(lock = False)
+    if not user_id in users:
+        raise MKUserError(None, _('The requested user does not exist'))
+
+    start = time.time()
+    result = push_user_profile_to_site(site, user_id, users[user_id])
+    duration = time.time() - start
+    update_replication_status(site["id"], {}, {"profile-sync": duration})
+    return result
 
 # AJAX handler for javascript triggered wato activation
 def ajax_activation():
@@ -8522,6 +8555,31 @@ def cmc_rush_ahead_activation():
 def cmc_reload():
     log_audit(None, "activate-config", "Reloading Check_MK Micro Core on the fly")
     html.live.command("[%d] RELOAD_CONFIG" % time.time())
+
+# AJAX handler for asynchronous replication of user profiles (changed passwords)
+def ajax_profile_repl():
+    site_id = html.var("site")
+
+    status = html.site_status.get(site_id, {}).get("state", "unknown")
+    if status == "dead":
+        result = _('The site is marked as dead. Not trying to replicate.')
+
+    else:
+        site = config.site(site_id)
+        try:
+            result = synchronize_profile(site, config.user_id)
+        except Exception, e:
+            result = str(e)
+
+    if result == True:
+        answer = "0 %s" % _("Replication completed successfully.");
+    else:
+        answer = "1 %s" % (_("Error: %s") % result)
+        # Add pending entry to make sync possible later for admins
+        update_replication_status(site_id, {"need_sync": True})
+        log_pending(AFFECTED, None, "edit-users", _('Password changed (sync failed: %s)') % result)
+
+    html.write(answer)
 
 # AJAX handler for asynchronous site replication
 def ajax_replication():
@@ -8705,11 +8763,50 @@ def page_automation():
     elif command == "push-snapshot":
         html.write(repr(automation_push_snapshot()))
 
+    elif command == "push-profile":
+        html.write(mk_repr(automation_push_profile()))
+
     elif command in automation_commands:
         html.write(repr(automation_commands[command]()))
 
     else:
         raise MKGeneralException(_("Invalid automation command: %s.") % command)
+
+def automation_push_profile():
+    try:
+        site_id = html.var("siteid")
+        if not site_id:
+            raise MKGeneralException(_("Missing variable siteid"))
+
+        user_id = html.var("user_id")
+        if not user_id:
+            raise MKGeneralException(_("Missing variable user_id"))
+
+        our_id = our_site_id()
+
+        # In peer mode, we have a replication configuration ourselves and
+        # we have a site ID our selves. Let's make sure that ID matches
+        # the ID our peer thinks we have.
+        if our_id != None and our_id != site_id:
+            raise MKGeneralException(
+              _("Site ID mismatch. Our ID is '%s', but you are saying we are '%s'.") %
+                (our_id, site_id))
+
+        profile = html.var("profile")
+        if not profile:
+            raise MKGeneralException(_('Invalid call: The profile is missing.'))
+
+        users = userdb.load_users(lock = True)
+        profile = mk_eval(profile)
+        users[user_id] = profile
+        userdb.save_users(users)
+
+        return True
+    except Exception, e:
+        if config.debug:
+            return _("Internal automation error: %s\n%s") % (str(e), format_exception())
+        else:
+            return _("Internal automation error: %s") % e
 
 def automation_push_snapshot():
     try:
@@ -12737,7 +12834,70 @@ def select_language(user_language):
                     'create you own translation, you find <a href="%(url)s">documentation online</a>.') %
                     { "url" : "http://mathias-kettner.de/checkmk_multisite_i18n.html"} )
 
+def user_profile_async_replication_dialog():
+    html.header(_('Replicate new Authentication Information'),
+                javascripts = ['wato'],
+                stylesheets = ['check_mk', 'pages', 'wato', 'status'])
+
+    html.begin_context_buttons()
+    html.context_button(_('User Profile'), 'user_profile.py', 'back')
+    html.end_context_buttons()
+
+    sites = [(name, config.site(name)) for name in config.sitenames() ]
+    sort_sites(sites)
+    repstatus = load_replication_status()
+
+    html.message(_('To make a login possible with your new credentials on all remote sites, the '
+                   'new login credentials need to be replicated to the remote sites. This is done '
+                   'on this page now. Each site is being represented by a single image which is first '
+                   'shown gray and then fills to green during synchronisation.'))
+
+    html.write('<h3>%s</h3>' % _('Replication States'))
+    html.write('<div id="profile_repl">')
+    num_replsites = 0
+    for site_id, site in sites:
+        is_local = site_is_local(site_id)
+
+        if is_local or (not is_local and not site.get("replication")):
+            continue # Skip non replication slaves
+
+        if site.get("disabled"):
+            ss = {}
+            status = "disabled"
+        else:
+            ss = html.site_status.get(site_id, {})
+            status = ss.get("state", "unknown")
+
+        srs = repstatus.get(site_id, {})
+
+        if not "secret" in site:
+            status_txt = _('Not logged in.')
+            start_sync = False
+            icon       = 'repl_locked'
+        else:
+            status_txt = _('Waiting for replication to start')
+            start_sync = True
+            icon       = 'repl_pending'
+
+        html.write('<div id="site-%s" class="site">' % (html.attrencode(site_id)))
+        html.icon(status_txt, icon)
+        if start_sync:
+            estimated_duration = srs.get("times", {}).get("profile-sync", 2.0)
+            html.javascript('wato_do_profile_replication(\'%s\', %d, \'%s\');' %
+                      (site_id, int(estimated_duration * 1000.0), _('Replication in progress')))
+            num_replsites += 1
+        html.write('<span>%s</span>' % site.get('alias', site_id))
+        html.write('</div>')
+
+    html.javascript('var g_num_replsites = %d;\n' % num_replsites)
+
+    html.write('</div>')
+    html.footer()
+
+
 def page_user_profile():
+    start_async_replication = False
+
     if not config.user_id:
         raise MKUserError(None, _('Not logged in.'))
 
@@ -12807,12 +12967,23 @@ def page_user_profile():
                     # Set the new cookie to prevent logout for the current user
                     login.set_auth_cookie(config.user_id, users[config.user_id]['serial'])
 
+            # Now, if in distributed environment, set the trigger for pushing the new
+            # auth information to the slave sites asynchronous
+            if is_distributed():
+                start_async_replication = True
+
             userdb.save_users(users)
             success = True
 
             html.reload_sidebar()
         except MKUserError, e:
             html.add_user_error(e.varname, e.message)
+
+    # When in distributed setup, display the replication dialog instead of the normal
+    # profile edit dialog after changing the password.
+    if start_async_replication:
+        user_profile_async_replication_dialog()
+        return
 
     html.header(_("Edit user profile"),
                 javascripts = ['wato'],

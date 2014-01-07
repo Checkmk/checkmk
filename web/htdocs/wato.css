@@ -1178,3 +1178,28 @@ table.multisite_conn_method td input {
     bottom: 0;
     left: 0;
 }
+
+/*--Profile Repl-----------------------------------------------------------.
+|          ____             __ _ _        ____            _                |
+|         |  _ \ _ __ ___  / _(_) | ___  |  _ \ ___ _ __ | |               |
+|         | |_) | '__/ _ \| |_| | |/ _ \ | |_) / _ \ '_ \| |               |
+|         |  __/| | | (_) |  _| | |  __/ |  _ <  __/ |_) | |               |
+|         |_|   |_|  \___/|_| |_|_|\___| |_| \_\___| .__/|_|               |
+|                                                  |_|                     |
+'-------------------------------------------------------------------------*/
+
+#profile_repl .site {
+    margin: 0 5px 5px 0;
+    padding: 2px;
+    border-radius: 1ex;
+    box-shadow: 0 0 3px #444;
+    background-color: #9dbecd;
+    border-color: #080;
+
+    width: 158px;
+    text-overflow: ellipsis;
+}
+
+#profile_repl .site img, #profile_repl .site span {
+    vertical-align: middle;
+}

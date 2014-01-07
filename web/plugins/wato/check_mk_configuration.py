@@ -2104,8 +2104,8 @@ register_rule(group,
             ( "timeout",
               Float(
                   title = _("Timeout between retries"),
-                  help = _("A request is sent to the SNMP daemon, than wait up to this "
-                           " number of seconds until retrying."),
+                  help = _("After a request is sent to the remote SNMP agent we will wait up to this "
+                           "number of seconds until assuming the answer get lost and retrying."),
                   default_value = 1,
                   minvalue = 0.1,
                   maxvalue = 60,

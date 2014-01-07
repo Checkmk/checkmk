@@ -439,8 +439,8 @@ class BIStatusFilter(Filter):
             defval = ""
         else:
             defval = "on"
-        for varend, text in [('0', 'OK'), ('1', 'WARN'), ('2', 'CRIT'),
-                             ('3', 'UNKN'), ('-1', 'PENDING'), ('n', _('no assumed state set'))]:
+        for varend, text in [('0', _('OK')), ('1', _('WARN')), ('2', _('CRIT')),
+                             ('3', _('UNKN')), ('-1', _('PENDING')), ('n', _('no assumed state set'))]:
             if self.code != 'a' and varend == 'n':
                 continue # no unset for read and effective state
             if varend == 'n':

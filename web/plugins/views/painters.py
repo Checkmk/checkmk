@@ -285,7 +285,7 @@ def paint_service_state_short(row):
         name = nagios_short_state_names.get(row["service_state"], "")
     else:
         state = "p"
-        name = "PEND"
+        name = _("PEND")
     if is_stale(row):
         state = str(state) + " stale"
     return "state svcstate state%s" % state, name
@@ -299,7 +299,7 @@ def paint_host_state_short(row):
         name = nagios_short_host_state_names.get(row["host_state"], "")
     else:
         state = "p"
-        name = "PEND"
+        name = _("PEND")
     if is_stale(row):
         state = str(state) + " stale"
     return "state hstate hstate%s" % state, name

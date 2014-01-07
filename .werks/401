@@ -1,0 +1,14 @@
+Title: Fix rule precedence in WATO-configured manual checks
+Level: 1
+Component: core
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1388497148
+Targetversion: future
+
+When configuring rules for <i>Manual Checks</i> via WATO and
+having several rules for the same combination of host, check type
+and item, then the <i>last</i> of these rules would specify the
+parameters of the check. This has now been fixed and the <i>first</i>
+matching rule has precedence.

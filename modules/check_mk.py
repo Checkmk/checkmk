@@ -645,6 +645,9 @@ def check_interval_of(hostname, checkname):
 #   |                      ___) | |\  | |  | |  __/                        |
 #   |                     |____/|_| \_|_|  |_|_|                           |
 #   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Some basic SNMP functions. Note: most of the SNMP related code is   |
+#   |  the separate module snmp.py.                                        |
 #   '----------------------------------------------------------------------'
 
 # Determine SNMP community for a specific host.  It the host is found
@@ -687,19 +690,6 @@ def is_snmpv2c_host(hostname):
 
 def is_usewalk_host(hostname):
     return in_binary_hostlist(hostname, usewalk_hosts)
-
-#.
-#   .--Classic SNMP--------------------------------------------------------.
-#   |        ____ _               _        ____  _   _ __  __ ____         |
-#   |       / ___| | __ _ ___ ___(_) ___  / ___|| \ | |  \/  |  _ \        |
-#   |      | |   | |/ _` / __/ __| |/ __| \___ \|  \| | |\/| | |_) |       |
-#   |      | |___| | (_| \__ \__ \ | (__   ___) | |\  | |  | |  __/        |
-#   |       \____|_|\__,_|___/___/_|\___| |____/|_| \_|_|  |_|_|           |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   | Non-inline SNMP handling code. Kept for compatibility.               |
-#   '----------------------------------------------------------------------'
-
 
 def snmp_timing_of(hostname):
     timing = host_extra_conf(hostname, snmp_timing)
@@ -914,8 +904,8 @@ def snmp_scan(hostname, ipaddress):
     found.sort()
     return found
 
-
-#   +----------------------------------------------------------------------+
+#.
+#   .--Cluster-------------------------------------------------------------.
 #   |                    ____ _           _                                |
 #   |                   / ___| |_   _ ___| |_ ___ _ __                     |
 #   |                  | |   | | | | / __| __/ _ \ '__|                    |
@@ -923,6 +913,10 @@ def snmp_scan(hostname, ipaddress):
 #   |                   \____|_|\__,_|___/\__\___|_|                       |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
+#   | Code dealing with clusters (virtual hosts that are used to deal with |
+#   | services that can move between physical nodes.                       |
+#   '----------------------------------------------------------------------'
+
 
 # clusternames (keys into dictionary) might be tagged :-(
 # names of nodes not!
@@ -966,15 +960,17 @@ def host_of_clustered_service(hostname, servicedesc):
 
     return hostname
 
-
-#   +----------------------------------------------------------------------+
-#   |          _   _           _       _               _                   |
-#   |         | | | | ___  ___| |_ ___| |__   ___  ___| | _____            |
-#   |         | |_| |/ _ \/ __| __/ __| '_ \ / _ \/ __| |/ / __|           |
-#   |         |  _  | (_) \__ \ || (__| | | |  __/ (__|   <\__ \           |
-#   |         |_| |_|\___/|___/\__\___|_| |_|\___|\___|_|\_\___/           |
+#.
+#   .--Checktable----------------------------------------------------------.
+#   |           ____ _               _    _        _     _                 |
+#   |          / ___| |__   ___  ___| | _| |_ __ _| |__ | | ___            |
+#   |         | |   | '_ \ / _ \/ __| |/ / __/ _` | '_ \| |/ _ \           |
+#   |         | |___| | | |  __/ (__|   <| || (_| | |_) | |  __/           |
+#   |          \____|_| |_|\___|\___|_|\_\\__\__,_|_.__/|_|\___|           |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
+#   | Code for computing the table of checks of a host.                    |
+#   '----------------------------------------------------------------------'
 
 
 # Returns check table for a specific host
@@ -1335,14 +1331,17 @@ def get_piggyback_translation(hostname):
     return translations
 
 
+#.
+#   .--Config Ouptut-------------------------------------------------------.
+#   |    ____             __ _          ___              _         _       |
+#   |   / ___|___  _ __  / _(_) __ _   / _ \ _   _ _ __ | |_ _   _| |_     |
+#   |  | |   / _ \| '_ \| |_| |/ _` | | | | | | | | '_ \| __| | | | __|    |
+#   |  | |__| (_) | | | |  _| | (_| | | |_| | |_| | |_) | |_| |_| | |_     |
+#   |   \____\___/|_| |_|_| |_|\__, |  \___/ \__,_| .__/ \__|\__,_|\__|    |
+#   |                          |___/              |_|                      |
 #   +----------------------------------------------------------------------+
-#   |    ____             __ _                     _               _       |
-#   |   / ___|___  _ __  / _(_) __ _    ___  _   _| |_ _ __  _   _| |_     |
-#   |  | |   / _ \| '_ \| |_| |/ _` |  / _ \| | | | __| '_ \| | | | __|    |
-#   |  | |__| (_) | | | |  _| | (_| | | (_) | |_| | |_| |_) | |_| | |_     |
-#   |   \____\___/|_| |_|_| |_|\__, |  \___/ \__,_|\__| .__/ \__,_|\__|    |
-#   |                          |___/                  |_|                  |
-#   +----------------------------------------------------------------------+
+#   | Output an ASCII configuration file for the monitoring core.          |
+#   '----------------------------------------------------------------------'
 
 def make_utf8(x):
     if type(x) == unicode:
@@ -1771,7 +1770,7 @@ def in_extraconf_servicelist(list, item):
     # no match in list -> negative answer
     return False
 
-# NEW IMPLEMENTATION
+
 def create_nagios_config(outfile = sys.stdout, hostnames = None):
     global hostgroups_to_define
     hostgroups_to_define = set([])
@@ -2951,9 +2950,13 @@ def reread_autochecks():
 #   |         |_|   |_|  \___|\___\___/|_| |_| |_| .__/|_|_|\___|          |
 #   |                                            |_|                       |
 #   +----------------------------------------------------------------------+
-#   |  Create one specializes Python file per host and bytecompile it.     |
+#   | Precompiling creates on dedicated Python file per host, which just   |
+#   | contains that code and information that is needed for executing all  |
+#   | checks of that host. Also static data that cannot change during the  |
+#   | normal monitoring process is being precomputed and hard coded. This  |
+#   | all saves substantial CPU ressources as opposed to running Check_MK  |
+#   | in adhoc mode (about 75%).                                           |
 #   '----------------------------------------------------------------------'
-
 
 # Find files to be included in precompile host check for a certain
 # check (for example df or mem.used). In case of checks with a period
@@ -3313,14 +3316,19 @@ no_inventory_possible = None
         sys.stderr.write(" ==> %s.\n" % compiled_filename)
 
 
+#.
+#   .--Man-Pages-----------------------------------------------------------.
+#   |         __  __                   ____                                |
+#   |        |  \/  | __ _ _ __       |  _ \ __ _  __ _  ___  ___          |
+#   |        | |\/| |/ _` | '_ \ _____| |_) / _` |/ _` |/ _ \/ __|         |
+#   |        | |  | | (_| | | | |_____|  __/ (_| | (_| |  __/\__ \         |
+#   |        |_|  |_|\__,_|_| |_|     |_|   \__,_|\__, |\___||___/         |
+#   |                                             |___/                    |
 #   +----------------------------------------------------------------------+
-#   |                  __  __                         _                    |
-#   |                 |  \/  | __ _ _ __  _   _  __ _| |                   |
-#   |                 | |\/| |/ _` | '_ \| | | |/ _` | |                   |
-#   |                 | |  | | (_| | | | | |_| | (_| | |                   |
-#   |                 |_|  |_|\__,_|_| |_|\__,_|\__,_|_|                   |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
+#   | Each Check has a man page. Here is that code for displaying that in- |
+#   | line documentation and also some code for outputting it in a format  |
+#   | that is used by the official Check_MK documentation ("nowiki").      |
+#   '----------------------------------------------------------------------'
 
 opt_nowiki   = False
 
@@ -3825,14 +3833,20 @@ def show_check_manual(checkname):
     except Exception, e:
         print "Invalid check manpage %s: missing %s" % (filename, e)
 
+
+#.
+#   .--Backup & Restore----------------------------------------------------.
+#   |  ____             _                   ___     ____           _       |
+#   | | __ )  __ _  ___| | ___   _ _ __    ( _ )   |  _ \ ___  ___| |_     |
+#   | |  _ \ / _` |/ __| |/ / | | | '_ \   / _ \/\ | |_) / _ \/ __| __|    |
+#   | | |_) | (_| | (__|   <| |_| | |_) | | (_>  < |  _ <  __/\__ \ |_ _   |
+#   | |____/ \__,_|\___|_|\_\\__,_| .__/   \___/\/ |_| \_\___||___/\__(_)  |
+#   |                             |_|                                      |
 #   +----------------------------------------------------------------------+
-#   |                  ____             _                                  |
-#   |                 | __ )  __ _  ___| | ___   _ _ __                    |
-#   |                 |  _ \ / _` |/ __| |/ / | | | '_ \                   |
-#   |                 | |_) | (_| | (__|   <| |_| | |_) |                  |
-#   |                 |____/ \__,_|\___|_|\_\\__,_| .__/                   |
-#   |                                             |_|                      |
-#   +----------------------------------------------------------------------+
+#   | Check_MK comes with a simple backup and restore of the current con-  |
+#   | figuration and cache files (cmk --backup and cmk --restore). This is |
+#   | implemented here.                                                    |
+#   '----------------------------------------------------------------------'
 
 class fake_file:
     def __init__(self, content):
@@ -4030,15 +4044,17 @@ def do_flush(hosts):
 
         sys.stdout.write(tty_normal + "\n")
 
-
-#   +----------------------------------------------------------------------+
-#   |   __  __       _        __                  _   _                    |
-#   |  |  \/  | __ _(_)_ __  / _|_   _ _ __   ___| |_(_) ___  _ __  ___    |
-#   |  | |\/| |/ _` | | '_ \| |_| | | | '_ \ / __| __| |/ _ \| '_ \/ __|   |
-#   |  | |  | | (_| | | | | |  _| |_| | | | | (__| |_| | (_) | | | \__ \   |
-#   |  |_|  |_|\__,_|_|_| |_|_|  \__,_|_| |_|\___|\__|_|\___/|_| |_|___/   |
+#.
+#   .--Main Functions------------------------------------------------------.
+#   | __  __       _         _____                 _   _                   |
+#   ||  \/  | __ _(_)_ __   |  ___|   _ _ __   ___| |_(_) ___  _ __  ___   |
+#   || |\/| |/ _` | | '_ \  | |_ | | | | '_ \ / __| __| |/ _ \| '_ \/ __|  |
+#   || |  | | (_| | | | | | |  _|| |_| | | | | (__| |_| | (_) | | | \__ \  |
+#   ||_|  |_|\__,_|_|_| |_| |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/  |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
+#   | Implementation of some of the toplevel functions.                    |
+#   '----------------------------------------------------------------------'
 
 # Create a list of all hosts of a certain hostgroup. Needed only for
 # option --list-hosts
@@ -5225,14 +5241,18 @@ def keepalive_read_line():
             line += byte
 
 
-#   +----------------------------------------------------------------------+
-#   |         ____                _                    __ _                |
-#   |        |  _ \ ___  __ _  __| |   ___ ___  _ __  / _(_) __ _          |
-#   |        | |_) / _ \/ _` |/ _` |  / __/ _ \| '_ \| |_| |/ _` |         |
-#   |        |  _ <  __/ (_| | (_| | | (_| (_) | | | |  _| | (_| |         |
-#   |        |_| \_\___|\__,_|\__,_|  \___\___/|_| |_|_| |_|\__, |         |
+#.
+#   .--Read Config---------------------------------------------------------.
+#   |        ____                _    ____             __ _                |
+#   |       |  _ \ ___  __ _  __| |  / ___|___  _ __  / _(_) __ _          |
+#   |       | |_) / _ \/ _` |/ _` | | |   / _ \| '_ \| |_| |/ _` |         |
+#   |       |  _ <  __/ (_| | (_| | | |__| (_) | | | |  _| | (_| |         |
+#   |       |_| \_\___|\__,_|\__,_|  \____\___/|_| |_|_| |_|\__, |         |
 #   |                                                       |___/          |
 #   +----------------------------------------------------------------------+
+#   | Code for reading the configuration files.                            |
+#   '----------------------------------------------------------------------'
+
 
 # Now - at last - we can read in the user's configuration files
 def all_nonfunction_vars():
@@ -5373,9 +5393,21 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
                             params[key] = value
 
             static.append((taglist, hostlist, checktype, item, params))
+
+    # Note: We need to reverse the order of the static_checks. This is because
+    # users assume that earlier rules have precedence over later ones. For static
+    # checks that is important if there are two rules for a host with the same
+    # combination of check type and item. When the variable 'checks' is evaluated,
+    # *later* rules have precedence. This is not consistent with the rest, but a
+    # result of this "historic implementation".
+    static.reverse()
+
+    # Now prepend to checks. That makes that checks variable have precedence
+    # over WATO.
     checks = static + checks
 
-    # Read autochecks and append them to explicit checks
+    # Read autochecks and prepend them to explicit checks. That way autochecks
+    # will have the *least* precedence!
     if with_autochecks:
         read_all_autochecks()
         checks = autochecks + checks
@@ -5551,7 +5583,9 @@ def output_profile():
 
         sys.stderr.write("Profile '%s' written. Please run %s.\n" % (g_profile_path, show_profile))
 
-#   +----------------------------------------------------------------------+
+
+#.
+#   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
 #   |                       |  \/  | __ _(_)_ __                           |
 #   |                       | |\/| |/ _` | | '_ \                          |
@@ -5559,8 +5593,8 @@ def output_profile():
 #   |                       |_|  |_|\__,_|_|_| |_|                         |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-
-
+#   | Main entry point and option parsing. Here is where all begins.       |
+#   '----------------------------------------------------------------------'
 
 # Do option parsing and execute main function -
 # if check_mk is not called as module

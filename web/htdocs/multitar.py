@@ -188,7 +188,7 @@ def extract_domains(tar, domains):
             errors.extend(dom_errors)
     if len(errors):
         errors = list(set(errors))
-        errors.append(_("<br>Please ensure the group is set to '%s' and writable") % defaults.www_group)
+        errors.append(_("<br>Please ensure the group is set to '%s' and has write permissions.") % defaults.www_group)
         raise MKGeneralException(_("Permission problems:<br>%s" % "<br>".join(errors)))
 
     # Empty/remove target folders/files

@@ -78,8 +78,8 @@ CRIT = 2
 UNKNOWN = 3
 UNAVAIL = 4
 
-service_state_names = { OK:"OK", WARN:"WARN", CRIT:"CRIT", UNKNOWN:"UNKNOWN", PENDING:"PENDING", UNAVAIL:"UNAVAILABLE"}
-host_state_names = { 0:"UP", 1:"DOWN", 2:"UNREACHABLE" }
+service_state_names = { OK:_("OK"), WARN:_("WARN"), CRIT:_("CRIT"), UNKNOWN:_("UNKNOWN"), PENDING:_("PENDING"), UNAVAIL:_("UNAVAILABLE")}
+host_state_names = { 0:_("UP"), 1:_("DOWN"), 2:_("UNREACHABLE") }
 
 AGGR_HOST  = 0
 AGGR_MULTI = 1

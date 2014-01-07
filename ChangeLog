@@ -1,4 +1,8 @@
 1.2.4b4:
+    Core & Setup:
+    * 0401 FIX: Fix rule precedence in WATO-configured manual checks...
+    * 0402 FIX: Fix exception in case of missing agent sections of cluster-aware checks...
+
     Multisite:
     * 0425 FIX: Fix login loop bug in distributed environments with different auth secrets
 

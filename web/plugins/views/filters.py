@@ -276,9 +276,9 @@ class FilterServiceState(Filter):
 
     def display(self):
         html.begin_checkbox_group()
-        for var, text in [(self.prefix + "st0", "OK"), (self.prefix + "st1", "WARN"), \
-                          (self.prefix + "st2", "CRIT"), (self.prefix + "st3", "UNKNOWN"),
-                          (self.prefix + "stp", "PEND.")]:
+        for var, text in [(self.prefix + "st0", _("OK")), (self.prefix + "st1", _("WARN")), \
+                          (self.prefix + "st2", _("CRIT")), (self.prefix + "st3", _("UNKNOWN")),
+                          (self.prefix + "stp", _("PEND"))]:
 	    #if html.mobile:
 	        #text = text[:1]
             html.checkbox(var, True, label=text)

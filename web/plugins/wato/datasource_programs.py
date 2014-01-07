@@ -176,7 +176,7 @@ register_rule(group,
      Dictionary(
         title = _("Check state of Fritz!Box Devices"),
         help = _("This rule selects the Fritz!Box agent, which uses UPNP to gather information "
-                 "about configuration and connection status information "),
+                 "about configuration and connection status information."),
         elements = [
             ( "timeout",
               Integer(

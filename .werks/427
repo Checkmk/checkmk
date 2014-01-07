@@ -1,0 +1,11 @@
+Title: Fixed exception when handling connections from event unix socket
+Level: 2
+Component: ec
+Version: 1.2.4b4
+Date: 1389083880
+Class: fix
+
+This issue has been introduced in december of 2013. It made the event
+console terminate with an exception with a message like 
+<tt>AttributeError: 'tuple' object has no attribute 'close'</tt>. This
+has been fixed now.

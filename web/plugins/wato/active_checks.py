@@ -75,7 +75,7 @@ register_rule(group,
     "active_checks:icmp",
     Dictionary(
         title = _("Check hosts with PING (ICMP Echo Request)"),
-        help = _("This ruleset allows you to configure explizit PING monitoring of hosts. "
+        help = _("This ruleset allows you to configure explicit PING monitoring of hosts. "
                  "Usually a PING is being used as a host check, so this is not neccessary. "
                  "There are some situations, however, where this can be useful. One of them "
                  "is when using the Check_MK Micro Core with SMART Ping and you want to "
@@ -182,7 +182,7 @@ register_rule(group,
                      TextAscii(
                          title = _("Expected Address"),
                          allow_empty = False,
-                         help = _("Optional IP-ADDRESS you expect the DNS server to return. HOST"
+                         help = _("Optional IP-Address you expect the DNS server to return. The host "
                                   "must end with a dot (.) " )),
                    ),
                    ( "expected_authority",

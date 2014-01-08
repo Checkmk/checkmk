@@ -6072,7 +6072,7 @@ def mode_ldap_config(phase):
             new_value = valuespec.from_html_vars(varname)
             valuespec.validate_value(new_value, varname)
             if current_settings.get(varname) != new_value:
-                msg = _("Changed ldap configuration variable %s to %s.") \
+                msg = _("Changed LDAP configuration variable %s to %s.") \
                           % (varname, valuespec.value_to_text(new_value))
                 log_pending(SYNC, None, "edit-configvar", msg)
             current_settings[varname] = new_value
@@ -6207,7 +6207,7 @@ def mode_ldap_config(phase):
             return True, _('Found all %d groups.') % num
 
         tests = [
-            (_('Connect'),             test_connect),
+            (_('Connection'),          test_connect),
             (_('User Base-DN'),        test_user_base_dn),
             (_('Count Users'),         test_user_count),
             (_('Group Base-DN'),       test_group_base_dn),
@@ -7555,7 +7555,7 @@ def mode_edit_site_globals(phase):
                 c = wato_confirm(
                     _("Removing site-specific configuration variable"),
                     _("Do you really want to remove the configuration variable <b>%s</b> "
-                      "of the specifi configuration of this site and that way use the global value "
+                      "of the specific configuration of this site and that way use the global value "
                       "of <b><tt>%s</tt></b>?") %
                        (varname, valuespec.value_to_text(def_value)))
             else:
@@ -11965,7 +11965,7 @@ def mode_edit_rule(phase, new = False):
 
         return (back_mode,
            (new and _("Created new rule in ruleset '%s' in folder %s")
-                or _("Editor rule in ruleset '%s' in folder %s")) %
+                or _("Edited rule in ruleset '%s' in folder %s")) %
                       (rulespec["title"], new_rule_folder["title"]))
 
     if rulespec.get("help"):
@@ -13278,7 +13278,7 @@ def mode_bi_rules(phase):
         elif html.var("_del_aggr"):
             nr = int(html.var("_del_aggr"))
             c = wato_confirm(_("Confirm aggregation deletion"),
-                _("Do you really want to delete the aggregation number <b>%s</b>") % (nr+1))
+                _("Do you really want to delete the aggregation number <b>%s</b>?") % (nr+1))
             if c:
                 del aggregations[nr]
                 log_audit(None, "bi-delete-aggregation", _("Deleted BI aggregation number %d") % (nr+1))

@@ -1,0 +1,11 @@
+Title: agent_vsphere / check_mk agent: fixed outdated systemtime of check_mk agent
+Level: 1
+Component: checks
+Version: 1.2.4b4
+Date: 1389087583
+Class: fix
+
+The systemtime of the check_mk agent was incorrect most of the time whenever the
+agent_vsphere was used together with the classic agent.
+The reason was that the agent_vsphere program was called after the check_mk agent
+- its execution took several seconds - thus leading to an outdated systemtime of the standard agent.

@@ -236,7 +236,7 @@ register_configvar(group,
              label = _("Show WATO icon"),
              help = _("When enabled a rule editor icon is displayed for each "
                       "service in the multisite views. It is only displayed if the user "
-                      "does have the permission to edit rules"),
+                      "does have the permission to edit rules."),
             default_value = False),
     domain = "multisite")
 
@@ -307,8 +307,8 @@ register_configvar(group,
         title = _("Adhoc downtime"),
         label = _("Enable adhoc downtime"),
         help  = _("This setting allows to set an adhoc downtime comment and its duration. "
-                  "When enabled a new button <tt>Adhoc downtime for xx minutes</tt> will "
-                  "be available in the command form"),
+                  "When enabled a new button <i>Adhoc downtime for __ minutes</i> will "
+                  "be available in the command form."),
     ),
     domain = "multisite",
 )
@@ -646,8 +646,8 @@ register_configvar(group,
             )),
             ("scope", DropdownChoice(
                 title = _("Search Scope"),
-                help  = _("Scope to be used in LDAP searches. In most cases <tt>Search whole subtree below "
-                          "the base DN</tt> is the best choice. "
+                help  = _("Scope to be used in LDAP searches. In most cases <i>Search whole subtree below "
+                          "the base DN</i> is the best choice. "
                           "It searches for matching objects recursively."),
                 choices = [
                     ("sub",  _("Search whole subtree below the base DN")),

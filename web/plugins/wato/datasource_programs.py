@@ -137,7 +137,7 @@ register_rule(group,
         help = _("This rule selects the vSphere agent instead of the normal Check_MK Agent "
                  "and allows monitoring of VMWare ESX via the vSphere API. You can configure "
                  "your connection settings here."),
-        forth = lambda a: dict(a.items() + [("skip_placeholder_vms", True), ("use_pysphere" , False)])
+        forth = lambda a: dict([("skip_placeholder_vms", True), ("use_pysphere" , False)] + a.items())
     ),
     match = 'first')
 
@@ -152,7 +152,7 @@ register_rule(group,
            Integer( title = _("Port Number"), default_value=8161 ),
            ListChoice(
               choices = [
-                ("piggybag",  _("Run in piggybag mode")),
+                ("piggybag",  _("Run in piggyback mode")),
               ],
               allow_empty = True
            )
@@ -176,12 +176,12 @@ register_rule(group,
      Dictionary(
         title = _("Check state of Fritz!Box Devices"),
         help = _("This rule selects the Fritz!Box agent, which uses UPNP to gather information "
-                 "about configuration and connection status information "),
+                 "about configuration and connection status information."),
         elements = [
             ( "timeout",
               Integer(
                   title = _("Connection timeout"),
-                  help = _("The network timeout in seconds when communicating via UPNP."
+                  help = _("The network timeout in seconds when communicating via UPNP. "
                            "The default is 10 seconds. Please note that this "
                            "is not a total timeout, instead it is applied to each API call."),
                   default_value = 10,

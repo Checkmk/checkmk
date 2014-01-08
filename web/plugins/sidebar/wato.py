@@ -246,7 +246,7 @@ def render_wato_foldertree():
         render_tree_folder(user_folders.values()[0], 'wato_tree_click')
 
 sidebar_snapins['wato_foldertree'] = {
-    'title'       : _('Foldertree (standalone)'),
+    'title'       : _('Tree of Folders'),
     'description' : _('This snapin shows the folders defined in WATO. It can be used to open views filtered by the WATO folder. It works standalone, without interaction with any other snapin.'),
     'render'      : render_wato_foldertree,
     'allowed'     : [ 'admin', 'user', 'guest' ],

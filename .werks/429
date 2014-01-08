@@ -1,0 +1,11 @@
+Title: Implemented role permissions for dashboards
+Level: 2
+Component: multisite
+Version: 1.2.5i1
+Date: 1389174300
+Class: feature
+
+Access to dashboards can now be controlled via role permissions. By
+default all roles are permitted to acces all dashboards (like in
+previous versions). You can now change access to the dashboards per
+role.

@@ -77,7 +77,7 @@ def views_by_topic():
     # Add all the dashboards to the views list
     s += [ (_('Dashboards'), d['title'] and d['title'] or d_name, d_name)
            for d_name, d
-           in dashboard.dashboards.items()
+           in dashboard.permitted_dashboards()
     ]
 
     s.sort()

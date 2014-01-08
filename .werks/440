@@ -1,0 +1,17 @@
+Title: heartbeat_crm: Inventory more gracefully handles case where agent output is invalid
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1389184898
+Targetversion: future
+
+One example:
+
+F+:
+<<<heartbeat_crm>>>
+Connection to cluster failed: connection failed
+F-:
+
+The inventory raised an exception in that case. Now it simply ignores that section.

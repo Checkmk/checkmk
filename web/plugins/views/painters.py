@@ -484,7 +484,7 @@ multisite_painters["service_description"] = {
 }
 
 multisite_painters["service_display_name"] = {
-    "title"   : _("Service alternative dislay name"),
+    "title"   : _("Service alternative display name"),
     "short"   : _("Display name"),
     "columns" : ["service_display_name"],
     "paint"   : lambda row: (None, row["service_display_name"]),

@@ -14925,7 +14925,7 @@ def is_alias_used(my_group, my_name, aliasname):
     for groupname, group in all_groups.items():
         for key, value in group.items():
             if value == aliasname and (my_group != groupname or my_name != key):
-                return False, _("This alias is already used in the %s group %s .") % (groupname, key)
+                return False, _("This alias is already used in the %s group %s.") % (groupname, key)
 
     # Timeperiods
     timeperiods = load_timeperiods()

@@ -354,7 +354,7 @@ avoption_entries = [
   ( "short_intervals",
     "single",
     Integer(
-        title = _("Short Time Intervalls"),
+        title = _("Short Time Intervals"),
         minvalue = 0,
         unit = _("sec"),
         label = _("Ignore intervals shorter or equal"),

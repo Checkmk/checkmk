@@ -800,8 +800,8 @@ ldap_attribute_plugins['auth_expire'] = {
 
 ldap_attribute_plugins['pager'] = {
     'title': _('Pager'),
-    'help':  _('This plugin synchronizes a field of the users ldap account to the pager attribute '
-               'of the WATO user accounts, which is then forwarded to Nagios and can be used'
+    'help':  _('This plugin synchronizes a field of the users LDAP account to the pager attribute '
+               'of the WATO user accounts, which is then forwarded to the monitoring core and can be used'
                'for notifications. By default the LDAP attribute <tt>mobile</tt> is used.'),
     'needed_attributes': lambda params: [ params.get('attr', ldap_attr('mobile')) ],
     'convert':           lambda plugin, params, user_id, ldap_user, user: \
@@ -831,7 +831,7 @@ def register_user_attribute_sync_plugins():
             'parameters': [
                 ('attr', TextAscii(
                     title = _("LDAP attribute to sync"),
-                    help  = _("The LDAP attribute which contents shal be synced into this custom attribute."),
+                    help  = _("The LDAP attribute whose contents shall be synced into this custom attribute."),
                     default_value = lambda: ldap_attr(attr),
                 )),
             ],

@@ -83,10 +83,13 @@ def inventory_heartbeat_crm(info):
     # - Check the number of nodes/resources
     # - Check the age of "last updated"
     if len(info) > 0:
-        lastUpdated, dc, numNodes, numResources = heartbeat_crm_parse_general(info)
-        if not heartbeat_crm_naildown:
-            dc = None # Ignore DC on check
-        return [(None, '(heartbeat_crm_default_max_age, %r, %d, %d)' % (dc, numNodes, numResources))]
+        try:
+            lastUpdated, dc, numNodes, numResources = heartbeat_crm_parse_general(info)
+            if not heartbeat_crm_naildown:
+                dc = None # Ignore DC on check
+            return [(None, '(heartbeat_crm_default_max_age, %r, %d, %d)' % (dc, numNodes, numResources))]
+        except:
+            return # No useful information found
 
 def check_heartbeat_crm(item, params, info):
     if len(info) > 0:

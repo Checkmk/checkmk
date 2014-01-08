@@ -38,7 +38,7 @@ megaraid_bbu_refvalues = {
     'Charging Status'                           : ('None', 1),  # nolearn
     'Battery State'                             : ('Operational', 2),  # nolearn
     'Learn Cycle Status'                        : ('OK', 1),
-    'Learn Cycle Active'                        : ('Yes', 0),
+    'Learn Cycle Active'                        : ('No', 0),
     'Battery Pack Missing'                      : ('No', 2),
     'Battery Replacement required'              : ('No', 1),
     'Over Temperature'                          : ('No', 2),
@@ -49,9 +49,12 @@ megaraid_bbu_refvalues = {
 
 def megaraid_bbu_parse(info):
     controllers = {}
+    current_hba = None
     for line in info:
-        # Format the Agent output
-        name, data = " ".join(line).split(":")
+        joined = " ".join(line)
+        if ":" not in joined:
+            continue # skip garbage lines
+        name, data = joined.split(":")
         name = name.strip()
         data = data.strip()
 
@@ -59,7 +62,7 @@ def megaraid_bbu_parse(info):
         if name in [ "BBU status for Adapter", "BBU status for Adpater" ]:
             current_hba = {}
             controllers[data] = current_hba
-        else:
+        elif current_hba != None:
             # We lose the numerical temperature here
             # (same key is used twice in output of megacli)
             current_hba[name] = data
@@ -91,7 +94,13 @@ def check_megaraid_bbu(item, _no_params, info):
         # to a false result. but people asked for it :>
         try:
             value = controller[varname]
-            if value != refvalue:
+            # Some controllers report "Optimal" instead of "Operational"
+            if value == "Optimal":
+                pass
+            # Some controllers do not output Temperature: OK and Voltage: OK.
+            elif varname in [ "Temperature", "Voltage" ] and value[0].isdigit():
+                pass
+            elif value != refvalue:
                 text = '%s is %s' % (varname, value)
                 if refstate:
                     text += ' (%s)' % ("!" * refstate)

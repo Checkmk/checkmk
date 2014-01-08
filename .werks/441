@@ -1,0 +1,10 @@
+Title: megaraid_bbu: Fix several false alarms and cases where inventory failed
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1389186664
+Targetversion: future
+
+

@@ -1,0 +1,11 @@
+Title: blade_blades: Now only make inventory for blades that are powered on
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1389185906
+Targetversion: future
+
+The inventory function now only find blades that are powered on instead just exsist.
+This handels the case, that a blade is ready for production but still not in use.

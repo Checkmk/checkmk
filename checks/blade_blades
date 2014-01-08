@@ -37,8 +37,8 @@ blade_blades_power_labels  = ('off', 'on')
 blade_blades_health_labels = ('unknown', 'good', 'warning', 'bad')
 
 def inventory_blade_blades(info):
-    # find only blades that are present
-    return [ (line[0], '', line[1]) for line in info if line[1] == '1' ]
+    # find only blades that are powered on 
+    return [ (line[0], '', line[1]) for line in info if line[2] == '1' ]
 
 def check_blade_blades(item, params, info):
     for line in info:

@@ -2444,7 +2444,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_applications,
     "veeam_backup",
-    _("Veeam Time since last Backup"),
+    _("Veeam: Time since last Backup"),
     Dictionary(
         elements = [
         ("age",
@@ -3456,7 +3456,7 @@ register_check_parameters(
             ),
             ( "upper",
             Tuple(
-                help = _("Upper levels for the FAN speed of a hardware device"),
+                help = _("Upper levels for the Fan speed of a hardware device"),
                 title = _("Upper levels"),
                 elements = [
                     Integer(title = _("warning if above"), unit = u"rpm", default_value = 8000),

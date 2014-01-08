@@ -733,7 +733,7 @@ register_configvar(group,
             ("scope", DropdownChoice(
                 title = _("Search Scope"),
                 help  = _("Scope to be used in group related LDAP searches. In most cases "
-                          "<tt>Search whole subtree below the base DN</tt> "
+                          "<i>Search whole subtree below the base DN</i> "
                           "is the best choice. It searches for matching objects in the given base "
                           "recursively."),
                 choices = [
@@ -747,8 +747,8 @@ register_configvar(group,
                 title = _("Search Filter"),
                 help = _("Using this option you can define an optional LDAP filter which is used "
                          "during group related LDAP searches. It can be used to only handle a "
-                         "subset of the groups below the given base DN.<br><br> "
-                         "e. g. <tt>(objectclass=group)</tt>"),
+                         "subset of the groups below the given base DN.<br><br>"
+                         "e.g. <tt>(objectclass=group)</tt>"),
                 size = 80,
                 default_value = lambda: userdb.ldap_filter('groups', False),
                 attrencode = True,

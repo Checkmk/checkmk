@@ -66,10 +66,7 @@
     * 0379 FIX: check_mk -c: Now also rewrites the location of conf.d directory
     * 0354 FIX: Catch exception when check plugins do not return a state...
     * 0398 FIX: Tolerate debug output in check plugins when using CMC...
-<<<<<<< HEAD
-=======
     * 0314 FIX: Fix CMC not executing any Check_MK checks after config reload...
->>>>>>> 2c468c4... FIX Fix login loop bug in distributed environments with different auth secrets
 
     Checks & Agents:
     * 0306 esx_vsphere_counters: added missing ramdisk levels sfcbtickets

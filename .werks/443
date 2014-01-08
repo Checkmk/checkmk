@@ -1,0 +1,13 @@
+Title: brocade_fcport: cope with firmware that does not provide speed information
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1389188713
+Targetversion: future
+
+Some newer firmwares of Brocade switches do not output information about the
+port speed anymore. That caused the check to fail. We now silently assume
+auto negotiation in that case (which means 2Gbit/s if you haven't configured
+this otherwise)

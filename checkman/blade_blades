@@ -21,5 +21,5 @@ examples:
  ]
 
 inventory:
- All blades in the system with the state 1 (present) are automatically
+ All blades that are powered on are automatically
  inventorized.

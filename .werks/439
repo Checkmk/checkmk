@@ -1,0 +1,10 @@
+Title: postfix_mailq: Linux agent better detects Postfix installation
+Level: 1
+Component: checks
+Version: 1.2.4b4
+Date: 1389182878
+Class: fix
+
+We new check, if there is really Postfix installed, not just the user.
+Also we handle the output of <tt>/usr/sbin/ssmpt</tt>. Thanks to Thomas
+Schweikle.

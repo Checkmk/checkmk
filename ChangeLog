@@ -6,6 +6,7 @@
 
     Checks & Agents:
     * 0251 FIX: agent_vsphere / check_mk agent: fixed outdated systemtime of check_mk agent...
+    * 0439 FIX: postfix_mailq: Linux agent better detects Postfix installation...
 
     Multisite:
     * 0425 FIX: Fix login loop bug in distributed environments with different auth secrets

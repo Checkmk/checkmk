@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,38 +23,38 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-
-def inventory_kemp_loadmaster_realserver(info):
-    return [ ( x[0], None ) for x in info ]
-
-def check_kemp_loadmaster_realserver(item, _no_params, info):
-    states = { 1 : 'reachable',
-               2 : 'stale',
-               3 : 'delay',
-               4 : 'probe',
-               5 : 'invalid',
-               6 : 'unkown',
-               7 : 'incomplete',
-               20 : 'not in use'}
-
-    for line in info:
-        if line[0] == item:
-            state = saveint(line[1])
-            message = "State: %s" % (states[state])
-            if state == 1:
-                return 0, message
-            if state ==  6:
-                return 1, message
-            if state in [ 2, 3, 4, 5, 7, 20 ]:
-                return 3, message
-    return 3, "Service not found"
-
-check_info["kemp_loadmaster_realserver"] = {
-    "check_function"        : check_kemp_loadmaster_realserver,
-    "inventory_function"    : inventory_kemp_loadmaster_realserver,
-    "service_description"   : "Server %s",
-    "has_perfdata"          : False,
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.12196.250.10",
-    "snmp_info"             : ( ".1.3.6.1.2.1.4.35.1.7.7.1.4", [ OID_END, ''] ),
+// Make data sources available via names
+$RRD = array();
+foreach ($NAME as $i => $n) {
+    $RRD[$n] = "$RRDFILE[$i]:$DS[$i]:MAX";
+    $WARN[$n] = $WARN[$i];
+    $CRIT[$n] = $CRIT[$i];
+    $MIN[$n]  = $MIN[$i];
+    $MAX[$n]  = $MAX[$i];
 }
+
+$servicedesc = str_replace("_", " ", $servicedesc);
+
+$opt[1] = "--vertical-label 'I/O (Blocks/s)' -X0  --title \"iSCSI traffic $hostname / $servicedesc\" ";
+
+$def[1]  = 
+           "HRULE:0#a0a0a0 ".
+# read
+           "DEF:read_blocks=$RRD[read_blocks] ".
+           "AREA:read_blocks#40c080:\"Read \" ".
+           "GPRINT:read_blocks:LAST:\"%8.1lf Blocks/s last\" ".
+           "GPRINT:read_blocks:AVERAGE:\"%6.1lf Blocks/s avg\" ".
+           "GPRINT:read_blocks:MAX:\"%6.1lf Blocks/s max\\n\" ";
+
+# write
+$def[1] .=
+           "DEF:write_blocks=$RRD[write_blocks] ".
+           "CDEF:write_blocks_neg=write_blocks,-1,* ".
+           "AREA:write_blocks_neg#4080c0:\"Write  \"  ".
+           "GPRINT:write_blocks:LAST:\"%6.1lf Blocks/s last\" ".
+           "GPRINT:write_blocks:AVERAGE:\"%6.1lf Blocks/s avg\" ".
+           "GPRINT:write_blocks:MAX:\"%6.1lf Blocks/s max\\n\" ".
+           "";
+
+?>
 

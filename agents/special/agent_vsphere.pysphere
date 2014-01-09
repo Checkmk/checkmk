@@ -81,12 +81,16 @@ OPTIONS:
   -c, --dump-counters           Simply dumping out all available counters and their values.
                                 This mode is meant for debugging and diagnostic purposes.
 
+  -S, --spaces HOW              How to handle spaces in hostnames. "cut": cut everyting
+                                after the first space, "underscore": replace with
+                                underscores. Default is "underscore".
+
 """)
 
-short_options = 'hi:u:s:Dat:H:cp'
+short_options = 'hi:u:s:Dat:H:cpS:'
 long_options  = [
     'help', 'user=', 'secret=', 'direct', 'agent', 'debug', 'modules=', 'timeout=', 'hostname=',
-    'dump-counters', 'profile', 'pysphere',
+    'dump-counters', 'profile', 'pysphere', 'spaces='
 ]
 
 try:
@@ -102,6 +106,7 @@ opt_dump_counters       = False
 opt_timeout             = 60
 opt_hostname            = None
 opt_skip_placeholder_vm = False
+opt_spaces              = "cut"
 
 g_profile         = None
 g_profile_path    = "vsphere_profile.out"
@@ -136,6 +141,11 @@ for o,a in opts:
         opt_hostname = a
     elif o in [ '-c', '--dump-counters' ]:
         opt_dump_counters = True
+    elif o in [ '-S', '--spaces']:
+        if a not in [ "cut", "underscore" ]:
+            usage()
+            sys.exit(1)
+        opt_spaces = a
     elif o in [ '-h', '--help' ]:
         usage()
         sys.exit(0)
@@ -232,6 +242,12 @@ print "AgentOs: %s " % host.get_server_type()
 
 # Prepare list of all hosts systems
 all_hosts = host.get_hosts()
+
+def convert_hostname(h):
+    if opt_spaces == "cut":
+        return h.split()[0]
+    else:
+        return h.replace(" ", "_")
 
 def output_profile():
     g_profile.dump_stats(g_profile_path)
@@ -585,7 +601,10 @@ def output_mors(what, properties, direct=False):
             # Convert property value using specified conversion function
             data[p.Name] = properties[p.Name](p.Val)
 
-        obj_name = data["name"].split()[0] # get rid of comment
+        if obj_type == MORTypes.VirtualMachine:
+            obj_name = convert_hostname(data["name"])
+        else:
+            obj_name = data["name"]
 
         # Output multiplexed Check_MK Agent output (new in version 1.2.3i1)
         if direct:

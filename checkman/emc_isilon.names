@@ -2,7 +2,7 @@ title: EMC Isilon: Report Cluster and Node Name
 agents: snmp
 catalog: hw/storagehw/emc
 license: GPL
-silon Infodistribution: check_mk
+distribution: check_mk
 description:
  Reports the Cluster and Node Name of EMC Isilon Storage System. This
  Check always returns {OK}.

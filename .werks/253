@@ -1,0 +1,11 @@
+Title: windows agent: fixed crash on processing eventlog records
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1389262775
+Class: fix
+
+On some instances the check_mk_agent crashed when formatting
+eventlog messages. This was caused by message templates, which were
+specified in dll files, expecting more formatting arguments than the
+eventlog record provided.

@@ -24,36 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def inventory_hitachi_hnas_psu(info):
-    inventory = []
-    for clusternode, id, status in info:
-        inventory.append( (clusternode + "." + id, None) )
-    return inventory
+def agent_emcvnx_arguments(params, hostname, ipaddress):
+    args = ''
+    args += " -u " + quote_shell_string(params["user"])
+    args += " -p " + quote_shell_string(params["password"])
+    args += " -i " + ",".join(params["infos"])
 
-def check_hitachi_hnas_psu(item, _no_params, info):
-    statusmap = (("", 3),          # 0
-                 ("ok", 0),        # 1
-                 ("failed", 2),    # 2
-                 ("notFitted", 1), # 3
-                 ("unknown", 3),   # 4
-                )
+    args += " " + quote_shell_string(ipaddress)
+    return args
 
-    for clusternode, id, status in info:
-        if clusternode + "." + id == item:
-            status = int(status)
-            if status == 0 or status >= len(statusmap):
-                return 3, "PNode %s PSU %s reports unidentified status %s" % (clusternode, id, status)
-            else:
-                return statusmap[status][1], "PNode %s PSU %s reports status %s" % (clusternode, id, statusmap[status][0])
-
-    return 3, "SNMP did not report a status of this PSU"
-
-check_info["hitachi_hnas_psu"] = {
-    "check_function"        : check_hitachi_hnas_psu,
-    "inventory_function"    : inventory_hitachi_hnas_psu,
-    "service_description"   : "PSU %s",
-    "has_perfdata"          : False,
-    "snmp_info"             : (".1.3.6.1.4.1.11096.6.1.1.1.2.1.13.1", [1, 2, 3]),
-                              # ClusterNode, ID, Status
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.11096.6"),
-}
+special_agent_info['emcvnx'] = agent_emcvnx_arguments

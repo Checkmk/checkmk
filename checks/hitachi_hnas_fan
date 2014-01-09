@@ -95,7 +95,7 @@ check_info["hitachi_hnas_fan"] = {
     "inventory_function"    : inventory_hitachi_hnas_fan,
     "service_description"   : "Fan %s",
     "has_perfdata"          : True,
-    "snmp_info"             : (".1.3.6.1.4.1.11096.6.1.1.1.2.1.11.1", [1, 2, 3, 4, 5]), 
+    "snmp_info"             : (".1.3.6.1.4.1.11096.6.1.1.1.2.1.11.1", [1, 2, 3, 4, 5]),
                               # fanClusterNode, fanIndex, fanFittedStatus, fanSpeedStatus, fanSpeed
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.11096.6"),
 }

@@ -11,7 +11,7 @@ description:
  given thresholds. {OK} is returned otherwise.
 
 item:
- The ID of the PNode, a dot, the ID of the FPGA, a space, the name of the FPGA. 
+ The ID of the PNode, a dot, the ID of the FPGA, a space, the name of the FPGA.
  E. g.: 1.0 wlog
 
 examples:

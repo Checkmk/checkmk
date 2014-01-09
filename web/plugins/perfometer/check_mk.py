@@ -489,6 +489,7 @@ perfometers["check_mk-winperf_phydisk"] = perfometer_check_mk_diskstat
 perfometers["check_mk-hpux_lunstats"] = perfometer_check_mk_diskstat
 perfometers["check_mk-mysql.innodb_io"] = perfometer_check_mk_diskstat
 perfometers["check_mk-esx_vsphere_counters.diskio"] = perfometer_check_mk_diskstat
+perfometers["check_mk-emcvnx_disks"] = perfometer_check_mk_diskstat
 
 def perfometer_in_out_mb_per_sec(row, check_command, perf_data):
     read_mbit = float(perf_data[0][1]) / 131072
@@ -499,6 +500,19 @@ def perfometer_in_out_mb_per_sec(row, check_command, perf_data):
     return text, perfometer_logarithmic_dual(
             read_mbit, "#30d050", write_mbit, "#0060c0", 100, 10)
 perfometers["check_mk-openvpn_clients"] = perfometer_in_out_mb_per_sec
+
+def perfometer_check_mk_hba(row, check_command, perf_data):
+    if len(perf_data) < 2:
+        return "", ""
+
+    read_blocks = int(perf_data[0][1])
+    write_blocks = int(perf_data[1][1])
+
+    text = "%d/s  %d/s" % (read_blocks, write_blocks)
+
+    return text, perfometer_logarithmic_dual(
+            read_blocks, "#30d050", write_blocks, "#0060c0", 100000, 2)
+perfometers["check_mk-emcvnx_hba"] = perfometer_check_mk_hba
 
 
 def perfometer_check_mk_printer_supply(row, check_command, perf_data):

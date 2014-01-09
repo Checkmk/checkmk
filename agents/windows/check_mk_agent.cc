@@ -1199,12 +1199,18 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
             DWORD num_strings = event->NumStrings;
             WCHAR *s = (WCHAR *)(((char *)event) + event->StringOffset);
             unsigned ns;
-            for (ns = 0; ns < num_strings; ns++) {
-                if (ns >= 63) break;
-                strings[ns] = s;
-                s += wcslen(s) + 1;
+            for (ns = 0; ns < 63; ns++) {
+                if (ns < num_strings) {
+                    strings[ns] = s;
+                    s += wcslen(s) + 1;
+                }
+                else
+                    // Sometimes the eventlog record does not provide
+                    // enough strings for the message template. Causes crash...
+                    // -> Fill the rest with 0 strings
+                    strings[ns] = (WCHAR *)"";
             }
-            strings[ns] = 0; // end marker in array
+            strings[63] = 0; // end marker in array
 
             // Windows eventlog entries refer to texts stored in a DLL >:-P
             // We need to load this DLL. First we need to look up which
@@ -2901,8 +2907,8 @@ void open_crash_log()
 
         // Threads are not allowed to access the crash_log
         g_connectionlog_file = CreateFile(TEXT(g_connection_log),
-            GENERIC_WRITE,            // open for reading
-            0,                        // do not share
+            GENERIC_WRITE,            // open for writing
+            FILE_SHARE_READ,          // do not share
             NULL,                     // no security
             CREATE_ALWAYS,            // existing file only
             FILE_ATTRIBUTE_NORMAL,    // normal file

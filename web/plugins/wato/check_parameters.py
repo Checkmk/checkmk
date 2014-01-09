@@ -2992,15 +2992,6 @@ register_check_parameters(
     None, None
 )
 
-# register_check_parameters(
-#     subgroup_virt,
-#     "esx_hostsystems",
-#     _("Available HostSystems in ESX cluster"),
-#     None,
-#     "first",
-#     False,
-# )
-
 
 register_check_parameters(
     subgroup_hardware,

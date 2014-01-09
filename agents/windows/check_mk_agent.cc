@@ -1207,7 +1207,7 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
                 else
                     // Sometimes the eventlog record does not provide
                     // enough strings for the message template. Causes crash...
-                    // -> Fill the rest with 0 strings
+                    // -> Fill the rest with empty strings
                     strings[ns] = (WCHAR *)"";
             }
             strings[63] = 0; // end marker in array

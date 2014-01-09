@@ -5550,7 +5550,7 @@ def get_snapshot_status(name):
             # Determine snapshot type: legacy / new
             is_legacy_snapshot = True
             try:
-                tarfile.open(snapshot_dir + name, "r:gz") 
+                tarfile.open(snapshot_dir + name, "r:gz")
             except:
                 is_legacy_snapshot = False
 
@@ -5683,7 +5683,7 @@ def mode_snapshot(phase):
         for entry in sorted(value.keys()):
             choices.append( (entry,value[entry]["title"]) )
             if value[entry].get("default"):
-                default_values.append(entry) 
+                default_values.append(entry)
         choices.sort(key = lambda x: x[1])
         backup_groups.append( ("group_%d" % idx, ListChoice(title = key, choices = choices, default_value = default_values) ) )
 

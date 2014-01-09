@@ -4,7 +4,7 @@ catalog: app/kemp
 license: GPL
 distribution: check_mk
 description:
- This check monitors the state of the backend servers connected to a Kemp 
+ This check monitors the state of the backend servers connected to a Kemp
  Loadmaster.
  It will return {OK} if the server is reachable,
  {WARn} if the server state is unkown, Other states will result in {UKN}.

@@ -9,7 +9,7 @@ description:
  It has been tested with the model PX2-2180CR.
  The check displays the measured value of the sensor and the state given
  by the device.
- Upper and lower warning and critical limits for the values can be configured 
+ Upper and lower warning and critical limits for the values can be configured
  in the device itself and the device state is determined accordingly.
  The state of the check reflects the state of the device.
 

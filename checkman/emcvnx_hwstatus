@@ -15,14 +15,14 @@ description:
  EMC's command line tool naviseccli.
 
 item:
- The name of the name of the sensor as returned by the special agent prefixed 
+ The name of the name of the sensor as returned by the special agent prefixed
  with Bus ID and Enclosure ID
 
- E. g. 
+ E. g.
 
     0/0 CPU Module A
 
-    or 
+    or
 
     0/0 SP B I/O Module 0
 

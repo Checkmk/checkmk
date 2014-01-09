@@ -29,7 +29,7 @@ def inventory_kemp_loadmaster_realserver(info):
     return [ ( x[0], None ) for x in info ]
 
 def check_kemp_loadmaster_realserver(item, _no_params, info):
-    states = { 1 : 'reachable', 
+    states = { 1 : 'reachable',
                2 : 'stale',
                3 : 'delay',
                4 : 'probe',

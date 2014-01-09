@@ -34,7 +34,7 @@ def check_stulz_powerstate(item, _no_params, info):
                 message = "Device powered off"
                 power_state = 2
             else:
-                message = "Device powered on" 
+                message = "Device powered on"
                 power_state = 6
 
             return 0, message, [ ('state', power_state ) ]

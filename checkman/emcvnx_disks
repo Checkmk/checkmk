@@ -6,12 +6,12 @@ distribution: check_mk
 description:
  Reports the status and the I/O rate of a disk in an EMC VNX storage system.
 
- Returns {OK} if the state of a disk is "Unbound" or "Hot Spare Ready" or 
+ Returns {OK} if the state of a disk is "Unbound" or "Hot Spare Ready" or
  "Enabled" or "Ready", the number of Hard Read Errors is 0 and the number
- of Hard Write Errors is 0. 
+ of Hard Write Errors is 0.
 
- Returns {WARN} if the state of a disk is "Rebuilding", the number of Hard 
- Read Errors is 0 and the number of Hard Write Errors is 0. 
+ Returns {WARN} if the state of a disk is "Rebuilding", the number of Hard
+ Read Errors is 0 and the number of Hard Write Errors is 0.
 
  {CRIT} is returned otherwise.
 

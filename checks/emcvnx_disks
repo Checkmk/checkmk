@@ -186,6 +186,6 @@ def check_emcvnx_disks(item, _no_params, info):
 check_info['emcvnx_disks'] = {
     "inventory_function"      : inventory_emcvnx_disks,
     "check_function"          : check_emcvnx_disks,
-    "service_description"     : "Enclosure %s", 
+    "service_description"     : "Enclosure %s",
     "has_perfdata"            : True,
 }

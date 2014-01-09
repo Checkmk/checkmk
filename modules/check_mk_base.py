@@ -1115,7 +1115,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
                     debug_log_file = debug_log
                     if debug_log_file == True:
                         debug_log_file = log_dir + "/crashed-checks.log"
-                    text += " A trace has been written to %s." % debug_log_file 
+                    text += " A trace has been written to %s." % debug_log_file
                 result = 3, text
                 if debug_log:
                     try:

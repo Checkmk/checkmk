@@ -54,7 +54,7 @@ check_info["hitachi_hnas_fpga"] = {
     "service_description"   : "FPGA %s",
     "has_perfdata"          : True,
     "snmp_info"             : (".1.3.6.1.4.1.11096.6.1.1.6.1.4.1", [1, 2, 3, 4]),
-                              # fpgaUtilizationCnIndex (=PNode), fpgaUtilizationFpgaIndex (=ID), 
+                              # fpgaUtilizationCnIndex (=PNode), fpgaUtilizationFpgaIndex (=ID),
                               # fpgaUtilizationFpgaName, fpgaUtilization
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.11096.6"),
     "group"                 : "fpga_utilization",

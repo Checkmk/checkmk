@@ -148,7 +148,7 @@ for module in naviseccli_options.keys():
 # fetch information by calling naviseccli
 #############################################################################
 
-basecmd="naviseccli -h %s -User %s -Password %s -Scope0 getall " % (host_address, user, password)
+basecmd="naviseccli -h %s -User %s -Password %s -Scope 0 getall " % (host_address, user, password)
 
 #
 # check_mk section of agent output

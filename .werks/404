@@ -1,0 +1,10 @@
+Title: cups_queues: fix exception in case of alternative time format
+Level: 1
+Component: checks
+Version: 1.2.4b4
+Date: 1389267220
+Class: fix
+
+In some cases the time format output by CUPS was not correctly
+parsed by the check. An example is <tt>Thu 29 Aug 2013 06:25:55 AM CEST</tt>.
+This has now been fixed.

@@ -1548,10 +1548,10 @@ def get_age_human_readable(secs):
     hours, mins = divmod(mins, 60)
     if hours < 12:
         return "%d hours, %d min" % (hours, mins)
-    if hours < 48:
+    elif hours < 48:
         return "%d hours" % hours
     days, hours = divmod(hours, 24)
-    if days < 7:
+    if days < 7 and hours > 0:
         return "%d days, %d hours" % (days, hours)
     return "%d days" % days
 

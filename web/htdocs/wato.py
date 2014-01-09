@@ -14135,6 +14135,7 @@ def mode_edit_custom_attr(phase, what):
             help  = html.var_utf8('help').strip()
             user_editable = html.get_checkbox('user_editable')
             show_in_table = html.get_checkbox('show_in_table')
+            add_custom_macro = html.get_checkbox('add_custom_macro')
 
             if new:
                 name = html.var("name", '').strip()
@@ -14161,11 +14162,12 @@ def mode_edit_custom_attr(phase, what):
             else:
                 log_pending(SYNCRESTART, None, "edit-%sattr" % what, _("Changed title of %s attribute %s") % (what, name))
             attr.update({
-                'title'         : title,
-                'topic'         : topic,
-                'help'          : help,
-                'user_editable' : user_editable,
-                'show_in_table' : show_in_table,
+                'title'            : title,
+                'topic'            : topic,
+                'help'             : help,
+                'user_editable'    : user_editable,
+                'show_in_table'    : show_in_table,
+                'add_custom_macro' : add_custom_macro,
             })
 
             save_custom_attrs(all_attrs)
@@ -14216,6 +14218,11 @@ def mode_edit_custom_attr(phase, what):
     html.help(_('This attribute is only visibile on the detail pages by default, but '
                 'you can also make it visible in the overview tables.'))
     html.checkbox('show_in_table', attr.get('show_in_table', False))
+
+    forms.section(_('Add as Custom Macro'))
+    html.help(_('The attribute can be added to the contact definiton in order  '
+                'to use it for notifications.'))
+    html.checkbox('add_custom_macro', attr.get('add_custom_macro', False))
 
     forms.end()
     html.button("save", _("Save"))

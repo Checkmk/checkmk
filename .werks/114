@@ -1,0 +1,10 @@
+Title: User Custom Attributes can now be exported to the core
+Level: 1
+Component: wato
+Version: 1.2.5i1
+Date: 1389279133
+Class: feature
+
+The Wato User Management has a feature to create Custom Attributes for users.
+This Attributes can now be used as custom macros for the monitoring core. The
+"Edit User Attribute" Dialog now has the option: "Add as Custom Macro".

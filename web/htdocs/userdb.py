@@ -166,12 +166,13 @@ multisite_dir = defaults.default_config_dir + "/multisite.d/wato/"
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-def declare_user_attribute(name, vs, user_editable = True, permission = None, show_in_table = False, topic = None):
+def declare_user_attribute(name, vs, user_editable = True, permission = None, show_in_table = False, topic = None, add_custom_macro = False):
     user_attributes[name] = {
-        'valuespec':     vs,
-        'user_editable': user_editable,
-        'show_in_table': show_in_table,
-        'topic':         topic and topic or 'personal',
+        'valuespec'         : vs,
+        'user_editable'     : user_editable,
+        'show_in_table'     : show_in_table,
+        'topic'             : topic and topic or 'personal',
+        'add_custom_macro'  : add_custom_macro,
     }
     # Permission needed for editing this attribute
     if permission:
@@ -354,6 +355,13 @@ def split_dict(d, keylist, positive):
 
 def save_users(profiles):
     custom_values = user_attributes.keys()
+    
+    # Add custom macros
+    core_custom_macros =  [ k for k,o in user_attributes.items() if o.get('add_custom_macro') ]
+    for user in profiles.keys():
+        for macro in core_custom_macros:
+            if profiles[user].get(macro):
+                profiles[user]['_'+macro] = profiles[user][macro]
 
     # Keys not to put into contact definitions for Check_MK
     non_contact_keys = [
@@ -614,6 +622,7 @@ def declare_custom_user_attrs():
             user_editable = attr['user_editable'],
             show_in_table = attr.get('show_in_table', False),
             topic = attr.get('topic', 'personal'),
+            add_custom_macro = attr.get('add_custom_macro', False )
         )
 
 #.

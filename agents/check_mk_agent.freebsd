@@ -129,14 +129,16 @@ echo '<<<ps>>>'
 COLUMNS=10000
 ps ax -o user,vsz,rss,pcpu,command | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
 
-# Memory Usage
-# currently we'll need sysutils/muse for this.
-if [ -x /usr/local/bin/muse ]
-   then 
-	echo '<<<mem>>>'
-# 					yes, i don't know sed well.
-	muse -k 2>/dev/null | sed 's/Total/MemTotal/' | sed 's/Free/MemFree/'
-        swapinfo -k 1K | tail -n 1 | awk '{ print "SwapTotal: "$2" kB\nSwapFree: "$4" kB" }'
+# Memory Usage. First we try statgrab, since
+# muse does not seem to support >4GB
+if [ -x /usr/local/bin/statgrab ] ; then
+    echo '<<<mem>>>'
+    statgrab -K mem.total mem.free swap.total swap.free | \
+    awk '{gsub(/swap\./,"Swap");}{gsub(/mem\./,"Mem");}{gsub(/tot/,"Tot");}{gsub(/free/,"Free");} { print $1":  "$3" kB"}'
+elif [ -x /usr/local/bin/muse ] ; then
+    echo '<<<mem>>>'
+    muse -k 2>/dev/null | sed 's/Total/MemTotal/' | sed 's/Free/MemFree/'
+    swapinfo -k 1K | tail -n 1 | awk '{ print "SwapTotal: "$2" kB\nSwapFree: "$4" kB" }'
 fi
 
 

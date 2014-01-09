@@ -1,6 +1,6 @@
 title: EMC VNX Storage: iSCSI traffic on HBAs
 agents: emc
-catalog: hw/storage
+catalog: hw/storagehw/emc
 license: GPL
 distribution: check_mk
 description:

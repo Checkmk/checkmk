@@ -7,9 +7,14 @@ Version: 1.2.5i1
 Date: 1389277479
 Targetversion: future
 
-This feature allows to configure how spaces of VMs in esx hostsystem should be treated.
-Hostnames in the monitoring core generally are not allowed to have space.
-The new option -S (configurable via a WATO rule) can now set how to handle these spaces:<br>
-Option: -S cut -> The virtual machines name is cut after the first space<br>
-Option: -S underline -> All spaces of this virtual machine are replaced with underline
+This feature allows to configure how spaces of VMs of ESX should be treated.
+Hostnames in the monitoring core generally are not allowed to contain spaces.
+The new option <tt>-S</tt> (configurable via the WATO rule <i>Check state
+of VMWare ESX via vSphere</i>) can now set how to handle these spaces:
+
+<table>
+<tr><th>Option</th><th>Behaviour</th></tr>
+<tr><td class=tt>-S cut</td><td>The virtual machines name is cut after the first space</td></tr>
+<tr><td class=tt>-S underline</td><td>All spaces of this virtual machine are replaced with underline</td></tr>
+</table>
 

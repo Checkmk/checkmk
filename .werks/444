@@ -1,0 +1,10 @@
+Title: timemachine: do not inventorize check when timemachine is not used
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1389285719
+Targetversion: future
+
+

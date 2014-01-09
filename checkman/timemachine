@@ -12,11 +12,11 @@ description:
 
 examples:
  # set default levels to 21600 sec (6h) for WARN and 43200 sec (12h) for CRIT
- backup_timemachine_default_levels = { "age": ( 86400, 172800 ) }
+ timemachine_default_levels = { "age": ( 86400, 172800 ) }
 
  # Check timemachine backups on a box called MyMAC with default levels
  checks += [
-   ("MyMAC", "timemachine", None, backup_timemachine_default_levels),
+   ("MyMAC", "timemachine", None, timemachine_default_levels),
  ]
 
  # or use individual levels for warn and crit
@@ -33,6 +33,6 @@ parameters (dict): with the element
    in seconds
 
 [configuration]
-backup_timemachine_default_levels(dict): The standard levels for {WARN} and
+timemachine_default_levels(dict): The standard levels for {WARN} and
    {CRIT}, preset to { "age": ( 86400, 172800 ) } which is 1 day / 2 days
 

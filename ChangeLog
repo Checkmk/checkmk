@@ -16,6 +16,7 @@
     * 0322 FIX: timemachine: Check now also works if there are spaces in the name of the backup volume or the hostname
     * 0403 FIX: mem.used: Prefer statgrab on FreeBSD for supporting more than 4GB...
     * 0404 FIX: cups_queues: fix exception in case of alternative time format...
+    * 0444 FIX: timemachine: do not inventorize check when timemachine is not used
 
     Multisite:
     * 0425 FIX: Fix login loop bug in distributed environments with different auth secrets

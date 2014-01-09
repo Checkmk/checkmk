@@ -32,49 +32,51 @@
 # <<<timemachine>>>
 # Unable to locate machine directory for host.
 
-import datetime, time, re
 
-backup_timemachine_default_levels = { "age": ( 86400, 172800 ) } # 1d/2d
+factory_settings["timemachine_default_levels"] = {
+    "age": ( 86400, 172800 ) # 1d/2d
+}
+
 
 def inventory_timemachine(info):
-    return [(None, backup_timemachine_default_levels)]
+    if " ".join(info[0]) != "Unable to locate machine directory for host.":
+        return [ (None, {}) ]
+
 
 def check_timemachine(item, params, info):
-    message = " ".join(info[0])
-    if not re.match('/Volumes/.+/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9]$', message):
-        return 2, "Backup seems to have failed, message was: %s" % message
+    line = " ".join(info[0]) # We expect at least one line
+    if not line.startswith("/Volumes/"):
+        return 2, "Backup seems to have failed, message was: " + line
+
+    tokens       = line.split("/")
+    timestamp    = tokens[-1]
+    backup_timeb = time.strptime(timestamp, "%Y-%m-%d-%H%M%S")
+    backup_time  = time.mktime(backup_timeb)
+    backup_age   = time.time() - backup_time
+
+    if backup_age < 0:
+        return 3, "Timestamp of last backup is in the future: " + timestamp
+
+    infotext = "Last backup was at %s (%s ago)" % (
+                   time.strftime("%c", backup_timeb), get_age_human_readable(backup_age))
 
     warn, crit = params['age']
-    now = datetime.datetime.now()
-    tokens = message.split("/")
-    timestamp = tokens[-1]
-    state = 0
-    result = re.match('([0-9][0-9][0-9][0-9])-([0-9][0-9])-([0-9][0-9])-([0-9][0-9])([0-9][0-9])([0-9][0-9])', timestamp)
-    if result == None:
-        return 3, "Timestamp of last backup in unknown format: %s" % timestamp
-    y = int(result.group(1))
-    m = int(result.group(2))
-    d = int(result.group(3))
-    H = int(result.group(4))
-    M = int(result.group(5))
-    S = int(result.group(6))
-    backuptime = datetime.datetime( y, m, d, H, M, S)
-    maxage_warn = datetime.timedelta(seconds=warn)
-    maxage_crit = datetime.timedelta(seconds=crit)
-    backupage = now - backuptime
-
-    if backuptime > now:
-        return 1, "Time problem: The last backup has a timestamp in the future: %s" % backuptime
-    if backupage > maxage_warn:
-        state = 1
-    if backupage > maxage_crit:
+    if backup_age >= crit:
         state = 2
-    return state, "Last Backup was at %s (age %s)" % (backuptime, backupage)
+        infotext += ", more than %s ago" % get_age_human_readable(crit)
+    elif backup_age >= warn:
+        state = 1
+        infotext += ", more than %s ago" % get_age_human_readable(warn)
+    else:
+        state = 0
+
+    return state, infotext
+
 
 check_info["timemachine"] = {
-    "check_function"        : check_timemachine,
-    "inventory_function"    : inventory_timemachine,
-    "service_description"   : "Backup Timemachine",
-    "group"                 : "backup_timemachine",
-    "has_perfdata"          : False,
+    "check_function"          : check_timemachine,
+    "inventory_function"      : inventory_timemachine,
+    "default_levels_variable" : "timemachine_default_levels",
+    "service_description"     : "Backup Timemachine",
+    "group"                   : "backup_timemachine",
 }

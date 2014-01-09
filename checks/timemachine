@@ -40,13 +40,13 @@ def inventory_timemachine(info):
     return [(None, backup_timemachine_default_levels)]
 
 def check_timemachine(item, params, info):
-    if len(info[0]) > 1:
-        message = " ".join(info[0])
+    message = " ".join(info[0])
+    if not re.match('/Volumes/.+/[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9]$', message):
         return 2, "Backup seems to have failed, message was: %s" % message
 
     warn, crit = params['age']
     now = datetime.datetime.now()
-    tokens = info[0][0].split("/")
+    tokens = message.split("/")
     timestamp = tokens[-1]
     state = 0
     result = re.match('([0-9][0-9][0-9][0-9])-([0-9][0-9])-([0-9][0-9])-([0-9][0-9])([0-9][0-9])([0-9][0-9])', timestamp)

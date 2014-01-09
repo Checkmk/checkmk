@@ -1,0 +1,13 @@
+Title: agent_vsphere: Make handling of spaces in hostnames of ESX configurable
+Level: 1
+Component: checks
+Version: 1.2.4b4
+Date: 1389277479
+Class: feature
+
+This feature allows to configure how spaces of VMs in esx hostsystem should be treated.
+Hostnames in the monitoring core generally are not allowed to have space.
+The new option -S (configurable via a WATO rule) can now set how to handle these spaces:<br>
+Option: -S cut -> The virtual machines name is cut after the first space<br>
+Option: -S underline -> All spaces of this virtual machine are replaced with underline
+

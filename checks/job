@@ -48,12 +48,16 @@
 #max_res_kbytes 1984
 #avg_mem_kbytes 0
 
+factory_settings["job_default_levels"] = {
+        "age": ( 0, 0 ) # disabled as default
+}
+
 def inventory_job(info):
     inventory = []
     for line in info:
         if line[0] == '==>':
             item = ' '.join(line[1:-1])
-            inventory.append( (item, None) )
+            inventory.append( (item, {} ) )
     return inventory
 
 def job_parse_real_time(s):
@@ -91,7 +95,8 @@ def job_parse(item, info):
 
     return data
 
-def check_job(item, _no_params, info):
+def check_job(item, params, info):
+    warn, crit = params.get('age')
     job = job_parse(item, info)
     if not job:
         return 3, 'Got no information for this job'
@@ -124,6 +129,13 @@ def check_job(item, _no_params, info):
             display_value = get_age_human_readable(value)
         elif key == 'start_time':
             display_value = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(value) )
+            job_age = time.time() - value
+            if crit > 0 and job_age >= crit:
+                state = max(state, 2)
+                display_value += "(!!) (more than %s ago)" % get_age_human_readable(crit)
+            elif warn > 0 and job_age >= warn:
+                state = max(state, 1)
+                display_value += "(!!) (more than %s ago)" % get_age_human_readable(warn)
         else:
             display_value = value
 
@@ -133,9 +145,10 @@ def check_job(item, _no_params, info):
     return state, ', '.join(output), perfdata
 
 check_info["job"] = {
-    'check_function':          check_job,
-    'inventory_function':      inventory_job,
-    'service_description':     'Job %s',
-    'group':                   'job',
-    'has_perfdata':            True,
+    'check_function'          : check_job,
+    'inventory_function'      : inventory_job,
+    'service_description'     : 'Job %s',
+    'default_levels_variable' : 'job_default_levels',
+    'group'                   : 'job',
+    'has_perfdata'            : True,
 }

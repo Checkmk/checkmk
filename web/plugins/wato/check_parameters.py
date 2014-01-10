@@ -2483,6 +2483,28 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "job",
+    _("Age of jobs controlled by mk-job"),
+    Dictionary(
+        elements = [
+        ("age",
+          Tuple(
+            title = _("Maximum time since last start of job execution"),
+            elements = [
+                Age(title = _("Warning if above"), default_value = 0),
+                Age(title = _("Critical if above"), default_value = 0)
+            ]
+          )
+        )]
+    ),
+    TextAscii(
+        title = _("Job name"),
+    ),
+    None
+)
+
+register_check_parameters(
+    subgroup_applications,
     "mssql_counters_locks",
     _("MSSQL Locks"),
     Dictionary(

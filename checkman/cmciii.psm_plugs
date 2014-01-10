@@ -1,0 +1,21 @@
+title: Rittal CMC-III PSM Plugs 
+agents: snmp
+catalog: hw/environment
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the status of the power plugs of the
+ Rittal CMC-III power supply modules (PSM).
+ No limits are set in the check. The state given by the Rittal device is
+ taken as the state of the check as follows:
+ If the Rittal device returns {OK}, the check is {OK}. Otherwise
+ the check is {CRIT}.
+
+item:
+ None
+
+perfdata:
+ None
+
+inventory:
+ None

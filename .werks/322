@@ -1,0 +1,10 @@
+Title: timemachine: Check now also works if there are spaces in the name of the backup volume or the hostname
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.4b4
+Date: 1389255252
+Targetversion: future
+
+

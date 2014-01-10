@@ -55,6 +55,12 @@ soapdata_list = [
            ]
 
 
+def convert_hostname(h):
+    if opt_spaces == "cut":
+        return h.split()[0]
+    else:
+        return h.replace(" ", "_")
+
 # List of predefined SOAP requests
 # ( [{used_by_object}], {internal_id}, {SOAP telegram} )
 
@@ -157,12 +163,16 @@ OPTIONS:
   -c, --dump-counters           Simply dumping out all available counters and their values.
                                 This mode is meant for debugging and diagnostic purposes.
 
+  -S, --spaces HOW              How to handle spaces in hostnames. "cut": cut everyting
+                                after the first space, "underscore": replace with
+                                underscores. Default is "underscore".
+
 """)
 
-short_options = 'hi:u:s:Dat:H:cp'
+short_options = 'hi:u:s:Dat:H:cpS:'
 long_options  = [
     'help', 'user=', 'secret=', 'direct', 'agent', 'debug', 'modules=', 'timeout=', 'hostname=',
-    'dump-counters', 'tracefile=', "pysphere",
+    'dump-counters', 'tracefile=', "pysphere", "spaces=",
 ]
 
 opt_debug               = False
@@ -174,6 +184,7 @@ opt_hostname            = None
 opt_skip_placeholder_vm = False
 opt_pysphere            = False
 opt_tracefile           = None
+opt_spaces              = "underscore"
 
 error = None
 error_exit = 1
@@ -215,10 +226,14 @@ for o,a in opts:
         opt_hostname = a
     elif o in [ '-c', '--dump-counters' ]:
         opt_dump_counters = True
+    elif o in [ '-S', '--spaces']:
+        if a not in [ "cut", "underscore" ]:
+            usage()
+            sys.exit(1)
+        opt_spaces = a
     elif o in [ '-h', '--help' ]:
         usage()
         sys.exit(0)
-
 
 # vCenter only supports the classical slow vSphere agent (based on pysphere)
 # Also we do not support ESX 4.1 (yet).
@@ -558,7 +573,7 @@ if not error:
             for key in sorted(vms.keys()):
                 data = vms[key]
                 if data.get("name"):
-                    print "<<<<%s>>>>" % data.get("name").replace(" ", "_")
+                    print "<<<<%s>>>>" % convert_hostname(data.get("name"))
                     print "<<<esx_vsphere_vm>>>"
                     entries = list(data.items())
                     entries.sort()
@@ -581,7 +596,7 @@ if not error:
             for key in sorted(vms.keys()):
                 data = vms[key]
                 running_on = hostsystem_name.get(data.get("runtime.host"), data.get("runtime.host"))
-                print "virtualmachine\t%s\t%s\t%s" % (data.get("name").replace(" ", "_"), running_on, data.get("runtime.powerState"))
+                print "virtualmachine\t%s\t%s\t%s" % (convert_hostname(data.get("name")), running_on, data.get("runtime.powerState"))
 
     except Exception, e:
         if opt_debug:

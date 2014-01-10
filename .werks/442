@@ -1,0 +1,8 @@
+Title: dell_om_disks: Treat global host spare disks as OK, instead of WARN
+Level: 1
+Component: checks
+Version: 1.2.4b4
+Date: 1389187885
+Class: fix
+
+Thanks to Mathias Decker

@@ -50,6 +50,9 @@ def agent_vsphere_arguments(params, hostname, ipaddress):
     if params.get("skip_placeholder_vms", True):
         args += " -p"
 
+    if "spaces" in params:
+        args += ' --spaces %s' % params["spaces"]
+
     if "timeout" in params:
         args += ' --timeout %d' % params["timeout"]
 

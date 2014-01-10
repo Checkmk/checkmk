@@ -1,0 +1,9 @@
+Title: mem.used: Prefer statgrab on FreeBSD for supporting more than 4GB
+Level: 1
+Component: checks
+Version: 1.2.4b4
+Date: 1389263935
+Class: fix
+
+The <tt>check_mk_agent.freebsd<tt> now first tries to find <tt>statgrab</tt> and prefers
+that if found.

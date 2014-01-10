@@ -1,4 +1,4 @@
-Title: dell_om_disks: Treat global host spare disks as OK, instead of WARN
+Title: dell_om_disks: Treat global hot spare disks as OK, instead of WARN
 Level: 1
 Component: checks
 Class: fix

@@ -2497,6 +2497,7 @@ void section_mrpe(SOCKET &out)
     {
         mrpe_entry *entry = *it_mrpe;
         output(out, "(%s) %s ", entry->plugin_name, entry->service_description);
+        crash_log("(%s) %s ", entry->plugin_name, entry->service_description);
 
         FILE *f = _popen(entry->command_line, "r");
         if (!f) {
@@ -2504,6 +2505,7 @@ void section_mrpe(SOCKET &out)
             continue;
         }
 
+        crash_log("Script started -> collecting data");
         if (f) {
             char buffer[8192];
             int bytes = fread(buffer, 1, sizeof(buffer) - 1, f);
@@ -2521,6 +2523,7 @@ void section_mrpe(SOCKET &out)
             int nagios_code = status;
             output(out, "%d %s\n", nagios_code, plugin_output);
         }
+        crash_log("Script finished");
     }
 }
 

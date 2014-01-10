@@ -1,0 +1,14 @@
+Title: EventFilterState() based view filters handle all boxes unticked not as expected
+Component: multisite
+State: open
+Date: 2014-01-10 08:32:57
+Targetversion: 1.2.5i1
+Class: nastiness
+
+The view filter EventFilterState renders checkboxes of things, for example of states. If all boxes
+are unchecked, the filter behaves like all boxes are checked -> no filtering. The user expects that
+this filter setting makes the filter all rows out, means an empty result.
+
+The current implementation might be confusing. Either make the filter work as expected or make the
+filter aumomatically check all boxes when the last checkbox is unchecked. This should also show the
+user that excluding all states is senseless.

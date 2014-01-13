@@ -1,0 +1,8 @@
+Title: cisco_vpn_tunnel: Fixed typo who leads to an exception
+Level: 1
+Component: checks
+Version: 1.2.4b5
+Date: 1389603991
+Class: fix
+
+

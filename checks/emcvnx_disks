@@ -130,7 +130,12 @@ def parse_emcvnx_disks(info):
 
 
 def inventory_emcvnx_disks(info):
-    return [ (disk, None) for disk in parse_emcvnx_disks(info).keys() ]
+    parsed = parse_emcvnx_disks(info)
+    inventory = []
+    for disk in parsed:
+        if parsed[disk]["state"] != "Empty":
+            inventory.append((disk, None))
+    return inventory
 
 
 def check_emcvnx_disks(item, _no_params, info):

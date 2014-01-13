@@ -82,6 +82,9 @@
 def parse_emcvnx_hwstatus(info):
     parsed = {}
     for line in info:
+	# recognice Enclosures by a line like
+	# DAE6S Bus 0 Enclosure 1
+	# with maybe an additional error message if Overall Status is not ok
         if len(line) > 3 and line[1] == "Bus" and line[3] == "Enclosure":
             encid = line[2] + "/" + line[4]
             enc = {}
@@ -90,6 +93,19 @@ def parse_emcvnx_hwstatus(info):
                 enc["Overall Status"] = line[5].replace("*", "")
             else:
                 enc["Overall Status"] = "No Errors Reported"
+	# recognice Enclosures by a line like
+	# SPE5 Enclosure SPE
+	# with maybe an additional error message if Overall Status is not ok
+        elif len(line) > 2 and line[1] == "Enclosure":
+            encid = line[2]
+            enc = {}
+            parsed[encid] = enc
+            if len(line) > 3:
+                enc["Overall Status"] = line[3].replace("*", "")
+            else:
+                enc["Overall Status"] = "No Errors Reported"
+	# gather additional information about an Enclosure found in one
+	# of the cases above
         elif len(line) > 2 and line[-2] == "State:":
             if line[0] == "SP":
                 device = line[0] + " " + line[1]

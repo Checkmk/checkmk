@@ -297,6 +297,15 @@ def perfometer_temperature_multi(row, check_command, perf_data):
 
 perfometers["check_mk-brocade_mlx_temp"] = perfometer_temperature_multi
 
+def perfometer_users(row, check_command, perf_data):
+    state = row["service_state"]
+    color = "#39f"
+    value = float(perf_data[0][1])
+    crit = savefloat(perf_data[0][4])
+    return u"%d users" % int(value), perfometer_logarithmic(value, 50, 2, color)
+
+perfometers["check_mk-hitachi_hnas_cifs"] = perfometer_users
+
 def perfometer_blower(row, check_command, perf_data):
     rpm = saveint(perf_data[0][1])
     perc = rpm / 10000.0 * 100.0

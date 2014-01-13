@@ -4,6 +4,7 @@
     Checks & Agents:
     * 0077 cmciii.psm_current, cmciii_psm_plugs, cmciii_io, cmciii.access, cmciii.temp, cmciii.can_current, cmciii.sensor, cmciii.state: new sub checks included in one new check cmcmiii superseding and improving several previous checks of the Rittal CMCIII device...
             NOTE: Please refer to the migration notes!
+    * 0116 FIX: cisco_vpn_tunnel: Fixed typo who leads to an exception
 
 
 1.2.4b4:

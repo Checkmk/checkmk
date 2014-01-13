@@ -75,33 +75,43 @@
 import bi # needed for aggregation icon
 
 multisite_painter_options["pnpview"] = {
- "title"   : _("PNP Timerange"),
- "default" : "1",
- "values"  : [ ("0", _("4 Hours")),  ("1", _("25 Hours")),
-               ("2", _("One Week")), ("3", _("One Month")),
-               ("4", _("One Year")), ("", _("All")) ]
+    'valuespec' : DropdownChoice(
+        title = _("PNP Timerange"),
+        default_value = '1',
+        choices = [
+            ("0", _("4 Hours")),  ("1", _("25 Hours")),
+            ("2", _("One Week")), ("3", _("One Month")),
+            ("4", _("One Year")), ("", _("All"))
+        ],
+    )
 }
 
 multisite_painter_options["ts_format"] = {
- "title"   : _("Time stamp format"),
- "default" : config.default_ts_format,
- "values"  : [
-     ("mixed", _("Mixed")),
-     ("abs", _("Absolute")),
-     ("rel", _("Relative")),
-     ("both", _("Both")),
-     ("epoch", _("Unix Timestamp (Epoch)")),
-  ]
+    'valuespec': DropdownChoice(
+        title = _("Time stamp format"),
+        default_value = config.default_ts_format,
+        choices = [
+            ("mixed", _("Mixed")),
+            ("abs",   _("Absolute")),
+            ("rel",   _("Relative")),
+            ("both",  _("Both")),
+            ("epoch", _("Unix Timestamp (Epoch)")),
+        ],
+    )
 }
 
 multisite_painter_options["ts_date"] = {
- "title" : _("Date format"),
- "default" : "%Y-%m-%d",
- "values" : [ ("%Y-%m-%d", "1970-12-18"),
-              ("%d.%m.%Y", "18.12.1970"),
-              ("%m/%d/%Y", "12/18/1970"),
-              ("%d.%m.",   "18.12."),
-              ("%m/%d",    "12/18") ]
+    'valuespec' : DropdownChoice(
+        title = _("Date format"),
+        default_value = "%Y-%m-%d",
+        choices = [
+            ("%Y-%m-%d", "1970-12-18"),
+            ("%d.%m.%Y", "18.12.1970"),
+            ("%m/%d/%Y", "12/18/1970"),
+            ("%d.%m.",   "18.12."),
+            ("%m/%d",    "12/18")
+        ],
+    )
 }
 
 # This helper function returns the value of the given custom var

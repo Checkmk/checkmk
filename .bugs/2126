@@ -1,0 +1,13 @@
+Title: Event hostname / address filter does not work as user expects
+Component: ec
+State: open
+Date: 2014-01-13 14:52:50
+Targetversion: 1.2.5i1
+Class: nastiness
+
+The "original hostname / filter" painter displays either the name of the host or the
+value of the host IP address. But the equal named filter only takes the original host
+IP address into account and does not filter by the host name.
+
+When knowing the technical details this seems to be correct, but the users expect an
+other behaviour.

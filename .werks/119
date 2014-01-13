@@ -1,0 +1,9 @@
+Title: stulz_humidity: Fixed lower thresholds
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1389619595
+
+The check thresholds for warning produced critical before.

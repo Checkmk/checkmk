@@ -94,6 +94,7 @@
     * 0404 FIX: cups_queues: fix exception in case of alternative time format...
     * 0444 FIX: timemachine: do not inventorize check when timemachine is not used
     * 0116 FIX: cisco_vpn_tunnel: Fixed typo that lead to an exception
+    * 0118 FIX: stulz_humidity: Fixed coloring in pnp template...
 
     Multisite:
     * 0371 Added log class filter to hostsvcevents view

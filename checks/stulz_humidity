@@ -42,11 +42,11 @@ def check_stulz_humidity(item, params, info):
             elif humidity >= warnhigh:
                 state = 1
                 msg = "to high (Levels Warning/Critical %d/%d) " % ( warnhigh, crithigh )
+            elif humidity <= warnlow and humidity > critlow:
+                state = 1
+                msg = "to low (Levels Warning/Critical %d/%d) " % ( warnlow, critlow )
             elif humidity <= critlow:
                 state = 2
-                msg = "to low (Levels Warning/Critical %d/%d) " % ( warnlow, critlow )
-            elif humidity <= warnlow:
-                state = 1
                 msg = "to low (Levels Warning/Critical %d/%d) " % ( warnlow, critlow )
             message = " Current Humidity: %.2f%% %s" % ( humidity, msg )
             perf = [ ('humidity', humidity, critlow, warnlow, warnhigh, crithigh ) ]

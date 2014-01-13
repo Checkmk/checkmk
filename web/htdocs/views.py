@@ -141,10 +141,13 @@ def show_painter_options(painter_options):
     html.begin_form("painteroptions")
     forms.header(_("Display Options"))
     for on in painter_options:
-        opt = multisite_painter_options[on]
-        forms.section(opt["title"])
-        html.select(on, opt["values"], get_painter_option(on), "submit();" )
+        vs = multisite_painter_options[on]['valuespec']
+        forms.section(vs.title())
+        vs.render_input('po_' + on, get_painter_option(on))
     forms.end()
+
+    html.button("painter_options", _("Submit"), "submit")
+
     html.hidden_fields()
     html.end_form()
     html.write('</div>')
@@ -1589,26 +1592,31 @@ def view_options(viewname):
 
     if config.may("general.painter_options"):
         for on, opt in multisite_painter_options.items():
-            if html.has_var(on):
+            vs = opt['valuespec']
+            value = vs.from_html_vars('po_' + on)
+            if value is None:
+                value = vs.default_value()
+
+            old_value = v.get(on)
+
+            v[on] = value
+            opt['value'] = value
+
+            if v[on] != old_value:
                 must_save = True
-                # Make sure only allowed values are returned
-                value = html.var(on)
-                for val, title in opt["values"]:
-                    if value == val:
-                        v[on] = value
-            elif on not in v:
-                v[on] = opt["default"]
-            opt["value"] = v[on]
 
     else:
         for on, opt in multisite_painter_options.items():
             if on in v:
                 del v[on]
-            opt["value"] = None
+                must_save = True
+            if 'value' in opt:
+                del opt['value']
 
     if must_save:
         vo[viewname] = v
         config.save_user_file("viewoptions", vo)
+
     return v
 
 
@@ -1843,8 +1851,8 @@ def show_context_links(thisview, active_filters, show_filters, display_options,
                   (thisview["owner"], thisview["name"], backurl)
         html.context_button(_("Edit View"), url, "edit", id="edit", bestof=config.context_buttons_to_show)
 
-        if show_availability:
-            html.context_button(_("Availability"), html.makeuri([("mode", "availability")]), "availability")
+    if show_availability:
+        html.context_button(_("Availability"), html.makeuri([("mode", "availability")]), "availability")
 
     if 'B' in display_options:
         execute_hooks('buttons-end')
@@ -2635,8 +2643,8 @@ def group_value(row, group_painters):
 def get_painter_option(name):
     opt = multisite_painter_options[name]
     if not config.may("general.painter_options"):
-        return opt["default"]
-    return opt.get("value", opt["default"])
+        return opt['valuespec'].default_value()
+    return opt.get("value", opt['valuespec'].default_value())
 
 def get_host_tags(row):
     for name, val in zip(row["host_custom_variable_names"],

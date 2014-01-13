@@ -26,6 +26,7 @@
 
 #<<<job>>>
 #==> asd ASD <==
+#start_time 1389355839
 #exit_code 0
 #real_time 0:00.00
 #user_time 0.00
@@ -37,6 +38,7 @@
 #
 #
 #==> test <==
+#start_time 1389352839
 #exit_code 0
 #real_time 0:00.00
 #user_time 0.00
@@ -46,10 +48,17 @@
 #max_res_kbytes 1984
 #avg_mem_kbytes 0
 
-import datetime
+factory_settings["job_default_levels"] = {
+        "age": ( 0, 0 ) # disabled as default
+}
 
 def inventory_job(info):
-    return [ (' '.join(l[1:-1]), None) for l in info if l[0] == '==>' ]
+    inventory = []
+    for line in info:
+        if line[0] == '==>':
+            item = ' '.join(line[1:-1])
+            inventory.append( (item, {} ) )
+    return inventory
 
 def job_parse_real_time(s):
     parts = s.split(':')
@@ -77,10 +86,8 @@ def job_parse(item, info):
                 val = job_parse_real_time(val)
             elif key in [ 'user_time', 'system_time' ]:
                 val = float(val)
-            elif key in [ 'exit_code', 'invol_context_switches', 'vol_context_switches' ]:
+            elif key in [ 'exit_code', 'invol_context_switches', 'vol_context_switches', 'start_time' ]:
                 val = int(val)
-            elif key == 'start_time':
-                val = datetime.datetime.fromtimestamp(int(val))
             elif key in [ 'max_res_kbytes', 'avg_mem_kbytes' ]:
                 key = key.replace('kbytes', 'bytes')
                 val = int(val) * 1000
@@ -88,7 +95,8 @@ def job_parse(item, info):
 
     return data
 
-def check_job(item, _no_params, info):
+def check_job(item, params, info):
+    warn, crit = params.get('age')
     job = job_parse(item, info)
     if not job:
         return 3, 'Got no information for this job'
@@ -103,9 +111,8 @@ def check_job(item, _no_params, info):
         txt += ' (!!)'
     output.append(txt)
 
-    output.append('Started: %s' % job['start_time'].strftime('%Y-%m-%d %H:%M:%S'))
-
     for key, title, value in [
+        ('start_time',             'Started',                 job['start_time']),
         ('real_time',              'Real-Time',               job['real_time']),
         ('user_time',              'User-Time',               job['user_time']),
         ('system_time',            'System-Time',             job['system_time']),
@@ -120,6 +127,15 @@ def check_job(item, _no_params, info):
             display_value = get_bytes_human_readable(value, 1000)
         elif key in [ 'real_time', 'user_time', 'system_time' ]:
             display_value = get_age_human_readable(value)
+        elif key == 'start_time':
+            display_value = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(value) )
+            job_age = time.time() - value
+            if crit > 0 and job_age >= crit:
+                state = max(state, 2)
+                display_value += "(!!) (more than %s ago)" % get_age_human_readable(crit)
+            elif warn > 0 and job_age >= warn:
+                state = max(state, 1)
+                display_value += "(!!) (more than %s ago)" % get_age_human_readable(warn)
         else:
             display_value = value
 
@@ -129,9 +145,10 @@ def check_job(item, _no_params, info):
     return state, ', '.join(output), perfdata
 
 check_info["job"] = {
-    'check_function':          check_job,
-    'inventory_function':      inventory_job,
-    'service_description':     'Job %s',
-    'group':                   'job',
-    'has_perfdata':            True,
+    'check_function'          : check_job,
+    'inventory_function'      : inventory_job,
+    'service_description'     : 'Job %s',
+    'default_levels_variable' : 'job_default_levels',
+    'group'                   : 'job',
+    'has_perfdata'            : True,
 }

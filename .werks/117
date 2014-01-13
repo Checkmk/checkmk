@@ -1,0 +1,9 @@
+Title: Availability button is now visible for users without the right to edit views
+Level: 1
+Component: multisite
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1389610935
+
+

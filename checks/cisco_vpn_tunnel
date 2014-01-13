@@ -41,7 +41,7 @@ def check_cisco_vpn_tunnel(item, params, info):
     tunnels = params.get('tunnels',[])
     tunnel_alias  = ""
     if not params.get('state'):
-        tunnel_wort_state = 2
+        tunnel_worst_state = 2
     else:
         tunnel_worst_state  = params.get('state')
     if item in [tunnel[0] for tunnel in tunnels]:

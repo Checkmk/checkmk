@@ -1,4 +1,4 @@
-Title: cisco_vpn_tunnel: Fixed typo who leads to an exception
+Title: cisco_vpn_tunnel: Fixed typo that lead to an exception
 Level: 1
 Component: checks
 Class: fix

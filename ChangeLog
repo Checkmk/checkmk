@@ -93,7 +93,7 @@
     * 0403 FIX: mem.used: Prefer statgrab on FreeBSD for supporting more than 4GB...
     * 0404 FIX: cups_queues: fix exception in case of alternative time format...
     * 0444 FIX: timemachine: do not inventorize check when timemachine is not used
-    * 0116 FIX: cisco_vpn_tunnel: Fixed typo who leads to an exception
+    * 0116 FIX: cisco_vpn_tunnel: Fixed typo that lead to an exception
 
     Multisite:
     * 0371 Added log class filter to hostsvcevents view

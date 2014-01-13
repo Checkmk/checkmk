@@ -4,6 +4,9 @@
             NOTE: Please refer to the migration notes!
     * 0116 FIX: cisco_vpn_tunnel: Fixed typo who leads to an exception
 
+    Multisite:
+    * 0117 FIX: Availability button is now visible for users without the right to edit views
+
 
 1.2.4b4:
     Core & Setup:

@@ -1843,8 +1843,8 @@ def show_context_links(thisview, active_filters, show_filters, display_options,
                   (thisview["owner"], thisview["name"], backurl)
         html.context_button(_("Edit View"), url, "edit", id="edit", bestof=config.context_buttons_to_show)
 
-        if show_availability:
-            html.context_button(_("Availability"), html.makeuri([("mode", "availability")]), "availability")
+    if show_availability:
+        html.context_button(_("Availability"), html.makeuri([("mode", "availability")]), "availability")
 
     if 'B' in display_options:
         execute_hooks('buttons-end')

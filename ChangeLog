@@ -122,6 +122,7 @@
     * 0423 FIX: Users are not logged out anymore during changing their own passwords...
     * 0424 FIX: Improved error handling in case of incorrect auth config in distributed WATO environments
     * 0425 FIX: Fix login loop bug in distributed environments with different auth secrets
+    * 0117 FIX: Availability button is now visible for users without the right to edit views
 
     WATO:
     * 0308 Multisite can now set rotation view permissions for NagVis...

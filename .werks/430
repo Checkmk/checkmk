@@ -1,0 +1,13 @@
+Title: It is now possible to define custom time ranges in PNP graph search
+Level: 2
+Component: multisite
+Version: 1.2.5i1
+Date: 1389610605
+Class: feature
+
+A display option for choosing the time range to be shown in the searched graphs
+has been added to the Graph Search view. This option can be used to specify custom
+time ranges, either relative or absolute date/time specifications.
+
+Additionally you can also use the former existing PNP view option to choose the
+level of detail (RRAs / views).

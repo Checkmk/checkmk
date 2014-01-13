@@ -2661,6 +2661,35 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "f5_connections",
+    _("F5 Loadbalancer Connections"),
+    Dictionary(
+        elements = [
+            ( "conns",
+                Tuple(
+                    title = _("Max. number of connections"),
+                    elements = [
+                       Integer(title = _("Warning if above"), default_value = 25000 ),
+                       Integer(title = _("Critical if above"), default_value = 30000 ) ,
+                    ]
+                )
+            ),
+            ( "ssl_conns",
+                Tuple(
+                    title = _("Max. number of ssl connections"),
+                    elements = [
+                       Integer(title = _("Warning if above"), default_value = 25000 ),
+                       Integer(title = _("Critical if above"), default_value = 30000 ),
+                    ]
+                )
+            ),
+        ]),
+    None,
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_applications,
     "dbsize",
     _("Size of MySQL/PostgresQL databases"),
     Optional(

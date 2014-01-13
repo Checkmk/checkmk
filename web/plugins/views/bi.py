@@ -171,37 +171,54 @@ multisite_painters["aggr_hosts_services"] = {
 }
 
 multisite_painter_options["aggr_expand"] = {
- "title"   : _("Initial expansion of aggregations"),
- "default" : "0",
- "values"  : [ ("0", "collapsed"), ("1", "first level"), ("2", "two levels"), ("3", "three levels"), ("999", "complete")]
+    'valuespec' : DropdownChoice(
+        title = _("Initial expansion of aggregations"),
+        default_value = "0",
+        choices = [
+            ("0",   _("collapsed")),
+            ("1",   _("first level")),
+            ("2",   _("two levels")),
+            ("3",   _("three levels")),
+            ("999", _("complete"))
+        ]
+    )
 }
 
 multisite_painter_options["aggr_onlyproblems"] = {
- "title"   : _("Show only problems"),
- "default" : "0",
- "values"  : [ ("0", "show all"), ("1", "show only problems")]
+    'valuespec' : DropdownChoice(
+        title = _("Show only problems"),
+        default_value = "0",
+        choices = [
+            ("0", _("show all")),
+            ("1", _("show only problems"))
+        ],
+    )
 }
 
 multisite_painter_options["aggr_treetype"] = {
- "title"   : _("Type of tree layout"),
- "default" : "foldable",
- "values"  : [
-    ("foldable",     _("foldable")),
-    ("boxes",        _("boxes")),
-    ("boxes-omit-root", _("boxes (omit root)")),
-    ("bottom-up",    _("bottom up")),
-    ("top-down",     _("top down"))]
+    'valuespec' : DropdownChoice(
+        title = _("Type of tree layout"),
+        default_value = "foldable",
+        choices = [
+            ("foldable",        _("foldable")),
+            ("boxes",           _("boxes")),
+            ("boxes-omit-root", _("boxes (omit root)")),
+            ("bottom-up",       _("bottom up")),
+            ("top-down",        _("top down")),
+        ],
+    )
 }
 
 multisite_painter_options["aggr_wrap"] = {
- "title"   : _("Handling of too long texts"),
- "default" : "wrap",
- "values"  : [ ("wrap", "wrap"), ("nowrap", "don't wrap")]
+    'valuespec' : DropdownChoice(
+         title = _("Handling of too long texts"),
+         default_value = "wrap",
+         choices = [
+            ("wrap",   _("wrap")),
+            ("nowrap", _("don't wrap")),
+        ],
+    )
 }
-
-
-
-
 
 def paint_aggr_tree_ltr(row, mirror):
     wrap = get_painter_option("aggr_wrap")

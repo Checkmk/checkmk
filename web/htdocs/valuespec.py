@@ -1509,11 +1509,15 @@ class AbsoluteDate(ValueSpec):
         self._include_time = kwargs.get("include_time", False)
         self._format = kwargs.get("format", self._include_time and "%F %T" or "%F")
         self._default_value = kwargs.get("default_value", None)
+        self._allow_empty = kwargs.get('allow_empty', False)
 
     def default_value(self):
         if self._default_value != None:
             return self._default_value
         else:
+            if self._allow_empty:
+                return None
+
             if self._include_time:
                 return time.time()
             else:
@@ -1602,7 +1606,10 @@ class AbsoluteDate(ValueSpec):
                 varname = varprefix + "_" + what
                 part = int(html.var(varname))
             except:
-                raise MKUserError(varname, _("Please enter a correct number"))
+                if self._allow_empty:
+                    return None
+                else:
+                    raise MKUserError(varname, _("Please enter a correct number"))
             if part < mmin or part > mmax:
                 raise MKUserError(varname, _("The value for %s must be between %d and %d" % (_(what), mmin, mmax)))
             parts.append(part)
@@ -1619,12 +1626,14 @@ class AbsoluteDate(ValueSpec):
         return time.mktime(tuple(parts))
 
     def validate_datatype(self, value, varprefix):
+        if value == None and self._allow_empty:
+            return
         if type(value) not in [ int, float ]:
             raise MKUserError(varprefix, _("The type of the timestamp must be int or float, but is %s") %
                               type_name(value))
 
     def validate_value(self, value, varprefix):
-        if value < 0 or int(value) > (2**31-1):
+        if (not self._allow_empty and value == None) or value < 0 or int(value) > (2**31-1):
             return MKUserError(varprefix, _("%s is not a valid UNIX timestamp") % value)
         ValueSpec.custom_validate(self, value, varprefix)
 
@@ -1759,6 +1768,128 @@ class TimeofdayRange(ValueSpec):
         if value[0] > value[1]:
             raise MKUserError(varprefix + "_until", _("The <i>from</i> time must not be greater then the <i>until</i> time."))
         ValueSpec.custom_validate(self, value, varprefix)
+
+class Timerange(CascadingDropdown):
+    def __init__(self, **kwargs):
+        self._title = _('Time range')
+
+        if kwargs.get('allow_empty', False):
+            kwargs['choices'] = [
+                (None, ''),
+            ]
+        else:
+            kwargs['choices'] = []
+
+        kwargs['choices'] += [
+            ( "d0",  _("Today") ),
+            ( "d1",  _("Yesterday") ),
+
+            ( "w0",  _("This week") ),
+            ( "w1",  _("Last week") ),
+
+            ( "m0",  _("This month") ),
+            ( "m1",  _("Last month") ),
+
+            ( "y0",  _("This year") ),
+            ( "y1",  _("Last year") ),
+
+            ( "age", _("The last..."), Age() ),
+            ( "date", _("Explicit date..."),
+                Tuple(
+                    orientation = "horizontal",
+                    title_br = False,
+                    elements = [
+                        AbsoluteDate(title = _("From:")),
+                        AbsoluteDate(title = _("To:")),
+                    ],
+                ),
+            ),
+        ]
+
+        if kwargs.get('include_time', False):
+            kwargs['choices'].append(
+                ( "time", _("Explicit time..."),
+                    Tuple(
+                        orientation = "horizontal",
+                        title_br = False,
+                        elements = [
+                            AbsoluteDate(
+                                title = _("From:"),
+                                include_time = True,
+                            ),
+                            AbsoluteDate(
+                                title = _("To:"),
+                                include_time = True,
+                            ),
+                        ],
+                    ),
+                )
+            )
+
+        CascadingDropdown.__init__(self, **kwargs)
+
+    def compute_range(self, rangespec):
+        now = time.time()
+        if rangespec[0] == 'age':
+            from_time = now - rangespec[1]
+            until_time = now
+            title = _("The last ") + Age().value_to_text(rangespec[1])
+            return (from_time, until_time), title
+        elif rangespec[0] in [ 'date', 'time' ]:
+            from_time, until_time = rangespec[1]
+            if from_time > until_time:
+                raise MKUserError("avo_rangespec_9_0_year", _("The end date must be after the start date"))
+            until_time += 86400 # Consider *end* of this day
+            title = AbsoluteDate().value_to_text(from_time) + " ... " + \
+                    AbsoluteDate().value_to_text(until_time)
+            return (from_time, until_time), title
+
+        else:
+            # year, month, day_of_month, hour, minute, second, day_of_week, day_of_year, is_daylightsavingtime
+            broken = list(time.localtime(now))
+            broken[3:6] = 0, 0, 0 # set time to 00:00:00
+            midnight = time.mktime(broken)
+
+            until_time = now
+            if rangespec[0] == 'd': # this/last Day
+                from_time = time.mktime(broken)
+                titles = _("Today"), _("Yesterday")
+
+            elif rangespec[0] == 'w': # week
+                from_time = midnight - (broken[6]) * 86400
+                titles = _("This week"), _("Last week")
+
+            elif rangespec[0] == 'm': # month
+                broken[2] = 1
+                from_time = time.mktime(broken)
+                titles = month_names[broken[1] - 1] + " " + str(broken[0]), \
+                         month_names[(broken[1] + 10) % 12] + " " + str(broken[0])
+
+            elif rangespec[0] == 'y': # year
+                broken[1:3] = [1, 1]
+                from_time = time.mktime(broken)
+                titles = str(broken[0]), str(broken[0]-1)
+
+            if rangespec[1] == '0':
+                return (from_time, now), titles[0]
+
+            else: # last (previous)
+                if rangespec[0] == 'd':
+                    return (from_time - 86400, from_time), titles[1]
+                elif rangespec[0] == 'w':
+                    return (from_time - 7 * 86400, from_time), titles[1]
+
+                until_time = from_time
+                from_broken = list(time.localtime(from_time))
+                if rangespec[0] == 'y':
+                    from_broken[0] -= 1
+                else: # m
+                    from_broken[1] -= 1
+                    if from_broken[1] == 0:
+                        from_broken[1] = 12
+                        from_broken[0] -= 1
+                return (time.mktime(from_broken), until_time), titles[1]
+
 
 # Make a configuration value optional, i.e. it may be None.
 # The user has a checkbox for activating the option. Example:

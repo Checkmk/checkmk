@@ -96,35 +96,8 @@ avoption_entries = [
   # Time range selection
   ( "rangespec",
     "double",
-    CascadingDropdown(
-        title = _("Time range"),
-        choices = [
-
-            ( "d0",  _("Today") ),
-            ( "d1",  _("Yesterday") ),
-
-            ( "w0",  _("This week") ),
-            ( "w1",  _("Last week") ),
-
-            ( "m0",  _("This month") ),
-            ( "m1",  _("Last month") ),
-
-            ( "y0",  _("This year") ),
-            ( "y1",  _("Last year") ),
-
-            ( "age", _("The last..."), Age() ),
-            ( "date", _("Explicit date..."),
-                Tuple(
-                    orientation = "horizontal",
-                    title_br = False,
-                    elements = [
-                        AbsoluteDate(title = _("From:")),
-                        AbsoluteDate(title = _("To:")),
-                    ],
-                ),
-            ),
-        ],
-        default_value = "m1",
+    Timerange(
+        default_value = 'm1',
     )
   ),
 
@@ -460,8 +433,13 @@ def render_availability_options():
                 html.add_user_error(e.varname, e.message)
                 is_open = True
 
+    range_vs = None
+    for name, height, vs in avoption_entries:
+        if name == 'rangespec':
+            range_vs = vs
+
     try:
-        range, range_title = compute_range(avoptions["rangespec"])
+        range, range_title = range_vs.compute_range(avoptions["rangespec"])
         avoptions["range"] = range, range_title
     except MKUserError, e:
         html.add_user_error(e.varname, e.message)
@@ -508,68 +486,6 @@ month_names = [
   _("May"),       _("June"),     _("July"),     _("August"),
   _("September"), _("October"),  _("November"), _("December")
 ]
-
-def compute_range(rangespec):
-    now = time.time()
-    if rangespec[0] == 'age':
-        from_time = now - rangespec[1]
-        until_time = now
-        title = _("The last ") + Age().value_to_text(rangespec[1])
-        return (from_time, until_time), title
-    elif rangespec[0] == 'date':
-        from_time, until_time = rangespec[1]
-        if from_time > until_time:
-            raise MKUserError("avo_rangespec_9_0_year", _("The end date must be after the start date"))
-        until_time += 86400 # Consider *end* of this day
-        title = AbsoluteDate().value_to_text(from_time) + " ... " + \
-                AbsoluteDate().value_to_text(until_time)
-        return (from_time, until_time), title
-
-    else:
-        # year, month, day_of_month, hour, minute, second, day_of_week, day_of_year, is_daylightsavingtime
-        broken = list(time.localtime(now))
-        broken[3:6] = 0, 0, 0 # set time to 00:00:00
-        midnight = time.mktime(broken)
-
-        until_time = now
-        if rangespec[0] == 'd': # this/last Day
-            from_time = time.mktime(broken)
-            titles = _("Today"), _("Yesterday")
-
-        elif rangespec[0] == 'w': # week
-            from_time = midnight - (broken[6]) * 86400
-            titles = _("This week"), _("Last week")
-
-        elif rangespec[0] == 'm': # month
-            broken[2] = 1
-            from_time = time.mktime(broken)
-            titles = month_names[broken[1] - 1] + " " + str(broken[0]), \
-                     month_names[(broken[1] + 10) % 12] + " " + str(broken[0])
-
-        elif rangespec[0] == 'y': # year
-            broken[1:3] = [1, 1]
-            from_time = time.mktime(broken)
-            titles = str(broken[0]), str(broken[0]-1)
-
-        if rangespec[1] == '0':
-            return (from_time, now), titles[0]
-
-        else: # last (previous)
-            if rangespec[0] == 'd':
-                return (from_time - 86400, from_time), titles[1]
-            elif rangespec[0] == 'w':
-                return (from_time - 7 * 86400, from_time), titles[1]
-
-            until_time = from_time
-            from_broken = list(time.localtime(from_time))
-            if rangespec[0] == 'y':
-                from_broken[0] -= 1
-            else: # m
-                from_broken[1] -= 1
-                if from_broken[1] == 0:
-                    from_broken[1] = 12
-                    from_broken[0] -= 1
-            return (time.mktime(from_broken), until_time), titles[1]
 
 def get_availability_data(datasource, filterheaders, range, only_sites, limit, single_object, include_output, avoptions):
     has_service = "service" in datasource["infos"]

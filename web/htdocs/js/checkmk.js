@@ -129,8 +129,9 @@ function get_url(url, handler, data, errorHandler, addAjaxId) {
     var addAjaxId = (typeof addAjaxId === "undefined") ? true : addAjaxId;
 
     // Dynamic part to prevent caching
+    var dyn = '';
     if (addAjaxId) {
-        var dyn = "_ajaxid="+Math.floor(Date.parse(new Date()) / 1000);
+        dyn = "_ajaxid="+Math.floor(Date.parse(new Date()) / 1000);
         if (url.indexOf('\?') !== -1) {
             dyn = "&"+dyn;
         } else {
@@ -494,6 +495,10 @@ function fallback_graphs(data) {
 
 function create_graph(data, params) {
     var urlvars = params + '&theme=multisite&baseurl='+data['base_url'];
+
+    if (typeof(data['start']) !== 'undefined' && typeof(data['end']) !== 'undefined')
+        urlvars += '&start='+data['start']+'&end='+data['end'];
+
     var container = document.getElementById(data['container']);
 
     var img = document.createElement('img');
@@ -515,13 +520,23 @@ function create_graph(data, params) {
     urlvars = null;
 }
 
-function render_pnp_graphs(container, site, host, service, pnpview, base_url, pnp_url, with_link) {
+function render_pnp_graphs(container, site, host, service, pnpview, base_url, pnp_url, with_link, from_ts, to_ts) {
+    from_ts = (typeof from_ts === 'undefined') ? null : from_ts;
+    to_ts   = (typeof to_ts === 'undefined') ? null : to_ts;
+
     var data = { 'container': container, 'base_url': base_url,
                  'pnp_url':   pnp_url,   'site':     site,
                  'host':      host,      'service':  service,
                  'with_link': with_link, 'view':     pnpview};
-    get_url(pnp_url + 'index.php/json?&host=' + encodeURIComponent(host) + '&srv=' + encodeURIComponent(service) + '&source=0&view=' + pnpview,
-        pnp_response_handler, data, pnp_error_response_handler, false);
+
+    if (from_ts !== null && to_ts !== null) {
+        data['start'] = from_ts;
+        data['end'] = to_ts;
+    }
+
+    var url = pnp_url + 'index.php/json?&host=' + encodeURIComponent(host)
+              + '&srv=' + encodeURIComponent(service) + '&source=0&view=' + pnpview;
+    get_url(url, pnp_response_handler, data, pnp_error_response_handler, false);
 }
 
 // Renders contents for the PNP hover menus

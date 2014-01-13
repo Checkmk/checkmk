@@ -1,0 +1,17 @@
+Title: cmciii.psm_current, cmciii_psm_plugs, cmciii_io, cmciii.access, cmciii.temp, cmciii.can_current, cmciii.sensor, cmciii.state: new sub checks included in one new check cmcmiii superseding and improving several previous checks of the Rittal CMCIII device
+Level: 1
+Component: checks
+Version: 1.2.4b5
+Date: 1389357115
+Class: incomp
+
+The sub checks included in this new check cmciii supersede the following
+old checks: cmciii_psm_current, cmciii_psm_plugs,
+cmciii_io, cmciii_pu_io, cmciii_pu_access, cmciii_pu_temp, cmciii_canbus,
+cmciii_state
+
+The new checks deliver significant better performance and unify the
+service description names.
+
+To switch from the old to the new checks you only need to re-inventorize
+your Rittal CMCIII device.

@@ -1,0 +1,8 @@
+Title: hitachi_hnas_cifs: new check for the number of users using a CIFS share
+Level: 2
+Component: checks
+Version: 1.2.5i1
+Date: 1389618206
+Class: feature
+
+

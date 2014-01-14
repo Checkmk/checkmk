@@ -481,12 +481,6 @@ def render_availability_options():
 
     return avoptions
 
-month_names = [
-  _("January"),   _("February"), _("March"),    _("April"),
-  _("May"),       _("June"),     _("July"),     _("August"),
-  _("September"), _("October"),  _("November"), _("December")
-]
-
 def get_availability_data(datasource, filterheaders, range, only_sites, limit, single_object, include_output, avoptions):
     has_service = "service" in datasource["infos"]
     av_filter = "Filter: time >= %d\nFilter: time <= %d\n" % range
@@ -901,7 +895,7 @@ def find_next_choord(broken, scale):
             broken[1] = 1
             broken[0] += 1
         epoch = time.mktime(broken)
-        title = "%s %d" % (month_names[broken[1]-1], broken[0])
+        title = "%s %d" % (valuespec.month_names[broken[1]-1], broken[0])
 
     dst = broken[8]
     if old_dst == 1 and dst == 0:

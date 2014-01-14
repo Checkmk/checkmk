@@ -42,7 +42,7 @@ setlocale(LC_ALL, 'C');
 
 # Determine if Bit or Byte.
 # Change multiplier and labels
-$unit = "B"; 
+$unit = "B";
 $unit_multiplier = 1;
 $vertical_label_name = "MByte/sec";
 if (strcmp($MIN[11], "0.0") == 0) {
@@ -91,9 +91,9 @@ if ($bandwidth > 0){
 }
 $ds_name[1] = 'Used bandwidth';
 $opt[1] = "--vertical-label \"$vertical_label_name\" -l -$range -u $range -X0 -b 1024 --title \"Used bandwidth $hostname / $servicedesc $bandwidthInfo\" ";
-$def[1] = 
+$def[1] =
   "HRULE:0#c0c0c0 ";
-  if ($mBandwidthH) 
+  if ($mBandwidthH)
       $def[1] .= "HRULE:$mBandwidthH#808080:\"Port speed\:  " . sprintf("%.1f", $bandwidth) . " ".$bwuom."$unit/s\\n\" ".
                  "HRULE:-$mBandwidthH#808080: ";
    if ($warn)
@@ -135,7 +135,7 @@ $def[1] =
   "";
 
 if (isset($DS[12])) {
-  $def[1] .= 
+  $def[1] .=
   "DEF:inbytesa=$RRDFILE[12]:$DS[12]:MAX ".
   "DEF:outbytesa=$RRDFILE[13]:$DS[13]:MAX ".
   "CDEF:intraffica=inbytesa,$unit_multiplier,* ".

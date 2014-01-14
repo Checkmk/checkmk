@@ -39,7 +39,7 @@ if (isset($DS[2])) {
 
     $opt[1] = "--vertical-label 'Throughput (MB/s)' -X0  --title \"FC Port throughput on $hostname\" ";
 
-    $def[1]  = 
+    $def[1]  =
                "HRULE:0#a0a0a0 ".
     # read
                "DEF:read=$RRD[read] ".
@@ -51,7 +51,7 @@ if (isset($DS[2])) {
 
     # read average as line in the same graph
     if (isset($RRD["read.avg"])) {
-        $def[1] .= 
+        $def[1] .=
                "DEF:read_avg=${RRD['read.avg']} ".
                "CDEF:read_avg_mb=read_avg,1048576,/ ".
                "LINE:read_avg_mb#202020 ";
@@ -81,7 +81,7 @@ if (isset($DS[2])) {
     }
 
 
-            
+
 }
 
 ?>

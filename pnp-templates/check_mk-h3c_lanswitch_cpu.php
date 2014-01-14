@@ -27,7 +27,7 @@ $desc = str_replace("_", " ", $servicedesc);
 
 $opt[1] = "--vertical-label 'CPU utilization %' -l0  -u 100 --title \"CPU Utilization $hostname $desc\" ";
 #
-$def[1] =  "DEF:util=$RRDFILE[1]:$DS[1]:MAX ". 
+$def[1] =  "DEF:util=$RRDFILE[1]:$DS[1]:MAX ".
            "CDEF:ok=util,$WARN[1],MIN ".
            "CDEF:warn=util,$CRIT[1],MIN ".
            "AREA:util#c0f020 ".

@@ -355,7 +355,7 @@ def split_dict(d, keylist, positive):
 
 def save_users(profiles):
     custom_values = user_attributes.keys()
-    
+
     # Add custom macros
     core_custom_macros =  [ k for k,o in user_attributes.items() if o.get('add_custom_macro') ]
     for user in profiles.keys():

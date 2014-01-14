@@ -120,7 +120,7 @@ def check_mem_windows(item, params, info):
         # Do averaging, if configured, just for matching the levels
         if "average" in params:
             average_min = params["average"]
-            timedif, used_kb = get_average("mem.win.%s" % paramname, 
+            timedif, used_kb = get_average("mem.win.%s" % paramname,
                                            now, used_kb, average_min, initialize_zero = False)
             used_mb  = used_kb / 1024.0
             free_mb  = (total_kb / 1024.0) - used_mb

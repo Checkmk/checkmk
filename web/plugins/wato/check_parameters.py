@@ -1150,7 +1150,7 @@ register_check_parameters(
                    default_value = 60,
                 )
             ),
-              
+
         ]),
     None,
     "dict"

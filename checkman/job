@@ -19,7 +19,7 @@ description:
  collected data to {/var/lib/check_mk_agent/job/<identifier>}. The agent sends
  all these data to the Check_MK server.
 
- The check is {CRITICAL} if the exit code of the job is not {0}, or if 
+ The check is {CRITICAL} if the exit code of the job is not {0}, or if
  warning or critical limits for the job age have been reached.
 
  Limits can be configured with WATO.

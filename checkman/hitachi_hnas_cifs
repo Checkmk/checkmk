@@ -8,7 +8,7 @@ description:
  storage system. The check always returns {OK}.
 
 item:
- The ID of the EVS plus the name of the CIFS share, separated by a space. 
+ The ID of the EVS plus the name of the CIFS share, separated by a space.
  E. g. 6 home
 
 perfdata:

@@ -37,7 +37,7 @@ $servicedesc = str_replace("_", " ", $servicedesc);
 
 $opt[1] = "--vertical-label 'I/O (Blocks/s)' -X0  --title \"iSCSI traffic $hostname / $servicedesc\" ";
 
-$def[1]  = 
+$def[1]  =
            "HRULE:0#a0a0a0 ".
 # read
            "DEF:read_blocks=$RRD[read_blocks] ".

@@ -59,7 +59,7 @@ $critgbtxt = sprintf("%.1f", $critgb);
 $opt[1] = "--vertical-label GB -l 0 -u $maxgb --title '$hostname: Filesystem $fstitle ($sizegb GB)' ";
 
 # First graph show current filesystem usage
-$def[1] = "DEF:mb=$RRDFILE[1]:$DS[1]:MAX "; 
+$def[1] = "DEF:mb=$RRDFILE[1]:$DS[1]:MAX ";
 $def[1] .= "CDEF:var1=mb,1024,/ ";
 $def[1] .= "AREA:var1#00ffc6:\"used space on $fsname\\n\" ";
 
@@ -84,7 +84,7 @@ if(isset($RRD['uncommitted'])) {
     $def[1] .= "GPRINT:uncommitted_gb:MAX:\"%6.2lf GB\l\" ";
 }
 
-$def[1] .= "LINE1:total_gb#226600 "; 
+$def[1] .= "LINE1:total_gb#226600 ";
 
 # Second graph is optional and shows trend. The MAX field
 # of the third variable contains (size of the filesystem in MB
@@ -95,7 +95,7 @@ if (isset($RRD['growth'])) {
     $hours = 1.0 / ($size_mb_per_hours / $size_mb);
     $range = sprintf("%.0fh", $hours);
 
-    // Current growth / shrinking. This value is give as MB / 24 hours. 
+    // Current growth / shrinking. This value is give as MB / 24 hours.
     // Note: This has changed in 1.1.13i3. Prior it was MB / trend_range!
     $opt[2] = "--vertical-label '+/- MB / 24h' -l -1 -u 1 -X0 --title '$hostname: Growth of $fstitle' ";
     $def[2] = "DEF:growth_max=${RRD['growth']} ";

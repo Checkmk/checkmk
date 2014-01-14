@@ -48,7 +48,7 @@ if($bandwidth > $base * $base * $base) {
 
 $ds_name[1] = 'QoS Class Traffic';
 $opt[1] = "--vertical-label \"MBit/sec\" -X0 -b 1000 --title \"$hostname / $servicedesc\" ";
-$def[1] = 
+$def[1] =
   "HRULE:0#c0c0c0 ".
   "HRULE:$bandwidth#808080:\"Interface speed\:  " . sprintf("%.1f", $bandwidth) . " ".$bwuom."Bit/s\\n\" ".
   "HRULE:$warn#FFE000:\"Warning\:          " . sprintf("%.1f", $warn) . " ".$bwuom."Bit/s\\n\" ".

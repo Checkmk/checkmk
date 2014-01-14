@@ -49,10 +49,10 @@ $critgbtxt = sprintf("%.1f", $critgb);
 $opt[1] = "--vertical-label GB -l 0 -u $maxgb -b 1024 --title '$hostname: Filesystem $fstitle ($sizegb GB)' ";
 
 # First graph show current filesystem usage
-$def[1] = "DEF:used_bytes=$RRDFILE[1]:$DS[1]:MAX "; 
+$def[1] = "DEF:used_bytes=$RRDFILE[1]:$DS[1]:MAX ";
 $def[1] .= "CDEF:var1=used_bytes,$giga,/ ";
-$def[1] .= "AREA:var1#00ffc6:\"used space on $fsname\\n\" "; 
-$def[1] .= "LINE1:var1#226600: "; 
+$def[1] .= "AREA:var1#00ffc6:\"used space on $fsname\\n\" ";
+$def[1] .= "LINE1:var1#226600: ";
 $def[1] .= "HRULE:$maxgb#003300:\"Size ($sizegb GB) \" ";
 $def[1] .= "HRULE:$warngb#ffff00:\"Warning at $warngbtxt GB \" ";
 $def[1] .= "HRULE:$critgb#ff0000:\"Critical at $critgbtxt GB \\n\" ";

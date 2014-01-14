@@ -47,61 +47,61 @@ if (isset($RRD['pagetables'])) {
 else {
     $def[1] .= "DEF:ram=$RRD[ramused] ";
 }
-   
+
 $def[1] .= "DEF:virt=$RRDFILE[3]:$DS[3]:MAX "
-        . "DEF:swap=$RRDFILE[2]:$DS[2]:MAX " 
+        . "DEF:swap=$RRDFILE[2]:$DS[2]:MAX "
 
         . "HRULE:$MAX[3]#000080:\"RAM+SWAP installed\" "
         . "HRULE:$MAX[1]#2040d0:\"$maxgb GB RAM installed\" "
         . "HRULE:$WARN[3]#FFFF00:\"Warning\" "
         . "HRULE:$CRIT[3]#FF0000:\"Critical\" "
-       
+
         . "'COMMENT:\\n' "
-        . "AREA:ram#80ff40:\"RAM used        \" " 
-        . "GPRINT:ram:LAST:\"%6.0lf MB last\" " 
-        . "GPRINT:ram:AVERAGE:\"%6.0lf MB avg\" " 
+        . "AREA:ram#80ff40:\"RAM used        \" "
+        . "GPRINT:ram:LAST:\"%6.0lf MB last\" "
+        . "GPRINT:ram:AVERAGE:\"%6.0lf MB avg\" "
         . "GPRINT:ram:MAX:\"%6.0lf MB max\\n\" "
-       
-        . "AREA:swap#008030:\"SWAP used       \":STACK " 
-        . "GPRINT:swap:LAST:\"%6.0lf MB last\" " 
-        . "GPRINT:swap:AVERAGE:\"%6.0lf MB avg\" " 
+
+        . "AREA:swap#008030:\"SWAP used       \":STACK "
+        . "GPRINT:swap:LAST:\"%6.0lf MB last\" "
+        . "GPRINT:swap:AVERAGE:\"%6.0lf MB avg\" "
         . "GPRINT:swap:MAX:\"%6.0lf MB max\\n\" "
         ;
-       
+
 
 if (isset($RRD['pagetables'])) {
    $def[1] .= ""
-           . "AREA:pagetables#ff8800:\"Page tables     \":STACK " 
-           . "GPRINT:pagetables:LAST:\"%6.0lf MB last\" " 
+           . "AREA:pagetables#ff8800:\"Page tables     \":STACK "
+           . "GPRINT:pagetables:LAST:\"%6.0lf MB last\" "
            . "GPRINT:pagetables:AVERAGE:\"%6.0lf MB avg\" "
            . "GPRINT:pagetables:MAX:\"%6.0lf MB max\\n\" "
-           . "LINE:virt#000000:\"RAM+SWAP+PT used\" " 
-           . "GPRINT:virt:LAST:\"%6.0lf MB last\" " 
-           . "GPRINT:virt:AVERAGE:\"%6.0lf MB avg\" " 
-           . "GPRINT:virt:MAX:\"%6.0lf MB max\\n\" " 
+           . "LINE:virt#000000:\"RAM+SWAP+PT used\" "
+           . "GPRINT:virt:LAST:\"%6.0lf MB last\" "
+           . "GPRINT:virt:AVERAGE:\"%6.0lf MB avg\" "
+           . "GPRINT:virt:MAX:\"%6.0lf MB max\\n\" "
            ;
 }
 
 else {
-   $def[1] .= "LINE:virt#000000:\"RAM+SWAP used   \" " 
-           . "GPRINT:virt:LAST:\"%6.0lf MB last\" " 
-           . "GPRINT:virt:AVERAGE:\"%6.0lf MB avg\" " 
-           . "GPRINT:virt:MAX:\"%6.0lf MB max\\n\" " 
+   $def[1] .= "LINE:virt#000000:\"RAM+SWAP used   \" "
+           . "GPRINT:virt:LAST:\"%6.0lf MB last\" "
+           . "GPRINT:virt:AVERAGE:\"%6.0lf MB avg\" "
+           . "GPRINT:virt:MAX:\"%6.0lf MB max\\n\" "
            ;
 }
 
 if (isset($RRD['mapped'])) {
    $def[1] .= "DEF:mapped=$RRD[mapped] "
            . "LINE2:mapped#8822ff:\"Memory mapped   \" "
-           . "GPRINT:mapped:LAST:\"%6.0lf MB last\" " 
-           . "GPRINT:mapped:AVERAGE:\"%6.0lf MB avg\" " 
+           . "GPRINT:mapped:LAST:\"%6.0lf MB last\" "
+           . "GPRINT:mapped:AVERAGE:\"%6.0lf MB avg\" "
            . "GPRINT:mapped:MAX:\"%6.0lf MB max\\n\" " ;
 }
 
 if (isset($RRD['committed_as'])) {
    $def[1] .= "DEF:committed=$RRD[committed_as] "
            . "LINE2:committed#cc00dd:\"Committed       \" "
-           . "GPRINT:committed:LAST:\"%6.0lf MB last\" " 
+           . "GPRINT:committed:LAST:\"%6.0lf MB last\" "
            . "GPRINT:committed:AVERAGE:\"%6.0lf MB avg\" "
            . "GPRINT:committed:MAX:\"%6.0lf MB max\\n\" " ;
 }

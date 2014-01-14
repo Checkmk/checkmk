@@ -69,11 +69,11 @@ $def[2] .= "DEF:system=".$RRD['system_time']." " ;
 $def[2] .= "CDEF:sum=user,system,+ ";
 $def[2] .= "CDEF:idle=100,sum,- ";
 
-$def[2] .= "AREA:system#ff6000:\"System\" " 
-         . "GPRINT:system:LAST:\"%2.1lf%%  \" " 
-         . "AREA:user#60f020:\"User\":STACK " 
-         . "GPRINT:user:LAST:\"%2.1lf%%  \" " 
-         . "LINE:sum#004080:\"Total\" " 
+$def[2] .= "AREA:system#ff6000:\"System\" "
+         . "GPRINT:system:LAST:\"%2.1lf%%  \" "
+         . "AREA:user#60f020:\"User\":STACK "
+         . "GPRINT:user:LAST:\"%2.1lf%%  \" "
+         . "LINE:sum#004080:\"Total\" "
          . "GPRINT:sum:LAST:\"%2.1lf%%  \\n\" ";
 
 #

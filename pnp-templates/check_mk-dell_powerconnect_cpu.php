@@ -51,5 +51,5 @@ $def[1] =  "DEF:load1=$RRDFILE[1]:$DS[1]:MAX ".
 	   "GPRINT:load3:MIN:\"Min\: %.0lf %s$UNIT[3] \" ".
 	   "GPRINT:load3:MAX:\"Max\: %.0lf %s$UNIT[3] \\n\" ".
 	   "";
-	  
+
 ?>

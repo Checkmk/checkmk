@@ -48,7 +48,7 @@ if ($MAX[2]) {
 if ($CRIT[2]) {
   $def[1] .= "LINE1:-$WARN[2]#adfd30:\"Nonheap WARN\" "
            . "LINE1:-$CRIT[2]#ff0080:\"Nonheap CRIT\" ";
-} 
+}
 
 
 $def[1] .= "GPRINT:total:LAST:\"Total %.2lfMB last\" "

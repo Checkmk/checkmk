@@ -1135,6 +1135,17 @@ register_check_parameters(
                            ]
                         )
                    ])),
+            ("average",
+                Integer (
+                    title = _("Averaging"),
+                    help = _("If this parameter is set, all measured values will be averaged "
+                           "over the specified time interval before levels are being applied. Per "
+                           "default, averaging is turned off. "),
+                   unit = _("minutes"),
+                   minvalue = 1,
+                )
+            ),
+              
         ]),
     None,
     "dict"

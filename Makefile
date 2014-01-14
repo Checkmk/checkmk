@@ -228,7 +228,7 @@ mrproper:
 
 SOURCE_FILES = checkman/* modules/* checks/* notifications/* $$(find -name Makefile) \
           livestatus/src/*{cc,c,h} web/htdocs/*.{py,css} web/htdocs/js/*.js web/plugins/*/*.py \
-          doc/helpers/* scripts/setup.sh scripts/autodetect.py $(find -type f pnp-templates/*.php) \
+          doc/helpers/* scripts/setup.sh scripts/autodetect.py $$(find pnp-templates -type f -name "*.php") \
           mkeventd/bin/mkeventd mkeventd/web/htdocs/*.py mkeventd/web/plugins/*/*.py mkeventd/src/*.c \
           mkeventd/checks/*
 

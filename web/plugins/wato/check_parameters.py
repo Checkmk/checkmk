@@ -1985,7 +1985,7 @@ register_check_parameters(
                   Integer(title = _("Warning if above"), unit = _("MB")),
                   Integer(title = _("Critical if above"), unit = _("MB"))]),
             ],
-        default_value = (80.0, 90.0)),
+        default_value = (150.0, 200.0)),
     None, None
 )
 

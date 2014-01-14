@@ -2541,6 +2541,9 @@ def show_service_table(host, firsttime):
 
     table.begin(css ="data", searchable = False)
 
+    # This option will later be switchable somehow
+    parameter_column = False
+
     for state_name, state_type, checkbox in [
         ( _("Available (missing) services"), "new", firsttime ),
         ( _("Already configured services"), "old", True, ),
@@ -2579,7 +2582,7 @@ def show_service_table(host, firsttime):
             table.cell(_("Plugin output"),       html.attrencode(output))
 
             # Icon for Rule editor, Check parameters
-            table.cell()
+            table.cell(parameter_column and _("Check Parameters") or "")
             varname = None
             if checkgroup:
                 varname = "checkgroup_parameters:" + checkgroup
@@ -2600,14 +2603,17 @@ def show_service_table(host, firsttime):
                     paramtext = _("Invalid check parameter: %s!") % e
                     paramtext += _(" The parameter is: %r") % (params,)
 
-                # Strip all html code from the paramtext
-                paramtext = paramtext.replace('</td>', '\t')
-                paramtext = paramtext.replace('</tr>', '\n')
-                paramtext = html.strip_tags(paramtext)
+                if parameter_column:
+                    html.write(paramtext)
+                else:
+                    # Strip all HTML code from the paramtext
+                    paramtext = paramtext.replace('</td>', '\t')
+                    paramtext = paramtext.replace('</tr>', '\n')
+                    paramtext = html.strip_tags(paramtext)
 
-                title = _("Check parameters for this service") + ": \n" + paramtext
-                html.write('<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' %
-                   (url, title))
+                    title = _("Check parameters for this service") + ": \n" + paramtext
+                    html.write('<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' %
+                       (url, title))
 
 
             # Permanently disable icon

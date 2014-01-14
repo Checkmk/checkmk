@@ -2503,9 +2503,9 @@ def show_service_table(host, firsttime):
     # If we do not find any data, we omit the cache and immediately try
     # again without using the cache.
     try:
-        table = check_mk_automation(host[".siteid"], "try-inventory", cache_options + [hostname])
-        if len(table) == 0 and cache_options != []:
-            table = check_mk_automation(host[".siteid"], "try-inventory", [ '@scan', hostname ])
+        checktable = check_mk_automation(host[".siteid"], "try-inventory", cache_options + [hostname])
+        if len(checktable) == 0 and cache_options != []:
+            checktable = check_mk_automation(host[".siteid"], "try-inventory", [ '@scan', hostname ])
             html.set_var("_scan", "on")
     except Exception, e:
         if config.debug:
@@ -2513,17 +2513,17 @@ def show_service_table(host, firsttime):
         html.show_error("Inventory failed for this host: %s" % e)
         return
 
-    table.sort()
+    checktable.sort()
 
     html.begin_form("checks", method = "POST")
     fixall = 0
     if config.may("wato.services"):
-        for entry in table:
+        for entry in checktable:
             if entry[0] == 'new' and not html.has_var("_activate_all") and not firsttime:
                 html.button("_activate_all", _("Activate missing"))
                 fixall += 1
                 break
-        for entry in table:
+        for entry in checktable:
             if entry[0] in [ 'obsolete', 'vanished', ]:
                 html.button("_cleanup", _("Remove exceeding"))
                 fixall += 1
@@ -2532,14 +2532,14 @@ def show_service_table(host, firsttime):
         if fixall == 2:
             html.button("_fixall", _("Fix all missing/exceeding"))
 
-        if len(table) > 0:
+        if len(checktable) > 0:
             html.button("_save", _("Save manual check configuration"))
 
     html.hidden_fields()
     if html.var("_scan"):
         html.hidden_field("_scan", "on")
 
-    html.write("<table class=data>\n")
+    table.begin(css ="data", searchable = False)
 
     for state_name, state_type, checkbox in [
         ( _("Available (missing) services"), "new", firsttime ),
@@ -2554,35 +2554,32 @@ def show_service_table(host, firsttime):
         ( _("Clustered services (located on cluster host)"), "clustered", None )
         ]:
         first = True
-        trclass = "even"
-        for st, ct, checkgroup, item, paramstring, params, descr, state, output, perfdata in table:
+        for st, ct, checkgroup, item, paramstring, params, descr, state, output, perfdata in checktable:
             item = html.attrencode(item or 'None')
             if state_type != st:
                 continue
             if first:
-                html.write('<tr class=groupheader><td colspan=7><br>%s</td></tr>\n' % state_name)
-                html.write("<tr><th>" + _("Status") + "</th>"
-                           "<th>" + _("Checktype") + "</th>"
-                           "<th>" + _("Item") + "</th>"
-                           "<th>" + _("Service Description") + "</th>"
-                           "<th>" + _("Current check") + "</th>"
-                           "<th></th><th></th><th></th></tr>\n")
+                table.groupheader(state_name)
                 first = False
-            trclass = trclass == "even" and "odd" or "even"
             statename = nagios_short_state_names.get(state, _("PEND"))
             if statename == _("PEND"):
                 stateclass = "state svcstate statep"
                 state = 0 # for tr class
             else:
                 stateclass = "state svcstate state%s" % state
-            html.write("<tr class=\"data %s%d\">" % (trclass, state))
+            # html.write("<tr class=\"data %s%d\">" % (trclass, state))
+
+            table.row(css="data", state=state)
 
             # Status, Checktype, Item, Description, Check Output
-            html.write("<td class=\"%s\">%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td>" %
-                    (stateclass, statename, ct, item, html.attrencode(descr), html.attrencode(output)))
+            table.cell(_("Status"),              statename, css=stateclass)
+            table.cell(_("Checkplugin"),         ct)
+            table.cell(_("Item"),                item)
+            table.cell(_("Service Description"), html.attrencode(descr))
+            table.cell(_("Plugin output"),       html.attrencode(output))
 
             # Icon for Rule editor, Check parameters
-            html.write("<td>")
+            table.cell()
             varname = None
             if checkgroup:
                 varname = "checkgroup_parameters:" + checkgroup
@@ -2612,10 +2609,9 @@ def show_service_table(host, firsttime):
                 html.write('<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' %
                    (url, title))
 
-            html.write("</td>")
 
             # Permanently disable icon
-            html.write("<td>")
+            table.cell()
             if state_type in ['new', 'old']:
                 url = make_link([
                     ('mode', 'edit_ruleset'),
@@ -2630,17 +2626,14 @@ def show_service_table(host, firsttime):
                 ])
                 html.write('<a href="%s"><img title="%s" class=icon src="images/icon_ignore.png"></a>' %
                     (url, _("Create rule to permanently disable this service")))
-            html.write("</td>")
 
             # Temporary ignore checkbox
-            html.write("<td>")
+            table.cell()
             if checkbox != None:
                 varname = "_%s_%s" % (ct, html.varencode(item))
                 html.checkbox(varname, checkbox, add_attr = ['title="%s"' % _('Temporarily ignore this service')])
-            html.write("</td>")
 
-            html.write("</tr>\n")
-    html.write("</table>\n")
+    table.end()
     html.end_form()
 
 

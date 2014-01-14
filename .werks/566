@@ -1,0 +1,8 @@
+Title: services.summary: new check to monitor stopped services of mode autostart in windows
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1389708658
+Class: feature
+
+

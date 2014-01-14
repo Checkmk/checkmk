@@ -171,7 +171,8 @@ enum script_type {
 };
 
 struct script_container {
-    char                  *path;
+    char                  *path;        // full path with interpreter, cscript, etc.
+    char                  *script_path; // path of script
     int                    max_age;
     int                    timeout;
     int                    max_retries;
@@ -2414,11 +2415,21 @@ DWORD WINAPI ScriptWorkerThread(LPVOID lpParam)
     return 0;
 }
 
+bool script_exists(script_container *cont)
+{
+    DWORD dwAttr = GetFileAttributes(cont->script_path);
+    return !(dwAttr == INVALID_FILE_ATTRIBUTES);
+}
 
 void run_script_container(script_container *cont)
 {
     if ( (cont->type == PLUGIN && !(enabled_sections & SECTION_PLUGINS)) ||
          (cont->type == LOCAL  && !(enabled_sections & SECTION_LOCAL)) )
+        return;
+
+    // Return if this script is no longer present
+    // However, the script container is preserved
+    if (!script_exists(cont))
         return;
 
     time_t now = time(0);
@@ -2433,6 +2444,7 @@ void run_script_container(script_container *cont)
 
         if (cont->worker_thread != INVALID_HANDLE_VALUE)
             CloseHandle(cont->worker_thread);
+
         cont->worker_thread  = CreateThread(
                 NULL,                 // default security attributes
                 0,                    // use default stack size
@@ -2443,9 +2455,7 @@ void run_script_container(script_container *cont)
 
         if (cont->execution_mode == SYNC ||
             cont->execution_mode == ASYNC && g_default_script_async_execution == SEQUENTIAL)
-        {
             WaitForSingleObject(cont->worker_thread, INFINITE);
-        }
     }
 }
 
@@ -2456,6 +2466,11 @@ void output_external_programs(SOCKET &out, script_type type)
     script_container* cont = NULL;
     while (it_cont != script_containers.end()) {
         cont = it_cont->second;
+        if (!script_exists(cont)) {
+            it_cont++;
+            continue;
+        }
+
         if (cont->type == type) {
             if (cont->status == SCRIPT_FINISHED) {
                 // Free buffer
@@ -3848,7 +3863,7 @@ void determine_available_scripts(script_type type)
                 char newpath[512];
                 // If the path in question is a directory -> continue
                 DWORD dwAttr = GetFileAttributes(path);
-                if(dwAttr != 0xffffffff && (dwAttr & FILE_ATTRIBUTE_DIRECTORY)) {
+                if(dwAttr != INVALID_FILE_ATTRIBUTES && (dwAttr & FILE_ATTRIBUTE_DIRECTORY)) {
                     continue;
                 }
 
@@ -3860,6 +3875,7 @@ void determine_available_scripts(script_type type)
                     // create new entry for this program
                     cont = new script_container();
                     cont->path             = strdup(command);
+                    cont->script_path      = strdup(path);
                     cont->buffer_time      = 0;
                     cont->buffer           = NULL;
                     cont->buffer_work      = NULL;

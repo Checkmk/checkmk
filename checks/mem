@@ -93,6 +93,8 @@ def check_mem_windows(item, params, info):
     infotxts = []
     MB = 1024.0 * 1024
     worststate = 0
+    now = time.time()
+
     for title, what, paramname in [
         ( "Memory",    "Mem",  "memory" ),
         ( "Page file", "Page", "pagefile" )]:
@@ -103,8 +105,30 @@ def check_mem_windows(item, params, info):
         free_mb  = free_kb / 1024.0
         perc     = 100.0 * used_kb / total_kb
 
-        # Now check the levels
+        infotxts.append("%s usage: %.1f%% (%.1f/%.1f GB)" %
+                (title, perc, used_kb / MB, total_kb / MB))
+
         warn, crit = params[paramname]
+
+        # In perfdata show warn/crit as absolute values
+        if type(warn) == float:
+            warn_kb = total_kb * warn / 100 / 1024
+        if type(crit) == float:
+            crit_kb = total_kb * crit / 100 / 1024
+        perfdata.append((paramname, used_kb / 1024.0, warn_kb, crit_kb, 0, total_kb / 1024.0))
+
+        # Do averaging, if configured, just for matching the levels
+        if "average" in params:
+            average_min = params["average"]
+            timedif, used_kb = get_average("mem.win.%s" % paramname, 
+                                           now, used_kb, average_min, initialize_zero = False)
+            used_mb  = used_kb / 1024.0
+            free_mb  = (total_kb / 1024.0) - used_mb
+            perc     = 100.0 * used_kb / total_kb
+            infotxts[-1] += ", %d min average: %.1f%% (%.1f GB)" % (average_min, perc, used_kb / MB)
+            perfdata.append((paramname + "_avg", used_kb / 1024.0))
+
+        # Now check the levels
         if (type(crit) == int and free_mb <= crit) or \
             (type(crit) == float and perc >= crit):
             worststate = 2
@@ -116,15 +140,8 @@ def check_mem_windows(item, params, info):
         else:
             state_code = ""
 
-        # Convert levels to absolute values (for perfdata)
-        if type(warn) == float:
-            warn = total_kb * warn / 100 / 1024
-        if type(crit) == float:
-            crit = total_kb * crit / 100 / 1024
+        infotxts[-1] += state_code
 
-        infotxts.append("%s usage: %.1f%% (%.1f/%.1f GB)%s" %
-                (title, perc, used_kb / MB, total_kb / MB, state_code))
-        perfdata.append((paramname, used_kb / 1024.0, warn, crit, 0, total_kb / 1024.0))
 
     return (worststate, ", ".join(infotxts), perfdata)
 

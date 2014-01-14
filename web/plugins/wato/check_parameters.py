@@ -1147,6 +1147,7 @@ register_check_parameters(
                            "default, averaging is turned off. "),
                    unit = _("minutes"),
                    minvalue = 1,
+                   default_value = 60,
                 )
             ),
               

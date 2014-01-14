@@ -5828,6 +5828,8 @@ def mode_snapshot(phase):
         html.write("<br>")
 
         html.write("<h3>" + _("Restore from uploaded file") + "</h3>")
+        html.write("Only supports snapshots up to 100MB. If your snapshot is larger than 100MB please copy it into the sites<br>"
+                   "backup directory %s/wato/snapshots. It will then show up in the snapshots table.<br><br>" % defaults.var_dir)
         html.begin_form("upload_form", method = "POST")
         html.upload_file("_upload_file")
         html.button("upload_button", _("Restore from file"), "submit")

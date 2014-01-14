@@ -27,6 +27,11 @@
 fortigate_memory_default_levels = (70, 80)
 
 def check_fortigate_memory(item, params, info):
+    # This check does not yet support averaging. We need to
+    # convert it to mem.include
+    if type(params) == dict:
+        params = params["levels"]
+
     warn, crit = params
     current = saveint(info[0][0])
     state = 0

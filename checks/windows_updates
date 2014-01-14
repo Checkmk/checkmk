@@ -71,8 +71,7 @@ def check_windows_updates(_unused, params, info):
 
         # the last element may be the forced_reboot time
         forced_reboot = ""
-        print len(info), last
-        if len(info) - 1 == last:
+        if len(info) - 1 == last and len(info[last]) == 2:
             forced_reboot = info[last]
 
         txt = []

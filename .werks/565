@@ -1,0 +1,8 @@
+Title: windows_updates: fix for some cases when forced_reboot is not set
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1389697265
+Class: fix
+
+

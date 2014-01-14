@@ -36,6 +36,11 @@ def inventory_cisco_sys_mem(info):
         return []
 
 def check_cisco_sys_mem(_no_item, params, info):
+    # This check does not yet support averaging. We need to
+    # convert it to mem.include
+    if type(params) == dict:
+        params = params["levels"]
+
     warn, crit = params
     if info[0][0]:
        mem_used =  float(info[0][0])

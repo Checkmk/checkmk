@@ -25,39 +25,23 @@
 # Boston, MA 02110-1301 USA.
 
 memused_default_levels = (150.0, 200.0)
-mem_extended_perfdata = False
+factory_settings["memory_default_levels"] = {
+    "levels" : memused_default_levels,
+}
+
 
 def check_memory(params, meminfo):
     swapused = meminfo['SwapTotal'] - meminfo['SwapFree']
     memused  = meminfo['MemTotal']  - meminfo['MemFree']
-    # Buffers and Cached are optional (not supported on Windows yet)
+
+    # Buffers and Cached are optional. On Linux both mean basically the same.
     caches   = meminfo.get('Buffers', 0) + meminfo.get('Cached', 0)
+
     # Size of Pagetable on Linux can be relevant e.g. on ORACLE
     # servers with much memory, that do not use HugeTables. We account
     # that for used
     pagetables = meminfo.get('PageTables', 0)
     pagetables_mb = pagetables / 1024.0
-
-    # Add extended memory performance data, if this is
-    # enabled and the agent provides that information.
-    extended_perf = []
-    extrainfo = ""
-    if mem_extended_perfdata:
-        mapped = meminfo.get('Mapped')
-        if mapped:
-            mapped_mb = int(mapped) / 1024
-            committed_as = meminfo.get('Committed_AS')
-            if committed_as:
-                committed_as_mb = int(committed_as) / 1024
-            else:
-                committed_as = 0
-            extended_perf = [
-                ('mapped',       str(mapped_mb)       + 'MB'),
-                ('committed_as', str(committed_as_mb) + 'MB'),
-                ('pagetables',   str(pagetables_mb)   + 'MB'),
-            ]
-            extrainfo = ", %.1f GB mapped, %.1f GB committed" % \
-                        (mapped_mb / 1024.0, committed_as_mb / 1024.0)
 
     totalused_kb = (swapused + memused - caches + pagetables)
     totalused_mb = totalused_kb / 1024.0
@@ -65,41 +49,78 @@ def check_memory(params, meminfo):
     totalmem_mb = totalmem_kb / 1024.0
     totalused_perc = 100 * (float(totalused_kb) / float(totalmem_kb))
     totalvirt_mb = (meminfo['SwapTotal'] + meminfo['MemTotal']) / 1024.0
-    warn, crit = params
 
-    perfdata = [
-        ('ramused', str( (memused - caches) / 1024) + 'MB', '', '', 0, totalmem_mb),
-        ('swapused', str(swapused / 1024) + 'MB', '', '', 0, meminfo['SwapTotal']/1024) ]
-
-    # levels may be given either in int -> MB or in float -> percentages
+    if type(params) == tuple:
+        params = { "levels" : params }
+    warn, crit = params["levels"]
 
     if pagetables > 0:
-        pgtext = " + %.2f GB Pagetables" % (pagetables_mb / 1024.0)
+        pgtext = " + %.2f Pagetables" % (pagetables_mb / 1024.0)
     else:
         pgtext = ""
-    infotext = ("%.2f GB used (%.2f GB RAM + %.2f GB SWAP%s, this is %.1f%% of %.2f GB RAM)" % \
+    infotext = "%.2f GB used (%.2f RAM + %.2f SWAP%s, this is %.1f%% of %.2f RAM" % \
                (totalused_mb / 1024.0, (memused-caches) / 1024.0 / 1024, swapused / 1024.0 / 1024,
-               pgtext, totalused_perc, totalmem_mb / 1024.0)) \
-               + extrainfo
+               pgtext, totalused_perc, totalmem_mb / 1024.0)
 
-    if type(warn) == float:
-        perfdata.append(('memused', str(totalused_mb)+'MB', int(warn/100.0 * totalmem_mb),
-                        int(crit/100.0 * totalmem_mb), 0, totalvirt_mb))
-        perfdata += extended_perf
-        if totalused_perc >= crit:
-            return (2, '%s, critical at %.1f%%' % (infotext, crit), perfdata)
-        elif totalused_perc >= warn:
-            return (1, '%s, warning at %.1f%%' % (infotext, warn), perfdata)
-        else:
-            return (0, '%s' % infotext, perfdata)
-
+    # Take into account averaging
+    average_min = params.get("average")
+    if average_min:
+        timedif, totalused_mb_avg = get_average("mem.used.total", time.time(),
+                                                totalused_mb, average_min, initialize_zero = False)
+        totalused_perc_avg = totalused_mb_avg / totalmem_mb * 100
+        infotext += ", %d min average %.1f%%" % (average_min, totalused_perc_avg)
+        comp_mb = totalused_mb_avg
     else:
-        perfdata.append(('memused', str(totalused_mb)+'MB', warn, crit, 0, totalvirt_mb))
-        perfdata += extended_perf
-        if totalused_mb >= crit:
-            return (2, '%s, critical at %.2f GB' % (infotext, crit / 1024.0), perfdata)
-        elif totalused_mb >= warn:
-            return (1, '%s, warning at %.2f GB' % (infotext, warn / 1024.0), perfdata)
-        else:
-            return (0, '%s' % infotext, perfdata)
+        comp_mb = totalused_mb
+        infotext += ")"
 
+
+    # levels may be given either in int -> MB or in float -> percentages. So convert
+    # effective levels to MB now
+    if type(warn) == float:
+        warn_mb = int(warn/100.0 * totalmem_mb)
+        crit_mb = int(crit/100.0 * totalmem_mb)
+        leveltext = lambda x: "%.1f%%" % x
+    else:
+        warn_mb = warn
+        crit_mb = crit
+        leveltext = lambda x: "%.2f GB" % (x / 1024.0)
+
+    # Prepare performance data
+    perfdata = [
+        ('ramused',  str( (memused - caches) / 1024) + 'MB', '', '', 0, totalmem_mb),
+        ('swapused', str(swapused / 1024) + 'MB', '', '', 0, meminfo['SwapTotal']/1024),
+        ('memused',  str(totalused_mb) + 'MB', warn_mb, crit_mb, 0, totalvirt_mb),
+    ]
+
+    if average_min:
+        perfdata.append(('memusedavg', str(totalused_mb_avg)+'MB'))
+
+    # Check levels
+    if comp_mb >= crit_mb:
+        state = 2
+        infotext += ", critical at %s" % leveltext(crit)
+    if comp_mb >= warn_mb:
+        state = 1
+        infotext += ", warning at %s" % leveltext(crit)
+    else:
+        state = 0
+
+    # Add additional metrics, provided by Linux.
+    mapped = meminfo.get('Mapped')
+    if mapped:
+        mapped_mb = int(mapped) / 1024
+        committed_as = meminfo.get('Committed_AS')
+        if committed_as:
+            committed_as_mb = int(committed_as) / 1024
+        else:
+            committed_as = 0
+        perfdata += [
+            ('mapped',       str(mapped_mb)       + 'MB'),
+            ('committed_as', str(committed_as_mb) + 'MB'),
+            ('pagetables',   str(pagetables_mb)   + 'MB'),
+        ]
+        infotext += ", %.1f mapped, %.1f committed" % \
+                    (mapped_mb / 1024.0, committed_as_mb / 1024.0)
+
+    return state, infotext, perfdata

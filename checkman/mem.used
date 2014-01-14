@@ -9,39 +9,31 @@ description:
  and critical level for the usage of virtual memory,
  {not} for the usage of RAM.
 
- This is not a bug, its a feature. In fact it is the
- only way to do it right (at least for Linux): What
- parts of a process currently reside in physical RAM
- and what parts are swapped out is not related in a
- direct way with the current memory usage.
+ This is not a bug, it's a feature. In fact it is the only way to do it right
+ (at least for Linux): What parts of a process currently reside in physical
+ RAM and what parts are swapped out is not related in a direct way with the
+ current memory usage.
 
- Linux tends to swap out
- parts of processes even if RAM is available. It does
- this in situations where disk buffers (are assumed to)
- speed up the overall performance more than keeping
- rarely used parts of processes in RAM.
+ Linux tends to swap out parts of processes even if RAM is available. It
+ does this in situations where disk buffers (are assumed to) speed up the
+ overall performance more than keeping rarely used parts of processes in RAM.
 
- For example after a complete backup of your system
- you might experiance that your swap usage has increased
- while you have more RAM free then before. That is
- because Linux has taken RAM from processes in order
- to increase disk buffers.
+ For example after a complete backup of your system you might experiance
+ that your swap usage has increased while you have more RAM free then
+ before. That is because Linux has taken RAM from processes in order to
+ increase disk buffers.
 
- So when defining a level to check against, the only
- value that is not affected by such internals of
- memory management is the total amount of {virtual}
- memory used up by processes (not by disk buffers).
+ So when defining a level to check against, the only value that is not
+ affected by such internals of memory management is the total amount of
+ {virtual} memory used up by processes (not by disk buffers).
 
- Check_mk lets you define levels in percentage of
- the physically installed RAM or as absolute
- values in MB. The default levels
- are at 150% and 200%. That means that this check
- gets critical if the memory used by processes
- is twice the size of your RAM.
+ Check_MK lets you define levels in percentage of the physically installed RAM
+ or as absolute values in MB. The default levels are at 150% and 200%. That
+ means that this check gets critical if the memory used by processes is
+ twice the size of your RAM.
 
- Hint: If you want to monitor swapping, you probably
- better measure major pagefaults. Please look
- at the check {kernel}.
+ Hint: If you want to monitor swapping, you probably better measure major
+ pagefaults. Please look at the check {kernel}.
 
 item:
  {None}
@@ -75,14 +67,23 @@ perfdata:
  If {mem_extended_perfdata} is set to {True}, then
  additional performance data is output (see below).
 
-[parameters]
-warning (int or float): the percentage of virtual memory used
- by processes at which WARNING state is triggered. If the
- level is defined as an integer value then it is interpreted
- as an absolute value in megabytes.
-critical (int or float): the percentage or absolute value
- at which CRITICAL state is triggered
+ If averaging is turned on, then a value {memusedavg} is added.
 
+[parameters]
+parameters (dict): The check previous used a pair of
+  two numbers as a parameter. While this is internally still
+  supported, the new format is a dictionary with the following
+  keys:
+
+  {"levels"}: A pair of two int or float values: if these are
+  float it means the the percentage of virtual memory used
+  by processes at which WARNING/CRIT state is triggered. If the
+  two numbers are defined as an integer value then they are interpreted
+  as an absolute value in megabytes.
+
+  {"average"}: This key is optional. If set (integer), it means
+  a number of minutes. The levels are then applied to the
+  averaged value over that time horizon.
 
 [configuration]
 memused_default_levels (float, float): Levels used by

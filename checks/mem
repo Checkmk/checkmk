@@ -44,20 +44,20 @@ def inventory_mem_used(info):
     meminfo = parse_proc_meminfo(info)
     if "MemTotal" in meminfo and \
         "PageTotal" not in meminfo: # This case is handled by mem.win
-        return [(None, "memused_default_levels")]
+        return [(None, {})]
 
 def check_mem_used(_no_item, params, info):
     meminfo = parse_proc_meminfo(info)
     return check_memory(params, meminfo)
 
 check_info['mem.used'] = {
-    "check_function"         : check_mem_used,
-    "inventory_function"     : inventory_mem_used,
-    "service_description"    : "Memory used",
-    "has_perfdata"           : True,
-    "group"                  : "memory",
-    "check_config_variables" : [ "mem_extended_perfdata" ],
-    "includes"               : [ "mem.include" ],
+    "check_function"          : check_mem_used,
+    "inventory_function"      : inventory_mem_used,
+    "service_description"     : "Memory used",
+    "has_perfdata"            : True,
+    "group"                   : "memory",
+    "default_levels_variable" : "memory_default_levels",
+    "includes"                : [ "mem.include" ],
 }
 
 

@@ -1975,28 +1975,50 @@ register_check_parameters(
     subgroup_os,
     "memory",
     _("Main memory usage (Linux / UNIX / Other Devices)"),
-    Alternative(
-        help = _("The levels for memory usage on Linux and UNIX systems take into account the "
-               "currently used memory (RAM or SWAP) by all processes and sets this in relation "
-               "to the total RAM of the system. This means that the memory usage can exceed 100%. "
-               "A usage of 200% means that the total size of all processes is twice as large as "
-               "the main memory, so <b>at least</b> the half of it is currently swapped out. "
-               "Besides Linux and UNIX systems, these parameters are also used for memory checks "
-               "of other devices, like Fortigate devices."),
-        elements = [
-            Tuple(
-                title = _("Specify levels in percentage of total RAM"),
-                elements = [
-                    # Disable limit of value to 101%, because levels > 100% make sense here
-                    # (swap+ram is > ram)
-                    Percentage(title = _("Warning at a memory usage of"), default_value = 80.0, maxvalue = None),
-                    Percentage(title = _("Critical at a memory usage of"), default_value = 90.0, maxvalue = None)]),
-            Tuple(
-                title = _("Specify levels in absolute usage values"),
-                elements = [
-                  Integer(title = _("Warning if above"), unit = _("MB")),
-                  Integer(title = _("Critical if above"), unit = _("MB"))]),
-            ]),
+    Transform(
+        Dictionary(
+            elements = [
+                ( "levels",
+                   Alternative(
+                        help = _("The levels for memory usage on Linux and UNIX systems take into account the "
+                               "currently used memory (RAM or SWAP) by all processes and sets this in relation "
+                               "to the total RAM of the system. This means that the memory usage can exceed 100%. "
+                               "A usage of 200% means that the total size of all processes is twice as large as "
+                               "the main memory, so <b>at least</b> the half of it is currently swapped out. "
+                               "Besides Linux and UNIX systems, these parameters are also used for memory checks "
+                               "of other devices, like Fortigate devices."),
+                        elements = [
+                            Tuple(
+                                title = _("Specify levels in percentage of total RAM"),
+                                elements = [
+                                    # Disable limit of value to 101%, because levels > 100% make sense here
+                                    # (swap+ram is > ram)
+                                    Percentage(title = _("Warning at a memory usage of"), maxvalue = None),
+                                    Percentage(title = _("Critical at a memory usage of"), maxvalue = None)]),
+                            Tuple(
+                                title = _("Specify levels in absolute usage values"),
+                                elements = [
+                                  Integer(title = _("Warning if above"), unit = _("MB")),
+                                  Integer(title = _("Critical if above"), unit = _("MB"))]),
+                            ],
+                        default_value = (150.0, 200.0))
+                ),
+                ("average",
+                    Integer(
+                        title = _("Averaging"),
+                        help = _("If this parameter is set, all measured values will be averaged "
+                               "over the specified time interval before levels are being applied. Per "
+                               "default, averaging is turned off. "),
+                       unit = _("minutes"),
+                       minvalue = 1,
+                       default_value = 60,
+                    )
+                ),
+            ],
+            optional_keys = [ "average" ],
+        ),
+        forth = lambda t: type(t) == tuple and { "levels" : t } or t, 
+    ),
     None, None
 )
 

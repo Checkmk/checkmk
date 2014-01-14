@@ -5,7 +5,6 @@ Version: 1.2.5i1
 Date: 1389692900
 Class: feature
 
-You now can set an averaging time horizon in minutes. If you do that
-the levels for memory and page file usage will be applied to their
-average over time. That make the check less reactive to small peaks
-in the memory usage.
+You now can set an averaging time horizon in minutes. If you do that the
+levels for memory and page file usage will be applied to their average over
+time. That makes the check less reactive to peaks in the memory usage.

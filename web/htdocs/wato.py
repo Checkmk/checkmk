@@ -4313,6 +4313,15 @@ def fmt_date(t):
 def fmt_time(t):
     return time.strftime('%H:%M:%S', time.localtime(t))
 
+def fmt_bytes(num):
+    for x in ['Bytes', 'KB', 'MB', 'GB', 'TB']:
+        if num < 1024.0:
+            if x == "Bytes":
+                return "%d %s" % (num, x)
+            else:
+                return "%3.1f %s" % (num, x)
+        num /= 1024.0
+
 def paged_log(log):
     start = int(html.var('start', 0))
     if not start:
@@ -5543,7 +5552,7 @@ def get_snapshot_status(name):
             files = tokens[1].splitlines()
             for filename in files:
                 name, info = filename.split(":",1)
-                file_info[name] = { "size" :info }
+                file_info[name] = {"size" : info}
             status["files"] = file_info
         else: # tarfile is finished, read comment
             # Determine snapshot type: legacy / new
@@ -5586,6 +5595,7 @@ def get_snapshot_status(name):
 def mode_snapshot_detail(phase):
     snapshot_name = html.var("_snapshot_name")
     status = get_snapshot_status(snapshot_name)
+
     if phase == "title":
         return _("Snapshot details of %s")  % status["name"]
     elif phase == "buttons":
@@ -5629,7 +5639,7 @@ def mode_snapshot_detail(phase):
                     domain_id = key[:-7]
                     if domain_id in backup_domains:
                         html.write("<tr><td>%s</td>"  % backup_domains.get(domain_id)["title"])
-                        html.write("<td align='right'>%s</td></tr>" % files[key]["size"])
+                        html.write("<td align='right'>%s</td></tr>" % fmt_bytes(files[key]["size"]))
                     else:
                         other_content.append(key)
                 except:
@@ -5638,7 +5648,7 @@ def mode_snapshot_detail(phase):
                 html.write("<tr><td>%s</td></tr>" % _("Other content"))
                 for key in other_content:
                     html.write("<tr><td>%s</td>"  % key)
-                    html.write("<td align='right'>%s</td></tr>" % files[key]["size"])
+                    html.write("<td align='right'>%s</td></tr>" % fmt_bytes(files[key]["size"]))
             html.write("</table>")
         forms.end()
     if snapshot_name != "uploaded_snapshot":
@@ -5850,7 +5860,7 @@ def mode_snapshot(phase):
             # Age and Size
             st = os.stat(snapshot_dir + name)
             age = time.time() - st.st_mtime
-            table.cell(_("Size"), "%d" % st.st_size, css="number"),
+            table.cell(_("Size"), fmt_bytes(st.st_size), css="number"),
 
             # Status icons
             table.cell(_("Status"))

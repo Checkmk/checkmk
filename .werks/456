@@ -1,0 +1,9 @@
+Title: Column was too short
+Level: 1
+Component: wato
+Version: 1.2.5i1
+Date: 1389709232
+Class: fix
+
+when activating changes by another user, the column showing the username was too
+short for it's content

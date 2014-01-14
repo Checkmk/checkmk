@@ -1,0 +1,30 @@
+title: Windows Services
+agents: windows
+catalog: applications
+license: GPL
+distribution: check_mk
+description:
+ This check gives a summary of the windows services and monitors
+ the number of services of mode "autostart" which are stopped.
+ The state of the check as soon as such a stopped service is found
+ can be configured to be any valid state. The default is {OK}. Also,
+ if no such stopped service is found, the state is {OK}.
+
+ A list of ignored services can be configured. These services will not be
+ considered when determining the stopped services.
+
+[configuration]
+{services_summary_default_levels(dict):} A dictionary with the following preset keys
+
+{"ignored": (),}
+{"state_of_stopped": 0}
+
+
+[parameters]
+parameters(dict):  A dictionary with the following keys:
+
+ {"ignored"}: tuple: A tuple of service names or regular expressions for
+ services. These services will be disregarded when determining the state of the check
+
+ {"state_if_stopped"}: int: The monitoring state that should be applied if
+ stopped services are found

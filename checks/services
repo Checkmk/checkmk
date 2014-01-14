@@ -235,3 +235,65 @@ check_info['services'] = {
     "group"                   : "services",
     "default_levels_variable" : "services_default_levels",
 }
+
+factory_settings["services_summary_default_levels"] = {
+        "ignored": (),
+        "state_if_stopped": 0
+}
+
+def inventory_services_summary(info):
+    if info[0]:
+        return [ (None, "services_summary_default_levels") ]
+
+def check_services_summary(item, params, info):
+    blacklist = params.get("ignored", () )
+    stoplist = []
+    num_blacklist = 0
+    num_auto = 0
+    for line in info:
+        startstop, auto = line[2].split("/")
+        srv_name = line[1]
+        if auto == "auto":
+            num_auto += 1
+            if startstop == "stopped":
+                match = False
+                for srv in blacklist:
+                    if  re.match(srv,srv_name):
+                        match = True
+                if match == False:
+                    stoplist.append(srv_name)
+                else:
+                    num_blacklist += 1
+
+    num_stoplist = len(stoplist)
+    num_srv = len(info)
+    length_runlist = len(info) - len(stoplist) - num_blacklist
+
+    if len(stoplist) > 0:
+        stopped_srvs = " ("+", ".join(stoplist)+")"
+        state = params.get("state_if_stopped")
+        if state == 1:
+            sym = "(!)"
+        elif state == 2:
+            sym="(!!)"
+        else:
+            sym = ""
+    else:
+        stopped_srvs = ""
+        state = 0
+        sym = ""
+
+
+    infotext = "%d services, %d services in autostart - of which %d services are stopped%s%s, %d services stopped but ignored" % \
+        ( num_srv, num_auto, num_stoplist, sym, stopped_srvs,  num_blacklist )
+
+    return state, infotext
+
+check_info['services.summary'] = {
+    "check_function"          : check_services_summary,
+    "inventory_function"      : inventory_services_summary,
+    "default_levels_variable" : "services_summary_default_levels",
+    "service_description"     : "Services Summary",
+    "node_info"               : True,
+    "group"                   : "services_summary",
+}

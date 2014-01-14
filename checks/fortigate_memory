@@ -26,6 +26,10 @@
 
 fortigate_memory_default_levels = (70, 80)
 
+def inventory_fortigate_memory(info):
+    if info:
+        return [(None, "fortigate_memory_default_levels")]
+
 def check_fortigate_memory(item, params, info):
     # This check does not yet support averaging. We need to
     # convert it to mem.include
@@ -48,7 +52,7 @@ def check_fortigate_memory(item, params, info):
 
 check_info["fortigate_memory"] = {
     "check_function"        : check_fortigate_memory,
-    "inventory_function"    : lambda info: [(None, "fortigate_memory_default_levels")],
+    "inventory_function"    : inventory_fortigate_memory,
     "service_description"   : "Memory usage",
     "has_perfdata"          : True,
     "group"                 : "memory",

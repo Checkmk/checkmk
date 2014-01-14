@@ -1,0 +1,10 @@
+Title: mem.used, solaris_mem: Introduce optional averaging of used memory
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1389699478
+Class: feature
+
+You now can set an averaging time horizon in minutes. If you do that the
+levels for the used memory will be applied to its average over time. That
+makes the check less reactive to peaks in the memory usage.

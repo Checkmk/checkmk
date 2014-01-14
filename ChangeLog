@@ -10,6 +10,9 @@
     Multisite:
     * 0117 FIX: Availability button is now visible for users without the right to edit views
 
+    WATO:
+    * 0256 FIX: wato snapshots: snapshot restore no longer fails with older python versions...
+
 
 1.2.4b4:
     Core & Setup:

@@ -641,6 +641,7 @@ register_check_parameters(
                            "default, averaging is turned off. "),
                    unit = _("minutes"),
                    minvalue = 1,
+                   default_value = 60,
                 )
             ),
             ("phystate",
@@ -1104,9 +1105,9 @@ register_check_parameters(
                        Tuple(
                            title = _("Usage Levels in Percent"),
                            elements = [
-                               Percentage(title = _("Warning if above") ),
-                               Percentage(title = _("Critical if above") ),
-                           ]
+                               Percentage(title = _("Warning if above")),
+                               Percentage(title = _("Critical if above")),
+                           ],
                        ),
                        Tuple(
                            title = _("Absolute Usage Levels"),
@@ -1115,7 +1116,8 @@ register_check_parameters(
                                 Filesize(title = _("Critical if above")),
                            ]
                         )
-                   ])),
+                   ],
+                   default_value = (80.0, 90.0))),
             ( "pagefile",
                Alternative(
                    title = _("Pagefile Levels"),
@@ -1134,7 +1136,21 @@ register_check_parameters(
                                 Filesize(title = _("Critical if above")),
                            ]
                         )
-                   ])),
+                   ],
+                   default_value = (50.0, 70.0))
+            ),
+            ("average",
+                Integer (
+                    title = _("Averaging"),
+                    help = _("If this parameter is set, all measured values will be averaged "
+                           "over the specified time interval before levels are being applied. Per "
+                           "default, averaging is turned off. "),
+                   unit = _("minutes"),
+                   minvalue = 1,
+                   default_value = 60,
+                )
+            ),
+              
         ]),
     None,
     "dict"

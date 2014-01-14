@@ -1769,6 +1769,12 @@ class TimeofdayRange(ValueSpec):
             raise MKUserError(varprefix + "_until", _("The <i>from</i> time must not be greater then the <i>until</i> time."))
         ValueSpec.custom_validate(self, value, varprefix)
 
+month_names = [
+  _("January"),   _("February"), _("March"),    _("April"),
+  _("May"),       _("June"),     _("July"),     _("August"),
+  _("September"), _("October"),  _("November"), _("December")
+]
+
 class Timerange(CascadingDropdown):
     def __init__(self, **kwargs):
         self._title = _('Time range')

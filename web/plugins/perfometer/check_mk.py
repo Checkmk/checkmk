@@ -71,6 +71,7 @@ perfometers["check_mk-hr_fs"] = perfometer_check_mk_df
 perfometers["check_mk-oracle_asm_diskgroup"] = perfometer_check_mk_df
 perfometers["check_mk-mysql_capacity"] = perfometer_check_mk_df
 perfometers["check_mk-esx_vsphere_counters.ramdisk"] = perfometer_check_mk_df
+perfometers["check_mk-hitachi_hnas_span"] = perfometer_check_mk_df
 
 def perfometer_esx_vsphere_datastores(row, check_command, perf_data):
     used_mb        = perf_data[0][1]
@@ -296,6 +297,15 @@ def perfometer_temperature_multi(row, check_command, perf_data):
     return display_string, perfometer_linear(display_value, display_color)
 
 perfometers["check_mk-brocade_mlx_temp"] = perfometer_temperature_multi
+
+def perfometer_users(row, check_command, perf_data):
+    state = row["service_state"]
+    color = "#39f"
+    value = float(perf_data[0][1])
+    crit = savefloat(perf_data[0][4])
+    return u"%d users" % int(value), perfometer_logarithmic(value, 50, 2, color)
+
+perfometers["check_mk-hitachi_hnas_cifs"] = perfometer_users
 
 def perfometer_blower(row, check_command, perf_data):
     rpm = saveint(perf_data[0][1])

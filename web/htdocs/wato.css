@@ -147,7 +147,7 @@ Boston, MA 02110-1301 USA.
     margin: 0 5px 0 0;
     padding: 0;
     border-style: none;
-    float: left;
+    float: none;
 }
 
 .wato table.foreignchanges {

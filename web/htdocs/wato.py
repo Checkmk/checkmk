@@ -2541,6 +2541,9 @@ def show_service_table(host, firsttime):
 
     table.begin(css ="data", searchable = False)
 
+    # This option will later be switchable somehow
+    parameter_column = False
+
     for state_name, state_type, checkbox in [
         ( _("Available (missing) services"), "new", firsttime ),
         ( _("Already configured services"), "old", True, ),
@@ -2579,7 +2582,7 @@ def show_service_table(host, firsttime):
             table.cell(_("Plugin output"),       html.attrencode(output))
 
             # Icon for Rule editor, Check parameters
-            table.cell()
+            table.cell(parameter_column and _("Check Parameters") or "")
             varname = None
             if checkgroup:
                 varname = "checkgroup_parameters:" + checkgroup
@@ -2600,14 +2603,17 @@ def show_service_table(host, firsttime):
                     paramtext = _("Invalid check parameter: %s!") % e
                     paramtext += _(" The parameter is: %r") % (params,)
 
-                # Strip all html code from the paramtext
-                paramtext = paramtext.replace('</td>', '\t')
-                paramtext = paramtext.replace('</tr>', '\n')
-                paramtext = html.strip_tags(paramtext)
+                if parameter_column:
+                    html.write(paramtext)
+                else:
+                    # Strip all HTML code from the paramtext
+                    paramtext = paramtext.replace('</td>', '\t')
+                    paramtext = paramtext.replace('</tr>', '\n')
+                    paramtext = html.strip_tags(paramtext)
 
-                title = _("Check parameters for this service") + ": \n" + paramtext
-                html.write('<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' %
-                   (url, title))
+                    title = _("Check parameters for this service") + ": \n" + paramtext
+                    html.write('<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' %
+                       (url, title))
 
 
             # Permanently disable icon
@@ -4307,6 +4313,15 @@ def fmt_date(t):
 def fmt_time(t):
     return time.strftime('%H:%M:%S', time.localtime(t))
 
+def fmt_bytes(num):
+    for x in ['Bytes', 'KB', 'MB', 'GB', 'TB']:
+        if num < 1024.0:
+            if x == "Bytes":
+                return "%d %s" % (num, x)
+            else:
+                return "%3.1f %s" % (num, x)
+        num /= 1024.0
+
 def paged_log(log):
     start = int(html.var('start', 0))
     if not start:
@@ -5537,7 +5552,7 @@ def get_snapshot_status(name):
             files = tokens[1].splitlines()
             for filename in files:
                 name, info = filename.split(":",1)
-                file_info[name] = { "size" :info }
+                file_info[name] = {"size" : info}
             status["files"] = file_info
         else: # tarfile is finished, read comment
             # Determine snapshot type: legacy / new
@@ -5580,6 +5595,7 @@ def get_snapshot_status(name):
 def mode_snapshot_detail(phase):
     snapshot_name = html.var("_snapshot_name")
     status = get_snapshot_status(snapshot_name)
+
     if phase == "title":
         return _("Snapshot details of %s")  % status["name"]
     elif phase == "buttons":
@@ -5623,7 +5639,7 @@ def mode_snapshot_detail(phase):
                     domain_id = key[:-7]
                     if domain_id in backup_domains:
                         html.write("<tr><td>%s</td>"  % backup_domains.get(domain_id)["title"])
-                        html.write("<td align='right'>%s</td></tr>" % files[key]["size"])
+                        html.write("<td align='right'>%s</td></tr>" % fmt_bytes(files[key]["size"]))
                     else:
                         other_content.append(key)
                 except:
@@ -5632,7 +5648,7 @@ def mode_snapshot_detail(phase):
                 html.write("<tr><td>%s</td></tr>" % _("Other content"))
                 for key in other_content:
                     html.write("<tr><td>%s</td>"  % key)
-                    html.write("<td align='right'>%s</td></tr>" % files[key]["size"])
+                    html.write("<td align='right'>%s</td></tr>" % fmt_bytes(files[key]["size"]))
             html.write("</table>")
         forms.end()
     if snapshot_name != "uploaded_snapshot":
@@ -5822,6 +5838,8 @@ def mode_snapshot(phase):
         html.write("<br>")
 
         html.write("<h3>" + _("Restore from uploaded file") + "</h3>")
+        html.write(_("Only supports snapshots up to 100MB. If your snapshot is larger than 100MB please copy it into the sites<br>"
+                   "backup directory %s/wato/snapshots. It will then show up in the snapshots table.<br><br>") % defaults.var_dir)
         html.begin_form("upload_form", method = "POST")
         html.upload_file("_upload_file")
         html.button("upload_button", _("Restore from file"), "submit")
@@ -5842,7 +5860,7 @@ def mode_snapshot(phase):
             # Age and Size
             st = os.stat(snapshot_dir + name)
             age = time.time() - st.st_mtime
-            table.cell(_("Size"), "%d" % st.st_size, css="number"),
+            table.cell(_("Size"), fmt_bytes(st.st_size), css="number"),
 
             # Status icons
             table.cell(_("Status"))

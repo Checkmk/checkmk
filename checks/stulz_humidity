@@ -34,7 +34,8 @@ def check_stulz_humidity(item, params, info):
         if line[0] == item:
             warnlow, critlow, warnhigh, crithigh = params
             humidity = savefloat(line[1])/10
-            infotext = "%s%%" % humidity + " (warn/crit below %.1f/%.1f or above %.1f/%.1f %%" % \
+            infotext = "%s%% (warn/crit below %.1f/%.1f or above %.1f/%.1f %%)" % \
+                            ( humidity, critlow, warnlow, warnhigh, crithigh) 
             
             perfdata = [ ('humidity', humidity, critlow, warnlow, warnhigh, crithigh ) ]
             if humidity <= critlow or humidity >= crithigh:

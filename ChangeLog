@@ -135,6 +135,7 @@
     * 0424 FIX: Improved error handling in case of incorrect auth config in distributed WATO environments
     * 0425 FIX: Fix login loop bug in distributed environments with different auth secrets
     * 0117 FIX: Availability button is now visible for users without the right to edit views
+    * 0431 FIX: LDAP: Fixed group syncrhonisation when nested group sync is enabled
 
     WATO:
     * 0308 Multisite can now set rotation view permissions for NagVis...

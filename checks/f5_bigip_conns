@@ -29,41 +29,68 @@
 
 # {iso(1) identified-organization(3) dod(6) internet(1) private(4) enterprise(1) 3375 bigipTrafficMgmt(2) bigipSystem(1) sysGlobals(1) sysGlobalStats(2) sysGlobalClientSslStat(9) sysClientsslStatCurConns(2)}
 
-
-# f5_bigip_conns_default_levels = ( 25000, 30000 )
 factory_settings["f5_bigip_conns_default_levels"] = {
         "conns": ( 25000, 30000 ),
-        "sslconns": ( 25000, 30000 ),
+        "ssl_conns": ( 25000, 30000 ),
 }
 
-
 def inventory_f5_bigip_conns(info):
-    inventory = []
-    if info[0][0]:
-        inventory.append( ( "Open Connections", {} ) )
-    if info[0][1]:
-        inventory.append( ( "Open SSL Connections", {} ) )
-
-    return inventory
+    #inventory = []
+    #if info[0][0]:
+    #    inventory.append( ( "Open Connections", {} ) )
+    #if info[0][1]:
+    #    inventory.append( ( "Open SSL Connections", {} ) )
+    #return inventory
+    if info:
+        return [ ( None, {} ) ]
 
 def check_f5_bigip_conns(item, params, info):
-    if item == "Open Connections":
-        warn, crit = params.get("conns")
-        conns   = int(info[0][0])
-    elif item == "Open SSL Connections":
-        warn, crit = params.get("sslconns")
-        conns   = int(info[0][1])
-    else:
-        return 3, "no such item"
+    type_list = { 'conns': ('Connections', 0),
+                  'ssl_conns': ('SSL Connections', 1),
+                }
+    perfdata = []
+    infotext = ""
+    state = 0
 
-    infotext = "Number %d (limits %d/%d)" % (conns, warn, crit)
-    perfdata = [ ("conns", conns, warn, crit ) ]
-    if conns > crit:
-        state = 2
-    elif conns > warn:
-        state = 1
-    else:
-        state = 0
+    separator = ""
+    for typ, values in type_list.iteritems():
+        param = params.get(typ)
+        desc = values[0]
+        index = values[1]
+        conns   = int(info[0][index])
+        infotext += separator
+        separator = " - "
+        if type(param) == tuple:
+            warn, crit = param
+            perfdata.append( (typ, conns, warn, crit) )
+            if conns >=crit:
+                sstate = 2
+                sym = "(!!)"
+            elif conns >= warn:
+                sstate = 1
+                sym = "(!)"
+            else:
+                sstate = 0
+                sym = ""
+            infotext += "%d %s%s (%d/%d)" % (conns, desc, sym, warn, crit)
+        else:
+            warn, crit = None, None
+            perf = ( (typ, conns, warn, crit) )
+            sstate, text, extraperf = check_levels(conns, typ, param)
+            if sstate == 2:
+                sym == "(!!)"
+            elif sstate == 1:
+                sym = "(!)"
+            else:
+                sym = ""
+            perfdata.append(perf)
+            if len(extraperf) > 0:
+                perfdata.append(extraperf[0])
+            infotext += "%d %s%s" % (conns, desc, sym)
+            if text:
+                infotext += ", " + text
+        if state < sstate:
+            state = sstate
 
     return (state, infotext, perfdata)
 
@@ -72,7 +99,8 @@ check_info["f5_bigip_conns"] = {
     'inventory_function'        : inventory_f5_bigip_conns,
     'service_description'       : 'Open Connections',
     'has_perfdata'              : True,
-    'default_levels_variable'   : "f5_bigip_conns_default_levels",
+    'group'                     : 'f5_connections',
+    'default_levels_variable'   : 'f5_bigip_conns_default_levels',
     'snmp_info'                 : ( '.1.3.6.1.4.1.3375.2.1.1.2', [
                                         '1.8', # sysStatServerCurConns
                                         '9.2', # sysClientsslStatCurConns

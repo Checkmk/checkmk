@@ -2736,21 +2736,17 @@ register_check_parameters(
     Dictionary(
         elements = [
             ( "conns",
-                Tuple(
-                    title = _("Max. number of connections"),
-                    elements = [
-                       Integer(title = _("Warning if above"), default_value = 25000 ),
-                       Integer(title = _("Critical if above"), default_value = 30000 ) ,
-                    ]
+                Levels(
+                     title = _("Max. number of connections"),
+                     default_value = None,
+                     default_levels = (25000, 30000)
                 )
             ),
             ( "ssl_conns",
-                Tuple(
-                    title = _("Max. number of ssl connections"),
-                    elements = [
-                       Integer(title = _("Warning if above"), default_value = 25000 ),
-                       Integer(title = _("Critical if above"), default_value = 30000 ),
-                    ]
+                Levels(
+                     title = _("Max. number of connections"),
+                     default_value = None,
+                     default_levels = (25000, 30000)
                 )
             ),
         ]),

@@ -9,7 +9,7 @@
 
     Multisite:
     * 0117 FIX: Availability button is now visible for users without the right to edit views
-    * 0431 FIX: LDAP: Fixed group syncrhonisation when nested group sync is enabled
+    * 0431 FIX: LDAP: Fixed group synchronisation when nested group sync is enabled
 
     WATO:
     * 0256 FIX: wato snapshots: snapshot restore no longer fails with older python versions...

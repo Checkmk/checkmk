@@ -2017,7 +2017,7 @@ register_check_parameters(
             ],
             optional_keys = [ "average" ],
         ),
-        forth = lambda t: type(t) == tuple and { "levels" : t } or t, 
+        forth = lambda t: type(t) == tuple and { "levels" : t } or t,
     ),
     None, None
 )
@@ -2127,7 +2127,7 @@ register_check_parameters(
                 orientation = "horizontal",
             )),
             ('state_if_stopped',
-            MonitoringState( 
+            MonitoringState(
                 title = _("Default state if stopped autostart services are found"),
                 default_value = 0,
             )),

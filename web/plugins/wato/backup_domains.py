@@ -30,6 +30,7 @@ if not defaults.omd_root:
                         ("file", "auth.secret"),
                         ("file", "auth.serials")
                       ],
+      "cleanup"     : False,
       "default"     : True
     }})
 else:
@@ -61,6 +62,7 @@ else:
                             ("file", "auth.secret"),
                             ("file", "auth.serials")
                           ],
+          "cleanup"     : False,
           "default"     : True
         },
         "personalsettings": {

@@ -43,9 +43,9 @@ The condition can be formed of:
 * the event type (up, down, ok, crit, etc.)
 * a host specification like in WATO rules (using host tags, etc.)
 * a service specification using regular expressions (like in WATO rules)
+* The original state or the complete state transition (e.g. CRIT -> WARN vs. OK -> WARN)
 
 Further conditions that we can think of are:
-* The original state or the complete state transition (e.g. CRIT -> WARN vs. OK -> WARN)
 * the type of the check plugin, e.g. only checks of type "if" or "if64"
 * whether the host or service is contained in a certain host/service group
 * whether it's contained in a certain contact group

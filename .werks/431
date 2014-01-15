@@ -1,0 +1,8 @@
+Title: LDAP: Fixed group synchronisation when nested group sync is enabled
+Level: 2
+Component: multisite
+Version: 1.2.4b5
+Date: 1389772171
+Class: fix
+
+

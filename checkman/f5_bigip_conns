@@ -5,30 +5,25 @@ license: GPL
 distribution: check_mk
 description:
  The check queries the MIB tables of F5 BIG-IP loadbalancers (local traffic managers)
- for the number of current connections and the number of current ssl connections.
+ for the number of current connections {sysStatClientCurConns} and the number of current
+ ssl connections {sysClientsslStatCurConns}.
+ Warning and critical limits can be given for both types of data.
 
  It supports devices running the 9.0 and above releases of the F5 OS. It's tested against 9.3
  devices.
 
- Warning and critical limits can be given for both types of data.
-
  The check is supported by WATO.
 
-inventory:
- The check has two items per host, the number of connections, and the number of ssl connections
-
 perfdata:
- The value: the number of current connections
+ At least two values: the number of current connections and ssl connections
 
 [parameters]
-parameters(dict): parameters is a dictionary with two keys
-
- {"conns"}: the number of connections from {sysStatClientCurConns }
-
- {"sslconns"}: the number of ssl connections from {sysClientsslStatCurConns }
+parameters(dict): parameters is a dictionary with two keys {"conns"} and {"ssl_conns"}.
+The keys may be a tuple of warning and critical levels. However, when using predictive levels
+via WATO, the keys are dictionaries themselves with several keys and values.
 
 [configuration]
-f5_bigip_conns_default_levels(dict): This variable is preset to {{ "conns": ( 25000, 30000 ) }, "sslconns": ( 25000, 30000 )}
+f5_bigip_conns_default_levels(dict): This variable is preset to {{ "conns": ( 25000, 30000 ) }, "ssl_conns": ( 25000, 30000 )}
 
 
 

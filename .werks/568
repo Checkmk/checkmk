@@ -1,0 +1,8 @@
+Title: f5_big_ip_conns: check now supports predictive monitoring and both connections types are merged in one check
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1389799642
+Class: feature
+
+

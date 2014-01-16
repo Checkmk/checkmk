@@ -48,7 +48,7 @@ mkde:
 	make -C $(CHECKMANDIR)/../.. install
 
 mkde-manpages:
-	@if ! ./check_mk; then \
+	@if ! ./check_mk --help >/dev/null 2>&1; then \
 	    echo "Check_MK seems broken somehow! Skipping manpage update!" ; \
 	    exit 1 ; \
 	fi

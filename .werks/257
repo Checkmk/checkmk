@@ -18,6 +18,6 @@ Additional fixes and features
 <ul>
 <li>The agent now also reports its build date, apart from its version</li>
 <li>Bugfix: The virtual and resident memory shown in the check output is now correct.
-There were problems whenever there were multiple processes with the same name<li>
+There were problems whenever there were multiple processes with the same name</li>
 </ul>
 

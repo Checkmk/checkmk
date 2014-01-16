@@ -2601,13 +2601,14 @@ def show_service_table(host, firsttime):
             table.cell(_("Plugin output"),       html.attrencode(output))
 
             # Icon for Rule editor, Check parameters
-            table.cell(parameter_column and _("Check Parameters") or "")
             varname = None
             if checkgroup:
                 varname = "checkgroup_parameters:" + checkgroup
             elif state_type == "active":
                 varname = "active_checks:" + ct
 
+            if parameter_column:
+                table.cell(_("Check Parameters"))
             if varname and varname in g_rulespecs:
                 rulespec = g_rulespecs[varname]
                 url = make_link([("mode", "edit_ruleset"),
@@ -2624,15 +2625,22 @@ def show_service_table(host, firsttime):
 
                 if parameter_column:
                     html.write(paramtext)
-                else:
-                    # Strip all HTML code from the paramtext
-                    paramtext = paramtext.replace('</td>', '\t')
-                    paramtext = paramtext.replace('</tr>', '\n')
-                    paramtext = html.strip_tags(paramtext)
 
+                # Strip all HTML code from the paramtext
+                table.cell("")
+                paramtext = paramtext.replace('</td>', '\t')
+                paramtext = paramtext.replace('</tr>', '\n')
+                paramtext = html.strip_tags(paramtext)
+
+                if parameter_column:
+                    title = _("Edit the parameters of this check")
+                else:
                     title = _("Check parameters for this service") + ": \n" + paramtext
-                    html.write('<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' %
-                       (url, title))
+                html.write('<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' %
+                   (url, title))
+
+            else:
+                table.cell("", "")
 
 
             # Permanently disable icon

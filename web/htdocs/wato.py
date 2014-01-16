@@ -2445,6 +2445,17 @@ def mode_inventory(phase, firsttime):
         config.need_permission("wato.services")
         check_host_permissions(hostname)
         if html.check_transaction():
+
+            # Settings for showing parameters
+            if html.var("_show_parameters"):
+                parameter_column = True
+                config.save_user_file("parameter_column", True)
+                return
+            elif html.var("_hide_parameters"):
+                parameter_column = False
+                config.save_user_file("parameter_column", False)
+                return
+
             cache_options = html.var("_scan") and [ '@scan' ] or [ '@noscan' ]
             table = check_mk_automation(host[".siteid"], "try-inventory", cache_options + [hostname])
             table.sort()
@@ -2498,6 +2509,7 @@ def show_service_table(host, firsttime):
 
     # Read current check configuration
     cache_options = html.var("_scan") and [ '@scan' ] or [ '@noscan' ]
+    parameter_column = config.load_user_file("parameter_column", False)
 
     # We first try using the Cache (if the user has not pressed Full Scan).
     # If we do not find any data, we omit the cache and immediately try
@@ -2535,6 +2547,14 @@ def show_service_table(host, firsttime):
         if len(checktable) > 0:
             html.button("_save", _("Save manual check configuration"))
 
+        html.write(" &nbsp; ")
+        if parameter_column:
+            html.button("_hide_parameters", _("Hide Check Parameters"))
+        else:
+            html.button("_show_parameters", _("Show Check Parameters"))
+
+
+
     html.hidden_fields()
     if html.var("_scan"):
         html.hidden_field("_scan", "on")
@@ -2542,7 +2562,6 @@ def show_service_table(host, firsttime):
     table.begin(css ="data", searchable = False)
 
     # This option will later be switchable somehow
-    parameter_column = False
 
     for state_name, state_type, checkbox in [
         ( _("Available (missing) services"), "new", firsttime ),
@@ -2582,13 +2601,14 @@ def show_service_table(host, firsttime):
             table.cell(_("Plugin output"),       html.attrencode(output))
 
             # Icon for Rule editor, Check parameters
-            table.cell(parameter_column and _("Check Parameters") or "")
             varname = None
             if checkgroup:
                 varname = "checkgroup_parameters:" + checkgroup
             elif state_type == "active":
                 varname = "active_checks:" + ct
 
+            if parameter_column:
+                table.cell(_("Check Parameters"))
             if varname and varname in g_rulespecs:
                 rulespec = g_rulespecs[varname]
                 url = make_link([("mode", "edit_ruleset"),
@@ -2605,15 +2625,22 @@ def show_service_table(host, firsttime):
 
                 if parameter_column:
                     html.write(paramtext)
-                else:
-                    # Strip all HTML code from the paramtext
-                    paramtext = paramtext.replace('</td>', '\t')
-                    paramtext = paramtext.replace('</tr>', '\n')
-                    paramtext = html.strip_tags(paramtext)
 
+                # Strip all HTML code from the paramtext
+                table.cell("")
+                paramtext = paramtext.replace('</td>', '\t')
+                paramtext = paramtext.replace('</tr>', '\n')
+                paramtext = html.strip_tags(paramtext)
+
+                if parameter_column:
+                    title = _("Edit the parameters of this check")
+                else:
                     title = _("Check parameters for this service") + ": \n" + paramtext
-                    html.write('<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' %
-                       (url, title))
+                html.write('<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' %
+                   (url, title))
+
+            else:
+                table.cell("", "")
 
 
             # Permanently disable icon

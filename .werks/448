@@ -1,0 +1,10 @@
+Title: New button in WATO service list for displaying check parameters
+Level: 2
+Component: wato
+Version: 1.2.5i1
+Date: 1389865905
+Class: feature
+
+In WATO the service list of a host has now a new button <i>Show Check Parameters</i>. That button 
+adds a new column to the list that shows the check parameters of that service directly in the
+table - not just as a tooltip to the triangle icon.

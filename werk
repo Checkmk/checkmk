@@ -279,7 +279,7 @@ def add_comment(werk, title, comment):
     werk["description"] += """
 %s: %s
 %s""" % (time.strftime("%F %T"), title, comment)
-    
+
 
 
 def usage():
@@ -298,6 +298,7 @@ where COMMAND is one of:
   edit [#]               - open werk # in editor (or newest werk)
   blame [#]              - show who worked on a werk
   rewrite                - rewrite changelog
+  url #                  - show the online URL of werk #
 
 """)
     sys.exit(1)
@@ -529,7 +530,7 @@ def main_new(args):
 
     sys.stdout.write("Werk saved with id %d.\n" % werk["id"])
 
-def main_blame(args):
+def get_werk_arg(args):
     if len(args) == 0:
         if g_last_werk == None:
             bail_out("No last werk, please specify id.")
@@ -543,8 +544,18 @@ def main_blame(args):
     if not werk:
         bail_out("No such werk.\n")
     save_last_werkid(id)
+    return id
 
+
+def main_blame(args):
+    id = get_werk_arg(args)
     os.system("git blame %d" % id)
+
+
+def main_url(args):
+    id = get_werk_arg(args)
+    sys.stdout.write("http://mathias-kettner.de/check_mk_werks.php?werk_id=%d\n" % id)
+
 
 def main_resolve(args):
     if len(args) == 0:
@@ -821,6 +832,7 @@ commands = {
   "rewrite"     : rewrite_changelog,
   "pick"        : main_pick,
   "cherry-pick" : main_pick,
+  "url"         : main_url,
 }
 
 hits = []

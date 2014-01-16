@@ -1,0 +1,10 @@
+Title: Show all custom variables of hosts and services in the detail views
+Level: 2
+Component: multisite
+Version: 1.2.5i1
+Date: 1389868818
+Class: feature
+
+There is now a new column painter for showing all custom variables of a
+host or service. This painter has been added to the details views of
+host and service.

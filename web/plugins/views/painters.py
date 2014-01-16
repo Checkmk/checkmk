@@ -848,6 +848,25 @@ multisite_painters["svc_servicelevel"] = {
     "sorter"  : 'servicelevel',
 }
 
+def paint_custom_vars(what, row, blacklist=[]):
+    items = row[what + "_custom_variables"].items()
+    items.sort()
+    code = '<table class=customvars>'
+    for varname, value in items:
+        if varname not in blacklist:
+            code += '<tr><td>%s</td><td>%s</td></tr>' % (varname, value)
+    code += '</table>'
+    return "", code
+
+multisite_painters["svc_custom_vars"] = {
+    "title"   : _("Service custom variables"),
+    "columns" : [ "service_custom_variables" ],
+    "paint"   : lambda row: paint_custom_vars('service', row),
+}
+
+
+
+
 #   _   _           _
 #  | | | | ___  ___| |_ ___
 #  | |_| |/ _ \/ __| __/ __|
@@ -1298,6 +1317,13 @@ multisite_painters["host_servicelevel"] = {
     "paint"   : lambda row: paint_custom_var('host', 'EC_SL', row),
     "sorter"  : 'servicelevel',
 }
+
+multisite_painters["host_custom_vars"] = {
+    "title"   : _("Host custom variables"),
+    "columns" : [ "host_custom_variables" ],
+    "paint"   : lambda row: paint_custom_vars('host', row, [ 'FILENAME', 'TAGS']),
+}
+
 
 #    _   _           _
 #   | | | | ___  ___| |_ __ _ _ __ ___  _   _ _ __  ___

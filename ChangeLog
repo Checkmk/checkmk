@@ -1,3 +1,9 @@
+1.2.4b6:
+    Checks & Agents:
+    * 0321 brocade_mlx: enhancing checks (BR-MLX modules, more OK states)...
+    * 0432 FIX: stulz_humidity: Fixed syntax error...
+
+
 1.2.4b5:
     Checks & Agents:
     * 0077 cmciii.psm_current, cmciii_psm_plugs, cmciii_io, cmciii.access, cmciii.temp, cmciii.can_current, cmciii.sensor, cmciii.state: new sub checks included in one new check cmcmiii superseding and improving several previous checks of the Rittal CMCIII device...
@@ -7,9 +13,14 @@
     * 0119 FIX: stulz_humidity: Fixed lower thresholds...
     * 0255 FIX: windows_agent: now able to handle the removal of local/plugin scripts during runtime...
     * 0447 FIX: fortigate_memory: Fix inventory, do not add check if no info available...
+    * 0567 FIX: apc_symmetra: transformation from old tuple to new dict format fixed and improved
 
     Multisite:
     * 0117 FIX: Availability button is now visible for users without the right to edit views
+    * 0431 FIX: LDAP: Fixed group synchronisation when nested group sync is enabled
+
+    WATO:
+    * 0256 FIX: wato snapshots: snapshot restore no longer fails with older python versions...
 
 
 1.2.4b4:

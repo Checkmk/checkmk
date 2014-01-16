@@ -1,0 +1,10 @@
+Title: wato snapshots: snapshot restore no longer fails with older python versions
+Level: 1
+Component: wato
+Version: 1.2.4b5
+Date: 1389714765
+Class: fix
+
+Python versions <= 2.6.6 had problems on restoring snapshots files.<br>
+The python tarfile module crashed when it tried to unpack tarfiles with no content.<br>
+The new implementation now uses the tar from the command line instead of the python tarfile module.

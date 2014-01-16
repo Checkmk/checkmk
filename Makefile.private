@@ -48,6 +48,10 @@ mkde:
 	make -C $(CHECKMANDIR)/../.. install
 
 mkde-manpages:
+	@if ! ./check_mk; then \
+	    echo "Check_MK seems broken somehow! Skipping manpage update!" ; \
+	    exit 1 ; \
+	fi
 	echo 'TI:Table of check types (incomplete)' > $(CHECKMANDIR)/checks
 	echo "DT:$$(date +%F)" >> $(CHECKMANDIR)/checks
 	echo "H1:Table of checks with documentation" >> $(CHECKMANDIR)/checks
@@ -59,7 +63,8 @@ mkde-manpages:
 	echo "C-:" >> $(CHECKMANDIR)/checks 
 	echo "H2:Table of documented checks"  >> $(CHECKMANDIR)/checks
 	echo "<table><tr><th>Name</th><th>Title</th></tr>">> $(CHECKMANDIR)/checks
-	for check in $$(cd checkman ; ls | fgrep -v '~') ; \
-	  do ./check_mk --nowiki -M $$check > $(CHECKMANDIR)/check_$$check 2>> $(CHECKMANDIR)/checks ; \
+	for check in $$(cd checkman ; ls | fgrep -v '~') ; do \
+            echo "$$check ..."; \
+            ./check_mk --nowiki -M $$check > $(CHECKMANDIR)/check_$$check 2>> $(CHECKMANDIR)/checks ; \
 	done
 	echo "</table>" >> $(CHECKMANDIR)/checks

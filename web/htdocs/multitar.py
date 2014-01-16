@@ -98,10 +98,12 @@ def get_file_content(tarfilename, filename):
     return tar.extractfile(filename).read()
 
 def extract_domains(tar, domains):
+    import subprocess
     tar_domains = {}
     for member in tar.getmembers():
         try:
-            tar_domains[member.name[:-7]] = member
+            if member.name.endswith(".tar.gz"):
+                tar_domains[member.name[:-7]] = member
         except Exception, e:
             pass
 
@@ -133,21 +135,27 @@ def extract_domains(tar, domains):
 
         # The complete tar file never fits in stringIO buffer..
         tar.extract(tar_member, restore_dir)
-        subtar = tarfile.open("%s/%s" % (restore_dir, tar_member.name))
 
-        # Set group id of extracted files, except base paths..
-        for entry in subtar.getmembers():
-            full_path = prefix + "/" + entry.name
+        # Older versions of python tarfile handle empty subtar archives :(
+        # This won't work: subtar = tarfile.open("%s/%s" % (restore_dir, tar_member.name))
+        p = subprocess.Popen("tar tzf %s/%s" % (restore_dir, tar_member.name), shell = True, stdout = subprocess.PIPE)
+        stdout, stderr = p.communicate()
+        for line in stdout:
+            full_path = prefix + "/" + line
             path_tokens = full_path.split("/")
             check_exists_or_writable(path_tokens)
 
         # Cleanup
         os.unlink("%s/%s" % (restore_dir, tar_member.name))
 
-        return len(errors) == 0, errors
+        return errors
 
 
     def cleanup_domain(domain):
+        # Some domains, e.g. authorization, do not get a cleanup
+        if domain.get("cleanup") == False:
+            return
+
         def path_valid(prefix, path):
             if path.startswith("/") or path.startswith(".."):
                 return False
@@ -170,21 +178,15 @@ def extract_domains(tar, domains):
             return
         # The complete tar.gz file never fits in stringIO buffer..
         tar.extract(tar_member, restore_dir)
-        subtar = tarfile.open("%s/%s" % (restore_dir, tar_member.name))
-        subtar.extractall(target_dir)
-
-        # Set group id of extracted files, except base paths..
-        base_paths = [path[1] for path in domain.get("paths") if path[0] == "dir"]
-        for entry in subtar.getmembers():
-            if entry.name not in base_paths:
-                os.chown("%s/%s" % (target_dir, entry.name), -1, gid)
+        p = subprocess.Popen("tar xzf %s/%s -C %s" % (restore_dir, tar_member.name, target_dir), shell = True)
+        p.communicate()
 
 
     # Check write permissions for target directories and files
     errors = []
     for name, tar_member in tar_domains.items():
         if name in domains:
-            result, dom_errors = check_domain_permissions(domains[name], tar_member)
+            dom_errors = check_domain_permissions(domains[name], tar_member)
             errors.extend(dom_errors)
     if len(errors):
         errors = list(set(errors))

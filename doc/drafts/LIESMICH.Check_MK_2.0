@@ -1,0 +1,62 @@
+Ideen für Aufräumarbeiten und Vereinfachungen an Check_MK für die Zukunft
+
+[1] Manual Checks
+
+Die aktuellen Regelsätze für Manual Checks fliegen weg. Dafür gibt
+es ein neues WATO-Modul, was optisch (und vom Code) her dem Modul
+"Host & Service Parameters" entspricht. In diesem Modul kann man
+sich durch den Baumartigen Check-Katalog hangeln und dort einen
+Checktyp auswählen (nicht eine Gruppe). Von diesem kann man dann
+statisch *Items* anlegen, jedoch ohne Parameter! Die jetzigen
+Regel für die "Inventorzed Checks" gelten dann ab sofort auch für
+die manuell angelegten Checks und heißen nur noch "Check Parameters".
+Die Agentenlosen "Active Checks" werden ebenfalls in die neuen manuell
+Checks einsortiert - auch wenn diese als Ausnahme direkt die Parameter
+tragen.
+
+
+[2] Prozess-Inventur
+
+Die Prozess-Inventur-Regel wird so vereinfacht, dass sie nur noch
+eine Abbilung von Itemname (z.B. "NTP") auf eine Prozess-Selektion
+darstellt (z.B. ~.*sbin/ntp, User egal). Es werden in Inventurregeln
+dann generell keine Parameter mehr definiert. Die Inventur erzeugt
+dann für jede gefundene Prozess-Selektion ein Item. Die Schwellwerte
+werden durch eine neue Regel gemacht, in die die jetzigen Werte
+umgezogen werden (Anzahlen, Schwellen für CPU, etc.). Per Default
+gelten dann als Schwellen 1,1,None,None (mindestens 1, sonst kritisch).
+Evtl. schalten wir dann gleich per Default die Perfdaten ein.
+Der Subcheck ps.perf entfällt.
+
+
+[3] Gruppierungsregeln umziehen
+
+Die Regeln File Info Groups, Filesystem Groups und Prozess Names(?)
+werden in einen eigenen Kasten eingebaut. Evtl. auch noch Interface
+groups.
+
+
+[4] WATO-Module etwas zusammenfassen
+
+Wir könnten Host & Service-Gruops zusammenziehen. Und ebenfalls Contact Groups und Users -> "Users". 
+
+
+[5] Begrifflichkeiten
+
+Wir räumen einige Begriffe auf und formulieren mehr aus
+Sicht des Benutzers als der Implementierung oder Historie.
+
+Contact       -> User (keine Unterscheidung mehr)
+Contact Group -> User group oder einfach nur Group
+Inventory     -> Service discovery
+
+
+[6] Roles & Permissions
+
+Das WATO-Modul heißt dann nur noch "Permissions". Die
+Eingangstabelle bekommt die Überschrift "Userroles".
+
+
+[7] Kontexthilfe
+
+

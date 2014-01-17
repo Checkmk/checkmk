@@ -37,6 +37,10 @@
 #   | used for unixoide operating systems.                                 |
 #   +----------------------------------------------------------------------+
 
+# The following variable is obsolete. It is kept here so that Check_MK 
+# won't fail if it's found in main.mk
+mem_extended_perfdata = None
+
 def parse_proc_meminfo(info):
     return dict([ (i[0][:-1], int(i[1])) for i in info ])
 

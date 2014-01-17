@@ -33,6 +33,10 @@
 # Third generation (from 1.1.5) output also virtual memory, resident memory and %CPU:
 # (class,122376,88128,0.0) /usr/jre1.6.0_13/bin/java -Dn=Cart_16TH13 -Dmcs.node=zbgh1ca -Dmcs.mdt.redundan
 
+# Forth generation (>=1.2.5), additional columns in bracket:
+# (user, virtual_size, resident_size, %cpu, processID, pagefile_usage, usermodetime, kernelmodetime, openHandles, threadCount) name
+#(\\KLAPPRECHNER\ab,29284,2948,0,3124,904,400576,901296,35,1)    NOTEPAD.EXE
+
 # Windows agent now ships a plugin "psperf.bat" that adds a section from wmic
 # to the output:
 # <<<ps:sep(44)>>>
@@ -72,6 +76,7 @@ def ps_parse_info(info):
     result = []
     lines = iter(info)
     wmic_info = {}
+    use_wmic_info = True
     cpu_cores = 1
     try:
         is_wmic = False
@@ -86,32 +91,49 @@ def ps_parse_info(info):
                 continue
 
             if not is_wmic:
+                # Ignore data from the psperf.bat if the agent has this feature builtin
+                if use_wmic_info and len(line[1].split(",")) >= 10:
+                    use_wmic_info = False
+                if not use_wmic_info:
+                    # We need to determine the number of cpu_cores without the wmic_info
+                    if line[2].lower() == "system idle process":
+                        cpu_cores = int(line[1][1:-1].split(",")[9])
                 result.append(line)
             else:
                 row = dict(zip(wmic_headers, line))
-                wmic_info[(row["node"], row["Name"])] = row
+                wmic_info[(row["node"], row["Name"], row["ProcessId"])] = row
     except StopIteration:
         pass
 
+
     # Add wmic_info to process table, but only if present:
-    if wmic_info:
+    if use_wmic_info and wmic_info:
+        def get_ps_info(node, name, processId = 0):
+            for key, value in wmic_info.items():
+                if (not processId and key[0:2] == (node, name)) or key == (node, name, processId):
+                    # each info is only returned once!
+                    del wmic_info[key]
+                    return value
         info = []
         seen_pids = set([]) # Remove duplicate entries
         for line in result:
-            psinfo = wmic_info.get(tuple(line))
+            psinfo = get_ps_info(line[0], line[1])
             # Get number of CPU cores from system idle process
             if psinfo:
                 if "ThreadCount" in wmic_headers and psinfo["Name"].lower() == "system idle process":
-                    cpucores = int(psinfo["ThreadCount"])
-                pid     = int(psinfo["ProcessId"])
+                    cpu_cores = int(psinfo["ThreadCount"])
+                pid = int(psinfo["ProcessId"])
                 if pid not in seen_pids:
                     seen_pids.add(pid)
-                    virt    = int(psinfo["VirtualSize"]) / 1024 # Bytes -> KB
-                    resi    = int(psinfo["WorkingSetSize"]) / 1024 # Bytes -> KB
-                    userc   = int(psinfo["UserModeTime"])   # do not resolve counter here!
-                    kernelc = int(psinfo["KernelModeTime"]) # do not resolve counter here!
-                    handlec = int(psinfo.get("HandleCount", 0)) # Only in newer psperf.bat versions
-                    line[1:1] = [ "(unknown,%d,%d,@%d/%d/%d/%d)" % (virt, resi, pid, userc, kernelc, handlec) ]
+                    virt     = int(psinfo["VirtualSize"])    / 1024 # Bytes -> KB
+                    resi     = int(psinfo["WorkingSetSize"]) / 1024 # Bytes -> KB
+                    pagefile = int(psinfo["PageFileUsage"])  / 1024 # Bytes -> KB
+                    userc    = int(psinfo["UserModeTime"])   # do not resolve counter here!
+                    kernelc  = int(psinfo["KernelModeTime"]) # do not resolve counter here!
+                    handlec  = int(psinfo.get("HandleCount", 0)) # Only in newer psperf.bat versions
+                    threadc  = int(psinfo["ThreadCount"])    # do not resolve counter here!
+                    line[1:1] = [ "(unknown,%d,%d,0,%d,%d,%d,%d,%d,%d)" %
+                                    (virt, resi, pid, pagefile, userc, kernelc, handlec, threadc) ]
             info.append(line)
         return cpu_cores, info
     else:
@@ -330,11 +352,11 @@ def check_procs(item, params, info, with_perfdata):
                 running_on.add(node_name)
             if ps[0][0] == '(':
                 addinfo = ps[0][1:-1].split(",")
-                if len(addinfo) >= 4: # extended performance data
+                if len(addinfo) >= 4: # extended performance data: virtualsize, residentsize, %cpu
                     virtual_size += int(addinfo[1])  # kB
                     resident_size += int(addinfo[2]) # kB
-                    if addinfo[3].startswith('@'): # wmic counters :-(
-                        pid, user_c, kernel_c, handle_c = map(int, addinfo[3][1:].split('/'))
+                    if len(addinfo) >= 10: # even more data: processId, pagefile_usage, usermodetime, kernelmodetime, threadCount, openHandles
+                        pid, pagefile_usage, user_c, kernel_c, handle_c = map(int, addinfo[4:9])
                         timedif, user_per_sec   = get_counter("ps_wmic.user.%d" % pid, now, user_c)
                         timedif, kernel_per_sec = get_counter("ps_wmic.kernel.%d" % pid, now, kernel_c)
                         user_perc = user_per_sec / 100000.0 / cpu_cores

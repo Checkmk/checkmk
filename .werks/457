@@ -1,0 +1,8 @@
+Title: hitachi_hnas_volume: New check for Usage and Status of Volumes in Hitachi HNAS storage systems
+Level: 2
+Component: checks
+Version: 1.2.5i1
+Date: 1389884457
+Class: feature
+
+

@@ -35,7 +35,7 @@ def check_apc_humidity(item, params, info):
     for line in info:
         if line[0] == item:
             humidity = saveint(line[1])
-            warnlow, critlow, warnhigh, crithigh = params
+            critlow, warnlow, warnhigh, crithigh = params
             infotext = "%s%% (warn/crit below %.1f/%.1f or above %.1f/%.1f %%)" % \
                             ( humidity, critlow, warnlow, warnhigh, crithigh)
             perfdata = [ ( "humidity", humidity, critlow, warnlow, warnhigh, crithigh ) ]

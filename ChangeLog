@@ -2,6 +2,9 @@
     Checks & Agents:
     * 0258 FIX: ps: fixed calculation of virtual/resident memory from windows agents...
 
+    WATO:
+    * 0434 FIX: Fixed wrong count of failed hosts in bulk inventory mode...
+
 
 1.2.4b6:
     Checks & Agents:

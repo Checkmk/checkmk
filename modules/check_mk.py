@@ -1692,28 +1692,115 @@ def get_rule_options(entry):
         return entry, {}
 
 
-# Compute list of service_groups or contact_groups of service
-# conf is either service_groups or service_contactgroups
-def service_extra_conf(hostname, service, conf):
-    entries = []
-    for entry in conf:
-        entry, rule_options = get_rule_options(entry)
+def all_matching_hosts(tags, hostlist):
+    matching = set([])
+    for taggedhost in all_hosts + clusters.keys():
+        parts = taggedhost.split("|")
+        hostname = parts[0]
+        hosttags = parts[1:]
+
+        if hosttags_match_taglist(hosttags, tags) and \
+           in_extraconf_hostlist(hostlist, hostname):
+           matching.add(hostname)
+    return matching
+
+
+def convert_service_ruleset(ruleset):
+    new_rules = []
+    for rule in ruleset:
+        rule, rule_options = get_rule_options(rule) # Das könnte man einmal umbauen und so lassen (8 sec von 137)
         if rule_options.get("disabled"):
             continue
 
-        if len(entry) == 3:
-            item, hostlist, servlist = entry
+        if len(rule) == 3:
+            item, hostlist, servlist = rule
             tags = []
-        elif len(entry) == 4:
-            item, tags, hostlist, servlist = entry
+        elif len(rule) == 4:
+            item, tags, hostlist, servlist = rule
         else:
-            raise MKGeneralException("Invalid entry '%r' in service configuration list: must have 3 or 4 elements" % (entry,))
+            raise MKGeneralException("Invalid rule '%r' in service configuration list: must have 3 or 4 elements" % (rule,))
 
-        if hosttags_match_taglist(tags_of_host(hostname), tags) and \
-           in_extraconf_hostlist(hostlist, hostname) and \
-           in_extraconf_servicelist(servlist, service):
+        # Directly compute set of all matching hosts here, this
+        # will avoid recomputation later
+        hosts = all_matching_hosts(tags, hostlist)
+        new_rules.append((item, hosts, servlist))
+
+    # Replace rules inplace. This finally modifies it, so we
+    # need this conversion only once
+    ruleset[:] = new_rules
+
+def serviceruleset_is_converted(ruleset):
+    if not ruleset:
+        return True # empty rulesets are converted in a trivial way
+
+    if type(ruleset[0]) != tuple:
+        return False
+
+    return type(ruleset[0][1]) == set
+
+
+# Compute outcome of a service rule set that has an item
+def service_extra_conf(hostname, service, ruleset):
+    if not serviceruleset_is_converted(ruleset):
+        convert_service_ruleset(ruleset)
+
+    entries = []
+    for item, hosts, servlist in ruleset:
+        if hostname in hosts and in_extraconf_servicelist(servlist, service):
             entries.append(item)
     return entries
+
+def convert_boolean_service_ruleset(ruleset):
+    new_rules = []
+    for rule in ruleset:
+        entry, rule_options = get_rule_options(rule)
+        if rule_options.get("disabled"):
+            continue
+
+        if entry[0] == NEGATE: # this entry is logically negated
+            negate = True
+            entry = entry[1:]
+        else:
+            negate = False
+
+        if len(entry) == 2:
+            hostlist, servlist = entry
+            tags = []
+        elif len(entry) == 3:
+            tags, hostlist, servlist = entry
+        else:
+            raise MKGeneralException("Invalid entry '%r' in configuration: must have 2 or 3 elements" % (entry,))
+
+        # Directly compute set of all matching hosts here, this
+        # will avoid recomputation later
+        hosts = all_matching_hosts(tags, hostlist)
+        new_rules.append((negate, hosts, servlist))
+
+    # Replace rules inplace. This finally modifies it, so we
+    # need this conversion only once
+    ruleset[:] = new_rules
+
+
+def boolean_serviceruleset_is_converted(ruleset):
+    if not ruleset:
+        return True # empty rulesets are converted in a trivial way
+
+    if type(ruleset[0]) != tuple:
+        return False
+
+    return type(ruleset[0][1]) == set
+
+
+# Compute outcome of a service rule set that just say yes/no
+def in_boolean_serviceconf_list(hostname, service_description, ruleset):
+    if not boolean_serviceruleset_is_converted(ruleset):
+        convert_boolean_service_ruleset(ruleset)
+
+    for negate, hosts, servlist in ruleset:
+        if hostname in hosts and \
+           in_extraconf_servicelist(servlist, service_description):
+            return not negate
+    return False # no match. Do not ignore
 
 
 
@@ -2872,33 +2959,6 @@ def service_ignored(hostname, checktype, service_description):
     if checktype and checktype_ignored_for_host(hostname, checktype):
         return True
     return False
-
-
-def in_boolean_serviceconf_list(hostname, service_description, conflist):
-    for entry in conflist:
-        entry, rule_options = get_rule_options(entry)
-        if rule_options.get("disabled"):
-            continue
-
-        if entry[0] == NEGATE: # this entry is logically negated
-            negate = True
-            entry = entry[1:]
-        else:
-            negate = False
-
-        if len(entry) == 2:
-            hostlist, servlist = entry
-            tags = []
-        elif len(entry) == 3:
-            tags, hostlist, servlist = entry
-        else:
-            raise MKGeneralException("Invalid entry '%r' in configuration: must have 2 or 3 elements" % (entry,))
-
-        if hosttags_match_taglist(tags_of_host(hostname), tags) and \
-           in_extraconf_hostlist(hostlist, hostname) and \
-           in_extraconf_servicelist(servlist, service_description):
-            return not negate
-    return False # no match. Do not ignore
 
 
 # Remove all autochecks of certain types of a certain host

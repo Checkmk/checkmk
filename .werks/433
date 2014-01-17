@@ -1,0 +1,14 @@
+Title: Creating WATO lock during automations (like e.g. master to slave syncs)
+Level: 1
+Component: wato
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1389945767
+
+All actions within WATO which might modify config files are globally locked.
+This prevents mixups in written files. Only the automation commands did not
+use a lock which might lead into broken files when some manual action
+and some pushed snapshot wrote a file at the same time. The automations
+now use the same lock as user actions which should prevent such problems now.
+

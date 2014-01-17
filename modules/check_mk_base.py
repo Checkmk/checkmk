@@ -1339,10 +1339,18 @@ def i_am_root():
 
 # Returns the nodes of a cluster, or None if hostname is
 # not a cluster
+g_nodesof_cache = {}
 def nodes_of(hostname):
+    nodes = g_nodesof_cache.get(hostname, False)
+    if nodes != False:
+        return nodes
+
     for tagged_hostname, nodes in clusters.items():
         if hostname == tagged_hostname.split("|")[0]:
+            g_nodesof_cache[hostname] = nodes
             return nodes
+
+    g_nodesof_cache[hostname] = None
     return None
 
 def pnp_cleanup(s):

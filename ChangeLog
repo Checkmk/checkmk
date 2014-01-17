@@ -1,5 +1,6 @@
 1.2.4b7:
     Core & Setup:
+    * 0452 Speedup generation of configuration...
     * 0451 FIX: Ignore missing check types when creating configuration for Nagios
 
     Checks & Agents:

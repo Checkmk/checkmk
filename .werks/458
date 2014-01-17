@@ -1,0 +1,8 @@
+Title: hitachi_hnas_fc_if: New check for FibreChannel Interfaces in Hitachi HNAS storage systems
+Level: 2
+Component: checks
+Version: 1.2.5i1
+Date: 1389949907
+Class: feature
+
+

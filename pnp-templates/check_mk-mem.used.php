@@ -106,4 +106,12 @@ if (isset($RRD['committed_as'])) {
            . "GPRINT:committed:MAX:\"%6.0lf MB max\\n\" " ;
 }
 
+/* Shared memory is part of RAM. So simply overlay it */
+if (isset($RRD['shared'])) {
+   $def[1] .= "DEF:shared=$RRD[shared] "
+           . "AREA:shared#44ccff:\"Shared Memory   \" "
+           . "GPRINT:shared:LAST:\"%6.0lf MB last\" "
+           . "GPRINT:shared:AVERAGE:\"%6.0lf MB avg\" "
+           . "GPRINT:shared:MAX:\"%6.0lf MB max\\n\" " ;
+}
 ?>

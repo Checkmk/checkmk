@@ -3,6 +3,9 @@
     * 0321 brocade_mlx: enhancing checks (BR-MLX modules, more OK states)...
     * 0432 FIX: stulz_humidity: Fixed syntax error...
 
+    WATO:
+    * 0433 FIX: Creating WATO lock during automations (like e.g. master to slave syncs)...
+
 
 1.2.4b5:
     Checks & Agents:

@@ -2003,6 +2003,9 @@ define servicedependency {
     have_at_least_one_service = False
     used_descriptions = {}
     for ((checkname, item), (params, description, deps)) in host_checks:
+        if checkname not in check_info:
+            continue # simply ignore missing checks
+
         # Make sure, the service description is unique on this host
         if description in used_descriptions:
             cn, it = used_descriptions[description]

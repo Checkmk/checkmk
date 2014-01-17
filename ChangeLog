@@ -1,3 +1,8 @@
+1.2.4b7:
+    Checks & Agents:
+    * 0258 FIX: ps: fixed calculation of virtual/resident memory from windows agents...
+
+
 1.2.4b6:
     Checks & Agents:
     * 0321 brocade_mlx: enhancing checks (BR-MLX modules, more OK states)...

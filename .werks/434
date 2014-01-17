@@ -1,0 +1,10 @@
+Title: Fixed wrong count of failed hosts in bulk inventory mode
+Level: 1
+Component: wato
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1389949915
+
+Failed inventory of hosts in bulk inventory were not counted
+correctly in GUI.

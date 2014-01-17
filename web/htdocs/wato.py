@@ -2934,7 +2934,7 @@ def mode_bulk_inventory(phase):
                     arguments = [ "@scan" ] + arguments
                 counts, failed_hosts = check_mk_automation(site_id, "inventory", arguments)
                 # sum up host individual counts to have a total count
-                sum_counts = [ 0, 0, 0, 0 ]
+                sum_counts = [ 0, 0, 0, 0 ] # added, removed, kept, new
                 result_txt = ''
                 for hostname in hostnames:
                     sum_counts[0] += counts[hostname][0]
@@ -2957,7 +2957,7 @@ def mode_bulk_inventory(phase):
                             del host["inventory_failed"]
                             save_hosts(folder) # Could be optimized, but difficult here
 
-                result = repr([ 'continue', num_hosts, 0 ] + sum_counts) + "\n" + result_txt
+                result = repr([ 'continue', num_hosts, len(failed_hosts) ] + sum_counts) + "\n" + result_txt
 
             except Exception, e:
                 result = repr([ 'failed', num_hosts, num_hosts, 0, 0, 0, 0, ]) + "\n"

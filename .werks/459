@@ -1,0 +1,8 @@
+Title: emcvnx_info: New info check providing Model, Revision and Serial Number of EMC VNX storage systems
+Level: 2
+Component: checks
+Version: 1.2.5i1
+Date: 1389969007
+Class: feature
+
+

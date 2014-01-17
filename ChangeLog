@@ -1,4 +1,7 @@
 1.2.4b7:
+    Core & Setup:
+    * 0451 FIX: Ignore missing check types when creating configuration for Nagios
+
     Checks & Agents:
     * 0258 FIX: ps: fixed calculation of virtual/resident memory from windows agents...
 

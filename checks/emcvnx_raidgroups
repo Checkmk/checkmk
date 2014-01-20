@@ -72,6 +72,7 @@
 
 def parse_emcvnx_raidgroups(info):
     parsed = {}
+    append = False
     for line in info:
         if len(line) > 2 and line[0] == "RaidGroup" and line[1] == "ID:":
             rg = {}
@@ -79,12 +80,31 @@ def parse_emcvnx_raidgroups(info):
         elif len(line) > 3 and line[0] == "List" and line[1] == "of" and line[2] == "luns:":
             luns = ",".join(line[3:])
             rg["luns"] = luns
+        elif len(line) > 8 and line[0] == "List" and line[1] == "of" and line[2] == "disks:":
+            disks = []
+            disk = line[4] + "/" + line[6] + " Disk " + line[8]
+            disks.append(disk)
+            rg["disks"] = disks
+            append = True
+        elif append == True and len(line) > 5 and line[0] == "Bus" and line[2] == "Enclosure" and line[4] == "Disk":
+            disk = line[1] + "/" + line[3] + " Disk " + line[5]
+            disks.append(disk)
+        elif append == True:
+            append = False
     return parsed
 
 
+#   .--list of LUNs--------------------------------------------------------.
+#   |           _ _     _            __   _    _   _ _   _                 |
+#   |          | (_)___| |_    ___  / _| | |  | | | | \ | |___             |
+#   |          | | / __| __|  / _ \| |_  | |  | | | |  \| / __|            |
+#   |          | | \__ \ |_  | (_) |  _| | |__| |_| | |\  \__ \            |
+#   |          |_|_|___/\__|  \___/|_|   |_____\___/|_| \_|___/            |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
 def inventory_emcvnx_raidgroups_list_luns(info):
     parsed = parse_emcvnx_raidgroups(info)
-    #import pprint; pprint.pprint(parsed)
     inventory = []
     for rg in parsed:
         inventory.append((rg, None))
@@ -103,3 +123,51 @@ check_info['emcvnx_raidgroups.list_luns'] = {
     "check_function"          : check_emcvnx_raidgroups_list_luns,
     "service_description"     : "RAID Group %s LUNs"
 }
+
+#.
+#   .--list of disks-------------------------------------------------------.
+#   |           _ _     _            __       _ _     _                    |
+#   |          | (_)___| |_    ___  / _|   __| (_)___| | _____             |
+#   |          | | / __| __|  / _ \| |_   / _` | / __| |/ / __|            |
+#   |          | | \__ \ |_  | (_) |  _| | (_| | \__ \   <\__ \            |
+#   |          |_|_|___/\__|  \___/|_|    \__,_|_|___/_|\_\___/            |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_emcvnx_raidgroups_list_disks(info):
+    import pprint; pprint.pprint(info)
+    parsed = parse_emcvnx_raidgroups(info)
+    import pprint; pprint.pprint(parsed)
+    inventory = []
+    for rg in parsed:
+        inventory.append((rg, None))
+    return inventory
+
+
+def check_emcvnx_raidgroups_list_disks(item, _no_params, info):
+    parsed = parse_emcvnx_raidgroups(info)
+    if item not in parsed:
+        return 3, "RAID Group %s not found in agent output" % item 
+
+    message = ""
+    enc = ""
+    for disk in sorted(parsed[item]["disks"]):
+        if message != "":
+            message += ", "
+        enc_id, disk_id = disk.split(' ', 1)
+        if enc_id == enc:
+            message += disk_id
+        else:
+            message += "Enclosure " + enc_id + " " + disk_id
+            enc = enc_id
+
+    return 0, "List of Disks: " + message
+
+
+check_info['emcvnx_raidgroups.list_disks'] = {
+    "inventory_function"      : inventory_emcvnx_raidgroups_list_disks, 
+    "check_function"          : check_emcvnx_raidgroups_list_disks,
+    "service_description"     : "RAID Group %s Disks"
+}
+
+#.

@@ -1,0 +1,9 @@
+Title: Ignore missing check types when creating configuration for Nagios
+Level: 1
+Component: core
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1389954601
+
+

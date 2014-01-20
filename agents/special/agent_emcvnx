@@ -159,12 +159,13 @@ cmd=basecmd + "-sp"
 if opt_debug:
     sys.stderr.write("executing external command: %s\n" % cmd)
 
+cmdout = []
 for line in os.popen(cmd).readlines():
     line = line.strip()
+    cmdout.append(line)
     tokens = re.split("\s+", line)
     if tokens[0] == "Agent" and tokens[1] == "Rev:":
         emcvnx_version = "_".join(tokens[2:])
-        break
 
 print "Version: %s" % emcvnx_version
 
@@ -173,6 +174,9 @@ print "Version: %s" % emcvnx_version
 # other commandline argument
 #print "AgentOs: %s " % emcvnx_model
 
+print "<<<emcvnx_info>>>"
+for line in cmdout:
+    print line
 
 #
 # all other sections of agent output

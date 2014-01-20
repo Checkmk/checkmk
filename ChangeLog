@@ -154,6 +154,7 @@
     * 0425 FIX: Fix login loop bug in distributed environments with different auth secrets
     * 0117 FIX: Availability button is now visible for users without the right to edit views
     * 0431 FIX: LDAP: Fixed group syncrhonisation when nested group sync is enabled
+    * 0122 FIX: Multisite view editor not longer throwing a exception when loading views from other users
 
     WATO:
     * 0308 Multisite can now set rotation view permissions for NagVis...

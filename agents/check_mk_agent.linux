@@ -369,7 +369,7 @@ if type lpstat > /dev/null 2>&1; then
        echo '<<<cups_queues>>>'
        WAITMAX="waitmax 3"
        CPRINTCONF=/etc/cups/printers.conf
-       PRINTERS=$(lpstat -a | awk '{print $1}')
+       PRINTERS=$(waitmax 10 lpstat -a | awk '{print $1}')
        if [ -r "$CPRINTCONF" ] ; then
           for PQ in $PRINTERS ; do
              grep -q -x -E "<(Default)?Printer $PQ>" $CPRINTCONF && $WAITMAX lpstat -p $PQ

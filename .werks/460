@@ -1,0 +1,10 @@
+Title: endless waiting for printer queues fixed
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1390207997
+Class: fix
+
+When checking the cups printer queues, the agent execution could take very long
+if a machine has many many printers. Fixed this by executing the lpstat command
+with a timeout.

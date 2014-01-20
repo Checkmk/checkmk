@@ -1,0 +1,8 @@
+Title: emcvnx_raidgroups.list_luns: New check for EMC VNX storage system
+Level: 2
+Component: checks
+Version: 1.2.5i1
+Date: 1390217290
+Class: feature
+
+reporting the List of LUNs used in a RAID Group

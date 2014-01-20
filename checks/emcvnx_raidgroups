@@ -1,0 +1,105 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# <<<emcvnx_raidgroups>>>
+# 
+# 
+# Server IP Address:       172.16.8.82
+# Agent Rev:           7.32.27 (0.14)
+# 
+# 
+# All RAID Groups Information
+# ----------------------------
+# 
+# 
+# RaidGroup ID:                              0
+# RaidGroup Type:                            r5
+# RaidGroup State:                           Explicit_Remove
+#                                            Valid_luns
+# List of disks:                             Bus 0 Enclosure 0  Disk 0
+#                                            Bus 0 Enclosure 0  Disk 1
+#                                            Bus 0 Enclosure 0  Disk 2
+#                                            Bus 0 Enclosure 0  Disk 3
+# List of luns:                              4 
+# Max Number of disks:                       16
+# Max Number of luns:                        256
+# Raw Capacity (Blocks):                     702504960
+# Logical Capacity (Blocks):                 526878720
+# Free Capacity (Blocks,non-contiguous):     0
+# Free contiguous group of unbound segments: 0
+# Defrag/Expand priority:                    Medium
+# Percent defragmented:                      100
+# Percent expanded:                          N/A
+# Disk expanding onto:                       N/A
+# Lun Expansion enabled:                     NO
+# Legal RAID types:                          r5 
+# 
+# RaidGroup ID:                              124
+# RaidGroup Type:                            hot_spare
+# [...]
+
+# Parse agent output into a dict of the form:
+# (where the RAID Group ID is used as key)
+# parsed = {'0':   {'luns': '4'},
+#           '1':   {'luns': '0,1'},
+#           '124': {'luns': '4089'},
+#           '2':   {'luns': '2,3'}}
+
+
+def parse_emcvnx_raidgroups(info):
+    parsed = {}
+    for line in info:
+        if len(line) > 2 and line[0] == "RaidGroup" and line[1] == "ID:":
+            rg = {}
+            parsed[line[2]] = rg
+        elif len(line) > 3 and line[0] == "List" and line[1] == "of" and line[2] == "luns:":
+            luns = ",".join(line[3:])
+            rg["luns"] = luns
+    return parsed
+
+
+def inventory_emcvnx_raidgroups_list_luns(info):
+    parsed = parse_emcvnx_raidgroups(info)
+    #import pprint; pprint.pprint(parsed)
+    inventory = []
+    for rg in parsed:
+        inventory.append((rg, None))
+    return inventory
+
+
+def check_emcvnx_raidgroups_list_luns(item, _no_params, info):
+    parsed = parse_emcvnx_raidgroups(info)
+    if item not in parsed:
+        return 3, "RAID Group %s not found in agent output" % item
+    return 0, "List of LUNs: " + parsed[item]["luns"]
+
+
+check_info['emcvnx_raidgroups.list_luns'] = {
+    "inventory_function"      : inventory_emcvnx_raidgroups_list_luns,
+    "check_function"          : check_emcvnx_raidgroups_list_luns,
+    "service_description"     : "RAID Group %s LUNs"
+}

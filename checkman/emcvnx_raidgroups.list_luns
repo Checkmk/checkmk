@@ -1,0 +1,18 @@
+title: EMC VNX Storage: RAID Group: List of LUNs
+agents: emc
+catalog: hw/storagehw/emc
+license: GPL
+distribution: check_mk
+description:
+ Reports the List of LUNs used in a RAID Group in an EMC VNX storage system.
+
+ This Check is just informational and always returns {OK}.
+
+ The information is retriefed by the special agent agent_emcvnx which uses
+ EMC's command line tool naviseccli.
+
+item:
+ The RAID Group ID.
+
+inventory:
+ Automatically configures one check for every RAID Group listed in the agent output.

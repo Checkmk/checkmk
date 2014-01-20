@@ -1,0 +1,8 @@
+Title: Multisite view editor not longer throwing a exception when loading views from other users
+Level: 1
+Component: multisite
+Version: 1.2.4b7
+Date: 1390225114
+Class: fix
+
+

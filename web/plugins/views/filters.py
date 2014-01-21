@@ -606,7 +606,8 @@ declare_filter(251, FilterTime("service", "svc_last_check", _("Last service chec
 
 declare_filter(250, FilterTime("host", "host_last_state_change", _("Last host state change"), "host_last_state_change"))
 declare_filter(251, FilterTime("host", "host_last_check", _("Last host check"), "host_last_check"))
-
+declare_filter(253, FilterTime("comment", "comment_entry_time", _("Time of comment"), "comment_entry_time" ))
+declare_filter(253, FilterTime("downtime", "downtime_entry_time", _("Time of Downtime"), "downtime_entry_time" ))
 #    _
 #   | |    ___   __ _
 #   | |   / _ \ / _` |

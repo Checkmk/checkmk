@@ -1,0 +1,8 @@
+Title: New time range filter for Downtimes and Comments
+Level: 1
+Component: multisite
+Version: 1.2.5i1
+Date: 1390303340
+Class: feature
+
+With the two new filters it is possible to filter list of comments or the list of downtimes for a special time range

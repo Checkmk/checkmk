@@ -1298,7 +1298,7 @@ def submit_to_core(host, service, state, output):
 
     # Send to Nagios/Icinga command pipe
     elif check_submission == "pipe":
-#        output = output.replace("\n", "\\n")
+        output = output.replace("\n", "\\n")
         open_command_pipe()
         if nagios_command_pipe:
             nagios_command_pipe.write("[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" %
@@ -1309,7 +1309,7 @@ def submit_to_core(host, service, state, output):
 
     # Create check result files for Nagios/Icinga
     elif check_submission == "file":
-#        output = output.replace("\n", "\\n")
+        output = output.replace("\n", "\\n")
         open_checkresult_file()
         if checkresult_file_fd:
             now = time.time()

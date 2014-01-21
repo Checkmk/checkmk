@@ -1287,6 +1287,7 @@ def submit_to_core(host, service, state, output):
     # Replace \n to enable multiline ouput
     output = output.replace('\n', '\\n')
     if monitoring_core == "cmc":
+        output = output.replace("\n", "\x01", 1).replace("\n","\\n")
         result = "\t%d\t%s\t%s\n" % (state, service, output.replace("\0", "")) # remove binary 0, CMC does not like it
         if opt_keepalive:
             global total_check_output
@@ -1297,6 +1298,7 @@ def submit_to_core(host, service, state, output):
 
     # Send to Nagios/Icinga command pipe
     elif check_submission == "pipe":
+#        output = output.replace("\n", "\\n")
         open_command_pipe()
         if nagios_command_pipe:
             nagios_command_pipe.write("[%d] PROCESS_SERVICE_CHECK_RESULT;%s;%s;%d;%s\n" %
@@ -1307,6 +1309,7 @@ def submit_to_core(host, service, state, output):
 
     # Create check result files for Nagios/Icinga
     elif check_submission == "file":
+#        output = output.replace("\n", "\\n")
         open_checkresult_file()
         if checkresult_file_fd:
             now = time.time()

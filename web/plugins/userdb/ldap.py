@@ -738,7 +738,7 @@ def ldap_convert_auth_expire(plugin, params, user_id, ldap_user, user):
     # Special handling for active directory: Is the user enabled / disabled?
     if config.ldap_connection['type'] == 'ad' and ldap_user.get('useraccountcontrol'):
         # see http://www.selfadsi.de/ads-attributes/user-userAccountControl.htm for details
-        if saveint(ldap_user['useraccountcontrol'][0]) & 2:
+        if saveint(ldap_user['useraccountcontrol'][0]) & 2 and not user.get("locked", False):
             return {
                 'locked': True,
                 'serial': user.get('serial', 0) + 1,

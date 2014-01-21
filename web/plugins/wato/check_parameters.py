@@ -899,6 +899,7 @@ register_rule(group + '/' + subgroup_storage,
     ),
     match = 'all',
 )
+
 register_rule(group + '/' + subgroup_storage,
     varname   = "fileinfo_groups",
     title     = _('File Grouping Patterns'),
@@ -915,20 +916,28 @@ register_rule(group + '/' + subgroup_storage,
                   'of single services for each file. This rule also applies when '
                   'you use manually configured checks instead of inventorized ones.'),
     valuespec = ListOf(
-      Tuple(
-          help = _("This defines one file grouping pattern"),
-          show_titles = True,
-          orientation = "horizontal",
-          elements = [
-             TextAscii(
-                 title = _("Name of group"),
-             ),
-             TextAscii(
-                 title = _("File pattern (using * and ?)"),
-             ),
-          ]
-      ),
-      add_label = _("Add pattern"),
+        Tuple(
+            help = _("This defines one file grouping pattern"),
+            show_titles = True,
+            orientation = "horizontal",
+            elements = [
+                TextAscii(
+                     title = _("Name of group"),
+                ),
+                Transform(
+                    Tuple(
+                        show_titles = True,
+                        orientation = "vertical",
+                        elements = [
+                            TextAscii(title = _("Include Pattern")),
+                            TextAscii(title = _("Exclude Pattern"))
+                        ],
+                    ),
+                    forth = lambda params: type(params) == str and ( params, '' ) or params
+                ),
+            ],
+        ),
+        add_label = _("Add pattern group"),
     ),
     match = 'all',
 )

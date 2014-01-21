@@ -65,7 +65,10 @@ def fileinfo_groups_of_file(check_filename):
     groups = []
     for line in host_extra_conf(g_hostname, fileinfo_groups):
         for group_name, pattern in line:
-            if fnmatch.fnmatch(check_filename, pattern):
+            if type(pattern) == str:
+                pattern = ( pattern, '' )
+            if fnmatch.fnmatch(check_filename, pattern[0]) \
+                    and not fnmatch.fnmatch(check_filename, pattern[1]):
                 groups.append(group_name)
     return groups
 
@@ -94,14 +97,13 @@ def check_fileinfo(item, params, info):
 # Constructs simple list of patterns and makes them available for the check
 def fileinfo_groups_precompile(hostname, item, params):
     patterns = []
-
     for line in host_extra_conf(hostname, fileinfo_groups):
         for group_name, pattern in line:
             if group_name == item:
+                if type(pattern) == str:
+                    pattern = ( pattern, '' )
                 patterns.append(pattern)
-
     params['precompiled_patterns'] = patterns
-
     return params
 
 def check_fileinfo_groups(item, params, info):
@@ -126,7 +128,8 @@ def check_fileinfo_groups(item, params, info):
     # Start counting all values
     for line in info[1:]:
         for pattern in params['precompiled_patterns']:
-            if fnmatch.fnmatch(line[0], pattern) and str(line[1]) != 'missing':
+            if fnmatch.fnmatch(line[0], pattern[0]) and str(line[1]) != 'missing' \
+                        and not fnmatch.fnmatch(line[0], pattern[1]):
                 size = int(line[1])
                 size_all += size
                 if size_smallest == None:

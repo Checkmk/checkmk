@@ -1,0 +1,8 @@
+Title: fileinfo.groups: file groups now allow exclude patterns as well
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1390322713
+Class: feature
+
+

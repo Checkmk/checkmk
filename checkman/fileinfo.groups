@@ -5,28 +5,39 @@ license: GPL
 distribution: check_mk
 description:
  This check monitors the size, age and the count of a group of files
- in the target host's filesystem.
- You can set lower and upper
+ in the target host's filesystem.  You can set lower and upper
  limits for each: size of files, age of oldest, the newest file
  and for the total count of files.
 
- This check needs some configuration in the agent,
- as the agent needs to know the information about
- which files need to be sent.
+ This check needs some configuration in the agent, as the agent needs to
+ know the information about which files need to be sent.  Please refer to
+ fileinfos manpage for information about setting up the agent.
 
- Please refer to fileinfos manpage for information
- about setting up the agent
+ The check also needs a configured file grouping pattern. File grouping
+ patterns combine a simple pattern based on {*} and {?} to join a subset
+ of the file names send by the agent into a file group. In addition an
+ {exclude} pattern may be define to exclude certain filenames.
+ The name of the file group is referenced in the check configuration
+ as the item.
 
 item:
- Configured name of the filesize group
+ Configured name of the file group
 
 examples:
 
+# old syntax of file group patterns, still valid
  fileinfo_groups = [
      ([("Auth_group",r"/var/log/auth*")], ALL_HOSTS),
      ([("Message_group", r"/var/log/messages*")], ['test2'], ALL_HOSTS),
  ]
 
+# new syntax of file group patterns, including exclude pattern
+ fileinfo_groups = [
+     ([("Auth_group", ("/var/log/auth*","/var/log/*.debug"))], ALL_HOSTS),
+     ([("Message_group", ("/var/log/messages*",""))], ['test2'], ALL_HOSTS),
+ ]
+
+# syntax of check
  check_parameters = [
   ({
     "minsize": (200.0, 300.0),

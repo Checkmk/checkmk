@@ -1,0 +1,11 @@
+Title: recurring updates of serial numbers of disabled ldap users fixed
+Level: 2
+Component: multisite
+Version: 1.2.4b5
+Date: 1390303011
+Class: fix
+
+If a user is disabled in LDAP, it gets locked in multisite and its serial number
+is increased, so that the user gets kicked out. Before this change the serial
+number was increased in every following sync. Now the serial number is only
+increased the first time a disabled user is synced.

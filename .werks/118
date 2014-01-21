@@ -1,0 +1,8 @@
+Title: stulz_humidity: Fixed coloring in pnp template
+Level: 1
+Component: checks
+Version: 1.2.4b5
+Date: 1389617988
+Class: fix
+
+Befor the change, the color for minimal warning was red and for minimal critical was yellow.

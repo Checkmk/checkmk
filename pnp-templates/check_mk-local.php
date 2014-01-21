@@ -53,10 +53,10 @@ if (!$found) {
     foreach ($RRDFILE as $i => $RRD) {
       $ii = $i % 8;
       $name = $NAME[$i];
-      $def[$i] = "DEF:cnt=$RRDFILE[$i]:$DS[$i]:MAX "; 
-      $def[$i] .= "AREA:cnt#$area_colors[$ii]:\"$name\" "; 
-      $def[$i] .= "LINE1:cnt#$line_colors[$ii]: "; 
-    
+      $def[$i] = "DEF:cnt=$RRDFILE[$i]:$DS[$i]:MAX ";
+      $def[$i] .= "AREA:cnt#$area_colors[$ii]:\"$name\" ";
+      $def[$i] .= "LINE1:cnt#$line_colors[$ii]: ";
+
       $upper = "";
       $lower = " -l 0";
       if ($WARN[$i] != "") {
@@ -73,7 +73,7 @@ if (!$found) {
         $upper = " -u" . $MAX[$i];
         $def[$i] .= "HRULE:$MAX[$i]#0000b0:\"Upper limit\" ";
       }
-    
+
       $opt[$i] = "$lower $upper --title '$hostname: $servicedesc - $name' ";
       $def[$i] .= "GPRINT:cnt:LAST:\"current\: %6.2lf\" ";
       $def[$i] .= "GPRINT:cnt:MAX:\"max\: %6.2lf\" ";

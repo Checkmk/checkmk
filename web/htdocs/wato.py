@@ -2919,7 +2919,7 @@ def mode_bulk_inventory(phase):
                     arguments = [ "@scan" ] + arguments
                 counts, failed_hosts = check_mk_automation(site_id, "inventory", arguments)
                 # sum up host individual counts to have a total count
-                sum_counts = [ 0, 0, 0, 0 ]
+                sum_counts = [ 0, 0, 0, 0 ] # added, removed, kept, new
                 result_txt = ''
                 for hostname in hostnames:
                     sum_counts[0] += counts[hostname][0]
@@ -2942,7 +2942,7 @@ def mode_bulk_inventory(phase):
                             del host["inventory_failed"]
                             save_hosts(folder) # Could be optimized, but difficult here
 
-                result = repr([ 'continue', num_hosts, 0 ] + sum_counts) + "\n" + result_txt
+                result = repr([ 'continue', num_hosts, len(failed_hosts) ] + sum_counts) + "\n" + result_txt
 
             except Exception, e:
                 result = repr([ 'failed', num_hosts, num_hosts, 0, 0, 0, 0, ]) + "\n"
@@ -8748,6 +8748,12 @@ def page_automation():
         raise MKAuthException(_("Missing secret for automation command."))
     if secret != get_login_secret():
         raise MKAuthException(_("Invalid automation secret."))
+
+    # To prevent mixups in written files we use the same lock here as for
+    # the normal WATO page processing. This might not be needed for some
+    # special automation requests, like inventory e.g., but to keep it simple,
+    # we request the lock in all cases.
+    lock_exclusive()
 
     # Initialise g_root_folder, load all folder information
     prepare_folder_info()

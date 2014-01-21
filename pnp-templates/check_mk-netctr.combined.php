@@ -32,13 +32,13 @@
 #    5: rx_errors
 #    6: tx_errors
 #    7: tx_collisions
-                        
+
 
 #
 $x = explode("_", $servicedesc);
 $nic = $x[1];
 $opt[1] = "--vertical-label 'Bytes/s' -l -1024 -u 1024 --title \"$hostname / NIC $nic\" ";
-# -l0 -u1048576  
+# -l0 -u1048576
 #
 #
 $def[1] =  "DEF:rx_bytes=$RRDFILE[1]:$DS[1]:AVERAGE " ;

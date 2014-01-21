@@ -27,7 +27,7 @@ $parts = explode("_", $servicedesc);
 $sensorname = implode(" ", $parts);
 
 /* This is obsolete. ipmi_sensors does not longer send perfdata
-   for fans... 
+   for fans...
 if ($parts[2] == "Fan")
 {
 	$opt[1] = "--vertical-label 'RPM' -X0 -l0 -u6000 --title \"$sensorname\" ";
@@ -52,6 +52,6 @@ if ($parts[2] == "Temperature")
 else {
    include("check_mk-local.php");
 }
- 
+
 
 ?>

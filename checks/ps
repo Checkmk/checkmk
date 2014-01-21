@@ -89,16 +89,23 @@ def ps_parse_info(info):
                 result.append(line)
             else:
                 row = dict(zip(wmic_headers, line))
-                wmic_info[(row["node"], row["Name"])] = row
+                wmic_info[(row["node"], row["Name"], row["ProcessId"])] = row
     except StopIteration:
         pass
 
     # Add wmic_info to process table, but only if present:
     if wmic_info:
+        def get_ps_info(node, name, processId = 0):
+            for key, value in wmic_info.items():
+                if (not processId and key[0:2] == (node, name)) or key == (node, name, processId):
+                    # each info is only returned once!
+                    del wmic_info[key]
+                    return value
+
         info = []
         seen_pids = set([]) # Remove duplicate entries
         for line in result:
-            psinfo = wmic_info.get(tuple(line))
+            psinfo = get_ps_info(line[0], line[1])
             # Get number of CPU cores from system idle process
             if psinfo:
                 if "ThreadCount" in wmic_headers and psinfo["Name"].lower() == "system idle process":

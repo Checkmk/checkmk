@@ -622,7 +622,7 @@ def ldap_group_members(filters, filt_attr = 'cn', nested = False):
                 'cn'      : cn,
             }
             for user_dn, obj in ldap_search(ldap_replace_macros(config.ldap_userspec['dn']), filt, columns = ['dn']):
-                groups[dn]['members'].append(user_dn.lower)
+                groups[dn]['members'].append(user_dn.lower())
 
     g_ldap_group_cache[cache_key] = groups
     return groups
@@ -738,7 +738,7 @@ def ldap_convert_auth_expire(plugin, params, user_id, ldap_user, user):
     # Special handling for active directory: Is the user enabled / disabled?
     if config.ldap_connection['type'] == 'ad' and ldap_user.get('useraccountcontrol'):
         # see http://www.selfadsi.de/ads-attributes/user-userAccountControl.htm for details
-        if saveint(ldap_user['useraccountcontrol'][0]) & 2:
+        if saveint(ldap_user['useraccountcontrol'][0]) & 2 and not user.get("locked", False):
             return {
                 'locked': True,
                 'serial': user.get('serial', 0) + 1,

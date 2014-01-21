@@ -9,7 +9,7 @@ foreach ($NAME as $i => $n) {
     $CRIT[$n] = $CRIT[$i];
     $MIN[$n]  = $MIN[$i];
     $MAX[$n]  = $MAX[$i];
-    $ACT[$n]  = $ACT[$i];	
+    $ACT[$n]  = $ACT[$i];
 }
 #
 # First graph with all data
@@ -18,8 +18,8 @@ $ds_name[$i] = "Apache Status";
 $def[$i]  = "";
 $opt[$i]  = " --vertical-label 'Connections' --title '$hostname: $servicedesc' -l 0";
 
-$def[$i] .= "DEF:varTotal=${RRD['TotalSlots']} "; 
-$def[$i] .= "DEF:varOpen=${RRD['OpenSlots']} "; 
+$def[$i] .= "DEF:varTotal=${RRD['TotalSlots']} ";
+$def[$i] .= "DEF:varOpen=${RRD['OpenSlots']} ";
 $def[$i] .= "HRULE:${ACT['TotalSlots']}#000000:\"Total Slots ${ACT['TotalSlots']}\" ";
 $def[$i] .= "COMMENT:\"\\n\" ";
 
@@ -33,7 +33,7 @@ $def[$i] .= "COMMENT:\"\\n\" ";
 
 foreach ($this->DS as $KEY=>$VAL) {
     if(preg_match('/^State_/', $VAL['NAME'])) {
-        $def[$i] .= "DEF:var${KEY}=${VAL['RRDFILE']}:${DS[$VAL['DS']]}:AVERAGE "; 
+        $def[$i] .= "DEF:var${KEY}=${VAL['RRDFILE']}:${DS[$VAL['DS']]}:AVERAGE ";
         $def[$i] .= "AREA:var${KEY}".rrd::color($KEY).":\"".rrd::cut(substr($VAL['NAME'],6),16) ."\":STACK ";
         $def[$i] .= "GPRINT:var${KEY}:LAST:\"Last %5.1lf\" ";
         $def[$i] .= "GPRINT:var${KEY}:MAX:\"Max %5.1lf\" ";
@@ -43,7 +43,7 @@ foreach ($this->DS as $KEY=>$VAL) {
 }
 
 #
-# Requests per Second 
+# Requests per Second
 #
 $i++;
 if (isset($RRD["ReqPerSec"])) {
@@ -60,7 +60,7 @@ if (isset($RRD["ReqPerSec"])) {
     }
 }
 #
-# Bytes per Second 
+# Bytes per Second
 #
 $i++;
 if (isset($RRD["BytesPerSec"])) {
@@ -76,7 +76,7 @@ if (isset($RRD["BytesPerSec"])) {
     }
 }
 #
-# all other graphs 
+# all other graphs
 #
 $i++;
 foreach ($this->DS as $KEY=>$VAL) {

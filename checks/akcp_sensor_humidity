@@ -48,8 +48,8 @@ def check_akcp_sensor_humidity(item, params, info):
             else:
                 if online == "1":
                     inthumidity = saveint(humidity)
-                    infotext = "%s %%" % humidity + " (warn/crit below %.1f/%.1f or above %.1f/%.1f %%" % \
-                                (critlow, warnlow, warnhigh, crithigh) + ")"
+                    infotext = "%s%% (warn/crit below %.1f/%.1f or above %.1f/%.1f %%)" % \
+                            ( humidity, warnlow, critlow, warnhigh, crithigh)
                     perfdata = [ ( "humidity", humidity, critlow, warnlow, warnhigh, crithigh ) ]
                     if inthumidity <= critlow or inthumidity >= crithigh:
                         return (2, "Humidity is: " + infotext, perfdata )

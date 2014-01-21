@@ -1,0 +1,22 @@
+title: Rittal CMC-III PU canbus current
+agents: snmp
+catalog: hw/environment
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state and current of the canbus ports of the
+ Rittal CMC-III PU unit.
+ No limits are set in the check, since limits are configured in the
+ Rittal device itself. The state given by the Rittal device is
+ taken as the state of the check as follows:
+ If the Rittal device returns {OK}, the check is {OK}. Otherwise
+ the check is {CRIT}.
+
+item:
+ The unit number and the internal name of the canbus port
+
+perfdata:
+ One variable: the current on the canbus port
+
+inventory:
+ All canbus ports of the device are inventorized

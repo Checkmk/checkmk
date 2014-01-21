@@ -1,0 +1,14 @@
+Title: Fixed htpasswd permission problem in check_mk standalone installation
+Level: 1
+Component: core
+Class: fix
+State: unknown
+Version: 1.2.4b7
+Date: 1389956512
+Targetversion: future
+
+In a standalone installation the path <tt>/usr/local/nagios/etc</tt> is not writable by the apache user.<br>
+The user management module tried to create a file <tt>/usr/local/nagios/etc/htpasswd.new</tt> and rename it to
+<tt>/usr/local/nagios/etc/htpasswd</tt> afterwards -> failed<br>
+The workaround is that no <tt>htpasswd.new</tt> file will be created on standalone installations.
+The user management module now directly writes in <tt>htpasswd</tt>.

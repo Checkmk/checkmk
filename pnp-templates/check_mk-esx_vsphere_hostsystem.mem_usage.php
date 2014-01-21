@@ -38,7 +38,7 @@ if ($WARN[1]) {
 
 $def[1] .= "'COMMENT:\\n' "
          . "AREA:used#20cf80:\"Used main memory   \" "
-         . "GPRINT:usedgb:LAST:\"%6.2lf GB last\" " 
+         . "GPRINT:usedgb:LAST:\"%6.2lf GB last\" "
          . "GPRINT:usedgb:AVERAGE:\"%6.2lf GB avg\" "
          . "GPRINT:usedgb:MAX:\"%6.2lf GB max\\n\" "
          ;

@@ -1,0 +1,10 @@
+Title: windows_agent: now able to handle the removal of local/plugin scripts during runtime
+Level: 1
+Component: checks
+Version: 1.2.4b5
+Date: 1389699043
+Class: fix
+
+Whenever a script got removed in the windows agents local or plugins directories,
+the agent still tried to call this script, thus resulting in an error message in the
+agent output. This has been fixed. Removed scripts no longer produce agent output.

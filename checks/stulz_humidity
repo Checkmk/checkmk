@@ -32,25 +32,19 @@ def inventory_stulz_humidity(info):
 def check_stulz_humidity(item, params, info):
     for line in info:
         if line[0] == item:
-            warnlow, critlow, warnhigh, crithigh = params
+            critlow, warnlow, warnhigh, crithigh = params
             humidity = savefloat(line[1])/10
-            state = 0
-            msg = ""
-            if humidity >= crithigh:
-                state = 2
-                msg = "to high (Levels Warning/Critical %d/%d) " % ( warnhigh, crithigh )
-            elif humidity >= warnhigh:
-                state = 1
-                msg = "to high (Levels Warning/Critical %d/%d) " % ( warnhigh, crithigh )
-            elif humidity <= critlow:
-                state = 2
-                msg = "to low (Levels Warning/Critical %d/%d) " % ( warnlow, critlow )
-            elif humidity <= warnlow:
-                state = 1
-                msg = "to low (Levels Warning/Critical %d/%d) " % ( warnlow, critlow )
-            message = " Current Humidity: %.2f%% %s" % ( humidity, msg )
-            perf = [ ('humidity', humidity, critlow, warnlow, warnhigh, crithigh ) ]
-            return state, message, perf
+            infotext = "%s%% (warn/crit below %.1f/%.1f or above %.1f/%.1f %%)" % \
+                            ( humidity, warnlow, critlow, warnhigh, crithigh)
+
+            perfdata = [ ('humidity', humidity, critlow, warnlow, warnhigh, crithigh ) ]
+            if humidity <= critlow or humidity >= crithigh:
+                return (2, "Humidity is: " + infotext, perfdata )
+            elif humidity <= warnlow or humidity >= warnhigh:
+                return (1, "Humidity is: " + infotext, perfdata )
+            else:
+                return (0, "Humidity is: " + infotext, perfdata )
+
     return 3, "No information found about the device"
 
 check_info["stulz_humidity"] = {

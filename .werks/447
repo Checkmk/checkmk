@@ -1,0 +1,10 @@
+Title: fortigate_memory: Fix inventory, do not add check if no info available
+Level: 1
+Component: checks
+Version: 1.2.4b5
+Date: 1389700548
+Class: fix
+
+Previously a check would be added if you do an explicity inventory. Now the
+inventory function only creates an item if there is really data available
+via SNMP.

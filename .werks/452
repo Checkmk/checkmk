@@ -1,0 +1,10 @@
+Title: Speedup generation of configuration
+Level: 2
+Component: core
+Version: 1.2.4b7
+Date: 1389959599
+Class: feature
+
+The configuration generation for the core (Nagios/CMC) in large setups has been
+sped up. This hold especially for situations with many rules and/or many
+cluster definitions.

@@ -39,16 +39,16 @@ $opt[1] = "--vertical-label 'Load average' -l0  -u 1 --title \"CPU Load for $hos
 
 $def[1] =  ""
          . "DEF:load1=$RRD[load1] "
-         . "AREA:load1#60c0e0:\"Load average  1 min \" " 
-         . "GPRINT:load1:LAST:\"%6.2lf last\" " 
-         . "GPRINT:load1:AVERAGE:\"%6.2lf avg\" " 
+         . "AREA:load1#60c0e0:\"Load average  1 min \" "
+         . "GPRINT:load1:LAST:\"%6.2lf last\" "
+         . "GPRINT:load1:AVERAGE:\"%6.2lf avg\" "
          . "GPRINT:load1:MAX:\"%6.2lf max\\n\" "
 
          . "DEF:load15=$RRD[load15] "
-         . "LINE:load15#004080:\"Load average 15 min \" " 
-         . "GPRINT:load15:LAST:\"%6.2lf last\" " 
-         . "GPRINT:load15:AVERAGE:\"%6.2lf avg\" " 
-         . "GPRINT:load15:MAX:\"%6.2lf max\\n\" " 
+         . "LINE:load15#004080:\"Load average 15 min \" "
+         . "GPRINT:load15:LAST:\"%6.2lf last\" "
+         . "GPRINT:load15:AVERAGE:\"%6.2lf avg\" "
+         . "GPRINT:load15:MAX:\"%6.2lf max\\n\" "
          . "";
 
 if ($WARN[1]) {
@@ -61,7 +61,7 @@ if ($WARN[1]) {
 if (isset($RRD["predict_load15"])) {
     $def[1] .= ""
          . "DEF:predict=$RRD[predict_load15] "
-         . "LINE:predict#ff0000:\"Reference for prediction \\n\" " 
+         . "LINE:predict#ff0000:\"Reference for prediction \\n\" "
          . "";
 }
 ?>

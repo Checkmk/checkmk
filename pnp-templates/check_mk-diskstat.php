@@ -41,7 +41,7 @@ if (isset($DS[2])) {
 
     $opt[1] = "--vertical-label 'Throughput (MB/s)' -X0  --title \"Disk throughput $hostname / $disk\" ";
 
-    $def[1]  = 
+    $def[1]  =
                "HRULE:0#a0a0a0 ".
     # read
                "DEF:read=$RRD[read] ".
@@ -53,7 +53,7 @@ if (isset($DS[2])) {
 
     # read average as line in the same graph
     if (isset($RRD["read.avg"])) {
-        $def[1] .= 
+        $def[1] .=
                "DEF:read_avg=${RRD['read.avg']} ".
                "CDEF:read_avg_mb=read_avg,1048576,/ ".
                "LINE:read_avg_mb#202020 ";
@@ -84,7 +84,7 @@ if (isset($DS[2])) {
 
     # write average
     if (isset($DS["write.avg"])) {
-        $def[1] .= 
+        $def[1] .=
                "DEF:write_avg=${RRD['write.avg']} ".
                "CDEF:write_avg_mb=write_avg,1048576,/ ".
                "CDEF:write_avg_mb_neg=write_avg_mb,-1,* ".
@@ -122,14 +122,14 @@ if (isset($DS[2])) {
         $def[] = ""
                 . "DEF:read=$RRD[read_ql] "
                 . "DEF:write=$RRD[write_ql] "
-                . "CDEF:writen=write,-1,* " 
+                . "CDEF:writen=write,-1,* "
                 . "HRULE:0#a0a0a0 "
                 . "AREA:read#669a76 "
                 . "AREA:writen#517ba5 "
                 ;
 
     }
-            
+
 }
 
 // legacy version of diskstat

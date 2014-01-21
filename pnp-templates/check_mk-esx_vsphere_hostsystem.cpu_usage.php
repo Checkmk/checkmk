@@ -43,7 +43,7 @@ $opt[1] = "--vertical-label 'Used CPU threads' --right-axis $rightscale:0 --righ
 $def[1] =  "DEF:perc=$RRD[util] "
          . "CDEF:util=perc,$num_threads,*,100,/ "
          ;
-         
+
 $def[1] .= "HRULE:$MAX[util]#0040d0:\"$num_threads CPU Threads\\n\" "
          ;
 
@@ -59,7 +59,7 @@ $def[1] .= "AREA:util#60f020:\"Utilization\:\" "
 
 
 if (isset($RRD["avg"])) {
-    $def[1] .= "DEF:aperc=$RRD[avg] ". 
+    $def[1] .= "DEF:aperc=$RRD[avg] ".
                "CDEF:avg=aperc,$num_threads,*,100,/ ".
                "LINE:avg#004000:\"Averaged\:   \" ".
                "GPRINT:aperc:LAST:\"%.1lf%%,\" ".

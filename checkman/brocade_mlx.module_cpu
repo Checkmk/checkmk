@@ -1,10 +1,10 @@
-title: Brocade NetIron MLX devices: NI-MLX Module CPU Utilization
+title: Brocade NetIron MLX devices: NI-MLX or BR-MLX Module CPU Utilization
 agents: snmp
 catalog: hw/network/brocade
 license: GPL
 distribution: check_mk
 description:
- Checks the Module CPU Utilization of a NI-MLX module in Brocade
+ Checks the Module CPU Utilization of a NI-MLX or BR-MLX module in Brocade
  NetIron MLX switching / routing devices.
 
  {WARN} or {CRIT} is returned, if the usage in the last 60 sec was above

@@ -1,0 +1,9 @@
+Title: ps: fixed calculation of virtual/resident memory from windows agents
+Level: 2
+Component: checks
+Version: 1.2.4b7
+Date: 1389882061
+Class: fix
+
+When processing data from windows agents the ps check had problems to accumulate
+the memory informations whenever processes shared the same name.

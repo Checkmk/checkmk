@@ -7,7 +7,7 @@ description:
  Checks the overall status of modules in Brocade NetIron MLX
  switching / routing devices.
 
- Returns {OK} on status 10 (running).
+ Returns {OK} on status 10 (running) and 11 (Blocked for full height card).
  Returns {WARN} on status 0 (empty), 2 (going down) and 9 (coming up).
  Returns {CRIT} on status 3 (rejected) and 4 (bad).
  Returns {UNKN} on every other status.

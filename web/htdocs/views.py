@@ -262,8 +262,19 @@ def load_views():
                     view["owner"] = user
                     view["name"] = name
 
-                    if view['datasource'] in multisite_datasources:
-                        html.multisite_views[(user, name)] = view
+                    if view['datasource'] not in multisite_datasources:
+                        continue
+
+
+                    # Maybe resolve inherited attributes
+                    builtin_view = html.multisite_views.get(('', name))
+                    if builtin_view:
+                        for attr in view_inherit_attrs:
+                            if attr not in view and attr in builtin_view:
+                                view[attr] = builtin_view[attr]
+
+                    html.multisite_views[(user, name)] = view
+
         except SyntaxError, e:
             raise MKGeneralException(_("Cannot load views from %s/views.mk: %s") % (dirpath, e))
 
@@ -308,15 +319,7 @@ def available_views():
                     and not config.may(permname):
                     continue
                 views[n] = view
-
-    # Maybe resolve inherited attributes
-    for name, view in views.items():
-        builtin_view = html.multisite_views.get(('', name))
-        if builtin_view:
-            for attr in view_inherit_attrs:
-                if attr not in view and attr in builtin_view:
-                    view[attr] = builtin_view[attr]
-
+                
     return views
 
 def save_views(us):

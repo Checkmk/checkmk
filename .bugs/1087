@@ -1,0 +1,10 @@
+Title: Omit the "Service " from column headers for service views
+Component: multisite
+State: open
+Date: 2014-01-16 11:29:06
+Targetversion: future
+Class: nastiness
+
+In a view that just show details of a service (like the "service" view),
+we should simply remove the "Service " from the column title and upper
+case the next character.

@@ -64,10 +64,10 @@ OPTIONS:
   --profile                     Enable performance profiling in Python source code
 
   -i MODULES, --modules MODULES Modules to query. This is a comma separated list of
-                                which may contain the keywords "disks", "hba", "hwstatus"
-                                or "all" to define which information should be queried
-                                from the SP. You can define to use only view of them
-                                to optimize performance. The default is "all".
+                                which may contain the keywords "disks", "hba", "hwstatus",
+                                "raidgroups" or "all" to define which information should
+                                be queried from the SP. You can define to use only view of
+                                them to optimize performance. The default is "all".
 
 """)
 
@@ -98,6 +98,7 @@ naviseccli_options = {
     "disks"      : {"cmd_option" : "-disk",  "active" : False},
     "hba"        : {"cmd_option" : "-hba",   "active" : False},
     "hwstatus"   : {"cmd_option" : "-array", "active" : False},
+    "raidgroups" : {"cmd_option" : "-rg",    "active" : False},
 #   "agent-info" : {"cmd_option" : "-sp",    "active" : False},
 }
 
@@ -148,7 +149,7 @@ for module in naviseccli_options.keys():
 # fetch information by calling naviseccli
 #############################################################################
 
-basecmd="naviseccli -h %s -User %s -Password %s -Scope 0 getall " % (host_address, user, password)
+basecmd="naviseccli -h %s -User %s -Password '%s' -Scope 0 getall " % (host_address, user, password)
 
 #
 # check_mk section of agent output
@@ -159,12 +160,13 @@ cmd=basecmd + "-sp"
 if opt_debug:
     sys.stderr.write("executing external command: %s\n" % cmd)
 
+cmdout = []
 for line in os.popen(cmd).readlines():
     line = line.strip()
+    cmdout.append(line)
     tokens = re.split("\s+", line)
     if tokens[0] == "Agent" and tokens[1] == "Rev:":
         emcvnx_version = "_".join(tokens[2:])
-        break
 
 print "Version: %s" % emcvnx_version
 
@@ -173,6 +175,9 @@ print "Version: %s" % emcvnx_version
 # other commandline argument
 #print "AgentOs: %s " % emcvnx_model
 
+print "<<<emcvnx_info>>>"
+for line in cmdout:
+    print line
 
 #
 # all other sections of agent output

@@ -109,18 +109,17 @@ def check_memory(params, meminfo):
     # Add additional metrics, provided by Linux.
     mapped = meminfo.get('Mapped')
     if mapped:
-        mapped_mb = int(mapped) / 1024
-        committed_as = meminfo.get('Committed_AS')
-        if committed_as:
-            committed_as_mb = int(committed_as) / 1024
-        else:
-            committed_as = 0
+        mapped_mb       = int(mapped) / 1024
+        committed_as_mb = int(meminfo.get('Committed_AS', 0)) / 1024
+        shared_mb       = int(meminfo.get('Shmem', 0)) / 1024
+
         perfdata += [
             ('mapped',       str(mapped_mb)       + 'MB'),
             ('committed_as', str(committed_as_mb) + 'MB'),
             ('pagetables',   str(pagetables_mb)   + 'MB'),
+            ('shared',       str(shared_mb)       + 'MB'),
         ]
-        infotext += ", %.1f mapped, %.1f committed" % \
-                    (mapped_mb / 1024.0, committed_as_mb / 1024.0)
+        infotext += ", %.1f mapped, %.1f committed, %.1f shared" % \
+                    (mapped_mb / 1024.0, committed_as_mb / 1024.0, shared_mb / 1024.0)
 
     return state, infotext, perfdata

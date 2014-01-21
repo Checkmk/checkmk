@@ -1,0 +1,9 @@
+Title: Added mail notificaton method to custom user notification dialog
+Level: 1
+Component: multisite
+Version: 1.2.5i1
+Date: 1390213013
+Class: feature
+
+The user notification dialog (currently accessible via WATO > Users > Notify Users)
+has been extended by adding a mail notification mechanism.

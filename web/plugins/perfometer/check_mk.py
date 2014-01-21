@@ -72,6 +72,9 @@ perfometers["check_mk-oracle_asm_diskgroup"] = perfometer_check_mk_df
 perfometers["check_mk-mysql_capacity"] = perfometer_check_mk_df
 perfometers["check_mk-esx_vsphere_counters.ramdisk"] = perfometer_check_mk_df
 perfometers["check_mk-hitachi_hnas_span"] = perfometer_check_mk_df
+perfometers["check_mk-hitachi_hnas_volume"] = perfometer_check_mk_df
+perfometers["check_mk-emcvnx_raidgroups.capacity"] = perfometer_check_mk_df
+perfometers["check_mk-emcvnx_raidgroups.capacity_contiguous"] = perfometer_check_mk_df
 
 def perfometer_esx_vsphere_datastores(row, check_command, perf_data):
     used_mb        = perf_data[0][1]
@@ -375,6 +378,7 @@ perfometers["check_mk-lnx_if"] = perfometer_check_mk_if
 perfometers["check_mk-hpux_if"] = perfometer_check_mk_if
 perfometers["check_mk-mcdata_fcport"] = perfometer_check_mk_if
 perfometers["check_mk-esx_vsphere_counters.if"] = perfometer_check_mk_if
+perfometers["check_mk-hitachi_hnas_fc_if"] = perfometer_check_mk_if
 
 
 def perfometer_check_mk_brocade_fcport(row, check_command, perf_data):

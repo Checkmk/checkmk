@@ -1,0 +1,9 @@
+Title: stulz_humidity: Fixed syntax error
+Level: 3
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1389864479
+
+Fixed syntax error in check which broke whole Check_MK.

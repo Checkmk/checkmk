@@ -42,6 +42,9 @@
 // This program needs at least windows version 0x0500
 // (Window 2000 / Windows XP)
 #define WINVER 0x0500
+// This define is required to use the function GetProcessHandleCount in
+// the ps section. Only available in winxp upwards
+#define _WIN32_WINNT 0x0501
 
 #include <stdio.h>
 #include <stdint.h>
@@ -227,6 +230,14 @@ struct mrpe_entry {
     char service_description[256];
 };
 
+struct process_entry {
+    unsigned long long process_id;
+    unsigned long long working_set_size;
+    unsigned long long pagefile_usage;
+    unsigned long long virtual_size;
+};
+typedef map<unsigned long long, process_entry> process_entry_t;
+
 // Forward declarations of functions
 void listen_tcp_loop();
 void output(SOCKET &out, const char *format, ...);
@@ -259,6 +270,7 @@ bool force_tcp_output           = false; // if true, send socket data immediatel
 char g_hostname[256];
 int  g_port                     = CHECK_MK_AGENT_PORT;
 
+OSVERSIONINFO osv;
 
 // Statistical values
 struct script_statistics_t {
@@ -633,34 +645,6 @@ void section_df(SOCKET &out)
     // }
 }
 
-//  .----------------------------------------------------------------------.
-//  |                      ______             ______                       |
-//  |                     / / / /  _ __  ___  \ \ \ \                      |
-//  |                    / / / /  | '_ \/ __|  \ \ \ \                     |
-//  |                    \ \ \ \  | |_) \__ \  / / / /                     |
-//  |                     \_\_\_\ | .__/|___/ /_/_/_/                      |
-//  |                             |_|                                      |
-//  '----------------------------------------------------------------------'
-
-void section_ps(SOCKET &out)
-{
-    crash_log("<<<ps>>>");
-    output(out, "<<<ps:sep(0)>>>\n");
-    HANDLE hProcessSnap;
-    PROCESSENTRY32 pe32;
-
-    hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (hProcessSnap != INVALID_HANDLE_VALUE)
-    {
-        pe32.dwSize = sizeof(PROCESSENTRY32);
-        if (Process32First(hProcessSnap, &pe32)) {
-            do {
-                output(out, "%s\n", pe32.szExeFile);
-            } while (Process32Next(hProcessSnap, &pe32));
-        }
-        CloseHandle(hProcessSnap);
-    }
-}
 
 //  .----------------------------------------------------------------------.
 //  |         ______                      _                ______          |
@@ -1067,6 +1051,10 @@ bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, ch
     if (dll)
         dwFlags |= FORMAT_MESSAGE_FROM_HMODULE;
 
+    crash_log("Event ID: %lu.%lu",
+            event->EventID / 65536, // "Qualifiers": no idea what *that* is
+            event->EventID % 65536); // the actual event id
+    crash_log("Formatting Message");
     DWORD len = FormatMessageW(
         dwFlags,
         dll,
@@ -1077,6 +1065,7 @@ bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, ch
         2048,
         (char **)strings
     );
+    crash_log("Formatting Message - DONE");
 
     if (dll)
         FreeLibrary(dll);
@@ -1432,6 +1421,245 @@ bool find_eventlogs(SOCKET &out)
                 regpath, GetLastError());
     }
     return success;
+}
+
+//  .----------------------------------------------------------------------.
+//  |                      ______             ______                       |
+//  |                     / / / /  _ __  ___  \ \ \ \                      |
+//  |                    / / / /  | '_ \/ __|  \ \ \ \                     |
+//  |                    \ \ \ \  | |_) \__ \  / / / /                     |
+//  |                     \_\_\_\ | .__/|___/ /_/_/_/                      |
+//  |                             |_|                                      |
+//  '----------------------------------------------------------------------'
+
+
+bool ExtractProcessOwner(HANDLE hProcess_i, string& csOwner_o)
+{
+    // Get process token
+    HANDLE hProcessToken = NULL;
+    if (!OpenProcessToken(hProcess_i, TOKEN_READ, &hProcessToken) || !hProcessToken)
+        return false;
+
+    // First get size needed, TokenUser indicates we want user information from given token
+    DWORD dwProcessTokenInfoAllocSize = 0;
+    GetTokenInformation(hProcessToken, TokenUser, NULL, 0, &dwProcessTokenInfoAllocSize);
+
+    // Call should have failed due to zero-length buffer.
+    if(GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+    {
+        // Allocate buffer for user information in the token.
+        PTOKEN_USER pUserToken = reinterpret_cast<PTOKEN_USER>(new BYTE[dwProcessTokenInfoAllocSize]);
+        if (pUserToken != NULL)
+        {
+            // Now get user information in the allocated buffer
+            if (GetTokenInformation(hProcessToken, TokenUser, pUserToken, dwProcessTokenInfoAllocSize, &dwProcessTokenInfoAllocSize))
+            {
+                // Some vars that we may need
+                SID_NAME_USE  snuSIDNameUse;
+                WCHAR         szUser[MAX_PATH]   = { 0 };
+                DWORD         dwUserNameLength   = MAX_PATH;
+                WCHAR         szDomain[MAX_PATH] = { 0 };
+                DWORD         dwDomainNameLength = MAX_PATH;
+
+                // Retrieve user name and domain name based on user's SID.
+                if ( LookupAccountSidW( NULL, pUserToken->User.Sid, szUser, &dwUserNameLength,
+                            szDomain, &dwDomainNameLength, &snuSIDNameUse))
+                {
+                    char info[1024];
+                    csOwner_o = "\\\\";
+                    WideCharToMultiByte(CP_UTF8, 0, (WCHAR*) &szDomain, -1, info, sizeof(info), NULL, NULL);
+                    csOwner_o += info;
+
+                    csOwner_o += "\\";
+                    WideCharToMultiByte(CP_UTF8, 0, (WCHAR*) &szUser, -1, info, sizeof(info), NULL, NULL);
+                    csOwner_o += info;
+
+                    CloseHandle( hProcessToken );
+                    delete [] pUserToken;
+                    return true;
+                }
+            }
+            delete [] pUserToken;
+        }
+    }
+    CloseHandle( hProcessToken );
+    return false;
+}
+
+process_entry_t get_process_perfdata()
+{
+    unsigned int counter_base_number = 230; // process base number
+
+    map< ULONGLONG, process_entry > process_info;
+    // registry entry is ascii representation of counter index
+    char counter_index_name[8];
+    snprintf(counter_index_name, sizeof(counter_index_name), "%u", counter_base_number);
+
+    // allocate block to store counter data block
+    DWORD size = DEFAULT_BUFFER_SIZE;
+    BYTE *data = new BYTE[DEFAULT_BUFFER_SIZE];
+    DWORD type;
+    DWORD ret;
+
+    // Holt zu einem bestimmten Counter den kompletten Binärblock aus der
+    // Registry. Da man vorher nicht weiß, wie groß der Puffer sein muss,
+    // kann man nur mit irgendeiner Größe anfangen und dann diesen immer
+    // wieder größer machen, wenn er noch zu klein ist. >:-P
+    while ((ret = RegQueryValueEx(HKEY_PERFORMANCE_DATA, counter_index_name,
+                    0, &type, data, &size)) != ERROR_SUCCESS)
+    {
+        if (ret == ERROR_MORE_DATA) // WIN32 API sucks...
+        {
+            // Der Puffer war zu klein. Toll. Also den Puffer größer machen
+            // und das ganze nochmal probieren.
+            size += DEFAULT_BUFFER_SIZE;
+            delete [] data;
+            data = new BYTE [size];
+        } else {
+            // Es ist ein anderer Fehler aufgetreten. Abbrechen.
+            delete [] data;
+            return process_info;
+        }
+    }
+
+    PERF_DATA_BLOCK *dataBlockPtr = (PERF_DATA_BLOCK *)data;
+
+    // Determine first object in list of objects
+    PERF_OBJECT_TYPE *objectPtr = FirstObject(dataBlockPtr);
+
+    // Now walk through the list of objects. The bad news is:
+    // even if we expect only one object, windows might send
+    // us more than one object. We need to scan a list of objects
+    // in order to find the one we have asked for. >:-P
+    for (unsigned int a=0 ; a < dataBlockPtr->NumObjectTypes ; a++)
+    {
+        // Have we found the object we seek?
+        if (objectPtr->ObjectNameTitleIndex == counter_base_number)
+        {
+            char name[512];
+            PERF_INSTANCE_DEFINITION *instancePtr = FirstInstance(objectPtr);
+            for(int b=0 ; b<objectPtr->NumInstances ; b++)
+            {
+                // get pointer to first counter
+                PERF_COUNTER_DEFINITION *counterPtr = FirstCounter(objectPtr);
+
+                WCHAR *name_start = (WCHAR *)((char *)(instancePtr) + instancePtr->NameOffset);
+                memcpy(name, name_start, instancePtr->NameLength);
+                WideCharToMultiByte(CP_UTF8, 0, name_start, instancePtr->NameLength, name, sizeof(name), NULL, NULL);
+                // replace spaces with '_'
+                for (char *s = name; *s; s++)
+                    if (*s == ' ') *s = '_';
+
+                // get PERF_COUNTER_BLOCK of this instance
+                PERF_COUNTER_BLOCK *counterBlockPtr = GetCounterBlock(instancePtr);
+
+                process_entry entry;
+                memset(&entry, 0, sizeof(entry));
+                for (unsigned int bc=0 ; bc < objectPtr->NumCounters ; bc++) {
+                    unsigned offset = counterPtr->CounterOffset;
+                    BYTE *pData = ((BYTE *)counterBlockPtr) + offset;
+                    switch(offset){
+                        case 40:
+                             entry.virtual_size     = (ULONGLONG)(*(DWORD*)pData);
+                             break;
+                        case 56:
+                             entry.working_set_size = (ULONGLONG)(*(DWORD*)pData);
+                             break;
+                        case 64:
+                             entry.pagefile_usage   = (ULONGLONG)(*(DWORD*)pData);
+                             break;
+                        case 104:
+                             entry.process_id       = (ULONGLONG)(*(DWORD*)pData);
+                             break;
+                        default:
+                             break;
+                    }
+                    counterPtr = NextCounter(counterPtr);
+                }
+                process_info[entry.process_id] = entry;
+                instancePtr = NextInstance(instancePtr);
+            }
+
+        }
+        // next object in list
+        objectPtr = NextObject(objectPtr);
+    }
+    delete [] data;
+    return process_info;
+}
+
+void section_ps(SOCKET &out)
+{
+    crash_log("<<<ps>>>");
+    output(out, "<<<ps:sep(9)>>>\n");
+    HANDLE hProcessSnap;
+    PROCESSENTRY32 pe32;
+
+    process_entry_t process_perfdata = get_process_perfdata();
+
+    hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hProcessSnap != INVALID_HANDLE_VALUE)
+    {
+        pe32.dwSize = sizeof(PROCESSENTRY32);
+        if (Process32First(hProcessSnap, &pe32))
+        {
+            do
+            {
+                string user = "unknown";
+                DWORD dwAccess = PROCESS_QUERY_INFORMATION | PROCESS_VM_READ;
+                HANDLE hProcess = OpenProcess(dwAccess, FALSE, pe32.th32ProcessID);
+
+                if (NULL == hProcess)
+                    continue;
+
+                // Process times
+                FILETIME createTime, exitTime, kernelTime, userTime;
+                ULARGE_INTEGER kernelmodetime, usermodetime;
+                if (GetProcessTimes( hProcess, &createTime, &exitTime, &kernelTime, &userTime ) != -1)
+                {
+                       kernelmodetime.LowPart  = kernelTime.dwLowDateTime;
+                       kernelmodetime.HighPart = kernelTime.dwHighDateTime;
+                       usermodetime.LowPart    = userTime.dwLowDateTime;
+                       usermodetime.HighPart   = userTime.dwHighDateTime;
+                }
+
+                // GetProcessHandleCount is only available winxp upwards
+                // Win2k reports 0 handles
+                DWORD processHandleCount = 0;
+                if (osv.dwMajorVersion > 5 || (osv.dwMajorVersion == 5 && osv.dwMinorVersion > 0))
+                    GetProcessHandleCount(hProcess, &processHandleCount);
+
+                // Process owner
+                ExtractProcessOwner(hProcess, user);
+
+                // Memory levels
+                ULONGLONG working_set_size = 0;
+                ULONGLONG virtual_size = 0;
+                ULONGLONG pagefile_usage = 0;
+                process_entry_t::iterator it_perf = process_perfdata.find(pe32.th32ProcessID);
+                if (it_perf != process_perfdata.end()) {
+                    working_set_size = it_perf->second.working_set_size;
+                    virtual_size     = it_perf->second.virtual_size;
+                    pagefile_usage   = it_perf->second.pagefile_usage;
+                }
+
+                //// Note: CPU utilization is determined out of usermodetime and kernelmodetime
+                output(out, "(%s,%llu,%llu,%d,%d,%llu,%lld,%lld,%d,%d)\t%s\n", user.c_str(), virtual_size / 1024, working_set_size / 1024, 0,
+                                                                  pe32.th32ProcessID, pagefile_usage / 1024, usermodetime.QuadPart, kernelmodetime.QuadPart,
+                                                                  processHandleCount, pe32.cntThreads, pe32.szExeFile);
+
+                CloseHandle(hProcess);
+            } while (Process32Next(hProcessSnap, &pe32));
+        }
+        CloseHandle(hProcessSnap);
+        process_perfdata.clear();
+
+        // The process snapshot doesn't show the system idle process (used to determine the number of cpu cores)
+        // We simply fake this entry..
+        SYSTEM_INFO sysinfo;
+        GetSystemInfo(&sysinfo);
+        output(out, "(SYSTEM,0,0,0,0,0,0,0,0,%d)\tSystem Idle Process\n", sysinfo.dwNumberOfProcessors);
+    }
 }
 
 
@@ -2454,7 +2682,7 @@ void run_script_container(script_container *cont)
                 NULL);                // returns the thread identifier
 
         if (cont->execution_mode == SYNC ||
-            cont->execution_mode == ASYNC && g_default_script_async_execution == SEQUENTIAL)
+            (cont->execution_mode == ASYNC && g_default_script_async_execution == SEQUENTIAL))
             WaitForSingleObject(cont->worker_thread, INFINITE);
     }
 }
@@ -2660,6 +2888,7 @@ void section_check_mk(SOCKET &out)
     crash_log("<<<check_mk>>>");
     output(out, "<<<check_mk>>>\n");
     output(out, "Version: %s\n", CHECK_MK_VERSION);
+    output(out, "BuildDate: %s\n", __DATE__);
 #ifdef ENVIRONMENT32
     output(out, "Architecture: 32bit\n");
 #else
@@ -4077,6 +4306,11 @@ void determine_directories()
 int main(int argc, char **argv)
 {
     wsa_startup();
+
+    // Determine windows version
+    osv.dwOSVersionInfoSize = sizeof(osv);
+    GetVersionEx(&osv);
+
     determine_directories();
     read_config_file();
 

@@ -1,0 +1,9 @@
+Title: stulz_humidity, apc_humidity: Fixed bug while processing check params
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1389950905
+
+The two checks interpreted warnlow as warncrit.

@@ -1,0 +1,12 @@
+Title: Inventory via WATO fails if checks are missing
+Component: wato
+State: open
+Date: 2014-01-16 17:29:54
+Targetversion: 1.2.5i1
+Class: bug
+
+Inventorized Fritzbox-1und1
+Failed to inventorize Fritzbox-Alt: 'fritz.uptime'
+
+That was because that check was missing. An cmk -II on the commanline could fix it.
+A WATO Inventory should simply ignore such problems.

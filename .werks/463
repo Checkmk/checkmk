@@ -1,0 +1,8 @@
+Title: emcvnx_raidgroups.capacity, emcvnx_raidgroups.capacity_contiguous: New Checks for EMC VNX Storage systems
+Level: 2
+Component: checks
+Version: 1.2.5i1
+Date: 1390228032
+Class: feature
+
+Checking usage of RAID Groups.

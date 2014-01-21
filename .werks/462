@@ -1,0 +1,8 @@
+Title: emcvnx_raidgroups.list_disks: New check for EMC VNX storage system
+Level: 2
+Component: checks
+Version: 1.2.5i1
+Date: 1390221906
+Class: feature
+
+reporting the List of Disks used in a RAID Group

@@ -1,0 +1,267 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# <<<emcvnx_raidgroups>>>
+# 
+# 
+# Server IP Address:       172.16.8.82
+# Agent Rev:           7.32.27 (0.14)
+# 
+# 
+# All RAID Groups Information
+# ----------------------------
+# 
+# 
+# RaidGroup ID:                              0
+# RaidGroup Type:                            r5
+# RaidGroup State:                           Explicit_Remove
+#                                            Valid_luns
+# List of disks:                             Bus 0 Enclosure 0  Disk 0
+#                                            Bus 0 Enclosure 0  Disk 1
+#                                            Bus 0 Enclosure 0  Disk 2
+#                                            Bus 0 Enclosure 0  Disk 3
+# List of luns:                              4 
+# Max Number of disks:                       16
+# Max Number of luns:                        256
+# Raw Capacity (Blocks):                     702504960
+# Logical Capacity (Blocks):                 526878720
+# Free Capacity (Blocks,non-contiguous):     0
+# Free contiguous group of unbound segments: 0
+# Defrag/Expand priority:                    Medium
+# Percent defragmented:                      100
+# Percent expanded:                          N/A
+# Disk expanding onto:                       N/A
+# Lun Expansion enabled:                     NO
+# Legal RAID types:                          r5 
+# 
+# RaidGroup ID:                              124
+# RaidGroup Type:                            hot_spare
+# [...]
+
+# Parse agent output into a dict of the form:
+# (where the RAID Group ID is used as key)
+# parsed = {'0':   {'luns': '4'},
+#           '1':   {'luns': '0,1'},
+#           '124': {'luns': '4089'},
+#           '2':   {'luns': '2,3'}}
+
+
+def parse_emcvnx_raidgroups(info):
+    parsed = {}
+    append = False
+    for line in info:
+        if len(line) > 2 and line[0] == "RaidGroup" and line[1] == "ID:":
+            rg = {}
+            parsed[line[2]] = rg
+        elif len(line) > 3 and line[0] == "List" and line[1] == "of" and line[2] == "luns:":
+            rg["luns"] = ",".join(line[3:])
+        elif len(line) > 8 and line[0] == "List" and line[1] == "of" and line[2] == "disks:":
+            disks = []
+            disk = line[4] + "/" + line[6] + " Disk " + line[8]
+            disks.append(disk)
+            rg["disks"] = disks
+            append = True
+        elif append == True and len(line) > 5 and line[0] == "Bus" and line[2] == "Enclosure" and line[4] == "Disk":
+            disk = line[1] + "/" + line[3] + " Disk " + line[5]
+            disks.append(disk)
+        elif append == True:
+            append = False
+        elif len(line) > 3 and line[0] == "Raw" and line[1] == "Capacity" and line[2] == "(Blocks):":
+            rg["capacity_raw_blocks"] = line[3]
+        elif len(line) > 3 and line[0] == "Logical" and line[1] == "Capacity" and line[2] == "(Blocks):":
+            rg["capacity_logical_blocks"] = line[3]
+        elif len(line) > 3 and line[0] == "Free" and line[1] == "Capacity" and line[2] == "(Blocks,non-contiguous):":
+            rg["capacity_free_total_blocks"] = line[3]
+        elif len(line) > 6 and line[0] == "Free" and line[1] == "contiguous" and line[4] == "unbound" and line[5] == "segments:":
+            rg["capacity_free_contiguous_blocks"] = line[6]
+    return parsed
+
+
+def inventory_emcvnx_raidgroups(info):
+    parsed = parse_emcvnx_raidgroups(info)
+    inventory = []
+    for rg in parsed:
+        inventory.append((rg, None))
+    return inventory
+
+
+#   .--list of LUNs--------------------------------------------------------.
+#   |           _ _     _            __   _    _   _ _   _                 |
+#   |          | (_)___| |_    ___  / _| | |  | | | | \ | |___             |
+#   |          | | / __| __|  / _ \| |_  | |  | | | |  \| / __|            |
+#   |          | | \__ \ |_  | (_) |  _| | |__| |_| | |\  \__ \            |
+#   |          |_|_|___/\__|  \___/|_|   |_____\___/|_| \_|___/            |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def check_emcvnx_raidgroups_list_luns(item, _no_params, info):
+    parsed = parse_emcvnx_raidgroups(info)
+    if item not in parsed:
+        return 3, "RAID Group %s not found in agent output" % item
+    return 0, "List of LUNs: " + parsed[item]["luns"]
+
+
+check_info['emcvnx_raidgroups.list_luns'] = {
+    "inventory_function"      : inventory_emcvnx_raidgroups,
+    "check_function"          : check_emcvnx_raidgroups_list_luns,
+    "service_description"     : "RAID Group %s LUNs"
+}
+
+#.
+#   .--list of disks-------------------------------------------------------.
+#   |           _ _     _            __       _ _     _                    |
+#   |          | (_)___| |_    ___  / _|   __| (_)___| | _____             |
+#   |          | | / __| __|  / _ \| |_   / _` | / __| |/ / __|            |
+#   |          | | \__ \ |_  | (_) |  _| | (_| | \__ \   <\__ \            |
+#   |          |_|_|___/\__|  \___/|_|    \__,_|_|___/_|\_\___/            |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def check_emcvnx_raidgroups_list_disks(item, _no_params, info):
+    parsed = parse_emcvnx_raidgroups(info)
+    if item not in parsed:
+        return 3, "RAID Group %s not found in agent output" % item 
+
+    message = ""
+    enc = ""
+    for disk in sorted(parsed[item]["disks"]):
+        if message != "":
+            message += ", "
+        enc_id, disk_id = disk.split(' ', 1)
+        if enc_id == enc:
+            message += disk_id
+        else:
+            message += "Enclosure " + enc_id + " " + disk_id
+            enc = enc_id
+
+    return 0, "List of Disks: " + message
+
+
+check_info['emcvnx_raidgroups.list_disks'] = {
+    "inventory_function"      : inventory_emcvnx_raidgroups, 
+    "check_function"          : check_emcvnx_raidgroups_list_disks,
+    "service_description"     : "RAID Group %s Disks"
+}
+
+#.
+#   .--capacity------------------------------------------------------------.
+#   |                                          _ _                         |
+#   |                ___ __ _ _ __   __ _  ___(_) |_ _   _                 |
+#   |               / __/ _` | '_ \ / _` |/ __| | __| | | |                |
+#   |              | (_| (_| | |_) | (_| | (__| | |_| |_| |                |
+#   |               \___\__,_| .__/ \__,_|\___|_|\__|\__, |                |
+#   |                        |_|                     |___/                 |
+#   '----------------------------------------------------------------------'
+
+def inventory_emcvnx_raidgroups_capacity(info):
+    parsed = parse_emcvnx_raidgroups(info)
+    inventory = []
+    for rg in parsed:
+        inventory.append((rg, {}))
+    return inventory
+
+
+def check_emcvnx_raidgroups_capacity(item, params, info):
+    parsed = parse_emcvnx_raidgroups(info)
+    if item not in parsed:
+        return 3, "RAID Group %s not found in agent output" % item 
+
+    fslist = []
+    # Blocksize in Bytes, seems to be fix
+    # (is not listed in the naviseccli output anywhere)
+    blocksize = 512
+    size_mb   = int(parsed[item]["capacity_logical_blocks"]) * blocksize / 1048576.0
+    avail_mb  = int(parsed[item]["capacity_free_total_blocks"]) * blocksize / 1048576.0
+    fslist.append((item, size_mb, avail_mb))
+
+    # variable name in perfdata is not allowed to be just a number
+    # especially 0 does not work, so prefix it generally with "rg"
+    rc, message, perfdata = df_check_filesystem_list(item, params, fslist)
+    perfdata[0] = ("rg" + perfdata[0][0], perfdata[0][1], perfdata[0][2], perfdata[0][3], perfdata[0][4], perfdata[0][5])
+    return rc, message, perfdata
+
+
+check_info['emcvnx_raidgroups.capacity'] = {
+    "inventory_function"      : inventory_emcvnx_raidgroups_capacity,
+    "check_function"          : check_emcvnx_raidgroups_capacity,
+    "service_description"     : "RAID Group %s Capacity",
+    "has_perfdata"            : True,
+    "group"                   : "filesystem",
+    "includes"                : [ "df.include" ],
+    "default_levels_variable" : "filesystem_default_levels",
+}
+
+#.
+#   .--capacity contiguous-------------------------------------------------.
+#   |                          _   _                                       |
+#   |           ___ ___  _ __ | |_(_) __ _ _   _  ___  _   _ ___           |
+#   |          / __/ _ \| '_ \| __| |/ _` | | | |/ _ \| | | / __|          |
+#   |         | (_| (_) | | | | |_| | (_| | |_| | (_) | |_| \__ \          |
+#   |          \___\___/|_| |_|\__|_|\__, |\__,_|\___/ \__,_|___/          |
+#   |                                |___/                                 |
+#   '----------------------------------------------------------------------'
+
+def inventory_emcvnx_raidgroups_capacity_contiguous(info):
+    parsed = parse_emcvnx_raidgroups(info)
+    inventory = []
+    for rg in parsed:
+        inventory.append((rg, {}))
+    return inventory
+
+
+def check_emcvnx_raidgroups_capacity_contiguous(item, params, info):
+    parsed = parse_emcvnx_raidgroups(info)
+    if item not in parsed:
+        return 3, "RAID Group %s not found in agent output" % item 
+
+    fslist = []
+    # Blocksize in Bytes, seems to be fix
+    # (is not listed in the naviseccli output anywhere)
+    blocksize = 512
+    size_mb   = int(parsed[item]["capacity_logical_blocks"]) * blocksize / 1048576.0
+    avail_mb  = int(parsed[item]["capacity_free_contiguous_blocks"]) * blocksize / 1048576.0
+    fslist.append((item, size_mb, avail_mb))
+
+    # variable name in perfdata is not allowed to be just a number
+    # especially 0 does not work, so prefix it generally with "rg"
+    rc, message, perfdata = df_check_filesystem_list(item, params, fslist)
+    perfdata[0] = ("rg" + perfdata[0][0], perfdata[0][1], perfdata[0][2], perfdata[0][3], perfdata[0][4], perfdata[0][5])
+    return rc, message, perfdata
+
+
+check_info['emcvnx_raidgroups.capacity_contiguous'] = {
+    "inventory_function"      : inventory_emcvnx_raidgroups_capacity_contiguous,
+    "check_function"          : check_emcvnx_raidgroups_capacity_contiguous, 
+    "service_description"     : "RAID Group %s Capacity Contiguous",
+    "has_perfdata"            : True,
+    "group"                   : "filesystem",
+    "includes"                : [ "df.include" ],
+    "default_levels_variable" : "filesystem_default_levels",
+}
+
+
+#.

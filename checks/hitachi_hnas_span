@@ -41,7 +41,9 @@ def check_hitachi_hnas_span(item, params, info):
             avail_mb  = size_mb - used_mb
             fslist.append((item, size_mb, avail_mb))
 
-    return df_check_filesystem_list(item, params, fslist)
+            return df_check_filesystem_list(item, params, fslist)
+
+    return 3, "Span %s not found" % item
 
 check_info["hitachi_hnas_span"] = {
     "check_function"         : check_hitachi_hnas_span,

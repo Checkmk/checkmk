@@ -1,0 +1,23 @@
+Title: windows_agent: now reports extended process information (obsoletes psperf.bat plugin)
+Level: 2
+Component: checks
+Version: 1.2.5i1
+Date: 1389878653
+Class: feature
+
+The ps section of the windows agent now provides additional information regarding processes.<br>
+# (user, virtual_size, resident_size, %cpu, processID, pagefile_usage, usermodetime, kernelmodetime, openHandles, threadCount) processName<br>
+#(\\KLAPPRECHNER\ab,29284,2948,0,3124,904,400576,901296,35,1)    NOTEPAD.EXE<br>
+<br>
+Previously you had to use the windows agent plugin psperf.bat to achieve the same amount of data.<br>
+Since this data is now reported by the agent itself, the psperf.bat plugin becomes obsolete.<br>
+In fact any data from psperf.bat will now be ignored in the ps check whenever the windows agent reports extended process information.<br>
+<br>
+
+Additional fixes and features
+<ul>
+<li>The agent now also reports its build date, apart from its version</li>
+<li>Bugfix: The virtual and resident memory shown in the check output is now correct.
+There were problems whenever there were multiple processes with the same name</li>
+</ul>
+

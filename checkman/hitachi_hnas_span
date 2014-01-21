@@ -13,8 +13,8 @@ item:
  The ID of a Span plus it's label, separated by a space, e. g. 3 SP_91
 
 perfdata:
- Three values: The first value is the used space of the filesystem
- in MB. Also the minimum (0 MB), maximum (size of the filesystem) and the
+ Three values: The first value is the used space of the span
+ in MB. Also the minimum (0 MB), maximum (size of the span) and the
  warning and critical levels in MB are provided.
  The second is the change of the usage in MB per range since the last check
  (e.g. in MB per 24 hours) and the 3rd is the averaged change (so called
@@ -26,7 +26,7 @@ inventory:
  Finds one item per Span.
 
 [parameters]
- See man page of {df}.
+parameters (dict): See man page of {df}.
 
 [configuration]
- See man page of {df}.
+filesystem_default_levels: And other, see man page of {df}.

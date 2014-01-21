@@ -1,0 +1,8 @@
+Title: Support multiline plugin output for Check_MK Checks
+Level: 2
+Component: core
+Version: 1.2.5i1
+Date: 1390310917
+Class: feature
+
+Check_MK checks can now return multiline ouput by just using the \n in it ouput.

@@ -2457,9 +2457,6 @@ def mode_inventory(phase, firsttime):
                 return
 
             cache_options = html.var("_scan") and [ '@scan' ] or [ '@noscan' ]
-            table = check_mk_automation(host[".siteid"], "try-inventory", cache_options + [hostname])
-            table.sort()
-            active_checks = {}
             new_target = "folder"
 
             if html.var("_refresh"):
@@ -2486,16 +2483,15 @@ def mode_inventory(phase, firsttime):
                             active_checks[(ct, item)] = paramstring
                     if st == "clustered":
                         active_checks[(ct, item)] = paramstring
-                if st == "clustered":
-                    active_checks[(ct, item)] = paramstring
 
-            check_mk_automation(host[".siteid"], "set-autochecks", [hostname], active_checks)
-            if host.get("inventory_failed"):
-                del host["inventory_failed"]
-                save_hosts()
-            message = _("Saved check configuration of host [%s] with %d services") % \
-                        (hostname, len(active_checks))
-            log_pending(LOCALRESTART, hostname, "set-autochecks", message)
+                check_mk_automation(host[".siteid"], "set-autochecks", [hostname], active_checks)
+                if host.get("inventory_failed"):
+                    del host["inventory_failed"]
+                    save_hosts()
+                message = _("Saved check configuration of host [%s] with %d services") % \
+                            (hostname, len(active_checks))
+                log_pending(LOCALRESTART, hostname, "set-autochecks", message)
+
             mark_affected_sites_dirty(g_folder, hostname, sync=False, restart=True)
             return new_target, message
         return "folder"
@@ -2546,6 +2542,7 @@ def show_service_table(host, firsttime):
 
         if len(checktable) > 0:
             html.button("_save", _("Save manual check configuration"))
+            html.button("_refresh", _("Automatic Refresh (Tabula Rasa)"))
 
         html.write(" &nbsp; ")
         if parameter_column:

@@ -162,6 +162,7 @@
     * 0431 FIX: LDAP: Fixed group syncrhonisation when nested group sync is enabled
     * 0122 FIX: Multisite view editor not longer throwing a exception when loading views from other users
     * 0569 FIX: recurring updates of serial numbers of disabled ldap users fixed...
+    * 0676 FIX: Move view "Stale services" to Problems folder
 
     WATO:
     * 0308 Multisite can now set rotation view permissions for NagVis...

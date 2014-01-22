@@ -239,7 +239,7 @@ max_num_processes                  = 50
 
 # SNMP communities and encoding
 has_inline_snmp                    = False # is set to True by inline_snmp module, when available
-use_inline_snmp                    = False
+use_inline_snmp                    = True
 snmp_default_community             = 'public'
 snmp_communities                   = []
 snmp_timing                        = []

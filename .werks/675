@@ -1,0 +1,10 @@
+Title: Activate inline SNMP per default (if available)
+Level: 2
+Component: core
+Version: 1.2.5i1
+Date: 1390379776
+Class: feature
+
+If the inline implementation of SNMP is available (in our subscription
+builds) then it is now activated per default. Inline SNMP saves about
+50% of the CPU ressources when monitoring hosts via SNMP.

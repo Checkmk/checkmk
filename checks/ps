@@ -164,6 +164,11 @@ def inventory_ps_common(invdata, info, handle_perfdata = False):
     # Handle new wato style inventory_processes_rules
     for rule in inventory_processes_rules:
         taglist, hostlist = rule[1:3]
+        if len(rule) >= 4:
+            options = rule[3]
+            if options.get("disabled"):
+                continue
+
         # Filter out entries with do not match our current host
         if not hosttags_match_taglist(tags_of_host(g_hostname), taglist) \
            or not in_extraconf_hostlist(hostlist, g_hostname):

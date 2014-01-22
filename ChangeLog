@@ -19,6 +19,9 @@
     WATO:
     * 0434 FIX: Fixed wrong count of failed hosts in bulk inventory mode...
 
+    Livestatus-Proxy:
+    * 0263 FIX: livestatus log table: fixed missing logentries of archived logfiles...
+
 
 1.2.4b6:
     Checks & Agents:

@@ -1,0 +1,13 @@
+Title: livestatus log table: fixed missing logentries of archived logfiles
+Level: 1
+Component: liveproxy
+Version: 1.2.4b7
+Date: 1390406019
+Class: fix
+
+In archived logfiles the line numbering of the logfile entries was incorrect.
+The incorrect number could collide with the configuration option max_lines_per_logfile,
+thus leading to an error where archive logfiles where not read completely.<br>
+For example:<br>
+More than 1000000 lines in ….. /live/var/archives/nagios-01-20-2014-00.log. Ignoring the rest!
+

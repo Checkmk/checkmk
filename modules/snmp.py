@@ -407,7 +407,7 @@ def snmpwalk_on_suboid(hostname, ip, oid, hex_plain = False):
     if opt_debug:
         sys.stderr.write('   Running %s\n' % (command,))
 
-    snmp_process = subprocess.Popen(command, shell = True, stdout = subprocess.PIPE)
+    snmp_process = subprocess.Popen(command, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
 
     # Ugly(1): in some cases snmpwalk inserts line feed within one
     # dataset. This happens for example on hexdump outputs longer
@@ -441,9 +441,10 @@ def snmpwalk_on_suboid(hostname, ip, oid, hex_plain = False):
     except StopIteration:
         pass
 
+    error = snmp_process.stderr.read()
     exitstatus = snmp_process.wait()
     if exitstatus:
         if opt_verbose:
-            sys.stderr.write(tty_red + tty_bold + "ERROR: " + tty_normal + "SNMP error\n")
-        raise MKSNMPError("SNMP Error on %s (Exit-Code: %d)" % (ip, exitstatus))
+            sys.stderr.write(tty_red + tty_bold + "ERROR: " + tty_normal + "SNMP error: %s\n" % error.strip())
+        raise MKSNMPError("SNMP Error on %s: %s (Exit-Code: %d)" % (ip, error.strip(), exitstatus))
     return rowinfo

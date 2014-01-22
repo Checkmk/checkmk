@@ -70,7 +70,7 @@ The following placeholdes will be substituted by value from the actual event:
 <tr><td class=tt>$STATE$</td><td>State of the event (0/1/2/3)</td></tr>
 <tr><td class=tt>$PHASE$</td><td>Phase of the event (always open)</td></tr>
 <tr><td class=tt>$OWNER$</td><td>Owner of the event</td></tr>
-<tr><td class=tt>$MATCH_GROUPS$</td><td>Text groups from regular expression match, separated by spaces/td></tr>
+<tr><td class=tt>$MATCH_GROUPS$</td><td>Text groups from regular expression match, separated by spaces</td></tr>
 <tr><td class=tt>$MATCH_GROUP_1$</td><td>Text of the first match group from expression match</td></tr>
 <tr><td class=tt>$MATCH_GROUP_2$</td><td>Text of the second match group from expression match</td></tr>
 <tr><td class=tt>$MATCH_GROUP_3$</td><td>Text of the third match group from expression match (and so on...)</td></tr>

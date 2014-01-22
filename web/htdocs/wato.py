@@ -2192,7 +2192,8 @@ def diag_host_tests():
         ('agent',         _('Agent')),
         ('snmpv1',        _('SNMPv1')),
         ('snmpv2',        _('SNMPv2c')),
-        ('snmpv2_nobulk', _('SNMPv2c (without Bulkwalk)'))
+        ('snmpv2_nobulk', _('SNMPv2c (without Bulkwalk)')),
+        ('traceroute',    _('Traceroute')),
     ]
 
 def mode_diag_host(phase):
@@ -8855,7 +8856,7 @@ def load_notification_scripts_from(adir):
                     lines.next()
                     line = lines.next().strip()
                     if line.startswith("#"):
-                        title = line.lstrip("#").strip()
+                        title = line.lstrip("#").strip().split("#", 1)[0]
                 except:
                     pass
                 scripts[entry] = title

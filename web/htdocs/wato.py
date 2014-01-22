@@ -8935,7 +8935,7 @@ def load_notification_scripts_from(adir):
                     lines.next()
                     line = lines.next().strip()
                     if line.startswith("#"):
-                        title = line.lstrip("#").strip()
+                        title = line.lstrip("#").strip().split("#", 1)[0]
                 except:
                     pass
                 scripts[entry] = title

@@ -1,0 +1,14 @@
+Title: df_netapp32 / df_netapp: Fixed bug with negative size in check output
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1390390390
+
+The df_netapp and df_netapp32 checks tried to determine 64 bit counters by checking
+the existance of the oid .1.3.6.1.4.1.789.1.5.4.1.29.1 (df64TotalKBytes).
+Depending on the 64 Bit counter a df_netapp check is created, otherwise df_netapp32 is used.
+Unfortunately not all netapp interfaces start at .1, so some netapp devices where wrongly
+inventorized as df_netapp32 checks. <br>
+Those checks reported negative volume sizes whenever the 32 bit counter overflowed.

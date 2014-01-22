@@ -1,0 +1,10 @@
+Title: Fix ugly Python exception in host diagnosis page in case of SNMP error
+Level: 1
+Component: core
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1390378855
+
+The stderr output of the SNMP commands is now captured correctly and displayed
+at the correct place in case of an error.

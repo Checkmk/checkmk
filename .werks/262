@@ -1,0 +1,9 @@
+Title: ps: Now able to skip disabled "Process Inventory" rules
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1390398896
+
+The ps check was unable to detect if a WATO rule "Process Inventory" was disabled.

@@ -235,6 +235,9 @@
     * 0336 FIX: Limit the number of lines read from a single logfile...
     * 0344 FIX: Fix semantics of columns num_services_hard_*...
 
+    Livestatus-Proxy:
+    * 0263 FIX: livestatus log table: fixed missing logentries of archived logfiles...
+
 
 1.2.3i7:
     Core & Setup:

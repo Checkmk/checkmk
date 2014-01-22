@@ -138,6 +138,7 @@ void Logfile::load(LogCache *logcache, time_t since, time_t until, unsigned logc
             return;
         }
 
+        _lineno = 0;
         loadRange(file, missing_types, logcache, since, until, logclasses);
         fclose(file);
         _logclasses_read |= missing_types;

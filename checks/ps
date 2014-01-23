@@ -37,6 +37,9 @@
 # (user, virtual_size, resident_size, %cpu, processID, pagefile_usage, usermodetime, kernelmodetime, openHandles, threadCount) name
 #(\\KLAPPRECHNER\ab,29284,2948,0,3124,904,400576,901296,35,1)    NOTEPAD.EXE
 
+# The plugin "psperf.bat" is depracted. As of version 1.2.5 all of this information
+# is reported by the windows agent itself. However, we still support sections from psperf.bat
+# if the agent version is lower than 1.2.5.
 # Windows agent now ships a plugin "psperf.bat" that adds a section from wmic
 # to the output:
 # <<<ps:sep(44)>>>

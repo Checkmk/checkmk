@@ -1285,19 +1285,14 @@ def submit_check_result(host, servicedesc, result, sa):
 def submit_to_core(host, service, state, output):
     # Save data for sending it to the Check_MK Micro Core
     # Replace \n to enable multiline ouput
-    output = output.replace('\n', '\\n')
-    if monitoring_core == "cmc":
+    if opt_keepalive:
         output = output.replace("\n", "\x01", 1).replace("\n","\\n")
         result = "\t%d\t%s\t%s\n" % (state, service, output.replace("\0", "")) # remove binary 0, CMC does not like it
-        if opt_keepalive:
-            global total_check_output
-            total_check_output += result
-        else:
-            if not opt_verbose:
-                sys.stdout.write(result)
+        global total_check_output
+        total_check_output += result
 
     # Send to Nagios/Icinga command pipe
-    elif check_submission == "pipe":
+    elif check_submission == "pipe" or monitoring_core == "cmc": # CMC does not support file
         output = output.replace("\n", "\\n")
         open_command_pipe()
         if nagios_command_pipe:

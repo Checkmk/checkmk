@@ -1,8 +1,10 @@
 Title: OpenLDAP: Group sync seems broken
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2013-12-17 13:38:38
 Targetversion: 1.2.4
-Class: bug
 
 Groups are not synced anymore. The search-filter on the distinguishedName does not work in Openldap, nor can "dn" be used in a searchfilter.
+
+2014-01-23 16:13:08: changed state open -> done

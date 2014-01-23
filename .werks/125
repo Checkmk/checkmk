@@ -1,4 +1,4 @@
-Title: Unitrends Backup
+Title: unitrends_backup:Unitrends Backup
 Level: 1
 Component: checks
 Version: 1.2.5i1
@@ -6,5 +6,5 @@ Date: 1390467872
 Class: feature
 
 Unitrends is a enterprise class backup solution.
-This check kann monitor the Backup schedules from unitrends.
+This check can monitor the Backup schedules from unitrends.
 

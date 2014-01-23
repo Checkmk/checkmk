@@ -1,0 +1,17 @@
+title: Unitrends Backup Schedule
+agents: linux
+catalog: app/unitrends
+license: GPL
+distribution: check_mk
+description:
+ Unitrends is a enterprise class backup solution.
+ This plugin needs the unitrends_backup plugin installed on the unitrends server
+ in order to work. The plugin will deliver a complete list of all schedules including
+ a sublist of a jobs in this schdule from the last 24 hours.
+
+ As long all of the jobs are succsessful the check returns a {OK} state. In each other 
+ case the check will return {CRITICAL}. In anycase it's possible to see the complete 
+ log in the long plugin output field from the core.
+
+inventory:
+ One Service for each Schedule will be created

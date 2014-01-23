@@ -1,0 +1,16 @@
+Title: printer_supply_ricoh: now reports correct filling levels
+Level: 1
+Component: checks
+Version: 1.2.4b7
+Date: 1390484833
+Class: fix
+
+The level is taken from the OID: .1.3.6.1.4.1.367.3.2.1.2.24.1.1.5
+
+C+:
+;; *************** Ricoh MIB ***************
+...
+[TONERCurLevel]
+1.3.6.1.4.1.367.3.2.1.2.24.1.1.5=1
+C-:
+

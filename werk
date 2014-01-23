@@ -202,7 +202,6 @@ def load_werk(werkid):
         "state"          : "unknown",
         "title"          : "unknown",
         "component"      : "general",
-        "targetversion"  : "future",
     }
     
     f = file(str(werkid))
@@ -218,6 +217,7 @@ def load_werk(werkid):
         description += line
 
     werk["description"] = description
+    versions.add(werk["version"])
     return werk
 
 def save_werk(werk):
@@ -355,6 +355,7 @@ def main_list(args, format):
           ( "component",      components ), 
           ( "level",          levels ), 
           ( "class",          classes ),
+          ( "version",        versions ),
           ]:
             for v in values:
                 if type(v) == tuple:
@@ -808,6 +809,7 @@ def main_fetch_ids(args):
 #   |_| |_| |_|\__,_|_|_| |_|
 #
 
+versions = set([])
 goto_werksdir()
 load_config()
 load_werks()

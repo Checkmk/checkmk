@@ -1,0 +1,8 @@
+Title: Remove garbled output of cmk -v in state of CMC
+Level: 1
+Component: core
+Version: 1.2.4b7
+Date: 1390492533
+Class: fix
+
+

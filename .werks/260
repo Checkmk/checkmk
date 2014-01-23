@@ -1,0 +1,11 @@
+Title: Fixed incorrect formatting of checks with long output
+Level: 1
+Component: checks
+Version: 1.2.4b7
+Date: 1390322620
+Class: fix
+
+Long output in check_mk checks was not formatted accordingly.
+Newlines within a checks output are now escaped correctly: \n -> \\n
+
+The incorrect formatting in previous versions could lead to missing long output texts in the monitoring core.

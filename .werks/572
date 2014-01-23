@@ -1,0 +1,9 @@
+Title: cmciii_lcp_waterflow: lower and upper limits to the flow are now monitored
+Level: 1
+Component: checks
+Class: feature
+State: unknown
+Version: 1.2.5i1
+Date: 1390506211
+
+

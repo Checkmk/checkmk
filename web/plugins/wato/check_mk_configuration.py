@@ -1256,14 +1256,6 @@ register_configvar(group,
     need_restart = True
     )
 
-register_configvar(group,
-    "always_cleanup_autochecks",
-    Checkbox(title = _("Always cleanup autochecks"),
-             help = _("When switched on, Check_MK will always cleanup the autochecks files "
-                      "after each inventory, i.e. create one file per host. This is the same "
-                      "as adding the option <tt>-u</tt> to each call of <tt>-I</tt> on the "
-                      "command line.")))
-
 group = _("Check configuration")
 
 

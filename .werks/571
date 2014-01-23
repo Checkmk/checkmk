@@ -1,0 +1,8 @@
+Title: cmciii_lcp_fans: now monitors the lower limit for the rpm
+Level: 1
+Component: checks
+Version: 1.2.4b7
+Date: 1390505063
+Class: feature
+
+

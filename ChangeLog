@@ -18,6 +18,7 @@
     * 0451 FIX: Ignore missing check types when creating configuration for Nagios
     * 0259 FIX: Fixed htpasswd permission problem in check_mk standalone installation...
     * 0453 FIX: Fix ugly Python exception in host diagnosis page in case of SNMP error...
+    * 0696 FIX: Remove garbled output of cmk -v in state of CMC
 
     Checks & Agents:
     * 0306 esx_vsphere_counters: added missing ramdisk levels sfcbtickets

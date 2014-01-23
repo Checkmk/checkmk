@@ -1,0 +1,8 @@
+Title: cmciii_lcp_airin, cmciii_lcp_airout, cmciii_lcp_waterin, cmciii_lcp_waterout: checks now observe limits to the temperatures
+Level: 1
+Component: checks
+Version: 1.2.4b7
+Date: 1390509708
+Class: feature
+
+

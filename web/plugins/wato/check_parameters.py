@@ -1873,6 +1873,20 @@ register_check_parameters(
         allow_empty = False),
     "dict",
 )
+register_check_parameters(
+    subgroup_networking,
+    "signal_quality",
+    _("Signal quality of Wireless device"),
+    Tuple(
+        elements=[
+            Percentage( title = _( "Warning if under"), maxvalue=100 ),
+            Percentage( title = _( "Critical if under"), maxvalue=100 ),
+    ]),
+    TextAscii(
+        title = _("Network specification"),
+        allow_empty = True),
+    "first",
+)
 
 register_check_parameters(
     subgroup_networking,

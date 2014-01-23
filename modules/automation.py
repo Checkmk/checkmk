@@ -684,6 +684,8 @@ def automation_scan_parents(args):
         raise MKAutomationError(str(e))
 
 def automation_diag_host(args):
+    import subprocess
+
     hostname, test, ipaddress, snmp_community = args[:4]
     agent_port, snmp_timeout, snmp_retries = map(int, args[4:7])
     cmd = args[7]
@@ -696,7 +698,6 @@ def automation_diag_host(args):
 
     try:
         if test == 'ping':
-            import subprocess
             p = subprocess.Popen('ping -A -i 0.2 -c 2 -W 5 %s 2>&1' % ipaddress, shell = True, stdout = subprocess.PIPE)
             response = p.stdout.read()
             return (p.wait(), response)
@@ -709,6 +710,15 @@ def automation_diag_host(args):
                 return 0, get_agent_info_program(cmd)
             else:
                 return 0, get_agent_info_tcp(hostname, ipaddress, agent_port or None)
+
+        elif test == 'traceroute':
+            traceroute_prog = find_bin_in_path('traceroute')
+            if not traceroute_prog:
+                return 1, "Cannot find binary <tt>traceroute</tt>."
+            else:
+                p = subprocess.Popen('traceroute -n %s 2>&1' % ipaddress, shell = True, stdout = subprocess.PIPE)
+                response = p.stdout.read()
+                return (p.wait(), response)
 
         elif test.startswith('snmp'):
             if snmp_community:

@@ -239,7 +239,7 @@ max_num_processes                  = 50
 
 # SNMP communities and encoding
 has_inline_snmp                    = False # is set to True by inline_snmp module, when available
-use_inline_snmp                    = False
+use_inline_snmp                    = True
 snmp_default_community             = 'public'
 snmp_communities                   = []
 snmp_timing                        = []
@@ -252,7 +252,7 @@ inventory_check_severity           = 1    # warning
 inventory_check_do_scan            = True # include SNMP scan for SNMP devices
 inventory_max_cachefile_age        = 120  # secs.
 inventory_check_autotrigger        = True # Automatically trigger inv-check after automation-inventory
-always_cleanup_autochecks          = True
+always_cleanup_autochecks          = None # For compatiblity with old configuration
 
 # Nagios templates and other settings concerning generation
 # of Nagios configuration files. No need to change these values.
@@ -4508,9 +4508,8 @@ Copyright (C) 2009 Mathias Kettner
 def usage():
     print """WAYS TO CALL:
  cmk [-n] [-v] [-p] HOST [IPADDRESS]  check all services on HOST
- cmk [-u] -I [HOST ..]                inventory - find new services
- cmk [-u] -II ...                     renew inventory, drop old services
- cmk -u, --cleanup-autochecks         reorder autochecks files
+ cmk -I [HOST ..]                     inventory - find new services
+ cmk -II ...                          renew inventory, drop old services
  cmk -N [HOSTS...]                    output Nagios configuration
  cmk -B                               create configuration for core
  cmk -C, --compile                    precompile host checks
@@ -4571,10 +4570,6 @@ NOTES:
 
   -II does the same as -I but deletes all existing checks of the
   specified types and hosts.
-
-  -u, --cleanup-autochecks resorts all checks found by inventory
-  into per-host files. It can be used as an options to -I or as
-  a standalone operation.
 
   -N outputs the Nagios configuration. You may optionally add a list
   of hosts. In that case the configuration is generated only for
@@ -5665,7 +5660,7 @@ def output_profile():
 # Do option parsing and execute main function -
 # if check_mk is not called as module
 if __name__ == "__main__":
-    short_options = 'SHVLCURODMmd:Ic:nhvpXPuNB'
+    short_options = 'SHVLCURODMmd:Ic:nhvpXPNB'
     long_options = [ "help", "version", "verbose", "compile", "debug",
                      "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
                      "flush", "package", "localize", "donate", "snmpwalk", "snmptranslate",
@@ -5673,7 +5668,7 @@ if __name__ == "__main__":
                      "snmpget=", "profile", "keepalive", "keepalive-fd=", "create-rrd",
                      "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
                      "man", "nowiki", "config-check", "backup=", "restore=",
-                     "check-inventory=", "paths", "cleanup-autochecks", "checks=",
+                     "check-inventory=", "paths", "checks=",
                      "cmc-file=", "browse-man", "list-man", "update-dns-cache" ]
 
     non_config_options = ['-L', '--list-checks', '-P', '--package', '-M', '--notify',
@@ -5713,8 +5708,6 @@ if __name__ == "__main__":
             opt_showperfdata = True
         elif o == '-n':
             opt_dont_submit = True
-        elif o in [ '-u', '--cleanup-autochecks' ]:
-            opt_cleanup_autochecks = True
         elif o == '--fake-dns':
             fake_dns = a
         elif o == '--keepalive':
@@ -5928,14 +5921,7 @@ if __name__ == "__main__":
         for checkname in checknames:
             make_inventory(checkname, hostnames, False)
 
-        # -u, --cleanup-autochecks called in stand alone mode
-        if opt_cleanup_autochecks or always_cleanup_autochecks:
-            do_cleanup_autochecks()
-        done = True
-
-    if not done and opt_cleanup_autochecks: # -u as standalone option
         do_cleanup_autochecks()
-        done = True
 
 
     if done:

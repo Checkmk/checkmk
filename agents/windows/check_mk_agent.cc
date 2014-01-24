@@ -225,9 +225,15 @@ script_containers_t script_containers;
 
 // Command definitions for MRPE
 struct mrpe_entry {
+    char run_as_user[256];
     char command_line[256];
     char plugin_name[64];
     char service_description[256];
+};
+
+struct mrpe_include{
+    char path[256];
+    char user[256];
 };
 
 struct process_entry {
@@ -247,6 +253,8 @@ double file_time(const FILETIME *filetime);
 void open_crash_log();
 void close_crash_log();
 void crash_log(const char *format, ...);
+void lowercase(char* value);
+char* next_word(char** line);
 
 //  .----------------------------------------------------------------------.
 //  |                    ____ _       _           _                        |
@@ -339,9 +347,12 @@ only_from_t g_only_from;
 typedef vector<winperf_counter*> winperf_counters_t;
 winperf_counters_t g_winperf_counters;
 
-// Configuration of winperf counters
+// Configuration of mrpe entries
 typedef vector<mrpe_entry*> mrpe_entries_t;
+typedef vector<mrpe_include*> mrpe_include_t;
 mrpe_entries_t g_mrpe_entries;
+mrpe_entries_t g_included_mrpe_entries;
+mrpe_include_t g_mrpe_include;
 
 // Configuration of execution suffixed
 typedef vector<char *> execute_suffixes_t;
@@ -2730,18 +2741,115 @@ void output_external_programs(SOCKET &out, script_type type)
 //  |                                    |_|                               |
 //  '----------------------------------------------------------------------'
 
+void update_mrpe_includes()
+{
+    for (unsigned int i = 0 ; i < g_included_mrpe_entries.size(); i++)
+        delete g_included_mrpe_entries[i];
+    g_included_mrpe_entries.clear();
+
+    FILE *file;
+    char  line[512];
+    int   lineno = 0;
+    for (mrpe_include_t::iterator it_include = g_mrpe_include.begin();
+         it_include != g_mrpe_include.end(); it_include++)
+    {
+        char* path = (*it_include)->path;
+        file = fopen(path, "r");
+        if (!file) {
+            crash_log("Include file not found %s", path);
+            continue;
+        }
+
+        lineno = 0;
+        while (!feof(file)) {
+            lineno++;
+            if (!fgets(line, sizeof(line), file)){
+                printf("intern clse\n");
+                fclose(file);
+                continue;
+            }
+
+            char *l = strip(line);
+            if (l[0] == 0 || l[0] == '#' || l[0] == ';')
+                continue; // skip empty lines and comments
+
+            // split up line at = sign
+            char *s = l;
+            while (*s && *s != '=')
+                s++;
+            if (*s != '=') {
+                crash_log("Invalid line %d in %s.", lineno, path);
+                continue;
+            }
+            *s = 0;
+            char *value = s + 1;
+            char *var = l;
+            rstrip(var);
+            lowercase(var);
+            value = strip(value);
+
+            if (!strcmp(var, "check")) {
+                // First word: service description
+                // Rest: command line
+                char *service_description = next_word(&value);
+                char *command_line = value;
+                if (!command_line || !command_line[0]) {
+                    crash_log("Invalid line %d in %s. Invalid command specification", lineno, path);
+                    continue;
+                }
+
+                mrpe_entry* tmp_entry = new mrpe_entry();
+                memset(tmp_entry, 0, sizeof(mrpe_entry));
+
+                strncpy(tmp_entry->command_line, command_line,
+                        sizeof(tmp_entry->command_line));
+                strncpy(tmp_entry->service_description, service_description,
+                        sizeof(tmp_entry->service_description));
+
+                // compute plugin name, drop directory part
+                char *plugin_name = next_word(&value);
+                char *p = strrchr(plugin_name, '/');
+                if (!p)
+                    p = strrchr(plugin_name, '\\');
+                if (p)
+                    plugin_name = p + 1;
+                strncpy(tmp_entry->plugin_name, plugin_name,
+                        sizeof(tmp_entry->plugin_name));
+
+                snprintf(tmp_entry->run_as_user, sizeof(tmp_entry->run_as_user), (*it_include)->user);
+                g_included_mrpe_entries.push_back(tmp_entry);
+            }
+        }
+        fclose(file);
+    }
+}
+
 void section_mrpe(SOCKET &out)
 {
     crash_log("<<<mrpe>>>");
     output(out, "<<<mrpe>>>\n");
 
-    for (mrpe_entries_t::iterator it_mrpe = g_mrpe_entries.begin();
-            it_mrpe != g_mrpe_entries.end(); it_mrpe++)
+    update_mrpe_includes();
+
+    mrpe_entries_t all_mrpe_entries;
+    all_mrpe_entries.insert(all_mrpe_entries.end(),
+                            g_mrpe_entries.begin(), g_mrpe_entries.end());
+    all_mrpe_entries.insert(all_mrpe_entries.end(),
+                            g_included_mrpe_entries.begin(), g_included_mrpe_entries.end());
+
+    for (mrpe_entries_t::iterator it_mrpe = all_mrpe_entries.begin();
+            it_mrpe != all_mrpe_entries.end(); it_mrpe++)
     {
         mrpe_entry *entry = *it_mrpe;
         output(out, "(%s) %s ", entry->plugin_name, entry->service_description);
-        crash_log("(%s) %s ", entry->plugin_name, entry->service_description);
+        crash_log("%s (%s) %s ", entry->run_as_user, entry->plugin_name, entry->service_description);
 
+        char command[1024];
+        char run_as_prefix[512];
+        memset(run_as_prefix, 0, sizeof(run_as_prefix));
+        if (strlen(entry->run_as_user) > 0)
+            snprintf(run_as_prefix, sizeof(run_as_prefix), "runas /User:%s ", entry->run_as_user);
+        snprintf(command, sizeof(command), "%s%s", run_as_prefix, entry->command_line);
         FILE *f = _popen(entry->command_line, "r");
         if (!f) {
             output(out, "3 Unable to execute - plugin may be missing.\n");
@@ -3617,7 +3725,6 @@ bool check_host_restriction(char *patterns)
     return false;
 }
 
-
 bool handle_mrpe_config_variable(char *var, char *value)
 {
     if (!strcmp(var, "check")) {
@@ -3634,6 +3741,7 @@ bool handle_mrpe_config_variable(char *var, char *value)
         fprintf(stderr, "CMD: [%s]\r\n", command_line);
 
         mrpe_entry* tmp_entry = new mrpe_entry();
+        memset(tmp_entry, 0, sizeof(mrpe_entry));
 
         strncpy(tmp_entry->command_line, command_line,
                 sizeof(tmp_entry->command_line));
@@ -3650,6 +3758,19 @@ bool handle_mrpe_config_variable(char *var, char *value)
         strncpy(tmp_entry->plugin_name, plugin_name,
                 sizeof(tmp_entry->plugin_name));
         g_mrpe_entries.push_back(tmp_entry);
+        return true;
+    } else if (!strncmp(var, "include", 7)) {
+        char *user = NULL;
+        if (strlen(var) > 7)
+            user = lstrip(var + 7);
+
+        mrpe_include* tmp = new mrpe_include();
+        memset(tmp, 0, sizeof(tmp));
+
+        if (user)
+            snprintf(tmp->user, sizeof(tmp->user), user);
+        snprintf(tmp->path, sizeof(tmp->path), value);
+        g_mrpe_include.push_back(tmp);
         return true;
     }
     return false;

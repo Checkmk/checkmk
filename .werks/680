@@ -1,0 +1,8 @@
+Title: Do not allow spaces in host names in event simulator
+Level: 1
+Component: ec
+Version: 1.2.4b7
+Date: 1390559112
+Class: fix
+
+Spaces are not allowed because that breaks the syslog message format.

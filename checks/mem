@@ -37,7 +37,7 @@
 #   | used for unixoide operating systems.                                 |
 #   +----------------------------------------------------------------------+
 
-# The following variable is obsolete. It is kept here so that Check_MK 
+# The following variable is obsolete. It is kept here so that Check_MK
 # won't fail if it's found in main.mk
 mem_extended_perfdata = None
 

@@ -65,7 +65,7 @@ perfdata:
  the amount of virtual RAM that is used by processes.
 
  On Linux some additional performance values are output,
- for example the size of the page tables and the shared 
+ for example the size of the page tables and the shared
  memory.
 
  If averaging is turned on, then a value {memusedavg} is added.

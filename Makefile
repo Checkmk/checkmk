@@ -230,7 +230,7 @@ SOURCE_FILES = checkman/* modules/* checks/* notifications/* $$(find -name Makef
           livestatus/src/*{cc,c,h} web/htdocs/*.{py,css} web/htdocs/js/*.js web/plugins/*/*.py \
           doc/helpers/* scripts/setup.sh scripts/autodetect.py $$(find pnp-templates -type f -name "*.php") \
           mkeventd/bin/mkeventd mkeventd/web/htdocs/*.py mkeventd/web/plugins/*/*.py mkeventd/src/*.c \
-          mkeventd/checks/*
+          mkeventd/checks/* check_mk_templates.cfg
 
 healspaces:
 	@echo "Removing trailing spaces from code lines..."

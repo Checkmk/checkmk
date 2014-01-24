@@ -161,7 +161,6 @@ def query(query):
             timeout = 10
 
         sock.settimeout(timeout)
-        # TODO: Pfad nicht auf OMD hart kodieren
         sock.connect(socket_path)
         sock.send(query)
 

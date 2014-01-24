@@ -2289,6 +2289,12 @@ define service {
 
             if description in used_descriptions:
                 cn, it = used_descriptions[description]
+                # If we have the same active check again with the same description,
+                # then we do not regard this as an error, but simply ignore the
+                # second one. That way one can override a check with other settings.
+                if cn == "active(%s)" % acttype:
+                    continue
+
                 raise MKGeneralException(
                         "ERROR: Duplicate service description (active check) '%s' for host '%s'!\n"
                         " - 1st occurrance: checktype = %s, item = %r\n"

@@ -680,7 +680,10 @@ vs_mkeventd_event = Dictionary(
             size = 40,
             default_value = _("myhost089"),
             allow_empty = True,
-            attrencode = True)
+            attrencode = True,
+            regex = "^\\S*$",
+            regex_error = _("The host name may not contain spaces."),
+            )
         ),
         ( "priority",
           DropdownChoice(

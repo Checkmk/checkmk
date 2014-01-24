@@ -721,7 +721,7 @@ if mkeventd_enabled:
     def command_mkeventd_delete(cmdtag, spec, row):
         if html.var("_delete_event"):
             command = "DELETE;%s;%s" % (row["event_id"], config.user_id)
-            title = _("<b>delete</b>")
+            title = _("<b>archive</b>")
             return command, title
 
 

@@ -8678,6 +8678,9 @@ def page_automation():
     if secret != get_login_secret():
         raise MKAuthException(_("Invalid automation secret."))
 
+    global g_git_messages
+    g_git_messages = []
+
     # To prevent mixups in written files we use the same lock here as for
     # the normal WATO page processing. This might not be needed for some
     # special automation requests, like inventory e.g., but to keep it simple,

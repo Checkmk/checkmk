@@ -532,6 +532,13 @@ multisite_painters["svc_next_check"] = {
     "paint"   : lambda row: paint_future_time(row["service_next_check"]),
 }
 
+multisite_painters["svc_last_time_ok"] = {
+    "title"   : _("The last time the service was OK"),
+    "short"   : _("Last OK"),
+    "columns" : [ "service_last_time_ok", "service_has_been_checked" ],
+    "paint"   : lambda row: paint_age(row["service_last_time_ok"], row["service_has_been_checked"] == 1, 60 * 10),
+}
+
 multisite_painters["svc_next_notification"] = {
     "title"   : _("The time of the next service notification"),
     "short"   : _("Next notification"),

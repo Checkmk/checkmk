@@ -146,6 +146,8 @@ def send_event(event):
     timestamp = time.strftime("%b %d %T", time.localtime())
     rfc = "<%d>%s %s %s: %s\n" % (
         prio, timestamp, event["host"], event["application"], event["text"])
+    if type(rfc) == unicode:
+        rfc = rfc.encode("utf-8")
     pipe = file(pipe_path, "w")
     pipe.write(rfc + "\n")
     return rfc

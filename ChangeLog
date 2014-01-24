@@ -25,6 +25,9 @@
     * 0434 FIX: Fixed wrong count of failed hosts in bulk inventory mode...
     * 0678 FIX: Move two last global settings of Event Console to proper places
 
+    Reporting & Availability:
+    * 0681 FIX: Display correct year for availability range for last month in january
+
     Event Console:
     * 0679 FIX: Allow non-Ascii characters in generated events
     * 0680 FIX: Do not allow spaces in host names in event simulator...

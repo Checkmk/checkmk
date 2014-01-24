@@ -1868,8 +1868,9 @@ class Timerange(CascadingDropdown):
             elif rangespec[0] == 'm': # month
                 broken[2] = 1
                 from_time = time.mktime(broken)
+                last_year = broken[0] - ((broken[1] == 1) and 1 or 0)
                 titles = month_names[broken[1] - 1] + " " + str(broken[0]), \
-                         month_names[(broken[1] + 10) % 12] + " " + str(broken[0])
+                         month_names[(broken[1] + 10) % 12] + " " + str(last_year)
 
             elif rangespec[0] == 'y': # year
                 broken[1:3] = [1, 1]

@@ -1779,12 +1779,13 @@ class Timerange(CascadingDropdown):
     def __init__(self, **kwargs):
         self._title = _('Time range')
 
+        if 'choices' not in kwargs:
+            kwargs['choices'] = []
+
         if kwargs.get('allow_empty', False):
-            kwargs['choices'] = [
+            kwargs['choices'] += [
                 (None, ''),
             ]
-        else:
-            kwargs['choices'] = []
 
         kwargs['choices'] += [
             ( "d0",  _("Today") ),
@@ -1868,8 +1869,9 @@ class Timerange(CascadingDropdown):
             elif rangespec[0] == 'm': # month
                 broken[2] = 1
                 from_time = time.mktime(broken)
+                last_year = broken[0] - ((broken[1] == 1) and 1 or 0)
                 titles = month_names[broken[1] - 1] + " " + str(broken[0]), \
-                         month_names[(broken[1] + 10) % 12] + " " + str(broken[0])
+                         month_names[(broken[1] + 10) % 12] + " " + str(last_year)
 
             elif rangespec[0] == 'y': # year
                 broken[1:3] = [1, 1]
@@ -1895,6 +1897,20 @@ class Timerange(CascadingDropdown):
                         from_broken[1] = 12
                         from_broken[0] -= 1
                 return (time.mktime(from_broken), until_time), titles[1]
+
+class PNPTimerange(Timerange):
+    def __init__(self, **kwargs):
+        kwargs['choices'] = [
+            ('pnp_view', _("PNP View"), DropdownChoice(
+                default_value = '1',
+                choices = [
+                    ("0", _("4 Hours")),  ("1", _("25 Hours")),
+                    ("2", _("One Week")), ("3", _("One Month")),
+                    ("4", _("One Year")), ("", _("All"))
+                ],
+            )),
+        ]
+        Timerange.__init__(self, **kwargs)
 
 
 # Make a configuration value optional, i.e. it may be None.
@@ -2328,13 +2344,18 @@ class Dictionary(ValueSpec):
                 html.write('<tr><td class=dictleft>')
             div_id = varprefix + "_d_" + param
             vp     = varprefix + "_p_" + param
+            colon_printed = False
             if self._optional_keys and param not in self._required_keys:
                 visible = html.get_checkbox(vp + "_USE")
                 if visible == None:
                     visible = param in value
+                label = vs.title()
+                if self._columns == 2:
+                    label += ":"
+                    colon_printed = True
                 html.checkbox(vp + "_USE", param in value,
                               onclick="valuespec_toggle_option(this, %r)" % div_id,
-                              label=vs.title())
+                              label=label)
             else:
                 visible = True
                 if vs.title():
@@ -2348,7 +2369,7 @@ class Dictionary(ValueSpec):
                             html.write(": ")
 
             if self._columns == 2:
-                if vs.title():
+                if vs.title() and not colon_printed:
                     html.write(':')
                 html.help(vs.help())
                 if not oneline:
@@ -2654,6 +2675,12 @@ class Transform(ValueSpec):
             return self._back(value)
         else:
             return value
+
+    def title(self):
+        if self._title:
+            return self._title
+        else:
+            return self._valuespec.title()
 
     def render_input(self, varprefix, value):
         self._valuespec.render_input(varprefix, self.forth(value))

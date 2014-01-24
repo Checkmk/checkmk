@@ -11,6 +11,8 @@ description:
  taken as the state of the check as follows:
  If the Rittal device returns {OK}, the check is {OK}. Otherwise
  the check is {CRIT}.
+ Futhermore, the global lower limit for the fan RPM is extracted from
+ the device. If the fan RPM is below this limit, the check is {WARN}.
 
 item:
  The number of the fan

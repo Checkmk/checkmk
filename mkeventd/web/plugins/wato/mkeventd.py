@@ -680,7 +680,10 @@ vs_mkeventd_event = Dictionary(
             size = 40,
             default_value = _("myhost089"),
             allow_empty = True,
-            attrencode = True)
+            attrencode = True,
+            regex = "^\\S*$",
+            regex_error = _("The host name may not contain spaces."),
+            )
         ),
         ( "priority",
           DropdownChoice(
@@ -1482,21 +1485,6 @@ if mkeventd_enabled:
     )
 
     register_configvar(group,
-        "mkeventd_connect_timeout",
-        Integer(
-            title = _("Connect timeout to status socket"),
-            help = _("When the Multisite GUI connects the socket of the event daemon "
-                     "in order to retrieve information about current and historic events "
-                     "then this timeout will be applied."),
-            minvalue = 1,
-            maxvalue = 120,
-            default_value = 10,
-            unit = "sec",
-        ),
-        domain = "multisite",
-    )
-
-    register_configvar(group,
         "replication",
         Optional(
             Dictionary(
@@ -1675,20 +1663,6 @@ if mkeventd_enabled:
     )
 
     register_configvar(group,
-        "mkeventd_pprint_rules",
-        Checkbox(title = _("Pretty-Print rules in configuration file"),
-                 label = _("enable pretty-printing of rules"),
-                 help = _("When the WATO module of the Event Console saves rules to the file "
-                          "<tt>mkeventd.d/wato/rules.mk</tt> it usually prints the Python "
-                          "representation of the rules-list into one single line by using the "
-                          "native Python code generator. Enabling this option switches to <tt>pprint</tt>, "
-                          "which nicely indents everything. While this is a bit slower for large "
-                          "rulesets it makes debugging and manual editing simpler."),
-                default_value = False),
-        domain = "multisite",
-    )
-
-    register_configvar(group,
         "actions",
         vs_mkeventd_actions,
         allow_reset = False,
@@ -1780,6 +1754,38 @@ if mkeventd_enabled:
         ),
         domain = "mkeventd",
     )
+
+    # A few settings for Multisite and WATO
+    register_configvar(_("Status GUI (Multisite)"),
+        "mkeventd_connect_timeout",
+        Integer(
+            title = _("Connect timeout to status socket of Event Console"),
+            help = _("When the Multisite GUI connects the socket of the event daemon "
+                     "in order to retrieve information about current and historic events "
+                     "then this timeout will be applied."),
+            minvalue = 1,
+            maxvalue = 120,
+            default_value = 10,
+            unit = "sec",
+        ),
+        domain = "multisite",
+    )
+
+    register_configvar(_("Configuration GUI (WATO)"),
+        "mkeventd_pprint_rules",
+        Checkbox(title = _("Pretty-Print rules in configuration file"),
+                 label = _("enable pretty-printing of rules"),
+                 help = _("When the WATO module of the Event Console saves rules to the file "
+                          "<tt>mkeventd.d/wato/rules.mk</tt> it usually prints the Python "
+                          "representation of the rules-list into one single line by using the "
+                          "native Python code generator. Enabling this option switches to <tt>pprint</tt>, "
+                          "which nicely indents everything. While this is a bit slower for large "
+                          "rulesets it makes debugging and manual editing simpler."),
+                default_value = False),
+        domain = "multisite",
+    )
+
+
 
 # Settings that should also be avaiable on distributed Sites that
 # do not run an own eventd but want to query one or send notifications

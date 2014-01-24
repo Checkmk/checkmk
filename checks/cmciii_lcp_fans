@@ -33,20 +33,29 @@ def inventory_cmciii_lcp_fans(info):
         return inventory
 
 def check_cmciii_lcp_fans(item, params, info):
+
+    lowlevel = int(re.sub(" .*$", "", info[0][0])) # global low warning
+
     for i in range(1,7):
         if item == i:
-            status = info[0][i*4-1]
-            lowlevel = re.sub(" .*$", "", info[0][0])
+            name = info[0][i*4-3]
+            status = info[0][i*4-1].lower()
+            rpm = int(info[0][i*4-2].split(" ")[0])
+            unit = info[0][i*4-2].split(" ")[1]
 
-            info_text = "%s RPM: %s, Status: %s" % \
-                    (info[0][i*4-3], info[0][i*4-2], info[0][i*4-1])
-
-            perfdata = [ ("rpm", re.sub(" ","", info[0][i*4-2]), lowlevel+":", 0, 0 ) ]
-
-            if status.lower() == "ok":
+            sym = ""
+            if status == "ok" and rpm >= lowlevel:
                 state = 0
+            elif ( status == "ok" and rpm < lowlevel ):
+                state = 1
+                sym = "(!)"
             else:
                 state = 2
+
+            info_text = "%s RPM: %d%s (limit %d%s)%s, Status %s" \
+                    %  (name, rpm, unit, lowlevel, unit, sym, status)
+
+            perfdata = [ ("rpm", str(rpm)+unit, str(lowlevel)+":", 0, 0 ) ]
 
             return (state, info_text, perfdata)
 

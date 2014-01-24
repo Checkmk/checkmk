@@ -10,6 +10,9 @@ description:
  taken as the state of the check as follows:
  If the Rittal device returns {OK}, the check is {OK}. Otherwise
  the check is {CRIT}.
+ Furthermore, the minimum and maximum flow limits of the device are
+ extracted and a state of {WARN} is assumed if the actual flow is
+ outside these limits.
 
 item:
  None

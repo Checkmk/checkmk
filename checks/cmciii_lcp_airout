@@ -38,17 +38,27 @@ def check_cmciii_lcp_airout(item, params, info):
     unit_desc, unit_status, desc, status = info[0][0:4]
     temps = extract_temps(info[0][4:])
 
-    info_text = "%s %s %s %s, Temp.Average: %.1f°C, Top/Mid/Bottom: %.1f/%.1f/%.1f" % \
-                    (unit_desc, unit_status, desc, status, temps[4], temps[5], temps[6], temps[7])
+    state = 0
+    if status.lower() != "ok" or unit_status.lower() != "ok":
+        state = 2
+        sym = ""
+
+    if temps[4] < temps[0] or temps[4] > temps[3] :
+        state = 2
+        sym = "(!!)"
+    elif temps[4] < temps[1] or temps[4] > temps[2]:
+        state = max(state, 1)
+        sym = "(!)"
+    else:
+        state = max(state, 0)
+        sym = ""
+
+    info_text = "%s %s %s %s, Temp.Average: %.1f°C%s, Top/Mid/Bottom: %.1f/%.1f/%.1f" % \
+                    (unit_desc, unit_status, desc, status, temps[4], sym, temps[5], temps[6], temps[7])
 
     levels_text = ", lowcrit/lowwarn/highwarn/highcrit: %.1f/%.1f/%.1f/%.1f" % ( temps[0], temps[1], temps[2], temps[3] )
 
     perfdata = [ ("temp", temps[4], str(temps[1])+":"+str(temps[2]), str(temps[0])+":"+str(temps[3]), 0 ) ]
-
-    if status.lower() == "ok" and unit_status.lower() == "ok":
-        state = 0
-    else:
-        state = 2
 
     return (state, info_text + levels_text, perfdata)
 

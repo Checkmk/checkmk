@@ -6358,7 +6358,7 @@ def render_global_configuration_variables(default_values, current_settings, show
     groupnames.sort()
     html.write('<div class=globalvars>')
     for groupname in groupnames:
-        forms.header(groupname, isopen=False)
+        header_is_painted = False # needed for omitting empty groups
 
         for domain, varname, valuespec in g_configvar_groups[groupname]:
             if not show_all and (not g_configvars[varname][4]
@@ -6370,6 +6370,10 @@ def render_global_configuration_variables(default_values, current_settings, show
                                           "your local Check_MK installation" % varname)
                 else:
                     continue
+
+            if not header_is_painted:
+                forms.header(groupname, isopen=False)
+                header_is_painted = True
 
             defaultvalue = default_values.get(varname, valuespec.default_value())
 

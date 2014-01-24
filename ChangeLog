@@ -1,6 +1,6 @@
 1.2.4b8:
     Core & Setup:
-    * 0682 FIX: Allow overriding of active checks by more specific rule...
+    * 0682 FIX: Allow overriding of active and custom checks by more specific rule...
 
 
 1.2.4b7:

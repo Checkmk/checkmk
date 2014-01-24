@@ -1,11 +1,10 @@
-Title: mpre_include: new local check, allows to include further mrpe configurations
+Title: mpre_include: run additional mrpe configs within user context
 Level: 2
 Component: checks
 Version: 1.2.5i1
 Date: 1390568187
 Class: feature
 
-H1:<b class=new>1.2.5</b> Additional MRPE local check with new features
 This version brings the new local check <tt>mrpe_include</tt> where you can
 configure additional include files for mrpe and under which user context
 the commands of these files are run. It allows non-root users to add additional

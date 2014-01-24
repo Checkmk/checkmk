@@ -382,6 +382,34 @@ register_configvar(group,
     domain = "multisite",
 )
 
+register_configvar(group,
+    "user_localizations",
+    Transform(
+        ListOf(
+            Tuple(
+                elements = [
+                   TextUnicode(title = _("Original Text"), size = 40),
+                    Dictionary(
+                        title = _("Translations"),
+                        elements = [
+                            ( l or "en", TextUnicode(title = a, size = 32) )
+                              for (l,a) in get_languages()
+                        ],
+                        columns = 2,
+                    ),
+                ],
+            ),
+            title = _("Custom localizations"),
+            movable = False,
+            totext = _("%d translations"),
+            default_value = sorted(default_user_localizations.items()),
+        ),
+        forth = lambda d: sorted(d.items()),
+        back = lambda l: dict(l),
+    ),
+    domain = "multisite",
+)
+
 #.
 #   .--WATO----------------------------------------------------------------.
 #   |                     __        ___  _____ ___                         |

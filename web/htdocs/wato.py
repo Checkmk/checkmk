@@ -4931,7 +4931,7 @@ class HostTagAttribute(Attribute):
                 secondary_tags = e[2]
             else:
                 secondary_tags = []
-            choices.append(("|".join([ tagvalue ] + secondary_tags), e[1] and _(e[1]) or ''))
+            choices.append(("|".join([ tagvalue ] + secondary_tags), e[1] and _u(_(e[1])) or ''))
             if value != "" and value == tagvalue and secondary_tags:
                 value = value + "|" + "|".join(secondary_tags)
 
@@ -5258,7 +5258,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
             if topic == None:
                 title = _("Basic settings")
             else:
-                title = topic
+                title = _u(topic)
 
             if topic == _("Host tags"):
                 topic_id = "wato_host_tags"
@@ -5404,7 +5404,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 checkbox_code = '<input type=checkbox name="%s" %s %s onclick="%s">' % (
                     checkbox_name, active and "CHECKED" or "", disabled and "DISABLED" or "", onclick)
 
-            forms.section(attr.title(), checkbox=checkbox_code, id="attr_" + attrname)
+            forms.section(_u(attr.title()), checkbox=checkbox_code, id="attr_" + attrname)
             html.help(attr.help())
 
             if len(values) == 1:
@@ -5461,7 +5461,7 @@ def configure_attributes(new, hosts, for_what, parent, myself=None, without_attr
                 tdclass, content = attr.paint(value, "")
                 if not content:
                     content = _("empty")
-                html.write("<b>" + content + "</b>")
+                html.write("<b>" + _u(content) + "</b>")
 
             html.write(explanation)
             html.write("</div>")
@@ -10157,7 +10157,7 @@ def mode_hosttags(phase):
         if hosttags:
             for nr, entry in enumerate(hosttags):
                 tag_id, title, choices = entry[:3] # fourth: tag dependency information
-                topic, title = parse_hosttag_title(title)
+                topic, title = map(_u, parse_hosttag_title(title))
                 table.row()
                 edit_url     = make_link([("mode", "edit_hosttag"), ("edit", tag_id)])
                 delete_url   = make_action_link([("mode", "hosttags"), ("_delete", tag_id)])
@@ -10204,8 +10204,8 @@ def mode_hosttags(phase):
                 html.icon_button(edit_url, _("Edit this auxiliary tag"), "edit")
                 html.icon_button(delete_url, _("Delete this auxiliary tag"), "delete")
                 table.cell(_("ID"), tag_id)
-                table.cell(_("Title"), title)
-                table.cell(_("Topic"), topic or '')
+                table.cell(_("Title"), _u(title))
+                table.cell(_("Topic"), _u(topic) or '')
         table.end()
 
 
@@ -10228,7 +10228,7 @@ def mode_edit_auxtag(phase):
     hosttags, auxtags = load_hosttags()
 
     vs_topic = OptionalDropdownChoice(
-        title = _("Topic"),
+        title = _("Topic") + "<sup>*</sup>",
         choices = hosttag_topics(hosttags),
         explicit = TextAscii(),
         otherlabel = _("Create New Topic"),
@@ -10303,18 +10303,19 @@ def mode_edit_auxtag(phase):
                 "be used here in order to specify the agent type."))
 
     # Title
-    forms.section(_("Title"))
+    forms.section(_("Title") + "<sup>*</sup>")
     html.text_input("title", title, size = 30)
     html.help(_("An alias or description of this auxiliary tag"))
 
     # The (optional) topic
-    forms.section(_("Topic"))
+    forms.section(_("Topic") + "<sup>*</sup>")
     html.help(_("Different taggroups can be grouped in topics to make the visualization and "
                 "selections in the GUI more comfortable."))
     forms.input(vs_topic, "topic", topic)
 
     # Button and end
     forms.end()
+    show_localization_hint()
     html.button("save", _("Save"))
     html.hidden_fields()
     html.end_form()
@@ -10371,7 +10372,7 @@ def mode_edit_hosttag(phase):
                     regex_error = _("Invalid tag ID. Only the characters a-z, A-Z, "
                                   "0-9, _ and - are allowed.")),
                 TextUnicode(
-                    title = _("Description"),
+                    title = _("Description") + "*",
                     allow_empty = False,
                     size = 40),
 
@@ -10531,12 +10532,12 @@ def mode_edit_hosttag(phase):
         html.write(tag_id)
 
     # Title
-    forms.section(_("Title"))
+    forms.section(_("Title") + "<sup>*</sup>")
     html.help(_("An alias or description of this tag group"))
     html.text_input("title", title, size = 30)
 
     # The (optional) topic
-    forms.section(_("Topic"))
+    forms.section(_("Topic") + "<sup>*</sup>")
     html.help(_("Different taggroups can be grouped in topics to make the visualization and "
                 "selections in the GUI more comfortable."))
     forms.input(vs_topic, "topic", topic)
@@ -10556,12 +10557,18 @@ def mode_edit_hosttag(phase):
                  "in all folders, hosts and rules accordingly."))
     forms.input(vs_choices, "choices", choices)
 
-
     # Button and end
     forms.end()
+    show_localization_hint()
+
     html.button("save", _("Save"))
     html.hidden_fields()
     html.end_form()
+
+def show_localization_hint():
+    url = "wato.py?mode=edit_configvar&varname=user_localizations"
+    html.message("<sup>*</sup>" + _("These texts may be localized depending on the users' "
+          "language. You can configure the localizations <a href=\"%s\">in the global settings</a>.") % url)
 
 # Current specification for hosttag entries: One tag definition is stored
 # as tuple of at least three elements. The elements are used as follows:
@@ -12200,27 +12207,27 @@ def render_condition_editor(tag_specs, varprefix=""):
     make_foldable = len(hosttags) > 1
     for topic, grouped_tags in hosttags:
         if make_foldable:
-            html.begin_foldable_container("topic", topic, True, "<b>%s</b>" % (topic))
+            html.begin_foldable_container("topic", topic, True, "<b>%s</b>" % (_u(topic)))
         html.write("<table class=\"hosttags\">")
 
         # Show main tags
         for entry in grouped_tags:
             id, title, choices = entry[:3]
-            html.write("<tr><td class=title>%s: &nbsp;</td>" % title)
+            html.write("<tr><td class=title>%s: &nbsp;</td>" % _u(title))
             default_tag, deflt = current_tag_setting(choices)
             tag_condition_dropdown("tag", deflt, id)
             if len(choices) == 1:
                 html.write(" " + _("set"))
             else:
                 html.select(varprefix + "tagvalue_" + id,
-                    [t[0:2] for t in choices if t[0] != None], deflt=default_tag)
+                    [(t[0], _u(t[1])) for t in choices if t[0] != None], deflt=default_tag)
             html.write("</div>")
             html.write("</td></tr>")
 
         # And auxiliary tags
         for id, title in sorted(auxtags.get(topic, []), key = lambda x: x[0]):
-            html.write("<tr><td class=title>%s: &nbsp;</td>" % title)
-            default_tag, deflt = current_tag_setting([(id, title)])
+            html.write("<tr><td class=title>%s: &nbsp;</td>" % _u(title))
+            default_tag, deflt = current_tag_setting([(id, _u(title))])
             tag_condition_dropdown("auxtag", deflt, id)
             html.write(" " + _("set"))
             html.write("</div>")

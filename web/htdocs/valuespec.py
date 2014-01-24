@@ -2328,13 +2328,18 @@ class Dictionary(ValueSpec):
                 html.write('<tr><td class=dictleft>')
             div_id = varprefix + "_d_" + param
             vp     = varprefix + "_p_" + param
+            colon_printed = False
             if self._optional_keys and param not in self._required_keys:
                 visible = html.get_checkbox(vp + "_USE")
                 if visible == None:
                     visible = param in value
+                label = vs.title()
+                if self._columns == 2:
+                    label += ":"
+                    colon_printed = True
                 html.checkbox(vp + "_USE", param in value,
                               onclick="valuespec_toggle_option(this, %r)" % div_id,
-                              label=vs.title())
+                              label=label)
             else:
                 visible = True
                 if vs.title():
@@ -2348,7 +2353,7 @@ class Dictionary(ValueSpec):
                             html.write(": ")
 
             if self._columns == 2:
-                if vs.title():
+                if vs.title() and not colon_printed:
                     html.write(':')
                 html.help(vs.help())
                 if not oneline:
@@ -2654,6 +2659,12 @@ class Transform(ValueSpec):
             return self._back(value)
         else:
             return value
+
+    def title(self):
+        if self._title:
+            return self._title
+        else:
+            return self._valuespec.title()
 
     def render_input(self, varprefix, value):
         self._valuespec.render_input(varprefix, self.forth(value))

@@ -1,0 +1,10 @@
+Title: Make title of tags and tag groups localizable
+Level: 1
+Component: wato
+Version: 1.2.5i1
+Date: 1390555739
+Class: feature
+
+The names of the host tags that are shipped are now correctly
+localized. More then that: the user now can change these localizations
+and even create language depended name for his own host tags.

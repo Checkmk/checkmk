@@ -232,3 +232,5 @@ default_user_profile  = {
     'roles': ['user'],
 }
 lock_on_logon_failures = False
+
+user_localizations = default_user_localizations

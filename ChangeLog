@@ -25,6 +25,9 @@
     * 0434 FIX: Fixed wrong count of failed hosts in bulk inventory mode...
     * 0678 FIX: Move two last global settings of Event Console to proper places
 
+    Event Console:
+    * 0679 FIX: Allow non-Ascii characters in generated events
+
     Livestatus-Proxy:
     * 0263 FIX: livestatus log table: fixed missing logentries of archived logfiles...
 

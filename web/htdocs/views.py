@@ -319,7 +319,7 @@ def available_views():
                     and not config.may(permname):
                     continue
                 views[n] = view
-                
+
     return views
 
 def save_views(us):

@@ -1,0 +1,8 @@
+Title: New notification variables NOTIFY_LASTSERVICEOK and NOTIFY_LASTHOSTUP
+Level: 1
+Component: notifications
+Version: 1.2.5i1
+Date: 1390575275
+Class: feature
+
+These two variables have been added to <tt>check_mk_templates.cfg</tt>.

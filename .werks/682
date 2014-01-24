@@ -1,14 +1,13 @@
-Title: Allow overriding of active checks by more specific rule
+Title: Allow overriding of active and custom checks by more specific rule
 Level: 1
 Component: core
-Class: fix
 State: unknown
 Version: 1.2.5i1
 Date: 1390564829
+Class: fix
 
-If you define an active Check via WATO in the main folder and then
-want to override this check in a subfolder, that was not possible
-up to now. Now if you define an active check <b>with the same
-type and service description</b> by a more specific rule, then
-that rule will override the more general ones (i.e. those
-coming later).
+If you define an active or custom Check via WATO in the main folder and
+then want to override this check in a subfolder, that was not possible up
+to now. Now if you define an active check <b>with the same type and service
+description</b> by a more specific rule, then that rule will override the
+more general ones (i.e. those coming later).

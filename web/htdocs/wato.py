@@ -2427,7 +2427,7 @@ def mode_inventory(phase, firsttime):
         if html.var("_scan"):
             title += _(" (live scan)")
         else:
-            title += _(" (cached data)")
+            title += _(" (might be cached data)")
         return title
 
     elif phase == "buttons":

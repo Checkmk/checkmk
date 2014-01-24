@@ -29,7 +29,7 @@ def inventory_hp_proliant_raid(info):
     if len(info) > 0:
         inventory = []
         for line in info:
-            inventory.append((line[0], None)) 
+            inventory.append((line[0], None))
         return inventory
 
 def check_hp_proliant_raid(item, _no_params, info):

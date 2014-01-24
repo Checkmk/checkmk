@@ -1,4 +1,4 @@
-title: Unitrends Replication status 
+title: Unitrends Replication status
 agents: linux
 catalog: app/unitrends
 license: GPL
@@ -9,7 +9,7 @@ description:
  in order to work. The plugin will deliver a complete list of all replication entries and
  her status
 
- As long all of the jobs are succsessful the check returns a {OK} state. In each other 
+ As long all of the jobs are succsessful the check returns a {OK} state. In each other
  case the check will return {CRITICAL} and deliver the list of the failed replications
 
 inventory:

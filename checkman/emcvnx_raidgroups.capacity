@@ -10,7 +10,7 @@ description:
  and examples please refer to the man page of {df}.
 
  The information is retriefed by the special agent agent_emcvnx which uses
- EMC's command line tool naviseccli. Capacity is retriefed in blocks. For 
+ EMC's command line tool naviseccli. Capacity is retriefed in blocks. For
  calculation of size in MB the check assumes a blocksize of 512 Bytes.
 
 item:

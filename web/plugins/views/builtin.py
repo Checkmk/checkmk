@@ -1274,6 +1274,7 @@ multisite_builtin_views.update({
                           ('svc_notification_number', None),
                           ('svc_check_type', None),
                           ('svc_state_age', None),
+                          ('svc_last_time_ok', None),
                           ('svc_check_age', None),
                           ('svc_next_check', None),
                           ('svc_next_notification', None),

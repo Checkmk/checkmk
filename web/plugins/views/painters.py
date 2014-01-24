@@ -278,12 +278,17 @@ multisite_painters["sitealias"] = {
     "paint"   : lambda row: (None, config.site(row["site"])["alias"]),
 }
 
-#    ____                  _
-#   / ___|  ___ _ ____   _(_) ___ ___  ___
-#   \___ \ / _ \ '__\ \ / / |/ __/ _ \/ __|
-#    ___) |  __/ |   \ V /| | (_|  __/\__ \
-#   |____/ \___|_|    \_/ |_|\___\___||___/
-#
+#.
+#   .--Services------------------------------------------------------------.
+#   |                ____                  _                               |
+#   |               / ___|  ___ _ ____   _(_) ___ ___  ___                 |
+#   |               \___ \ / _ \ '__\ \ / / |/ __/ _ \/ __|                |
+#   |                ___) |  __/ |   \ V /| | (_|  __/\__ \                |
+#   |               |____/ \___|_|    \_/ |_|\___\___||___/                |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Painters for services                                                |
+#   '----------------------------------------------------------------------'
 
 def paint_service_state_short(row):
     if row["service_has_been_checked"] == 1:
@@ -525,6 +530,13 @@ multisite_painters["svc_next_check"] = {
     "short"   : _("Next check"),
     "columns" : [ "service_next_check" ],
     "paint"   : lambda row: paint_future_time(row["service_next_check"]),
+}
+
+multisite_painters["svc_last_time_ok"] = {
+    "title"   : _("The last time the service was OK"),
+    "short"   : _("Last OK"),
+    "columns" : [ "service_last_time_ok", "service_has_been_checked" ],
+    "paint"   : lambda row: paint_age(row["service_last_time_ok"], row["service_has_been_checked"] == 1, 60 * 10),
 }
 
 multisite_painters["svc_next_notification"] = {
@@ -855,14 +867,18 @@ multisite_painters["svc_custom_vars"] = {
 }
 
 
+#.
+#   .--Hosts---------------------------------------------------------------.
+#   |                       _   _           _                              |
+#   |                      | | | | ___  ___| |_ ___                        |
+#   |                      | |_| |/ _ \/ __| __/ __|                       |
+#   |                      |  _  | (_) \__ \ |_\__ \                       |
+#   |                      |_| |_|\___/|___/\__|___/                       |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Painters for hosts                                                   |
+#   '----------------------------------------------------------------------'
 
-
-#   _   _           _
-#  | | | | ___  ___| |_ ___
-#  | |_| |/ _ \/ __| __/ __|
-#  |  _  | (_) \__ \ |_\__ \
-#  |_| |_|\___/|___/\__|___/
-#
 
 multisite_painters["host_state"] = {
     "title"   : _("Host state"),

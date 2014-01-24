@@ -9,7 +9,7 @@ description:
  It uses the check logic of the {if64} check, so for configuration parameters
  and examples please refer to the man page of {if64}.
 
- Values for ifHCInUcastPkts, ifHCInMulticastPkts, ifHCInBroadcastPkts, 
+ Values for ifHCInUcastPkts, ifHCInMulticastPkts, ifHCInBroadcastPkts,
  ifHCOutUcastPkts, ifHCOutMulticastPkts, ifHCOutBroadcastPkts, ifOutDiscards,
  ifOutErrors and ifOutQLen are always 0 and ifPhysAddress is empty, because
  they do not exist in this case.
@@ -19,7 +19,7 @@ item:
  the ID of the interface as a three digit number, prefixed with the ID
  of the ClusterNode. For Interface 2 on ClusterNode 1 e. g. 1002
 
- If configured to use the Alias or Description of an interface as item, 
+ If configured to use the Alias or Description of an interface as item,
  it is build from the ID of the ClusterNode plus the ID of the interface
  separated by a dot. For Interface 2 on ClusterNode 1 e. g. 1.2
 

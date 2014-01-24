@@ -1779,12 +1779,13 @@ class Timerange(CascadingDropdown):
     def __init__(self, **kwargs):
         self._title = _('Time range')
 
+        if 'choices' not in kwargs:
+            kwargs['choices'] = []
+
         if kwargs.get('allow_empty', False):
-            kwargs['choices'] = [
+            kwargs['choices'] += [
                 (None, ''),
             ]
-        else:
-            kwargs['choices'] = []
 
         kwargs['choices'] += [
             ( "d0",  _("Today") ),
@@ -1896,6 +1897,20 @@ class Timerange(CascadingDropdown):
                         from_broken[1] = 12
                         from_broken[0] -= 1
                 return (time.mktime(from_broken), until_time), titles[1]
+
+class PNPTimerange(Timerange):
+    def __init__(self, **kwargs):
+        kwargs['choices'] = [
+            ('pnp_view', _("PNP View"), DropdownChoice(
+                default_value = '1',
+                choices = [
+                    ("0", _("4 Hours")),  ("1", _("25 Hours")),
+                    ("2", _("One Week")), ("3", _("One Month")),
+                    ("4", _("One Year")), ("", _("All"))
+                ],
+            )),
+        ]
+        Timerange.__init__(self, **kwargs)
 
 
 # Make a configuration value optional, i.e. it may be None.

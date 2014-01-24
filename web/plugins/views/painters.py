@@ -74,23 +74,10 @@
 
 import bi # needed for aggregation icon
 
-multisite_painter_options["pnpview"] = {
-    'valuespec' : DropdownChoice(
-        title = _("PNP View"),
-        default_value = '1',
-        choices = [
-            ("0", _("4 Hours")),  ("1", _("25 Hours")),
-            ("2", _("One Week")), ("3", _("One Month")),
-            ("4", _("One Year")), ("", _("All"))
-        ],
-    )
-}
-
 multisite_painter_options["pnp_timerange"] = {
-    'valuespec' : Timerange(
+    'valuespec' : PNPTimerange(
         title = _("PNP Timerange"),
         default_value = None,
-        allow_empty = True,
         include_time = True,
     )
 }
@@ -683,14 +670,17 @@ def paint_pnpgraph(sitename, host, service = "_HOST_"):
         with_link = 'true'
     else:
         with_link = 'false'
-    pnpview = get_painter_option("pnpview")
 
     pnp_timerange = get_painter_option("pnp_timerange")
+
+    pnpview = '1'
+    from_ts, to_ts = 'null', 'null'
     if pnp_timerange != None:
-        vs = multisite_painter_options["pnp_timerange"]['valuespec']
-        from_ts, to_ts = map(int, vs.compute_range(pnp_timerange)[0])
-    else:
-        from_ts, to_ts = 'null', 'null'
+        if pnp_timerange[0] != 'pnp_view':
+            vs = multisite_painter_options["pnp_timerange"]['valuespec']
+            from_ts, to_ts = map(int, vs.compute_range(pnp_timerange)[0])
+        else:
+            pnpview = pnp_timerange[1]
 
     return "pnpgraph", "<div id=\"%s\"></div>" \
                        "<script>render_pnp_graphs('%s', '%s', '%s', '%s', '%s', '%s', '%s', %s, %s, %s)</script>" % \
@@ -701,7 +691,7 @@ multisite_painters["svc_pnpgraph" ] = {
     "title"   : _("PNP service graph"),
     "short"   : _("PNP graph"),
     "columns" : [ "host_name", "service_description" ],
-    "options" : [ "pnpview", 'pnp_timerange' ],
+    "options" : [ 'pnp_timerange' ],
     "paint"   : lambda row: paint_pnpgraph(row["site"], row["host_name"], row["service_description"]),
 }
 
@@ -1043,7 +1033,7 @@ multisite_painters["host_pnpgraph" ] = {
     "title"   : _("PNP host graph"),
     "short"   : _("PNP graph"),
     "columns" : [ "host_name" ],
-    "options" : [ "pnpview", 'pnp_timerange' ],
+    "options" : [ 'pnp_timerange' ],
     "paint"   : lambda row: paint_pnpgraph(row["site"], row["host_name"])
 }
 

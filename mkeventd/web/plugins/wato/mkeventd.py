@@ -2014,8 +2014,16 @@ register_rule(
 #   | Stuff for sending monitoring notifications into the event console.   |
 #   '----------------------------------------------------------------------'
 def mkeventd_update_notifiation_configuration(hosts):
-    contactgroup   = config.mkeventd_notify_contactgroup
-    remote_console = config.mkeventd_notify_remotehost
+    # Setup notification into the Event Console. Note: If
+    # the event console is not activated then also the global
+    # default settings are missing and we must skip this code.
+    # This can happen in a D-WATO setup where the master has
+    # enabled the EC and the slave not.
+    try:
+        contactgroup   = config.mkeventd_notify_contactgroup
+        remote_console = config.mkeventd_notify_remotehost
+    except:
+        return
 
     if not remote_console:
         remote_console = ""

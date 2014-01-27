@@ -5933,7 +5933,7 @@ if __name__ == "__main__":
             make_inventory(checkname, hostnames, False)
 
         do_cleanup_autochecks()
-
+        done = True
 
     if done:
         output_profile()

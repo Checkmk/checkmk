@@ -12975,10 +12975,11 @@ def page_user_profile():
 
         if config.may('general.edit_user_attributes'):
             for name, attr in userdb.get_user_attributes():
-                vs = attr['valuespec']
-                forms.section(vs.title())
-                vs.render_input("ua_" + name, user.get(name, vs.default_value()))
-                html.help(vs.help())
+                if attr['user_editable']:
+                    vs = attr['valuespec']
+                    forms.section(vs.title())
+                    vs.render_input("ua_" + name, user.get(name, vs.default_value()))
+                    html.help(vs.help())
 
     # Save button
     forms.end()

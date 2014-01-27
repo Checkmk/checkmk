@@ -1,0 +1,9 @@
+Title: Fixed permission bug in "Edit user profile" dialog.
+Level: 1
+Component: wato
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1390823084
+
+The Edit user profile dialog has shown even the not user editable custom fields.

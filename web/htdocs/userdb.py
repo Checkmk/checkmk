@@ -423,7 +423,13 @@ def save_users(profiles):
 
     # Write out the users serials
     serials_file = '%s/auth.serials.new' % os.path.dirname(defaults.htpasswd_file)
-    out = create_user_file(serials_file, "w")
+    rename_file = True
+    try:
+        out = create_user_file(serials_file, "w")
+    except:
+        rename_file = False
+        out = create_user_file(serials_file[:-4], "w")
+
     def encode_utf8(value):
         if type(value) == unicode:
             value = value.encode("utf-8")
@@ -432,7 +438,8 @@ def save_users(profiles):
     for user_id, user in profiles.items():
         out.write('%s:%d\n' % (encode_utf8(user_id), user.get('serial', 0)))
     out.close()
-    os.rename(serials_file, serials_file[:-4])
+    if rename_file:
+        os.rename(serials_file, serials_file[:-4])
 
     # Write user specific files
     for id, user in profiles.items():

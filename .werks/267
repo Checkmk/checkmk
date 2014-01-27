@@ -1,0 +1,13 @@
+Title: Fixed auth.serials permission problem in check_mk standalone installation
+Level: 1
+Component: core
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1390812956
+
+In a standalone installation the path <tt>/usr/local/nagios/etc</tt> is not writable by the apache user.<br>
+The user management module tried to create a file <tt>/usr/local/nagios/etc/auth_serials.new</tt> and rename it to
+<tt>/usr/local/nagios/etc/auth_serials</tt> afterwards -> failed<br>
+The workaround is that no <tt>auth_serials.new</tt> file will be created on standalone installations.
+The user management module now directly writes in <tt>auth_serials</tt>.

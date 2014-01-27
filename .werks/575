@@ -1,0 +1,8 @@
+Title: cmciii_lcp_airin, cmciii_lcp_airout, cmciii_lcp_waterin, cmciii_lcp_waterout: improved handling of warning state
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1390818045
+Class: fix
+
+A unit state of warning no longer leads to a critical state of the check itself

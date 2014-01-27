@@ -125,11 +125,20 @@ def check_fileinfo_groups(item, params, info):
     size_all = 0
     size_smallest = None
     size_largest  = 0
-    # Start counting all values
+    date_inclusion = ""
+    # Start counting values on all files
     for line in info[1:]:
         for pattern in params['precompiled_patterns']:
-            if fnmatch.fnmatch(line[0], pattern[0]) and str(line[1]) != 'missing' \
-                        and not fnmatch.fnmatch(line[0], pattern[1]):
+            inclusion, exclusion = pattern
+            disect = re.match('(/.*/)\$DATE:((?:%\w.?){1,})\$(.*)',inclusion)
+            if disect:
+                prefix = disect.group(1)
+                datepattern =  time.strftime(disect.group(2),time.localtime(reftime))
+                postfix = disect.group(3)
+                inclusion = prefix+datepattern+postfix
+                date_inclusion = inclusion
+            if fnmatch.fnmatch(line[0], inclusion) and str(line[1]) != 'missing' \
+                        and not fnmatch.fnmatch(line[0], exclusion):
                 size = int(line[1])
                 size_all += size
                 if size_smallest == None:
@@ -163,6 +172,8 @@ def check_fileinfo_groups(item, params, info):
         check_definition.append(("size_smallest", size_smallest, get_filesize_human_readable))
     if size_largest != 0:
         check_definition.append(("size_largest",  size_largest,  get_filesize_human_readable))
+    if date_inclusion:
+        check_definition.append(("date pattern",  date_inclusion, str ))
 
     return fileinfo_check_function(check_definition, params)
 

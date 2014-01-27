@@ -1,0 +1,12 @@
+Title: if64: check now supports clustering
+Level: 2
+Component: checks
+Version: 1.2.5i1
+Date: 1390815573
+Class: feature
+
+If you have a cluster of two or more hosts, and the check is configured
+as a clustered service for an interface, the interface with the highest
+output traffic is considered the active interface, and only this interface
+is monitored and assigned to the cluster. The check denotes from which node
+the interface data is taken.

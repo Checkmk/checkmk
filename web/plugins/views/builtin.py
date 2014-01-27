@@ -300,7 +300,7 @@ multisite_builtin_views.update({
                            ('service_description', 'service'),
                            ('comment_id', None)],
               'public': True,
-              'show_filters': ['hostregex', 'serviceregex'],
+              'show_filters': ['hostregex', 'comment_entry_time', 'serviceregex'],
               'sorters': [('comment_type', False), ('comment_author', False)],
               'title': _('Comments')
  },
@@ -383,6 +383,7 @@ multisite_builtin_views.update({
                'public': True,
                'show_filters': ['service_scheduled_downtime_depth',
                                 'hostregex',
+                                'downtime_entry_time',
                                 'serviceregex'],
                'sorters': [('downtime_what', False),
                            ('downtime_start_time', False)],

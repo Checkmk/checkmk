@@ -1,6 +1,7 @@
 1.2.4b8:
     Core & Setup:
     * 0682 FIX: Allow overriding of active and custom checks by more specific rule...
+    * 0267 FIX: Fixed auth.serials permission problem in check_mk standalone installation...
 
 
 1.2.4b7:

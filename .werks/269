@@ -1,0 +1,11 @@
+Title: brocade_fcport: fixed problem on displaying check_parameters in WATO
+Level: 1
+Component: wato
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1390824236
+
+The checks parameters stored in the autochecks file could not get processed and
+displayed correctly by the WATO inventory.
+

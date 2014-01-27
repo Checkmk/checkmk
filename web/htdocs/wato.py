@@ -827,11 +827,12 @@ def get_folder_aliaspath(folder, show_main = True):
 #   '----------------------------------------------------------------------'
 
 def mode_folder(phase):
+    global g_folder
+
     auth_message = check_folder_permissions(g_folder, "read", False)
     auth_read = auth_message == True
     auth_write = check_folder_permissions(g_folder, "write", False) == True
 
-    global g_folder
     if phase == "title":
         return g_folder["title"]
 
@@ -6615,6 +6616,11 @@ def save_configuration_settings(vars):
             continue
         per_domain.setdefault(domain, {})[varname] = vars[varname]
 
+    # The global setting wato_enabled is not registered in the configuration domains
+    # sind the user must not change it directly. It is set by D-WATO on slave sites.
+    if "wato_enabled" in vars:
+        per_domain.setdefault("multisite", {})["wato_enabled"] = vars["wato_enabled"]
+
     for domain, domain_info in g_configvar_domains.items():
         if 'save' in domain_info:
             domain_info['save'](per_domain.get(domain, {}))
@@ -7646,6 +7652,13 @@ def create_site_globals_file(siteid, tmp_dir):
     sites = load_sites()
     site = sites[siteid]
     config = site.get("globals", {})
+
+    # Add global setting for disabling WATO right here. It is not
+    # available as a normal global option. That would be too dangerous.
+    # You could disable WATO on the master very easily that way...
+    # The default value is True - even for sites configured with an
+    # older version of Check_MK.
+    config["wato_enabled"] = not site.get("disable_wato", True)
     file(tmp_dir + "/sitespecific.mk", "w").write("%r\n" % config)
 
 
@@ -7851,6 +7864,9 @@ def mode_edit_site(phase):
         # setting is not lost if replication is turned off for a while.
         new_site["multisiteurl"] = multisiteurl
 
+        # Disabling of WATO
+        new_site["disable_wato"] = html.get_checkbox("disable_wato")
+
         # Handle the insecure replication flag
         new_site["insecure"] = html.get_checkbox("insecure")
 
@@ -7991,6 +8007,12 @@ def mode_edit_site(phase):
                    "appended, but it must always be an absolute URL. Please note, that "
                    "that URL will be fetched by the Apache server of the local "
                    "site itself, whilst the URL-Prefix is used by your local Browser."))
+
+    forms.section(_("WATO"), simple=True)
+    html.checkbox("disable_wato", site.get("disable_wato", True), label = _('Disable configuration via WATO on this site'))
+    html.help( _('It is a good idea to disable access to WATO completely on the slave site. '
+                 'Otherwise a user who does not now about the replication could make local '
+                 'changes that are overridden at the next configuration activation.'))
 
     forms.section(_("SSL"), simple=True)
     html.checkbox("insecure", site.get("insecure", False), label = _('Ignore SSL certificate errors'))
@@ -12975,10 +12997,11 @@ def page_user_profile():
 
         if config.may('general.edit_user_attributes'):
             for name, attr in userdb.get_user_attributes():
-                vs = attr['valuespec']
-                forms.section(vs.title())
-                vs.render_input("ua_" + name, user.get(name, vs.default_value()))
-                html.help(vs.help())
+                if attr['user_editable']:
+                    vs = attr['valuespec']
+                    forms.section(vs.title())
+                    vs.render_input("ua_" + name, user.get(name, vs.default_value()))
+                    html.help(vs.help())
 
     # Save button
     forms.end()

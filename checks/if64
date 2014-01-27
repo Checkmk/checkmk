@@ -26,18 +26,19 @@
 
 def fix_if64_highspeed(info):
     for line in info:
-        if type(line[3]) == str: # not yet converted
-            line[3] = saveint(line[3]) * 1000000
+        if type(line[4]) == str: # not yet converted
+            line[4] = saveint(line[4]) * 1000000
 
 
 def inventory_if64(info):
-    info = [ x for x in info if saveint(x[0]) > 0 ] #Fix for switches like DLINK, with empty lines in MIB
+    # Fix for switches like DLINK, with empty lines in MIB
+    info = [ x for x in info if saveint(x[1]) > 0 ] 
     fix_if64_highspeed(info)
-    return inventory_if_common(info)
+    return inventory_if_common(info, has_nodeinfo = True)
 
 def check_if64(item, params, info):
     fix_if64_highspeed(info)
-    return check_if_common(item, params, info)
+    return check_if_common(item, params, info, has_nodeinfo = True)
 
 
 def if64_scan_function(oid):
@@ -90,5 +91,6 @@ check_info["if64"] = {
     ]),
     'snmp_scan_function'        : if64_scan_function,
     'group'                     : 'if',
+    'node_info'                 : True,
     'default_levels_variable'   : 'if_default_levels',
 }

@@ -1,0 +1,10 @@
+Title: wato inventory: fixed missing services
+Level: 2
+Component: wato
+Version: 1.2.5i1
+Date: 1390814913
+Class: fix
+
+If a host had more inventorized services than they were specified in
+the global option "Limit the number of rows shown in tables" specified,
+the excess services got ignored.

@@ -42,10 +42,13 @@ def check_cmciii_lcp_waterout(item, params, info):
     status = info[0][9]
 
     state = 0
+    sym = ""
     if status.lower() != "ok" or unit_status.lower() != "ok":
-        state = 2
-        sym = ""
-
+        if status.lower() in ( "ok", "warning" ) and \
+                unit_status.lower() in  ( "ok", "warning" ):
+            state = 1
+        else:
+            state = 2
     if temp < limits[3] or temp > limits[0] :
         state = 2
         sym = "(!!)"
@@ -54,7 +57,6 @@ def check_cmciii_lcp_waterout(item, params, info):
         sym = "(!)"
     else:
         state = max(state, 0)
-        sym = ""
 
     info_text = "%s %s, %s %s, Temperature: %.1f°C%s" \
             % (unit_desc, unit_status, desc, status, temp, sym)

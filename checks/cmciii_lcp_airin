@@ -39,10 +39,13 @@ def check_cmciii_lcp_airin(item, params, info):
     temps = extract_temps(info[0][4:])
 
     state = 0
+    sym = ""
     if status.lower() != "ok" or unit_status.lower() != "ok":
-        state = 2
-        sym = ""
-
+        if status.lower() in ( "ok", "warning" ) and \
+                unit_status.lower() in  ( "ok", "warning" ):
+            state = 1
+        else:
+            state = 2
     if temps[4] < temps[0] or temps[4] > temps[3] :
         state = 2
         sym = "(!!)"
@@ -51,7 +54,6 @@ def check_cmciii_lcp_airin(item, params, info):
         sym = "(!)"
     else:
         state = max(state, 0)
-        sym = ""
 
     info_text = "%s %s %s %s, Temp.Average: %.1f°C%s, Top/Mid/Bottom: %.1f/%.1f/%.1f" % \
                     (unit_desc, unit_status, desc, status, temps[4], sym, temps[5], temps[6], temps[7])

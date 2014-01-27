@@ -82,20 +82,33 @@ def if_statename(st):
               '7': 'lowerLayerDown' }
     return names.get(st, st)
 
+def if_extract_node(line, has_nodeinfo):
+    if has_nodeinfo:
+        return line[0], line[1:]
+    else:
+        return None, line
 
 # Pads port numbers with zeroes, so that items
 # nicely sort alphabetically
-def if_pad_with_zeroes(info, ifIndex):
+def if_pad_with_zeroes(info, ifIndex, has_nodeinfo):
+    if has_nodeinfo:
+        index = 1
+    else:
+        index = 0
     if if_inventory_pad_portnumbers:
-        max_index = max([int(line[0]) for line in info])
+        max_index = max([int(line[index]) for line in info])
         digits = len(str(max_index))
         return ("%0"+str(digits)+"d") % int(ifIndex)
     else:
         return ifIndex
 
 
-def inventory_if_common(info):
-    if len(info) == 0 or len(info[0]) != 20:
+def inventory_if_common(info, has_nodeinfo = False):
+    if has_nodeinfo:
+        length = 21
+    else:
+        length = 20
+    if len(info) == 0 or len(info[0]) != length:
         return []
 
     settings = host_extra_conf_merged(g_hostname, inventory_if_rules)
@@ -119,10 +132,12 @@ def inventory_if_common(info):
 
 
     # Determine whether single, grouped or both
-    for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, \
+    for line in info:
+        node, line = if_extract_node(line,has_nodeinfo)
+        ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, \
             inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \
             outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \
-            ifOutQLen, ifAlias, ifPhysAddress in info:
+            ifOutQLen, ifAlias, ifPhysAddress = line
         ifDescr = cleanup_if_strings(ifDescr)
         ifAlias = cleanup_if_strings(ifAlias)
 
@@ -137,7 +152,7 @@ def inventory_if_common(info):
         elif uses_alias and ifAlias:
             item = ifAlias
         else:
-            item = if_pad_with_zeroes(info, ifIndex)
+            item = if_pad_with_zeroes(info, ifIndex, has_nodeinfo )
 
         # Prepare grouped interfaces
         is_only_in_group = False
@@ -193,13 +208,18 @@ def inventory_if_common(info):
 
     return inventory
 
-def check_if_common(item, params, info):
+def check_if_common(item, params, info, has_nodeinfo = False):
+
     # If this item is in an ifgroup create a pseudo interface and pass its data to the common instance
     # This is done by simply adding the additional group_info data to the already existing info table
     if params.get("aggregate"):
         matching_interfaces = []
+        if has_nodeinfo:
+            type_index = 3
+        else:
+            type_index = 2
         for element in info:
-            if params["iftype"] == saveint(element[2]):
+            if params["iftype"] == saveint(element[type_index]):
                 matching_interfaces.append(element)
 
         # Accumulate info over matching_interfaces
@@ -212,10 +232,12 @@ def check_if_common(item, params, info):
             "outbcast" : 0, "ifOutDiscards" : 0, "ifOutErrors" : 0, "ifOutQLen" : 0
         }
 
-        for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, \
+        for line in matching_interfaces:
+            node, line = if_extract_node(line,has_nodeinfo)
+            ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, \
                 inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \
                 outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \
-                ifOutQLen, ifAlias, ifPhysAddress in matching_interfaces:
+                ifOutQLen, ifAlias, ifPhysAddress = line
             if if_inventory_uses_description and ifDescr:
                 group_item = ifDescr
             elif if_inventory_uses_alias and ifAlias:
@@ -297,11 +319,11 @@ def check_if_common(item, params, info):
         # If applicable, signal the check_if_common_single if the counter of the
         # given interface has wrapped. Actually a wrap of the if group itself is unlikely,
         # however any counter wrap of one of its members causes the accumulation being invalid
-        return check_if_common_single(item, params, info, wrapped)
+        return check_if_common_single(item, params, info, wrapped, has_nodeinfo=has_nodeinfo)
 
-    return check_if_common_single(item, params,info)
+    return check_if_common_single(item, params, info, has_nodeinfo=has_nodeinfo)
 
-def check_if_common_single(item, params, info, force_counter_wrap = False):
+def check_if_common_single(item, params, info, force_counter_wrap = False, has_nodeinfo = False):
     # Params now must be a dict. Some keys might
     # be set to None
     targetspeed        = params.get("speed")
@@ -311,6 +333,7 @@ def check_if_common_single(item, params, info, force_counter_wrap = False):
     average            = params.get("average")
     unit               = params.get("unit") in ["Bit", "bit"] and "Bit" or "B"
     unit_multiplier    = unit == "Bit" and 8.0 or 1.0
+    cluster_items      = {}
 
     # error checking might be turned off
     if params["errors"]:
@@ -324,11 +347,12 @@ def check_if_common_single(item, params, info, force_counter_wrap = False):
     else:
         bw_warn_param, bw_crit_param = None, None
 
-
-    for ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets,  \
+    for line in info:
+        node, line = if_extract_node(line,has_nodeinfo)
+        ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets,  \
             inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \
             outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \
-            ifOutQLen, ifAlias, ifPhysAddress in info:
+            ifOutQLen, ifAlias, ifPhysAddress = line
         ifDescr = cleanup_if_strings(ifDescr)
         ifAlias = cleanup_if_strings(ifAlias)
 
@@ -353,6 +377,9 @@ def check_if_common_single(item, params, info, force_counter_wrap = False):
                 infotext = "[%s] " % ifDescr
             else:
                 infotext = "[%s] " % ifIndex
+
+            if node != None:
+                infotext = "%son %s: " % ( infotext, node )
 
             state = 0
 
@@ -539,7 +566,27 @@ def check_if_common_single(item, params, info, force_counter_wrap = False):
                             state = max(state, 1)
                             infotext += "(!) >= " + str(err_warn)
 
-            return (state, infotext, perfdata)
+            if node:
+                cluster_items[node] = ( state, infotext, perfdata )
+            else:
+                return (state, infotext, perfdata)
+
+    # if system is a cluster we have more than one line per item with
+    # different node, results are collected in cluster_items
+    # we choose the node with the highest outgoing traffic
+    # since in a cluster environment this is likely the node
+    # which is master
+    if cluster_items:
+        maxval = 0
+        for node, result in cluster_items.items():
+            state, infotext, perfdata = result
+            for entry in perfdata:
+                name, value = entry[:2]
+                if name == "out":
+                    maxval = max(maxval, value)
+                    if maxval == value:
+                        choosen_node = node
+        return cluster_items[choosen_node]
 
     return (3, "no such interface")
 

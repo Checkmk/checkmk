@@ -827,11 +827,12 @@ def get_folder_aliaspath(folder, show_main = True):
 #   '----------------------------------------------------------------------'
 
 def mode_folder(phase):
+    global g_folder
+
     auth_message = check_folder_permissions(g_folder, "read", False)
     auth_read = auth_message == True
     auth_write = check_folder_permissions(g_folder, "write", False) == True
 
-    global g_folder
     if phase == "title":
         return g_folder["title"]
 

@@ -1,15 +1,18 @@
-Title: New summary page with all settings of a host
+Title: New summary pages with all settings of a host or service
 Level: 3
 Component: wato
 Version: 1.2.5i1
 Date: 1390909000
 Class: feature
 
-In WATO there is now a new summary page for each host, called <i>Settings
-host host...</i>. In this page you can see all of the host's settings that are
+In WATO there is now a new summary page for each host and each service. This
+is called by a button <i>Parameters</i> for the host or the already existing
+"triangle" icon in the services list.
+
+In this page you can see all of the host's or service's settings that are
 determined by rules (via <i>Host &amp; Service Parameters</i>).  You will only
-see the current setting of each paramter, but also whether it is determined
-by one or more matching rules or whether it is the factory default value.
-A click brings you directly to the according rule set or even rule. This all
-makes it much simpler to get an overview over all <i>effective</i> settings
-of a host and also gives you a fast access to each setting.
+see the current setting of each parameter and also whether it is determined
+by one or more matching rules or whether it is at its default value.  A click
+brings you directly to the according rule set or even rule. This all makes
+it much simpler to get an overview over all <i>effective</i> settings of a
+host and also gives you a fast access to each setting.

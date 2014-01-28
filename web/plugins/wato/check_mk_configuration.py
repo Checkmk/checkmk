@@ -1745,7 +1745,8 @@ register_rule(group,
         help = _("This setting delays notifications about service problems by the "
                  "specified amount of time. If the service is OK again within that "
                  "time, no notification will be sent out."),
-        ),
+    ),
+    factory_default = 0,
     itemtype = "service")
 
 register_rule(group,

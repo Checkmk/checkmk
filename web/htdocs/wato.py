@@ -1388,7 +1388,7 @@ def show_hosts(folder):
 
         # Column with actions (buttons)
         edit_url     = make_link([("mode", "edithost"), ("host", hostname)])
-        settings_url = make_link([("mode", "host_settings"), ("host", hostname)])
+        params_url   = make_link([("mode", "object_parameters"), ("host", hostname)])
         services_url = make_link([("mode", "inventory"), ("host", hostname)])
         clone_url    = make_link([("mode", host.get(".nodes") and "newcluster" or "newhost"),
                                  ("clone", hostname)])
@@ -1407,7 +1407,7 @@ def show_hosts(folder):
 
         html.write("<td class=buttons>")
         html.icon_button(edit_url, _("Edit the properties of this host"), "edit")
-        html.icon_button(settings_url, _("View the rule based settings of this host"), "rulesets")
+        html.icon_button(params_url, _("View the rule based parameters of this host"), "rulesets")
         if check_host_permissions(hostname, False) == True:
             msg = _("Edit the services of this host, do an inventory")
             image =  "services"
@@ -1986,8 +1986,8 @@ def mode_edithost(phase, new, cluster):
         if not new:
             html.context_button(_("Services"),
                   make_link([("mode", "inventory"), ("host", hostname)]), "services")
-            html.context_button(_("Settings"),
-                  make_link([("mode", "host_settings"), ("host", hostname)]), "rulesets")
+            html.context_button(_("Parameters"),
+                  make_link([("mode", "object_parameters"), ("host", hostname)]), "rulesets")
             if not cluster:
                 html.context_button(_("Diagnostic"),
                       make_link([("mode", "diag_host"), ("host", hostname)]), "diagnose")
@@ -2178,33 +2178,45 @@ def delete_host_after_confirm(delname):
         return None # browser reload
 
 #.
-#   .--Host Settings-------------------------------------------------------.
-#   |     _   _           _     ____       _   _   _                       |
-#   |    | | | | ___  ___| |_  / ___|  ___| |_| |_(_)_ __   __ _ ___       |
-#   |    | |_| |/ _ \/ __| __| \___ \ / _ \ __| __| | '_ \ / _` / __|      |
-#   |    |  _  | (_) \__ \ |_   ___) |  __/ |_| |_| | | | | (_| \__ \      |
-#   |    |_| |_|\___/|___/\__| |____/ \___|\__|\__|_|_| |_|\__, |___/      |
-#   |                                                      |___/           |
+#   .--Host & Services Parameters Overview pages---------------------------.
+#   |        ____                                _                         |
+#   |       |  _ \ __ _ _ __ __ _ _ __ ___   ___| |_ ___ _ __ ___          |
+#   |       | |_) / _` | '__/ _` | '_ ` _ \ / _ \ __/ _ \ '__/ __|         |
+#   |       |  __/ (_| | | | (_| | | | | | |  __/ ||  __/ |  \__ \         |
+#   |       |_|   \__,_|_|  \__,_|_| |_| |_|\___|\__\___|_|  |___/         |
+#   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   | A page showing all rule sets that affect a host and their current    |
-#   | outcome for a specific host.                                         |
+#   | Mode for displaying and modifying the rule based host and service    |
+#   | parameters. This is a host/service overview page over all things     |
+#   | that can be modified via rules.                                      |
 #   '----------------------------------------------------------------------'
 
-def mode_host_settings(phase):
+def mode_object_parameters(phase):
     hostname = html.var("host") # may be empty in new/clone mode
     host = g_folder[".hosts"][hostname]
     is_cluster = ".nodes" in host
+    service = html.var("service")
 
     if phase == "title":
-        return _("Settings of host") + " " + hostname
+        title = _("Parameters of") + " " + hostname
+        if service:
+            title += " / " + service
+        return title
 
     elif phase == "buttons":
+        if service:
+            prefix = _("Host-")
+        else:
+            prefix = ""
         html.context_button(_("Folder"), make_link([("mode", "folder")]), "back")
-        host_status_button(hostname, "hoststatus")
-        html.context_button(_("Properties"), make_link([("mode", "edithost"), ("host", hostname)]), "edit")
+        if service:
+            service_status_button(hostname, service)
+        else:
+            host_status_button(hostname, "hoststatus")
+        html.context_button(prefix + _("Properties"), make_link([("mode", "edithost"), ("host", hostname)]), "edit")
         html.context_button(_("Services"), make_link([("mode", "inventory"), ("host", hostname)]), "services")
         if not is_cluster:
-            html.context_button(_("Diagnostic"),
+            html.context_button(prefix + _("Diagnostic"),
               make_link([("mode", "diag_host"), ("host", hostname)]), "diagnose")
         return
 
@@ -2222,6 +2234,113 @@ def mode_host_settings(phase):
     groupnames.sort()
 
 
+    # For services we make a special handling the for origin and parameters
+    # of that service!
+    if service:
+        serviceinfo = check_mk_automation(host[".siteid"], "analyse-service", [hostname, service])
+        if serviceinfo:
+            forms.header(_("Check Origin and Parameters"), isopen = True, narrow=True, css="rulesettings")
+            forms.section(_("Type of check"))
+            html.write("<table class=setting><tr><td class=reason></td><td class=setting>")
+            origin = serviceinfo["origin"]
+            html.write({
+                "active"  : _("Active check"),
+                "static"  : _("Manual check"),
+                "auto"    : _("Inventorized check"),
+                "classic" : _("Classical check"),
+            }[origin])
+            html.write("</td></tr></table>")
+
+            if origin ==  "auto":
+                checkgroup = serviceinfo["checkgroup"]
+                checktype = serviceinfo["checktype"]
+                if not group:
+                    htmlwrite(_("This check is not configurable via WATO"))
+                else:
+                    rulespec = g_rulespecs["checkgroup_parameters:" + checkgroup]
+                    output_analysed_ruleset(all_rulesets, rulespec, hostname, 
+                                            serviceinfo["item"], serviceinfo["parameters"])
+
+            elif origin == "static":
+                checkgroup = serviceinfo["checkgroup"]
+                checktype = serviceinfo["checktype"]
+                if not group:
+                    htmlwrite(_("This check is not configurable via WATO"))
+                else:
+                    rulespec = g_rulespecs["static_checks:" + checkgroup]
+                    itemspec = rulespec["itemspec"]
+                    if itemspec:
+                        item_text = itemspec.value_to_text(serviceinfo["item"])
+                        forms.section(rulespec["itemspec"].title())
+                    else:
+                        forms.section(_("Item"))
+                        item_text = serviceinfo["item"]
+                    html.write("<table class=setting><tr><td class=reason></td><td class=setting>%s</td></tr></table>" % 
+                        item_text)
+                    output_analysed_ruleset(all_rulesets, rulespec, hostname, 
+                                            serviceinfo["item"], PARAMETERS_OMIT)
+                    html.write(rulespec["valuespec"]._elements[2].value_to_text(serviceinfo["parameters"]))
+                    html.write("</td></tr></table>")
+                    
+
+            elif origin == "active":
+                checktype = serviceinfo["checktype"]
+                rulespec = g_rulespecs["active_checks:" + checktype]
+                output_analysed_ruleset(all_rulesets, rulespec, hostname, None, serviceinfo["parameters"])
+
+            elif origin == "classic":
+                rule = all_rulesets["custom_checks"][serviceinfo["rule_nr"]]
+                # Find relative rule number in folder
+                old_folder = None
+                rel_nr = -1
+                for r in all_rulesets["custom_checks"]:
+                    if old_folder != r[0]:
+                        rel_nr = -1
+                    rel_nr += 1
+                    if r is rule:
+                        break
+                url = make_link([('mode', 'edit_ruleset'), ('varname', "custom_checks"), ('host', hostname)])
+                forms.section('<a href="%s">%s</a>' % (url, _("Command Line")))
+                url = make_link([
+                    ('mode', 'edit_rule'),
+                    ('varname', "custom_checks"), 
+                    ('rule_folder', rule[0][".path"]), 
+                    ('rulenr', rel_nr), 
+                    ('host', hostname)])
+
+                html.write('<table class=setting><tr><td class=reason><a href="%s">%s %d %s %s</a></td>' % (
+                    url, _("Rule"), rel_nr + 1, _("in"), rule[0]["title"]))
+                html.write("<td class=settingvalue used><tt>%s</tt></td></tr></table>" % 
+                    serviceinfo["command_line"])
+
+
+    last_maingroup = None
+    for groupname in groupnames:
+        maingroup = groupname.split("/")[0]
+        # Show information about a ruleset
+        # Sort rulesets according to their title
+        g_rulespec_group[groupname].sort(
+            cmp = lambda a, b: cmp(a["title"], b["title"]))
+
+        for rulespec in g_rulespec_group[groupname]:
+            if (rulespec["itemtype"] == 'service') == (not service): 
+                continue # This rule is not for hosts/services
+
+            # Open form for that group here, if we know that we have at least one rule
+            if last_maingroup != maingroup:
+                last_maingroup = maingroup
+                grouptitle, grouphelp = g_rulegroups.get(maingroup, (maingroup, ""))
+                forms.header(grouptitle, isopen = maingroup == "monconf", narrow=True, css="rulesettings")
+                html.help(grouphelp)
+
+            output_analysed_ruleset(all_rulesets, rulespec, hostname, service)
+
+
+    forms.end()
+
+PARAMETERS_UNKNOW = []
+PARAMETERS_OMIT = []
+def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_settings=PARAMETERS_UNKNOW):
     def rule_url(rule):
         rule_folder, rule_nr = rule
         return make_link([
@@ -2229,115 +2348,103 @@ def mode_host_settings(phase):
             ('varname', varname), 
             ('rule_folder', rule_folder[".path"]), 
             ('rulenr', rule_nr), 
-            ('host', hostname)])
+            ('host', hostname),
+            ('item', service and mk_repr(service) or '')])
 
 
-    last_maingroup = None
-    for groupname in groupnames:
-        maingroup = groupname.split("/")[0]
-        if last_maingroup != maingroup:
-            last_maingroup = maingroup
-            grouptitle, grouphelp = g_rulegroups.get(maingroup, (maingroup, ""))
-            forms.header(grouptitle, isopen = maingroup == "monconf", narrow=True, css="rulesettings")
-            html.help(grouphelp)
+    varname = rulespec["varname"]
+    valuespec = rulespec["valuespec"]
+    url = make_link([('mode', 'edit_ruleset'), ('varname', varname), ('host', hostname), ('item', mk_repr(service))])
+    forms.section('<a href="%s">%s</a>' % (url, rulespec["title"]))
+    setting, rules = analyse_ruleset(rulespec, all_rulesets[varname], hostname, service)
+    html.write("<table class='setting'><tr>")
+    html.write("<td class=reason>")
 
-        # Show information about a ruleset
-        # Sort rulesets according to their title
-        g_rulespec_group[groupname].sort(
-            cmp = lambda a, b: cmp(a["title"], b["title"]))
+    # Show reason for the determined value
+    if len(rules) == 1:
+        rule_folder, rule_nr = rules[0]
+        url = rule_url(rules[0])
+        html.write('<a href="%s">%s</a>' % (rule_url(rules[0]), _("Rule %d in %s") % (rule_nr + 1, rule_folder["title"])))
+    elif len(rules) > 1:
+        html.write('<a href="%s">%d %s</a>' % (url, len(rules), _("Rules")))
+    else:
+        html.write("<i>" + _("Default Value") + "</i>")
+    html.write('</td>')
 
-        for rulespec in g_rulespec_group[groupname]:
-            if rulespec["itemtype"] == 'service': 
-                continue # This rule is not for hosts
+    # Show the resulting value or factory setting
+    html.write("<td class='settingvalue %s'>" % (len(rules) > 0 and "used" or "unused"))
 
-            varname = rulespec["varname"]
-            valuespec = rulespec["valuespec"]
-            url = make_link([('mode', 'edit_ruleset'), ('varname', varname), ('host', hostname)])
-            forms.section('<a href="%s">%s</a>' % (url, rulespec["title"]))
-            setting, rules = analyse_rule_for_host(rulespec, all_rulesets[varname], hostname)
-            html.write("<table class='setting'><tr>")
-            html.write("<td class=reason>")
+    # In some cases we now the settings from a check_mk auomation
+    if known_settings is PARAMETERS_OMIT:
+        return
 
-            # Show reason for the determined value
-            if len(rules) == 1:
-                rule_folder, rule_nr = rules[0]
-                url = rule_url(rules[0])
-                html.write('<a href="%s">%s</a>' % (rule_url(rules[0]), _("Rule in %s") % rules[0][0]["title"]))
-            elif len(rules) > 1:
-                html.write('<a href="%s">%d %s</a>' % (url, len(rules), _("Rules")))
-            else:
-                html.write("<i>" + _("Default Value") + "</i>")
-            html.write('</td>')
+    elif known_settings is not PARAMETERS_UNKNOW:
+        html.write(valuespec.value_to_text(known_settings))
 
-            # Show the resulting value or factory setting
-            html.write("<td class='settingvalue %s'>" % (len(rules) > 0 and "used" or "unused"))
-
-            # For match type "dict" it can be the case the rule define some of the keys
-            # while other keys are taken from the factory defaults. We need to show the 
-            # complete outcoming value here.
-            if rules and rulespec["match"] == "dict" \
-                     and rulespec["factory_default"] is not NO_FACTORY_DEFAULT \
-                     and rulespec["factory_default"] is not FACTORY_DEFAULT_UNUSED:
+    else:
+        # For match type "dict" it can be the case the rule define some of the keys
+        # while other keys are taken from the factory defaults. We need to show the 
+        # complete outcoming value here.
+        if rules and rulespec["match"] == "dict":
+            if rulespec["factory_default"] is not NO_FACTORY_DEFAULT \
+                and rulespec["factory_default"] is not FACTORY_DEFAULT_UNUSED:
                 fd = rulespec["factory_default"].copy()
                 fd.update(setting)
                 setting = fd
 
+        if valuespec and not rules: # show the default value
+            # Some rulesets are ineffective if they are empty
+            if rulespec["factory_default"] is FACTORY_DEFAULT_UNUSED:
+                html.write(_("(unused)"))
 
-            if valuespec and not rules: # show the default value
-                # Some rulesets are ineffective if they are empty
-                if rulespec["factory_default"] is FACTORY_DEFAULT_UNUSED:
-                    html.write(_("(unused)"))
+            # If there is a factory default then show that one
+            elif rulespec["factory_default"] is not NO_FACTORY_DEFAULT:
+                setting = rulespec["factory_default"]
+                html.write(valuespec.value_to_text(setting))
 
-                # If there is a factory default then show that one
-                elif rulespec["factory_default"] is not NO_FACTORY_DEFAULT:
-                    setting = rulespec["factory_default"]
-                    html.write(valuespec.value_to_text(setting))
+            # Rulesets that build lists are empty if no rule matches
+            elif rulespec["match"] in ("all", "list"):
+                html.write(_("(no entry)"))
 
-                # Rulesets that build lists are empty if no rule matches
-                elif rulespec["match"] in ("all", "list"):
-                    html.write(_("(no entry)"))
-
-                # Else we use the default value of the valuespec
-                else:
-                    html.write(valuespec.value_to_text(valuespec.default_value()))
-
-            # We have a setting
-            elif valuespec:
-                if rulespec["match"] in ( "all", "list" ):
-                    html.write(", ".join([valuespec.value_to_text(e) for e in setting]))
-                else:
-                    html.write(valuespec.value_to_text(setting))
-            
-            # Binary rule, no valuespec, outcome is True or False
+            # Else we use the default value of the valuespec
             else:
-                html.write('<img align=absmiddle class=icon title="%s" src="images/rule_%s%s.png">' % (
-                    setting and _("yes") or _("no"), setting and "yes" or "no", not rules and "_off" or ""))
+                html.write(valuespec.value_to_text(valuespec.default_value()))
 
-            html.write("</td></tr></table>")
+        # We have a setting
+        elif valuespec:
+            if rulespec["match"] in ( "all", "list" ):
+                html.write(", ".join([valuespec.value_to_text(e) for e in setting]))
+            else:
+                html.write(valuespec.value_to_text(setting))
 
+        # Binary rule, no valuespec, outcome is True or False
+        else:
+            html.write('<img align=absmiddle class=icon title="%s" src="images/rule_%s%s.png">' % (
+                setting and _("yes") or _("no"), setting and "yes" or "no", not rules and "_off" or ""))
 
-    forms.end()
-
+    html.write("</td></tr></table>")
 
 # Returns the outcoming value or None and
 # a list of matching rules. These are pairs
 # of rule_folder and rule_number
-def analyse_rule_for_host(rulespec, ruleset, hostname):
+def analyse_ruleset(rulespec, ruleset, hostname, service):
     resultlist = []
     resultdict = {}
     effectiverules = []
     old_folder = None
-    nr = 0
+    nr = -1
     for ruledef in ruleset:
         folder, rule = ruledef
         if folder != old_folder:
             old_folder = folder
-            nr = 0 # Starting couting again in new folder
+            nr = -1 # Starting couting again in new folder
+        nr += 1
         value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
         if rule_options.get("disabled"):
             continue
 
-        matches = True == rule_matches_host_and_item(rulespec, tag_specs, host_list, item_list, folder, g_folder, hostname, None)
+        if True != rule_matches_host_and_item(rulespec, tag_specs, host_list, item_list, folder, g_folder, hostname, service):
+            continue
 
         if rulespec["match"] == "all":
             resultlist.append(value)
@@ -2404,8 +2511,8 @@ def mode_diag_host(phase):
         host_status_button(hostname, "hoststatus")
         html.context_button(_("Properties"),
                             make_link([("mode", "edithost"), ("host", hostname)]), "edit")
-        html.context_button(_("Settings"),
-              make_link([("mode", "host_settings"), ("host", hostname)]), "rulesets")
+        html.context_button(_("Parameters"),
+              make_link([("mode", "object_parameters"), ("host", hostname)]), "rulesets")
         html.context_button(_("Services"),
                             make_link([("mode", "inventory"), ("host", hostname)]), "services")
         return
@@ -2633,8 +2740,8 @@ def mode_inventory(phase, firsttime):
                             make_link([("mode", "folder")]), "back")
         host_status_button(hostname, "host")
         html.context_button(_("Properties"), make_link([("mode", "edithost"), ("host", hostname)]), "edit")
-        html.context_button(_("Settings"),
-              make_link([("mode", "host_settings"), ("host", hostname)]), "rulesets")
+        html.context_button(_("Parameters"),
+              make_link([("mode", "object_parameters"), ("host", hostname)]), "rulesets")
         if ".nodes" not in host:
             # only display for non cluster hosts
             html.context_button(_("Diagnostic"),
@@ -2806,38 +2913,41 @@ def show_service_table(host, firsttime):
 
             if parameter_column:
                 table.cell(_("Check Parameters"))
-            if varname and varname in g_rulespecs:
-                rulespec = g_rulespecs[varname]
-                url = make_link([("mode", "edit_ruleset"),
-                                 ("varname", varname),
-                                 ("host", hostname),
-                                 ("item", mk_repr(item))])
-                try:
-                    rulespec["valuespec"].validate_datatype(params, "")
-                    rulespec["valuespec"].validate_value(params, "")
-                    paramtext = rulespec["valuespec"].value_to_text(params)
-                except Exception, e:
-                    paramtext = _("Invalid check parameter: %s!") % e
-                    paramtext += _(" The parameter is: %r") % (params,)
+                if varname and varname in g_rulespecs:
+                    rulespec = g_rulespecs[varname]
+                    url = make_link([("mode", "edit_ruleset"),
+                                     ("varname", varname),
+                                     ("host", hostname),
+                                     ("item", mk_repr(item))])
+                    try:
+                        rulespec["valuespec"].validate_datatype(params, "")
+                        rulespec["valuespec"].validate_value(params, "")
+                        paramtext = rulespec["valuespec"].value_to_text(params)
+                    except Exception, e:
+                        paramtext = _("Invalid check parameter: %s!") % e
+                        paramtext += _(" The parameter is: %r") % (params,)
 
-                if parameter_column:
                     html.write(paramtext)
 
-                # Strip all HTML code from the paramtext
-                table.cell("")
-                paramtext = paramtext.replace('</td>', '\t')
-                paramtext = paramtext.replace('</tr>', '\n')
-                paramtext = html.strip_tags(paramtext)
+                    #  # Strip all HTML code from the paramtext
+                    #  table.cell("")
+                    #  paramtext = paramtext.replace('</td>', '\t')
+                    #  paramtext = paramtext.replace('</tr>', '\n')
+                    #  paramtext = html.strip_tags(paramtext)
 
-                if parameter_column:
-                    title = _("Edit the parameters of this check")
-                else:
-                    title = _("Check parameters for this service") + ": \n" + paramtext
-                html.write('<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' %
-                   (url, title))
+                    #  if parameter_column:
+                    #      title = _("Edit the parameters of this services")
+                    #  else:
+                    #      title = _("Check parameters for this service") + ": \n" + paramtext
+                    #  #html.write('<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' %
+                    #  #   (url, title))
 
-            else:
-                table.cell("", "")
+            # Icon for Service parameters
+            table.cell("", "")
+            params_url = make_link([("mode", "object_parameters"),
+                                    ("host", hostname),
+                                    ("service", descr)])
+            html.icon_button(params_url, _("View and modify the parameters for this service"), "rulesets")
 
 
             # Permanently disable icon
@@ -11566,8 +11676,8 @@ def mode_edit_ruleset(phase):
         if hostname:
             html.context_button(_("Services"),
                  make_link([("mode", "inventory"), ("host", hostname)]), "services")
-            html.context_button(_("Settings"),
-                  make_link([("mode", "host_settings"), ("host", hostname)]), "rulesets")
+            html.context_button(_("Parameters"),
+                  make_link([("mode", "object_parameters"), ("host", hostname), ("service", item)]), "rulesets")
         return
 
     elif phase == "action":
@@ -12647,6 +12757,8 @@ def register_rule(group, varname, valuespec = None, title = None,
                   help = None, itemspec = None, itemtype = None, itemname = None,
                   itemhelp = None, itemenum = None,
                   match = "first", optional = False, factory_default = NO_FACTORY_DEFAULT):
+    if not itemname and itemtype == "service":
+        itemname = _("Service")
     ruleset = {
         "group"           : group,
         "varname"         : varname,
@@ -12735,6 +12847,7 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec, 
             title = valuespec.title(),
             elements = elements,
         ),
+        itemspec = itemspec,
         match = "all")
 
 
@@ -14916,6 +15029,15 @@ def host_status_button(hostname, viewname):
            ("site",     "")]),
            "status")  # TODO: support for distributed WATO
 
+def service_status_button(hostname, servicedesc):
+    html.context_button(_("Status"),
+       "view.py?" + html.urlencode_vars([
+           ("view_name", "service"),
+           ("host",     hostname),
+           ("service",  servicedesc),
+           ]),
+           "status")  # TODO: support for distributed WATO
+
 def folder_status_button(viewname = "allhosts"):
     html.context_button(_("Status"),
        "view.py?" + html.urlencode_vars([
@@ -15149,7 +15271,7 @@ modes = {
    "firstinventory"     : (["hosts", "services"], lambda phase: mode_inventory(phase, True)),
    "inventory"          : (["hosts"], lambda phase: mode_inventory(phase, False)),
    "diag_host"          : (["hosts", "diag_host"], mode_diag_host),
-   "host_settings"      : (["hosts", "rulesets"], mode_host_settings),
+   "object_parameters"  : (["hosts", "rulesets"], mode_object_parameters),
    "search"             : (["hosts"], mode_search),
    "search_results"     : (["hosts"], mode_search_results),
    "bulkinventory"      : (["hosts", "services"], mode_bulk_inventory),

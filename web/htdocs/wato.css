@@ -1179,6 +1179,57 @@ table.multisite_conn_method td input {
     left: 0;
 }
 
+/*--Settings---------------------------------------------------------------.
+|                ____       _   _   _                                      |
+|               / ___|  ___| |_| |_(_)_ __   __ _ ___                      |
+|               \___ \ / _ \ __| __| | '_ \ / _` / __|                     |
+|                ___) |  __/ |_| |_| | | | | (_| \__ \                     |
+|               |____/ \___|\__|\__|_|_| |_|\__, |___/                     |
+|                                           |___/                          |
++--------------------------------------------------------------------------+
+| Settings for hosts and services (rule analysis)                          |
+'-------------------------------------------------------------------------*/
+table.setting td.reason {
+    float: none;
+    width: 180px;
+    display: inline-block;
+    color: white;
+    font-style: italic;
+}
+
+table.setting td.reason i { /* default value */
+    color: #b6c8d1;
+}
+
+table.setting td.reason a {
+    text-decoration: none;
+}
+table.setting td.reason a:hover {
+    text-decoration: underline;
+}
+
+table.setting td.settingvalue.used {
+}
+td.settingvalue.unused, td.settingvalue.unused td {
+    font-style: italic;
+    color: #256;
+}
+.wato table.nform div.title a {
+    color: black;
+    text-decoration: none;
+}
+.wato table.nform div.title a:hover {
+    text-decoration: underline;
+}
+
+table.nform.rulesettings td.legend {
+    width: 300px;
+}
+table.nform.rulesettings td.legend div.title {
+    max-width: 300px;
+}
+
+
 /*--Profile Repl-----------------------------------------------------------.
 |          ____             __ _ _        ____            _                |
 |         |  _ \ _ __ ___  / _(_) | ___  |  _ \ ___ _ __ | |               |

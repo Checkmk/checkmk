@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-#   .-README---------------------------------------------------------------.
+#   .--README--------------------------------------------------------------.
 #   |               ____                _                                  |
 #   |              |  _ \ ___  __ _  __| |  _ __ ___   ___                 |
 #   |              | |_) / _ \/ _` |/ _` | | '_ ` _ \ / _ \                |
@@ -92,7 +92,7 @@
 
 
 #.
-#   .-Init-----------------------------------------------------------------.
+#   .--Init----------------------------------------------------------------.
 #   |                           ___       _ _                              |
 #   |                          |_ _|_ __ (_) |_                            |
 #   |                           | || '_ \| | __|                           |
@@ -143,7 +143,7 @@ g_folders = {}
 g_html_head_open = False
 
 #.
-#   .-Main-----------------------------------------------------------------.
+#   .--Main----------------------------------------------------------------.
 #   |                        __  __       _                                |
 #   |                       |  \/  | __ _(_)_ __                           |
 #   |                       | |\/| |/ _` | | '_ \                          |
@@ -396,7 +396,7 @@ def do_git_commit():
 
 
 #.
-#   .-Load/Save------------------------------------------------------------.
+#   .--Load/Save-----------------------------------------------------------.
 #   |          _                    _    ______                            |
 #   |         | |    ___   __ _  __| |  / / ___|  __ ___   _____           |
 #   |         | |   / _ \ / _` |/ _` | / /\___ \ / _` \ \ / / _ \          |
@@ -815,7 +815,7 @@ def get_folder_aliaspath(folder, show_main = True):
     return ' / '.join(aliaspath)
 
 #.
-#   .-Folders--------------------------------------------------------------.
+#   .--Folders-------------------------------------------------------------.
 #   |                   _____     _     _                                  |
 #   |                  |  ___|__ | | __| | ___ _ __ ___                    |
 #   |                  | |_ / _ \| |/ _` |/ _ \ '__/ __|                   |
@@ -1388,6 +1388,7 @@ def show_hosts(folder):
 
         # Column with actions (buttons)
         edit_url     = make_link([("mode", "edithost"), ("host", hostname)])
+        settings_url = make_link([("mode", "host_settings"), ("host", hostname)])
         services_url = make_link([("mode", "inventory"), ("host", hostname)])
         clone_url    = make_link([("mode", host.get(".nodes") and "newcluster" or "newhost"),
                                  ("clone", hostname)])
@@ -1406,6 +1407,7 @@ def show_hosts(folder):
 
         html.write("<td class=buttons>")
         html.icon_button(edit_url, _("Edit the properties of this host"), "edit")
+        html.icon_button(settings_url, _("View the rule based settings of this host"), "rulesets")
         if check_host_permissions(hostname, False) == True:
             msg = _("Edit the services of this host, do an inventory")
             image =  "services"
@@ -1699,7 +1701,7 @@ def get_hostnames_from_checkboxes(filterfunc = None):
     return selected_hosts
 
 #.
-#   .-Edit Folder----------------------------------------------------------.
+#   .--Edit Folder---------------------------------------------------------.
 #   |           _____    _ _ _     _____     _     _                       |
 #   |          | ____|__| (_) |_  |  ___|__ | | __| | ___ _ __             |
 #   |          |  _| / _` | | __| | |_ / _ \| |/ _` |/ _ \ '__|            |
@@ -1934,7 +1936,7 @@ def ajax_set_foldertree():
 
 
 #.
-#   .-Edit-Host------------------------------------------------------------.
+#   .--Edit-Host-----------------------------------------------------------.
 #   |               _____    _ _ _     _   _           _                   |
 #   |              | ____|__| (_) |_  | | | | ___  ___| |_                 |
 #   |              |  _| / _` | | __| | |_| |/ _ \/ __| __|                |
@@ -1961,7 +1963,7 @@ def mode_edithost(phase, new, cluster):
         cluster = ".nodes" in host
         mode = "clone"
     elif not new and hostname in g_folder[".hosts"]:
-        title = _("Edit host") + " " + hostname
+        title = _("Properties of host") + " " + hostname
         host = g_folder[".hosts"][hostname]
         cluster = ".nodes" in host
         mode = "edit"
@@ -1978,16 +1980,16 @@ def mode_edithost(phase, new, cluster):
         return title
 
     elif phase == "buttons":
+        html.context_button(_("Folder"), make_link([("mode", "folder")]), "back")
         if not new:
             host_status_button(hostname, "hoststatus")
-        html.context_button(_("Folder"), make_link([("mode", "folder")]), "back")
         if not new:
             html.context_button(_("Services"),
                   make_link([("mode", "inventory"), ("host", hostname)]), "services")
-            html.context_button(_("Rulesets"),
-                  make_link([("mode", "ruleeditor"), ("host", hostname), ("local", "on")]), "rulesets")
+            html.context_button(_("Settings"),
+                  make_link([("mode", "host_settings"), ("host", hostname)]), "rulesets")
             if not cluster:
-                html.context_button(_("Diagnose"),
+                html.context_button(_("Diagnostic"),
                       make_link([("mode", "diag_host"), ("host", hostname)]), "diagnose")
 
     elif phase == "action":
@@ -2176,7 +2178,199 @@ def delete_host_after_confirm(delname):
         return None # browser reload
 
 #.
-#   .-Host Diag------------------------------------------------------------.
+#   .--Host Settings-------------------------------------------------------.
+#   |     _   _           _     ____       _   _   _                       |
+#   |    | | | | ___  ___| |_  / ___|  ___| |_| |_(_)_ __   __ _ ___       |
+#   |    | |_| |/ _ \/ __| __| \___ \ / _ \ __| __| | '_ \ / _` / __|      |
+#   |    |  _  | (_) \__ \ |_   ___) |  __/ |_| |_| | | | | (_| \__ \      |
+#   |    |_| |_|\___/|___/\__| |____/ \___|\__|\__|_|_| |_|\__, |___/      |
+#   |                                                      |___/           |
+#   +----------------------------------------------------------------------+
+#   | A page showing all rule sets that affect a host and their current    |
+#   | outcome for a specific host.                                         |
+#   '----------------------------------------------------------------------'
+
+def mode_host_settings(phase):
+    hostname = html.var("host") # may be empty in new/clone mode
+    host = g_folder[".hosts"][hostname]
+    is_cluster = ".nodes" in host
+
+    if phase == "title":
+        return _("Settings of host") + " " + hostname
+
+    elif phase == "buttons":
+        html.context_button(_("Folder"), make_link([("mode", "folder")]), "back")
+        host_status_button(hostname, "hoststatus")
+        html.context_button(_("Properties"), make_link([("mode", "edithost"), ("host", hostname)]), "edit")
+        html.context_button(_("Services"), make_link([("mode", "inventory"), ("host", hostname)]), "services")
+        if not is_cluster:
+            html.context_button(_("Diagnostic"),
+              make_link([("mode", "diag_host"), ("host", hostname)]), "diagnose")
+        return
+
+    elif phase == "action":
+        return
+
+
+    # Now we collect all rulesets that apply to hosts, except those specifying
+    # new active or static checks
+    all_rulesets = load_all_rulesets()
+    groupnames = [ gn for gn, rulesets in g_rulespec_groups 
+                   if not gn.startswith("static/") and
+                      not gn.startswith("checkparams/") and
+                      gn != "activechecks" ]
+    groupnames.sort()
+
+
+    def rule_url(rule):
+        rule_folder, rule_nr = rule
+        return make_link([
+            ('mode', 'edit_rule'),
+            ('varname', varname), 
+            ('rule_folder', rule_folder[".path"]), 
+            ('rulenr', rule_nr), 
+            ('host', hostname)])
+
+
+    last_maingroup = None
+    for groupname in groupnames:
+        maingroup = groupname.split("/")[0]
+        if last_maingroup != maingroup:
+            last_maingroup = maingroup
+            grouptitle, grouphelp = g_rulegroups.get(maingroup, (maingroup, ""))
+            forms.header(grouptitle, isopen = maingroup == "monconf", narrow=True, css="rulesettings")
+            html.help(grouphelp)
+
+        # Show information about a ruleset
+        # Sort rulesets according to their title
+        g_rulespec_group[groupname].sort(
+            cmp = lambda a, b: cmp(a["title"], b["title"]))
+
+        for rulespec in g_rulespec_group[groupname]:
+            if rulespec["itemtype"] == 'service': 
+                continue # This rule is not for hosts
+
+            varname = rulespec["varname"]
+            valuespec = rulespec["valuespec"]
+            url = make_link([('mode', 'edit_ruleset'), ('varname', varname), ('host', hostname)])
+            forms.section('<a href="%s">%s</a>' % (url, rulespec["title"]))
+            setting, rules = analyse_rule_for_host(rulespec, all_rulesets[varname], hostname)
+            html.write("<table class='setting'><tr>")
+            html.write("<td class=reason>")
+
+            # Show reason for the determined value
+            if len(rules) == 1:
+                rule_folder, rule_nr = rules[0]
+                url = rule_url(rules[0])
+                html.write('<a href="%s">%s</a>' % (rule_url(rules[0]), _("Rule in %s") % rules[0][0]["title"]))
+            elif len(rules) > 1:
+                html.write('<a href="%s">%d %s</a>' % (url, len(rules), _("Rules")))
+            else:
+                html.write("<i>" + _("Default Value") + "</i>")
+            html.write('</td>')
+
+            # Show the resulting value or factory setting
+            html.write("<td class='settingvalue %s'>" % (len(rules) > 0 and "used" or "unused"))
+
+            # For match type "dict" it can be the case the rule define some of the keys
+            # while other keys are taken from the factory defaults. We need to show the 
+            # complete outcoming value here.
+            if rules and rulespec["match"] == "dict" \
+                     and rulespec["factory_default"] is not NO_FACTORY_DEFAULT \
+                     and rulespec["factory_default"] is not FACTORY_DEFAULT_UNUSED:
+                fd = rulespec["factory_default"].copy()
+                fd.update(setting)
+                setting = fd
+
+
+            if valuespec and not rules: # show the default value
+                # Some rulesets are ineffective if they are empty
+                if rulespec["factory_default"] is FACTORY_DEFAULT_UNUSED:
+                    html.write(_("(unused)"))
+
+                # If there is a factory default then show that one
+                elif rulespec["factory_default"] is not NO_FACTORY_DEFAULT:
+                    setting = rulespec["factory_default"]
+                    html.write(valuespec.value_to_text(setting))
+
+                # Rulesets that build lists are empty if no rule matches
+                elif rulespec["match"] in ("all", "list"):
+                    html.write(_("(no entry)"))
+
+                # Else we use the default value of the valuespec
+                else:
+                    html.write(valuespec.value_to_text(valuespec.default_value()))
+
+            # We have a setting
+            elif valuespec:
+                if rulespec["match"] in ( "all", "list" ):
+                    html.write(", ".join([valuespec.value_to_text(e) for e in setting]))
+                else:
+                    html.write(valuespec.value_to_text(setting))
+            
+            # Binary rule, no valuespec, outcome is True or False
+            else:
+                html.write('<img align=absmiddle class=icon title="%s" src="images/rule_%s%s.png">' % (
+                    setting and _("yes") or _("no"), setting and "yes" or "no", not rules and "_off" or ""))
+
+            html.write("</td></tr></table>")
+
+
+    forms.end()
+
+
+# Returns the outcoming value or None and
+# a list of matching rules. These are pairs
+# of rule_folder and rule_number
+def analyse_rule_for_host(rulespec, ruleset, hostname):
+    resultlist = []
+    resultdict = {}
+    effectiverules = []
+    old_folder = None
+    nr = 0
+    for ruledef in ruleset:
+        folder, rule = ruledef
+        if folder != old_folder:
+            old_folder = folder
+            nr = 0 # Starting couting again in new folder
+        value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
+        if rule_options.get("disabled"):
+            continue
+
+        matches = True == rule_matches_host_and_item(rulespec, tag_specs, host_list, item_list, folder, g_folder, hostname, None)
+
+        if rulespec["match"] == "all":
+            resultlist.append(value)
+            effectiverules.append((folder, nr))
+
+        elif rulespec["match"] == "list":
+            resultlist += value
+            effectiverules.append((folder, nr))
+
+        elif rulespec["match"] == "dict":
+            new_result = value.copy()
+            new_result.update(resultdict)
+            resultdict = new_result
+            effectiverules.append((folder, nr))
+
+        else:
+            return value, [(folder, nr)]
+
+    if rulespec["match"] in ("list", "all"):
+        return resultlist, effectiverules
+
+    elif rulespec["match"] == "dict":
+        return resultdict, effectiverules
+
+    else:
+        return None, [] # No match
+
+
+
+
+
+#.
+#   .--Host Diag-----------------------------------------------------------.
 #   |              _   _           _     ____  _                           |
 #   |             | | | | ___  ___| |_  |  _ \(_) __ _  __ _               |
 #   |             | |_| |/ _ \/ __| __| | | | | |/ _` |/ _` |              |
@@ -2203,12 +2397,15 @@ def mode_diag_host(phase):
         raise MKGeneralException(_('The hostname is missing.'))
 
     if phase == 'title':
-        return _('Host Diagnostic')
+        return _('Diagnostic of host') + " " + hostname
 
     elif phase == 'buttons':
-        global_buttons()
-        html.context_button(_("Host Properties"),
-                            make_link([("mode", "edithost"), ("host", hostname)]), "back")
+        html.context_button(_("Folder"), make_link([("mode", "folder")]), "back")
+        host_status_button(hostname, "hoststatus")
+        html.context_button(_("Properties"),
+                            make_link([("mode", "edithost"), ("host", hostname)]), "edit")
+        html.context_button(_("Settings"),
+              make_link([("mode", "host_settings"), ("host", hostname)]), "rulesets")
         html.context_button(_("Services"),
                             make_link([("mode", "inventory"), ("host", hostname)]), "services")
         return
@@ -2405,7 +2602,7 @@ def ajax_diag_host():
         html.write("1 %s" % _("Exception: %s") % html.attrencode(traceback.format_exc()))
 
 #.
-#   .-Inventory & Services-------------------------------------------------.
+#   .--Inventory & Services------------------------------------------------.
 #   |                ____                  _                               |
 #   |               / ___|  ___ _ ____   _(_) ___ ___  ___                 |
 #   |               \___ \ / _ \ '__\ \ / / |/ __/ _ \/ __|                |
@@ -2432,14 +2629,15 @@ def mode_inventory(phase, firsttime):
         return title
 
     elif phase == "buttons":
-        host_status_button(hostname, "host")
         html.context_button(_("Folder"),
                             make_link([("mode", "folder")]), "back")
-        html.context_button(_("Host properties"),
-                            make_link([("mode", "edithost"), ("host", hostname)]), "host")
+        host_status_button(hostname, "host")
+        html.context_button(_("Properties"), make_link([("mode", "edithost"), ("host", hostname)]), "edit")
+        html.context_button(_("Settings"),
+              make_link([("mode", "host_settings"), ("host", hostname)]), "rulesets")
         if ".nodes" not in host:
             # only display for non cluster hosts
-            html.context_button(_("Diagnose"),
+            html.context_button(_("Diagnostic"),
                   make_link([("mode", "diag_host"), ("host", hostname)]), "diagnose")
         html.context_button(_("Full Scan"), html.makeuri([("_scan", "yes")]))
 
@@ -2670,7 +2868,7 @@ def show_service_table(host, firsttime):
 
 
 #.
-#   .-Search---------------------------------------------------------------.
+#   .--Search--------------------------------------------------------------.
 #   |                   ____                      _                        |
 #   |                  / ___|  ___  __ _ _ __ ___| |__                     |
 #   |                  \___ \ / _ \/ _` | '__/ __| '_ \                    |
@@ -2795,7 +2993,7 @@ def search_hosts_in_folder(folder, crit):
     return len(found)
 
 #.
-#   .-CSV-Import-----------------------------------------------------------.
+#   .--CSV-Import----------------------------------------------------------.
 #   |       ____ ______     __   ___                            _          |
 #   |      / ___/ ___\ \   / /  |_ _|_ __ ___  _ __   ___  _ __| |_        |
 #   |     | |   \___ \\ \ / /____| || '_ ` _ \| '_ \ / _ \| '__| __|       |
@@ -2896,7 +3094,7 @@ def create_target_folder_from_aliaspath(aliaspath):
 
 
 #.
-#   .-Bulk-Inventory-------------------------------------------------------.
+#   .--Bulk-Inventory------------------------------------------------------.
 #   |  ____        _ _      ___                      _                     |
 #   | | __ ) _   _| | | __ |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _   |
 #   | |  _ \| | | | | |/ /  | || '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |  |
@@ -3130,7 +3328,7 @@ def find_hosts_with_failed_agent():
         "Columns: host_name")
 
 #.
-#   .-Bulk-Edit------------------------------------------------------------.
+#   .--Bulk-Edit-----------------------------------------------------------.
 #   |                ____        _ _      _____    _ _ _                   |
 #   |               | __ ) _   _| | | __ | ____|__| (_) |_                 |
 #   |               |  _ \| | | | | |/ / |  _| / _` | | __|                |
@@ -3196,7 +3394,7 @@ def mode_bulk_edit(phase):
 
 
 #.
-#   .-Bulk-Cleanup---------------------------------------------------------.
+#   .--Bulk-Cleanup--------------------------------------------------------.
 #   |      ____        _ _       ____ _                                    |
 #   |     | __ ) _   _| | | __  / ___| | ___  __ _ _ __  _   _ _ __        |
 #   |     |  _ \| | | | | |/ / | |   | |/ _ \/ _` | '_ \| | | | '_ \       |
@@ -3321,7 +3519,7 @@ def bulk_cleanup_attributes(the_file, hosts):
 
 
 #.
-#   .-Parentscan-----------------------------------------------------------.
+#   .--Parentscan----------------------------------------------------------.
 #   |          ____                      _                                 |
 #   |         |  _ \ __ _ _ __ ___ _ __ | |_ ___  ___ __ _ _ __            |
 #   |         | |_) / _` | '__/ _ \ '_ \| __/ __|/ __/ _` | '_ \           |
@@ -3696,7 +3894,7 @@ def configure_gateway(state, site_id, folder, host, effective, gateway):
 
 
 #.
-#   .-Random Hosts---------------------------------------------------------.
+#   .--Random Hosts--------------------------------------------------------.
 #   |  ____                 _                   _   _           _          |
 #   | |  _ \ __ _ _ __   __| | ___  _ __ ___   | | | | ___  ___| |_ ___    |
 #   | | |_) / _` | '_ \ / _` |/ _ \| '_ ` _ \  | |_| |/ _ \/ __| __/ __|   |
@@ -3788,7 +3986,7 @@ def create_random_hosts(folder, count, folders, levels):
         return total_created
 
 #.
-#   .-Auditlog-------------------------------------------------------------.
+#   .--Auditlog------------------------------------------------------------.
 #   |                    _                 __ _ _                          |
 #   |                   | |    ___   __ _ / _(_) | ___                     |
 #   |                   | |   / _ \ / _` | |_| | |/ _ \                    |
@@ -3830,7 +4028,7 @@ def mode_auditlog(phase):
         render_audit_log(audit, "audit")
 
 #.
-#   .-Pending & Replication------------------------------------------------.
+#   .--Pending & Replication-----------------------------------------------.
 #   |                 ____                _ _                              |
 #   |                |  _ \ ___ _ __   __| (_)_ __   __ _                  |
 #   |                | |_) / _ \ '_ \ / _` | | '_ \ / _` |                 |
@@ -4485,7 +4683,7 @@ def export_audit_log():
     return False
 
 #.
-#   .-Automation-----------------------------------------------------------.
+#   .--Automation----------------------------------------------------------.
 #   |          _         _                        _   _                    |
 #   |         / \  _   _| |_ ___  _ __ ___   __ _| |_(_) ___  _ __         |
 #   |        / _ \| | | | __/ _ \| '_ ` _ \ / _` | __| |/ _ \| '_ \        |
@@ -4594,7 +4792,7 @@ def hilite_errors(outdata):
 
 
 #.
-#   .-Progress-------------------------------------------------------------.
+#   .--Progress------------------------------------------------------------.
 #   |               ____                                                   |
 #   |              |  _ \ _ __ ___   __ _ _ __ ___  ___ ___                |
 #   |              | |_) | '__/ _ \ / _` | '__/ _ \/ __/ __|               |
@@ -4654,7 +4852,7 @@ def interactive_progress(items, title, stats, finishvars, timewait, success_stat
 
 
 #.
-#   .-Attributes-----------------------------------------------------------.
+#   .--Attributes----------------------------------------------------------.
 #   |              _   _   _        _ _           _                        |
 #   |             / \ | |_| |_ _ __(_) |__  _   _| |_ ___  ___             |
 #   |            / _ \| __| __| '__| | '_ \| | | | __/ _ \/ __|            |
@@ -5542,7 +5740,7 @@ def effective_attributes(host, folder):
 
 
 #.
-#   .-Snapshots------------------------------------------------------------.
+#   .--Snapshots-----------------------------------------------------------.
 #   |           ____                        _           _                  |
 #   |          / ___| _ __   __ _ _ __  ___| |__   ___ | |_ ___            |
 #   |          \___ \| '_ \ / _` | '_ \/ __| '_ \ / _ \| __/ __|           |
@@ -5969,7 +6167,7 @@ def factory_reset():
 
 
 #.
-#   .-Value-Editor---------------------------------------------------------.
+#   .--Value-Editor--------------------------------------------------------.
 #   |       __     __    _              _____    _ _ _                     |
 #   |       \ \   / /_ _| |_   _  ___  | ____|__| (_) |_ ___  _ __         |
 #   |        \ \ / / _` | | | | |/ _ \ |  _| / _` | | __/ _ \| '__|        |
@@ -6013,7 +6211,7 @@ def get_edited_value(valuespec):
 
 
 #.
-#   .-Configuration--------------------------------------------------------.
+#   .--Configuration-------------------------------------------------------.
 #   |    ____             __ _                       _   _                 |
 #   |   / ___|___  _ __  / _(_) __ _ _   _ _ __ __ _| |_(_) ___  _ __      |
 #   |  | |   / _ \| '_ \| |_| |/ _` | | | | '__/ _` | __| |/ _ \| '_ \     |
@@ -6281,7 +6479,7 @@ def mode_ldap_config(phase):
     html.write('</div>')
 
 #.
-#   .-Global-Settings------------------------------------------------------.
+#   .--Global-Settings-----------------------------------------------------.
 #   |          ____ _       _           _  __     __                       |
 #   |         / ___| | ___ | |__   __ _| | \ \   / /_ _ _ __ ___           |
 #   |        | |  _| |/ _ \| '_ \ / _` | |  \ \ / / _` | '__/ __|          |
@@ -6636,7 +6834,7 @@ def save_configuration_vars(vars, filename):
         out.write("%s = %s\n" % (varname, pprint.pformat(value)))
 
 #.
-#   .-Groups---------------------------------------------------------------.
+#   .--Groups--------------------------------------------------------------.
 #   |                    ____                                              |
 #   |                   / ___|_ __ ___  _   _ _ __  ___                    |
 #   |                  | |  _| '__/ _ \| | | | '_ \/ __|                   |
@@ -6940,7 +7138,7 @@ class CheckTypeGroupSelection(ElementSelection):
 
 
 #.
-#   .-Timeperiods----------------------------------------------------------.
+#   .--Timeperiods---------------------------------------------------------.
 #   |      _____ _                                _           _            |
 #   |     |_   _(_)_ __ ___   ___ _ __   ___ _ __(_) ___   __| |___        |
 #   |       | | | | '_ ` _ \ / _ \ '_ \ / _ \ '__| |/ _ \ / _` / __|       |
@@ -7345,7 +7543,7 @@ def find_usages_of_timeperiod(tpname):
 
 
 #.
-#   .-Multisite Connections------------------------------------------------.
+#   .--Multisite Connections-----------------------------------------------.
 #   |                        ____  _ _                                     |
 #   |                       / ___|(_) |_ ___  ___                          |
 #   |                       \___ \| | __/ _ \/ __|                         |
@@ -8119,7 +8317,7 @@ def update_distributed_wato_file(sites):
         delete_distributed_wato_file()
 
 #.
-#   .-Replication----------------------------------------------------------.
+#   .--Replication---------------------------------------------------------.
 #   |           ____            _ _           _   _                        |
 #   |          |  _ \ ___ _ __ | (_) ___ __ _| |_(_) ___  _ __             |
 #   |          | |_) / _ \ '_ \| | |/ __/ _` | __| |/ _ \| '_ \            |
@@ -8636,7 +8834,7 @@ def ajax_replication():
     html.write(answer)
 
 #.
-#   .-Automation-Webservice------------------------------------------------.
+#   .--Automation-Webservice-----------------------------------------------.
 #   |          _         _                        _   _                    |
 #   |         / \  _   _| |_ ___  _ __ ___   __ _| |_(_) ___  _ __         |
 #   |        / _ \| | | | __/ _ \| '_ ` _ \ / _` | __| |/ _ \| '_ \        |
@@ -8856,7 +9054,7 @@ def delete_distributed_wato_file():
         create_user_file(p, "w").write("")
 
 #.
-#   .-Users/Contacts-------------------------------------------------------.
+#   .--Users/Contacts------------------------------------------------------.
 #   | _   _                      ______            _             _         |
 #   || | | |___  ___ _ __ ___   / / ___|___  _ __ | |_ __ _  ___| |_ ___   |
 #   || | | / __|/ _ \ '__/ __| / / |   / _ \| '_ \| __/ _` |/ __| __/ __|  |
@@ -9692,7 +9890,7 @@ class UserSelection(DropdownChoice):
 
 
 #.
-#   .-Roles----------------------------------------------------------------.
+#   .--Roles---------------------------------------------------------------.
 #   |                       ____       _                                   |
 #   |                      |  _ \ ___ | | ___  ___                         |
 #   |                      | |_) / _ \| |/ _ \/ __|                        |
@@ -10029,7 +10227,7 @@ def mode_role_matrix(phase):
     html.write("</table>")
 
 #.
-#   .-Host-Tags------------------------------------------------------------.
+#   .--Host-Tags-----------------------------------------------------------.
 #   |              _   _           _     _____                             |
 #   |             | | | | ___  ___| |_  |_   _|_ _  __ _ ___               |
 #   |             | |_| |/ _ \/ __| __|   | |/ _` |/ _` / __|              |
@@ -10895,7 +11093,7 @@ def change_host_tags_in_rules(folder, operations, mode):
 
 
 #.
-#   .-Rule-Editor----------------------------------------------------------.
+#   .--Rule-Editor---------------------------------------------------------.
 #   |           ____        _        _____    _ _ _                        |
 #   |          |  _ \ _   _| | ___  | ____|__| (_) |_ ___  _ __            |
 #   |          | |_) | | | | |/ _ \ |  _| / _` | | __/ _ \| '__|           |
@@ -11367,7 +11565,9 @@ def mode_edit_ruleset(phase):
              make_link([("mode", "rulesets"), ("group", "used"), ("host", hostname)]), "usedrulesets")
         if hostname:
             html.context_button(_("Services"),
-                 make_link([("mode", "inventory"), ("host", hostname)]), "back")
+                 make_link([("mode", "inventory"), ("host", hostname)]), "services")
+            html.context_button(_("Settings"),
+                  make_link([("mode", "host_settings"), ("host", hostname)]), "rulesets")
         return
 
     elif phase == "action":
@@ -12438,27 +12638,30 @@ g_rulegroups = {}
 def register_rulegroup(group, title, help):
     g_rulegroups[group] = (title, help)
 
-g_rulespecs = {}
-g_rulespec_group = {} # for conveniant lookup
-g_rulespec_groups = [] # for keeping original order
+g_rulespecs            = {}
+g_rulespec_group       = {} # for conveniant lookup
+g_rulespec_groups      = [] # for keeping original order
+NO_FACTORY_DEFAULT     = [] # needed for unique ID
+FACTORY_DEFAULT_UNUSED = [] # means this ruleset is not used if no rule is entered
 def register_rule(group, varname, valuespec = None, title = None,
                   help = None, itemspec = None, itemtype = None, itemname = None,
                   itemhelp = None, itemenum = None,
-                  match = "first", optional = False):
+                  match = "first", optional = False, factory_default = NO_FACTORY_DEFAULT):
     ruleset = {
-        "group"     : group,
-        "varname"   : varname,
-        "valuespec" : valuespec,
-        "itemspec"  : itemspec, # original item spec, e.g. if validation is needed
-        "itemtype"  : itemtype, # None, "service", "checktype" or "checkitem"
-        "itemname"  : itemname, # e.g. "mount point"
-        "itemhelp"  : itemhelp, # a description of the item, only rarely used
-        "itemenum"  : itemenum, # possible fixed values for items
-        "match"     : match,    # used by WATO rule analyzer (green and grey balls)
-        "title"     : title or valuespec.title(),
-        "help"      : help or valuespec.help(),
-        "optional"  : optional, # rule may be None (like only_hosts)
-        }
+        "group"           : group,
+        "varname"         : varname,
+        "valuespec"       : valuespec,
+        "itemspec"        : itemspec, # original item spec, e.g. if validation is needed
+        "itemtype"        : itemtype, # None, "service", "checktype" or "checkitem"
+        "itemname"        : itemname, # e.g. "mount point"
+        "itemhelp"        : itemhelp, # a description of the item, only rarely used
+        "itemenum"        : itemenum, # possible fixed values for items
+        "match"           : match,    # used by WATO rule analyzer (green and grey balls)
+        "title"           : title or valuespec.title(),
+        "help"            : help or valuespec.help(),
+        "optional"        : optional, # rule may be None (like only_hosts)
+        "factory_default" : factory_default,
+    }
 
     # Register group
     if group not in g_rulespec_group:
@@ -13012,7 +13215,7 @@ def page_user_profile():
     html.footer()
 
 #.
-#   .-Sampleconfig---------------------------------------------------------.
+#   .--Sampleconfig--------------------------------------------------------.
 #   |   ____                        _                       __ _           |
 #   |  / ___|  __ _ _ __ ___  _ __ | | ___  ___ ___  _ __  / _(_) __ _     |
 #   |  \___ \ / _` | '_ ` _ \| '_ \| |/ _ \/ __/ _ \| '_ \| |_| |/ _` |    |
@@ -13083,7 +13286,7 @@ def create_sample_config():
 
         # All hosts should use SNMP v2c if not specially tagged
         'bulkwalk_hosts': [
-            (['!snmp-v1'], ['@all'], {'comment': u'Hosts with the tag "snmp-v1" must not use bulkwalk'})],
+            (['snmp', '!snmp-v1'], ['@all'], {'comment': u'Hosts with the tag "snmp-v1" must not use bulkwalk'})],
 
         # Put all hosts and the contact group 'all'
         'host_contactgroups': [
@@ -13098,7 +13301,7 @@ def create_sample_config():
     config.wato_aux_tags = wato_aux_tags
 
 #.
-#   .-Pattern Editor-------------------------------------------------------.
+#   .--Pattern Editor------------------------------------------------------.
 #   |   ____       _   _                    _____    _ _ _                 |
 #   |  |  _ \ __ _| |_| |_ ___ _ __ _ __   | ____|__| (_) |_ ___  _ __     |
 #   |  | |_) / _` | __| __/ _ \ '__| '_ \  |  _| / _` | | __/ _ \| '__|    |
@@ -14149,7 +14352,7 @@ def mode_bi_edit_rule(phase):
     html.end_form()
 
 #.
-#   .--Custom-Attrs.-------------------------------------------------------.
+#   .--Custom-Attributes---------------------------------------------------.
 #   |   ____          _                          _   _   _                 |
 #   |  / ___|   _ ___| |_ ___  _ __ ___         / \ | |_| |_ _ __ ___      |
 #   | | |  | | | / __| __/ _ \| '_ ` _ \ _____ / _ \| __| __| '__/ __|     |
@@ -14373,7 +14576,7 @@ def mode_custom_attrs(phase, what):
     table.end()
 
 #.
-#   .-Hooks-&-API----------------------------------------------------------.
+#   .--Hooks-&-API---------------------------------------------------------.
 #   |       _   _             _           ___        _    ____ ___         |
 #   |      | | | | ___   ___ | | _____   ( _ )      / \  |  _ \_ _|        |
 #   |      | |_| |/ _ \ / _ \| |/ / __|  / _ \/\   / _ \ | |_) | |         |
@@ -14666,7 +14869,7 @@ def validate_all_hosts(hostnames, force_all = False):
         return {}
 
 #.
-#   .-Helpers--------------------------------------------------------------.
+#   .--Helpers-------------------------------------------------------------.
 #   |                  _   _      _                                        |
 #   |                 | | | | ___| |_ __   ___ _ __ ___                    |
 #   |                 | |_| |/ _ \ | '_ \ / _ \ '__/ __|                   |
@@ -14922,7 +15125,7 @@ def is_a_checkbox(vs):
         return False
 
 #.
-#   .-Plugins--------------------------------------------------------------.
+#   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
 #   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
 #   |                  | |_) | | | | |/ _` | | '_ \/ __|                   |
@@ -14946,6 +15149,7 @@ modes = {
    "firstinventory"     : (["hosts", "services"], lambda phase: mode_inventory(phase, True)),
    "inventory"          : (["hosts"], lambda phase: mode_inventory(phase, False)),
    "diag_host"          : (["hosts", "diag_host"], mode_diag_host),
+   "host_settings"      : (["hosts", "rulesets"], mode_host_settings),
    "search"             : (["hosts"], mode_search),
    "search_results"     : (["hosts"], mode_search_results),
    "bulkinventory"      : (["hosts", "services"], mode_bulk_inventory),

@@ -2084,7 +2084,8 @@ register_check_parameters(
         title = _("Specify levels in percentage of total RAM"),
         elements = [
           Percentage(title = _("Warning at a RAM usage of"), default_value = 80.0),
-          Percentage(title = _("Critical at a RAM usage of"), default_value = 90.0)]),
+          Percentage(title = _("Critical at a RAM usage of"), default_value = 90.0),
+        ]),
     None, None
 )
 
@@ -3299,7 +3300,8 @@ register_check_parameters(
                             title = _("Resulting state"),
                         ),
                     ],
-                    default_value = ( "running", "auto", 0)),
+                    default_value = ( "running", "auto", 0)
+                ),
                 title = _("Services states"),
                 help = _("You can specify a separate monitoring state for each possible "
                          "combination of service state and start type. If you do not use "

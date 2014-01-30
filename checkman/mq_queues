@@ -1,6 +1,6 @@
 title: Apache ActiveMQ Queue lengths
 agents: special datasource
-catalog: os/misc
+catalog: app/ActiveMQ
 license: GPL
 distribution: check_mk
 description:

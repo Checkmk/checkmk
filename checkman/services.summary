@@ -1,6 +1,6 @@
 title: Windows Services
 agents: windows
-catalog: applications
+catalog: os/services
 license: GPL
 distribution: check_mk
 description:

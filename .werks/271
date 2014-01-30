@@ -1,0 +1,10 @@
+Title: Fixed sorting in duallist element (two lists with interchangable elements)
+Level: 1
+Component: wato
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1391001637
+
+This fix ensures that if elements are moved from one list to the other
+they are inserted at the correct alphanumerical index and not at the end.

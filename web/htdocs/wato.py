@@ -2234,32 +2234,67 @@ def mode_object_parameters(phase):
     groupnames.sort()
 
 
+    def render_rule_reason(title, title_url, reason, reason_url, is_default, setting):
+        if title_url:
+            title = '<a href="%s">%s</a>' % (title_url, title)
+        forms.section(title)
+
+        if reason:
+            title = '<a href="%s">%s</a>' % (reason_url, reason)
+        if is_default:
+            reason = '<i>' + reason + '</i>'
+        html.write("<table class=setting><tr><td class=reason>%s</td>" % reason)
+        html.write('<td class="settingvalue %s">%s</td></tr></table>' % (is_default and "unused" or "used", setting))
+
+
     # For services we make a special handling the for origin and parameters
     # of that service!
     if service:
         serviceinfo = check_mk_automation(host[".siteid"], "analyse-service", [hostname, service])
         if serviceinfo:
             forms.header(_("Check Origin and Parameters"), isopen = True, narrow=True, css="rulesettings")
-            forms.section(_("Type of check"))
-            html.write("<table class=setting><tr><td class=reason></td><td class=setting>")
             origin = serviceinfo["origin"]
-            html.write({
+            origin_txt = {
                 "active"  : _("Active check"),
                 "static"  : _("Manual check"),
                 "auto"    : _("Inventorized check"),
                 "classic" : _("Classical check"),
-            }[origin])
-            html.write("</td></tr></table>")
+            }[origin]
+            render_rule_reason(_("Type of check"), None, "", "", False, origin_txt)
 
+            # First case: inventorized checks. They come from var/check_mk/autochecks/HOST.
             if origin ==  "auto":
                 checkgroup = serviceinfo["checkgroup"]
                 checktype = serviceinfo["checktype"]
-                if not group:
-                    htmlwrite(_("This check is not configurable via WATO"))
-                else:
-                    rulespec = g_rulespecs["checkgroup_parameters:" + checkgroup]
+                if not checkgroup:
+                    render_rule_reason(_("Parameters"), None, "", "", True, _("This check is not configurable via WATO"))
+
+                # Logwatch needs a special handling, since it is not configured
+                # via checkgroup_parameters but via "logwatch_rules" in a special
+                # WATO module.
+                elif checkgroup == "logwatch":
+                    rulespec = g_rulespecs["logwatch_rules"]
                     output_analysed_ruleset(all_rulesets, rulespec, hostname, 
                                             serviceinfo["item"], serviceinfo["parameters"])
+
+                else:
+                    # Note: some inventorized checks have a check group but
+                    # *no* ruleset for inventorized checks. One example is "ps".
+                    # That can be configured as a manual check or created by
+                    # inventory. But in the later case all parameters are set
+                    # by the inventory. This will be changed in a later version,
+                    # but we need to address it anyway.
+                    grouprule = "checkgroup_parameters:" + checkgroup
+                    if grouprule not in g_rulespecs:
+                        rulespec = g_rulespecs["static_checks:" + checkgroup]
+                        url = make_link([('mode', 'edit_ruleset'), ('varname', "static_checks:" + checkgroup), ('host', hostname)])
+                        render_rule_reason(_("Parameters"), url, _("Determined by inventory"), None, False, 
+                                   rulespec["valuespec"]._elements[2].value_to_text(serviceinfo["parameters"]))
+
+                    else:
+                        rulespec = g_rulespecs[grouprule]
+                        output_analysed_ruleset(all_rulesets, rulespec, hostname, 
+                                                serviceinfo["item"], serviceinfo["parameters"])
 
             elif origin == "static":
                 checkgroup = serviceinfo["checkgroup"]
@@ -2271,12 +2306,11 @@ def mode_object_parameters(phase):
                     itemspec = rulespec["itemspec"]
                     if itemspec:
                         item_text = itemspec.value_to_text(serviceinfo["item"])
-                        forms.section(rulespec["itemspec"].title())
+                        title = rulespec["itemspec"].title()
                     else:
-                        forms.section(_("Item"))
                         item_text = serviceinfo["item"]
-                    html.write("<table class=setting><tr><td class=reason></td><td class=setting>%s</td></tr></table>" % 
-                        item_text)
+                        title = _("Item")
+                    render_rule_reason(title, None, "", "", False, item_text)
                     output_analysed_ruleset(all_rulesets, rulespec, hostname, 
                                             serviceinfo["item"], PARAMETERS_OMIT)
                     html.write(rulespec["valuespec"]._elements[2].value_to_text(serviceinfo["parameters"]))

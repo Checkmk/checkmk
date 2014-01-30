@@ -13,6 +13,7 @@ manpage_catalog_titles = {
             "fortinet"   : "Fortinet",
             "h3c"        : "H3C Technologies (also 3Com)",
             "hp"         : "Hewlett-Packard (HP)",
+            "kemp"       : "KEMP",
             "lancom"     : "LANCOM Systems GmbH",
             "netgear"    : "Netgear",
             "riverbed"   : "Riverbed Technology",

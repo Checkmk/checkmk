@@ -31,7 +31,7 @@ def hitachi_hnas_fc_if_convert_info(info):
         converted.append(map(str, [
             "%d%03d" % (int(line[0]), int(line[1])),   # ifIndex
             line[0] + "." + line[1],                   # ifDescr (use ClusterNode.InterfaceIndex)
-            56,                                        # ifType 56 (fibreChannel)
+            "",                                        # ifType: do not set port type
             int(line[3]) * 1000000000,                 # ifHighSpeed
             line[2] == "1" and 1 or 2,                 # ifOperStatus (map other states to down)
             line[4],                                   # ifHCInOctets

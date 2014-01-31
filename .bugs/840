@@ -1,0 +1,9 @@
+Title: Wato condition show only the name of a tag but not the group
+Component: wato
+State: open
+Date: 2014-01-31 17:38:22
+Targetversion: 1.2.5i1
+Class: nastiness
+
+If you have multiple tags with the same title but in diffrent groups you cant see it in the
+condition colums from which tag group this tag is

@@ -5,6 +5,7 @@
 
     Multisite:
     * 0270 FIX: Multisite host tag filter: Now uses exact match...
+    * 0273 FIX: Fixed exceptions when modifying / cloning views...
 
     WATO:
     * 0686 FIX: Fix replication with WATO if EC is enabled on master and disabled on slave

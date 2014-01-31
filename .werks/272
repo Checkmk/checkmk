@@ -1,0 +1,9 @@
+Title: if checks: port type 56 (fibrechannel) is no longer inventorized per default
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1391009094
+Class: fix
+
+Fibrechannel ports have their own checks, specifically written for them.
+There is no need to inventorize them as if* services as well.

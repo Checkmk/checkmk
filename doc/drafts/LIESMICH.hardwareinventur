@@ -31,10 +31,10 @@ interaktiv aufklappen und ansehen kann.
 suchen kann, z.B. alle Hosts, die eine bestimmte Software enthalten,
 oder dergleichen.
 
-6. Man kann einen Funktion global konfigurieren, die jeden Update der
+6. Man kann eine Funktion global konfigurieren, die jedes Update der
 Inventurdaten eines Hosts an ein Skript übergibt. Dieses kann die Daten
-dann an eine CMBD senden (z.B. i-doit).
-
+dann an eine CMBD senden (z.B. i-doit) oder ein Lizenzverwaltungssystem
+(z.B. Aspera).
 
 
 
@@ -46,7 +46,7 @@ dann an eine CMBD senden (z.B. i-doit).
 [1] Agenten
 
 Wir schreiben sowohl für Linux, als auch für Windows ein Plugin mk_hwinventory,
-welches Daten sammelt, die von aktuellen Checks nicht ermittelt werden. Ein 
+welches Daten sammelt, die von aktuellen Checks nicht ermittelt werden. Ein
 Beispiel dafür für Linux:
 
 Code im Plugin:
@@ -70,19 +70,18 @@ account-plugin-salut 3.6.0.3-0ubuntu1
 account-plugin-twitter 0.8-0ubuntu2.2
 account-plugin-windows-live 0.8-0ubuntu2.2
 
-Damit die Menge der Daten, die vom Agenten übertragen wird, nicht
-unnötige aufgebläht wird, überträgt der Agent die Inventurdaten nur
-in einem einstellbaren Turnus. Dazu wird bei Linux die run_cached-Funktion
-so erweitert, dass sie eine --once Option bekommt. Diese führt dazu,
-dass das Ergebnis eines asynchronen Laufes nur ein einziges Mal
-ausgeliefert wird. In den Sektionsheader wird der Schlüssel :persist
-eingebaut (Beispiel: <<<deb_packages:persist(1440)>>>). Dieser signalisiert
-Check_MK, dass diese Sektion persistiert werden soll. Wenn bei einem
-Agentenlauf die Sektion fehlt, wird sie einfach aus diesem Persistenzspeicher
-geholt. Die Zahl in Klammern ist die Anzahl von Minuten, für die
-das gültig sein soll. Wenn innerhalb dieser Zeit keine neuen Daten
-kommen, wird das persistierte Verworfen und gilt als veraltet.
-Im aktuellen Windows-Agenten muss das analog umgesetzt werden.
+Damit die Menge der Daten, die vom Agenten übertragen wird, nicht unnötige
+aufgebläht wird, überträgt der Agent die Inventurdaten nur in einem
+einstellbaren Turnus. Dazu wird bei Linux die run_cached-Funktion so
+erweitert, dass sie eine --once Option bekommt. Diese führt dazu, dass
+das Ergebnis eines asynchronen Laufes nur ein einziges Mal ausgeliefert
+wird. In den Sektionsheader wird der Schlüssel :persist eingebaut (Beispiel:
+<<<deb_packages:persist(1440)>>>). Dieser signalisiert Check_MK, dass diese
+Sektion persistiert werden soll. Wenn bei einem Agentenlauf die Sektion fehlt,
+wird sie einfach aus diesem Persistenzspeicher geholt. Die Zahl in Klammern
+ist die Anzahl von Minuten, für die das gültig sein soll. Wenn innerhalb
+dieser Zeit keine neuen Daten kommen, wird das persistierte Verworfen und gilt
+als veraltet.  Im aktuellen Windows-Agenten muss das analog umgesetzt werden.
 
 Im Check_mk werden diese Daten abgelegt nach var/check_mk/persist/HOSTNAME/SECTION
 
@@ -91,9 +90,9 @@ Im Check_mk werden diese Daten abgelegt nach var/check_mk/persist/HOSTNAME/SECTI
 
 Pro Host wird ein logischer Baum angelegt, in dem die Inventurdaten gespeichert
 werden. Diese kann von Check_MK aus leicht in eine Python-Struktur eingelesen
-werden und wieder gespeichert werden. Die Speicherung kann im Prototyp wie
-üblich mit repr() erfolgen. Später kann man evtl. eine MongoDB einsetzen,
-falls die Recherchefunktionen sonst nicht performant genug sind.
+werden und wieder gespeichert werden. Die Speicherung erfolgt zunächst
+wie üblich als Python-Datenstruktur. Später kann man evtl. eine MongoDB
+einsetzen, falls die Recherchefunktionen sonst nicht performant genug sind.
 
 Hier ist ein Beispiel für eine sehr rudimentäre, gekürzte Struktur:
 {
@@ -161,26 +160,24 @@ def inventary_foo(info, tree):
         tree["software"]["packages"] = packages
 
 
-Es kann auch Plugins geben, die keine Daten aus info auswerten,
-sondern direkt in den Baum schauen und weitere Daten daraus
-ableiten. So könnte man z.B. aus der RPM-Liste ermitteln, dass
-auf einem System eine Apache installiert ist.
+Es kann auch Plugins geben, die keine Daten aus info auswerten, sondern direkt
+in den Baum schauen und weitere Daten daraus ableiten. So könnte man z.B. aus
+der RPM-Liste ermitteln, dass auf einem System eine Apache installiert ist.
 
-
-Die Baumstruktur wird ebenfalls über eine Art Plugins aufgebaut.
-Damit wird sichergestellt, dass der Baum alle Äste enthält, bevor
-die Inventurplugins aufgerufen werden. In den Strukturdefinitionen
-wird auch festgelegt, wie die einzelnen Äste später dargestellt werden.
-Dazu muss man noch ein Konzept entwickeln.
+Die Baumstruktur wird ebenfalls über eine Art Plugins aufgebaut.  Damit wird
+sichergestellt, dass der Baum alle Äste enthält, bevor die Inventurplugins
+aufgerufen werden. In den Strukturdefinitionen wird auch festgelegt, wie
+die einzelnen Äste später dargestellt werden.  Dazu muss man noch ein
+Konzept entwickeln.
 
 
 [3] Hooks und Eintrag in CMDB
 
 Nachdem der Baum für einen Host gefüllt und auf Platte geschrieben wurde,
-werden frei definierbare Hookskripten ausgefürt. So ein Hook kann dann
-in die CMDB den Update der Daten eines Hosts schreiben. Dazu stellt die
-CMDB z.B. einen Webservice bereit, welcher in JSON-Syntax den Baum erhält
-und diesen dann komplett oder teilweise in eigene Datenstrukturen ablegt.
+werden frei definierbare Hookskripten ausgefürt. So ein Hook kann dann in
+die CMDB den Update der Daten eines Hosts schreiben. Dazu stellt die CMDB
+z.B. einen Webservice bereit, welcher in JSON-Syntax den Baum erhält und
+diesen dann komplett oder teilweise in eigene Datenstrukturen ablegt.
 
 
 [4] Ansicht der Daten in Multisite: Baumdarstellung
@@ -209,9 +206,3 @@ RPM-Paket X", dann ist das X ja variabel. Dies könnten wir evtl. lösen,
 in dem wir den bestehenden Mechanismus zum Anzeigen von Service-Daten in
 Hosttabellen verwenden.
 
-
--------------------------------------------------------------------------------
-                                 N O T I Z E N
--------------------------------------------------------------------------------
-
-- Das ganze muss natürlich auch auf Workstations funktionieren!

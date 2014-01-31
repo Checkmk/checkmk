@@ -319,7 +319,8 @@ class TextAscii(ValueSpec):
         self._size          = kwargs.get("size", 25) # also possible: "max"
         self._cssclass      = kwargs.get("cssclass", "text")
         self._strip         = kwargs.get("strip", True)
-        self._allow_empty   = kwargs.get("allow_empty", True)
+        self._allow_empty   = kwargs.get("allow_empty", _("none"))
+        self._empty_text    = kwargs.get("empty_text", "")
         self._read_only     = kwargs.get("read_only")
         self._none_is_empty = kwargs.get("none_is_empty", False)
         self._regex         = kwargs.get("regex")
@@ -358,8 +359,8 @@ class TextAscii(ValueSpec):
 
 
     def value_to_text(self, value):
-        if value == None:
-            return _("none")
+        if not value:
+            return self._empty_text
         else:
             if self._attrencode:
                 return html.attrencode(value)

@@ -1,0 +1,10 @@
+Title: Multisite host tag filter: Now uses exact match
+Level: 1
+Component: multisite
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1390847004
+
+Filtering for host tags could lead to wrong results, because the livestatus filter did not look for an exact match.<br>
+If the filter was set to <tt>lan</tt>, hosts with <tt>wlan</tt> or <tt>bland</tt> were also found.

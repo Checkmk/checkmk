@@ -1730,8 +1730,9 @@ register_rule(group,
         help = _("This setting delays notifications about host problems by the "
                  "specified amount of time. If the host is up again within that "
                  "time, no notification will be sent out."),
-        )
-    )
+    ),
+    factory_default = 0,
+)
 
 register_rule(group,
     "extra_service_conf:first_notification_delay",
@@ -1744,7 +1745,8 @@ register_rule(group,
         help = _("This setting delays notifications about service problems by the "
                  "specified amount of time. If the service is OK again within that "
                  "time, no notification will be sent out."),
-        ),
+    ),
+    factory_default = 0,
     itemtype = "service")
 
 register_rule(group,
@@ -2060,7 +2062,8 @@ register_rule(group,
            TextAscii(
                title = _("SNMP community (SNMP Versions 1 and 2c)"),
                allow_empty = False,
-               attrencode = True),
+               attrencode = True,
+           ),
            Tuple(
                title = _("Credentials for SNMPv3"),
                elements = _snmpv3_basic_elements),
@@ -2075,6 +2078,8 @@ register_rule(group,
                       title = _("Privacy protocol")),
                  Password(title = _("Privacy pass phrase")),
                    ])],
+
+        default_value = "public",
         title = _("SNMP communities of monitored hosts"),
         help = _("By default Check_MK uses the community \"public\" to contact hosts via SNMP. This rule "
                  "can be used to customize the the credentials to be used when contacting hosts via SNMP.")))
@@ -2087,7 +2092,7 @@ register_rule(group,
                  " always assumes UTF-8 encoding. You can declare other "
                  " other encodings here"),
         choices = [
-           ("utf-8", _("UTF-8 (default)") ),
+           ("utf-8", _("UTF-8") ),
            ("latin1" ,_("latin1")),
            ]
         )),
@@ -2147,7 +2152,9 @@ register_rule(group,
                   maxvalue = 50,
               )
             ),
-       ]),
+       ]
+    ),
+    factory_default = { "timeout" : 1, "retries" : 5 },
     match = "dict")
 
 
@@ -2204,11 +2211,13 @@ register_rule(group,
             ),
         ],
     ),
+    factory_default = { "connection" : 2, "missing_sections" : 1, "empty_output" : 2, "wrong_version" : 1, "exception": 3 },
     title = _("Status of the Check_MK service"),
     help = _("This ruleset specifies the total status of the Check_MK service in "
              "case of various error situations. One use case is the monitoring "
              "of hosts that are not always up. You can have Check_MK an OK status "
              "here if the host is not reachable."),
+    match = "dict",
 )
 
 register_rule(group,

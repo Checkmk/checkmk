@@ -1,0 +1,8 @@
+Title: emc_isilon.nodehealth: new check for EMC Isilon Storage systems: NodeHealth
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1391169308
+Class: feature
+
+

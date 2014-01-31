@@ -987,7 +987,8 @@ def create_view(vs):
                 base_view = html.multisite_views.get(('', oldname)) # load builtin view
     elif mode == 'edit' and ('', oldname) in html.multisite_views:
         base_view = html.multisite_views.get(('', oldname)) # load builtin view
-        override = True
+        if oldname == name:
+            override = True
 
     view = {}
     for key, (opt_edit, valuespec) in vs.items():

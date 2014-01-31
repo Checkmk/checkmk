@@ -1,0 +1,16 @@
+Title: Fixed exceptions when modifying / cloning views
+Level: 2
+Component: multisite
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1391162049
+
+This werk fixes several view related problems<br>
+
+<ul>
+<li>Modified views no longer vanish in the "Views" sidebar snapin</li>
+<li>Fixed attribute inheritance of views</li>
+<li>Changing a views name no longer causes exception in the view editor</li>
+<li>Nagstamon and dashboard views are now hidden for real</li>
+</ul>

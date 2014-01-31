@@ -24,9 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-emc_isilon_info = [(".1.3.6.1.4.1.12124.1.1", [1, 2, 5, 6]),
-                   # clusterName, clusterHealth, configuredNodes, onlineNodes
-                   (".1.3.6.1.4.1.12124.2.1", [1]), # nodeName
+emc_isilon_info = [(".1.3.6.1.4.1.12124.1.1", [1,   # clusterName
+                                               2,   # clusterHealth
+                                               5,   # configuredNodes
+                                               6]), # onlineNodes
+                   (".1.3.6.1.4.1.12124.2.1", [1,   # nodeName
+                                               2]), # nodeHealth
                   ]
 
 def emc_isilon_scan(oid):
@@ -53,6 +56,34 @@ check_info["emc_isilon.clusterhealth"] = {
     "check_function"        : check_emc_isilon_clusterhealth,
     "inventory_function"    : inventory_emc_isilon_clusterhealth,
     "service_description"   : "Cluster Health",
+    "has_perfdata"          : False,
+    "snmp_info"             : emc_isilon_info,
+    "snmp_scan_function"    : emc_isilon_scan
+}
+
+#.
+#   .--NodeHealth------------------------------------------------------.
+
+def inventory_emc_isilon_nodehealth(info):
+    return [(None, None)]
+
+def check_emc_isilon_nodehealth(item, _no_params, info):
+    status=int(info[1][0][1])
+    statusmap = ("ok", "attn", "down", "invalid")
+    nodename=info[1][0][0]
+    if status >= len(statusmap):
+        return 3, "nodeHealth reports unidentified status %s" % status
+    else:
+        if status == 0:
+            rc = 0
+        else:
+            rc = 2
+        return rc, "nodeHealth for %s reports status %s" % (nodename, statusmap[status])
+
+check_info["emc_isilon.nodehealth"] = {
+    "check_function"        : check_emc_isilon_nodehealth,
+    "inventory_function"    : inventory_emc_isilon_nodehealth,
+    "service_description"   : "Node Health",
     "has_perfdata"          : False,
     "snmp_info"             : emc_isilon_info,
     "snmp_scan_function"    : emc_isilon_scan

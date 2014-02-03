@@ -1,0 +1,8 @@
+Title: Error rates for network interfaces can now be set smaller then 0.1 when using Wato.
+Level: 1
+Component: wato
+Version: 1.2.4b8
+Date: 1391166250
+Class: fix
+
+Values like smaller 0.1 are not longer saved as 0.0.

@@ -14,6 +14,9 @@
     * 0271 FIX: Fixed sorting in duallist element (two lists with interchangable elements)...
     * 0131 FIX: Error rates for network interfaces can now be set smaller then 0.1 when using Wato....
 
+    Notifications:
+    * 0133 FIX: Fixed mkeventd notification plugin...
+
 
 1.2.4b7:
     Core & Setup:

@@ -275,6 +275,11 @@ def load_views():
 
                     html.multisite_views[(user, name)] = view
 
+                    # Repair views with missing 'title' or 'description'
+                    for key in [ "title", "description" ]:
+                        if key not in view:
+                            view[key] = _("Missing %s") % key
+
         except SyntaxError, e:
             raise MKGeneralException(_("Cannot load views from %s/views.mk: %s") % (dirpath, e))
 

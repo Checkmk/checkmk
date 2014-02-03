@@ -201,7 +201,9 @@ def check_emcvnx_raidgroups_capacity(item, params, info):
     # variable name in perfdata is not allowed to be just a number
     # especially 0 does not work, so prefix it generally with "rg"
     rc, message, perfdata = df_check_filesystem_list(item, params, fslist)
-    perfdata[0] = ("rg" + perfdata[0][0], perfdata[0][1], perfdata[0][2], perfdata[0][3], perfdata[0][4], perfdata[0][5])
+    # note: on very first run perfdata is empty
+    if len(perfdata) > 0:
+        perfdata[0] = ("rg" + perfdata[0][0], perfdata[0][1], perfdata[0][2], perfdata[0][3], perfdata[0][4], perfdata[0][5])
     return rc, message, perfdata
 
 

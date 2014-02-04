@@ -1,4 +1,4 @@
-title: MK's Remote Plugin Executor
+title: MRPE: MK's Remote Plugin Executor
 agents: linux, aix, solaris, hpux, macosx, netbsd, openbsd, freebsd
 catalog: generic
 license: GPL

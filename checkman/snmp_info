@@ -1,6 +1,6 @@
 title: Retrieve informational SNMP data about host
 agents: snmp
-catalog: generic
+catalog: os/misc
 license: GPL
 distribution: check_mk
 description:

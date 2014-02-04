@@ -1,0 +1,10 @@
+Title: winperf_msx_queues: Support output of Exchange 2013
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1391504873
+
+Exchange2013 supports multiple priorities of queues and therefore outputs
+more than one counter. The check can now handle this.

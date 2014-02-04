@@ -12,5 +12,13 @@ description:
  The information is retriefed by the special agent agent_emcvnx which uses
  EMC's command line tool naviseccli.
 
+ The full information is only available if you did switch on the "Model and
+ Revsion" switch in the WATO rule "Check state of EMC VNX storage systems" or
+ did call the special agent (as datasource program) with --modules option
+ including "agent" module. If you are not interested in Model and Revision of
+ your Storage device you can switch this off and save one call of naviseccli in
+ every check interval. In this case the Check reports only the serial number
+ of the SP.
+
 inventory:
  Finds exactly one check on every EMC VNX storage system called EMC VNX Info

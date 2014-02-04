@@ -65,9 +65,9 @@ OPTIONS:
 
   -i MODULES, --modules MODULES Modules to query. This is a comma separated list of
                                 which may contain the keywords "disks", "hba", "hwstatus",
-                                "raidgroups" or "all" to define which information should
-                                be queried from the SP. You can define to use only view of
-                                them to optimize performance. The default is "all".
+                                "raidgroups", "agent" or "all" to define which information
+                                should be queried from the SP. You can define to use only
+                                view of them to optimize performance. The default is "all".
 
 """)
 
@@ -93,6 +93,7 @@ host_address   = None
 user           = None
 password       = None
 mortypes       = [ 'all' ]
+fetch_agent_info = False
 
 naviseccli_options = { 
     "disks"      : {"cmd_option" : "-disk",  "active" : False},
@@ -135,6 +136,7 @@ for module in naviseccli_options.keys():
     try:
         if mortypes.index("all") >= 0:
             naviseccli_options[module]["active"] = True
+            fetch_agent_info = True
     except ValueError:
         pass
 
@@ -144,19 +146,24 @@ for module in naviseccli_options.keys():
     except ValueError:
         pass
 
+try:
+    if mortypes.index("agent") >= 0:
+        fetch_agent_info = True
+except ValueError:
+    pass
 
 #############################################################################
 # fetch information by calling naviseccli
 #############################################################################
 
-basecmd="naviseccli -h %s -User %s -Password '%s' -Scope 0 getall " % (host_address, user, password)
+basecmd="naviseccli -h %s -User %s -Password '%s' -Scope 0 " % (host_address, user, password)
 
 #
 # check_mk section of agent output
 #
 
 print "<<<check_mk>>>"
-cmd=basecmd + "-sp"
+cmd=basecmd + "getall -sp"
 if opt_debug:
     sys.stderr.write("executing external command: %s\n" % cmd)
 
@@ -179,13 +186,23 @@ print "<<<emcvnx_info>>>"
 for line in cmdout:
     print line
 
+# if module "agent" was requested, fetch additional information about the
+# agent, e. g. Model and Revision
+if fetch_agent_info:
+    cmd=basecmd + "getagent"
+    if opt_debug:
+        sys.stderr.write("executing external command: %s\n" % cmd)
+
+    for line in os.popen(cmd).readlines():
+        print line,
+
 #
 # all other sections of agent output
 #
 for module in naviseccli_options.keys():
     if naviseccli_options[module]["active"] == True:
         print "<<<emcvnx_%s>>>" % module
-        cmd=basecmd + naviseccli_options[module]["cmd_option"]
+        cmd=basecmd + "getall " + naviseccli_options[module]["cmd_option"]
         if opt_debug:
             sys.stderr.write("executing external command: %s\n" % cmd)
         for line in os.popen(cmd).readlines():

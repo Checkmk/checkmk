@@ -1,0 +1,8 @@
+Title: New column painter for the last time a service was OK
+Level: 1
+Component: multisite
+Version: 1.2.5i1
+Date: 1390574993
+Class: feature
+
+This information is displayed in the details of a service.

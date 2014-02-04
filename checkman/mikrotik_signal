@@ -1,4 +1,4 @@
-title: Check Mikrotik Wlan Bridge Signal Strenght` 
+title: Check Mikrotik Wlan Bridge Signal Strenght`
 agents: linux
 catalog: hw/network/mikrotik
 license: GPL
@@ -12,6 +12,6 @@ description:
 
 inventory:
  One service for each network will be created.
- 
+
 [parameters]
  Tuple, levels for warn/ crit

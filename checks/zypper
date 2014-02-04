@@ -37,8 +37,10 @@
 
 
 def inventory_zypper(info):
-    if len(info) > 0:
-        return [(None,{})]
+    # the agent section is only present when the agent has
+    # detected that zypper is installed, therefore the check
+    # can always register
+    return [(None,{})]
 
 def check_zypper(_no_item, _no_params, info):
     patch_types = {}
@@ -83,4 +85,5 @@ check_info['zypper'] = {
     "check_function"          : check_zypper,
     "inventory_function"      : inventory_zypper,
     "service_description"     : "Zypper Updates",
+    "group"                   : "zypper",
 }

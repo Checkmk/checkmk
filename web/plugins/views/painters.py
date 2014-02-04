@@ -74,23 +74,10 @@
 
 import bi # needed for aggregation icon
 
-multisite_painter_options["pnpview"] = {
-    'valuespec' : DropdownChoice(
-        title = _("PNP View"),
-        default_value = '1',
-        choices = [
-            ("0", _("4 Hours")),  ("1", _("25 Hours")),
-            ("2", _("One Week")), ("3", _("One Month")),
-            ("4", _("One Year")), ("", _("All"))
-        ],
-    )
-}
-
 multisite_painter_options["pnp_timerange"] = {
-    'valuespec' : Timerange(
+    'valuespec' : PNPTimerange(
         title = _("PNP Timerange"),
         default_value = None,
-        allow_empty = True,
         include_time = True,
     )
 }
@@ -291,12 +278,17 @@ multisite_painters["sitealias"] = {
     "paint"   : lambda row: (None, config.site(row["site"])["alias"]),
 }
 
-#    ____                  _
-#   / ___|  ___ _ ____   _(_) ___ ___  ___
-#   \___ \ / _ \ '__\ \ / / |/ __/ _ \/ __|
-#    ___) |  __/ |   \ V /| | (_|  __/\__ \
-#   |____/ \___|_|    \_/ |_|\___\___||___/
-#
+#.
+#   .--Services------------------------------------------------------------.
+#   |                ____                  _                               |
+#   |               / ___|  ___ _ ____   _(_) ___ ___  ___                 |
+#   |               \___ \ / _ \ '__\ \ / / |/ __/ _ \/ __|                |
+#   |                ___) |  __/ |   \ V /| | (_|  __/\__ \                |
+#   |               |____/ \___|_|    \_/ |_|\___\___||___/                |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Painters for services                                                |
+#   '----------------------------------------------------------------------'
 
 def paint_service_state_short(row):
     if row["service_has_been_checked"] == 1:
@@ -540,6 +532,13 @@ multisite_painters["svc_next_check"] = {
     "paint"   : lambda row: paint_future_time(row["service_next_check"]),
 }
 
+multisite_painters["svc_last_time_ok"] = {
+    "title"   : _("The last time the service was OK"),
+    "short"   : _("Last OK"),
+    "columns" : [ "service_last_time_ok", "service_has_been_checked" ],
+    "paint"   : lambda row: paint_age(row["service_last_time_ok"], row["service_has_been_checked"] == 1, 60 * 10),
+}
+
 multisite_painters["svc_next_notification"] = {
     "title"   : _("The time of the next service notification"),
     "short"   : _("Next notification"),
@@ -683,14 +682,17 @@ def paint_pnpgraph(sitename, host, service = "_HOST_"):
         with_link = 'true'
     else:
         with_link = 'false'
-    pnpview = get_painter_option("pnpview")
 
     pnp_timerange = get_painter_option("pnp_timerange")
+
+    pnpview = '1'
+    from_ts, to_ts = 'null', 'null'
     if pnp_timerange != None:
-        vs = multisite_painter_options["pnp_timerange"]['valuespec']
-        from_ts, to_ts = map(int, vs.compute_range(pnp_timerange)[0])
-    else:
-        from_ts, to_ts = 'null', 'null'
+        if pnp_timerange[0] != 'pnp_view':
+            vs = multisite_painter_options["pnp_timerange"]['valuespec']
+            from_ts, to_ts = map(int, vs.compute_range(pnp_timerange)[0])
+        else:
+            pnpview = pnp_timerange[1]
 
     return "pnpgraph", "<div id=\"%s\"></div>" \
                        "<script>render_pnp_graphs('%s', '%s', '%s', '%s', '%s', '%s', '%s', %s, %s, %s)</script>" % \
@@ -701,7 +703,7 @@ multisite_painters["svc_pnpgraph" ] = {
     "title"   : _("PNP service graph"),
     "short"   : _("PNP graph"),
     "columns" : [ "host_name", "service_description" ],
-    "options" : [ "pnpview", 'pnp_timerange' ],
+    "options" : [ 'pnp_timerange' ],
     "paint"   : lambda row: paint_pnpgraph(row["site"], row["host_name"], row["service_description"]),
 }
 
@@ -865,14 +867,18 @@ multisite_painters["svc_custom_vars"] = {
 }
 
 
+#.
+#   .--Hosts---------------------------------------------------------------.
+#   |                       _   _           _                              |
+#   |                      | | | | ___  ___| |_ ___                        |
+#   |                      | |_| |/ _ \/ __| __/ __|                       |
+#   |                      |  _  | (_) \__ \ |_\__ \                       |
+#   |                      |_| |_|\___/|___/\__|___/                       |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Painters for hosts                                                   |
+#   '----------------------------------------------------------------------'
 
-
-#   _   _           _
-#  | | | | ___  ___| |_ ___
-#  | |_| |/ _ \/ __| __/ __|
-#  |  _  | (_) \__ \ |_\__ \
-#  |_| |_|\___/|___/\__|___/
-#
 
 multisite_painters["host_state"] = {
     "title"   : _("Host state"),
@@ -1043,7 +1049,7 @@ multisite_painters["host_pnpgraph" ] = {
     "title"   : _("PNP host graph"),
     "short"   : _("PNP graph"),
     "columns" : [ "host_name" ],
-    "options" : [ "pnpview", 'pnp_timerange' ],
+    "options" : [ 'pnp_timerange' ],
     "paint"   : lambda row: paint_pnpgraph(row["site"], row["host_name"])
 }
 

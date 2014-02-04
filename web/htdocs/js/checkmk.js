@@ -1803,7 +1803,20 @@ function vs_duallist_switch(field, varprefix) {
     // Move the selected option to the other select field
     var selected = field.options[field.selectedIndex];
     field.removeChild(selected);
-    other_field.appendChild(selected);
+
+    // Determine the correct child to insert
+    var sibling = other_field.firstChild;
+    while (sibling != null) {
+        if (sibling.nodeType == 1 && sibling.label.toLowerCase() > selected.label.toLowerCase())
+            break;
+        sibling = sibling.nextSibling
+    }
+
+    if (sibling)
+        other_field.insertBefore(selected, sibling);
+    else
+        other_field.appendChild(selected);
+
     selected.selected = false;
 
     // add remove from internal helper field

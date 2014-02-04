@@ -528,6 +528,12 @@ def perfometer_check_mk_hba(row, check_command, perf_data):
             read_blocks, "#30d050", write_blocks, "#0060c0", 100000, 2)
 perfometers["check_mk-emcvnx_hba"] = perfometer_check_mk_hba
 
+def perfometer_check_mk_iops(row, check_command, perf_data):
+    iops = int(perf_data[0][1])
+    text = "%d/s" % iops
+
+    return text, perfometer_logarithmic(iops, 100000, 2, "#30d050")
+perfometers["check_mk-emc_isilon_iops"] = perfometer_check_mk_iops
 
 def perfometer_check_mk_printer_supply(row, check_command, perf_data):
     left = savefloat(perf_data[0][1])

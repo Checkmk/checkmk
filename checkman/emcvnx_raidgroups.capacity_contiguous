@@ -6,14 +6,14 @@ distribution: check_mk
 description:
  Checks the Usage of RAID Groups in an EMC VNX storage system. In contrast to
  the Check {emcvnx_raidgroups.capacity} this check rates only the biggest
- free contiguous group of unbound segments as "free". Fragmented space is 
+ free contiguous group of unbound segments as "free". Fragmented space is
  rated as used.
 
  The Check uses the check logic of the {df} check, so for configuration parameters
  and examples please refer to the man page of {df}.
 
  The information is retriefed by the special agent agent_emcvnx which uses
- EMC's command line tool naviseccli. Capacity is retriefed in blocks. For 
+ EMC's command line tool naviseccli. Capacity is retriefed in blocks. For
  calculation of size in MB the check assumes a blocksize of 512 Bytes.
 
 item:

@@ -47,6 +47,8 @@ def do_automation(cmd, args):
                 result = automation_try_inventory(args)
             elif cmd == "inventory":
                 result = automation_inventory(args)
+            elif cmd == "analyse-service":
+                result = automation_analyse_service(args)
             elif cmd == "get-autochecks":
                 result = automation_get_autochecks(args)
             elif cmd == "set-autochecks":
@@ -547,6 +549,116 @@ def automation_parse_autochecks_file(hostname):
                 raise
             raise MKAutomationError("Invalid line %d in autochecks file %s" % (lineno, path))
     return table
+
+
+# Determine the type of the check, and how the parameters are being
+# constructed
+def automation_analyse_service(args):
+    global g_hostname
+    hostname = args[0]
+    servicedesc = args[1]
+    g_hostname = hostname # To be sure for all subfunctions
+
+    # We just consider types of checks that are managed via WATO.
+    # We have the following possible types of services:
+    # 1. manual checks (static_checks) (currently overriding inventorized checks)
+    # 2. inventorized check
+    # 3. classical checks
+    # 4. active checks
+
+    # Compute effective check table, in order to remove SNMP duplicates
+    check_table = get_check_table(hostname, remove_duplicates = True)
+
+    # 1. Manual checks
+    for nr, (checkgroup, entries) in enumerate(static_checks.items()):
+        for entry in entries:
+            entry, rule_options = get_rule_options(entry)
+            if rule_options.get("disabled"):
+                continue
+
+            # Parameters are optional
+            if len(entry[0]) == 2:
+                checktype, item = entry[0]
+                params = None
+            else:
+                checktype, item, params = entry[0]
+            if len(entry) == 3:
+                taglist, hostlist = entry[1:3]
+            else:
+                hostlist = entry[1]
+                taglist = []
+
+            if hosttags_match_taglist(tags_of_host(hostname), taglist) and \
+               in_extraconf_hostlist(hostlist, hostname):
+               descr = service_description(checktype, item)
+               if descr == servicedesc:
+                   return {
+                       "origin"       : "static",
+                       "checkgroup"   : checkgroup,
+                       "checktype"    : checktype,
+                       "item"         : item,
+                       "rule_nr"      : nr,
+                       "parameters"   : params,
+                  }
+
+
+    # 2. Load all autochecks of the host in question and try to find
+    # our service there
+    try:
+        path = "%s/%s.mk" % (autochecksdir, hostname)
+        for hn, ct, item, params in eval(file(path).read()):
+            if (ct, item) not in check_table:
+                continue # this is a removed duplicate or clustered service
+            descr = service_description(ct, item)
+            if hn == hostname and descr == servicedesc:
+                dlv = check_info[ct].get("default_levels_variable")
+                if dlv:
+                    fs = factory_settings.get(dlv, None)
+                else:
+                    fs = None
+
+                return {
+                    "origin"           : "auto",
+                    "checktype"        : ct,
+                    "checkgroup"       : check_info[ct].get("group"),
+                    "item"             : item,
+                    "inv_parameters"   : params,
+                    "factory_settings" : fs,
+                    "parameters"      : compute_check_parameters(hostname, ct, item, params),
+                }
+    except:
+        if opt_debug:
+            raise
+
+    # 3. Classical checks
+    custchecks = host_extra_conf(hostname, custom_checks)
+    for nr, entry in enumerate(custchecks):
+        desc = entry["service_description"]
+        if desc == servicedesc:
+            return {
+                "origin"       : "classic",
+                "rule_nr"      : nr,
+                "command_line" : entry["command_line"],
+            }
+
+    # 4. Active checks
+    for acttype, rules in active_checks.items():
+        entries = host_extra_conf(hostname, rules)
+        if entries:
+            act_info = active_check_info[acttype]
+            for params in entries:
+                description = act_info["service_description"](params)
+                if description == servicedesc:
+                    return {
+                        "origin"     : "active",
+                        "checktype"  : acttype,
+                        "parameters" : params,
+                    }
+
+    return {} # not found
+    # TODO: Was ist mit Clustern???
+    # TODO: Klappt das mit automatischen verschatten von SNMP-Checks (bei dual Monitoring)
+
 
 def automation_delete_host(args):
     hostname = args[0]

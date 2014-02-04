@@ -40,6 +40,7 @@ register_rule(group,
                  "via SSH. The command line may contain the placeholders <tt>&lt;IP&gt;</tt> and "
                  "<tt>&lt;HOST&gt;</tt>."),
         label = _("Command line to execute"),
+	empty_text = _("Access Check_MK Agent via TCP"),
         size = 80,
         attrencode = True))
 
@@ -139,6 +140,7 @@ register_rule(group,
                  "your connection settings here."),
         forth = lambda a: dict([("skip_placeholder_vms", True), ("use_pysphere" , False)] + a.items())
     ),
+    factory_default = FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
     match = 'first')
 
 
@@ -158,6 +160,7 @@ register_rule(group,
            )
         ]
     ),
+    factory_default = FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
     match = "first")
 
 register_rule(group,
@@ -190,6 +193,7 @@ register_rule(group,
                          ( "hba",            _("iSCSI HBAs") ),
                          ( "hwstatus",       _("Hardware Status") ),
                          ( "raidgroups",     _("RAID Groups") ),
+                         ( "agent",          _("Model and Revsion") ),
                      ],
                      default_value = [ "disks", "hba", "hwstatus", ],
                      allow_empty = False,
@@ -200,6 +204,7 @@ register_rule(group,
         ],
         optional_keys = [ ],
     ),
+    factory_default = FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
     match = 'first')
 
 register_rule(group,
@@ -209,8 +214,9 @@ register_rule(group,
         title = _("Create random monitoring data"),
         help = _("By configuring this rule for a host - instead of the normal "
                  "Check_MK agent random monitoring data will be created."),
-        totext = _("No configuration neccessary."),
+        totext = _("Create random monitoring data"),
     ),
+    factory_default = FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
     match = 'first')
 
 register_rule(group,
@@ -234,4 +240,5 @@ register_rule(group,
         ],
         optional_keys = [ "timeout" ],
     ),
+    factory_default = FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
     match = 'first')

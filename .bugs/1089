@@ -1,0 +1,10 @@
+Title: New user custom attribute needs apache restart to work
+Component: wato
+State: open
+Date: 2014-01-30 15:14:42
+Targetversion: 1.2.5i1
+Class: bug
+
+If you create a new custom attribute for users then you
+need to restart Apache in order to make that attribute visible
+in the WATO pages.

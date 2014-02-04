@@ -146,6 +146,8 @@ def send_event(event):
     timestamp = time.strftime("%b %d %T", time.localtime())
     rfc = "<%d>%s %s %s: %s\n" % (
         prio, timestamp, event["host"], event["application"], event["text"])
+    if type(rfc) == unicode:
+        rfc = rfc.encode("utf-8")
     pipe = file(pipe_path, "w")
     pipe.write(rfc + "\n")
     return rfc
@@ -159,7 +161,6 @@ def query(query):
             timeout = 10
 
         sock.settimeout(timeout)
-        # TODO: Pfad nicht auf OMD hart kodieren
         sock.connect(socket_path)
         sock.send(query)
 

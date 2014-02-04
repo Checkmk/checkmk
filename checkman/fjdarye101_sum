@@ -1,0 +1,15 @@
+title: Fujitsu storage systems: Summary status FW 2013
+agents: snmp
+catalog: hw/storagehw/fujitsu
+license: GPLv2
+distribution: none
+description:
+ This check monitors the reported summary status of storage systems from
+ Fujitsu which support the FJDARY-E101.MIB like the ETERNUS DX60.
+ This is an adaption of the corresponding fjdarye60 check.
+
+item:
+ The item is {0} (integer) in all cases because on system can only have one summary status.
+
+inventory:
+ The check supports automatic inventory. Each system gets one summary checks.

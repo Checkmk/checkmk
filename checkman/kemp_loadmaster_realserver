@@ -1,6 +1,6 @@
 title: Kemp Loadmaster Realserver
 agents: snmp
-catalog: app/kemp
+catalog: hw/network/kemp
 license: GPL
 distribution: check_mk
 description:

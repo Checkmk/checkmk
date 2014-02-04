@@ -88,7 +88,7 @@ def inventory_brocade_fcport(info):
                 phystate in brocade_fcport_inventory_phystates:
 
                 inventory.append(( brocade_fcport_getitem(info[0], index, portname, is_isl),
-                   '{ "phystate": %d, "opstate": %d, "admstate": %d }'
+                   '{ "phystate": [%d], "opstate": [%d], "admstate": [%d] }'
                     % (phystate, opstate, admstate) ))
 
     return inventory

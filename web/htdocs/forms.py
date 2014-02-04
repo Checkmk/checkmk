@@ -124,7 +124,7 @@ def strip_bad_chars(x):
     else:
         return s.translate(twofivesix, "'&;<>\"")
 
-def header(title, isopen = True, table_id = "", narrow = False):
+def header(title, isopen = True, table_id = "", narrow = False, css=None):
     global g_header_open
     global g_section_open
     global g_section_isopen
@@ -138,7 +138,7 @@ def header(title, isopen = True, table_id = "", narrow = False):
         table_id = ' id="%s"' % table_id
     else:
         table_id = ''
-    html.write('<table %s class="nform%s">' % (table_id, narrow and " narrow" or ""))
+    html.write('<table %s class="nform%s%s">' % (table_id, narrow and " narrow" or "", css and (" " + css) or ""))
     fold_id = strip_bad_chars(title)
     g_section_isopen = html.begin_foldable_container(
             html.form_name and html.form_name or "nform", fold_id, isopen, title, indent="nform")

@@ -24,36 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def inventoryfunc(info):
-    inventory = []
-    for line in info:
-        rawdata = line[1]
-        if rawdata[2] == '\xa0': # RLUN is present
-            inventory.append( (line[0], "", None) )
-    return inventory
-
-def checkfunc(item, _no_params, info):
-    for line in info:
-        if item == line[0]:
-            rawdata = line[1]
-            if rawdata[2] != '\xa0':
-                return (2, "RLUN is not present")
-            elif rawdata[3] == '\x08':
-                return (1, "RLUN is rebuilding") # we assume that ;-)
-            elif rawdata[3] == '\x00':
-                return (0, "RLUN is in normal state") # assumption
-            else:
-                return (2, "RLUN in unknown state %02x" % ord(rawdata[3]))
-
-    return (3, "No RLUN %s in SNMP output" % item)
-
-
 
 check_info["fjdarye60_rluns"] = {
-    'check_function':          checkfunc,
-    'inventory_function':      inventoryfunc,
-    'service_description':     'RLUN %s',
-    'snmp_info':               ('.1.3.6.1.4.1.211.1.21.1.60.3.4.2.1', [0, '2']),
-    'snmp_scan_function':      \
+    'includes'              : ["fjdarye.include"],
+    'check_function'        : check_fjdarye_rluns,
+    'inventory_function'    : inventory_fjdarye_rluns,
+    'service_description'   : 'RLUN %s',
+    'snmp_info'             : ('.1.3.6.1.4.1.211.1.21.1.60.3.4.2.1', [0, '2']),
+    'snmp_scan_function'    : \
           lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.211.1.21.1.60",
 }

@@ -1746,8 +1746,8 @@ register_check_parameters(
                            "the given bounds. The error rate is computed by dividing number of "
                            "errors by the total number of packets (successful plus errors)."),
                   elements = [
-                      Percentage(title = _("Warning if above"), label = _("errors"), default_value = 0.01),
-                      Percentage(title = _("Critical if above"), label = _("errors"), default_value = 0.1)
+                      Percentage(title = _("Warning if above"), label = _("errors"), default_value = 0.01, display_format = '%.3f' ),
+                      Percentage(title = _("Critical if above"), label = _("errors"), default_value = 0.1, display_format = '%.3f' )
                   ])),
              ( "speed",
                OptionalDropdownChoice(
@@ -2084,7 +2084,8 @@ register_check_parameters(
         title = _("Specify levels in percentage of total RAM"),
         elements = [
           Percentage(title = _("Warning at a RAM usage of"), default_value = 80.0),
-          Percentage(title = _("Critical at a RAM usage of"), default_value = 90.0)]),
+          Percentage(title = _("Critical at a RAM usage of"), default_value = 90.0),
+        ]),
     None, None
 )
 
@@ -3299,7 +3300,8 @@ register_check_parameters(
                             title = _("Resulting state"),
                         ),
                     ],
-                    default_value = ( "running", "auto", 0)),
+                    default_value = ( "running", "auto", 0)
+                ),
                 title = _("Services states"),
                 help = _("You can specify a separate monitoring state for each possible "
                          "combination of service state and start type. If you do not use "
@@ -4616,3 +4618,10 @@ register_check_parameters(
     "first", False
 )
 
+register_check_parameters(
+    subgroup_os,
+    "zypper",
+    _("Zypper Updates"),
+    None,
+    None, None,
+)

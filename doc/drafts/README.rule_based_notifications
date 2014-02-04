@@ -262,4 +262,7 @@ D) NOTIFICATION
      they are not available in the notification context.
 
 
+==============================================================================================
+Further ideas:
 
+- Diagnostic feature: Click on a Host or Service and ask "who will be notified?"

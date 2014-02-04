@@ -1,0 +1,36 @@
+Title: mpre_include: run additional mrpe configs within user context
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1390568187
+Class: feature
+
+This version brings the new local check <tt>mrpe_include</tt> where you can
+configure additional include files for mrpe and under which user context
+the commands of these files are run. It allows non-root users to add additional
+mrpe commands without modifying the <tt>mrpe.cfg</tt> file.
+You can assign include files to users and define in which user context the commands
+should be executed.
+
+This check is configured with the configuration
+file <tt>mrpe_include.cfg</tt>. In a default installation this file is located
+within the Check_MK config directory under <tt>/etc/check_mk/mrpe_include.cfg</tt>.
+
+The <tt>mrpe_include.cfg</tt> does not contain the new mrpe commands,
+though a user name followed by a include path.
+Here is an example:
+
+F+:/etc/check_mk/mrpe_include.cfg
+# Execute as user ab
+ab /etc/check_mk/mrpe_ab_commands.cfg
+# Execute as user lm
+lm /etc/other/mrpe_lm.cfg
+# Execute with no user context change
+- /etc/mrpe_default.cfg
+F-:
+
+Each line consists of two parameters, the user followed by the include file.
+Each command within the include file is executed as this user.
+If you do not want to change the user context (default is root), you can set the user to <tt>-</tt>.
+The included files have the same configuration syntax as the <tt>mrpe.cfg</tt>.
+

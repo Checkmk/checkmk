@@ -26,16 +26,16 @@
 
 # Example output from agent:
 # <<<emcvnx_raidgroups>>>
-# 
-# 
+#
+#
 # Server IP Address:       172.16.8.82
 # Agent Rev:           7.32.27 (0.14)
-# 
-# 
+#
+#
 # All RAID Groups Information
 # ----------------------------
-# 
-# 
+#
+#
 # RaidGroup ID:                              0
 # RaidGroup Type:                            r5
 # RaidGroup State:                           Explicit_Remove
@@ -44,7 +44,7 @@
 #                                            Bus 0 Enclosure 0  Disk 1
 #                                            Bus 0 Enclosure 0  Disk 2
 #                                            Bus 0 Enclosure 0  Disk 3
-# List of luns:                              4 
+# List of luns:                              4
 # Max Number of disks:                       16
 # Max Number of luns:                        256
 # Raw Capacity (Blocks):                     702504960
@@ -56,8 +56,8 @@
 # Percent expanded:                          N/A
 # Disk expanding onto:                       N/A
 # Lun Expansion enabled:                     NO
-# Legal RAID types:                          r5 
-# 
+# Legal RAID types:                          r5
+#
 # RaidGroup ID:                              124
 # RaidGroup Type:                            hot_spare
 # [...]
@@ -144,7 +144,7 @@ check_info['emcvnx_raidgroups.list_luns'] = {
 def check_emcvnx_raidgroups_list_disks(item, _no_params, info):
     parsed = parse_emcvnx_raidgroups(info)
     if item not in parsed:
-        return 3, "RAID Group %s not found in agent output" % item 
+        return 3, "RAID Group %s not found in agent output" % item
 
     message = ""
     enc = ""
@@ -162,7 +162,7 @@ def check_emcvnx_raidgroups_list_disks(item, _no_params, info):
 
 
 check_info['emcvnx_raidgroups.list_disks'] = {
-    "inventory_function"      : inventory_emcvnx_raidgroups, 
+    "inventory_function"      : inventory_emcvnx_raidgroups,
     "check_function"          : check_emcvnx_raidgroups_list_disks,
     "service_description"     : "RAID Group %s Disks"
 }
@@ -188,7 +188,7 @@ def inventory_emcvnx_raidgroups_capacity(info):
 def check_emcvnx_raidgroups_capacity(item, params, info):
     parsed = parse_emcvnx_raidgroups(info)
     if item not in parsed:
-        return 3, "RAID Group %s not found in agent output" % item 
+        return 3, "RAID Group %s not found in agent output" % item
 
     fslist = []
     # Blocksize in Bytes, seems to be fix
@@ -201,7 +201,9 @@ def check_emcvnx_raidgroups_capacity(item, params, info):
     # variable name in perfdata is not allowed to be just a number
     # especially 0 does not work, so prefix it generally with "rg"
     rc, message, perfdata = df_check_filesystem_list(item, params, fslist)
-    perfdata[0] = ("rg" + perfdata[0][0], perfdata[0][1], perfdata[0][2], perfdata[0][3], perfdata[0][4], perfdata[0][5])
+    # note: on very first run perfdata is empty
+    if len(perfdata) > 0:
+        perfdata[0] = ("rg" + perfdata[0][0], perfdata[0][1], perfdata[0][2], perfdata[0][3], perfdata[0][4], perfdata[0][5])
     return rc, message, perfdata
 
 
@@ -236,7 +238,7 @@ def inventory_emcvnx_raidgroups_capacity_contiguous(info):
 def check_emcvnx_raidgroups_capacity_contiguous(item, params, info):
     parsed = parse_emcvnx_raidgroups(info)
     if item not in parsed:
-        return 3, "RAID Group %s not found in agent output" % item 
+        return 3, "RAID Group %s not found in agent output" % item
 
     fslist = []
     # Blocksize in Bytes, seems to be fix
@@ -255,7 +257,7 @@ def check_emcvnx_raidgroups_capacity_contiguous(item, params, info):
 
 check_info['emcvnx_raidgroups.capacity_contiguous'] = {
     "inventory_function"      : inventory_emcvnx_raidgroups_capacity_contiguous,
-    "check_function"          : check_emcvnx_raidgroups_capacity_contiguous, 
+    "check_function"          : check_emcvnx_raidgroups_capacity_contiguous,
     "service_description"     : "RAID Group %s Capacity Contiguous",
     "has_perfdata"            : True,
     "group"                   : "filesystem",

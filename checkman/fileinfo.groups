@@ -13,31 +13,37 @@ description:
  know the information about which files need to be sent.  Please refer to
  fileinfos manpage for information about setting up the agent.
 
- The check also needs a configured file grouping pattern. File grouping
- patterns combine a simple pattern based on {*} and {?} to join a subset
- of the file names send by the agent into a file group. In addition an
- {exclude} pattern may be define to exclude certain filenames.
- The name of the file group is referenced in the check configuration
- as the item.
+ The check also needs a configured file grouping pattern.  The name of the
+ file group is referenced in the check configuration as the item.
+
+ File grouping patterns combine a simple pattern based on {*} and {?} to
+ join a subset of the file names send by the agent into a file group. In
+ addition an {exclude} pattern may be defined to exclude certain filenames.
+
+ Furthermore, the current time/date in a configurable format may be
+ included in the pattern. The syntax is as follows: {$DATE:format-spec$},
+ where {format-spec} is a list of time format directives of the unix date
+ command.  Example: {$DATE:%Y%m%d$} is todays date, e.g. 20140127. A pattern
+ of {/var/tmp/backups/$DATE:%Y%m%d$.txt} would search for .txt files with
+ todays date as name in the directory /var/tmp/backups.
 
 item:
  Configured name of the file group
 
 examples:
-
-# old syntax of file group patterns, still valid
+ # old syntax of file group patterns, still valid
  fileinfo_groups = [
      ([("Auth_group",r"/var/log/auth*")], ALL_HOSTS),
      ([("Message_group", r"/var/log/messages*")], ['test2'], ALL_HOSTS),
  ]
 
-# new syntax of file group patterns, including exclude pattern
+ # new syntax of file group patterns, including exclude pattern
  fileinfo_groups = [
      ([("Auth_group", ("/var/log/auth*","/var/log/*.debug"))], ALL_HOSTS),
      ([("Message_group", ("/var/log/messages*",""))], ['test2'], ALL_HOSTS),
  ]
 
-# syntax of check
+ # syntax of check
  check_parameters = [
   ({
     "minsize": (200.0, 300.0),

@@ -45,6 +45,14 @@
 # 10362 0 rawcount
 # 10364 811 rawcount
 
+# Example output from a Exchange 2013 server:
+# <<<winperf_msx_queues>>>
+# 1385554029.05 12048
+# 4 instances: niedrige_priorität normale_priorität hohe_priorität _total
+# 2 0 0 0 0 rawcount
+# 4 0 0 0 0 rawcount
+# 6 0 0 0 0 rawcount
+
 # Default warn/crit levels for length of queues
 msx_queues_default_levels = (500, 2000)
 
@@ -68,7 +76,7 @@ def check_winperf_msx_queues(item, params, info):
 
     for line in info[2:]:
         if line[0] == winperf_msx_queues.get(item):
-            length = int(line[1])
+            length = int(line[-2])
             warn, crit = params
             perfdata = [("length", length, warn, crit)]
             infotext = "%d entries" % length

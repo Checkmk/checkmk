@@ -70,8 +70,6 @@
 #  Index 12 -- # of milliseconds spent doing I/Os
 #  Index 13 -- weighted # of milliseconds spent doing I/Os
 
-check_includes['diskstat'] = [ "diskstat.include" ]
-
 # Convert information to generic format also generated
 # by winperf_phydisk
 # [ now, [( disk, readctr, writectr ), ... ]]
@@ -152,4 +150,6 @@ check_info["diskstat"] = {
     'service_description':     'Disk IO %s',
     'has_perfdata':            True,
     'group':                   'disk_io',
+    'includes':                [ "diskstat.include" ],
 }
+

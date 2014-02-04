@@ -41,17 +41,30 @@ def check_cmciii_lcp_waterin(item, params, info):
     temp = limits.pop(0)
     status = info[0][9]
 
-    info_text = "%s %s,  %s %s, Temperature: %.1f°C" % (unit_desc, unit_status, desc, status, temp)
+    state = 0
+    sym = ""
+    if status.lower() != "ok" or unit_status.lower() != "ok":
+        if status.lower() in ( "ok", "warning" ) and \
+                unit_status.lower() in  ( "ok", "warning" ):
+            state = 1
+        else:
+            state = 2
+    if temp < limits[3] or temp > limits[0] :
+        state = 2
+        sym = "(!!)"
+    elif temp < limits[2] or temp > limits[1]:
+        state = max(state, 1)
+        sym = "(!)"
+    else:
+        state = max(state, 0)
 
-    levels_text = ", limits lowcrit/lowwarn/highwarn/highcrit: %.1f/%.1f/%.1f/%.1f" % ( limits[3], limits[2], limits[1], limits[0] )
+    info_text = "%s %s, %s %s, Temperature: %.1f°C%s" \
+            % (unit_desc, unit_status, desc, status, temp, sym)
+
+    levels_text = ", lowcrit/lowwarn/highwarn/highcrit: %.1f/%.1f/%.1f/%.1f" \
+            % ( limits[3], limits[2], limits[1], limits[0] )
 
     perfdata = [ ("temp", temp, str(limits[2])+":"+str(limits[1]), str(limits[3])+":"+str(limits[0]), 0 ) ]
-
-
-    if status.lower() == "ok" and unit_status.lower() == "ok":
-        state = 0
-    else:
-        state = 2
 
     return (state, info_text + levels_text, perfdata)
 

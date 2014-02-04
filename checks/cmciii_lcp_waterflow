@@ -30,15 +30,26 @@ def inventory_cmciii_lcp_waterflow(info):
 
 def check_cmciii_lcp_waterflow(item, params, info):
     if info[0]:
-        info_text = "%s Status: %s Flow: %s, MinFlow: %s, MaxFLow: %s" % \
-                (info[0][0], info[0][4], info[0][1], info[0][3], info[0][2])
+        name = info[0][0]
+        status = info[0][4]
+        flow = float(info[0][1].split(" ")[0])
+        unit = info[0][1].split(" ")[1]
+        minflow= float(info[0][3].split(" ")[0])
+        maxflow = float(info[0][2].split(" ")[0])
 
-        perfdata = [ ("flow", re.sub(" ", "", info[0][1]) , 0, re.sub(' .*$', '', info[0][3])+":"+re.sub(' .*$', '', info[0][2]), 0 ) ]
-
-        if info[0][4].lower() == "ok":
-            state = 0
-        else:
+        sym = ""
+        if status.lower() != "ok":
             state = 2
+        elif flow < minflow or flow > maxflow:
+            state = 1
+            sym = "(!)"
+        else:
+            state = 0
+
+        info_text = "%s Status: %s Flow: %.1f%s, MinFlow: %.1f, MaxFLow: %.1f" \
+                % (name, status, flow, sym, minflow, maxflow)
+
+        perfdata = [ ("flow", str(flow)+unit , str(minflow)+":"+str(maxflow), 0, 0 ) ]
 
         return (state, info_text, perfdata)
 

@@ -1,0 +1,40 @@
+Title: windows_agent: now supports mrpe include files
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1390577245
+Class: feature
+
+This version introduces the mrpe configuration option <tt>include</tt>.
+With this option you can define addiontal include files and the user domain in
+which include files should be executed.
+
+F+:check_mk.ini
+[mrpe]
+    # Run classical Nagios plugins. The word before the command
+    # line is the service description for Nagios. Use backslashes
+    # in Windows-paths.
+    check = Dummy mrpe\check_crit
+    check = IP_Configuration mrpe\check_ipconfig 1.2.3.4
+    check = Whatever c:\myplugins\check_whatever -w 10 -c 20
+    # Additional mrpe configs
+    # The include files can be changed during the runtime
+    include \\ab = C:\includes\ab_mrpe.cfg
+    include \\NT-AUTORITÄT\SYSTEM = C:\includes\system_mrpe.cfg
+    # If you omit the user the file is executed with the current user
+    include = C:\includes\default.cfg
+F-:
+
+The syntax in the mrpe include file is the same as in the mrpe section, with the exception
+that you cannot add further includes in a include file. There is also no need to define a <tt>[mrpe]</tt>
+section in an included file. You just need to define the <tt>check</tt> lines here.
+F+:ab_mrpe.cfg
+    check = Dummy mrpe\check_crit
+    check = IP_Configuration mrpe\check_ipconfig 1.2.3.4
+F-:
+<b>Important:</b> Keep in mind that the agent needs the permission to run
+scripts as other user. Internally it uses the windows command <tt>runas /User:</tt>
+which prompts for a password if agent has no permission to change to this user.<br>
+In this case the check_mk agent will get stuck!
+
+

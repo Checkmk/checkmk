@@ -4618,3 +4618,10 @@ register_check_parameters(
     "first", False
 )
 
+register_check_parameters(
+    subgroup_os,
+    "zypper",
+    _("Zypper Updates"),
+    None,
+    None, None,
+)

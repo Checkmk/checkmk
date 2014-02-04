@@ -1,0 +1,9 @@
+Title: zypper: check is always registered as soon as mk_zypper plugin detects zypper tool
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1391505179
+Class: fix
+
+There is also a WATO section "Zypper Updates" now so that the check can be configured
+as a manual check.

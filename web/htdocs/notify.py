@@ -201,26 +201,43 @@ def page_notify():
             recipients = msg['dest'][1]
 
         num_recipients = len(recipients)
-        num_success = 0
-        num_failed  = 0
+
+        num_success = {}
+        for method in msg['methods']:
+            num_success[method] = 0
 
         # Now loop all notitification methods to send the notifications
+        errors = {}
         for user_id in recipients:
             for method in msg['methods']:
                 try:
                     handler = notify_methods[method]['handler']
                     handler(user_id, msg)
-                    num_success += 1
+                    num_success[method] = num_success[method] + 1
                 except MKInternalError, e:
-                    num_failed += 1
-                    html.show_error(_('Failed to send %s notification to %s: %s') % (method, user_id, e))
+                    errors.setdefault(method, []).append( (user_id, e) )
 
-        msg = _('The notification has been sent to %d of %d recipients.') % (num_success, num_recipients)
-        msg += ' <a href="%s">%s</a>' % (html.makeuri([]), _('Back to previous page'))
+        message = _('The notification has been sent via<br>')
+        message += "<table>"
+        for method in msg['methods']:
+            message += "<tr><td>%s</td><td>to %d of %d recipients</td></tr>" %\
+                            (notify_methods[method]["title"], num_success[method], num_recipients)
+        message += "</table>"
 
-        msg += '<p>Sent notification to: %s</p>' % ', '.join(recipients)
+        message += ' <a href="%s">%s</a>' % (html.makeuri([]), _('Back to previous page'))
+        message += '<p>Sent notification to: %s</p>' % ', '.join(recipients)
+        html.message(message)
 
-        html.message(msg)
+        if errors:
+            error_message = ""
+            for key, values in errors.items():
+                error_message += _("Failed to sent %s notifications to the following users") % key
+                error_message += "<table>"
+                for user, error in values:
+                    error_message += "<tr><td>%s</td><td>%s</td></tr>" % (user, error )
+                error_message += "</table><br>"
+            html.show_error(error_message)
+
 
     html.footer()
 

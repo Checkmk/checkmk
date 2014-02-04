@@ -841,11 +841,12 @@ def get_folder_aliaspath(folder, show_main = True):
 #   '----------------------------------------------------------------------'
 
 def mode_folder(phase):
+    global g_folder
+
     auth_message = check_folder_permissions(g_folder, "read", False)
     auth_read = auth_message == True
     auth_write = check_folder_permissions(g_folder, "write", False) == True
 
-    global g_folder
     if phase == "title":
         return g_folder["title"]
 
@@ -2440,7 +2441,7 @@ def mode_inventory(phase, firsttime):
         if html.var("_scan"):
             title += _(" (live scan)")
         else:
-            title += _(" (cached data)")
+            title += _(" (might be cached data)")
         return title
 
     elif phase == "buttons":
@@ -6338,7 +6339,7 @@ def render_global_configuration_variables(default_values, current_settings, show
     groupnames.sort()
     html.write('<div class=globalvars>')
     for groupname in groupnames:
-        forms.header(groupname, isopen=False)
+        header_is_painted = False # needed for omitting empty groups
 
         for domain, varname, valuespec in g_configvar_groups[groupname]:
             if not show_all and (not g_configvars[varname][4]
@@ -6350,6 +6351,10 @@ def render_global_configuration_variables(default_values, current_settings, show
                                           "your local Check_MK installation" % varname)
                 else:
                     continue
+
+            if not header_is_painted:
+                forms.header(groupname, isopen=False)
+                header_is_painted = True
 
             defaultvalue = default_values.get(varname, valuespec.default_value())
 
@@ -8748,6 +8753,9 @@ def page_automation():
         raise MKAuthException(_("Missing secret for automation command."))
     if secret != get_login_secret():
         raise MKAuthException(_("Invalid automation secret."))
+
+    global g_git_messages
+    g_git_messages = []
 
     # To prevent mixups in written files we use the same lock here as for
     # the normal WATO page processing. This might not be needed for some
@@ -12819,7 +12827,7 @@ def HostnameTranslation(**kwargs):
 
 def select_language(user_language):
     languages = [ l for l in get_languages() if not config.hide_language(l[0]) ]
-    inactive = user_language != ''
+    inactive = not not user_language
 
     if languages:
         forms.section(_("Language"),
@@ -13040,10 +13048,11 @@ def page_user_profile():
 
         if config.may('general.edit_user_attributes'):
             for name, attr in userdb.get_user_attributes():
-                vs = attr['valuespec']
-                forms.section(vs.title())
-                vs.render_input("ua_" + name, user.get(name, vs.default_value()))
-                html.help(vs.help())
+                if attr['user_editable']:
+                    vs = attr['valuespec']
+                    forms.section(vs.title())
+                    vs.render_input("ua_" + name, user.get(name, vs.default_value()))
+                    html.help(vs.help())
 
     # Save button
     forms.end()

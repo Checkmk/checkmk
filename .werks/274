@@ -1,0 +1,8 @@
+Title: Fixed exception when view title or description was missing
+Level: 1
+Component: multisite
+Version: 1.2.4b8
+Date: 1391434136
+Class: fix
+
+

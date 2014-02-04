@@ -1,0 +1,8 @@
+Title: Allow non-Ascii characters in generated events
+Level: 1
+Component: ec
+Version: 1.2.4b7
+Date: 1390557118
+Class: fix
+
+

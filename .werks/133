@@ -1,0 +1,8 @@
+Title: Fixed mkeventd notification plugin
+Level: 1
+Component: notifications
+Version: 1.2.4b8
+Date: 1391439039
+Class: fix
+
+The service description was missing

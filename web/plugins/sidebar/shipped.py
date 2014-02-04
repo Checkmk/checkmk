@@ -69,7 +69,7 @@ sidebar_snapins["about"] = {
 visible_views = [ "allhosts", "searchsvc" ]
 
 def views_by_topic():
-    s = [ (view.get("topic", _("Other")), view["title"], name)
+    s = [ (view.get("topic") or _("Other"), view.get("title"), name)
           for name, view
           in html.available_views.items()
           if not view["hidden"] and not view.get("mobile")]

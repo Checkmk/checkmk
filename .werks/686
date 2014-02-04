@@ -1,0 +1,8 @@
+Title: Fix replication with WATO if EC is enabled on master and disabled on slave
+Level: 1
+Component: wato
+Version: 1.2.4b8
+Date: 1390819484
+Class: fix
+
+

@@ -168,8 +168,10 @@ register_rule(group,
         help = _("Check the resolution of a hostname into an IP address by a DNS server. "
                  "This check uses <tt>check_dns</tt> from the standard Nagios plugins."),
         elements = [
-           TextAscii(title = _("Hostname"), allow_empty = False,
-                     help = _('The name or address you want to query')),
+           TextAscii(
+               title = _("Queried Hostname or IP address"), 
+               allow_empty = False,
+               help = _('The name or IPv4 address you want to query')),
            Dictionary(
                title = _("Optional parameters"),
                elements = [
@@ -179,11 +181,15 @@ register_rule(group,
                          allow_empty = False,
                          help = _("Optional DNS server you want to use for the lookup"))),
                    ( "expected_address",
-                     TextAscii(
-                         title = _("Expected Address"),
-                         allow_empty = False,
-                         help = _("Optional IP-Address you expect the DNS server to return. The host "
-                                  "must end with a dot (.) " )),
+                     Transform(
+                         ListOfStrings(
+                             title = _("Expected answer (IP address or hostname)"), 
+                             help = _("List all allowed expected answers here. If query for an "
+                                      "IP address then the answer will be host names, that end "
+                                      "with a dot."),
+                         ),
+                         forth = lambda old: type(old) in (str, unicode) and [old] or old,
+                     ),
                    ),
                    ( "expected_authority",
                      FixedValue(

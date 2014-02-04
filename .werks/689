@@ -1,0 +1,11 @@
+Title: postgres_sessions: fix empty agent section in case of 0 sessions
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1391505669
+
+This fixes the problem that in some case when 0 sessions are active
+the agent section is empty and the inventory will find the check
+nomore.

@@ -34,7 +34,12 @@ def check_dns_arguments(params):
         args += " -s '$HOSTADDRESS$'"
 
     if "expected_address" in settings:
-        args += ' -a %s' % quote_shell_string(settings["expected_address"])
+        # Convert from old (str) to new (list of strings)
+        exp = settings["expected_address"]
+        if type(exp) in ( str, unicode ):
+            exp = [ exp ]
+        for entry in exp:
+            args += ' -a %s' % quote_shell_string(entry)
 
     if settings.get("expected_authority"):
         args += ' -A'

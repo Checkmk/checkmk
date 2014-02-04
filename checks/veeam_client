@@ -50,6 +50,7 @@ def check_veeam_client(item, params, info):
     for line in info:
         if line[0] == "Status":
             result = line[1]
+            stopstate = 0
             perfdata = []
             infotxt = line[0] + ":" + line[1] + " "
         elif line[0] == "DurationDDHHMMSS" and result != "InProgress" and result != "Pending":

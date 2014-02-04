@@ -1,0 +1,8 @@
+Title: veeam_client: fix for case when no StopTime section in agent output
+Level: 1
+Component: checks
+Version: 1.2.4b7
+Date: 1391524330
+Class: fix
+
+

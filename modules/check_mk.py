@@ -2633,6 +2633,70 @@ def quote_nagios_string(s):
 #   | Automatic service detection                                          |
 #   '----------------------------------------------------------------------'
 
+def do_inventory(hostnames, checknames, only_new):
+
+        # For clusters add their nodes to the list
+        nodes = []
+        for h in hostnames:
+            nodes = nodes_of(h)
+            if nodes:
+                hostnames += nodes
+
+        # Then remove clusters and make list unique
+        hostnames = list(set([ h for h in hostnames if not is_cluster(h) ]))
+        hostnames.sort()
+
+        if opt_verbose:
+            if len(hostnames) > 0:
+                sys.stdout.write("Inventorizing %s.\n" % ", ".join(hostnames))
+            else:
+                sys.stdout.write("Inventorizing all hosts.\n")
+
+        if inventory_checks:
+            checknames = inventory_checks.split(",")
+
+        # remove existing checks, if option -I is used twice
+        if seen_I > 1:
+            if inventory_checks == None:
+                checknames = inventorable_checktypes("all")
+            if len(hostnames) > 0:
+                # Entries in hostnames that are either prefixed with @
+                # or are no valid hostnames are considered to be tags.
+                for host in hostnames:
+                    remove_autochecks_of(host, checknames)
+                    # If all nodes of a cluster are contained in the list, then
+                    # also remove the autochecks of that cluster. Beware: a host
+                    # can be part more multiple clusters
+                    for clust in clusters_of(host):
+                        missing = [] # collect nodes missing on the command line
+                        for node in nodes_of(clust):
+                            if node not in hostnames:
+                                missing.append(node)
+
+                        if len(missing) == 0:
+                            if opt_verbose:
+                                sys.stdout.write("All nodes of %s specified, dropping checks of %s, too.\n" % (clust, node))
+                            remove_autochecks_of(clust, checknames)
+
+                        else:
+                            sys.stdout.write("Warning: %s is part of cluster %s, but you didn't specify %s as well.\nChecks on %s will be kept.\n" %
+                            (host, clust, ",".join(missing), clust))
+
+            else:
+                for host in all_active_hosts() + all_active_clusters():
+                    remove_autochecks_of(host, checknames)
+            reread_autochecks()
+
+        if inventory_checks == None:
+            do_snmp_scan(hostnames)
+            checknames = inventorable_checktypes("tcp")
+
+        for checkname in checknames:
+            make_inventory(checkname, hostnames, False)
+
+        do_cleanup_autochecks()
+
+
 
 def inventorable_checktypes(what): # snmp, tcp, all
     checknames = [ k for k in check_info.keys()
@@ -5689,7 +5753,7 @@ if __name__ == "__main__":
 
     done = False
     seen_I = 0
-    inventory_checks = None
+    check_types = None
     # Scan modifying options first (makes use independent of option order)
     for o,a in opts:
         if o in [ '-v', '--verbose' ]:
@@ -5725,7 +5789,7 @@ if __name__ == "__main__":
         elif o == '-I':
             seen_I += 1
         elif o == "--checks":
-            inventory_checks = a
+            check_types = a.split(",")
         elif o == "--cmc-file":
             opt_cmc_relfilename = a
 
@@ -5859,70 +5923,11 @@ if __name__ == "__main__":
             raise
         sys.exit(3)
 
+    # handle -I / -II
     if not done and seen_I > 0:
-
         hostnames = parse_hostname_list(args)
-        # For clusters add their nodes to the list
-        nodes = []
-        for h in hostnames:
-            nodes = nodes_of(h)
-            if nodes:
-                hostnames += nodes
-
-        # Then remove clusters and make list unique
-        hostnames = list(set([ h for h in hostnames if not is_cluster(h) ]))
-        hostnames.sort()
-
-        if opt_verbose:
-            if len(hostnames) > 0:
-                sys.stdout.write("Inventorizing %s.\n" % ", ".join(hostnames))
-            else:
-                sys.stdout.write("Inventorizing all hosts.\n")
-
-        if inventory_checks:
-            checknames = inventory_checks.split(",")
-
-        # remove existing checks, if option -I is used twice
-        if seen_I > 1:
-            if inventory_checks == None:
-                checknames = inventorable_checktypes("all")
-            if len(hostnames) > 0:
-                # Entries in hostnames that are either prefixed with @
-                # or are no valid hostnames are considered to be tags.
-                for host in hostnames:
-                    remove_autochecks_of(host, checknames)
-                    # If all nodes of a cluster are contained in the list, then
-                    # also remove the autochecks of that cluster. Beware: a host
-                    # can be part more multiple clusters
-                    for clust in clusters_of(host):
-                        missing = [] # collect nodes missing on the command line
-                        for node in nodes_of(clust):
-                            if node not in hostnames:
-                                missing.append(node)
-
-                        if len(missing) == 0:
-                            if opt_verbose:
-                                sys.stdout.write("All nodes of %s specified, dropping checks of %s, too.\n" % (clust, node))
-                            remove_autochecks_of(clust, checknames)
-
-                        else:
-                            sys.stdout.write("Warning: %s is part of cluster %s, but you didn't specify %s as well.\nChecks on %s will be kept.\n" %
-                            (host, clust, ",".join(missing), clust))
-
-            else:
-                for host in all_active_hosts() + all_active_clusters():
-                    remove_autochecks_of(host, checknames)
-            reread_autochecks()
-
-        if inventory_checks == None:
-            do_snmp_scan(hostnames)
-            checknames = inventorable_checktypes("tcp")
-
-        for checkname in checknames:
-            make_inventory(checkname, hostnames, False)
-
-        do_cleanup_autochecks()
-
+        do_inventory(hostnames, check_types, seen_I == 1)
+        done = True
 
     if done:
         output_profile()
@@ -5930,10 +5935,13 @@ if __name__ == "__main__":
     elif (len(args) == 0 and not opt_keepalive) or len(args) > 2:
         usage()
         sys.exit(1)
+    
+    # handle --keepalive
     elif opt_keepalive:
         do_check_keepalive()
-    else:
 
+    # handle adhoc-check
+    else:
         hostname = args[0]
         if len(args) == 2:
             ipaddress = args[1]
@@ -5946,12 +5954,6 @@ if __name__ == "__main__":
                 except:
                     print "Cannot resolve hostname '%s'." % hostname
                     sys.exit(2)
-
-        # honor --checks= also when checking (makes testing easier)
-        if inventory_checks:
-            check_types = inventory_checks.split(",")
-        else:
-            check_types = None
 
         do_check(hostname, ipaddress, check_types)
 

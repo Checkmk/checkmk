@@ -13126,7 +13126,7 @@ def HostnameTranslation(**kwargs):
 
 def select_language(user_language):
     languages = [ l for l in get_languages() if not config.hide_language(l[0]) ]
-    inactive = user_language != ''
+    inactive = not not user_language
 
     if languages:
         forms.section(_("Language"),

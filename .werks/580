@@ -1,0 +1,8 @@
+Title: emc_datadomain_fans, emc_datadomain_nvbat, emc_datadomain_power, emc_datadomain_temps: new hardware checks for EMC Datadomain
+Level: 2
+Component: checks
+Version: 1.2.5i1
+Date: 1391617591
+Class: feature
+
+

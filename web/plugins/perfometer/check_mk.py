@@ -738,6 +738,10 @@ def perfometer_eaton(row, command, perf):
 
 perfometers['check_mk-ups_eaton_enviroment'] = perfometer_eaton
 
+def perfometer_battery(row, command, perf):
+    return u"%s%%" % str(perf[0][1]), perfometer_linear(float(perf[0][1]), '#C98D5C')
+
+perfometers['check_mk-emc_datadomain_nvbat'] = perfometer_battery
 
 def perfometer_ups_capacity(row, command, perf):
     return "%0.2f%%" % float(perf[1][1]), perfometer_linear(float(perf[1][1]), '#B2FF7F')

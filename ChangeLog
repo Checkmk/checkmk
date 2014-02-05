@@ -81,6 +81,7 @@
     * 0699 emc_isilon_iops: New check for Disk Operations per Second (IOPS) in EMC Isilon Storage
     * 0132 New checks fjdarye101_disks fjdarye101_rluns: Fujitsu Storage Systems with 2013 Firmware
     * 0697 check_dns: allow to specify multiple expected answers
+    * 0580 emc_datadomain_fans, emc_datadomain_nvbat, emc_datadomain_power, emc_datadomain_temps: new hardware checks for EMC Datadomain
     * 0103 FIX: services: Fixed bug with service inventory defined in main.mk...
     * 0299 FIX: borcade_mlx_fan: Prettified output, handling "other" state now
     * 0300 FIX: cisco_fru_power: Trying not to inventorize not plugged in FRUs...
@@ -156,8 +157,8 @@
     * 0577 FIX: fileinfo.groups: new date pattern is now available for inventory check as well
     * 0688 FIX: winperf_msx_queues: Support output of Exchange 2013...
     * 0578 FIX: zypper: check is always registered as soon as mk_zypper plugin detects zypper tool...
-    * 0579 FIX: veeam_client: fix for case when no StopTime section in agent output
     * 0689 FIX: postgres_sessions: fix empty agent section in case of 0 sessions...
+    * 0579 FIX: veeam_client: fix for case when no StopTime section in agent output
 
     Multisite:
     * 0371 Added log class filter to hostsvcevents view

@@ -2645,7 +2645,6 @@ def quote_nagios_string(s):
 #   '----------------------------------------------------------------------'
 
 def do_inventory(hostnames, checknames, only_new):
-
         # For clusters add their nodes to the list
         nodes = []
         for h in hostnames:
@@ -2663,18 +2662,17 @@ def do_inventory(hostnames, checknames, only_new):
             else:
                 sys.stdout.write("Inventorizing all hosts.\n")
 
-        if inventory_checks:
-            checknames = inventory_checks.split(",")
-
         # remove existing checks, if option -I is used twice
         if seen_I > 1:
-            if inventory_checks == None:
-                checknames = inventorable_checktypes("all")
+            if not checknames:
+                checks_to_remove = inventorable_checktypes("all")
+            else:
+                checks_to_remove = checknames
             if len(hostnames) > 0:
                 # Entries in hostnames that are either prefixed with @
                 # or are no valid hostnames are considered to be tags.
                 for host in hostnames:
-                    remove_autochecks_of(host, checknames)
+                    remove_autochecks_of(host, checks_to_remove)
                     # If all nodes of a cluster are contained in the list, then
                     # also remove the autochecks of that cluster. Beware: a host
                     # can be part more multiple clusters
@@ -2687,7 +2685,7 @@ def do_inventory(hostnames, checknames, only_new):
                         if len(missing) == 0:
                             if opt_verbose:
                                 sys.stdout.write("All nodes of %s specified, dropping checks of %s, too.\n" % (clust, node))
-                            remove_autochecks_of(clust, checknames)
+                            remove_autochecks_of(clust, checks_to_remove)
 
                         else:
                             sys.stdout.write("Warning: %s is part of cluster %s, but you didn't specify %s as well.\nChecks on %s will be kept.\n" %
@@ -2695,10 +2693,10 @@ def do_inventory(hostnames, checknames, only_new):
 
             else:
                 for host in all_active_hosts() + all_active_clusters():
-                    remove_autochecks_of(host, checknames)
+                    remove_autochecks_of(host, checks_to_remove)
             reread_autochecks()
 
-        if inventory_checks == None:
+        if checknames == None:
             do_snmp_scan(hostnames)
             checknames = inventorable_checktypes("tcp")
 

@@ -1,0 +1,31 @@
+title: Arcserve Backup
+agents: windows
+catalog: os/services
+license: GPL
+distribution: check_mk
+description:
+ Checks if Backup Jobs did finish successfully on an Arcserve Backup
+ System. Therefor it queries the database on the backup server. It needs
+ the arcserve_backup.ps1 agent plugin to be installed there.
+
+ Returns {OK} if the backup job did finish with an OK message, {WARN} if
+ the job reported warnings and {CRIT} if the job did report errors.
+ {UNKN} is returned if the job did finish with an unidentified message.
+
+ Number of directories, number of files and size are only reported but
+ do never trigger any non-OK state.
+
+item:
+ The name of the backup.
+
+perfdata:
+ Returns three values: The number of directories backuped in the last 
+ execution of the backup, the number of files backuped and the total
+ size backuped in Bytes.
+
+inventory:
+ Finds one service for every backup configured. 
+ 
+ Please note: This is independent of the number of hosts backuped in one
+ backup job. Only the total state of a backup (over all contained hosts)
+ is reported.

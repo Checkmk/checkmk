@@ -20,7 +20,7 @@ tmpl_head_html = '''
 <title>$SUBJECT$</title>
 <style>
 body {
-    background-color: #426D8A;
+    background-color: #FFFFFF;
     padding: 5px;
     font-family: arial,helvetica,sans-serif;
     font-size: 10px;

@@ -1,0 +1,8 @@
+Title: arcserve_backup: new check for status of backups in an Arcserve Backup Server
+Level: 2
+Component: checks
+Version: 1.2.5i1
+Date: 1391600281
+Class: feature
+
+

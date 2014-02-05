@@ -1,4 +1,4 @@
-title: Integrate custom checks via arbitrary scripts on the agent
+title: local: Integrate custom checks via arbitrary scripts on the agent
 agents: linux, windows, aix, solaris, freebsd, netbsd, openbsd
 catalog: generic
 license: GPL

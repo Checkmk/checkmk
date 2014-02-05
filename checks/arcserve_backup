@@ -1,0 +1,170 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# <<<arcserve_backup>>>
+# 
+# Job: 
+# 3960
+# Beschreibung: Tagessicherung staging. (27.01.2014)
+# 255.154 Verzeichnis(se) 1.400.060 Datei(en) (388,38 GB) auf Datentr�ger gesichert.
+# Vorgang Sichern erfolgreich
+# 
+# Job: 
+# 3954
+# Beschreibung: Wochensicherung staging. (24.01.2014)
+# 340.611 Verzeichnis(se) 1.726.321 Datei(en) (446,52 GB) auf Datentr�ger gesichert.
+# Vorgang Sichern erfolgreich
+# 
+# <<<arcserve_backup>>>
+# Job: 
+# 3972
+# Beschreibung: Tagessicherung staging. (30.01.2014)
+# 255.641 Verzeichnis(se) 1.405.125 Datei(en) (389,27 GB) auf Datentr�ger gesichert.
+# Vorgang Sichern unvollst�ndig.Anzahl an Fehlern/Warnungen: 0/1
+# 
+# Job: 
+# 3954
+# Beschreibung: Wochensicherung staging. (24.01.2014)
+# 340.611 Verzeichnis(se) 1.726.321 Datei(en) (446,52 GB) auf Datentr�ger gesichert.
+# Vorgang Sichern erfolgreich
+# 
+# <<<arcserve_backup>>>
+# Job: 
+# 3976
+# Beschreibung: Wochensicherung staging. (31.01.2014)
+# 341.092 Verzeichnis(se) 1.731.713 Datei(en) (447,42 GB) auf Datentr�ger gesichert.
+# Vorgang Sichern konnte nicht durchgef�hrt werden.Anzahl an Fehlern/Warnungen: 1/0
+# 
+# Job: 
+# 3972
+# Beschreibung: Tagessicherung staging. (30.01.2014)
+# 255.641 Verzeichnis(se) 1.405.125 Datei(en) (389,27 GB) auf Datentr�ger gesichert.
+# Vorgang Sichern unvollst�ndig.Anzahl an Fehlern/Warnungen: 0/1
+
+# parses info in a structure like
+# parsed = {
+#     'Tagessicherung staging': { 'dirs'  : 255641,
+#                                 'files' : 1405125,
+#                                 'result': 'Sichern unvollst\xc3\xa4ndig.Anzahl an Fehlern/Warnungen: 0/1',
+#                                 'size'  : 417975479828},
+#     'Wochensicherung staging': {'dirs'  : 341092,
+#                                 'files' : 1731713,
+#                                 'result': 'Sichern konnte nicht durchgef\xc3\xbchrt werden.Anzahl an Fehlern/Warnungen: 1/0',
+#                                 'size'  : 480413566894}}
+
+def parse_arcserve_backup(info):
+    unit_factor = { "kb": 1024, "mb": 1024 ** 2, "gb": 1024 ** 3, "tb": 1024 ** 4 }
+    parsed = {}
+    for line in info:
+        if line[0] == "Beschreibung:":
+            backup_id = " ".join(line[1:-1])
+            if backup_id[-1] == ".":
+                backup_id = backup_id[0:-1]
+                backup = {}
+                parsed[backup_id] = backup
+        elif len(line) > 5 and line[1] == "Verzeichnis(se)" and line[3] == "Datei(en)" \
+            and line[5][-1] == ")":
+            dirs  = int(line[0].replace(".", ""))
+            files = int(line[2].replace(".", ""))
+            unit  = line[5].replace(")", "").lower()
+            size  = int(float(line[4].replace("(", "").replace(",", ".")) * unit_factor[unit])
+            backup["dirs"]  = dirs
+            backup["files"] = files
+            backup["size"]  = size
+        elif len(line) > 1 and line[0] == "Vorgang":
+            result = " ".join(line[1:])
+            backup["result"] = result
+    return parsed
+
+def inventory_arcserve_backup(info):
+    parsed = parse_arcserve_backup(info)
+    inventory = []
+    for backup in parsed:
+        inventory.append( (backup, None) )
+    return inventory
+
+def check_arcserve_backup(item, _no_params, info):
+    parsed = parse_arcserve_backup(info)
+    if item not in parsed:
+        return 3, "Backup %s not found in agent output" % item
+
+    message = ""
+    perfdata = []
+
+    # directories
+    if "dirs" in parsed[item]:
+        dirs=parsed[item]["dirs"]
+        message += "%s directories" % parsed[item]["dirs"]
+    else:
+        dirs=0
+    perfdata.append(("dirs", dirs))
+
+    # files
+    if "files" in parsed[item]:
+        if message != "":
+            message += ", "
+        files=parsed[item]["files"]
+        message += "%s files" % parsed[item]["files"]
+    else:
+        files=0
+    perfdata.append(("files", files))
+
+    # size
+    if "size" in parsed[item]:
+        if message != "":
+            message += ", "
+        size=parsed[item]["size"]
+        message += "Size: %s" % get_bytes_human_readable(parsed[item]["size"])
+    else:
+        size=0
+    perfdata.append(("size", str(size) + "Bytes"))
+
+    # result
+    if message != "":
+        message += ", "
+
+    if parsed[item]["result"].startswith("Sichern erfolgreich"):
+        status=0
+    elif parsed[item]["result"].startswith("Sichern unvollst"):
+        status=1
+    elif parsed[item]["result"].startswith("Sichern konnte nicht durchgef"):
+        status=2
+    else:
+        message += "unknown Result: %s" % parsed[item]["result"]
+        return 3, message, perfdata
+
+    message += "Result: %s" % parsed[item]["result"]
+
+    return status, message, perfdata
+
+check_info["arcserve_backup"] = {
+    "check_function"        : check_arcserve_backup,
+    "inventory_function"    : inventory_arcserve_backup,
+    "service_description"   : "Arcserve Backup %s",
+    "has_perfdata"          : True,
+}
+

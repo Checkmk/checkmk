@@ -231,7 +231,7 @@ if [ -f "$MK_CONFDIR/fileinfo.cfg" ]
 then
     echo '<<<fileinfo:sep(124)>>>'
     /usr/bin/perl -e 'print time."\n"'
-    ls $(cat "$MK_CONFDIR/fileinfo.cfg") | \
+    ls $(cat "$MK_CONFDIR/fileinfo.cfg") | sort -u | \
         /usr/bin/perl -e '
            while(my $file = <>) {
                $file =~ s/\n$//;

@@ -61,7 +61,7 @@ if mknotifyd_enabled:
                     ),
                     Integer(
                         title = _("TCP port"),
-                        minvalue = 1,
+                        minvalue = 1024,
                         maxvalue = 65535,
                         default_value = 6555,
                     ),
@@ -102,7 +102,7 @@ if mknotifyd_enabled:
         "notification_daemon_listen_port",
         Optional(
             Integer(
-                minvalue = 1,
+                minvalue = 1024,
                 maxvalue = 65535,
                 default_value = 6555,
             ),

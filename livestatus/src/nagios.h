@@ -30,15 +30,24 @@
 #ifdef CMC
 #include "../cmc.h"
 #else
-#define NSCORE
-#include "nagios/objects.h"
-#include "nagios/nagios.h"
-#include "nagios/nebstructs.h"
-#include "nagios/neberrors.h"
-#include "nagios/broker.h"
-#include "nagios/nebmodules.h"
-#include "nagios/nebcallbacks.h"
-#endif
-
+    #define NSCORE
+    #ifdef NAGIOS4
+    #include "nagios4/objects.h"
+    #include "nagios4/nagios.h"
+    #include "nagios4/nebstructs.h"
+    #include "nagios4/neberrors.h"
+    #include "nagios4/broker.h"
+    #include "nagios4/nebmodules.h"
+    #include "nagios4/nebcallbacks.h"
+    #else
+    #include "nagios/objects.h"
+    #include "nagios/nagios.h"
+    #include "nagios/nebstructs.h"
+    #include "nagios/neberrors.h"
+    #include "nagios/broker.h"
+    #include "nagios/nebmodules.h"
+    #include "nagios/nebcallbacks.h"
+    #endif // NAGIOS4
+#endif // CMC
 #endif // nagios_h
 

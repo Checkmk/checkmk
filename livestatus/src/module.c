@@ -72,7 +72,11 @@ void TRIGGER(int what)
 
 
 NEB_API_VERSION(CURRENT_NEB_API_VERSION)
+#ifndef NAGIOS4
 extern int event_broker_options;
+#else
+extern unsigned long event_broker_options;
+#endif // NAGIOS4
 extern int enable_environment_macros;
 extern char *log_file;
 

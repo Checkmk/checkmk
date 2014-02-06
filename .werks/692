@@ -1,0 +1,9 @@
+Title: fileinfo: Avoid duplicate entries in Solaris agent
+Level: 1
+Component: checks
+Version: 1.2.4b8
+Date: 1391687738
+Class: fix
+
+If due to redundant patterns files would be listed twice, the duplicates
+are now correctly suppressed.

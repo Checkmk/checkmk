@@ -27,7 +27,9 @@
 #include "Query.h"
 #include "logger.h"
 #include "nagios.h"
+#ifndef NAGIOS4
 #include "nagios/macros.h"
+#endif
 extern char     *macro_user[MAX_USER_MACROS];
 
 string OffsetStringMacroColumn::valueAsString(void *data, Query *)
@@ -94,7 +96,11 @@ const char *OffsetStringMacroColumn::expandMacro(const char *macroname, host *hs
     else if (!strcmp(macroname, "HOSTPERFDATA"))
         return hst->perf_data;
     else if (!strcmp(macroname, "HOSTCHECKCOMMAND"))
+    #ifndef NAGIOS4
         return hst->host_check_command;
+    #else
+        return hst->check_command;
+    #endif // NAGIOS4
 
     else if (!strncmp(macroname, "_HOST", 5)) // custom macro
         return expandCustomVariables(macroname + 5, hst->custom_variables);
@@ -112,7 +118,11 @@ const char *OffsetStringMacroColumn::expandMacro(const char *macroname, host *hs
         else if (!strcmp(macroname, "SERVICEPERFDATA"))
             return svc->perf_data;
         else if (!strcmp(macroname, "SERVICECHECKCOMMAND"))
+        #ifndef NAGIOS4
             return svc->service_check_command;
+        #else
+            return svc->check_command;
+        #endif // NAGIOS4
         else if (!strncmp(macroname, "_SERVICE", 8)) // custom macro
             return expandCustomVariables(macroname + 8, svc->custom_variables);
     }

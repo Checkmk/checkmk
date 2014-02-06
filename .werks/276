@@ -1,0 +1,15 @@
+Title: nagios4 livestatus support
+Level: 3
+Component: livestatus
+Version: 1.2.5i1
+Date: 1391698284
+Class: feature
+
+It is now possible to compile livestatus for nagios4.
+The <tt>setup.sh</tt> script from the check_mk tarball now autodetects
+the nagios version and proposes it during the setup process.<br>
+You can also choose the version manually (3 or 4).<br>
+Depending on the chosen version livestatus includes the nagios headers from 3.2.0 or 4.0.2.<br><br>
+
+If you just want to compile livestatus you can set the nagios version via an option in the configure script.<br>
+<tt>configure --with-nagios4<tt>

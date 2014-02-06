@@ -89,10 +89,17 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
                 "An alias name for the host", (char *)(&hst.alias) - ref, indirect_offset));
     table->addColumn(new OffsetStringColumn(prefix + "address",
                 "IP address", (char *)(&hst.address) - ref, indirect_offset));
+#ifdef NAGIOS4
+    table->addColumn(new OffsetStringColumn(prefix + "check_command",
+                "Nagios command for active host check of this host", (char *)(&hst.check_command) - ref, indirect_offset));
+    table->addColumn(new OffsetStringHostMacroColumn(prefix + "check_command_expanded",
+                "Nagios command for active host check of this host with the macros expanded", (char *)(&hst.check_command) - ref, indirect_offset));
+#else
     table->addColumn(new OffsetStringColumn(prefix + "check_command",
                 "Nagios command for active host check of this host", (char *)(&hst.host_check_command) - ref, indirect_offset));
     table->addColumn(new OffsetStringHostMacroColumn(prefix + "check_command_expanded",
                 "Nagios command for active host check of this host with the macros expanded", (char *)(&hst.host_check_command) - ref, indirect_offset));
+#endif
     table->addColumn(new OffsetStringColumn(prefix + "event_handler",
                 "Nagios command used as event handler", (char *)(&hst.event_handler) - ref, indirect_offset));
     table->addColumn(new OffsetStringColumn(prefix + "notification_period",
@@ -138,8 +145,13 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
                 "Whether freshness checks are activated (0/1)", (char *)(&hst.check_freshness) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "process_performance_data",
                 "Whether processing of performance data is enabled (0/1)", (char *)(&hst.process_performance_data) - ref, indirect_offset));
+    #ifndef NAGIOS4
     table->addColumn(new OffsetIntColumn(prefix + "accept_passive_checks",
                 "Whether passive host checks are accepted (0/1)", (char *)(&hst.accept_passive_host_checks) - ref, indirect_offset));
+    #else
+    table->addColumn(new OffsetIntColumn(prefix + "accept_passive_checks",
+                "Whether passive host checks are accepted (0/1)", (char *)(&hst.accept_passive_checks) - ref, indirect_offset));
+    #endif // NAGIOS4
     table->addColumn(new OffsetIntColumn(prefix + "event_handler_enabled",
                 "Whether event handling is enabled (0/1)", (char *)(&hst.event_handler_enabled) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "acknowledgement_type",
@@ -152,10 +164,17 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
                 "Last hard state", (char *)(&hst.last_hard_state) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "current_attempt",
                 "Number of the current check attempts", (char *)(&hst.current_attempt) - ref, indirect_offset));
+    #ifndef NAGIOS4
     table->addColumn(new OffsetTimeColumn(prefix + "last_notification",
                 "Time of the last notification (Unix timestamp)", (char *)(&hst.last_host_notification) - ref, indirect_offset));
     table->addColumn(new OffsetTimeColumn(prefix + "next_notification",
                 "Time of the next notification (Unix timestamp)", (char *)(&hst.next_host_notification) - ref, indirect_offset));
+    #else
+    table->addColumn(new OffsetTimeColumn(prefix + "last_notification",
+                "Time of the last notification (Unix timestamp)", (char *)(&hst.last_notification) - ref, indirect_offset));
+    table->addColumn(new OffsetTimeColumn(prefix + "next_notification",
+                "Time of the next notification (Unix timestamp)", (char *)(&hst.next_notification) - ref, indirect_offset));
+    #endif // NAGIOS4
     table->addColumn(new OffsetTimeColumn(prefix + "next_check",
                 "Scheduled time for the next check (Unix timestamp)", (char *)(&hst.next_check) - ref, indirect_offset));
     table->addColumn(new OffsetTimeColumn(prefix + "last_hard_state_change",
@@ -205,8 +224,13 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
                 "Whether active checks are enabled for the host (0/1)", (char *)(&hst.checks_enabled) - ref, indirect_offset));
     table->addColumn(new OffsetIntColumn(prefix + "check_options",
                 "The current check option, forced, normal, freshness... (0-2)", (char *)(&hst.check_options) - ref, indirect_offset));
+    #ifndef NAGIOS4
     table->addColumn(new OffsetIntColumn(prefix + "obsess_over_host",
                 "The current obsess_over_host setting... (0/1)", (char *)(&hst.obsess_over_host) - ref, indirect_offset));
+    #else
+    table->addColumn(new OffsetIntColumn(prefix + "obsess_over_host",
+                "The current obsess_over_host setting... (0/1)", (char *)(&hst.obsess) - ref, indirect_offset));
+    #endif // NAGIOS4
     table->addColumn(new AttributelistColumn(prefix + "modified_attributes",
                 "A bitmask specifying which attributes have been modified", (char *)(&hst.modified_attributes) - ref, indirect_offset, false));
     table->addColumn(new AttributelistColumn(prefix + "modified_attributes_list",

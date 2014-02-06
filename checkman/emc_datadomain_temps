@@ -1,0 +1,23 @@
+title: EMC Datadomain: Temperature Sensors
+agents: snmp
+catalog: hw/storagehw/emc
+license: GPL
+distribution: check_mk
+description:
+ Reports the status of the temperature sensors of the EMC Datadomain
+ Deduplication Storage Systems. The state of the check is determined
+ from the state reported by the device as follows:
+ The check is {OK} when the sensor reports {1=OK}. The check is {WARN}
+ when the sensor device reports a state of {0=Failed}, {3=OverheatWarning}
+ or {2=Notfound}.  The check is {CRIT} when the sensor reports a state of
+ {4=OverheatCritical}.
+
+item:
+ "ID of the enclosure" - "ID of the sensor"
+
+perfdata:
+ The temperatur measured by the sensor
+
+inventory:
+ Automatically configures one check for every sensor found on the
+ device

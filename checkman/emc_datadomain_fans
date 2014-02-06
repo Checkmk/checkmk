@@ -1,0 +1,22 @@
+title: EMC Datadomain: fan status
+agents: snmp
+catalog: hw/storagehw/emc
+license: GPL
+distribution: check_mk
+description:
+ Reports the status of the fans of the EMC Datadomain
+ Deduplication Storage Systems. The state is {OK} when the status
+ of the fan as reported by the device is {1=OK}, it is {WARN}
+ when the status of the device is reported to be {0=notfound},
+ and it is {CRIT} when the device reports its status as {2=Fail}.
+
+item:
+ "ID of the enclosure" - "ID of the fan"
+
+perfdata:
+ The fan level measured by the sensor. This can only be unknown,
+ low, medium or high
+
+inventory:
+ Automatically configures one check for every fan found on the
+ device

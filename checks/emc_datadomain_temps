@@ -43,8 +43,8 @@ def check_emc_datadomain_temps(item, _no_params, info):
             dev_temp = line[3]
             dev_descr = line[2]
             dev_state = line[4]
-            dev_state_str = state_table.get(dev_state, "Unknown")[0]
-            dev_state_rc = state_table.get(dev_state, 3)[1]
+            dev_state_str = state_table.get(dev_state, ("Unknown",3))[0]
+            dev_state_rc = state_table.get(dev_state, ("Unknown",3))[1]
             infotext = "%s Temperature %sC Status %s" % ( dev_descr, dev_temp, dev_state_str )
             perfdata = [('temp', dev_temp+"C" )]
             return dev_state_rc, infotext,perfdata

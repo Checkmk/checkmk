@@ -195,7 +195,7 @@ ps -o comm $pszone | grep -w xntpd &>/dev/null
 if [ $? -eq 0 ]
 then
     echo '<<<ntp>>>'
-    ntpq -p | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
+    ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
 fi
 
 

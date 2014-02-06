@@ -107,7 +107,7 @@ fi
 
 echo '<<<ntp>>>'
 # remove heading, make first column space separated
-ntpq -p | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
+ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
 
 
 # Kernel tunnables

@@ -93,7 +93,7 @@ done
 
 # Logical Volume Manager
 echo '<<<hpux_lvm:sep(58)>>>'
-vgdisplay -v -F
+/sbin/vgdisplay -v -F
 
 # Multipathing
 echo '<<<hpux_multipath>>>'

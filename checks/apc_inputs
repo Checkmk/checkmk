@@ -1,0 +1,82 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+def inventory_apc_inputs(info):
+    if len(info) > 0:
+        inventory = []
+        for line in info:
+            if line[2] not in [ "3", "4" ]:
+                inventory.append(( line[0], {"state" : line[2]} ))
+        return inventory
+
+def check_apc_inputs(item, params, info):
+    states = {
+        '1' : "closed",
+        '2' : "open",
+        '3' : "disabled",
+        '4' : "not applicable",
+    }
+    alarm_states = {
+        '1' : "normal",
+        '2' : "warning",
+        '3' : "cirtical",
+        '4' : "not applicable",
+    }
+    for name, location, state, alarm_status in info:
+        if name == item:
+            if alarm_status in [ "2", "4"]:
+                check_state = 1
+            elif alarm_status == "3":
+                check_state = 2
+            elif alarm_status == "1":
+                check_state = 0
+
+            messages = [ "State is %s" % alarm_states[alarm_status]  ]
+
+            if params['state'] != state:
+                check_state = max( check_state, 1 )
+                messages.append("Port state Change from %s to %s(!)" % \
+                    ( states[params['state']], states[state] ))
+
+            return check_state, ", ".join(messages)
+    return 3, "Sensor not found"
+
+
+
+check_info['apc_inputs'] = {
+  "inventory_function"      : inventory_apc_inputs,
+  "check_function"          : check_apc_inputs,
+  "service_description"     : "Input %s",
+  "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.318.1.3"),
+  "snmp_info"               : ( ".1.3.6.1.4.1.318.1.1.25.2.2.1", 
+                                    [
+                                      3, # Port Name
+                                      4, # Location
+                                      5, # CurrentState
+                                      6, # AlarmStatus
+                                    ] )
+}
+

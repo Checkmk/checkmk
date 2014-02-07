@@ -27,6 +27,9 @@
 #include "TimeperiodsCache.h"
 #include "nagios.h"
 #include "logger.h"
+#ifdef NAGIOS4
+#include <pthread.h>
+#endif // NAGIOS4
 
 extern timeperiod *timeperiod_list;
 

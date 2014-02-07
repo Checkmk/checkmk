@@ -36,7 +36,7 @@ TAROPTS        	= --owner=root --group=root --exclude=.svn --exclude=*~ \
 		  --exclude=.gitignore --exclude=.*.swp --exclude=.f12
 LIVESTATUS_SOURCES = configure aclocal.m4 config.guess config.h.in config.sub \
 		     configure.ac ltmain.sh Makefile.am Makefile.in missing \
-		     nagios/README nagios/*.h src/*.{h,c,cc} src/Makefile.{in,am} \
+		     nagios/README nagios/*.h nagios4/README nagios4/*.h src/*.{h,c,cc} src/Makefile.{in,am} \
 		     depcomp install-sh api/python/{*.py,README} api/perl/*
 
 
@@ -126,6 +126,8 @@ mk-livestatus:
 	cd livestatus ; tar cf - $(LIVESTATUS_SOURCES) | tar xf - -C ../mk-livestatus-$(VERSION)
 	mkdir -p mk-livestatus-$(VERSION)/nagios
 	cp livestatus/nagios/*.h mk-livestatus-$(VERSION)/nagios/
+	mkdir -p mk-livestatus-$(VERSION)/nagios4
+	cp livestatus/nagios4/*.h mk-livestatus-$(VERSION)/nagios4/
 	tar czf mk-livestatus-$(VERSION).tar.gz $(TAROPTS) mk-livestatus-$(VERSION)
 	rm -rf mk-livestatus-$(VERSION)
 

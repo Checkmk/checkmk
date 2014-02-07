@@ -74,7 +74,7 @@ ps ax -o user,vsz,rss,pcpu,command | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([
 
 # NTP seems to be enabled as a default
 echo '<<<ntp>>>'
-    ntpq -pn | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
+    ntpq -npn | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
 
 # TCP Conn stats
 echo '<<<tcp_conn_stats>>>'

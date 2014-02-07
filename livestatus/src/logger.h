@@ -36,6 +36,9 @@
 #define LG_CRIT  LOG_CRIT
 #define LG_ALERT LOG_ALERT
 #else
+#ifdef NAGIOS4
+#include <syslog.h>
+#endif
 // TODO: Really use log levels
 #define LG_INFO 262144
 #define LG_WARN  LOG_INFO

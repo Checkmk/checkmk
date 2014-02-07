@@ -70,6 +70,13 @@ AC_TYPE_SIGNAL
 AC_FUNC_STAT
 AC_CHECK_FUNCS([bzero gettimeofday memmove regcomp select socket strcasecmp strdup strerror strtoul])
 
+AC_ARG_WITH(nagios4,AC_HELP_STRING([--with-nagios4],[enabled compilation for nagios 4]), [
+    CPPFLAGS="${CFLAGS} -DNAGIOS4"
+    nagios_headers=nagios4
+    ],
+    nagios_headers=nagios)
+AC_SUBST(nagios_headers)
+
 AC_CONFIG_FILES([Makefile
                  src/Makefile])
 AC_OUTPUT

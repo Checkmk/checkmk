@@ -37,7 +37,9 @@
 
 extern time_t program_start;
 extern int nagios_pid;
+#ifndef NAGIOS4
 extern time_t last_command_check;
+#endif
 extern time_t last_log_rotation;
 extern int enable_notifications;
 extern int execute_service_checks;
@@ -65,8 +67,12 @@ extern int g_num_active_connections;
 int livechecks_performed = 0;
 int livecheck_overflows = 0;
 
+#ifndef NAGIOS4
 extern circular_buffer external_command_buffer;
 extern int external_command_buffer_slots;
+#else
+// TODO: check if this data is available in nagios_squeue
+#endif // NAGIOS4
 
 TableStatus::TableStatus()
 {
@@ -152,8 +158,14 @@ TableStatus::TableStatus()
                 "Whether Nagios checks for external commands at its command pipe (0/1)", &check_external_commands));
     addColumn(new TimePointerColumn("program_start",
                 "The time of the last program start as UNIX timestamp", (int*)&program_start));
+    #ifndef NAGIOS4
     addColumn(new TimePointerColumn("last_command_check",
                 "The time of the last check for a command as UNIX timestamp", (int*)&last_command_check));
+    #else
+    int dummy = 0;
+    addColumn(new TimePointerColumn("last_command_check",
+                "The time of the last check for a command as UNIX timestamp (placeholder)", &dummy));
+    #endif // NAGIOS4
     addColumn(new TimePointerColumn("last_log_rotation",
                 "Time time of the last log file rotation", (int*)&last_log_rotation));
     addColumn(new IntPointerColumn("interval_length",
@@ -168,6 +180,7 @@ TableStatus::TableStatus()
                 "The version of the monitoring daemon", get_program_version()));
 
     // External command buffer
+    #ifndef NAGIOS4
     addColumn(new IntPointerColumn("external_command_buffer_slots",
                 "The size of the buffer for the external commands",
                 &external_command_buffer_slots));
@@ -177,6 +190,17 @@ TableStatus::TableStatus()
     addColumn(new IntPointerColumn("external_command_buffer_max",
                 "The maximum number of slots used in the external command buffer",
                 &(external_command_buffer.high)));
+    #else
+    addColumn(new IntPointerColumn("external_command_buffer_slots",
+                "The size of the buffer for the external commands (placeholder)",
+                &dummy));
+    addColumn(new IntPointerColumn("external_command_buffer_usage",
+                "The number of slots in use of the external command buffer (placeholder)",
+                &dummy));
+    addColumn(new IntPointerColumn("external_command_buffer_max",
+                "The maximum number of slots used in the external command buffer (placeholder)",
+                &dummy));
+    #endif // NAGIOS4
 
     // Livestatus' own status
     addColumn(new IntPointerColumn("cached_log_messages",

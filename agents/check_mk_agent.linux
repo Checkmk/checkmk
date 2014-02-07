@@ -346,7 +346,7 @@ fi
 
 if type ntpq > /dev/null 2>&1 ; then
    # remove heading, make first column space separated
-   run_cached -s ntp 30 "waitmax 5 ntpq -p | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'"
+   run_cached -s ntp 30 "waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'"
 fi
 
 if type nvidia-settings >/dev/null && [ -S /tmp/.X11-unix/X0 ]

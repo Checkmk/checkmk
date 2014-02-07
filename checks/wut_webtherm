@@ -27,7 +27,7 @@
 wut_webtherm_defaultlevels = (30, 35)
 
 def inventory_webtherm(info):
-    # line[0] is 1.1, 2.1, 3.1, 6.1, 8.1 or 16.1 depending on MIB variant. We chop
+    # line[0] is 1.1, 2.1, 3.1, 6.1, 8.1, 16.1 or 18.1 depending on MIB variant. We chop
     # of the first part in order to get independent of that.
     return [ (line[0].split(".")[1], "wut_webtherm_defaultlevels") for
         line in info if len(line) == 2 ]
@@ -56,7 +56,8 @@ def detect_webtherm(oid):
           ".1.3.6.1.4.1.5040.1.2.7",
           ".1.3.6.1.4.1.5040.1.2.8",
           ".1.3.6.1.4.1.5040.1.2.9",
-          ".1.3.6.1.4.1.5040.1.2.16"  ]
+          ".1.3.6.1.4.1.5040.1.2.16",
+          ".1.3.6.1.4.1.5040.1.2.18" ]
 
 check_info["wut_webtherm"] = {
     'check_function':          check_webtherm,
@@ -64,7 +65,7 @@ check_info["wut_webtherm"] = {
     'service_description':     'Thermograph Sensor %s',
     'has_perfdata':            True,
     'snmp_info':               ('.1.3.6.1.4.1.5040.1.2',
-        ['1', '2', '3', '6', '7', '8', '9', '16'],
+        ['1', '2', '3', '6', '7', '8', '9', '16', '18'],
         ['1.2.1.1', '1.3.1.1']
     ),
     'snmp_scan_function':      detect_webtherm,

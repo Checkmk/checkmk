@@ -51,8 +51,8 @@ fi
 function file_age() {
     /usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($^T-$mtime);' "$1"
 }
-    
-    
+
+
 
 
 # Runs a command asynchronous by use of a cache file
@@ -110,7 +110,7 @@ fi
 
 # Filesystem usage for UFS and VXFS
 echo '<<<df>>>'
-for fs in ufs vxfs samfs
+for fs in ufs vxfs samfs lofs
 do
     df -l -k -F $fs 2>/dev/null | sed 1d | \
     while read Filesystem kbytes used avail capacity Mountedon
@@ -195,7 +195,7 @@ ps -o comm $pszone | grep -w xntpd &>/dev/null
 if [ $? -eq 0 ]
 then
     echo '<<<ntp>>>'
-    ntpq -p | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
+    ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
 fi
 
 
@@ -231,7 +231,7 @@ if [ -f "$MK_CONFDIR/fileinfo.cfg" ]
 then
     echo '<<<fileinfo:sep(124)>>>'
     /usr/bin/perl -e 'print time."\n"'
-    ls $(cat "$MK_CONFDIR/fileinfo.cfg") | \
+    ls $(cat "$MK_CONFDIR/fileinfo.cfg") | sort -u | \
         /usr/bin/perl -e '
            while(my $file = <>) {
                $file =~ s/\n$//;

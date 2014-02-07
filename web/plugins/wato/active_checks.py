@@ -615,6 +615,11 @@ register_rule(group,
                                   ],
                                   default_value = 'follow'),
                             ),
+                            ( "expect_response_header",
+                              TextAscii(
+                                  title = _("String to expect in response headers"),
+                              )
+                            ),
                             ( "expect_response",
                               ListOfStrings(
                                   title = _("Strings to expect in server response"),

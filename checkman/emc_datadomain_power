@@ -1,0 +1,19 @@
+title: EMC Datadomain: Power Modules
+agents: snmp
+catalog: hw/storagehw/emc
+license: GPL
+distribution: check_mk
+description:
+ Reports the status of the power modules of the EMC Datadomain
+ Deduplication Storage Systems. The state of the check is {OK}
+ when the state reported by the device is {0=Absent} or {1=OK}.
+ The state of the check is {WARN} when device reports a state of
+ {4=ACNone}. The state is {CRIT} when the device reports a state
+ of {2=Failed} or {3=Faulty}.
+
+item:
+ "ID of the enclosure" - "ID of the module"
+
+inventory:
+ Automatically configures one check for every power module found on the
+ device

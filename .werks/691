@@ -1,0 +1,8 @@
+Title: Solaris agent: include lofs in list of monitored filesystem types
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1391686794
+Class: feature
+
+

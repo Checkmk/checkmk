@@ -229,7 +229,7 @@ fi
 if which ntpq > /dev/null 2>&1 ; then
    echo '<<<ntp>>>'
    # remote heading, make first column space separated
-   ntpq -p | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
+   ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
 fi
 
 

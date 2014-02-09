@@ -1,0 +1,82 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+def inventory_emc_datadomain_disks(info):
+    inventory = []
+    for line in info[0]:
+        item = line[0]+"-"+line[1]
+        inventory.append((item, None))
+    return inventory
+
+def check_emc_datadomain_disks(item, _no_params, info):
+    state_table = { "1": ("Operational", 0),
+                    "2": ("Unknown", 3),
+                    "3": ("Absent", 1),
+                    "4": ("Failed", 2),
+                    "5": ("Spare", 0),
+                    "6": ("Available", 0),
+                    }
+    for line in info[0]:
+        if item == line[0]+"-"+line[1]:
+            model = line[2]
+            firmware = line[3]
+            serial = line[4]
+            capacity = line[5]
+            dev_state = line[6]
+            index = int(line[7].split('.')[1]) - 1
+            busy = info[1][index][0]
+            dev_state_str = state_table.get(dev_state, ("Unknown",3))[0]
+            dev_state_rc = state_table.get(dev_state, ("Unknown",3))[1]
+            infotext = "%s, busy %s%% - %s, Firmware %s, Serial %s, Capacity %s" \
+                % ( dev_state_str, busy, model, firmware, serial, capacity )
+            perfdata = [('busy', busy+"%" )]
+            return dev_state_rc, infotext,perfdata
+
+check_info["emc_datadomain_disks"] = {
+    "check_function"        : check_emc_datadomain_disks,
+    "inventory_function"    : inventory_emc_datadomain_disks,
+    "service_description"   : "Hard Disk %s",
+    "has_perfdata"          : True,
+    "snmp_info"             : [
+                                (".1.3.6.1.4.1.19746.1.6.1.1.1",
+                                       [
+                                            1, # diskPropEnclosureID
+                                            2, # diskPropIndex
+                                            4, # diskModel
+                                            5, # diskFirmwareVersion
+                                            6, # diskSerialNumber
+                                            7, # diskPropCapacity
+                                            8, # diskPropState
+                                            OID_END
+                                       ]),
+                                (".1.3.6.1.4.1.19746.1.6.2.1.1",
+                                       [
+                                            6, # diskPerfBusy
+                                       ]
+                            )],
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.19746.3.1.14")
+}
+

@@ -1,0 +1,89 @@
+title: EMC Datadomain: Used space of filesystems via SNMP
+agents: snmp
+catalog: os/storagehw/emc
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the usage of filesystems of the EMS Deduplication
+ Storage Systems. It uses SNMP with the {Datadomain-MIB} to get its data.
+
+ For configuration parameters and examples you may also refer to the man
+ page of {df}. The check can be configured with the same WATO rule as the
+ {df} check.
+
+ The filesystems monitored by this check are different from the filesystems
+ found by the hr_fs filesystem check for the same device. The latter are
+ the ones found on the underlying operating system level of the device,
+ whereas the filesystems monitored with this check are the filesystems of
+ the Data Domain application.
+
+item:
+ The name of the filesystem as in {fileSystemResourceName} of the Data Domain
+ MIB.
+
+inventory:
+ For each fixed disk one service is generated - if the description
+ of the filesystem in not listed in {inventory_df_exclude_mountpoints}.
+
+perfdata:
+ One or three values: The first value is the used space of the filesystem
+ in MB. Also the minimum (0 MB), maximum (size of the filesystem) and the
+ warning and critical levels in MB are provided. If {trend_range} is set
+ (the default), then two additional values are output: the change of the
+ usage in MB per range since the last check (e.g. in MB per 24 hours) and
+ the averaged change (so called trend), also in MB per range.
+
+[parameters]
+parameters (dict): This check supports two types of parameters. The
+ new version supports trends and is a dictionary with the following
+ keys:
+
+ {"levels"}: Warning and critical level of filesystem usage in percentages
+ of the filesystem size. The default is {(80, 90)}.
+
+ {"magic"}: The magic number, which scales the levels according to the
+ filesystem size. Default is a factor of 1.0, which does no adaptation. A
+ factor less than 1.0 raises the levels for large filesystems and lowers
+ them for small ones. Please look at online documentation for more details
+ about the magic factor.
+
+ {"magic_norm"}: Norm size of a filesystem for the magic computation.
+ The default for this is {20}. It is measured in {GB}.
+
+ {"levels_low"}: When applying the magic factor the warn/crit levels will
+ never drop below these numbers. The is preset to {(50,60)}.
+
+ {"trend_range"}: The time range over that trends are computed. This is in
+ hours and preset to {24} (i.e. one day). If you set this to {None} then trend
+ computing is disabled and the check outputs only one performance data value.
+
+ {"trend_mb"}: A pair of numbers specifying the maximum number of megabytes
+ the usage is allowed to grow within the time range if not triggering
+ warning/critical. If you set this to {(10,20)} then the check will warn if
+ the size grows by more than 10 MB per {trend_range} hours and critical if
+ it grows more than 20 MB. Per default no levels are applied.
+
+ {"trend_perc"}: This is similar to trend_mb but here you specify the
+ allowed growth in percentages of the filesystem size. Fractional values
+ are allowed. This may be used in parallel with trend_mb.
+
+ {"trend_timeleft"}: A pair of numbers that specifies the minimum hours
+ of time left until the filesystem gets full. If you set this to {(48,24)}
+ then the check will warn if the estimated time until the disk is full is 48
+ hours or less. It will get critical if only 24 hours are assumed to be left.
+
+ It is still possible to specify a pair or triple of numbers {instead}
+ of a dictionary:
+
+warning (int): The percentage of used space that triggers
+ WARNING state
+critical (int): The percentage of used space that triggers
+ CRITICAL space
+magic_factor (float): Optional: Magic factor that adapts the levels
+ according to the size of the filesystem. Default is a factor of 1.0,
+ which does no adaptation. A factor less than 1.0 raises the levels for
+ large filesystems and lowers them for small ones. Please look at online
+ documentation for more details about the magic factor.
+
+[configuration]
+filesystem_default_levels (dict, pair or triple): Default levels for filesystem detected by inventory. For further paramters please refer to the man page of {df}.

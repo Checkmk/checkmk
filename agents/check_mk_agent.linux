@@ -365,23 +365,32 @@ fi
 
 # Status of CUPS printer queues
 if type lpstat > /dev/null 2>&1; then
-   if pgrep cups > /dev/null 2>&1; then
-       echo '<<<cups_queues>>>'
-       WAITMAX="waitmax 3"
-       CPRINTCONF=/etc/cups/printers.conf
-       PRINTERS=$(waitmax 10 lpstat -a | awk '{print $1}')
-       if [ -r "$CPRINTCONF" ] ; then
-          for PQ in $PRINTERS ; do
-             grep -q -x -E "<(Default)?Printer $PQ>" $CPRINTCONF && $WAITMAX lpstat -p $PQ
-          done
-          echo '---'
-          for PQ in $PRINTERS ; do
-             grep -q -x -E "<(Default)?Printer $PQ>" $CPRINTCONF && $WAITMAX lpstat -o $PQ
-          done
-       else
-          $WAITMAX lpstat -p ; echo '---' ; $WAITMAX lpstat -o | sort
-       fi
-   fi
+    if pgrep cups > /dev/null 2>&1; then
+        echo '<<<cups_queues>>>'
+        CPRINTCONF=/etc/cups/printers.conf
+        if [ -r "$CPRINTCONF" ] ; then
+            LOCAL_PRINTERS=$(grep -E "<(Default)?Printer .*>" $CPRINTCONF | awk '{print $2}' | sed -e 's/>//')
+            lpstat -p | while read LINE
+            do
+                PRINTER=$(echo $LINE | awk '{print $2}')
+                if echo "$LOCAL_PRINTERS" | grep -q "$PRINTER"; then
+                    echo $LINE
+                fi
+            done
+            echo '---'
+            lpstat -o | while read LINE
+            do
+                PRINTER=$(echo $LINE | awk '{print $2}')
+                if echo "$LOCAL_PRINTERS" | grep -q "$PRINTER"; then
+                    echo $LINE
+                fi
+            done
+        else
+            lpstat -p
+            echo '---'
+            lpstat -o | sort
+        fi
+    fi
 fi
 
 # Heartbeat monitoring

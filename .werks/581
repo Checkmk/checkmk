@@ -1,0 +1,8 @@
+Title: emc_datadomain_disks emc_datadomain_fs:  new checks to monitor disks and filesystems of EMC Datadomain
+Level: 2
+Component: checks
+Version: 1.2.5i1
+Date: 1391968147
+Class: feature
+
+

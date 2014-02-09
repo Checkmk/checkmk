@@ -4,8 +4,11 @@ catalog: hw/environment
 license: GPL
 distribution: check_mk
 description:
- This plugin checks the status of pumps of Stulz clima units. Returns
+ This plugin checks the status and RPM of pumps of Stulz clima units. It returns
  {OK} if the pump is running and {CRIT} if it is not running.
+
+perfdata:
+ The RPM of the pump in percent of the maximum RPM are taken as performance data
 
 inventory:
  The inventory will create exactly one service per pump.

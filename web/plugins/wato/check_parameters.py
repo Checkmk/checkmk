@@ -330,7 +330,8 @@ register_rule(group + '/' + subgroup_inventory,
                          '<p>Specifying "grab user" makes the created check expect the process to run as the same user as during inventory: the user '
                          'name will be hardcoded into the check. In that case if you put %u into the service description, that will be replaced '
                          'by the actual user name during inventory. You need that if your rule might match for more than one user - your would '
-                         'create duplicate services with the same description otherwise.</p>'),
+                         'create duplicate services with the same description otherwise.</p><p>Windows users are specified by the namespace followed by '
+                         'the actual user name. For example "\\\\NT AUTHORITY\NETWORK SERVICE" or "\\\\CHKMKTEST\Administrator".</p>'),
             )),
             ('perfdata', Checkbox(
                 title = _('Performance Data'),

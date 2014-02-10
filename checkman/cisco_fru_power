@@ -1,0 +1,20 @@
+title: Cisco Nexus Switches: State of FRU Power Supplies
+agents: snmp
+catalog: hw/network/cisco
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the administrative and operational status of field
+ replaceable unit (FRU) power supplies of Cisco switches.  The check is
+ {OK} when the administrative and operational state is {on}.  The check is
+ {CRIT} when the administrative state is {off} or the operational state
+ is {offDenied}, {offEnvPower}, {offEnvTemp}, {offEnvFan}. {failed},
+ {onButInlinePowerFail}.  The check is {WARN} otherwise.
+
+item:
+ The index of the power supply from the list of OIDs for the device.
+
+inventory:
+ One check is created for each FRU power supply unit.  Units are only included
+ if they are not in the operational state {offEnvOther} and {offEnvPower}
+

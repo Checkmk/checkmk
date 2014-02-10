@@ -128,7 +128,7 @@ def extract_domains(tar, domains):
                 if os.access("/".join(path_tokens), os.W_OK):
                     return True  # exists and writable
                 else:
-                    errors.append("Path not writable %s" % "/".join(path_tokens))
+                    errors.append(_("Path not writable %s") % "/".join(path_tokens))
                     return False # not writable
             else:
                 return check_exists_or_writable(path_tokens[:-1])

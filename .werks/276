@@ -3,7 +3,7 @@ Level: 3
 Component: livestatus
 Class: feature
 State: unknown
-Version: 1.2.4b8
+Version: 1.2.4
 Date: 1391698284
 
 It is now possible to compile livestatus for nagios4.

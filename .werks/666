@@ -3,7 +3,7 @@ Level: 1
 Component: wato
 Class: fix
 State: unknown
-Version: 1.2.4b8
+Version: 1.2.4
 Date: 1391698838
 
 This limitation has been added to prevent permission problem errors and mixups

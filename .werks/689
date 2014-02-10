@@ -1,7 +1,7 @@
 Title: postgres_sessions: fix empty agent section in case of 0 sessions
 Level: 1
 Component: checks
-Version: 1.2.4b8
+Version: 1.2.4
 Date: 1391505669
 Class: fix
 

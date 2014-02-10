@@ -1,7 +1,7 @@
 Title: hpux_lvm: avoid problem when alternative vgdisplay is installed
 Level: 1
 Component: checks
-Version: 1.2.4b8
+Version: 1.2.4
 Date: 1391693475
 Class: fix
 

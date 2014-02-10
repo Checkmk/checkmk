@@ -1,7 +1,7 @@
 Title: Fixed auth.serials permission problem in check_mk standalone installation
 Level: 1
 Component: core
-Version: 1.2.4b8
+Version: 1.2.4
 Date: 1390812956
 Class: fix
 

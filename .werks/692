@@ -1,7 +1,7 @@
 Title: fileinfo: Avoid duplicate entries in Solaris agent
 Level: 1
 Component: checks
-Version: 1.2.4b8
+Version: 1.2.4
 Date: 1391687738
 Class: fix
 

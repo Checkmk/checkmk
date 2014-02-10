@@ -97,10 +97,13 @@ def check_statgrab_net_params(item, params, info):
 
 def inventory_statgrab_net_ctr(info):
     items = []
+    last_tx_nic = ""
     for var, value in info:
-        if var.endswith(".up"):
+        if var.endswith(".tx"):
+            last_tx_nic = var.split('.')[0]
+        elif var.endswith(".up"):
             nicname = var.split('.')[0]
-            if not nicname.startswith("lo"):
+            if nicname == last_tx_nic and not nicname.startswith("lo"):
                 items.append( (nicname, '', '""') )
     return items
 

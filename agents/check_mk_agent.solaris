@@ -141,8 +141,8 @@ sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
 # binary: http://www.opencsw.org/
 if type statgrab &>/dev/null
 then
-    statgrab_vars="const. cpu. disk. general. mem. page. proc. swap. user."
-    statgrab_sections="proc cpu disk page"
+    statgrab_vars="const. cpu. disk. general. mem. page. swap. user."
+    statgrab_sections="cpu disk page"
 
     # Only collect net stats in global zone.
     if [ "$zonename" == "global" ]
@@ -191,7 +191,7 @@ echo $(($ctime - $btime))
 
 
 # NTP
-ps -o comm $pszone | grep -w xntpd &>/dev/null
+ps -o comm $pszone | grep -w .*ntpd &>/dev/null
 if [ $? -eq 0 ]
 then
     echo '<<<ntp>>>'

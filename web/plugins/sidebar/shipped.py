@@ -974,8 +974,8 @@ def render_bookmarks():
     n = 0
     for title, href in bookmarks:
         html.write("<div class=bookmark id=\"bookmark_%d\">" % n)
-        iconbutton(_("delete"), "del_bookmark.py?num=%d" % n, "side", "updateContents", 'snapin_bookmarks', css_class = 'bookmark')
-        iconbutton(_("edit"), "edit_bookmark.py?num=%d" % n, "main", css_class = 'bookmark')
+        iconbutton("delete", "del_bookmark.py?num=%d" % n, "side", "updateContents", 'snapin_bookmarks', css_class = 'bookmark')
+        iconbutton("edit", "edit_bookmark.py?num=%d" % n, "main", css_class = 'bookmark')
         html.write(link(title, href))
         html.write("</div>")
         n += 1

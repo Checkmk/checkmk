@@ -1,0 +1,8 @@
+Title: Fixed bookmark icon images for non-english user languages
+Level: 1
+Component: multisite
+Version: 1.2.5i1
+Date: 1392039717
+Class: fix
+
+Using a language different than english caused the bookmark delete and edit images to vanish.

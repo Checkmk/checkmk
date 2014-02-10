@@ -1,0 +1,20 @@
+Title: Quicksearch of hosts: incorrect WATO link
+Component: multisite
+State: open
+Date: 2014-02-10 14:24:58
+Targetversion: 1.2.5i1
+Class: bug
+
+For example:
+Doint a quicksearch on "x" returns the hosts esx_host and winxp
+The WATO context button links to
+http://localhost/heute1/check_mk/wato.py?mode=edithost&host=x
+
+Should be changed that it only creates a host link if there is a
+WATO host with this name. If not, just create a link to the wato_folder
+
+Best place for change:
+htdocs/views.py:
+lines following: # WATO: If we have a host context, then show button to WATO, if permissions allow this
+
+Note: checking if a WATO host exist might take some time...

@@ -191,7 +191,7 @@ echo $(($ctime - $btime))
 
 
 # NTP
-ps -o comm $pszone | grep -w xntpd &>/dev/null
+ps -o comm $pszone | grep -w .*ntpd &>/dev/null
 if [ $? -eq 0 ]
 then
     echo '<<<ntp>>>'

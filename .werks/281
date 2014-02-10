@@ -1,0 +1,10 @@
+Title: statgrab_net.ctr: only inventorize interfaces with actual traffic
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1392045619
+Class: fix
+
+Some virtual interfaces with no counter information got inventorized - doesn't made sense.
+Now we only inventorize interfaces which also provide traffic information.
+

@@ -1,4 +1,7 @@
 1.2.4p1:
+    Checks & Agents:
+    * 0279 FIX: check_mk_agent.solaris: removed proc section from statgrab...
+
     Multisite:
     * 0278 FIX: Fixed bookmark icon images for non-english user languages...
 

@@ -11,16 +11,15 @@ description:
  Depending on the state of the sensor the checks can
  be {OK}, {WARN}, {CRIT} or {UNKNOWN}.
 
- In addition to {cisco_temp} this check outputs performance
+ In addition to {cisco_temp} this check determines performance
  data.
 
 perfdata:
  The current temperature in degrees celsius
 
 item:
- The description of the sensor as provided by
- the device.
+ The description of the sensor as provided by the device.
 
 inventory:
- One check for each sensor is created by the inventory, if the
+ One check for each sensor is created by the inventory if the
  sensor is not in state {5} (not present).

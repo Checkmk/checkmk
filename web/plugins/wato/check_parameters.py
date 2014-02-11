@@ -1997,6 +1997,21 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_os,
+    "cisco_supervisor_mem",
+    _("Cisco Nexus Supervisor Memory Usage"),
+    Tuple(
+        title = _("The average utilization of memory on the active supervisor"),
+        elements = [
+          Percentage(title = _("Warning at a usage of"), default_value = 80.0, maxvalue = 100.0 ),
+          Percentage(title = _("Critical at a usage of"), default_value = 90.0, maxvalue = 100.0 )
+        ]
+    ),
+    None,
+    None
+)
+
+register_check_parameters(
+    subgroup_os,
     "memory",
     _("Main memory usage (Linux / UNIX / Other Devices)"),
     Transform(

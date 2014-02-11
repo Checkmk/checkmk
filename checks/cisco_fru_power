@@ -57,12 +57,6 @@
 # 5:powerCycle
 #
 
-power_oper_type = ('', 'offEnvOther', 'on', 'offAdmin', 'offDenied',
-                    'offEnvPower', 'offEnvTemp', 'offEnvFan', 'failed',
-                    'onButFanFail', 'offCooling', 'offConnectorRating',
-                    'onButInlinePowerFail' )
-
-power_admin_type = ( '', 'on', 'off', 'inlineAuto', 'inlineOn', 'powercycle')
 
 def inventory_cisco_fru_power(info):
     return [ (line[0], None )  for line in info if saveint(line[2]) not in  [ 1, 5 ] ]
@@ -70,9 +64,15 @@ def inventory_cisco_fru_power(info):
 def check_cisco_fru_power(item, params, info):
     for line in info:
         if line[0] == item:
+            power_oper_type = ('', 'offEnvOther', 'on', 'offAdmin', 'offDenied',
+                            'offEnvPower', 'offEnvTemp', 'offEnvFan', 'failed',
+                            'onButFanFail', 'offCooling', 'offConnectorRating',
+                            'onButInlinePowerFail' )
+            power_admin_type = ( '', 'on', 'off', 'inlineAuto', 'inlineOn', 'powercycle')
+
             admin_state, oper_state  = map(saveint, line[1:3])
-            output = 'Admin-State: %s, Oper-State: %s' % (power_admin_type[admin_state],
-                                                            power_oper_type[oper_state])
+            admin_state_txt = power_admin_type[admin_state]
+            oper_state_txt = power_oper_type[oper_state]
             admin_sym = ""
             oper_sym = ""
             if admin_state == 1 and oper_state == 2:
@@ -89,10 +89,11 @@ def check_cisco_fru_power(item, params, info):
                     admin_sym = "(!)"
                 if oper_state not in (2,4,5,6,7,8,12):
                     oper_sym = "(!)"
-            return (state, "Admin-State: %s%s, Oper-State: %s%s" % \
-                (power_admin_type[admin_state],admin_sym,power_oper_type[oper_state],oper_sym))
+            infotext = "Admin-State: %s%s, Oper-State: %s%s" % \
+                            (admin_state_txt, admin_sym, oper_state_txt, oper_sym)
+            return (state, infotext)
 
-    return (3, "item not found in snmp data")
+    return (3, "item not found in SNMP data")
 
 check_info["cisco_fru_power"] = {
     'check_function':          check_cisco_fru_power,

@@ -27,31 +27,24 @@
 # cseSysMemoryUtilization   .1.3.6.1.4.1.9.9.305.1.1.2.0
 #
 
-cisco_mem_default_levels = (80.0, 90.0)
+cisco_sys_mem_default_levels = (80.0, 90.0)
 
 def inventory_cisco_sys_mem(info):
     if info:
-        return [ (None, "cisco_mem_default_levels") ]
+        return [ (None, "cisco_sys_mem_default_levels") ]
     else:
         return []
 
 def check_cisco_sys_mem(_no_item, params, info):
-    # This check does not yet support averaging. We need to
-    # convert it to mem.include
-    if type(params) == dict:
-        params = params["levels"]
-
     warn, crit = params
     if info[0][0]:
        mem_used =  float(info[0][0])
        perfdata = [("mem_used", mem_used, warn, crit, 0, 100)]
        infotext = "%2.1f%% of supervisor memory used" % mem_used
-       if type(warn) == int or type(crit) == int:
-           return (3, infotext + "no limits applied, must be given in precent", perfdata)
        if mem_used >= crit:
-           return (2, infotext + " (critical at %2.1f%% MB)" % crit, perfdata)
+           return (2, infotext + " (critical at %2.1f%%)" % crit, perfdata)
        elif mem_used >= warn:
-           return (1, infotext + " (warning at %2.1f%% MB)" % warn, perfdata)
+           return (1, infotext + " (warning at %2.1f%%)" % warn, perfdata)
        else:
            return (0, infotext, perfdata)
 
@@ -61,7 +54,7 @@ check_info["cisco_sys_mem"] = {
     "inventory_function"    : inventory_cisco_sys_mem,
     "service_description"   : "Supervisor Mem Used",
     "has_perfdata"          : True,
-    "group"                 : "memory",
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.4.1.9.9.305.1.1.2.0"),
+    "group"                 : "cisco_supervisor_mem", # seperate group since only percentage 
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Cisco NX-OS"),
     "snmp_info"		    : ( ".1.3.6.1.4.1.9.9.305.1.1.2", "0" ),
 }

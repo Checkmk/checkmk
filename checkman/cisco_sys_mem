@@ -1,0 +1,25 @@
+title: Cisco Nexus Supervisor Memory
+agents: snmp
+catalog: hw/network/cisco
+license: GPL
+distribution: check_mk
+description:
+
+ This check monitors the average utilization of memory on the active supervisor
+ of Cisco Nexus devices as given by the {cseSysMemoryUtilization} parameter in
+ the {CISCO-SYSTEM-EXT-MIB}. The device gives the utilization in precent,
+ so that handling of absolute values is not available.
+
+perfdata:
+ The memory utilization in percent
+
+[parameters]
+parameters (tuple): A tuple with the following values
+
+ {warn}: (int) The warning level in percent
+
+ {crit}: (int) The critical level in percent
+
+[configuration]
+cisco_sys_mem_default_levels (tuple): This variable is preset to { (80.0,90.0) }
+

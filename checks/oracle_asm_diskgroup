@@ -30,8 +30,6 @@
 # MOUNTED  NORMAL  N         512   4096  1048576      3072     2146              309             918              0             Y  OCR_VOTE/
 # The agent section <<<oracle_asm_diskgroup>>> does not output the header line
 
-check_includes['oracle_asm_diskgroup'] = [ "df.include" ]
-
 def inventory_oracle_asm_diskgroup(info):
     return [ (line[-1].rstrip("/"), {}) for line in info ]
 
@@ -47,10 +45,11 @@ def check_oracle_asm_diskgroup(item, params, info):
 
 
 check_info["oracle_asm_diskgroup"] = {
-    'check_function':          check_oracle_asm_diskgroup,
-    'inventory_function':      inventory_oracle_asm_diskgroup,
-    'service_description':     'ASM Diskgroup %s',
-    'has_perfdata':            True,
-    'group':                   'fs',
-    'default_levels_variable': 'filesystem_default_levels',
+    'check_function'          : check_oracle_asm_diskgroup,
+    'inventory_function'      : inventory_oracle_asm_diskgroup,
+    'service_description'     : 'ASM Diskgroup %s',
+    'has_perfdata'            : True,
+    'group'                   : 'filesystem',
+    'default_levels_variable' : 'filesystem_default_levels',
+    "includes"                : [ "df.include" ],
 }

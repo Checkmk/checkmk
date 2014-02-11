@@ -1,0 +1,10 @@
+Title: oracle_asm_diskgroup: Now really uses the generic filesystem levels
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1392119342
+Class: fix
+
+The check should but did not use the generic filesystem levels for inventorized
+and manual checks, but it did not use them.
+

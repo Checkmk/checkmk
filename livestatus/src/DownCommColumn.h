@@ -26,7 +26,6 @@
 #define DownCommColumn_h
 
 #include "config.h"
-#include "objects.h"
 
 #include "ListColumn.h"
 #include "TableContacts.h"

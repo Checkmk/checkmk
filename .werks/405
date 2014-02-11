@@ -1,0 +1,9 @@
+Title: Add CSV export to availability views
+Level: 2
+Component: reporting
+Version: 1.2.5i1
+Date: 1392141896
+Class: feature
+
+In the availability table views there is now the small CSV export icon at the
+bottom left of the page, which allows a CVS export of the table.

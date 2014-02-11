@@ -33,7 +33,10 @@ def inventory_snmp_uptime(info):
 def check_snmp_uptime(checktype, params, info):
     ticks            = info[0][0]
     try:
-        uptime = int(ticks[:-2])
+        if len(ticks) < 3:
+            uptime = 0
+        else:
+            uptime = int(ticks[:-2])
     except:
         days, h, m, s = ticks.split(":")
         uptime = (int(days) * 86400 ) + (int(h) * 3600) + (int(m) * 60) + int(float(s))

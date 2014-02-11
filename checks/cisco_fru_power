@@ -90,10 +90,10 @@ def check_cisco_fru_power(item, params, info):
                 if oper_state not in (2,4,5,6,7,8,12):
                     oper_sym = "(!)"
             infotext = "Admin-State: %s%s, Oper-State: %s%s" % \
-                            (admin_state_txt, admin_sym, oper_state_txt, oper_sym))
+                            (admin_state_txt, admin_sym, oper_state_txt, oper_sym)
             return (state, infotext)
 
-    return (3, "item not found in snmp data")
+    return (3, "item not found in SNMP data")
 
 check_info["cisco_fru_power"] = {
     'check_function':          check_cisco_fru_power,

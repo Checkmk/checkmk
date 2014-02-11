@@ -1,0 +1,14 @@
+Title: TIMEPERIOD TRANSITION messages no longer cut at 64 bytes
+Level: 1
+Component: core
+Version: 1.2.4p1
+Date: 1392123708
+Class: fix
+
+Whenever the timeperiod name was specified very long not all information got
+logged into the monitoring history during a timeperiod transition.<br>
+For example:<br>
+nagios-02-07-2014-00.log:[1391684695] TIMEPERIOD TRANSITION: ab@mathias-kettner.de_demo_timeperiod@shd-online.d<br><br>
+
+Some mandatory information was missing at the end of the line, thus causing
+the livestatus statehist table to crash, while processing such an invalid entry.

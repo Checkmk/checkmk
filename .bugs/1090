@@ -1,0 +1,8 @@
+Title: IE8: availability options do not work
+Component: multisite
+State: open
+Date: 2014-02-12 09:23:30
+Targetversion: 1.2.5i1
+Class: bug
+
+The availability options cannot be opened on IE8. Happens in version 1.2.4.

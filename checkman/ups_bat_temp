@@ -4,13 +4,10 @@ catalog: hw/power
 license: GPL
 distribution: check_mk
 description:
- This check monitors the state of temperature sensors
- on UPS devices.
-
+ This check monitors the state of temperature sensors on UPS devices.
 
 item:
- The description of the sensor as provided by
- the device.
+ The description of the sensor as provided by the device.
 
 perfdata:
  The actual temperature in degree

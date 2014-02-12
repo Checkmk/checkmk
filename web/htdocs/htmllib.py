@@ -801,8 +801,11 @@ class html:
             self.bottom_footer()
             self.body_end()
 
-    def add_status_icon(self, img, tooltip):
-        self.status_icons[img] = tooltip
+    def add_status_icon(self, img, tooltip, url = None):
+	if url:
+	    self.status_icons[img] = tooltip, url
+	else:
+	    self.status_icons[img] = tooltip
 
     def render_status_icons(self):
         h = '<a target="_top" href="%s"><img class=statusicon src="images/status_frameurl.png" title="%s"></a>\n' % \
@@ -811,13 +814,17 @@ class html:
              ("index.py?" + self.urlencode_vars([("start_url", self.makeuri([]))]), _("URL to this page including sidebar"))
 
         if self.myfile == "view" and self.var('mode') != 'availability':
-            # h += '<a target="_top" href="%s"><img class=statusicon src="images/status_frameurl.png" title="%s"></a>\n' % \
-            #     (self.makeuri([("output_format", "json_export")]), _("Export as JSON"))
-            h += '<a target="_top" href="%s"><img class=statusicon src="images/icon_download_csv.png" title="%s"></a>\n' % \
+            h += '<a target="_top" href="%s">' \
+                 '<img class=statusicon src="images/status_download_csv.png" title="%s"></a>\n' % \
                  (self.makeuri([("output_format", "csv_export")]), _("Export as CSV"))
 
         for img, tooltip in self.status_icons.items():
-            h += '<img class=statusicon src="images/status_%s.png" title="%s">\n' % (img, tooltip)
+	    if type(tooltip) == tuple:
+		tooltip, url = tooltip
+		h += '<a target="_top" href="%s"><img class=statusicon src="images/status_%s.png" title="%s"></a>\n' % \
+		     (url, img, tooltip)
+	    else:
+		h += '<img class=statusicon src="images/status_%s.png" title="%s">\n' % (img, tooltip)
         return h
 
     def show_error(self, msg):

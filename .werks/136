@@ -1,0 +1,9 @@
+Title: cisco_fru_power: Prevent inventory of not exsisting devices
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1392302417
+
+

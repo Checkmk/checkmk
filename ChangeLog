@@ -175,6 +175,7 @@
     * 0582 FIX: cisco_sys_mem: check now has a man page and a new WATO integration
     * 0667 FIX: oracle_asm_diskgroup: Now really uses the generic filesystem levels...
     * 0555 FIX: snmp_uptime: no longer fails if uptime is < 1 seconds
+    * 0136 FIX: cisco_fru_power: Prevent inventory of not exsisting devices
 
     Multisite:
     * 0371 Added log class filter to hostsvcevents view

@@ -59,7 +59,7 @@
 
 
 def inventory_cisco_fru_power(info):
-    return [ (line[0], None )  for line in info if saveint(line[2]) not in  [ 1, 5 ] ]
+    return [ (line[0], None )  for line in info if saveint(line[2]) not in  [ 0, 1, 5 ] ]
 
 def check_cisco_fru_power(item, params, info):
     for line in info:

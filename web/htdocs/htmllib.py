@@ -1244,14 +1244,13 @@ class html:
         self.load_tree_states()
         self.treestates[tree] = val
 
-    def parse_field_storage(self, fields):
+    def parse_field_storage(self, fields, handle_uploads_as_file_obj = False):
         self.vars     = {}
         self.listvars = {} # for variables with more than one occurrance
         self.uploads  = {}
 
         for field in fields.list:
             varname = field.name
-            value = field.value
 
             # To prevent variours injections, we only allow a defined set
             # of characters to be used in variables
@@ -1260,19 +1259,23 @@ class html:
 
             # put uploaded file infos into separate storage
             if field.filename is not None:
-                self.uploads[varname] = (field.filename, field.type, field.value)
+                if handle_uploads_as_file_obj:
+                    value = field.file
+                else:
+                    value = field.value
+                self.uploads[varname] = (field.filename, field.type, value)
 
             else: # normal variable
                 # Multiple occurrance of a variable? Store in extra list dict
                 if varname in self.vars:
                     if varname in self.listvars:
-                        self.listvars[varname].append(value)
+                        self.listvars[varname].append(field.value)
                     else:
-                        self.listvars[varname] = [ self.vars[varname], value ]
+                        self.listvars[varname] = [ self.vars[varname], field.value ]
                 # In the single-value-store the last occurrance of a variable
                 # has precedence. That makes appending variables to the current
                 # URL simpler.
-                self.vars[varname] = value
+                self.vars[varname] = field.value
 
     def uploaded_file(self, varname, default = None):
         return self.uploads.get(varname, default)

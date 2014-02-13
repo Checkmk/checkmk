@@ -1,0 +1,8 @@
+Title: Allowing upload of files without loading the whole file into memory
+Level: 1
+Component: multisite
+Version: 1.2.5i1
+Date: 1392304629
+Class: fix
+
+

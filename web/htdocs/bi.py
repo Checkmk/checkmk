@@ -963,20 +963,6 @@ def compile_leaf_node(host_re, service_re = config.HOST_STATE):
 
 service_nomatch_cache = set([])
 
-regex_cache = {}
-def regex(r):
-    rx = regex_cache.get(r)
-    if rx:
-        return rx
-    try:
-        rx = re.compile(r)
-    except Exception, e:
-        raise MKConfigError(_("Invalid regular expression '%s': %s") % (r, e))
-    regex_cache[r] = rx
-    return rx
-
-
-
 
 #     _____                     _   _
 #    | ____|_  _____  ___ _   _| |_(_) ___  _ __

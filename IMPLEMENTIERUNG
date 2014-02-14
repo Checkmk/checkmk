@@ -1,0 +1,10 @@
+NOCH ZU TUN:
+
+[6] host_inventory per Livestatus bereitstellen, damit verteiltes Monitoring klappt?
+Dabei auch evtl. host_has_inventory bereitstellen für das Icon?
+
+[7] Linux komplett abdecken
+
+[8] Windows komplett abdecken
+
+[2] Displayhints für *alle* Knoten erstellen. Das kann man machen, sobald der Baum komplett ist

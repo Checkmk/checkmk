@@ -13438,7 +13438,12 @@ def create_sample_config():
         # Put all hosts and the contact group 'all'
         'host_contactgroups': [
             ('all', [], ALL_HOSTS, {'comment': u'Put all hosts into the contact group "all"'} ),
-        ]
+        ],
+
+        # Interval for HW/SW-Inventory check
+        'extra_service_conf:check_interval': [
+          ( 1440, [], ALL_HOSTS, [ "Check_MK HW/SW Inventory$" ], {'comment': u'Restrict HW/SW-Inventory to once a day'} ),
+        ],
     }
 
     save_rulesets(g_root_folder, rulesets)

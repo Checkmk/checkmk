@@ -258,6 +258,12 @@ img.treeangle {
 img.treeangle.nform {
     margin-left: -5px;
 }
+img.treeangle.title {
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    margin-right: 5px;
+}
 b.treeangle.title {
    font-weight: bold;
    color: #ffffff;

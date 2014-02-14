@@ -1,0 +1,86 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output (Ubuntu 12.10)
+# <<<lnx_distro:sep(124)>>>
+# /etc/debian_version|wheezy/sid
+# /etc/lsb-release|DISTRIB_ID=Ubuntu|DISTRIB_RELEASE=12.10|DISTRIB_CODENAME=quantal|DISTRIB_DESCRIPTION="Ubuntu 12.10"
+
+
+def inv_lnx_distro(info):
+    node = inv_tree("software.os.")
+    for line in info:
+        if line[0] == '/etc/lsb-release':
+             inv_lnx_parse_lsb_release(node, line[1:])
+        elif line[0] == '/etc/debian_version':
+            inv_lnx_parse_debian(node, line[1])
+
+def inv_lnx_parse_lsb_release(node, lines):
+    for line in lines:
+        node["type"] = "linux"
+        varname, value = line.split("=", 1)
+        value = value.strip("'").strip('"')
+        if varname == "DISTRIB_ID":
+            node["vendor"] = value
+        elif varname == "DISTRIB_RELEASE":
+            node["version"] = value
+        elif varname == "DISTRIB_CODENAME":
+            node["code_name"] = value.title()
+        elif varname == "DISTRIB_DESCRIPTION":
+            node["name"] = value
+
+def inv_lnx_parse_debian(node, line):
+    node["type"] = "linux"
+    if "name" not in node: # Do not overwrite Ubuntu information
+        node["name"] = "Debian " + line
+        node["vendor"] = "Debian"
+        node["version"] = line
+        if line.startswith("2.0."):
+            node["code_name"] = "Hamm"
+        elif line.startswith("2.1."):
+            node["code_name"] = "Slink"
+        elif line.startswith("2.2."):
+            node["code_name"] = "Potato"
+        elif line.startswith("3.0."):
+            node["code_name"] = "Woody"
+        elif line.startswith("3.1."):
+            node["code_name"] = "Sarge"
+        elif line.startswith("4."):
+            node["code_name"] = "Etch"
+        elif line.startswith("5."):
+            node["code_name"] = "Lenny"
+        elif line.startswith("6."):
+            node["code_name"] = "Squeeze"
+        elif line.startswith("7."):
+            node["code_name"] = "Wheezy"
+        elif line.startswith("8."):
+            node["code_name"] = "Jessie"
+
+
+
+inv_info['lnx_distro'] = {
+   "inv_function"           : inv_lnx_distro,
+}

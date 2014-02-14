@@ -1,0 +1,49 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output:
+# <<<mem>>>
+# MemTotal:       32998364 kB
+# SwapTotal:             0 kB
+# VmallocTotal:   34359738367 kB
+
+inv_mem_keys = {
+    "MemTotal"    : "total_ram_usable",
+    "SwapTotal"   : "total_swap",
+    "VmallocTotal": "total_vmalloc",
+}
+
+def inv_mem(info):
+    node = inv_tree("hardware.memory.")
+    for line in info:
+        key = line[0].rstrip(':')
+        if key in inv_mem_keys:
+            node[inv_mem_keys[key]] = int(line[1]) * 1024
+
+
+inv_info['mem'] = {
+   "inv_function"           : inv_mem,
+}

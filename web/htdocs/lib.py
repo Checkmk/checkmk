@@ -352,6 +352,20 @@ def release_all_locks():
     g_locked_paths = []
 
 
+regex_cache = {}
+def regex(r):
+    rx = regex_cache.get(r)
+    if rx:
+        return rx
+    try:
+        rx = re.compile(r)
+    except Exception, e:
+        raise MKConfigError(_("Invalid regular expression '%s': %s") % (r, e))
+    regex_cache[r] = rx
+    return rx
+
+
+
 
 __builtin__.default_user_localizations = {
      u'Agent type':                          { "de": u"Art des Agenten", },

@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Run and *send* only once every 4 hours
+INTERVAL=14400
+
+FLAGFILE=$MK_CONFDIR/mk_inventory.last
+LAST_RUN=$(stat -c %Y $FLAGFILE)
+NOW=$(date +%s)
+UNTIL=$((NOW + INTERVAL))
+
+if [ $(( NOW - LAST_RUN )) -ge $INTERVAL ]
+then
+    touch $FLAGFILE
+
+    # List of DEB packages
+    if type dpkg-query >/dev/null; then
+        echo "<<<lnx_packages:sep(124):persist($UNTIL)>>>"
+        dpkg-query --show --showformat='${Package}|${Version}|${Architecture}|deb|${Summary}|${Status}\n'
+    fi
+    
+    # List of RPM packages in same format
+    if type rpm >/dev/null; then
+        echo "<<<lnx_packages:sep(124):persist($UNTIL)>>>"
+        rpm -qa --qf '%{NAME}|%{VERSION}|%{ARCH}|rpm|%{SUMMARY}|\n'
+    fi
+    
+    # Information about distribution
+    echo "<<<lnx_distro:sep(124):persist($UNTIL)>>>"
+    for f in /etc/{debian_version,lsb-release,redhat-release,SuSE-release} ; do
+        if [ -e $f ] ; then
+            echo -n "$f|" ; tr \\n \| < $f | sed 's/|$//' ; echo
+        fi
+    done
+    
+    # CPU Information. We need just the first one
+    if [ -e /proc/cpuinfo ] ; then
+        echo "<<<lnx_cpuinfo:sep(58):persist($UNTIL)>>>"
+        sed 's/[[:space:]]*:[[:space:]]*/:/' < /proc/cpuinfo | grep -v '^flags'
+    fi
+    
+    # Information about main board, memory, etc.
+    if type dmidecode >/dev/null ; then
+        echo "<<<dmidecode:sep(58):persist($UNTIL)>>>"
+        dmidecode -q | sed 's/\t/:/g'
+    fi
+fi
+

@@ -458,6 +458,7 @@ fi
 
 checksdir=$sharedir/checks
 notificationsdir=$sharedir/notifications
+inventorydir=$sharedir/inventory
 modulesdir=$sharedir/modules
 web_dir=$sharedir/web
 localedir=$sharedir/locale
@@ -482,6 +483,7 @@ check_mk_configdir          = '$confdir/conf.d'
 share_dir                   = '$sharedir'
 checks_dir                  = '$checksdir'
 notifications_dir           = '$notificationsdir'
+inventory_dir               = '$inventorydir'
 check_manpages_dir          = '$checkmandir'
 modules_dir                 = '$modulesdir'
 locale_dir                  = '$localedir'
@@ -807,6 +809,8 @@ do
 	   tar xzf $SRCDIR/checks.tar.gz -C $DESTDIR$checksdir &&
 	   mkdir -p $DESTDIR$notificationsdir &&
 	   tar xzf $SRCDIR/notifications.tar.gz -C $DESTDIR$notificationsdir &&
+	   mkdir -p $DESTDIR$inventorydir &&
+	   tar xzf $SRCDIR/inventory.tar.gz -C $DESTDIR$inventorydir &&
 	   mkdir -p $DESTDIR$web_dir &&
 	   tar xzf $SRCDIR/web.tar.gz -C $DESTDIR$web_dir &&
 	   cp $DESTDIR$modulesdir/defaults $DESTDIR$web_dir/htdocs/defaults.py &&

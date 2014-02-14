@@ -1,0 +1,266 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output:
+# BIOS Information
+# 	Vendor: LENOVO
+# 	Version: 6FET49WW (1.19 )
+# 	Release Date: 10/17/2008
+# 	Address: 0xE0000
+# 	Runtime Size: 128 kB
+# 	ROM Size: 8192 kB
+# 	Characteristics:
+# 		PCI is supported
+# 		PC Card (PCMCIA) is supported
+# 		PNP is supported
+# 		BIOS is upgradeable
+# 		BIOS shadowing is allowed
+# 		ESCD support is available
+# 		Boot from CD is supported
+# 		Selectable boot is supported
+# 		BIOS ROM is socketed
+# 		EDD is supported
+# 		ACPI is supported
+# 		USB legacy is supported
+# 		BIOS boot specification is supported
+# 		Targeted content distribution is supported
+# 	BIOS Revision: 1.25
+# 	Firmware Revision: 1.1
+#
+# System Information
+# 	Manufacturer: LENOVO
+# 	Product Name: 4061AR7
+# 	Version: ThinkPad W500
+# 	Serial Number: L3AFB3L
+# 	UUID: AD137E01-4A86-11CB-A580-BE0E287D2679
+# 	Wake-up Type: Power Switch
+# 	SKU Number: Not Specified
+# 	Family: ThinkPad W500
+#
+# ... any many other sections...
+
+
+def inv_dmidecode(info):
+    section_name = None
+    section_lines = []
+    for line in info:
+        if len(line) == 1:
+            if section_name:
+                inv_dmidecode_parse_section(section_name, section_lines)
+            section_name = line[0]
+            section_lines = []
+        else:
+            section_lines.append(line[1:])
+    if section_name:
+        inv_dmidecode_parse_section(section_name, section_lines)
+
+    node = inv_tree("hardware.")
+
+
+def inv_dmidecode_parse_section(name, lines):
+    lines = [ [ w.strip() for w in words ] for words in lines ]
+    if name == "BIOS Information":
+        inv_dmidecode_parse_bios(lines)
+    elif name == "System Information":
+        inv_dmidecode_parse_system(lines)
+    elif name == "Chassis Information":
+        inv_dmidecode_parse_chassis(lines)
+    elif name == "Processor Information":
+        inv_dmidecode_parse_processor(lines)
+#    elif name == "Memory Controller Information":
+#        inv_dmidecode_parse_mem_controller(lines)
+#    elif name == "Memory Module Information":
+#        inv_dmidecode_parse_mem_module(lines)
+    elif name == "Physical Memory Array":
+        inv_dmidecode_parse_physical_mem_array(lines)
+    elif name == "Memory Device":
+        inv_dmidecode_parse_mem_device(lines)
+
+    # TODO: Summe über alle Arrays ausrechnen
+
+def inv_dmidecode_parse_bios(lines):
+    inv_dmidecode_parse_generic("hardware.bios.", lines, {
+        "Vendor"            : "vendor",
+        "Version"           : "version",
+        "Release Date"      : "date",
+        "BIOS Revision"     : "revision",
+        "Firmware Revision" : "firmware",
+    })
+
+def inv_dmidecode_parse_system(lines):
+    inv_dmidecode_parse_generic("hardware.system.", lines, {
+        "Manufacturer"  : "manufacturer",
+        "Product Name"  : "product",
+        "Version"       : "version",
+        "Serial Number" : "serial",
+        "UUID"          : "uuid",
+        "Family"        : "family",
+    })
+
+def inv_dmidecode_parse_chassis(lines):
+    inv_dmidecode_parse_generic("hardware.chassis.", lines, {
+        "Manufacturer" : "manufacturer",
+        "Type" : "type",
+    })
+
+# Note: This node is also being filled by lnx_cpuinfo
+def inv_dmidecode_parse_processor(lines):
+    node = inv_tree("hardware.cpu.")
+    for line in lines:
+        if line[0] == "Manufacturer":
+            node["vendor"] = {
+                "GenuineIntel" : "intel",
+                "AuthenticAMD" : "amd",
+            }.get(line[1], line[1])
+        elif line[0] == "Max Speed": # 2530 MHz
+            node["max_speed"] = dmidecode_parse_speed(line[1])
+        elif line[0] == "Voltage":
+            node["voltage"] = dmidecode_parse_voltage(line[1])
+
+# def inv_dmidecode_parse_mem_controller(lines):
+#     # TODO: Can we have multiple memory controllers
+#     node = inv_tree("hardware.memory.")
+#     for line in lines:
+#         if line[0] == "Maximum Memory Module Size":
+#             node["max_module_size"] = dmidecode_parse_size(line[1])
+#         elif line[0] == "Maximum Total Memory Size":
+#             node["max_memory_size"] = dmidecode_parse_size(line[1])
+#         elif line[0] == "Memory Module Voltage":
+#             node["module_voltage"] = dmidecode_parse_voltage(line[1])
+# 
+# def inv_dmidecode_parse_mem_module(lines):
+#     node = inv_tree("hardware.memory.modules:")
+#     module = {}
+#     node.append(module)
+#     for line in lines:
+#         if line[0] == "Socket Designation":
+#             module["disignation"] = line[1]
+#         elif line[0] == "Type":
+#             module["type"] = line[1]
+#         elif line[0] == "Installed Size":
+#             module["size"] = dmidecode_parse_size(line[1])
+#         elif line[0] == "Enabled Size":
+#             module["enabled_size"] = dmidecode_parse_size(line[1])
+#         elif line[0] == "Current Speed":
+#             time_sec = dmidecode_parse_time(line[1])
+#             speed = 1.0 / time_sec
+#             module["current_speed"] = speed
+
+def inv_dmidecode_parse_physical_mem_array(lines):
+    # We expect several possible arrays
+    node = inv_tree("hardware.memory.arrays:")
+    array = {
+        "devices" : []
+    }
+    node.append(array)
+    for line in lines:
+         if line[0] == "Location":
+             array["location"] = line[1]
+         elif line[0] == "Use":
+             array["use"] = line[1]
+         elif line[0] == "Error Correction Type":
+             array["error_correction"] = line[1]
+         elif line[0] == "Maximum Capacity":
+             array["maximum_capacity"] = dmidecode_parse_size(line[1])
+
+def inv_dmidecode_parse_mem_device(lines):
+    # We assume that this devices belongs to an array
+    # that we've just found
+    node = inv_tree("hardware.memory.arrays:")
+    array = node[-1]
+    device = {}
+    array["devices"].append(device)
+    inv_dmidecode_parse_generic(device, lines, {
+        "Total Width"   : "total_width",  # 64 bits
+        "Data Width"    : "data_width",   # 64 bits
+        "Form Factor"   : "form_factor",  # SODIMM
+        "Set"           : "set",          # None
+        "Locator"       : "locator",      # DIMM 2
+        "Bank Locator"  : "bank_locator", # Bank 2/3
+        "Type"          : "type",         # DDR2
+        "Type Detail"   : "type_detail",  # Synchronous
+        "Manufacturer"  : "manufacturer", # Not Specified
+        "Serial Number" : "serial",       # Not Specified
+        "Asset Tag"     : "asset_tag",    # Not Specified
+        "Part Number"   : "part_number",  # Not Specified
+        "Speed"         : "speed",        # 667 MHz
+        "Size"          : "size",         # 2048 MB
+    })
+
+    # Convert speed and size into numbers
+    device["speed"] = dmidecode_parse_speed(device["speed"])
+    device["size"] = dmidecode_parse_speed(device["size"])
+
+def inv_dmidecode_parse_generic(node, lines, keyinfo):
+    if type(node) == str:
+        node = inv_tree(node)
+    for line in lines:
+        if line[0] in keyinfo:
+            node[keyinfo[line[0]]] = line[1]
+
+
+def dmidecode_parse_size(v): # into Bytes (int)
+    if v == "Unknown":
+        return None
+
+    parts = v.split()
+    if parts[1].lower() == "gb":
+        return int(parts[0]) * 1024 * 1024 * 1024
+    elif parts[1].lower() == "mb":
+        return int(parts[0]) * 1024 * 1024
+    elif parts[1].lower() == "kb":
+        return int(parts[0]) * 1024
+    else:
+        return int(parts[0])
+
+def dmidecode_parse_speed(v): # into Hz (float)
+    if v == "Unknown":
+        return None
+
+    parts = v.split()
+    if parts[1] == "GHz":
+        return float(parts[0]) * 1000000000.0
+    elif parts[1] == "MHz":
+        return float(parts[0]) * 1000000.0
+    elif parts[1] == "kHz":
+        return float(parts[0]) * 1000.0
+    elif parts[1] == "Hz":
+        return float(parts[0])
+
+def dmidecode_parse_voltage(v):
+    return float(v.split()[0])
+
+def dmidecode_parse_time(v): # 155 ns
+    parts = v.split()
+    if parts[1] == "ns":
+        return float(parts[0]) / 1000000000.0
+    else:
+        return float(parts[0]) # assume seconds
+
+
+inv_info['dmidecode'] = {
+   "inv_function"           : inv_dmidecode,
+}

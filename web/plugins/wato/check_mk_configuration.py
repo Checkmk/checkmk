@@ -1082,7 +1082,7 @@ register_configvar(group,
     need_restart = True
 )
 
-group = _("Inventory - automatic service detection")
+group = _("Service discovery")
 
 register_configvar(group,
     "inventory_check_interval",

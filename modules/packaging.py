@@ -47,6 +47,7 @@ except:
 package_parts = [ (part, title, ldir and ldir or dir) for part, title, dir, ldir in [
   ( "checks",        "Checks",                    checks_dir,          local_checks_dir ),
   ( "notifications", "Notification scripts",      notifications_dir,   local_notifications_dir ),
+  ( "inventory",     "Inventory plugins",         inventory_dir,       local_inventory_dir ),
   ( "checkman",      "Checks' man pages",         check_manpages_dir,  local_check_manpages_dir ),
   ( "agents",        "Agents",                    agents_dir,          local_agents_dir ),
   ( "web",           "Multisite extensions",      web_dir,             local_web_dir ),

@@ -393,6 +393,7 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_che
     # then we prepend this data and also tolerate a failing
     # normal Check_MK Agent access.
     piggy_output = get_piggyback_info(hostname) + get_piggyback_info(ipaddress)
+
     output = ""
     agent_failed = False
     if is_tcp_host(hostname):
@@ -422,9 +423,14 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_che
         raise MKAgentError("Too short output from agent: '%s'" % output)
 
     lines = [ l.strip() for l in output.split('\n') ]
-    info, piggybacked = parse_info(lines, hostname)
+    info, piggybacked, persisted = parse_info(lines, hostname)
     store_piggyback_info(hostname, piggybacked)
+    store_persisted_info(hostname, persisted)
     store_cached_hostinfo(hostname, info)
+
+    # Add information from previous persisted agent outputs, if those
+    # sections are not available in the current output
+    add_persisted_info(hostname, info)
 
     # If the agent has failed and the information we seek is
     # not contained in the piggy data, raise an exception
@@ -435,6 +441,34 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_che
             return []
 
     return info[check_type] # return only data for specified check
+
+def store_persisted_info(hostname, persisted):
+    dir = var_dir + "/persisted/"
+    if persisted:
+        if not os.path.exists(dir):
+            os.makedirs(dir)
+        file(dir + hostname, "w").write("%r\n" % persisted)
+        if opt_debug:
+            sys.stdout.write("Persisted sections %s.\n" % ", ".join(persisted.keys()))
+
+def add_persisted_info(hostname, info):
+    try:
+        path = var_dir + "/persisted/" + hostname
+        persisted = eval(file(path).read())
+    except:
+        return
+
+    now = time.time()
+    for section, (persisted_until, persisted_section) in persisted.items():
+        if now < persisted_until:
+            if section not in info:
+                info[section] = persisted_section
+                if opt_debug:
+                    sys.stdout.write("Added persisted section %s.\n" % section)
+        else:
+            if opt_debug:
+                sys.stdout.write("Persisted section %s is outdated by %d seconds.\n" % (
+                        section, persisted_until - now))
 
 
 def get_piggyback_info(hostname):
@@ -698,13 +732,19 @@ def store_cached_checkinfo(hostname, checkname, table):
     else:
         g_infocache[hostname] = { checkname: table }
 
-# Split agent output in chunks, splits lines by whitespaces
+# Split agent output in chunks, splits lines by whitespaces. 
+# Returns a triple of:
+# 1. A dictionary from "sectionname" to a list of rows
+# 2. piggy-backed data for other hosts
+# 3. Sections to be persisted for later usage
 def parse_info(lines, hostname):
+
     info = {}
     piggybacked = {} # unparsed info for other hosts
+    persist = {} # handle sections with option persist(...)
     host = None
-    chunk = []
-    chunkoptions = {}
+    section = []
+    section_options = {}
     separator = None
     for line in lines:
         if line[:4] == '<<<<' and line[-4:] == '>>>>':
@@ -717,12 +757,14 @@ def parse_info(lines, hostname):
                     host = None # unpiggybacked "normal" host
         elif host: # processing data for an other host
             piggybacked.setdefault(host, []).append(line)
+
+        # Found normal section header
+        # section header has format <<<name:opt1(args):opt2:opt3(args)>>>
         elif line[:3] == '<<<' and line[-3:] == '>>>':
-            chunkheader = line[3:-3]
-            # chunk header has format <<<name:opt1(args):opt2:opt3(args)>>>
-            headerparts = chunkheader.split(":")
-            chunkname = headerparts[0]
-            chunkoptions = {}
+            section_header = line[3:-3]
+            headerparts = section_header.split(":")
+            section_name = headerparts[0]
+            section_options = {}
             for o in headerparts[1:]:
                 opt_parts = o.split("(")
                 opt_name = opt_parts[0]
@@ -730,19 +772,25 @@ def parse_info(lines, hostname):
                     opt_args = opt_parts[1][:-1]
                 else:
                     opt_args = None
-                chunkoptions[opt_name] = opt_args
+                section_options[opt_name] = opt_args
 
-            chunk = info.get(chunkname, None)
-            if chunk == None: # chunk appears in output for the first time
-                chunk = []
-                info[chunkname] = chunk
+            section = info.get(section_name, None)
+            if section == None: # section appears in output for the first time
+                section = []
+                info[section_name] = section
             try:
-                separator = chr(int(chunkoptions["sep"]))
+                separator = chr(int(section_options["sep"]))
             except:
                 separator = None
+
+            # Split of persisted section for server-side caching
+            if "persist" in section_options:
+                until = int(section_options["persist"])
+                persist[section_name] = ( until, section )
+
         elif line != '':
-            chunk.append(line.split(separator))
-    return info, piggybacked
+            section.append(line.split(separator))
+    return info, piggybacked, persist
 
 
 def cachefile_age(filename):

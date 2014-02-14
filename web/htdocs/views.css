@@ -673,3 +673,52 @@ div.avlegend.timeline div.state {
 div.avlegend.timeline div.state.ooservice {
     color: black;
 }
+
+
+/*--Inventory--------------------------------------------------------------.
+|            ___                      _                                    |
+|           |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _                  |
+|            | || '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |                 |
+|            | || | | \ V /  __/ | | | || (_) | |  | |_| |                 |
+|           |___|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |                 |
+|                                                   |___/                  |
++--------------------------------------------------------------------------+
+| Styles for displaying HW/SW-Inventory data                               |
+'-------------------------------------------------------------------------*/
+
+td.invtree {
+    width: 100%;
+}
+
+td.invtree b.treeangle.title {
+    color: black;
+    font-weight: normal;
+}
+
+td.invtree ul.treeangle {
+    margin: 0px;
+    margin-bottom: 3px;
+}
+
+td.invtree table {
+   border-collapse: collapse;
+   border: 0.5px solid black;
+   box-shadow: 0.5px 0.5px 1px #ccc;
+   margin-top: 3px;
+}
+
+td.invtree table td,
+td.invtree table th,
+table.data.single tr.data td.invtree table td,
+table.data.single tr.data td.invtree table th
+{
+    border: 1px solid #888;
+    padding: 1px 5px;
+    height: 14px;
+}
+td.invtree table th {
+    text-align: left;
+}
+td.invtree table td {
+    background-color: #fff;
+}

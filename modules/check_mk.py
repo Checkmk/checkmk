@@ -66,6 +66,7 @@ if omd_root:
     local_share              = omd_root + "/local/share/check_mk"
     local_checks_dir         = local_share + "/checks"
     local_notifications_dir  = local_share + "/notifications"
+    local_inventory_dir      = local_share + "/inventory"
     local_check_manpages_dir = local_share + "/checkman"
     local_agents_dir         = local_share + "/agents"
     local_mibs_dir           = local_share + "/mibs"
@@ -76,6 +77,7 @@ if omd_root:
 else:
     local_checks_dir         = None
     local_notifications_dir  = None
+    local_inventory_dir      = None
     local_check_manpages_dir = None
     local_agents_dir         = None
     local_mibs_dir           = None
@@ -93,6 +95,7 @@ default_config_dir                 = '/etc/check_mk'
 check_mk_configdir                 = default_config_dir + "/conf.d"
 checks_dir                         = '/usr/share/check_mk/checks'
 notifications_dir                  = '/usr/share/check_mk/notifications'
+inventory_dir                      = '/usr/share/check_mk/inventory'
 agents_dir                         = '/usr/share/check_mk/agents'
 check_manpages_dir                 = '/usr/share/doc/check_mk/checks'
 modules_dir                        = '/usr/share/check_mk/modules'
@@ -339,6 +342,7 @@ host_check_commands                  = [] # alternative host check instead of ch
 check_mk_exit_status                 = [] # Rule for specifying CMK's exit status in case of various errors
 check_periods                        = []
 snmp_check_interval                  = []
+inv_exports                          = {} # Rulesets for inventory export hooks
 
 
 # global variables used to cache temporary values (not needed in check_mk_base)
@@ -1384,8 +1388,10 @@ def host_is_member_of_site(hostname, site):
     # hosts without a site: tag belong to all sites
     return True
 
-def parse_hostname_list(args):
-    valid_hosts = all_active_hosts() + all_active_clusters()
+def parse_hostname_list(args, with_clusters = True):
+    valid_hosts = all_active_hosts()
+    if with_clusters:
+        valid_hosts += all_active_clusters()
     hostlist = []
     for arg in args:
         if arg[0] != '@' and arg in valid_hosts:
@@ -4177,9 +4183,14 @@ def do_flush(hosts):
             flushed = True
             sys.stdout.write(tty_bold + tty_cyan + " autochecks(%d)" % d)
 
+        # inventory
+        path = var_dir + "/inventory/" + host
+        if os.path.exists(path):
+            os.remove(path)
+            sys.stdout.write(tty_bold + tty_yellow + " inventory")
+
         if not flushed:
             sys.stdout.write("(nothing)")
-
 
         sys.stdout.write(tty_normal + "\n")
 
@@ -4364,6 +4375,7 @@ def show_paths():
         ( modules_dir,                 dir, inst, "Main components of check_mk"),
         ( checks_dir,                  dir, inst, "Checks"),
         ( notifications_dir,           dir, inst, "Notification scripts"),
+        ( inventory_dir,               dir, inst, "Inventory plugins"),
         ( agents_dir,                  dir, inst, "Agents for operating systems"),
         ( doc_dir,                     dir, inst, "Documentation files"),
         ( web_dir,                     dir, inst, "Check_MK's web pages"),
@@ -4404,6 +4416,7 @@ def show_paths():
         paths += [
          ( local_checks_dir,           dir, local, "Locally installed checks"),
          ( local_notifications_dir,    dir, local, "Locally installed notification scripts"),
+         ( local_inventory_dir,        dir, local, "Locally installed inventory plugins"),
          ( local_check_manpages_dir,   dir, local, "Locally installed check man pages"),
          ( local_agents_dir,           dir, local, "Locally installed agents and plugins"),
          ( local_web_dir,              dir, local, "Locally installed Multisite addons"),
@@ -4593,7 +4606,7 @@ def usage():
  cmk -d HOSTNAME|IPADDRESS            show raw information from agent
  cmk --check-inventory HOSTNAME       check for items not yet checked
  cmk --update-dns-cache               update IP address lookup cache
- cmk --list-hosts [G1 G2 ...]         print list of hosts
+ cmk -l, --list-hosts [G1 G2 ...]     print list of all hosts
  cmk --list-tag TAG1 TAG2 ...         list hosts having certain tags
  cmk -L, --list-checks                list all available check types
  cmk -M, --man [CHECKTYPE]            show manpage for check CHECKTYPE
@@ -4612,6 +4625,8 @@ def usage():
  cmk --localize COMMAND               do localization operations
  cmk --notify                         used to send notifications from core
  cmk --create-rrd [--keepalive|SPEC]  create round robin database
+ cmk -i, --inventory [HOST1 HOST2...] Do a HW/SW-Inventory of some ar all hosts
+ cmk --inventory-as-check HOST        Do HW/SW-Inventory, behave like check plugin
  cmk -V, --version                    print version
  cmk -h, --help                       print this help
 
@@ -5733,7 +5748,7 @@ def output_profile():
 # Do option parsing and execute main function -
 # if check_mk is not called as module
 if __name__ == "__main__":
-    short_options = 'SHVLCURODMmd:Ic:nhvpXPNB'
+    short_options = 'SHVLCURODMmd:Ic:nhvpXPNBil'
     long_options = [ "help", "version", "verbose", "compile", "debug",
                      "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
                      "flush", "package", "localize", "donate", "snmpwalk", "snmptranslate",
@@ -5741,7 +5756,7 @@ if __name__ == "__main__":
                      "snmpget=", "profile", "keepalive", "keepalive-fd=", "create-rrd",
                      "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
                      "man", "nowiki", "config-check", "backup=", "restore=",
-                     "check-inventory=", "paths", "checks=",
+                     "check-inventory=", "paths", "checks=", "inventory", "inventory-as-check=",
                      "cmc-file=", "browse-man", "list-man", "update-dns-cache" ]
 
     non_config_options = ['-L', '--list-checks', '-P', '--package', '-M', '--notify',
@@ -5888,7 +5903,7 @@ if __name__ == "__main__":
             elif o in [ '-m', '--browse-man' ]:
                 manpage_browser()
                 done = True
-            elif o == '--list-hosts':
+            elif o in [ '-l', '--list-hosts' ]:
                 l = list_all_hosts(args)
                 sys.stdout.write("\n".join(l))
                 if l != []:
@@ -5915,6 +5930,18 @@ if __name__ == "__main__":
             elif o == '--automation':
                 execfile(modules_dir + "/automation.py")
                 do_automation(a, args)
+                done = True
+            elif o in [ '-i', '--inventory' ]:
+                execfile(modules_dir + "/inventory.py")
+                if args:
+                    hostnames = parse_hostname_list(args, with_clusters = False)
+                else:
+                    hostnames = None
+                do_inv(hostnames)
+                done = True
+            elif o == '--inventory-as-check':
+                execfile(modules_dir + "/inventory.py")
+                do_inv_check(a)
                 done = True
             elif o == '--notify':
                 read_config_files(False, True)
@@ -5944,7 +5971,7 @@ if __name__ == "__main__":
     elif (len(args) == 0 and not opt_keepalive) or len(args) > 2:
         usage()
         sys.exit(1)
-    
+
     # handle --keepalive
     elif opt_keepalive:
         do_check_keepalive()

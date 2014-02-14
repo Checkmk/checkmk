@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import config, defaults, livestatus, time, os, re, pprint, time, copy
-import weblib, traceback, forms, valuespec
+import weblib, traceback, forms, valuespec, inventory
 from lib import *
 from pagefunctions import *
 
@@ -60,6 +60,7 @@ def load_plugins():
     global multisite_commands        ; multisite_commands         = []
     global ubiquitary_filters        ; ubiquitary_filters         = [] # Always show this filters
     global view_hooks                ; view_hooks                 = {}
+    global inventory_displayhints    ; inventory_displayhints     = {}
 
     config.declare_permission_section("action", _("Commands on host and services"))
 
@@ -211,6 +212,10 @@ class Filter:
 
     def filter(self, tablename):
         return ""
+
+    # Wether this filter needs to load host inventory data
+    def need_inventory(self):
+        return False
 
     # post-Livestatus filtering (e.g. for BI aggregations)
     def filter_table(self, rows):
@@ -1302,6 +1307,10 @@ def show_view(view, show_heading = False, show_buttons = True,
         if only_count or (html.var("filled_in") != "filter" and not html.has_var(varname)):
             html.set_var(varname, value)
 
+    # Af any painter, sorter or filter needs the information about the host's
+    # inventory, then we load it and attach it as column "host_inventory"
+    need_inventory_data = False
+
     # Prepare Filter headers for Livestatus
     filterheaders = ""
     only_sites = None
@@ -1312,6 +1321,8 @@ def show_view(view, show_heading = False, show_buttons = True,
             only_sites = header.strip().split(" ")[1:]
         else:
             filterheaders += header
+        if filt.need_inventory():
+            need_inventory_data = True
 
     # Prepare limit:
     # We had a problem with stats queries on the logtable where
@@ -1360,6 +1371,8 @@ def show_view(view, show_heading = False, show_buttons = True,
             columns += s[0]["columns"]
         else:
             join_columns += s[0]["columns"]
+        if s[0].get("load_inv"):
+            need_inventory_data = True
 
     # Add key columns, needed for executing commands
     columns += datasource["keys"]
@@ -1379,6 +1392,9 @@ def show_view(view, show_heading = False, show_buttons = True,
     for entry in all_painters:
         p = entry[0]
         painter_options += p.get("options", [])
+        if p.get("load_inv"):
+            need_inventory_data = True
+
     painter_options = list(set(painter_options))
     painter_options.sort()
 
@@ -1398,6 +1414,11 @@ def show_view(view, show_heading = False, show_buttons = True,
         # Now add join information, if there are join columns
         if len(join_painters) > 0:
             do_table_join(datasource, rows, filterheaders, join_painters, join_columns, only_sites)
+
+        # Add inventory data if one of the painters needs it
+        if need_inventory_data:
+            for row in rows:
+                row["host_inventory"] = inventory.host(row["host_name"])
 
         sort_data(rows, sorters)
     else:
@@ -2726,3 +2747,19 @@ def declare_1to1_sorter(painter_name, func, col_num = 0, reverse = False):
         multisite_sorters[painter_name]["cmp"] = \
             lambda r1, r2: func(multisite_painters[painter_name]['columns'][col_num], r2, r1)
     return painter_name
+
+
+
+# Ajax call for fetching parts of the tree
+def ajax_inv_render_tree():
+    hostname = html.var("host")
+    invpath = html.var("path")
+    tree = inventory.host(hostname)
+    node = inventory.get(tree, invpath)
+    if not node:
+        html.show_error(_("Invalid path %s in inventory tree") % invpath)
+        html.debug(tree)
+    else:
+        render_inv_subtree_container(hostname, invpath, node)
+
+

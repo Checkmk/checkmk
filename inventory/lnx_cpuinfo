@@ -1,0 +1,86 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output:
+# <<<lnx_cpuinfo:sep(58)>>>
+# processor:0
+# vendor_id:GenuineIntel
+# cpu family:6
+# model:45
+# model name:Intel(R) Core(TM) i7-3930K CPU @ 3.20GHz
+# stepping:7
+# microcode:0x70c
+# cpu MHz:1200.000
+# cache size:12288 KB
+# physical id:0
+# siblings:12
+# core id:0
+# cpu cores:6
+# apicid:0
+# initial apicid:0
+# fpu:yes
+# fpu_exception:yes
+# cpuid level:13
+# wp:yes
+# bogomips:6399.88
+# clflush size:64
+# cache_alignment:64
+# address sizes:46 bits physical, 48 bits virtual
+# power management:
+# 
+# processor:1
+# ...
+
+# Note: This node is also being filled by dmidecode
+def inv_lnx_cpuinfo(info):
+    node = inv_tree("hardware.cpu.")
+    for varname, value in info:
+        if varname == "cpu cores":
+            node["cores_per_cpu"] = int(value)
+        elif varname == "siblings":
+            node["threads_per_cpu"] = int(value)
+        elif varname == "mode name":
+            node["model"] = value
+        elif varname == "vendor_id":
+            node["vendor"] = {
+                "GenuineIntel" : "intel",
+                "AuthenticAMD" : "amd",
+            }.get(value, value)
+        elif varname == "cache size":
+            node["cache_size"] = int(value.split()[0]) * 1024 # everything is normalized to bytes!
+        elif varname == "model name":
+            node["model"] = value
+        elif varname == "physical id":
+            num_cpus = int(value) + 1
+
+    node["cores"]   = num_cpus * node["cores_per_cpu"]
+    node["threads"] = num_cpus * node["threads_per_cpu"]
+    node["cpus"]    = num_cpus
+
+inv_info['lnx_cpuinfo'] = {
+   "inv_function"           : inv_lnx_cpuinfo,
+}
+

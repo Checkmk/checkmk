@@ -87,5 +87,6 @@ pagehandlers.update({
    "bi_availability"          : bi.page_availability,
    "ajax_userdb_sync"         : userdb.ajax_sync,
    "notify"                   : notify.page_notify,
+   "ajax_inv_render_tree"     : views.ajax_inv_render_tree,
 })
 

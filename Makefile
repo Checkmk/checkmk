@@ -86,6 +86,7 @@ dist: mk-livestatus mk-eventd
 	tar czf $(DISTNAME)/share.tar.gz $(TAROPTS) check_mk_templates.cfg
 	tar czf $(DISTNAME)/checks.tar.gz $(TAROPTS) -C checks $$(cd checks ; ls)
 	tar czf $(DISTNAME)/notifications.tar.gz $(TAROPTS) -C notifications $$(cd notifications ; ls)
+	tar czf $(DISTNAME)/inventory.tar.gz $(TAROPTS) -C inventory $$(cd inventory ; ls)
 	tar czf $(DISTNAME)/checkman.tar.gz $(TAROPTS) -C checkman $$(cd checkman ; ls)
 	tar czf $(DISTNAME)/web.tar.gz $(TAROPTS) -C web htdocs plugins
 	tar czf $(DISTNAME)/livestatus.tar.gz $(TAROPTS) -C livestatus  $$(cd livestatus ; echo $(LIVESTATUS_SOURCES) )
@@ -228,7 +229,7 @@ mrproper:
 	git clean -xfd -e .bugs 2>/dev/null || git clean -xfd
 
 
-SOURCE_FILES = checkman/* modules/* checks/* notifications/* $$(find -name Makefile) \
+SOURCE_FILES = checkman/* modules/* checks/* notifications/* inventory/* $$(find -name Makefile) \
           livestatus/src/*{cc,c,h} web/htdocs/*.{py,css} web/htdocs/js/*.js web/plugins/*/*.py \
           doc/helpers/* scripts/setup.sh scripts/autodetect.py $$(find pnp-templates -type f -name "*.php") \
           mkeventd/bin/mkeventd mkeventd/web/htdocs/*.py mkeventd/web/plugins/*/*.py mkeventd/src/*.c \

@@ -1,0 +1,72 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example for Debian/Ubuntu
+# <<<lnx_packages:sep(124)>>>
+# zlib1g:amd64|1:1.2.7.dfsg-13|amd64|deb|compression library - runtime|install ok installed
+# zlib1g:i386|1:1.2.7.dfsg-13|i386|deb|compression library - runtime|install ok installed
+# zlib1g-dev:amd64|1:1.2.7.dfsg-13|amd64|deb|compression library - development|install ok installed
+
+# Example for RPM
+# gpg-pubkey|307e3d54|(none)|rpm|gpg(SuSE Package Signing Key <build@suse.de>)|
+# gpg-pubkey|1d061a62|(none)|rpm|gpg(build@novell.com (Novell Linux Products) <support@novell.com>)|
+# licenses|20070810|noarch|rpm|License collection as found in the packages of SuSE Linux|
+# branding-SLES|11|noarch|rpm|SUSE Linux Enterprise Server Brand File|
+# terminfo|5.6|i586|rpm|A terminal descriptions database|
+# yast2-schema|2.17.4|noarch|rpm|YaST2 - AutoYaST Schema|
+# glibc-i18ndata|2.11.1|i586|rpm|Database Sources for 'locale'|
+# cpio-lang|2.9|i586|rpm|Languages for package cpio|
+# zlib|1.2.3|i586|rpm|Data Compression Library|
+
+
+def inv_lnx_packages(info):
+    paclist = inv_tree("software.packages:")
+    for pacname, version, arch, pactype, summary, inststate in info:
+        if pactype == "deb":
+            if "installed" not in inststate:
+                continue
+        if arch == "amd64":
+            arch = "x86_64"
+        entry = {
+            "name"            : pacname,
+            "version"         : version,
+            "arch"            : arch,
+            "package_type"    : pactype,
+            "summary"         : summary,
+        }
+        # Split version into version of contained software and version of the
+        # packages (RPM calls the later "release")
+        parts = version.rsplit("-", 1)
+        if len(parts) == 2:
+            version, package_version = parts
+            entry["version"] = version
+            entry["package_version"] = package_version
+        paclist.append(entry)
+
+
+inv_info['lnx_packages'] = {
+   "inv_function"           : inv_lnx_packages,
+}

@@ -12,6 +12,9 @@
     Multisite:
     * 0278 FIX: Fixed bookmark icon images for non-english user languages...
 
+    BI:
+    * 0669 FIX: Fixed regex matching in BI when using character groups [...]...
+
 
 1.2.4:
     Core & Setup:

@@ -523,7 +523,8 @@ def find_matching_services(aggr_type, what, calllist):
         if middle in g_services_by_hostname:
             entries = [ ((e[0], host_re), e[1]) for e in g_services_by_hostname[middle] ]
             host_re = "(.*)"
-    elif not honor_site and not '*' in host_re and not '$' in host_re and not '|' in host_re:
+    elif not honor_site and not '*' in host_re and not '$' in host_re \
+         and not '|' in host_re and not '[' in host_re:
         # Exact host match
         entries = [ ((e[0], host_re), e[1]) for e in g_services_by_hostname.get(host_re, []) ]
 
@@ -887,7 +888,8 @@ def match_host_tags(have_tags, required_tags):
 def compile_leaf_node(host_re, service_re = config.HOST_STATE):
     found = []
     honor_site = SITE_SEP in host_re
-    if not honor_site and not '*' in host_re and not '$' in host_re and not '|' in host_re:
+    if not honor_site and not '*' in host_re and not '$' in host_re \
+        and not '|' in host_re and '[' not in host_re:
         entries = [ ((e[0], host_re), e[1]) for e in g_services_by_hostname.get(host_re, []) ]
 
     else:

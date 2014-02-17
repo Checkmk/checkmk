@@ -117,8 +117,14 @@ def check_mem_windows(item, params, info):
         # In perfdata show warn/crit as absolute values
         if type(warn) == float:
             warn_kb = total_kb * warn / 100 / 1024
+        else:
+            warn_kb = warn * 1024
+
         if type(crit) == float:
             crit_kb = total_kb * crit / 100 / 1024
+        else:
+            crit_kb = crit * 1024
+
         perfdata.append((paramname, used_kb / 1024.0, warn_kb, crit_kb, 0, total_kb / 1024.0))
 
         # Do averaging, if configured, just for matching the levels

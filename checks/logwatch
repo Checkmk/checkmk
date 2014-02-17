@@ -45,9 +45,12 @@ def logwatch_ec_forwarding_enabled(params, item):
 
     return False
 
-def inventory_logwatch(info, is_logwatch_ec = False):
-    inventory = []
-    forward_logs = []
+# Splits the number of existing logfiles into
+# forwarded (to ec) and not forwarded. Returns a
+# pair of forwarded and not forwarded logs.
+def logwatch_select_forwarded(info):
+    forwarded_logs = []
+    not_forwarded_logs = []
 
     forward_settings = host_extra_conf(g_hostname, checkgroup_parameters.get('logwatch_ec', []))
 
@@ -55,23 +58,24 @@ def inventory_logwatch(info, is_logwatch_ec = False):
         line = " ".join(l)
         if len(line) > 6 and line[0:3] == "[[[" and line[-3:] == "]]]" \
            and ':missing' not in line and ':cannotopen' not in line:
-            item = line[3:-3]
+            logfile_name = line[3:-3]
 
-            if not forward_settings or forward_settings[0] is None:
-                if not is_logwatch_ec:
-                    inventory.append((item, "", '""'))
-                continue
+            # Is forwarding enabled in general?
+            if forward_settings and forward_settings[0] != None:
+                if logwatch_ec_forwarding_enabled(forward_settings[0], logfile_name):
+                    forwarded_logs.append(logfile_name)
+                else:
+                    not_forwarded_logs.append(logfile_name)
 
-            forward = logwatch_ec_forwarding_enabled(forward_settings[0], item)
-            if not is_logwatch_ec and not forward:
-                inventory.append((item, "", '""'))
-            elif is_logwatch_ec and forward:
-                forward_logs.append(item)
+            # No forwarding rule configured
+            else:
+                not_forwarded_logs.append(logfile_name)
 
-    if forward_logs:
-        return [(None, '{}')]
+    return forwarded_logs, not_forwarded_logs
 
-    return inventory
+def inventory_logwatch(info):
+    forwarded_logs, not_forwarded_logs = logwatch_select_forwarded(info)
+    return [ (n, None) for n in not_forwarded_logs ]
 
 #logwatch_patterns = {
 #    'System': [
@@ -393,9 +397,8 @@ def check_logwatch(item, params, info):
 
 check_info['logwatch'] = {
     'check_function':      check_logwatch,
+    'inventory_function':  inventory_logwatch,
     'service_description': "LOG %s",
-    'has_perfdata':        0,
-    'inventory_function':  lambda info: inventory_logwatch(info, False),
     'group':               'logwatch',
 }
 
@@ -434,6 +437,11 @@ def syslog_time():
     value = time.strftime("%b %%d %H:%M:%S", localtime)
     return value % day
 
+def inventory_logwatch_ec(info):
+    forwarded_logs, not_forwarded_logs = logwatch_select_forwarded(info)
+    if forwarded_logs:
+        return [ (None, { "expected_logfiles": forwarded_logs } ) ]
+
 def check_logwatch_ec(item, params, info):
     if len(info) == 1:
         line = " ".join(info[0])
@@ -460,6 +468,31 @@ def check_logwatch_ec(item, params, info):
         for logfile in logs.keys():
             if not logwatch_ec_forwarding_enabled(params, logfile):
                 del logs[logfile]
+
+    # Check if the number of expected files matches the actual one
+    status = 0
+    infotexts = []
+    if params.get('monitor_logfilelist'):
+        if 'expected_logfiles' not in params:
+            infotexts.append("You enabled monitoring the list of forwarded logfiles. You need to re-inventorize the check once.")
+            status = 1
+        else:
+            expected = params['expected_logfiles']
+            missing = []
+            for f in expected:
+                if f not in logs:
+                    missing.append(f)
+            if missing:
+                infotexts.append("Missing logfiles: %s" % (", ".join(missing)))
+                status = 1
+
+            exceeding = []
+            for f in logs:
+                if f not in expected:
+                    exceeding.append(f)
+            if exceeding:
+                infotexts.append("Newly appeared logfiles: %s" % (", ".join(exceeding)))
+                status = 1
 
     # 3. create syslog message of each line
     # <128> Oct 24 10:44:27 Klappspaten /var/log/syslog: Oct 24 10:44:27 Klappspaten logger: asdasdad as
@@ -526,16 +559,17 @@ def check_logwatch_ec(item, params, info):
             logfile_info = " from " + ",".join(list(forwarded_logfiles))
         else:
             logfile_info = ""
-        return (0, 'Forwarded %d messages%s to event console' % (
-           num_messages, logfile_info ), [('messages', num_messages)])
+
+        infotexts.append('Forwarded %d messages%s to event console' % (num_messages, logfile_info))
+        return (status, ", ".join(infotexts), [('messages', num_messages)])
+
     except Exception, e:
         return (2, 'Unable to forward messages to event console (%s). Lost %d messages.' %
                 (e, num_messages))
 
 check_info['logwatch.ec'] = {
     'check_function':      check_logwatch_ec,
+    'inventory_function':  inventory_logwatch_ec,
     'service_description': "Log Forwarding",
-    'has_perfdata':        0,
-    'inventory_function':  lambda info: inventory_logwatch(info, True),
     'group':               'logwatch_ec',
 }

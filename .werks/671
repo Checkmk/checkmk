@@ -1,0 +1,8 @@
+Title: LDAP: Disable logging of password changes received from LDAP
+Level: 1
+Component: multisite
+Version: 1.2.4p1
+Date: 1392626070
+Class: fix
+
+

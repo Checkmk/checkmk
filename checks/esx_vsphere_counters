@@ -77,6 +77,7 @@ def inventory_esx_vsphere_counters_diskio(info):
 def check_esx_vsphere_counters_diskio(_no_item, _no_params, info):
     reads = 0
     writes = 0
+    latency = 0
     for counter, item, value, unit in info:
         if item == '':
             if counter == 'disk.read':
@@ -87,10 +88,12 @@ def check_esx_vsphere_counters_diskio(_no_item, _no_params, info):
             reads += int(value)
         elif counter == 'disk.numberWrite':
             writes += int(value)
+        elif counter == 'disk.deviceLatency':
+            latency = max(latency, int(value))
 
-    return 0, "%s/sec read, %s/sec write, IOs: %.2f/sec" % (
-        get_bytes_human_readable(read_bytes), get_bytes_human_readable(write_bytes), reads + writes,), \
-        [ ("read", read_bytes), ("write", write_bytes), ("ios", reads + writes) ]
+    return 0, "%s/sec read, %s/sec write, IOs: %.2f/sec, latency: %d ms" % (
+        get_bytes_human_readable(read_bytes), get_bytes_human_readable(write_bytes), reads + writes, latency), \
+        [ ("read", read_bytes), ("write", write_bytes), ("ios", reads + writes), ("latency" , latency) ]
 
 
 check_info['esx_vsphere_counters.diskio'] = {

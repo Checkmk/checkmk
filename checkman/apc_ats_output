@@ -1,10 +1,10 @@
-title: APC ATS Output Power
+title: APC ATS: Output Power
 agents: snmp
-catalog: hw/power
+catalog: hw/power/apc
 license: GPL
 distribution: check_mk
 description:
- This Check monitors the output measurements of a APC Automatic Transfer Switch .
+ This Check monitors the output measurements of a APC Automatic Transfer Switch.
 
 inventory:
  One service will be created for each power phase

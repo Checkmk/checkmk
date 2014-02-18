@@ -1,6 +1,6 @@
-title: Stulz clima unit air humidity
+title: STULZ Clima Unit: Air Humidity
 agents: snmp
-catalog: hw/environment
+catalog: hw/environment/stulz
 license: GPL
 distribution: check_mk
 description:

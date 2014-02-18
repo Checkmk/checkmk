@@ -1,6 +1,6 @@
-title: Rittal CMC-III LCP Air IN
+title: Rittal CMC-III LCP: Air In and Temperature
 agents: snmp
-catalog: hw/environment
+catalog: hw/environment/rittal
 license: GPL
 distribution: check_mk
 description:

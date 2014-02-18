@@ -1,6 +1,6 @@
-title: WuT Web-IO
+title: WuT Web-IO: Analogue Input Channels
 agents: snmp
-catalog: hw/environment
+catalog: hw/environment/wut
 license: GPL
 distribution: check_mk
 description:

@@ -1,4 +1,4 @@
-title: Rittal CMC TC Temperature sensors
+title: Rittal CMC TC: Temperature
 agents: snmp
 catalog: hw/environment
 license: GPL

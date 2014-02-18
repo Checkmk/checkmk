@@ -1,4 +1,4 @@
-title: Check Mikrotik Wlan Bridge Signal Strenght`
+title: Mikrotik Wlan Bridge: Signal Strenght
 agents: linux
 catalog: hw/network/mikrotik
 license: GPL

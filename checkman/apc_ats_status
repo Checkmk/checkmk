@@ -1,6 +1,6 @@
-title: APC ATS ( Automatic Transfer Switch ) status
+title: APC ATS: Status
 agents: snmp
-catalog: hw/power
+catalog: hw/power/apc
 license: GPL
 distribution: check_mk
 description:

@@ -1,6 +1,6 @@
-title: WuT Web-Thermograph
+title: WuT Web-Thermograph: Temperature
 agents: snmp
-catalog: hw/environment
+catalog: hw/environment/wut
 license: GPL
 distribution: check_mk
 description:

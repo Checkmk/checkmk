@@ -1,6 +1,6 @@
-title: Liebert Chiller
+title: Liebert Chiller: Status
 agents: snmp
-catalog: hw/environment
+catalog: hw/environment/emerson
 license: GPL
 distribution: check_mk
 description:

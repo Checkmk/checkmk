@@ -1,4 +1,4 @@
-title: APC Modular Power Distribution Unit
+title: APC Modular PDU: Modul Status
 agents: snmp
 catalog: hw/power
 license: GPL

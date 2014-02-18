@@ -178,6 +178,7 @@
     * 0667 FIX: oracle_asm_diskgroup: Now really uses the generic filesystem levels...
     * 0555 FIX: snmp_uptime: no longer fails if uptime is < 1 seconds
     * 0136 FIX: cisco_fru_power: Prevent inventory of not exsisting devices
+    * 0557 FIX: check_mk_agent.solaris: removed section statgrab mem...
 
     Multisite:
     * 0371 Added log class filter to hostsvcevents view

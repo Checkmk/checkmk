@@ -19,8 +19,8 @@ perfdata:
 
 [parameters]
 parameters(dict): parameters is a dictionary with two keys {"conns"} and {"ssl_conns"}.
-The keys may be a tuple of warning and critical levels. However, when using predictive levels
-via WATO, the keys are dictionaries themselves with several keys and values.
+ The keys may be a tuple of warning and critical levels. However, when using predictive levels
+ via WATO, the keys are dictionaries themselves with several keys and values.
 
 [configuration]
 f5_bigip_conns_default_levels(dict): This variable is preset to {{ "conns": ( 25000, 30000 ) }, "ssl_conns": ( 25000, 30000 )}

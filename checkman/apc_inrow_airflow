@@ -1,6 +1,6 @@
-title: APC InRow Cooling Airflow
+title: APC InRow Cooling Devices: Airflow
 agents: snmp
-catalog: hw/environment
+catalog: hw/environment/apc
 license: GPL
 distribution: check_mk
 description:

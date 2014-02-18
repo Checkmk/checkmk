@@ -1,6 +1,6 @@
 title: AKCP Drycontact Sensor
 agents: snmp
-catalog: hw/environment
+catalog: hw/environment/akcp
 license: GPL
 distribution:
 description:

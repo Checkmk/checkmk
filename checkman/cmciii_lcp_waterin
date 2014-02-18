@@ -1,6 +1,6 @@
-title: Rittal CMC-III LCP Water IN
+title: Rittal CMC-III LCP: Water In Temperature
 agents: snmp
-catalog: hw/environment
+catalog: hw/environment/rittal
 license: GPL
 distribution: check_mk
 description:

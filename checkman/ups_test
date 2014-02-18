@@ -1,6 +1,6 @@
-title:  Generic UPS Device: self test
+title:  Generic UPS Device: Self Test
 agents: snmp
-catalog: hw/power
+catalog: hw/power/generic
 license: GPL
 distribution: check_mk
 description:

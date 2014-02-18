@@ -1,4 +1,4 @@
-title: Check for fan state and rpm on genua devices
+title: Genuscreen: Fan State and RPM
 agents: snmp
 catalog: hw/network/genua
 license: GPL

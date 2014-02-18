@@ -1,6 +1,6 @@
 title: APC Symmetra UPS: self test
 agents: snmp
-catalog: hw/power
+catalog: hw/power/apc
 license: GPL
 distribution: check_mk
 description:

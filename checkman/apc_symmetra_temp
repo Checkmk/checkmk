@@ -1,6 +1,6 @@
 title: APC Symmetra Web/SNMP Management Card: Temperature
 agents: snmp
-catalog: hw/environment
+catalog: hw/environment/apc
 license: GPL
 distribution: check_mk
 description:

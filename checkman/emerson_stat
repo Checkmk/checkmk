@@ -1,6 +1,6 @@
 title: Emerson UPS: status
 agents: snmp
-catalog: hw/power
+catalog: hw/power/emerson
 license: GPL
 distribution: check_mk
 description:

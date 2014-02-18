@@ -1,11 +1,11 @@
-title: Sensatronic EM1 Devices: Temperature, humidity, wetness
+title: Sensatronics EM1 Devices: Temperature, humidity, wetness
 agents: snmp
-catalog: hw/environment
+catalog: hw/environment/sensatronics
 license: GPL
 distribution:
 description:
  This check monitors the data gathered by the sensors attached
- to a Sensatronic EM1 device. The device needs to support the {SENSATRONICS-EM1} MIB.
+ to a Sensatronics EM1 device. The device needs to support the {SENSATRONICS-EM1} MIB.
 
 item:
  Each sensor which returns a value different than -999.9 results in one service. The item

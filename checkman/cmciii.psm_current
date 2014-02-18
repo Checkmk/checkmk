@@ -1,6 +1,6 @@
-title: Rittal CMC-III PSM Currents
+title: Rittal CMC-III PSM: Currents
 agents: snmp
-catalog: hw/environment
+catalog: hw/environment/rittal
 license: GPL
 distribution: check_mk
 description:

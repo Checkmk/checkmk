@@ -1,0 +1,9 @@
+Title: check_mk_agent.solaris: removed section statgrab mem
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1392726543
+Class: fix
+
+The data from statgrab_mem section was already provided by the solaris_mem section.
+<<<statgrab_mem>>> is hereby removed from the check_mk_agent.solaris output.

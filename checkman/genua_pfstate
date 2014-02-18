@@ -1,4 +1,4 @@
-title: State of packetfilter engine for genuscreen firewalls
+title: Genuscreen: State of Packetfilter Engine
 agents: snmp
 catalog: hw/network/genua
 license: GPL

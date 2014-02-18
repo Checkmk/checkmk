@@ -1,6 +1,6 @@
 title: Sensatronics E4 Temperature sensors
 agents: snmp
-catalog: hw/environment/sensatronic
+catalog: hw/environment/sensatronics
 license: GPL
 distribution: check_mk
 description:

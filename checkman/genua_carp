@@ -1,4 +1,4 @@
-title: State of carp interfaces on carp clusters and nodes of genuscreen devices
+title: Genuscreen: State of Carp Interfaces on Carp Clusters and Nodes
 agents: snmp
 catalog: hw/network/genua
 license: GPL

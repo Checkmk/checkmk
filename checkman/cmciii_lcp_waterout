@@ -1,6 +1,6 @@
-title: Rittal CMC-III LCP Water OUT
+title: Rittal CMC-III LCP: Water Out Temperature
 agents: snmp
-catalog: hw/environment
+catalog: hw/environment/rittal
 license: GPL
 distribution: check_mk
 description:

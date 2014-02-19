@@ -1,16 +1,16 @@
 title: Masterguard UPS Devices: Out voltage
 agents: snmp
-catalog: hw/power
+catalog: hw/power/emerson
 license: GPL
 distribution: check_mk
 description:
- Out Voltage
+ Checks the Out Voltage of Masterguard UPS Devices
 
 item:
  ID of the phase
 
 perfdata:
- The current Voltage
+ One value: The current Voltage
 
 inventory:
  One service per phase will be created

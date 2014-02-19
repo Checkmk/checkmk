@@ -1,6 +1,6 @@
 title: AKCP Sensor Temperature
 agents: snmp
-catalog: hw/environment
+catalog: hw/environment/akcp
 license: GPL
 distribution:
 description:

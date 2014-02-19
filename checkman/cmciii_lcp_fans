@@ -1,6 +1,6 @@
-title: Rittal CMC-III LCP Fans
+title: Rittal CMC-III LCP: Fans
 agents: snmp
-catalog: hw/environment
+catalog: hw/environment/rittal
 license: GPL
 distribution: check_mk
 description:

@@ -1,6 +1,6 @@
-title: Rittal CMC-III PU canbus current
+title: Rittal CMC-III PU: Canbus and Current
 agents: snmp
-catalog: hw/environment
+catalog: hw/environment/rittal
 license: GPL
 distribution: check_mk
 description:

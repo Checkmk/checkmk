@@ -1,6 +1,6 @@
 title: Liebert MPH/MPX devices: PDU AUX sensors
 agents: snmp
-catalog: hw/environment
+catalog: hw/environment/emerson
 license: GPL
 distribution: check_mk
 description:

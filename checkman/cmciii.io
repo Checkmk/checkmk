@@ -1,6 +1,6 @@
-title: Rittal CMC-III IO Units
+title: Rittal CMC-III IO Units: Status of Input and Output Ports
 agents: snmp
-catalog: hw/environment
+catalog: hw/environment/rittal
 license: GPL
 distribution: check_mk
 description:

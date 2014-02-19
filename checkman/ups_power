@@ -1,6 +1,6 @@
 title: Generic UPS Device: Output power
 agents: snmp
-catalog: hw/power
+catalog: hw/power/generic
 license: GPL
 distribution: check_mk
 description:

@@ -1,6 +1,6 @@
-title: Stulz clima unit alerts
+title: STULZ Clima Unit: Alerts
 agents: snmp
-catalog: hw/environment
+catalog: hw/environment/stulz
 license: GPL
 distribution: check_mk
 description:

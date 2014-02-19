@@ -1,0 +1,8 @@
+Title: esx_vsphere_counters.diskio: now also shows disk latency
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1392650420
+Class: feature
+
+

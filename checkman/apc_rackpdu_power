@@ -1,6 +1,6 @@
-title: APC PDU units: Power and Voltage
+title: APC PDU: Power and Voltage
 agents: snmp
-catalog: hw/power
+catalog: hw/power/apc
 license: GPL
 distribution: check_mk
 description:

@@ -1,4 +1,4 @@
-title: State of packetfilter engine for genuscreen firewalls
+title: Genuscreen: State of Packetfilter Engine
 agents: snmp
 catalog: hw/network/genua
 license: GPL
@@ -28,7 +28,7 @@ inventory:
 parameters(dict): parameters is a dictionary with one key
 
  {"used"}: a tuple of lower warning and critical values for the number
-of used PF states
+    of used PF states
 
 [configuration]
 genua_pfstate_default_levels(dict): This variable is preset to

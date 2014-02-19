@@ -1,0 +1,17 @@
+Title: logwatch.ec: Optionally monitor the list of forwarded logfiles
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1392629160
+Class: feature
+
+You can now have the check <tt>logwatch.ec</tt> - Event Console forwarding of
+logfiles - monitor the list of forwarded logfiles. This is enabled by setting
+<tt>"monitoring_logfilelist"</tt> to <tt>True</tt> in the checks parameter
+dictionary. WATO shows this as a new check box <i>Warn if list of forwarded
+logfiles changes</i> in the rule set <i>Logwatch Event Console Forwarding</i>.
+
+During inventory the check remembers the list of currently present logfiles
+that should be forwarded to the Event Console. If that list changes at any
+time later then the check goes to WARN and displays the missing/exceeding
+logfiles. Re-inventorize the check in order to acknowledge the new list.

@@ -1,6 +1,6 @@
-title: APC Input Contacts
+title: APC UPS: Input Contacts
 agents: snmp
-catalog: hw/power
+catalog: hw/power/apc
 license: GPL
 distribution: check_mk
 description:

@@ -1876,7 +1876,7 @@ register_rule(
               )
             ),
             ( "item",
-              RegExp(
+              TextAscii(
                 title = _("Item (Used in service description)"),
                 help = _("If you enter an item name here, this will be used as "
                    "part of the service description after the prefix \"Events \". "

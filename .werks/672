@@ -1,0 +1,12 @@
+Title: Service item of "Check event state in event console" checks can now be configured
+Level: 1
+Component: ec
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1392798026
+
+In the past the application regex was used as part of the service descriptin, which
+ resulted in nagios validation errors in case of regexes, where e.g. "$" signs were
+used. Now you can use such regexes and define the item option to create a custom
+item for the service description.

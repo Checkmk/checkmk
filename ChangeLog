@@ -17,6 +17,9 @@
     BI:
     * 0669 FIX: Fixed regex matching in BI when using character groups [...]...
 
+    Event Console:
+    * 0672 FIX: Service item of "Check event state in event console" checks can now be configured...
+
 
 1.2.4:
     Core & Setup:

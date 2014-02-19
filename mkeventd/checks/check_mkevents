@@ -17,8 +17,9 @@ def check_mkevents_arguments(params):
     return args
 
 def check_mkevents_description(params):
-    if "application" in params:
-        return "Events %s" % params["application"]
+    item = params.get('item', params.get('application'))
+    if item:
+        return "Events %s" % item
     else:
         return "Events"
 

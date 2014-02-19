@@ -8,6 +8,7 @@
     * 0667 FIX: oracle_asm_diskgroup: Now really uses the generic filesystem levels...
     * 0555 FIX: snmp_uptime: no longer fails if uptime is < 1 seconds
     * 0136 FIX: cisco_fru_power: Prevent inventory of not exsisting devices
+    * 0673 FIX: zfsget: Fixed broken check - was not compatible to current agent output of "df"
 
     Multisite:
     * 0278 FIX: Fixed bookmark icon images for non-english user languages...

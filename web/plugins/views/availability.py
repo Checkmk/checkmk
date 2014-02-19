@@ -722,7 +722,7 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
                     (avoptions["downtimes"]["exclude_ok"] and state == 0) and not \
                     avoptions["downtimes"]["include"] == "ignore":
                     if avoptions["downtimes"]["include"] == "exclude":
-                        consider = false
+                        consider = False
                     else:
                         s = "in_downtime"
                 elif span["host_down"] and avoptions["consider"]["host_down"]:

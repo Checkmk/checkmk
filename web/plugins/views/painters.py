@@ -183,14 +183,16 @@ multisite_painters["service_icons"] = {
     "title":   _("Service icons"),
     "short":   _("Icons"),
     "columns": iconpainter_columns("service"),
-    "paint":   lambda row: paint_icons("service", row)
+    "groupby" : lambda row: "", # Do not account for in grouping
+    "paint":    lambda row: paint_icons("service", row)
 }
 
 multisite_painters["host_icons"] = {
     "title":   _("Host icons"),
     "short":   _("Icons"),
     "columns": iconpainter_columns("host"),
-    "paint":   lambda row: paint_icons("host", row)
+    "groupby" : lambda row: "", # Do not account for in grouping
+    "paint":    lambda row: paint_icons("host", row)
 }
 
 # -----------------------------------------------------------------------

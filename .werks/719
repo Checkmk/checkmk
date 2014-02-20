@@ -1,0 +1,9 @@
+Title: postfix_mailq: fix Linux agent in case of ssmtp being installed
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1392888833
+
+

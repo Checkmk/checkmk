@@ -180,6 +180,7 @@
     * 0136 FIX: cisco_fru_power: Prevent inventory of not exsisting devices
     * 0557 FIX: check_mk_agent.solaris: removed section statgrab mem...
     * 0673 FIX: zfsget: Fixed broken check - was not compatible to current agent output of "df"
+    * 0719 FIX: postfix_mailq: fix Linux agent in case of ssmtp being installed
 
     Multisite:
     * 0371 Added log class filter to hostsvcevents view

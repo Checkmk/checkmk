@@ -1,6 +1,6 @@
 title: Liebert MPH/MPX devices: general information
 agents: snmp
-catalog: hw/power
+catalog: hw/power/emerson
 license: GPL
 distribution: check_mk
 description:

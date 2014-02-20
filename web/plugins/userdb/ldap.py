@@ -687,8 +687,10 @@ def ldap_convert_simple(user_id, ldap_user, user, user_attr, attr):
 
 def ldap_convert_mail(plugin, params, user_id, ldap_user, user):
     mail = ''
-    if ldap_user.get(params.get('attr', ldap_attr('mail'))):
-        mail = ldap_user[params.get('attr', ldap_attr('mail'))][0].lower()
+    mail_attr = params.get('attr', ldap_attr('mail')).lower()
+    if ldap_user.get(mail_attr):
+        mail = ldap_user[mail_attr][0].lower()
+
     if mail:
         return {'email': mail}
     else:
@@ -698,7 +700,7 @@ ldap_attribute_plugins['email'] = {
     'title': _('Email address'),
     'help':  _('Synchronizes the email of the LDAP user account into Check_MK.'),
     # Attributes which must be fetched from ldap
-    'needed_attributes': lambda params: [ params.get('attr', ldap_attr('mail')) ],
+    'needed_attributes': lambda params: [ params.get('attr', ldap_attr('mail')).lower() ],
     # Calculating the value of the attribute based on the configuration and the values
     # gathered from ldap
     'convert': ldap_convert_mail,
@@ -717,10 +719,10 @@ ldap_attribute_plugins['alias'] = {
     'title': _('Alias'),
     'help':  _('Populates the alias attribute of the WATO user by syncrhonizing an attribute '
                'from the LDAP user account. By default the LDAP attribute <tt>cn</tt> is used.'),
-    'needed_attributes': lambda params: [ params.get('attr', ldap_attr('cn')) ],
+    'needed_attributes': lambda params: [ params.get('attr', ldap_attr('cn')).lower() ],
     'convert':           lambda plugin, params, user_id, ldap_user, user: \
                              ldap_convert_simple(user_id, ldap_user, user, 'alias',
-                                                 params.get('attr', ldap_attr('cn'))),
+                                                 params.get('attr', ldap_attr('cn')).lower()),
     'lock_attributes':   [ 'alias' ],
     'parameters': [
         ("attr", TextAscii(
@@ -744,7 +746,7 @@ def ldap_convert_auth_expire(plugin, params, user_id, ldap_user, user):
                 'serial': user.get('serial', 0) + 1,
             }
 
-    changed_attr = params.get('attr', ldap_attr('pw_changed'))
+    changed_attr = params.get('attr', ldap_attr('pw_changed')).lower()
     if not changed_attr in ldap_user:
         raise MKLDAPException(_('The "Authentication Expiration" attribute (%s) could not be fetched '
                                 'from the LDAP server for user %s.') % (changed_attr, ldap_user))
@@ -766,7 +768,7 @@ def ldap_convert_auth_expire(plugin, params, user_id, ldap_user, user):
     return {}
 
 def ldap_attrs_auth_expire(params):
-    attrs = [ params.get('attr', ldap_attr('pw_changed')) ]
+    attrs = [ params.get('attr', ldap_attr('pw_changed')).lower() ]
 
     # Fetch user account flags to check locking
     if config.ldap_connection['type'] == 'ad':
@@ -803,10 +805,10 @@ ldap_attribute_plugins['pager'] = {
     'help':  _('This plugin synchronizes a field of the users LDAP account to the pager attribute '
                'of the WATO user accounts, which is then forwarded to the monitoring core and can be used'
                'for notifications. By default the LDAP attribute <tt>mobile</tt> is used.'),
-    'needed_attributes': lambda params: [ params.get('attr', ldap_attr('mobile')) ],
+    'needed_attributes': lambda params: [ params.get('attr', ldap_attr('mobile')).lower() ],
     'convert':           lambda plugin, params, user_id, ldap_user, user: \
                              ldap_convert_simple(user_id, ldap_user, user, 'pager',
-                                                 params.get('attr', ldap_attr('mobile'))),
+                                                 params.get('attr', ldap_attr('mobile')).lower()),
     'lock_attributes':   ['pager'],
     'parameters': [
         ('attr', TextAscii(
@@ -1042,16 +1044,19 @@ def ldap_sync(add_to_changelog, only_username):
                 details.append(_('Added: %s') % ', '.join(added))
             if removed:
                 details.append(_('Removed: %s') % ', '.join(removed))
-            if changed:
-                if 'ldap_pw_last_changed' in changed and 'serial' in changed:
-                    details.append(_('Password Changed'))
-                    changed.remove('ldap_pw_last_changed')
-                    changed.remove('serial')
-                if changed:
-                    details.append(('Changed: %s') % ', '.join(changed))
 
-            wato.log_pending(wato.SYNCRESTART, None, "edit-users",
-                 _("LDAP Connector: Modified user %s (%s)") % (user_id, ', '.join(details)))
+            # Ignore password changes from ldap - do not log them. For now.
+            if 'ldap_pw_last_changed' in changed:
+                changed.remove('ldap_pw_last_changed')
+            if 'serial' in changed:
+                changed.remove('serial')
+
+            if changed:
+                details.append(('Changed: %s') % ', '.join(changed))
+
+            if details:
+                wato.log_pending(wato.SYNCRESTART, None, "edit-users",
+                     _("LDAP Connector: Modified user %s (%s)") % (user_id, ', '.join(details)))
 
     duration = time.time() - start_time
     ldap_log('SYNC FINISHED - Duration: %0.3f sec' % duration)

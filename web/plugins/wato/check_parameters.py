@@ -4445,6 +4445,16 @@ register_check_parameters(subgroup_applications,
                         choices = syslog_facilities,
                         default_value = 17, # local1
                     )),
+                    ('monitor_logfilelist',
+                        Checkbox(
+                            title =  _("Monitoring of forwarded logfiles"),
+                            label = _("Warn if list of forwarded logfiles changes"),
+                            help = _("If this option is enabled then the check monitors the list of forwarded "
+                                  "logfiles and will warn you if at any time a logfile is missing or exceeding "
+                                  "when compared to the initial list that was snapshotted during service detection. "
+                                  "Reinventorize this check in order to make it OK again."),
+                     )
+                    ),
                 ],
                 optional_keys = ['restrict_logfiles'],
             ),

@@ -158,8 +158,9 @@ then
         grep "^$s\." /tmp/statgrab.$$ | cut -d. -f2-99 | sed 's/ *= */ /'
     done
 
-    echo '<<<statgrab_mem>>>'
-    egrep "^(swap|mem)\." /tmp/statgrab.$$ | sed 's/ *= */ /'
+# this info is already provided by solaris_mem
+#    echo '<<<statgrab_mem>>>'
+#    egrep "^(swap|mem)\." /tmp/statgrab.$$ | sed 's/ *= */ /'
 
     [ -f /tmp/statgrab.$$ ] && rm -f /tmp/statgrab.$$
 fi

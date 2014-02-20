@@ -106,7 +106,7 @@ def parse_zfsget(info):
 def zfsget_parse_df_info(entries, info):
     new_entries = {}
 
-    for device, kbytes, used, avail, percent, mountpoint in info:
+    for device, fs_type, kbytes, used, avail, percent, mountpoint in info:
         # ignore entries already contained in zfsget and also
         # entries for virtual filesystems (like swap)
         if mountpoint.startswith("/") and mountpoint not in entries:

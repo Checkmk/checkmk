@@ -1,0 +1,9 @@
+Title: zfsget: Fixed broken check - was not compatible to current agent output of "df"
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1392816428
+
+

@@ -1,6 +1,6 @@
-title: HWg-STE Ethernet thermometer
+title: HWg-STE Ethernet Thermometer: Temperature
 agents: snmp
-catalog: hw/environment
+catalog: hw/environment/hwg
 license: GPL
 distribution: check_mk
 description:

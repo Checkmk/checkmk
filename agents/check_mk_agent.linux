@@ -424,6 +424,7 @@ if type mailq >/dev/null 2>&1 && [ -x /usr/sbin/postfix ] && getent passwd postf
     echo '<<<postfix_mailq>>>'
     mailq | tail -n 6
 elif [ -x /usr/sbin/ssmtp ] ; then
+    echo '<<<postfix_mailq>>>'
     mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
 fi
 

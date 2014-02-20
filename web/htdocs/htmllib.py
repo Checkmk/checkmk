@@ -801,8 +801,11 @@ class html:
             self.bottom_footer()
             self.body_end()
 
-    def add_status_icon(self, img, tooltip):
-        self.status_icons[img] = tooltip
+    def add_status_icon(self, img, tooltip, url = None):
+	if url:
+	    self.status_icons[img] = tooltip, url
+	else:
+	    self.status_icons[img] = tooltip
 
     def render_status_icons(self):
         h = '<a target="_top" href="%s"><img class=statusicon src="images/status_frameurl.png" title="%s"></a>\n' % \
@@ -811,13 +814,17 @@ class html:
              ("index.py?" + self.urlencode_vars([("start_url", self.makeuri([]))]), _("URL to this page including sidebar"))
 
         if self.myfile == "view" and self.var('mode') != 'availability':
-            # h += '<a target="_top" href="%s"><img class=statusicon src="images/status_frameurl.png" title="%s"></a>\n' % \
-            #     (self.makeuri([("output_format", "json_export")]), _("Export as JSON"))
-            h += '<a target="_top" href="%s"><img class=statusicon src="images/icon_download_csv.png" title="%s"></a>\n' % \
+            h += '<a target="_top" href="%s">' \
+                 '<img class=statusicon src="images/status_download_csv.png" title="%s"></a>\n' % \
                  (self.makeuri([("output_format", "csv_export")]), _("Export as CSV"))
 
         for img, tooltip in self.status_icons.items():
-            h += '<img class=statusicon src="images/status_%s.png" title="%s">\n' % (img, tooltip)
+	    if type(tooltip) == tuple:
+		tooltip, url = tooltip
+		h += '<a target="_top" href="%s"><img class=statusicon src="images/status_%s.png" title="%s"></a>\n' % \
+		     (url, img, tooltip)
+	    else:
+		h += '<img class=statusicon src="images/status_%s.png" title="%s">\n' % (img, tooltip)
         return h
 
     def show_error(self, msg):
@@ -1244,14 +1251,13 @@ class html:
         self.load_tree_states()
         self.treestates[tree] = val
 
-    def parse_field_storage(self, fields):
+    def parse_field_storage(self, fields, handle_uploads_as_file_obj = False):
         self.vars     = {}
         self.listvars = {} # for variables with more than one occurrance
         self.uploads  = {}
 
         for field in fields.list:
             varname = field.name
-            value = field.value
 
             # To prevent variours injections, we only allow a defined set
             # of characters to be used in variables
@@ -1260,19 +1266,23 @@ class html:
 
             # put uploaded file infos into separate storage
             if field.filename is not None:
-                self.uploads[varname] = (field.filename, field.type, field.value)
+                if handle_uploads_as_file_obj:
+                    value = field.file
+                else:
+                    value = field.value
+                self.uploads[varname] = (field.filename, field.type, value)
 
             else: # normal variable
                 # Multiple occurrance of a variable? Store in extra list dict
                 if varname in self.vars:
                     if varname in self.listvars:
-                        self.listvars[varname].append(value)
+                        self.listvars[varname].append(field.value)
                     else:
-                        self.listvars[varname] = [ self.vars[varname], value ]
+                        self.listvars[varname] = [ self.vars[varname], field.value ]
                 # In the single-value-store the last occurrance of a variable
                 # has precedence. That makes appending variables to the current
                 # URL simpler.
-                self.vars[varname] = value
+                self.vars[varname] = field.value
 
     def uploaded_file(self, varname, default = None):
         return self.uploads.get(varname, default)

@@ -1,0 +1,10 @@
+Title: availability: fixed exception on specific filter settings
+Level: 1
+Component: multisite
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1392731502
+
+The generation of the availability data could raise an exception
+if the "Scheduled Downtimes" filter were set to "Exclude scheduled downtimes"

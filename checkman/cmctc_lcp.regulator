@@ -1,6 +1,6 @@
-title: Rittal CMC-TC LCP Regulator
+title: Rittal CMC-TC LCP: Regulator
 agents: snmp
-catalog: hw/environment
+catalog: hw/environment/rittal
 license: GPL
 distribution: check_mk
 description:

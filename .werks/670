@@ -1,0 +1,12 @@
+Title: LDAP: Fixed sync when non lower case attributes are configured
+Level: 1
+Component: multisite
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1392625538
+
+The LDAP sync converts all configured ldap attributes to lower case
+for easier handling internally. When custom LDAP source attributes
+are configured by using non lower case, the sync did not process
+those vars in some cases.

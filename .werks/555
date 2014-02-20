@@ -1,0 +1,9 @@
+Title: snmp_uptime: no longer fails if uptime is < 1 seconds
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1392136196
+
+

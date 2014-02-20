@@ -1,0 +1,19 @@
+Title: WATO snapshots: improved validation of (uploaded) snapshots
+Level: 1
+Component: wato
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1392892008
+
+Some new validation features have been added<br>
+
+<ul>
+<li>Only tar and tar.gz files can be uploaded</li>
+<li>It is checked if the file size if reasonable</li>
+<li>It is checked if the content of the tarfile 'looks' OK (real check is done later)</li>
+</ul>
+
+Upon restoring the snapshot, an additional integrity check is done for
+each of the subtar files. If this check fails, e.g. some tar.gz is corrupted,
+the snapshot won't get applied and an error message is raised.

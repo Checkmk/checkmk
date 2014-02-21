@@ -182,6 +182,7 @@
     * 0557 FIX: check_mk_agent.solaris: removed section statgrab mem...
     * 0673 FIX: zfsget: Fixed broken check - was not compatible to current agent output of "df"
     * 0719 FIX: postfix_mailq: fix Linux agent in case of ssmtp being installed
+    * 0584 FIX: agent_vsphere: special agent now handles non-standard https port correctly...
 
     Multisite:
     * 0371 Added log class filter to hostsvcevents view

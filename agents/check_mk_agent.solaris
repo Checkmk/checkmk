@@ -158,9 +158,13 @@ then
         grep "^$s\." /tmp/statgrab.$$ | cut -d. -f2-99 | sed 's/ *= */ /'
     done
 
-# this info is already provided by solaris_mem
-#    echo '<<<statgrab_mem>>>'
-#    egrep "^(swap|mem)\." /tmp/statgrab.$$ | sed 's/ *= */ /'
+    # the <<<statgrab_mem>>> info is already provided by <<<solaris_mem>>>
+    # However, we make an exception if /usr/bin/top is missing (required by solaris_mem)
+    if [ ! -x /usr/bin/top ]
+    then
+        echo '<<<statgrab_mem>>>'
+        egrep "^(swap|mem)\." /tmp/statgrab.$$ | sed 's/ *= */ /'
+    fi
 
     [ -f /tmp/statgrab.$$ ] && rm -f /tmp/statgrab.$$
 fi

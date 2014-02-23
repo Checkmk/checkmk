@@ -104,7 +104,7 @@
 #   `----------------------------------------------------------------------'
 
 import sys, pprint, socket, re, subprocess, time, datetime,  \
-       shutil, tarfile, StringIO, math, fcntl, pickle, random
+       shutil, tarfile, cStringIO, math, fcntl, pickle, random
 import config, table, multitar, userdb, hooks, weblib, login
 from lib import *
 from valuespec import *
@@ -5896,67 +5896,98 @@ def effective_attributes(host, folder):
 #   '----------------------------------------------------------------------'
 
 # Returns status information for snapshots or snapshots in progress
-def get_snapshot_status(name):
+def get_snapshot_status(snapshot):
+    if type(snapshot) == tuple:
+        name, file_stream = snapshot
+    else:
+        name = snapshot
+        file_stream = None
+
     status = {}
-    try:
-        if name == "uploaded_snapshot":
-            status["name"] = _("uploaded snapshot")
+
+    def check_size():
+        if file_stream:
+            file_stream.seek(0, os.SEEK_END)
+            size = file_stream.tell()
         else:
-            status["name"] = "%s %s" % (name[14:24], name[25:33].replace("-",":"))
-        path_status = "%s/workdir/%s.status" % (snapshot_dir, name)
-        path_pid    = "%s/workdir/%s.pid"    % (snapshot_dir, name)
-        # Check if this process is still running
-        if os.path.exists(path_pid):
-            if os.path.exists(path_pid) and not os.path.exists("/proc/%s" % open(path_pid).read()):
-                status["progress_status"] = _("ERROR: Snapshot progress no longer running")
-                status["broken"] = True
-            else:
-                status["progress_status"] = _("Snapshot build currently in progress")
+            statinfo = os.stat(snapshot_dir + name)
+            size = statinfo.st_size
+        if size < 256:
+            raise MKGeneralException(_("Invalid snapshot (too small)"))
+        else:
+            status["total_size"] = size
 
-        if os.path.exists(path_status):
-            tokens = file(path_status, "r").read().split("\n",1)
-            status["comment"] = tokens[0].split(":",1)[1]
-            file_info = {}
-            files = tokens[1].splitlines()
-            for filename in files:
-                name, info = filename.split(":",1)
-                file_info[name] = {"size" : info}
-            status["files"] = file_info
-        else: # tarfile is finished, read comment
-            # Determine snapshot type: legacy / new
-            is_legacy_snapshot = True
-            try:
-                tarfile.open(snapshot_dir + name, "r:gz")
-            except:
-                is_legacy_snapshot = False
+    def check_extension():
+        # Check snapshot extension: tar or tar.gz
+        if name.endswith(".tar.gz"):
+            status["type"]    = "legacy"
+            status["comment"] = _("Snapshot created with old version")
+        elif not name.endswith(".tar"):
+            raise MKGeneralException(_("Invalid snapshot (incorrect file extension)"))
 
-            # Legacy snapshots
-            if is_legacy_snapshot:
-                status["type"] = "legacy"
-                status["type_text"] = _("Snapshot created with old version")
-                status["comment"]   = _("Snapshot created with old version")
-            # New snapshots
-            else:
-                status["files"] = multitar.list_tar_content(snapshot_dir + name)
-                if "comment" in status["files"]:
-                    status["comment"] = multitar.get_file_content(snapshot_dir + name, "comment")
-                if "created_by" in status["files"]:
-                    status["created_by"] = multitar.get_file_content(snapshot_dir + name, "created_by")
-                if "type" in status["files"]:
-                    status["type"] = multitar.get_file_content(snapshot_dir + name, "type")
-                    status["type_text"] = status["type"] == "automatic" and _("Automatically created") or _("Manually created")
+    def check_content():
+        if file_stream:
+            file_stream.seek(0)
+            status["files"] = multitar.list_tar_content(file_stream)
+        else:
+            status["files"] = multitar.list_tar_content(snapshot_dir + name)
+
+        if status.get("type") == "legacy":
+            for tarname in status["files"].keys():
+                if tarname not in  ["check_mk.tar", "multisite.tar",
+                                    "htpasswd.tar", "sites.tar", "auth.secret.tar",
+                                    "auth.serials.tar", "usersettings.tar"]:
+                    raise MKGeneralException(_("Invalid snapshot (contains invalid tarfile %s)") % tarname)
+        else: # new snapshots
+            for entry in ["comment", "created_by", "type"]:
+                if entry in status["files"]:
+                    status[entry] = multitar.get_file_content(snapshot_dir + name, entry)
                 else:
-                    status["type"] = "legacy"
-                    status["type_text"] = _("Snapshot created with old version")
-                    status["comment"]   = _("Snapshot created with old version")
-            try:
-                # Simple validity check - try to read snapshot content
-                # Note: Opening it with "r" works on tar and tar.gz
-                tarfile.open(snapshot_dir + name, "r").getmembers()
-            except:
-                raise
-    except:
-        status["broken"] = True
+                    raise MKGeneralException(_("Invalid snapshot (missing file: %s)") % entry)
+
+    try:
+        if len(name) > 35:
+            status["name"] = "%s %s" % (name[14:24], name[25:33].replace("-",":"))
+        else:
+            status["name"] = name
+
+        if not file_stream:
+            # Check if the snapshot build is still in progress...
+            path_status = "%s/workdir/%s.status" % (snapshot_dir, name)
+            path_pid    = "%s/workdir/%s.pid"    % (snapshot_dir, name)
+
+            # Check if this process is still running
+            if os.path.exists(path_pid):
+                if os.path.exists(path_pid) and not os.path.exists("/proc/%s" % open(path_pid).read()):
+                    status["progress_status"] = _("ERROR: Snapshot progress no longer running")
+                    raise MKGeneralException(_("Error: Process for snapshot creating is no longer running"))
+                else:
+                    status["progress_status"] = _("Snapshot build currently in progress")
+
+            # Read snapshot status file (regularly updated by snapshot process)
+            if os.path.exists(path_status):
+                tokens = file(path_status, "r").read().split("\n",1)
+                status["comment"] = tokens[0].split(":",1)[1]
+                file_info = {}
+                files = tokens[1].splitlines()
+                for filename in files:
+                    name, info = filename.split(":",1)
+                    file_info[name] = {"size" : info}
+                status["files"] = file_info
+                return status
+
+        # Snapshot exists and is finished - do some basic checks
+        check_size()
+        check_extension()
+        check_content()
+
+    except MKGeneralException, e:
+        status["broken_text"] = e.reason
+        status["broken"]      = True
+        pass
+    except Exception, e:
+        status["broken_text"] = e.message
+        status["broken"]      = True
         pass
     return status
 
@@ -5982,6 +6013,11 @@ def mode_snapshot_detail(phase):
         html.write("</table>")
     else:
         other_content = []
+
+        if status.get("broken"):
+            html.add_user_error('broken', _  ('This snapshot is broken!'))
+            html.add_user_error('broken_text', status.get("broken_text"))
+            html.show_user_errors()
 
         html.begin_form("snapshot_details", method="POST")
         forms.header(_("Snapshot %s") % snapshot_name)
@@ -6119,12 +6155,25 @@ def mode_snapshot(phase):
         # upload snapshot
         elif html.uploads.get("_upload_file"):
             uploaded_file = html.uploaded_file("_upload_file")
+            filename      = uploaded_file[0]
+
+            if ".." in filename or "/" in filename:
+                    raise MKUserError("_upload_file", _("Invalid filename %s (contains .. or /)"))
+            filename = os.path.basename(filename)
+
             if uploaded_file[0] == "":
                 raise MKUserError(None, _("Please select a file for upload."))
             if html.check_transaction():
-                file("%s/uploaded_snapshot" % snapshot_dir, "w").write(uploaded_file[2])
-                html.set_var("_snapshot_name", "uploaded_snapshot")
-                return "snapshot_detail"
+
+                file_stream = cStringIO.StringIO(uploaded_file[2])
+                status = get_snapshot_status((filename, file_stream))
+
+                if status.get("broken"):
+                    raise MKUserError("_upload_file", _("This is not a Check_MK snapshot!<br>%s") % status.get("broken_text"))
+                else:
+                    file(snapshot_dir + filename, "w").write(uploaded_file[2])
+                    html.set_var("_snapshot_name", filename)
+                    return "snapshot_detail"
 
         # delete file
         elif html.has_var("_delete_file"):
@@ -6233,7 +6282,7 @@ def mode_snapshot(phase):
             # Status icons
             table.cell(_("Status"))
             if status.get("broken"):
-                html.icon( _("This snapshot is broken"), "validation_error")
+                html.icon(status.get("broken_text",_("This snapshot is broken")), "validation_error")
             elif status.get("progress_status"):
                 html.icon( status.get("progress_status"), "timeperiods")
         table.end()

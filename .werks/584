@@ -1,0 +1,19 @@
+Title: agent_vsphere: special agent now handles non-standard https port correctly
+Level: 2
+Component: checks
+Version: 1.2.5i1
+Date: 1392982760
+Class: fix
+
+The special agent vsphere to monitor ESX-Servers and vcenters can be configured to use a
+non-standard port for the vsphere https connection. This might be useful for firewall
+traversals etc.
+
+The configuration was possible before this fix in WATO, but it was never used, so that the
+default https port 443 was always used.
+
+With this fix the port which is actually configured in WATO will be used for https.
+
+If a vcenter is queried including the check_mk_agent, the check_mk_agent will still be queried
+on the standard check_mk_agent port 6556, whereas the https connection port will be the one
+configured in WATO.

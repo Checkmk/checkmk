@@ -645,6 +645,7 @@ class ListOfStrings(ValueSpec):
             self._valuespec = TextAscii()
         self._vertical = kwargs.get("orientation", "vertical") == "vertical"
         self._allow_empty = kwargs.get("allow_empty", True)
+        self._empty_text  = kwargs.get("empty_text", "")
 
     def render_input(self, vp, value):
         # Form already submitted?
@@ -670,6 +671,9 @@ class ListOfStrings(ValueSpec):
         return []
 
     def value_to_text(self, value):
+        if not value:
+            return self._empty_text
+
         if self._vertical:
             s = '<table>'
             for v in value:

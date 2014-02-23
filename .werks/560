@@ -1,0 +1,9 @@
+Title: check_mk_agent.solaris: report statgrab_mem section if solaris_mem section is missing
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1392894310
+Class: feature
+
+Some older solaris machines do not have /usr/bin/top, which is required by <tt>&lt;&lt;&lt;solaris_mem&gt;&gt;&gt;</tt>.
+In this case we report the deprecated (but still supported section) <tt>&lt;&lt;&lt;statgrab_mem&gt;&gt;&gt;</tt>.

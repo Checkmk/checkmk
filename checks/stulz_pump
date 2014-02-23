@@ -26,28 +26,36 @@
 
 def inventory_stulz_pump(info):
     inventory = []
-    for pump_id, pump_status in info:
+    for pump_id, pump_status in info[0]:
         pump_id = pump_id.replace('.1', '')
         inventory.append( (pump_id, None) )
     return inventory
 
 def check_stulz_pump(item, _no_params, info):
-    for pump_id, pump_status in info:
+    for pump_id, pump_status in info[0]:
         pump_id = pump_id.replace('.1', '')
         if pump_id == item:
+            pump_rpm = info[1][int(pump_id)-1][0]
+            perfdata = [ ('rpm', pump_rpm+"%", None, None, 0, 100) ]
             if pump_status == '1':
-                return 0, "Pump is running"
+                state = 0
+                infotext = "Pump is running at %s%%" % pump_rpm
             elif pump_status == '0':
-                return 2, "Pump is not running"
+                state = 2
+                infotext = "Pump is not running"
             else:
-                return 3, "Pump reports unidentified status " + pump_status
+                state = 3
+                infotext = "Pump reports unidentified status " + pump_status
+            return state, infotext, perfdata
     return 3, "Pump %s not found" % item
 
 check_info["stulz_pump"] = {
     "check_function"        : check_stulz_pump,
     "inventory_function"    : inventory_stulz_pump,
     "service_description"   : "Pump %s",
+    "has_perfdata"          : True,
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.29462.10",
-    "snmp_info"             : ( ".1.3.6.1.4.1.29462.10.2.1.1.2.1.4.1.1.5802", [ OID_END, 2] ),
+    "snmp_info"             : [( ".1.3.6.1.4.1.29462.10.2.1.1.2.1.4.1.1.5802", [ OID_END, 2] ),
+                               ( ".1.3.6.1.4.1.29462.10.2.1.1.2.1.4.1.1.5821", [2] ),]
 }
 

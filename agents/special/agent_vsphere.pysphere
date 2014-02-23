@@ -53,9 +53,10 @@ OPTIONS:
   -D, --direct                  Assume a directly queried host system (no vCenter). In
                                 This we expect data about only one HostSystem to be
                                 Found and do not create piggy host data for that host.
-  -p                            Skip placeholder virtualmachines. These backup vms are created
+  -P                            Skip placeholder virtualmachines. These backup vms are created
                                 by the Site Recovery Manager (SRM) and are identified by not
                                 having any assigned virtual disks.
+  -p, --port port               Alternative port number (default is 443 for the https connection)
   --pysphere                    Does nothing. For compatibility with new agent.
   -H, --hostname                Specify a hostname. This is neccessary if this is
                                 different from HOST. It is being used in --direct
@@ -87,10 +88,10 @@ OPTIONS:
 
 """)
 
-short_options = 'hi:u:s:Dat:H:cpS:'
+short_options = 'hi:u:s:Dat:H:cPp:S:'
 long_options  = [
     'help', 'user=', 'secret=', 'direct', 'agent', 'debug', 'modules=', 'timeout=', 'hostname=',
-    'dump-counters', 'profile', 'pysphere', 'spaces='
+    'dump-counters', 'profile', 'pysphere', 'spaces=', 'port='
 ]
 
 try:
@@ -104,6 +105,7 @@ opt_direct              = False
 opt_agent               = False
 opt_dump_counters       = False
 opt_timeout             = 60
+opt_port                = 443
 opt_hostname            = None
 opt_skip_placeholder_vm = False
 opt_spaces              = "cut"
@@ -127,8 +129,10 @@ for o,a in opts:
         opt_direct = True
     elif o in [ '-a', '--agent' ]:
         opt_agent = True
-    elif o in [ '-p' ]:
+    elif o in [ '-P' ]:
         opt_skip_placeholder_vm = True
+    elif o in [ '-p', '--port' ]:
+        opt_port = a
     elif o in [ '-u', '--user' ]:
         user = a
     elif o in [ '-s', '--secret' ]:
@@ -158,6 +162,8 @@ elif not args:
 else:
     sys.stderr.write("ERROR: Please specify exactly one host.\n")
     sys.exit(1)
+
+port = ":" + str(opt_port)
 
 socket.setdefaulttimeout(opt_timeout)
 
@@ -215,9 +221,9 @@ try:
     # server. Details can be found here:
     # http://www.vmware.com/support/developer/vc-sdk/visdk41pubs/ApiReference/vim.ServiceInstance.html)
     if opt_debug:
-        sys.stderr.write("Connecting to %s..." % host_address)
+        sys.stderr.write("Connecting to %s%s..." % (host_address, port))
         sys.stderr.flush()
-    host.connect(host_address, user, secret, sock_timeout=opt_timeout)
+    host.connect(host_address+port, user, secret, sock_timeout=opt_timeout)
     if opt_debug:
         sys.stderr.write("Connected.\n")
 except socket.timeout:

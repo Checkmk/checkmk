@@ -130,9 +130,10 @@ OPTIONS:
   -D, --direct                  Assume a directly queried host system (no vCenter). In
                                 This we expect data about only one HostSystem to be
                                 found and do not create piggy host data for that host.
-  -p                            Skip placeholder virtualmachines. These backup vms are created
+  -P                            Skip placeholder virtualmachines. These backup vms are created
                                 by the Site Recovery Manager (SRM) and are identified by not
                                 having any assigned virtual disks.
+  -p, --port port               Alternative port number (default is 443 for the https connection)
   --pysphere                    Fallback to old pysphere based special agent. It supports
                                 ESX 4.1 but is very slow.
   -H, --hostname                Specify a hostname. This is neccessary if this is
@@ -159,10 +160,10 @@ OPTIONS:
 
 """)
 
-short_options = 'hi:u:s:Dat:H:cp'
+short_options = 'hi:u:s:Dat:H:cPp:'
 long_options  = [
     'help', 'user=', 'secret=', 'direct', 'agent', 'debug', 'modules=', 'timeout=', 'hostname=',
-    'dump-counters', 'tracefile=', "pysphere",
+    'dump-counters', 'tracefile=', "pysphere", "port=",
 ]
 
 opt_debug               = False
@@ -170,6 +171,7 @@ opt_direct              = False
 opt_agent               = False
 opt_dump_counters       = False
 opt_timeout             = 60
+opt_port                = 443
 opt_hostname            = None
 opt_skip_placeholder_vm = False
 opt_pysphere            = False
@@ -199,8 +201,10 @@ for o,a in opts:
         opt_direct = True
     elif o in [ '-a', '--agent' ]:
         opt_agent = True
-    elif o == '-p':
+    elif o == '-P':
         opt_skip_placeholder_vm = True
+    elif o in [ '-p', '--port' ]:
+        opt_port = a
     elif o == '--pysphere':
         opt_pysphere = True
     elif o in [ '-u', '--user' ]:
@@ -303,7 +307,7 @@ if tracefile:
 
 try:
     my_cookie   = None
-    netloc      = host_address
+    netloc      = host_address + ":" + str(opt_port)
     request_uri = "/sdk"
     transport   = httplib.HTTPSConnection
     transdict   = {'timeout': opt_timeout}
@@ -311,7 +315,7 @@ try:
     handle.connect()
 
     if opt_debug:
-        sys.stderr.write("Connecting to %s..." % host_address)
+        sys.stderr.write("Connecting to %s..." % netloc)
         sys.stderr.flush()
 
     def query_server(soapdata):

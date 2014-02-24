@@ -28,6 +28,31 @@
 
 group = _("Notification")
 
+register_configvar(group,
+    "enable_rulebased_notifications",
+    Checkbox(
+        title = _("Rule based notifications"),
+        label = _("Enable new rule based notifications"),
+        help = _("If you enable the new rule based notifications then the current plain text email and "
+                 "&quot;flexible notifications&quot; will become inactive. Instead notificatios will "
+                 "be configured with the WATO module <i>Notifications</i> on a global base."),
+        default_value = False,
+    ),
+    domain = "check_mk")
+
+register_configvar(group,
+    "notification_fallback_email",
+    EmailAddress(
+        title = _("Fallback email address for rule based notifications"),
+        help = _("If you work with rule based notifications then you should configure an email "
+                 "address here. In case of a whole in your notification rules a notification "
+                 "will be emailed here. This makes sure that in any case <i>someone</i> gets "
+                 "notified."),
+        empty_text = _("<i>(No fallback email address configured!)</i>"),
+        make_clickable = False,
+   ),
+   domain = "check_mk")
+
 
 register_configvar(group,
     "notification_logging",

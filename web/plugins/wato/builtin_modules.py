@@ -58,6 +58,9 @@ modules = [
       ( "contact_groups",   _("Contact Groups"),     "contactgroups", "users",
       _("Contact groups are used to assign persons to hosts and services") ),
 
+      ( "notifications",    _("Notifications"),     "notifications", "notifications",
+      _("Rules for the notification of contacts about host and service problems")),
+
       ( "timeperiods",      _("Time Periods"),       "timeperiods", "timeperiods",
       _("Timeperiods restrict notifications and other things to certain periods of "
         "the day.") ),

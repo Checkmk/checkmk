@@ -56,9 +56,9 @@ If all conditions of a rule are fullfilled, it matches
 and its action is executed. The action consist of:
 
 * Who should be notified?
-  a) all contacts of the host/service
-  b) an explicit list of contacts
-  c) all members of a certain contact group
+/  a) all contacts of the host/service
+/  b) an explicit list of contacts
+/  c) all members of a certain contact group
   d) an explicit email/pager address
   e) all contacts
 

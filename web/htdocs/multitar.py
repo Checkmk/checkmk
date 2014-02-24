@@ -87,7 +87,7 @@ def extract_from_file(filename, elements):
 def list_tar_content(the_tarfile):
     files = {}
     try:
-        if type(the_tarfile) == cStringIO.StringIO:
+        if type(the_tarfile) != str:
             tar = tarfile.open("r", fileobj = the_tarfile)
         else:
             tar = tarfile.open(the_tarfile, "r")
@@ -97,7 +97,7 @@ def list_tar_content(the_tarfile):
     return files
 
 def get_file_content(the_tarfile, filename):
-    if type(the_tarfile) == cStringIO.StringIO:
+    if type(the_tarfile) != str:
         tar = tarfile.open("r", fileobj = the_tarfile)
     else:
         tar = tarfile.open(the_tarfile, "r")

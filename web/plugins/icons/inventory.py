@@ -25,7 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 def paint_icon_inventory(what, row, tags, customer_vars):
-    if what == "host" and inventory.has_inventory(row["host_name"]):
+    if (what == "host" or row.get("service_check_command","").startswith("check_mk_active-cmk_inv!")) \
+        and inventory.has_inventory(row["host_name"]):
 	return link_to_view("<img class=icon title='%s' src='images/icon_inv.png'>" %
 			    _("Show Hardware/Software-Inventory of this host"),
 	                    row, 'inv_host' )

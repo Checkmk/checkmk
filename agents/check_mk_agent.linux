@@ -30,6 +30,14 @@ unset LANG
 export MK_LIBDIR="/usr/lib/check_mk_agent"
 export MK_CONFDIR="/etc/check_mk"
 
+# Provide information about the remote host. That helps when data
+# is being sent only once to each remote host.
+if [ "$REMOTE_HOST" ] ; then
+    export REMOTE=$REMOTE_HOST
+elif [ "$SSH_CLIENT" ] ; then
+    export REMOTE=${SSH_CLIENT%% *}
+fi
+
 # Make sure, locally installed binaries are found
 PATH=$PATH:/usr/local/bin
 
@@ -46,7 +54,6 @@ LOCALDIR=$MK_LIBDIR/local
 # All files in SPOOLDIR will simply appended to the agent
 # output if they are not outdated (see below)
 SPOOLDIR=$MK_CONFDIR/spool
-
 
 # close standard input (for security reasons) and stderr
 if [ "$1" = -d ]

@@ -339,10 +339,6 @@ def notify_keepalive():
             global g_inactive_timerperiods
             g_inactive_timerperiods = None
 
-            # Invalidate timeperiod cache
-            global g_inactive_timerperiods
-            g_inactive_timerperiods = None
-
             # If the configuration has changed, we do a restart. But we do
             # this check just before the next notification arrives. We must
             # *not* read data from stdin, just peek! There is still one
@@ -840,8 +836,6 @@ def format_exception():
 #   '----------------------------------------------------------------------'
 
 def notify_rulebased(context):
-    notify_log("RBN2!")
-
     # First step: go through all rules and construct our table of
     # notification plugins to call. This is a dict from (user, plugin) to
     # a pair if (locked, parameters). If locked is True, then a user
@@ -900,7 +894,9 @@ def rbn_match_rule(rule, context):
         rbn_match_services(rule, context) or \
         rbn_match_exclude_services(rule, context) or \
         rbn_match_checktype(rule, context) or \
-        rbn_match_timeperiod(rule)
+        rbn_match_timeperiod(rule) or \
+        rbn_match_escalation(rule, context) or \
+        rbn_match_servicelevel(rule, context)
 
 
 def rbn_match_hosttags(rule, context):
@@ -959,6 +955,27 @@ def rbn_match_timeperiod(rule):
         if timeperiod != "24X7" and not check_timeperiod(timeperiod):
             return "The timeperiod '%s' is currently not active." % timeperiod
 
+
+def rbn_match_escalation(rule, context):
+    if "match_escalation" in rule:
+        from_number, to_number = rule["match_escalation"]
+        if context["WHAT"] == "HOST":
+            notification_number = int(context.get("HOSTNOTIFICATIONNUMBER", 1))
+        else:
+            notification_number = int(context.get("SERVICENOTIFICATIONNUMBER", 1))
+        if notification_number < from_number or notification_number > to_number:
+            return "The notification number %d does not lie in range %d ... %d" % (
+                    notification_number, from_number, to_number)
+
+def rbn_match_servicelevel(rule, context):
+    from_sl, to_sl = rule["match_sl"]
+    if context['WHAT'] == "SERVICE" and context.get('SVC_SL','').isdigit():
+        sl = saveint(context.get('SVC_SL'))
+    else:
+        sl = saveint(context.get('HOST_SL'))
+
+    if sl < from_sl or sl > to_sl:
+        return "The service level %d is not between %d and %d." % (sl, from_sl, to_sl)
 
 
 def rbn_rule_contacts(rule, context):

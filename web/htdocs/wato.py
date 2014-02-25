@@ -7453,9 +7453,11 @@ def vs_notification_rule():
                   elements = [
                       Integer(
                           label = _("from"),
-                          help = _("Let through notifications counting from this number"),
-                          default_value = 1,
-                          minvalue = 1,
+                          help = _("Let through notifications counting from this number. "
+                                   "For normal alerts The first notification has the number 1. "
+                                   "For custom notifications the number is 0."),
+                          default_value = 0,
+                          minvalue = 0,
                           maxvalue = 999999,
                       ),
                       Integer(

@@ -336,6 +336,10 @@ def notify_keepalive():
     while True:
         try:
 
+            # Invalidate timeperiod cache
+            global g_inactive_timerperiods
+            g_inactive_timerperiods = None
+
             # If the configuration has changed, we do a restart. But we do
             # this check just before the next notification arrives. We must
             # *not* read data from stdin, just peek! There is still one
@@ -885,6 +889,73 @@ def notify_rulebased(context):
 def rbn_match_rule(rule, context):
     if rule.get("disabled"):
         return "This rule is disabled"
+
+    return \
+        rbn_match_hosttags(rule, context) or \
+        rbn_match_hosts(rule, context) or \
+        rbn_match_exclude_hosts(rule, context) or \
+        rbn_match_services(rule, context) or \
+        rbn_match_exclude_services(rule, context) or \
+        rbn_match_checktype(rule, context) or \
+        rbn_match_timeperiod(rule)
+
+
+def rbn_match_hosttags(rule, context):
+    required = rule.get("match_hosttags")
+    if required:
+        tags = context.get("HOSTTAGS", "").split()
+        if not hosttags_match_taglist(tags, required):
+            return "The host's tags %s do not match the required tags %s" % (
+                "|".join(tags), "|".join(required))
+
+def rbn_match_hosts(rule, context):
+    if "match_hosts" in rule:
+        hostlist = rule["match_hosts"]
+        if context["HOSTNAME"] not in hostlist:
+            return "The host's name '%s' is not on the list of allowed hosts (%s)" % (
+                context["HOSTNAME"], ", ".join(hostlist))
+
+def rbn_match_exclude_hosts(rule, context):
+    if context["HOSTNAME"] in rule.get("match_exclude_hosts", []):
+        return "The host's name '%s' is on the list of excluded hosts" % context["HOSTNAME"]
+
+
+def rbn_match_services(rule, context):
+    if "match_services" in rule:
+        if context["WHAT"] != "SERVICE":
+            return "The rule specifies a list of services, but this is a host notification."
+        servicelist = rule["match_services"]
+        service = context["SERVICEDESC"]
+        if not in_extraconf_servicelist(servicelist, service):
+            return "The service's description '%s' dows not match by the list of " \
+                   "allowed services (%s)" % (service, ", ".join(servicelist))
+
+def rbn_match_exclude_services(rule, context):
+    excludelist = rule.get("match_exclude_services", [])
+    service = context["SERVICEDESC"]
+    if in_extraconf_servicelist(excludelist, service):
+        return "The service's description '%s' matches the list of excluded services" \
+          % context["SERVICEDESC"]
+
+def rbn_match_checktype(rule, context):
+    if "match_checktype" in rule:
+        if context["WHAT"] != "SERVICE":
+            return "The rule specifies a list of Check_MK plugins, but this is a host notification."
+        command = context["SERVICECHECKCOMMAND"]
+        if not command.startswith("check_mk-"):
+            return "The rule specified a list of Check_MK plugins, but his is no Check_MK service."
+        plugin = command[9:]
+        allowed = rule["match_checktype"]
+        if plugin not in allowed:
+            return "The Check_MK plugin '%s' is not on the list of allowed plugins (%s)" % \
+              (plugin, ", ".join(allowed))
+
+def rbn_match_timeperiod(rule):
+    if "match_timeperiod" in rule:
+        timeperiod = rule["match_timeperiod"]
+        if timeperiod != "24X7" and not check_timeperiod(timeperiod):
+            return "The timeperiod '%s' is currently not active." % timeperiod
+
 
 
 def rbn_rule_contacts(rule, context):

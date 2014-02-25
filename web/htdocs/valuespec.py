@@ -707,7 +707,11 @@ class ListOfStrings(ValueSpec):
 
     def validate_value(self, value, vp):
         if len(value) == 0 and not self._allow_empty:
-            raise MKUserError(vp + "_0", _("Please specify at least one value"))
+            if self._empty_text:
+                msg = self._empty_text
+            else:
+                msg = _("Please specify at least one value")
+            raise MKUserError(vp + "_0", msg)
         if self._valuespec:
             for nr, s in enumerate(value):
                 self._valuespec.validate_value(s, vp + "_%d" % nr)

@@ -6374,13 +6374,13 @@ def factory_reset():
 #   '----------------------------------------------------------------------'
 
 
-class CheckTypeSelection(ListChoice):
+class CheckTypeSelection(DualListChoice):
     def __init__(self, **kwargs):
-        ListChoice.__init__(self, columns=3, **kwargs)
+        DualListChoice.__init__(self, **kwargs)
 
     def get_elements(self):
         checks = check_mk_local_automation("get-check-information")
-        elements = [ (cn, "<span title=\"%s\">%s</span>" % (c["title"], cn)) for (cn, c) in checks.items()]
+        elements = [ (cn, (cn + " - " + c["title"])[:60]) for (cn, c) in checks.items()]
         elements.sort()
         return elements
 
@@ -7402,7 +7402,8 @@ def vs_notification_rule():
                   title = _("Match only the following hosts"),
                   size = 24,
                   orientation = "horizontal",
-
+                  allow_empty = False,
+                  empty_text = _("Please specify at least one host. Disable the option if you want to allow all hosts."),
               )
             ),
             ( "match_exclude_hosts",
@@ -7414,9 +7415,14 @@ def vs_notification_rule():
             ),
             ( "match_services",
               ListOfStrings(
-                  title = _("Match only the following hosts"),
+                  title = _("Match only the following services"),
+                  help = _("Specify a list of regular expressions that must match the <b>beginning</b> of the "
+                           "service name in order for the rule to match. Note: Host notifications never match this "
+                           "rule if this option is being used."),
                   valuespec = TextUnicode(size = 32),
                   orientation = "horizontal",
+                  allow_empty = False,
+                  empty_text = _("Please specify at least one service regex. Disable the option if you want to allow all services."),
               )
             ),
             ( "match_exclude_services",
@@ -7428,7 +7434,9 @@ def vs_notification_rule():
             ),
             ( "match_checktype",
               CheckTypeSelection(
-                  title = _("Match the following check types")
+                  title = _("Match the following check types"),
+                  help = _("Only apply the rule if the notification originates from certain types of check plugins. "
+                           "Note: Host notifications never match this rule if this option is being used."),
               )
             ),
             ( "match_timeperiod",

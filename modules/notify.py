@@ -833,7 +833,120 @@ def format_exception():
 #   '----------------------------------------------------------------------'
 
 def notify_rulebased(context):
-    notify_log("RBN!")
+    notify_log("RBN2!")
+
+    # First step: go through all rules and construct our table of
+    # notification plugins to call. This is a dict from (user, plugin) to
+    # a pair if (locked, parameters). If locked is True, then a user
+    # cannot cancel this notification via his personal notification rules.
+    # Example:
+    # notifications = {
+    #  ( "hh", "email" ) : ( False, [] ),
+    #  ( "hh", "sms"   ) : ( True, [ "0171737337", "bar" ] ),
+    # }
+
+    notifications = {}
+
+    for rule in notification_rules:
+        notify_log(pprint.pformat(rule))
+        notify_log("Trying rule '%s'..." % rule["description"])
+        why_not = rbn_match_rule(rule, context) # also checks disabling
+        if why_not:
+            notify_log(" -> does not match: %s" % why_not)
+        else:
+            notify_log(" -> matches!")
+            contacts = rbn_rule_contacts(rule, context)
+            plugin = rule["notify_plugin"]
+            method = rule["notify_method"]
+            if method == None: # cancelling
+                for contact in contacts:
+                    key = contact, plugin
+                    if key in notifications:
+                        notify_log("   - cancelling notification of %s via %s" % key)
+                        del notifications[key]
+                        # TODO: honor locked flag for user specific rules
+            else:
+                for contact in contacts:
+                    key = contact, plugin
+                    if key in notifications:
+                        notify_log("   - modifying notification of %s via %s" % key)
+                    else:
+                        notify_log("   - adding notification of %s via %s" % key)
+                    # Hint: method is the list of plugin parameters in this case
+                    notifications[key] = ( not rule.get("allow_disable"), method )
+
+    notify_log("Resulting notification table:")
+    entries = notifications.items()
+    entries.sort()
+    for (contact, plugin), (locked, params) in entries:
+        notify_log("  * %s via %s, parameters: %s" % (contact, plugin, " ".join(params)))
 
 
+def rbn_match_rule(rule, context):
+    if rule.get("disabled"):
+        return "This rule is disabled"
 
+
+def rbn_rule_contacts(rule, context):
+    contacts = set([])
+    if rule.get("contact_object"):
+        contacts.update(rbn_object_contacts(context).keys())
+    if rule.get("contact_all"):
+        contacts.update(rbn_all_contacts().keys())
+    if "contact_contacts" in rule:
+        contacts.update(rule["contact_contacts"])
+    if "contact_groups" in rule:
+        contacts.update(rbn_groups_contacts(rule["contact_groups"]))
+    if "contact_emails" in rule:
+        contacts.update(rbn_emails_contacts(rule["contact_emails"]))
+    return contacts
+
+
+def rbn_object_contacts(context):
+    contacts = {}
+    for key, value in context.iteritems():
+        if key.startswith("CONTACTALIAS["):
+            name = key[13:-1]
+            contacts[name] = {
+                "alias": value,
+                "email": context["CONTACTEMAIL[%s]" % name],
+                "pager": context["CONTACTPAGER[%s]" % name],
+            }
+    return contacts
+
+def rbn_all_contacts():
+    # TODO: Diese Liste nur einmal holen und dann cachen
+    contacts = {}
+    query = "GET contacts\nColumns: name alias email pager\nSeparators: 1 2 3 4\n"
+    response = livestatus_fetch_query(query)
+    notify_log(response)
+    lines = response.split('\1')
+    for line in lines:
+        parts = line.split('\2')
+        if len(parts) == 4:
+            name, alias, email, pager = parts
+            contacts[name] = {
+                "alias" : alias,
+                "email" : email,
+                "pager" : pager,
+            }
+    return contacts
+
+def rbn_groups_contacts(groups):
+    if not groups:
+        return {}
+    contacts = set([])
+    query = "GET contactgroups\nColumns: members\n"
+    for group in groups:
+        query += "Filter: name = %s\n" % group
+    query += "Or: %d\n" % len(groups)
+    response = livestatus_fetch_query(query)
+    for line in response.splitlines():
+        line = line.strip()
+        if line:
+            contacts.update(line.split(","))
+    return contacts
+
+
+def rbn_emails_contacts(emails):
+    return [ "mailto:" + e for e in emails ]

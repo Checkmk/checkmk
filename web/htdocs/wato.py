@@ -7543,7 +7543,7 @@ def vs_notification_rule():
             ( "contact_groups",
               ListOf(
                   GroupSelection("contact"),
-                  title = _("The member of certain contact groups"),
+                  title = _("The members of certain contact groups"),
                   movable = False,
               )
             ),

@@ -34,7 +34,7 @@
 # hostname, servicedesc, hoststate, servicestate, output in
 # the form %(variable)s
 
-import pprint, urllib, select, subprocess
+import pprint, urllib, select, subprocess, socket
 
 # Default settings
 notification_logdir   = var_dir + "/notify"
@@ -294,7 +294,8 @@ def do_notify(args):
 
             notify_mode, argument = args
             if notify_mode in ['fake-service', 'fake-host']:
-                plugin = argument
+                global fake_plugin
+                fake_plugin = argument
             if notify_mode in ['spoolfile']:
                filename = argument
 
@@ -447,10 +448,11 @@ def convert_context_to_unicode(context):
             context[key] = value_unicode
 
 def notify_notify(context):
+    if notification_logging >= 2:
+        notify_log("----------------------------------------------------------------------")
     notify_log("Got notification context with %s variables" % len(context))
 
     # Add a few further helper variables
-    import socket
     context["MONITORING_HOST"] = socket.gethostname()
     if omd_root:
         context["OMD_ROOT"] = omd_root
@@ -483,12 +485,16 @@ def notify_notify(context):
                                                  (context['HOSTNAME'], context['SERVICEDESC']))
 
     if notify_mode in [ 'fake-service', 'fake-host' ]:
-        sys.exit(call_notification_script(plugin, [], context, True))
+        sys.exit(call_notification_script(fake_plugin, [], context, True))
 
     if 'LASTHOSTSTATECHANGE' in context:
         context['LASTHOSTSTATECHANGE_REL'] = get_readable_rel_date(context['LASTHOSTSTATECHANGE'])
     if context['WHAT'] != 'HOST' and 'LASTSERVICESTATECHANGE' in context:
         context['LASTSERVICESTATECHANGE_REL'] = get_readable_rel_date(context['LASTSERVICESTATECHANGE'])
+
+    # Rule based notifications enabled? We might need to complete a few macros
+    if enable_rulebased_notifications:
+        add_rulebased_macros(context)
 
     convert_context_to_unicode(context)
 
@@ -509,6 +515,54 @@ def notify_notify(context):
             return 0
 
     process_context(context, notification_spooling)
+
+
+def add_rulebased_macros(context):
+    # For the rule based notifications we need the list of contacts
+    # an object has. The CMC does send this in the macro "CONTACTS"
+    # (the count) and macros of the form CONTACTALIAS[hh]=Harry Hirsch
+    if "NUM_CONTACTS" not in context:
+        livestatus_fetch_contacts(context, context["HOSTNAME"], context.get("SERVICEDESC"))
+
+def livestatus_fetch_contacts(context, host, service):
+
+    if service:
+        query = "GET services\nFilter: host_name = %s\nFilter: service_description = %s\nColumns: contacts\n" % (
+            host, service)
+    else:
+        query = "GET hosts\nFilter: host_name = %s\nColumns: contacts\n" % host
+
+    contacts = livestatus_fetch_query(query).split(",")
+
+    # Now get all relevant information
+    query = "GET contacts\nColumns: name alias email pager\nSeparators: 1 2 3 4\n"
+    for contact in contacts:
+        query += "Filter: name = %s\n" % contact.strip()
+    query += "Or: %d\n" % len(contacts)
+    response = livestatus_fetch_query(query)
+    lines = response.split('\1')
+    count = 0
+    for line in lines:
+        parts = line.split('\2')
+        if len(parts) == 4:
+            name, alias, email, pager = parts
+            if name != "check-mk-notify":
+                context["CONTACTALIAS[%s]" % name] = alias
+                context["CONTACTEMAIL[%s]" % name] = email
+                context["CONTACTPAGER[%s]" % name] = pager
+                count += 1
+    context["NUM_CONTACTS"] = str(count)
+
+def livestatus_fetch_query(query):
+    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    sock.connect(livestatus_unix_socket)
+    sock.send(query)
+    sock.shutdown(socket.SHUT_WR)
+    response = sock.recv(10000000)
+    sock.close()
+    return response
+
+
 
 
 def notify_via_email(context, write_into_spoolfile):

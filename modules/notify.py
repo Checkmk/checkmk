@@ -896,7 +896,9 @@ def rbn_match_rule(rule, context):
         rbn_match_checktype(rule, context) or \
         rbn_match_timeperiod(rule) or \
         rbn_match_escalation(rule, context) or \
-        rbn_match_servicelevel(rule, context)
+        rbn_match_servicelevel(rule, context) or \
+        rbn_match_host_event(rule, context) or \
+        rbn_match_service_event(rule, context)
 
 
 def rbn_match_hosttags(rule, context):
@@ -930,6 +932,8 @@ def rbn_match_services(rule, context):
                    "allowed services (%s)" % (service, ", ".join(servicelist))
 
 def rbn_match_exclude_services(rule, context):
+    if context["WHAT"] != "SERVICE":
+        return
     excludelist = rule.get("match_exclude_services", [])
     service = context["SERVICEDESC"]
     if in_extraconf_servicelist(excludelist, service):
@@ -968,14 +972,61 @@ def rbn_match_escalation(rule, context):
                     notification_number, from_number, to_number)
 
 def rbn_match_servicelevel(rule, context):
-    from_sl, to_sl = rule["match_sl"]
-    if context['WHAT'] == "SERVICE" and context.get('SVC_SL','').isdigit():
-        sl = saveint(context.get('SVC_SL'))
-    else:
-        sl = saveint(context.get('HOST_SL'))
+    if "match_sl" in rule:
+        from_sl, to_sl = rule["match_sl"]
+        if context['WHAT'] == "SERVICE" and context.get('SVC_SL','').isdigit():
+            sl = saveint(context.get('SVC_SL'))
+        else:
+            sl = saveint(context.get('HOST_SL'))
 
-    if sl < from_sl or sl > to_sl:
-        return "The service level %d is not between %d and %d." % (sl, from_sl, to_sl)
+        if sl < from_sl or sl > to_sl:
+            return "The service level %d is not between %d and %d." % (sl, from_sl, to_sl)
+
+def rbn_match_host_event(rule, context):
+    if "match_host_event" in rule:
+        if context["WHAT"] != "HOST":
+            if "match_host_event" not in rule:
+                return "This is a service notification, but the rule just matches host events"
+            else:
+                return # Let this be handled by match_service_event
+        allowed_events = rule["match_host_event"]
+        state          = context["HOSTSTATE"]
+        last_state     = context["LASTHOSTSTATE"]
+        events         = { "UP" : 'r', "DOWN" : 'd', "UNREACHABLE" : 'u' }
+        return rbn_match_event(context, state, last_state, events, allowed_events)
+
+
+def rbn_match_service_event(rule, context):
+    if "match_service_event" in rule:
+        if context["WHAT"] != "SERVICE":
+            if "match_host_event" not in rule:
+                return "This is a host notification, but the rule just matches service events"
+            else:
+                return # Let this be handled by match_host_event
+        allowed_events = rule["match_service_event"]
+        state          = context["SERVICESTATE"]
+        last_state     = context["LASTSERVICESTATE"]
+        events         = { "OK" : 'r', "WARNING" : 'w', "CRITICAL" : 'c', "UNKNOWN" : 'u' }
+        return rbn_match_event(context, state, last_state, events, allowed_events)
+
+def rbn_match_event(context, state, last_state, events, allowed_events):
+    notification_type = context["NOTIFICATIONTYPE"]
+
+    if notification_type == "RECOVERY":
+        event = events.get(last_state, '?') + 'r'
+    elif notification_type in [ "FLAPPINGSTART", "FLAPPINGSTOP", "FLAPPINGDISABLED" ]:
+        event = 'f'
+    elif notification_type in [ "DOWNTIMESTART", "DOWNTIMEEND", "DOWNTIMECANCELLED"]:
+        event = 's'
+    elif notification_type == "ACKNOWLEDGEMENT":
+        event = 'x'
+    else:
+        event = events.get(last_state, '?') + events.get(state, '?')
+
+    if event not in allowed_events:
+        return "Event type '%s' not handled by this rule. Allowed are: %s" % (
+                event, ", ".join(allowed_events))
+
 
 
 def rbn_rule_contacts(rule, context):

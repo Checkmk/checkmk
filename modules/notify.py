@@ -335,6 +335,9 @@ def notify_keepalive():
 
     while True:
         try:
+            # Invalidate timeperiod cache
+            global g_inactive_timerperiods
+            g_inactive_timerperiods = None
 
             # Invalidate timeperiod cache
             global g_inactive_timerperiods

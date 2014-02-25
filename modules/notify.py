@@ -736,7 +736,7 @@ def notify_flexible(context, notification_table, write_into_spoolfile):
     else:
         return 0
 
-def call_notification_script(plugin, parameters, context, write_into_spoolfile):
+def call_notification_script(plugin, parameters, context, write_into_spoolfile=False):
 
     # Enter context into environment
     os.putenv("NOTIFY_PARAMETERS", " ".join(parameters))
@@ -771,7 +771,7 @@ def call_notification_script(plugin, parameters, context, write_into_spoolfile):
             create_spoolfile({"context": context, "plugin": plugin})
             exitcode = 0
         else:
-            notify_log("Executing %s" % path)
+            notify_log("     executing %s" % path)
             out = os.popen(path + " 2>&1 </dev/null")
             for line in out:
                 notify_log("Output: %s" % line.rstrip())
@@ -847,15 +847,16 @@ def notify_rulebased(context):
     # }
 
     notifications = {}
+    num_rule_matches = 0
 
     for rule in notification_rules:
-        notify_log(pprint.pformat(rule))
         notify_log("Trying rule '%s'..." % rule["description"])
         why_not = rbn_match_rule(rule, context) # also checks disabling
         if why_not:
             notify_log(" -> does not match: %s" % why_not)
         else:
             notify_log(" -> matches!")
+            num_rule_matches += 1
             contacts = rbn_rule_contacts(rule, context)
             plugin = rule["notify_plugin"]
             method = rule["notify_method"]
@@ -876,11 +877,87 @@ def notify_rulebased(context):
                     # Hint: method is the list of plugin parameters in this case
                     notifications[key] = ( not rule.get("allow_disable"), method )
 
-    notify_log("Resulting notification table:")
+    if not notifications:
+        if num_rule_matches:
+            notify_log("%d rules matched, but no notification has been created." % num_rule_matches)
+        else:
+            if notification_fallback_email:
+                notify_log("No rule matched, falling back to email to %s" % notification_fallback_email)
+                contact = rbn_fake_email_contact(notification_fallback_email)
+                rbn_add_contact_information(context, contact)
+                call_notification_script("mail", [], context)
+        return
+
+    # Now do the actual notifications
+    notify_log("Executing %d notifications:" % len(notifications))
     entries = notifications.items()
     entries.sort()
     for (contact, plugin), (locked, params) in entries:
-        notify_log("  * %s via %s, parameters: %s" % (contact, plugin, " ".join(params)))
+        notify_log("  * notifying %s via %s, parameters: %s" % (contact, plugin, ", ".join(params)))
+        try:
+            rbn_add_contact_information(context, contact)
+            call_notification_script(plugin, params, context)
+        except Exception, e:
+            if opt_debug:
+                raise
+            fe = format_exception()
+            notify_log("    ERROR: %s" % e)
+            notify_log(fe)
+
+
+def rbn_fake_email_contact(email):
+    return {
+        "name"  : email.split("@")[0],
+        "alias" : "Explicit email adress " + email,
+        "email" : email,
+        "pager" : "",
+    }
+
+
+def rbn_add_contact_information(context, contact):
+    if type(contact) == dict:
+        for what in [ "name", "alias", "email", "pager" ]:
+            context["CONTACT" + what.upper()] = contact[what]
+    else:
+        context["CONTACTNAME"] = contact
+        for what in [ "alias", "email", "pager" ]:
+            varname = "CONTACT" + what.upper()
+            value = context.get("%s[%s]" % (varname, contact))
+            if value != None:
+                context[varname] = value
+            else:
+                # Need to fetch information via livestatus
+                contact_dict = query_contact_info(contact)
+                rbn_add_contact_information(context, contact_dict)
+
+g_contact_cache = {}
+def query_contact_info(name):
+    if name in g_contact_cache:
+        return g_contact_cache[name]
+    try:
+        query = "GET contacts\nColumns: alias email pager\nFilter: name = %s\n" % name
+        response = livestatus_fetch_query(query)
+        alias, email, pager = response.strip().split(";")
+    except:
+        if opt_debug:
+            raise
+        alias = name
+        email = ""
+        page = ""
+    contact = {
+        "name"  : name,
+        "alias" : alias,
+        "email" : email,
+        "pager" : pager,
+    }
+    g_contact_cache[name] = contact
+    return contact
+
+
+
+
+
+
 
 
 def rbn_match_rule(rule, context):
@@ -1061,17 +1138,17 @@ def rbn_all_contacts():
     contacts = {}
     query = "GET contacts\nColumns: name alias email pager\nSeparators: 1 2 3 4\n"
     response = livestatus_fetch_query(query)
-    notify_log(response)
     lines = response.split('\1')
     for line in lines:
         parts = line.split('\2')
         if len(parts) == 4:
             name, alias, email, pager = parts
-            contacts[name] = {
-                "alias" : alias,
-                "email" : email,
-                "pager" : pager,
-            }
+            if name not in [ "check-mk-notify", "check_mk" ]:
+                contacts[name] = {
+                    "alias" : alias,
+                    "email" : email,
+                    "pager" : pager,
+                }
     return contacts
 
 def rbn_groups_contacts(groups):

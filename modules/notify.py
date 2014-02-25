@@ -235,7 +235,11 @@ def handle_spoolfile(spoolfile):
             return 2
         return 0
 
-def process_context(context, write_into_spoolfile, use_method = None):
+def process_context(context, write_into_spoolfile):
+    # TODO: Do spooling right here, not on a per-plugin base
+    if enable_rulebased_notifications:
+        return notify_rulebased(context)
+
     # Get notification settings for the contact in question - if available.
     method = "email"
     contact = contacts.get(context["CONTACTNAME"])
@@ -244,26 +248,6 @@ def process_context(context, write_into_spoolfile, use_method = None):
             method = contact.get("notification_method")
         else:
             method = 'email'
-
-        if use_method:
-            if use_method == "email":
-                method = "email"
-            elif method == "email":
-                # We are searching for a specific
-                # but this contact does not offer any
-                notify_log("ERROR: contact %r does not have any plugins (required: %s)" % (contact, use_method))
-                return 2
-            else:
-                found_plugin = {}
-                for item in method[1]:
-                    if item["plugin"] == use_method:
-                        found_plugin = item
-                        break
-                if not found_plugin:
-                    # Required plugin was not found for this contact
-                    notify_log("ERROR: contact %r do not have plugin %s" % (contact, use_method))
-                    return 2
-                method = ('flexible', [found_plugin])
 
         if type(method) == tuple and method[0] == 'flexible':
             notify_log("Preparing flexible notifications for %s" % context["CONTACTNAME"])
@@ -524,6 +508,14 @@ def add_rulebased_macros(context):
     if "NUM_CONTACTS" not in context:
         livestatus_fetch_contacts(context, context["HOSTNAME"], context.get("SERVICEDESC"))
 
+    # Add a pseudo contact name. This is needed for the correct creation
+    # of spool files. Spool files are created on a per-contact-base, as in classical
+    # notifications the core sends out one individual notification per contact.
+    # In the case of rule based notifications we do not make distinctions between
+    # the various contacts.
+    context["CONTACTNAME"] = "check-mk-notify"
+
+
 def livestatus_fetch_contacts(context, host, service):
 
     if service:
@@ -553,6 +545,7 @@ def livestatus_fetch_contacts(context, host, service):
                 count += 1
     context["NUM_CONTACTS"] = str(count)
 
+
 def livestatus_fetch_query(query):
     sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     sock.connect(livestatus_unix_socket)
@@ -561,8 +554,6 @@ def livestatus_fetch_query(query):
     response = sock.recv(10000000)
     sock.close()
     return response
-
-
 
 
 def notify_via_email(context, write_into_spoolfile):
@@ -742,8 +733,6 @@ def notify_flexible(context, notification_table, write_into_spoolfile):
     else:
         return 0
 
-
-
 def call_notification_script(plugin, parameters, context, write_into_spoolfile):
 
     # Enter context into environment
@@ -830,3 +819,21 @@ def format_exception():
     t, v, tb = sys.exc_info()
     traceback.print_exception(t, v, tb, None, txt)
     return txt.getvalue()
+
+#.
+#   .--Rulebased-----------------------------------------------------------.
+#   |            ____        _      _                        _             |
+#   |           |  _ \ _   _| | ___| |__   __ _ ___  ___  __| |            |
+#   |           | |_) | | | | |/ _ \ '_ \ / _` / __|/ _ \/ _` |            |
+#   |           |  _ <| |_| | |  __/ |_) | (_| \__ \  __/ (_| |            |
+#   |           |_| \_\\__,_|_|\___|_.__/ \__,_|___/\___|\__,_|            |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Logic for rule based notifications                                  |
+#   '----------------------------------------------------------------------'
+
+def notify_rulebased(context):
+    notify_log("RBN!")
+
+
+

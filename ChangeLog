@@ -17,6 +17,9 @@
     * 0671 FIX: LDAP: Disable logging of password changes received from LDAP
     * 0558 FIX: availability: fixed exception on specific filter settings...
 
+    Notifications:
+    * 0720 FIX: Fix timeperiod computation with CMC and flexible notifications...
+
     BI:
     * 0669 FIX: Fixed regex matching in BI when using character groups [...]...
 

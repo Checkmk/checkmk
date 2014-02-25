@@ -345,6 +345,9 @@ def notify_keepalive():
 
     while True:
         try:
+            # Invalidate timeperiod cache
+            global g_inactive_timerperiods
+            g_inactive_timerperiods = None
 
             # If the configuration has changed, we do a restart. But we do
             # this check just before the next notification arrives. We must

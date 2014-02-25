@@ -1,7 +1,7 @@
 Title: Fixed permission bug in "Edit user profile" dialog.
 Level: 1
 Component: wato
-Version: 1.2.4b8
+Version: 1.2.4
 Date: 1390823084
 Class: fix
 

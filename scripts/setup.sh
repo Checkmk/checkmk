@@ -24,7 +24,7 @@
 # Boston, MA 02110-1301 USA.
 
 
-VERSION=1.2.4b8
+VERSION=1.2.4p1
 NAME=check_mk
 LANG=
 LC_ALL=
@@ -225,6 +225,7 @@ HOMEBASEDIR=$HOME/$NAME
 
 ask_title "Installation directories of check_mk"
 
+
 ask_dir bindir /usr/bin $HOMEBASEDIR/bin $OMD_ROOT/local/bin "Executable programs" \
   "Directory where to install executable programs such as check_mk itself.
 This directory should be in your search path (\$PATH). Otherwise you
@@ -406,6 +407,10 @@ C++ compiler installed in order to do this"
 
 if [ "$enable_livestatus" = yes ]
 then
+  ask_dir -d nagios_version "3.5.0" "3.5.0" "OMD Monitoring Site $OMD_SITE" "Nagios / Icinga version" \
+   "The version is required for the compilation of the livestatus module.
+Depending on the major version (3 or 4) different nagios headers are included"
+
   ask_dir libdir /usr/lib/$NAME $HOMEBASEDIR/lib $OMD_ROOT/local/lib/mk-livestatus "check_mk's binary modules" \
    "Directory for architecture dependent binary libraries and plugins
 of check_mk"
@@ -560,7 +565,14 @@ compile_livestatus ()
    mkdir -p $D
    tar xvzf $SRCDIR/livestatus.tar.gz -C $D
    pushd $D
-   ./configure --libdir=$libdir --bindir=$bindir &&
+
+   local CONFIGURE_OPTS=""
+   if [ -n "$nagios_version" ] ; then
+        if [ ${nagios_version:0:1} == 4 ] ; then
+           CONFIGURE_OPTS="--with-nagios4"
+        fi
+   fi
+   ./configure --libdir=$libdir --bindir=$bindir $CONFIGURE_OPTS &&
    make clean &&
    cat <<EOF > src/livestatus.h &&
 #ifndef livestatus_h

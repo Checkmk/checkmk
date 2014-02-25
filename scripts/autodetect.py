@@ -40,6 +40,7 @@ target_values = {
     'nagiosaddconf'     : "Snippet to add to nagios.cfg",
     'nagios_auth_name'  : "HTTP Basic AuthName for Nagios",
     'nagios_binary'     : "Absolute path to Nagios binary itself",
+    'nagios_version'    : "Nagios version",
     'nagios_config_file': "Absolute path to nagios.cfg",
     'nagios_startscript': "Nagios startskript (usually in /etc/init.d)",
     'nagios_status_file': "Absolute path to Nagios' status.dat",
@@ -436,6 +437,12 @@ try:
 
         # Path to executable
         result['nagios_binary'] = process_executable(pid)
+
+        # Nagios version
+        result['nagios_version'] = ""
+        for line in os.popen(result["nagios_binary"]+ " --version 2>/dev/null"):
+            if line.startswith("Nagios Core") or line.startswith("Icinga Core"):
+                result['nagios_version'] = line.split()[2]
 
         # Path to startscript
         for path in [ '/etc/init.d/nagios', '/etc/init.d/nagios3', '/etc/init.d/icinga' ]:

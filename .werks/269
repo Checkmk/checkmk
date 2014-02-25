@@ -1,7 +1,7 @@
 Title: brocade_fcport: fixed problem on displaying check_parameters in WATO
 Level: 1
 Component: wato
-Version: 1.2.4b8
+Version: 1.2.4
 Date: 1390824236
 Class: fix
 

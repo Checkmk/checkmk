@@ -27,6 +27,9 @@
 #include "TimeperiodsCache.h"
 #include "nagios.h"
 #include "logger.h"
+#ifdef NAGIOS4
+#include <pthread.h>
+#endif // NAGIOS4
 
 extern timeperiod *timeperiod_list;
 
@@ -145,7 +148,7 @@ bool TimeperiodsCache::inTimeperiod(timeperiod *tp)
 
 void TimeperiodsCache::logTransition(char *name, int from, int to)
 {
-    char buffer[64];
+    char buffer[256];
     snprintf(buffer, sizeof(buffer), "TIMEPERIOD TRANSITION: %s;%d;%d", name, from, to);
     write_to_all_logs(buffer, LOG_INFO);
 }

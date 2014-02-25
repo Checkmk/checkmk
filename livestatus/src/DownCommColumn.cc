@@ -50,11 +50,11 @@ void DownCommColumn::output(void *data, Query *query)
             found_match = false;
 
             if (!is_service){
-                if (dt->_host->name == ((host_struct*)data)->name)
+                if (dt->_host->name == ((host*)data)->name)
                     found_match = true;
             }
             else
-               if ( dt->_service->description == ((service_struct*)data)->description && dt->_service->host_name == ((service_struct*)data)->host_name )
+               if ( dt->_service->description == ((service*)data)->description && dt->_service->host_name == ((service*)data)->host_name )
                     found_match = true;
 
             if (found_match)

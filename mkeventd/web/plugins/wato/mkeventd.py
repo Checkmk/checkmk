@@ -1875,6 +1875,18 @@ register_rule(
                 default_value = '$HOSTNAME$',
               )
             ),
+            ( "item",
+              TextAscii(
+                title = _("Item (Used in service description)"),
+                help = _("If you enter an item name here, this will be used as "
+                   "part of the service description after the prefix \"Events \". "
+                   "The prefix plus the configured item must result in an unique "
+                   "service description per host. If you leave this empty either the "
+                   "string provided in \"Application\" is used as item or the service "
+                   "gets no item when the \"Application\" field is also not configured."),
+                allow_empty = False,
+              )
+            ),
             ( "application",
               RegExp(
                 title = _("Application (regular expression)"),
@@ -1934,7 +1946,7 @@ register_rule(
             )
           ),
         ],
-        optional_keys = [ "application", "remote", "ignore_acknowledged" ],
+        optional_keys = [ "application", "remote", "ignore_acknowledged", "item" ],
     ),
     match = 'all',
 )

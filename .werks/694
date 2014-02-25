@@ -1,0 +1,8 @@
+Title: wut_webtherm: Support new versions of WUT-Thermometer
+Level: 1
+Component: checks
+Version: 1.2.4
+Date: 1391698766
+Class: feature
+
+Now also support devices with OID 18.

@@ -92,7 +92,7 @@ function run_cached () {
 
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.4b8
+echo Version: 1.2.4p1
 echo AgentOS: solaris
 
 
@@ -141,8 +141,8 @@ sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'
 # binary: http://www.opencsw.org/
 if type statgrab &>/dev/null
 then
-    statgrab_vars="const. cpu. disk. general. mem. page. proc. swap. user."
-    statgrab_sections="proc cpu disk page"
+    statgrab_vars="const. cpu. disk. general. mem. page. swap. user."
+    statgrab_sections="cpu disk page"
 
     # Only collect net stats in global zone.
     if [ "$zonename" == "global" ]
@@ -231,7 +231,7 @@ if [ -f "$MK_CONFDIR/fileinfo.cfg" ]
 then
     echo '<<<fileinfo:sep(124)>>>'
     /usr/bin/perl -e 'print time."\n"'
-    ls $(cat "$MK_CONFDIR/fileinfo.cfg") | \
+    ls $(cat "$MK_CONFDIR/fileinfo.cfg") | sort -u | \
         /usr/bin/perl -e '
            while(my $file = <>) {
                $file =~ s/\n$//;

@@ -59,7 +59,7 @@ def edit_dictionary(entries, value, focus=None, hover_help=True,
                 vs.validate_value(v, varprefix + name)
                 new_value[name] = v
             except MKUserError, e:
-                messages.append(u"%s: %s" % (vs.title(), e.message))
+                messages.append("%s: %s" % (vs.title(), e.message))
                 html.add_user_error(e.varname, e.message)
 
         if validate and not html.has_user_errors():

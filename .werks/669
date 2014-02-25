@@ -1,0 +1,10 @@
+Title: Fixed regex matching in BI when using character groups [...]
+Level: 1
+Component: bi
+Version: 1.2.4p1
+Date: 1392622961
+Class: fix
+
+Regexes were not applied correctly when only using character groups as regex
+syntax without any other regex things. The option was not treated correctly
+since it was not detected as being a regex.

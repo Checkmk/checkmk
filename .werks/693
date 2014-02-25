@@ -1,0 +1,9 @@
+Title: hpux_lvm: avoid problem when alternative vgdisplay is installed
+Level: 1
+Component: checks
+Version: 1.2.4
+Date: 1391693475
+Class: fix
+
+The agent now uses <tt>/sbin/vgdisplay</tt>. That avoids an invalid output
+in case an alternative version of the command is installed e.g. in <tt>/usr/bin</tt>.

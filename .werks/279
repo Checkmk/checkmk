@@ -1,0 +1,10 @@
+Title: check_mk_agent.solaris: removed proc section from statgrab
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.4p1
+Date: 1392045063
+
+Querying the proc section with statgrab could lead to bus errors or segmentation faults.
+Since the statgrab_proc section wasn't used anyway it has been removed from the agent.

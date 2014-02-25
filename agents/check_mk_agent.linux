@@ -93,7 +93,7 @@ function run_cached () {
 }
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.4b8
+echo Version: 1.2.4p1
 echo AgentOS: linux
 echo PluginsDirectory: $PLUGINSDIR
 echo LocalDirectory: $LOCALDIR
@@ -433,6 +433,7 @@ if type mailq >/dev/null 2>&1 && [ -x /usr/sbin/postfix ] && getent passwd postf
     echo '<<<postfix_mailq>>>'
     mailq | tail -n 6
 elif [ -x /usr/sbin/ssmtp ] ; then
+    echo '<<<postfix_mailq>>>'
     mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6
 fi
 

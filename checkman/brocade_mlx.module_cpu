@@ -38,8 +38,8 @@ perfdata:
  cpu_util60 together with warn and crit levels.
 
 inventory:
- Finds one item per NI-MLX module.
- Empty modules are omitted.
+ Finds one item per NI-MLX or BR-MLX module.
+ Modules with state "empty" or "Blocked for full height card" are omitted.
 
 [parameters]
 parameters (dict): with the element

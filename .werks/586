@@ -1,0 +1,8 @@
+Title: rmon_stats: new snmp check to gather network traffic statistics on RMON enabled network interfaces
+Level: 2
+Component: checks
+Version: 1.2.5i1
+Date: 1393332564
+Class: feature
+
+

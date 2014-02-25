@@ -1,0 +1,30 @@
+title: Traffic Analysis of Network Interfaces using RMON
+agents: snmp
+catalog: hw/network/generic
+license: GPL
+distribution: check_mk
+description:
+ This check extracts data from the RMON statistics group of RMON enabled network
+ interfaces. The data are described in the Remote MONitoring MIB. Several devices
+ of various vendors are capable of supplying RMON data via SNMP, among them
+ are some CISCO devices. It may be necessary to enable RMON for every single network
+ interface you want to gather information for.
+
+ The check always returns the state {OK}. The main purpose of the check is to gather
+ network traffic statistics as performance data. 
+
+item:
+ The ID of the network interface within RMON (etherStatsIndex)
+
+inventory:
+ The inventory creates one service for each network port for which RMON is activated.
+
+perfdata:
+ {bcast}: The number of broadcast packets received per second.
+ {mcast}: The number of multicast packets received per second.
+ {0-63b}: The number of octects of size 0-63 bytes
+ {64-127b}: The number of octects pre second of size 64-127 bytes
+ {128-255b}: The number of octects pre second of size 128-255 bytes
+ {256-511b}: The number of octects pre second of size 256-511 bytes
+ {512-1023b}: The number of octects pre second of size 512-1023 bytes
+ {1024-1518b}: The number of octects pre second of size 1024-1518 bytes

@@ -7383,15 +7383,13 @@ def vs_notification_rule():
             ),
             ( "allow_disable",
               Checkbox(
-                title = _("Overriding by users"), 
+                title = _("Overriding by users"),
                 help = _("If you uncheck this option then users are not allowed to deactive notifications "
                          "that are created by this rule."),
                 label = _("allow users to deactivate this notification"),
                 default_value = True,
               )
             ),
-                        
-
             # Matching
             ( "match_hosttags",
               HostTagCondition(
@@ -7414,7 +7412,7 @@ def vs_notification_rule():
             ),
             ( "match_services",
               ListOfStrings(
-                  title = _("Match only the following hosts"),
+                  title = _("Match only the following services"),
                   valuespec = TextUnicode(size = 32),
                   orientation = "horizontal",
               )
@@ -7591,8 +7589,8 @@ def vs_notification_rule():
             ( _("General Properties"), [ "description", "disabled", "allow_disable" ] ),
             ( _("Notification Method"), [ "notify_plugin", "notify_method" ] ),
             ( _("Contact Selection"), [ "contact_all", "contact_object", "contact_contacts", "contact_groups", "contact_emails" ] ),
-            ( _("Conditions"),         [ "match_hosttags", "match_hosts", "match_exclude_hosts", 
-                                         "match_services", "match_exclude_services", 
+            ( _("Conditions"),         [ "match_hosttags", "match_hosts", "match_exclude_hosts",
+                                         "match_services", "match_exclude_services",
                                          "match_checktype", "match_timeperiod",
                                          "match_escalation", "match_sl", "match_host_event", "match_service_event" ] ),
         ],

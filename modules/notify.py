@@ -42,6 +42,11 @@ notification_spooldir = var_dir + "/notify/spool"
 notification_log = notification_logdir + "/notify.log"
 notification_logging    = 0
 
+# Settings for new rule based notifications
+enable_rulebased_notifications = False
+notification_fallback_email    = ""
+notification_rules             = []
+
 # Notification Spooling
 notification_spooling = False
 notification_spool_to = None

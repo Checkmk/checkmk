@@ -1,0 +1,15 @@
+Title: Rule for checking agents for wanted version
+Level: 2
+Component: checks
+Version: 1.2.5i1
+Date: 1393324817
+Class: feature
+
+You can now define a rule (in WATO it is called "Check for correct version of
+Check_MK agent") to check if the Check_MK Agents have one wanted version.
+You may give a version number manually or take the version number of the 
+monitoring site as a reference.
+
+If the Agent has a different version, the Check_MK service on this host returns
+a WARN status, or what ever status you did define in the rule "Status of the
+Check_MK service".

@@ -453,9 +453,15 @@ class EmailAddress(TextAscii):
     def __init__(self, **kwargs):
         TextAscii.__init__(self, **kwargs)
         self._regex = re.compile('^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$', re.I)
+        self._make_clickable = kwargs.get("make_clickable", False)
 
     def value_to_text(self, value):
-        return '<a href="mailto:%s">%s</a>' % (value, value)
+        if not value:
+            return TextAscii.value_to_text(self, value)
+        elif self._make_clickable:
+            return '<a href="mailto:%s">%s</a>' % (value, value)
+        else:
+            return value
 
 
 # Network as used in routing configuration, such as

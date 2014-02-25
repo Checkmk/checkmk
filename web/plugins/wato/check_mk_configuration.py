@@ -2221,6 +2221,23 @@ register_rule(group,
 )
 
 register_rule(group,
+    "check_mk_agent_target_versions",
+    OptionalDropdownChoice(
+        title = _("Check for correct version of Check_MK agent"),
+        help = _("If you want to make sure all of your Check_MK agents are running"
+                 " one specific version, you may set it by this rule. Agents running "
+                 " some different version return a none ok state then"),
+        choices = [
+           ("ignore", _("Ignore version")),
+           ("site",   _("Same version as the monitoring site")),
+           ],
+        otherlabel    = _("Custom ->"),
+        explicit      = TextAscii(allow_empty = False),
+        default_value = "ignore",
+    )
+)
+
+register_rule(group,
     "piggyback_translation",
     HostnameTranslation(
         title = _("Hostname translation for piggybacked hosts"),

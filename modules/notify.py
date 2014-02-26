@@ -34,7 +34,7 @@
 # hostname, servicedesc, hoststate, servicestate, output in
 # the form %(variable)s
 
-import pprint, urllib, select, subprocess
+import pprint, urllib, select, subprocess, socket
 
 # Default settings
 notification_logdir   = var_dir + "/notify"
@@ -235,7 +235,11 @@ def handle_spoolfile(spoolfile):
             return 2
         return 0
 
-def process_context(context, write_into_spoolfile, use_method = None):
+def process_context(context, write_into_spoolfile):
+    # TODO: Do spooling right here, not on a per-plugin base
+    if enable_rulebased_notifications:
+        return notify_rulebased(context)
+
     # Get notification settings for the contact in question - if available.
     method = "email"
     contact = contacts.get(context["CONTACTNAME"])
@@ -244,26 +248,6 @@ def process_context(context, write_into_spoolfile, use_method = None):
             method = contact.get("notification_method")
         else:
             method = 'email'
-
-        if use_method:
-            if use_method == "email":
-                method = "email"
-            elif method == "email":
-                # We are searching for a specific
-                # but this contact does not offer any
-                notify_log("ERROR: contact %r does not have any plugins (required: %s)" % (contact, use_method))
-                return 2
-            else:
-                found_plugin = {}
-                for item in method[1]:
-                    if item["plugin"] == use_method:
-                        found_plugin = item
-                        break
-                if not found_plugin:
-                    # Required plugin was not found for this contact
-                    notify_log("ERROR: contact %r do not have plugin %s" % (contact, use_method))
-                    return 2
-                method = ('flexible', [found_plugin])
 
         if type(method) == tuple and method[0] == 'flexible':
             notify_log("Preparing flexible notifications for %s" % context["CONTACTNAME"])
@@ -294,7 +278,8 @@ def do_notify(args):
 
             notify_mode, argument = args
             if notify_mode in ['fake-service', 'fake-host']:
-                plugin = argument
+                global fake_plugin
+                fake_plugin = argument
             if notify_mode in ['spoolfile']:
                filename = argument
 
@@ -350,6 +335,9 @@ def notify_keepalive():
 
     while True:
         try:
+            # Invalidate timeperiod cache
+            global g_inactive_timerperiods
+            g_inactive_timerperiods = None
 
             # If the configuration has changed, we do a restart. But we do
             # this check just before the next notification arrives. We must
@@ -447,10 +435,11 @@ def convert_context_to_unicode(context):
             context[key] = value_unicode
 
 def notify_notify(context):
+    if notification_logging >= 2:
+        notify_log("----------------------------------------------------------------------")
     notify_log("Got notification context with %s variables" % len(context))
 
     # Add a few further helper variables
-    import socket
     context["MONITORING_HOST"] = socket.gethostname()
     if omd_root:
         context["OMD_ROOT"] = omd_root
@@ -483,12 +472,16 @@ def notify_notify(context):
                                                  (context['HOSTNAME'], context['SERVICEDESC']))
 
     if notify_mode in [ 'fake-service', 'fake-host' ]:
-        sys.exit(call_notification_script(plugin, [], context, True))
+        sys.exit(call_notification_script(fake_plugin, [], context, True))
 
     if 'LASTHOSTSTATECHANGE' in context:
         context['LASTHOSTSTATECHANGE_REL'] = get_readable_rel_date(context['LASTHOSTSTATECHANGE'])
     if context['WHAT'] != 'HOST' and 'LASTSERVICESTATECHANGE' in context:
         context['LASTSERVICESTATECHANGE_REL'] = get_readable_rel_date(context['LASTSERVICESTATECHANGE'])
+
+    # Rule based notifications enabled? We might need to complete a few macros
+    if enable_rulebased_notifications:
+        add_rulebased_macros(context)
 
     convert_context_to_unicode(context)
 
@@ -509,6 +502,61 @@ def notify_notify(context):
             return 0
 
     process_context(context, notification_spooling)
+
+
+def add_rulebased_macros(context):
+    # For the rule based notifications we need the list of contacts
+    # an object has. The CMC does send this in the macro "CONTACTS"
+    # (the count) and macros of the form CONTACTALIAS[hh]=Harry Hirsch
+    if "NUM_CONTACTS" not in context:
+        livestatus_fetch_contacts(context, context["HOSTNAME"], context.get("SERVICEDESC"))
+
+    # Add a pseudo contact name. This is needed for the correct creation
+    # of spool files. Spool files are created on a per-contact-base, as in classical
+    # notifications the core sends out one individual notification per contact.
+    # In the case of rule based notifications we do not make distinctions between
+    # the various contacts.
+    context["CONTACTNAME"] = "check-mk-notify"
+
+
+def livestatus_fetch_contacts(context, host, service):
+
+    if service:
+        query = "GET services\nFilter: host_name = %s\nFilter: service_description = %s\nColumns: contacts\n" % (
+            host, service)
+    else:
+        query = "GET hosts\nFilter: host_name = %s\nColumns: contacts\n" % host
+
+    contacts = livestatus_fetch_query(query).split(",")
+
+    # Now get all relevant information
+    query = "GET contacts\nColumns: name alias email pager\nSeparators: 1 2 3 4\n"
+    for contact in contacts:
+        query += "Filter: name = %s\n" % contact.strip()
+    query += "Or: %d\n" % len(contacts)
+    response = livestatus_fetch_query(query)
+    lines = response.split('\1')
+    count = 0
+    for line in lines:
+        parts = line.split('\2')
+        if len(parts) == 4:
+            name, alias, email, pager = parts
+            if name != "check-mk-notify":
+                context["CONTACTALIAS[%s]" % name] = alias
+                context["CONTACTEMAIL[%s]" % name] = email
+                context["CONTACTPAGER[%s]" % name] = pager
+                count += 1
+    context["NUM_CONTACTS"] = str(count)
+
+
+def livestatus_fetch_query(query):
+    sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+    sock.connect(livestatus_unix_socket)
+    sock.send(query)
+    sock.shutdown(socket.SHUT_WR)
+    response = sock.recv(10000000)
+    sock.close()
+    return response
 
 
 def notify_via_email(context, write_into_spoolfile):
@@ -688,9 +736,7 @@ def notify_flexible(context, notification_table, write_into_spoolfile):
     else:
         return 0
 
-
-
-def call_notification_script(plugin, parameters, context, write_into_spoolfile):
+def call_notification_script(plugin, parameters, context, write_into_spoolfile=False):
 
     # Enter context into environment
     os.putenv("NOTIFY_PARAMETERS", " ".join(parameters))
@@ -725,7 +771,7 @@ def call_notification_script(plugin, parameters, context, write_into_spoolfile):
             create_spoolfile({"context": context, "plugin": plugin})
             exitcode = 0
         else:
-            notify_log("Executing %s" % path)
+            notify_log("     executing %s" % path)
             out = os.popen(path + " 2>&1 </dev/null")
             for line in out:
                 notify_log("Output: %s" % line.rstrip())
@@ -776,3 +822,350 @@ def format_exception():
     t, v, tb = sys.exc_info()
     traceback.print_exception(t, v, tb, None, txt)
     return txt.getvalue()
+
+#.
+#   .--Rulebased-----------------------------------------------------------.
+#   |            ____        _      _                        _             |
+#   |           |  _ \ _   _| | ___| |__   __ _ ___  ___  __| |            |
+#   |           | |_) | | | | |/ _ \ '_ \ / _` / __|/ _ \/ _` |            |
+#   |           |  _ <| |_| | |  __/ |_) | (_| \__ \  __/ (_| |            |
+#   |           |_| \_\\__,_|_|\___|_.__/ \__,_|___/\___|\__,_|            |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Logic for rule based notifications                                  |
+#   '----------------------------------------------------------------------'
+
+def notify_rulebased(context):
+    # First step: go through all rules and construct our table of
+    # notification plugins to call. This is a dict from (user, plugin) to
+    # a pair if (locked, parameters). If locked is True, then a user
+    # cannot cancel this notification via his personal notification rules.
+    # Example:
+    # notifications = {
+    #  ( "hh", "email" ) : ( False, [] ),
+    #  ( "hh", "sms"   ) : ( True, [ "0171737337", "bar" ] ),
+    # }
+
+    notifications = {}
+    num_rule_matches = 0
+
+    for rule in notification_rules:
+        notify_log("Trying rule '%s'..." % rule["description"])
+        why_not = rbn_match_rule(rule, context) # also checks disabling
+        if why_not:
+            notify_log(" -> does not match: %s" % why_not)
+        else:
+            notify_log(" -> matches!")
+            num_rule_matches += 1
+            contacts = rbn_rule_contacts(rule, context)
+            plugin = rule["notify_plugin"]
+            method = rule["notify_method"]
+            if method == None: # cancelling
+                for contact in contacts:
+                    key = contact, plugin
+                    if key in notifications:
+                        notify_log("   - cancelling notification of %s via %s" % key)
+                        del notifications[key]
+                        # TODO: honor locked flag for user specific rules
+            else:
+                for contact in contacts:
+                    key = contact, plugin
+                    if key in notifications:
+                        notify_log("   - modifying notification of %s via %s" % key)
+                    else:
+                        notify_log("   - adding notification of %s via %s" % key)
+                    # Hint: method is the list of plugin parameters in this case
+                    notifications[key] = ( not rule.get("allow_disable"), method )
+
+    if not notifications:
+        if num_rule_matches:
+            notify_log("%d rules matched, but no notification has been created." % num_rule_matches)
+        else:
+            if notification_fallback_email:
+                notify_log("No rule matched, falling back to email to %s" % notification_fallback_email)
+                contact = rbn_fake_email_contact(notification_fallback_email)
+                rbn_add_contact_information(context, contact)
+                call_notification_script("mail", [], context)
+        return
+
+    # Now do the actual notifications
+    notify_log("Executing %d notifications:" % len(notifications))
+    entries = notifications.items()
+    entries.sort()
+    for (contact, plugin), (locked, params) in entries:
+        notify_log("  * notifying %s via %s, parameters: %s" % (contact, plugin, ", ".join(params)))
+        try:
+            rbn_add_contact_information(context, contact)
+            call_notification_script(plugin, params, context)
+        except Exception, e:
+            if opt_debug:
+                raise
+            fe = format_exception()
+            notify_log("    ERROR: %s" % e)
+            notify_log(fe)
+
+
+def rbn_fake_email_contact(email):
+    return {
+        "name"  : email.split("@")[0],
+        "alias" : "Explicit email adress " + email,
+        "email" : email,
+        "pager" : "",
+    }
+
+
+def rbn_add_contact_information(context, contact):
+    if type(contact) == dict:
+        for what in [ "name", "alias", "email", "pager" ]:
+            context["CONTACT" + what.upper()] = contact[what]
+    else:
+        context["CONTACTNAME"] = contact
+        for what in [ "alias", "email", "pager" ]:
+            varname = "CONTACT" + what.upper()
+            value = context.get("%s[%s]" % (varname, contact))
+            if value != None:
+                context[varname] = value
+            else:
+                # Need to fetch information via livestatus
+                contact_dict = query_contact_info(contact)
+                rbn_add_contact_information(context, contact_dict)
+
+g_contact_cache = {}
+def query_contact_info(name):
+    if name in g_contact_cache:
+        return g_contact_cache[name]
+    try:
+        query = "GET contacts\nColumns: alias email pager\nFilter: name = %s\n" % name
+        response = livestatus_fetch_query(query)
+        alias, email, pager = response.strip().split(";")
+    except:
+        if opt_debug:
+            raise
+        alias = name
+        email = ""
+        page = ""
+    contact = {
+        "name"  : name,
+        "alias" : alias,
+        "email" : email,
+        "pager" : pager,
+    }
+    g_contact_cache[name] = contact
+    return contact
+
+
+
+
+
+
+
+
+def rbn_match_rule(rule, context):
+    if rule.get("disabled"):
+        return "This rule is disabled"
+
+    return \
+        rbn_match_hosttags(rule, context) or \
+        rbn_match_hosts(rule, context) or \
+        rbn_match_exclude_hosts(rule, context) or \
+        rbn_match_services(rule, context) or \
+        rbn_match_exclude_services(rule, context) or \
+        rbn_match_checktype(rule, context) or \
+        rbn_match_timeperiod(rule) or \
+        rbn_match_escalation(rule, context) or \
+        rbn_match_servicelevel(rule, context) or \
+        rbn_match_host_event(rule, context) or \
+        rbn_match_service_event(rule, context)
+
+
+def rbn_match_hosttags(rule, context):
+    required = rule.get("match_hosttags")
+    if required:
+        tags = context.get("HOSTTAGS", "").split()
+        if not hosttags_match_taglist(tags, required):
+            return "The host's tags %s do not match the required tags %s" % (
+                "|".join(tags), "|".join(required))
+
+def rbn_match_hosts(rule, context):
+    if "match_hosts" in rule:
+        hostlist = rule["match_hosts"]
+        if context["HOSTNAME"] not in hostlist:
+            return "The host's name '%s' is not on the list of allowed hosts (%s)" % (
+                context["HOSTNAME"], ", ".join(hostlist))
+
+def rbn_match_exclude_hosts(rule, context):
+    if context["HOSTNAME"] in rule.get("match_exclude_hosts", []):
+        return "The host's name '%s' is on the list of excluded hosts" % context["HOSTNAME"]
+
+
+def rbn_match_services(rule, context):
+    if "match_services" in rule:
+        if context["WHAT"] != "SERVICE":
+            return "The rule specifies a list of services, but this is a host notification."
+        servicelist = rule["match_services"]
+        service = context["SERVICEDESC"]
+        if not in_extraconf_servicelist(servicelist, service):
+            return "The service's description '%s' dows not match by the list of " \
+                   "allowed services (%s)" % (service, ", ".join(servicelist))
+
+def rbn_match_exclude_services(rule, context):
+    if context["WHAT"] != "SERVICE":
+        return
+    excludelist = rule.get("match_exclude_services", [])
+    service = context["SERVICEDESC"]
+    if in_extraconf_servicelist(excludelist, service):
+        return "The service's description '%s' matches the list of excluded services" \
+          % context["SERVICEDESC"]
+
+def rbn_match_checktype(rule, context):
+    if "match_checktype" in rule:
+        if context["WHAT"] != "SERVICE":
+            return "The rule specifies a list of Check_MK plugins, but this is a host notification."
+        command = context["SERVICECHECKCOMMAND"]
+        if not command.startswith("check_mk-"):
+            return "The rule specified a list of Check_MK plugins, but his is no Check_MK service."
+        plugin = command[9:]
+        allowed = rule["match_checktype"]
+        if plugin not in allowed:
+            return "The Check_MK plugin '%s' is not on the list of allowed plugins (%s)" % \
+              (plugin, ", ".join(allowed))
+
+def rbn_match_timeperiod(rule):
+    if "match_timeperiod" in rule:
+        timeperiod = rule["match_timeperiod"]
+        if timeperiod != "24X7" and not check_timeperiod(timeperiod):
+            return "The timeperiod '%s' is currently not active." % timeperiod
+
+
+def rbn_match_escalation(rule, context):
+    if "match_escalation" in rule:
+        from_number, to_number = rule["match_escalation"]
+        if context["WHAT"] == "HOST":
+            notification_number = int(context.get("HOSTNOTIFICATIONNUMBER", 1))
+        else:
+            notification_number = int(context.get("SERVICENOTIFICATIONNUMBER", 1))
+        if notification_number < from_number or notification_number > to_number:
+            return "The notification number %d does not lie in range %d ... %d" % (
+                    notification_number, from_number, to_number)
+
+def rbn_match_servicelevel(rule, context):
+    if "match_sl" in rule:
+        from_sl, to_sl = rule["match_sl"]
+        if context['WHAT'] == "SERVICE" and context.get('SVC_SL','').isdigit():
+            sl = saveint(context.get('SVC_SL'))
+        else:
+            sl = saveint(context.get('HOST_SL'))
+
+        if sl < from_sl or sl > to_sl:
+            return "The service level %d is not between %d and %d." % (sl, from_sl, to_sl)
+
+def rbn_match_host_event(rule, context):
+    if "match_host_event" in rule:
+        if context["WHAT"] != "HOST":
+            if "match_host_event" not in rule:
+                return "This is a service notification, but the rule just matches host events"
+            else:
+                return # Let this be handled by match_service_event
+        allowed_events = rule["match_host_event"]
+        state          = context["HOSTSTATE"]
+        last_state     = context["LASTHOSTSTATE"]
+        events         = { "UP" : 'r', "DOWN" : 'd', "UNREACHABLE" : 'u' }
+        return rbn_match_event(context, state, last_state, events, allowed_events)
+
+
+def rbn_match_service_event(rule, context):
+    if "match_service_event" in rule:
+        if context["WHAT"] != "SERVICE":
+            if "match_host_event" not in rule:
+                return "This is a host notification, but the rule just matches service events"
+            else:
+                return # Let this be handled by match_host_event
+        allowed_events = rule["match_service_event"]
+        state          = context["SERVICESTATE"]
+        last_state     = context["LASTSERVICESTATE"]
+        events         = { "OK" : 'r', "WARNING" : 'w', "CRITICAL" : 'c', "UNKNOWN" : 'u' }
+        return rbn_match_event(context, state, last_state, events, allowed_events)
+
+def rbn_match_event(context, state, last_state, events, allowed_events):
+    notification_type = context["NOTIFICATIONTYPE"]
+
+    if notification_type == "RECOVERY":
+        event = events.get(last_state, '?') + 'r'
+    elif notification_type in [ "FLAPPINGSTART", "FLAPPINGSTOP", "FLAPPINGDISABLED" ]:
+        event = 'f'
+    elif notification_type in [ "DOWNTIMESTART", "DOWNTIMEEND", "DOWNTIMECANCELLED"]:
+        event = 's'
+    elif notification_type == "ACKNOWLEDGEMENT":
+        event = 'x'
+    else:
+        event = events.get(last_state, '?') + events.get(state, '?')
+
+    if event not in allowed_events:
+        return "Event type '%s' not handled by this rule. Allowed are: %s" % (
+                event, ", ".join(allowed_events))
+
+
+
+def rbn_rule_contacts(rule, context):
+    contacts = set([])
+    if rule.get("contact_object"):
+        contacts.update(rbn_object_contacts(context).keys())
+    if rule.get("contact_all"):
+        contacts.update(rbn_all_contacts().keys())
+    if "contact_contacts" in rule:
+        contacts.update(rule["contact_contacts"])
+    if "contact_groups" in rule:
+        contacts.update(rbn_groups_contacts(rule["contact_groups"]))
+    if "contact_emails" in rule:
+        contacts.update(rbn_emails_contacts(rule["contact_emails"]))
+    return contacts
+
+
+def rbn_object_contacts(context):
+    contacts = {}
+    for key, value in context.iteritems():
+        if key.startswith("CONTACTALIAS["):
+            name = key[13:-1]
+            contacts[name] = {
+                "alias": value,
+                "email": context["CONTACTEMAIL[%s]" % name],
+                "pager": context["CONTACTPAGER[%s]" % name],
+            }
+    return contacts
+
+def rbn_all_contacts():
+    # TODO: Diese Liste nur einmal holen und dann cachen
+    contacts = {}
+    query = "GET contacts\nColumns: name alias email pager\nSeparators: 1 2 3 4\n"
+    response = livestatus_fetch_query(query)
+    lines = response.split('\1')
+    for line in lines:
+        parts = line.split('\2')
+        if len(parts) == 4:
+            name, alias, email, pager = parts
+            if name not in [ "check-mk-notify", "check_mk" ]:
+                contacts[name] = {
+                    "alias" : alias,
+                    "email" : email,
+                    "pager" : pager,
+                }
+    return contacts
+
+def rbn_groups_contacts(groups):
+    if not groups:
+        return {}
+    contacts = set([])
+    query = "GET contactgroups\nColumns: members\n"
+    for group in groups:
+        query += "Filter: name = %s\n" % group
+    query += "Or: %d\n" % len(groups)
+    response = livestatus_fetch_query(query)
+    for line in response.splitlines():
+        line = line.strip()
+        if line:
+            contacts.update(line.split(","))
+    return contacts
+
+
+def rbn_emails_contacts(emails):
+    return [ "mailto:" + e for e in emails ]

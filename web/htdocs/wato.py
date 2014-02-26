@@ -6374,13 +6374,13 @@ def factory_reset():
 #   '----------------------------------------------------------------------'
 
 
-class CheckTypeSelection(ListChoice):
+class CheckTypeSelection(DualListChoice):
     def __init__(self, **kwargs):
-        ListChoice.__init__(self, columns=3, **kwargs)
+        DualListChoice.__init__(self, **kwargs)
 
     def get_elements(self):
         checks = check_mk_local_automation("get-check-information")
-        elements = [ (cn, "<span title=\"%s\">%s</span>" % (c["title"], cn)) for (cn, c) in checks.items()]
+        elements = [ (cn, (cn + " - " + c["title"])[:60]) for (cn, c) in checks.items()]
         elements.sort()
         return elements
 
@@ -7383,15 +7383,13 @@ def vs_notification_rule():
             ),
             ( "allow_disable",
               Checkbox(
-                title = _("Overriding by users"), 
+                title = _("Overriding by users"),
                 help = _("If you uncheck this option then users are not allowed to deactive notifications "
                          "that are created by this rule."),
                 label = _("allow users to deactivate this notification"),
                 default_value = True,
               )
             ),
-                        
-
             # Matching
             ( "match_hosttags",
               HostTagCondition(
@@ -7402,7 +7400,8 @@ def vs_notification_rule():
                   title = _("Match only the following hosts"),
                   size = 24,
                   orientation = "horizontal",
-
+                  allow_empty = False,
+                  empty_text = _("Please specify at least one host. Disable the option if you want to allow all hosts."),
               )
             ),
             ( "match_exclude_hosts",
@@ -7414,9 +7413,14 @@ def vs_notification_rule():
             ),
             ( "match_services",
               ListOfStrings(
-                  title = _("Match only the following hosts"),
+                  title = _("Match only the following services"),
+                  help = _("Specify a list of regular expressions that must match the <b>beginning</b> of the "
+                           "service name in order for the rule to match. Note: Host notifications never match this "
+                           "rule if this option is being used."),
                   valuespec = TextUnicode(size = 32),
                   orientation = "horizontal",
+                  allow_empty = False,
+                  empty_text = _("Please specify at least one service regex. Disable the option if you want to allow all services."),
               )
             ),
             ( "match_exclude_services",
@@ -7428,7 +7432,9 @@ def vs_notification_rule():
             ),
             ( "match_checktype",
               CheckTypeSelection(
-                  title = _("Match the following check types")
+                  title = _("Match the following check types"),
+                  help = _("Only apply the rule if the notification originates from certain types of check plugins. "
+                           "Note: Host notifications never match this rule if this option is being used."),
               )
             ),
             ( "match_timeperiod",
@@ -7445,9 +7451,11 @@ def vs_notification_rule():
                   elements = [
                       Integer(
                           label = _("from"),
-                          help = _("Let through notifications counting from this number"),
-                          default_value = 1,
-                          minvalue = 1,
+                          help = _("Let through notifications counting from this number. "
+                                   "For normal alerts The first notification has the number 1. "
+                                   "For custom notifications the number is 0."),
+                          default_value = 0,
+                          minvalue = 0,
                           maxvalue = 999999,
                       ),
                       Integer(
@@ -7475,45 +7483,51 @@ def vs_notification_rule():
             ( "match_host_event",
                ListChoice(
                     title = _("Match Host Event Type"),
+                    help = _("Select the host event types and transitions this rule should handle. Note: "
+                             "If you activate this option and do <b>not</b> also specify service event "
+                             "types then this rule will never hold for service notifications!"),
                     choices = [
-                    ( 'rd', _("UP")          + " ➤ " + _("DOWN")),
-                    ( 'dr', _("DOWN")        + " ➤ " + _("UP")),
-                    ( 'ru', _("UP")          + " ➤ " + _("UNREACHABLE")),
-                    ( 'du', _("DOWN")        + " ➤ " + _("UNREACHABLE")),
-                    ( 'ud', _("UNREACHABLE") + " ➤ " + _("DOWN")),
-                    ( 'ur', _("UNREACHABLE") + " ➤ " + _("UP")),
-                    ( 'f', _("Start or end of flapping state")),
-                    ( 's', _("Start or end of a scheduled downtime ")),
-                    ( 'x', _("Acknowledgement of host problem")),
-                  ],
-                  default_value = [ 'rd', 'dr', 'f', 's', 'x' ],
+                        ( 'rd', _("UP")          + " ➤ " + _("DOWN")),
+                        ( 'dr', _("DOWN")        + " ➤ " + _("UP")),
+                        ( 'ru', _("UP")          + " ➤ " + _("UNREACHABLE")),
+                        ( 'du', _("DOWN")        + " ➤ " + _("UNREACHABLE")),
+                        ( 'ud', _("UNREACHABLE") + " ➤ " + _("DOWN")),
+                        ( 'ur', _("UNREACHABLE") + " ➤ " + _("UP")),
+                        ( 'f', _("Start or end of flapping state")),
+                        ( 's', _("Start or end of a scheduled downtime ")),
+                        ( 'x', _("Acknowledgement of host problem")),
+                    ],
+                    default_value = [ 'rd', 'dr', 'f', 's', 'x' ],
               )
             ),
             ( "match_service_event",
                ListChoice(
                    title = _("Match Service Event Type"),
+                    help  = _("Select the service event types and transitions this rule should handle. Note: "
+                              "If you activate this option and do <b>not</b> also specify host event "
+                              "types then this rule will never hold for host notifications!"),
                    choices = [
-                    ( 'rw', _("OK")      + " ➤ " + _("WARN")),
-                    ( 'rc', _("OK")      + " ➤ " + _("CRIT")),
-                    ( 'ru', _("OK")      + " ➤ " + _("UNKNOWN")),
+                       ( 'rw', _("OK")      + " ➤ " + _("WARN")),
+                       ( 'rc', _("OK")      + " ➤ " + _("CRIT")),
+                       ( 'ru', _("OK")      + " ➤ " + _("UNKNOWN")),
 
-                    ( 'wr', _("WARN")    + " ➤ " + _("OK")),
-                    ( 'wc', _("WARN")    + " ➤ " + _("CRIT")),
-                    ( 'wu', _("WARN")    + " ➤ " + _("UNKNOWN")),
+                       ( 'wr', _("WARN")    + " ➤ " + _("OK")),
+                       ( 'wc', _("WARN")    + " ➤ " + _("CRIT")),
+                       ( 'wu', _("WARN")    + " ➤ " + _("UNKNOWN")),
 
-                    ( 'cr', _("CRIT")    + " ➤ " + _("OK")),
-                    ( 'cw', _("CRIT")    + " ➤ " + _("WARN")),
-                    ( 'cu', _("CRIT")    + " ➤ " + _("UNKNOWN")),
+                       ( 'cr', _("CRIT")    + " ➤ " + _("OK")),
+                       ( 'cw', _("CRIT")    + " ➤ " + _("WARN")),
+                       ( 'cu', _("CRIT")    + " ➤ " + _("UNKNOWN")),
 
-                    ( 'ur', _("UNKNOWN") + " ➤ " + _("OK")),
-                    ( 'uw', _("UNKNOWN") + " ➤ " + _("WARN")),
-                    ( 'uc', _("UNKNOWN") + " ➤ " + _("CRIT")),
+                       ( 'ur', _("UNKNOWN") + " ➤ " + _("OK")),
+                       ( 'uw', _("UNKNOWN") + " ➤ " + _("WARN")),
+                       ( 'uc', _("UNKNOWN") + " ➤ " + _("CRIT")),
 
-                    ( 'f', _("Start or end of flapping state")),
-                    ( 's', _("Start or end of a scheduled downtime")),
-                    ( 'x', _("Acknowledgement of service problem")),
-                 ],
-                default_value = [ 'rw', 'rc', 'ru', 'wc', 'wu', 'uc', 'f', 's', 'x' ],
+                       ( 'f', _("Start or end of flapping state")),
+                       ( 's', _("Start or end of a scheduled downtime")),
+                       ( 'x', _("Acknowledgement of service problem")),
+                   ],
+                   default_value = [ 'rw', 'rc', 'ru', 'wc', 'wu', 'uc', 'f', 's', 'x' ],
               )
             ),
 
@@ -7543,7 +7557,7 @@ def vs_notification_rule():
             ( "contact_groups",
               ListOf(
                   GroupSelection("contact"),
-                  title = _("The member of certain contact groups"),
+                  title = _("The members of certain contact groups"),
                   movable = False,
               )
             ),
@@ -7591,8 +7605,8 @@ def vs_notification_rule():
             ( _("General Properties"), [ "description", "disabled", "allow_disable" ] ),
             ( _("Notification Method"), [ "notify_plugin", "notify_method" ] ),
             ( _("Contact Selection"), [ "contact_all", "contact_object", "contact_contacts", "contact_groups", "contact_emails" ] ),
-            ( _("Conditions"),         [ "match_hosttags", "match_hosts", "match_exclude_hosts", 
-                                         "match_services", "match_exclude_services", 
+            ( _("Conditions"),         [ "match_hosttags", "match_hosts", "match_exclude_hosts",
+                                         "match_services", "match_exclude_services",
                                          "match_checktype", "match_timeperiod",
                                          "match_escalation", "match_sl", "match_host_event", "match_service_event" ] ),
         ],

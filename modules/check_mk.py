@@ -340,6 +340,7 @@ host_attributes                      = {} # needed by WATO, ignored by Check_MK
 ping_levels                          = [] # special parameters for host/PING check_command
 host_check_commands                  = [] # alternative host check instead of check_icmp
 check_mk_exit_status                 = [] # Rule for specifying CMK's exit status in case of various errors
+check_mk_agent_target_versions       = [] # Rule for defining expected version for agents
 check_periods                        = []
 snmp_check_interval                  = []
 inv_exports                          = {} # Rulesets for inventory export hooks
@@ -1444,14 +1445,10 @@ def host_contactgroups_of(hostlist):
                 first_list = False
             else:
                 cgrs.append(entry)
+    if monitoring_core == "nagios" and enable_rulebased_notifications:
+        cgrs.append("check-mk-notify")
     return list(set(cgrs))
 
-def host_contactgroups_nag(hostlist):
-    cgrs = host_contactgroups_of(hostlist)
-    if len(cgrs) > 0:
-        return "    contact_groups " + ",".join(cgrs) + "\n"
-    else:
-        return ""
 
 def parents_of(hostname):
     par = host_extra_conf(hostname, parents)
@@ -1481,6 +1478,8 @@ def extra_service_conf_of(hostname, description):
     sercgr = service_extra_conf(hostname, description, service_contactgroups)
     contactgroups_to_define.update(sercgr)
     if len(sercgr) > 0:
+        if enable_rulebased_notifications:
+            sercgr.append("check-mk-notify") # not nessary if not explicit groups defined
         conf += "  contact_groups\t\t" + ",".join(sercgr) + "\n"
 
     sergr = service_extra_conf(hostname, description, service_groups)
@@ -2614,7 +2613,11 @@ def create_nagios_config_contacts(outfile):
                 outfile.write("  email\t\t\t\t%s\n" % contact["email"])
             if "pager" in contact:
                 outfile.write("  pager\t\t\t\t%s\n" % contact["pager"])
-            not_enabled = contact.get("notifications_enabled", True)
+            if enable_rulebased_notifications:
+                not_enabled = False
+            else:
+                not_enabled = contact.get("notifications_enabled", True)
+
             for what in [ "host", "service" ]:
                 no = contact.get(what + "_notification_options", "")
                 if not no or not not_enabled:
@@ -2629,6 +2632,21 @@ def create_nagios_config_contacts(outfile):
 
             outfile.write("  contactgroups\t\t\t%s\n" % ", ".join(cgrs))
             outfile.write("}\n\n")
+
+    if enable_rulebased_notifications:
+        outfile.write(
+            "# Needed for rule based notifications\n"
+            "define contact {\n"
+            "  contact_name\t\t\tcheck-mk-notify\n"
+            "  alias\t\t\t\tContact for rule based notifications\n"
+            "  host_notification_options\td,u,r,f,s\n"
+            "  service_notification_options\tu,c,w,r,f,s\n"
+            "  host_notification_period\t24X7\n"
+            "  service_notification_period\t24X7\n"
+            "  host_notification_commands\tcheck-mk-notify\n"
+            "  service_notification_commands\tcheck-mk-notify\n"
+            "  contactgroups\t\t\tcheck-mk-notify\n"
+            "}\n\n");
 
 
 # Quote string for use in a nagios command execution.

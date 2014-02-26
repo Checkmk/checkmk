@@ -38,7 +38,8 @@ register_configvar(group,
                  "be configured with the WATO module <i>Notifications</i> on a global base."),
         default_value = False,
     ),
-    domain = "check_mk")
+    domain = "check_mk",
+    need_restart = True)
 
 register_configvar(group,
     "notification_fallback_email",

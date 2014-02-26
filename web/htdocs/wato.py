@@ -5941,7 +5941,10 @@ def get_snapshot_status(snapshot):
         else: # new snapshots
             for entry in ["comment", "created_by", "type"]:
                 if entry in status["files"]:
-                    status[entry] = multitar.get_file_content(snapshot_dir + name, entry)
+                    if file_stream:
+                        status[entry] = multitar.get_file_content(file_stream, entry)
+                    else:
+                        status[entry] = multitar.get_file_content(snapshot_dir + name, entry)
                 else:
                     raise MKGeneralException(_("Invalid snapshot (missing file: %s)") % entry)
 
@@ -5986,7 +5989,8 @@ def get_snapshot_status(snapshot):
         status["broken"]      = True
         pass
     except Exception, e:
-        status["broken_text"] = e.message
+        import traceback
+        status["broken_text"] = traceback.format_exc()
         status["broken"]      = True
         pass
     return status

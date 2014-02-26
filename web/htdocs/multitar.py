@@ -88,6 +88,7 @@ def list_tar_content(the_tarfile):
     files = {}
     try:
         if type(the_tarfile) != str:
+            the_tarfile.seek(0)
             tar = tarfile.open("r", fileobj = the_tarfile)
         else:
             tar = tarfile.open(the_tarfile, "r")
@@ -98,10 +99,10 @@ def list_tar_content(the_tarfile):
 
 def get_file_content(the_tarfile, filename):
     if type(the_tarfile) != str:
+        the_tarfile.seek(0)
         tar = tarfile.open("r", fileobj = the_tarfile)
     else:
         tar = tarfile.open(the_tarfile, "r")
-    tar = tarfile.open(the_tarfile, "r")
     return tar.extractfile(filename).read()
 
 def extract_domains(tar, domains):

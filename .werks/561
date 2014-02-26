@@ -21,7 +21,7 @@ C+:
 s: mem h: localhost
 C-:
 
-This will search for all services containing <tt>mem</tt> on the localhost.
+This will search for all services containing <tt>mem</tt> on the <tt>localhost</tt>.
 Furthermore you can combine these filters.
 
 C+:
@@ -36,8 +36,11 @@ The search algorhytm is as follow:
 <li>Different filters are combined with <tt>AND</tt></li>
 </ul>
 
-The query <tt>h: localhost s: mem s: cpu h:switch-intern</tt> actually results in the
-following livestatus query:
+The query
+C+:
+h: localhost s: mem s: cpu h:switch-intern
+C-:
+actually results in the following livestatus query:
 
 C+:
 GET services
@@ -54,4 +57,4 @@ Limit: 80
 C-:
 
 You can also add the <tt>hg:</tt> and <tt>sg:</tt> filters to the query.<br>
-<b>Note:</b> Right now, this multisearch filter only works if at least one of the filters is a service (<tt>s:</tt>).
+<b>Note:</b> Right now, this multisearch filter only works if at least one of the filters is a service ( <tt>s:</tt> ).

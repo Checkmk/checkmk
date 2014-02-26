@@ -24,33 +24,22 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# +------------------------------------------------------------------+
-# | This file has been contributed by:                               |
-# |                                                                  |
-# | Peter Lauk <lauk@stuttgart-airport.com>           Copyright 2010 |
-# +------------------------------------------------------------------+
-
 def inventory_printer_pages(info):
-    return [ (line[0], None ) for line in info ]
+    if len(info) > 0:
+        return [ (None, None) ]
 
 def check_printer_pages(item, params, info):
-    for line in info:
-        if line[0] == item:
-            infotext = "%d Pages printed" % int(line[1])
-            perfdata = [ ( "pages", int(line[1]) ) ]
-            return (0, "%s" % infotext, perfdata)
-
-    return (3, 'not found')
-
-
-
+    pages = saveint(info[0][0])
+    infotext = "%d Pages printed" % pages 
+    perfdata = [ ( "pages", pages ) ]
+    return (0, "%s" % infotext, perfdata)
 
 check_info["printer_pages"] = {
     'check_function':          check_printer_pages,
     'inventory_function':      inventory_printer_pages,
-    'service_description':     'Pages %s',
+    'service_description':     'Pages',
     'has_perfdata':            True,
-    'snmp_info':               ('.1.3.6.1.2.1.43.10.2.1.4.1', [0, 1]),
+    'snmp_info':               ('.1.3.6.1.2.1.43.10.2.1.4.1', [ 1 ]),
     'snmp_scan_function':      \
      lambda oid: oid(".1.3.6.1.2.1.43.10.2.1.4.1.1") != None,
 }

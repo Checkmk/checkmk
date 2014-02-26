@@ -452,7 +452,7 @@ class RegExpUnicode(TextUnicode, RegExp):
 class EmailAddress(TextAscii):
     def __init__(self, **kwargs):
         TextAscii.__init__(self, **kwargs)
-        self._regex = re.compile('^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$', re.I)
+        self._regex = re.compile('^[A-Z0-9._%+-]+@(localhost|[A-Z0-9.-]+\.[A-Z]{2,4})$', re.I)
         self._make_clickable = kwargs.get("make_clickable", False)
 
     def value_to_text(self, value):

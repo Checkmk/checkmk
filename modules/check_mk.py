@@ -1845,20 +1845,21 @@ def in_extraconf_hostlist(hostlist, hostname):
                 return True
 
         # Allow negation of hostentry with prefix '!'
-        elif hostentry[0] == '!':
-            hostentry = hostentry[1:]
-            negate = True
-        # Allow regex with prefix '~'
-        elif hostentry[0] == '~':
-            hostentry = hostentry[1:]
-            regex = True
+        else:
+            if hostentry[0] == '!':
+                hostentry = hostentry[1:]
+                negate = True
+            # Allow regex with prefix '~'
+            if hostentry[0] == '~':
+                hostentry = hostentry[1:]
+                regex = True
 
         hostentry = strip_tags(hostentry)
         if not regex and hostname == hostentry:
             return not negate
         # Handle Regex
         elif re.match(hostentry, hostname):
-            return True
+            return not negate
 
     return False
 

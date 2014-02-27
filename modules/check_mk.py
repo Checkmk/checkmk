@@ -1871,7 +1871,7 @@ def in_extraconf_hostlist(hostlist, hostname):
             if not use_regex and hostname == hostentry:
                 return not negate
             # Handle Regex
-            elif re.match(regex(hostentry), hostname):
+            elif regex(hostentry).match(hostname):
                 return not negate
         except MKGeneralException:
             if opt_debug:

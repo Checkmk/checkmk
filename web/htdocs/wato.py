@@ -12735,12 +12735,15 @@ def rule_matches_host_and_item(rulespec, tag_specs, host_list, item_list,
                                rule_folder, host_folder, hostname, item):
     reasons = []
     host = host_folder[".hosts"][hostname]
-    if not (
+    hostname_match = False
+
+    if not ( 
         (hostname in host_list)
         or
         (("!"+hostname) not in host_list
          and len(host_list) > 0
-         and host_list[-1] == ALL_HOSTS[0])):
+         and host_list[-1] == ALL_HOSTS[0])
+        or len([ x for x in host_list if x.startswith('~') and re.match(x[1:], hostname) ]) > 0): 
          reasons.append(_("The host name does not match."))
 
     tags_match = True

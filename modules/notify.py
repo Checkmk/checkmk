@@ -746,8 +746,12 @@ def notify_rulebased(context):
     notifications = {}
     num_rule_matches = 0
 
-    for rule in notification_rules:
-        notify_log("Trying rule '%s'..." % rule["description"])
+    for rule in notification_rules + user_notification_rules():
+        if "contact" in rule:
+            notify_log("User %s's rule '%s'..." % (rule["contact"], rule["description"]))
+        else:
+            notify_log("Global rule '%s'..." % rule["description"])
+
         why_not = rbn_match_rule(rule, context) # also checks disabling
         if why_not:
             notify_log(" -> does not match: %s" % why_not)
@@ -761,9 +765,12 @@ def notify_rulebased(context):
                 for contact in contacts:
                     key = contact, plugin
                     if key in notifications:
-                        notify_log("   - cancelling notification of %s via %s" % key)
-                        del notifications[key]
-                        # TODO: honor locked flag for user specific rules
+                        locked, method = notifications[key]
+                        if locked and "contact" in rule:
+                            notify_log("   - cannot cancel notification of %s via %s: it is locked" % key)
+                        else:
+                            notify_log("   - cancelling notification of %s via %s" % key)
+                            del notifications[key]
             else:
                 for contact in contacts:
                     key = contact, plugin
@@ -801,6 +808,23 @@ def notify_rulebased(context):
             notify_log("    ERROR: %s" % e)
             notify_log(fe)
 
+
+# Create a table of all user specific notification rules
+def user_notification_rules():
+    user_rules = []
+    for contactname, contact in contacts.iteritems():
+        notify_log("Hat %s was?" % contactname)
+        for rule in contact.get("notification_rules", []):
+            # Save the owner of the rule for later debugging
+            rule["contact"] = contactname
+            # We assume that the "contact_..." entries in the
+            # rule are allowed and only contain one entry of the
+            # type "contact_contacts" : [ contactname ]. This
+            # is handled by WATO. Contact specific rules are a
+            # WATO-only feature anyway...
+            user_rules.append(rule)
+    notify_log("Found %d user specific rules" % len(user_rules))
+    return user_rules
 
 def rbn_fake_email_contact(email):
     return {

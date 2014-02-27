@@ -5933,10 +5933,9 @@ def get_snapshot_status(snapshot):
             status["files"] = multitar.list_tar_content(snapshot_dir + name)
 
         if status.get("type") == "legacy":
+            allowed_files = map(lambda x: "%s.tar" % x[1], backup_paths)
             for tarname in status["files"].keys():
-                if tarname not in  ["check_mk.tar", "multisite.tar",
-                                    "htpasswd.tar", "sites.tar", "auth.secret.tar",
-                                    "auth.serials.tar", "usersettings.tar"]:
+                if tarname not in allowed_files:
                     raise MKGeneralException(_("Invalid snapshot (contains invalid tarfile %s)") % tarname)
         else: # new snapshots
             for entry in ["comment", "created_by", "type"]:

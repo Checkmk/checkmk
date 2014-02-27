@@ -7635,41 +7635,39 @@ def vs_notification_rule(userid = None):
         form_narrow = True,
     )
 
-def render_notification_rules(rules, userid=""):
+def render_notification_rules(rules, userid="", analyse=False):
     if not rules:
         html.message(_("You have not created any rules yet."))
 
-    # Simulator
-    # event = config.load_user_file("simulated_event", {})
-    # html.begin_form("simulator")
-    # vs_mkeventd_event.render_input("event", event)
-    # forms.end()
-    # html.hidden_fields()
-    # html.button("simulate", _("Try out"))
-    # html.button("_generate", _("Generate Event!"))
-    # html.end_form()
-    # html.write("<br>")
-
-    # if html.var("simulate"):
-    #     event = vs_mkeventd_event.from_html_vars("event")
-    # else:
-    #     event = None
-
     if rules:
-        table.begin(limit = None)
+        table.begin(title = _("Notification rules"), limit = None)
+
+        if analyse:
+            analyse_rules, analyse_plugins = analyse
 
         # have_match = False
         for nr, rule in enumerate(rules):
             table.row()
+
+            # Analyse
+            if analyse:
+                table.cell(css="buttons")
+                what, anarule, reason = analyse_rules[nr]
+                if what == "match":
+                    html.icon(_("This rule matches"), "rulematch")
+                elif what == "miss":
+                    html.icon(_("This rule does not match: %s") % reason, "rulenmatch")
+
             if userid:
                 listmode = "user_notifications"
             else:
                 listmode = "notifications"
+            analyse = html.var("analyse", "")
             delete_url = make_action_link([("mode", listmode), ("user", userid), ("_delete", nr)])
-            top_url    = make_action_link([("mode", listmode), ("user", userid), ("_move", nr), ("_where", 0)])
-            bottom_url = make_action_link([("mode", listmode), ("user", userid), ("_move", nr), ("_where", len(rules)-1)])
-            up_url     = make_action_link([("mode", listmode), ("user", userid), ("_move", nr), ("_where", nr-1)])
-            down_url   = make_action_link([("mode", listmode), ("user", userid), ("_move", nr), ("_where", nr+1)])
+            top_url    = make_action_link([("mode", listmode), ("analyse", analyse), ("user", userid), ("_move", nr), ("_where", 0)])
+            bottom_url = make_action_link([("mode", listmode), ("analyse", analyse), ("user", userid), ("_move", nr), ("_where", len(rules)-1)])
+            up_url     = make_action_link([("mode", listmode), ("analyse", analyse), ("user", userid), ("_move", nr), ("_where", nr-1)])
+            down_url   = make_action_link([("mode", listmode), ("analyse", analyse), ("user", userid), ("_move", nr), ("_where", nr+1)])
             edit_url   = make_link([("mode", "notification_rule"), ("edit", nr), ("user", userid)])
             clone_url  = make_link([("mode", "notification_rule"), ("clone", nr), ("user", userid)])
 
@@ -7730,30 +7728,40 @@ def render_notification_rules(rules, userid=""):
                 html.write("<i>%s</i>" % _("(no conditions)"))
 
 
-
-            # elif event:
-            #     result = mkeventd.event_rule_matches(rule, event)
-            #     if type(result) != tuple:
-            #         html.icon(_("Rule does not match: %s") % result, "rulenmatch")
-            #     else:
-            #         cancelling, groups = result
-            #         if have_match:
-            #             msg = _("This rule matches, but is overruled by a previous match.")
-            #             icon = "rulepmatch"
-            #         else:
-            #             if cancelling:
-            #                 msg = _("This rule does a cancelling match.")
-            #             else:
-            #                 msg = _("This rule matches.")
-            #             icon = "rulematch"
-            #             have_match = True
-            #         if groups:
-            #             msg += _(" Match groups: %s") % ",".join([ g or _('&lt;None&gt;') for g in groups ])
-            #         html.icon(msg, icon)
-
         table.end()
 
 
+def vs_notification():
+    return Dictionary(
+        title = _("Notification Simulator"),
+        help = _("You can simulate a notification here and analyse your rule set. No notification will "
+                 "actually be sent out."),
+        render = "form",
+        form_narrow = True,
+        optional_keys = False,
+        elements = [
+            ( "host",
+              TextUnicode(
+                title = _("Host Name"),
+                help = _("The host name of the event"),
+                size = 40,
+                default_value = _("myhost089"),
+                allow_empty = False,
+                attrencode = True,
+                regex = "^\\S*$",
+                regex_error = _("The host name may not contain spaces."),
+                )
+            ),
+            ( "service",
+              TextUnicode(
+                title = _("Service Description"),
+                size = 80,
+                default_value = _("Foo Bar 42"),
+                allow_empty = True,
+              ),
+            )
+        ]
+    )
 
 def mode_notifications(phase):
     if phase == "title":
@@ -7767,6 +7775,10 @@ def mode_notifications(phase):
     rules = load_notification_rules()
 
     if phase == "action":
+        if html.has_var("_replay"):
+            if html.check_transaction():
+                nr = int(html.var("_replay"))
+                result = check_mk_local_automation("notification-replay", [str(nr)], None)
 
     ###    # Validation of input for rule simulation (no further action here)
     ###    if html.var("simulate") or html.var("_generate"):
@@ -7829,9 +7841,70 @@ def mode_notifications(phase):
             "in case of a problem in your notification rules. Please configure "
             "one <a href=\"%s\">here</a>.") % url)
 
-    render_notification_rules(rules)
+    if html.has_var("analyse"):
+        nr = int(html.var("analyse"))
+        analyse = check_mk_local_automation("notification-analyse", [str(nr)], None)
+    else:
+        analyse = False
 
-    html.message(_("<b>Note</b>: This module is not yet operational and just here for demonstration purposes."))
+    render_notification_rules(rules, analyse=analyse)
+    if analyse:
+        table.begin(table_id = "plugins", title = _("Resulting notifications"))
+        for contact, plugin, parameters in analyse[1]:
+            table.row()
+            table.cell(_("Contact"), contact)
+            table.cell(_("Plugin"), plugin)
+            table.cell(_("Plugin parameters"), ", ".join(parameters))
+        table.end()
+
+    ### # Show form for simulating a notification
+    ### Dies ist aktuell deaktiviert, weil für eine Notifikation sehr viele
+    ### Datenfelder gefüllt werden müssen.
+    ### html.write("<br>")
+    ### event = config.load_user_file("simulated_notification", {})
+    ### html.begin_form("simulator")
+    ### vs_notification().render_input("event", event)
+    ### forms.end()
+    ### html.hidden_fields()
+    ### html.button("simulate", _("Try out"))
+    ### html.end_form()
+    ### html.write("<br>")
+
+
+    # Show recent notifications. We can use them for rule analysis
+    try:
+        backlog = eval(file(defaults.var_dir + "/notify/backlog.mk").read())
+    except:
+        backlog = []
+
+    if backlog:
+        html.write("<br>")
+        html.begin_foldable_container("notification_backlog", None, True, 
+                           title = _("Recent notifications (for analysis)"), indent=False)
+        table.begin(table_id = "backlog")
+        for nr, entry in enumerate(backlog):
+            table.row()
+            table.cell(css="buttons")
+
+            analyse_url = html.makeuri([("analyse", str(nr))])
+            html.icon_button(analyse_url, _("Anaylse ruleset with this notification"), "analyze")
+            replay_url = html.makeactionuri([("_replay", str(nr))])
+            html.icon_button(replay_url, _("Replay this notification, send it again!"), "replay")
+            if html.var("analyse") and nr == int(html.var("analyse")):
+                html.icon(_("You are analysing this notification"), "rulematch")
+
+            table.cell(_("Nr."), nr+1, css="number")
+            date = entry.get("SHORTDATETIME", "")
+            if not date:
+                date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(entry["MICROTIME"]) / 1000000.0))
+            table.cell(_("Date"), date)
+            table.cell(_("Host"), entry.get("HOSTNAME", ""))
+            table.cell(_("Service"), entry.get("SERVICEDESC", ""))
+            output = entry.get("SERVICEOUTPUT", entry.get("HOSTOUTPUT"))
+            table.cell(_("Plugin output"), output)
+        table.end()
+        html.end_foldable_container()
+
 
 
 # Similar like mode_notifications, but just for the user specific notification table
@@ -7862,7 +7935,6 @@ def mode_user_notifications(phase):
     render_notification_rules(rules, userid)
 
 
-
 def mode_notification_rule(phase):
     edit_nr = int(html.var("edit", "-1"))
     clone_nr = int(html.var("clone", "-1"))
@@ -7875,7 +7947,6 @@ def mode_notification_rule(phase):
     new = edit_nr < 0
 
     if phase == "title":
-
         if new:
             return _("Create new rule") + suffix
         else:
@@ -7944,6 +8015,8 @@ def mode_notification_rule(phase):
     html.button("save", _("Save"))
     html.hidden_fields()
     html.end_form()
+
+
 
 
 

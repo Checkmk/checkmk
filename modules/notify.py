@@ -48,10 +48,11 @@ import pprint, urllib, select, subprocess, socket
 #   '----------------------------------------------------------------------'
 
 # Default settings
-notification_logdir   = var_dir + "/notify"
-notification_spooldir = var_dir + "/notify/spool"
-notification_log = notification_logdir + "/notify.log"
+notification_logdir     = var_dir + "/notify"
+notification_spooldir   = var_dir + "/notify/spool"
+notification_log        = notification_logdir + "/notify.log"
 notification_logging    = 0
+notification_backlog    = 10 # keep the last 10 notification contexts for reference
 
 # Settings for new rule based notifications
 enable_rulebased_notifications = False
@@ -115,40 +116,52 @@ notification. But there are situations where this module is called with
 COMMANDS to e.g. support development of notification plugins.
 
 Available commands:
-    fake-service <plugin>       ... Calls the given notification plugin with fake
-                                    notification data of a service notification.
-    fake-host <plugin>          ... Calls the given notification plugin with fake
-                                    notification data of a host notification.
-    spoolfile <filename>        ... Reads the given spoolfile and creates a
-                                    notification out of its data
+    fake-service <plugin>   Calls the given notification plugin with fake
+                            notification data of a service notification.
+    fake-host <plugin>      Calls the given notification plugin with fake
+                            notification data of a host notification.
+    spoolfile <filename>    Reads the given spoolfile and creates a
+                            notification out of its data
+
+    replay N                Uses the N'th recent notification from the backlog
+                            and sends it again, counting from 0.
 """)
 
 
 def do_notify(args):
     global notify_mode
     try:
-        notify_mode = 'notify'
-        if args:
-            if len(args) != 2 or args[0] not in ['fake-service', 'fake-host', 'spoolfile']:
-                sys.stderr.write("ERROR: Invalid call to check_mk --notify.\n\n")
-                notify_usage()
-                sys.exit(1)
-
-            notify_mode, argument = args
-            if notify_mode in ['fake-service', 'fake-host']:
-                global fake_plugin
-                fake_plugin = argument
-            if notify_mode in ['spoolfile']:
-               filename = argument
-
-            if notify_mode in ['fake-service', 'fake-host']:
-                global g_interactive
-                g_interactive = True
-
         if not os.path.exists(notification_logdir):
             os.makedirs(notification_logdir)
         if not os.path.exists(notification_spooldir):
             os.makedirs(notification_spooldir)
+
+        notify_mode = 'notify'
+        if args:
+            notify_mode = args[0]
+            if notify_mode not in [ 'fake-service', 'fake-host', 'spoolfile', 'replay' ]:
+                sys.stderr.write("ERROR: Invalid call to check_mk --notify.\n\n")
+                notify_usage()
+                sys.exit(1)
+
+            if len(args) != 2 and notify_mode != "replay":
+                sys.stderr.write("ERROR: need an argument to --notify %s.\n\n" % notify_mode)
+                sys.exit(1)
+
+            if notify_mode in ['fake-service', 'fake-host']:
+                global fake_plugin, g_interactive
+                fake_plugin = args[1]
+                g_interactive = True
+
+            elif notify_mode == 'spoolfile':
+               filename = args[1]
+
+            elif notify_mode == 'replay':
+                try:
+                    replay_nr = int(args[1])
+                except:
+                    replay_nr = 0
+
 
         # If the notify_mode is set to 'spoolfile' we try to parse the given spoolfile
         # This spoolfile contains a python dictionary
@@ -160,6 +173,10 @@ def do_notify(args):
 
         if opt_keepalive:
             notify_keepalive()
+
+        elif notify_mode == 'replay':
+            context = notification_context_from_backlog(replay_nr)
+            notify_notify(context)
 
         else:
             notify_notify(notification_context_from_env())
@@ -174,7 +191,20 @@ def do_notify(args):
             (time.strftime("%Y-%m-%d %H:%M:%S"), format_exception()))
 
 
-def process_context(context, write_into_spoolfile):
+def notification_replay_backlog(nr):
+    global notify_mode
+    notify_mode = "replay"
+    context = notification_context_from_backlog(nr)
+    return notify_notify(context)
+
+def notification_analyse_backlog(nr):
+    global notify_mode
+    notify_mode = "replay"
+    context = notification_context_from_backlog(nr)
+    return notify_notify(context, analyse=True)
+
+
+def process_context(context, write_into_spoolfile, analyse=False):
     # TODO: Do spooling right here, not on a per-plugin base
     contact = contacts.get(context["CONTACTNAME"])
 
@@ -185,7 +215,7 @@ def process_context(context, write_into_spoolfile):
     #    setting of the core is different from our global variable. The core must
     #    have precedence in this situation!
     if not contact or contact == "check-mk-notify":
-        return notify_rulebased(context)
+        return notify_rulebased(context, analyse=True)
 
     # Get notification settings for the contact in question - if available.
     method = "email"
@@ -197,10 +227,14 @@ def process_context(context, write_into_spoolfile):
 
         if type(method) == tuple and method[0] == 'flexible':
             notify_log("Preparing flexible notifications for %s" % context["CONTACTNAME"])
-            return notify_flexible(context, method[1], write_into_spoolfile)
+            if analyse:
+                return 0
+            else:
+                return notify_flexible(context, method[1], write_into_spoolfile)
         else:
             notify_log("Sending plain email to %s" % context["CONTACTNAME"])
-            return notify_via_email(context, write_into_spoolfile)
+            if not analyse:
+                return notify_via_email(context, write_into_spoolfile)
 
     except Exception, e:
         notify_log("ERROR: %s\n%s" % (e, format_exception()))
@@ -208,6 +242,35 @@ def process_context(context, write_into_spoolfile):
         if notification_log:
             sys.stderr.write("Details have been logged to %s.\n" % notification_log)
         sys.exit(2)
+
+def store_notification_backlog(context):
+    path = notification_logdir + "/backlog.mk"
+    if not notification_backlog:
+        if os.path.exists(path):
+            os.remove(path)
+        return
+
+    try:
+        backlog = eval(file(path).read())[:notification_backlog-1]
+    except:
+        backlog = []
+
+    backlog = [ context ] + backlog
+    file(path, "w").write("%r\n" % backlog)
+
+
+def notification_context_from_backlog(nr):
+    try:
+        backlog = eval(file(notification_logdir + "/backlog.mk").read())
+    except:
+        backlog = []
+
+    if nr < 0 or nr >= len(backlog):
+        sys.stderr.write("No notification number %d in backlog.\n" % nr)
+        sys.exit(2)
+
+    notify_log("Replaying notification %d from backlog...\n" % nr)
+    return backlog[nr]
 
 
 def notification_context_from_env():
@@ -235,10 +298,16 @@ def convert_context_to_unicode(context):
             context[key] = value_unicode
 
 
-def notify_notify(context):
+def notify_notify(context, analyse=False):
+    if not analyse:
+        store_notification_backlog(context)
+
     if notification_logging >= 2:
         notify_log("----------------------------------------------------------------------")
-    notify_log("Got notification context with %s variables" % len(context))
+    if analyse:
+        notify_log("Analysing notification context with %s variables" % len(context))
+    else:
+        notify_log("Got notification context with %s variables" % len(context))
 
     # Add a few further helper variables
     context["MONITORING_HOST"] = socket.gethostname()
@@ -303,8 +372,7 @@ def notify_notify(context):
         if not notification_spool_to[2]:
             return 0
 
-    process_context(context, notification_spooling)
-
+    return process_context(context, notification_spooling, analyse=analyse)
 
 
 
@@ -732,7 +800,7 @@ def check_notification_type(context, host_events, service_events):
 #   |  Logic for rule based notifications                                  |
 #   '----------------------------------------------------------------------'
 
-def notify_rulebased(context):
+def notify_rulebased(context, analyse=True):
     # First step: go through all rules and construct our table of
     # notification plugins to call. This is a dict from (user, plugin) to
     # a pair if (locked, parameters). If locked is True, then a user
@@ -745,6 +813,7 @@ def notify_rulebased(context):
 
     notifications = {}
     num_rule_matches = 0
+    rule_info = []
 
     for rule in notification_rules + user_notification_rules():
         if "contact" in rule:
@@ -755,6 +824,7 @@ def notify_rulebased(context):
         why_not = rbn_match_rule(rule, context) # also checks disabling
         if why_not:
             notify_log(" -> does not match: %s" % why_not)
+            rule_info.append(("miss", rule, why_not))
         else:
             notify_log(" -> matches!")
             num_rule_matches += 1
@@ -781,6 +851,8 @@ def notify_rulebased(context):
                     # Hint: method is the list of plugin parameters in this case
                     notifications[key] = ( not rule.get("allow_disable"), method )
 
+            rule_info.append(("match", rule, ""))
+
     if not notifications:
         if num_rule_matches:
             notify_log("%d rules matched, but no notification has been created." % num_rule_matches)
@@ -793,14 +865,21 @@ def notify_rulebased(context):
         return
 
     # Now do the actual notifications
+    plugin_info = []
     notify_log("Executing %d notifications:" % len(notifications))
     entries = notifications.items()
     entries.sort()
     for (contact, plugin), (locked, params) in entries:
-        notify_log("  * notifying %s via %s, parameters: %s" % (contact, plugin, ", ".join(params)))
+        if analyse:
+            verb = "would notify"
+        else:
+            verb = "notifying"
+        notify_log("  * %s %s via %s, parameters: %s" % (verb, contact, plugin, ", ".join(params)))
+        plugin_info.append((contact, plugin, params))
         try:
             rbn_add_contact_information(context, contact)
-            call_notification_script(plugin, params, context)
+            if not analyse:
+                call_notification_script(plugin, params, context)
         except Exception, e:
             if opt_debug:
                 raise
@@ -808,12 +887,28 @@ def notify_rulebased(context):
             notify_log("    ERROR: %s" % e)
             notify_log(fe)
 
+    analysis_info = rule_info, plugin_info
+    return analysis_info
+
+def add_rulebased_macros(context):
+    # For the rule based notifications we need the list of contacts
+    # an object has. The CMC does send this in the macro "CONTACTS"
+    # (the count) and macros of the form CONTACTALIAS[hh]=Harry Hirsch
+    if "NUM_CONTACTS" not in context:
+        livestatus_fetch_contacts(context, context["HOSTNAME"], context.get("SERVICEDESC"))
+
+    # Add a pseudo contact name. This is needed for the correct creation
+    # of spool files. Spool files are created on a per-contact-base, as in classical
+    # notifications the core sends out one individual notification per contact.
+    # In the case of rule based notifications we do not make distinctions between
+    # the various contacts.
+    context["CONTACTNAME"] = "check-mk-notify"
+
 
 # Create a table of all user specific notification rules
 def user_notification_rules():
     user_rules = []
     for contactname, contact in contacts.iteritems():
-        notify_log("Hat %s was?" % contactname)
         for rule in contact.get("notification_rules", []):
             # Save the owner of the rule for later debugging
             rule["contact"] = contactname
@@ -825,6 +920,7 @@ def user_notification_rules():
             user_rules.append(rule)
     notify_log("Found %d user specific rules" % len(user_rules))
     return user_rules
+
 
 def rbn_fake_email_contact(email):
     return {
@@ -875,20 +971,6 @@ def query_contact_info(name):
     return contact
 
 
-def add_rulebased_macros(context):
-    # For the rule based notifications we need the list of contacts
-    # an object has. The CMC does send this in the macro "CONTACTS"
-    # (the count) and macros of the form CONTACTALIAS[hh]=Harry Hirsch
-    if "NUM_CONTACTS" not in context:
-        livestatus_fetch_contacts(context, context["HOSTNAME"], context.get("SERVICEDESC"))
-
-    # Add a pseudo contact name. This is needed for the correct creation
-    # of spool files. Spool files are created on a per-contact-base, as in classical
-    # notifications the core sends out one individual notification per contact.
-    # In the case of rule based notifications we do not make distinctions between
-    # the various contacts.
-    context["CONTACTNAME"] = "check-mk-notify"
-
 def livestatus_fetch_contacts(context, host, service):
     if service:
         query = "GET services\nFilter: host_name = %s\nFilter: service_description = %s\nColumns: contacts\n" % (
@@ -924,16 +1006,16 @@ def rbn_match_rule(rule, context):
         return "This rule is disabled"
 
     return \
-        rbn_match_hosttags(rule, context) or \
-        rbn_match_hosts(rule, context) or \
-        rbn_match_exclude_hosts(rule, context) or \
-        rbn_match_services(rule, context) or \
+        rbn_match_hosttags(rule, context)         or \
+        rbn_match_hosts(rule, context)            or \
+        rbn_match_exclude_hosts(rule, context)    or \
+        rbn_match_services(rule, context)         or \
         rbn_match_exclude_services(rule, context) or \
-        rbn_match_checktype(rule, context) or \
-        rbn_match_timeperiod(rule) or \
-        rbn_match_escalation(rule, context) or \
-        rbn_match_servicelevel(rule, context) or \
-        rbn_match_host_event(rule, context) or \
+        rbn_match_checktype(rule, context)        or \
+        rbn_match_timeperiod(rule)                or \
+        rbn_match_escalation(rule, context)       or \
+        rbn_match_servicelevel(rule, context)     or \
+        rbn_match_host_event(rule, context)       or \
         rbn_match_service_event(rule, context)
 
 

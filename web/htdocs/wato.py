@@ -12803,21 +12803,44 @@ def parse_rule(ruleset, orig_rule):
         raise MKGeneralException(_("Invalid rule <tt>%s</tt>") % (orig_rule,))
 
 
-
 def rule_matches_host_and_item(rulespec, tag_specs, host_list, item_list,
                                rule_folder, host_folder, hostname, item):
     reasons = []
     host = host_folder[".hosts"][hostname]
     hostname_match = False
+    negate = False
+    regex_match = False
 
-    if not ( 
-        (hostname in host_list)
-        or
-        (("!"+hostname) not in host_list
-         and len(host_list) > 0
-         and host_list[-1] == ALL_HOSTS[0])
-        or len([ x for x in host_list if x.startswith('~') and re.match(x[1:], hostname) ]) > 0): 
-         reasons.append(_("The host name does not match."))
+    for check_host in host_list:
+        if hostname == check_host:
+            hostname_match = True
+            break
+        else:
+            if check_host[0] == '!':
+                check_host = check_host[1:]
+                negate = True
+            if check_host[0] == '~':
+                check_host = check_host[1:]
+                regex_match = True
+
+            if not regex_match and hostname == check_host:
+                if negate:
+                    break
+                hostname_match = True
+                break
+            elif regex_match and regex(check_host).match(hostname):
+                if negate:
+                    break
+                hostname_match = True
+                break
+
+            # No Match until now, but negate, so thats a match
+            if negate:
+                hostname_match = True
+                break
+
+    if not hostname_match:
+        reasons.append(_("The host name does not match."))
 
     tags_match = True
     for tag in tag_specs:

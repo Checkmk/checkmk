@@ -712,7 +712,7 @@ multisite_painters["svc_pnpgraph" ] = {
 def paint_check_manpage(row):
     command = row["service_check_command"]
     if not command.startswith("check_mk-"):
-	return "", ""
+        return "", ""
     checktype = command[9:]
     # Honor man-pages in OMD's local structure
     p = None
@@ -723,23 +723,23 @@ def paint_check_manpage(row):
     if not p:
         p = defaults.check_manpages_dir + "/" + checktype
     if os.path.isfile(p):
-	description = None
-	for line in file(p):
-	    line = line.rstrip()
-	    if line == "description:":
-		description = ""
-	    elif line.strip() == "" and description != None:
-		description += "<p>"
-	    elif not line.startswith(' ') and line[-1] == ':':
-		break
-	    elif description != None:
-	        description += " " + line
-	if not description:
-	    return "", ""
-	else:
-	    return "", description.replace("{", "<b>").replace("}", "</b>")
+        description = None
+        for line in file(p):
+            line = line.rstrip()
+            if line == "description:":
+                description = ""
+            elif line.strip() == "" and description != None:
+                description += "<p>"
+            elif not line.startswith(' ') and line[-1] == ':':
+                break
+            elif description != None:
+                description += " " + line.replace("<", "&lt;").replace(">", "&gt;")
+        if not description:
+            return "", ""
+        else:
+            return "", description.replace("{", "<b>").replace("}", "</b>")
     else:
-	return "", _("Man-Page: %s not found.") % p
+        return "", _("Man-Page: %s not found.") % p
 
 multisite_painters["check_manpage"] = {
     "title"   : _("Check manual (for Check_MK based checks)"),

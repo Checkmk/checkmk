@@ -5933,10 +5933,9 @@ def get_snapshot_status(snapshot):
             status["files"] = multitar.list_tar_content(snapshot_dir + name)
 
         if status.get("type") == "legacy":
+            allowed_files = map(lambda x: "%s.tar" % x[1], backup_paths)
             for tarname in status["files"].keys():
-                if tarname not in  ["check_mk.tar", "multisite.tar",
-                                    "htpasswd.tar", "sites.tar", "auth.secret.tar",
-                                    "auth.serials.tar", "usersettings.tar"]:
+                if tarname not in allowed_files:
                     raise MKGeneralException(_("Invalid snapshot (contains invalid tarfile %s)") % tarname)
         else: # new snapshots
             for entry in ["comment", "created_by", "type"]:
@@ -7369,6 +7368,7 @@ def vs_notification_rule(userid = None):
     if userid:
         contact_headers = []
         section_contacts = []
+        section_override = []
     else:
         contact_headers = [
             ( _("Contact Selection"), [ "contact_all", "contact_object", "contact_contacts", "contact_groups", "contact_emails" ] ),
@@ -7412,6 +7412,17 @@ def vs_notification_rule(userid = None):
               )
             ),
         ]
+        section_override = [
+            ( "allow_disable",
+              Checkbox(
+                title = _("Overriding by users"),
+                help = _("If you uncheck this option then users are not allowed to deactive notifications "
+                         "that are created by this rule."),
+                label = _("allow users to deactivate this notification"),
+                default_value = True,
+              )
+            ),
+        ]
 
     return Dictionary(
         title = _("Rule Properties"),
@@ -7432,15 +7443,9 @@ def vs_notification_rule(userid = None):
                 label = _("do not apply this rule"),
               )
             ),
-            ( "allow_disable",
-              Checkbox(
-                title = _("Overriding by users"),
-                help = _("If you uncheck this option then users are not allowed to deactive notifications "
-                         "that are created by this rule."),
-                label = _("allow users to deactivate this notification"),
-                default_value = True,
-              )
-            ),
+        ] + section_override +
+        [
+
             # Matching
             ( "match_hosttags",
               HostTagCondition(
@@ -7836,17 +7841,22 @@ def mode_user_notifications(phase):
     if phase == "title":
         return _("Custom notification table for user ") + userid
 
-    elif phase == "buttons":
+    users = userdb.load_users(lock = phase == 'action')
+    user = users[userid]
+    is_contact = not not user.get("contactgroups")
+    if phase == "buttons":
         html.context_button(_("All Users"), make_link([("mode", "users")]), "back")
         html.context_button(_("User Properties"), make_link([("mode", "edit_user"), ("edit", userid)]), "edit")
-        html.context_button(_("New Rule"), make_link([("mode", "notification_rule"), ("user", userid)]), "new")
+        if is_contact:
+            html.context_button(_("New Rule"), make_link([("mode", "notification_rule"), ("user", userid)]), "new")
         return
 
     elif phase == "action":
         return
 
-    users = userdb.load_users(lock = phase == 'action')
-    user = users[userid]
+    if not is_contact:
+        html.show_warning(_("This user is not member of any contact group and thus cannot have notification rules!"))
+        return
 
     rules = user.get("notification_rules", [])
     render_notification_rules(rules, userid)
@@ -10150,7 +10160,7 @@ def mode_users(phase):
         html.icon_button(delete_url, _("Delete"), "delete")
 
         notifications_url = make_link([("mode", "user_notifications"), ("user", id)])
-        if load_configuration_settings().get("enable_rulebased_notifications"):
+        if load_configuration_settings().get("enable_rulebased_notifications") and user.get("contactgroups"):
             html.icon_button(notifications_url, _("Custom notification table of this user"), "notifications")
 
         # ID

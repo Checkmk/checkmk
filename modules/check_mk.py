@@ -1821,7 +1821,8 @@ def in_boolean_serviceconf_list(hostname, service_description, ruleset):
 
 # Entries in list are (tagged) hostnames that must equal the
 # (untagged) hostname. Expressions beginning with ! are negated: if
-# they match, the item is excluded from the list. Also the three
+# they match, the item is excluded from the list. Expressions beginning 
+# withy ~ are treated as Regular Expression. Also the three
 # special tags '@all', '@clusters', '@physical' are allowed.
 def in_extraconf_hostlist(hostlist, hostname):
 
@@ -1832,6 +1833,8 @@ def in_extraconf_hostlist(hostlist, hostname):
     for hostentry in hostlist:
         if len(hostentry) == 0:
             raise MKGeneralException('Empty hostname in host list %r' % hostlist)
+        negate = False
+        regex = False
         if hostentry[0] == '@':
             if hostentry == '@all':
                 return True
@@ -1845,11 +1848,17 @@ def in_extraconf_hostlist(hostlist, hostname):
         elif hostentry[0] == '!':
             hostentry = hostentry[1:]
             negate = True
-        else:
-            negate = False
+        # Allow regex with prefix '~'
+        elif hostentry[0] == '~':
+            hostentry = hostentry[1:]
+            regex = True
 
-        if hostname == strip_tags(hostentry):
+        hostentry = strip_tags(hostentry)
+        if not regex and hostname == hostentry:
             return not negate
+        # Handle Regex
+        elif re.match(hostentry, hostname):
+            return True
 
     return False
 

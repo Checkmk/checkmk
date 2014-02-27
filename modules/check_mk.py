@@ -652,6 +652,18 @@ def agent_target_version(hostname):
         else:
             return agent_target_versions[0]
 
+regex_cache = {}
+def regex(r):
+    rx = regex_cache.get(r)
+    if rx:
+        return rx
+    try:
+        rx = re.compile(r)
+    except Exception, e:
+        raise MKGeneralException("Invalid regular expression '%s': %s" % (r, e))
+    regex_cache[r] = rx
+    return rx
+
 #.
 #   .--SNMP----------------------------------------------------------------.
 #   |                      ____  _   _ __  __ ____                         |
@@ -1834,7 +1846,7 @@ def in_extraconf_hostlist(hostlist, hostname):
         if len(hostentry) == 0:
             raise MKGeneralException('Empty hostname in host list %r' % hostlist)
         negate = False
-        regex = False
+        use_regex = False
         if hostentry[0] == '@':
             if hostentry == '@all':
                 return True
@@ -1852,14 +1864,18 @@ def in_extraconf_hostlist(hostlist, hostname):
             # Allow regex with prefix '~'
             if hostentry[0] == '~':
                 hostentry = hostentry[1:]
-                regex = True
+                use_regex = True
 
         hostentry = strip_tags(hostentry)
-        if not regex and hostname == hostentry:
-            return not negate
-        # Handle Regex
-        elif re.match(hostentry, hostname):
-            return not negate
+        try:
+            if not use_regex and hostname == hostentry:
+                return not negate
+            # Handle Regex
+            elif re.match(regex(hostentry), hostname):
+                return not negate
+        except MKGeneralException:
+            if opt_debug:
+                raise
 
     return False
 

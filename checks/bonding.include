@@ -27,7 +27,7 @@
 def inventory_bonding(parsed):
     inventory = []
     for bond, status in parsed.items():
-        if status["status"] == "up":
+        if status["status"] in ("up", "degraded"):
             # If no information about primary interface is available
             # then assume currently active one as primary
             if "primary" not in status and "active" in status:
@@ -42,7 +42,7 @@ def check_bonding(item, params, parsed):
     if item not in parsed:
         return (3, "no such bonding interface")
     status = parsed[item]
-    if status["status"] != "up":
+    if status["status"] not in ("up", "degraded"):
         return 2, "interface is " + status["status"]
 
     infos = [ "mode: " + status["mode"] ]
@@ -74,7 +74,12 @@ def check_bonding(item, params, parsed):
             if expected_active != None and expected_active != active:
                 infos[-1] += "(!)"
                 infos.append("expected is %s" % expected_active)
-                state = 1
+                state = 1 
+
+    infos.append("bond status: " + status["status"])
+    if status["status"] != "up":
+        infos[-1] += "(!)"
+        state = 1 
 
     return state, ", ".join(infos)
 

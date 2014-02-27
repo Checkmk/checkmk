@@ -642,6 +642,16 @@ def check_interval_of(hostname, checkname):
         if match is None or match == checkname:
             return minutes # use first match
 
+def agent_target_version(hostname):
+    agent_target_versions = host_extra_conf(hostname, check_mk_agent_target_versions)
+    if len(agent_target_versions) > 0:
+        if agent_target_versions[0] == "ignore":
+            return None
+        elif agent_target_versions[0] == "site":
+            return check_mk_version
+        else:
+            return agent_target_versions[0]
+
 #.
 #   .--SNMP----------------------------------------------------------------.
 #   |                      ____  _   _ __  __ ____                         |
@@ -3403,6 +3413,9 @@ no_inventory_possible = None
 
     # Piggyback translations
     output.write("def get_piggyback_translation(hostname):\n    return %r\n\n" % get_piggyback_translation(hostname))
+
+    # Expected agent version
+    output.write("def agent_target_version(hostname):\n    return %r\n\n" % agent_target_version(hostname))
 
     # SNMP character encoding
     output.write("def get_snmp_character_encoding(hostname):\n    return %r\n\n"

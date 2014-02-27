@@ -655,14 +655,27 @@ def page_edit_bookmark():
 #   '----------------------------------------------------------------------'
 
 def parse_search_query(s):
-    types = {'h': 'host', 'hg': 'hostgroup', 's': 'service', 'sg': 'servicegroup'}
-    ty = 'host'
-    if ':' in s:
-        s_ty, s_part = s.split(':', 1)
-        if s_ty in types.keys():
-            ty = types[s_ty]
-            s  = s_part
-    return ty, s.replace('*', '.*')
+    types = {'h': 'hosts', 'hg': 'hostgroups', 's': 'services', 'sg': 'servicegroups'}
+
+    found_filters = []
+    if ":" in s:
+        regex = "(^((hg)|h|(sg)|s)| (hg|h|sg|s)):"
+        found = []
+        matches = re.finditer(regex, s)
+        for match in matches:
+            found.append((match.group(1), match.start()))
+
+        found_filters = []
+        current_string = s
+        for token_type, token_offset in found[-1::-1]:
+            found_filters.append( (types[token_type.lstrip()],
+                                   current_string[token_offset+len(token_type)+1:].replace("*", ".*").strip()) )
+            current_string = current_string[:token_offset]
+
+    if found_filters:
+        return found_filters
+    else:
+        return [("hosts", s.replace('*', '.*'))]
 
 def is_ipaddress(s):
     try:
@@ -674,26 +687,101 @@ def is_ipaddress(s):
     except:
         return False
 
-def search_url_tmpl(ty, exact = True):
-    if ty == 'host':
-        if exact:
-            return 'view.py?view_name=host&host=%(name)s&site=%(site)s'
-        else:
-            return 'view.py?view_name=hosts&host=%(name)s'
-    elif ty == 'hostgroup':
-        if exact:
-            return 'view.py?view_name=hostgroup&hostgroup=%(name)s&site=%(site)s'
-        else:
-            return 'view.py?view_name=hostgroups&hostgroup_name=%(name)s&site=%(site)s'
-    elif ty == 'servicegroup':
-        if exact:
-            return 'view.py?view_name=servicegroup&servicegroup=%(name)s&site=%(site)s'
-        else:
-            return 'view.py?view_name=svcgroups&servicegroup_name=%(name)s&site=%(site)s'
-    elif ty == 'service':
-        return 'view.py?view_name=allservices&service=%(name)s&site=%(site)s'
+def plugin_matches_filters(plugin, used_filters):
+    if not ((len(used_filters) > 1) == (plugin.get("required_types") != None)):
+        return False
 
-def search_livestatus(ty, q):
+    if len(used_filters) == 1: # Simple filters
+        if plugin.get("lq_table", plugin.get("id")) != used_filters[0][0]:
+            return False
+    else:                      # Multi filters
+        # used_filters example [ ('services', 'CPU'), ('hosts', 'localhost'), ('services', 'Mem') ]
+        search_types = list(set(map(lambda x: x[0], used_filters)))
+        # Only allow plugins with specified "required_types"
+        if not plugin.get("required_types"):
+            return False
+
+        # If search_types does not include all required fields -> do not use
+        for entry in plugin["required_types"]:
+            if entry not in search_types:
+                return False
+
+        # If there are unknown types in the search -> do not use
+        for entry in search_types:
+            if entry not in plugin["required_types"] + plugin.get("optional_types", []):
+                return False
+    return True
+
+def search_url_tmpl(used_filters, row, exact = True):
+    if not row:
+        # try to find the first plugin matching the used_filters
+        for entry in search_plugins:
+            if plugin_matches_filters(entry, used_filters):
+                plugin = entry
+                row_options = {}
+                row_data    = {}
+                break
+        else:
+            return "" # Shouldn't happen...
+    else:
+        plugin, row_options, row_data = row
+
+    def find_tmpl():
+        if exact: # Get the match template
+            if plugin.get("match_url_tmpl_func"):
+                return plugin['match_url_tmpl_func'](used_filters, row_data)
+            if plugin.get("match_url_tmpl"):
+                return plugin.get("match_url_tmpl")
+
+            # Default match templates
+            ty = plugin.get("dftl_url_tmpl", plugin.get("id"))
+            if ty == 'hosts':
+                return 'view.py?view_name=host&host=%(name)s&site=%(site)s'
+            elif ty == 'hostgroups':
+                return 'view.py?view_name=hostgroup&hostgroup=%(name)s&site=%(site)s'
+            elif ty == 'servicegroups':
+                return 'view.py?view_name=servicegroup&servicegroup=%(name)s&site=%(site)s'
+            elif ty == 'services':
+                return 'view.py?view_name=allservices&service=%(name)s&site=%(site)s'
+        else: # Get the search template
+            if plugin.get("search_url_tmpl_func"):
+                return plugin['search_url_tmpl_func'](used_filters, row_data)
+            if plugin.get("search_url_tmpl"):
+                return plugin.get("search_url_tmpl")
+
+            # Default search templates
+            ty = plugin.get("dftl_url_tmpl", plugin.get("id"))
+            if ty == 'hosts':
+                return 'view.py?view_name=hosts&host=%(name)s'
+            elif ty == 'hostgroups':
+                return 'view.py?view_name=hostgroups&hostgroup_name=%(name)s&site=%(site)s'
+            elif ty == 'servicegroups':
+                return 'view.py?view_name=svcgroups&servicegroup_name=%(name)s&site=%(site)s'
+            elif ty == 'services':
+                return 'view.py?view_name=allservices&service=%(name)s&site=%(site)s'
+
+    # Search the template
+    url_tmpl = find_tmpl()
+
+    # Some templates with single filters contain %(name)s, %(search)s, %(site)
+    if len(used_filters) == 1:
+        if exact:
+            site = row_data.get("site")
+            name = row_data.get(get_row_name(row))
+        else:
+            site = ""
+            name = used_filters[0][1]
+
+        url_tmpl = url_tmpl % {
+            'name'   : html.urlencode(name),
+            'search' : html.urlencode(name),
+            'site'   : site,
+        }
+
+    return url_tmpl
+
+
+def search_livestatus(used_filters):
     try:
         limit = config.quicksearch_dropdown_limit
     except:
@@ -703,153 +791,186 @@ def search_livestatus(ty, q):
     # is neccessary to make one query for each plugin - sorry. For example
     # for the case, that a host can be found via alias or name.
     data = []
-    column = ty == 'service' and 'description' or 'name'
+
     html.live.set_prepend_site(True)
     for plugin in search_plugins:
-        if plugin['type'] != ty or 'filter_func' not in plugin:
+        if 'filter_func' not in plugin:
             continue
 
-        f = plugin['filter_func'](q)
-        if f:
-            lq = "GET %ss\nCache: reload\nColumns: %s\n%sLimit: %d\n" % \
-                    (ty, column, f, limit)
-            data += [ [ plugin['id'] ] + row for row in html.live.query(lq) ]
+        if not plugin_matches_filters(plugin, used_filters):
+            continue
+
+        lq_filter = plugin['filter_func'](used_filters)
+        if lq_filter:
+            lq_table   = plugin.get("lq_table", plugin.get("id"))
+            lq_columns = plugin.get("lq_columns")
+            lq         = "GET %s\nCache: reload\nColumns: %s\n%sLimit: %d\n" % \
+                          (lq_table, " ".join(lq_columns), lq_filter, limit)
+            #html.debug("<br>%s" % lq.replace("\n", "<br>"))
+
+            lq_columns = [ "site" ] + lq_columns
+            for row in html.live.query(lq):
+                # Put result columns into a dict
+                row_dict = {}
+                for idx, col in enumerate(row):
+                    row_dict[lq_columns[idx]] = col
+
+                # The plugin itself might add more info to the row
+                # This is saved into an extra dict named options
+                options = {}
+                if plugin.get("match_url_tmpl_func"):
+                    options["url"] = plugin["match_url_tmpl_func"](used_filters, row_dict)
+
+                data.append([ plugin ] + [ options ] + [ row_dict ])
             if len(data) >= limit:
                 break
+
+    for plugin in search_plugins:
+        if "search_func" in plugin and plugin_matches_filters(plugin, used_filters):
+            for row in plugin['search_func'](used_filters):
+                row_options, row_data = row
+                data.append((plugin, row_options, row_data))
+
     html.live.set_prepend_site(False)
 
-    # Some special plugins fetch host data, but do own livestatus
-    # queries, maybe in other tables, for example when searching
-    # for hosts which have a service with specific plugin output
-    for plugin in search_plugins:
-        if plugin['type'] == ty and 'search_func' in plugin:
-            data += plugin['search_func'](q)
-
-    # Apply the limit once again (search_funcs of plugins could have
-    # added some results)
+    # Apply the limit once again (search_funcs of plugins could have added some results)
     data = data[:limit]
 
+    used_keys = []
+
+    # Function to create a unqiue hashable key from a row
+    def get_key(row):
+        plugin, row_options, row_data = row
+        name = row_data.get(get_row_name(row))
+        return (row_data.get("site"), row_data.get("host_name"), name)
+
+    # Remove duplicate rows
+    used_keys = []
+    new_data  = []
+    for row in data:
+        row_key = get_key(row)
+        if row_key not in used_keys:
+            new_data.append(row)
+            used_keys.append(row_key)
+    data = new_data
+
+    # Sort data if its not a host filter
     def sort_data(data):
-        sorted_data = set([])
-        for entry in data:
-            entry = tuple(entry)
-            if entry not in sorted_data:
-                sorted_data.add(entry)
-        sorted_data = list(sorted_data)
-        sorted_data.sort()
+        sorted_data = data
+        def sort_fctn(a, b):
+            return cmp(get_key(a), get_key(b))
+        data.sort(cmp = sort_fctn)
         return sorted_data
 
-    if ty != 'host':
+    if len(used_filters) == 1 and used_filters[0][0] != "hosts":
         data = sort_data(data)
 
     return data
 
-def format_result(name, ty, url, site, display_site):
+
+def format_result(row, render_options):
+    plugin, row_options, row_data = row
+    name_column = get_row_name(row)
+    name        = row_data.get(name_column)
+    url         = row_options["url"]
+    css         = plugin.get("css_class", plugin["id"])
+
+    name_append = ""
+    if render_options.get("display_site"):
+        name_append += " (%s)" % row_data.get("site")
+    if render_options.get("display_host"):
+        # Don't append the host name if its already the display name..
+        if not name_column == "host_name" and row_data.get("host_name"):
+            name_append += " &lt;%s&gt;" % row_data.get("host_name")
+    if name_append:
+        name = "%s %s" % (name, name_append)
+
     html.write('<a id="result_%s" class="%s" href="%s" onClick="mkSearchClose()" target="main">%s' %
-                (name, ty, url, name))
-    if display_site:
-        html.write(' (%s)' % site)
+                (name, css, url, name))
     html.write('</a>\n')
 
-def render_search_results(ty, objects, format_func = format_result):
-    url_tmpl = search_url_tmpl(ty)
 
-    # When results contain infos from several sites, display
-    # the site id in the result text
-    only_site = None
-    display_site = False
-    for obj in objects:
-        if only_site is None:
-            only_site = obj[1]
-        elif only_site != obj[1]:
-            display_site = True
-            break
+def get_row_name(row):
+    plugin, row_options, row_data = row
+    if plugin.get("qs_show"):
+        return plugin.get("qs_show")
+    elif plugin.get("lq_columns"):
+        return plugin.get("lq_columns")[0]
+    return ""
 
-    # Remove duplicate entries, i.e. with the same name and
-    # the same URL.
+def render_search_results(used_filters, objects, format_func = format_result):
+    # When results contain infos from several sites or hosts, display
+    # display that info in the result text
+    options = {}
+    values  = {}
+    for row in objects:
+        plugin, row_options, row_data = row
+        name = get_row_name(row)
+
+        for action, name in [ ("display_site", "site"),
+                              ("display_host", "host_name") ]:
+            if row_data.get(name):
+                values.setdefault(action, row_data.get(name))
+                # If this values differs from the default setting -> set is as option
+                if values.get(action) != row_data.get(name):
+                    options[action] = True
+
+    # Remove duplicate entries, i.e. with the same name and the same URL.
     unique = set([])
-    for obj in objects:
-        if len(obj) == 3:
-            plugin, site, name = obj
-            url = url_tmpl % {'name': name, 'site': site}
-        else:
-            plugin, site, name, url = obj
-        if not (name, url) in unique:
-            format_func(name, ty, url, site, display_site)
-            unique.add((name, url))
+    for row in objects:
+        plugin, row_options, row_data = row
+        # Find missing urls
+        name = get_row_name(row)
+        if "url" not in row_options:
+            row_options["url"] = search_url_tmpl(used_filters, row)
+
+        obj_id = (row_options["url"], name)
+        if obj_id not in unique:
+            format_func(row, options)
+            unique.add(obj_id)
 
 def process_search(q):
-    ty, q = parse_search_query(q)
-    if ty not in [ 'host', 'hostgroup', 'service', 'servicegroup' ]:
-        return None, None
+    used_filters = parse_search_query(q)
 
-    data = search_livestatus(ty, q)
-    if ty == 'host' and not data:
+    data = search_livestatus(used_filters)
+    if len(used_filters) == 1 and used_filters[0][0] == "hosts" and not data:
         # When asking for hosts and no host found, try searching services instead
-        ty = 'service'
-        data = search_livestatus(ty, q)
-    return ty, data
+        data = search_livestatus( [("services", used_filters[0][1])] )
+        return data, [("services", used_filters[0][1])]
+
+    return data, used_filters
 
 def ajax_search():
     q = html.var('q').strip()
     if not q:
         return
 
-    ty, data = process_search(q)
-    if ty is None:
+    data, used_filters = process_search(q)
+    if not data:
         return
 
     try:
-        render_search_results(ty, data)
+        render_search_results(used_filters, data)
     except Exception, e:
+        html.write("error")
+        import traceback
+        html.write(traceback.format_exc())
         html.write(repr(e))
 
-def get_search_plugin(ty, plugin_id):
-    for plugin in search_plugins:
-        if plugin['type'] == ty and plugin['id'] == plugin_id:
-            return plugin
 
 def search_open():
     q = html.var('q').strip()
     if not q:
         return
 
-    ty, data = process_search(q)
-    if ty is None:
+    data, used_filters = process_search(q)
+    if not used_filters:
         return
 
-    cleaned_search_string = parse_search_query(q)[1]
-
-    if len(data) == 1:
-        if len(data[0]) == 3:
-            # Check wether or not the plugin which found the first match registered
-            # an own url template, use this if provided.
-            plugin = get_search_plugin(ty, data[0][0])
-            if 'url_tmpl' in plugin:
-                url_tmpl = plugin['url_tmpl']
-            else:
-                url_tmpl = search_url_tmpl(ty)
-            url = url_tmpl % {
-                'name'   : html.urlencode(data[0][2]),
-                'search' : html.urlencode(cleaned_search_string),
-                'site'   : data[0][1],
-            }
-        else:
-            url = data[0][3]
+    if data and len(data) == 1:
+        url = search_url_tmpl(used_filters, data[0])
     else:
-        # Check wether or not the plugin which found the first match registered
-        # an own url template, use this if provided.
-        url_tmpl = search_url_tmpl(ty, exact = False)
-        if data:
-            plugin = get_search_plugin(ty, data[0][0])
-            if 'url_tmpl' in plugin:
-                url_tmpl = plugin['url_tmpl']
-
-        url = url_tmpl % {
-            'name'   : html.urlencode(cleaned_search_string),
-            'search' : html.urlencode(cleaned_search_string),
-            'site'   : '',
-        }
+        url = search_url_tmpl(used_filters, data and data[0] or None, exact = False)
 
     html.set_http_header('Location', url)
     from mod_python import apache

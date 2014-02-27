@@ -5941,7 +5941,10 @@ def get_snapshot_status(snapshot):
         else: # new snapshots
             for entry in ["comment", "created_by", "type"]:
                 if entry in status["files"]:
-                    status[entry] = multitar.get_file_content(snapshot_dir + name, entry)
+                    if file_stream:
+                        status[entry] = multitar.get_file_content(file_stream, entry)
+                    else:
+                        status[entry] = multitar.get_file_content(snapshot_dir + name, entry)
                 else:
                     raise MKGeneralException(_("Invalid snapshot (missing file: %s)") % entry)
 
@@ -5986,7 +5989,8 @@ def get_snapshot_status(snapshot):
         status["broken"]      = True
         pass
     except Exception, e:
-        status["broken_text"] = e.message
+        import traceback
+        status["broken_text"] = traceback.format_exc()
         status["broken"]      = True
         pass
     return status
@@ -7361,7 +7365,54 @@ def save_notification_rules(rules):
     file(root_dir + "notifications.mk", "w").write("notification_rules += %s\n" % pprint.pformat(rules))
 
 
-def vs_notification_rule():
+def vs_notification_rule(userid = None):
+    if userid:
+        contact_headers = []
+        section_contacts = []
+    else:
+        contact_headers = [
+            ( _("Contact Selection"), [ "contact_all", "contact_object", "contact_contacts", "contact_groups", "contact_emails" ] ),
+        ]
+        section_contacts = [
+            # Contact selection
+            ( "contact_object",
+              Checkbox(
+                  title = _("All contacts of the notified object"),
+                  label = _("Notify all contacts of the notified host or service."),
+                  default_value = True,
+              )
+            ),
+            ( "contact_all",
+              Checkbox(
+                  title = _("All contacts"),
+                  label = _("Notify all users that are member of at least one contact group."),
+              )
+            ),
+            ( "contact_contacts",
+              ListOf(
+                  UserSelection(only_contacts = True),
+                  title = _("The following contacts"),
+                  help = _("Enter a list of user ids to be notified here. These users need to be members "
+                           "of at least one contact group in order to be notified."),
+                  movable = False,
+              )
+            ),
+            ( "contact_groups",
+              ListOf(
+                  GroupSelection("contact"),
+                  title = _("The members of certain contact groups"),
+                  movable = False,
+              )
+            ),
+            ( "contact_emails",
+              ListOfStrings(
+                  valuespec = EmailAddress(),
+                  title = _("The following explicit email addresses"),
+                  orientation = "horizontal",
+              )
+            ),
+        ]
+
     return Dictionary(
         title = _("Rule Properties"),
         elements = [
@@ -7530,45 +7581,9 @@ def vs_notification_rule():
                    default_value = [ 'rw', 'rc', 'ru', 'wc', 'wu', 'uc', 'f', 's', 'x' ],
               )
             ),
-
-            # Contact selection
-            ( "contact_object",
-              Checkbox(
-                  title = _("All contacts of the notified object"),
-                  label = _("Notify all contacts of the notified host or service."),
-                  default_value = True,
-              )
-            ),
-            ( "contact_all",
-              Checkbox(
-                  title = _("All contacts"),
-                  label = _("Notify all users that are member of at least one contact group."),
-              )
-            ),
-            ( "contact_contacts",
-              ListOf(
-                  UserSelection(only_contacts = True),
-                  title = _("The following contacts"),
-                  help = _("Enter a list of user ids to be notified here. These users need to be members "
-                           "of at least one contact group in order to be notified."),
-                  movable = False,
-              )
-            ),
-            ( "contact_groups",
-              ListOf(
-                  GroupSelection("contact"),
-                  title = _("The members of certain contact groups"),
-                  movable = False,
-              )
-            ),
-            ( "contact_emails",
-              ListOfStrings(
-                  valuespec = EmailAddress(),
-                  title = _("The following explicit email addresses"),
-                  orientation = "horizontal",
-              )
-            ),
-
+        ] +
+        section_contacts +
+        [
             # Notification
             ( "notify_plugin",
               DropdownChoice(
@@ -7603,8 +7618,9 @@ def vs_notification_rule():
                           "match_checktype", "contact_contacts", "contact_groups", "contact_emails" ],
         headers = [
             ( _("General Properties"), [ "description", "disabled", "allow_disable" ] ),
-            ( _("Notification Method"), [ "notify_plugin", "notify_method" ] ),
-            ( _("Contact Selection"), [ "contact_all", "contact_object", "contact_contacts", "contact_groups", "contact_emails" ] ),
+            ( _("Notification Method"), [ "notify_plugin", "notify_method" ] ),]
+            + contact_headers
+            + [
             ( _("Conditions"),         [ "match_hosttags", "match_hosts", "match_exclude_hosts",
                                          "match_services", "match_exclude_services",
                                          "match_checktype", "match_timeperiod",
@@ -7614,80 +7630,7 @@ def vs_notification_rule():
         form_narrow = True,
     )
 
-def mode_notifications(phase):
-    if phase == "title":
-        return _("Notification configuration")
-
-    elif phase == "buttons":
-        global_buttons()
-        html.context_button(_("New Rule"), make_link([("mode", "notification_rule")]), "new")
-        return
-
-    rules = load_notification_rules()
-
-    if phase == "action":
-
-    ###    # Validation of input for rule simulation (no further action here)
-    ###    if html.var("simulate") or html.var("_generate"):
-    ###        event = vs_mkeventd_event.from_html_vars("event")
-    ###        vs_mkeventd_event.validate_value(event, "event")
-    ###        config.save_user_file("simulated_event", event)
-
-    ###    if html.has_var("_generate") and html.check_transaction():
-    ###        if not event.get("application"):
-    ###            raise MKUserError("event_p_application", _("Please specify an application name"))
-    ###        if not event.get("host"):
-    ###            raise MKUserError("event_p_host", _("Please specify a host name"))
-    ###        rfc = mkeventd.send_event(event)
-    ###        return None, "Test event generated and sent to Event Console.<br><pre>%s</pre>" % rfc
-
-
-        if html.has_var("_delete"):
-            nr = int(html.var("_delete"))
-            rule = rules[nr]
-            c = wato_confirm(_("Confirm rule deletion"),
-                             _("Do you really want to delete the rule <b>%d</b> <i>%s</i>?" %
-                               (nr, rule.get("description",""))))
-            if c:
-                log_pending(SYNC, None, "notification-delete-rule", _("Deleted notification rule %d") % nr)
-                del rules[nr]
-                save_notification_rules(rules)
-            elif c == False:
-                return ""
-            else:
-                return
-
-        if html.check_transaction():
-            if html.has_var("_move"):
-                from_pos = int(html.var("_move"))
-                to_pos = int(html.var("_where"))
-                rule = rules[from_pos]
-                del rules[from_pos] # make to_pos now match!
-                rules[to_pos:to_pos] = [rule]
-                save_notification_rules(rules)
-                log_pending(SYNC, None, "notification-move-rule", _("Changed position of notification rule %d") % from_pos)
-        return
-
-    # Check setting of global notifications. Are they enabled? If not, display
-    # a warning here. Note: this is a main.mk setting, so we cannot access this
-    # directly.
-    current_settings = load_configuration_settings()
-    if not current_settings.get("enable_rulebased_notifications"):
-        url = 'wato.py?mode=edit_configvar&varname=enable_rulebased_notifications'
-        html.show_warning(
-           _("<p>Warning</b><br><br>Rule based notifications are disabled in your global settings. "
-             "The rules that you edit here will not have affect."
-             "<br><br>"
-             "You can change this setting <a href=\"%s\">here</a>.") % url)
-
-
-    elif not current_settings.get("notification_fallback_email"):
-        url = 'wato.py?mode=edit_configvar&varname=notification_fallback_email'
-        html.show_warning(
-          _("<b>Warning</b><br><br>You haven't configured a fallback email address "
-            "in case of a problem in your notification rules. Please configure "
-            "one <a href=\"%s\">here</a>.") % url)
-
+def render_notification_rules(rules, userid=""):
     if not rules:
         html.message(_("You have not created any rules yet."))
 
@@ -7713,28 +7656,32 @@ def mode_notifications(phase):
         # have_match = False
         for nr, rule in enumerate(rules):
             table.row()
-            delete_url = make_action_link([("mode", "notifications"), ("_delete", nr)])
-            top_url    = make_action_link([("mode", "notifications"), ("_move", nr), ("_where", 0)])
-            bottom_url = make_action_link([("mode", "notifications"), ("_move", nr), ("_where", len(rules)-1)])
-            up_url     = make_action_link([("mode", "notifications"), ("_move", nr), ("_where", nr-1)])
-            down_url   = make_action_link([("mode", "notifications"), ("_move", nr), ("_where", nr+1)])
-            edit_url   = make_link([("mode", "notification_rule"), ("edit", nr)])
-            clone_url  = make_link([("mode", "notification_rule"), ("clone", nr)])
+            if userid:
+                listmode = "user_notifications"
+            else:
+                listmode = "notifications"
+            delete_url = make_action_link([("mode", listmode), ("user", userid), ("_delete", nr)])
+            top_url    = make_action_link([("mode", listmode), ("user", userid), ("_move", nr), ("_where", 0)])
+            bottom_url = make_action_link([("mode", listmode), ("user", userid), ("_move", nr), ("_where", len(rules)-1)])
+            up_url     = make_action_link([("mode", listmode), ("user", userid), ("_move", nr), ("_where", nr-1)])
+            down_url   = make_action_link([("mode", listmode), ("user", userid), ("_move", nr), ("_where", nr+1)])
+            edit_url   = make_link([("mode", "notification_rule"), ("edit", nr), ("user", userid)])
+            clone_url  = make_link([("mode", "notification_rule"), ("clone", nr), ("user", userid)])
 
             table.cell(_("Actions"), css="buttons")
-            html.icon_button(edit_url, _("Edit this rule"), "edit")
-            html.icon_button(clone_url, _("Create a copy of this rule"), "clone")
-            html.icon_button(delete_url, _("Delete this rule"), "delete")
+            html.icon_button(edit_url, _("Edit this notification rule"), "edit")
+            html.icon_button(clone_url, _("Create a copy of this notification rule"), "clone")
+            html.icon_button(delete_url, _("Delete this notification rule"), "delete")
             if not rule is rules[0]:
-                html.icon_button(top_url, _("Move this rule to the top"), "top")
-                html.icon_button(up_url, _("Move this rule one position up"), "up")
+                html.icon_button(top_url, _("Move this notification rule to the top"), "top")
+                html.icon_button(up_url, _("Move this notification rule one position up"), "up")
             else:
                 html.empty_icon_button()
                 html.empty_icon_button()
 
             if not rule is rules[-1]:
-                html.icon_button(down_url, _("Move this rule one position down"), "down")
-                html.icon_button(bottom_url, _("Move this rule to the bottom"), "bottom")
+                html.icon_button(down_url, _("Move this notification rule one position down"), "down")
+                html.icon_button(bottom_url, _("Move this notification rule to the bottom"), "bottom")
             else:
                 html.empty_icon_button()
                 html.empty_icon_button()
@@ -7801,26 +7748,140 @@ def mode_notifications(phase):
 
         table.end()
 
+
+
+def mode_notifications(phase):
+    if phase == "title":
+        return _("Notification configuration")
+
+    elif phase == "buttons":
+        global_buttons()
+        html.context_button(_("New Rule"), make_link([("mode", "notification_rule")]), "new")
+        return
+
+    rules = load_notification_rules()
+
+    if phase == "action":
+
+    ###    # Validation of input for rule simulation (no further action here)
+    ###    if html.var("simulate") or html.var("_generate"):
+    ###        event = vs_mkeventd_event.from_html_vars("event")
+    ###        vs_mkeventd_event.validate_value(event, "event")
+    ###        config.save_user_file("simulated_event", event)
+
+    ###    if html.has_var("_generate") and html.check_transaction():
+    ###        if not event.get("application"):
+    ###            raise MKUserError("event_p_application", _("Please specify an application name"))
+    ###        if not event.get("host"):
+    ###            raise MKUserError("event_p_host", _("Please specify a host name"))
+    ###        rfc = mkeventd.send_event(event)
+    ###        return None, "Test event generated and sent to Event Console.<br><pre>%s</pre>" % rfc
+
+
+        if html.has_var("_delete"):
+            nr = int(html.var("_delete"))
+            rule = rules[nr]
+            c = wato_confirm(_("Confirm notification rule deletion"),
+                             _("Do you really want to delete the notification rule <b>%d</b> <i>%s</i>?" %
+                               (nr, rule.get("description",""))))
+            if c:
+                log_pending(SYNC, None, "notification-delete-rule", _("Deleted notification rule %d") % nr)
+                del rules[nr]
+                save_notification_rules(rules)
+            elif c == False:
+                return ""
+            else:
+                return
+
+        if html.check_transaction():
+            if html.has_var("_move"):
+                from_pos = int(html.var("_move"))
+                to_pos = int(html.var("_where"))
+                rule = rules[from_pos]
+                del rules[from_pos] # make to_pos now match!
+                rules[to_pos:to_pos] = [rule]
+                save_notification_rules(rules)
+                log_pending(SYNC, None, "notification-move-rule", _("Changed position of notification rule %d") % from_pos)
+        return
+
+    # Check setting of global notifications. Are they enabled? If not, display
+    # a warning here. Note: this is a main.mk setting, so we cannot access this
+    # directly.
+    current_settings = load_configuration_settings()
+    if not current_settings.get("enable_rulebased_notifications"):
+        url = 'wato.py?mode=edit_configvar&varname=enable_rulebased_notifications'
+        html.show_warning(
+           _("<p>Warning</b><br><br>Rule based notifications are disabled in your global settings. "
+             "The rules that you edit here will not have affect."
+             "<br><br>"
+             "You can change this setting <a href=\"%s\">here</a>.") % url)
+
+
+    elif not current_settings.get("notification_fallback_email"):
+        url = 'wato.py?mode=edit_configvar&varname=notification_fallback_email'
+        html.show_warning(
+          _("<b>Warning</b><br><br>You haven't configured a fallback email address "
+            "in case of a problem in your notification rules. Please configure "
+            "one <a href=\"%s\">here</a>.") % url)
+
+    render_notification_rules(rules)
+
     html.message(_("<b>Note</b>: This module is not yet operational and just here for demonstration purposes."))
+
+
+# Similar like mode_notifications, but just for the user specific notification table
+def mode_user_notifications(phase):
+    userid = html.var("user")
+
+    if phase == "title":
+        return _("Custom notification table for user ") + userid
+
+    elif phase == "buttons":
+        html.context_button(_("All Users"), make_link([("mode", "users")]), "back")
+        html.context_button(_("User Properties"), make_link([("mode", "edit_user"), ("edit", userid)]), "edit")
+        html.context_button(_("New Rule"), make_link([("mode", "notification_rule"), ("user", userid)]), "new")
+        return
+
+    elif phase == "action":
+        return
+
+    users = userdb.load_users(lock = phase == 'action')
+    user = users[userid]
+
+    rules = user.get("notification_rules", [])
+    render_notification_rules(rules, userid)
 
 
 
 def mode_notification_rule(phase):
-    rules = load_notification_rules()
     edit_nr = int(html.var("edit", "-1"))
     clone_nr = int(html.var("clone", "-1"))
+    userid = html.var("user", "")
+    if userid:
+        suffix = _(" for user ") + html.attrencode(userid)
+    else:
+        suffix = ""
+
     new = edit_nr < 0
 
     if phase == "title":
+
         if new:
-            return _("Create new rule")
+            return _("Create new rule") + suffix
         else:
-            return _("Edit rule %d" % edit_nr)
+            return _("Edit rule %d" % edit_nr) + suffix
 
     elif phase == "buttons":
         home_button()
-        html.context_button(_("All Rules"), make_link([("mode", "notifications")]), "back")
+        html.context_button(_("All Rules"), make_link([("mode", "notifications"), ("userid", userid)]), "back")
         return
+
+    if userid:
+        users = userdb.load_users(lock = phase == 'action')
+        user = users[userid]
+        rules = user.setdefault("notification_rules", [])
+    else:
+        rules = load_notification_rules()
 
     if new:
         if clone_nr >= 0 and not html.var("_clear"):
@@ -7831,28 +7892,39 @@ def mode_notification_rule(phase):
     else:
         rule = rules[edit_nr]
 
-    vs = vs_notification_rule()
+
+    vs = vs_notification_rule(userid)
 
     if phase == "action":
         if not html.check_transaction():
             return "notifications"
 
         rule = vs.from_html_vars("rule")
+        if userid:
+            rule["contact_contacts"] = [ userid ] # Force selection of our user
+
         vs.validate_value(rule, "rule")
 
         if new and clone_nr >= 0:
             rules[clone_nr:clone_nr] = [ rule ]
         elif new:
-            rules = [ rule ] + rules
+            rules[0:0] = [ rule ]
         else:
             rules[edit_nr] = rule
 
-        save_notification_rules(rules)
-        if new:
-            log_pending(SYNC, None, "new-notification-rule", _("Created new notification rule"))
+        if userid:
+            userdb.save_users(users)
         else:
-            log_pending(SYNC, None, "edit-notification-rule", _("Changed notification rule %d") % edit_nr)
-        return "notifications"
+            save_notification_rules(rules)
+
+        if new:
+            log_pending(SYNC, None, "new-notification-rule", _("Created new notification rule") + suffix)
+        else:
+            log_pending(SYNC, None, "edit-notification-rule", _("Changed notification rule %d") % edit_nr + suffix)
+        if userid:
+            return "user_notifications"
+        else:
+            return "notifications"
 
 
     html.begin_form("rule")
@@ -10077,6 +10149,10 @@ def mode_users(phase):
         delete_url = html.makeactionuri([("_delete", id)])
         html.icon_button(delete_url, _("Delete"), "delete")
 
+        notifications_url = make_link([("mode", "user_notifications"), ("user", id)])
+        if load_configuration_settings().get("enable_rulebased_notifications"):
+            html.icon_button(notifications_url, _("Custom notification table of this user"), "notifications")
+
         # ID
         table.cell(_("ID"), id)
 
@@ -10134,24 +10210,25 @@ def mode_users(phase):
             html.write("<i>" + _("none") + "</i>")
 
         # notifications
-        table.cell(_("Notifications"))
-        if not cgs:
-            html.write(_("<i>not a contact</i>"))
-        elif not user.get("notifications_enabled", True):
-            html.write(_("disabled"))
-        elif "" == user.get("host_notification_options", "") \
-            and "" == user.get("service_notification_options", ""):
-            html.write(_("all events disabled"))
-        else:
-            tp = user.get("notification_period", "24X7")
-            if tp != "24X7" and tp not in timeperiods:
-                tp = tp + _(" (invalid)")
-            elif tp != "24X7":
-                url = make_link([("mode", "edit_timeperiod"), ("edit", tp)])
-                tp = '<a href="%s">%s</a>' % (url, timeperiods[tp].get("alias", tp))
+        if not load_configuration_settings().get("enable_rulebased_notifications"):
+            table.cell(_("Notifications"))
+            if not cgs:
+                html.write(_("<i>not a contact</i>"))
+            elif not user.get("notifications_enabled", True):
+                html.write(_("disabled"))
+            elif "" == user.get("host_notification_options", "") \
+                and "" == user.get("service_notification_options", ""):
+                html.write(_("all events disabled"))
             else:
-                tp = _("Always")
-            html.write(tp)
+                tp = user.get("notification_period", "24X7")
+                if tp != "24X7" and tp not in timeperiods:
+                    tp = tp + _(" (invalid)")
+                elif tp != "24X7":
+                    url = make_link([("mode", "edit_timeperiod"), ("edit", tp)])
+                    tp = '<a href="%s">%s</a>' % (url, timeperiods[tp].get("alias", tp))
+                else:
+                    tp = _("Always")
+                html.write(tp)
 
         # the visible custom attributes
         for name, attr in visible_custom_attrs:
@@ -10172,6 +10249,9 @@ def mode_users(phase):
 
 
 def mode_edit_user(phase):
+    # Check if rule based notifications are enabled (via WATO)
+    rulebased_notifications = load_configuration_settings().get("enable_rulebased_notifications")
+
     users = userdb.load_users(lock = phase == 'action')
     userid = html.var("edit") # missing -> new user
     cloneid = html.var("clone") # Only needed in 'new' mode
@@ -10184,6 +10264,9 @@ def mode_edit_user(phase):
 
     elif phase == "buttons":
         html.context_button(_("All Users"), make_link([("mode", "users")]), "back")
+        if rulebased_notifications and not new:
+            html.context_button(_("Notifications"), make_link([("mode", "user_notifications"), 
+                    ("user", userid)]), "notifications")
         return
 
     if new:
@@ -10323,40 +10406,43 @@ def mode_edit_user(phase):
                 cgs.append(c)
         new_user["contactgroups"] = cgs
 
-        # Notifications
-        new_user["notifications_enabled"] = html.get_checkbox("notifications_enabled")
+        # Notification settings are only active if we do *not* have
+        # rule based notifications!
+        if not rulebased_notifications:
+            # Notifications
+            new_user["notifications_enabled"] = html.get_checkbox("notifications_enabled")
 
-        # Check if user can receive notifications
-        if new_user["notifications_enabled"]:
-            if not new_user["email"]:
-                raise MKUserError("email",
-                     _('You have enabled the notifications but missed to configure a '
-                       'Email address. You need to configure your mail address in order '
-                       'to be able to receive emails.'))
+            # Check if user can receive notifications
+            if new_user["notifications_enabled"]:
+                if not new_user["email"]:
+                    raise MKUserError("email",
+                         _('You have enabled the notifications but missed to configure a '
+                           'Email address. You need to configure your mail address in order '
+                           'to be able to receive emails.'))
 
-            if not new_user["contactgroups"]:
-                raise MKUserError("notifications_enabled",
-                     _('You have enabled the notifications but missed to make the '
-                       'user member of at least one contact group. You need to make '
-                       'the user member of a contact group which has hosts assigned '
-                       'in order to be able to receive emails.'))
+                if not new_user["contactgroups"]:
+                    raise MKUserError("notifications_enabled",
+                         _('You have enabled the notifications but missed to make the '
+                           'user member of at least one contact group. You need to make '
+                           'the user member of a contact group which has hosts assigned '
+                           'in order to be able to receive emails.'))
 
-            if not new_user["roles"]:
-                raise MKUserError("role_user",
-                    _("Your user has no roles. Please assign at least one role."))
+                if not new_user["roles"]:
+                    raise MKUserError("role_user",
+                        _("Your user has no roles. Please assign at least one role."))
 
-        ntp = html.var("notification_period")
-        if ntp not in timeperiods:
-            ntp = "24X7"
-        new_user["notification_period"] = ntp
+            ntp = html.var("notification_period")
+            if ntp not in timeperiods:
+                ntp = "24X7"
+            new_user["notification_period"] = ntp
 
-        for what, opts in [ ( "host", "durfs"), ("service", "wucrfs") ]:
-            new_user[what + "_notification_options"] = "".join(
-              [ opt for opt in opts if html.get_checkbox(what + "_" + opt) ])
+            for what, opts in [ ( "host", "durfs"), ("service", "wucrfs") ]:
+                new_user[what + "_notification_options"] = "".join(
+                  [ opt for opt in opts if html.get_checkbox(what + "_" + opt) ])
 
-        value = vs_notification_method.from_html_vars("notification_method")
-        vs_notification_method.validate_value(value, "notification_method")
-        new_user["notification_method"] = value
+            value = vs_notification_method.from_html_vars("notification_method")
+            vs_notification_method.validate_value(value, "notification_method")
+            new_user["notification_method"] = value
 
         # Custom user attributes
         for name, attr in userdb.get_user_attributes():
@@ -10522,59 +10608,60 @@ def mode_edit_user(phase):
                 "If you do not put the user into any contact group "
                 "then no monitoring contact will be created for the user.") % (url1, url2))
 
-    forms.header(_("Notifications"), isopen=False)
+    if not rulebased_notifications:
+        forms.header(_("Notifications"), isopen=False)
 
-    forms.section(_("Enabling"), simple=True)
-    html.checkbox("notifications_enabled", user.get("notifications_enabled", False),
-         label = _("enable notifications"))
-    html.help(_("Notifications are sent out "
-                "when the status of a host or service changes."))
+        forms.section(_("Enabling"), simple=True)
+        html.checkbox("notifications_enabled", user.get("notifications_enabled", False),
+             label = _("enable notifications"))
+        html.help(_("Notifications are sent out "
+                    "when the status of a host or service changes."))
 
-    # Notification period
-    forms.section(_("Notification time period"))
-    choices = [ ( "24X7", _("Always")) ] + \
-              [ ( id, "%s" % (tp["alias"])) for (id, tp) in timeperiods.items() ]
-    html.sorted_select("notification_period", choices, user.get("notification_period"))
-    html.help(_("Only during this time period the "
-                 "user will get notifications about host or service alerts."))
+        # Notification period
+        forms.section(_("Notification time period"))
+        choices = [ ( "24X7", _("Always")) ] + \
+                  [ ( id, "%s" % (tp["alias"])) for (id, tp) in timeperiods.items() ]
+        html.sorted_select("notification_period", choices, user.get("notification_period"))
+        html.help(_("Only during this time period the "
+                     "user will get notifications about host or service alerts."))
 
-    # Notification options
-    notification_option_names = { # defined here: _() must be executed always!
-        "host" : {
-            "d" : _("Host goes down"),
-            "u" : _("Host gets unreachble"),
-            "r" : _("Host goes up again"),
-        },
-        "service" : {
-            "w" : _("Service goes into warning state"),
-            "u" : _("Service goes into unknown state"),
-            "c" : _("Service goes into critical state"),
-            "r" : _("Service recovers to OK"),
-        },
-        "both" : {
-            "f" : _("Start or end of flapping state"),
-            "s" : _("Start or end of a scheduled downtime"),
+        # Notification options
+        notification_option_names = { # defined here: _() must be executed always!
+            "host" : {
+                "d" : _("Host goes down"),
+                "u" : _("Host gets unreachble"),
+                "r" : _("Host goes up again"),
+            },
+            "service" : {
+                "w" : _("Service goes into warning state"),
+                "u" : _("Service goes into unknown state"),
+                "c" : _("Service goes into critical state"),
+                "r" : _("Service recovers to OK"),
+            },
+            "both" : {
+                "f" : _("Start or end of flapping state"),
+                "s" : _("Start or end of a scheduled downtime"),
+            }
         }
-    }
 
-    forms.section(_("Notification Options"))
-    for title, what, opts in [ ( _("Host events"), "host", "durfs"),
-                  (_("Service events"), "service", "wucrfs") ]:
-        html.write("%s:<ul>" % title)
-        user_opts = user.get(what + "_notification_options", opts)
-        for opt in opts:
-            opt_name = notification_option_names[what].get(opt,
-                   notification_option_names["both"].get(opt))
-            html.checkbox(what + "_" + opt, opt in user_opts, label = opt_name)
-            html.write("<br>")
-        html.write("</ul>")
-    html.help(_("Here you specify which types of alerts "
-               "will be notified to this contact. Note: these settings will only be saved "
-               "and used if the user is member of a contact group."))
+        forms.section(_("Notification Options"))
+        for title, what, opts in [ ( _("Host events"), "host", "durfs"),
+                      (_("Service events"), "service", "wucrfs") ]:
+            html.write("%s:<ul>" % title)
+            user_opts = user.get(what + "_notification_options", opts)
+            for opt in opts:
+                opt_name = notification_option_names[what].get(opt,
+                       notification_option_names["both"].get(opt))
+                html.checkbox(what + "_" + opt, opt in user_opts, label = opt_name)
+                html.write("<br>")
+            html.write("</ul>")
+        html.help(_("Here you specify which types of alerts "
+                   "will be notified to this contact. Note: these settings will only be saved "
+                   "and used if the user is member of a contact group."))
 
-    forms.section(_("Notification Method"))
-    vs_notification_method.render_input("notification_method", user.get("notification_method"))
-    custom_user_attributes('notify')
+        forms.section(_("Notification Method"))
+        vs_notification_method.render_input("notification_method", user.get("notification_method"))
+        custom_user_attributes('notify')
 
     forms.header(_("Personal Settings"), isopen = False)
     select_language(user.get('language', ''))
@@ -13886,9 +13973,22 @@ def page_user_profile():
         user_profile_async_replication_dialog()
         return
 
+    rulebased_notifications = load_configuration_settings().get("enable_rulebased_notifications")
+
     html.header(_("Edit user profile"),
                 javascripts = ['wato'],
                 stylesheets = ['check_mk', 'pages', 'wato', 'status'])
+
+    # Rule based notifications: The user currently cannot simply call the according
+    # WATO module due to WATO permission issues. So we cannot show this button
+    # right now.
+
+    # if rulebased_notifications:
+    #     html.begin_context_buttons()
+    #     url = "wato.py?mode=user_notifications&user=" + config.user_id
+    #     html.context_button(_("Notifications"), url, "notifications")
+    #     html.end_context_buttons()
+
 
     if success:
         html.message(_("Successfully updated user profile."))
@@ -13925,13 +14025,15 @@ def page_user_profile():
 
     if config.may('general.edit_profile'):
         select_language(config.get_language(''))
+
         # Let the user configure how he wants to be notified
-        if config.may('general.edit_notifications') and user.get("notifications_enabled"):
+        if not rulebased_notifications \
+            and config.may('general.edit_notifications') \
+            and user.get("notifications_enabled"):
             forms.section(_("Notifications"))
             html.help(_("Here you can configure how you want to be notified about host and service problems and "
                         "other monitoring events."))
             vs_notification_method.render_input("notification_method", user.get("notification_method"))
-            # forms.input(vs_notification_method, "notification_method", user.get("notification_method"))
 
         if config.may('general.edit_user_attributes'):
             for name, attr in userdb.get_user_attributes():
@@ -15933,6 +16035,7 @@ modes = {
    "edit_site_globals"  : (["sites"], mode_edit_site_globals),
    "users"              : (["users"], mode_users),
    "edit_user"          : (["users"], mode_edit_user),
+   "user_notifications" : (["users"], mode_user_notifications),
    "user_attrs"         : (["users"], lambda phase: mode_custom_attrs(phase, "user")),
    "edit_user_attr"     : (["users"], lambda phase: mode_edit_custom_attr(phase, "user")),
    "roles"              : (["users"], mode_roles),

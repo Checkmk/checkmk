@@ -25,10 +25,9 @@
 # Boston, MA 02110-1301 USA.
 
 def inventory_printer_pages(info):
-    if len(info) > 0:
-        return [ (None, None) ]
+    return [ (None, None) ]
 
-def check_printer_pages(item, params, info):
+def check_printer_pages(_no_item, _no_params, info):
     pages = saveint(info[0][0])
     infotext = "%d Pages printed" % pages 
     perfdata = [ ( "pages", pages ) ]

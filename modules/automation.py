@@ -63,6 +63,10 @@ def do_automation(cmd, args):
                 result = automation_diag_host(args)
             elif cmd == "create-snapshot":
                 result = automation_create_snapshot(args)
+	    elif cmd == "notification-replay":
+		result = automation_notification_replay(args)
+	    elif cmd == "notification-analyse":
+		result = automation_notification_analyse(args)
             else:
                 raise MKAutomationError("Automation command '%s' is not implemented." % cmd)
 
@@ -1024,4 +1028,11 @@ def automation_create_snapshot(args):
     except Exception, e:
         raise MKAutomationError(str(e))
 
+def automation_notification_replay(args):
+    nr = args[0]
+    return notification_replay_backlog(int(nr))
+
+def automation_notification_analyse(args):
+    nr = args[0]
+    return notification_analyse_backlog(int(nr))
 

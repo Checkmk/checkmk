@@ -15,7 +15,7 @@ independent of an actual user. It is handled as follows:
 
 1. The monitoring Core (Nagios/Icinga/CMC) creates a host or service *Alert*.
 
-2. The monitoring core notifies the global contact called "checkmk-notify" 
+2. The monitoring core notifies the global contact called "check-mk-notify" 
    about the alert.
 
 3. This contact has "cmk --notify" configured as its notification command. By
@@ -44,9 +44,9 @@ The condition can be formed of:
 * a host specification like in WATO rules (using host tags, etc.)
 * a service specification using regular expressions (like in WATO rules)
 * The original state or the complete state transition (e.g. CRIT -> WARN vs. OK -> WARN)
+* the type of the check plugin, e.g. only checks of type "if" or "if64"
 
 Further conditions that we can think of are:
-* the type of the check plugin, e.g. only checks of type "if" or "if64"
 * whether the host or service is contained in a certain host/service group
 * whether it's contained in a certain contact group
 * whether it has a certain contact
@@ -56,20 +56,20 @@ If all conditions of a rule are fullfilled, it matches
 and its action is executed. The action consist of:
 
 * Who should be notified?
-/  a) all contacts of the host/service
-/  b) an explicit list of contacts
-/  c) all members of a certain contact group
+  a) all contacts of the host/service
+  b) an explicit list of contacts
+  c) all members of a certain contact group
   d) an explicit email/pager address
   e) all contacts
 
-* Which plugin should be used for notification? (email, sms, pager, etc.)
+* Which plugin should be used for the notification? (email, sms, pager, etc.)
 
 * The parameters of that plugin
 
 Note: the action is not immediately executed but added to the list of planned
-notifications. This list consists of triples of the following structure:
+notifications. This list consists of tuples of the following structure:
 
-   Contact, Plugin, Parameters
+   Contact, Plugin, Parameters, Locking
 
 Also each rule has a checkbox:
  [ ] allow users to deactivate this notification
@@ -77,16 +77,15 @@ Also each rule has a checkbox:
 
 CANCELLING RULES
 ----------------
-In order to be able to better configure exceptions there could be a second
+In order to be able to better configure exceptions there is be a second
 type of rules: cancelling rules. They have the same structure as the normal
 rules when in comes to conditions.  Also the selection of the contacts is
-the same. The plugins section is now not a single plugin, but a list of
-checkboxes where several plugins can be selected. No plugin parameters need
-to be configured here.
+the same. The plugins section of the rule is now set to a cancelling
+mode. No plugin parameters need to be configured here in that case.
 
 When a cancelling rule matches, all previously selected notifications
-to the specified users with the specified plugins are cancelled. Such a rule
-could mean, e.g.,  "Do not notifiy Hubert during the Weekend via SMS".
+to the specified users with the specified plugin are cancelled. Such a rule
+reads for example:  "Do not notifiy Hubert during the Weekend via SMS".
 
 The order of the normal and cancelling rules is honored.  Example:
 
@@ -116,26 +115,33 @@ USER-RULES
 We want to keep the current feature that a user is able to configure
 its notifications himself. Therefore each user has his/her own chain of
 notification rules. They have the same structure as the global ones except
-that the user cannot specify any contact other then himself as a target.
+that the user cannot specify any contact as a target - it is implicitely
+set to himself.
 
-The user rules are always executed after the global rules. As state above
-a notification created by a global rule can be locked against a cancelling
-rule by the user.
+The user rules are always executed after the global rules. As already mentioned
+a notification created by a global rule can be locked against cancelling by
+the user.
 
 A user can:
 - add notifications
-- cancel notifications that have their origin in global rules
+- cancel notifications that have their origin in global rules or his own
+  rules
 
-Note: in this way a user can "subscribe" to notifications of certain hosts
-and services - regardless of whether he is a contact of that object in
-the monitoring.
+A user cannot:
+- cancel notifications from global rules that are locked
+- influence notifications to other users in any way
+
+Note: This basically implements a kind subscriber model, where users can
+subscribe and unsubscribe to arbitrary notifications - event if they
+are no monitoring contact for the specific hosts/services!
 
 
 FALLBACK
 --------
 If a notification is not matched by any rule, then - as a fallback - an
 email is sent to a globally configured address - to make sure
-that no notifiation is being lost due to a misconfiguration.
+that no notifiation is being lost due to a misconfiguration. This address
+is opional but the administrator will be warned if he does not specify one.
 
 
 IMPLEMENTATION IN WATO
@@ -147,7 +153,7 @@ Within WATO the new notifcation system looks like this:
   with the current "Flexible Notifications". In the first version
   this defaults to "off".
 
-* If enabled, the notification options in the users
+* If enabled the notification options in the users
   settings of all users change. The current block of options is
   removed. Instead a new button "Notifications"
   will lead the user/admin to the user-owned chain of notification
@@ -155,8 +161,8 @@ Within WATO the new notifcation system looks like this:
   anymore. This can be done by a rule if needed.
 
 * If flexible notifications are configured already,
-  they will *not* be converted. But they are kept in the configuration
-  in case you switch the rule based system off again later.
+  they will *not* be converted. But they will be kept hidden in the
+  configuration in case you switch the rule based system off again later.
 
 * A new WATO module shows the global notification rules. The view is
   almost identical to the view of the user specific rules.

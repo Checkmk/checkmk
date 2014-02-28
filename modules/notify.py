@@ -682,7 +682,26 @@ def should_notify(context, entry):
     # Check host, if configured
     if entry.get("only_hosts"):
         hostname = context.get("HOSTNAME")
-        if hostname not in entry["only_hosts"]:
+
+        skip = True
+        regex = False
+        negate = False
+        for h in entry["only_hosts"]:
+            if h.startswith("!"): # negate
+                negate = True
+                h = h[1:]
+            elif h.startswith('~'):
+                regex = True
+                h = h[1:]
+
+            if not regex and hostname == h:
+                skip = negate
+                break
+
+            elif regex and re.match(h, hostname):
+                skip = negate
+                break
+        if skip:
             notify_log(" - Skipping: host '%s' matches none of %s" % (hostname, ", ".join(entry["only_hosts"])))
             return False
 

@@ -10235,7 +10235,8 @@ def load_notification_table():
                                   ( "only_hosts",
                                     ListOfStrings(
                                         title = _("Limit to the following hosts"),
-                                        help = _("Configure the hosts for this notification. Only exact, case sensitive matches"),
+                                        help = _("Configure the hosts for this notification. Without prefix, only exact, case sensitive matches," 
+                                                 "! for negation and ~ for regex matches " ),
                                         orientation = "horizontal",
                                         valuespec = RegExp(size = 20),
                                     ),

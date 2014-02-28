@@ -7486,6 +7486,13 @@ def vs_notification_rule(userid = None):
                   orientation = "horizontal",
               )
             ),
+            ( "match_plugin_output",
+              RegExp(
+                 title = _("Match the output of the check plugin"),
+                 help = _("This text is a regular expression that is being searched in the output "
+                          "of the check plugins that produced the alert. It is not a prefix but an infix match."),
+              ),
+            ),
             ( "match_checktype",
               CheckTypeSelection(
                   title = _("Match the following check types"),
@@ -7619,6 +7626,7 @@ def vs_notification_rule(userid = None):
 
         ],
         optional_keys = [ "match_hosttags", "match_hosts", "match_exclude_hosts", "match_services", "match_exclude_services",
+                          "match_plugin_output",
                           "match_timeperiod", "match_escalation", "match_sl", "match_host_event", "match_service_event",
                           "match_checktype", "contact_contacts", "contact_groups", "contact_emails" ],
         headers = [
@@ -7627,7 +7635,7 @@ def vs_notification_rule(userid = None):
             + contact_headers
             + [
             ( _("Conditions"),         [ "match_hosttags", "match_hosts", "match_exclude_hosts",
-                                         "match_services", "match_exclude_services",
+                                         "match_services", "match_exclude_services", "match_plugin_output",
                                          "match_checktype", "match_timeperiod",
                                          "match_escalation", "match_sl", "match_host_event", "match_service_event" ] ),
         ],
@@ -7891,7 +7899,10 @@ def mode_notifications(phase):
                 table.cell(css="buttons")
 
                 analyse_url = html.makeuri([("analyse", str(nr))])
-                html.icon_button(analyse_url, _("Anaylse ruleset with this notification"), "analyze")
+                context = entry.items()
+                context.sort()
+                tooltip = "".join("%s: %s\n" % e for e in context)
+                html.icon_button(analyse_url, _("Anaylse ruleset with this notification:\n" + tooltip), "analyze")
                 replay_url = html.makeactionuri([("_replay", str(nr))])
                 html.icon_button(replay_url, _("Replay this notification, send it again!"), "replay")
                 if html.var("analyse") and nr == int(html.var("analyse")):

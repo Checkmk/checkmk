@@ -1016,6 +1016,7 @@ def rbn_match_rule(rule, context):
         rbn_match_exclude_hosts(rule, context)    or \
         rbn_match_services(rule, context)         or \
         rbn_match_exclude_services(rule, context) or \
+        rbn_match_plugin_output(rule, context)    or \
         rbn_match_checktype(rule, context)        or \
         rbn_match_timeperiod(rule)                or \
         rbn_match_escalation(rule, context)       or \
@@ -1062,6 +1063,19 @@ def rbn_match_exclude_services(rule, context):
     if in_extraconf_servicelist(excludelist, service):
         return "The service's description '%s' matches the list of excluded services" \
           % context["SERVICEDESC"]
+
+def rbn_match_plugin_output(rule, context):
+    if "match_plugin_output" in rule:
+        r = regex(rule["match_plugin_output"])
+
+        if context["WHAT"] == "SERVICE":
+            output = context["SERVICEOUTPUT"]
+        else:
+            output = context["HOSTOUTPUT"]
+        if not r.search(output):
+            return "The expression '%s' cannot be found in the plugin output '%s'" % \
+                (rule["match_plugin_output"], output)
+
 
 def rbn_match_checktype(rule, context):
     if "match_checktype" in rule:

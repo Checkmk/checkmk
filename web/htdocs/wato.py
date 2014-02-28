@@ -7373,7 +7373,7 @@ def vs_notification_rule(userid = None):
     else:
         contact_headers = [
             ( _("Contact Selection"), [ "contact_all", "contact_all_with_email", "contact_object", 
-                                        "contact_contacts", "contact_groups", "contact_emails" ] ),
+                                        "contact_users", "contact_groups", "contact_emails" ] ),
         ]
         section_contacts = [
             # Contact selection
@@ -7396,10 +7396,10 @@ def vs_notification_rule(userid = None):
                   label = _("Notify all users that have configured an email address in their profile"),
               )
             ),
-            ( "contact_contacts",
+            ( "contact_users",
               ListOf(
-                  UserSelection(only_contacts = True),
-                  title = _("The following contacts"),
+                  UserSelection(only_contacts = False),
+                  title = _("The following users"),
                   help = _("Enter a list of user ids to be notified here. These users need to be members "
                            "of at least one contact group in order to be notified."),
                   movable = False,
@@ -7636,7 +7636,7 @@ def vs_notification_rule(userid = None):
         optional_keys = [ "match_hosttags", "match_hosts", "match_exclude_hosts", "match_services", "match_exclude_services",
                           "match_plugin_output",
                           "match_timeperiod", "match_escalation", "match_sl", "match_host_event", "match_service_event",
-                          "match_checktype", "contact_contacts", "contact_groups", "contact_emails" ],
+                          "match_checktype", "contact_users", "contact_groups", "contact_emails" ],
         headers = [
             ( _("General Properties"), [ "description", "disabled", "allow_disable" ] ),
             ( _("Notification Method"), [ "notify_plugin", "notify_method" ] ),]
@@ -7750,8 +7750,8 @@ def render_notification_rules(rules, userid="", show_title=False, show_buttons=T
                 infos.append(_("all users"))
             if rule.get("contact_all_with_email"):
                 infos.append(_("all users with and email address"))
-            if rule.get("contact_contacts"):
-                infos.append(_("contacts: ") + (", ".join(rule["contact_contacts"])))
+            if rule.get("contact_users"):
+                infos.append(_("users: ") + (", ".join(rule["contact_users"])))
             if rule.get("contact_groups"):
                 infos.append(_("contact groups: ") + (", ".join(rule["contact_groups"])))
             if rule.get("contact_emails"):
@@ -8101,7 +8101,7 @@ def mode_notification_rule(phase, profilemode):
 
         rule = vs.from_html_vars("rule")
         if userid:
-            rule["contact_contacts"] = [ userid ] # Force selection of our user
+            rule["contact_users"] = [ userid ] # Force selection of our user
 
         vs.validate_value(rule, "rule")
 
@@ -10354,7 +10354,7 @@ def mode_users(phase):
         html.icon_button(delete_url, _("Delete"), "delete")
 
         notifications_url = make_link([("mode", "user_notifications"), ("user", id)])
-        if load_configuration_settings().get("enable_rulebased_notifications") and user.get("contactgroups"):
+        if load_configuration_settings().get("enable_rulebased_notifications"):
             html.icon_button(notifications_url, _("Custom notification table of this user"), "notifications")
 
         # ID

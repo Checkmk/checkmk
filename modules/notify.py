@@ -911,7 +911,6 @@ def user_notification_rules():
     user_rules = []
     contactnames = contacts.keys()
     contactnames.sort()
-    notify_log(repr(contacts))
     for contactname in contactnames:
         contact = contacts[contactname]
         for rule in contact.get("notification_rules", []):
@@ -919,7 +918,7 @@ def user_notification_rules():
             rule["contact"] = contactname
             # We assume that the "contact_..." entries in the
             # rule are allowed and only contain one entry of the
-            # type "contact_contacts" : [ contactname ]. This
+            # type "contact_users" : [ contactname ]. This
             # is handled by WATO. Contact specific rules are a
             # WATO-only feature anyway...
             user_rules.append(rule)
@@ -1127,8 +1126,8 @@ def rbn_rule_contacts(rule, context):
         contacts.update(rbn_all_contacts())
     if rule.get("contact_all_with_email"):
         contacts.update(rbn_all_contacts(with_email=True))
-    if "contact_contacts" in rule:
-        contacts.update(rule["contact_contacts"])
+    if "contact_users" in rule:
+        contacts.update(rule["contact_users"])
     if "contact_groups" in rule:
         contacts.update(rbn_groups_contacts(rule["contact_groups"]))
     if "contact_emails" in rule:

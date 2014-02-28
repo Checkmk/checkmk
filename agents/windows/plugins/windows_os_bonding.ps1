@@ -1,12 +1,10 @@
-﻿# Changelog: 	v0.02	Rearranged info
-#				v0.03	Included try block for older operating systems
-#				v0.04	Added speed info
-#
+﻿# you need this agent plugin if you want to monitor bonding interfaces
+# on windows configured on operating system level
 
 try {
 	$teams = Get-NetLbfoTeam
 } catch {}
-if ($teams){
+if ($teams) {
 	Write-Host "<<<windows_os_bonding:sep(58)>>>"
 	foreach ($team in $teams){
 		Write-Host Team Name: $team.Name
@@ -25,4 +23,3 @@ if ($teams){
 		}
 	}
 }
-

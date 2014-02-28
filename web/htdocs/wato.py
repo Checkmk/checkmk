@@ -7635,12 +7635,16 @@ def vs_notification_rule(userid = None):
         form_narrow = True,
     )
 
-def render_notification_rules(rules, userid="", analyse=False):
+def render_notification_rules(rules, userid="", show_buttons=True, analyse=False, start_nr=0):
     if not rules:
         html.message(_("You have not created any rules yet."))
 
     if rules:
-        table.begin(title = _("Notification rules"), limit = None)
+        if userid:
+            title = _("Notification rules of user %s") % userid
+        else:
+            title = _("Global notification rules")
+        table.begin(title = title, limit = None)
 
         if analyse:
             analyse_rules, analyse_plugins = analyse
@@ -7652,7 +7656,7 @@ def render_notification_rules(rules, userid="", analyse=False):
             # Analyse
             if analyse:
                 table.cell(css="buttons")
-                what, anarule, reason = analyse_rules[nr]
+                what, anarule, reason = analyse_rules[nr + start_nr]
                 if what == "match":
                     html.icon(_("This rule matches"), "rulematch")
                 elif what == "miss":
@@ -7662,45 +7666,54 @@ def render_notification_rules(rules, userid="", analyse=False):
                 listmode = "user_notifications"
             else:
                 listmode = "notifications"
-            analyse = html.var("analyse", "")
-            delete_url = make_action_link([("mode", listmode), ("user", userid), ("_delete", nr)])
-            top_url    = make_action_link([("mode", listmode), ("analyse", analyse), ("user", userid), ("_move", nr), ("_where", 0)])
-            bottom_url = make_action_link([("mode", listmode), ("analyse", analyse), ("user", userid), ("_move", nr), ("_where", len(rules)-1)])
-            up_url     = make_action_link([("mode", listmode), ("analyse", analyse), ("user", userid), ("_move", nr), ("_where", nr-1)])
-            down_url   = make_action_link([("mode", listmode), ("analyse", analyse), ("user", userid), ("_move", nr), ("_where", nr+1)])
-            edit_url   = make_link([("mode", "notification_rule"), ("edit", nr), ("user", userid)])
-            clone_url  = make_link([("mode", "notification_rule"), ("clone", nr), ("user", userid)])
 
-            table.cell(_("Actions"), css="buttons")
-            html.icon_button(edit_url, _("Edit this notification rule"), "edit")
-            html.icon_button(clone_url, _("Create a copy of this notification rule"), "clone")
-            html.icon_button(delete_url, _("Delete this notification rule"), "delete")
-            if not rule is rules[0]:
-                html.icon_button(top_url, _("Move this notification rule to the top"), "top")
-                html.icon_button(up_url, _("Move this notification rule one position up"), "up")
-            else:
-                html.empty_icon_button()
-                html.empty_icon_button()
+            if show_buttons:
+                analyse = html.var("analyse", "")
+                delete_url = make_action_link([("mode", listmode), ("user", userid), ("_delete", nr)])
+                top_url    = make_action_link([("mode", listmode), ("analyse", analyse), ("user", userid), ("_move", nr), ("_where", 0)])
+                bottom_url = make_action_link([("mode", listmode), ("analyse", analyse), ("user", userid), ("_move", nr), ("_where", len(rules)-1)])
+                up_url     = make_action_link([("mode", listmode), ("analyse", analyse), ("user", userid), ("_move", nr), ("_where", nr-1)])
+                down_url   = make_action_link([("mode", listmode), ("analyse", analyse), ("user", userid), ("_move", nr), ("_where", nr+1)])
+                edit_url   = make_link([("mode", "notification_rule"), ("edit", nr), ("user", userid)])
+                clone_url  = make_link([("mode", "notification_rule"), ("clone", nr), ("user", userid)])
 
-            if not rule is rules[-1]:
-                html.icon_button(down_url, _("Move this notification rule one position down"), "down")
-                html.icon_button(bottom_url, _("Move this notification rule to the bottom"), "bottom")
+                table.cell(_("Actions"), css="buttons")
+                html.icon_button(edit_url, _("Edit this notification rule"), "edit")
+                html.icon_button(clone_url, _("Create a copy of this notification rule"), "clone")
+                html.icon_button(delete_url, _("Delete this notification rule"), "delete")
+                if not rule is rules[0]:
+                    html.icon_button(top_url, _("Move this notification rule to the top"), "top")
+                    html.icon_button(up_url, _("Move this notification rule one position up"), "up")
+                else:
+                    html.empty_icon_button()
+                    html.empty_icon_button()
+
+                if not rule is rules[-1]:
+                    html.icon_button(down_url, _("Move this notification rule one position down"), "down")
+                    html.icon_button(bottom_url, _("Move this notification rule to the bottom"), "bottom")
+                else:
+                    html.empty_icon_button()
+                    html.empty_icon_button()
             else:
-                html.empty_icon_button()
-                html.empty_icon_button()
+                table.cell("", css="buttons")
+                for x in range(7):
+                    html.empty_icon_button()
 
             table.cell("", css="narrow")
             if rule.get("disabled"):
                 html.icon(_("This rule is currently disabled and will not be applied"), "disabled")
-
-            table.cell(_("Description"), rule["description"])
+            else:
+                html.empty_icon_button()
 
             table.cell(_("Type"), css="narrow")
             if rule["notify_method"] == None:
                 html.icon(_("Cancel notifications for this plugin type"), "notify_cancel")
             else:
                 html.icon(_("Create a notification"), "notify_create")
-            table.cell(_("Plugin"), rule["notify_plugin"])
+            table.cell(_("Plugin"), rule["notify_plugin"], css="narrow")
+
+            table.cell(_("Description"), rule["description"])
+
             
             table.cell(_("Contacts"))
             infos = []
@@ -7764,18 +7777,41 @@ def vs_notification():
     )
 
 def mode_notifications(phase):
+    options = config.load_user_file("notification_display_options", {})
+    show_user_rules = options.get("show_user_rules", False)
+    show_backlog = options.get("show_backlog", False)
+
     if phase == "title":
         return _("Notification configuration")
 
     elif phase == "buttons":
         global_buttons()
         html.context_button(_("New Rule"), make_link([("mode", "notification_rule")]), "new")
+        if show_user_rules:
+            html.context_button(_("Hide user rules"), html.makeactionuri([("_show_user", "")]), "users")
+        else:
+            html.context_button(_("Show user rules"), html.makeactionuri([("_show_user", "1")]), "users")
+
+        if show_backlog:
+            html.context_button(_("Hide Analysis"), html.makeactionuri([("_show_backlog", "")]), "analyze")
+        else:
+            html.context_button(_("Analyse"), html.makeactionuri([("_show_backlog", "1")]), "analyze")
         return
 
     rules = load_notification_rules()
 
     if phase == "action":
-        if html.has_var("_replay"):
+        if html.has_var("_show_user"):
+            if html.check_transaction():
+                options["show_user_rules"] = not not html.var("_show_user")
+                config.save_user_file("notification_display_options", options)
+
+        elif html.has_var("_show_backlog"):
+            if html.check_transaction():
+                options["show_backlog"] = not not html.var("_show_backlog")
+                config.save_user_file("notification_display_options", options)
+
+        elif html.has_var("_replay"):
             if html.check_transaction():
                 nr = int(html.var("_replay"))
                 result = check_mk_local_automation("notification-replay", [str(nr)], None)
@@ -7795,7 +7831,7 @@ def mode_notifications(phase):
     ###        return None, "Test event generated and sent to Event Console.<br><pre>%s</pre>" % rfc
 
 
-        if html.has_var("_delete"):
+        elif html.has_var("_delete"):
             nr = int(html.var("_delete"))
             rule = rules[nr]
             c = wato_confirm(_("Confirm notification rule deletion"),
@@ -7810,8 +7846,8 @@ def mode_notifications(phase):
             else:
                 return
 
-        if html.check_transaction():
-            if html.has_var("_move"):
+        elif html.has_var("_move"):
+            if html.check_transaction():
                 from_pos = int(html.var("_move"))
                 to_pos = int(html.var("_where"))
                 rule = rules[from_pos]
@@ -7841,13 +7877,59 @@ def mode_notifications(phase):
             "in case of a problem in your notification rules. Please configure "
             "one <a href=\"%s\">here</a>.") % url)
 
+    # Show recent notifications. We can use them for rule analysis
+    if show_backlog:
+        try:
+            backlog = eval(file(defaults.var_dir + "/notify/backlog.mk").read())
+        except:
+            backlog = []
+
+        if backlog:
+            table.begin(table_id = "backlog", title = _("Recent notifications (for analysis)"))
+            for nr, entry in enumerate(backlog):
+                table.row()
+                table.cell(css="buttons")
+
+                analyse_url = html.makeuri([("analyse", str(nr))])
+                html.icon_button(analyse_url, _("Anaylse ruleset with this notification"), "analyze")
+                replay_url = html.makeactionuri([("_replay", str(nr))])
+                html.icon_button(replay_url, _("Replay this notification, send it again!"), "replay")
+                if html.var("analyse") and nr == int(html.var("analyse")):
+                    html.icon(_("You are analysing this notification"), "rulematch")
+
+                table.cell(_("Nr."), nr+1, css="number")
+                date = entry.get("SHORTDATETIME", "")
+                if not date:
+                    date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(entry["MICROTIME"]) / 1000000.0))
+                table.cell(_("Date"), date)
+                table.cell(_("Host"), entry.get("HOSTNAME", ""))
+                table.cell(_("Service"), entry.get("SERVICEDESC", ""))
+                output = entry.get("SERVICEOUTPUT", entry.get("HOSTOUTPUT"))
+                table.cell(_("Plugin output"), output)
+            table.end()
+
+    # Do analysis
     if html.has_var("analyse"):
         nr = int(html.var("analyse"))
         analyse = check_mk_local_automation("notification-analyse", [str(nr)], None)
     else:
         analyse = False
 
-    render_notification_rules(rules, analyse=analyse)
+    start_nr = 0
+    render_notification_rules(rules, analyse=analyse, start_nr = start_nr)
+    start_nr += len(rules)
+
+    if options.get("show_user_rules"):
+        users = userdb.load_users()
+        userids = users.keys()
+        userids.sort() # Create same order as modules/notification.py
+        for userid in userids:
+            user = users[userid]
+            rules = user.get("notification_rules", [])
+            if rules:
+                render_notification_rules(rules, userid, show_buttons = False, analyse=analyse, start_nr = start_nr)
+                start_nr += len(rules)
+
     if analyse:
         table.begin(table_id = "plugins", title = _("Resulting notifications"))
         for contact, plugin, parameters in analyse[1]:
@@ -7871,39 +7953,6 @@ def mode_notifications(phase):
     ### html.write("<br>")
 
 
-    # Show recent notifications. We can use them for rule analysis
-    try:
-        backlog = eval(file(defaults.var_dir + "/notify/backlog.mk").read())
-    except:
-        backlog = []
-
-    if backlog:
-        html.write("<br>")
-        html.begin_foldable_container("notification_backlog", None, True, 
-                           title = _("Recent notifications (for analysis)"), indent=False)
-        table.begin(table_id = "backlog")
-        for nr, entry in enumerate(backlog):
-            table.row()
-            table.cell(css="buttons")
-
-            analyse_url = html.makeuri([("analyse", str(nr))])
-            html.icon_button(analyse_url, _("Anaylse ruleset with this notification"), "analyze")
-            replay_url = html.makeactionuri([("_replay", str(nr))])
-            html.icon_button(replay_url, _("Replay this notification, send it again!"), "replay")
-            if html.var("analyse") and nr == int(html.var("analyse")):
-                html.icon(_("You are analysing this notification"), "rulematch")
-
-            table.cell(_("Nr."), nr+1, css="number")
-            date = entry.get("SHORTDATETIME", "")
-            if not date:
-                date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(entry["MICROTIME"]) / 1000000.0))
-            table.cell(_("Date"), date)
-            table.cell(_("Host"), entry.get("HOSTNAME", ""))
-            table.cell(_("Service"), entry.get("SERVICEDESC", ""))
-            output = entry.get("SERVICEOUTPUT", entry.get("HOSTOUTPUT"))
-            table.cell(_("Plugin output"), output)
-        table.end()
-        html.end_foldable_container()
 
 
 

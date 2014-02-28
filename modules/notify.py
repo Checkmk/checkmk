@@ -905,10 +905,15 @@ def add_rulebased_macros(context):
     context["CONTACTNAME"] = "check-mk-notify"
 
 
-# Create a table of all user specific notification rules
+# Create a table of all user specific notification rules. Important:
+# create deterministic order, so that rule analyses can depend on
+# rule indices
 def user_notification_rules():
     user_rules = []
-    for contactname, contact in contacts.iteritems():
+    contactnames = contacts.keys()
+    contactnames.sort()
+    for contactname in contactnames:
+        contact = contacts[contactname]
         for rule in contact.get("notification_rules", []):
             # Save the owner of the rule for later debugging
             rule["contact"] = contactname

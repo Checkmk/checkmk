@@ -7912,7 +7912,35 @@ def mode_notifications(phase):
                 date = entry.get("SHORTDATETIME", "")
                 if not date:
                     date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(entry["MICROTIME"]) / 1000000.0))
-                table.cell(_("Date"), date)
+                table.cell(_("Date/Time"), date, css="nobr")
+                nottype = entry.get("NOTIFICATIONTYPE")
+                table.cell(_("Type"), nottype)
+
+
+                if nottype in [ "PROBLEM", "RECOVERY" ]:
+                    if entry.get("SERVICESTATE"):
+                        statename = _(entry["SERVICESTATE"][:4])
+                        state = entry["SERVICESTATEID"]
+                        css = "state svcstate state%s" % state
+                    else:
+                        statename = _(entry.get("HOSTSTATE")[:4])
+                        state = entry["HOSTSTATEID"]
+                        css = "state hstate state%s" % state
+                    table.cell(_("State"), statename, css=css)
+                elif nottype.startswith("DOWNTIME"):
+                    table.cell(_("State"))
+                    html.icon(_("Downtime"), "downtime")
+                elif nottype.startswith("ACK"):
+                    table.cell(_("State"))
+                    html.icon(_("Acknowledgement"), "ack")
+                elif nottype.startswith("FLAP"):
+                    table.cell(_("State"))
+                    html.icon(_("Flapping"), "flapping")
+                else:
+                    table.cell(_("State"), "")
+
+
+
                 table.cell(_("Host"), entry.get("HOSTNAME", ""))
                 table.cell(_("Service"), entry.get("SERVICEDESC", ""))
                 output = entry.get("SERVICEOUTPUT", entry.get("HOSTOUTPUT"))

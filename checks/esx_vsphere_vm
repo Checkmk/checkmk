@@ -117,6 +117,49 @@ check_info['esx_vsphere_vm.name'] = {
   "service_description" : "ESX Name",
 }
 
+
+#.
+#   .--GuestTools----------------------------------------------------------.
+#   |            ____                 _  _____           _                 |
+#   |           / ___|_   _  ___  ___| ||_   _|__   ___ | |___             |
+#   |          | |  _| | | |/ _ \/ __| __|| |/ _ \ / _ \| / __|            |
+#   |          | |_| | |_| |  __/\__ \ |_ | | (_) | (_) | \__ \            |
+#   |           \____|\__,_|\___||___/\__||_|\___/ \___/|_|___/            |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_esx_vsphere_vm_guest_tools(info):
+    data = esx_vsphere_vm_convert(info)
+    if 'guest.toolsVersionStatus' in data:
+        return [(None, None)]
+
+def check_esx_vsphere_vm_guest_tools(_no_item, params, info):
+    data = esx_vsphere_vm_convert(info)
+
+    vm_status = data['guest.toolsVersionStatus'][0]
+
+    guest_tools_map = {
+        "guestToolsCurrent":      (0, "VMware Tools is installed, and the version is current"),
+        "guestToolsNeedUpgrade":  (1, "VMware Tools is installed, but the version is not current"),
+        "guestToolsNotInstalled": (2, "VMware Tools has never been installed"),
+        "guestToolsUnmanaged":    (1, "VMware Tools is installed, but it is not managed by VMWare")
+    }
+    state, info = guest_tools_map.get(vm_status, (3, "Unknown status for VMware Tools"))
+
+    if params:
+        state = params.get(vm_status, state)
+
+    return state, info
+
+check_info['esx_vsphere_vm.guestTools'] = {
+  "inventory_function"  : inventory_esx_vsphere_vm_guest_tools,
+  "check_function"      : check_esx_vsphere_vm_guest_tools,
+  "service_description" : "ESX Guest Tools",
+  "group"               : "vm_guest_tools"
+}
+
 #.
 #   .--Heartbeat-----------------------------------------------------------.
 #   |           _   _                 _   _                _               |

@@ -58,7 +58,7 @@ def parse_windows_os_bonding(info):
             bonds[bond]["mode"] = line[1]
         elif line[0] == "Status":
             bonds[bond]["status"] = line[1].lower()
-        elif line[0] == "Slave Interface":
+        elif line[0] == "Slave Name":
             slave = line[1]
             bonds[bond]["interfaces"][slave] = {}
         elif line[0] == "Slave Status":

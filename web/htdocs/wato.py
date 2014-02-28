@@ -177,10 +177,12 @@ def page_handler():
     if not config.wato_enabled:
         raise MKGeneralException(_("WATO is disabled. Please set <tt>wato_enabled = True</tt>"
                                    " in your <tt>multisite.mk</tt> if you want to use WATO."))
-    if not config.may("wato.use"):
+    current_mode = html.var("mode") or "main"
+    modeperms, modefunc = modes.get(current_mode, ([], None))
+
+    if modeperms != None and not config.may("wato.use"):
         raise MKAuthException(_("You are not allowed to use WATO."))
 
-    current_mode = html.var("mode") or "main"
 
     # If we do an action, we aquire an exclusive lock on the complete
     # WATO.
@@ -199,7 +201,6 @@ def page_handler():
         else:
             raise
 
-    modeperms, modefunc = modes.get(current_mode, ([], None))
     if modefunc == None:
         html.header(_("Sorry"), stylesheets=wato_styles)
         html.begin_context_buttons()
@@ -210,7 +211,7 @@ def page_handler():
         return
 
     # Check general permission for this mode
-    if not config.may("wato.seeall"):
+    if modeperms != None and not config.may("wato.seeall"):
         for pname in modeperms:
             config.need_permission("wato." + pname)
 
@@ -7643,7 +7644,7 @@ def vs_notification_rule(userid = None):
         form_narrow = True,
     )
 
-def render_notification_rules(rules, userid="", show_buttons=True, analyse=False, start_nr=0):
+def render_notification_rules(rules, userid="", show_buttons=True, analyse=False, start_nr=0, profilemode=False):
     if not rules:
         html.message(_("You have not created any rules yet."))
 
@@ -7670,7 +7671,9 @@ def render_notification_rules(rules, userid="", show_buttons=True, analyse=False
                 elif what == "miss":
                     html.icon(_("This rule does not match: %s") % reason, "rulenmatch")
 
-            if userid:
+            if profilemode:
+                listmode = "user_notifications_p"
+            elif userid:
                 listmode = "user_notifications"
             else:
                 listmode = "notifications"
@@ -7682,8 +7685,9 @@ def render_notification_rules(rules, userid="", show_buttons=True, analyse=False
                 bottom_url = make_action_link([("mode", listmode), ("analyse", analyse), ("user", userid), ("_move", nr), ("_where", len(rules)-1)])
                 up_url     = make_action_link([("mode", listmode), ("analyse", analyse), ("user", userid), ("_move", nr), ("_where", nr-1)])
                 down_url   = make_action_link([("mode", listmode), ("analyse", analyse), ("user", userid), ("_move", nr), ("_where", nr+1)])
-                edit_url   = make_link([("mode", "notification_rule"), ("edit", nr), ("user", userid)])
-                clone_url  = make_link([("mode", "notification_rule"), ("clone", nr), ("user", userid)])
+                suffix = profilemode and "_p" or ""
+                edit_url   = make_link([("mode", "notification_rule" + suffix), ("edit", nr), ("user", userid)])
+                clone_url  = make_link([("mode", "notification_rule" + suffix), ("clone", nr), ("user", userid)])
 
                 table.cell(_("Actions"), css="buttons")
                 html.icon_button(edit_url, _("Edit this notification rule"), "edit")
@@ -7966,21 +7970,29 @@ def mode_notifications(phase):
 
 
 # Similar like mode_notifications, but just for the user specific notification table
-def mode_user_notifications(phase):
-    userid = html.var("user")
+def mode_user_notifications(phase, profilemode):
+    if profilemode:
+        userid = config.user_id
+        title = _("Your personal notification rules")
+        config.need_permission("general.edit_notifications")
+    else:
+        userid = html.var("user")
+        title = _("Custom notification table for user ") + userid
 
     if phase == "title":
-        return _("Custom notification table for user ") + userid
+        return title
 
     users = userdb.load_users(lock = phase == 'action')
     user = users[userid]
-    is_contact = not not user.get("contactgroups")
     rules = user.setdefault("notification_rules", [])
 
     if phase == "buttons":
-        html.context_button(_("All Users"), make_link([("mode", "users")]), "back")
-        html.context_button(_("User Properties"), make_link([("mode", "edit_user"), ("edit", userid)]), "edit")
-        if is_contact:
+        if profilemode:
+            html.context_button(_("Profile"), "user_profile.py", "back")
+            html.context_button(_("New Rule"), make_link([("mode", "notification_rule_p")]), "new")
+        else:
+            html.context_button(_("All Users"), make_link([("mode", "users")]), "back")
+            html.context_button(_("User Properties"), make_link([("mode", "edit_user"), ("edit", userid)]), "edit")
             html.context_button(_("New Rule"), make_link([("mode", "notification_rule"), ("user", userid)]), "new")
         return
 
@@ -8013,19 +8025,20 @@ def mode_user_notifications(phase):
                        (from_pos, userid))
         return
 
-    if not is_contact:
-        html.show_warning(_("This user is not member of any contact group and thus cannot have notification rules!"))
-        return
-
     rules = user.get("notification_rules", [])
-    render_notification_rules(rules, userid)
+    render_notification_rules(rules, userid, profilemode = profilemode)
 
 
-def mode_notification_rule(phase):
+def mode_notification_rule(phase, profilemode):
     edit_nr = int(html.var("edit", "-1"))
     clone_nr = int(html.var("clone", "-1"))
-    userid = html.var("user", "")
-    if userid:
+    if profilemode:
+        userid = config.user_id
+        config.need_permission("general.edit_notifications")
+    else:
+        userid = html.var("user", "")
+
+    if userid and not profilemode:
         suffix = _(" for user ") + html.attrencode(userid)
     else:
         suffix = ""
@@ -8034,13 +8047,16 @@ def mode_notification_rule(phase):
 
     if phase == "title":
         if new:
-            return _("Create new rule") + suffix
+            return _("Create new notification rule") + suffix
         else:
-            return _("Edit rule %d" % edit_nr) + suffix
+            return _("Edit notification rule %d" % edit_nr) + suffix
 
     elif phase == "buttons":
-        home_button()
-        html.context_button(_("All Rules"), make_link([("mode", "notifications"), ("userid", userid)]), "back")
+        if profilemode:
+            html.context_button(_("All Rules"), make_link([("mode", "user_notifications_p")]), "back")
+        else:
+            home_button()
+            html.context_button(_("All Rules"), make_link([("mode", "notifications"), ("userid", userid)]), "back")
         return
 
     if userid:
@@ -8088,7 +8104,9 @@ def mode_notification_rule(phase):
             log_pending(SYNC, None, "new-notification-rule", _("Created new notification rule") + suffix)
         else:
             log_pending(SYNC, None, "edit-notification-rule", _("Changed notification rule %d") % edit_nr + suffix)
-        if userid:
+        if profilemode:
+            return "user_notifications_p"
+        elif userid:
             return "user_notifications"
         else:
             return "notifications"
@@ -14168,7 +14186,6 @@ def page_user_profile():
         user_profile_async_replication_dialog()
         return
 
-    rulebased_notifications = load_configuration_settings().get("enable_rulebased_notifications")
 
     html.header(_("Edit user profile"),
                 javascripts = ['wato'],
@@ -14178,11 +14195,12 @@ def page_user_profile():
     # WATO module due to WATO permission issues. So we cannot show this button
     # right now.
 
-    # if rulebased_notifications:
-    #     html.begin_context_buttons()
-    #     url = "wato.py?mode=user_notifications&user=" + config.user_id
-    #     html.context_button(_("Notifications"), url, "notifications")
-    #     html.end_context_buttons()
+    rulebased_notifications = load_configuration_settings().get("enable_rulebased_notifications")
+    if rulebased_notifications and config.may('general.edit_notifications'):
+        html.begin_context_buttons()
+        url = "wato.py?mode=user_notifications_p"
+        html.context_button(_("Notifications"), url, "notifications")
+        html.end_context_buttons()
 
 
     if success:
@@ -16182,6 +16200,10 @@ def is_a_checkbox(vs):
 #   | Prepare plugin-datastructures and load WATO plugins                  |
 #   '----------------------------------------------------------------------'
 
+# permissions = None -> every user can use this mode, permissions
+# are checked by the mode itself. Otherwise the user needs at
+# least wato.use and - if he makes actions - wato.edit. Plus wato.*
+# for each permission in the list.
 modes = {
    # ident,               permissions, handler function
    "main"               : ([], mode_main),
@@ -16222,7 +16244,10 @@ modes = {
    "edit_service_group" : (["groups"], lambda phase: mode_edit_group(phase, "service")),
    "edit_contact_group" : (["users"], lambda phase: mode_edit_group(phase, "contact")),
    "notifications"      : (["notifications"], mode_notifications),
-   "notification_rule"  : (["notifications"], mode_notification_rule),
+   "notification_rule"  : (["notifications"], lambda phase: mode_notification_rule(phase, False)),
+   "user_notifications" : (["users"], lambda phase: mode_user_notifications(phase, False)),
+   "notification_rule_p": (None, lambda phase: mode_notification_rule(phase, True)), # for personal settings
+   "user_notifications_p":(None, lambda phase: mode_user_notifications(phase, True)), # for personal settings
    "timeperiods"        : (["timeperiods"], mode_timeperiods),
    "edit_timeperiod"    : (["timeperiods"], mode_edit_timeperiod),
    "sites"              : (["sites"], mode_sites),
@@ -16230,7 +16255,6 @@ modes = {
    "edit_site_globals"  : (["sites"], mode_edit_site_globals),
    "users"              : (["users"], mode_users),
    "edit_user"          : (["users"], mode_edit_user),
-   "user_notifications" : (["users"], mode_user_notifications),
    "user_attrs"         : (["users"], lambda phase: mode_custom_attrs(phase, "user")),
    "edit_user_attr"     : (["users"], lambda phase: mode_edit_custom_attr(phase, "user")),
    "roles"              : (["users"], mode_roles),

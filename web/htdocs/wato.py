@@ -7824,21 +7824,6 @@ def mode_notifications(phase):
                 nr = int(html.var("_replay"))
                 result = check_mk_local_automation("notification-replay", [str(nr)], None)
 
-    ###    # Validation of input for rule simulation (no further action here)
-    ###    if html.var("simulate") or html.var("_generate"):
-    ###        event = vs_mkeventd_event.from_html_vars("event")
-    ###        vs_mkeventd_event.validate_value(event, "event")
-    ###        config.save_user_file("simulated_event", event)
-
-    ###    if html.has_var("_generate") and html.check_transaction():
-    ###        if not event.get("application"):
-    ###            raise MKUserError("event_p_application", _("Please specify an application name"))
-    ###        if not event.get("host"):
-    ###            raise MKUserError("event_p_host", _("Please specify a host name"))
-    ###        rfc = mkeventd.send_event(event)
-    ###        return None, "Test event generated and sent to Event Console.<br><pre>%s</pre>" % rfc
-
-
         elif html.has_var("_delete"):
             nr = int(html.var("_delete"))
             rule = rules[nr]
@@ -7978,21 +7963,6 @@ def mode_notifications(phase):
             table.cell(_("Plugin parameters"), ", ".join(parameters))
         table.end()
 
-    ### # Show form for simulating a notification
-    ### Dies ist aktuell deaktiviert, weil für eine Notifikation sehr viele
-    ### Datenfelder gefüllt werden müssen.
-    ### html.write("<br>")
-    ### event = config.load_user_file("simulated_notification", {})
-    ### html.begin_form("simulator")
-    ### vs_notification().render_input("event", event)
-    ### forms.end()
-    ### html.hidden_fields()
-    ### html.button("simulate", _("Try out"))
-    ### html.end_form()
-    ### html.write("<br>")
-
-
-
 
 
 # Similar like mode_notifications, but just for the user specific notification table
@@ -8005,6 +7975,8 @@ def mode_user_notifications(phase):
     users = userdb.load_users(lock = phase == 'action')
     user = users[userid]
     is_contact = not not user.get("contactgroups")
+    rules = user.setdefault("notification_rules", [])
+
     if phase == "buttons":
         html.context_button(_("All Users"), make_link([("mode", "users")]), "back")
         html.context_button(_("User Properties"), make_link([("mode", "edit_user"), ("edit", userid)]), "edit")
@@ -8013,6 +7985,32 @@ def mode_user_notifications(phase):
         return
 
     elif phase == "action":
+        if html.has_var("_delete"):
+            nr = int(html.var("_delete"))
+            rule = rules[nr]
+            c = wato_confirm(_("Confirm notification rule deletion"),
+                             _("Do you really want to delete the notification rule <b>%d</b> <i>%s</i>?" %
+                               (nr, rule.get("description",""))))
+            if c:
+                log_pending(SYNC, None, "notification-delete-user-rule", _("Deleted notification rule %d or user %s") % 
+                            (nr, userid))
+                del rules[nr]
+                userdb.save_users(users)
+            elif c == False:
+                return ""
+            else:
+                return
+
+        elif html.has_var("_move"):
+            if html.check_transaction():
+                from_pos = int(html.var("_move"))
+                to_pos = int(html.var("_where"))
+                rule = rules[from_pos]
+                del rules[from_pos] # make to_pos now match!
+                rules[to_pos:to_pos] = [rule]
+                userdb.save_users(users)
+                log_pending(SYNC, None, "notification-move-user-rule", _("Changed position of notification rule %d of user %s") %
+                       (from_pos, userid))
         return
 
     if not is_contact:

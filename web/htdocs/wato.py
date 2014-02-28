@@ -7372,7 +7372,8 @@ def vs_notification_rule(userid = None):
         section_override = []
     else:
         contact_headers = [
-            ( _("Contact Selection"), [ "contact_all", "contact_object", "contact_contacts", "contact_groups", "contact_emails" ] ),
+            ( _("Contact Selection"), [ "contact_all", "contact_all_with_email", "contact_object", 
+                                        "contact_contacts", "contact_groups", "contact_emails" ] ),
         ]
         section_contacts = [
             # Contact selection
@@ -7385,8 +7386,14 @@ def vs_notification_rule(userid = None):
             ),
             ( "contact_all",
               Checkbox(
-                  title = _("All contacts"),
-                  label = _("Notify all users that are member of at least one contact group."),
+                  title = _("All users"),
+                  label = _("Notify all users"),
+              )
+            ),
+            ( "contact_all_with_email",
+              Checkbox(
+                  title = _("All users with an email address"),
+                  label = _("Notify all users that have configured an email address in their profile"),
               )
             ),
             ( "contact_contacts",
@@ -7644,13 +7651,22 @@ def vs_notification_rule(userid = None):
         form_narrow = True,
     )
 
-def render_notification_rules(rules, userid="", show_buttons=True, analyse=False, start_nr=0, profilemode=False):
+def render_notification_rules(rules, userid="", show_title=False, show_buttons=True, analyse=False, start_nr=0, profilemode=False):
     if not rules:
         html.message(_("You have not created any rules yet."))
 
     if rules:
-        if userid:
-            title = _("Notification rules of user %s") % userid
+        if not show_title:
+            title = ""
+        elif profilemode:
+            title = _("Notification rules")
+        elif userid:
+            url = html.makeuri([("mode", "user_notifications"), ("user", userid)])
+            html.plug()
+            html.icon_button(url, _("Edit this user's notifications"), "edit")
+            code = html.drain()
+            html.unplug()
+            title = code + _("Notification rules of user %s") % userid
         else:
             title = _("Global notification rules")
         table.begin(title = title, limit = None)
@@ -7726,13 +7742,14 @@ def render_notification_rules(rules, userid="", show_buttons=True, analyse=False
 
             table.cell(_("Description"), rule["description"])
 
-            
             table.cell(_("Contacts"))
             infos = []
             if rule.get("contact_object"):
                 infos.append(_("all contacts of the notified object"))
             if rule.get("contact_all"):
-                infos.append(_("all contacts"))
+                infos.append(_("all users"))
+            if rule.get("contact_all_with_email"):
+                infos.append(_("all users with and email address"))
             if rule.get("contact_contacts"):
                 infos.append(_("contacts: ") + (", ".join(rule["contact_contacts"])))
             if rule.get("contact_groups"):
@@ -7944,7 +7961,7 @@ def mode_notifications(phase):
         analyse = False
 
     start_nr = 0
-    render_notification_rules(rules, analyse=analyse, start_nr = start_nr)
+    render_notification_rules(rules, show_title = True, analyse=analyse, start_nr = start_nr)
     start_nr += len(rules)
 
     if options.get("show_user_rules"):
@@ -7955,7 +7972,7 @@ def mode_notifications(phase):
             user = users[userid]
             rules = user.get("notification_rules", [])
             if rules:
-                render_notification_rules(rules, userid, show_buttons = False, analyse=analyse, start_nr = start_nr)
+                render_notification_rules(rules, userid, show_title = True, show_buttons = False, analyse=analyse, start_nr = start_nr)
                 start_nr += len(rules)
 
     if analyse:

@@ -215,7 +215,7 @@ def process_context(context, write_into_spoolfile, analyse=False):
     #    setting of the core is different from our global variable. The core must
     #    have precedence in this situation!
     if not contact or contact == "check-mk-notify":
-        return notify_rulebased(context, analyse=True)
+        return notify_rulebased(context, analyse=analyse)
 
     # Get notification settings for the contact in question - if available.
     method = "email"
@@ -800,7 +800,7 @@ def check_notification_type(context, host_events, service_events):
 #   |  Logic for rule based notifications                                  |
 #   '----------------------------------------------------------------------'
 
-def notify_rulebased(context, analyse=True):
+def notify_rulebased(context, analyse=False):
     # First step: go through all rules and construct our table of
     # notification plugins to call. This is a dict from (user, plugin) to
     # a pair if (locked, parameters). If locked is True, then a user
@@ -893,9 +893,8 @@ def notify_rulebased(context, analyse=True):
 def add_rulebased_macros(context):
     # For the rule based notifications we need the list of contacts
     # an object has. The CMC does send this in the macro "CONTACTS"
-    # (the count) and macros of the form CONTACTALIAS[hh]=Harry Hirsch
-    if "NUM_CONTACTS" not in context:
-        livestatus_fetch_contacts(context, context["HOSTNAME"], context.get("SERVICEDESC"))
+    if "CONTACTS" not in context:
+        context["CONTACTS"] = livestatus_fetch_contacts(context["HOSTNAME"], context.get("SERVICEDESC"))
 
     # Add a pseudo contact name. This is needed for the correct creation
     # of spool files. Spool files are created on a per-contact-base, as in classical
@@ -912,6 +911,7 @@ def user_notification_rules():
     user_rules = []
     contactnames = contacts.keys()
     contactnames.sort()
+    notify_log(repr(contacts))
     for contactname in contactnames:
         contact = contacts[contactname]
         for rule in contact.get("notification_rules", []):
@@ -939,70 +939,23 @@ def rbn_fake_email_contact(email):
 def rbn_add_contact_information(context, contact):
     if type(contact) == dict:
         for what in [ "name", "alias", "email", "pager" ]:
-            context["CONTACT" + what.upper()] = contact[what]
+            context["CONTACT" + what.upper()] = contact.get(what, "")
+            for key in contact.keys():
+                if key[0] == '_':
+                    context["CONTACT" + key.upper()] = contact[key]
     else:
-        context["CONTACTNAME"] = contact
-        for what in [ "alias", "email", "pager" ]:
-            varname = "CONTACT" + what.upper()
-            value = context.get("%s[%s]" % (varname, contact))
-            if value != None:
-                context[varname] = value
-            else:
-                # Need to fetch information via livestatus
-                contact_dict = query_contact_info(contact)
-                rbn_add_contact_information(context, contact_dict)
-
-g_contact_cache = {}
-def query_contact_info(name):
-    if name in g_contact_cache:
-        return g_contact_cache[name]
-    try:
-        query = "GET contacts\nColumns: alias email pager\nFilter: name = %s\n" % name
-        response = livestatus_fetch_query(query)
-        alias, email, pager = response.strip().split(";")
-    except:
-        if opt_debug:
-            raise
-        alias = name
-        email = ""
-        page = ""
-    contact = {
-        "name"  : name,
-        "alias" : alias,
-        "email" : email,
-        "pager" : pager,
-    }
-    g_contact_cache[name] = contact
-    return contact
+        contact_dict = contacts.get(contact, { "name" : contact, "alias" : contact })
+        rbn_add_contact_information(context, contact_dict)
 
 
-def livestatus_fetch_contacts(context, host, service):
+def livestatus_fetch_contacts(host, service):
     if service:
         query = "GET services\nFilter: host_name = %s\nFilter: service_description = %s\nColumns: contacts\n" % (
             host, service)
     else:
         query = "GET hosts\nFilter: host_name = %s\nColumns: contacts\n" % host
 
-    contacts = livestatus_fetch_query(query).split(",")
-
-    # Now get all relevant information
-    query = "GET contacts\nColumns: name alias email pager\nSeparators: 1 2 3 4\n"
-    for contact in contacts:
-        query += "Filter: name = %s\n" % contact.strip()
-    query += "Or: %d\n" % len(contacts)
-    response = livestatus_fetch_query(query)
-    lines = response.split('\1')
-    count = 0
-    for line in lines:
-        parts = line.split('\2')
-        if len(parts) == 4:
-            name, alias, email, pager = parts
-            if name != "check-mk-notify":
-                context["CONTACTALIAS[%s]" % name] = alias
-                context["CONTACTEMAIL[%s]" % name] = email
-                context["CONTACTPAGER[%s]" % name] = pager
-                count += 1
-    context["NUM_CONTACTS"] = str(count)
+    return livestatus_fetch_query(query).strip()
 
 
 
@@ -1169,9 +1122,11 @@ def rbn_match_event(context, state, last_state, events, allowed_events):
 def rbn_rule_contacts(rule, context):
     contacts = set([])
     if rule.get("contact_object"):
-        contacts.update(rbn_object_contacts(context).keys())
+        contacts.update(rbn_object_contacts(context))
     if rule.get("contact_all"):
-        contacts.update(rbn_all_contacts().keys())
+        contacts.update(rbn_all_contacts())
+    if rule.get("contact_all_with_email"):
+        contacts.update(rbn_all_contacts(with_email=True))
     if "contact_contacts" in rule:
         contacts.update(rule["contact_contacts"])
     if "contact_groups" in rule:
@@ -1182,34 +1137,21 @@ def rbn_rule_contacts(rule, context):
 
 
 def rbn_object_contacts(context):
-    contacts = {}
-    for key, value in context.iteritems():
-        if key.startswith("CONTACTALIAS["):
-            name = key[13:-1]
-            contacts[name] = {
-                "alias": value,
-                "email": context["CONTACTEMAIL[%s]" % name],
-                "pager": context["CONTACTPAGER[%s]" % name],
-            }
-    return contacts
+    commasepped = context.get("CONTACTS")
+    if commasepped:
+        return commasepped.split(",")
+    else:
+        return []
 
-def rbn_all_contacts():
-    # TODO: Diese Liste nur einmal holen und dann cachen
-    contacts = {}
-    query = "GET contacts\nColumns: name alias email pager\nSeparators: 1 2 3 4\n"
-    response = livestatus_fetch_query(query)
-    lines = response.split('\1')
-    for line in lines:
-        parts = line.split('\2')
-        if len(parts) == 4:
-            name, alias, email, pager = parts
-            if name not in [ "check-mk-notify", "check_mk" ]:
-                contacts[name] = {
-                    "alias" : alias,
-                    "email" : email,
-                    "pager" : pager,
-                }
-    return contacts
+def rbn_all_contacts(with_email=None):
+    if not with_email:
+        return contacts.keys() # We have that via our main.mk contact definitions!
+    else:
+        return [
+          contact_id
+          for (contact_id, contact)
+          in contacts.items()
+          if contact.get("email")]
 
 def rbn_groups_contacts(groups):
     if not groups:

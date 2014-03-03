@@ -1,0 +1,12 @@
+Title: Create a history entry for events that failed their target count
+Level: 1
+Component: ec
+Version: 1.2.5i1
+Date: 1393848610
+Class: feature
+
+When a counting rule sees the first matching message, then an entry in the history
+is logged with the type <tt>NEW</tt>. When the event did not reach the configured
+number of required message within the configured time then no history entry was
+logged. Now an entry of type <tt>COUNTFAILED</tt> is being logged and you can see
+the count of messages received so far in that entry.

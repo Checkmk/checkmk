@@ -1,0 +1,10 @@
+Title: if64: problems resolved when running as a clustered service
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1393841515
+Class: fix
+
+When running as a clustered service counter warps may have been triggered
+without actual reason, leading to invalid unknown check results. This
+has been fixed.

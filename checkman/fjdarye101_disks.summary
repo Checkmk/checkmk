@@ -7,7 +7,7 @@ description:
  This check monitors the reported summary status of all installed
  physical disks
  in storage systems from Fujitsu which support the
- FJDARY-E101.MIB. 
+ FJDARY-E101.MIB.
  This is an adaption of the corresponding fjdarye60 check.
 
 item:

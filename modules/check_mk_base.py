@@ -732,7 +732,7 @@ def store_cached_checkinfo(hostname, checkname, table):
     else:
         g_infocache[hostname] = { checkname: table }
 
-# Split agent output in chunks, splits lines by whitespaces. 
+# Split agent output in chunks, splits lines by whitespaces.
 # Returns a triple of:
 # 1. A dictionary from "sectionname" to a list of rows
 # 2. piggy-backed data for other hosts

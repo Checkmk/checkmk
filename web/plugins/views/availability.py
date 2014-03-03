@@ -1103,7 +1103,7 @@ def render_availability_group(group_title, range_title, group_id, availability, 
     summary = {}
     summary_counts = {}
     table.begin("av_items", group_title, css="availability",
-        searchable = False, limit = None, output_format = do_csv and "csv" or "html", 
+        searchable = False, limit = None, output_format = do_csv and "csv" or "html",
         omit_headers = "omit_headers" in avoptions["labelling"])
     for site, host, service, display_name, states, considered_duration, total_duration, statistics, timeline_rows, group_ids in group_availability:
         table.row()

@@ -2228,7 +2228,7 @@ def mode_object_parameters(phase):
     # Now we collect all rulesets that apply to hosts, except those specifying
     # new active or static checks
     all_rulesets = load_all_rulesets()
-    groupnames = [ gn for gn, rulesets in g_rulespec_groups 
+    groupnames = [ gn for gn, rulesets in g_rulespec_groups
                    if not gn.startswith("static/") and
                       not gn.startswith("checkparams/") and
                       gn != "activechecks" ]
@@ -2275,7 +2275,7 @@ def mode_object_parameters(phase):
                 # WATO module.
                 elif checkgroup == "logwatch":
                     rulespec = g_rulespecs["logwatch_rules"]
-                    output_analysed_ruleset(all_rulesets, rulespec, hostname, 
+                    output_analysed_ruleset(all_rulesets, rulespec, hostname,
                                             serviceinfo["item"], serviceinfo["parameters"])
 
                 else:
@@ -2289,12 +2289,12 @@ def mode_object_parameters(phase):
                     if grouprule not in g_rulespecs:
                         rulespec = g_rulespecs["static_checks:" + checkgroup]
                         url = make_link([('mode', 'edit_ruleset'), ('varname', "static_checks:" + checkgroup), ('host', hostname)])
-                        render_rule_reason(_("Parameters"), url, _("Determined by inventory"), None, False, 
+                        render_rule_reason(_("Parameters"), url, _("Determined by inventory"), None, False,
                                    rulespec["valuespec"]._elements[2].value_to_text(serviceinfo["parameters"]))
 
                     else:
                         rulespec = g_rulespecs[grouprule]
-                        output_analysed_ruleset(all_rulesets, rulespec, hostname, 
+                        output_analysed_ruleset(all_rulesets, rulespec, hostname,
                                                 serviceinfo["item"], serviceinfo["parameters"])
 
             elif origin == "static":
@@ -2312,11 +2312,11 @@ def mode_object_parameters(phase):
                         item_text = serviceinfo["item"]
                         title = _("Item")
                     render_rule_reason(title, None, "", "", False, item_text)
-                    output_analysed_ruleset(all_rulesets, rulespec, hostname, 
+                    output_analysed_ruleset(all_rulesets, rulespec, hostname,
                                             serviceinfo["item"], PARAMETERS_OMIT)
                     html.write(rulespec["valuespec"]._elements[2].value_to_text(serviceinfo["parameters"]))
                     html.write("</td></tr></table>")
-                    
+
 
             elif origin == "active":
                 checktype = serviceinfo["checktype"]
@@ -2338,14 +2338,14 @@ def mode_object_parameters(phase):
                 forms.section('<a href="%s">%s</a>' % (url, _("Command Line")))
                 url = make_link([
                     ('mode', 'edit_rule'),
-                    ('varname', "custom_checks"), 
-                    ('rule_folder', rule[0][".path"]), 
-                    ('rulenr', rel_nr), 
+                    ('varname', "custom_checks"),
+                    ('rule_folder', rule[0][".path"]),
+                    ('rulenr', rel_nr),
                     ('host', hostname)])
 
                 html.write('<table class=setting><tr><td class=reason><a href="%s">%s %d %s %s</a></td>' % (
                     url, _("Rule"), rel_nr + 1, _("in"), rule[0]["title"]))
-                html.write("<td class=settingvalue used><tt>%s</tt></td></tr></table>" % 
+                html.write("<td class=settingvalue used><tt>%s</tt></td></tr></table>" %
                     serviceinfo["command_line"])
 
 
@@ -2358,7 +2358,7 @@ def mode_object_parameters(phase):
             cmp = lambda a, b: cmp(a["title"], b["title"]))
 
         for rulespec in g_rulespec_group[groupname]:
-            if (rulespec["itemtype"] == 'service') == (not service): 
+            if (rulespec["itemtype"] == 'service') == (not service):
                 continue # This rule is not for hosts/services
 
             # Open form for that group here, if we know that we have at least one rule
@@ -2380,9 +2380,9 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
         rule_folder, rule_nr = rule
         return make_link([
             ('mode', 'edit_rule'),
-            ('varname', varname), 
-            ('rule_folder', rule_folder[".path"]), 
-            ('rulenr', rule_nr), 
+            ('varname', varname),
+            ('rule_folder', rule_folder[".path"]),
+            ('rulenr', rule_nr),
             ('host', hostname),
             ('item', service and mk_repr(service) or '')])
 
@@ -2418,7 +2418,7 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
 
     else:
         # For match type "dict" it can be the case the rule define some of the keys
-        # while other keys are taken from the factory defaults. We need to show the 
+        # while other keys are taken from the factory defaults. We need to show the
         # complete outcoming value here.
         if rules and rulespec["match"] == "dict":
             if rulespec["factory_default"] is not NO_FACTORY_DEFAULT \
@@ -7399,7 +7399,7 @@ def vs_notification_rule(userid = None):
         section_override = []
     else:
         contact_headers = [
-            ( _("Contact Selection"), [ "contact_all", "contact_all_with_email", "contact_object", 
+            ( _("Contact Selection"), [ "contact_all", "contact_all_with_email", "contact_object",
                                         "contact_users", "contact_groups", "contact_emails" ] ),
         ]
         section_contacts = [
@@ -8079,7 +8079,7 @@ def mode_user_notifications(phase, profilemode):
                              _("Do you really want to delete the notification rule <b>%d</b> <i>%s</i>?" %
                                (nr, rule.get("description",""))))
             if c:
-                log_pending(SYNC, None, "notification-delete-user-rule", _("Deleted notification rule %d or user %s") % 
+                log_pending(SYNC, None, "notification-delete-user-rule", _("Deleted notification rule %d or user %s") %
                             (nr, userid))
                 del rules[nr]
                 userdb.save_users(users)
@@ -10318,7 +10318,7 @@ def load_notification_table():
                                   ( "only_hosts",
                                     ListOfStrings(
                                         title = _("Limit to the following hosts"),
-                                        help = _("Configure the hosts for this notification. Without prefix, only exact, case sensitive matches," 
+                                        help = _("Configure the hosts for this notification. Without prefix, only exact, case sensitive matches,"
                                                  "! for negation and ~ for regex matches " ),
                                         orientation = "horizontal",
                                         valuespec = RegExp(size = 20),
@@ -10553,7 +10553,7 @@ def mode_edit_user(phase):
     elif phase == "buttons":
         html.context_button(_("All Users"), make_link([("mode", "users")]), "back")
         if rulebased_notifications and not new:
-            html.context_button(_("Notifications"), make_link([("mode", "user_notifications"), 
+            html.context_button(_("Notifications"), make_link([("mode", "user_notifications"),
                     ("user", userid)]), "notifications")
         return
 
@@ -10975,8 +10975,8 @@ def filter_hidden_users(users):
 def generate_wato_users_elements_function(none_value, only_contacts = False):
     def get_wato_users(nv):
         users = filter_hidden_users(userdb.load_users())
-        elements = [ (name, "%s - %s" % (name, us.get("alias", name))) 
-                     for (name, us) 
+        elements = [ (name, "%s - %s" % (name, us.get("alias", name)))
+                     for (name, us)
                      in users.items()
                      if (not only_contacts or us.get("contactgroups")) ]
         if nv != None:

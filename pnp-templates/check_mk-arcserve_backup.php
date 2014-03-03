@@ -2,7 +2,7 @@
 #
 # Copyright (c) 2006-2010 Joerg Linge (http://www.pnp4nagios.org)
 # Default Template used if no other template is found.
-# Don`t delete this file ! 
+# Don`t delete this file !
 #
 # Define some colors ..
 #
@@ -17,7 +17,7 @@ foreach ($this->DS as $KEY=>$VAL) {
 	$vlabel   = " ";
 	$lower    = "";
 	$upper    = "";
-	
+
 	if ($VAL['UNIT'] == "%%") {
 		$vlabel = "%";
 		$upper = " --upper=101 ";

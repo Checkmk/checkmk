@@ -107,11 +107,11 @@ class SpoolfilesHandler:
     def __init__(self):
         self._should_terminate = False
         self._is_running = False
-    
+
     def run(self):
         log("Starting SpoolfilesHandler")
         self._is_running = True
-        try: 
+        try:
             while not self._should_terminate:
                 self.process_directory(g_spool_dir)
                 self.process_directory(g_deferred_dir, g_config["notification_deferred_retention_time"])
@@ -132,11 +132,11 @@ class SpoolfilesHandler:
                 # Spoolfiles with the key forward are handled locally
                 spoolfile_path = "%s/%s" % (root, spoolfile)
                 file_age = now - os.stat(spoolfile_path)[8]
-                
+
                 if file_age < files_older_than:
                     verbose("File age %d" % file_age, 2)
-                    continue                
-                
+                    continue
+
                 try:
                     content = eval(file(spoolfile_path).read())
                     if not content.get("context"):
@@ -157,7 +157,7 @@ class SpoolfilesHandler:
                         verbose("Forward notification to %s %s" % (host, port), 2)
                         sock.connect((host, int(port)))
                         sock.send(pickle.dumps(content))
-                        # Wait for OK response  
+                        # Wait for OK response
                         while True:
                             readable = select.select([sock], [], [], 1)[0]
                             data = None
@@ -170,19 +170,19 @@ class SpoolfilesHandler:
                                 break # Error while reading
                     except Exception, e:
                         # Connection problems
-                        verbose(format_exception(), 2) 
+                        verbose(format_exception(), 2)
                     spoolfile_process_result = response_text != "OK" and 1 or 0
                 else:
                     spoolfile_process_result = os.system("cmk --notify spoolfile %s" % spoolfile_path)
 
-                verbose("process result <%d> of file %s " % (spoolfile_process_result, spoolfile_path), 2) 
+                verbose("process result <%d> of file %s " % (spoolfile_process_result, spoolfile_path), 2)
                 if spoolfile_process_result == 1:
-                    # Moving logfile to deferred and retry later 
+                    # Moving logfile to deferred and retry later
                     deferredfile_path = "%s/%s" % (g_deferred_dir, spoolfile)
                     os.rename(spoolfile_path, deferredfile_path)
                     now = time.time()
                     os.utime(deferredfile_path, (now, now))
-                else: 
+                else:
                     os.remove(spoolfile_path)
 
 #.
@@ -256,7 +256,7 @@ class TcpServer:
 
                 try:
                     content = pickle.loads(client_data)
-                    if "context" in content:  
+                    if "context" in content:
                         context = content["context"]
                         if not context["CONTACTNAME"]:
                             log("Error: Unable to process data from %s %d" % (addr_info[0], addr_info[1]))
@@ -282,7 +282,7 @@ class TcpServer:
             if self._reopen_sockets:
                 log("Reopen tcp socket")
                 self.close_sockets()
-                self.open_sockets()    
+                self.open_sockets()
                 self._reopen_sockets = False
 
         log("Stopping TcpServer")
@@ -373,7 +373,7 @@ def usage():
 
 """)
     if os.getenv("OMD_ROOT"):
-        sys.stdout.write("""You are running OMD, which is generally a good idea. 
+        sys.stdout.write("""You are running OMD, which is generally a good idea.
 The following defaults are set:
 
   Config dir:  %(g_config_dir)s
@@ -388,10 +388,10 @@ def run_thread(run_function, args=()):
     return thread.start_new_thread(run_function, args)
 
 def run_notifyd():
-    global g_tpc_server, g_spoolfiles_handler 
+    global g_tpc_server, g_spoolfiles_handler
     global g_spool_dir, g_deferred_dir
     global g_config_changed
-        
+
     g_spool_dir    = "%s/notify/spool" % g_var_dir
     g_deferred_dir = "%s/notify/deferred" % g_var_dir
 
@@ -415,14 +415,14 @@ def run_notifyd():
             load_configuration()
             if g_config_changed:
                 if g_config["notification_daemon_listen_port"]:
-                    if not g_tcp_server._is_running: 
+                    if not g_tcp_server._is_running:
                         run_thread(g_tcp_server.run)
                     else:
                         g_tcp_server._reopen_sockets = True
                 else:
                     g_tcp_server._should_terminate = True
                 g_config_changed = False
-                time.sleep(0.2) 
+                time.sleep(0.2)
 
             # Check if worker threads are still running
             if g_config["notification_daemon_listen_port"] and not g_tcp_server._is_running:
@@ -432,11 +432,11 @@ def run_notifyd():
             if not g_spoolfiles_handler._is_running:
                 log("SpoolfilesHandler thread crashed. Restarting...")
                 run_thread(g_spoolfiles_handler.run)
-            
+
             if opt_single_cycle:
                 raise MKSignalException(1)
         except MKSignalException, e:
-            # Initiate shutdown 
+            # Initiate shutdown
             g_tcp_server._should_terminate         = True
             g_spoolfiles_handler._should_terminate = True
             now = time.time()
@@ -458,7 +458,7 @@ class MKSignalException(Exception):
 def signal_handler(signum, stack_frame):
     log("Got signal %d" % signum)
     raise MKSignalException(signum)
-    
+
 
 #.
 #   .--Main----------------------------------------------------------------.
@@ -534,7 +534,7 @@ try:
     if os.path.exists(g_pid_file):
         old_pid = int(file(g_pid_file).read())
         if process_exists(old_pid):
-            bail_out("Old PID file %s still existing and mknotifyd still running with PID %d." % 
+            bail_out("Old PID file %s still existing and mknotifyd still running with PID %d." %
                 (g_pid_file, old_pid))
         os.remove(g_pid_file)
         log("Removed orphaned PID file %s (process %d not running anymore)." % (g_pid_file, old_pid))
@@ -563,7 +563,7 @@ try:
 
     # Now let's go...
     run_notifyd()
-    
+
     # We reach this point, if the server has been killed by
     # a signal or hitting Ctrl-C (in foreground mode)
     os.remove(g_pid_file)

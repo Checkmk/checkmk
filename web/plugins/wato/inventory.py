@@ -33,7 +33,7 @@ register_rule(group,
     "active_checks:cmk_inv",
     None, # Currently no parameters
     title = _("Do hardware/software Inventory"),
-    help = _("All hosts configured via this ruleset will do a hardware and " 
+    help = _("All hosts configured via this ruleset will do a hardware and "
            "software inventory. For each configured host a new active check "
            "will be created. You should also create a rule for changing the "
            "normal interval for that check to something between a couple of "

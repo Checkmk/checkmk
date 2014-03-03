@@ -50,13 +50,13 @@ cisco_fru_poweroper_types = {
 }
 
 
-def inventory_cisco_fru_power(info): 
+def inventory_cisco_fru_power(info):
     # Monitor all devices that are not
     # - with incomplete SNMP data
     # - in state 1:offEnvOther
     # - in state 5:offEnvPower
-    return [ (line[0], None)  
-             for line in info 
+    return [ (line[0], None)
+             for line in info
              if line[2] not in ('', '1', '5') ]
 
 

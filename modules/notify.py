@@ -1268,7 +1268,7 @@ def do_bulk_notify(contact, plugin, params, context, bulk):
         state = context.get(what + "STATE", "")
         bulk_path += ("state", state)
 
-    notify_log("    --> storing for bulk notification %s" % "|".join(bulk_path)) 
+    notify_log("    --> storing for bulk notification %s" % "|".join(bulk_path))
     bulk_dirname = create_bulk_dirname(bulk_path)
     uuid = bulk_uuid()
     filename = bulk_dirname + "/" + uuid

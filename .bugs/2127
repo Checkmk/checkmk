@@ -1,0 +1,13 @@
+Title: EC-Check: Make check for hostname AND ipaddress match possible
+Component: ec
+State: open
+Date: 2014-03-03 08:20:36
+Targetversion: 1.2.5i1
+Class: nastiness
+
+When e.g. receiving SNMP-traps, only the ipaddress is known in the event. The view resolves the ipaddress to existing
+hostnames. As a result, the user thinks the "check event state in event console" check can check for events with matching
+host name. But this is not true, since the event only has the ipaddress stored.
+
+Either add an option "hostname or ipaddress" to the ec-check or use livestatus to try to resolve ipaddres to hostnames
+to make this easier to handle.

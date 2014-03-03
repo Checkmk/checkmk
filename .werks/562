@@ -1,0 +1,19 @@
+Title: esx_vsphere_vm.guest_tools: new check to monitor guest tools status
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1393598628
+Class: feature
+
+This check allows to monitor if the guest gools version of the VM is up-to-date.<br>
+Possible values and states:
+<ul>
+<li>"VMware Tools is installed, and the version is current" - State OK</li>
+<li>"VMware Tools is installed, but the version is not current" - State WARN</li>
+<li>"VMware Tools has never been installed" - State CRIT</li>
+<li>"VMware Tools is installed, but it is not managed by VMWare" - State WARN</li>
+</ul>
+
+The resulting state of each value can also be modified by the WATO rule<br>
+<tt>Virtual machine guest tools status</tt>
+

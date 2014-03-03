@@ -642,6 +642,28 @@ def check_interval_of(hostname, checkname):
         if match is None or match == checkname:
             return minutes # use first match
 
+def agent_target_version(hostname):
+    agent_target_versions = host_extra_conf(hostname, check_mk_agent_target_versions)
+    if len(agent_target_versions) > 0:
+        if agent_target_versions[0] == "ignore":
+            return None
+        elif agent_target_versions[0] == "site":
+            return check_mk_version
+        else:
+            return agent_target_versions[0]
+
+regex_cache = {}
+def regex(r):
+    rx = regex_cache.get(r)
+    if rx:
+        return rx
+    try:
+        rx = re.compile(r)
+    except Exception, e:
+        raise MKGeneralException("Invalid regular expression '%s': %s" % (r, e))
+    regex_cache[r] = rx
+    return rx
+
 #.
 #   .--SNMP----------------------------------------------------------------.
 #   |                      ____  _   _ __  __ ____                         |
@@ -1445,14 +1467,10 @@ def host_contactgroups_of(hostlist):
                 first_list = False
             else:
                 cgrs.append(entry)
+    if monitoring_core == "nagios" and enable_rulebased_notifications:
+        cgrs.append("check-mk-notify")
     return list(set(cgrs))
 
-def host_contactgroups_nag(hostlist):
-    cgrs = host_contactgroups_of(hostlist)
-    if len(cgrs) > 0:
-        return "    contact_groups " + ",".join(cgrs) + "\n"
-    else:
-        return ""
 
 def parents_of(hostname):
     par = host_extra_conf(hostname, parents)
@@ -1482,6 +1500,8 @@ def extra_service_conf_of(hostname, description):
     sercgr = service_extra_conf(hostname, description, service_contactgroups)
     contactgroups_to_define.update(sercgr)
     if len(sercgr) > 0:
+        if enable_rulebased_notifications:
+            sercgr.append("check-mk-notify") # not nessary if not explicit groups defined
         conf += "  contact_groups\t\t" + ",".join(sercgr) + "\n"
 
     sergr = service_extra_conf(hostname, description, service_groups)
@@ -1813,7 +1833,8 @@ def in_boolean_serviceconf_list(hostname, service_description, ruleset):
 
 # Entries in list are (tagged) hostnames that must equal the
 # (untagged) hostname. Expressions beginning with ! are negated: if
-# they match, the item is excluded from the list. Also the three
+# they match, the item is excluded from the list. Expressions beginning 
+# withy ~ are treated as Regular Expression. Also the three
 # special tags '@all', '@clusters', '@physical' are allowed.
 def in_extraconf_hostlist(hostlist, hostname):
 
@@ -1824,6 +1845,8 @@ def in_extraconf_hostlist(hostlist, hostname):
     for hostentry in hostlist:
         if len(hostentry) == 0:
             raise MKGeneralException('Empty hostname in host list %r' % hostlist)
+        negate = False
+        use_regex = False
         if hostentry[0] == '@':
             if hostentry == '@all':
                 return True
@@ -1834,14 +1857,25 @@ def in_extraconf_hostlist(hostlist, hostname):
                 return True
 
         # Allow negation of hostentry with prefix '!'
-        elif hostentry[0] == '!':
-            hostentry = hostentry[1:]
-            negate = True
         else:
-            negate = False
+            if hostentry[0] == '!':
+                hostentry = hostentry[1:]
+                negate = True
+            # Allow regex with prefix '~'
+            if hostentry[0] == '~':
+                hostentry = hostentry[1:]
+                use_regex = True
 
-        if hostname == strip_tags(hostentry):
-            return not negate
+        hostentry = strip_tags(hostentry)
+        try:
+            if not use_regex and hostname == hostentry:
+                return not negate
+            # Handle Regex
+            elif regex(hostentry).match(hostname):
+                return not negate
+        except MKGeneralException:
+            if opt_debug:
+                raise
 
     return False
 
@@ -2615,7 +2649,11 @@ def create_nagios_config_contacts(outfile):
                 outfile.write("  email\t\t\t\t%s\n" % contact["email"])
             if "pager" in contact:
                 outfile.write("  pager\t\t\t\t%s\n" % contact["pager"])
-            not_enabled = contact.get("notifications_enabled", True)
+            if enable_rulebased_notifications:
+                not_enabled = False
+            else:
+                not_enabled = contact.get("notifications_enabled", True)
+
             for what in [ "host", "service" ]:
                 no = contact.get(what + "_notification_options", "")
                 if not no or not not_enabled:
@@ -2630,6 +2668,21 @@ def create_nagios_config_contacts(outfile):
 
             outfile.write("  contactgroups\t\t\t%s\n" % ", ".join(cgrs))
             outfile.write("}\n\n")
+
+    if enable_rulebased_notifications:
+        outfile.write(
+            "# Needed for rule based notifications\n"
+            "define contact {\n"
+            "  contact_name\t\t\tcheck-mk-notify\n"
+            "  alias\t\t\t\tContact for rule based notifications\n"
+            "  host_notification_options\td,u,r,f,s\n"
+            "  service_notification_options\tu,c,w,r,f,s\n"
+            "  host_notification_period\t24X7\n"
+            "  service_notification_period\t24X7\n"
+            "  host_notification_commands\tcheck-mk-notify\n"
+            "  service_notification_commands\tcheck-mk-notify\n"
+            "  contactgroups\t\t\tcheck-mk-notify\n"
+            "}\n\n");
 
 
 # Quote string for use in a nagios command execution.
@@ -3386,6 +3439,9 @@ no_inventory_possible = None
 
     # Piggyback translations
     output.write("def get_piggyback_translation(hostname):\n    return %r\n\n" % get_piggyback_translation(hostname))
+
+    # Expected agent version
+    output.write("def agent_target_version(hostname):\n    return %r\n\n" % agent_target_version(hostname))
 
     # SNMP character encoding
     output.write("def get_snmp_character_encoding(hostname):\n    return %r\n\n"

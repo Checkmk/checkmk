@@ -1,0 +1,10 @@
+Title: brocade_mlx: omit inventory of cpu and memory on more states
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1393336534
+Class: fix
+
+If for a module the status is "Blocked for full height card" it is omitted
+during inventory for CPU and Memory checks, because there is no sense in
+checking them.

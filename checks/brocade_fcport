@@ -25,11 +25,15 @@
 # Boston, MA 02110-1301 USA.
 
 # lookup tables for check implementation
+# Taken from swFCPortPhyState
 brocade_fcport_phystates = [ '', 'noCard', 'noTransceiver', 'laserFault', 'noLight',
                               'noSync', 'inSync', 'portFault', 'diagFault', 'lockRef' ]
+# Taken from swFCPortOpStatus
 brocade_fcport_opstates  = [ 'unknown', 'online', 'offline', 'testing', 'faulty' ]
+# Taken from swFCPortAdmStatus
 brocade_fcport_admstates = [ '', 'online', 'offline', 'testing', 'faulty' ]
-brocade_fcport_speed     = [ 'unknown', '1Gbit', '2Gbit', 'auto-Neg', '4Gbit', '8Gbit', '10Gbit', ]
+# Taken from swFCPortSpeed
+brocade_fcport_speed     = [ '', '1Gbit', '2Gbit', 'auto-Neg', '4Gbit', '8Gbit', '10Gbit', 'unknown', '16Gbit' ]
 
 
 # settings for inventory: which ports should be inventorized

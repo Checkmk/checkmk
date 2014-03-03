@@ -1,0 +1,11 @@
+Title: New button in host properties: "Save and add all autodetected services"
+Component: core
+State: open
+Date: 2014-02-26 09:15:44
+Targetversion: 1.2.5i1
+Class: feature
+
+This button would save a few click:
+
+Save & Goto services
+Save manual check configuration

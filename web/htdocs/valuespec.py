@@ -452,7 +452,7 @@ class RegExpUnicode(TextUnicode, RegExp):
 class EmailAddress(TextAscii):
     def __init__(self, **kwargs):
         TextAscii.__init__(self, **kwargs)
-        self._regex = re.compile('^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$', re.I)
+        self._regex = re.compile('^[A-Z0-9._%+-]+@(localhost|[A-Z0-9.-]+\.[A-Z]{2,4})$', re.I)
         self._make_clickable = kwargs.get("make_clickable", False)
 
     def value_to_text(self, value):
@@ -707,7 +707,11 @@ class ListOfStrings(ValueSpec):
 
     def validate_value(self, value, vp):
         if len(value) == 0 and not self._allow_empty:
-            raise MKUserError(vp + "_0", _("Please specify at least one value"))
+            if self._empty_text:
+                msg = self._empty_text
+            else:
+                msg = _("Please specify at least one value")
+            raise MKUserError(vp + "_0", msg)
         if self._valuespec:
             for nr, s in enumerate(value):
                 self._valuespec.validate_value(s, vp + "_%d" % nr)

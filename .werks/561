@@ -1,0 +1,60 @@
+Title: quicksearch: now able to search with multiple filters
+Level: 2
+Component: multisite
+Version: 1.2.5i1
+Date: 1393430612
+Class: feature
+
+The classical quicksearch allowed certain filter prefixes,
+which specified the item to look for. For example:
+<ul>
+<li>h: {search_text} # Find hostname, host_address or hostalias</li>
+<li>s: {search_text} # Find service</li>
+<li>hg: {search_text} # Find hostgroup</li>
+<li>sg: {search_text} # Find servicegroup</li>
+</ul>
+
+The new search feature enhances the service search.<br>
+You can now combine these filters to thin out the results.<br>
+For example:
+C+:
+s: mem h: localhost
+C-:
+
+This will search for all services containing <tt>mem</tt> on the <tt>localhost</tt>.
+Furthermore you can combine these filters.
+
+C+:
+s: mem s: cpu h: localhost h: switch-intern
+C-:
+
+This will search for all services containing <tt>mem</tt> <b>OR</b> <tt>cpu</tt> on
+the hosts <tt>localhost</tt> <b>OR</b> <tt>switch-intern</tt>.
+The search algorhytm is as follow:
+<ul>
+<li>Same filters are combined with <tt>OR</tt></li>
+<li>Different filters are combined with <tt>AND</tt></li>
+</ul>
+
+The query
+C+:
+h: localhost s: mem s: cpu h:switch-intern
+C-:
+actually results in the following livestatus query:
+
+C+:
+GET services
+Cache: reload
+Columns: service_description host_name hostgroups servicegroups
+Filter: host_name ~~ switch-intern
+Filter: host_name ~~ localhost
+Or: 2
+Filter: service_description ~~ cpu
+Filter: service_description ~~ mem
+Or: 2
+And: 2
+Limit: 80
+C-:
+
+You can also add the <tt>hg:</tt> and <tt>sg:</tt> filters to the query.<br>
+<b>Note:</b> Right now, this multisearch filter only works if at least one of the filters is a service ( <tt>s:</tt> ).

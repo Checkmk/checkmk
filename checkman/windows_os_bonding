@@ -1,0 +1,28 @@
+title: Bonding Network Interface on Windows (Operating System Level)
+agents: windows
+catalog: os/networking
+license: GPL
+distribution: check_mk
+description:
+ Checks the current state of a Windows bonding interface
+ (configured on operating system level).
+ If the total bonding state of the interface is down, then the
+ check returns {CRIT}, for status degraded it returns {WARN}.
+ If at least one slave interface is down or not the expected slave
+ is currently active, then the check gets {WARN}.
+
+ For this check to work you need to install the agent plugin
+ windows_os_bonding.ps1 on the target machine.
+
+ Since the check uses the same check logic as lnx_bonding, please
+ refer to lnx_bonding check manpage vor examples and parameters.
+
+item:
+ The team name of the bonding interface.
+
+inventory:
+ One check will be created for every bonding interface found in state
+ up or degraded.
+
+[parameters]
+parameters (dict): see lnx_bonding check manpage.

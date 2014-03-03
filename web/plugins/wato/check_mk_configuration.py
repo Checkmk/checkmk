@@ -2228,10 +2228,10 @@ register_rule(group,
                  " one specific version, you may set it by this rule. Agents running "
                  " some different version return a none ok state then"),
         choices = [
-           ("ignore", _("Ignore version")),
+           ("ignore", _("Ignore the version")),
            ("site",   _("Same version as the monitoring site")),
            ],
-        otherlabel    = _("Custom ->"),
+        otherlabel    = _("Specific version"),
         explicit      = TextAscii(allow_empty = False),
         default_value = "ignore",
     )

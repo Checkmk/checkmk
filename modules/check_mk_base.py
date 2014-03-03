@@ -946,16 +946,7 @@ def do_check(hostname, ipaddress, only_check_types = None):
 
     start_time = time.time()
 
-    agent_target_versions = host_extra_conf(hostname, check_mk_agent_target_versions)
-    if len(agent_target_versions) > 0:
-        if agent_target_versions[0] == "ignore":
-            check_mk_agent_target_version = None
-        elif agent_target_versions[0] == "site":
-            check_mk_agent_target_version = check_mk_version
-        else:
-            check_mk_agent_target_version = agent_target_versions[0]
-    else:
-        check_mk_agent_target_version = None
+    expected_version = agent_target_version(hostname)
 
     # Exit state in various situations is confiugrable since 1.2.3i1
     exit_spec = exit_code_spec(hostname)
@@ -974,8 +965,8 @@ def do_check(hostname, ipaddress, only_check_types = None):
         elif num_errors > 0:
             output = "Got no information from host, "
             status = exit_spec.get("empty_output", 2)
-        elif check_mk_agent_target_version and agent_version != check_mk_agent_target_version:
-            output = "different agent version %s (should be %s), " % (agent_version, check_mk_agent_target_version)
+        elif expected_version and agent_version != expected_version:
+            output = "unexpected agent version %s (should be %s), " % (agent_version, expected_version)
             status = exit_spec.get("wrong_version", 1)
         elif agent_min_version and agent_version < agent_min_version:
             output = "old plugin version %s (should be at least %s), " % (agent_version, agent_min_version)

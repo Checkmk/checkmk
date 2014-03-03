@@ -671,7 +671,7 @@ def page_edit_view():
     html.write(_("Reload page every "))
     html.number_input("browser_reload", 0)
     html.write(_(" seconds"))
-    html.help(_("Leave this empty or at 0 for now automatic reload."))
+    html.help(_("Leave this empty or at 0 for no automatic reload."))
 
     forms.section(_("Audible alarm sounds"), simple=True)
     html.checkbox("play_sounds", False, label=_("Play alarm sounds"))

@@ -7365,6 +7365,12 @@ def save_notification_rules(rules):
     file(root_dir + "notifications.mk", "w").write("notification_rules += %s\n" % pprint.pformat(rules))
 
 
+def FolderChoice(**kwargs):
+    kwargs["choices"] = folder_selection(g_root_folder)
+    kwargs.setdefault("title", _("Folder"))
+    return DropdownChoice(**kwargs)
+
+
 def vs_notification_rule(userid = None):
     if userid:
         contact_headers = []
@@ -7455,6 +7461,13 @@ def vs_notification_rule(userid = None):
         [
 
             # Matching
+            ( "match_folder",
+              FolderChoice(
+                  help = _("This condition makes the rule match only hosts that are managed "
+                           "via WATO and that are contained in this folder - either directly "
+                           "or in one of its subfolders."),
+              ),
+            ),
             ( "match_hosttags",
               HostTagCondition(
                   title = _("Match Host Tags"))
@@ -7633,8 +7646,8 @@ def vs_notification_rule(userid = None):
             )
 
         ],
-        optional_keys = [ "match_hosttags", "match_hosts", "match_exclude_hosts", "match_services", "match_exclude_services",
-                          "match_plugin_output",
+        optional_keys = [ "match_folder", "match_hosttags", "match_hosts", "match_exclude_hosts", 
+                          "match_services", "match_exclude_services", "match_plugin_output",
                           "match_timeperiod", "match_escalation", "match_sl", "match_host_event", "match_service_event",
                           "match_checktype", "contact_users", "contact_groups", "contact_emails" ],
         headers = [
@@ -7642,7 +7655,7 @@ def vs_notification_rule(userid = None):
             ( _("Notification Method"), [ "notify_plugin", "notify_method" ] ),]
             + contact_headers
             + [
-            ( _("Conditions"),         [ "match_hosttags", "match_hosts", "match_exclude_hosts",
+            ( _("Conditions"),         [ "match_folder", "match_hosttags", "match_hosts", "match_exclude_hosts",
                                          "match_services", "match_exclude_services", "match_plugin_output",
                                          "match_checktype", "match_timeperiod",
                                          "match_escalation", "match_sl", "match_host_event", "match_service_event" ] ),
@@ -12844,7 +12857,6 @@ def folder_selection(folder, depth=0):
     for subfolder in subfolders:
         sel += folder_selection(subfolder, depth + 1)
     return sel
-
 
 
 def create_rule(rulespec, hostname=None, item=NO_ITEM):

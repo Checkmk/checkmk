@@ -872,39 +872,40 @@ def notify_rulebased(context, analyse=False):
 
             rule_info.append(("match", rule, ""))
 
+    plugin_info = []
+
     if not notifications:
         if num_rule_matches:
             notify_log("%d rules matched, but no notification has been created." % num_rule_matches)
         else:
-            if notification_fallback_email:
+            if notification_fallback_email and not analyse:
                 notify_log("No rule matched, falling back to email to %s" % notification_fallback_email)
                 contact = rbn_fake_email_contact(notification_fallback_email)
                 rbn_add_contact_information(context, contact)
                 call_notification_script("mail", [], context)
-        return
 
-    # Now do the actual notifications
-    plugin_info = []
-    notify_log("Executing %d notifications:" % len(notifications))
-    entries = notifications.items()
-    entries.sort()
-    for (contact, plugin), (locked, params) in entries:
-        if analyse:
-            verb = "would notify"
-        else:
-            verb = "notifying"
-        notify_log("  * %s %s via %s, parameters: %s" % (verb, contact, plugin, ", ".join(params)))
-        plugin_info.append((contact, plugin, params))
-        try:
-            rbn_add_contact_information(context, contact)
-            if not analyse:
-                call_notification_script(plugin, params, context)
-        except Exception, e:
-            if opt_debug:
-                raise
-            fe = format_exception()
-            notify_log("    ERROR: %s" % e)
-            notify_log(fe)
+    else:
+        # Now do the actual notifications
+        notify_log("Executing %d notifications:" % len(notifications))
+        entries = notifications.items()
+        entries.sort()
+        for (contact, plugin), (locked, params) in entries:
+            if analyse:
+                verb = "would notify"
+            else:
+                verb = "notifying"
+            notify_log("  * %s %s via %s, parameters: %s" % (verb, contact, plugin, ", ".join(params)))
+            plugin_info.append((contact, plugin, params))
+            try:
+                rbn_add_contact_information(context, contact)
+                if not analyse:
+                    call_notification_script(plugin, params, context)
+            except Exception, e:
+                if opt_debug:
+                    raise
+                fe = format_exception()
+                notify_log("    ERROR: %s" % e)
+                notify_log(fe)
 
     analysis_info = rule_info, plugin_info
     return analysis_info
@@ -982,6 +983,7 @@ def rbn_match_rule(rule, context):
         return "This rule is disabled"
 
     return \
+        rbn_match_folder(rule, context)           or \
         rbn_match_hosttags(rule, context)         or \
         rbn_match_hosts(rule, context)            or \
         rbn_match_exclude_hosts(rule, context)    or \
@@ -994,6 +996,28 @@ def rbn_match_rule(rule, context):
         rbn_match_servicelevel(rule, context)     or \
         rbn_match_host_event(rule, context)       or \
         rbn_match_service_event(rule, context)
+
+def rbn_match_folder(rule, context):
+    if "match_folder" in rule:
+        mustfolder = rule["match_folder"]
+        mustpath = mustfolder.split("/")
+        hasfolder = None
+        for tag in context.get("HOSTTAGS", "").split():
+            if tag.startswith("/wato/"):
+                hasfolder = tag[6:].rstrip("/")
+                haspath = hasfolder.split("/")
+                if mustpath == ["",]:
+                    return # Match is on main folder, always OK
+                while mustpath:
+                    if not haspath or mustpath[0] != haspath[0]:
+                        return "The rule requires WATO folder '%s', but the host is in '%s'" % (
+                            mustfolder, hasfolder)
+                    mustpath = mustpath[1:]
+                    haspath = haspath[1:]
+
+        if hasfolder == None:
+            return "The host is not managed via WATO, but the rule requires a WATO folder"
+
 
 
 def rbn_match_hosttags(rule, context):

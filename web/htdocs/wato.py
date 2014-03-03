@@ -7371,6 +7371,27 @@ def FolderChoice(**kwargs):
     return DropdownChoice(**kwargs)
 
 
+def vs_notification_bulkby():
+    return ListChoice(
+      title = _("Createseparate notification bulks based on"),
+      choices = [
+        ( "folder",     _("Folder") ),
+        ( "host",       _("Host") ),
+        ( "service",    _("Service description") ),
+        ( "sl",         _("Service level") ),
+        ( "check_type", _("Check type") ),
+        ( "state",      _("Host/Service state") ),
+      ],
+      default_value = [ "host" ],
+    )
+
+def vs_notification_scripts():
+    return DropdownChoice(
+       title = _("Notification Script"),
+       choices = notification_script_choices,
+       default_value = "mail",
+    )
+
 def vs_notification_rule(userid = None):
     if userid:
         contact_headers = []
@@ -7619,11 +7640,7 @@ def vs_notification_rule(userid = None):
         [
             # Notification
             ( "notify_plugin",
-              DropdownChoice(
-                   title = _("Notification Plugin"),
-                   choices = load_notification_scripts,
-                   default_value = "mail",
-              ),
+              vs_notification_scripts(),
             ),
 
             ( "notify_method",
@@ -7643,16 +7660,52 @@ def vs_notification_rule(userid = None):
                       ),
                   ]
               )
-            )
+            ),
+
+            ( "bulk",
+              Dictionary(
+                  title = _("Notification Bulking"),
+                  help = _("Enabling the bulk notifications will collect several subsequent notifications "
+                           "for the same contact into one single notification, which lists of all the "
+                           "actual problems, e.g. in a single emails. This cuts down the number of notifications "
+                           "in cases where many (related) problems occur within a short time."),
+                  elements = [
+                    ( "interval",
+                      Age(
+                          title = _("Time horizon"),
+                          label = _("Bulk up to"),
+                          help = _("Notifications are kept back for bulking at most for this time."),
+                          default_value = 60,
+                      )
+                    ),
+                    ( "count",
+                      Integer(
+                          title = _("Maximum bulk size"),
+                          label = _("Bulk up to"),
+                          unit  = _("Notifications"),
+                          help = _("At most that many Notifications are kept back for bulking. A value of "
+                                   "1 essentially turns of notification bulking."),
+                          default_value = 1000,
+                          minvalue = 1,
+                      ),
+                    ),
+                    ( "groupby",
+                      vs_notification_bulkby(),
+                    ),
+                  ],
+                  columns = 1,
+                  optional_keys = False,
+            ),
+          ),
 
         ],
-        optional_keys = [ "match_folder", "match_hosttags", "match_hosts", "match_exclude_hosts", 
+        optional_keys = [ "match_folder", "match_hosttags", "match_hosts", "match_exclude_hosts",
                           "match_services", "match_exclude_services", "match_plugin_output",
                           "match_timeperiod", "match_escalation", "match_sl", "match_host_event", "match_service_event",
-                          "match_checktype", "contact_users", "contact_groups", "contact_emails" ],
+                          "match_checktype", "bulk", "contact_users", "contact_groups", "contact_emails" ],
         headers = [
             ( _("General Properties"), [ "description", "disabled", "allow_disable" ] ),
-            ( _("Notification Method"), [ "notify_plugin", "notify_method" ] ),]
+            ( _("Notification Method"), [ "notify_plugin", "notify_method", "bulk" ] ),]
             + contact_headers
             + [
             ( _("Conditions"),         [ "match_folder", "match_hosttags", "match_hosts", "match_exclude_hosts",
@@ -7662,7 +7715,20 @@ def vs_notification_rule(userid = None):
         ],
         render = "form",
         form_narrow = True,
+        validate = validate_notification_rule,
     )
+
+def validate_notification_rule(rule, varprefix):
+    if "bulk" in rule and rule["notify_method"] == None:
+        raise MKUserError(varprefix + "_p_bulk_USE",
+             _("It does not make sense to add a bulk configuration for cancelling rules."))
+
+    if "bulk" in rule:
+        info = load_notification_scripts()[rule["notify_plugin"]]
+        if not info["bulk"]:
+            raise MKUserError(varprefix + "_p_notify_plugin",
+                  _("The notification script %s does not allow bulking.") % info["title"])
+
 
 def render_notification_rules(rules, userid="", show_title=False, show_buttons=True, analyse=False, start_nr=0, profilemode=False):
     if not rules:
@@ -7751,7 +7817,12 @@ def render_notification_rules(rules, userid="", show_title=False, show_buttons=T
                 html.icon(_("Cancel notifications for this plugin type"), "notify_cancel")
             else:
                 html.icon(_("Create a notification"), "notify_create")
+
             table.cell(_("Plugin"), rule["notify_plugin"], css="narrow")
+
+            table.cell(_("Bulk"), css="narrow")
+            if "bulk" in rule:
+                html.icon(_("This rule configures bulk notifications."), "bulk")
 
             table.cell(_("Description"), rule["description"])
 
@@ -7782,41 +7853,9 @@ def render_notification_rules(rules, userid="", show_title=False, show_buttons=T
             else:
                 html.write("<i>%s</i>" % _("(no conditions)"))
 
-
         table.end()
 
 
-def vs_notification():
-    return Dictionary(
-        title = _("Notification Simulator"),
-        help = _("You can simulate a notification here and analyse your rule set. No notification will "
-                 "actually be sent out."),
-        render = "form",
-        form_narrow = True,
-        optional_keys = False,
-        elements = [
-            ( "host",
-              TextUnicode(
-                title = _("Host Name"),
-                help = _("The host name of the event"),
-                size = 40,
-                default_value = _("myhost089"),
-                allow_empty = False,
-                attrencode = True,
-                regex = "^\\S*$",
-                regex_error = _("The host name may not contain spaces."),
-                )
-            ),
-            ( "service",
-              TextUnicode(
-                title = _("Service Description"),
-                size = 80,
-                default_value = _("Foo Bar 42"),
-                allow_empty = True,
-              ),
-            )
-        ]
-    )
 
 def mode_notifications(phase):
     options = config.load_user_file("notification_display_options", {})
@@ -7990,11 +8029,17 @@ def mode_notifications(phase):
 
     if analyse:
         table.begin(table_id = "plugins", title = _("Resulting notifications"))
-        for contact, plugin, parameters in analyse[1]:
+        for contact, plugin, parameters, bulk in analyse[1]:
             table.row()
             table.cell(_("Contact"), contact)
-            table.cell(_("Plugin"), plugin)
+            table.cell(_("Plugin"), vs_notification_scripts().value_to_text(plugin))
             table.cell(_("Plugin parameters"), ", ".join(parameters))
+            table.cell(_("Bulking"))
+            if bulk:
+                html.write(_("Time horizon") + ": " + Age().value_to_text(bulk["interval"]))
+                html.write(", %s: %d" % (_("Maximum count"), bulk["count"]))
+                html.write(", group by %s" % vs_notification_bulkby().value_to_text(bulk["groupby"]))
+
         table.end()
 
 
@@ -10088,22 +10133,41 @@ def service_levels():
     except:
         return [(0, "(no service level)")]
 
+# Example header of a notification script:
+#!/usr/bin/python
+# HTML Emails with included graphs
+# Bulk: yes
+# Argument 1: Full system path to the pnp4nagios index.php for fetching the graphs. Usually auto configured in OMD.
+# Argument 2: HTTP-URL-Prefix to open Multisite. When provided, several links are added to the mail.
+#
+# This script creates a nifty HTML email in multipart format with
+# attached graphs and such neat stuff. Sweet!
+
 def load_notification_scripts_from(adir):
     scripts = {}
     if os.path.exists(adir):
         for entry in os.listdir(adir):
             path = adir + "/" + entry
             if os.path.isfile(path) and os.access(path, os.X_OK):
-                title = entry
+                info = { "title" : entry, "bulk" : False }
                 try:
                     lines = file(path)
                     lines.next()
                     line = lines.next().strip()
                     if line.startswith("#"):
-                        title = line.lstrip("#").strip().split("#", 1)[0]
+                        info["title"] = line.lstrip("#").strip().split("#", 1)[0]
+                    while True:
+                        line = lines.next().strip()
+                        if not line.startswith("#") or ":" not in line:
+                            break
+                        key, value = line[1:].strip().split(":", 1)
+                        value = value.strip()
+                        if key.lower() == "bulk":
+                            info["bulk"] = (value == "yes")
+
                 except:
                     pass
-                scripts[entry] = title
+                scripts[entry] = info
     return scripts
 
 
@@ -10120,7 +10184,13 @@ def load_notification_scripts():
         scripts.update(load_notification_scripts_from(local_dir))
     except:
         pass
-    choices = scripts.items()
+
+    return scripts
+
+def notification_script_choices():
+    scripts = load_notification_scripts()
+
+    choices = [ (name, info["title"]) for (name, info) in scripts.items() ]
     choices.append((None, _("Plain Text Email (using configured templates)")))
     choices.sort(cmp = lambda a,b: cmp(a[1], b[1]))
     # Make choices localizable
@@ -10128,7 +10198,7 @@ def load_notification_scripts():
     return choices
 
 def notification_script_title(name):
-    return dict(load_notification_scripts()).get(name, name)
+    return dict(notification_script_choices()).get(name, name)
 
 
 def load_notification_table():
@@ -10157,7 +10227,7 @@ def load_notification_table():
                                     (  "plugin",
                                        DropdownChoice(
                                             title = _("Notification Plugin"),
-                                            choices = load_notification_scripts,
+                                            choices = notification_script_choices,
                                             default_value = "mail",
                                         ),
                                     ),

@@ -50,6 +50,7 @@ import pprint, urllib, select, subprocess, socket
 # Default settings
 notification_logdir     = var_dir + "/notify"
 notification_spooldir   = var_dir + "/notify/spool"
+notification_bulkdir    = var_dir + "/notify/bulk"
 notification_log        = notification_logdir + "/notify.log"
 notification_logging    = 0
 notification_backlog    = 10 # keep the last 10 notification contexts for reference
@@ -849,12 +850,14 @@ def notify_rulebased(context, analyse=False):
             num_rule_matches += 1
             contacts = rbn_rule_contacts(rule, context)
             plugin = rule["notify_plugin"]
-            method = rule["notify_method"]
+            method = rule["notify_method"] # None: do cancel, [ str ]: plugin parameters
+            bulk   = rule.get("bulk")
+
             if method == None: # cancelling
                 for contact in contacts:
                     key = contact, plugin
                     if key in notifications:
-                        locked, method = notifications[key]
+                        locked, method, bulk = notifications[key]
                         if locked and "contact" in rule:
                             notify_log("   - cannot cancel notification of %s via %s: it is locked" % key)
                         else:
@@ -864,7 +867,7 @@ def notify_rulebased(context, analyse=False):
                 for contact in contacts:
                     key = contact, plugin
                     if key in notifications:
-                        locked, method = notifications[key]
+                        locked, method, bulk = notifications[key]
                         if locked and "contact" in rule:
                             notify_log("   - cannot modify notification of %s via %s: it is locked" % key)
                             continue
@@ -872,7 +875,7 @@ def notify_rulebased(context, analyse=False):
                     else:
                         notify_log("   - adding notification of %s via %s" % key)
                     # Hint: method is the list of plugin parameters in this case
-                    notifications[key] = ( not rule.get("allow_disable"), method )
+                    notifications[key] = ( not rule.get("allow_disable"), method, bulk )
 
             rule_info.append(("match", rule, ""))
 
@@ -893,17 +896,20 @@ def notify_rulebased(context, analyse=False):
         notify_log("Executing %d notifications:" % len(notifications))
         entries = notifications.items()
         entries.sort()
-        for (contact, plugin), (locked, params) in entries:
+        for (contact, plugin), (locked, params, bulk) in entries:
             if analyse:
                 verb = "would notify"
             else:
                 verb = "notifying"
             notify_log("  * %s %s via %s, parameters: %s" % (verb, contact, plugin, ", ".join(params)))
-            plugin_info.append((contact, plugin, params))
+            plugin_info.append((contact, plugin, params, bulk))
             try:
                 rbn_add_contact_information(context, contact)
                 if not analyse:
-                    call_notification_script(plugin, params, context)
+                    if bulk:
+                        do_bulk_notify(contact, plugin, params, context, bulk)
+                    else:
+                        call_notification_script(plugin, params, context)
             except Exception, e:
                 if opt_debug:
                     raise
@@ -1217,6 +1223,83 @@ def rbn_groups_contacts(groups):
 
 def rbn_emails_contacts(emails):
     return [ "mailto:" + e for e in emails ]
+
+#.
+#   .--Bulk-Notifications--------------------------------------------------.
+#   |                         ____        _ _                              |
+#   |                        | __ ) _   _| | | __                          |
+#   |                        |  _ \| | | | | |/ /                          |
+#   |                        | |_) | |_| | |   <                           |
+#   |                        |____/ \__,_|_|_|\_\                          |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Store postponed bulk notifications for the delivery via the noti-   |
+#   |  cation spooler (mknotifyd).                                         |
+#   '----------------------------------------------------------------------'
+
+def do_bulk_notify(contact, plugin, params, context, bulk):
+    # First identify the bulk. The following elements identify it:
+    # 1. contact
+    # 2. plugin
+    # 3. time horizon (interval) in seconds
+    # 4. max bulked notifications
+    # 5. elements specified in bulk["groupby"]
+    # We first create a bulk path constructed as a tuple of strings.
+    # Later we convert that to a unique directory name.
+    # Note: if you have separate bulk rules with exactly the same
+    # bulking options, then they will use the same bulk.
+
+    what = context["WHAT"]
+    bulk_path = (contact, plugin, str(bulk["interval"]), str(bulk["count"]))
+    bulkby = bulk["groupby"]
+    if "host" in bulkby:
+        bulk_path += ("host", context["HOSTNAME"])
+    elif "folder" in bulkby:
+        bulk_path += ("folder", find_wato_folder(context))
+    if "service" in bulkby:
+        bulk_path += ("service", context.get("SERVICEDESC", ""))
+    if "sl" in bulkby:
+        sl = context.get(what + "_SL", "")
+        bulk_path += ("sl", sl)
+    if "check_type" in bulkby:
+        command = context.get(what + "CHECKCOMMAND", "").split("!")[0]
+        bulk_path += ("check_type", command)
+    if "state" in bulkby:
+        state = context.get(what + "STATE", "")
+        bulk_path += ("state", state)
+
+    notify_log("    --> storing for bulk notification %s" % "|".join(bulk_path)) 
+    bulk_dirname = create_bulk_dirname(bulk_path)
+    uuid = bulk_uuid()
+    filename = bulk_dirname + "/" + uuid
+    file(filename, "w").write("%r\n" % ((params, context),))
+    notify_log("        - stored in %s" % filename)
+
+
+def find_wato_folder(context):
+    for tag in context.get("HOSTTAGS", "").split():
+        if tag.startswith("/wato/"):
+            return tag[6:].rstrip("/")
+    return ""
+
+def create_bulk_dirname(bulk_path):
+    dirname = notification_bulkdir + "/" + bulk_path[0] + "/" + bulk_path[1] + "/"
+    dirname += ",".join([b.replace("/", "\\") for b in bulk_path[2:]])
+    if not os.path.exists(dirname):
+        os.makedirs(dirname)
+        notify_log("        - created bulk directory %s" % dirname)
+    return dirname
+
+def bulk_uuid():
+    try:
+        return file('/proc/sys/kernel/random/uuid').read().strip()
+    except IOError:
+        # On platforms where the above file does not exist we try to
+        # use the python uuid module which seems to be a good fallback
+        # for those systems. Well, if got python < 2.5 you are lost for now.
+        import uuid
+        return str(uuid.uuid4())
+
 
 #.
 #   .--Fake-Notify---------------------------------------------------------.

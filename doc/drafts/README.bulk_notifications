@@ -31,12 +31,8 @@ Notification:
 - Send via Email
 
 Aggregation:
-- Aggregate up to 2 minutes
-- Aggregate by check type
-
-Possible options for the aggregation:
  - time range (e.g. collect notifications up to 2 minutes)
- - force separate notifications for different
+ - force separate notification bulks for different
    [ ] hosts
    [ ] check types
    [ ] states (WARN, CRIT, etc.)
@@ -52,6 +48,7 @@ can enable bulk notifications for otherwise un-bulked ones.
 
 Vice versa: if in a rule notifications are aggregated and a later rule
 (e.g. one of a user) has aggregation disabled, that setting has precedence.
+
 
 IMPLEMENTATION
 --------------

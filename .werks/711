@@ -1,0 +1,16 @@
+Title: New rules based notifications
+Level: 3
+Component: notifications
+Version: 1.2.5i1
+Date: 1393852777
+Class: feature
+
+Check_MK comes now with a completely new notification system called <i>Rule Based
+Notifications</i>. While keeping the flexibility of the <i>Flexible Notifications</i>
+it is easier to configure and at the same time even more flexible. Please
+refer to <a href="http://mathias-kettner.com/checkmk_rbn.html">the online documentation</a>
+for details.
+
+Rule based notifications are turned off per default. They do not harm you in
+any way as long as you do not enable them. If you turn them on then your current
+flexible notification settings are <i>not</i> being converted!

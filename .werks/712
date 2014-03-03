@@ -1,0 +1,10 @@
+Title: Fix multiple groups with same tag when grouping hosts after a tag
+Level: 1
+Component: multisite
+Class: fix
+State: unknown
+Version: 1.2.5i1
+Date: 1393861572
+
+When you use the value of a specific host tag group for grouping in a view,
+you got multiple times the same group. This has been fixed.

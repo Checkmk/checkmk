@@ -24,9 +24,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import userdb
-
 def sync_pre_activate_changes(_unused):
-    if 'wato_pre_activate_changes' in config.userdb_automatic_sync:
+    # In some rare cases for still unknown reasons at this time the
+    # variable config sometimes has the value None. This could or could
+    # not be a mod_python problem. But it makes the activation of changes
+    # in a D-WATO setup break. So better handle this case here.
+    try:
+        do_sync = 'wato_pre_activate_changes' in config.userdb_automatic_sync
+    except:
+        do_sync = False
+    if do_sync:
         userdb.hook_sync()
+
 api.register_hook('pre-activate-changes', sync_pre_activate_changes)

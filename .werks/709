@@ -1,0 +1,8 @@
+Title: Fix NoneType has not attribute userdb_automatic_sync bug in D-WATO
+Level: 1
+Component: wato
+Version: 1.2.4p1
+Date: 1393836538
+Class: fix
+
+

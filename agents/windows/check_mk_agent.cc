@@ -2461,6 +2461,11 @@ char *add_interpreter(char *path, char *newpath)
         snprintf(newpath, 256, "powershell.exe -NoLogo -ExecutionPolicy RemoteSigned \"& \'%s\'\"", path);
         return newpath;
     }
+    else if (!strcmp(path + strlen(path) - 3, ".pl")) {
+        // Perl scripts get perl.exe as interpreter
+        snprintf(newpath, 256, "perl.exe \"%s\"", path);
+        return newpath;
+    }
     else {
         snprintf(newpath, 256, "\"%s\"", path);
         return newpath;

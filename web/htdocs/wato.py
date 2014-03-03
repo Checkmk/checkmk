@@ -7632,13 +7632,13 @@ def vs_notification_rule(userid = None):
                   style = "dropdown",
                   elements = [
                       ListOfStrings(
-                          title = _("Call this plugin with the following parameters"),
+                          title = _("Call the script with the following parameters"),
                           valuespec = TextUnicode(size = 24),
                           orientation = "horizontal",
                       ),
                       FixedValue(
                           value = None,
-                          title = _("Cancel all previous notifications with the plugin"),
+                          title = _("Cancel all previous notifications with this method"),
                           totext = "",
                       ),
                   ]

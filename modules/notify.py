@@ -864,6 +864,10 @@ def notify_rulebased(context, analyse=False):
                 for contact in contacts:
                     key = contact, plugin
                     if key in notifications:
+                        locked, method = notifications[key]
+                        if locked and "contact" in rule:
+                            notify_log("   - cannot modify notification of %s via %s: it is locked" % key)
+                            continue
                         notify_log("   - modifying notification of %s via %s" % key)
                     else:
                         notify_log("   - adding notification of %s via %s" % key)

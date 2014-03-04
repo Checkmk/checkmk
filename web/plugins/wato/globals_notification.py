@@ -69,6 +69,18 @@ register_configvar(group,
     ),
     domain = "check_mk")
 
+register_configvar(group,
+    "notification_bulk_interval",
+    Age(
+        title = _("Interval for checking for ripe bulk notifications"),
+        help = _("If you are using rule based notifications with and <i>Bulk Notifications</i> "
+                 "then Check_MK will check for ripe notification bulks to be sent out "
+                 "at latest every this interval."),
+        default_value = 10,
+        minvalue = 1,
+    ),
+    domain = "check_mk",
+    need_restart = True)
 
 register_configvar(group,
     "notification_logging",

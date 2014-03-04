@@ -435,12 +435,13 @@ def run_notifyd():
 
             if opt_single_cycle:
                 raise MKSignalException(1)
+
         except MKSignalException, e:
             # Initiate shutdown
             g_tcp_server._should_terminate         = True
             g_spoolfiles_handler._should_terminate = True
             now = time.time()
-            while (g_tcp_server._is_running or g_spoolfiles_handler._is_running)\
+            while (g_tcp_server._is_running or g_spoolfiles_handler._is_running) \
                 and time.time() - now < 2:
                 time.sleep(0.1)
 

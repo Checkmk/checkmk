@@ -224,10 +224,11 @@ def page_handler():
             # Even if the user has seen this mode because auf "seeall",
             # he needs an explicit access permission for doing changes:
             if config.may("wato.seeall"):
-                for pname in modeperms:
-                    if '.' not in pname:
-                        pname = "wato." + pname
-                    config.need_permission(pname)
+                if modeperms:
+                    for pname in modeperms:
+                        if '.' not in pname:
+                            pname = "wato." + pname
+                        config.need_permission(pname)
 
             result = modefunc("action")
             if type(result) == tuple:
@@ -7858,9 +7859,10 @@ def render_notification_rules(rules, userid="", show_title=False, show_buttons=T
 
 
 def mode_notifications(phase):
-    options = config.load_user_file("notification_display_options", {})
+    options         = config.load_user_file("notification_display_options", {})
     show_user_rules = options.get("show_user_rules", False)
-    show_backlog = options.get("show_backlog", False)
+    show_backlog    = options.get("show_backlog", False)
+    show_bulks      = options.get("show_bulks", False)
 
     if phase == "title":
         return _("Notification configuration")
@@ -7877,6 +7879,12 @@ def mode_notifications(phase):
             html.context_button(_("Hide Analysis"), html.makeactionuri([("_show_backlog", "")]), "analyze")
         else:
             html.context_button(_("Analyse"), html.makeactionuri([("_show_backlog", "1")]), "analyze")
+
+        if show_bulks:
+            html.context_button(_("Hide Bulks"), html.makeactionuri([("_show_bulks", "")]), "bulk")
+        else:
+            html.context_button(_("Show Bulks"), html.makeactionuri([("_show_bulks", "1")]), "bulk")
+
         return
 
     rules = load_notification_rules()
@@ -7890,6 +7898,11 @@ def mode_notifications(phase):
         elif html.has_var("_show_backlog"):
             if html.check_transaction():
                 options["show_backlog"] = not not html.var("_show_backlog")
+                config.save_user_file("notification_display_options", options)
+
+        elif html.has_var("_show_bulks"):
+            if html.check_transaction():
+                options["show_bulks"] = not not html.var("_show_bulks")
                 config.save_user_file("notification_display_options", options)
 
         elif html.has_var("_replay"):
@@ -7935,13 +7948,17 @@ def mode_notifications(phase):
              "<br><br>"
              "You can change this setting <a href=\"%s\">here</a>.") % url)
 
-
     elif not current_settings.get("notification_fallback_email"):
         url = 'wato.py?mode=edit_configvar&varname=notification_fallback_email'
         html.show_warning(
           _("<b>Warning</b><br><br>You haven't configured a fallback email address "
             "in case of a problem in your notification rules. Please configure "
             "one <a href=\"%s\">here</a>.") % url)
+
+    if show_bulks:
+        render_bulks(only_ripe = False) # Warn if there are unsent bulk notificatios
+    else:
+        render_bulks(only_ripe = True) # Warn if there are unsent bulk notificatios
 
     # Show recent notifications. We can use them for rule analysis
     if show_backlog:
@@ -8040,6 +8057,34 @@ def mode_notifications(phase):
                 html.write(", %s: %d" % (_("Maximum count"), bulk["count"]))
                 html.write(", group by %s" % vs_notification_bulkby().value_to_text(bulk["groupby"]))
 
+        table.end()
+
+
+def render_bulks(only_ripe):
+    bulks = check_mk_local_automation("notification-get-bulks", [ only_ripe and "1" or "0" ], None)
+    if bulks:
+        if only_ripe:
+            table.begin(title = _("Overdue bulk notifications!"))
+        else:
+            table.begin(title = _("Open bulk notifications"))
+
+        for dir, age, interval, maxcount, uuids in bulks:
+            dirparts = dir.split("/")
+            contact = dirparts[-3]
+            method = dirparts[-2]
+            bulk_id = dirparts[-1].split(",", 2)[-1]
+            table.row()
+            table.cell(_("Contact"), contact)
+            table.cell(_("Method"), method)
+            table.cell(_("Bulk ID"), bulk_id)
+            table.cell(_("Max. Age"), "%d %s" % (interval, _("sec")), css="number")
+            table.cell(_("Age"), "%d %s" % (age, _("sec")), css="number")
+            if age >= interval:
+                html.icon(_("Age of oldest notification is over maximum age"), "warning")
+            table.cell(_("Max. Count"), str(maxcount), css="number")
+            table.cell(_("Count"), str(len(uuids)), css="number")
+            if len(uuids) >= maxcount:
+                html.icon(_("Number of notifications exceeds maximum allowed number"), "warning")
         table.end()
 
 

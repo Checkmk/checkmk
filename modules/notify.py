@@ -59,6 +59,7 @@ notification_backlog    = 10 # keep the last 10 notification contexts for refere
 enable_rulebased_notifications = False
 notification_fallback_email    = ""
 notification_rules             = []
+notification_bulk_interval     = 10 # Check every 10 seconds for ripe bulks
 
 # Notification Spooling
 notification_spooling = False
@@ -123,9 +124,9 @@ Available commands:
                             notification data of a host notification.
     spoolfile <filename>    Reads the given spoolfile and creates a
                             notification out of its data
-
     replay N                Uses the N'th recent notification from the backlog
                             and sends it again, counting from 0.
+    send-bulks              Send out ripe bulk notifications
 """)
 
 
@@ -140,12 +141,12 @@ def do_notify(args):
         notify_mode = 'notify'
         if args:
             notify_mode = args[0]
-            if notify_mode not in [ 'fake-service', 'fake-host', 'spoolfile', 'replay' ]:
+            if notify_mode not in [ 'fake-service', 'fake-host', 'spoolfile', 'replay', 'send-bulks' ]:
                 sys.stderr.write("ERROR: Invalid call to check_mk --notify.\n\n")
                 notify_usage()
                 sys.exit(1)
 
-            if len(args) != 2 and notify_mode != "replay":
+            if len(args) != 2 and notify_mode not in [ "replay", "send-bulks" ]:
                 sys.stderr.write("ERROR: need an argument to --notify %s.\n\n" % notify_mode)
                 sys.exit(1)
 
@@ -178,6 +179,9 @@ def do_notify(args):
         elif notify_mode == 'replay':
             context = notification_context_from_backlog(replay_nr)
             notify_notify(context)
+
+        elif notify_mode == "send-bulks":
+            send_ripe_bulks()
 
         else:
             notify_notify(notification_context_from_env())
@@ -312,6 +316,7 @@ def notify_notify(context, analyse=False):
 
     # Add a few further helper variables
     context["MONITORING_HOST"] = socket.gethostname()
+    context["LOGDIR"] = notification_logdir
     if omd_root:
         context["OMD_ROOT"] = omd_root
         context["OMD_SITE"] = os.getenv("OMD_SITE", "")
@@ -389,21 +394,7 @@ def notify_notify(context, analyse=False):
 #   |  Code for the actuall calling of notification plugins (scripts).     |
 #   '----------------------------------------------------------------------'
 
-
-def call_notification_script(plugin, parameters, context, write_into_spoolfile=False):
-
-    # Enter context into environment
-    os.putenv("NOTIFY_PARAMETERS", " ".join(parameters))
-    for nr, value in enumerate(parameters):
-        os.putenv("NOTIFY_PARAMETER_%d" % (nr + 1), value)
-    os.putenv("NOTIFY_LOGDIR", notification_logdir)
-
-    # Export complete context to have all vars in environment.
-    # Existing vars are replaced, some already existing might remain
-    for key in context:
-        if context['WHAT'] == 'SERVICE' or 'SERVICE' not in key:
-            os.putenv('NOTIFY_' + key, context[key].encode('utf-8'))
-
+def path_to_notification_script(plugin):
     # Call actual script without any arguments
     if local_notifications_dir:
         path = local_notifications_dir + "/" + plugin
@@ -417,6 +408,28 @@ def call_notification_script(plugin, parameters, context, write_into_spoolfile=F
         notify_log("  not in %s" % notifications_dir)
         if local_notifications_dir:
             notify_log("  and not in %s" % local_notifications_dir)
+        return None
+
+    else:
+        return path
+
+
+def call_notification_script(plugin, parameters, context, write_into_spoolfile=False):
+
+    # Enter context into environment
+    os.putenv("NOTIFY_PARAMETERS", " ".join(parameters))
+    for nr, value in enumerate(parameters):
+        os.putenv("NOTIFY_PARAMETER_%d" % (nr + 1), value)
+
+    # Export complete context to have all vars in environment.
+    # Existing vars are replaced, some already existing might remain
+    for key in context:
+        if context['WHAT'] == 'SERVICE' or 'SERVICE' not in key:
+            os.putenv('NOTIFY_' + key, context[key].encode('utf-8'))
+
+    # Call actual script without any arguments
+    path = path_to_notification_script(plugin)
+    if not path:
         exitcode = 2
 
     else:
@@ -616,9 +629,11 @@ def notify_keepalive():
                 raise
             notify_log("ERROR %s\n%s" % (e, format_exception()))
 
+        send_ripe_bulks()
+
 
 def notify_data_available():
-    readable, writeable, exceptionable = select.select([0], [], [], None)
+    readable, writeable, exceptionable = select.select([0], [], [], notification_bulk_interval)
     return not not readable
 
 def notification_context_from_string(data):
@@ -1233,8 +1248,8 @@ def rbn_emails_contacts(emails):
 #   |                        |____/ \__,_|_|_|\_\                          |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   |  Store postponed bulk notifications for the delivery via the noti-   |
-#   |  cation spooler (mknotifyd).                                         |
+#   |  Store postponed bulk notifications for later delivery. Deliver such |
+#   |  notifications on cmk --notify bulk.                                 |
 #   '----------------------------------------------------------------------'
 
 def do_bulk_notify(contact, plugin, params, context, bulk):
@@ -1272,15 +1287,16 @@ def do_bulk_notify(contact, plugin, params, context, bulk):
     bulk_dirname = create_bulk_dirname(bulk_path)
     uuid = bulk_uuid()
     filename = bulk_dirname + "/" + uuid
-    file(filename, "w").write("%r\n" % ((params, context),))
+    file(filename + ".new", "w").write("%r\n" % ((params, context),))
+    os.rename(filename + ".new", filename) # We need an atomic creation!
     notify_log("        - stored in %s" % filename)
-
 
 def find_wato_folder(context):
     for tag in context.get("HOSTTAGS", "").split():
         if tag.startswith("/wato/"):
             return tag[6:].rstrip("/")
     return ""
+
 
 def create_bulk_dirname(bulk_path):
     dirname = notification_bulkdir + "/" + bulk_path[0] + "/" + bulk_path[1] + "/"
@@ -1289,6 +1305,7 @@ def create_bulk_dirname(bulk_path):
         os.makedirs(dirname)
         notify_log("        - created bulk directory %s" % dirname)
     return dirname
+
 
 def bulk_uuid():
     try:
@@ -1300,6 +1317,152 @@ def bulk_uuid():
         import uuid
         return str(uuid.uuid4())
 
+
+def find_bulks(only_ripe):
+    if not os.path.exists(notification_bulkdir):
+        return []
+
+    now = time.time()
+    bulks = []
+
+    dir_1 = notification_bulkdir
+    for contact in os.listdir(dir_1):
+        if contact.startswith("."):
+            continue
+        dir_2 = dir_1 + "/" + contact
+        for method in os.listdir(dir_2):
+            if method.startswith("."):
+                continue
+            dir_3 = dir_2 + "/" + method
+            for bulk in os.listdir(dir_3):
+                parts = bulk.split(',') # e.g. 60,10,host,localhost
+                try:
+                    interval = int(parts[0])
+                    count = int(parts[1])
+                except:
+                    notify_log("Skipping invalid bulk directory %s" % dir_3)
+                    continue
+                dir_4 = dir_3 + "/" + bulk
+                uuids = []
+                oldest = time.time()
+                for uuid in os.listdir(dir_4): # 4ded0fa2-f0cd-4b6a-9812-54374a04069f
+                    if uuid.startswith(".") or uuid.endswith(".new"):
+                        continue
+                    if len(uuid) != 36:
+                        notify_log("Skipping invalid notification file %s/%s" % (dir_4, uuid))
+                        continue
+
+                    mtime = os.stat(dir_4 + "/" + uuid).st_mtime
+                    uuids.append((mtime, uuid))
+                    oldest = min(oldest, mtime)
+
+                uuids.sort()
+                if not uuids:
+                    dirage = now - os.stat(dir_4).st_mtime
+                    if dirage > 60:
+                        notify_log("Warning: removing orphaned empty bulk directory %s" % dir_4)
+                        try:
+                            os.rmdir(dir_4)
+                        except Exception, e:
+                            notify_log("    -> Error removing it: %s" % e)
+                    continue
+
+                age = now - oldest
+                if age >= interval:
+                    notify_log("Bulk %s is ripe: age %d >= %d" % (dir_4, age, interval))
+                elif len(uuids) >= count:
+                    notify_log("Bulk %s is ripe: count %d >= %d" % (dir_4, len(uuids), count))
+                else:
+                    notify_log("Bulk %s is not ripe yet (age: %d, count: %d)!" % (dir_4, age, len(uuids)))
+                    if only_ripe:
+                        continue
+
+                bulks.append((dir_4, age, interval, count, uuids))
+
+    return bulks
+
+def send_ripe_bulks():
+    ripe = find_bulks(True)
+    if ripe:
+        notify_log("Sending out %d ripe bulk notifications" % len(ripe))
+        for bulk in ripe:
+            try:
+                notify_bulk(bulk[0], bulk[-1])
+            except Exception, e:
+                if opt_debug:
+                    raise
+                notify_log("Error sending bulk %s: %s" % (bulk[0], format_exception()))
+
+
+def notify_bulk(dirname, uuids):
+    parts = dirname.split("/")
+    contact = parts[-3]
+    plugin = parts[-2]
+    notify_log("   -> %s/%s %s" % (contact, plugin, dirname))
+    # If new entries are created in this directory while we are working
+    # on it, nothing bad happens. It's just that we cannot remove
+    # the directory after our work. It will be the starting point for
+    # the next bulk with the same ID, which is completely OK.
+    bulk_context = []
+    old_params = None
+    unhandled_uuids = []
+    for mtime, uuid in uuids:
+        params, context = eval(file(dirname + "/" + uuid).read())
+        if old_params == None:
+            old_params = params
+        elif params != old_params:
+            notify_log("     Parameters (%s) are different from previous (%s), skipping" % (
+                    ",".join(params), ",".join(old_params)))
+            unhandled_uuids.append(uuid)
+            continue
+        bulk_context.append("\n")
+        for varname, value in context.items():
+            bulk_context.append("%s=%s\n" % (varname, value))
+
+    parameter_context = [ "PARAMETERS=" + " ".join(old_params) + "\n" ]
+    for nr, param in enumerate(old_params):
+        parameter_context.append("PARAMETER_%d=%s\n" % (nr + 1, param))
+
+    context_text = "".join(parameter_context + bulk_context)
+    call_bulk_notification_script(plugin, context_text)
+
+    # Remove sent notifications
+    for mtime, uuid in uuids:
+        if (mtime, uuid) not in unhandled_uuids:
+            path = dirname + "/" + uuid
+            try:
+                os.remove(path)
+            except Exception, e:
+                notify_log("Cannot remove %s: %s" % (path, e))
+
+    # Repeat with unhandled uuids (due to different parameters)
+    if unhandled_uuids:
+        notify_bulk(dirname, unhandled_uuids)
+
+    # Remove directory. Not neccessary if emtpy
+    try:
+        os.rmdir(dirname)
+    except Exception, e:
+        if not unhandled_uuids:
+            notify_log("Warning: cannot remove directory %s: %s" % (dirname, e))
+
+
+def call_bulk_notification_script(plugin, context_text):
+    path = path_to_notification_script(plugin)
+    if not path:
+        raise MKGeneralException("Notification plugin not found")
+
+    # Protocol: The script gets the context on standard input and
+    # read until that is closed. It is being called with the parameter
+    # --bulk.
+    p = subprocess.Popen([path, "--bulk"], shell=False,
+                         stdout = subprocess.PIPE, stderr = subprocess.PIPE, stdin = subprocess.PIPE)
+    stdout_txt, stderr_txt = p.communicate(context_text.encode("utf-8"))
+    exitcode = p.returncode
+    if exitcode:
+        notify_log("ERROR: script %s --bulk returned with exit code %s" % (path, exitcode))
+    for line in (stdout_txt + stderr_txt).splitlines():
+        notify_log("%s: %s" % (plugin, line.rstrip()))
 
 #.
 #   .--Fake-Notify---------------------------------------------------------.

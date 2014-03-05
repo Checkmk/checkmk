@@ -117,6 +117,66 @@ check_info['esx_vsphere_vm.name'] = {
   "service_description" : "ESX Name",
 }
 
+#   .--VM Datastores--------------------------------------------------------.
+#   |    __     ____  __   ____        _            _                      |
+#   |    \ \   / /  \/  | |  _ \  __ _| |_ __ _ ___| |_ ___  _ __ ___      |
+#   |     \ \ / /| |\/| | | | | |/ _` | __/ _` / __| __/ _ \| '__/ _ \     |
+#   |      \ V / | |  | | | |_| | (_| | || (_| \__ \ || (_) | | |  __/     |
+#   |       \_/  |_|  |_| |____/ \__,_|\__\__,_|___/\__\___/|_|  \___|     |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_esx_vsphere_vm_datastores(info):
+    data = esx_vsphere_vm_convert(info)
+    # Right now we only handle one datastore per vm
+    if 'config.datastoreUrl' in data:
+        return [(None, None)]
+    return
+
+def check_esx_vsphere_vm_datastores(no_item, no_params, info):
+    data = esx_vsphere_vm_convert(info)
+
+    datastore_urls = data.get("config.datastoreUrl")
+    if not datastore_urls:
+        return 3, "Datastore information is missing"
+
+    output = []
+    for datastore_url in " ".join(datastore_urls).split("\t"):
+        datastore_url = datastore_url.split("|")
+        output_store = []
+
+        # datastore_url looks like
+        #['url /vmfs/volumes/513df1e9-12fd7366-ac5a-e41f13e69eaa',
+        # 'uncommitted 51973812224',
+        # 'name zmucvm99-lds',
+        # 'type VMFS',
+        # 'accessible true',
+        # 'capacity 578478407680',
+        # 'freeSpace 68779245568']
+
+        # Convert datastore_url to dict
+        datastore_dict = dict(map(lambda x: x.split(" ", 1), datastore_url))
+
+        capacity = saveint(datastore_dict.get("capacity", 0)) * 1.0
+        if capacity:
+            free_perc = int(datastore_dict.get("freeSpace", 0)) / capacity * 100
+        else:
+            free_perc = 0.0
+
+        output_store = "Running on %s (%s/%0.1f%% free)" %\
+                             (datastore_dict.get("name"),
+                              get_bytes_human_readable(capacity),
+                              free_perc)
+        output.append(output_store)
+    return 0, ", ".join(output)
+
+check_info['esx_vsphere_vm.datastores'] = {
+  "inventory_function"  : inventory_esx_vsphere_vm_datastores,
+  "check_function"      : check_esx_vsphere_vm_datastores,
+  "service_description" : "ESX Datastores",
+}
 
 #.
 #   .--GuestTools----------------------------------------------------------.

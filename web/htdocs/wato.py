@@ -7593,12 +7593,12 @@ def vs_notification_rule(userid = None):
                              "If you activate this option and do <b>not</b> also specify service event "
                              "types then this rule will never hold for service notifications!"),
                     choices = [
-                        ( 'rd', _("UP")          + " ➤ " + _("DOWN")),
-                        ( 'dr', _("DOWN")        + " ➤ " + _("UP")),
-                        ( 'ru', _("UP")          + " ➤ " + _("UNREACHABLE")),
-                        ( 'du', _("DOWN")        + " ➤ " + _("UNREACHABLE")),
-                        ( 'ud', _("UNREACHABLE") + " ➤ " + _("DOWN")),
-                        ( 'ur', _("UNREACHABLE") + " ➤ " + _("UP")),
+                        ( 'rd', _("UP")          + u" ➤ " + _("DOWN")),
+                        ( 'dr', _("DOWN")        + u" ➤ " + _("UP")),
+                        ( 'ru', _("UP")          + u" ➤ " + _("UNREACHABLE")),
+                        ( 'du', _("DOWN")        + u" ➤ " + _("UNREACHABLE")),
+                        ( 'ud', _("UNREACHABLE") + u" ➤ " + _("DOWN")),
+                        ( 'ur', _("UNREACHABLE") + u" ➤ " + _("UP")),
                         ( 'f', _("Start or end of flapping state")),
                         ( 's', _("Start or end of a scheduled downtime ")),
                         ( 'x', _("Acknowledgement of host problem")),
@@ -7607,35 +7607,35 @@ def vs_notification_rule(userid = None):
               )
             ),
             ( "match_service_event",
-               ListChoice(
-                   title = _("Match Service Event Type"),
-                    help  = _("Select the service event types and transitions this rule should handle. Note: "
-                              "If you activate this option and do <b>not</b> also specify host event "
-                              "types then this rule will never hold for host notifications!"),
-                   choices = [
-                       ( 'rw', _("OK")      + " ➤ " + _("WARN")),
-                       ( 'rc', _("OK")      + " ➤ " + _("CRIT")),
-                       ( 'ru', _("OK")      + " ➤ " + _("UNKNOWN")),
+                ListChoice(
+                    title = _("Match Service Event Type"),
+                     help  = _("Select the service event types and transitions this rule should handle. Note: "
+                               "If you activate this option and do <b>not</b> also specify host event "
+                               "types then this rule will never hold for host notifications!"),
+                    choices = [
+                        ( 'rw', _("OK")      + u" ➤ " + _("WARN")),
+                        ( 'rc', _("OK")      + u" ➤ " + _("CRIT")),
+                        ( 'ru', _("OK")      + u" ➤ " + _("UNKNOWN")),
 
-                       ( 'wr', _("WARN")    + " ➤ " + _("OK")),
-                       ( 'wc', _("WARN")    + " ➤ " + _("CRIT")),
-                       ( 'wu', _("WARN")    + " ➤ " + _("UNKNOWN")),
+                        ( 'wr', _("WARN")    + u" ➤ " + _("OK")),
+                        ( 'wc', _("WARN")    + u" ➤ " + _("CRIT")),
+                        ( 'wu', _("WARN")    + u" ➤ " + _("UNKNOWN")),
 
-                       ( 'cr', _("CRIT")    + " ➤ " + _("OK")),
-                       ( 'cw', _("CRIT")    + " ➤ " + _("WARN")),
-                       ( 'cu', _("CRIT")    + " ➤ " + _("UNKNOWN")),
+                        ( 'cr', _("CRIT")    + u" ➤ " + _("OK")),
+                        ( 'cw', _("CRIT")    + u" ➤ " + _("WARN")),
+                        ( 'cu', _("CRIT")    + u" ➤ " + _("UNKNOWN")),
 
-                       ( 'ur', _("UNKNOWN") + " ➤ " + _("OK")),
-                       ( 'uw', _("UNKNOWN") + " ➤ " + _("WARN")),
-                       ( 'uc', _("UNKNOWN") + " ➤ " + _("CRIT")),
+                        ( 'ur', _("UNKNOWN") + u" ➤ " + _("OK")),
+                        ( 'uw', _("UNKNOWN") + u" ➤ " + _("WARN")),
+                        ( 'uc', _("UNKNOWN") + u" ➤ " + _("CRIT")),
 
-                       ( 'f', _("Start or end of flapping state")),
-                       ( 's', _("Start or end of a scheduled downtime")),
-                       ( 'x', _("Acknowledgement of service problem")),
-                   ],
-                   default_value = [ 'rw', 'rc', 'ru', 'wc', 'wu', 'uc', 'f', 's', 'x' ],
-              )
-            ),
+                        ( 'f', _("Start or end of flapping state")),
+                        ( 's', _("Start or end of a scheduled downtime")),
+                        ( 'x', _("Acknowledgement of service problem")),
+                    ],
+                    default_value = [ 'rw', 'rc', 'ru', 'wc', 'wu', 'uc', 'f', 's', 'x' ],
+               )
+             ),
         ] +
         section_contacts +
         [

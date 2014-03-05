@@ -1103,18 +1103,24 @@ register_check_parameters(
                    title = _("Memory Levels"),
                    elements = [
                        Tuple(
-                           title = _("Usage Levels in Percent"),
+                           title = _("Memory usage in percent"),
                            elements = [
                                Percentage(title = _("Warning if above")),
                                Percentage(title = _("Critical if above")),
                            ],
                        ),
-                       Tuple(
-                           title = _("Absolute Usage Levels"),
-                           elements = [
-                                Filesize(title = _("Warning if above")),
-                                Filesize(title = _("Critical if above")),
-                           ]
+                       Transform(
+                            Tuple(
+                                title = _("Absolute free memory"),
+                                elements = [
+                                     Filesize(title = _("Warning if less than")),
+                                     Filesize(title = _("Critical if less than")),
+                                ]
+                            ),
+                            # Note: Filesize values lesser 1MB will not work
+                            # -> need hide option in filesize valuespec
+                            back  = lambda x: (x[0] / 1024 / 1024, x[1] / 1024 / 1024),
+                            forth = lambda x: (x[0] * 1024 * 1024, x[1] * 1024 * 1024)
                         )
                    ],
                    default_value = (80.0, 90.0))),
@@ -1123,18 +1129,24 @@ register_check_parameters(
                    title = _("Pagefile Levels"),
                    elements = [
                        Tuple(
-                           title = _("Usage Levels in Percent"),
+                           title = _("Pagefile usage in percent"),
                            elements = [
                                Percentage(title = _("Warning if above")),
                                Percentage(title = _("Critical if above")),
                            ]
                        ),
-                       Tuple(
-                           title = _("Absolute Usage Levels"),
-                           elements = [
-                                Filesize(title = _("Warning if above")),
-                                Filesize(title = _("Critical if above")),
-                           ]
+                       Transform(
+                            Tuple(
+                                title = _("Absolute free pagefile"),
+                                elements = [
+                                     Filesize(title = _("Warning if less than")),
+                                     Filesize(title = _("Critical if less than")),
+                                ]
+                            ),
+                            # Note: Filesize values lesser 1MB will not work
+                            # -> need hide option in filesize valuespec
+                            back  = lambda x: (x[0] / 1024 / 1024, x[1] / 1024 / 1024),
+                            forth = lambda x: (x[0] * 1024 * 1024, x[1] * 1024 * 1024)
                         )
                    ],
                    default_value = (50.0, 70.0))

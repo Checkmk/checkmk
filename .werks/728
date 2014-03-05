@@ -1,0 +1,12 @@
+Title: mem.win: fixed bug in WATO configuration rule
+Level: 1
+Component: wato
+Version: 1.2.4p1
+Date: 1394038275
+Class: fix
+
+The WATO configuration showed "Absolute used pagefile" (and memory) as configurable limits.
+The check instead interpreted this value as "Absolute free pagefile".
+This has been fixed. WATO now shows "Absolute free pagefile", too.
+
+Additionally the configured value was off by a factor of 1024 * 1024.

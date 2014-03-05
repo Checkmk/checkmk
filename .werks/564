@@ -1,0 +1,12 @@
+Title: esx_vsphere_vm.datastores: displays the datastores of the vm
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1394029082
+Class: feature
+
+This check proviced information about any datastores the virtualmachine is running on.
+Reported fields are the name, the total capacity and the percentage of free space.
+
+The check returns {OK}, unless the datastore information is missing.
+In this case it returns {UNKNOWN}.

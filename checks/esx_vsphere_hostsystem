@@ -174,7 +174,7 @@ def check_esx_vsphere_hostsystem_state(item, params, info):
         label['Status'] = "(!)"
     elif overallStatus in [ "red", "gray"]:
         state = 2
-        label['Satus'] = "(!!)"
+        label['Status'] = "(!!)"
     messages.append("Entity state: %s%s" % (overallStatus, label['Status']))
 
     label['powerState'] = ''

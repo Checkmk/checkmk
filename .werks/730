@@ -1,0 +1,13 @@
+Title: cmc: fixed bug displaying logentries after a logfile rotation
+Level: 2
+Component: core
+Version: 1.2.4p1
+Date: 1394120989
+Class: fix
+
+The Check_MK microcore didn't cleanup cached logfiles correctly.
+Thus caused missing logentries, when accessing views like
+"Host and Service Events" or "Search global logfile".
+
+The logentries itself were not lost, just unavailable in views.
+The problem could be fixed by restarting (not reloading) the cmc.

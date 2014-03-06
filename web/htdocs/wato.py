@@ -7574,6 +7574,30 @@ def vs_notification_rule(userid = None):
                 ],
               ),
             ),
+            ( "match_escalation_throttle",
+              Tuple(
+                  title = _("Throttle periodic notifications"),
+                  help = _("This match option allows you to throttle periodic notifications after "
+                           "a certain number of notifications have been created by the monitoring "
+                           "core. If you for example select 10 as the beginning and 5 as the rate "
+                           "then you will receive the notification 1 through 10 and then 15, 20, "
+                           "25.. and so on."),
+                  orientation = "float",
+                  elements = [
+                     Integer(
+                         label = _("beginning from notifcation number"),
+                         default_value = 10,
+                         minvalue = 1,
+                     ),
+                     Integer(
+                         label = _("send only every"),
+                         default_value = 5,
+                         unit = _("th notification"),
+                         minvalue = 1,
+                    )
+                  ],
+              )
+            ),
             ( "match_sl",
               Tuple(
                 title = _("Match service level"),
@@ -7702,7 +7726,8 @@ def vs_notification_rule(userid = None):
         ],
         optional_keys = [ "match_folder", "match_hosttags", "match_hosts", "match_exclude_hosts",
                           "match_services", "match_exclude_services", "match_plugin_output",
-                          "match_timeperiod", "match_escalation", "match_sl", "match_host_event", "match_service_event",
+                          "match_timeperiod", "match_escalation", "match_escalation_throttle", 
+                          "match_sl", "match_host_event", "match_service_event",
                           "match_checktype", "bulk", "contact_users", "contact_groups", "contact_emails" ],
         headers = [
             ( _("General Properties"), [ "description", "disabled", "allow_disable" ] ),
@@ -7712,7 +7737,8 @@ def vs_notification_rule(userid = None):
             ( _("Conditions"),         [ "match_folder", "match_hosttags", "match_hosts", "match_exclude_hosts",
                                          "match_services", "match_exclude_services", "match_plugin_output",
                                          "match_checktype", "match_timeperiod",
-                                         "match_escalation", "match_sl", "match_host_event", "match_service_event" ] ),
+                                         "match_escalation", "match_escalation_throttle",
+                                         "match_sl", "match_host_event", "match_service_event" ] ),
         ],
         render = "form",
         form_narrow = True,

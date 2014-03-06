@@ -583,18 +583,19 @@ def rbn_match_rule(rule, context):
         return "This rule is disabled"
 
     return \
-        rbn_match_folder(rule, context)           or \
-        rbn_match_hosttags(rule, context)         or \
-        rbn_match_hosts(rule, context)            or \
-        rbn_match_exclude_hosts(rule, context)    or \
-        rbn_match_services(rule, context)         or \
-        rbn_match_exclude_services(rule, context) or \
-        rbn_match_plugin_output(rule, context)    or \
-        rbn_match_checktype(rule, context)        or \
-        rbn_match_timeperiod(rule)                or \
-        rbn_match_escalation(rule, context)       or \
-        rbn_match_servicelevel(rule, context)     or \
-        rbn_match_host_event(rule, context)       or \
+        rbn_match_folder(rule, context)                or \
+        rbn_match_hosttags(rule, context)              or \
+        rbn_match_hosts(rule, context)                 or \
+        rbn_match_exclude_hosts(rule, context)         or \
+        rbn_match_services(rule, context)              or \
+        rbn_match_exclude_services(rule, context)      or \
+        rbn_match_plugin_output(rule, context)         or \
+        rbn_match_checktype(rule, context)             or \
+        rbn_match_timeperiod(rule)                     or \
+        rbn_match_escalation(rule, context)            or \
+        rbn_match_escalation_throtte(rule, context)    or \
+        rbn_match_servicelevel(rule, context)          or \
+        rbn_match_host_event(rule, context)            or \
         rbn_match_service_event(rule, context)
 
 
@@ -708,6 +709,18 @@ def rbn_match_escalation(rule, context):
             return "The notification number %d does not lie in range %d ... %d" % (
                     notification_number, from_number, to_number)
 
+def rbn_match_escalation_throtte(rule, context):
+    if "match_escalation_throttle" in rule:
+        from_number, rate = rule["match_escalation_throttle"]
+        if context["WHAT"] == "HOST":
+            notification_number = int(context.get("HOSTNOTIFICATIONNUMBER", 1))
+        else:
+            notification_number = int(context.get("SERVICENOTIFICATIONNUMBER", 1))
+        if notification_number <= from_number:
+            return
+        if (notification_number - from_number) % rate != 0:
+            return "This notification is being skipped due to throttling. The next number will be %d" % \
+                (notification_number + rate - ((notification_number - from_number) % rate))
 
 def rbn_match_servicelevel(rule, context):
     if "match_sl" in rule:

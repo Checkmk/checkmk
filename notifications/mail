@@ -486,6 +486,10 @@ def main():
         mailto = context['CONTACTEMAIL']
         subject = context['SUBJECT']
 
+    if not mailto: # e.g. empty field in user database
+        sys.stdout.write("Cannot send HTML email: empty destination email address")
+        sys.exit(2)
+
 
     # Create the mail and send it
     m = multipart_mail(mailto, subject, content_txt, content_html, attachments)

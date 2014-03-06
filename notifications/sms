@@ -13,7 +13,7 @@ for binary in [ 'sendsms', 'smssend' ]:
 
 if not send_path:
     sys.stderr.write('Error: SMS Tools binaries (sendsms or smssend) not found\n')
-    sys.exit(1)
+    sys.exit(2) # Fatal error, no retry
 
 max_len = 160
 message = os.environ['NOTIFY_HOSTNAME'] + " "
@@ -29,4 +29,7 @@ else:
     message += "is " + os.environ['NOTIFY_HOSTSTATE']
 
 empf = os.environ['NOTIFY_CONTACTPAGER']
-os.system("%s %s '%s'" % (send_path, empf, message[:160]))
+if 0 == os.system("%s %s '%s'" % (send_path, empf, message[:160])):
+    sys.exit(0)
+else:
+    sys.exit(1)

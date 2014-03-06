@@ -7442,9 +7442,9 @@ def vs_notification_rule(userid = None):
             ),
             ( "contact_emails",
               ListOfStrings(
-                  valuespec = EmailAddress(),
+                  valuespec = EmailAddress(size = 44),
                   title = _("The following explicit email addresses"),
-                  orientation = "horizontal",
+                  orientation = "vertical",
               )
             ),
         ]
@@ -7725,10 +7725,14 @@ def validate_notification_rule(rule, varprefix):
              _("It does not make sense to add a bulk configuration for cancelling rules."))
 
     if "bulk" in rule:
-        info = load_notification_scripts()[rule["notify_plugin"]]
-        if not info["bulk"]:
+        if rule["notify_plugin"]:
+            info = load_notification_scripts()[rule["notify_plugin"]]
+            if not info["bulk"]:
+                raise MKUserError(varprefix + "_p_notify_plugin",
+                      _("The notification script %s does not allow bulking.") % info["title"])
+        else:
             raise MKUserError(varprefix + "_p_notify_plugin",
-                  _("The notification script %s does not allow bulking.") % info["title"])
+                  _("The plain emails currently do not support bulking."))
 
 
 def render_notification_rules(rules, userid="", show_title=False, show_buttons=True, analyse=False, start_nr=0, profilemode=False):
@@ -7819,7 +7823,7 @@ def render_notification_rules(rules, userid="", show_title=False, show_buttons=T
             else:
                 html.icon(_("Create a notification"), "notify_create")
 
-            table.cell(_("Plugin"), rule["notify_plugin"], css="narrow")
+            table.cell(_("Plugin"), rule["notify_plugin"] or _("Plain Email"), css="narrow")
 
             table.cell(_("Bulk"), css="narrow")
             if "bulk" in rule:

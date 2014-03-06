@@ -239,6 +239,7 @@ class TcpServer:
                 client_data = ""
                 chunk_count = 0
                 client_socket, addr_info = s.accept()
+                from_name = "%s:%s" % addr_info
                 while True:
                     try:
                         data_ready = select.select([client_socket], [], [], 2)[0]
@@ -254,21 +255,21 @@ class TcpServer:
                         break # Error while reading
 
                 if opt_verbose > 1:
-                    verbose("Received notification %d from %s in %d chunks" % ( handled_connections, pprint.pformat(addr_info), chunk_count), 2)
+                    verbose("Received notification %d from %s in %d chunks" % ( handled_connections, from_name, chunk_count), 2)
                     handled_connections = handled_connections + 1
 
                 try:
                     content = pickle.loads(client_data)
-                    del content["forward"]
                     if not os.path.exists(g_spool_dir):
                         os.makedirs(g_spool_dir)
-                    spoolfile = "%s/%s" % uuid.uuid1()
+                    spoolfile = "%s/%s" % (g_spool_dir, uuid.uuid1())
                     file(spoolfile,"w").write(pprint.pformat(content))
                     verbose("client data processed - sending OK", 2)
                     client_socket.send("OK")
 
                 except Exception, e:
-                    log("Error processing data from %s" % pprint.pformat(addr_info))
+
+                    log("Error processing data from %s: %s\n%s" % (from_name, e, format_exception()))
                     try:
                         if client_socket:
                             client_socket.send("ERROR")

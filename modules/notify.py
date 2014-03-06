@@ -544,7 +544,15 @@ def rbn_add_contact_information(raw_context, contact):
                 if key[0] == '_':
                     raw_context["CONTACT" + key.upper()] = contact[key]
     else:
-        contact_dict = contacts.get(contact, { "name" : contact, "alias" : contact })
+        if contact.startswith("mailto:"): # Fake contact
+            contact_dict = { 
+                "name"  : contact[7:].split("@")[0], 
+                "alias" : "Email address " + contact,
+                "email" : contact[7:],
+                "pager" : "" }
+        else:
+            contact_dict = contacts.get(contact, { "name" : contact, "alias" : contact })
+
         rbn_add_contact_information(raw_context, contact_dict)
 
 
@@ -1186,7 +1194,7 @@ def handle_spoolfile(spoolfile):
             # several or no actual plugins.
             notify_log("Got spool file from remote host for local delivery.")
             raw_context = data["context"]
-            locally_deliver_plugin_context(data["context"])
+            locally_deliver_raw_context(data["context"])
             return 0 # No error handling for async delivery
 
     except Exception, e:

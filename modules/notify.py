@@ -216,7 +216,7 @@ def notify_notify(raw_context, analyse=False):
         if not also_local:
             return
 
-    locally_deliver_raw_context(raw_context, analyse=analyse)
+    return locally_deliver_raw_context(raw_context, analyse=analyse)
 
 
 # Here we decide which notification implementation we are using.
@@ -239,8 +239,7 @@ def locally_deliver_raw_context(raw_context, analyse=False):
         if not contactname or contactname == "check-mk-notify":
             # 1. RULE BASE NOTIFICATIONS
             notify_log("Preparing rule based notifications")
-            notify_rulebased(raw_context, analyse=analyse)
-            return
+            return notify_rulebased(raw_context, analyse=analyse)
 
         if analyse:
             return # Analysis only possible when rule based notifications are enabled
@@ -283,7 +282,7 @@ def notification_analyse_backlog(nr):
     global notify_mode
     notify_mode = "replay"
     raw_context = raw_context_from_backlog(nr)
-    notify_notify(raw_context, analyse=True)
+    return notify_notify(raw_context, analyse=True)
 
 
 #.
@@ -432,7 +431,7 @@ def notify_rulebased(raw_context, analyse=False):
                     key = contact, plugin
                     plugintxt = plugin or "plain email"
                     if key in notifications:
-                        locked, method, bulk = notifications[key]
+                        locked, method, old_bulk = notifications[key]
                         if locked and "contact" in rule:
                             notify_log("   - cannot modify notification of %s via %s: it is locked" % (contact, plugintxt))
                             continue
@@ -466,7 +465,9 @@ def notify_rulebased(raw_context, analyse=False):
                 verb = "would notify"
             else:
                 verb = "notifying"
-            notify_log("  * %s %s via %s, parameters: %s" % (verb, contact, (plugin or "plain email"), ", ".join(params)))
+            notify_log("  * %s %s via %s, parameters: %s, bulk: %s" % (
+                  verb, contact, (plugin or "plain email"), params and ", ".join(params) or "(no parameters)",
+                  bulk and "yes" or "no"))
             plugin_info.append((contact, plugin, params, bulk)) # for analysis
             try:
                 rbn_add_contact_information(raw_context, contact)

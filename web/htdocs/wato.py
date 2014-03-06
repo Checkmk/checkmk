@@ -7735,7 +7735,8 @@ def validate_notification_rule(rule, varprefix):
                   _("The plain emails currently do not support bulking."))
 
 
-def render_notification_rules(rules, userid="", show_title=False, show_buttons=True, analyse=False, start_nr=0, profilemode=False):
+def render_notification_rules(rules, userid="", show_title=False, show_buttons=True,
+                              analyse=False, start_nr=0, profilemode=False):
     if not rules:
         html.message(_("You have not created any rules yet."))
 
@@ -7779,12 +7780,12 @@ def render_notification_rules(rules, userid="", show_title=False, show_buttons=T
                 listmode = "notifications"
 
             if show_buttons:
-                analyse = html.var("analyse", "")
+                anavar = html.var("analyse", "")
                 delete_url = make_action_link([("mode", listmode), ("user", userid), ("_delete", nr)])
-                top_url    = make_action_link([("mode", listmode), ("analyse", analyse), ("user", userid), ("_move", nr), ("_where", 0)])
-                bottom_url = make_action_link([("mode", listmode), ("analyse", analyse), ("user", userid), ("_move", nr), ("_where", len(rules)-1)])
-                up_url     = make_action_link([("mode", listmode), ("analyse", analyse), ("user", userid), ("_move", nr), ("_where", nr-1)])
-                down_url   = make_action_link([("mode", listmode), ("analyse", analyse), ("user", userid), ("_move", nr), ("_where", nr+1)])
+                top_url    = make_action_link([("mode", listmode), ("analyse", anavar), ("user", userid), ("_move", nr), ("_where", 0)])
+                bottom_url = make_action_link([("mode", listmode), ("analyse", anavar), ("user", userid), ("_move", nr), ("_where", len(rules)-1)])
+                up_url     = make_action_link([("mode", listmode), ("analyse", anavar), ("user", userid), ("_move", nr), ("_where", nr-1)])
+                down_url   = make_action_link([("mode", listmode), ("analyse", anavar), ("user", userid), ("_move", nr), ("_where", nr+1)])
                 suffix = profilemode and "_p" or ""
                 edit_url   = make_link([("mode", "notification_rule" + suffix), ("edit", nr), ("user", userid)])
                 clone_url  = make_link([("mode", "notification_rule" + suffix), ("clone", nr), ("user", userid)])
@@ -8027,7 +8028,7 @@ def mode_notifications(phase):
             table.end()
 
     # Do analysis
-    if html.has_var("analyse"):
+    if html.var("analyse"):
         nr = int(html.var("analyse"))
         analyse = check_mk_local_automation("notification-analyse", [str(nr)], None)
     else:
@@ -14432,7 +14433,8 @@ def page_user_profile():
 def create_sample_config():
     if os.path.exists(multisite_dir + "hosttags.mk") \
         or os.path.exists(root_dir + "rules.mk") \
-        or os.path.exists(root_dir + "groups.mk"):
+        or os.path.exists(root_dir + "groups.mk") \
+        or os.path.exists(root_dir + "notifications.mk"):
         return
 
     # A contact group where everyone is member of
@@ -14499,6 +14501,19 @@ def create_sample_config():
     }
 
     save_rulesets(g_root_folder, rulesets)
+
+    notification_rules = [{
+        'allow_disable'          : True,
+        'contact_all'            : False,
+        'contact_all_with_email' : False,
+        'contact_object'         : True,
+        'description'            : 'Notify all contacts of a host/service via HTML email',
+        'disabled'               : False,
+        'notify_method'          : [],
+        'notify_plugin'          : 'mail'
+    }]
+    save_notification_rules(notification_rules)
+
 
     # Make sure the host tag attributes are immediately declared!
     config.wato_host_tags = wato_host_tags

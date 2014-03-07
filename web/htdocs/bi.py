@@ -1202,8 +1202,8 @@ def x_best_state(l, x):
 
     return ll[n-1][1]
 
-def aggr_nth_state(nodelist, n, worst_state):
-    states = [ i[0]["state"] for i in nodelist ]
+def aggr_nth_state(nodelist, n, worst_state, ignore_states = None):
+    states = [ i[0]["state"] for i in nodelist if not ignore_states or i[0]["state"] not in ignore_states ]
     state = x_best_state(states, n)
 
     # limit to worst state
@@ -1212,11 +1212,11 @@ def aggr_nth_state(nodelist, n, worst_state):
 
     return { "state" : state, "output" : "" }
 
-def aggr_worst(nodes, n = 1, worst_state = CRIT):
-    return aggr_nth_state(nodes, -int(n), int(worst_state))
+def aggr_worst(nodes, n = 1, worst_state = CRIT, ignore_states = None):
+    return aggr_nth_state(nodes, -int(n), int(worst_state), ignore_states)
 
-def aggr_best(nodes, n = 1, worst_state = CRIT):
-    return aggr_nth_state(nodes, int(n), int(worst_state))
+def aggr_best(nodes, n = 1, worst_state = CRIT, ignore_states = None):
+    return aggr_nth_state(nodes, int(n), int(worst_state), ignore_states)
 
 config.aggregation_functions["worst"] = aggr_worst
 config.aggregation_functions["best"]  = aggr_best

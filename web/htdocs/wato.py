@@ -7940,6 +7940,7 @@ def mode_notifications(phase):
             if html.check_transaction():
                 nr = int(html.var("_replay"))
                 result = check_mk_local_automation("notification-replay", [str(nr)], None)
+                return None, _("Replayed notifiation number %d") % (nr + 1)
 
         elif html.has_var("_delete"):
             nr = int(html.var("_delete"))

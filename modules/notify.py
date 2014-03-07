@@ -53,6 +53,7 @@ import pprint, urllib, select, subprocess, socket
 notification_logdir     = var_dir + "/notify"
 notification_spooldir   = var_dir + "/notify/spool"
 notification_bulkdir    = var_dir + "/notify/bulk"
+notification_core_log   = var_dir + "/notify/nagios.log" # Fallback for history if no CMC running
 notification_log        = notification_logdir + "/notify.log"
 notification_logging    = 0
 notification_backlog    = 10 # keep the last 10 notification contexts for reference
@@ -451,9 +452,10 @@ def notify_rulebased(raw_context, analyse=False):
         else:
             if notification_fallback_email and not analyse:
                 notify_log("No rule matched, falling back to email to %s" % notification_fallback_email)
+                plugin_context = create_plugin_context(raw_context, [])
                 contact = rbn_fake_email_contact(notification_fallback_email)
-                rbn_add_contact_information(raw_context, contact)
-                notify_plain_email(raw_context)
+                rbn_add_contact_information(plugin_context, contact)
+                notify_via_email(plugin_context)
 
     else:
         # Now do the actual notifications
@@ -470,17 +472,14 @@ def notify_rulebased(raw_context, analyse=False):
                   bulk and "yes" or "no"))
             plugin_info.append((contact, plugin, params, bulk)) # for analysis
             try:
-                rbn_add_contact_information(raw_context, contact)
                 plugin_context = create_plugin_context(raw_context, params)
+                rbn_add_contact_information(plugin_context, contact)
                 if not analyse:
                     if bulk:
                         do_bulk_notify(contact, plugin, params, plugin_context, bulk)
                     elif notification_spooling:
                         create_spoolfile({"context": plugin_context, "plugin": plugin})
-                    elif plugin:
-                        call_notification_script(plugin, plugin_context)
-                    else:
-                        notify_via_email(plugin_context)
+                    call_notification_script(plugin, plugin_context)
 
             except Exception, e:
                 if opt_debug:
@@ -537,13 +536,13 @@ def rbn_fake_email_contact(email):
     }
 
 
-def rbn_add_contact_information(raw_context, contact):
+def rbn_add_contact_information(plugin_context, contact):
     if type(contact) == dict:
         for what in [ "name", "alias", "email", "pager" ]:
-            raw_context["CONTACT" + what.upper()] = contact.get(what, "")
-            for key in contact.keys():
-                if key[0] == '_':
-                    raw_context["CONTACT" + key.upper()] = contact[key]
+            plugin_context["CONTACT" + what.upper()] = contact.get(what, "")
+        for key in contact.keys():
+            if key[0] == '_':
+                plugin_context["CONTACT" + key.upper()] = contact[key]
     else:
         if contact.startswith("mailto:"): # Fake contact
             contact_dict = { 
@@ -552,9 +551,10 @@ def rbn_add_contact_information(raw_context, contact):
                 "email" : contact[7:],
                 "pager" : "" }
         else:
-            contact_dict = contacts.get(contact, { "name" : contact, "alias" : contact })
+            contact_dict = contacts.get(contact, { "alias" : contact })
+            contact_dict["name"] = contact
 
-        rbn_add_contact_information(raw_context, contact_dict)
+        rbn_add_contact_information(plugin_context, contact_dict)
 
 
 def livestatus_fetch_contacts(host, service):
@@ -862,10 +862,7 @@ def notify_flexible(raw_context, notification_table):
 
         if notification_spooling:
             create_spoolfile({"context": plugin_context, "plugin": plugin})
-        elif plugin:
-            call_notification_script(plugin, plugin_context)
-        else:
-            notify_via_email(plugin_context)
+        call_notification_script(plugin, plugin_context)
 
 # may return
 # 0  : everything fine   -> proceed
@@ -1132,8 +1129,20 @@ def path_to_notification_script(plugin):
     else:
         return path
 
-
+# This is the function that finally sends the actual notificion.
+# It does this by calling an external script are creating a
+# plain email and calling bin/mail.
+#
+# It also does the central logging of the notifications
+# that are actually sent out.
+#
+# Note: this function is *not* being called for bulk notification.
 def call_notification_script(plugin, plugin_context):
+    core_notification_log(plugin, plugin_context)
+
+    # The "Pseudo"-Plugin None means builtin plain email
+    if not plugin:
+        return notify_via_email(plugin_context)
 
     # Call actual script without any arguments
     path = path_to_notification_script(plugin)
@@ -1197,10 +1206,7 @@ def handle_spoolfile(spoolfile):
             plugin = data["plugin"]
             notify_log("Got spool file for local delivery via %s" % (
                 plugin or "plain mail"))
-            if plugin:
-                return call_notification_script(plugin, plugin_context)
-            else:
-                return notify_via_email(plugin_context)
+            return call_notification_script(plugin, plugin_context)
 
         else:
             # We received a forwarded raw notification. We need to process
@@ -1583,6 +1589,19 @@ def livestatus_fetch_query(query):
     sock.close()
     return response
 
+def livestatus_send_command(command):
+    try:
+        message = "COMMAND [%d] %s\n" % (time.time(), command)
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        sock.connect(livestatus_unix_socket)
+        sock.send(message)
+        sock.close()
+    except Exception, e:
+        if opt_debug:
+            raise
+        notify_log("WARNING: cannot send livestatus command: %s" % e)
+        notify_log("Command was: %s" % command)
+
 
 def format_exception():
     import traceback, StringIO, sys
@@ -1634,4 +1653,27 @@ def fresh_uuid():
         import uuid
         return str(uuid.uuid4())
 
+def core_notification_log(plugin, plugin_context):
+    what = plugin_context["WHAT"]
+    contact = plugin_context["CONTACTNAME"]
+    spec = plugin_context["HOSTNAME"]
+    if what == "HOST":
+        state = plugin_context["HOSTSTATE"]
+        output = plugin_context["HOSTOUTPUT"]
+    if what == "SERVICE":
+        spec += ";" + plugin_context["SERVICEDESC"]
+        state = plugin_context["SERVICESTATE"]
+        output = plugin_context["SERVICEOUTPUT"]
+
+    log_message = "%s NOTIFICATION: %s;%s;%s;%s;%s" % (
+            what, contact, spec, state, plugin or "plain email", output)
+    if monitoring_core == "cmc":
+        livestatus_send_command("LOG;" + log_message)
+    else:
+        # Nagios and friends do not support logging via an
+        # external command. We write the files into a help file
+        # in var/check_mk/notify. If the users likes he can
+        # replace that file with a symbolic link to the nagios
+        # log file. But note: Nagios logging might not atomic.
+        file(notification_core_log, "a").write("[%d] %s\n" % (time.time(), log_message))
 

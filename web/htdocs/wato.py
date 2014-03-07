@@ -7374,7 +7374,7 @@ def FolderChoice(**kwargs):
 
 def vs_notification_bulkby():
     return ListChoice(
-      title = _("Createseparate notification bulks based on"),
+      title = _("Create separate notification bulks based on"),
       choices = [
         ( "folder",     _("Folder") ),
         ( "host",       _("Host") ),

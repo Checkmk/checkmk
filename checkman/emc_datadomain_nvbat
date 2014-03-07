@@ -18,5 +18,5 @@ perfdata:
  The electrical charge of the battery in percent
 
 inventory:
- Automatically configures one check for every NVRAM battery found on the 
+ Automatically configures one check for every NVRAM battery found on the
  device

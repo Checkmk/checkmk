@@ -1,0 +1,12 @@
+Title: Removed caching function in Windows Update agent plugin
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1393858396
+Class: incomp
+
+The current Windows Agent Versions has a build in caching mechanism. Cause of this the buildin caching features from windows_update.vbs are now removed. Please make shure that caching is activated in the check_mk.ini file.
+
+A example config can look like this:
+[plugin]
+    cache_age windows_updates.vbs = 3600

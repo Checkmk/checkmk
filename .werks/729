@@ -1,0 +1,9 @@
+Title: esx_vsphere_hostsystem: fixed incorrect status label (not state)
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1394111987
+Class: fix
+
+The status label in the check output was incorrect when
+the overallStatus of the hostsystem was grey or red.

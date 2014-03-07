@@ -4,7 +4,7 @@ catalog: hw/storagehw/emc
 license: GPL
 distribution: check_mk
 description:
- Reports the Disk Operations per Second (IOPS) of Disks in EMC Isilon 
+ Reports the Disk Operations per Second (IOPS) of Disks in EMC Isilon
  Storage Systems.
 
  This check always returns {OK}

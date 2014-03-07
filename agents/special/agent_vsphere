@@ -50,10 +50,16 @@ soapdata_list = [
             (["counters"],      "8_perf_counter_syntax", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:QueryPerfCounter xsi:type="ns1:QueryPerfCounterRequestType"><ns1:_this type="PerformanceManager">ha-perfmgr</ns1:_this>###counters###</ns1:QueryPerfCounter></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
             (["counters"],      "9_perf_counter_data", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:QueryPerf xsi:type="ns1:QueryPerfRequestType"><ns1:_this type="PerformanceManager">ha-perfmgr</ns1:_this><ns1:querySpec><ns1:entity type="HostSystem">ha-host</ns1:entity><ns1:maxSample>1</ns1:maxSample>###counters###<ns1:intervalId>20</ns1:intervalId></ns1:querySpec></ns1:QueryPerf></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
             (["hostsystem"],    "10_hostsystem", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType"><ns1:_this type="PropertyCollector">ha-property-collector</ns1:_this><ns1:specSet><ns1:propSet><ns1:type>HostSystem</ns1:type><ns1:pathSet>summary.quickStats.overallMemoryUsage</ns1:pathSet><ns1:pathSet>hardware.cpuInfo.numCpuThreads</ns1:pathSet><ns1:pathSet>runtime.powerState</ns1:pathSet><ns1:pathSet>summary.quickStats.overallCpuUsage</ns1:pathSet><ns1:pathSet>hardware.cpuInfo.hz</ns1:pathSet><ns1:pathSet>hardware.cpuInfo.numCpuPackages</ns1:pathSet><ns1:pathSet>config.multipathState.path</ns1:pathSet><ns1:pathSet>hardware.cpuInfo.numCpuCores</ns1:pathSet><ns1:pathSet>name</ns1:pathSet><ns1:pathSet>overallStatus</ns1:pathSet><ns1:pathSet>runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo</ns1:pathSet><ns1:pathSet>runtime.inMaintenanceMode</ns1:pathSet><ns1:pathSet>hardware.memorySize</ns1:pathSet></ns1:propSet><ns1:objectSet><ns1:obj type="Folder">ha-folder-root</ns1:obj><ns1:skip>false</ns1:skip><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>visitFolders</ns1:name><ns1:type>Folder</ns1:type><ns1:path>childEntity</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToHf</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToVmf</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>crToH</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>crToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToDs</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>hToVm</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToVmf</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>vmFolder</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToDs</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>datastore</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToHf</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>hostFolder</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToH</ns1:name><ns1:type>ComputeResource</ns1:type><ns1:path>host</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToRp</ns1:name><ns1:type>ComputeResource</ns1:type><ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToRp</ns1:name><ns1:type>ResourcePool</ns1:type><ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>hToVm</ns1:name><ns1:type>HostSystem</ns1:type><ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToVm</ns1:name><ns1:type>ResourcePool</ns1:type><ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet></ns1:objectSet></ns1:specSet><ns1:options></ns1:options></ns1:RetrievePropertiesEx></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
-            (["virtualmachine"],"11_virtualmachine", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType"><ns1:_this type="PropertyCollector">ha-property-collector</ns1:_this><ns1:specSet><ns1:propSet><ns1:type>VirtualMachine</ns1:type><ns1:pathSet>summary.quickStats.consumedOverheadMemory</ns1:pathSet><ns1:pathSet>config.hardware.numCPU</ns1:pathSet><ns1:pathSet>summary.quickStats.overallCpuDemand</ns1:pathSet><ns1:pathSet>summary.quickStats.distributedCpuEntitlement</ns1:pathSet><ns1:pathSet>runtime.host</ns1:pathSet><ns1:pathSet>summary.quickStats.distributedMemoryEntitlement</ns1:pathSet><ns1:pathSet>summary.quickStats.uptimeSeconds</ns1:pathSet><ns1:pathSet>summary.quickStats.sharedMemory</ns1:pathSet><ns1:pathSet>config.hardware.memoryMB</ns1:pathSet><ns1:pathSet>summary.quickStats.privateMemory</ns1:pathSet><ns1:pathSet>summary.quickStats.balloonedMemory</ns1:pathSet><ns1:pathSet>summary.quickStats.staticMemoryEntitlement</ns1:pathSet><ns1:pathSet>runtime.powerState</ns1:pathSet><ns1:pathSet>summary.quickStats.overallCpuUsage</ns1:pathSet><ns1:pathSet>config.hardware.numCoresPerSocket</ns1:pathSet><ns1:pathSet>config.hardware.device</ns1:pathSet><ns1:pathSet>guest.toolsVersion</ns1:pathSet><ns1:pathSet>guestHeartbeatStatus</ns1:pathSet><ns1:pathSet>name</ns1:pathSet><ns1:pathSet>summary.quickStats.compressedMemory</ns1:pathSet><ns1:pathSet>summary.quickStats.swappedMemory</ns1:pathSet><ns1:pathSet>summary.quickStats.guestMemoryUsage</ns1:pathSet><ns1:pathSet>summary.quickStats.staticCpuEntitlement</ns1:pathSet><ns1:pathSet>summary.quickStats.hostMemoryUsage</ns1:pathSet><ns1:pathSet>guest.toolsVersionStatus</ns1:pathSet></ns1:propSet><ns1:objectSet><ns1:obj type="Folder">ha-folder-root</ns1:obj><ns1:skip>false</ns1:skip><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>visitFolders</ns1:name><ns1:type>Folder</ns1:type><ns1:path>childEntity</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToHf</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToVmf</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>crToH</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>crToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToDs</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>hToVm</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToVmf</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>vmFolder</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToDs</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>datastore</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToHf</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>hostFolder</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToH</ns1:name><ns1:type>ComputeResource</ns1:type><ns1:path>host</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToRp</ns1:name><ns1:type>ComputeResource</ns1:type><ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToRp</ns1:name><ns1:type>ResourcePool</ns1:type><ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>hToVm</ns1:name><ns1:type>HostSystem</ns1:type><ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToVm</ns1:name><ns1:type>ResourcePool</ns1:type><ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet></ns1:objectSet></ns1:specSet><ns1:options></ns1:options></ns1:RetrievePropertiesEx></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
+            (["virtualmachine"],"11_virtualmachine", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType"><ns1:_this type="PropertyCollector">ha-property-collector</ns1:_this><ns1:specSet><ns1:propSet><ns1:type>VirtualMachine</ns1:type><ns1:pathSet>summary.quickStats.consumedOverheadMemory</ns1:pathSet><ns1:pathSet>config.hardware.numCPU</ns1:pathSet><ns1:pathSet>summary.quickStats.overallCpuDemand</ns1:pathSet><ns1:pathSet>summary.quickStats.distributedCpuEntitlement</ns1:pathSet><ns1:pathSet>runtime.host</ns1:pathSet><ns1:pathSet>summary.quickStats.distributedMemoryEntitlement</ns1:pathSet><ns1:pathSet>summary.quickStats.uptimeSeconds</ns1:pathSet><ns1:pathSet>summary.quickStats.sharedMemory</ns1:pathSet><ns1:pathSet>config.hardware.memoryMB</ns1:pathSet><ns1:pathSet>summary.quickStats.privateMemory</ns1:pathSet><ns1:pathSet>summary.quickStats.balloonedMemory</ns1:pathSet><ns1:pathSet>summary.quickStats.staticMemoryEntitlement</ns1:pathSet><ns1:pathSet>runtime.powerState</ns1:pathSet><ns1:pathSet>summary.quickStats.overallCpuUsage</ns1:pathSet><ns1:pathSet>config.hardware.numCoresPerSocket</ns1:pathSet><ns1:pathSet>config.hardware.device</ns1:pathSet><ns1:pathSet>guest.toolsVersion</ns1:pathSet><ns1:pathSet>guestHeartbeatStatus</ns1:pathSet><ns1:pathSet>name</ns1:pathSet><ns1:pathSet>summary.quickStats.compressedMemory</ns1:pathSet><ns1:pathSet>summary.quickStats.swappedMemory</ns1:pathSet><ns1:pathSet>summary.quickStats.guestMemoryUsage</ns1:pathSet><ns1:pathSet>summary.quickStats.staticCpuEntitlement</ns1:pathSet><ns1:pathSet>summary.quickStats.hostMemoryUsage</ns1:pathSet><ns1:pathSet>config.datastoreUrl</ns1:pathSet><ns1:pathSet>guest.toolsVersionStatus</ns1:pathSet></ns1:propSet><ns1:objectSet><ns1:obj type="Folder">ha-folder-root</ns1:obj><ns1:skip>false</ns1:skip><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>visitFolders</ns1:name><ns1:type>Folder</ns1:type><ns1:path>childEntity</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToHf</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToVmf</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>crToH</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>crToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToDs</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>hToVm</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToVmf</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>vmFolder</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToDs</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>datastore</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToHf</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>hostFolder</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToH</ns1:name><ns1:type>ComputeResource</ns1:type><ns1:path>host</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToRp</ns1:name><ns1:type>ComputeResource</ns1:type><ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToRp</ns1:name><ns1:type>ResourcePool</ns1:type><ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>hToVm</ns1:name><ns1:type>HostSystem</ns1:type><ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToVm</ns1:name><ns1:type>ResourcePool</ns1:type><ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet></ns1:objectSet></ns1:specSet><ns1:options></ns1:options></ns1:RetrievePropertiesEx></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
             (["required"],      "12_logout", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:Logout xsi:type="ns1:LogoutRequestType"><ns1:_this type="SessionManager">ha-sessionmgr</ns1:_this></ns1:Logout></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
            ]
 
+
+def convert_hostname(h):
+    if opt_spaces == "cut":
+        return h.split()[0]
+    else:
+        return h.replace(" ", "_")
 
 # List of predefined SOAP requests
 # ( [{used_by_object}], {internal_id}, {SOAP telegram} )
@@ -158,12 +164,16 @@ OPTIONS:
   -c, --dump-counters           Simply dumping out all available counters and their values.
                                 This mode is meant for debugging and diagnostic purposes.
 
+  -S, --spaces HOW              How to handle spaces in hostnames. "cut": cut everyting
+                                after the first space, "underscore": replace with
+                                underscores. Default is "underscore".
+
 """)
 
-short_options = 'hi:u:s:Dat:H:cPp:'
+short_options = 'hi:u:s:Dat:H:cPp:S:'
 long_options  = [
     'help', 'user=', 'secret=', 'direct', 'agent', 'debug', 'modules=', 'timeout=', 'hostname=',
-    'dump-counters', 'tracefile=', "pysphere", "port=",
+    'dump-counters', 'tracefile=', "pysphere", "port=", "spaces=",
 ]
 
 opt_debug               = False
@@ -176,6 +186,7 @@ opt_hostname            = None
 opt_skip_placeholder_vm = False
 opt_pysphere            = False
 opt_tracefile           = None
+opt_spaces              = "underscore"
 
 error = None
 error_exit = 1
@@ -219,10 +230,14 @@ for o,a in opts:
         opt_hostname = a
     elif o in [ '-c', '--dump-counters' ]:
         opt_dump_counters = True
+    elif o in [ '-S', '--spaces']:
+        if a not in [ "cut", "underscore" ]:
+            usage()
+            sys.exit(1)
+        opt_spaces = a
     elif o in [ '-h', '--help' ]:
         usage()
         sys.exit(0)
-
 
 # vCenter only supports the classical slow vSphere agent (based on pysphere)
 # Also we do not support ESX 4.1 (yet).
@@ -431,8 +446,8 @@ if not error:
         ###########################
         # Datastores
         ###########################
+        datastores = {} # We also need the datastore info later in the virtualmachines section
         if "datastore" in query_objects:
-            datastores = {}
             elements = get_pattern('<objects><obj type="Datastore">(.*?)</obj>(.*?)</objects>', results["4_datastores"])
             for datastore, content in elements:
                 entries = get_pattern('<name>(.*?)</name><val xsi:type.*?>(.*?)</val>', content)
@@ -445,8 +460,9 @@ if not error:
             for key in sorted(datastores.keys()):
                 data = datastores[key]
                 print "[%s]" % data.get("name")
-                del data["name"]
                 for ds_key in sorted(data.keys()):
+                    if ds_key == "name":
+                        continue
                     print "%s\t%s" % (ds_key.split(".")[1], data[ds_key])
 
         ###########################
@@ -559,10 +575,30 @@ if not error:
                     del vm_data["config.hardware.device"]
                 vms[vm_data.get("name")] = vm_data
 
+
+                # Add datastore infos to the field config.datastoreUrl
+                datastore_urls = get_pattern("<name>(.*?)</name><url>(.*?)</url>", vm_data.get("config.datastoreUrl"))
+                vm_datastores = []
+                for name, url in datastore_urls:
+                    for datastore in datastores.values():
+                        if name == datastore["name"]:
+                            vm_datastore = []
+                            for key, value in datastore.items():
+                                if key != "name":
+                                    key = key.split(".")[1]
+                                vm_datastore.append("%s %s" % (key, value))
+                            vm_datastores.append("|".join(vm_datastore))
+                            break
+                    else:
+                        # No matching datastore was found. At least add the name
+                        vm_datastores.append("name %s" % name)
+
+                vm_data["config.datastoreUrl"] = "\t".join(vm_datastores)
+
             for key in sorted(vms.keys()):
                 data = vms[key]
                 if data.get("name"):
-                    print "<<<<%s>>>>" % data.get("name").replace(" ", "_")
+                    print "<<<<%s>>>>" % convert_hostname(data.get("name"))
                     print "<<<esx_vsphere_vm>>>"
                     entries = list(data.items())
                     entries.sort()
@@ -585,7 +621,7 @@ if not error:
             for key in sorted(vms.keys()):
                 data = vms[key]
                 running_on = hostsystem_name.get(data.get("runtime.host"), data.get("runtime.host"))
-                print "virtualmachine\t%s\t%s\t%s" % (data.get("name").replace(" ", "_"), running_on, data.get("runtime.powerState"))
+                print "virtualmachine\t%s\t%s\t%s" % (convert_hostname(data.get("name")), running_on, data.get("runtime.powerState"))
 
     except Exception, e:
         if opt_debug:

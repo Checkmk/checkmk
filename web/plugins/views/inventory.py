@@ -169,7 +169,7 @@ class FilterInvHasSoftwarePackage(Filter):
         html.write(_("Max.&nbsp;Vers.:"))
         html.text_input(self._varprefix + "version_to", size = 9)
         html.write("<br>")
-        html.checkbox(self._varprefix + "negate", False, label=_("Negate: find hosts <b>not</b> having this package")) 
+        html.checkbox(self._varprefix + "negate", False, label=_("Negate: find hosts <b>not</b> having this package"))
 
     def filter_table(self, rows):
         name = html.var_utf8(self._varprefix + "name")
@@ -272,12 +272,12 @@ def declare_inv_column(invpath, datatype, title, short = None):
             "cmp"      : lambda a, b: cmp_inventory_node(a, b, invpath),
         }
 
-        # Declare filter. 
+        # Declare filter.
         if datatype == "str":
             declare_filter(800, FilterInvText(name, invpath, title))
         else:
             filter_info = inv_filter_info.get(datatype, {})
-            declare_filter(800, FilterInvFloat(name, invpath, title, 
+            declare_filter(800, FilterInvFloat(name, invpath, title,
                unit = filter_info.get("unit"),
                scale = filter_info.get("scale")))
 
@@ -795,14 +795,14 @@ def declare_swpacs_columns(name, title, sortfunc):
         declare_filter(800, FilterSWPacsText(name, _("Software Package") + ": " + title))
 
 
-for name, title, sortfunc in [ 
-    ( "name",         _("Name"),             cmp ), 
-    ( "summary",      _("Summary"),          cmp ), 
-    ( "arch",         _("CPU Architecture"), cmp ), 
-    ( "package_type", _("Type"),             cmp ), 
-    ( "version",      _("Version"),          cmp_version ), 
-    ( "package_version", _("Package Version"), cmp_version ), 
-    ]: 
+for name, title, sortfunc in [
+    ( "name",         _("Name"),             cmp ),
+    ( "summary",      _("Summary"),          cmp ),
+    ( "arch",         _("CPU Architecture"), cmp ),
+    ( "package_type", _("Type"),             cmp ),
+    ( "version",      _("Version"),          cmp_version ),
+    ( "package_version", _("Package Version"), cmp_version ),
+    ]:
     declare_swpacs_columns(name, title, sortfunc)
 
 

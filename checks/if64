@@ -32,7 +32,7 @@ def fix_if64_highspeed(info):
 
 def inventory_if64(info):
     # Fix for switches like DLINK, with empty lines in MIB
-    info = [ x for x in info if saveint(x[1]) > 0 ] 
+    info = [ x for x in info if saveint(x[1]) > 0 ]
     fix_if64_highspeed(info)
     return inventory_if_common(info, has_nodeinfo = True)
 

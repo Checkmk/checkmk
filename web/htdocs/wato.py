@@ -224,10 +224,11 @@ def page_handler():
             # Even if the user has seen this mode because auf "seeall",
             # he needs an explicit access permission for doing changes:
             if config.may("wato.seeall"):
-                for pname in modeperms:
-                    if '.' not in pname:
-                        pname = "wato." + pname
-                    config.need_permission(pname)
+                if modeperms:
+                    for pname in modeperms:
+                        if '.' not in pname:
+                            pname = "wato." + pname
+                        config.need_permission(pname)
 
             result = modefunc("action")
             if type(result) == tuple:
@@ -2228,7 +2229,7 @@ def mode_object_parameters(phase):
     # Now we collect all rulesets that apply to hosts, except those specifying
     # new active or static checks
     all_rulesets = load_all_rulesets()
-    groupnames = [ gn for gn, rulesets in g_rulespec_groups 
+    groupnames = [ gn for gn, rulesets in g_rulespec_groups
                    if not gn.startswith("static/") and
                       not gn.startswith("checkparams/") and
                       gn != "activechecks" ]
@@ -2275,7 +2276,7 @@ def mode_object_parameters(phase):
                 # WATO module.
                 elif checkgroup == "logwatch":
                     rulespec = g_rulespecs["logwatch_rules"]
-                    output_analysed_ruleset(all_rulesets, rulespec, hostname, 
+                    output_analysed_ruleset(all_rulesets, rulespec, hostname,
                                             serviceinfo["item"], serviceinfo["parameters"])
 
                 else:
@@ -2289,12 +2290,12 @@ def mode_object_parameters(phase):
                     if grouprule not in g_rulespecs:
                         rulespec = g_rulespecs["static_checks:" + checkgroup]
                         url = make_link([('mode', 'edit_ruleset'), ('varname', "static_checks:" + checkgroup), ('host', hostname)])
-                        render_rule_reason(_("Parameters"), url, _("Determined by inventory"), None, False, 
+                        render_rule_reason(_("Parameters"), url, _("Determined by inventory"), None, False,
                                    rulespec["valuespec"]._elements[2].value_to_text(serviceinfo["parameters"]))
 
                     else:
                         rulespec = g_rulespecs[grouprule]
-                        output_analysed_ruleset(all_rulesets, rulespec, hostname, 
+                        output_analysed_ruleset(all_rulesets, rulespec, hostname,
                                                 serviceinfo["item"], serviceinfo["parameters"])
 
             elif origin == "static":
@@ -2312,11 +2313,11 @@ def mode_object_parameters(phase):
                         item_text = serviceinfo["item"]
                         title = _("Item")
                     render_rule_reason(title, None, "", "", False, item_text)
-                    output_analysed_ruleset(all_rulesets, rulespec, hostname, 
+                    output_analysed_ruleset(all_rulesets, rulespec, hostname,
                                             serviceinfo["item"], PARAMETERS_OMIT)
                     html.write(rulespec["valuespec"]._elements[2].value_to_text(serviceinfo["parameters"]))
                     html.write("</td></tr></table>")
-                    
+
 
             elif origin == "active":
                 checktype = serviceinfo["checktype"]
@@ -2338,14 +2339,14 @@ def mode_object_parameters(phase):
                 forms.section('<a href="%s">%s</a>' % (url, _("Command Line")))
                 url = make_link([
                     ('mode', 'edit_rule'),
-                    ('varname', "custom_checks"), 
-                    ('rule_folder', rule[0][".path"]), 
-                    ('rulenr', rel_nr), 
+                    ('varname', "custom_checks"),
+                    ('rule_folder', rule[0][".path"]),
+                    ('rulenr', rel_nr),
                     ('host', hostname)])
 
                 html.write('<table class=setting><tr><td class=reason><a href="%s">%s %d %s %s</a></td>' % (
                     url, _("Rule"), rel_nr + 1, _("in"), rule[0]["title"]))
-                html.write("<td class=settingvalue used><tt>%s</tt></td></tr></table>" % 
+                html.write("<td class=settingvalue used><tt>%s</tt></td></tr></table>" %
                     serviceinfo["command_line"])
 
 
@@ -2358,7 +2359,7 @@ def mode_object_parameters(phase):
             cmp = lambda a, b: cmp(a["title"], b["title"]))
 
         for rulespec in g_rulespec_group[groupname]:
-            if (rulespec["itemtype"] == 'service') == (not service): 
+            if (rulespec["itemtype"] == 'service') == (not service):
                 continue # This rule is not for hosts/services
 
             # Open form for that group here, if we know that we have at least one rule
@@ -2380,9 +2381,9 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
         rule_folder, rule_nr = rule
         return make_link([
             ('mode', 'edit_rule'),
-            ('varname', varname), 
-            ('rule_folder', rule_folder[".path"]), 
-            ('rulenr', rule_nr), 
+            ('varname', varname),
+            ('rule_folder', rule_folder[".path"]),
+            ('rulenr', rule_nr),
             ('host', hostname),
             ('item', service and mk_repr(service) or '')])
 
@@ -2418,7 +2419,7 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
 
     else:
         # For match type "dict" it can be the case the rule define some of the keys
-        # while other keys are taken from the factory defaults. We need to show the 
+        # while other keys are taken from the factory defaults. We need to show the
         # complete outcoming value here.
         if rules and rulespec["match"] == "dict":
             if rulespec["factory_default"] is not NO_FACTORY_DEFAULT \
@@ -7371,6 +7372,27 @@ def FolderChoice(**kwargs):
     return DropdownChoice(**kwargs)
 
 
+def vs_notification_bulkby():
+    return ListChoice(
+      title = _("Createseparate notification bulks based on"),
+      choices = [
+        ( "folder",     _("Folder") ),
+        ( "host",       _("Host") ),
+        ( "service",    _("Service description") ),
+        ( "sl",         _("Service level") ),
+        ( "check_type", _("Check type") ),
+        ( "state",      _("Host/Service state") ),
+      ],
+      default_value = [ "host" ],
+    )
+
+def vs_notification_scripts():
+    return DropdownChoice(
+       title = _("Notification Script"),
+       choices = notification_script_choices,
+       default_value = "mail",
+    )
+
 def vs_notification_rule(userid = None):
     if userid:
         contact_headers = []
@@ -7378,7 +7400,7 @@ def vs_notification_rule(userid = None):
         section_override = []
     else:
         contact_headers = [
-            ( _("Contact Selection"), [ "contact_all", "contact_all_with_email", "contact_object", 
+            ( _("Contact Selection"), [ "contact_all", "contact_all_with_email", "contact_object",
                                         "contact_users", "contact_groups", "contact_emails" ] ),
         ]
         section_contacts = [
@@ -7420,9 +7442,9 @@ def vs_notification_rule(userid = None):
             ),
             ( "contact_emails",
               ListOfStrings(
-                  valuespec = EmailAddress(),
+                  valuespec = EmailAddress(size = 44),
                   title = _("The following explicit email addresses"),
-                  orientation = "horizontal",
+                  orientation = "vertical",
               )
             ),
         ]
@@ -7552,6 +7574,30 @@ def vs_notification_rule(userid = None):
                 ],
               ),
             ),
+            ( "match_escalation_throttle",
+              Tuple(
+                  title = _("Throttle periodic notifications"),
+                  help = _("This match option allows you to throttle periodic notifications after "
+                           "a certain number of notifications have been created by the monitoring "
+                           "core. If you for example select 10 as the beginning and 5 as the rate "
+                           "then you will receive the notification 1 through 10 and then 15, 20, "
+                           "25.. and so on."),
+                  orientation = "float",
+                  elements = [
+                     Integer(
+                         label = _("beginning from notifcation number"),
+                         default_value = 10,
+                         minvalue = 1,
+                     ),
+                     Integer(
+                         label = _("send only every"),
+                         default_value = 5,
+                         unit = _("th notification"),
+                         minvalue = 1,
+                    )
+                  ],
+              )
+            ),
             ( "match_sl",
               Tuple(
                 title = _("Match service level"),
@@ -7571,12 +7617,12 @@ def vs_notification_rule(userid = None):
                              "If you activate this option and do <b>not</b> also specify service event "
                              "types then this rule will never hold for service notifications!"),
                     choices = [
-                        ( 'rd', _("UP")          + " ➤ " + _("DOWN")),
-                        ( 'dr', _("DOWN")        + " ➤ " + _("UP")),
-                        ( 'ru', _("UP")          + " ➤ " + _("UNREACHABLE")),
-                        ( 'du', _("DOWN")        + " ➤ " + _("UNREACHABLE")),
-                        ( 'ud', _("UNREACHABLE") + " ➤ " + _("DOWN")),
-                        ( 'ur', _("UNREACHABLE") + " ➤ " + _("UP")),
+                        ( 'rd', _("UP")          + u" ➤ " + _("DOWN")),
+                        ( 'dr', _("DOWN")        + u" ➤ " + _("UP")),
+                        ( 'ru', _("UP")          + u" ➤ " + _("UNREACHABLE")),
+                        ( 'du', _("DOWN")        + u" ➤ " + _("UNREACHABLE")),
+                        ( 'ud', _("UNREACHABLE") + u" ➤ " + _("DOWN")),
+                        ( 'ur', _("UNREACHABLE") + u" ➤ " + _("UP")),
                         ( 'f', _("Start or end of flapping state")),
                         ( 's', _("Start or end of a scheduled downtime ")),
                         ( 'x', _("Acknowledgement of host problem")),
@@ -7585,45 +7631,41 @@ def vs_notification_rule(userid = None):
               )
             ),
             ( "match_service_event",
-               ListChoice(
-                   title = _("Match Service Event Type"),
-                    help  = _("Select the service event types and transitions this rule should handle. Note: "
-                              "If you activate this option and do <b>not</b> also specify host event "
-                              "types then this rule will never hold for host notifications!"),
-                   choices = [
-                       ( 'rw', _("OK")      + " ➤ " + _("WARN")),
-                       ( 'rc', _("OK")      + " ➤ " + _("CRIT")),
-                       ( 'ru', _("OK")      + " ➤ " + _("UNKNOWN")),
+                ListChoice(
+                    title = _("Match Service Event Type"),
+                     help  = _("Select the service event types and transitions this rule should handle. Note: "
+                               "If you activate this option and do <b>not</b> also specify host event "
+                               "types then this rule will never hold for host notifications!"),
+                    choices = [
+                        ( 'rw', _("OK")      + u" ➤ " + _("WARN")),
+                        ( 'rc', _("OK")      + u" ➤ " + _("CRIT")),
+                        ( 'ru', _("OK")      + u" ➤ " + _("UNKNOWN")),
 
-                       ( 'wr', _("WARN")    + " ➤ " + _("OK")),
-                       ( 'wc', _("WARN")    + " ➤ " + _("CRIT")),
-                       ( 'wu', _("WARN")    + " ➤ " + _("UNKNOWN")),
+                        ( 'wr', _("WARN")    + u" ➤ " + _("OK")),
+                        ( 'wc', _("WARN")    + u" ➤ " + _("CRIT")),
+                        ( 'wu', _("WARN")    + u" ➤ " + _("UNKNOWN")),
 
-                       ( 'cr', _("CRIT")    + " ➤ " + _("OK")),
-                       ( 'cw', _("CRIT")    + " ➤ " + _("WARN")),
-                       ( 'cu', _("CRIT")    + " ➤ " + _("UNKNOWN")),
+                        ( 'cr', _("CRIT")    + u" ➤ " + _("OK")),
+                        ( 'cw', _("CRIT")    + u" ➤ " + _("WARN")),
+                        ( 'cu', _("CRIT")    + u" ➤ " + _("UNKNOWN")),
 
-                       ( 'ur', _("UNKNOWN") + " ➤ " + _("OK")),
-                       ( 'uw', _("UNKNOWN") + " ➤ " + _("WARN")),
-                       ( 'uc', _("UNKNOWN") + " ➤ " + _("CRIT")),
+                        ( 'ur', _("UNKNOWN") + u" ➤ " + _("OK")),
+                        ( 'uw', _("UNKNOWN") + u" ➤ " + _("WARN")),
+                        ( 'uc', _("UNKNOWN") + u" ➤ " + _("CRIT")),
 
-                       ( 'f', _("Start or end of flapping state")),
-                       ( 's', _("Start or end of a scheduled downtime")),
-                       ( 'x', _("Acknowledgement of service problem")),
-                   ],
-                   default_value = [ 'rw', 'rc', 'ru', 'wc', 'wu', 'uc', 'f', 's', 'x' ],
-              )
-            ),
+                        ( 'f', _("Start or end of flapping state")),
+                        ( 's', _("Start or end of a scheduled downtime")),
+                        ( 'x', _("Acknowledgement of service problem")),
+                    ],
+                    default_value = [ 'rw', 'rc', 'ru', 'wc', 'wu', 'uc', 'f', 's', 'x' ],
+               )
+             ),
         ] +
         section_contacts +
         [
             # Notification
             ( "notify_plugin",
-              DropdownChoice(
-                   title = _("Notification Plugin"),
-                   choices = load_notification_scripts,
-                   default_value = "mail",
-              ),
+              vs_notification_scripts(),
             ),
 
             ( "notify_method",
@@ -7643,28 +7685,84 @@ def vs_notification_rule(userid = None):
                       ),
                   ]
               )
-            )
+            ),
+
+            ( "bulk",
+              Dictionary(
+                  title = _("Notification Bulking"),
+                  help = _("Enabling the bulk notifications will collect several subsequent notifications "
+                           "for the same contact into one single notification, which lists of all the "
+                           "actual problems, e.g. in a single emails. This cuts down the number of notifications "
+                           "in cases where many (related) problems occur within a short time."),
+                  elements = [
+                    ( "interval",
+                      Age(
+                          title = _("Time horizon"),
+                          label = _("Bulk up to"),
+                          help = _("Notifications are kept back for bulking at most for this time."),
+                          default_value = 60,
+                      )
+                    ),
+                    ( "count",
+                      Integer(
+                          title = _("Maximum bulk size"),
+                          label = _("Bulk up to"),
+                          unit  = _("Notifications"),
+                          help = _("At most that many Notifications are kept back for bulking. A value of "
+                                   "1 essentially turns of notification bulking."),
+                          default_value = 1000,
+                          minvalue = 1,
+                      ),
+                    ),
+                    ( "groupby",
+                      vs_notification_bulkby(),
+                    ),
+                  ],
+                  columns = 1,
+                  optional_keys = False,
+            ),
+          ),
 
         ],
-        optional_keys = [ "match_folder", "match_hosttags", "match_hosts", "match_exclude_hosts", 
+        optional_keys = [ "match_folder", "match_hosttags", "match_hosts", "match_exclude_hosts",
                           "match_services", "match_exclude_services", "match_plugin_output",
-                          "match_timeperiod", "match_escalation", "match_sl", "match_host_event", "match_service_event",
-                          "match_checktype", "contact_users", "contact_groups", "contact_emails" ],
+                          "match_timeperiod", "match_escalation", "match_escalation_throttle", 
+                          "match_sl", "match_host_event", "match_service_event",
+                          "match_checktype", "bulk", "contact_users", "contact_groups", "contact_emails" ],
         headers = [
             ( _("General Properties"), [ "description", "disabled", "allow_disable" ] ),
-            ( _("Notification Method"), [ "notify_plugin", "notify_method" ] ),]
+            ( _("Notification Method"), [ "notify_plugin", "notify_method", "bulk" ] ),]
             + contact_headers
             + [
             ( _("Conditions"),         [ "match_folder", "match_hosttags", "match_hosts", "match_exclude_hosts",
                                          "match_services", "match_exclude_services", "match_plugin_output",
                                          "match_checktype", "match_timeperiod",
-                                         "match_escalation", "match_sl", "match_host_event", "match_service_event" ] ),
+                                         "match_escalation", "match_escalation_throttle",
+                                         "match_sl", "match_host_event", "match_service_event" ] ),
         ],
         render = "form",
         form_narrow = True,
+        validate = validate_notification_rule,
     )
 
-def render_notification_rules(rules, userid="", show_title=False, show_buttons=True, analyse=False, start_nr=0, profilemode=False):
+def validate_notification_rule(rule, varprefix):
+    if "bulk" in rule and rule["notify_method"] == None:
+        raise MKUserError(varprefix + "_p_bulk_USE",
+             _("It does not make sense to add a bulk configuration for cancelling rules."))
+
+    if "bulk" in rule:
+        if rule["notify_plugin"]:
+            info = load_notification_scripts()[rule["notify_plugin"]]
+            if not info["bulk"]:
+                raise MKUserError(varprefix + "_p_notify_plugin",
+                      _("The notification script %s does not allow bulking.") % info["title"])
+        else:
+            raise MKUserError(varprefix + "_p_notify_plugin",
+                  _("The plain emails currently do not support bulking."))
+
+
+def render_notification_rules(rules, userid="", show_title=False, show_buttons=True,
+                              analyse=False, start_nr=0, profilemode=False):
     if not rules:
         html.message(_("You have not created any rules yet."))
 
@@ -7708,12 +7806,12 @@ def render_notification_rules(rules, userid="", show_title=False, show_buttons=T
                 listmode = "notifications"
 
             if show_buttons:
-                analyse = html.var("analyse", "")
+                anavar = html.var("analyse", "")
                 delete_url = make_action_link([("mode", listmode), ("user", userid), ("_delete", nr)])
-                top_url    = make_action_link([("mode", listmode), ("analyse", analyse), ("user", userid), ("_move", nr), ("_where", 0)])
-                bottom_url = make_action_link([("mode", listmode), ("analyse", analyse), ("user", userid), ("_move", nr), ("_where", len(rules)-1)])
-                up_url     = make_action_link([("mode", listmode), ("analyse", analyse), ("user", userid), ("_move", nr), ("_where", nr-1)])
-                down_url   = make_action_link([("mode", listmode), ("analyse", analyse), ("user", userid), ("_move", nr), ("_where", nr+1)])
+                top_url    = make_action_link([("mode", listmode), ("analyse", anavar), ("user", userid), ("_move", nr), ("_where", 0)])
+                bottom_url = make_action_link([("mode", listmode), ("analyse", anavar), ("user", userid), ("_move", nr), ("_where", len(rules)-1)])
+                up_url     = make_action_link([("mode", listmode), ("analyse", anavar), ("user", userid), ("_move", nr), ("_where", nr-1)])
+                down_url   = make_action_link([("mode", listmode), ("analyse", anavar), ("user", userid), ("_move", nr), ("_where", nr+1)])
                 suffix = profilemode and "_p" or ""
                 edit_url   = make_link([("mode", "notification_rule" + suffix), ("edit", nr), ("user", userid)])
                 clone_url  = make_link([("mode", "notification_rule" + suffix), ("clone", nr), ("user", userid)])
@@ -7751,7 +7849,12 @@ def render_notification_rules(rules, userid="", show_title=False, show_buttons=T
                 html.icon(_("Cancel notifications for this plugin type"), "notify_cancel")
             else:
                 html.icon(_("Create a notification"), "notify_create")
-            table.cell(_("Plugin"), rule["notify_plugin"], css="narrow")
+
+            table.cell(_("Plugin"), rule["notify_plugin"] or _("Plain Email"), css="narrow")
+
+            table.cell(_("Bulk"), css="narrow")
+            if "bulk" in rule:
+                html.icon(_("This rule configures bulk notifications."), "bulk")
 
             table.cell(_("Description"), rule["description"])
 
@@ -7782,46 +7885,15 @@ def render_notification_rules(rules, userid="", show_title=False, show_buttons=T
             else:
                 html.write("<i>%s</i>" % _("(no conditions)"))
 
-
         table.end()
 
 
-def vs_notification():
-    return Dictionary(
-        title = _("Notification Simulator"),
-        help = _("You can simulate a notification here and analyse your rule set. No notification will "
-                 "actually be sent out."),
-        render = "form",
-        form_narrow = True,
-        optional_keys = False,
-        elements = [
-            ( "host",
-              TextUnicode(
-                title = _("Host Name"),
-                help = _("The host name of the event"),
-                size = 40,
-                default_value = _("myhost089"),
-                allow_empty = False,
-                attrencode = True,
-                regex = "^\\S*$",
-                regex_error = _("The host name may not contain spaces."),
-                )
-            ),
-            ( "service",
-              TextUnicode(
-                title = _("Service Description"),
-                size = 80,
-                default_value = _("Foo Bar 42"),
-                allow_empty = True,
-              ),
-            )
-        ]
-    )
 
 def mode_notifications(phase):
-    options = config.load_user_file("notification_display_options", {})
+    options         = config.load_user_file("notification_display_options", {})
     show_user_rules = options.get("show_user_rules", False)
-    show_backlog = options.get("show_backlog", False)
+    show_backlog    = options.get("show_backlog", False)
+    show_bulks      = options.get("show_bulks", False)
 
     if phase == "title":
         return _("Notification configuration")
@@ -7838,6 +7910,12 @@ def mode_notifications(phase):
             html.context_button(_("Hide Analysis"), html.makeactionuri([("_show_backlog", "")]), "analyze")
         else:
             html.context_button(_("Analyse"), html.makeactionuri([("_show_backlog", "1")]), "analyze")
+
+        if show_bulks:
+            html.context_button(_("Hide Bulks"), html.makeactionuri([("_show_bulks", "")]), "bulk")
+        else:
+            html.context_button(_("Show Bulks"), html.makeactionuri([("_show_bulks", "1")]), "bulk")
+
         return
 
     rules = load_notification_rules()
@@ -7851,6 +7929,11 @@ def mode_notifications(phase):
         elif html.has_var("_show_backlog"):
             if html.check_transaction():
                 options["show_backlog"] = not not html.var("_show_backlog")
+                config.save_user_file("notification_display_options", options)
+
+        elif html.has_var("_show_bulks"):
+            if html.check_transaction():
+                options["show_bulks"] = not not html.var("_show_bulks")
                 config.save_user_file("notification_display_options", options)
 
         elif html.has_var("_replay"):
@@ -7896,13 +7979,17 @@ def mode_notifications(phase):
              "<br><br>"
              "You can change this setting <a href=\"%s\">here</a>.") % url)
 
-
     elif not current_settings.get("notification_fallback_email"):
         url = 'wato.py?mode=edit_configvar&varname=notification_fallback_email'
         html.show_warning(
           _("<b>Warning</b><br><br>You haven't configured a fallback email address "
             "in case of a problem in your notification rules. Please configure "
             "one <a href=\"%s\">here</a>.") % url)
+
+    if show_bulks:
+        render_bulks(only_ripe = False) # Warn if there are unsent bulk notificatios
+    else:
+        render_bulks(only_ripe = True) # Warn if there are unsent bulk notificatios
 
     # Show recent notifications. We can use them for rule analysis
     if show_backlog:
@@ -7967,7 +8054,7 @@ def mode_notifications(phase):
             table.end()
 
     # Do analysis
-    if html.has_var("analyse"):
+    if html.var("analyse"):
         nr = int(html.var("analyse"))
         analyse = check_mk_local_automation("notification-analyse", [str(nr)], None)
     else:
@@ -7990,11 +8077,45 @@ def mode_notifications(phase):
 
     if analyse:
         table.begin(table_id = "plugins", title = _("Resulting notifications"))
-        for contact, plugin, parameters in analyse[1]:
+        for contact, plugin, parameters, bulk in analyse[1]:
             table.row()
             table.cell(_("Contact"), contact)
-            table.cell(_("Plugin"), plugin)
+            table.cell(_("Plugin"), vs_notification_scripts().value_to_text(plugin))
             table.cell(_("Plugin parameters"), ", ".join(parameters))
+            table.cell(_("Bulking"))
+            if bulk:
+                html.write(_("Time horizon") + ": " + Age().value_to_text(bulk["interval"]))
+                html.write(", %s: %d" % (_("Maximum count"), bulk["count"]))
+                html.write(", group by %s" % vs_notification_bulkby().value_to_text(bulk["groupby"]))
+
+        table.end()
+
+
+def render_bulks(only_ripe):
+    bulks = check_mk_local_automation("notification-get-bulks", [ only_ripe and "1" or "0" ], None)
+    if bulks:
+        if only_ripe:
+            table.begin(title = _("Overdue bulk notifications!"))
+        else:
+            table.begin(title = _("Open bulk notifications"))
+
+        for dir, age, interval, maxcount, uuids in bulks:
+            dirparts = dir.split("/")
+            contact = dirparts[-3]
+            method = dirparts[-2]
+            bulk_id = dirparts[-1].split(",", 2)[-1]
+            table.row()
+            table.cell(_("Contact"), contact)
+            table.cell(_("Method"), method)
+            table.cell(_("Bulk ID"), bulk_id)
+            table.cell(_("Max. Age"), "%d %s" % (interval, _("sec")), css="number")
+            table.cell(_("Age"), "%d %s" % (age, _("sec")), css="number")
+            if age >= interval:
+                html.icon(_("Age of oldest notification is over maximum age"), "warning")
+            table.cell(_("Max. Count"), str(maxcount), css="number")
+            table.cell(_("Count"), str(len(uuids)), css="number")
+            if len(uuids) >= maxcount:
+                html.icon(_("Number of notifications exceeds maximum allowed number"), "warning")
         table.end()
 
 
@@ -8034,7 +8155,7 @@ def mode_user_notifications(phase, profilemode):
                              _("Do you really want to delete the notification rule <b>%d</b> <i>%s</i>?" %
                                (nr, rule.get("description",""))))
             if c:
-                log_pending(SYNC, None, "notification-delete-user-rule", _("Deleted notification rule %d or user %s") % 
+                log_pending(SYNC, None, "notification-delete-user-rule", _("Deleted notification rule %d or user %s") %
                             (nr, userid))
                 del rules[nr]
                 userdb.save_users(users)
@@ -10088,22 +10209,41 @@ def service_levels():
     except:
         return [(0, "(no service level)")]
 
+# Example header of a notification script:
+#!/usr/bin/python
+# HTML Emails with included graphs
+# Bulk: yes
+# Argument 1: Full system path to the pnp4nagios index.php for fetching the graphs. Usually auto configured in OMD.
+# Argument 2: HTTP-URL-Prefix to open Multisite. When provided, several links are added to the mail.
+#
+# This script creates a nifty HTML email in multipart format with
+# attached graphs and such neat stuff. Sweet!
+
 def load_notification_scripts_from(adir):
     scripts = {}
     if os.path.exists(adir):
         for entry in os.listdir(adir):
             path = adir + "/" + entry
             if os.path.isfile(path) and os.access(path, os.X_OK):
-                title = entry
+                info = { "title" : entry, "bulk" : False }
                 try:
                     lines = file(path)
                     lines.next()
                     line = lines.next().strip()
                     if line.startswith("#"):
-                        title = line.lstrip("#").strip().split("#", 1)[0]
+                        info["title"] = line.lstrip("#").strip().split("#", 1)[0]
+                    while True:
+                        line = lines.next().strip()
+                        if not line.startswith("#") or ":" not in line:
+                            break
+                        key, value = line[1:].strip().split(":", 1)
+                        value = value.strip()
+                        if key.lower() == "bulk":
+                            info["bulk"] = (value == "yes")
+
                 except:
                     pass
-                scripts[entry] = title
+                scripts[entry] = info
     return scripts
 
 
@@ -10120,7 +10260,13 @@ def load_notification_scripts():
         scripts.update(load_notification_scripts_from(local_dir))
     except:
         pass
-    choices = scripts.items()
+
+    return scripts
+
+def notification_script_choices():
+    scripts = load_notification_scripts()
+
+    choices = [ (name, info["title"]) for (name, info) in scripts.items() ]
     choices.append((None, _("Plain Text Email (using configured templates)")))
     choices.sort(cmp = lambda a,b: cmp(a[1], b[1]))
     # Make choices localizable
@@ -10128,7 +10274,7 @@ def load_notification_scripts():
     return choices
 
 def notification_script_title(name):
-    return dict(load_notification_scripts()).get(name, name)
+    return dict(notification_script_choices()).get(name, name)
 
 
 def load_notification_table():
@@ -10157,7 +10303,7 @@ def load_notification_table():
                                     (  "plugin",
                                        DropdownChoice(
                                             title = _("Notification Plugin"),
-                                            choices = load_notification_scripts,
+                                            choices = notification_script_choices,
                                             default_value = "mail",
                                         ),
                                     ),
@@ -10248,7 +10394,7 @@ def load_notification_table():
                                   ( "only_hosts",
                                     ListOfStrings(
                                         title = _("Limit to the following hosts"),
-                                        help = _("Configure the hosts for this notification. Without prefix, only exact, case sensitive matches," 
+                                        help = _("Configure the hosts for this notification. Without prefix, only exact, case sensitive matches,"
                                                  "! for negation and ~ for regex matches " ),
                                         orientation = "horizontal",
                                         valuespec = RegExp(size = 20),
@@ -10483,7 +10629,7 @@ def mode_edit_user(phase):
     elif phase == "buttons":
         html.context_button(_("All Users"), make_link([("mode", "users")]), "back")
         if rulebased_notifications and not new:
-            html.context_button(_("Notifications"), make_link([("mode", "user_notifications"), 
+            html.context_button(_("Notifications"), make_link([("mode", "user_notifications"),
                     ("user", userid)]), "notifications")
         return
 
@@ -10905,8 +11051,8 @@ def filter_hidden_users(users):
 def generate_wato_users_elements_function(none_value, only_contacts = False):
     def get_wato_users(nv):
         users = filter_hidden_users(userdb.load_users())
-        elements = [ (name, "%s - %s" % (name, us.get("alias", name))) 
-                     for (name, us) 
+        elements = [ (name, "%s - %s" % (name, us.get("alias", name)))
+                     for (name, us)
                      in users.items()
                      if (not only_contacts or us.get("contactgroups")) ]
         if nv != None:
@@ -14313,7 +14459,8 @@ def page_user_profile():
 def create_sample_config():
     if os.path.exists(multisite_dir + "hosttags.mk") \
         or os.path.exists(root_dir + "rules.mk") \
-        or os.path.exists(root_dir + "groups.mk"):
+        or os.path.exists(root_dir + "groups.mk") \
+        or os.path.exists(root_dir + "notifications.mk"):
         return
 
     # A contact group where everyone is member of
@@ -14380,6 +14527,19 @@ def create_sample_config():
     }
 
     save_rulesets(g_root_folder, rulesets)
+
+    notification_rules = [{
+        'allow_disable'          : True,
+        'contact_all'            : False,
+        'contact_all_with_email' : False,
+        'contact_object'         : True,
+        'description'            : 'Notify all contacts of a host/service via HTML email',
+        'disabled'               : False,
+        'notify_method'          : [],
+        'notify_plugin'          : 'mail'
+    }]
+    save_notification_rules(notification_rules)
+
 
     # Make sure the host tag attributes are immediately declared!
     config.wato_host_tags = wato_host_tags

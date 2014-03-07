@@ -647,6 +647,7 @@ def output_mors(what, properties, direct=False):
                 print line
 
 
+g_datastores = {}
 def output_datastores():
     property_names = [ 
         "name",
@@ -668,11 +669,14 @@ def output_datastores():
     rows = host._retrieve_properties_traversal(property_names=property_names, obj_type=MORTypes.Datastore)
     # if the user has no permission to host / datastores, rows is None, skip it then
     if rows:
+        last_name = None
         for mor in rows:
             for entry in mor.PropSet:
                 if entry.Name == "name":
+                    last_name = entry.Val
                     print '[%s]' % entry.Val
                 else:
+                    g_datastores.setdefault(last_name, {})[entry.Name.split(".")[1]] = entry.Val
                     print '%s\t%s' % (entry.Name.split(".")[1], entry.Val)
 
 def conv_multipath(value):
@@ -742,6 +746,22 @@ if "hostsystem" in mortypes:
       #"summary.quickStats.uptime": str,
     }, opt_direct)
 
+def conv_vm_datastoreUrl(value):
+    result = []
+    for entry in value.VirtualMachineConfigInfoDatastoreUrlPair:
+        datastore_info = "name %s" % (entry.Name)
+        extra_info = []
+        if g_datastores.get(entry.Name):
+            for key, value in g_datastores.get(entry.Name).items():
+                extra_info.append("%s %s" % (key, value))
+        if extra_info:
+            datastore_info += "|" + "|".join(extra_info)
+        result.append(datastore_info)
+
+    return "\t".join(result)
+
+
+
 # Warning: we have no guarantee that all properties are always
 # output. For example if a VM is powered off, the only property
 # we get is summary.runtime.powerState
@@ -776,6 +796,7 @@ vm_propertys = {
       #"config.hardware.hwVersion": str,
       #"config.hardware.guestId": str,
       #"config.hardware.uuid": str,
+      "config.datastoreUrl": conv_vm_datastoreUrl,
 
       "runtime.powerState": str,
       "runtime.host" : conv_host,

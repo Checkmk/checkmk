@@ -174,6 +174,8 @@ class Age(ValueSpec):
         minutes, seconds = divmod(rest,      60)
 
         html.write("<div>")
+        if self._label:
+            html.write(self._label + " ")
         html.number_input(varprefix+'_days', days, 2)
         html.write(" %s " % _("days"))
         html.number_input(varprefix+'_hours', hours, 2)

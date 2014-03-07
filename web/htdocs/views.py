@@ -2664,7 +2664,10 @@ def group_value(row, group_painters):
     for p in group_painters:
         groupvalfunc = p[0].get("groupby")
         if groupvalfunc:
-            group.append(groupvalfunc(row))
+            if "args" in p[0]:
+                group.append(groupvalfunc(row, *p[0]["args"]))
+            else:
+                group.append(groupvalfunc(row))
         else:
             for c in p[0]["columns"]:
                 group.append(row[c])
@@ -2677,6 +2680,9 @@ def get_painter_option(name):
     return opt.get("value", opt['valuespec'].default_value())
 
 def get_host_tags(row):
+    if "host_custom_variables" in row:
+        return row["host_custom_variables"].get("TAGS", "")
+
     for name, val in zip(row["host_custom_variable_names"],
                          row["host_custom_variable_values"]):
         if name == "TAGS":

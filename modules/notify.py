@@ -479,7 +479,8 @@ def notify_rulebased(raw_context, analyse=False):
                         do_bulk_notify(contact, plugin, params, plugin_context, bulk)
                     elif notification_spooling:
                         create_spoolfile({"context": plugin_context, "plugin": plugin})
-                    call_notification_script(plugin, plugin_context)
+                    else:
+                        call_notification_script(plugin, plugin_context)
 
             except Exception, e:
                 if opt_debug:
@@ -862,7 +863,8 @@ def notify_flexible(raw_context, notification_table):
 
         if notification_spooling:
             create_spoolfile({"context": plugin_context, "plugin": plugin})
-        call_notification_script(plugin, plugin_context)
+        else:
+            call_notification_script(plugin, plugin_context)
 
 # may return
 # 0  : everything fine   -> proceed
@@ -1391,6 +1393,12 @@ def notify_bulk(dirname, uuids):
         bulk_context.append("\n")
         for varname, value in context.items():
             bulk_context.append("%s=%s\n" % (varname, value))
+
+        # Do not forget to add this to the monitoring log. We create
+        # a single entry for each notification contained in the bulk.
+        # It is important later to have this precise information.
+        plugin_name = "bulk " + (plugin or "plain email")
+        core_notification_log(plugin_name, context)
 
     parameter_context = [ "PARAMETERS=" + " ".join(old_params) + "\n" ]
     for nr, param in enumerate(old_params):

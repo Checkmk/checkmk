@@ -1,0 +1,13 @@
+Title: New bulk notifications
+Level: 3
+Component: notifications
+Version: 1.2.5i1
+Date: 1394187887
+Class: feature
+
+The new rule based notifications now also support a new feature called <i>Bulk Notifications</i>. The
+idea is to send multiple notifications, that are created within a short time frame, within one email and
+not as separate emails. This can help in situations where due to some general problem dozends of
+notifications would happen in a sort time. Also it can be used in order to create something similar
+to mailing list digests: you can get informed about all problems once a day. Please refer to the
+<a href="http://mathias-kettner.com/checkmk_rbn.html">online documentation</a> for details.

@@ -1,0 +1,10 @@
+Title: mk_postgres: improved support for versions postgres < 9.2
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1394456453
+Class: feature
+
+Postgres < 9.2 didn't know the pg_stat_activity column 'query'.
+This caused an entry in the error log.
+The new mk_postgres plugin is now able to handle this smarter.

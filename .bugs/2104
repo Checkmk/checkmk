@@ -1,0 +1,21 @@
+Title: creating core config: check if used timeperiod actually exists
+Component: core
+State: open
+Date: 2014-03-10 13:03:53
+Targetversion: 1.2.5i1
+Class: bug
+
+On creating the configuration for the core, there is now validation if
+a timeperiod used in any rules is actually defined. This causes a crash
+in the cmc and a config validation error for the nagios core.
+
+Example:
+1) Create timeperiod named officehours
+
+2) Manually add this (incorrect) timeperiod in main.mk
+# Note: office-hours vs. officehours
+
+extra_service_conf['notification_period'] = [
+  ( 'office-hours', [], ALL_HOSTS, ALL_SERVICES ),
+] + extra_service_conf['notification_period']
+

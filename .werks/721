@@ -5,7 +5,7 @@ Version: 1.2.5i1
 Date: 1394452012
 Class: feature
 
-Check_MK BI is now able to base the computation of the state of an BI aggregate
+Check_MK BI is now able to base the computation of the state of a BI aggregate
 on hard states of hosts and services. This is a new option at the top level
 of a BI aggregate. In WATO this is a new check box in each aggregation called
 <i>Base state computation on hard states</i>.
@@ -20,6 +20,12 @@ host_aggregations += [
 ]
 F-:
 
-<b>Note</b>: Please make sure that all of your monitoring sites are
+<b>Note 1</b>: Hard state only make sense if you have changed the <i>Maximum
+Number of Check Attempts</i> of a host or service from the default value
+of 1 to a higher value. If you have set the number of attempts to three
+then the hard state of service remained OK until the service has been checked
+three times in a row with a non-OK state.
+
+<b>Note 2</b>: Please make sure that all of your monitoring sites are
 updated to the same Check_MK version as your Multisite server. This new
 BI features needs an up-to-date Livestatus implementation.

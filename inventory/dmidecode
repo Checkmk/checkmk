@@ -150,7 +150,7 @@ def inv_dmidecode_parse_processor(lines):
 #             node["max_memory_size"] = dmidecode_parse_size(line[1])
 #         elif line[0] == "Memory Module Voltage":
 #             node["module_voltage"] = dmidecode_parse_voltage(line[1])
-# 
+#
 # def inv_dmidecode_parse_mem_module(lines):
 #     node = inv_tree("hardware.memory.modules:")
 #     module = {}

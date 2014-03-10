@@ -6,7 +6,7 @@ distribution: none
 description:
  This check monitors the state of an RLUN in
  a storage system from Fujitsu that support the
- FJDARY-E101-MIB. 
+ FJDARY-E101-MIB.
 
  Note: Unfortunately the MIB does not provide any information
  about the exact meanings of the state objects of the RLUNs

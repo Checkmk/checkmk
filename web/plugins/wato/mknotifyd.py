@@ -41,11 +41,12 @@ if mknotifyd_enabled:
     register_configvar(group,
         "notification_spooling",
         Checkbox(
-            title = _("Spool notifications"),
-            help = _("Here you can set if notifications are processed through a spooling mechanism."
-                     "Using notification spooling has the advantage that if there are problems on "
-                     "sending a notification, the system tries to resend it later on. This is configurable "
-                     "via the 'Notification fail retry interval'"),
+            title = _("Deliver notifications asychronously"),
+            help = _("The option will make notifications handled asynchronously. For each notification a spool "
+                     "file will be created and later processes by the notification spooler. This avoids a hanging "
+                     "core in case of notifications that need very long to execute. It also enables a retry in "
+                     "case of failed notifications. Please not that this is not useful if you only use notification "
+                     "methods that have their own spooling (like email or SMS tools)."),
             default_value = False),
         domain = "check_mk"
     )
@@ -67,10 +68,10 @@ if mknotifyd_enabled:
                     ),
                     Checkbox(
                         title = _("Local processing"),
-                        label = _("Also process notification locally"),
+                        label = _("Process notifications also locally"),
                     ),
                 ]),
-            title = _("Remote notification spooling"),
+            title = _("Forward all notifications to remote server"),
             help = _("This option allows you to forward notifications to another Check_MK site. "
                      "That site must have the notification spooler running and TCP listening enabled. "
                      "This allows you to create a centralized notification handling."),

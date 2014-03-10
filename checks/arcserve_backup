@@ -26,40 +26,40 @@
 
 # Example output from agent:
 # <<<arcserve_backup>>>
-# 
-# Job: 
+#
+# Job:
 # 3960
 # Beschreibung: Tagessicherung staging. (27.01.2014)
 # 255.154 Verzeichnis(se) 1.400.060 Datei(en) (388,38 GB) auf Datentr�ger gesichert.
 # Vorgang Sichern erfolgreich
-# 
-# Job: 
+#
+# Job:
 # 3954
 # Beschreibung: Wochensicherung staging. (24.01.2014)
 # 340.611 Verzeichnis(se) 1.726.321 Datei(en) (446,52 GB) auf Datentr�ger gesichert.
 # Vorgang Sichern erfolgreich
-# 
+#
 # <<<arcserve_backup>>>
-# Job: 
+# Job:
 # 3972
 # Beschreibung: Tagessicherung staging. (30.01.2014)
 # 255.641 Verzeichnis(se) 1.405.125 Datei(en) (389,27 GB) auf Datentr�ger gesichert.
 # Vorgang Sichern unvollst�ndig.Anzahl an Fehlern/Warnungen: 0/1
-# 
-# Job: 
+#
+# Job:
 # 3954
 # Beschreibung: Wochensicherung staging. (24.01.2014)
 # 340.611 Verzeichnis(se) 1.726.321 Datei(en) (446,52 GB) auf Datentr�ger gesichert.
 # Vorgang Sichern erfolgreich
-# 
+#
 # <<<arcserve_backup>>>
-# Job: 
+# Job:
 # 3976
 # Beschreibung: Wochensicherung staging. (31.01.2014)
 # 341.092 Verzeichnis(se) 1.731.713 Datei(en) (447,42 GB) auf Datentr�ger gesichert.
 # Vorgang Sichern konnte nicht durchgef�hrt werden.Anzahl an Fehlern/Warnungen: 1/0
-# 
-# Job: 
+#
+# Job:
 # 3972
 # Beschreibung: Tagessicherung staging. (30.01.2014)
 # 255.641 Verzeichnis(se) 1.405.125 Datei(en) (389,27 GB) auf Datentr�ger gesichert.

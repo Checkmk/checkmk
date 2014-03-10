@@ -11,7 +11,7 @@ description:
  interface you want to gather information for.
 
  The check always returns the state {OK}. The main purpose of the check is to gather
- network traffic statistics as performance data. 
+ network traffic statistics as performance data.
 
 item:
  The ID of the network interface within RMON (etherStatsIndex)

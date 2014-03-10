@@ -345,6 +345,9 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
                 "A list of all services of the host together with state and has_been_checked",    (char *)(&hst.services) - ref, indirect_offset, false, 1));
     table->addColumn(new ServicelistColumn(prefix + "services_with_info",
                 "A list of all services including detailed information about each service",    (char *)(&hst.services) - ref, indirect_offset, false, 2));
+    table->addColumn(new ServicelistColumn(prefix + "services_with_fullstate",
+                "A list of all services including full state information. The list of entries can grow in future versions.", 
+                   (char *)(&hst.services) - ref, indirect_offset, false, 3));
 }
 
 void *TableHosts::findObject(char *objectspec)

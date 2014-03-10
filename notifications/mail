@@ -1,12 +1,13 @@
 #!/usr/bin/python
-# HTML Emails with included Graphs
-# This script creates a very beautiful mail in multipart format with
-# attached graphs and such neat stuff. Sweet!
+# HTML Emails with included graphs
+# Bulk: yes
 #
-# Argument 1: Full system path to the pnp4nagios index.php for fetching
-#             the graphs. Usually auto configured in OMD.
-# Argument 2: HTTP-URL-Prefix to open multisite. When provided, several
-#             links are added to the mail.
+# Argument 1: Full system path to the pnp4nagios index.php for fetching the graphs. Usually auto configured in OMD.
+# Argument 2: HTTP-URL-Prefix to open Multisite. When provided, several links are added to the mail.
+#
+# This script creates a nifty HTML email in multipart format with
+# attached graphs and such neat stuff. Sweet!
+
 
 import os, re, sys, subprocess
 from email.mime.multipart import MIMEMultipart
@@ -247,6 +248,7 @@ $GRAPH_CODE$
 ''' + tmpl_foot_html
 
 opt_debug = '-d' in sys.argv
+bulk_mode = '--bulk' in sys.argv
 
 class GraphException(Exception):
     pass
@@ -320,14 +322,15 @@ def fetch_pnp_data(context, params):
     if not os.path.exists(path):
         raise GraphException('Unable to locate pnp4nagios index.php (%s)' % path)
 
-    return os.popen('REMOTE_USER="%s" php %s %s "%s"' % (context['CONTACTNAME'], php_save_path, path, params)).read()
+    #return os.popen('REMOTE_USER="%s" php %s %s "%s"' % (context['CONTACTNAME'], php_save_path, path, params)).read()
+    return os.popen('REMOTE_USER="%s" php %s %s "%s"' % ('omdadmin', php_save_path, path, params)).read()
 
 def fetch_num_sources(context):
     svc_desc = context['WHAT'] == 'HOST' and '_HOST_' or context['SERVICEDESC']
     infos = fetch_pnp_data(context, '/json?host=%s&srv=%s&view=0' %
                                      (context['HOSTNAME'], svc_desc))
     if not infos.startswith('[{'):
-        raise GraphException('Unable to fetch graph infos, got: "%s"' % infos)
+        raise GraphException('Unable to fetch graph infos: %s' % extract_graph_error(infos))
 
     return infos.count('source=')
 
@@ -337,17 +340,19 @@ def fetch_graph(context, source, view = 1):
                                     (context['HOSTNAME'], svc_desc, view, source))
 
     if graph[:8] != '\x89PNG\r\n\x1a\n':
-        raise GraphException('Unable to fetch the graph, got: "%s"' % graph)
+        raise GraphException('Unable to fetch the graph: %s' % extract_graph_error(graph))
 
     return graph
 
-def main():
-    # gather all options from env
-    context = dict([
-        (var[7:], value.decode("utf-8"))
-        for (var, value)
-        in os.environ.items()
-        if var.startswith("NOTIFY_")])
+def extract_graph_error(output):
+    lines = output.splitlines()
+    for nr, line in enumerate(lines):
+        if "Please check the documentation for information about the following error" in line:
+            return lines[nr+1]
+    return output
+
+
+def construct_content(context):
 
     # Fetch graphs for this object. It first tries to detect how many sources
     # are available for this object. Then it loops through all sources and
@@ -356,7 +361,9 @@ def main():
     try:
         num_sources = fetch_num_sources(context)
     except GraphException, e:
-        sys.stderr.write('Unable to fetch graph infos: %s\n' % e)
+        graph_error = extract_graph_error(str(e))
+        if '.xml" not found.' not in graph_error:
+            sys.stderr.write('Unable to fetch number of graphs: %s\n' % graph_error)
         num_sources = 0
 
     # If argument 2 is given, we know the base url to the installation and can add
@@ -417,10 +424,75 @@ def main():
 
     # Prepare the mail contents
     content_txt, content_html = prepare_contents(context)
+    return content_txt, content_html, attachments
+
+
+def read_bulk_contexts():
+    parameters = {}
+    contexts = []
+    in_params = True
+
+    # First comes a section with global variables
+    for line in sys.stdin:
+        line = line.strip()
+        if line:
+            key, value = line.split("=", 1)
+            if in_params:
+                parameters[key] = value
+            else:
+                context[key] = value
+
+        else:
+            in_params = False
+            context = {}
+            contexts.append(context)
+
+    return parameters, contexts
+
+def main():
+    if bulk_mode:
+        attachments = []
+        content_txt = ""
+        content_html = ""
+        parameters, contexts = read_bulk_contexts()
+        hosts = set([])
+        for context in contexts:
+            context.update(parameters)
+            txt, html, att = construct_content(context)
+            content_txt += txt
+            content_html += html
+            attachments += att
+            mailto = context['CONTACTEMAIL'] # Assume the same in each context
+            subject = context['SUBJECT']
+            hosts.add(context["HOSTNAME"])
+
+        # Create a useful subject
+        hosts = list(hosts)
+        if len(contexts) > 1:
+            if len(hosts) == 1:
+                subject = "Check_MK: %d notifications for %s" % (len(contexts), hosts[0])
+            else:
+                subject = "Check_MK: %d notifications for %d hosts" % (
+                    len(contexts), len(hosts))
+
+    else:
+        # gather all options from env
+        context = dict([
+            (var[7:], value.decode("utf-8"))
+            for (var, value)
+            in os.environ.items()
+            if var.startswith("NOTIFY_")])
+        content_txt, content_html, attachments = construct_content(context)
+        mailto = context['CONTACTEMAIL']
+        subject = context['SUBJECT']
+
+    if not mailto: # e.g. empty field in user database
+        sys.stdout.write("Cannot send HTML email: empty destination email address")
+        sys.exit(2)
+
 
     # Create the mail and send it
-    m = multipart_mail(context['CONTACTEMAIL'], context['SUBJECT'], content_txt,
-                       content_html, attachments)
-    send_mail(m, context['CONTACTEMAIL'])
+    m = multipart_mail(mailto, subject, content_txt, content_html, attachments)
+    send_mail(m, mailto)
 
 main()

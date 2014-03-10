@@ -41,6 +41,8 @@ def do_automation(cmd, args):
         elif cmd == "delete-host":
             read_config_files(with_autochecks=False)
             result = automation_delete_host(args)
+        elif cmd == "notification-get-bulks":
+            result = automation_get_bulks(args)
         else:
             read_config_files()
             if cmd == "try-inventory":
@@ -1036,3 +1038,6 @@ def automation_notification_analyse(args):
     nr = args[0]
     return notification_analyse_backlog(int(nr))
 
+def automation_get_bulks(args):
+    only_ripe = args[0] == "1"
+    return find_bulks(only_ripe)

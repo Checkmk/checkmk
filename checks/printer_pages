@@ -29,7 +29,7 @@ def inventory_printer_pages(info):
 
 def check_printer_pages(_no_item, _no_params, info):
     pages = saveint(info[0][0])
-    infotext = "%d Pages printed" % pages 
+    infotext = "%d Pages printed" % pages
     perfdata = [ ( "pages", pages ) ]
     return (0, "%s" % infotext, perfdata)
 

@@ -169,7 +169,7 @@ register_rule(group,
                  "This check uses <tt>check_dns</tt> from the standard Nagios plugins."),
         elements = [
            TextAscii(
-               title = _("Queried Hostname or IP address"), 
+               title = _("Queried Hostname or IP address"),
                allow_empty = False,
                help = _('The name or IPv4 address you want to query')),
            Dictionary(
@@ -183,7 +183,7 @@ register_rule(group,
                    ( "expected_address",
                      Transform(
                          ListOfStrings(
-                             title = _("Expected answer (IP address or hostname)"), 
+                             title = _("Expected answer (IP address or hostname)"),
                              help = _("List all allowed expected answers here. If query for an "
                                       "IP address then the answer will be host names, that end "
                                       "with a dot."),
@@ -1161,7 +1161,7 @@ register_rule(group,
                       )),
                       ( "output",
                         TextUnicode(
-                            title = _("Plugin output in case of absent abdates"),
+                            title = _("Plugin output in case of absent updates"),
                             size = 40,
                             allow_empty = False,
                             default_value = _("Check result did not arrive in time")

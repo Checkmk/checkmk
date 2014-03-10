@@ -11,11 +11,11 @@ fi
 
 echo '<<<postgres_sessions>>>'
 # Postgres 9.2 uses 'query' instead of 'current_query'
-for name in query current_query
-do
-    OUTPUT="$(echo "select $name = '<IDLE>', count(*) from pg_stat_activity group by ($name = '<IDLE>');" |\
-         su - $USER -c "psql --variable ON_ERROR_STOP=1 -d postgres -A -t -F' '" 2>/dev/null)" && break
-done
+QNAME="$(echo "select column_name from information_schema.columns where table_name='pg_stat_activity' and column_name in ('query','current_query');" |\
+        su - $USER -c "psql -d postgres -t -A -F';'")"
+OUTPUT="$(echo "select $QNAME = '<IDLE>', count(*) from pg_stat_activity group by ($QNAME = '<IDLE>');" |\
+    su - $USER -c "psql --variable ON_ERROR_STOP=1 -d postgres -A -t -F' '" 2>/dev/null)"
+
 echo "$OUTPUT"
 # line with number of idle sessions is sometimes missing on Postgre 8.x. This can lead
 # to an altogether empty section and thus the check disappearing.

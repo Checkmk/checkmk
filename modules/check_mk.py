@@ -1833,7 +1833,7 @@ def in_boolean_serviceconf_list(hostname, service_description, ruleset):
 
 # Entries in list are (tagged) hostnames that must equal the
 # (untagged) hostname. Expressions beginning with ! are negated: if
-# they match, the item is excluded from the list. Expressions beginning 
+# they match, the item is excluded from the list. Expressions beginning
 # withy ~ are treated as Regular Expression. Also the three
 # special tags '@all', '@clusters', '@physical' are allowed.
 def in_extraconf_hostlist(hostlist, hostname):
@@ -2391,7 +2391,6 @@ define service {
                        quote_nagios_string(entry["freshness"]["output"]), entry["freshness"]["state"])
             else:
                 freshness = ""
-
 
             custom_commands_to_define.add(command_name)
 

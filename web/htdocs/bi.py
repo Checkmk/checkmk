@@ -320,6 +320,12 @@ def compile_forest(user, only_hosts = None, only_groups = None):
             if entry[0] == config.DISABLED:
                 continue
 
+            if entry[0] == config.HARD_STATES:
+                use_hard_states = True
+                entry = entry[1:]
+            else:
+                use_hard_states = False
+
             if len(entry) < 3:
                 raise MKConfigError(_("<h1>Invalid aggregation <tt>%s</tt></h1>"
                                       "Must have at least 3 entries (has %d)") % (entry, len(entry)))
@@ -342,6 +348,7 @@ def compile_forest(user, only_hosts = None, only_groups = None):
 
             for this_entry in new_entries:
                 remove_empty_nodes(this_entry)
+                this_entry["use_hard_states"] = use_hard_states
 
             new_entries = [ e for e in new_entries if len(e["nodes"]) > 0 ]
 
@@ -989,17 +996,18 @@ service_nomatch_cache = set([])
 def execute_tree(tree, status_info = None):
     if status_info == None:
         required_hosts = tree["reqhosts"]
+        use_hard_states = tree["use_hard_states"]
         status_info = get_status_info(required_hosts)
-    return execute_node(tree, status_info)
+    return execute_node(tree, status_info, use_hard_states)
 
-def execute_node(node, status_info):
+def execute_node(node, status_info, use_hard_states):
     if node["type"] == NT_LEAF:
-        return execute_leaf_node(node, status_info)
+        return execute_leaf_node(node, status_info, use_hard_states)
     else:
-        return execute_rule_node(node, status_info)
+        return execute_rule_node(node, status_info, use_hard_states)
 
 
-def execute_leaf_node(node, status_info):
+def execute_leaf_node(node, status_info, use_hard_states):
 
     site, host = node["host"]
     service = node.get("service")
@@ -1008,7 +1016,7 @@ def execute_leaf_node(node, status_info):
     status = status_info.get((site, host))
     if status == None:
         return ({ "state" : MISSING, "output" : _("Host %s not found") % host}, None, node)
-    host_state, host_output, service_state = status
+    host_state, host_hard_state, host_output, service_state = status
 
     # Get state assumption from user
     if service:
@@ -1021,11 +1029,15 @@ def execute_leaf_node(node, status_info):
     if service:
         for entry in service_state: # list of all services of that host
             if entry[0] == service:
-                state, has_been_checked, output = entry[1:]
+                state, has_been_checked, output, hard_state, attempt, max_attempts, downtime_depth, acknowledged = entry[1:9]
                 if has_been_checked == 0:
                     output = _("This service has not been checked yet")
                     state = PENDING
-                state = {"state":state, "output":output}
+                if use_hard_states:
+                    st = hard_state
+                else:
+                    st = state
+                state = {"state" : st, "output" : output}
                 if state_assumption != None:
                     assumed_state = {"state":state_assumption,
                                      "output" : _("Assumed to be %s") % service_state_names[state_assumption]}
@@ -1036,7 +1048,11 @@ def execute_leaf_node(node, status_info):
         return ({"state":MISSING, "output": _("This host has no such service")}, None, node)
 
     else:
-        aggr_state = {0:OK, 1:CRIT, 2:UNKNOWN, -1:PENDING}[host_state]
+        if use_hard_states:
+            st = host_hard_state
+        else:
+            st = host_state
+        aggr_state = {0:OK, 1:CRIT, 2:UNKNOWN, -1:PENDING}[st]
         state = {"state":aggr_state, "output" : host_output}
         if state_assumption != None:
             assumed_state = {"state": state_assumption,
@@ -1046,7 +1062,7 @@ def execute_leaf_node(node, status_info):
         return (state, assumed_state, node)
 
 
-def execute_rule_node(node, status_info):
+def execute_rule_node(node, status_info, use_hard_states):
     # get aggregation function
     funcspec = node["func"]
     parts = funcspec.split('!')
@@ -1063,7 +1079,7 @@ def execute_rule_node(node, status_info):
     assumed_states = []
     one_assumption = False
     for n in node["nodes"]:
-        result = execute_node(n, status_info) # state, assumed_state, node [, subtrees]
+        result = execute_node(n, status_info, use_hard_states) # state, assumed_state, node [, subtrees]
         subtrees.append(result)
 
         node_states.append((result[0], result[2]))
@@ -1104,7 +1120,7 @@ def get_status_info(required_hosts):
         html.live.set_auth_domain('bi')
         data = html.live.query(
                 "GET hosts\n"
-                "Columns: name state plugin_output services_with_info\n"
+                "Columns: name state hard_state plugin_output services_with_fullstate\n"
                 + filter)
         html.live.set_auth_domain('read')
         tuples += [((site, e[0]), e[1:]) for e in data]
@@ -1115,7 +1131,7 @@ def get_status_info(required_hosts):
 # hosts but with a livestatus filter header and a list of columns
 # that need to be fetched in any case
 def get_status_info_filtered(filter_header, only_sites, limit, add_columns, fetch_parents = True):
-    columns = [ "name", "state", "plugin_output", "services_with_info", "parents" ] + add_columns
+    columns = [ "name", "state", "hard_state", "plugin_output", "services_with_fullstate", "parents" ] + add_columns
 
     html.live.set_only_sites(only_sites)
     html.live.set_prepend_site(True)
@@ -1123,7 +1139,6 @@ def get_status_info_filtered(filter_header, only_sites, limit, add_columns, fetc
     query = "GET hosts\n"
     query += "Columns: " + (" ".join(columns)) + "\n"
     query += filter_header
-
 
     if config.debug_livestatus_queries \
             and html.output_format == "html" and 'W' in html.display_options:
@@ -1202,8 +1217,8 @@ def x_best_state(l, x):
 
     return ll[n-1][1]
 
-def aggr_nth_state(nodelist, n, worst_state):
-    states = [ i[0]["state"] for i in nodelist ]
+def aggr_nth_state(nodelist, n, worst_state, ignore_states = None):
+    states = [ i[0]["state"] for i in nodelist if not ignore_states or i[0]["state"] not in ignore_states ]
     state = x_best_state(states, n)
 
     # limit to worst state
@@ -1212,11 +1227,11 @@ def aggr_nth_state(nodelist, n, worst_state):
 
     return { "state" : state, "output" : "" }
 
-def aggr_worst(nodes, n = 1, worst_state = CRIT):
-    return aggr_nth_state(nodes, -int(n), int(worst_state))
+def aggr_worst(nodes, n = 1, worst_state = CRIT, ignore_states = None):
+    return aggr_nth_state(nodes, -int(n), int(worst_state), ignore_states)
 
-def aggr_best(nodes, n = 1, worst_state = CRIT):
-    return aggr_nth_state(nodes, int(n), int(worst_state))
+def aggr_best(nodes, n = 1, worst_state = CRIT, ignore_states = None):
+    return aggr_nth_state(nodes, int(n), int(worst_state), ignore_states)
 
 config.aggregation_functions["worst"] = aggr_worst
 config.aggregation_functions["best"]  = aggr_best
@@ -1775,16 +1790,18 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
                         row = rows_by_host[sitehost]
                         status_info[sitehost] = [
                              row["state"],
+                             row["hard_state"],
                              row["plugin_output"],
-                             row["services_with_info"] ]
+                             row["services_with_fullstate"] ]
                 if status_info == None:
                     break
         else:
             aggrs = g_user_cache["host_aggregations"].get((site, host), [])
             status_info = { (site, host) : [
                 hostrow["state"],
+                hostrow["hard_state"],
                 hostrow["plugin_output"],
-                hostrow["services_with_info"] ] }
+                hostrow["services_with_fullstate"] ] }
 
         for group, aggregation in aggrs:
             row = hostrow.copy()
@@ -1799,8 +1816,9 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
                     if this_row:
                         status_info[(site, host)] = [
                             this_row['state'],
+                            this_row['hard_state'],
                             this_row['plugin_output'],
-                            this_row['services_with_info'],
+                            this_row['services_with_fullstate'],
                         ]
 
             row.update(create_aggregation_row(aggregation, status_info))

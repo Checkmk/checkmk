@@ -38,10 +38,18 @@
 #include "LogEntry.h"
 #include "LogCache.h"
 
+#ifdef CMC
+#include "Core.h"
+extern Core *g_core;
+#else
+extern time_t last_log_rotation;
+#endif // CMC
+
+
+
 #define CHECK_MEM_CYCLE 1000 /* Check memory every N'th new message */
 
 // watch nagios' logfile rotation
-extern time_t last_log_rotation;
 extern int g_debug_level;
 extern char *log_archive_path;
 extern char *log_file;
@@ -108,7 +116,11 @@ bool LogCache::logCachePreChecks()
     // Has Nagios rotated logfiles? => Update
     // our file index. And delete all memorized
     // log messages.
+    #ifdef CMC
+    if (g_core->_last_logfile_rotation > _last_index_update) {
+    #else
     if (last_log_rotation > _last_index_update) {
+    #endif
         logger(LG_INFO, "Nagios has rotated logfiles. Rebuilding logfile index");
         forgetLogfiles();
         updateLogfileIndex();

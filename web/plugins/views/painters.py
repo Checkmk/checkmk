@@ -1749,6 +1749,12 @@ multisite_painters["log_contact_name"] = {
     "columns" : ["log_contact_name"],
     "paint"   : lambda row: ("nowrap", row["log_contact_name"]),
 }
+multisite_painters["log_command"] = {
+    "title"   : _("Log: command/plugin"),
+    "short"   : _("Command"),
+    "columns" : ["log_command_name"],
+    "paint"   : lambda row: ("nowrap", row["log_command_name"]),
+}
 def paint_log_icon(row):
     img = None
     log_type = row["log_type"]
@@ -1936,6 +1942,12 @@ def paint_host_tag(row, tgid):
             return "", t[1]
     return "", _("N/A")
 
+# Use title of the tag value for grouping, not the complete
+# dictionary of custom variables!
+def groupby_host_tag(row, tgid):
+    cssclass, title = paint_host_tag(row, tgid)
+    return title
+
 for entry in config.wato_host_tags:
     tgid = entry[0]
     tit  = entry[1]
@@ -1944,7 +1956,8 @@ for entry in config.wato_host_tags:
     multisite_painters["host_tag_" + tgid] = {
         "title"   : _("Host tag:") + ' ' + tit,
         "short"   : tit,
-        "columns" : [ "host_custom_variable_names", "host_custom_variable_values" ],
+        "columns" : [ "host_custom_variables" ],
         "paint"   : paint_host_tag,
+        "groupby" : groupby_host_tag,
         "args"    : [ tgid ],
     }

@@ -84,7 +84,7 @@ def inv_tree(path):
     current_path = ""
 
     while path:
-        parts = re.split("[:.]", path) 
+        parts = re.split("[:.]", path)
         name = parts[0]
         what = path[len(name)]
         path = path[1 + len(name):]

@@ -1811,26 +1811,13 @@ register_configvar(group,
     need_restart = True)
 
 register_configvar(group,
-    "mkeventd_notify_facility",
-    DropdownChoice(
-        title = _("Syslog facility for Event Console notifications"),
-        help = _("When sending notifications from the monitoring system to the event console "
-                 "the following syslog facility will be set for these messages. Choosing "
-                 "a unique facility makes creation of rules easier."),
-        choices = mkeventd.syslog_facilities,
-        default_value = 16, # local0
-    ),
-    domain = "multisite",
-    need_restart = True)
-
-register_configvar(group,
     "mkeventd_notify_remotehost",
     Optional(
         TextAscii(
             title = _("Host running Event Console"),
             attrencode = True,
         ),
-        title = _("Forward notifications to remote host"),
+        title = _("Send notifications to remote Event Console"),
         help = _("This will send the notification to a Check_MK Event Console on a remote host "
                  "by using syslog. <b>Note</b>: this setting will only be applied if no Event "
                  "Console is running locally in this site! That way you can use the same global "
@@ -1839,6 +1826,19 @@ register_configvar(group,
                  "is enabled."),
         label = _("Send to remote Event Console via syslog"),
         none_label = _("Do not send to remote host"),
+    ),
+    domain = "multisite",
+    need_restart = True)
+
+register_configvar(group,
+    "mkeventd_notify_facility",
+    DropdownChoice(
+        title = _("Syslog facility for Event Console notifications"),
+        help = _("When sending notifications from the monitoring system to the event console "
+                 "the following syslog facility will be set for these messages. Choosing "
+                 "a unique facility makes creation of rules easier."),
+        choices = mkeventd.syslog_facilities,
+        default_value = 16, # local0
     ),
     domain = "multisite",
     need_restart = True)

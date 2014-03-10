@@ -43,7 +43,7 @@ check_info["emc_isilon_iops"] = {
     "inventory_function"    : inventory_emc_isilon_iops,
     "service_description"   : "Disk %s IO",
     "has_perfdata"          : True,
-    "snmp_info"             : (".1.3.6.1.4.1.12124.2.2.52.1", 
+    "snmp_info"             : (".1.3.6.1.4.1.12124.2.2.52.1",
                                    [ 2,    # diskPerfDeviceName
                                      3,    # diskPerfOpsPerSecond
                               ]),

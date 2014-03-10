@@ -19,13 +19,13 @@ item:
  The name of the backup.
 
 perfdata:
- Returns three values: The number of directories backuped in the last 
+ Returns three values: The number of directories backuped in the last
  execution of the backup, the number of files backuped and the total
  size backuped in Bytes.
 
 inventory:
- Finds one service for every backup configured. 
- 
+ Finds one service for every backup configured.
+
  Please note: This is independent of the number of hosts backuped in one
  backup job. Only the total state of a backup (over all contained hosts)
  is reported.

@@ -1187,11 +1187,14 @@ class EventServer:
                             if event["count"] == 0:
                                 log("Rule %s, event %d: again without allowed rate, dropping event" %
                                     (rule["id"], event["id"]))
+                                log_event_history(event, "COUNTFAILED")
                                 events_to_delete.append(nr)
+
                     else: # algorithm 'interval'
                         if event["first"] + count["period"] <= now: # End of period reached
                             log("Rule %s: reached only %d out of %d events within %d seconds. "
                                 "Resetting to zero." % (rule["id"], event["count"], count["count"], count["period"]))
+                            log_event_history(event, "COUNTFAILED")
                             events_to_delete.append(nr)
 
             # Handle delayed actions

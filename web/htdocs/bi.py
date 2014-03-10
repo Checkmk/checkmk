@@ -1016,7 +1016,7 @@ def execute_leaf_node(node, status_info, use_hard_states):
     status = status_info.get((site, host))
     if status == None:
         return ({ "state" : MISSING, "output" : _("Host %s not found") % host}, None, node)
-    host_state, host_output, service_state = status
+    host_state, host_hard_state, host_output, service_state = status
 
     # Get state assumption from user
     if service:
@@ -1048,7 +1048,11 @@ def execute_leaf_node(node, status_info, use_hard_states):
         return ({"state":MISSING, "output": _("This host has no such service")}, None, node)
 
     else:
-        aggr_state = {0:OK, 1:CRIT, 2:UNKNOWN, -1:PENDING}[host_state]
+        if use_hard_states:
+            st = host_hard_state
+        else:
+            st = host_state
+        aggr_state = {0:OK, 1:CRIT, 2:UNKNOWN, -1:PENDING}[st]
         state = {"state":aggr_state, "output" : host_output}
         if state_assumption != None:
             assumed_state = {"state": state_assumption,
@@ -1116,7 +1120,7 @@ def get_status_info(required_hosts):
         html.live.set_auth_domain('bi')
         data = html.live.query(
                 "GET hosts\n"
-                "Columns: name state plugin_output services_with_fullstate\n"
+                "Columns: name state hard_state plugin_output services_with_fullstate\n"
                 + filter)
         html.live.set_auth_domain('read')
         tuples += [((site, e[0]), e[1:]) for e in data]
@@ -1127,7 +1131,7 @@ def get_status_info(required_hosts):
 # hosts but with a livestatus filter header and a list of columns
 # that need to be fetched in any case
 def get_status_info_filtered(filter_header, only_sites, limit, add_columns, fetch_parents = True):
-    columns = [ "name", "state", "plugin_output", "services_with_fullstate", "parents" ] + add_columns
+    columns = [ "name", "state", "hard_state", "plugin_output", "services_with_fullstate", "parents" ] + add_columns
 
     html.live.set_only_sites(only_sites)
     html.live.set_prepend_site(True)
@@ -1135,7 +1139,6 @@ def get_status_info_filtered(filter_header, only_sites, limit, add_columns, fetc
     query = "GET hosts\n"
     query += "Columns: " + (" ".join(columns)) + "\n"
     query += filter_header
-
 
     if config.debug_livestatus_queries \
             and html.output_format == "html" and 'W' in html.display_options:
@@ -1787,6 +1790,7 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
                         row = rows_by_host[sitehost]
                         status_info[sitehost] = [
                              row["state"],
+                             row["hard_state"],
                              row["plugin_output"],
                              row["services_with_fullstate"] ]
                 if status_info == None:
@@ -1795,6 +1799,7 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
             aggrs = g_user_cache["host_aggregations"].get((site, host), [])
             status_info = { (site, host) : [
                 hostrow["state"],
+                hostrow["hard_state"],
                 hostrow["plugin_output"],
                 hostrow["services_with_fullstate"] ] }
 
@@ -1811,6 +1816,7 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
                     if this_row:
                         status_info[(site, host)] = [
                             this_row['state'],
+                            this_row['hard_state'],
                             this_row['plugin_output'],
                             this_row['services_with_fullstate'],
                         ]

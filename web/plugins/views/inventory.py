@@ -779,7 +779,7 @@ def declare_swpacs_columns(name, title, sortfunc):
     multisite_painters[column] = {
         "title"   : _("Package") + " " + title,
         "short"   : title,
-        "columns" : [],
+        "columns" : [ "invswpac_name" ],
         "paint"   : lambda row: ("", row.get(column)),
         "sorter"  : column,
     }

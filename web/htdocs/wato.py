@@ -15212,10 +15212,10 @@ def convert_aggregation_to_bi(aggr):
         conv = (aggr["groups"],)
     node = convert_node_to_bi(aggr["node"])
     convaggr = conv + node
-    if aggr["disabled"]:
-        convaggr = (bi_constants["DISABLED"],) + convaggr
     if aggr["hard_states"]:
         convaggr = (bi_constants["HARD_STATES"],) + convaggr
+    if aggr["disabled"]:
+        convaggr = (bi_constants["DISABLED"],) + convaggr
     return convaggr
 
 # Not in global context, so that l10n will happen again

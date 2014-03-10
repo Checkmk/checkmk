@@ -20,10 +20,10 @@ host_aggregations += [
 ]
 F-:
 
-<b>Note 1</b>: Hard state only make sense if you have changed the <i>Maximum
+<b>Note 1</b>: Hard states only make sense if you have changed the <i>Maximum
 Number of Check Attempts</i> of a host or service from the default value
 of 1 to a higher value. If you have set the number of attempts to three
-then the hard state of service remained OK until the service has been checked
+the hard state of service remaines OK until the service has been checked
 three times in a row with a non-OK state.
 
 <b>Note 2</b>: Please make sure that all of your monitoring sites are

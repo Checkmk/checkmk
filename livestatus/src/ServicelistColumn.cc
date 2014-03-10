@@ -73,6 +73,18 @@ void ServicelistColumn::output(void *data, Query *query)
                     query->outputSublistSeparator();
                     query->outputString(svc->plugin_output);
                 }
+                if (_info_depth >= 3) {
+                    query->outputSublistSeparator();
+                    query->outputInteger(svc->last_hard_state);
+                    query->outputSublistSeparator();
+                    query->outputInteger(svc->current_attempt);
+                    query->outputSublistSeparator();
+                    query->outputInteger(svc->max_attempts);
+                    query->outputSublistSeparator();
+                    query->outputInteger(svc->scheduled_downtime_depth);
+                    query->outputSublistSeparator();
+                    query->outputInteger(svc->problem_has_been_acknowledged);
+                }
                 query->outputEndSublist();
             }
         }

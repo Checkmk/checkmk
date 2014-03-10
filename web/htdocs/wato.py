@@ -15024,6 +15024,7 @@ bi_constants = {
   'FOREACH_SERVICE' : 'FOREACH_SERVICE-f41e728b-0bce-40dc-82ea-51091d034fc3',
   'REMAINING'       : 'REMAINING-f41e728b-0bce-40dc-82ea-51091d034fc3',
   'DISABLED'        : 'DISABLED-f41e728b-0bce-40dc-82ea-51091d034fc3',
+  'HARD_STATES'     : 'HARD_STATES-f41e728b-0bce-40dc-82ea-51091d034fc3',
 }
 
 # returns aggregations, aggregation_rules
@@ -15185,6 +15186,12 @@ def convert_aggregation_from_bi(aggr, single_host):
     else:
         disabled = False
 
+    if aggr[0] == bi_constants["HARD_STATES"]:
+        hard_states = True
+        aggr = aggr[1:]
+    else:
+        hard_states = False
+
     if type(aggr[0]) != list:
         groups = [aggr[0]]
     else:
@@ -15192,6 +15199,7 @@ def convert_aggregation_from_bi(aggr, single_host):
     node = convert_node_from_bi(aggr[1:])
     return {
         "disabled"    : disabled,
+        "hard_states" : hard_states,
         "groups"      : groups,
         "node"        : node,
         "single_host" : single_host,
@@ -15206,6 +15214,8 @@ def convert_aggregation_to_bi(aggr):
     convaggr = conv + node
     if aggr["disabled"]:
         convaggr = (bi_constants["DISABLED"],) + convaggr
+    if aggr["hard_states"]:
+        convaggr = (bi_constants["HARD_STATES"],) + convaggr
     return convaggr
 
 # Not in global context, so that l10n will happen again
@@ -15386,6 +15396,16 @@ def declare_bi_valuespecs(aggregation_rules):
           Checkbox(
               title = _("Disabled"),
               label = _("Currently disable this aggregation"),
+          )
+        ),
+        ( "hard_states",
+          Checkbox(
+              title = _("Use Hard States"),
+              label = _("Base state computation on hard states"),
+              help = _("Hard states can only differ from soft states if at least one host or service "
+                       "of the BI aggregate has more than 1 maximum check attempt. For example if you "
+                       "set the maximum check attempts of a service to 3 and the service is CRIT "
+                       "just since one check then it's soft state is CRIT, but its hard state is still OK."),
           )
         ),
         ( "single_host",

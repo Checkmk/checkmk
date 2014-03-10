@@ -2392,7 +2392,6 @@ define service {
             else:
                 freshness = ""
 
-
             custom_commands_to_define.add(command_name)
 
             if description in used_descriptions:

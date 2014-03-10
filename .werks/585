@@ -1,0 +1,11 @@
+Title: check_mk_agent.linux: more efficient handling of cups printer queues
+Level: 2
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.4b8
+Date: 1393261649
+
+The handling of printer queues has been made more efficient for cases when
+many printer queues (>> 100) are to be monitored. This part of the agent
+is now a factor of 10-20 faster !

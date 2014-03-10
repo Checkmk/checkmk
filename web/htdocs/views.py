@@ -663,7 +663,7 @@ def page_edit_view():
     html.write(_("Reload page every "))
     html.number_input("browser_reload", 0)
     html.write(_(" seconds"))
-    html.help(_("Leave this empty or at 0 for now automatic reload."))
+    html.help(_("Leave this empty or at 0 for no automatic reload."))
 
     forms.section(_("Audible alarm sounds"), simple=True)
     html.checkbox("play_sounds", False, label=_("Play alarm sounds"))
@@ -2635,7 +2635,10 @@ def group_value(row, group_painters):
     for p in group_painters:
         groupvalfunc = p[0].get("groupby")
         if groupvalfunc:
-            group.append(groupvalfunc(row))
+            if "args" in p[0]:
+                group.append(groupvalfunc(row, *p[0]["args"]))
+            else:
+                group.append(groupvalfunc(row))
         else:
             for c in p[0]["columns"]:
                 group.append(row[c])
@@ -2648,6 +2651,9 @@ def get_painter_option(name):
     return opt.get("value", opt["default"])
 
 def get_host_tags(row):
+    if "host_custom_variables" in row:
+        return row["host_custom_variables"].get("TAGS", "")
+
     for name, val in zip(row["host_custom_variable_names"],
                          row["host_custom_variable_values"]):
         if name == "TAGS":

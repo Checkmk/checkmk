@@ -1,0 +1,8 @@
+Title: Fixed printer_pages
+Level: 1
+Component: checks
+Version: 1.2.4p1
+Date: 1393422115
+Class: fix
+
+The old version used a not exsisting OID who leads to a error when using inline snmp.

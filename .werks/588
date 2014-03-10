@@ -1,0 +1,8 @@
+Title: dell_poweredge_amperage.current, dell_poweredge_amperage.power, dell_poweredge_cpu, dell_poweredge_status, dell_poweredge_temp: new checks for the Dell PowerEdge Blade Server
+Level: 2
+Component: checks
+Version: 1.2.5i1
+Date: 1394472883
+Class: feature
+
+

@@ -1,0 +1,31 @@
+title: Dell PowerEdge Server: Current 
+agents: snmp
+catalog: hw/network/dell
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the electrical current going through power units of 
+ Dell PowerEdge Servers.
+
+ No limits are set in the check, since limits are configured in the device
+ itself. The state given by the device is taken as the state of the check
+ as follows: If the device returns {OK}, the check is {OK}. If the device returns
+ {other}, {unknown}, {nonCriticalUpper} and {nonCriticalLower} a state of {WARN}
+ is returned. Otherwise the check is {CRIT}.
+
+ The check displays the upper warning and critical limits as configured in the device.
+ Further limits are {not} displayed, even though they may be configured. These are
+ UpperNonRecoverable, LowerCritical, LowerNonCritical and LowerNonRecoverable.
+ These limits yet may lead to state changes, the corresponding states are honoured
+ as outlined above.
+
+item:
+ The name of the location variable configured for the power unit
+
+perfdata:
+ One variable: the electrical current in Ampere
+
+inventory:
+ All power units 
+
+

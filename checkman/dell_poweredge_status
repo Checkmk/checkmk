@@ -1,0 +1,19 @@
+title: Dell PowerEdge Server: Global State
+agents: snmp
+catalog: hw/network/dell
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the global state of Dell PowerEdge Servers.
+ The state is extracted from the device via SNMP from the parameter
+ {GlobalSystemStatus}.
+
+ The state of the check is {OK}, when the device returns a state of {OK}.
+ The state of the cehck is {WARN}, when the device returns a state of {other},
+ {unknown} or {nonCritical}. The state of the check is {CRIT} otherwise.
+
+ No limits are set in the check.
+
+ In addition to the state the check displays various other parameters of the server:
+ racURL, chassisServiceTag, chassisSystemName, racSlot, systemModelName
+

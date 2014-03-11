@@ -1,0 +1,10 @@
+Title: mkeventd: fixed encoding of unicode characters in the snmptrap receiver
+Level: 2
+Component: ec
+Version: 1.2.5i1
+Date: 1394548319
+Class: fix
+
+Messages coming in via the build-in snmptrap receiver and containing unicode characters
+never matched any rule because the matching algorithm threw an exception. This
+has been fixed. 

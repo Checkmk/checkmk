@@ -957,13 +957,19 @@ class EventServer:
                 return # dropping unhandled snmp version
 
         # once we got here we have a real parsed trap which we convert to an event now
+        text = ', '.join([ '%s: %s' % (item[0], str(item[1]).replace('\n', '')) for item in trap ])
+        # Convert to Unicode, first assume UTF-8, then latin-1
+        try:
+            text = text.decode("utf-8")
+        except:
+            text = text.decode("latin-1")
         event = {
             'time'        : time.time(),
             'host'        : host.replace('\n', ''),
             'priority'    : 5,  # notice
             'facility'    : 31, # not used by syslog -> we use this for all traps
             'application' : application.replace('\n', ''),
-            'text'        : ', '.join([ '%s: %s' % (item[0], str(item[1]).replace('\n', '')) for item in trap ])
+            'text'        : text
         }
         self.process_event(event)
 

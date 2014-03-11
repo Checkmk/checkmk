@@ -1,0 +1,34 @@
+title: Dell PowerEdge Server: Temperature Sensors
+agents: snmp
+catalog: hw/network/dell
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the temperature of Dell PowerEdge Servers by probing and
+ monitoring known temperature sensors on the device. Measured temperatures
+ may include CPU temperatures as well as air inlet temperatures and others,
+ depending on the device configuration.
+
+ No limits are set in the check, since limits are configured in the device
+ itself. The state given by the device is taken as the state of the check
+ as follows: If the device returns {OK}, the check is {OK}. If the device returns
+ {other}, {unknown}, {nonCriticalUpper} and {nonCriticalLower} a state of {WARN}
+ is returned. Otherwise the check is {CRIT}.
+
+ The check displays the upper warning and critical limits as configured in the device.
+ Further limits are {not} displayed, even though they may be configured. These are
+ UpperNonRecoverable, LowerCritical, LowerNonCritical and LowerNonRecoverable.
+ These limits yet may lead to state changes, the corresponding states are honoured
+ as outlined above.
+
+item:
+ Either the name of the location variable configured for the temperature sensor, or
+ the chassis index and sensor index seperated by a dash.
+
+perfdata:
+ One variable: the temperature
+
+inventory:
+ All temperature sensors which do not have the state settings unknown are detected
+
+

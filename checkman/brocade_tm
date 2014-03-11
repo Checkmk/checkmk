@@ -1,0 +1,68 @@
+title: Brocade NetIron MLX devices: Traffic Manager Statistics
+agents: snmp
+catalog: hw/network/brocade
+license: GPL
+distribution: check_mk
+description:
+ This check extracts the traffic manager statistics for interfaces of Brocade devices.
+ Warning and critical levels may be configured for the retrieved values, as described below.
+
+item:
+ The name of the network interface
+
+examples:
+ # Set default levels for check
+ brocade_tm_default_levels(dict) = {
+            'brcdTMStatsTotalIngressPktsCnt': (1000,10000),
+            'brcdTMStatsIngressEnqueuePkts': (1000,10000),
+            'brcdTMStatsEgressEnqueuePkts': (1000,10000),
+            'brcdTMStatsIngressDequeuePkts': (1000,10000),
+            'brcdTMStatsIngressTotalQDiscardPkts': (1000,10000),
+            'brcdTMStatsIngressOldestDiscardPkts': (1000,10000),
+            'brcdTMStatsEgressDiscardPkts': (1000,10000),
+        }
+
+ # checkgroup_parameters syntax
+ # hosts in production get lower levels of brcdTMStatsEgressEnqueuePkts
+ checkgroup_parameters.setdefault('brocade_tm', [])
+ checkgroup_parameters['brocade_tm'] += [
+    ( { "brcdTMStatsEgressEnqueuePkts": (500,5000) }, ["prod"], ALL_HOSTS ),
+    ]
+
+perfdata:
+ Seven statistical values for each interface are returned: brcdTMStatsTotalIngressPktsCnt,
+ brcdTMStatsIngressEnqueuePkts, brcdTMStatsEgressEnqueuePkts, brcdTMStatsIngressDequeuePkts,
+ brcdTMStatsIngressTotalQDiscardPkts, brcdTMStatsIngressOldestDiscardPkts,
+ brcdTMStatsEgressDiscardPkts
+
+inventory:
+ Finds one item per network interface
+
+[parameters]
+parameters(dict): parameters is a dictionary with seven keys
+
+{"brcdTMStatsTotalIngressPktsCnt"}: a tuple of warning and critical levels
+
+{"brcdTMStatsIngressEnqueuePkts"}: a tuple of warning and critical levels
+
+{"brcdTMStatsEgressEnqueuePkts"}: a tuple of warning and critical levels
+
+{"brcdTMStatsIngressDequeuePkts"}: a tuple of warning and critical levels
+
+{"brcdTMStatsIngressTotalQDiscardPkts"}: a tuple of warning and critical levels
+
+{"brcdTMStatsIngressOldestDiscardPkts"}: a tuple of warning and critical levels
+
+{"brcdTMStatsEgressDiscardPkts"}: a tuple of warning and critical levels
+
+
+[configuration]
+brocade_tm_default_levels(dict): the variable is preset to
+'brcdTMStatsTotalIngressPktsCnt': (1000,10000),
+'brcdTMStatsIngressEnqueuePkts': (1000,10000),
+'brcdTMStatsEgressEnqueuePkts': (1000,10000),
+'brcdTMStatsIngressDequeuePkts': (1000,10000),
+'brcdTMStatsIngressTotalQDiscardPkts': (1000,10000),
+'brcdTMStatsIngressOldestDiscardPkts': (1000,10000),
+'brcdTMStatsEgressDiscardPkts': (1000,10000) 
+

@@ -281,6 +281,7 @@ perfometers["check_mk-hwg_temp"] = perfometer_temperature
 perfometers["check_mk-sensatronics_temp"] = perfometer_temperature
 perfometers["check_mk-apc_inrow_temperature"] = perfometer_temperature
 perfometers["check_mk-hitachi_hnas_temp"] = perfometer_temperature
+perfometers["check_mk-dell_poweredge_temp"] = perfometer_temperature
 
 def perfometer_temperature_multi(row, check_command, perf_data):
     display_value = -1
@@ -300,6 +301,24 @@ def perfometer_temperature_multi(row, check_command, perf_data):
     return display_string, perfometer_linear(display_value, display_color)
 
 perfometers["check_mk-brocade_mlx_temp"] = perfometer_temperature_multi
+
+def perfometer_power(row, check_command, perf_data):
+    display_color = "#60f020"
+
+    value=savefloat(perf_data[0][1])
+    crit=savefloat(perf_data[0][4])
+    warn=savefloat(perf_data[0][3])
+    power_perc = value/crit*90 # critical is at 90% to allow for more than crit
+
+    if value > warn:
+        display_color = "#FFC840"
+    if value > crit:
+        display_color = "#FF0000"
+
+    display_string = "%s Watt" % value
+    return display_string, perfometer_linear(power_perc, display_color)
+
+perfometers["check_mk-dell_poweredge_amperage.power"] = perfometer_power
 
 def perfometer_users(row, check_command, perf_data):
     state = row["service_state"]

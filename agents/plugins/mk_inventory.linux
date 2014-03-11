@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Run and *send* only once every 4 hours
 INTERVAL=14400

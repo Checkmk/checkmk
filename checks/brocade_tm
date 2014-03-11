@@ -1,0 +1,113 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+factory_settings["brocade_tm_default_levels"] = {
+            'brcdTMStatsTotalIngressPktsCnt': (1000,10000),
+            'brcdTMStatsIngressEnqueuePkts': (1000,10000),
+            'brcdTMStatsEgressEnqueuePkts': (1000,10000),
+            'brcdTMStatsIngressDequeuePkts': (1000,10000),
+            'brcdTMStatsIngressTotalQDiscardPkts': (1000,10000),
+            'brcdTMStatsIngressOldestDiscardPkts': (1000,10000),
+            'brcdTMStatsEgressDiscardPkts': (1000,10000),
+}
+
+def inventory_brocade_tm(info):
+    inventory = []
+    for line in info:
+        inventory.append(( line[0], None ))
+    return inventory
+
+def check_brocade_tm(item, params, info):
+    for line in info:
+        if line[0] == item:
+            tm = {}
+            rates = {}
+            tm['brcdTMStatsTotalIngressPktsCnt'] = line[1]
+            tm['brcdTMStatsIngressEnqueuePkts'] = line[2]
+            tm['brcdTMStatsEgressEnqueuePkts'] = line[3]
+            tm['brcdTMStatsIngressDequeuePkts'] = line[4]
+            tm['brcdTMStatsIngressTotalQDiscardPkts'] = line[5]
+            tm['brcdTMStatsIngressOldestDiscardPkts'] = line[6]
+            tm['brcdTMStatsEgressDiscardPkts'] = line[7]
+
+            now = time.time()
+            infotext = ""
+            counter_wrapped = ""
+            perfdata = []
+            overall_state = 0
+
+            for name, counter in tm.items():
+                try:
+                    timediff, rate = get_counter("%s.%s" % (name, item), now, saveint(counter))
+                except MKCounterWrapped, e:
+                    counter_wrapped = e
+                    rate = 0 # we need to fill the rate, even though check will not do anything
+
+                warn, crit = params[name]
+                if re.search("Discard", name):
+                    if rate > crit:
+                        state = 2
+                        sym = "(!!)"
+                    elif rate > warn:
+                        state = 1
+                        sym = "(!)"
+                    else:
+                        state = 0
+                        sym = ""
+                else:
+                    state = 0
+                    sym = ""
+                infotext += "%s: %.1f%s, " % ( name, rate, sym )
+                perfdata.append( (name, rate, warn, crit) )
+                overall_state = max(overall_state, state)
+
+            if counter_wrapped: # interrupt the check, no output this time
+                raise counter_wrapped
+
+            return(overall_state, infotext, perfdata)
+
+    return (3, "Interface not found")
+
+check_info["brocade_tm"] = {
+    'check_function'         : check_brocade_tm,
+    'inventory_function'     : inventory_brocade_tm,
+    'service_description'    : 'TM %s',
+    'has_perfdata'           : True,
+    'snmp_scan_function'     : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1991.1."),
+    'group'                  : 'brocade_tm',
+    'default_levels_variable': 'brocade_tm_default_levels',
+    'snmp_info'              : ( ".1.3.6.1.4.1.1991.1.14.2.1.2.2.1",[
+            3, # 'brcdTMStatsDescription',
+            4, # 'brcdTMStatsTotalIngressPktsCnt',
+            5, # 'brcdTMStatsIngressEnqueuePkts',
+            6, # 'brcdTMStatsEgressEnqueuePkts',
+            9, # 'brcdTMStatsIngressDequeuePkts',
+            11, # 'brcdTMStatsIngressTotalQDiscardPkts',
+            13, # 'brcdTMStatsIngressOldestDiscardPkts',
+            15, # 'brcdTMStatsEgressDiscardPkts',
+    ]),
+}

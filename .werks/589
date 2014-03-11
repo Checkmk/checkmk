@@ -1,0 +1,8 @@
+Title: brocade_tm: new check monitoring traffic manager statistics for interfaces of brocade devices
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1394521488
+Class: feature
+
+

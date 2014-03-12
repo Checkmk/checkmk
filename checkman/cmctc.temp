@@ -1,4 +1,4 @@
-title: Rittal CMC TC: Temperature
+title: Rittal CMC-TC: Temperature
 agents: snmp
 catalog: hw/environment/rittal
 license: GPL

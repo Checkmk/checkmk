@@ -1,0 +1,27 @@
+title: Dell PowerEdge Server: State of PCI Devices
+agents: snmp
+catalog: hw/network/dell
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state of the PCI devices of Dell PowerEdge Servers.
+ The state is extracted from the device via SNMP from the parameter
+ {pCIDeviceStatus}.
+
+ The state of the check is {OK} when the device returns a state of {OK}.
+ The state of the cehck is {WARN} when the device returns a state of {other},
+ {unknown} or {nonCritical}. The state of the check is {CRIT} otherwise.
+
+ No limits are set in the check.
+
+ In addition to the state the following information of the memory modules
+ is retrieved and displayed in the check output: width of the data bus,
+ description of the device and manufacturer,
+
+item:
+ The name of the fqdd variable for the device
+
+inventory:
+ All PCI devices of the device are detected
+
+

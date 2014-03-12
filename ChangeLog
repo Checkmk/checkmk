@@ -106,6 +106,7 @@
     * 0588 dell_poweredge_amperage.current, dell_poweredge_amperage.power, dell_poweredge_cpu, dell_poweredge_status, dell_poweredge_temp: new checks for the Dell PowerEdge Blade Server
     * 0589 brocade_tm: new check monitoring traffic manager statistics for interfaces of brocade devices
     * 0591 dell_poweredge_mem: new check to monitor memory modules of Dell PowerEdge Servers
+    * 0592 dell_poweredge_pci: new check for pci devices on dell PowerEdge Servers
     * 0103 FIX: services: Fixed bug with service inventory defined in main.mk...
     * 0299 FIX: borcade_mlx_fan: Prettified output, handling "other" state now
     * 0300 FIX: cisco_fru_power: Trying not to inventorize not plugged in FRUs...

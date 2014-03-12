@@ -9,19 +9,19 @@ description:
  {memoryDeviceStatus}.
 
  The state of the check is {OK} when the device returns a state of {OK}.
- The state of the cehck is {WARN} when the device returns a state of {other},
+ The state of the check is {WARN} when the device returns a state of {other},
  {unknown} or {nonCritical}. The state of the check is {CRIT} otherwise.
 
  No limits are set in the check.
 
- In addition to the state the following information of the memory modules
- is retrieved and displayed in the check output: size, speed, manufacturer,
+ In addition to the state the following information of the PCI devices is
+ retrieved and displayed in the check output: size, speed, manufacturer,
  part number and serial number
 
 item:
  The name of the location variable configured for the memory module
 
 inventory:
- All memory module of the device are detected
+ All memory modules of the device are detected
 
 

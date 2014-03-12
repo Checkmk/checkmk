@@ -1,0 +1,8 @@
+Title: dell_poweredge_mem: new check to monitor memory modules of Dell PowerEdge Servers
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1394633291
+Class: feature
+
+

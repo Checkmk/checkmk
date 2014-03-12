@@ -15,10 +15,7 @@ description:
  No limits are set in the check.
 
 item:
- Either the name of the location variable configured for the CPU, or
- the chassis index and sensor index seperated by a dash.
+ The name of the location variable configured for the CPU
 
 inventory:
  All CPUs of the device are detected
-
-

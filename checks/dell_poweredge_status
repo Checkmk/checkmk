@@ -25,15 +25,12 @@
 # Boston, MA 02110-1301 USA.
 
 dell_poweredge_status_info = ( ".1.3.6.1.4.1.674.10892.5", [
-                                      "1.1.6", # racURL
-                                      "1.2.1", # chassisServiceTag
-                                      "1.2.2", # chassisSystemName ?
-                                      "1.3.11", # racSlot
-                                      "1.3.12", # systemModelName
-                                      "2.1", # globalSystemStatus
-                                      #"2.2", # systemLCDStatus
-                                      #"2.3", # globalStorageStatus
-                                      #"2.4", # systemPowerState
+                                      "1.1.6.0", # racURL                 0
+                                      "1.2.2.0", # chassisSystemName ?    1
+                                      "1.3.5.0", # SystemBladeSlotNumber  2
+                                      "1.3.12.0", # systemModelName       3
+                                      "2.1.0", # globalSystemStatus       4
+                                      "4.300.10.1.11.1", # chassisServiceTagName 5
                               ])
 
 dell_poweredge_status_scan =  lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.674.10892.5"
@@ -43,8 +40,9 @@ def inventory_dell_poweredge_status(info):
         return [ ( None, None ) ]
 
 def check_dell_poweredge_status(item, _no_params, info):
-    racURL, chassisServiceTag, chassisSystemName, racSlot, systemModelName, \
-        globalSystemStatus = info[0]
+    di = dict()
+    di['racURL'], di['chassisSystemName'], di['SystemBladeSlotNumber'], \
+            di['systemModelName'],  status, di['chassisServiceTagName'] = info[0]
 
     state_table = {
         "1" : ( "other", 1 ),
@@ -54,9 +52,11 @@ def check_dell_poweredge_status(item, _no_params, info):
         "5" : ( "Critical", 2 ),
         "6" : ( "NonRecoverable", 2 ),
     }
-    state_txt, state = state_table.get(globalSystemStatus, "2")
-    infotext = "System Status %s, ChassisName %s. Model %s, ServiceTag %s, RackSlot %s, racURL %s" \
-        % ( state_txt, chassisSystemName, systemModelName, chassisServiceTag, racSlot, racURL )
+    state_txt, state = state_table.get(status, "2")
+    infotext, state = state_table.get(status, "2")
+    for  parameter, value in di.items():
+        infotext += ", %s: %s" % ( parameter, value )
+    infotext = re.sub("^, ","", infotext)
 
     return state, infotext
 

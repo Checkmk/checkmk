@@ -14,6 +14,7 @@ description:
 
  No limits are set in the check.
 
- In addition to the state the check displays various other parameters of the server:
- racURL, chassisServiceTag, chassisSystemName, racSlot, systemModelName
+ In addition to the state, the check displays the following other parameters
+ of the server: racURL, chassisServiceTagName, chassisSystemName,
+ systemBladeSlotNumber, systemModelName
 

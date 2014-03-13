@@ -714,15 +714,16 @@ def plugin_matches_filters(plugin, used_filters):
 
 def search_url_tmpl(used_filters, row, exact = True):
     if not row:
-        # try to find the first plugin matching the used_filters
-        for entry in search_plugins:
-            if plugin_matches_filters(entry, used_filters):
-                plugin = entry
-                row_options = {}
-                row_data    = {}
-                break
-        else:
-            return "" # Shouldn't happen...
+        def find_plugin(filters):
+            for entry in search_plugins:
+                if plugin_matches_filters(entry, filters):
+                    return entry, {}, {}
+            return None, None, None
+        plugin, row_options, row_data = find_plugin(used_filters)
+        if not plugin: # find a plugin for the first used filter
+            plugin, row_options, row_data = find_plugin([used_filters[0]])
+        if not plugin:
+            return ""  # shouldn't happen..
     else:
         plugin, row_options, row_data = row
 

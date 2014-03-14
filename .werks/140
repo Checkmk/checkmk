@@ -1,0 +1,8 @@
+Title: Fixed unwanted handling of hostname as regex
+Level: 1
+Component: core
+Version: 1.2.5i1
+Date: 1394791132
+Class: fix
+
+Cause of a bug every hostname was treated as regex.

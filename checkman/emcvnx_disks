@@ -21,6 +21,9 @@ description:
  The information is retriefed by the special agent agent_emcvnx which uses
  EMC's command line tool naviseccli.
 
+ If you always get Read: 0.00B/s, Write: 0.00B/s and you think this are not
+ the correct values, please note: Reporting of these data must be turned on
+ at the storage by a command like {setstats -on}
 item:
  Consists of bus ID, enclosure ID and disk ID as returned by the agent.
  E. g. "1/1 Disk 9"

@@ -1,0 +1,22 @@
+title: Socomec UPS Device: Remaining battery capacity
+agents: snmp
+catalog: hw/power/socomec
+license: GPL
+distribution: check_mk
+description:
+ The check monitors
+ the time the UPS is on battery (in seconds),
+ the battery capacity (in percent),
+ and the remaining runtime (in minutes).
+ Warning and critical levels can
+ be given for the time on battery and the capacity.
+ 
+ Please refer to the manpage of ups_capacity for configuration examples.
+
+perfdata:
+ The remaining runtime in minutes and the capacity in percent
+
+inventory:
+ Supported.
+
+

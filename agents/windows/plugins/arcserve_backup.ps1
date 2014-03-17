@@ -18,7 +18,8 @@
 # GetLatestJobId # 
 ################## 
 function GetLatestJobId($sqlCmd) { 
-   # Put the command in our sqlCmd 
+   # Put the command in our sqlCmd
+   # Please adapt description if english translation is used
    $sqlCmd.CommandText = "SELECT top 1 jobid FROM dbo.aslogw WHERE msgtext LIKE '%Ausführung von Job Sichern%' ORDER BY jobid DESC" 
     
    # Create an adapter to put the data we get from SQL and get the data 
@@ -34,7 +35,8 @@ function GetLatestJobId($sqlCmd) {
 # GetPreLatestJobId # 
 ##################### 
 function GetPreLatestJobId($sqlCmd, $jobId) { 
-   # Put the command in our sqlCmd 
+   # Put the command in our sqlCmd
+   # Please adapt description if english translation is used
    $sqlCmd.CommandText = "SELECT top 1 jobid FROM dbo.aslogw WHERE msgtext LIKE '%Ausführung von Job Sichern%' AND jobid < " + $jobId + " ORDER BY jobid DESC" 
     
    # Create an adapter to put the data we get from SQL and get the data 
@@ -51,7 +53,8 @@ function GetPreLatestJobId($sqlCmd, $jobId) {
 ############# 
 function GetStatus($sqlCmd, $jobId) { 
     
-      # Put the command in our sqlCmd 
+      # Put the command in our sqlCmd
+      # Please adapt description if english translation is used
       $sqlCmd.CommandText = "SELECT top 1 msgtext FROM dbo.aslogw WHERE msgtext LIKE '%Vorgang Sichern%' AND jobid = " + $jobid + " ORDER BY id DESC" 
        
       # Create an adapter to put the data we get from SQL and get the data 
@@ -70,7 +73,8 @@ function GetStatus($sqlCmd, $jobId) {
 ################## 
 function GetBackupFiles($sqlCmd, $jobId) { 
     
-      # Put the command in our sqlCmd 
+      # Put the command in our sqlCmd
+      # Please adapt description if english translation is used
       $sqlCmd.CommandText = "SELECT msgtext FROM dbo.aslogw WHERE msgtext LIKE '%Verzeichnis(se)%' AND jobid = " + $jobId + " ORDER BY id DESC" 
        
       # Create an adapter to put the data we get from SQL and get the data 
@@ -89,7 +93,8 @@ function GetBackupFiles($sqlCmd, $jobId) {
 ################## 
 function GetDescription($sqlCmd, $jobId) { 
     
-      # Put the command in our sqlCmd 
+      # Put the command in our sqlCmd
+      # Please adapt description if english translation is used
       $sqlCmd.CommandText = "SELECT msgtext + ' (' + convert(varchar(10), logtime, 104) + ')' FROM dbo.aslogw WHERE msgtext LIKE '%Beschreibung:%' AND jobid = " + $jobId + " ORDER BY id DESC" 
        
       # Create an adapter to put the data we get from SQL and get the data 
@@ -110,7 +115,8 @@ function GetDescription($sqlCmd, $jobId) {
 
 # We need no arguments
 
-   # Make a connection with the SQL-server 
+   # Make a connection with the SQL-server
+   # Please adapt Server and Database name
    $sqlServer = "SATURN\ARCSERVE_DB" 
    $sqlConnection = New-Object System.Data.SqlClient.SqlConnection 
    $sqlConnection.ConnectionString = "Server=$sqlServer;Integrated Security=True;Database=aslog" 
@@ -136,6 +142,7 @@ function GetDescription($sqlCmd, $jobId) {
 
    write-output ""
 
+   # Please adapt job description
    if ( $desc.contains("Wochensicherung") ) {
    
       $temp = GetPreLatestJobId $sqlCmd $j 
@@ -165,5 +172,3 @@ function GetDescription($sqlCmd, $jobId) {
     
    # Close the SQL-connection 
    $sqlConnection.Close() 
- 
-

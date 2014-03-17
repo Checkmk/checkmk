@@ -1,0 +1,10 @@
+Title: df: now able to monitor inodes
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1395068449
+Class: feature
+
+The df check is now able to monitor the number of remaining inodes.
+In WATO you can configure the limits of the remaining inodes, either in
+absolute or as percentage values.

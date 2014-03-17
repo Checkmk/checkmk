@@ -24,23 +24,20 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+def check_ups_out_voltage(item, params, info):
+    warn, crit = params
+    for line in info:
+	if line[0] == item:
+	    power = int(line[1])
+	    perfdata = [ ( "out_voltage", power, warn, crit, 200, 240 ) ]
+	    infotext = "out voltage: %dV (warn/crit at %dV/%dV)" % \
+	 	(power, warn, crit)
 
-ups_out_voltage_default_levels = (210, 180) # warning / critical
+	    if power <= crit:
+		return (2, infotext, perfdata)
+	    elif power <= warn:
+		return (1, infotext, perfdata)
+	    else:
+		return (0, infotext, perfdata)
 
-def inventory_ups_out_voltage(info):
-    if len(info) > 0:
-        return [ ( x[0], "ups_out_voltage_default_levels") for x in info if int(x[1]) > 0 ]
-
-check_info['ups_out_voltage'] = {
-  "inventory_function"  : inventory_ups_out_voltage,
-  "check_function"      : check_ups_out_voltage,
-  "service_description" : "OUT voltage phase %s",
-  "has_perfdata"        : True,
-  "group"               : "evolt",
-  "includes"            : [ 'ups_out_voltage.include' ],
-  "snmp_info"           : ( ".1.3.6.1.2.1.33.1.4.4.1", [ 0, 2 ] ),
-  "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in \
-                         [ ".1.3.6.1.4.1.534.1", ".1.3.6.1.4.1.705.1",".1.3.6.1.4.1.705.1.2", ".1.3.6.1.4.1.818.1.100.1.1",
-                           ".1.3.6.1.2.1.33", ".1.3.6.1.2.1.33.2", ".1.3.6.1.4.1.5491.6",
-                           ".1.3.6.1.4.1.476.1.42" ]
-}
+    return (3, "Phase %s not found in SNMP output" % item)

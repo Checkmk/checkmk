@@ -32,11 +32,11 @@
 # upsBatteryTemperature         1.3.6.1.4.1.4555.1.1.1.1.2.6
 
 
-ups_socomec_capacity_default_levels = { 'battime': (0, 0), 'capacity': (95, 90) }
+ups_capacity_default_levels = { 'battime': (0, 0), 'capacity': (95, 90) }
 
 def inventory_ups_socomec_capacity(info):
     if len(info) > 0:
-        return [(None, 'ups_socomec_capacity_default_levels')]
+        return [(None, 'ups_capacity_default_levels')]
 
 
 check_info["ups_socomec_capacity"] = {

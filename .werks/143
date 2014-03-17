@@ -1,0 +1,8 @@
+Title: ups_socomec_in_voltage, ups_socomec_out_voltage: Socomec UPS Devices, Input and Output Voltages
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1395063636
+Class: feature
+
+Two new checks to monitor the Input and Output Voltage on Socomec UPS Devices

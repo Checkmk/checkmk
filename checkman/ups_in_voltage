@@ -1,10 +1,10 @@
-title: Generic UPS Device: In voltage
+title: Generic UPS Device: Input voltage
 agents: snmp
 catalog: hw/power/generic
 license: GPL
 distribution: check_mk
 description:
- In Voltage
+ This Checks monitors the Input Voltage on generic UPS devices
 
 item:
  ID of the phase

@@ -138,7 +138,7 @@ def convert_winperf_if(info):
            0,       # inmcast
            nic[16], # non-unicast empfangen
            nic[18], # ifInDiscards
-           nic[20] + nic[22], # ifInErrors (Empfangene Pakete Fehler), + "Empfangene Paket unbekannt"
+           nic[20], # ifInErrors
            nic[-4], # ifOutOctets (Bytes gesendet)
            nic[26], # outucast
            0,

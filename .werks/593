@@ -1,0 +1,8 @@
+Title: zypper: agent plugin and check now lead to UNKNOWN result in case of repo problems
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1395064398
+Class: fix
+
+

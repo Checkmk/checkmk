@@ -49,25 +49,47 @@ automation_secret=""
 # password = ""
 # automation_secret = "LSEGRILPWQVLDBCYCKOC"
 
+# set "http" or "https" here
+protocol = "http"
+# protocol = "https"
+
+# Do you want to accept any Certificate when using HTTPS?
+# You may set this to True or False
+# You should leave it to False wherever possible
+# You need to change this to True if using a self signed certificate
+# Please note that this might be a security issue because then
+# *every* SSL certificate is accepted
+# If using http as protocol, this setting is ignored
+accept_any_certificate = False
+# accept_any_certificate = True
+
 # Do not change anything below
 
 import os, sys
 
+if protocol != "https":
+    protocol = "http"
+
+if protocol == "https" and accept_any_certificate == True:
+    cert_option = "--insecure"
+else:
+    cert_option = ""
+
 if automation_secret != "":
-    url = 'http://localhost/%scheck_mk/view.py?view_name=aggr_summary&output_format=python' \
-          '&_username=%s&_secret=%s' % (url_prefix, user, automation_secret)
+    url = '%s://localhost/%scheck_mk/view.py?view_name=aggr_summary&output_format=python' \
+          '&_username=%s&_secret=%s' % (protocol, url_prefix, user, automation_secret)
 elif password != "":
-    url = 'http://localhost/%scheck_mk/login.py?_login=1&_username=%s&_password=%s' \
+    url = '%s://localhost/%scheck_mk/login.py?_login=1&_username=%s&_password=%s' \
           '&_origtarget=view.py%%3Fview_name=aggr_summary%%26output_format=python' % \
-          (url_prefix, user, password)
+          (protocol, url_prefix, user, password)
 else:
     sys.stderr.write("You need to specify a password or an automation secret in the script source\n")
     sys.exit(1)
 
 
 try:
-    command = "curl -u \"%s:%s\" -b /dev/null -L --noproxy localhost --silent '%s'" % \
-                    (user, password, url)
+    command = "curl -u \"%s:%s\" -b /dev/null -L --noproxy localhost %s --silent '%s'" % \
+                    (user, password, cert_option, url)
     output = os.popen(command).read()
     data = eval(output)
 except:

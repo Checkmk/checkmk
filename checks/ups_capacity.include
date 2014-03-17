@@ -24,23 +24,44 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+def check_ups_capacity(item, params, info):
+    # To support inventories with the old version
+    if type(params) is tuple:  # old format with 2 params in tuple
+        warn, crit = params
+        cap_warn, cap_crit =  (95, 90)
+    elif type(params) is dict:  # new dict format
+        warn,crit = params.get('battime',(0,0))
+        cap_warn,cap_crit = params.get('capacity',(95,90))
+    else:
+        warn, crit = (0, 0)
+        cap_warn, cap_crit =  (95, 90)
 
-ups_out_voltage_default_levels = (210, 180) # warning / critical
+    time_on_bat, minutes_left, percent_fuel = map(int, info[0])
+    perf = [
+      ('capacity', minutes_left, warn, crit),
+      ('percent', percent_fuel),
+    ]
 
-def inventory_ups_out_voltage(info):
-    if len(info) > 0:
-        return [ ( x[0], "ups_out_voltage_default_levels") for x in info if int(x[1]) > 0 ]
+    state = 0
+    time_label = ""
+    cap_label = ""
+    if time_on_bat > crit:
+        state = 2
+        time_label = "On battery since %ds(%ds/%ds)(!!), " % time_on_bat, warn, crit
+        #return(2, "On battery since %ds(!!) " % time_on_bat + info_text, perf)
+    elif time_on_bat > warn:
+        state = 1
+        time_label = "On battery since %ds(%ds/%ds)(!)" % time_on_bat, warn, crit
+        #return(1, "On battery since %ds(!) " % time_on_bat + info_text, perf)
+    if percent_fuel < cap_crit:
+        state = 2
+        cap_label = "(!!)"
+    elif percent_fuel < cap_warn:
+        state = 1
+        cap_label = "(!)"
 
-check_info['ups_out_voltage'] = {
-  "inventory_function"  : inventory_ups_out_voltage,
-  "check_function"      : check_ups_out_voltage,
-  "service_description" : "OUT voltage phase %s",
-  "has_perfdata"        : True,
-  "group"               : "evolt",
-  "includes"            : [ 'ups_out_voltage.include' ],
-  "snmp_info"           : ( ".1.3.6.1.2.1.33.1.4.4.1", [ 0, 2 ] ),
-  "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in \
-                         [ ".1.3.6.1.4.1.534.1", ".1.3.6.1.4.1.705.1",".1.3.6.1.4.1.705.1.2", ".1.3.6.1.4.1.818.1.100.1.1",
-                           ".1.3.6.1.2.1.33", ".1.3.6.1.2.1.33.2", ".1.3.6.1.4.1.5491.6",
-                           ".1.3.6.1.4.1.476.1.42" ]
-}
+    info_text = "%sremaining capacity %dmin, percentage %d%% (%d/%d) %s" \
+        % (time_label, minutes_left, percent_fuel, cap_warn, cap_crit, cap_label )
+    return(state, info_text, perf)
+
+

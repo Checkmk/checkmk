@@ -1,0 +1,8 @@
+Title: ups_socomec_capacity: Battery Capacity Check for Socomec UPS Devices.
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1394801189
+Class: feature
+
+

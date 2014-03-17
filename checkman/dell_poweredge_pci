@@ -1,6 +1,6 @@
 title: Dell PowerEdge Server: State of PCI Devices
 agents: snmp
-catalog: hw/network/dell
+catalog: hw/server/dell
 license: GPL
 distribution: check_mk
 description:

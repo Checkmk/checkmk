@@ -1107,12 +1107,21 @@ def execute_rule_node(node, status_info, use_hard_states):
     node_states = []
     assumed_states = []
     downtime_states = []
+    ack_states = [] # Needed for computing the acknowledgement of non-OK nodes
     one_assumption = False
     for n in node["nodes"]:
         result = execute_node(n, status_info, use_hard_states) # state, assumed_state, node [, subtrees]
         subtrees.append(result)
-        # Assume items in downtime as CRIT
+
+        # Assume items in downtime as CRIT when computing downtime state
         downtime_states.append(({"state": result[0]["in_downtime"] and 2 or 0, "output" : ""}, result[2]))
+
+        # Assume non-OK nodes that are acked as OK
+        if result[0]["acknowledged"]:
+            acked_state = 0
+        else:
+            acked_state = result[0]["state"]
+        ack_states.append(({"state": acked_state, "output" : ""}, result[2]))
 
         node_states.append((result[0], result[2]))
         if result[1] != None:
@@ -1125,9 +1134,16 @@ def execute_rule_node(node, status_info, use_hard_states):
     downtime_state = func(*([downtime_states] + funcargs))
     state = func(*([node_states] + funcargs))
     state["in_downtime"] = downtime_state["state"] >= 2
+    if state["state"] > 0: # Non-OK-State -> compute acknowledgedment
+        ack_state = func(*([ack_states] + funcargs))
+        state["acknowledged"] = ack_state["state"] == 0 # would be OK if acked problems would be OK
+    else:
+        state["acknowledged"] = False
+
     if one_assumption:
         assumed_state = func(*([assumed_states] + funcargs))
         assumed_state["in_downtime"] = state["in_downtime"]
+        assumed_state["acknowledged"] = state["acknowledged"]
     else:
         assumed_state = None
     return (state, assumed_state, node, subtrees)
@@ -1529,7 +1545,7 @@ def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, 
     return "aggrtree" + (boxes and "_box" or ""), htmlcode
 
 def aggr_render_node(tree, title, mousecode, show_host):
-    
+
     # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
     if tree[1] and tree[0] != tree[1]:
         addclass = " " + _("assumed")
@@ -1541,6 +1557,10 @@ def aggr_render_node(tree, title, mousecode, show_host):
     if tree[0]["in_downtime"]:
         title = ('<img class="icon bi" src="images/icon_downtime.png" title="%s">' % \
             _("This element is currently in a scheduled downtime")) + title
+
+    if tree[0]["acknowledged"]:
+        title = ('<img class="icon bi" src="images/icon_ack.png" title="%s">' % \
+            _("This problem has been acknowledged")) + title
 
     h = '<span class="content state state%d%s">%s</span>\n' \
          % (effective_state["state"], addclass, render_bi_state(effective_state["state"]))

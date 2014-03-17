@@ -28,13 +28,23 @@ if type zypper > /dev/null ; then
     if grep -q '^VERSION = 10' < /etc/SuSE-release
     then
         ZYPPER='waitmax 10 zypper --no-gpg-checks --non-interactive --terse'
-        $ZYPPER refresh > /dev/null
-        { $ZYPPER pchk || [ $? = 100 -o $? = 101 ] && $ZYPPER lu ; } \
-    	  | egrep '(patches needed|\|)' | egrep -v '^(#|Repository |Catalog )'
+        REFRESH=`$ZYPPER refresh 2>&1`
+        if  [ "$REFRESH" ]
+        then
+	    echo "ERROR: $REFRESH"
+        else
+            { $ZYPPER pchk || [ $? = 100 -o $? = 101 ] && $ZYPPER lu ; } \
+    	      | egrep '(patches needed|\|)' | egrep -v '^(#|Repository |Catalog )'
+        fi
     else
         ZYPPER='waitmax 10 zypper --no-gpg-checks --non-interactive --quiet'
-        $ZYPPER refresh > /dev/null
-        { { $ZYPPER pchk || [ $? = 100 -o $? = 101 ] && $ZYPPER lp ; } ; $ZYPPER ll ; } \
-    	  | egrep '(patches needed|\|)' | egrep -v '^(#|Repository)'
+        REFRESH=`$ZYPPER refresh 2>&1`
+        if  [ "$REFRESH" ]
+        then
+            echo "ERROR: $REFRESH"
+        else
+            { { $ZYPPER pchk || [ $? = 100 -o $? = 101 ] && $ZYPPER lp ; } ; $ZYPPER ll ; } \
+    	      | egrep '(patches needed|\|)' | egrep -v '^(#|Repository)'
+        fi
     fi
 fi

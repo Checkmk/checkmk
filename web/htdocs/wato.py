@@ -7472,6 +7472,13 @@ def vs_notification_rule(userid = None):
                 attrencode = True,
                 allow_empty = False,
             )),
+            ( "comment",
+              TextAreaUnicode(
+                title = _("Comment"),
+                help = _("An optional comment that explains the purpose of this rule."),
+                rows = 5,
+              )
+            ),
             ( "disabled",
               Checkbox(
                 title = _("Rule activation"),
@@ -7730,7 +7737,7 @@ def vs_notification_rule(userid = None):
                           "match_sl", "match_host_event", "match_service_event",
                           "match_checktype", "bulk", "contact_users", "contact_groups", "contact_emails" ],
         headers = [
-            ( _("General Properties"), [ "description", "disabled", "allow_disable" ] ),
+            ( _("General Properties"), [ "description", "comment", "disabled", "allow_disable" ] ),
             ( _("Notification Method"), [ "notify_plugin", "notify_method", "bulk" ] ),]
             + contact_headers
             + [
@@ -7988,7 +7995,8 @@ def mode_notifications(phase):
             "one <a href=\"%s\">here</a>.") % url)
 
     if show_bulks:
-        render_bulks(only_ripe = False) # Warn if there are unsent bulk notificatios
+        if not render_bulks(only_ripe = False): # Warn if there are unsent bulk notificatios
+            html.message(_("Currently there are no unsent notification bulks pending."))
     else:
         render_bulks(only_ripe = True) # Warn if there are unsent bulk notificatios
 
@@ -8118,6 +8126,9 @@ def render_bulks(only_ripe):
             if len(uuids) >= maxcount:
                 html.icon(_("Number of notifications exceeds maximum allowed number"), "warning")
         table.end()
+        return True
+    else:
+        return False
 
 
 

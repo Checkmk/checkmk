@@ -377,7 +377,7 @@ def render_inv_subtree_leaf(hostname, invpath, node):
         html.write(str(node))
     elif type(node) == float:
         html.write("%.2f" % node)
-    else:
+    elif node != None:
         html.write(str(node))
     html.write("<br>")
 

@@ -257,7 +257,7 @@ def page_handler():
                 html.set_var("mode", newmode) # will be used by makeuri
 
                 # Check general permissions for the new mode
-                if not config.may("wato.seeall"):
+                if modeperms != None and not config.may("wato.seeall"):
                     for pname in modeperms:
                         if '.' not in pname:
                             pname = "wato." + pname

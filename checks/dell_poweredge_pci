@@ -48,7 +48,7 @@ def inventory_dell_poweredge_pci(info):
 
 def check_dell_poweredge_pci(item, _no_params, info):
     di = dict()
-    for status, di['BusWidth'], di['Manufacturer'], di['Description'], fqdd in info:
+    for status, di['BusWidth'], di['MFR'], di['Desc.'], fqdd in info:
 
         if item == fqdd:
             state_table = {
@@ -72,7 +72,7 @@ def check_dell_poweredge_pci(item, _no_params, info):
 check_info["dell_poweredge_pci"] = {
     "check_function"        : check_dell_poweredge_pci,
     "inventory_function"    : inventory_dell_poweredge_pci,
-    "service_description"   : "%s",
+    "service_description"   : "PCI %s",
     "has_perfdata"          : False,
     "snmp_info"             : dell_poweredge_pci_info,
     "snmp_scan"             : dell_poweredge_pci_scan,

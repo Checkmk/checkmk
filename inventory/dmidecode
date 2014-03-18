@@ -128,17 +128,23 @@ def inv_dmidecode_parse_chassis(lines):
 
 # Note: This node is also being filled by lnx_cpuinfo
 def inv_dmidecode_parse_processor(lines):
-    node = inv_tree("hardware.cpu.")
+    cpu_info = {}
     for line in lines:
         if line[0] == "Manufacturer":
-            node["vendor"] = {
+            cpu_info["vendor"] = {
                 "GenuineIntel" : "intel",
                 "AuthenticAMD" : "amd",
             }.get(line[1], line[1])
         elif line[0] == "Max Speed": # 2530 MHz
-            node["max_speed"] = dmidecode_parse_speed(line[1])
+            cpu_info["max_speed"] = dmidecode_parse_speed(line[1])
         elif line[0] == "Voltage":
-            node["voltage"] = dmidecode_parse_voltage(line[1])
+            cpu_info["voltage"] = dmidecode_parse_voltage(line[1])
+        elif line[0] == "Status":
+            if line[1] == "Unpopulated":
+                return
+
+    # Only update our CPU information if the socket is populated
+    inv_tree("hardware.cpu.").update(cpu_info)
 
 # def inv_dmidecode_parse_mem_controller(lines):
 #     # TODO: Can we have multiple memory controllers
@@ -192,7 +198,6 @@ def inv_dmidecode_parse_mem_device(lines):
     node = inv_tree("hardware.memory.arrays:")
     array = node[-1]
     device = {}
-    array["devices"].append(device)
     inv_dmidecode_parse_generic(device, lines, {
         "Total Width"   : "total_width",  # 64 bits
         "Data Width"    : "data_width",   # 64 bits
@@ -210,9 +215,11 @@ def inv_dmidecode_parse_mem_device(lines):
         "Size"          : "size",         # 2048 MB
     })
 
-    # Convert speed and size into numbers
-    device["speed"] = dmidecode_parse_speed(device["speed"])
-    device["size"] = dmidecode_parse_speed(device["size"])
+    if device["size"] != "No Module Installed":
+        # Convert speed and size into numbers
+        device["speed"] = dmidecode_parse_speed(device["speed"])
+        device["size"] = dmidecode_parse_size(device["size"])
+        array["devices"].append(device)
 
 def inv_dmidecode_parse_generic(node, lines, keyinfo):
     if type(node) == str:
@@ -227,7 +234,9 @@ def dmidecode_parse_size(v): # into Bytes (int)
         return None
 
     parts = v.split()
-    if parts[1].lower() == "gb":
+    if parts[1].lower() == "tb":
+        return int(parts[0]) * 1024 * 1024 * 1024 * 1024
+    elif parts[1].lower() == "gb":
         return int(parts[0]) * 1024 * 1024 * 1024
     elif parts[1].lower() == "mb":
         return int(parts[0]) * 1024 * 1024

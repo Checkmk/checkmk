@@ -503,11 +503,14 @@ def inv_paint_bytes(b):
     return "number", "%d %s" % (b, units[i])
 
 def inv_paint_count(b):
-    return "number", str(b)
+    if b == None:
+        return "", ""
+    else:
+        return "number", str(b)
 
 def inv_paint_bytes_rounded(b):
     if b == None:
-        return "", _("unknown")
+        return "", ""
     elif b == 0:
         return "number", "0"
 
@@ -519,9 +522,9 @@ def inv_paint_bytes_rounded(b):
         fac = fac / 1024.0
 
     if i:
-        return "number", "%.2f %s" % (b / fac, units[i])
+        return "number", "%.2f&nbsp;%s" % (b / fac, units[i])
     else:
-        return "number", "%d %s" % (b, units[0])
+        return "number", "%d&nbsp;%s" % (b, units[0])
 
 def inv_paint_volt(volt):
     return "number", "%.1f V" % volt
@@ -568,6 +571,7 @@ inventory_displayhints.update({
     ".software.packages:*.summary"                     : { "title" : _("Description"), },
     ".software.packages:*.version"                     : { "title" : _("Version"), },
     ".software.packages:*.package_version"             : { "title" : _("Package Version"), },
+    ".software.packages:*.size"                        : { "title" : _("Size"), "paint" : "count" },
 })
 
 # TEST: create painters for node with a display hint

@@ -8,16 +8,17 @@ states = {
 }
 
 components = [ 
-  ( "core", "Core Modules, Setup, etc." ),
-  ( "checks", "Checks and Agent plugins" ),
-  ( "multisite", "Multisite GUI" ),
+  ( "core",       "Core Modules, Setup, etc." ),
+  ( "checks",     "Checks and Agent plugins" ),
+  ( "multisite",  "Multisite GUI" ),
   ( "livestatus", "Livestatus" ),
-  ( "ec", "Event Console" ),
-  ( "livecheck", "Livecheck part in Livestatus, livecheck helper" ),
-  ( "wato", "Check_MK's Web Administration Tool" ),
-  ( "bi", "BI - Business Intelligence" ),
-  ( "mobile", "Multisite Mobile GUI" ), 
-  ( "docu", "Documentation "),
+  ( "ec",         "Event Console" ),
+  ( "inv",        "Hardware/Software-Inventory" ),
+  ( "livecheck",  "Livecheck part in Livestatus, livecheck helper" ),
+  ( "wato",       "Check_MK's Web Administration Tool" ),
+  ( "bi",         "BI - Business Intelligence" ),
+  ( "mobile",     "Multisite Mobile GUI" ), 
+  ( "docu",       "Documentation "),
 ]
 
 classes = [ 

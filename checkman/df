@@ -159,6 +159,12 @@ parameters (dict): This check supports two types of parameters. The
  to specify integers or floats to denote values in megabytes of precent.
  The default is {(80.0, 90.0)}, meaning 80% and 90%.
 
+ {"inodes_levels"}: Warning and critical level for the remaining inodes
+ on the filesystem. Depending of the number type you can choose
+ different kinds of levels as follows: Integers denote the amount
+ of available inodes. Floating point numbers denote the amount of
+ available inodes in percent.
+
  {"magic"}: The magic number, which scales the levels according to the
  filesystem size. Default
  is a factor of 1.0, which does no adaptation. A factor less than 1.0 raises

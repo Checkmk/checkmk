@@ -1624,6 +1624,27 @@ filesystem_elements = [
           totext = "",
           title = "",
           )),
+    ( "inodes_levels",
+        Alternative(
+                    title = _("Levels for Inodes"),
+                    help  = _("The number of remaining inodes on the filesystem. "
+                              "Please note that this setting has no effect on some filesystem checks."),
+                    elements = [
+                            Tuple( title = _("Percentage free"),
+                                   elements = [
+                                       Percentage(title = _("Warning if less than") , unit = "%", minvalue = 0.0),
+                                       Percentage(title = _("Critical if less than"), unit = "%", minvalue = 0.0),
+                                   ]
+                            ),
+                            Tuple( title = _("Absolute free"),
+                                   elements = [
+                                       Integer(title = _("Warning if less than"),  size = 10, unit = _("inodes"), minvalue = 0),
+                                       Integer(title = _("Critical if less than"), size = 10, unit = _("inodes"), minvalue = 0),
+                                ]
+                            )
+                    ]
+        )
+    ),
     (  "magic",
        Float(
           title = _("Magic factor (automatic level adaptation for large filesystems)"),

@@ -561,6 +561,7 @@ bi_availability_columns = [
  ( "warn",                      "state1",        _("WARN"),     None ),
  ( "crit",                      "state2",        _("CRIT"),     None ),
  ( "unknown",                   "state3",        _("UNKNOWN"),  None ),
+ ( "in_downtime",               "downtime",      _("Downtime"), _("The aggregate was in a scheduled downtime") ),
  ( "unmonitored",               "unmonitored",   _("N/A"),      _("During this time period no monitoring data is available") ),
 ]
 
@@ -1319,7 +1320,7 @@ def get_bi_timeline(tree, avoptions, timewarp):
         only_sites.add(site)
         hosts.append(host)
 
-    columns = [ "host_name", "service_description", "from", "log_output", "state" ]
+    columns = [ "host_name", "service_description", "from", "log_output", "state", "in_downtime" ]
     html.live.set_only_sites(list(only_sites))
     html.live.set_prepend_site(True)
     html.live.set_limit() # removes limit
@@ -1358,9 +1359,9 @@ def get_bi_timeline(tree, avoptions, timewarp):
     states = {}
     def update_states(phase_entries):
         for row in phase_entries:
-            service = row["service_description"]
-            key = row["site"], row["host_name"], service
-            states[key] = row["state"], row["log_output"]
+            service     = row["service_description"]
+            key         = row["site"], row["host_name"], service
+            states[key] = row["state"], row["log_output"], row["in_downtime"]
 
 
     update_states(phases_list[0][1])
@@ -1385,7 +1386,7 @@ def get_bi_timeline(tree, avoptions, timewarp):
         "service_description"    : tree['title'],
         "in_notification_period" : 1,
         "in_service_period"      : 1,
-        "in_downtime"            : 0,
+        "in_downtime"            : tree_state[0]['in_downtime'],
         "in_host_downtime"       : 0,
         "host_down"              : 0,
         "is_flapping"            : 0,
@@ -1417,7 +1418,16 @@ def compute_tree_state(tree, status):
         service = site_host_service[2]
         if service:
             services_by_host.setdefault(site_host, []).append((
-                service, state_output[0], 1, state_output[1]))
+                service,         # service description
+                state_output[0], # state
+                1,               # has_been_checked
+                state_output[1], # output
+                state_output[0], # hard state (we use the soft state here)
+                1,               # attempt
+                1,               # max_attempts (not relevant)
+                state_output[2], # in_downtime
+                False,           # acknowledged
+                ))
         else:
             hosts[site_host] = state_output
 
@@ -1425,7 +1435,10 @@ def compute_tree_state(tree, status):
     for site_host, state_output in hosts.items():
         status_info[site_host] = [
             state_output[0],
+            state_output[0], # host hard state
             state_output[1],
+            state_output[2], # in_downtime
+            False, # acknowledged
             services_by_host[site_host]
         ]
 

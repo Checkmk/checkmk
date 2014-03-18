@@ -215,6 +215,27 @@ def get_filesystem_levels(host, mountpoint, size_gb, params):
         crit_hr = get_bytes_human_readable(crit * mega)
         levels["levels_text"] = "(%s %s/%s)" % (label, warn_hr, crit_hr)
 
+    if params.get("inodes_levels"):
+        if type(levels["inodes_levels"]) == tuple:
+            warn, crit = levels["inodes_levels"]
+        else:
+            # A list of inode levels. Choose the correct one depending on the
+            # size of the current filesystem. We do not make the first
+            # rule match, but that with the largest size_gb. That way
+            # the order of the entries is not important.
+            found = False
+            found_size = 0
+            for to_size, this_levels in levels["inodes_levels"]:
+                if size_gb * giga > to_size and to_size >= found_size:
+                    warn, crit = this_levels
+                    found_size = to_size
+                    found = True
+            if not found:
+                warn, crit = 100.0, 100.0 # entry not found in list
+        levels["inodes_levels"] = warn, crit
+    else:
+        levels["inodes_levels"] = (None, None)
+
     return levels
 
 # Legacy function for checks that do not support groups yet
@@ -222,20 +243,25 @@ def df_check_filesystem(hostname, mountpoint, size_mb, avail_mb, params):
     return df_check_filesystem_list(mountpoint, params, [(mountpoint, size_mb, avail_mb)])
 
 # New function for checks that support groups.
-def df_check_filesystem_list(item, params, fslist):
+def df_check_filesystem_list(item, params, fslist_blocks, fslist_inodes = None):
     if "patterns" in params:
         import fnmatch
 
         patterns = params["patterns"]
         count = 0
-        total_size = 0
-        total_avail = 0
-        for mp, size_mb, avail_mb in fslist:
+        total_blocks_size   = 0
+        total_blocks_avail  = 0
+        total_inodes        = 0
+        total_inodse_avail  = 0
+        for idx, (mp, size_mb, avail_mb) in enumerate(fslist_block):
             for pattern in patterns:
                 if fnmatch.fnmatch(mp, pattern):
                     count += 1
-                    total_size += size_mb
-                    total_avail += avail_mb
+                    total_blocks_size += size_mb
+                    total_blocks_avail += avail_mb
+                    if fslist_inodes:
+                        total_inodes       += fslist_inodes[idx][1]
+                        total_inodes_avail += fslist_inodes[idx][2]
                     break
         # If no filesystem has been found we cannot do the
         # actual check since the size is zero.
@@ -246,13 +272,17 @@ def df_check_filesystem_list(item, params, fslist):
             infotext += " (%d filesystems)" % count
             return status, infotext, perfdata
     else:
-        for mp, size_mb, avail_mb in fslist:
+        for idx, (mp, size_mb, avail_mb) in enumerate(fslist_blocks):
             if mp == item:
-                return df_check_filesystem_single(g_hostname, mp, size_mb, avail_mb, params)
+                if fslist_inodes:
+                    inodes_total, inodes_avail = fslist_inodes[idx][1], fslist_inodes[idx][2]
+                else:
+                    inodes_total, inodes_avail = None, None
+                return df_check_filesystem_single(g_hostname, mp, size_mb, avail_mb, inodes_total, inodes_avail, params)
         return (3, "filesystem not found")
 
 
-def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, params):
+def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, inodes_total, inodes_avail, params):
     if size_mb == 0:
         return (1, "size of filesystem is 0 MB", [])
 
@@ -262,7 +292,8 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, params):
 
     # Get warning and critical levels already with 'magic factor' applied
     levels = get_filesystem_levels(g_hostname, mountpoint, size_gb, params)
-    warn_mb, crit_mb = levels["levels_mb"]
+    warn_mb, crit_mb       = levels["levels_mb"]
+    warn_inode, crit_inode = levels["inodes_levels"]
 
     # Take into account magic scaling factor (third optional argument
     # in check params). A factor of 1.0 changes nothing. Factor should
@@ -404,6 +435,27 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, params):
            status = 2
        elif used_mb >= warn_mb:
            status = max(1, status)
+
+    # Check inode levels
+    if inodes_total:
+        inodes_avail_perc = 100.0 * inodes_avail / inodes_total
+        inodes_warn, inodes_crit = levels["inodes_levels"]
+        if inodes_warn != None:
+            if type(inodes_warn) == int: # Absolute levels
+                if inodes_crit > inodes_avail:
+                    status = max(2, status)
+                    problems.append("less than %dk inodes available(!!)" % (crit_inode / 1000))
+                elif inodes_warn > inodes_avail:
+                    status = max(1, status)
+                    problems.append("less than %dk inodes available(!)" % (warn_inode / 1000))
+            else:                       # Percentage levels
+                if inodes_crit > inodes_avail_perc:
+                    status = max(2, status)
+                    problems.append("less than %0.2f%% inodes available(!!)" % inodes_crit)
+                elif inodes_warn > inodes_avail_perc:
+                    status = max(1, status)
+                    problems.append("less than %.02f%% inodes available(!!)" % inodes_warn)
+        infotext += ", inodes available %dk/%0.2f%%" % (inodes_avail / 1000, inodes_avail_perc)
 
     if problems:
         infotext += " - %s" % ", ".join(problems)

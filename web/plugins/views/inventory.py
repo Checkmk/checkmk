@@ -677,14 +677,13 @@ def inv_software_table(columns, add_headers, only_sites, limit, filters):
         header = filt.filter("invswpacs")
         if not header.startswith("Sites:"):
             filter_code += header
-    host_columns = filter(lambda c: c.startswith("host_"), columns)
-    columns = [ "name" ] + columns
+    host_columns = [ "host_name" ] + filter(lambda c: c.startswith("host_"), columns)
 
     html.live.set_only_sites(only_sites)
     html.live.set_prepend_site(True)
 
     query = "GET hosts\n"
-    query += "Columns: " + (" ".join(columns)) + "\n"
+    query += "Columns: " + (" ".join(host_columns)) + "\n"
     query += filter_code
 
     if config.debug_livestatus_queries \
@@ -700,7 +699,7 @@ def inv_software_table(columns, add_headers, only_sites, limit, filters):
     html.live.set_prepend_site(False)
     html.live.set_only_sites(None)
 
-    headers = [ "site" ] + columns
+    headers = [ "site" ] + host_columns
 
     # Now create big table of all software packages of these hosts
     rows = []
@@ -754,7 +753,7 @@ class FilterSWPacsVersion(Filter):
         html.write(_("Min.&nbsp;Version:"))
         html.text_input(self.htmlvars[0], size = 9)
         html.write(" &nbsp; ")
-        html.write(_("Max.&nbsp;Vers.:"))
+        html.write(_("Max.&nbsp;Version:"))
         html.text_input(self.htmlvars[1], size = 9)
 
     def filter_table(self, rows):
@@ -796,12 +795,12 @@ def declare_swpacs_columns(name, title, sortfunc):
 
 
 for name, title, sortfunc in [
-    ( "name",         _("Name"),             cmp ),
-    ( "summary",      _("Summary"),          cmp ),
-    ( "arch",         _("CPU Architecture"), cmp ),
-    ( "package_type", _("Type"),             cmp ),
-    ( "version",      _("Version"),          cmp_version ),
-    ( "package_version", _("Package Version"), cmp_version ),
+    ( "name",            _("Name"),             cmp ),
+    ( "summary",         _("Summary"),          cmp ),
+    ( "arch",            _("CPU Architecture"), cmp ),
+    ( "package_type",    _("Type"),             cmp ),
+    ( "version",         _("Version"),          cmp_version ),
+    ( "package_version", _("Package Version"),  cmp_version ),
     ]:
     declare_swpacs_columns(name, title, sortfunc)
 
@@ -811,7 +810,7 @@ for name, title, sortfunc in [
 multisite_datasources["invswpacs"] = {
     "title"       : _("Inventory: Software Packages"),
     "table"       : inv_software_table,
-    "infos"       : [ "host", "invswpacs" ],
+    "infos"       : [ "host", "invswpac" ],
     "keys"        : [],
     "idkeys"      : [],
 }

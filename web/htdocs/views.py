@@ -62,7 +62,7 @@ def load_plugins():
     global view_hooks                ; view_hooks                 = {}
     global inventory_displayhints    ; inventory_displayhints     = {}
 
-    config.declare_permission_section("action", _("Commands on host and services"))
+    config.declare_permission_section("action", _("Commands on host and services"), do_sort = True)
 
     load_web_plugins("views", globals())
 
@@ -72,7 +72,7 @@ def load_plugins():
     loaded_with_language = current_language
 
     # Declare permissions for builtin views
-    config.declare_permission_section("view", _("Builtin views"))
+    config.declare_permission_section("view", _("Builtin views"), do_sort = True)
     for name, view in multisite_builtin_views.items():
         config.declare_permission("view.%s" % name,
                 view["title"],

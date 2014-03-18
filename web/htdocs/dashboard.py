@@ -77,7 +77,7 @@ def load_plugins():
     dashboards = builtin_dashboards
 
     # Declare permissions for all dashboards
-    config.declare_permission_section("dashboard", _("Dashboards"))
+    config.declare_permission_section("dashboard", _("Dashboards"), do_sort = True)
     for name, dashboard in dashboards.items():
         config.declare_permission("dashboard.%s" % name,
                 dashboard["title"],

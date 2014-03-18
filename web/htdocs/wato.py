@@ -11301,12 +11301,16 @@ def mode_edit_role(phase):
          "permissions that are on default will reflect the new base role."))
 
     # Loop all permission sections, but sorted plz
-    for section, (prio, section_title) in sorted(config.permission_sections.iteritems(),
+    for section, (prio, section_title, do_sort) in sorted(config.permission_sections.iteritems(),
                                                  key = lambda x: x[1][0], reverse = True):
         forms.header(section_title, False)
 
         # Loop all permissions
-        for perm in config.permissions_by_order:
+        permlist = config.permissions_by_order[:]
+        if do_sort:
+            permlist.sort(cmp = lambda a,b: cmp(a["title"], b["title"]))
+
+        for perm in permlist:
             pname = perm["name"]
             this_section = pname.split(".")[0]
             if section != this_section:
@@ -11390,7 +11394,7 @@ def mode_role_matrix(phase):
 
     # Loop all permission sections, but sorted plz
     odd = "even"
-    for section, (prio, section_title) in sorted(config.permission_sections.iteritems(),
+    for section, (prio, section_title, do_sort) in sorted(config.permission_sections.iteritems(),
                                                  key = lambda x: x[1][0], reverse = True):
 
         html.write('<tr>')
@@ -11398,7 +11402,11 @@ def mode_role_matrix(phase):
         html.write('</tr>')
 
         # Loop all permissions
-        for perm in config.permissions_by_order:
+        permlist = config.permissions_by_order[:]
+        if do_sort:
+            permlist.sort(cmp = lambda a,b: cmp(a["title"], b["title"]))
+
+        for perm in permlist:
             pname = perm["name"]
             this_section = pname.split(".")[0]
             if section != this_section:

@@ -179,10 +179,10 @@ def declare_permission(name, title, description, defaults):
 
     permissions_by_name[name] = perm
 
-def declare_permission_section(name, title, prio = 0):
+def declare_permission_section(name, title, prio = 0, do_sort = False):
     # Prio can be a number which is used for sorting. Higher numbers will
     # be listed first, e.g. in the edit dialogs
-    permission_sections[name] = (prio, title)
+    permission_sections[name] = (prio, title, do_sort)
 
 # Compute permissions for HTTP user and set in
 # global variables. Also store user.

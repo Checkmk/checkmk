@@ -41,8 +41,7 @@ def inventory_dell_poweredge_status(info):
 
 def check_dell_poweredge_status(item, _no_params, info):
     di = dict()
-    di['racURL'], di['chassisSystemName'], di['SystemBladeSlotNumber'], \
-            di['systemModelName'],  status, di['chassisServiceTagName'] = info[0]
+    di['racURL'], di['Chassis'], di['Slot'], di['Model'],  status, di['ServiceTag'] = info[0]
 
     state_table = {
         "1" : ( "other", 1 ),
@@ -54,7 +53,7 @@ def check_dell_poweredge_status(item, _no_params, info):
     }
     state_txt, state = state_table.get(status, "2")
     infotext, state = state_table.get(status, "2")
-    for  parameter, value in di.items():
+    for parameter, value in di.items():
         infotext += ", %s: %s" % ( parameter, value )
     infotext = re.sub("^, ","", infotext)
 

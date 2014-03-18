@@ -279,7 +279,7 @@ def declare_inv_column(invpath, datatype, title, short = None):
             filter_info = inv_filter_info.get(datatype, {})
             declare_filter(800, FilterInvFloat(name, invpath, title,
                unit = filter_info.get("unit"),
-               scale = filter_info.get("scale")))
+               scale = filter_info.get("scale", 1.0)))
 
 
 # Tree painter

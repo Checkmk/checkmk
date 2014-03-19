@@ -13,3 +13,6 @@ and and that is published for other users.
 Please note that regardless of a view's permission the owner of the view can
 always see it. If you do not like this you can remove the permission for
 creating custom views.
+
+The default for new views is still that all roles have the permission for
+this view.

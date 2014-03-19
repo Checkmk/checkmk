@@ -11213,6 +11213,10 @@ def mode_edit_role(phase):
         html.context_button(_("All Roles"), make_link([("mode", "roles")]), "back")
         return
 
+    # Make sure that all dynamic permissions are available (e.g. those for custom
+    # views)
+    config.load_dynamic_permissions()
+
     roles = userdb.load_roles()
     role = roles[id]
 

@@ -1,0 +1,10 @@
+Title: dell_chassis_power, dell_chassis_powersupplies: new checks for Dell Poweredge Chassis Ppower consumption
+Level: 2
+Component: checks
+Version: 1.2.5i1
+Date: 1395353155
+Class: feature
+
+These checks measure the overall power consumption of the chassis of the Dell Poweredge Blade Server
+as well as the power consumption of the individual blade nodes as given by the Dell Chassis Management
+Controller (CMC)

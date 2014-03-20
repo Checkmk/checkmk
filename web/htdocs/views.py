@@ -311,7 +311,7 @@ def declare_custom_view_permissions():
                         config.declare_permission("view." + name, view["title"], 
                                     view["description"], ['admin','user','guest'])
         except:
-            if opt_debug:
+            if config.debug:
                 raise
 
 # Get the list of views which are available to the user

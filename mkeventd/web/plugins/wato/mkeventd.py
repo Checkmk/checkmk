@@ -253,6 +253,18 @@ vs_mkeventd_rule = Dictionary(
             prefix_values = True,
           ),
         ),
+        ( "contact_groups",
+          ListOf(
+              GroupSelection("contact"),
+              title = _("Fallback Contact Groups"),
+              help = _("When displaying events in the Check_MK GUI you can make a user only see events "
+                       "for hosts he is a contact for. When you expect this rule to reveice events from "
+                       "hosts that are <i>not</i> known to the monitoring you can specify contact groups "
+                       "for the visibility here. Note: if you activate this option and do not specify "
+                       "any group, then users with restricted permissions can never see these events."),
+              movable = False,
+          )
+        ),
         ( "actions",
           ListChoice(
             title = _("Actions"),
@@ -635,12 +647,12 @@ vs_mkeventd_rule = Dictionary(
     optional_keys = [ "delay", "livetime", "count", "expect", "match_priority", "match_priority",
                       "match_facility", "match_sl", "match_host", "match_application", "match_timeperiod",
                       "set_text", "set_host", "set_application", "set_comment",
-                      "set_contact", "cancel_priority", "match_ok" ],
+                      "set_contact", "cancel_priority", "match_ok", "contact_groups" ],
     headers = [
         ( _("General Properties"), [ "id", "description", "disabled" ] ),
         ( _("Matching Criteria"), [ "match", "match_host", "match_application", "match_priority", "match_facility",
                                     "match_sl", "match_ok", "cancel_priority", "match_timeperiod" ]),
-        ( _("Outcome &amp; Action"), [ "state", "sl", "actions", "drop", "autodelete" ]),
+        ( _("Outcome &amp; Action"), [ "state", "sl", "contact_groups", "actions", "drop", "autodelete" ]),
         ( _("Counting &amp; Timing"), [ "count", "expect", "delay", "livetime", ]),
         ( _("Rewriting"), [ "set_text", "set_host", "set_application", "set_comment", "set_contact" ]),
     ],
@@ -921,7 +933,7 @@ def mode_mkeventd_rules(phase):
                 html.empty_icon_button()
                 html.empty_icon_button()
 
-            table.cell("")
+            table.cell("", css="buttons")
             if rule.get("disabled"):
                 html.icon(_("This rule is currently disabled and will not be applied"), "disabled")
             elif event:
@@ -943,6 +955,11 @@ def mode_mkeventd_rules(phase):
                     if groups:
                         msg += _(" Match groups: %s") % ",".join([ g or _('&lt;None&gt;') for g in groups ])
                     html.icon(msg, icon)
+
+            if rule.get("contact_groups") != None:
+                html.icon(_("This rule attaches contact group(s) to the events: %s") %
+                           (", ".join(rule["contact_groups"]) or _("(none)")),
+                         "contactgroups")
 
             table.cell(_("ID"), '<a href="%s">%s</a>' % (edit_url, rule["id"]))
 

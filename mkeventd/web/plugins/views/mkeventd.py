@@ -48,7 +48,15 @@ def table_events(what, columns, add_headers, only_sites, limit, filters):
     # in case. Also in the events table instead of the host name there
     # might be the IP address of the host - while in the monitoring we
     # name. We will join later.
-    rows = get_all_events(what, filters, limit)
+
+    # If due to limitation of visibility we do a post-filtering, we cannot
+    # impose a limit when fetching the data. This is dangerous, but we
+    # have no other chance, currently.
+    if not config.may("mkeventd.seeall"):
+        use_limit = None
+    else:
+        use_limit = limit
+    rows = get_all_events(what, filters, use_limit)
 
     # Now we join the stuff with the host information. Therefore we
     # get the information about all hosts that are referred to in
@@ -84,6 +92,38 @@ def table_events(what, columns, add_headers, only_sites, limit, filters):
     # and later fetch the data of the relevant hosts.
     hostrows = event_hostrows(columns, only_sites, filters, host_filters)
 
+    # Sichtbarkeit: Wenn der Benutzer *nicht* das Recht hat, alle Events
+    # zu sehen, dann müssen wir die Abfrage zweimal machen. Einmal with
+    # AuthUser: (normal) und einmal zusätzlich ohne AuthUser. Dabei brauchen
+    # wir dann nicht mehr alle Spalten, sondern nur noch die Liste der
+    # Kontaktgruppen.
+    # 1. Wenn ein Host bei der ersten Anfrage fehlt, aber bei der zweiten kommt,
+    # heißt das, dass der User diesen Host nicht sehen darf. Und der Event wird
+    # nicht angezeigt.
+    # 2. Wenn ein Host bei beiden Abfragen fehlt, gibt es diesen Host nicht im
+    # Monitoring. Dann gibt es zwei Fälle:
+    # a) Wenn im Event eine Liste von Kontaktgruppen eingetragen ist (kommt durch
+    # eine Regel), dann darf der User den Event sehen, wenn er Mitglied einer
+    # der Kontaktgruppen ist. Dies bekommen wir einfach aus dem User-Profil
+    # heraus. Für solche Events brauchen wir das Ergebnis der Abfrage nicht.
+    # b) Wenn im Event diese Option fehlt, dann darf der User das Event immer sehen.
+    # Wir können das aber nochmal global steuern über eine Permission.
+
+    if not config.may("mkeventd.seeall"):
+        host_contact_groups = {}
+        query = "GET hosts\nColumns: name address contact_groups\n" + host_filters
+        html.live.set_only_sites(only_sites)
+        html.live.set_auth_domain('mkeventd')
+        data = html.live.query(query)
+        html.live.set_auth_domain('read')
+        html.live.set_only_sites(None)
+        for host, address, groups in data:
+            host_contact_groups[host.lower()] = groups
+            host_contact_groups[address] = groups
+
+    else:
+        host_contact_groups = None
+
     # Create lookup dict from hostname/address to the dataset of the host.
     # This speeds up the mapping to the events.
     hostdict = {}
@@ -112,8 +152,34 @@ def table_events(what, columns, add_headers, only_sites, limit, filters):
     # We're ready to join the host-data with the event data now. The question
     # is what to do with events that cannot be mapped to a host...
     new_rows = []
+    user_contact_groups = None
     for event in rows:
         host = event["event_host"].lower()
+
+        # Users without the mkeventd.seeall permission only may see the host if
+        # they are a contact via the monitoring. In case the host is not known
+        # to the monitoring the permission mkeventd.seeunrelated is being neccessary
+        # as well.
+        if host_contact_groups != None:
+            if host in host_contact_groups:
+                if host not in hostdict:
+                    continue # Host known to monitoring, but user is now allowed
+            else: # Host not known to monitoring
+                # Has the event explicit contact groups assigned? Use them!
+                cgs = event.get("event_contact_groups")
+                if cgs == None:
+                    if not config.may("mkeventd.seeunrelated"):
+                        continue
+                else:
+                    if user_contact_groups == None:
+                        user_contact_groups = get_user_contact_groups()
+
+                    allowed = False
+                    for g in cgs:
+                        if g in user_contact_groups:
+                            allowed = True
+                    if not allowed:
+                        continue
 
         if host in hostdict:
             event.update(hostdict[host])
@@ -145,6 +211,11 @@ def event_hostrows(columns, only_sites, filters, host_filters):
     host_columns = filter(lambda c: c.startswith("host_"), columns)
     return get_host_table(filter_code, only_sites, host_columns)
 
+
+def get_user_contact_groups():
+    query = "GET contactgroups\nFilter: members >= %s\nColumns: name\nCache: reload" % (config.user_id)
+    contacts = html.live.query_column(query)
+    return set(contacts)
 
 def get_host_table(filter_header, only_sites, add_columns):
     columns = [ "host_name" ] + add_columns
@@ -194,6 +265,19 @@ def get_all_events(what, filters, limit):
 # Declare datasource only if the event console is activated. We do
 # not want to irritate users that do not know anything about the EC.
 if mkeventd_enabled:
+    config.declare_permission("mkeventd.seeall",
+            _("See all events"),
+            _("If a user lacks this permission then he/she can see only those events that "
+              "originate from a host that he/she is a contact for."),
+            [ "user", "admin", "guest" ])
+
+    config.declare_permission("mkeventd.seeunrelated",
+           _("See events not related to a known host"),
+           _("If that user does not have the permission <i>See all events</i> then this permission "
+             "controls wether he/she can see events that are not related to a host in the montioring "
+             "and that do not have been assigned specific contract groups to via the event rule."),
+           [ "user", "admin", "guest" ])
+
     multisite_datasources["mkeventd_events"] = {
         "title"       : _("Event Console: Current Events"),
         "table"       : lambda *args: table_events('events', *args),
@@ -537,6 +621,22 @@ if mkeventd_enabled:
         "short"   : _("Icons"),
         "columns" : [ "event_phase" ],
         "paint"   : paint_event_icons,
+    }
+
+    def paint_event_contact_groups(row):
+        cgs = row.get("event_contact_groups")
+        if cgs == None:
+            return "", ""
+        elif cgs:
+            return "", ", ".join(cgs)
+        else:
+            return "", "<i>"  + _("none") + "</i>"
+
+    multisite_painters["event_contact_groups"] = {
+        "title"   : _("Fallback Contact Groups"),
+        "short"   : _("Contact Groups"),
+        "columns" : [ "event_contact_groups" ],
+        "paint"   : paint_event_contact_groups,
     }
 
     # Event History
@@ -965,6 +1065,7 @@ if mkeventd_enabled:
             ('event_count', None, ''),
             ('event_sl', None, ''),
             ('event_contact', None, ''),
+            ('event_contact_groups', None, ''),
             ('event_application', None, ''),
             ('event_pid', None, ''),
             ('event_priority', None, ''),
@@ -1060,6 +1161,7 @@ if mkeventd_enabled:
             ('event_count', None, ''),
             ('event_sl', None, ''),
             ('event_contact', None, ''),
+            ('event_contact_groups', None, ''),
             ('event_application', None, ''),
             ('event_pid', None, ''),
             ('event_priority', None, ''),

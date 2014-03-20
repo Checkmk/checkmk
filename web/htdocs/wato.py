@@ -7336,7 +7336,7 @@ class CheckTypeGroupSelection(ElementSelection):
 
 
 #.
-#   .--Notifications-------------------------------------------------------.
+#   .--Notifications-(Rule Based)------------------------------------------.
 #   |       _   _       _   _  __ _           _   _                        |
 #   |      | \ | | ___ | |_(_)/ _(_) ___ __ _| |_(_) ___  _ __  ___        |
 #   |      |  \| |/ _ \| __| | |_| |/ __/ _` | __| |/ _ \| '_ \/ __|       |
@@ -11212,6 +11212,10 @@ def mode_edit_role(phase):
     elif phase == "buttons":
         html.context_button(_("All Roles"), make_link([("mode", "roles")]), "back")
         return
+
+    # Make sure that all dynamic permissions are available (e.g. those for custom
+    # views)
+    config.load_dynamic_permissions()
 
     roles = userdb.load_roles()
     role = roles[id]

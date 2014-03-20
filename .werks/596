@@ -1,0 +1,8 @@
+Title: dell_chassis_status, dell_chassis_temp, dell_chassis_kvm, dell_chassis_io, dell_chassis_fans: new checks to monitor the overall status of various sections of the Dell Poweredge Chassis via CMC
+Level: 2
+Component: checks
+Version: 1.2.5i1
+Date: 1395353641
+Class: feature
+
+

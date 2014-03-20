@@ -24,10 +24,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Example output (Ubuntu 12.10)
+# Example outputs from various systems:
 # <<<lnx_distro:sep(124)>>>
 # /etc/debian_version|wheezy/sid
+
+# <<<lnx_distro:sep(124)>>>
 # /etc/lsb-release|DISTRIB_ID=Ubuntu|DISTRIB_RELEASE=12.10|DISTRIB_CODENAME=quantal|DISTRIB_DESCRIPTION="Ubuntu 12.10"
+
+# <<<lnx_distro:sep(124)>>>
+# /etc/redhat-release|Red Hat Enterprise Linux Server release 6.5 (Santiago)
+
 
 
 def inv_lnx_distro(info):
@@ -37,10 +43,24 @@ def inv_lnx_distro(info):
              inv_lnx_parse_lsb_release(node, line[1:])
         elif line[0] == '/etc/debian_version':
             inv_lnx_parse_debian(node, line[1])
+        elif line[0] == '/etc/redhat-release':
+            inv_lnx_parse_redhat_release(node, line[1])
+
+def inv_lnx_parse_redhat_release(node, line):
+    node["type"] = "linux"
+    parts = line.split("(")
+    left = parts[0].strip()
+    node["code_name"] = parts[1].rstrip(")")
+    name, _release, version = left.rsplit(None, 2)
+    if name.startswith("Red Hat"):
+        node["vendor"] = "Red Hat"
+    node["version"] = version
+    node["name"] = left
+
 
 def inv_lnx_parse_lsb_release(node, lines):
+    node["type"] = "linux"
     for line in lines:
-        node["type"] = "linux"
         varname, value = line.split("=", 1)
         value = value.strip("'").strip('"')
         if varname == "DISTRIB_ID":

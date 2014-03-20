@@ -116,6 +116,27 @@ def inv_tree(path):
     return node
 
 
+# Removes empty nodes from a (sub)-tree. Returns
+# True if the tree itself is empty
+def inv_cleanup_tree(tree):
+
+    if type(tree) == dict:
+        for key, value in tree.items():
+            if inv_cleanup_tree(value):
+                del tree[key]
+        return not tree
+
+    elif type(tree) == list:
+        to_delete = []
+        for nr, entry in enumerate(tree):
+            if inv_cleanup_tree(entry):
+                to_delete.append(nr)
+        for nr in to_delete[::-1]:
+            del tree[nr]
+        return not tree
+
+    else:
+        return False # cannot clean non-container nodes
 
 #.
 #   .--Inventory-----------------------------------------------------------.
@@ -217,6 +238,9 @@ def do_inv_for(hostname, ipaddress):
 
         plugin["inv_function"](info)
 
+    # Remove empty paths
+    inv_cleanup_tree(g_inv_tree)
+
     if inventory_pprint_output:
         r = pprint.pformat(g_inv_tree)
     else:
@@ -247,3 +271,5 @@ def run_inv_export_hooks(hostname, tree):
                     raise
                 raise MKGeneralException("Failed to execute export hook %s: %s" % (
                     hookname, e))
+
+

@@ -1571,7 +1571,14 @@ def get_filesystem_valuespec(what):
                                 )],
                     )
 
-def match_filesystem_level_type(value):
+
+# Match and transform functions for level configurations like
+# -- used absolute,        positive int   (2, 4)
+# -- used percentage,      positive float (2.0, 4.0)
+# -- available absolute,   negative int   (-2, -4)
+# -- available percentage, negative float (-2.0, -4.0)
+# (4 alternatives)
+def match_dual_level_type(value):
     if type(value) == list:
         for entry in value:
             if entry[1][0] < 0 or entry[1][1] < 0:
@@ -1584,7 +1591,7 @@ def match_filesystem_level_type(value):
         else:
             return 0
 
-def transform_filesystem_levels(value):
+def transform_filesystem_free(value):
     tuple_convert = lambda val: tuple(map(lambda x: -x, val))
 
     if type(value) == tuple:
@@ -1602,15 +1609,15 @@ filesystem_elements = [
             title = _("Levels for filesystem"),
             show_alternative_title = True,
             default_value = (80.0, 90.0),
-            match = match_filesystem_level_type,
+            match = match_dual_level_type,
             elements = [
                    get_filesystem_valuespec("used"),
                    Transform(
                             get_filesystem_valuespec("free"),
                             title = _("Levels for filesystem free space"),
                             allow_empty = False,
-                            forth = transform_filesystem_levels,
-                            back  = transform_filesystem_levels
+                            forth = transform_filesystem_free,
+                            back  = transform_filesystem_free
                     )
                 ]
                 )
@@ -2051,8 +2058,12 @@ register_check_parameters(
         Dictionary(
             elements = [
                 ( "levels",
-                   Alternative(
-                        help = _("The levels for memory usage on Linux and UNIX systems take into account the "
+                    Alternative(
+                        title = _("Levels for memory"),
+                        show_alternative_title = True,
+                        default_value = (150.0, 200.0),
+                        match = match_dual_level_type,
+                        help = _("The used and free levels for the memory on Linux and UNIX systems take into account the "
                                "currently used memory (RAM or SWAP) by all processes and sets this in relation "
                                "to the total RAM of the system. This means that the memory usage can exceed 100%. "
                                "A usage of 200% means that the total size of all processes is twice as large as "
@@ -2060,20 +2071,55 @@ register_check_parameters(
                                "Besides Linux and UNIX systems, these parameters are also used for memory checks "
                                "of other devices, like Fortigate devices."),
                         elements = [
-                            Tuple(
-                                title = _("Specify levels in percentage of total RAM"),
+                            Alternative(
+                                title = _("Levels for used memory"),
                                 elements = [
-                                    # Disable limit of value to 101%, because levels > 100% make sense here
-                                    # (swap+ram is > ram)
-                                    Percentage(title = _("Warning at a memory usage of"), maxvalue = None),
-                                    Percentage(title = _("Critical at a memory usage of"), maxvalue = None)]),
-                            Tuple(
-                                title = _("Specify levels in absolute usage values"),
-                                elements = [
-                                  Integer(title = _("Warning if above"), unit = _("MB")),
-                                  Integer(title = _("Critical if above"), unit = _("MB"))]),
-                            ],
-                        default_value = (150.0, 200.0))
+                                    Tuple(
+                                        title = _("Specify levels in percentage of total RAM"),
+                                        elements = [
+                                          Percentage(title = _("Warning at a usage of"),  maxvalue = None),
+                                          Percentage(title = _("Critical at a usage of"), maxvalue = None)
+                                        ]
+                                    ),
+                                    Tuple(
+                                        title = _("Specify levels in absolute values"),
+                                        elements = [
+                                          Integer(title = _("Warning if above"), unit = _("MB")),
+                                          Integer(title = _("Critical if above"), unit = _("MB"))
+                                        ]
+                                    ),
+                                ]
+                            ),
+                            Transform(
+                                    Alternative(
+                                        elements = [
+                                            Tuple(
+                                                title = _("Specify levels in percentage of total RAM"),
+                                                elements = [
+                                                  Percentage(title = _("Warning if less than"),  maxvalue = None),
+                                                  Percentage(title = _("Critical if less than"), maxvalue = None)
+                                                ]
+                                            ),
+                                            Tuple(
+                                                title = _("Specify levels in absolute values"),
+                                                elements = [
+                                                  Integer(title = _("Warning if below"), unit = _("MB")),
+                                                  Integer(title = _("Critical if below"), unit = _("MB"))
+                                                ]
+                                            ),
+                                        ]
+                                    ),
+                                    title = _("Levels for free memory"),
+                                    help = _("Keep in mind that if you have 1GB RAM and 1GB SWAP you need to "
+                                             "specify 120% or 1200MB to get an alert if there is only 20% free RAM available. "
+                                             "The free memory levels do not work with the fortigate check, because it does "
+                                             "not provide total memory data."),
+                                    allow_empty = False,
+                                    forth = lambda val: tuple(map(lambda x: -x, val)),
+                                    back  = lambda val: tuple(map(lambda x: -x, val))
+                             )
+                        ]
+                    ),
                 ),
                 ("average",
                     Integer(

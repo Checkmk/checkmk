@@ -186,13 +186,23 @@ register_rule(group,
             ( "user",
               TextAscii(
                   title = _("EMC VNX admin user name"),
-                  allow_empty = False,
+                  allow_empty = True,
+                  help = _("If you leave user name and password empty, the special agent tries to "
+                           "authenticate against the EMC VNX device by Security Files. "
+                           "These need to be created manually before using. Therefor run as "
+                           "instance user (if using OMD) or Nagios user (if not using OMD) "
+                           "a command like "
+                           "<tt>naviseccli -AddUserSecurity -scope 0 -password PASSWORD -user USER</tt> "
+                           "This creates <tt>SecuredCLISecurityFile.xml</tt> and "
+                           "<tt>SecuredCLIXMLEncrypted.key</tt> in the home directory of the user "
+                           "and these files are used then."
+                           ),
               )
             ),
             ( "password",
               Password(
                   title = _("EMC VNX admin user password"),
-                  allow_empty = False,
+                  allow_empty = True,
               )
             ),
             ( "infos",

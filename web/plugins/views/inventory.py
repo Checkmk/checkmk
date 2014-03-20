@@ -28,6 +28,9 @@ import inventory
 
 def paint_host_inventory(row, invpath):
     invdata = inventory.get(row["host_inventory"], invpath)
+    if not invdata:
+        return "", "" # _("No inventory data available")
+
     hint = inv_display_hint(invpath)
     if "paint_function" in hint:
         return hint["paint_function"](invdata)
@@ -300,17 +303,18 @@ def render_inv_subtree(hostname, invpath, node):
         render_inv_subtree_leaf(hostname, invpath, node)
 
 def render_inv_subtree_foldable(hostname, invpath, node):
-    icon, title = inv_titleinfo(invpath, node)
+    if node: # omit empty nodes completely
+        icon, title = inv_titleinfo(invpath, node)
 
-    if "%d" in title: # Replace with list index
-        list_index = int(invpath.split(":")[-1].rstrip(".")) + 1
-        title = title % list_index
+        if "%d" in title: # Replace with list index
+            list_index = int(invpath.split(":")[-1].rstrip(".")) + 1
+            title = title % list_index
 
-    fetch_url = html.makeuri_contextless([("host", hostname), ("path", invpath)], "ajax_inv_render_tree.py")
-    if html.begin_foldable_container("inv_" + hostname, invpath, False, title, icon=icon, fetch_url=fetch_url):
-        # Render only if it is open. We'll get the stuff via ajax later if it's closed
-        render_inv_subtree_container(hostname, invpath, node)
-    html.end_foldable_container()
+        fetch_url = html.makeuri_contextless([("host", hostname), ("path", invpath)], "ajax_inv_render_tree.py")
+        if html.begin_foldable_container("inv_" + hostname, invpath, False, title, icon=icon, fetch_url=fetch_url):
+            # Render only if it is open. We'll get the stuff via ajax later if it's closed
+            render_inv_subtree_container(hostname, invpath, node)
+        html.end_foldable_container()
 
 def render_inv_subtree_container(hostname, invpath, node):
     hint = inv_display_hint(invpath)
@@ -768,7 +772,7 @@ class FilterSWPacsVersion(Filter):
 
         new_rows = []
         for row in rows:
-            version = row[self.name]
+            version = row.get(self.name, "")
             if from_version and cmp_version(version, from_version) == -1:
                 continue
             if to_version and cmp_version(version, to_version) == 1:

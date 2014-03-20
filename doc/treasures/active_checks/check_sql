@@ -206,7 +206,10 @@ try:
         #opt_input.append("outvar")
         cursor.callproc(opt_sql, (outvar,))
         res =  outvar.getvalue()
-        result = res[0].split(",")
+        if opt_dbms == "mssql":
+            result = res[0].split(",")
+        else:
+            result = res.split(",")
     else:
         cursor.execute(opt_sql)
         result = cursor.fetchone()

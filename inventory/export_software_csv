@@ -36,10 +36,11 @@ def inv_export_software_csv(hostname, params, tree):
     else:
         quote = lambda s: s
 
-    if "software" not in tree or "packages" not in tree["software"]:
-        raise MKGeneralException("Missing Software/Packages in inventory tree")
+    try:
+        packages = tree["software"]["packages"]
+    except KeyError:
+        return # No software information available
 
-    packages = tree["software"]["packages"]
     filename  = params["filename"].replace("<HOST>", hostname)
     if not filename.startswith("/"):
         filename = var_dir + "/" + filename

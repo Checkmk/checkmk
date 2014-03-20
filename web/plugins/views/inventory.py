@@ -29,7 +29,7 @@ import inventory
 def paint_host_inventory(row, invpath):
     invdata = inventory.get(row["host_inventory"], invpath)
     if not invdata:
-        return "", _("No inventory data available")
+        return "", "" # _("No inventory data available")
 
     hint = inv_display_hint(invpath)
     if "paint_function" in hint:
@@ -772,7 +772,7 @@ class FilterSWPacsVersion(Filter):
 
         new_rows = []
         for row in rows:
-            version = row[self.name]
+            version = row.get(self.name, "")
             if from_version and cmp_version(version, from_version) == -1:
                 continue
             if to_version and cmp_version(version, to_version) == 1:

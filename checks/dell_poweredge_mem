@@ -66,7 +66,7 @@ def check_dell_poweredge_mem(item, _no_params, info):
                 "5" : ( "Critical", 2 ),
                 "6" : ( "NonRecoverable", 2 ),
             }
-            infotext, state = state_table.get(status, "2")
+            infotext, state = state_table.get(status, ( "unknown state", 2 ))
             for  parameter, value in di.items():
                 infotext += ", %s: %s" % ( parameter, value )
 

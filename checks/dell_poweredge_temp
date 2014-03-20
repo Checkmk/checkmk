@@ -74,7 +74,7 @@ def check_dell_poweredge_temp(item, _no_params, info):
                 "9" : ( "NonRecoverableLower", 2 ),
                 "10" : ( "failed", 2 ),
             }
-            state_txt, state = state_table.get(Status, "2")
+            state_txt, state = state_table.get(Status, ( "unknown state", 2 ))
             infotext = "%.1f Degrees (upper limits %s/%s) %s" % ( temp, warn, crit, state_txt )
             perfdata = [( "temp", temp, warn, crit )]
 

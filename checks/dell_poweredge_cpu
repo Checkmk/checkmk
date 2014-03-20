@@ -65,7 +65,7 @@ def check_dell_poweredge_cpu(item, _no_params, info):
                 "5" : ( "Critical", 2 ),
                 "6" : ( "NonRecoverable", 2 ),
             }
-            state_txt, state = state_table.get(Status, "2")
+            state_txt, state = state_table.get(Status, ( "unknown state", 2 ))
             infotext = "%s %s" % ( BrandName, state_txt )
 
             return state, infotext

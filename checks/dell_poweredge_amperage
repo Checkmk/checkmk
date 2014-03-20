@@ -78,18 +78,20 @@ def check_dell_poweredge_amperage(item, _no_params, info):
             }
             state_txt, state = state_table.get(Status, "2")
 
-            if UpperNonCritical or UpperCritical:
+            if UpperNonCritical and UpperCritical:
                 limittext = " (upper limits %s/%s)" % (UpperNonCritical, UpperCritical)
+                maxi = savefloat(UpperCritical) * 1.1
             else:
                 limittext = ""
+                maxi = ""
 
             if ProbeType in ( "23", "25" ): # Amps
                 current = str(int(Reading)/10.0)
                 infotext = "%s Ampere %s" % ( current, state_txt )
-                perfdata = [( "current", current+"A", UpperNonCritical, UpperCritical )]
+                perfdata = [( "current", current+"A", UpperNonCritical, UpperCritical, "", maxi )]
             elif ProbeType in ( "24", "26" ): # Watts
                 infotext = "%s Watt %s" % ( Reading, state_txt )
-                perfdata = [( "power", Reading+"W", UpperNonCritical, UpperCritical )]
+                perfdata = [( "power", Reading+"W", UpperNonCritical, UpperCritical, "", maxi )]
             else:
                 infotext = "Unknown Probe Type %s" % ProbeType
                 return 3, infotext
@@ -107,11 +109,11 @@ check_info["dell_poweredge_amperage.power"] = {
     "snmp_scan"             : dell_poweredge_amperage_scan,
 }
 
-check_info["dell_poweredge_amperage.current"] = {
-    "check_function"        : check_dell_poweredge_amperage,
-    "inventory_function"    : inventory_dell_poweredge_amperage_current,
-    "service_description"   : "%s",
-    "has_perfdata"          : True,
-    "snmp_info"             : dell_poweredge_amperage_info,
-    "snmp_scan"             : dell_poweredge_amperage_scan,
-}
+#check_info["dell_poweredge_amperage.current"] = {
+#    "check_function"        : check_dell_poweredge_amperage,
+#    "inventory_function"    : inventory_dell_poweredge_amperage_current,
+#    "service_description"   : "%s",
+#    "has_perfdata"          : True,
+#    "snmp_info"             : dell_poweredge_amperage_info,
+#    "snmp_scan"             : dell_poweredge_amperage_scan,
+#}

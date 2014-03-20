@@ -37,6 +37,13 @@ def check_fortigate_memory(item, params, info):
         params = params["levels"]
 
     warn, crit = params
+
+    # This check is only able to check the used space
+    # The checkgroup "memory" might set negative values which act as levels for free space
+    # These levels are converted to used space, too..
+    warn = abs(warn)
+    crit = abs(crit)
+
     current = saveint(info[0][0])
     state = 0
     icon = ''

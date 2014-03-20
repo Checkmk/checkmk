@@ -58,6 +58,13 @@ OPTIONS:
   -h, --help                    Show this help message and exit
   -u USER, --user USER          Username for EMC VNX login
   -p PASSWORD, --password PASSWORD  Password for EMC VNX login
+
+                                If you do not give USER and PASSWORD:
+                                We try to use naviseccli with security files.
+                                These need to be created in advance by running as
+                                the instance user:
+                                naviseccli -AddUserSecurity -scope 0 -password PASSWORD -user USER
+
   --debug                       Debug mode: write some debug messages,
                                 let Python exceptions come through
 
@@ -156,7 +163,11 @@ except ValueError:
 # fetch information by calling naviseccli
 #############################################################################
 
-basecmd="naviseccli -h %s -User %s -Password '%s' -Scope 0 " % (host_address, user, password)
+if (user == None or user == '') and (password == None or password == ''):
+    # try using security files
+    basecmd="naviseccli -h %s -Scope 0 " % host_address
+else:
+    basecmd="naviseccli -h %s -User %s -Password '%s' -Scope 0 " % (host_address, user, password)
 
 #
 # check_mk section of agent output

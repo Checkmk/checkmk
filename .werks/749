@@ -1,0 +1,27 @@
+Title: Allow to restrict visibility of events by their host contacts
+Level: 2
+Component: ec
+Version: 1.2.5i1
+Date: 1395238587
+Class: feature
+
+The Event Console has now two new permissions:
+
+<ol>
+<li>See all events</li>
+<li>See events not related to a known host</li>
+</ol>
+
+Both permissions default to <i>yes</i> in all roles. If you remove the <i>See all events</i>
+permission then a user can only see events for hosts that either he is a monitoring contact for
+or that are not known to the monitoring at all (i.e. no host with such a name or IP address
+is configured as monitored host in your monitoring core). The visibility of the later
+ones can be switched off with the second permission. The second permission is only relevant
+if <i>See all events</i> is set to <i>no</i> - of course.
+
+Furthermore you can now assign <i>Fallback Contact Groups</i> to an event. This
+is done with a new rule option in the section <i>Outcome &amp; Action</i>. As
+soon as you assign contact groups these will be assumed for all hosts
+that are not in the monitoring. That groups will be attached as an additional information
+to each event created with that rule. These events will then be handled like as if the
+host is known to the monitoring when it comes to the visibility.

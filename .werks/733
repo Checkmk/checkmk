@@ -1,0 +1,8 @@
+Title: mem, solaris_mem: now able to configure amount of free memory
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1395309870
+Class: feature
+
+You can now configure the levels of free memory via WATO.

@@ -55,7 +55,7 @@ def load_plugins():
     loaded_with_language = current_language
 
     # Declare permissions: each snapin creates one permission
-    config.declare_permission_section("sidesnap", _("Sidebar snapins"))
+    config.declare_permission_section("sidesnap", _("Sidebar snapins"), do_sort = True)
     for name, snapin in sidebar_snapins.items():
         config.declare_permission("sidesnap.%s" % name,
             snapin["title"],

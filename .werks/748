@@ -1,0 +1,18 @@
+Title: Also custom views now have permissions
+Level: 2
+Component: multisite
+Version: 1.2.5i1
+Date: 1395220282
+Class: feature
+
+In that past only builtin views had permissions that you could disable in a
+role and that way remove those views for certain users. Now this also works
+for custom views - i.e. views that a user has created with a new unique name
+and and that is published for other users.
+
+Please note that regardless of a view's permission the owner of the view can
+always see it. If you do not like this you can remove the permission for
+creating custom views.
+
+The default for new views is still that all roles have the permission for
+this view.

@@ -1,6 +1,6 @@
 title: Dell PowerEdge Server: Global State
 agents: snmp
-catalog: hw/network/dell
+catalog: hw/server/dell
 license: GPL
 distribution: check_mk
 description:

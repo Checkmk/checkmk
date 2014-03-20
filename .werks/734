@@ -1,0 +1,8 @@
+Title: esx_vsphere_vm.running_on: shows the esx host of the VM
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1395325160
+Class: feature
+
+

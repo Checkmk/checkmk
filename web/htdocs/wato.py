@@ -257,7 +257,7 @@ def page_handler():
                 html.set_var("mode", newmode) # will be used by makeuri
 
                 # Check general permissions for the new mode
-                if not config.may("wato.seeall"):
+                if modeperms != None and not config.may("wato.seeall"):
                     for pname in modeperms:
                         if '.' not in pname:
                             pname = "wato." + pname
@@ -7336,7 +7336,7 @@ class CheckTypeGroupSelection(ElementSelection):
 
 
 #.
-#   .--Notifications-------------------------------------------------------.
+#   .--Notifications-(Rule Based)------------------------------------------.
 #   |       _   _       _   _  __ _           _   _                        |
 #   |      | \ | | ___ | |_(_)/ _(_) ___ __ _| |_(_) ___  _ __  ___        |
 #   |      |  \| |/ _ \| __| | |_| |/ __/ _` | __| |/ _ \| '_ \/ __|       |
@@ -7472,6 +7472,13 @@ def vs_notification_rule(userid = None):
                 attrencode = True,
                 allow_empty = False,
             )),
+            ( "comment",
+              TextAreaUnicode(
+                title = _("Comment"),
+                help = _("An optional comment that explains the purpose of this rule."),
+                rows = 5,
+              )
+            ),
             ( "disabled",
               Checkbox(
                 title = _("Rule activation"),
@@ -7730,7 +7737,7 @@ def vs_notification_rule(userid = None):
                           "match_sl", "match_host_event", "match_service_event",
                           "match_checktype", "bulk", "contact_users", "contact_groups", "contact_emails" ],
         headers = [
-            ( _("General Properties"), [ "description", "disabled", "allow_disable" ] ),
+            ( _("General Properties"), [ "description", "comment", "disabled", "allow_disable" ] ),
             ( _("Notification Method"), [ "notify_plugin", "notify_method", "bulk" ] ),]
             + contact_headers
             + [
@@ -7988,7 +7995,8 @@ def mode_notifications(phase):
             "one <a href=\"%s\">here</a>.") % url)
 
     if show_bulks:
-        render_bulks(only_ripe = False) # Warn if there are unsent bulk notificatios
+        if not render_bulks(only_ripe = False): # Warn if there are unsent bulk notificatios
+            html.message(_("Currently there are no unsent notification bulks pending."))
     else:
         render_bulks(only_ripe = True) # Warn if there are unsent bulk notificatios
 
@@ -8118,6 +8126,9 @@ def render_bulks(only_ripe):
             if len(uuids) >= maxcount:
                 html.icon(_("Number of notifications exceeds maximum allowed number"), "warning")
         table.end()
+        return True
+    else:
+        return False
 
 
 
@@ -11202,6 +11213,10 @@ def mode_edit_role(phase):
         html.context_button(_("All Roles"), make_link([("mode", "roles")]), "back")
         return
 
+    # Make sure that all dynamic permissions are available (e.g. those for custom
+    # views)
+    config.load_dynamic_permissions()
+
     roles = userdb.load_roles()
     role = roles[id]
 
@@ -11290,12 +11305,16 @@ def mode_edit_role(phase):
          "permissions that are on default will reflect the new base role."))
 
     # Loop all permission sections, but sorted plz
-    for section, (prio, section_title) in sorted(config.permission_sections.iteritems(),
+    for section, (prio, section_title, do_sort) in sorted(config.permission_sections.iteritems(),
                                                  key = lambda x: x[1][0], reverse = True):
         forms.header(section_title, False)
 
         # Loop all permissions
-        for perm in config.permissions_by_order:
+        permlist = config.permissions_by_order[:]
+        if do_sort:
+            permlist.sort(cmp = lambda a,b: cmp(a["title"], b["title"]))
+
+        for perm in permlist:
             pname = perm["name"]
             this_section = pname.split(".")[0]
             if section != this_section:
@@ -11379,7 +11398,7 @@ def mode_role_matrix(phase):
 
     # Loop all permission sections, but sorted plz
     odd = "even"
-    for section, (prio, section_title) in sorted(config.permission_sections.iteritems(),
+    for section, (prio, section_title, do_sort) in sorted(config.permission_sections.iteritems(),
                                                  key = lambda x: x[1][0], reverse = True):
 
         html.write('<tr>')
@@ -11387,7 +11406,11 @@ def mode_role_matrix(phase):
         html.write('</tr>')
 
         # Loop all permissions
-        for perm in config.permissions_by_order:
+        permlist = config.permissions_by_order[:]
+        if do_sort:
+            permlist.sort(cmp = lambda a,b: cmp(a["title"], b["title"]))
+
+        for perm in permlist:
             pname = perm["name"]
             this_section = pname.split(".")[0]
             if section != this_section:

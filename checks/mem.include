@@ -97,14 +97,23 @@ def check_memory(params, meminfo):
         perfdata.append(('memusedavg', str(totalused_mb_avg)+'MB'))
 
     # Check levels
-    if comp_mb >= crit_mb:
-        state = 2
-        infotext += ", critical at %s" % leveltext(crit)
-    if comp_mb >= warn_mb:
-        state = 1
-        infotext += ", warning at %s" % leveltext(crit)
-    else:
-        state = 0
+    state = 0
+    if warn_mb > 0: # positive levels - used memory
+        if comp_mb >= crit_mb:
+            state = 2
+            infotext += ", critical at %s used" % leveltext(crit)
+        elif comp_mb >= warn_mb:
+            state = 1
+            infotext += ", warning at %s used" % leveltext(warn)
+    else:           # negative levels - free memory
+        freemem_mb = totalvirt_mb - comp_mb
+        if freemem_mb <= -crit_mb:
+            state = 2
+            infotext += ", critical at %s free" % leveltext(-crit)
+        elif freemem_mb <= -warn_mb:
+            state = 1
+            infotext += ", warning at %s free" % leveltext(-warn)
+
 
     # Add additional metrics, provided by Linux.
     mapped = meminfo.get('Mapped')

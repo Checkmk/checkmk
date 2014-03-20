@@ -78,13 +78,17 @@ def paint_bi_icons(row):
             ("aggr_group", row["aggr_group"]),
             ("aggr_name",  row["aggr_name"])])
     html.icon_button(avail_url, _("Analyse availability of this aggregation"), "availability")
+    if row["aggr_effective_state"]["in_downtime"]:
+	html.icon(_("This aggregation is currently in a scheduled downtime"), "downtime")
+    if row["aggr_effective_state"]["acknowledged"]:
+	html.icon(_("The critical problems that make this aggregation non-OK have been acknowledged"), "ack")
     code = html.drain()
     html.unplug()
     return "buttons", code
 
 multisite_painters["aggr_icons"] = {
     "title" : _("Links"),
-    "columns" : [ "aggr_group", "aggr_name" ],
+    "columns" : [ "aggr_group", "aggr_name", "aggr_effective_state" ],
     "paint" : paint_bi_icons,
 }
 

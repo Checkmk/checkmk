@@ -82,12 +82,19 @@ tr.even0 .aggrtree ul.subtree {
     display:inline-block;
 }
 
-.aggrtree img.assumption {
+.aggrtree img.assumption, .aggrtree img.bi.icon {
     width: 13px;
     height: 13px;
     margin: 0;
     margin-right: 0px;
     vertical-align: middle;
+}
+
+.aggrtree img.bi.icon {
+    margin-right: 5px;
+    margin-left: 0px;
+    position: relative;
+    top: -1px;
 }
 
 b.bullet {

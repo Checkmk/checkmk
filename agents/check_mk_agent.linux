@@ -127,6 +127,12 @@ echo '<<<df>>>'
 excludefs="-x smbfs -x tmpfs -x cifs -x iso9660 -x udf -x nfsv4 -x nfs -x mvfs -x zfs"
 df -PTlk $excludefs | sed 1d
 
+# df inodes information
+echo '<<<df>>>'
+echo '[df_inodes_start]'
+df -PTli $excludefs | sed 1d
+echo '[df_inodes_end]'
+
 # Filesystem usage for ZFS
 if type zfs > /dev/null 2>&1 ; then
     echo '<<<zfsget>>>'

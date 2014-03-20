@@ -1,0 +1,11 @@
+Title: BI aggregates now acknowledgement information
+Level: 2
+Component: bi
+Version: 1.2.5i1
+Date: 1395073928
+Class: feature
+
+Check_MK BI now also aggregates the information wether problems that make the aggregate
+non-OK are acknowledged. Please refer to the updated <a href="checkmk_bi.html">documentation
+about BI</a> for details.
+

@@ -28,6 +28,9 @@ import inventory
 
 def paint_host_inventory(row, invpath):
     invdata = inventory.get(row["host_inventory"], invpath)
+    if not invdata:
+        return "", "" # _("No inventory data available")
+
     hint = inv_display_hint(invpath)
     if "paint_function" in hint:
         return hint["paint_function"](invdata)
@@ -279,7 +282,7 @@ def declare_inv_column(invpath, datatype, title, short = None):
             filter_info = inv_filter_info.get(datatype, {})
             declare_filter(800, FilterInvFloat(name, invpath, title,
                unit = filter_info.get("unit"),
-               scale = filter_info.get("scale")))
+               scale = filter_info.get("scale", 1.0)))
 
 
 # Tree painter
@@ -300,17 +303,18 @@ def render_inv_subtree(hostname, invpath, node):
         render_inv_subtree_leaf(hostname, invpath, node)
 
 def render_inv_subtree_foldable(hostname, invpath, node):
-    icon, title = inv_titleinfo(invpath, node)
+    if node: # omit empty nodes completely
+        icon, title = inv_titleinfo(invpath, node)
 
-    if "%d" in title: # Replace with list index
-        list_index = int(invpath.split(":")[-1].rstrip(".")) + 1
-        title = title % list_index
+        if "%d" in title: # Replace with list index
+            list_index = int(invpath.split(":")[-1].rstrip(".")) + 1
+            title = title % list_index
 
-    fetch_url = html.makeuri_contextless([("host", hostname), ("path", invpath)], "ajax_inv_render_tree.py")
-    if html.begin_foldable_container("inv_" + hostname, invpath, False, title, icon=icon, fetch_url=fetch_url):
-        # Render only if it is open. We'll get the stuff via ajax later if it's closed
-        render_inv_subtree_container(hostname, invpath, node)
-    html.end_foldable_container()
+        fetch_url = html.makeuri_contextless([("host", hostname), ("path", invpath)], "ajax_inv_render_tree.py")
+        if html.begin_foldable_container("inv_" + hostname, invpath, False, title, icon=icon, fetch_url=fetch_url):
+            # Render only if it is open. We'll get the stuff via ajax later if it's closed
+            render_inv_subtree_container(hostname, invpath, node)
+        html.end_foldable_container()
 
 def render_inv_subtree_container(hostname, invpath, node):
     hint = inv_display_hint(invpath)
@@ -377,7 +381,7 @@ def render_inv_subtree_leaf(hostname, invpath, node):
         html.write(str(node))
     elif type(node) == float:
         html.write("%.2f" % node)
-    else:
+    elif node != None:
         html.write(str(node))
     html.write("<br>")
 
@@ -503,11 +507,14 @@ def inv_paint_bytes(b):
     return "number", "%d %s" % (b, units[i])
 
 def inv_paint_count(b):
-    return "number", str(b)
+    if b == None:
+        return "", ""
+    else:
+        return "number", str(b)
 
 def inv_paint_bytes_rounded(b):
     if b == None:
-        return "", _("unknown")
+        return "", ""
     elif b == 0:
         return "number", "0"
 
@@ -519,9 +526,9 @@ def inv_paint_bytes_rounded(b):
         fac = fac / 1024.0
 
     if i:
-        return "number", "%.2f %s" % (b / fac, units[i])
+        return "number", "%.2f&nbsp;%s" % (b / fac, units[i])
     else:
-        return "number", "%d %s" % (b, units[0])
+        return "number", "%d&nbsp;%s" % (b, units[0])
 
 def inv_paint_volt(volt):
     return "number", "%.1f V" % volt
@@ -568,6 +575,7 @@ inventory_displayhints.update({
     ".software.packages:*.summary"                     : { "title" : _("Description"), },
     ".software.packages:*.version"                     : { "title" : _("Version"), },
     ".software.packages:*.package_version"             : { "title" : _("Package Version"), },
+    ".software.packages:*.size"                        : { "title" : _("Size"), "paint" : "count" },
 })
 
 # TEST: create painters for node with a display hint
@@ -677,14 +685,13 @@ def inv_software_table(columns, add_headers, only_sites, limit, filters):
         header = filt.filter("invswpacs")
         if not header.startswith("Sites:"):
             filter_code += header
-    host_columns = filter(lambda c: c.startswith("host_"), columns)
-    columns = [ "name" ] + columns
+    host_columns = [ "host_name" ] + filter(lambda c: c.startswith("host_"), columns)
 
     html.live.set_only_sites(only_sites)
     html.live.set_prepend_site(True)
 
     query = "GET hosts\n"
-    query += "Columns: " + (" ".join(columns)) + "\n"
+    query += "Columns: " + (" ".join(host_columns)) + "\n"
     query += filter_code
 
     if config.debug_livestatus_queries \
@@ -700,7 +707,7 @@ def inv_software_table(columns, add_headers, only_sites, limit, filters):
     html.live.set_prepend_site(False)
     html.live.set_only_sites(None)
 
-    headers = [ "site" ] + columns
+    headers = [ "site" ] + host_columns
 
     # Now create big table of all software packages of these hosts
     rows = []
@@ -754,7 +761,7 @@ class FilterSWPacsVersion(Filter):
         html.write(_("Min.&nbsp;Version:"))
         html.text_input(self.htmlvars[0], size = 9)
         html.write(" &nbsp; ")
-        html.write(_("Max.&nbsp;Vers.:"))
+        html.write(_("Max.&nbsp;Version:"))
         html.text_input(self.htmlvars[1], size = 9)
 
     def filter_table(self, rows):
@@ -765,7 +772,7 @@ class FilterSWPacsVersion(Filter):
 
         new_rows = []
         for row in rows:
-            version = row[self.name]
+            version = row.get(self.name, "")
             if from_version and cmp_version(version, from_version) == -1:
                 continue
             if to_version and cmp_version(version, to_version) == 1:
@@ -796,12 +803,12 @@ def declare_swpacs_columns(name, title, sortfunc):
 
 
 for name, title, sortfunc in [
-    ( "name",         _("Name"),             cmp ),
-    ( "summary",      _("Summary"),          cmp ),
-    ( "arch",         _("CPU Architecture"), cmp ),
-    ( "package_type", _("Type"),             cmp ),
-    ( "version",      _("Version"),          cmp_version ),
-    ( "package_version", _("Package Version"), cmp_version ),
+    ( "name",            _("Name"),             cmp ),
+    ( "summary",         _("Summary"),          cmp ),
+    ( "arch",            _("CPU Architecture"), cmp ),
+    ( "package_type",    _("Type"),             cmp ),
+    ( "version",         _("Version"),          cmp_version ),
+    ( "package_version", _("Package Version"),  cmp_version ),
     ]:
     declare_swpacs_columns(name, title, sortfunc)
 
@@ -811,7 +818,7 @@ for name, title, sortfunc in [
 multisite_datasources["invswpacs"] = {
     "title"       : _("Inventory: Software Packages"),
     "table"       : inv_software_table,
-    "infos"       : [ "host", "invswpacs" ],
+    "infos"       : [ "host", "invswpac" ],
     "keys"        : [],
     "idkeys"      : [],
 }

@@ -24,15 +24,28 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def agent_emcvnx_arguments(params, hostname, ipaddress):
-    args = ''
-    if params["user"] != "":
-        args += " -u " + quote_shell_string(params["user"])
-    if params["password"] != "":
-        args += " -p " + quote_shell_string(params["password"])
-    args += " -i " + ",".join(params["infos"])
+# Example output
+# <<<win_wmi_software:sep(124)>>>
+# 64 Bit HP CIO Components Installer|Hewlett-Packard|15.2.1
+# Adobe Flash Player 12 ActiveX|Adobe Systems Incorporated|12.0.0.70
+# Microsoft Visio 2010 Interactive Guide DEU|Microsoft|1.2.1
+# Microsoft Outlook 2010 Interactive Guide DEU|Microsoft|1.2.1
+# VMware vSphere Client 4.1|VMware, Inc.|4.1.0.17435
+# Microsoft Office Professional Plus 2010|Microsoft Corporation|14.0.7015.1000
 
-    args += " " + quote_shell_string(ipaddress)
-    return args
 
-special_agent_info['emcvnx'] = agent_emcvnx_arguments
+def inv_win_wmi_software(info):
+    paclist = inv_tree("software.packages:")
+    for pacname, vendor, version in info:
+        entry = {
+            "name"            : pacname,
+            "version"         : version,
+            "vendor"          : vendor,
+            "package_type"    : "wmi",
+        }
+        paclist.append(entry)
+
+
+inv_info['win_wmi_software'] = {
+   "inv_function"           : inv_win_wmi_software,
+}

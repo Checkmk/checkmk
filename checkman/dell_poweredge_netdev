@@ -1,0 +1,31 @@
+title: Dell PowerEdge Server: State of Network Devices
+agents: snmp
+catalog: hw/server/dell
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state of the network devices of Dell PowerEdge Servers.
+ The state is extracted from the device via SNMP from the parameters
+ {networkDeviceStatus} and {networkDeviceConnectionStatus}.
+
+ The state of the check is {OK} when the device returns a state of {OK}.
+ The state of the cehck is {WARN} when the device returns a state of {other},
+ {unknown} or {nonCritical}. The state of the check is {CRIT} otherwise.
+
+ The state also returns {OK} when the connections status is {CONNECTED}.
+ It returns {CRIT} otherwise und {WARN} if the connection status is {UNKNOWN}
+
+ No limits are set in the check.
+
+ In addition to the state the following information is retrieved and displayed in
+ the check output: name of the product, current MAC address
+ ,
+ description of the device and manufacturer,
+
+item:
+ The name of the fqdd variable for the device
+
+inventory:
+ All network devices of the device are detected
+
+

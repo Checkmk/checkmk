@@ -24,15 +24,25 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def agent_emcvnx_arguments(params, hostname, ipaddress):
-    args = ''
-    if params["user"] != "":
-        args += " -u " + quote_shell_string(params["user"])
-    if params["password"] != "":
-        args += " -p " + quote_shell_string(params["password"])
-    args += " -i " + ",".join(params["infos"])
+# Example output
+# <<<win_exefiles:sep(124)>>>
+# C:\Program Files\Common Files\Microsoft Shared\MSInfo\msinfo32.exe|378880
+# C:\Program Files\Common Files\Microsoft Shared\OFFICE15\CMigrate.exe|6847704
+# C:\Program Files\Common Files\Microsoft Shared\OFFICE15\MSOXMLED.EXE|217200
+# C:\Program Files\Common Files\Microsoft Shared\OfficeSoftwareProtectionPlatform\OSPPSVC.EXE|5132888
 
-    args += " " + quote_shell_string(ipaddress)
-    return args
+def inv_win_exefiles(info):
+    paclist = inv_tree("software.packages:")
+    for path, size in info:
+        parts = path.split('\\')
+        entry = {
+            "name"            : path,
+            "package_type"    : "exe",
+            "size"            : int(size),
+        }
+        paclist.append(entry)
 
-special_agent_info['emcvnx'] = agent_emcvnx_arguments
+
+inv_info['win_exefiles'] = {
+   "inv_function"           : inv_win_exefiles,
+}

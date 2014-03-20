@@ -1,0 +1,10 @@
+Title: Add Linux caching agent also to normal agent RPM
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1395153584
+Class: feature
+
+In the RPM package for the Linux agent we now always ship
+the "Caching" agent <tt>/usr/bin/check_mk_caching_agent</tt>. In order
+to use it instead of the normal agent, simply edit <tt>/etc/xinetd.d/check_mk</tt>.

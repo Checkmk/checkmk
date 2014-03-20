@@ -994,9 +994,9 @@ service_nomatch_cache = set([])
 # Execution of the trees. Returns a tree object reflecting
 # the states of all nodes
 def execute_tree(tree, status_info = None):
+    use_hard_states = tree["use_hard_states"]
     if status_info == None:
         required_hosts = tree["reqhosts"]
-        use_hard_states = tree["use_hard_states"]
         status_info = get_status_info(required_hosts)
     return execute_node(tree, status_info, use_hard_states)
 
@@ -1015,8 +1015,13 @@ def execute_leaf_node(node, status_info, use_hard_states):
     # Get current state of host and services
     status = status_info.get((site, host))
     if status == None:
-        return ({ "state" : MISSING, "output" : _("Host %s not found") % host}, None, node)
-    host_state, host_hard_state, host_output, service_state = status
+        return ({
+            "state"               : MISSING,
+            "output"              : _("Host %s not found") % host,
+            "in_downtime"         : False,
+            "acknowledged"        : False,
+        }, None, node)
+    host_state, host_hard_state, host_output, host_in_downtime, host_acknowledged, service_state = status
 
     # Get state assumption from user
     if service:
@@ -1037,15 +1042,30 @@ def execute_leaf_node(node, status_info, use_hard_states):
                     st = hard_state
                 else:
                     st = state
-                state = {"state" : st, "output" : output}
+                state = {
+                    "state"        : st,
+                    "output"       : output,
+                    "in_downtime"  : downtime_depth > 0,
+                    "acknowledged" : not not acknowledged,
+                }
                 if state_assumption != None:
-                    assumed_state = {"state":state_assumption,
-                                     "output" : _("Assumed to be %s") % service_state_names[state_assumption]}
+                    assumed_state = {
+                        "state"        : state_assumption,
+                        "output"       : _("Assumed to be %s") % service_state_names[state_assumption],
+                        "in_downtime"  : downtime_depth > 0,
+                        "acknowledged" : not not acknowledged,
+                    }
+
                 else:
                     assumed_state = None
                 return (state, assumed_state, node)
 
-        return ({"state":MISSING, "output": _("This host has no such service")}, None, node)
+        return ({
+                "state"        : MISSING,
+                "output"       : _("This host has no such service"),
+                "in_downtime"  : False,
+                "acknowledged" : False,
+            }, None, node)
 
     else:
         if use_hard_states:
@@ -1053,10 +1073,19 @@ def execute_leaf_node(node, status_info, use_hard_states):
         else:
             st = host_state
         aggr_state = {0:OK, 1:CRIT, 2:UNKNOWN, -1:PENDING}[st]
-        state = {"state":aggr_state, "output" : host_output}
+        state = {
+            "state"        : aggr_state,
+            "output"       : host_output,
+            "in_downtime"  : host_in_downtime,
+            "acknowledged" : host_acknowledged,
+            }
         if state_assumption != None:
-            assumed_state = {"state": state_assumption,
-                             "output" : _("Assumed to be %s") % host_state_names[state_assumption]}
+            assumed_state = {
+                "state"        : state_assumption,
+                "output"       : _("Assumed to be %s") % host_state_names[state_assumption],
+                "in_downtime"  : host_in_downtime,
+                "acknowledged" : host_acknowledged,
+                }
         else:
             assumed_state = None
         return (state, assumed_state, node)
@@ -1077,10 +1106,22 @@ def execute_rule_node(node, status_info, use_hard_states):
     subtrees = []
     node_states = []
     assumed_states = []
+    downtime_states = []
+    ack_states = [] # Needed for computing the acknowledgement of non-OK nodes
     one_assumption = False
     for n in node["nodes"]:
         result = execute_node(n, status_info, use_hard_states) # state, assumed_state, node [, subtrees]
         subtrees.append(result)
+
+        # Assume items in downtime as CRIT when computing downtime state
+        downtime_states.append(({"state": result[0]["in_downtime"] and 2 or 0, "output" : ""}, result[2]))
+
+        # Assume non-OK nodes that are acked as OK
+        if result[0]["acknowledged"]:
+            acked_state = 0
+        else:
+            acked_state = result[0]["state"]
+        ack_states.append(({"state": acked_state, "output" : ""}, result[2]))
 
         node_states.append((result[0], result[2]))
         if result[1] != None:
@@ -1090,9 +1131,19 @@ def execute_rule_node(node, status_info, use_hard_states):
             # no assumption, take real state into assumption array
             assumed_states.append(node_states[-1])
 
+    downtime_state = func(*([downtime_states] + funcargs))
     state = func(*([node_states] + funcargs))
+    state["in_downtime"] = downtime_state["state"] >= 2
+    if state["state"] > 0: # Non-OK-State -> compute acknowledgedment
+        ack_state = func(*([ack_states] + funcargs))
+        state["acknowledged"] = ack_state["state"] == 0 # would be OK if acked problems would be OK
+    else:
+        state["acknowledged"] = False
+
     if one_assumption:
         assumed_state = func(*([assumed_states] + funcargs))
+        assumed_state["in_downtime"] = state["in_downtime"]
+        assumed_state["acknowledged"] = state["acknowledged"]
     else:
         assumed_state = None
     return (state, assumed_state, node, subtrees)
@@ -1120,7 +1171,7 @@ def get_status_info(required_hosts):
         html.live.set_auth_domain('bi')
         data = html.live.query(
                 "GET hosts\n"
-                "Columns: name state hard_state plugin_output services_with_fullstate\n"
+                "Columns: name state hard_state plugin_output scheduled_downtime_depth acknowledged services_with_fullstate\n"
                 + filter)
         html.live.set_auth_domain('read')
         tuples += [((site, e[0]), e[1:]) for e in data]
@@ -1131,7 +1182,8 @@ def get_status_info(required_hosts):
 # hosts but with a livestatus filter header and a list of columns
 # that need to be fetched in any case
 def get_status_info_filtered(filter_header, only_sites, limit, add_columns, fetch_parents = True):
-    columns = [ "name", "state", "hard_state", "plugin_output", "services_with_fullstate", "parents" ] + add_columns
+    columns = [ "name", "state", "hard_state", "plugin_output", "scheduled_downtime_depth",
+                "acknowledged", "services_with_fullstate", "parents" ] + add_columns
 
     html.live.set_only_sites(only_sites)
     html.live.set_prepend_site(True)
@@ -1493,6 +1545,7 @@ def render_tree_foldable(row, boxes, omit_root, expansion_level, only_problems, 
     return "aggrtree" + (boxes and "_box" or ""), htmlcode
 
 def aggr_render_node(tree, title, mousecode, show_host):
+
     # Check if we have an assumed state: comparing assumed state (tree[1]) with state (tree[0])
     if tree[1] and tree[0] != tree[1]:
         addclass = " " + _("assumed")
@@ -1500,6 +1553,14 @@ def aggr_render_node(tree, title, mousecode, show_host):
     else:
         addclass = ""
         effective_state = tree[0]
+
+    if tree[0]["in_downtime"]:
+        title = ('<img class="icon bi" src="images/icon_downtime.png" title="%s">' % \
+            _("This element is currently in a scheduled downtime")) + title
+
+    if tree[0]["acknowledged"]:
+        title = ('<img class="icon bi" src="images/icon_ack.png" title="%s">' % \
+            _("This problem has been acknowledged")) + title
 
     h = '<span class="content state state%d%s">%s</span>\n' \
          % (effective_state["state"], addclass, render_bi_state(effective_state["state"]))
@@ -1792,6 +1853,8 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
                              row["state"],
                              row["hard_state"],
                              row["plugin_output"],
+                             not not hostrow["acknowledged"],
+                             hostrow["scheduled_downtime_depth"] > 0,
                              row["services_with_fullstate"] ]
                 if status_info == None:
                     break
@@ -1801,6 +1864,8 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
                 hostrow["state"],
                 hostrow["hard_state"],
                 hostrow["plugin_output"],
+                not not hostrow["acknowledged"],
+                hostrow["scheduled_downtime_depth"] > 0,
                 hostrow["services_with_fullstate"] ] }
 
         for group, aggregation in aggrs:
@@ -1818,6 +1883,8 @@ def singlehost_table(columns, add_headers, only_sites, limit, filters, joinbynam
                             this_row['state'],
                             this_row['hard_state'],
                             this_row['plugin_output'],
+                            not not this_row["acknowledged"],
+                            this_row["scheduled_downtime_depth"] > 0,
                             this_row['services_with_fullstate'],
                         ]
 

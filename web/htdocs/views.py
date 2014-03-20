@@ -62,7 +62,7 @@ def load_plugins():
     global view_hooks                ; view_hooks                 = {}
     global inventory_displayhints    ; inventory_displayhints     = {}
 
-    config.declare_permission_section("action", _("Commands on host and services"))
+    config.declare_permission_section("action", _("Commands on host and services"), do_sort = True)
 
     load_web_plugins("views", globals())
 
@@ -72,18 +72,19 @@ def load_plugins():
     loaded_with_language = current_language
 
     # Declare permissions for builtin views
-    config.declare_permission_section("view", _("Builtin views"))
+    config.declare_permission_section("view", _("Multisite Views"), do_sort = True)
     for name, view in multisite_builtin_views.items():
         config.declare_permission("view.%s" % name,
                 view["title"],
                 view["description"],
                 config.builtin_role_ids)
 
+    # Make sure that custom views also have permissions
+    config.declare_dynamic_permissions(declare_custom_view_permissions)
+
     # Add painter names to painter objects (e.g. for JSON web service)
     for n, p in multisite_painters.items():
         p["name"] = n
-
-
 
 
 ##################################################################################
@@ -237,6 +238,7 @@ class Filter:
 
 # Load all views - users or builtins
 def load_views():
+    declare_custom_view_permissions()
     html.multisite_views = {}
 
     # first load builtins. Set username to ''
@@ -273,7 +275,6 @@ def load_views():
                     if view['datasource'] not in multisite_datasources:
                         continue
 
-
                     # Maybe resolve inherited attributes
                     builtin_view = html.multisite_views.get(('', name))
                     if builtin_view:
@@ -293,6 +294,26 @@ def load_views():
 
     html.available_views = available_views()
 
+# Load all users views just in order to declare permissions of custom views
+def declare_custom_view_permissions():
+    # Now scan users subdirs for files "views.mk"
+    subdirs = os.listdir(config.config_dir)
+    for user in subdirs:
+        try:
+            dirpath = config.config_dir + "/" + user
+            if os.path.isdir(dirpath):
+                path = dirpath + "/views.mk"
+                if not os.path.exists(path):
+                    continue
+                views = eval(file(path).read())
+                for name, view in views.items():
+                    if view["public"] and not config.permission_exists("view." + name):
+                        config.declare_permission("view." + name, view["title"], 
+                                    view["description"], ['admin','user','guest'])
+        except:
+            if config.debug:
+                raise
+
 # Get the list of views which are available to the user
 # (which could be retrieved with get_view)
 def available_views():
@@ -308,12 +329,12 @@ def available_views():
     # 2. views of special users allowed to globally override builtin views
     for (u, n), view in html.multisite_views.items():
         if n not in views and view["public"] and config.user_may(u, "general.force_views"):
-                # Honor original permissions for the current user
-                permname = "view.%s" % n
-                if config.permission_exists(permname) \
-                    and not config.may(permname):
-                    continue
-                views[n] = view
+            # Honor original permissions for the current user
+            permname = "view.%s" % n
+            if config.permission_exists(permname) \
+                and not config.may(permname):
+                continue
+            views[n] = view
 
     # 3. Builtin views, if allowed.
     for (u, n), view in html.multisite_views.items():
@@ -2764,7 +2785,6 @@ def ajax_inv_render_tree():
     node = inventory.get(tree, invpath)
     if not node:
         html.show_error(_("Invalid path %s in inventory tree") % invpath)
-        html.debug(tree)
     else:
         render_inv_subtree_container(hostname, invpath, node)
 

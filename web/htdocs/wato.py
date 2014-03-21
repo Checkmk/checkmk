@@ -13116,7 +13116,7 @@ def rule_matches_host_and_item(rulespec, tag_specs, host_list, item_list,
     regex_match = False
 
     for check_host in host_list:
-        if hostname == check_host:
+        if check_host == "@all" or hostname == check_host:
             hostname_match = True
             break
         else:

@@ -13146,7 +13146,6 @@ def rule_matches_host_and_item(rulespec, tag_specs, host_list, item_list,
     if not hostname_match:
         reasons.append(_("The host name does not match."))
 
-    tags_match = True
     for tag in tag_specs:
         if tag[0] != '/' and tag[0] != '!' and tag not in host[".tags"]:
             reasons.append(_("The host is missing the tag %s" % tag))

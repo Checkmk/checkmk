@@ -63,6 +63,6 @@ check_info["dell_chassis_powersupplies"] = {
     "service_description"   : "Power Supply %s",
     "has_perfdata"          : True,
     "snmp_info"             : dell_chassis_powersupplies_info,
-    "snmp_scan"             : dell_chassis_powersupplies_scan,
+    "snmp_scan_function"    : dell_chassis_powersupplies_scan,
 }
 

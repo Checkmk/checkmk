@@ -88,8 +88,8 @@ register_rule(group,
                  default_value = "PING",
            ))
         ] + check_icmp_params,
-        match = "all",
-    )
+    ),
+    match = "all",
 )
 
 register_rule(group,
@@ -157,7 +157,8 @@ register_rule(group,
             ]),
             forth = lambda x: type(x) == tuple and x[1] or x,
             title = _("Check FTP Service"),
-        )
+    ),
+    match = "all",
 )
 
 
@@ -223,7 +224,8 @@ register_rule(group,
                 ]),
         ]
     ),
-    match = 'all')
+    match = 'all'
+)
 
 register_rule(group,
     "active_checks:sql",
@@ -321,7 +323,8 @@ register_rule(group,
             )
         ]
     ),
-    match = 'all')
+    match = 'all'
+)
 
 register_rule(group,
     "active_checks:tcp",
@@ -462,7 +465,8 @@ register_rule(group,
                 ]),
         ]
     ),
-    match = 'all')
+    match = 'all'
+)
 
 
 register_rule(group,
@@ -758,7 +762,8 @@ register_rule(group,
             ),
         ]
     ),
-    match = 'all')
+    match = 'all'
+)
 
 register_rule(group,
     "active_checks:ldap",
@@ -1003,7 +1008,8 @@ register_rule(group,
                       )
                     ),
                 ])
-        ]),
+        ]
+    ),
     match = 'all'
 )
 
@@ -1068,7 +1074,8 @@ register_rule(group,
         ],
         required_keys = [ "share", "levels" ],
     ),
-    match = 'all')
+    match = 'all'
+)
 
 def PluginCommandLine(addhelp = ""):
     return TextAscii(

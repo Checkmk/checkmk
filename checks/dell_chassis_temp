@@ -79,6 +79,6 @@ check_info["dell_chassis_temp"] = {
     "has_perfdata"          : True,
     "group"                 : "hw_temperature",
     "snmp_info"             : dell_chassis_temp_info,
-    "snmp_scan"             : dell_chassis_temp_scan,
+    "snmp_scan_function"    : dell_chassis_temp_scan,
 }
 

@@ -63,6 +63,6 @@ check_info["dell_chassis_power"] = {
     "service_description"   : "Chassis Power",
     "has_perfdata"          : True,
     "snmp_info"             : dell_chassis_power_info,
-    "snmp_scan"             : dell_chassis_power_scan,
+    "snmp_scan_function"    : dell_chassis_power_scan,
 }
 

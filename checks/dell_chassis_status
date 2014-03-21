@@ -66,6 +66,6 @@ check_info["dell_chassis_status"] = {
     "service_description"   : "Chassis Health",
     "has_perfdata"          : False,
     "snmp_info"             : dell_chassis_status_info,
-    "snmp_scan"             : dell_chassis_status_scan,
+    "snmp_scan_function"    : dell_chassis_status_scan,
 }
 

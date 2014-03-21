@@ -106,7 +106,7 @@ check_info["dell_poweredge_amperage.power"] = {
     "service_description"   : "%s",
     "has_perfdata"          : True,
     "snmp_info"             : dell_poweredge_amperage_info,
-    "snmp_scan"             : dell_poweredge_amperage_scan,
+    "snmp_scan_function"    : dell_poweredge_amperage_scan,
 }
 
 #check_info["dell_poweredge_amperage.current"] = {
@@ -115,5 +115,5 @@ check_info["dell_poweredge_amperage.power"] = {
 #    "service_description"   : "%s",
 #    "has_perfdata"          : True,
 #    "snmp_info"             : dell_poweredge_amperage_info,
-#    "snmp_scan"             : dell_poweredge_amperage_scan,
+#    "snmp_scan_function"    : dell_poweredge_amperage_scan,
 #}

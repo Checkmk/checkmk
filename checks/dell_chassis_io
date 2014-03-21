@@ -56,6 +56,6 @@ check_info["dell_chassis_io"] = {
     "service_description"   : "Overall IO Module Status",
     "has_perfdata"          : False,
     "snmp_info"             : dell_chassis_io_info,
-    "snmp_scan"             : dell_chassis_io_scan,
+    "snmp_scan_function"    : dell_chassis_io_scan,
 }
 

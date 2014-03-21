@@ -59,6 +59,6 @@ check_info["dell_chassis_kvm"] = {
     "service_description"   : "Overall KVM Status",
     "has_perfdata"          : False,
     "snmp_info"             : dell_chassis_kvm_info,
-    "snmp_scan"             : dell_chassis_kvm_scan,
+    "snmp_scan_function"    : dell_chassis_kvm_scan,
 }
 

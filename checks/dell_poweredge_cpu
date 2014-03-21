@@ -78,6 +78,6 @@ check_info["dell_poweredge_cpu"] = {
     "service_description"   : "%s",
     "has_perfdata"          : False,
     "snmp_info"             : dell_poweredge_cpu_info,
-    "snmp_scan"             : dell_poweredge_cpu_scan,
+    "snmp_scan_function"    : dell_poweredge_cpu_scan,
 }
 

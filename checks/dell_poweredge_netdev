@@ -92,6 +92,6 @@ check_info["dell_poweredge_netdev"] = {
     "service_description"   : "%s",
     "has_perfdata"          : False,
     "snmp_info"             : dell_poweredge_netdev_info,
-    "snmp_scan"             : dell_poweredge_netdev_scan,
+    "snmp_scan_function"    : dell_poweredge_netdev_scan,
 }
 

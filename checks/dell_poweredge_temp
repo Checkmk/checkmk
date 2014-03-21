@@ -88,6 +88,6 @@ check_info["dell_poweredge_temp"] = {
     "service_description"   : "%s",
     "has_perfdata"          : True,
     "snmp_info"             : dell_poweredge_temp_info,
-    "snmp_scan"             : dell_poweredge_temp_scan,
+    "snmp_scan_function"    : dell_poweredge_temp_scan,
 }
 

@@ -69,6 +69,6 @@ check_info["dell_chassis_slots"] = {
     "service_description"   : "Slot %s",
     "has_perfdata"          : False,
     "snmp_info"             : dell_chassis_slots_info,
-    "snmp_scan"             : dell_chassis_slots_scan,
+    "snmp_scan_function"    : dell_chassis_slots_scan,
 }
 

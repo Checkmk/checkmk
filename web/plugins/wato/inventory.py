@@ -31,7 +31,7 @@ group = "inventory"
 
 register_rule(group,
     "active_checks:cmk_inv",
-    None, # Currently no parameters
+    FixedValue(None, totext = _("No configuration neccessary")),
     title = _("Do hardware/software Inventory"),
     help = _("All hosts configured via this ruleset will do a hardware and "
            "software inventory. For each configured host a new active check "
@@ -41,6 +41,7 @@ register_rule(group,
            "<b>Note:</b> in order to get any useful "
            "result for agent based hosts make sure that you have installed "
            "the agent plugin <tt>mk_inventory</tt> on these hosts."),
+    match = "all",
 )
 
 register_rule(group,

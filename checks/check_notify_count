@@ -24,14 +24,20 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def check_cmk_inv(params):
-    # Currently no parameters are neccessary
-    return ""
+def check_notify_count_arguments(params):
+    description, interval, settings = params
+    args = '-r %d' % interval
 
-active_check_info['cmk_inv'] = {
-    "command_line"        : 'cmk --inventory-as-check $HOSTNAME$',
-    "argument_function"   : check_cmk_inv,
-    "service_description" : lambda x: "Check_MK HW/SW Inventory",
-    "has_perfdata"        : False,
+    if "num_per_contact" in settings:
+        args += ' -w %s -c %s' % settings['num_per_contact']
+
+    return args
+
+
+active_check_info['notify_count'] = {
+    "command_line"        : '$USER1$/check_notify_count $ARG1$',
+    "argument_function"   : check_notify_count_arguments,
+    "service_description" : lambda params: "Notify %s" % params[0],
+    "has_perfdata"        : True,
 }
 

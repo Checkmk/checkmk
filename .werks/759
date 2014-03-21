@@ -1,0 +1,10 @@
+Title: check_notify_count: New active check to monitor the number of notifications sent to contacts
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1395396860
+Class: feature
+
+Check the number of sent notifications per contact using the plugin <tt>check_notify_count</tt> 
+provided with Check_MK. This plugin counts the total number of notifcations sent by the local 
+monitoring core and creates graphs for each individual contact.

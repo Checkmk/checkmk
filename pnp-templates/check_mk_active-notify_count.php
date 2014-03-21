@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,14 +23,22 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def check_cmk_inv(params):
-    # Currently no parameters are neccessary
-    return ""
+$title = str_replace("_", " ", $servicedesc);
 
-active_check_info['cmk_inv'] = {
-    "command_line"        : 'cmk --inventory-as-check $HOSTNAME$',
-    "argument_function"   : check_cmk_inv,
-    "service_description" : lambda x: "Check_MK HW/SW Inventory",
-    "has_perfdata"        : False,
+$area_colors = array( "beff5f", "5fffef", "5faaff", "cc5fff", "ff5fe2", "ff5f6c", "ff975f", "ffec5f");
+$line_colors = array( "5f7a2f", "2f8077", "2f5580", "662f80", "802f71", "802f36", "804b2f", "80762f");
+
+$parts = explode(' ', $NAGIOS_CHECK_COMMAND);
+$minutes = $parts[1];
+
+$opt[1] = "--vertical-label 'Notifications' -l0 --title \"$title (in last $minutes min)\" ";
+$def[1] = "";
+foreach ($DS AS $i => $ds_val) {
+    $contact_name = substr($NAME[$i], 0, strpos($NAME[$i], '_'));
+    $def[1] .=  "DEF:$contact_name=".$RRDFILE[$i].":$ds_val:MAX " ;
+
+    $def[1] .= "LINE1:$contact_name#".$line_colors[$i % 8].":\"".sprintf("%-20s", $contact_name)."\" ";
+    $def[1] .= "GPRINT:$contact_name:MAX:\"%3.lf\\n\" ";
 }
 
+?>

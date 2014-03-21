@@ -8,7 +8,7 @@
 !define NAME "Check_MK Agent ${CHECK_MK_VERSION}"
 
 XPStyle on
-Icon "installer.ico"
+Icon "check_mk_agent.ico"
 
 ; The name of the installer
 Name "${NAME}"

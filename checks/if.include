@@ -105,9 +105,9 @@ def if_pad_with_zeroes(info, ifIndex, has_nodeinfo):
 
 def inventory_if_common(info, has_nodeinfo = False):
     if has_nodeinfo:
-        length = 22
-    else:
         length = 21
+    else:
+        length = 20
     if len(info) == 0 or len(info[0]) != length:
         return []
 
@@ -140,7 +140,7 @@ def inventory_if_common(info, has_nodeinfo = False):
         ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, \
             inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \
             outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \
-            ifOutQLen, ifAlias, ifPhysAddress, ifRxSignal = line
+            ifOutQLen, ifAlias, ifPhysAddress = line
         ifDescr = cleanup_if_strings(ifDescr)
         ifAlias = cleanup_if_strings(ifAlias)
 
@@ -240,7 +240,7 @@ def check_if_common(item, params, info, has_nodeinfo = False):
             ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, \
                 inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \
                 outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \
-                ifOutQLen, ifAlias, ifPhysAddress, ifRxSignal = line
+                ifOutQLen, ifAlias, ifPhysAddress = line
             if if_inventory_uses_description and ifDescr:
                 group_item = ifDescr
             elif if_inventory_uses_alias and ifAlias:
@@ -355,17 +355,9 @@ def check_if_common_single(item, params, info, force_counter_wrap = False, has_n
         ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets,  \
             inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \
             outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \
-            ifOutQLen, ifAlias, ifPhysAddress, ifRxSignal = line
+            ifOutQLen, ifAlias, ifPhysAddress = line
         ifDescr = cleanup_if_strings(ifDescr)
         ifAlias = cleanup_if_strings(ifAlias)
-        try:
-            ifRxSignal_tmp = re.sub(' dBm:','', ifRxSignal)
-            ifRxSignal, RxSignalState = ifRxSignal_tmp.split(' ')
-            ifRxSignal = float(ifRxSignal)
-        except:
-            ifRxSignal = 0.0
-            RxSignalState = ""
-
 
         if item.lstrip("0") == ifIndex \
             or (item == "0" * len(item) and saveint(ifIndex) == 0) \
@@ -506,26 +498,22 @@ def check_if_common_single(item, params, info, force_counter_wrap = False, has_n
                 ( "outucast",  outucast, None, None, None, None),
                 ( "outnucast", saveint(outmcast) + saveint(outbcast), None, None, None, None),
                 ( "outdisc",   ifOutDiscards, None, None, None, None),
-                ( "rxsignal",  ifRxSignal, None, None, None, None),
                 ( "outerr",    ifOutErrors, err_warn, err_crit, None, None) ]:
 
-                if name != "rxsignal":
-                    try:
-                        if node == None:
-                            timedif, rate = get_counter("if.%s.%s" % (name, item), this_time, saveint(counter))
-                            if force_counter_wrap:
-                                raise MKCounterWrapped("if.%s.%s" % (name, item), "Forced counter wrap")
-                        else: # clustered check needs one counter per variable, item AND NODE
-                            timedif, rate = get_counter("if.%s.%s.%s" % (node, name, item), this_time, saveint(counter))
-                            if force_counter_wrap:
-                                raise MKCounterWrapped("if.%s.%s.%s" % (node, name, item), "Forced counter wrap")
-                        rates.append(rate)
-                        perfdata.append( (name, rate, warn, crit, mmin, mmax) )
-                    except MKCounterWrapped:
-                        wrapped = True
-                        # continue, other counters might wrap as well
-                else:
-                    perfdata.append( (name, counter, warn, crit, mmin, mmax) )
+                try:
+                    if node == None:
+                        timedif, rate = get_counter("if.%s.%s" % (name, item), this_time, saveint(counter))
+                        if force_counter_wrap:
+                            raise MKCounterWrapped("if.%s.%s" % (name, item), "Forced counter wrap")
+                    else: # clustered check needs one counter per variable, item AND NODE
+                        timedif, rate = get_counter("if.%s.%s.%s" % (node, name, item), this_time, saveint(counter))
+                        if force_counter_wrap:
+                            raise MKCounterWrapped("if.%s.%s.%s" % (node, name, item), "Forced counter wrap")
+                    rates.append(rate)
+                    perfdata.append( (name, rate, warn, crit, mmin, mmax) )
+                except MKCounterWrapped:
+                    wrapped = True
+                    # continue, other counters might wrap as well
 
             # if at least one counter wrapped, we do not handle the counters at all
             if wrapped:
@@ -571,12 +559,6 @@ def check_if_common_single(item, params, info, force_counter_wrap = False, has_n
                     elif bw_warn != None and traffic >= bw_warn:
                         state = max(state, 1)
                         infotext += ' (!) >= ' + format_value(bw_warn)
-
-                    if RxSignalState != "":
-                        infotext += ", RxSignalState: %s" % RxSignalState
-                        if RxSignalState != "Normal":
-                            state = max(state, 1)
-                            infotext += ' (!)'
 
                     pacrate = okrate + errorrate
                     if pacrate > 0.0: # any packets transmitted?

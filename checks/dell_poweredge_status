@@ -65,6 +65,6 @@ check_info["dell_poweredge_status"] = {
     "service_description"   : "PowerEdge Health",
     "has_perfdata"          : False,
     "snmp_info"             : dell_poweredge_status_info,
-    "snmp_scan"             : dell_poweredge_status_scan,
+    "snmp_scan_function"    : dell_poweredge_status_scan,
 }
 

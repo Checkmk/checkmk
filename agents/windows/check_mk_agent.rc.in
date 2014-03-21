@@ -1,0 +1,29 @@
+1 VERSIONINFO
+FILEVERSION %PVERSION%
+PRODUCTVERSION %PVERSION%
+FILEFLAGSMASK 0
+FILEOS 0x4
+FILETYPE 0x2
+{
+ BLOCK "StringFileInfo"
+ {
+  BLOCK "040904b0"
+  {
+   VALUE "CompanyName", "Mathias Kettner GmbH"
+   VALUE "FileDescription", "Check_MK Agent"
+   VALUE "FileVersion", "%VERSION%"
+   VALUE "InternalName", "check_mk_agent"
+   VALUE "LegalCopyright", "%YEAR% Mathias Kettner GmbH"
+   VALUE "OriginalFilename", "check_mk_agent.exe"
+   VALUE "ProductName", "Check_MK Agent"
+   VALUE "ProductVersion", "%VERSION%"
+   VALUE "Comments", "Check_MK Monitoring Agent"
+  }
+ }
+ BLOCK "VarFileInfo"
+ {
+  VALUE "Translation", 0x0409, 0x04B0
+ }
+}
+
+AppIcon ICON "check_mk_agent.ico"

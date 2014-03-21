@@ -15,7 +15,7 @@ description:
  of the server: drsServerServiceTag, drsServerSlotName
 
 item:
- The id of the slot
+ The name of the slot as given by drsServerSlotNumber
 
 inventory:
  All slots where the state is not "absent".

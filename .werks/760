@@ -1,0 +1,9 @@
+Title: The windows agent contains meta information about version, manufacturer etc.
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1395407804
+Class: feature
+
+The windows agent exe files do contain meta information like product name, manufacturer,
+version etc. now. This might be useful for some software distribution systems.

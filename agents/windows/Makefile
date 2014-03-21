@@ -22,9 +22,14 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+SHELL   = /bin/bash
+VERSION = 1.2.5i1
+WINDRES = i586-mingw32msvc-windres
+
 ifeq ($(shell uname),Linux)
-  CXX    = echo -e "\n\nWARNING: MinGW under Linux is broken! Use at your own risk!\n\n" ; i586-mingw32msvc-g++
-  CXX_64 = x86_64-w64-mingw32-g++
+  CXX        = echo -e "\n\nWARNING: MinGW under Linux is broken! Use at your own risk!\n\n" ; i586-mingw32msvc-g++
+  CXX_64     = x86_64-w64-mingw32-g++
+  WINDRES_64 = x86_64-w64-mingw32-windres
 else
   CXX = mingw32-g++
 endif
@@ -50,11 +55,23 @@ install_agent-64.exe: check_mk_agent-64.exe crash.exe nowin.exe
 	makensis installer-64.nsi
 	chmod +x install_agent-64.exe
 
-check_mk_agent.exe: check_mk_agent.cc Makefile
-	$(CXX) -s -O2 -Wall -Werror -o $@ $< -static -lwsock32
+check_mk_agent.exe: check_mk_agent.cc Makefile check_mk_agent.res
+	$(CXX) -s -O2 -Wall -Werror -o $@ $< -static -lwsock32 check_mk_agent.res
 
-check_mk_agent-64.exe: check_mk_agent.cc Makefile
-	$(CXX_64) -s -O2 -Wall -Werror -o $@ $< -static -lwsock32
+check_mk_agent-64.exe: check_mk_agent.cc Makefile check_mk_agent-64.res
+	$(CXX_64) -s -O2 -Wall -Werror -o $@ $< -static -lwsock32 check_mk_agent-64.res
+
+check_mk_agent.res: check_mk_agent.rc
+	$(WINDRES) $< -O coff -o $@
+
+check_mk_agent-64.res: check_mk_agent.rc
+	$(WINDRES_64) $< -O coff -o $@
+
+check_mk_agent.rc: check_mk_agent.rc.in
+	V=$(VERSION) ; V=$${V//./, } ; V=$${V//i/, 1} ; V=$${V//b/, 2} ; \
+	if [ $${#V} -eq 12 ]; then V+=", 0"; fi ; \
+	sed "s/%VERSION%/$(VERSION)/g;s/%YEAR%/$$(date +%Y)/g" check_mk_agent.rc.in > check_mk_agent.rc ; \
+	sed -i "s/%PVERSION%/$$V/g" check_mk_agent.rc
 
 crash.exe: crash.cc Makefile
 	$(CXX) -o $@ $<
@@ -63,7 +80,7 @@ nowin.exe: nowin.cc Makefile
 	$(CXX) -o $@ $<
 
 clean:
-	rm -f *.o *~ svn-*.tmp
+	rm -f *.o *~ svn-*.tmp *.rc *.res
 
 mrproper: clean
 	rm -f *.exe

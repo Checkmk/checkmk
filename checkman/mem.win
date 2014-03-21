@@ -21,6 +21,7 @@ examples:
  memory_win_default_levels = {
     "memory"   : (80.0, 90.0), # alert at 80%/90% usage
     "pagefile" : (2048, 1024), # alert, if less then 2/1 GB free
+    "swap"     : (2048, 1024), # alert, if less then 2/1 GB free
     "average"  : 60,           # apply levels on 60-min average
  }
 
@@ -43,6 +44,9 @@ parameters (dict): This check uses a dictionary as parameter. The following
  (e.g. {2048}) are interpreted as MB of {free} space.
 
  {"pagefile"} Warning and critical levels for page file usage. The same
+ rules apply as for {memory}.
+
+ {"swap"} Warning and critical levels for swap usage. The same
  rules apply as for {memory}.
 
  {"average"} This optional parameters sets a value in minutes for averaging.

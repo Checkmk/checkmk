@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,42 +23,22 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+$title = str_replace("_", " ", $servicedesc);
 
+$area_colors = array( "beff5f", "5fffef", "5faaff", "cc5fff", "ff5fe2", "ff5f6c", "ff975f", "ffec5f");
+$line_colors = array( "5f7a2f", "2f8077", "2f5580", "662f80", "802f71", "802f36", "804b2f", "80762f");
 
+$parts = explode(' ', $NAGIOS_CHECK_COMMAND);
+$minutes = $parts[1];
 
-def check_blade_bx_powermod(item, _no_param, info):
-    power_status = {
-        1 : "unknow",
-        2 : "ok",
-        3 : "not-present",
-        4 : "error",
-        5 : "critical",
-        6 : "off",
-        7 : "dummy"
-        }
+$opt[1] = "--vertical-label 'Notifications' -l0 --title \"$title (in last $minutes min)\" ";
+$def[1] = "";
+foreach ($DS AS $i => $ds_val) {
+    $contact_name = substr($NAME[$i], 0, strpos($NAME[$i], '_'));
+    $def[1] .=  "DEF:$contact_name=".$RRDFILE[$i].":$ds_val:MAX " ;
 
-    for index, status, product_name in info:
-        status = saveint(status)
-        if index != item: continue
-        state = 0
-        if status != 2:
-            state = 2
-
-        return (state, "%s Status is %s" % (product_name, power_status[status]) )
-
-    return (3, "Module %s not found in SNMP info" % index)
-
-check_info['blade_bx_powermod'] = {
-    "check_function" : check_blade_bx_powermod,
-    "inventory_function" : lambda info: [ (line[0], None) for line in info ],
-    "service_description" : "Power Module %s",
-    "has_perfdata" : False,
-    "snmp_info" : (".1.3.6.1.4.1.7244.1.1.1.3.2.4.1", [
-                                                      1, # index
-                                                      2, # status
-                                                      4, # product name
-   ]),
-   "snmp_scan_function" : lambda oid: "BX600" in oid(".1.3.6.1.2.1.1.1.0") \
-                            or oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.7244.1.1.1",
+    $def[1] .= "LINE1:$contact_name#".$line_colors[$i % 8].":\"".sprintf("%-20s", $contact_name)."\" ";
+    $def[1] .= "GPRINT:$contact_name:MAX:\"%3.lf\\n\" ";
 }
 
+?>

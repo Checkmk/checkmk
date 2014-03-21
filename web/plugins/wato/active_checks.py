@@ -1262,3 +1262,43 @@ register_rule(group,
     ),
     match = 'all'
 )
+
+register_rule(group,
+    "active_checks:notify_count",
+    Tuple(
+        title = _("Check Number of Notifications per Contact"),
+        help = _("Check the number of sent notifications per contact using the plugin <tt>check_notify_count</tt> "
+                 "provided with Check_MK. This plugin counts the total number of notifcations sent by the local "
+                 "monitoring core and creates graphs for each individual contact. You can configure thresholds "
+                 "on the number of notifications per contact in a defined time interval."
+                 "This plugin queries livestatus to extract the notification related log entries from the "
+                 "log file of your monitoring core."),
+        elements = [
+            TextUnicode(
+                title = _("Name"),
+                help = _("The name will be used in the service description"),
+                allow_empty = False
+            ),
+            Integer(
+                title = _("Interval to monitor"),
+                label = _("notifications within last"),
+                unit = _("minutes"),
+                minvalue = 1,
+                default_value = 60,
+            ),
+            Dictionary(
+                title = _("Optional parameters"),
+                elements = [
+                    ("num_per_contact", Tuple(
+                        title = _("Thresholds for Notifications per Contact"),
+                        elements = [
+                            Integer(title = _("Warning if above"), default_value = 20),
+                            Integer(title = _("Critical if above"), default_value = 50),
+                        ]
+                    )),
+                ]
+            ),
+        ]
+    ),
+    match = 'all'
+)

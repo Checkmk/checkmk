@@ -31,7 +31,7 @@ def inventory_enterasys_cpu_util(info):
 def check_enterasys_cpu_util(_no_item, params, info):
     util = 0
     for core_util in info:
-        util += saveint(core_util[0]) / 60
+        util += saveint(core_util[0]) / 10
     num_cpus = len(info)
     usage = util / num_cpus
     return check_cpu_util(usage, params)

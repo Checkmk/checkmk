@@ -53,7 +53,7 @@ def check_enterasys_powersupply(item, _no_params, info):
             if state == '4':
                 return 2, 'PSU installed and not operating'
             if redun != '1':
-                return 1, 'PSU %s' % redundancy_types[redyn]
+                return 1, 'PSU %s' % redundancy_types[redun]
             return 0, 'PSU working and redundant (%s)' % supply_types[typ]
 
 

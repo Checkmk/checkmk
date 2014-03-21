@@ -3899,10 +3899,10 @@ register_check_parameters(
                             unit = "%", default_value = 95,
                         ),
                         Integer(
-                            title = _("Critical Battery Temperature"),
-                            help = _("The critical temperature of the battery"),
+                            title = _("Critical System Temperature"),
+                            help = _("The critical temperature of the System"),
                             unit = _("C"),
-                            default_value = 40,
+                            default_value = 55,
                         ),
                         Integer(
                             title = _("Critical Battery Current"),

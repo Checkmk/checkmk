@@ -91,7 +91,7 @@ def check_apc(item, params, info):
         params = { "levels": params }
 
     # new format with up to 6 params in dict
-    crit_capacity, crit_batt_temp, crit_batt_curr, crit_voltage = params['levels']
+    crit_capacity, crit_sys_temp, crit_batt_curr, crit_voltage = params['levels']
     if params.get("post_calibration_levels"):
         delay_after_test  = params['post_calibration_levels']['additional_time_span']
         alt_crit_capacity = params['post_calibration_levels']['altcapacity']
@@ -146,14 +146,15 @@ def check_apc(item, params, info):
 
     single_states.append( (state, infotxt, ("capacity", AdvBatteryCapacity, "", crit_capacity, 0, 100)) )
 
-    # 4. Check battery temperature
-    infotxt = "bat. temp. %dC" % AdvBatteryTemperature
-    if AdvBatteryTemperature >= crit_batt_temp:
+    # 4. Check System temperature
+    # The Name AdvBatteryTemperature is a wrong naming in the vendor mib.
+    infotxt = "sys. temp. %dC" % AdvBatteryTemperature
+    if AdvBatteryTemperature >= crit_sys_temp:
         state = 2
         infotxt += "(!!)"
     else:
         state = 0
-    single_states.append( (state, infotxt, ("battemp", AdvBatteryTemperature, "", crit_batt_temp) ) )
+    single_states.append( (state, infotxt, ("systemp", AdvBatteryTemperature, "", crit_sys_temp) ) )
 
     # 5. Check battery current
     infotxt = "bat. curr. %dA" % AdvBatteryCurrent

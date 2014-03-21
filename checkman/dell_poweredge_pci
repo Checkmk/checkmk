@@ -14,7 +14,7 @@ description:
 
  No limits are set in the check.
 
- In addition to the state the following information of the memory modules
+ In addition to the state the following information
  is retrieved and displayed in the check output: width of the data bus,
  description of the device and manufacturer,
 

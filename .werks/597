@@ -1,0 +1,8 @@
+Title: dell_chassis_slots: new check to monitor the status of the blade slots of the Dell Poweredge Blade Servers
+Level: 2
+Component: checks
+Version: 1.2.5i1
+Date: 1395353802
+Class: feature
+
+

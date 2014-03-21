@@ -1,0 +1,16 @@
+Title: EMC VNX: special agent can alternatively authenticate via security files
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1395314250
+Class: feature
+
+If you leave user name and password empty, the special agent tries to
+authenticate against the EMC VNX device by Security Files.
+These need to be created manually before using. Therefor run as
+instance user (if using OMD) or Nagios user (if not using OMD)
+a command like
+<tt>naviseccli -AddUserSecurity -scope 0 -password PASSWORD -user USER</tt>
+This creates <tt>SecuredCLISecurityFile.xml</tt> and
+<tt>SecuredCLIXMLEncrypted.key</tt> in the home directory of the user
+and these files are used then.

@@ -1161,7 +1161,8 @@ def render_availability_group(group_title, range_title, group_id, availability, 
             elif show_summary:
                 summary.setdefault(sid, 0.0)
                 if avoptions["timeformat"].startswith("percentage"):
-                    summary[sid] += float(number) / considered_duration
+                    if considered_duration > 0:
+                        summary[sid] += float(number) / considered_duration
                 else:
                     summary[sid] += number
 
@@ -1237,6 +1238,9 @@ def render_availability_group(group_title, range_title, group_id, availability, 
     table.end()
 
 def check_av_levels(number, av_levels, considered_duration):
+    if considered_duration == 0:
+        return 0
+
     perc = 100 * float(number) / float(considered_duration)
     warn, crit = av_levels
     if perc < crit:

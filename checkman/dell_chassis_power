@@ -1,0 +1,19 @@
+title: Dell PowerEdge Chassis: Overall Power Consumption
+agents: snmp
+catalog: hw/server/dell
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the overall power consumption of the chassis of Dell PowerEdge Servers.
+
+ The state of the check is {OK}, when the device returns a state of {OK}.
+ The state of the cehck is {WARN}, when the device returns a state of {other},
+ {unknown} or {nonCritical}. The state of the check is {CRIT} otherwise.
+
+ No limits are set in the check, since the state is derived by the device itself.
+
+ In addition to the state, the check displays the following other parameters
+ of the server: drsPotentialPower, drsMaxPowerSpecification, drsWattsReading, drsAmpsReading
+
+perfdata:
+ One variable: the power consumption in Watts

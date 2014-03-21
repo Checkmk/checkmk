@@ -38,7 +38,7 @@ check_info["printer_pages"] = {
     'inventory_function':      inventory_printer_pages,
     'service_description':     'Pages',
     'has_perfdata':            True,
-    'snmp_info':               ('.1.3.6.1.2.1.43.10.2.1.4.1', [ 1 ]),
+    'snmp_info':               ('.1.3.6.1.2.1.43.10.2.1.4', [ "1" ]),
     'snmp_scan_function':      \
      lambda oid: oid(".1.3.6.1.2.1.43.10.2.1.4.1.1") != None,
 }

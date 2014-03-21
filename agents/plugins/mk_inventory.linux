@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Run and *send* only once every 4 hours
 INTERVAL=14400
@@ -6,7 +6,7 @@ INTERVAL=14400
 FLAGFILE=$MK_CONFDIR/mk_inventory.last.$REMOTE
 LAST_RUN=$(stat -c %Y $FLAGFILE)
 NOW=$(date +%s)
-UNTIL=$((NOW + INTERVAL))
+UNTIL=$((NOW + INTERVAL + 600))
 
 if [ $(( NOW - LAST_RUN )) -ge $INTERVAL ]
 then

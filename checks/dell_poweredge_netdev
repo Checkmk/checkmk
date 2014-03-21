@@ -55,7 +55,6 @@ def check_dell_poweredge_netdev(item, _no_params, info):
     di = dict()
     for status, connection_status, di['Product'], cur_mac, fqdd in info:
         if item == fqdd:
-            print connection_status
             di['MAC'] =  '-'.join( [ "%02X" % ord( c ) for c in cur_mac ] ).strip()
             state_table = {
                 "1" : ( "other,", 1 ),

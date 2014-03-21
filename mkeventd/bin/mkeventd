@@ -30,24 +30,25 @@ syslog_facilities = [ "kern", "user", "mail", "daemon", "auth", "syslog", "lpr",
                       None, None, None, None, None, None, None, "snmptrap" ]
 
 event_columns = [
-    ( "event_id",            1 ),
-    ( "event_count",         1 ),
-    ( "event_text",         "" ),
-    ( "event_first",       0.0 ),
-    ( "event_last",        0.0 ),
-    ( "event_comment",      "" ),
-    ( "event_sl",            0 ), # filter fehlt
-    ( "event_host",         "" ),
-    ( "event_contact",      "" ),
-    ( "event_application",  "" ),
-    ( "event_pid",           0 ),
-    ( "event_priority",      5 ),
-    ( "event_facility",      1 ),
-    ( "event_rule_id",      "" ),
-    ( "event_state",         0 ),
-    ( "event_phase",        "" ),
-    ( "event_owner",        "" ),
-    ( "event_match_groups", "" ),
+    ( "event_id",              1 ),
+    ( "event_count",           1 ),
+    ( "event_text",           "" ),
+    ( "event_first",         0.0 ),
+    ( "event_last",          0.0 ),
+    ( "event_comment",        "" ),
+    ( "event_sl",              0 ), # filter fehlt
+    ( "event_host",           "" ),
+    ( "event_contact",        "" ),
+    ( "event_application",    "" ),
+    ( "event_pid",             0 ),
+    ( "event_priority",        5 ),
+    ( "event_facility",        1 ),
+    ( "event_rule_id",        "" ),
+    ( "event_state",           0 ),
+    ( "event_phase",          "" ),
+    ( "event_owner",          "" ),
+    ( "event_match_groups",   "" ),
+    ( "event_contact_groups", "" ),
 ]
 
 history_columns = [
@@ -61,6 +62,9 @@ history_columns = [
 def unsplit(s):
     if type(s) != str:
         return s
+
+    elif s.startswith('\2'):
+        return None # \2 is the designator for None
 
     elif s.startswith('\1'):
         if len(s) == 1:
@@ -83,7 +87,11 @@ def convert_history_line(values):
     values[15] = int(values[15])
     values[16] = int(values[16])
     values[18] = int(values[18])
-    values[21] = unsplit(values[21])
+    values[21] = unsplit(values[21]) # match groups
+    if len(values) >= 23:
+        values[22] = unsplit(values[22]) # contact groups
+    else:
+        values.append(None)
 
 
 
@@ -412,6 +420,8 @@ def quote_tab(col):
         return str(col)
     elif type(col) in [ tuple, list ]:
         col = "\1" + "\1".join(col)
+    elif col == None:
+        col = "\2"
 
     return col.replace("\t", " ")
 
@@ -579,19 +589,12 @@ def parse_history_file(path, headers, filters, greptexts, limit):
 
         try:
             parts = line.rstrip('\n').split('\t')
-            if False:
-                values = [line_no] + parts
-            elif True:
-                convert_history_line(parts)
-                values = [line_no] + parts
-            else:
-                pairs = zip(history_columns[1:], parts)
-                values = [line_no] + map(lambda p: unsplit(type(p[0][1])(p[1])), pairs)
-                # Handle \1 separated lists/tuples (e.g. match_groups)
+            convert_history_line(parts)
+            values = [line_no] + parts
             if g_status_server.filter_row(headers, filters, values):
                 entries.append(values)
         except Exception, e:
-            log("Invalid line %d in history file %s: %s" % (line_no, path, e))
+            log("Invalid line '%s' in history file %s: %s" % (line, path, e))
 
     return entries
 
@@ -1330,20 +1333,21 @@ class EventServer:
             # Create artifical event from scratch. Make sure that all important
             # fields are defined.
             event = {
-                "rule_id"      : rule["id"],
-                "text"         : text,
-                "phase"        : "open",
-                "count"        : 1,
-                "time"         : now,
-                "first"        : now,
-                "last"         : now,
-                "comment"      : "",
-                "host"         : "",
-                "application"  : "",
-                "pid"          : 0,
-                "priority"     : 3,
-                "facility"     : 1, # user
-                "match_groups" : (),
+                "rule_id"        : rule["id"],
+                "text"           : text,
+                "phase"          : "open",
+                "count"          : 1,
+                "time"           : now,
+                "first"          : now,
+                "last"           : now,
+                "comment"        : "",
+                "host"           : "",
+                "application"    : "",
+                "pid"            : 0,
+                "priority"       : 3,
+                "facility"       : 1, # user
+                "match_groups"   : (),
+                "contact_groups" : rule.get("contact_groups"),
             }
             self.rewrite_event(rule, event, ())
             g_event_status.new_event(event)
@@ -1513,7 +1517,12 @@ class EventServer:
                     return
 
                 else:
+                    # Remember the rule id that this event originated from
                     event["rule_id"] = rule["id"]
+
+                    # Attach optional contact group information for visibility
+                    event["contact_groups"] = rule.get("contact_groups")
+
                     # Store groups from matching this event. In order to make
                     # persistence easier, we do not safe them as list but join
                     # them on ASCII-1.

@@ -69,6 +69,7 @@ check_mk_agent-64.res: check_mk_agent.rc
 
 check_mk_agent.rc: check_mk_agent.rc.in
 	V=$(VERSION) ; V=$${V//./, } ; V=$${V//i/, 1} ; V=$${V//b/, 2} ; \
+	if [ $${#V} -eq 12 ]; then V+=", 0"; fi ; \
 	sed "s/%VERSION%/$(VERSION)/g;s/%YEAR%/$$(date +%Y)/g" check_mk_agent.rc.in > check_mk_agent.rc ; \
 	sed -i "s/%PVERSION%/$$V/g" check_mk_agent.rc
 

@@ -65,22 +65,22 @@ def check_dell_poweredge_netdev(item, _no_params, info):
                 "6" : ( "NonRecoverable,", 2 ),
             }
             connection_table = {
-                "1" : ( "connected", 0 ),
-                "2" : ( "disconnected", 2 ),
-                "3" : ( "driverBad", 2 ),
-                "4" : ( "driverDisabled", 2 ),
-                "10" : ( "hardwareInitializing", 2 ),
-                "11" : ( "hardwareResetting", 2 ),
-                "12" : ( "hardwareClosing", 2 ),
-                "13" : ( "hardwareNotReady", 2 ),
+                "1" : ( "connected, ", 0 ),
+                "2" : ( "disconnected, ", 2 ),
+                "3" : ( "driverBad, ", 2 ),
+                "4" : ( "driverDisabled, ", 2 ),
+                "10" : ( "hardwareInitializing, ", 2 ),
+                "11" : ( "hardwareResetting, ", 2 ),
+                "12" : ( "hardwareClosing, ", 2 ),
+                "13" : ( "hardwareNotReady, ", 2 ),
             }
             dev_state_txt, dev_state = state_table.get(status, ( "unknown device status,", 2 ))
-            conn_state_txt, conn_state = connection_table.get(connection_status, ( "unknown connection status", 1 ))
+            conn_state_txt, conn_state = connection_table.get(connection_status, ( "", 0 ))
             state = max(dev_state, conn_state)
             infotext = "%s %s" % (dev_state_txt, conn_state_txt)
             for parameter, value in di.items():
-                infotext += ", %s: %s" % ( parameter, value )
-            infotext = re.sub("^, ","", infotext)
+                infotext += "%s: %s, " % ( parameter, value )
+            infotext = re.sub(", $","", infotext)
 
             return state, infotext
 

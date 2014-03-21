@@ -1,0 +1,99 @@
+#!/usr/bin/python
+# encoding: utf-8
+
+import sys, getopt, time, os, socket
+
+try:
+    import livestatus
+except ImportError:
+    sys.stderr.write('The python livestatus api module is missing. Please install from\n'
+                     'Check_MK livestatus sources to a python import path.\n')
+    sys.exit(1)
+
+
+def usage():
+    sys.stderr.write("""check_notify_count
+
+USAGE: check_notify_count
+       check_notify_count -h
+
+OPTIONS:
+  -h, --help                    Show this help message and exit
+  -l PATH                       Path to livestatus socket (Autodetected in OMD)
+  -r MINUTES                    Timerange in the past to observe, given in minutes.
+                                Default is set to 60 minutes.
+  -w NUM                        Minumum number of notifications per contact in
+                                timerange to raise a WARNING state.
+                                Disabled by default.
+  -c NUM                        Minumum number of notifications per contact in
+                                timerange to raise a CRITICAL state.
+                                Disabled by default.
+
+""")
+
+short_options = 'hr:w:c:l:'
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], short_options)
+except getopt.GetoptError, err:
+    sys.stderr.write("%s\n" % err)
+    sys.exit(1)
+
+socket_path  = ''
+timerange    = 60
+warn, crit   = None, None
+
+for o,a in opts:
+    if o == '-h':
+        usage()
+        sys.exit(0)
+    elif o == '-r':
+    	timerange = int(a)
+    elif o == '-w':
+        warn = int(a)
+    elif o == '-c':
+        crit = int(a)
+    elif o == '-l':
+        socket_path = a
+
+if len(args) == 1:
+    sys.stderr.write('ERROR: No service pattern given.\n')
+    sys.exit(1)
+
+if not socket_path and 'OMD_ROOT' in os.environ:
+    socket_path = os.environ['OMD_ROOT'] + '/tmp/run/live'
+
+if not os.path.exists(socket_path):
+    sys.stderr.write('ERROR: Livestatus socket (%s) does not exist\n' % socket_path)
+    sys.exit(1)
+
+query = (
+    'GET log\n'
+    'Columns: log_contact_name\n'
+    'Filter: log_time >= %d\n'
+    'Filter: class = 3\n'
+    'Stats: state != 999\n'
+) % (int(time.time() - (timerange * 60)))
+
+c = livestatus.SingleSiteConnection('unix:' + socket_path)
+
+total_num = 0
+perfdata  = []
+state     = 0
+details   = []
+for contact_name, num in c.query_table(query):
+    total_num += num
+
+    if crit != None and num > crit:
+        state = max(state, 2)
+        details.append('%s got %d (>%d) (!!)' % (contact_name, num, crit))
+    elif warn != None and num > warn:
+        state = max(state, 1)
+        details.append('%s got %d (>%d) (!)' % (contact_name, num, warn))
+
+    perfdata.append('%s_num=%d' % (contact_name, num))
+
+detail_txt = details and ' (%s)' % ', '.join(details) or ''
+sys.stdout.write('%d notifications within last %d minutes%s | %s\n' %
+                        (total_num, timerange, detail_txt, ' '.join(perfdata)))
+sys.exit(0)

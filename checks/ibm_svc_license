@@ -25,8 +25,20 @@
 # Boston, MA 02110-1301 USA.
 
 # Example output from agent:
-# Put here the example output from your TCP-Based agent. If the
-# check is SNMP-Based, then remove this section
+# <<<ibm_svc_license:sep(58)>>>
+# used_flash:0.00
+# used_remote:0.00
+# used_virtualization:192.94
+# license_flash:0
+# license_remote:0
+# license_virtualization:412
+# license_physical_disks:0
+# license_physical_flash:off
+# license_physical_remote:off
+# used_compression_capacity:0.00
+# license_compression_capacity:0
+# license_compression_enclosures:0
+
 
 def parse_ibm_svc_license(info):
     licenses = {}

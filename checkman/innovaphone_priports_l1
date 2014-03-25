@@ -1,0 +1,14 @@
+title: Innovaphone Pri L1 Gateways: Pri Ports
+agents: snmp
+catalog: hw/network/tel
+license: GPL
+distribution: check_mk
+description:
+ This check checks the L1 pri ports of a innovaphone pri gateway like IP6010, IP3010 or IP1060.
+ The Check monitors the current state, Signal loss since last check and the slip error count since the
+ last inventory. To reset the slip error count you can eighter do a reinventory or fix the problem and reboot
+ the device.
+
+inventory:
+ One service for each port in state UP will be created.
+

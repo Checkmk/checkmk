@@ -1,0 +1,27 @@
+Title: objects.precache missing on first start
+Component: core
+State: open
+Date: 2014-03-24 13:28:13
+Targetversion: 1.2.5i1
+Class: bug
+
+creating a new site with
+omd create blubb
+[...]
+Created new site blubb with version 2014.03.24.mmk.
+[...]
+su - blubb
+OMD[blubb]:~$ omd start
+Starting Livestatus Proxy-Daemon...OK
+Starting rrdcached...OK
+Starting npcd...OK
+Starting nagios.............ERROR
+Starting dedicated Apache for site blubb...OK
+Initializing Crontab...OK
+
+in nagios.log:
+Error: Cannot open config file '/omd/sites/blubb/var/nagios/objects.precache' for reading: No such file or directory
+
+after a
+cmk -R
+nagios starts... :-(

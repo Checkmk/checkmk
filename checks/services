@@ -251,7 +251,13 @@ def check_services_summary(item, params, info):
     num_blacklist = 0
     num_auto = 0
     for line in info:
-        startstop, auto = line[2].split("/")
+        # newer agents also send start type as part of state,
+        # e.g. running/auto
+        if '/' in line[2]:
+            startstop, auto = line[2].split('/')
+        else:
+            startstop = line[2]
+            auto      = "unknown"
         srv_name = line[1]
         if auto == "auto":
             num_auto += 1

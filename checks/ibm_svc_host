@@ -43,7 +43,7 @@ def check_ibm_svc_host(item, _no_params, info):
             degraded += 1
         elif line[4] == 'offline':
             offline += 1
-        elif line[4] == 'active':
+        elif line[4] == 'active' or line[4] == 'online':
             active += 1
         elif line[4] == 'inactive':
             inactive += 1

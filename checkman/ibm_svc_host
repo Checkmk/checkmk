@@ -6,8 +6,8 @@ distribution: check_mk
 description:
  Checks the status of hosts an IBM SVC / V7000 presents volumes to.
 
- If there are only hosts reporting status {active} or {inactive} the 
- check returns {OK}. If there are hosts reporting {degraded} status or
+ If there are only hosts reporting status {active}, {online} or {inactive}
+ the check returns {OK}. If there are hosts reporting {degraded} status or
  any unidentified status the check returns {WARN}. If some hosts report
  {offline} status the check returns {CRIT}.
 

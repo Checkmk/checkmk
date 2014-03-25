@@ -1,0 +1,95 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# <<<ibm_svc_mdiskgrp:sep(58)>>>
+# 0:Quorum_2:online:1:0:704.00MB:64:704.00MB:0.00MB:0.00MB:0.00MB:0:0:auto:inactive:no:0.00MB:0.00MB:0.00MB
+# 1:stp5_450G_03:online:18:6:29.43TB:256:21.68TB:8.78TB:7.73TB:7.75TB:29:80:auto:inactive:no:0.00MB:0.00MB:0.00MB
+# 4:stp5_450G_02:online:15:14:24.53TB:256:277.00GB:24.26TB:24.26TB:24.26TB:98:80:auto:inactive:no:0.00MB:0.00MB:0.00MB
+# 9:stp6_450G_03:online:18:6:29.43TB:256:21.68TB:8.78TB:7.73TB:7.75TB:29:80:auto:inactive:no:0.00MB:0.00MB:0.00MB
+# 10:stp6_450G_02:online:15:14:24.53TB:256:277.00GB:24.26TB:24.26TB:24.26TB:98:80:auto:inactive:no:0.00MB:0.00MB:0.00MB
+# 15:stp6_300G_01:online:15:23:16.34TB:256:472.50GB:15.88TB:15.88TB:15.88TB:97:80:auto:inactive:no:0.00MB:0.00MB:0.00MB
+# 16:stp5_300G_01:online:15:23:16.34TB:256:472.50GB:15.88TB:15.88TB:15.88TB:97:80:auto:inactive:no:0.00MB:0.00MB:0.00MB
+# 17:Quorum_1:online:1:0:512.00MB:256:512.00MB:0.00MB:0.00MB:0.00MB:0:80:auto:inactive:no:0.00MB:0.00MB:0.00MB
+# 18:Quorum_0:online:1:0:512.00MB:256:512.00MB:0.00MB:0.00MB:0.00MB:0:80:auto:inactive:no:0.00MB:0.00MB:0.00MB
+# 21:stp5_450G_01:online:12:31:19.62TB:256:320.00GB:19.31TB:19.31TB:19.31TB:98:0:auto:inactive:no:0.00MB:0.00MB:0.00MB
+# 22:stp6_450G_01:online:12:31:19.62TB:256:320.00GB:19.31TB:19.31TB:19.31TB:98:0:auto:inactive:no:0.00MB:0.00MB:0.00MB
+# 23:stp5_600G_01:online:3:2:6.54TB:256:512.00MB:6.54TB:6.54TB:6.54TB:99:80:auto:inactive:no:0.00MB:0.00MB:0.00MB
+# 24:stp6_600G_01:online:3:2:6.54TB:256:512.00MB:6.54TB:6.54TB:6.54TB:99:80:auto:inactive:no:0.00MB:0.00MB:0.00MB
+
+def ibm_svc_mdiskgrp_to_mb(size):
+    if size.endswith("MB"):
+       size = int(float(size.replace("MB", "")))
+    elif size.endswith("GB"):
+       size = int(float(size.replace("GB", ""))) * 1024
+    elif size.endswith("TB"):
+       size = int(float(size.replace("TB", ""))) * 1024 * 1024
+    elif size.endswith("PB"):
+       size = int(float(size.replace("PB", ""))) * 1024 * 1024 * 1024
+    elif size.endswith("EB"):
+       size = int(float(size.replace("EB", ""))) * 1024 * 1024 * 1024 * 1024
+    return size
+
+def inventory_ibm_svc_mdiskgrp(info):
+    inventory = []
+    for mgrp_id, mgrp_name, mgrp_status, mdisk_count, vdisk_count, capacity, \
+        extent_size, free_capacity, virtual_capacity, used_capacity, \
+        real_capacity, overallocation, mgrp_warning, easy_tier, easy_tier_status, \
+        compression_active, compression_virtual_capacity, compression_compressed_capacity, \
+        compression_uncompressed_capacity in info:
+            inventory.append( (mgrp_name, {}) )
+    return inventory
+
+def check_ibm_svc_mdiskgrp(item, params, info):
+    for mgrp_id, mgrp_name, mgrp_status, mdisk_count, vdisk_count, capacity, \
+        extent_size, free_capacity, virtual_capacity, used_capacity, \
+        real_capacity, overallocation, mgrp_warning, easy_tier, easy_tier_status, \
+        compression_active, compression_virtual_capacity, compression_compressed_capacity, \
+        compression_uncompressed_capacity in info:
+            if mgrp_name == item:
+                if mgrp_status != "online":
+                    return 2, "MDiskGrp %s reports status %s" % (item, mgrp_status)
+                fslist = []
+                size_mb   = ibm_svc_mdiskgrp_to_mb(capacity)
+                avail_mb  = ibm_svc_mdiskgrp_to_mb(free_capacity)
+                fslist.append((item, size_mb, avail_mb))
+                status, message, perfdata = df_check_filesystem_list(item, params, fslist)
+                message += ", MDiskGrp %s reports status %s" % (item, mgrp_status)
+                return status, message, perfdata
+
+    return 3, "MDiskGrp %s not found in agent output" % item
+
+
+check_info["ibm_svc_mdiskgrp"] = {
+    "check_function"          : check_ibm_svc_mdiskgrp,
+    "inventory_function"      : inventory_ibm_svc_mdiskgrp,
+    "service_description"     : "IBM SVC MDiskGrp %s",
+    "has_perfdata"            : True,
+    "group"                   : "filesystem",
+    "includes"                : [ "df.include" ],
+    "default_levels_variable" : "filesystem_default_levels",
+}
+

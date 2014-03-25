@@ -834,4 +834,35 @@ def perfometer_check_mk_arcserve_backup(row, check_command, perf_data):
     text = number_human_readable(bytes)
 
     return text, perfometer_logarithmic(bytes, 1000 * 1024 * 1024 * 1024, 2, "#BDC6DE")
+
 perfometers["check_mk-arcserve_backup"] = perfometer_check_mk_arcserve_backup
+
+def perfometer_check_mk_ibm_svc_host(row, check_command, perf_data):
+    h = '<table><tr>'
+    active   = int(perf_data[0][1])
+    inactive = int(perf_data[1][1])
+    degraded = int(perf_data[2][1])
+    offline  = int(perf_data[3][1])
+    other    = int(perf_data[4][1])
+    total    = active + inactive + degraded + offline + other
+    if active > 0:
+        perc_active   = 100 * active   / total
+        h += perfometer_td(perc_active,   "#008000")
+    if inactive > 0:
+        perc_inactive = 100 * inactive / total
+        h += perfometer_td(perc_inactive, "#0000FF")
+    if degraded > 0:
+        perc_degraded = 100 * degraded / total
+        h += perfometer_td(perc_degraded, "#F84")
+    if offline > 0:
+        perc_offline  = 100 * offline  / total
+        h += perfometer_td(perc_offline,  "#FF0000")
+    if other > 0:
+        perc_other    = 100 * other    / total
+        h += perfometer_td(perc_other,    "#000000")
+    if total == 0:
+        h += perfometer_td(100,    "white")
+    h += "</tr></table>"
+    return "%d active" % active, h
+
+perfometers["check_mk-ibm_svc_host"] = perfometer_check_mk_ibm_svc_host

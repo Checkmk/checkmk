@@ -1,0 +1,20 @@
+title: IBM SVC / V7000: Status of Hosts Connected
+agents: ibm_svc
+catalog: hw/storagehw/ibm
+license: GPL
+distribution: check_mk
+description:
+ Checks the status of hosts an IBM SVC / V7000 presents volumes to.
+
+ If there are only hosts reporting status {active} or {inactive} the 
+ check returns {OK}. If there are hosts reporting {degraded} status or
+ any unidentified status the check returns {WARN}. If some hosts report
+ {offline} status the check returns {CRIT}.
+
+perfdata:
+ Five values are reported: The number of hosts reporting
+ active, inactive, degraded, offline and unidentified status.
+
+inventory:
+ Creates exactly one check for every IBM SVC / V7000 named
+ IBM SVC Hosts.

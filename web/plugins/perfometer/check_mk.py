@@ -866,3 +866,16 @@ def perfometer_check_mk_ibm_svc_host(row, check_command, perf_data):
     return "%d active" % active, h
 
 perfometers["check_mk-ibm_svc_host"] = perfometer_check_mk_ibm_svc_host
+
+def perfometer_check_mk_ibm_svc_license(row, check_command, perf_data):
+    licensed = float(perf_data[0][1])
+    used     = float(perf_data[1][1])
+    if used == 0 and licensed == 0:
+        return "0 of 0 used", perfometer_linear(100, "white")
+    elif licensed == 0:
+        return "completely unlicensed", perfometer_linear(100, "silver")
+    else:
+        perc_used = 100 * used / licensed
+        return "%0.2f%% used" % perc_used, perfometer_linear(perc_used, "silver")
+
+perfometers["check_mk-ibm_svc_license"] = perfometer_check_mk_ibm_svc_license

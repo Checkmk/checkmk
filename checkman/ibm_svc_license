@@ -1,0 +1,16 @@
+title: IBM SVC / V7000: Licensing Status
+agents: ibm_svc
+catalog: hw/storagehw/ibm
+license: GPL
+distribution: check_mk
+description:
+ For every licensed feature on an IBM SVC / V7000 device, the number
+ of licenses is compared to the usage of licenses. The check returns
+ {CRIT} if the usage is higher than the licensing and {OK} otherwise.
+
+perfdata:
+ Two values are reported: The number of licenses you have and the number
+ of licenses used.
+
+inventory:
+ Creates one check for every licensable feature.

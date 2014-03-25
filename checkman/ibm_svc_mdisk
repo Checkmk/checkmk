@@ -13,5 +13,8 @@ description:
 
  The worst of both is returned as check result.
 
+item:
+ The name of the MDisk.
+
 inventory:
  Creates one check for every MDisk in th IBM SVC / V7000 device.

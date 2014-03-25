@@ -8,6 +8,10 @@ description:
  of licenses is compared to the usage of licenses. The check returns
  {CRIT} if the usage is higher than the licensing and {OK} otherwise.
 
+item:
+ The name of the licensable feature. This is everything after used_ or
+ license_ in the output of the lslicense command.
+
 perfdata:
  Two values are reported: The number of licenses you have and the number
  of licenses used.

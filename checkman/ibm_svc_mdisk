@@ -1,0 +1,17 @@
+title: IBM SVC / V7000: Status and Mode of MDisks
+agents: ibm_svc
+catalog: hw/storagehw/ibm
+license: GPL
+distribution: check_mk
+description:
+ Checks the status and mode of MDisks in an IBM SVC / V7000 device.
+
+ Status {online} is {OK}, status {offline} and {excluded} are {CRIT} and
+ every other status is {WARN}.
+
+ Mode {managed} is {OK} and every other mode is {WARN}.
+
+ The worst of both is returned as check result.
+
+inventory:
+ Creates one check for every MDisk in th IBM SVC / V7000 device.

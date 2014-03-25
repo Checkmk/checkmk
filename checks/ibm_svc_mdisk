@@ -1,0 +1,78 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# <<<ibm_svc_mdisk:sep(58)>>>
+# 0:stp5_300G_01-01:online:managed:16:stp5_300G_01:1.1TB:0000000000000000:BLUBB5:600a0b80006e1dbc0000f6f9513026a000000000000000000000000000000000:generic_hdd
+# 1:Quorum_BLUBB3:online:managed:0:Quorum_2:1.0GB:0000000000000000:BLUBB3:600a0b8000293eb800001f264c3e8a1f00000000000000000000000000000000:generic_hdd
+# 2:stp6_300G_01-01:online:managed:15:stp6_300G_01:1.1TB:0000000000000000:BLUBB6:600a0b80006e8e3c00000f1651302b8800000000000000000000000000000000:generic_hdd
+# 3:Quorum_blubb5:online:managed:18:Quorum_0:1.0GB:0000000000000001:BLUBB5:600a0b80006e1dcc0000f6905130225800000000000000000000000000000000:generic_hdd
+# 4:Quorum_blubb6:online:managed:17:Quorum_1:1.0GB:0000000000000001:BLUBB6:600a0b80006e1d5e00000dcb5130228700000000000000000000000000000000:generic_hdd
+# 5:stp5_300G_01-02:online:managed:16:stp5_300G_01:1.1TB:0000000000000002:BLUBB5:600a0b80006e1dbc0000f6fc51304bfc00000000000000000000000000000000:generic_hdd
+# 6:stp6_300G_01-02:online:managed:15:stp6_300G_01:1.1TB:0000000000000002:BLUBB6:600a0b80006e8e3c00000f1951304f9a00000000000000000000000000000000:generic_hdd
+# 7:stp5_300G_01-03:online:managed:16:stp5_300G_01:1.1TB:0000000000000003:BLUBB5:600a0b80006e1dcc0000f76951305bc000000000000000000000000000000000:generic_hdd
+# 8:stp6_300G_01-03:online:managed:15:stp6_300G_01:1.1TB:0000000000000003:BLUBB6:600a0b80006e1d5e00000e9a51305a3200000000000000000000000000000000:generic_hdd
+# 9:stp5_300G_01-04:online:managed:16:stp5_300G_01:1.1TB:0000000000000004:BLUBB5:600a0b80006e1dbc0000f7d051341cc000000000000000000000000000000000:generic_hdd
+
+
+def inventory_ibm_svc_mdisk(info):
+    inventory = []
+    for mdisk_id, mdisk_name, mdisk_status, mdisk_mode, mdisk_grp_id, mdisk_grp_name, capacity, ctrl_lun_number, controller_name, mdisk_uid, tier in info:
+        inventory.append( (mdisk_name, None) )
+    return inventory
+
+def check_ibm_svc_mdisk(item, _no_params, info):
+    status = 3
+    for mdisk_id, mdisk_name, mdisk_status, mdisk_mode, mdisk_grp_id, mdisk_grp_name, capacity, ctrl_lun_number, controller_name, mdisk_uid, tier in info:
+        if mdisk_name == item:
+
+            # Check mdisk_status
+            message = "%s reports status %s" % (item, mdisk_status)
+            if mdisk_status == "online":
+                status = 0
+            elif mdisk_status == "offline" or mdisk_status == "excluded":
+                status = 2
+                message += "(!!)"
+            else:
+                status = 1
+                message += "(!)"
+
+            # check mdisk_mode
+            message += ", Mode %s" % mdisk_mode
+            if mdisk_mode != "managed":
+                status = max(status, 1)
+                message += "(!)"
+
+            return status, message
+    return 3, "MDisk %s not found in agent output" % item
+
+check_info["ibm_svc_mdisk"] = {
+    "check_function"        : check_ibm_svc_mdisk,
+    "inventory_function"    : inventory_ibm_svc_mdisk,
+    "service_description"   : "IBM SVC MDisk %s",
+    "has_perfdata"          : False,
+}
+

@@ -1,0 +1,13 @@
+title: Kentix MultiSensor-RACK: Humidity Sensor
+agents: snmp
+catalog: hw/server/kentix
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the humidity measured by the Kentix MultiSensor-RACK device.
+
+ No limits are set in the check, since limits are configured in the device
+ itself. These limits are taken as the lower and upper warning levels of the check.
+
+perfdata:
+ One variable: the humidity

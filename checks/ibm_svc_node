@@ -1,0 +1,79 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# Put here the example output from your TCP-Based agent. If the
+# check is SNMP-Based, then remove this section
+
+def inventory_ibm_svc_node(info):
+    io_groups = {}
+    inventory = []
+    for node_id, node_name, ups_serial, wwnn, node_status, io_group_id, \
+        io_group_name, config_node, ups_unique_id, hardware, iscsi_name, \
+        iscsi_alias, panel_name, enclosure_id, canister_id, \
+        enclosure_serial_number, additional in info:
+            io_groups[io_group_name] = 1
+    for io_group_name in io_groups.keys():
+        inventory.append( (io_group_name, None) )
+    return inventory
+
+def check_ibm_svc_node(item, _no_params, info):
+    message = ""
+    status = 0
+    online_nodes = 0
+    nodes_of_iogroup = 0
+
+    for node_id, node_name, ups_serial, wwnn, node_status, io_group_id, \
+        io_group_name, config_node, ups_unique_id, hardware, iscsi_name, \
+        iscsi_alias, panel_name, enclosure_id, canister_id, \
+        enclosure_serial_number, additional in info:
+            if io_group_name == item:
+                if message != "":
+                    message += ", "
+                message += "Node %s is %s" % (node_name, node_status)
+                nodes_of_iogroup += 1
+                if node_status == "online":
+                    online_nodes += 1
+
+    if nodes_of_iogroup == 0:
+        return 3, "IO Group %s not found in agent output" % item
+
+    if nodes_of_iogroup == online_nodes:
+        status = 0
+    elif online_nodes == 0:
+        status = 2
+    else:
+        status = 1
+
+    return status, message
+
+check_info["ibm_svc_node"] = {
+    "check_function"        : check_ibm_svc_node,
+    "inventory_function"    : inventory_ibm_svc_node,
+    "service_description"   : "IBM SVC IO Group %s",
+    "has_perfdata"          : False,
+}
+

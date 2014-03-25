@@ -132,6 +132,7 @@
     * 0768 ibm_svc_license: New check for Licensing Status on IBM SVC / V7000 devices
     * 0769 ibm_svc_mdisk: new check for status and mode of MDisks in an IBM SVC / V7000 device
     * 0770 ibm_svc_mdiskgrp: New check for status and usage of MDisksGrps in IBM SVC / V7000 devices
+    * 0771 ibm_svc_node: new check for status of IO Groups of IBM SVC / V7000 devices
     * 0103 FIX: services: Fixed bug with service inventory defined in main.mk...
     * 0299 FIX: borcade_mlx_fan: Prettified output, handling "other" state now
     * 0300 FIX: cisco_fru_power: Trying not to inventorize not plugged in FRUs...

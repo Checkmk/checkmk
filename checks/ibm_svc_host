@@ -32,7 +32,6 @@ def inventory_ibm_svc_host(info):
     return [(None, None)]
 
 def check_ibm_svc_host(item, _no_params, info):
-    #import pprint; pprint.pprint(info)
     degraded=0
     offline=0
     active=0

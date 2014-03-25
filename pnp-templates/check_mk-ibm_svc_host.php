@@ -47,31 +47,3 @@ $def[1] = ""
           . "GPRINT:other:AVERAGE:\"% 6.0lf Hosts avg\" "
           . "GPRINT:other:LAST:\"% 6.0lf Hosts last\\n\" "
           . "";
-
-
-#$opt[2] = "--vertical-label 'Events per second' -X0 -l0  --title \"OMD site $site / Livestatus performance\" ";
-#$ds_name[2] = "Livestatus performance";
-#
-#$def[2] = ""
-#          . "DEF:connects=$RRDFILE[4]:$DS[4]:MAX "
-#          . "DEF:requests=$RRDFILE[5]:$DS[5]:MAX "
-#          . "AREA:requests#abc:\"Livestatus Requests     \" "
-#          . "GPRINT:requests:AVERAGE:\"% 6.1lf/s avg\" "
-#          . "GPRINT:requests:LAST:\"% 6.1lf/s last\\n\" "
-#          . "AREA:connects#678:\"Livestatus Connects     \" "
-#          . "GPRINT:connects:AVERAGE:\"% 6.1lf/s avg\" "
-#          . "GPRINT:connects:LAST:\"% 6.1lf/s last\\n\" "
-#          . "";
-#
-#$opt[3] = "--vertical-label 'Requests per Connect' -X0 -l0  --title \"OMD site $site / Livestatus connection usage\" ";
-#$ds_name[3] = "Livestatus connection usage";
-#
-#$def[3] = ""
-#          . "DEF:connects=$RRDFILE[4]:$DS[4]:MAX "
-#          . "DEF:requests=$RRDFILE[5]:$DS[5]:MAX "
-#          . "CDEF:rpcs=requests,connects,/ "
-#          . "AREA:rpcs#8a3:\"Requests per Connection\" "
-#          . "GPRINT:rpcs:AVERAGE:\"% 6.1lf/s avg\" "
-#          . "GPRINT:rpcs:LAST:\"% 6.1lf/s last\\n\" "
-#          . "";
-#

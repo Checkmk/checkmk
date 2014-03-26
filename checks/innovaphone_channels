@@ -24,19 +24,24 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-innovaphone_channels_default_levels = ( 75, 80 )
+innovaphone_channels_default_levels = ( 75.0, 80.0 )
 
 def inventory_innovaphone_channels(info):
-    return [ (x[0], 'innovaphone_channels_default_levels') for x in info ]
+    return [ (x[0], 'innovaphone_channels_default_levels') for x in info \
+             if x[1] == "Up" and x[2] == "Up" ]
 
 def check_innovaphone_channels(item, params, info):
     for line in info:
         if line[0] == item:
-            idle, total = map(float, line[1:])
+            link, physical = line[1:3]
+            if link != 'Up' or physical != 'Up':
+                return 2, "Link: %s, Physical: %s" % ( link, physical )
+            idle, total = map(float, line[3:])
             perc_used = (idle/total) * 100
             perc_free = 100 - perc_used
-            message = "(Used: %s, Free: %s, Total: %s)" % ( total - idle, idle, total )
+            message = "(Used: %.0f, Free: %.0f, Total: %.0f)" % ( total - idle, idle, total )
             return check_innovaphone(params, [[None,perc_free]], '%', message ) 
+    return 3, "No Channel information found"
 
 check_info["innovaphone_channels"] = {
     "check_function"        : check_innovaphone_channels,

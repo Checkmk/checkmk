@@ -473,6 +473,7 @@ perfometers["check_mk-hitachi_hnas_fpga"] = perfometer_cpu_utilization
 perfometers["check_mk-hr_cpu"] = perfometer_cpu_utilization
 perfometers["check_mk-innovaphone_cpu"] = perfometer_cpu_utilization
 perfometers["check_mk-enterasys_cpu_util"] = perfometer_cpu_utilization
+perfometers["check_mk-juniper_trpz_cpu_util"] = perfometer_cpu_utilization
 
 def perfometer_ps_perf(row, check_command, perf_data):
     perf_dict = dict([(p[0], float(p[1])) for p in perf_data])
@@ -884,3 +885,12 @@ def perfometer_check_mk_ibm_svc_license(row, check_command, perf_data):
         return "%0.2f%% used" % perc_used, perfometer_linear(perc_used, "silver")
 
 perfometers["check_mk-ibm_svc_license"] = perfometer_check_mk_ibm_svc_license
+
+
+def perfometer_licenses_percent(row, check_command, perf_data):
+    licenses = float(perf_data[0][1])
+    max_avail = float(perf_data[0][5])
+    used_perc = ( licenses / 100 ) * max_avail
+    return "%.0f%% used" % used_perc, perfometer_linear( used_perc, 'orange' )
+
+perfometers['check_mk-innovaphone_licenses'] = perfometer_licenses_percent

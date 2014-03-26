@@ -1,0 +1,14 @@
+title: Juniper/Trapeze: Check flash states
+agents: snmp
+catalog: hw/network/juniper 
+license: GPL
+distribution: check_mk 
+description:
+ Checks the usage of flash.
+ The check can be configured with wato.
+ Levels for warning and critical can be set either in percent
+ or in absolute levels.
+
+inventory:
+ Returns 1 service with used and total flash memory.
+

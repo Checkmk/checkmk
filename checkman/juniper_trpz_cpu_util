@@ -1,23 +1,24 @@
-title: CPU utilization of the last 1/5/15 minutes
+title: Juniper/Trapeze CPU utilization of the last few seconds and 1/5 minutes
 agents: snmp
 catalog: hw/network/juniper
 license: GPL
 distribution: check_mk
 description:
- Check CPU utilization of the last 1/5/15 minutes in percent on Juniper devices.
+ Check CPU utilization of the last few seconds and 1/5 minutes in percent on Trapeze (Juniper) devices.
+ The current utilization is informational only and does not generate alarms.
 
 perfdata:
+ utilc: The CPU utilization of the last few seconds in percent.
  util1: The CPU utilization of the last 1 minutes in percent.
  util5: The CPU utilization of the last 5 minutes in percent.
- util15: The CPU utilization of the last 15 minutes in percent.
 
 inventory:
- One service for each Routing Engine will be creted
+ One service for the first CPU will be created
 
 [parameters]
 warning (int): The percentage of CPU utilization that triggers a warning level.
 critical (int): The percentage of CPU utilization that triggers a critical level.
 
 [configuration]
-juniper_cpu_default_levels (int, int): Default levels for warning and critical used
+juniper_trpz_cpu_util_default_levels (int, int): Default levels for warning and critical used
   by inventorized checks. This is preset to {(80.0, 90.0)}

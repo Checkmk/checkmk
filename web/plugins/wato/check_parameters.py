@@ -2079,6 +2079,31 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_os,
+    "general_flash_usage",
+    _("Flash Space Usage"),
+    Alternative(
+        elements = [
+            Tuple(
+                title = _("Specify levels in percentage of total Flash"),
+                elements = [
+                  Percentage(title = _("Warning at a usage of"), label = _("% of Flash"), maxvalue = None),
+                  Percentage(title = _("Critical at a usage of"), label = _("% of Flash"), maxvalue = None)
+                ]
+            ),
+            Tuple(
+                title = _("Specify levels in absolute usage values"),
+                elements = [
+                  Integer(title = _("Warning if above"), unit = _("MB")),
+                  Integer(title = _("Critical if above"), unit = _("MB"))
+                ]
+            ),
+        ]
+    ),
+    None, 
+    None
+)
+register_check_parameters(
+    subgroup_os,
     "cisco_supervisor_mem",
     _("Cisco Nexus Supervisor Memory Usage"),
     Tuple(

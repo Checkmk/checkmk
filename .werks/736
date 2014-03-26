@@ -1,0 +1,15 @@
+Title: WATO backup and restore: improved error handling
+Level: 1
+Component: wato
+Version: 1.2.5i1
+Date: 1395833664
+Class: fix
+
+Additional validations are now undertaken when creating or restoring a backup file.<br>
+
+New procedures and features
+<ul>
+<li>Stopping and re-starting performance data recording while the restore is in progress</li>
+<li>Correct evaluation of exit codes and error messages from the backup/restore commands</li>
+<li>New backup/restore hooks: <tt>pre_restore</tt>, <tt>post_restore</tt>, <tt>backup_command</tt>, <tt>restore_command</tt></li>
+</ul>

@@ -1,0 +1,12 @@
+Title: cmk -m does not start if manpages without catalog: header
+Component: docu
+State: open
+Date: 2014-03-26 11:19:32
+Targetversion: 1.2.5i1
+Class: bug
+
+if you installed some mkp packages from the exchange or so and their
+check manpages do not contain a catalog: header then cmk -m
+does not start at all (failing)
+
+missing catalog: header must be caught

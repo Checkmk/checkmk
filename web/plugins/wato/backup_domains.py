@@ -2,6 +2,26 @@
 
 backup_domains = {}
 
+# Temporary variable which stores settings during the backup process
+backup_perfdata_enabled = True
+def performancedata_restore(pre_restore = True):
+    global backup_perfdata_enabled
+    site = default_site()
+    html.live.set_only_sites([site])
+
+    if pre_restore:
+        data = html.live.query("GET status\nColumns: process_performance_data")
+        backup_perfdata_enabled = data[0][0] == 1
+        # Return if perfdata is not activated - nothing to do..
+        if not backup_perfdata_enabled:
+            return []
+    elif not backup_perfdata_enabled:
+        return []
+    command = pre_restore and "DISABLE_PERFORMANCE_DATA" or "ENABLE_PERFORMANCE_DATA"
+    html.live.command("[%d] %s" % (int(time.time()), command), site)
+    html.live.set_only_sites()
+    return []
+
 if not defaults.omd_root:
     backup_domains.update( {
     "noomd-config": {
@@ -54,6 +74,9 @@ else:
           "default"     : True,
         },
         "authorization": {
+          # This domain is obsolete
+          # It no longer shows up in the backup screen
+          "deprecated"  : True,
           "group"       : _("Configuration"),
           "title"       : _("Local Authentication Data"),
           "prefix"      : os.path.dirname(defaults.htpasswd_file),
@@ -63,13 +86,27 @@ else:
                             ("file", "auth.serials")
                           ],
           "cleanup"     : False,
+          "default"     : True,
+        },
+        "authorization_v1": {
+          "group"       : _("Configuration"),
+          "title"       : _("Local Authentication Data"),
+          "prefix"      : defaults.omd_root,
+          "paths"       : [
+                            ("file", "etc/htpasswd"),
+                            ("file", "etc/auth.secret"),
+                            ("file", "etc/auth.serials"),
+                            ("file", "var/check_mk/web/*/serial.mk")
+                          ],
+          "cleanup"     : False,
           "default"     : True
         },
         "personalsettings": {
           "title"       : _("Personal User Settings and Custom Views"),
           "prefix"      :  defaults.var_dir,
           "paths"       : [ ("dir", "web") ],
-          "default"     : True
+          "exclude"     : [ "*/serial.mk" ],
+          "cleanup"     : False,
         },
         "autochecks": {
           "group"       : _("Configuration"),
@@ -104,13 +141,15 @@ else:
                           ],
         },
         "performancedata": {
-          "group"       : _("Historic Data"),
-          "title"       : _("Performance Data"),
-          "prefix"      : defaults.omd_root,
-          "paths"       : [
-                            ("dir",  "var/pnp4nagios/perfdata"),
-                            ("dir",  "var/rrdcached"),
-                          ],
+          "group"        : _("Historic Data"),
+          "title"        : _("Performance Data"),
+          "prefix"       : defaults.omd_root,
+          "paths"        : [
+                             ("dir",  "var/pnp4nagios/perfdata"),
+                             ("dir",  "var/rrdcached"),
+                           ],
+          "pre_restore"  : lambda: performancedata_restore(pre_restore = True),
+          "post_restore" : lambda: performancedata_restore(pre_restore = False)
         },
         "applicationlogs": {
           "group"       : _("Historic Data"),

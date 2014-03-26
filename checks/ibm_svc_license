@@ -1,0 +1,85 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# <<<ibm_svc_license:sep(58)>>>
+# used_flash:0.00
+# used_remote:0.00
+# used_virtualization:192.94
+# license_flash:0
+# license_remote:0
+# license_virtualization:412
+# license_physical_disks:0
+# license_physical_flash:off
+# license_physical_remote:off
+# used_compression_capacity:0.00
+# license_compression_capacity:0
+# license_compression_enclosures:0
+
+
+def parse_ibm_svc_license(info):
+    licenses = {}
+    for line in info:
+        if line[0].startswith("license_"):
+            license = line[0].replace("license_", "")
+            if not license in licenses.keys():
+                licenses[license] = [0.0, 0.0]
+            if line[1] == "off":
+                licenses[license][0] = 0.0
+            else:
+                licenses[license][0] = float(line[1])
+        if line[0].startswith("used_"):
+            license = line[0].replace("used_", "")
+            if not license in licenses.keys():
+                licenses[license] = [0.0, 0.0]
+            licenses[license][1] = float(line[1])
+    return licenses
+
+def inventory_ibm_svc_license(info):
+    inventory = []
+    licenses = parse_ibm_svc_license(info)
+    for license in licenses.keys():
+        inventory.append( (license, None) )
+    return inventory
+
+def check_ibm_svc_license(item, _no_params, info):
+    licenses = parse_ibm_svc_license(info)
+    licensed, used = licenses[item]
+    perfdata = [ ("licensed", licensed), ("used", used) ]
+
+    if used > licensed:
+        status = 2
+    else:
+        status = 0
+    return status, "%s %s licensed, %s used" % (item, licensed, used), perfdata
+
+check_info["ibm_svc_license"] = {
+    "check_function"        : check_ibm_svc_license,
+    "inventory_function"    : inventory_ibm_svc_license,
+    "service_description"   : "IBM SVC License %s",
+    "has_perfdata"          : True,
+}
+

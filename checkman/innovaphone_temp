@@ -1,0 +1,20 @@
+title: Innovaphone Gateway: Current Temperature
+agents: special
+catalog: hw/network/tel
+license: GPL
+distribution: check_mk
+description:
+ This check shows the current device temperature in degree celsisus. 
+
+
+inventory:
+ One check will be created
+
+perfdata:
+ The actual temperature in celsisus, together with it's warn and crit levels
+
+[parameters]
+warning (int): The temperature in celsisus that triggers
+ a WARNING state
+critical (int): The temperature in celsius that triggers
+ a CRITICAL state

@@ -75,6 +75,7 @@ perfometers["check_mk-hitachi_hnas_span"] = perfometer_check_mk_df
 perfometers["check_mk-hitachi_hnas_volume"] = perfometer_check_mk_df
 perfometers["check_mk-emcvnx_raidgroups.capacity"] = perfometer_check_mk_df
 perfometers["check_mk-emcvnx_raidgroups.capacity_contiguous"] = perfometer_check_mk_df
+perfometers["check_mk-ibm_svc_mdiskgrp"] = perfometer_check_mk_df
 
 def perfometer_esx_vsphere_datastores(row, check_command, perf_data):
     used_mb        = perf_data[0][1]
@@ -283,6 +284,7 @@ perfometers["check_mk-apc_inrow_temperature"] = perfometer_temperature
 perfometers["check_mk-hitachi_hnas_temp"] = perfometer_temperature
 perfometers["check_mk-dell_poweredge_temp"] = perfometer_temperature
 perfometers["check_mk-dell_chassis_temp"] = perfometer_temperature
+perfometers["check_mk-innovaphone_temp"] = perfometer_temperature
 
 def perfometer_temperature_multi(row, check_command, perf_data):
     display_value = -1
@@ -469,6 +471,8 @@ perfometers["check_mk-brocade_mlx.module_cpu"] = perfometer_cpu_utilization
 perfometers["check_mk-hitachi_hnas_cpu"] = perfometer_cpu_utilization
 perfometers["check_mk-hitachi_hnas_fpga"] = perfometer_cpu_utilization
 perfometers["check_mk-hr_cpu"] = perfometer_cpu_utilization
+perfometers["check_mk-innovaphone_cpu"] = perfometer_cpu_utilization
+perfometers["check_mk-enterasys_cpu_util"] = perfometer_cpu_utilization
 
 def perfometer_ps_perf(row, check_command, perf_data):
     perf_dict = dict([(p[0], float(p[1])) for p in perf_data])
@@ -785,6 +789,7 @@ def perfometer_simple_mem_usage(row, command, perf):
 perfometers['check_mk-db2_mem'] = perfometer_simple_mem_usage
 perfometers['check_mk-esx_vsphere_hostsystem.mem_usage'] = perfometer_simple_mem_usage
 perfometers['check_mk-brocade_mlx.module_mem'] = perfometer_simple_mem_usage
+perfometers['check_mk-innovaphone_mem'] = perfometer_simple_mem_usage
 
 def perfometer_vmguest_mem_usage(row, command, perf):
     used = float(perf[0][1])
@@ -866,3 +871,16 @@ def perfometer_check_mk_ibm_svc_host(row, check_command, perf_data):
     return "%d active" % active, h
 
 perfometers["check_mk-ibm_svc_host"] = perfometer_check_mk_ibm_svc_host
+
+def perfometer_check_mk_ibm_svc_license(row, check_command, perf_data):
+    licensed = float(perf_data[0][1])
+    used     = float(perf_data[1][1])
+    if used == 0 and licensed == 0:
+        return "0 of 0 used", perfometer_linear(100, "white")
+    elif licensed == 0:
+        return "completely unlicensed", perfometer_linear(100, "silver")
+    else:
+        perc_used = 100 * used / licensed
+        return "%0.2f%% used" % perc_used, perfometer_linear(perc_used, "silver")
+
+perfometers["check_mk-ibm_svc_license"] = perfometer_check_mk_ibm_svc_license

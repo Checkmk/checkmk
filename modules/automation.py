@@ -886,7 +886,7 @@ def automation_create_snapshot(args):
 
         snapshot_name = data["snapshot_name"]
         snapshot_dir  = var_dir + "/wato/snapshots"
-        work_dir       = snapshot_dir + "/workdir"
+        work_dir       = snapshot_dir + "/workdir/%s" % snapshot_name
         if not os.path.exists(work_dir):
             os.makedirs(work_dir)
 
@@ -901,6 +901,15 @@ def automation_create_snapshot(args):
         file(filename_target, "w").close()
         file(filename_status, "w").close()
 
+        def wipe_directory(path):
+            for entry in os.listdir(path):
+                if entry not in [ '.', '..' ]:
+                    p = path + "/" + entry
+                    if os.path.isdir(p):
+                        shutil.rmtree(p)
+                    else:
+                        os.remove(p)
+
         lock_status_file = threading.Lock()
         def update_status_file(domain = None, infotext = None):
             lock_status_file.acquire()
@@ -912,13 +921,13 @@ def automation_create_snapshot(args):
                 status_list = list(statusinfo.items())
                 status_list.sort()
                 for status in status_list:
-                    statusfile.write("%s:%s\n" % status)
+                    statusfile.write("%s.tar.gz:%s\n" % status)
             lock_status_file.release()
 
         # Set initial status info
         statusinfo = {}
         for name in data.get("domains", {}).keys():
-            statusinfo[name] = "TODO"
+            statusinfo[name] = "TODO:0"
         update_status_file()
 
         if not data.get("wait"):
@@ -944,10 +953,8 @@ def automation_create_snapshot(args):
         tar_in_progress = tarfile.open(filename_work, "w")
 
         def cleanup():
-            for filename in [filename_work, filename_status,
-                             filename_pid, filename_subtar]:
-                if filename and os.path.exists(filename):
-                    os.unlink(filename)
+            wipe_directory(work_dir)
+            os.rmdir(work_dir)
 
         def check_should_abort():
             if not os.path.exists(filename_target):
@@ -967,11 +974,11 @@ def automation_create_snapshot(args):
             while current_domain != None:
                 try:
                     if current_domain:
-                        if os.path.exists(filename_subtar):
-                            update_status_file(current_domain, "Processing / Size: %d" % os.stat(filename_subtar).st_size)
+                        if os.path.exists(path_subtar):
+                            update_status_file(current_domain, "Processing:%d" % os.stat(path_subtar).st_size)
                 except:
                     pass
-                time.sleep(0.1)
+                time.sleep(seconds)
 
         # Add comment to tar file
         if data.get("comment"):
@@ -1000,27 +1007,43 @@ def automation_create_snapshot(args):
 
         for name, info in domains:
             current_domain = name # Set name for update size thread
-            paths  = info["paths"]
-            prefix = info.get("prefix","")
+            prefix          = info.get("prefix","")
+            exclude_options = ""
+            for entry in info.get("exclude", []):
+                exclude_options += "--exclude=%s " % entry
+
             check_should_abort()
 
-            paths = map(lambda x: x[1] == "" and "." or x[1], paths)
-
-            # Create tar.gz subtar
             filename_subtar = "%s.tar.gz" % name
-            command = "cd %s ; tar czf %s --ignore-failed-read --force-local -C %s %s" %  (work_dir, filename_subtar, prefix, " ".join(paths))
-            proc = subprocess.Popen(command, shell=True)
-            proc.wait()
+            path_subtar = "%s/%s" % (work_dir, filename_subtar)
 
-            subtar_size   = os.stat("%s/%s" % (work_dir, filename_subtar)).st_size
+            if info.get("backup_command"):
+                command = info.get("backup_command") % {"prefix"      : prefix,
+                                                        "path_subtar" : path_subtar,
+                                                        "work_dir"    : work_dir}
+            else:
+                paths = map(lambda x: x[1] == "" and "." or x[1], info.get("paths", []))
+                command = "cd %s ; tar czf %s --ignore-failed-read --force-local %s -C %s %s" % \
+                          (prefix, path_subtar, exclude_options, prefix, " ".join(paths))
 
+            proc           = subprocess.Popen(command, shell=True, stdin = None, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+            stdout, stderr = proc.communicate()
+            exit_code      = proc.wait()
+            # Allow exit codes 0 and 1 (files changed during backup)
+            if exit_code not in [0, 1]:
+                raise MKAutomationError("Error while creating backup of %s (Exit Code %d) - %s.\n%s" % (current_domain, exit_code, stderr, command))
+
+            subtar_size   = os.stat("%s" % path_subtar).st_size
             # Append tar.gz subtar to snapshot
             command = "cd %s ; tar --append --file=%s %s ; rm %s" % (work_dir, filename_work, filename_subtar, filename_subtar)
             proc = subprocess.Popen(command, shell=True)
-            proc.wait()
+            proc.communicate()
+            exit_code = proc.wait()
+            if exit_code != 0:
+                raise MKAutomationError("Error on adding backup domain %s to tarfile" % current_domain)
 
             current_domain = ""
-            update_status_file(name, "Finished / Size: %d" % subtar_size)
+            update_status_file(name, "Finished:%d" % subtar_size)
 
         current_domain = None
 
@@ -1028,6 +1051,7 @@ def automation_create_snapshot(args):
         cleanup()
 
     except Exception, e:
+        cleanup()
         raise MKAutomationError(str(e))
 
 def automation_notification_replay(args):

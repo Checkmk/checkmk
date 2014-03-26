@@ -262,3 +262,25 @@ register_rule(group,
     ),
     factory_default = FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
     match = 'first')
+
+
+register_rulegroup("datasource_programs",
+    _("Datasource Programs"),
+    _("Specialized agents, e.g. check via SSH, ESX vSphere, SAP R/3"))
+
+group = "datasource_programs"
+
+
+register_rule(group,
+    "special_agents:innovaphone",
+    Tuple(
+        title = _("Innovaphone Gateways"),
+        help = _( "Please specify the user and password needed to access the xml interface"),
+        elements = [
+           TextAscii(title = _("Username")),
+           Password( title = _("Password")),
+        ]
+    ),
+    factory_default = FACTORY_DEFAULT_UNUSED, 
+    match = "first")
+

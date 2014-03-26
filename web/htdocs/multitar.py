@@ -166,7 +166,7 @@ def extract_domains(tar, domains):
     def cleanup_domain(domain):
         # Some domains, e.g. authorization, do not get a cleanup
         if domain.get("cleanup") == False:
-            return
+            return []
 
         def path_valid(prefix, path):
             if path.startswith("/") or path.startswith(".."):
@@ -174,7 +174,7 @@ def extract_domains(tar, domains):
             return True
 
         # Remove old stuff
-        for what, path in domain["paths"]:
+        for what, path in domain.get("paths", {}):
             if not path_valid(domain["prefix"], path):
                 continue
             full_path = "%s/%s" % (domain["prefix"], path)
@@ -183,48 +183,70 @@ def extract_domains(tar, domains):
                     wipe_directory(full_path)
                 else:
                     os.remove(full_path)
+        return []
 
     def extract_domain(domain, tar_member):
-        target_dir = domain.get("prefix")
-        if not target_dir:
-            return
-        # The complete tar.gz file never fits in stringIO buffer..
-        tar.extract(tar_member, restore_dir)
-        p = subprocess.Popen("tar xzf %s/%s -C %s" % (restore_dir, tar_member.name, target_dir), shell = True)
-        p.communicate()
+        try:
+            target_dir = domain.get("prefix")
+            if not target_dir:
+                return
+            # The complete tar.gz file never fits in stringIO buffer..
+            tar.extract(tar_member, restore_dir)
+
+            if domain.get("restore_command"):
+                path_subtar = "%s/%s" % (restore_dir, tar_member.name)
+                command = domain.get("restore_command") % { "prefix"      : target_dir,
+                                                            "restore_dir" : restore_dir,
+                                                            "path_subtar" : path_subtar }
+            else:
+                command = "tar xzf %s/%s -C %s" % (restore_dir, tar_member.name, target_dir)
+
+            p = subprocess.Popen(command, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+            stdout, stderr = p.communicate()
+            exit_code = p.wait()
+            if exit_code:
+                return [ "%s - %s" % (domains["title"], stderr) ]
+        except Exception, e:
+            return [ "%s - %s" % (domains["title"], str(e)) ]
 
 
-    # Check write permissions for target directories and files
-    errors = []
-    for name, tar_member in tar_domains.items():
-        if name in domains:
-            dom_errors = check_domain(domains[name], tar_member)
-            errors.extend(dom_errors)
-    if len(errors):
-        errors = list(set(errors))
-        errors.append(_("<br>If there are permission problems, please ensure the group is set to '%s' and has write permissions.") % defaults.www_group)
-        raise MKGeneralException(_("Unable to restore snapshot:<br>%s" % "<br>".join(errors)))
+    def execute_restore(domain, is_pre_restore = True):
+        if is_pre_restore:
+            if "pre_restore" in domain:
+                return domain["pre_restore"]()
+        else:
+            if "post_restore" in domain:
+                return domain["post_restore"]()
+        return []
 
-    # Empty/remove target folders/files
-    for name, tar_member in tar_domains.items():
-        if name in domains:
-            cleanup_domain(domains[name])
+    total_errors = []
+    for what, abort_on_error, handler in [
+                            ("Permissions",  True,  lambda domain, tar_member: check_domain(domain, tar_member)),
+                            ("Pre-Restore",  True,  lambda domain, tar_member: execute_restore(domain, is_pre_restore = True)),
+                            ("Cleanup",      False, lambda domain, tar_member: cleanup_domain(domain)),
+                            ("Extract",      False, lambda domain, tar_member: extract_domain(domain, tar_member)),
+                            ("Post-Restore", False, lambda domain, tar_member: execute_restore(domain, is_pre_restore = False))
+                          ]:
+        errors = []
+        for name, tar_member in tar_domains.items():
+            if name in domains:
+                dom_errors = handler(domains[name], tar_member)
+                if dom_errors:
+                    errors.extend(dom_errors)
 
-    # Apply tarfile
-    extract_errors = []
-    for name, tar_member in tar_domains.items():
-        if name in domains:
-            try:
-                extract_domain(domains[name], tar_member)
-            except Exception, e:
-                extract_errors.append("(%s) %s<br>%s" % (name, domains[name]["title"], str(e)))
-                continue
+        if errors:
+            if what == "Permissions":
+                errors = list(set(errors))
+                errors.append(_("<br>If there are permission problems, please ensure the group is set to '%s' and has write permissions.") % defaults.www_group)
+            if abort_on_error:
+                raise MKGeneralException(_("%s - Unable to restore snapshot:<br>%s" % (what, "<br>".join(errors))))
+            total_errors.extend(errors)
 
     # Cleanup
     wipe_directory(restore_dir)
 
-    if extract_errors:
-        raise MKGeneralException(_("Errors on restoring snapshot:<br>%s" % "<br>".join(extract_errors)))
+    if total_errors:
+        raise MKGeneralException(_("Errors on restoring snapshot:<br>%s" % "<br>".join(total_errors)))
 
 
 # Extract a tarball

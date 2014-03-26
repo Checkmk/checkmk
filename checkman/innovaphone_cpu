@@ -1,0 +1,20 @@
+title: Innovaphone Gateway: CPU utilization
+agents: special
+catalog: hw/network/tel
+license: GPL
+distribution: check_mk
+description:
+ This check shows the peak utilization for the latest 1 min.
+
+
+inventory:
+ One check will be created
+
+perfdata:
+ The actual utilization, together with it's warn and crit levels
+
+[parameters]
+warning (int): The percentage of CPU usage that triggers
+ a WARNING state
+critical (int): The percentage of CPU usage that triggers
+ a CRITICAL state

@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -22,30 +21,17 @@
 # ails.  You should have  received  a copy of the  GNU  General Public
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
-# Boston, MA 02110-1301 USA. 
-enterasys_cpu_default_levels = (90, 95)
+# Boston, MA 02110-1301 USA.
 
-def inventory_enterasys_cpu_util(info):
-    return [ ( None, "enterasys_cpu_default_levels" )] 
+$opt[1] = '--vertical-label "Licenses" --title "' . $this->MACRO['DISP_HOSTNAME'] . ' / ' . $this->MACRO['DISP_SERVICEDESC'] . ' per State" --lower=0';
 
-def check_enterasys_cpu_util(_no_item, params, info):
-    util = 0
-    for core_util in info:
-        util += saveint(core_util[0]) / 10
-    num_cpus = len(info)
-    usage = util / num_cpus
-    return check_cpu_util(usage, params)
-
-
-check_info["enterasys_cpu_util"] = {
-    "check_function"        : check_enterasys_cpu_util,
-    "inventory_function"    : inventory_enterasys_cpu_util,
-    "service_description"   : "CPU utilization",
-    "snmp_info"             : ( ".1.3.6.1.4.1.5624.1.2.49.1.1.1.1", [ 3 ]), #util in last 1min 
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5624.2.1"),
-    "has_perfdata"          : True,
-    "group"                 : "cpu_utilization",
-    "includes"                : [ "cpu_util.include" ],
-
-}
-
+$def[1] = ""
+          . "DEF:licensed=$RRDFILE[1]:$DS[1]:MAX "
+          . "DEF:used=$RRDFILE[2]:$DS[2]:MAX "
+          . "AREA:used#008000:\"Used          \" "
+          . "GPRINT:used:AVERAGE:\"% 6.0lf avg\" "
+          . "GPRINT:used:LAST:\"% 6.0lf last\\n\" "
+          . "LINE1:licensed#0000FF:\"Licensed      \" "
+          . "GPRINT:licensed:AVERAGE:\"% 6.0lf avg\" "
+          . "GPRINT:licensed:LAST:\"% 6.0lf last\\n\" "
+          . "";

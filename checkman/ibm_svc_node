@@ -1,0 +1,18 @@
+title: IBM SVC / V7000: Status of IO Groups
+agents: ibm_svc
+catalog: hw/storagehw/ibm
+license: GPL
+distribution: check_mk
+description:
+ Checks the status of IO Groups of an IBM SVC / V7000 device.
+
+ If all nodes of an IO Group report status {online} the check returns
+ {OK}. If all nodes of an IO Group report some other status (e. g. 
+ {offline}) the check returns {CRIT}. And in all other cases - that
+ means if at least one node is {online} - the check returns {WARN}.
+
+item:
+ The name of the IO Group.
+
+inventory:
+ Creates one check for every IO Group in an IBM SVC / V7000 device.

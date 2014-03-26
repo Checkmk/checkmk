@@ -2035,6 +2035,21 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_os,
+    "innovaphone_mem",
+    _("Innovaphone Memory Usage"),
+    Tuple(
+       title = _("Specify levels in percentage of total RAM"),
+       elements = [
+          Percentage(title = _("Warning at a usage of"), unit = _("% of RAM") ),
+          Percentage(title = _("Critical at a usage of"), unit = _("% of RAM") ),
+       ]
+    ),
+    None,
+    "first"
+)
+
+register_check_parameters(
+    subgroup_os,
     "cisco_mem",
     _("Cisco Memory Usage"),
     Alternative(
@@ -2042,8 +2057,8 @@ register_check_parameters(
             Tuple(
                 title = _("Specify levels in percentage of total RAM"),
                 elements = [
-                  Percentage(title = _("Warning at a usage of"), label = _("% of RAM"), maxvalue = None),
-                  Percentage(title = _("Critical at a usage of"), label = _("% of RAM"), maxvalue = None)
+                  Percentage(title = _("Warning at a usage of"), unit = _("% of RAM"), maxvalue = None),
+                  Percentage(title = _("Critical at a usage of"), unit = _("% of RAM"), maxvalue = None)
                 ]
             ),
             Tuple(

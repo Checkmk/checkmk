@@ -1,0 +1,8 @@
+Title: ibm_svc_mdisk: new check for status and mode of MDisks in an IBM SVC / V7000 device
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1395757553
+Class: feature
+
+

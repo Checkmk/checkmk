@@ -1,0 +1,68 @@
+#!/usr/bin/python
+# encoding: utf-8
+from lxml import etree
+import sys
+from urllib2 import urlopen
+import urllib2, base64
+
+server = sys.argv[1]
+user = sys.argv[2]
+password = sys.argv[3] 
+
+def get_url(address):
+    request = urllib2.Request(address)
+    base64string = base64.encodestring('%s:%s' % (user, password)).replace('\n', '')
+    request.add_header("Authorization", "Basic %s" % base64string)   
+    return urllib2.urlopen(request)
+
+def get_informations(name, xml_id, org_name):
+    data_url = "/LOG0/CNT/mod_cmd.xml?cmd=xml-count&x="
+    address = "http://%s%s%s" % ( server, data_url, xml_id ) 
+    c = False
+    for line in  etree.parse(get_url(address)).getroot():
+        for child in line:
+            if child.get('c'):
+                c = child.get('c')
+    if c:
+        print "<<<%s>>>" % name
+        print org_name + " " + c
+
+def get_pri_channel(channel_name):
+    data_url = "/%s/mod_cmd.xml" % channel_name
+    address = "http://%s%s" % ( server, data_url) 
+    data = etree.parse(get_url(address)).getroot()
+    link =  data.get('link')
+    physical = data.get('physical')
+    if link != "Up" or physical != "Up":
+        return
+    idle = 0
+    total = 0
+    for channel in  data.findall('ch'):
+        if channel.get('state') == 'Idle':
+            idle += 1
+        total += 1
+    total -= 1
+    print "%s %s %s" % (channel_name, idle, total)
+
+
+
+base_url = "/LOG0/CNT/mod_cmd.xml?cmd=xml-counts"
+counter_address = "http://%s%s" % ( server, base_url )
+p = etree.parse(get_url(counter_address))
+data= p.getroot()
+
+informations = {}
+for line in data:
+    n = line.get('n')
+    x = line.get('x')
+    informations[n] = x
+
+s_prefix = "innovaphone_"
+for what in [ "CPU", "MEM", "TEMP"]:
+    if informations.get(what):
+        name = s_prefix+what.lower()
+        get_informations(name, informations[what], what)
+
+print "<<<%schannels>>>" % s_prefix
+for channel in range(1,5):
+    get_pri_channel('PRI'+str(channel))

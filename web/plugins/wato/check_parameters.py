@@ -1761,8 +1761,8 @@ register_check_parameters(
                 title = _("Provisioning Levels"),
                 help = _("Configure thresholds for overprovisioning of datastores."),
                 elements = [
-                  Percentage(title = _("Warning at overprovisioning of")),
-                  Percentage(title = _("Critical at overprovisioning of")),
+                  Percentage(title = _("Warning at overprovisioning of"), maxvalue = None),
+                  Percentage(title = _("Critical at overprovisioning of"), maxvalue = None),
                 ]
             )),
         ],

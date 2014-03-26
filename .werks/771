@@ -1,8 +1,8 @@
-Title: ibm_svc_node: new check for status of IO Groups of IBM SVC / V7000 devices
+Title: juniper_trpz_aps: Show the number of connected access points on juniper wlan controllers
 Level: 1
 Component: checks
 Version: 1.2.5i1
-Date: 1395767425
+Date: 1395842452
 Class: feature
 
 

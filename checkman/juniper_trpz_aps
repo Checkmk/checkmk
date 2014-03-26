@@ -1,0 +1,11 @@
+title: Number of online access points 
+agents: snmp
+catalog: hw/network/juniper
+license: GPL
+distribution: check_mk
+description:
+ Show the number of online access points registered on the controller
+
+inventory:
+ One service for the number of access points
+

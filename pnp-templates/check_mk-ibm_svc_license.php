@@ -23,27 +23,15 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-$opt[1] = '--vertical-label "Number of Hosts" --title "' . $this->MACRO['DISP_HOSTNAME'] . ' / ' . $this->MACRO['DISP_SERVICEDESC'] . ' per State" --lower=0';
+$opt[1] = '--vertical-label "Licenses" --title "' . $this->MACRO['DISP_HOSTNAME'] . ' / ' . $this->MACRO['DISP_SERVICEDESC'] . ' per State" --lower=0';
 
 $def[1] = ""
-          . "DEF:active=$RRDFILE[1]:$DS[1]:MAX "
-          . "DEF:inactive=$RRDFILE[2]:$DS[2]:MAX "
-          . "DEF:degraded=$RRDFILE[3]:$DS[3]:MAX "
-          . "DEF:offline=$RRDFILE[4]:$DS[4]:MAX "
-          . "DEF:other=$RRDFILE[5]:$DS[5]:MAX "
-          . "AREA:active#008000:\"Active             \" "
-          . "GPRINT:active:AVERAGE:\"% 6.0lf Hosts avg\" "
-          . "GPRINT:active:LAST:\"% 6.0lf Hosts last\\n\" "
-          . "AREA:inactive#0000FF:\"Inactive           \":STACK "
-          . "GPRINT:inactive:AVERAGE:\"% 6.0lf Hosts avg\" "
-          . "GPRINT:inactive:LAST:\"% 6.0lf Hosts last\\n\" "
-          . "AREA:degraded#F84:\"Degraded           \":STACK "
-          . "GPRINT:degraded:AVERAGE:\"% 6.0lf Hosts avg\" "
-          . "GPRINT:degraded:LAST:\"% 6.0lf Hosts last\\n\" "
-          . "AREA:offline#FF0000:\"Offline            \":STACK "
-          . "GPRINT:offline:AVERAGE:\"% 6.0lf Hosts avg\" "
-          . "GPRINT:offline:LAST:\"% 6.0lf Hosts last\\n\" "
-          . "AREA:other#000:\"Other              \":STACK "
-          . "GPRINT:other:AVERAGE:\"% 6.0lf Hosts avg\" "
-          . "GPRINT:other:LAST:\"% 6.0lf Hosts last\\n\" "
+          . "DEF:licensed=$RRDFILE[1]:$DS[1]:MAX "
+          . "DEF:used=$RRDFILE[2]:$DS[2]:MAX "
+          . "AREA:used#008000:\"Used          \" "
+          . "GPRINT:used:AVERAGE:\"% 6.0lf avg\" "
+          . "GPRINT:used:LAST:\"% 6.0lf last\\n\" "
+          . "LINE1:licensed#0000FF:\"Licensed      \" "
+          . "GPRINT:licensed:AVERAGE:\"% 6.0lf avg\" "
+          . "GPRINT:licensed:LAST:\"% 6.0lf last\\n\" "
           . "";

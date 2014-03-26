@@ -1,0 +1,60 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+juniper_trpz_mem_default_levels = ( 80.0, 90.0 )
+
+def inventory_juniper_trpz_mem(info):
+    return [ ( None, "juniper_trpz_mem_default_levels" ) ]
+
+def check_juniper_trpz_mem(_no_item, params, info):
+    usage, mem_size = map( savefloat,  info[0] )
+    usage_perc = (usage / mem_size) * 100
+
+    warn, crit = params
+    warn_a = (mem_size / 100) * warn
+    crit_a = (mem_size / 100) * crit
+    perf = [( "usage", usage*1024, warn_a*1024, crit_a*1024, 0, mem_size )]
+    message = "Used: %s/%s (%.0f%%)" % \
+    ( get_bytes_human_readable(usage*1024), get_bytes_human_readable(mem_size*1024), usage_perc ) 
+    levels = " ( Warning/Critical at %0.f%%/%.0f%%)" % ( warn, crit )
+    if usage_perc >= crit:
+        return 2, message + levels, perf
+    elif usage_perc >= warn:
+        return 1, message + levels, perf
+    return 0, message, perf
+
+check_info["juniper_trpz_mem"] = {
+    'check_function':        check_juniper_trpz_mem,
+    'inventory_function':    inventory_juniper_trpz_mem,
+    'service_description':   'Memory used',
+    'has_perfdata':          True,
+    "snmp_scan_function":    lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.14525.3.1.6"),
+    # see: http://www.observium.org/svn/observer/trunk/mibs/trapeze/trpz-system-mib.my
+    "snmp_info":             (".1.3.6.1.4.1.14525.4.8.1.1", [ 
+                                                            "12.1", # trpzSysCpuMemoryInstantUsage
+                                                            "6",    # trpzSysCpuMemorySize
+                                                            ])
+}

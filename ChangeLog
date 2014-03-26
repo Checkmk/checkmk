@@ -235,6 +235,7 @@
     * 0593 FIX: zypper: agent plugin and check now lead to UNKNOWN result in case of repo problems
     * 0758 FIX: check_sql: Fixed monitoring of stored procedures with oracle
     * 0599 FIX: esx_vsphere_datastores: provisioning levels in WATO are no longer limited to 101%
+    * 0737 FIX: megaraid_ldisks: now able to handle "No Virtual Drive Configured" states...
 
     Multisite:
     * 0371 Added log class filter to hostsvcevents view

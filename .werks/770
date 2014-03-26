@@ -1,8 +1,8 @@
-Title: ibm_svc_mdiskgrp: New check for status and usage of MDisksGrps in IBM SVC / V7000 devices
+Title: innovaphone_licenses: New check to monitor licenses on innovaphone devices"
 Level: 1
 Component: checks
 Version: 1.2.5i1
-Date: 1395763421
+Date: 1395842049
 Class: feature
 
 

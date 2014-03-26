@@ -1,0 +1,10 @@
+Title: New Special Agent for innovaphone gateways
+Level: 1
+Component: checks
+Version: 1.2.5i1
+Date: 1395821816
+Class: feature
+
+The new innovaphone agent is based on the XML output from the device. There a Checks for CPU Usage, Channel Usage,
+Temperature and Memory used. You can check the device also with snmp (dual) to get Interface informations and some more
+PRI Channel informations.

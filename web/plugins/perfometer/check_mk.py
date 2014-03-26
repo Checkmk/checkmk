@@ -283,6 +283,7 @@ perfometers["check_mk-apc_inrow_temperature"] = perfometer_temperature
 perfometers["check_mk-hitachi_hnas_temp"] = perfometer_temperature
 perfometers["check_mk-dell_poweredge_temp"] = perfometer_temperature
 perfometers["check_mk-dell_chassis_temp"] = perfometer_temperature
+perfometers["check_mk-innovaphone_temp"] = perfometer_temperature
 
 def perfometer_temperature_multi(row, check_command, perf_data):
     display_value = -1
@@ -469,6 +470,8 @@ perfometers["check_mk-brocade_mlx.module_cpu"] = perfometer_cpu_utilization
 perfometers["check_mk-hitachi_hnas_cpu"] = perfometer_cpu_utilization
 perfometers["check_mk-hitachi_hnas_fpga"] = perfometer_cpu_utilization
 perfometers["check_mk-hr_cpu"] = perfometer_cpu_utilization
+perfometers["check_mk-innovaphone_cpu"] = perfometer_cpu_utilization
+perfometers["check_mk-enterasys_cpu_util"] = perfometer_cpu_utilization
 
 def perfometer_ps_perf(row, check_command, perf_data):
     perf_dict = dict([(p[0], float(p[1])) for p in perf_data])
@@ -785,6 +788,7 @@ def perfometer_simple_mem_usage(row, command, perf):
 perfometers['check_mk-db2_mem'] = perfometer_simple_mem_usage
 perfometers['check_mk-esx_vsphere_hostsystem.mem_usage'] = perfometer_simple_mem_usage
 perfometers['check_mk-brocade_mlx.module_mem'] = perfometer_simple_mem_usage
+perfometers['check_mk-innovaphone_mem'] = perfometer_simple_mem_usage
 
 def perfometer_vmguest_mem_usage(row, command, perf):
     used = float(perf[0][1])

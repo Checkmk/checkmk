@@ -9,7 +9,7 @@ Additional validations are now undertaken when creating or restoring a backup fi
 
 New procedures and features
 <ul>
-<li>Stopping and re-staring the record of performance data while the restore is in progress</li>
-<li>Correct evaluation of exit codes and error messages from the backup commands</li>
-<li>New backup/restore hooks: <tt>pre_restore</tt>, <tt>post_restore</t>, <tt>backup_command</tt>, <tt>restore_command</tt></li>
+<li>Stopping and re-starting performance data recording while the restore is in progress</li>
+<li>Correct evaluation of exit codes and error messages from the backup/restore commands</li>
+<li>New backup/restore hooks: <tt>pre_restore</tt>, <tt>post_restore</tt>, <tt>backup_command</tt>, <tt>restore_command</tt></li>
 </ul>

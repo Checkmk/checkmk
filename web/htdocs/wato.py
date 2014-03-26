@@ -5905,7 +5905,17 @@ def get_snapshot_status(snapshot):
         name = snapshot
         file_stream = None
 
-    status = {}
+    # Defaults of available keys
+    status = {
+        "name"            : "",
+        "total_size"      : 0,
+        "type"            : None,
+        "files"           : {},
+        "comment"         : "",
+        "created_by"      : "",
+        "broken"          : False,
+        "progress_status" : "",
+    }
 
     def check_size():
         if file_stream:
@@ -5957,26 +5967,26 @@ def get_snapshot_status(snapshot):
 
         if not file_stream:
             # Check if the snapshot build is still in progress...
-            path_status = "%s/workdir/%s.status" % (snapshot_dir, name)
-            path_pid    = "%s/workdir/%s.pid"    % (snapshot_dir, name)
+            path_status = "%s/workdir/%s/%s.status" % (snapshot_dir, name, name)
+            path_pid    = "%s/workdir/%s/%s.pid"    % (snapshot_dir, name, name)
 
             # Check if this process is still running
             if os.path.exists(path_pid):
                 if os.path.exists(path_pid) and not os.path.exists("/proc/%s" % open(path_pid).read()):
-                    status["progress_status"] = _("ERROR: Snapshot progress no longer running")
-                    raise MKGeneralException(_("Error: Process for snapshot creating is no longer running"))
+                    status["progress_status"] = _("ERROR: Snapshot progress no longer running!")
+                    raise MKGeneralException(_("Error: The process responsible for creating the snapshot is no longer running!"))
                 else:
                     status["progress_status"] = _("Snapshot build currently in progress")
 
             # Read snapshot status file (regularly updated by snapshot process)
             if os.path.exists(path_status):
-                tokens = file(path_status, "r").read().split("\n",1)
-                status["comment"] = tokens[0].split(":",1)[1]
+                lines = file(path_status, "r").readlines()
+                status["comment"] = lines[0].split(":", 1)[1]
                 file_info = {}
-                files = tokens[1].splitlines()
-                for filename in files:
-                    name, info = filename.split(":",1)
-                    file_info[name] = {"size" : info}
+                for filename in lines[1:]:
+                    name, info = filename.split(":", 1)
+                    text, size = info[:-1].split(":", 1)
+                    file_info[name] = {"size" : saveint(size), "text": text}
                 status["files"] = file_info
                 return status
 
@@ -6009,57 +6019,57 @@ def mode_snapshot_detail(phase):
     elif phase == "action":
         return
 
-    if status.get("info"):
-        html.write("<table><tr><th>%s</th><th>%s</th></tr>" % (_("Content"), _("Status")))
-        for token in status["info"].split("\n"):
-            pair = token.split(":",1)
-            if len(pair) == 2:
-                html.write("<tr><td>%s</td><td>%s</td></tr>" % (backup_domains.get(pair[0],{}).get("title") or pair[0], pair[1]))
-        html.write("</table>")
+    other_content = []
+
+    if status.get("broken"):
+        html.add_user_error('broken', _  ('This snapshot is broken!'))
+        html.add_user_error('broken_text', status.get("broken_text"))
+        html.show_user_errors()
+
+    html.begin_form("snapshot_details", method="POST")
+    forms.header(_("Snapshot %s") % snapshot_name)
+
+    for entry in [ ("comment", _("Comment")), ("created_by", _("Created by")) ]:
+        if status.get(entry[0]):
+            forms.section(entry[1])
+            html.write(status.get(entry[0]))
+
+    forms.section(_("Content"))
+    files = status["files"]
+    if not files:
+        html.write(_("Snapshot is empty!"))
     else:
-        other_content = []
+        html.write("<table>")
+        html.write("<tr><th align='left'>%s</th><th align='right'>%s</th></tr>" % (_("Description"), _("Size")))
 
-        if status.get("broken"):
-            html.add_user_error('broken', _  ('This snapshot is broken!'))
-            html.add_user_error('broken_text', status.get("broken_text"))
-            html.show_user_errors()
+        domains        = []
+        other_content  = []
+        for filename, values in files.items():
+            if filename in ["comment", "type", "created_by"]:
+                continue
+            domain_key = filename[:-7]
+            if domain_key in backup_domains.keys():
+                domains.append( (backup_domains[domain_key]["title"], filename, values) )
+            else:
+                other_content.append( ("Other", filename, values) )
+        domains.sort()
 
-        html.begin_form("snapshot_details", method="POST")
-        forms.header(_("Snapshot %s") % snapshot_name)
 
-        for entry in [ ("comment", _("Comment")), ("created_by", _("Created by")) ]:
-            if status.get(entry[0]):
-                forms.section(entry[1])
-                html.write(status.get(entry[0]))
+        for (title, filename, values) in domains:
+            extra_info = ""
+            if values.get("text"):
+                extra_info = "%s - " % values["text"]
+            html.write("<tr><td>%s%s</td>"  % (extra_info, title))
+            html.write("<td align='right'>%s</td></tr>" % fmt_bytes(values["size"]))
 
-        forms.section(_("Content"))
-        files = multitar.list_tar_content(snapshot_dir + snapshot_name)
-        if not files:
-            html.write(_("Snapshot is empty!"))
-        else:
-            html.write("<table>")
-            html.write("<tr><th align='left'>%s</th><th align='right'>%s</th></tr>" % (_("Description"), _("Size")))
-            domain_keys = files.keys()
-            domain_keys.sort()
-            for key in domain_keys:
-                if key in ["comment", "type", "created_by"]:
-                    continue
-                try:
-                    domain_id = key[:-7]
-                    if domain_id in backup_domains:
-                        html.write("<tr><td>%s</td>"  % backup_domains.get(domain_id)["title"])
-                        html.write("<td align='right'>%s</td></tr>" % fmt_bytes(files[key]["size"]))
-                    else:
-                        other_content.append(key)
-                except:
-                    other_content.append(key)
-            if other_content:
-                html.write("<tr><td>%s</td></tr>" % _("Other content"))
-                for key in other_content:
-                    html.write("<tr><td>%s</td>"  % key)
-                    html.write("<td align='right'>%s</td></tr>" % fmt_bytes(files[key]["size"]))
-            html.write("</table>")
-        forms.end()
+        if other_content:
+            html.write("<tr><td><i>%s</i></td></tr>" % _("Other content"))
+            for (title, filename, values) in other_content:
+                html.write("<tr><td>%s</td>"  % filename)
+                html.write("<td align='right'>%s</td></tr>" % fmt_bytes(values["size"]))
+        html.write("</table>")
+
+    forms.end()
     if snapshot_name != "uploaded_snapshot":
         delete_url = make_action_link([("mode", "snapshot"), ("_delete_file", snapshot_name)])
         html.buttonlink(delete_url, _("Delete Snapshot"))
@@ -6092,7 +6102,8 @@ def mode_snapshot(phase):
     # Sort domains by group
     domains_grouped = {}
     for domainname, data in backup_domains.items():
-        domains_grouped.setdefault(data.get("group","Other"), {}).update({domainname: data})
+        if not data.get("deprecated"):
+            domains_grouped.setdefault(data.get("group","Other"), {}).update({domainname: data})
     backup_groups = []
     for idx, key in enumerate(sorted(domains_grouped.keys())):
         value = domains_grouped[key]
@@ -6320,6 +6331,15 @@ def do_snapshot_maintenance():
 
 
 def create_snapshot(data = {}):
+    import copy
+    def remove_functions(snapshot_data):
+        snapshot_data_copy = copy.deepcopy(snapshot_data)
+        for dom_key, dom_values in snapshot_data.items():
+            for key, value in dom_values.items():
+                if hasattr(value, '__call__'):
+                    del snapshot_data_copy[dom_key][key]
+        return snapshot_data_copy
+
     make_nagios_directory(snapshot_dir)
 
     snapshot_name = data.get("name") or "wato-snapshot-%s.tar" %  \
@@ -6329,7 +6349,7 @@ def create_snapshot(data = {}):
     snapshot_data["created_by"]    = data.get("created_by", config.user_id)
     snapshot_data["type"]          = data.get("type", "automatic")
     snapshot_data["snapshot_name"] = snapshot_name
-    snapshot_data["domains"]       = data.get("domains", get_backup_domains(["default"]))
+    snapshot_data["domains"]       = remove_functions(data.get("domains", get_backup_domains(["default"])))
     snapshot_data["wait"]          = data.get("wait", False)
 
     check_mk_local_automation("create-snapshot", [], snapshot_data)

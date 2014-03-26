@@ -1,8 +1,8 @@
-Title: ibm_svc_mdisk: new check for status and mode of MDisks in an IBM SVC / V7000 device
+Title: juniper_trpz_cpu_util, juniper_trpz_flash, juniper_trpz_info, juniper_trpz_power: new Checks for juniper trapeze switches
 Level: 1
 Component: checks
 Version: 1.2.5i1
-Date: 1395757553
+Date: 1395842006
 Class: feature
 
 

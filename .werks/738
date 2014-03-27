@@ -1,0 +1,11 @@
+Title: csv_export: now able to handle umlauts in download filenames
+Level: 1
+Component: multisite
+Version: 1.2.5i1
+Date: 1395936272
+Class: fix
+
+The csv export function raised an exception when the
+type of the filename was set to unicode. This happened when
+the filename text contained umlauts.
+Filenames are now converted to utf-8 in this case.

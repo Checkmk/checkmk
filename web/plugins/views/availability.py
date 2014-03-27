@@ -62,6 +62,8 @@ def render_availability(view, datasource, filterheaders, display_options,
         do_csv = True
         html.req.content_type = "text/csv; charset=UTF-8"
         filename = '%s-%s.csv' % (title, time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
+        if type(filename) == unicode:
+            filename = filename.encode("utf-8")
         html.req.headers_out['Content-Disposition'] = 'Attachment; filename=%s' % filename
     else:
         do_csv = False

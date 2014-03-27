@@ -67,6 +67,8 @@ def render_json(rows, view, group_painters, painters, num_columns, show_checkbox
     if export:
         html.req.content_type = "appliation/json; charset=UTF-8"
         filename = '%s-%s.json' % (view['name'], time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
+        if type(filename) == unicode:
+            filename = filename.encode("utf-8")
         html.req.headers_out['Content-Disposition'] = 'Attachment; filename=%s' % filename
 
     html.write("[\n")
@@ -124,6 +126,8 @@ def render_csv(rows, view, group_painters, painters, num_columns, show_checkboxe
     if export:
         html.req.content_type = "text/csv; charset=UTF-8"
         filename = '%s-%s.csv' % (view['name'], time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
+        if type(filename) == unicode:
+            filename = filename.encode("utf-8")
         html.req.headers_out['Content-Disposition'] = 'Attachment; filename=%s' % filename
 
     csv_separator = html.var("csv_separator", ";")

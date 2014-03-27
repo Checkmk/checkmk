@@ -764,7 +764,8 @@ def automation_get_configuration():
     result = {}
     for varname in variable_names:
         if varname in globals():
-            result[varname] = globals()[varname]
+            if not hasattr(globals()[varname], '__call__'):
+                result[varname] = globals()[varname]
     return result
 
 def automation_get_check_information():

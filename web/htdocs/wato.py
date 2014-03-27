@@ -849,6 +849,7 @@ def mode_folder(phase):
         if not g_folder.get(".lock_hosts") and config.may("wato.manage_hosts") and auth_write:
             html.context_button(_("New host"),    make_link([("mode", "newhost")]), "new")
             html.context_button(_("New cluster"), make_link([("mode", "newcluster")]), "new_cluster")
+            html.context_button(_("Bulk Import"), make_link_to([("mode", "bulk_import")], g_folder), "bulk_import")
         if config.may("wato.services"):
             html.context_button(_("Bulk Inventory"), make_link([("mode", "bulkinventory"), ("all", "1")]),
                         "inventory")
@@ -3237,7 +3238,115 @@ def create_target_folder_from_aliaspath(aliaspath):
 
     return folder
 
+#.
+#   .--Bulk Import---------------------------------------------------------.
+#   |       ____        _ _      ___                            _          |
+#   |      | __ ) _   _| | | __ |_ _|_ __ ___  _ __   ___  _ __| |_        |
+#   |      |  _ \| | | | | |/ /  | || '_ ` _ \| '_ \ / _ \| '__| __|       |
+#   |      | |_) | |_| | |   <   | || | | | | | |_) | (_) | |  | |_        |
+#   |      |____/ \__,_|_|_|\_\ |___|_| |_| |_| .__/ \___/|_|   \__|       |
+#   |                                         |_|                          |
+#   +----------------------------------------------------------------------+
+#   | Realizes a simple page with a single textbox which one can insert    |
+#   | several hostnames, separated by different chars and submit it to     |
+#   | create these hosts in the current folder.                            |
+#   '----------------------------------------------------------------------'
 
+def mode_bulk_import(phase):
+    if phase == "title":
+        return _('Bulk Host Import')
+
+    elif phase == "buttons":
+        html.context_button(_("Folder"), make_link([("mode", "folder")]), "back")
+
+    elif phase == "action":
+        if not html.check_transaction():
+            return "folder"
+
+        attributes = collect_attributes()
+
+        config.need_permission("wato.manage_hosts")
+        check_folder_permissions(g_folder, "write")
+        check_user_contactgroups(attributes.get("contactgroups", (False, [])))
+
+        hosts = html.var('_hosts')
+        if not hosts:
+            raise MKUserError('_hosts', _('Please specify at least one hostname.'))
+
+        created  = 0
+        skipped  = 0
+        selected = []
+
+        # Split by all possible separators
+        hosts = hosts.replace(' ', ';').replace(',', ';').replace('\n', ';').replace('\r', '')
+        for hostname in hosts.split(';'):
+            if hostname in g_folder['.hosts']:
+                skipped += 1
+                continue
+            elif not re.match('^[a-zA-Z0-9-_.]+$', hostname):
+                skipped += 1
+                continue
+
+            new_host = {
+                '.name'   : hostname,
+                '.folder' : g_folder,
+            }
+            g_folder[".hosts"][hostname] = new_host
+            mark_affected_sites_dirty(g_folder, hostname)
+
+            message = _("Created new host %s.") % hostname
+            log_pending(AFFECTED, hostname, "create-host", message)
+            g_folder["num_hosts"] += 1
+            created += 1
+            selected.append('_c_%s' % hostname)
+
+        if not created:
+            return 'folder', _('No host has been imported.')
+
+        else:
+            save_folder_and_hosts(g_folder)
+            reload_hosts(g_folder)
+            call_hook_hosts_changed(g_folder)
+
+            if html.get_checkbox('_do_service_detection'):
+                # Create a new selection
+                weblib.set_rowselection('wato-folder-/'+g_folder['.path'], selected, 'set')
+                html.set_var('mode', 'bulkinventory')
+                html.set_var('show_checkboxes', '1')
+                return 'bulkinventory'
+
+            result_txt = ''
+            if skipped > 0:
+                result_txt = _('Imported %d hosts, but skipped %d hosts. Hosts might '
+                    'be skipped when they already exist or contain illegal chars.') % (created, skipped)
+            else:
+                result_txt = _('Imported %d hosts.') % created
+
+            return 'folder', result_txt
+
+    else:
+        html.begin_form("bulkimport", method = "POST")
+
+        html.write('<p>')
+        html.write(_('Using this page you can import several hosts at once into '
+            'the choosen folder. You can paste a list of hostnames, separated '
+            'by comma, semicolon, space or newlines. These hosts will then be '
+            'added to the folder using the default attributes. If some of the '
+            'host names cannot be resolved via DNS, you must manually edit '
+            'those hosts later and add explicit IP addresses.'))
+        html.write('</p>')
+        forms.header(_('Bulk Host Import'))
+        forms.section(_('Hosts'))
+        html.text_area('_hosts', cols = 70, rows = 10)
+
+        forms.section(_('Options'))
+        html.checkbox('_do_service_detection', False, label = _('Perform automatic service detection'))
+        forms.end()
+
+        html.button('_import', _('Import'))
+
+        html.hidden_fields()
+        html.end_form()
 
 #.
 #   .--Bulk-Inventory------------------------------------------------------.
@@ -16465,6 +16574,7 @@ modes = {
    "editfolder"         : (["hosts" ], lambda phase: mode_editfolder(phase, False)),
    "newhost"            : (["hosts", "manage_hosts"], lambda phase: mode_edithost(phase, True, False)),
    "newcluster"         : (["hosts", "manage_hosts"], lambda phase: mode_edithost(phase, True, True)),
+   "bulk_import"         : (["hosts", "manage_hosts"], lambda phase: mode_bulk_import(phase)),
    "edithost"           : (["hosts"], lambda phase: mode_edithost(phase, False, None)),
    "parentscan"         : (["hosts"], mode_parentscan),
    "firstinventory"     : (["hosts", "services"], lambda phase: mode_inventory(phase, True)),

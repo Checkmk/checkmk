@@ -1,0 +1,11 @@
+Title: New bulk host import mode in WATO
+Level: 2
+Component: wato
+Version: 1.2.5i1
+Date: 1395930477
+Class: feature
+
+You can now import a list of hosts into a WATO folder. The new feature can be
+reached by clicking the <tt>Bulk Import</tt> button a WATO folder of your
+choice. Simply add a list of host names to the text area, choose whether or not
+you like to do an inventory afterwards and then click <tt>Import</tt>.

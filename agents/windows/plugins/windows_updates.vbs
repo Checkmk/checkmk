@@ -15,7 +15,7 @@
 ' some issues, so I went for a simpler solution using only one script
 '
 ' Updated by Bastian Kuhn, 2014-03-03: Removed all caching functions cause the current agent
-' has a native caching support. Make shure that you activate caching for this script in check_mk.ini
+' has a native caching support. Make sure that you activate caching for this script in check_mk.ini
 ' -----------------------------------------------------------------------------------------
 
 Option Explicit
@@ -39,9 +39,6 @@ end function
 Dim result, reboot, numImp, numOpt, important, opti
 Dim updtSearcher, colDownloads, objEntry
 
-Dim objFSO, stdout 
-Set objFSO = WScript.CreateObject("Scripting.FileSystemObject")
-Set stdout = objFSO.GetStandardStream(1)
 
 Dim WSHShell
 Set WSHShell = CreateObject("WScript.Shell")
@@ -50,7 +47,7 @@ Dim RebootTime
 Dim RegPath
 
 If CreateObject("Microsoft.Update.AutoUpdate").DetectNow <> 0 Then
-    stdout.WriteLine("<<<windows_updates>>>")
+    WScript.Echo "<<<windows_updates>>>"
     WScript.Quit()
 End If
 
@@ -76,22 +73,22 @@ For Each objEntry in colDownloads
            important = objEntry.Title
        else
            important = important & "; " & objEntry.Title
-	   End If
-		    numImp = numImp + 1
+    End If
+        numImp = numImp + 1
     Else
-	    If numOpt = 0 Then
+        If numOpt = 0 Then
             opti = objEntry.Title
         Else
             opti = opti & "; " & objEntry.Title
-	    End If
-	    numOpt = numOpt + 1
+        End If
+        numOpt = numOpt + 1
     End If
 
 Next
 
-    stdout.WriteLine("<<<windows_updates>>>")
-    stdout.WriteLine(reboot & " " & numImp & " " & numOpt)
-    stdout.WriteLine(important)
-    stdout.WriteLine(opti)
-    stdout.WriteLine(RebootTime)
+WScript.Echo "<<<windows_updates>>>"
+WScript.Echo reboot & " " & numImp & " " & numOpt
+WScript.Echo important
+WScript.Echo opti
+WScript.Echo RebootTime
 WScript.Quit()

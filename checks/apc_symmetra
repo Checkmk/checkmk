@@ -71,9 +71,9 @@
 
 # old format:
 # apc_default_levels = ( 95, 40, 1, 220 )
-
+# Temperature default now 60C: regadring to a apc technician a temperature up tp 70C is possible
 factory_settings["apc_default_levels"] = {
-        "levels": ( 95, 40, 1, 220 )
+        "levels": ( 95, 60, 1, 220 )
 }
 
 def check_apc(item, params, info):

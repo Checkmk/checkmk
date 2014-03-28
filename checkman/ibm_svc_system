@@ -1,0 +1,12 @@
+title: IBM SVC / V7000: System Info
+agents: ibm_svc
+catalog: hw/storagehw/ibm
+license: GPL
+distribution: check_mk
+description:
+ Reports name, location, code_level and email_contact_location of an
+ IBM SVC / V7000 device. The check always returns {OK}.
+
+inventory:
+ Creates exactly one check for every IBM SVC / V7000 named
+ IBM SVC Info.

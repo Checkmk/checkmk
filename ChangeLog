@@ -1,4 +1,7 @@
 1.2.5i2:
+    Checks & Agents:
+    * 0774 ibm_svc_nodestats.diskio: new check for disk troughput per node on IBM SVC / V7000 devices
+
 
 1.2.5i1:
     Core & Setup:

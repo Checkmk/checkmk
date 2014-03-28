@@ -1,3 +1,5 @@
+1.2.5i2:
+
 1.2.5i1:
     Core & Setup:
     * 0386 Added all active checks to check_mk -L output...
@@ -137,6 +139,7 @@
     * 0771 juniper_trpz_aps: Show the number of connected access points on juniper wlan controllers
     * 0772 added special agent for IBM SVC / V7000 storage systems...
     * 0773 ibm_svc_system: new check for System Info of IBM SVC / V7000 devices
+    * 0147 enterasys_fans: New Check to monitor fans of enterasys swichtes
     * 0103 FIX: services: Fixed bug with service inventory defined in main.mk...
     * 0299 FIX: borcade_mlx_fan: Prettified output, handling "other" state now
     * 0300 FIX: cisco_fru_power: Trying not to inventorize not plugged in FRUs...

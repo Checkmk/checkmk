@@ -1,0 +1,16 @@
+title: Enterasys: Fans
+agents: snmp
+catalog: hw/network/enterasys
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the health of the Fans. It will return an {UKN} state if the status changes
+ to "infoNotAvailable" or "notInstalled", and to {CRIT} if the state changes to "installedAndNotOperating".
+ No configuration is necessary.
+
+item:
+ The id of the FAN like reported in the output of the SNMP agent.
+
+inventory:
+ One check is created for each Fan.
+

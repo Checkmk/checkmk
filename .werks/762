@@ -1,0 +1,8 @@
+Title: Fixed availability filters not opening in IE7
+Level: 2
+Component: multisite
+Version: 1.2.4p1
+Date: 1395997821
+Class: fix
+
+

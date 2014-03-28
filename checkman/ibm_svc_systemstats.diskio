@@ -1,0 +1,19 @@
+title: IBM SVC / V7000: Disk Throughput for Drives/MDisks/VDisks in Total
+agents: ibm_svc
+catalog: hw/storagehw/ibm
+license: GPL
+distribution: check_mk
+description:
+ Reports the disk throughput for Drives, MDisks and VDisks of an IBM
+ SVC / V7000 device in total in bytes per second. 
+
+ The check is only for reporting and returns always {OK}.
+
+item:
+ "Drives", "MDisks" or "VDisks"
+
+inventory:
+ Creates one check for Drives, one for MDisks and one for VDisks.
+
+perfdata:
+ Two values: Throughput read and throughput write in Bytes/sec.

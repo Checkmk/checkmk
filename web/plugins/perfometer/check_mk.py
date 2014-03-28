@@ -533,6 +533,7 @@ perfometers["check_mk-mysql.innodb_io"] = perfometer_check_mk_diskstat
 perfometers["check_mk-esx_vsphere_counters.diskio"] = perfometer_check_mk_diskstat
 perfometers["check_mk-emcvnx_disks"] = perfometer_check_mk_diskstat
 perfometers["check_mk-ibm_svc_nodestats.diskio"] = perfometer_check_mk_diskstat
+perfometers["check_mk-ibm_svc_systemstats.diskio"] = perfometer_check_mk_diskstat
 
 def perfometer_in_out_mb_per_sec(row, check_command, perf_data):
     read_mbit = float(perf_data[0][1]) / 131072

@@ -5,7 +5,7 @@ license: GPL
 distribution: check_mk
 description:
  The check monitors the ouput voltage on Socomec UPS Devices
- 
+
  Please refer to the manpage of ups_out_voltage for configuration examples.
 
 inventory:

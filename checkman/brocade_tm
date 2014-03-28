@@ -64,5 +64,5 @@ brocade_tm_default_levels(dict): the variable is preset to
 'brcdTMStatsIngressDequeuePkts': (1000,10000),
 'brcdTMStatsIngressTotalQDiscardPkts': (1000,10000),
 'brcdTMStatsIngressOldestDiscardPkts': (1000,10000),
-'brcdTMStatsEgressDiscardPkts': (1000,10000) 
+'brcdTMStatsEgressDiscardPkts': (1000,10000)
 

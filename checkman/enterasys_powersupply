@@ -5,7 +5,7 @@ license: GPL
 distribution: check_mk
 description:
  This check monitors the health of power supplies. If the operating
- state change or the supplie is not longer redundant then the check 
+ state change or the supplie is not longer redundant then the check
  returns {CRIT}.
 
 item:

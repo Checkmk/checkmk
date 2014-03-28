@@ -7862,7 +7862,7 @@ def vs_notification_rule(userid = None):
         ],
         optional_keys = [ "match_folder", "match_hosttags", "match_hosts", "match_exclude_hosts",
                           "match_services", "match_exclude_services", "match_plugin_output",
-                          "match_timeperiod", "match_escalation", "match_escalation_throttle", 
+                          "match_timeperiod", "match_escalation", "match_escalation_throttle",
                           "match_sl", "match_host_event", "match_service_event",
                           "match_checktype", "bulk", "contact_users", "contact_groups", "contact_emails" ],
         headers = [

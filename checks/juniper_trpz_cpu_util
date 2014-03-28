@@ -70,6 +70,6 @@ check_info["juniper_trpz_cpu_util"] = {
     "snmp_info"             : (".1.3.6.1.4.1.14525.4.8.1.1.11", [
                                                                 1, # trpzSysCpuInstantLoad
                                                                 2, # trpzSysCpuLastMinuteLoad
-                                                                3, # trpzSysCpuLast5MinutesLoad 
+                                                                3, # trpzSysCpuLast5MinutesLoad
                                                                 ])
 }

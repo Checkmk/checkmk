@@ -546,8 +546,8 @@ def rbn_add_contact_information(plugin_context, contact):
                 plugin_context["CONTACT" + key.upper()] = contact[key]
     else:
         if contact.startswith("mailto:"): # Fake contact
-            contact_dict = { 
-                "name"  : contact[7:].split("@")[0], 
+            contact_dict = {
+                "name"  : contact[7:].split("@")[0],
                 "alias" : "Email address " + contact,
                 "email" : contact[7:],
                 "pager" : "" }

@@ -7,7 +7,7 @@ description:
  Checks the status of IO Groups of an IBM SVC / V7000 device.
 
  If all nodes of an IO Group report status {online} the check returns
- {OK}. If all nodes of an IO Group report some other status (e. g. 
+ {OK}. If all nodes of an IO Group report some other status (e. g.
  {offline}) the check returns {CRIT}. And in all other cases - that
  means if at least one node is {online} - the check returns {WARN}.
 

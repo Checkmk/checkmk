@@ -36,7 +36,7 @@ def check_innovaphone_priports_l1(item, params, info):
        1 : "Down",
        2 : "UP",
     }
-    
+
     for line in info:
         if line[0] == item:
             state = 0

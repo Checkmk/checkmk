@@ -308,7 +308,7 @@ def declare_custom_view_permissions():
                 views = eval(file(path).read())
                 for name, view in views.items():
                     if view["public"] and not config.permission_exists("view." + name):
-                        config.declare_permission("view." + name, view["title"], 
+                        config.declare_permission("view." + name, view["title"],
                                     view["description"], ['admin','user','guest'])
         except:
             if config.debug:

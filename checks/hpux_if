@@ -116,7 +116,7 @@ def hpux_parse_speed(speed):
         mult = 1000 * 1000 * 1000
     else:
         mult = 1000 * 1000
-    return int(parts[0]) * mult
+    return float(parts[0]) * mult
 
 def hpux_parse_operstatus(txt):
     if txt.lower() == "up":

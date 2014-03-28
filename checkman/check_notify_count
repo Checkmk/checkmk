@@ -5,7 +5,7 @@ license: GPL
 distribution: check_mk
 description:
  Check the number of sent notifications per contact using the plugin check_notify_count
- provided with Check_MK. This plugin counts the total number of notifcations sent by the local 
+ provided with Check_MK. This plugin counts the total number of notifcations sent by the local
  monitoring core and creates graphs for each individual contact. You can configure thresholds
  on the number of notifications per contact in a defined time interval.
 

@@ -346,7 +346,7 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
     table->addColumn(new ServicelistColumn(prefix + "services_with_info",
                 "A list of all services including detailed information about each service",    (char *)(&hst.services) - ref, indirect_offset, false, 2));
     table->addColumn(new ServicelistColumn(prefix + "services_with_fullstate",
-                "A list of all services including full state information. The list of entries can grow in future versions.", 
+                "A list of all services including full state information. The list of entries can grow in future versions.",
                    (char *)(&hst.services) - ref, indirect_offset, false, 3));
 }
 

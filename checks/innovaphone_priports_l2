@@ -41,7 +41,7 @@ def check_innovaphone_priports_l2(item, params, info):
        1 : "Down",
        2 : "UP",
     }
-    
+
     for line in info:
         if line[0] == item:
             state = 0
@@ -67,7 +67,7 @@ check_info["innovaphone_priports_l2"] = {
     "has_perfdata"          : False,
     "snmp_info"             : ( ".1.3.6.1.4.1.6666.1.1.1", [ 1, #l2Label
                                                              2, #l2State
-                                                             3  #l2Mode 
+                                                             3  #l2Mode
                                                             ] ),
     "snmp_scan_function"    : lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.6666",
 }

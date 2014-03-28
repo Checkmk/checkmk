@@ -1,0 +1,8 @@
+Title: Availablity: Prevent crash if the notification period is missing
+Level: 1
+Component: core
+Version: 1.2.5i1
+Date: 1395999230
+Class: fix
+
+There are some setup where the notification period of a nagios object was set to NULL.

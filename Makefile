@@ -249,6 +249,3 @@ setup:
 	rm -rf $(DISTNAME)
 	check_mk -R
 	/etc/init.d/apache2 reload
-
-
--include Makefile.private

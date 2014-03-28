@@ -527,6 +527,11 @@ void TableStateHistory::answerQuery(Query *query)
                 else
                     state->_notification_period = (char *)"";
 
+                // If for some reason the notification period is missing set a default
+                if (state->_notification_period == NULL) {
+                     state->_notification_period = (char *)"";
+                }
+
                 // Same for service period. For Nagios this is a bit different, since this
                 // is no native field but just a custom variable
                 if (state->_service != 0)

@@ -13,7 +13,7 @@ item:
  "Drives", "MDisks" or "VDisks" plus the name of the node.
 
 inventory:
- Creates one check for every Drive, MDisk or VDisk on every node.
+ Creates one check for Drives, one for MDisks and one for VDisks per node.
 
 perfdata:
  Two values: Throughput read and throughput write in Bytes/sec.

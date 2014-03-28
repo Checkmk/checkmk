@@ -1,0 +1,8 @@
+Title: ibm_svc_systemstats.diskio: new check for disk throughput in IBM SVC / V7000 devices in total
+Level: 1
+Component: checks
+Version: 1.2.5i2
+Date: 1396015424
+Class: feature
+
+

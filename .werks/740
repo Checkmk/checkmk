@@ -1,4 +1,4 @@
-Title: winperf_if: now able to handle display of bandwidth > 4GBit
+Title: winperf_if: now able to handle bandwidth > 4GBit
 Level: 1
 Component: checks
 Version: 1.2.5i2

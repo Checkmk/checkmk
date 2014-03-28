@@ -237,6 +237,7 @@
     * 0758 FIX: check_sql: Fixed monitoring of stored procedures with oracle
     * 0599 FIX: esx_vsphere_datastores: provisioning levels in WATO are no longer limited to 101%
     * 0737 FIX: megaraid_ldisks: now able to handle "No Virtual Drive Configured" states...
+    * 0763 FIX: hpux_if: Fixed exception during parsing of provided data on some systems...
 
     Multisite:
     * 0371 Added log class filter to hostsvcevents view

@@ -1,0 +1,184 @@
+#!/usr/bin/python
+# encoding: utf-8
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# needs to issue a command like
+# ssh USER@HOSTNAME 'echo \<\<\<ibm_svc_host:sep\(58\)\>\>\>; lshost -nohdr -delim :; echo \<\<\<ibm_svc_license:sep\(58\)\>\>\>; lslicense -delim :; echo \<\<\<ibm_svc_mdisk:sep\(58\)\>\>\>; lsmdisk -nohdr -delim :; echo \<\<\<ibm_svc_mdiskgrp:sep\(58\)\>\>\>; lsmdiskgrp -nohdr -delim :; echo \<\<\<ibm_svc_node:sep\(58\)\>\>\>; lsnode -nohdr -delim :; echo \<\<\<ibm_svc_nodestats:sep\(58\)\>\>\>; lsnodestats -nohdr -delim :; echo \<\<\<ibm_svc_system:sep\(58\)\>\>\>; lssystem -delim :; echo \<\<\<ibm_svc_systemstats:sep\(58\)\>\>\>; lssystemstats -nohdr -delim :'
+
+import sys, os, getopt, re
+
+import inspect, pprint # FOR DEBUGGING
+
+#############################################################################
+def usage():
+#############################################################################
+    sys.stderr.write("""Check_MK SVC / V7000 Agent
+
+USAGE: agent_ibmsvc [OPTIONS] HOST
+       agent_ibmsvc -h
+
+ARGUMENTS:
+  HOST                          Host name or IP address of the target device
+
+OPTIONS:
+  -h, --help                    Show this help message and exit
+  -u USER, --user USER          Username for EMC VNX login
+
+                                We try to use SSH key authentification.
+                                Private key must be pre-created in ~/.ssh/
+
+  -k, --accept-any-hostkey      Accept any SSH Host Key
+                                Please note: This might be a security issue because
+                                man-in-the-middle attacks are not recognized
+
+  --debug                       Debug mode: write some debug messages,
+                                let Python exceptions come through
+
+  --profile                     Enable performance profiling in Python source code
+
+  -i MODULES, --modules MODULES Modules to query. This is a comma separated list of
+                                which may contain the keywords "lshost", "lslicense",
+                                "lsmdisk", "lsmdiskgrp", "lsnode", "lsnodestats",
+                                "lssystem", "lssystemstats" or "all" to define which
+                                information should be queried from the device. You can
+                                define to use only view of them to optimize performance.
+                                The default is "all".
+
+""")
+
+#############################################################################
+# command line options
+#############################################################################
+short_options = 'hu:p:t:m:i:k'
+long_options  = [ 'help', 'user=', 'debug', 'timeout=', 'profile', 'modules=', 'accept-any-hostkey' ]
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+except getopt.GetoptError, err:
+    sys.stderr.write("%s\n" % err)
+    sys.exit(1)
+
+opt_debug       = False
+opt_timeout     = 10
+opt_any_hostkey = ""
+
+g_profile       = None
+g_profile_path  = "ibmsvc_profile.out"
+
+host_address    = None
+user            = None
+mortypes        = [ 'all' ]
+
+command_options = { 
+    "lshost"        : {"section_header" : "ibm_svc_host",        "active" : False},
+    "lslicense"     : {"section_header" : "ibm_svc_license",     "active" : False},
+    "lsmdisk"       : {"section_header" : "ibm_svc_mdisk",       "active" : False},
+    "lsmdiskgrp"    : {"section_header" : "ibm_svc_mdiskgrp",    "active" : False},
+    "lsnode"        : {"section_header" : "ibm_svc_node",        "active" : False},
+    "lsnodestats"   : {"section_header" : "ibm_svc_nodestats",   "active" : False},
+    "lssystem"      : {"section_header" : "ibm_svc_system",      "active" : False},
+    "lssystemstats" : {"section_header" : "ibm_svc_systemstats", "active" : False},
+}
+
+for o,a in opts:
+    if o in [ '--debug' ]:
+        opt_debug = True
+    elif o in [ '--profile' ]:
+        import cProfile
+        g_profile = cProfile.Profile()
+        g_profile.enable()
+    elif o in [ '-u', '--user' ]:
+        user = a
+    elif o in [ '-i', '--modules' ]:
+        mortypes = a.split(',')
+    elif o in [ '-t', '--timeout' ]:
+        opt_timeout = int(a)
+    elif o in [ '-k', '--accept-any-hostkey' ]:
+        opt_any_hostkey = "-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+    elif o in [ '-h', '--help' ]:
+        usage()
+        sys.exit(0)
+
+if len(args) == 1:
+    host_address = args[0]
+elif not args:
+    sys.stderr.write("ERROR: No host given.\n")
+    sys.exit(1)
+else:
+    sys.stderr.write("ERROR: Please specify exactly one host.\n")
+    sys.exit(1)
+
+if user == None:
+    sys.stderr.write("ERROR: No user name given.\n")
+    sys.exit(1)
+
+for module in command_options.keys():
+    try:
+        if mortypes.index("all") >= 0:
+            command_options[module]["active"] = True
+    except ValueError:
+        pass
+
+    try:
+        if mortypes.index(module) >= 0:
+            command_options[module]["active"] = True
+    except ValueError:
+        pass
+
+
+#############################################################################
+# fetch information by ssh
+#############################################################################
+
+cmd = "ssh -o ConnectTimeout=%s %s %s@%s '" % (opt_timeout, opt_any_hostkey, user, host_address)
+
+for module in command_options.keys():
+    if command_options[module]["active"] == True:
+        cmd += "echo \<\<\<%s:sep\(58\)\>\>\>; %s -nohdr -delim :;" % (command_options[module]["section_header"], module)
+
+cmd += "'"
+
+if opt_debug:
+    sys.stderr.write("executing external command: %s\n" % cmd)
+for line in os.popen(cmd).readlines():
+    print line,
+
+
+#############################################################################
+def output_profile():
+#############################################################################
+    g_profile.dump_stats(g_profile_path)
+    show_profile = os.path.join(os.path.dirname(g_profile_path), 'show_profile.py')
+    file(show_profile, "w")\
+        .write("#!/usr/bin/python\n"
+               "import pstats\n"
+               "stats = pstats.Stats('%s')\n"
+               "stats.sort_stats('time').print_stats()\n" % g_profile_path)
+    os.chmod(show_profile, 0755)
+
+    sys.stderr.write("Profile '%s' written. Please run %s.\n" % (g_profile_path, show_profile))
+
+if g_profile:
+    output_profile()

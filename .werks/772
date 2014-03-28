@@ -1,8 +1,10 @@
-Title: juniper_trpz_mem: New check to monitor memory usage on juniper switches
+Title: added special agent for IBM SVC / V7000 storage systems
 Level: 1
 Component: checks
 Version: 1.2.5i1
-Date: 1395845671
+Date: 1395998056
 Class: feature
 
-
+Added a special agent for IBM SVC / V7000 storage systems and a WATO
+rule for configuring it. This way you do not need any longer give the
+very long SSH command manually as a datasource program.

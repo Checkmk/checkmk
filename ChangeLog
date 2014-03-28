@@ -3,6 +3,7 @@
     * 0147 enterasys_fans: New Check to monitor fans of enterasys swichtes
     * 0774 ibm_svc_nodestats.diskio: new check for disk troughput per node on IBM SVC / V7000 devices
     * 0775 ibm_svc_systemstats.diskio: new check for disk throughput in IBM SVC / V7000 devices in total
+    * 0764 lnx_quota: Added new check to monitor Linux File System Quota...
     * 0740 FIX: winperf_if: now able to handle bandwidth > 4GBit...
 
 

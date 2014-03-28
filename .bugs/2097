@@ -1,9 +1,9 @@
 Title: Livestatus is not compatible to Nagios 4
 Component: livestatus
-State: open
+Class: feature
+State: done
 Date: 2013-12-16 14:00:17
 Targetversion: future
-Class: feature
 
 Configuration
 
@@ -43,3 +43,6 @@ lized
 -------------------------------------
 Livestatus needs to know for which nagios core to compile and use different
 headers.
+
+2014-03-28 10:11:29: changed state open -> done
+Has already been implemented via configure flag.

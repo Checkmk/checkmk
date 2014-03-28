@@ -1,4 +1,4 @@
-title: Dell PowerEdge Server: Power Consumption 
+title: Dell PowerEdge Server: Power Consumption
 agents: snmp
 catalog: hw/server/dell
 license: GPL

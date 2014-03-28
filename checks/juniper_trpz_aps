@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 def inventory_juniper_trpz_aps(info):
-    return [ (None, None) ] 
+    return [ (None, None) ]
 
 def check_juniper_trpz_aps(_no_item, _no_params, info):
     aps = info[0][0]

@@ -1,4 +1,4 @@
-title: Number of online access points 
+title: Number of online access points
 agents: snmp
 catalog: hw/network/juniper
 license: GPL

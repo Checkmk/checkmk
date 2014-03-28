@@ -31,7 +31,7 @@ def inventory_innovaphone_licenses(info):
 
 def check_innovaphone_licenses(_no_item, params, info):
     total, used = map(savefloat, info[0])
-    perc_used = ( used/ 100 ) * total 
+    perc_used = ( used/ 100 ) * total
     warn, crit = params
     message = "Used %.0f/%.0f Licences (%.0f%%)" % ( used, total, perc_used)
     levels = "Warning/ Critical at (%s/%s)" % ( warn, crit )

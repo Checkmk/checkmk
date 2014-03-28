@@ -4,7 +4,7 @@ catalog: hw/network/tel
 license: GPL
 distribution: check_mk
 description:
- This check shows the current device temperature in degree celsisus. 
+ This check shows the current device temperature in degree celsisus.
 
 
 inventory:

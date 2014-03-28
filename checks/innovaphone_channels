@@ -40,7 +40,7 @@ def check_innovaphone_channels(item, params, info):
             perc_used = (idle/total) * 100
             perc_free = 100 - perc_used
             message = "(Used: %.0f, Free: %.0f, Total: %.0f)" % ( total - idle, idle, total )
-            return check_innovaphone(params, [[None,perc_free]], '%', message ) 
+            return check_innovaphone(params, [[None,perc_free]], '%', message )
     return 3, "No Channel information found"
 
 check_info["innovaphone_channels"] = {

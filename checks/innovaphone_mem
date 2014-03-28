@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-innovaphone_mem_default_levels = ( 60.0, 70.0 ) 
+innovaphone_mem_default_levels = ( 60.0, 70.0 )
 
 def inventory_innovaphone_mem(info):
     return [ (None, "innovaphone_mem_default_levels") ]

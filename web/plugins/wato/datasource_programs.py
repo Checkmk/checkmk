@@ -343,6 +343,6 @@ register_rule(group,
            Password( title = _("Password")),
         ]
     ),
-    factory_default = FACTORY_DEFAULT_UNUSED, 
+    factory_default = FACTORY_DEFAULT_UNUSED,
     match = "first")
 

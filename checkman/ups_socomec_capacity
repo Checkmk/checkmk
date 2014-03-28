@@ -10,7 +10,7 @@ description:
  and the remaining runtime (in minutes).
  Warning and critical levels can
  be given for the time on battery and the capacity.
- 
+
  Please refer to the manpage of ups_capacity for configuration examples.
 
 perfdata:

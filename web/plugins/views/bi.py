@@ -89,6 +89,7 @@ def paint_bi_icons(row):
 multisite_painters["aggr_icons"] = {
     "title" : _("Links"),
     "columns" : [ "aggr_group", "aggr_name", "aggr_effective_state" ],
+    "printable" : False,
     "paint" : paint_bi_icons,
 }
 

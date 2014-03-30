@@ -619,6 +619,7 @@ if mkeventd_enabled:
     multisite_painters["event_icons"] = {
         "title"   : _("Event Icons"),
         "short"   : _("Icons"),
+        "printable" : False,
         "columns" : [ "event_phase" ],
         "paint"   : paint_event_icons,
     }

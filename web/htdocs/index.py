@@ -68,6 +68,13 @@ def load_all_plugins():
             pass
         except Exception:
             raise
+
+    # Load reporting plugins (only available in subscription version)
+    try:
+        reporting.load_plugins()
+    except:
+        pass
+
 __builtin__.load_all_plugins = load_all_plugins
 
 # Main entry point for all HTTP-requests (called directly by mod_apache)

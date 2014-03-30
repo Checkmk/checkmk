@@ -319,6 +319,8 @@ def may_with_roles(some_role_ids, pname):
                 base_role_id = role["basedon"]
             else:
                 base_role_id = role_id
+            if pname not in permissions_by_name:
+                return False # Permission unknown. Assume False. Functionality might be missing
             perm = permissions_by_name[pname]
             he_may = base_role_id in perm["defaults"]
         if he_may:

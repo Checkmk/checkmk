@@ -197,6 +197,7 @@ multisite_painters["perfometer"] = {
                   "service_check_command", "service_pnpgraph_present", "service_plugin_output" ],
     "paint" : paint_perfometer,
     "sorter" : "svc_perf_val01",
+    "printable" : False, # No printable on PDF, only in HTML
 }
 
 load_web_plugins("perfometer", globals())

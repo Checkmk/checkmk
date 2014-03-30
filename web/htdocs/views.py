@@ -235,6 +235,18 @@ class Filter:
     def heading_info(self, infoname):
         return None
 
+def unset_all_filtervars():
+    for f in multisite_filters.values():
+        for varname in f.htmlvars:
+            html.del_var(varname)
+
+def get_all_filtervars():
+    filtervars = {}
+    for f in multisite_filters.values():
+        for varname in f.htmlvars:
+            if html.has_var(varname):
+                filtervars[varname] = html.var(varname)
+    return filtervars
 
 # Load all views - users or builtins
 def load_views():
@@ -1176,7 +1188,15 @@ def page_view():
         raise MKGeneralException(_("Missing the variable view_name in the URL."))
     view = html.available_views.get(view_name)
     if not view:
-        raise MKGeneralException(("No view defined with the name '%s'.") % html.attrencode(view_name))
+        raise MKGeneralException(_("No view defined with the name '%s'.") % html.attrencode(view_name))
+
+    if config.may("reporting.instant"):
+        if html.var("instant_report"):
+            import reporting
+            reporting.instant_report()
+            return
+
+        html.add_status_icon("report", _("Export as PDF (instant report)"), html.makeuri([("instant_report", "1")]))
 
     show_view(view, True, True, True)
 

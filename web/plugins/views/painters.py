@@ -188,6 +188,7 @@ def iconpainter_columns(what):
 multisite_painters["service_icons"] = {
     "title":   _("Service icons"),
     "short":   _("Icons"),
+    "printable" : False, # does not contain printable text
     "columns": iconpainter_columns("service"),
     "groupby" : lambda row: "", # Do not account for in grouping
     "paint":    lambda row: paint_icons("service", row)
@@ -196,6 +197,7 @@ multisite_painters["service_icons"] = {
 multisite_painters["host_icons"] = {
     "title":   _("Host icons"),
     "short":   _("Icons"),
+    "printable" : False, # does not contain printable text
     "columns": iconpainter_columns("host"),
     "groupby" : lambda row: "", # Do not account for in grouping
     "paint":    lambda row: paint_icons("host", row)

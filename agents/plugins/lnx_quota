@@ -1,0 +1,6 @@
+#!/bin/bash
+echo "<<<lnx_quota>>>"
+for VOL in $(grep usrjquota /etc/fstab | cut -d' ' -f2); do
+    echo "[[[$VOL]]]"
+    repquota -up $VOL
+done

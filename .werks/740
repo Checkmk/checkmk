@@ -1,0 +1,11 @@
+Title: winperf_if: now able to handle bandwidth > 4GBit
+Level: 1
+Component: checks
+Version: 1.2.5i2
+Date: 1396016199
+Class: fix
+
+If an interface had a bandwidth of > 4GBit the check did not receive
+the correct bandwidth value, because of a 32 bit counter overflow.
+Workaround: The windows plugin wmic_if.bat now also reports the correct bandwidth value.
+If you use this plugin its bandwidth value will have precedence before the bandwidth determined by the agent.

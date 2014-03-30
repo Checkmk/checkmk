@@ -1,0 +1,102 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+def lnx_quota_parse(info):
+    parsed = {}
+    fs = None
+    for line in info:
+        if line[0].startswith('[[['):
+            # new filesystem
+            fs = line[0][3:-3]
+            parsed[fs] = {}
+        elif fs and len(line) == 10:
+            # new table entry
+            parsed[fs][line[0]] = map(int, line[2:])
+    return parsed
+
+def inventory_lnx_quota(info):
+    inv = []
+    for fs in lnx_quota_parse(info).keys():
+        inv.append((fs, {}))
+    return inv
+
+def check_lnx_quota(item, params, info):
+    parsed = lnx_quota_parse(info)
+    if item not in parsed:
+        return 3, 'Quota info not found for this filesystem'
+
+    state    = 0
+    output   = []
+    perfdata = []
+
+    fmt = lambda v, w: w == 'files' and '%d files' % v or get_bytes_human_readable(used*1000, 1000)
+
+    for user, values in parsed[item].items():
+        for what, (used, soft, hard, grace) in [
+                ('blocks', values[:4]),
+                ('files',  values[4:]) ]:
+            if soft == 0 and hard == 0:
+                continue # skip entries with not-set limits
+
+            this_state = 0
+            txt = '%s %s' % (user, fmt(used, what))
+            if used > hard:
+                this_state = 2
+                txt += ' (over %s hard(!!))' % fmt(hard, what)
+            elif used > soft:
+                this_state = 1
+                txt += ' (over %s soft' % fmt(soft, what)
+                if grace != 0:
+                    # user is or was in grace period
+                    if grace <= time.time():
+                        txt += ', grace exceeded(!!)'
+                        this_state = 2
+                    else:
+                        txt += ', within grace(!)'
+                else:
+                    txt += '(!)'
+                txt += ')'
+            # When users are in "ok" state, don't output their usage, just
+            # add the perfdata for them
+            if this_state:
+                output.append(txt)
+            state = max(state, this_state)
+
+            perfdata.append(('%s_%s' % (user, what), used*1000,
+                             soft*1000, hard*1000, 0, hard*1000))
+
+    if not output:
+        output.append('All users are within quota')
+
+    return state, ', '.join(output), perfdata
+
+check_info['lnx_quota'] = {
+    'check_function'      : check_lnx_quota,
+    'inventory_function'  : inventory_lnx_quota,
+    'service_description' : 'Quota %s',
+    'has_perfdata'        : True,
+    'group'               : 'quota',
+}

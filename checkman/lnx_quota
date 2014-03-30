@@ -1,0 +1,22 @@
+title: Linux File System Quotas
+agents: linux
+catalog: os/storage
+license: GPL
+distribution: check_mk
+description:
+  This check monitors filesystems where linux user quotas has been configured
+  for users which exceed their space and file quotas.
+
+  The check uses information provided by the Check_MK linux agent which are
+  available when the agent has been extended with the {lnx_quota} agent plugin.
+
+item:
+  The mountpoint of the filesystem
+
+perfdata:
+  Two values per user. {<user>_blocks} reports the currently allocated space
+  of the user in bytes and {<user>_files} reports the number of files currently
+  owned by the user.
+
+inventory:
+  Creates one check for each filesystem with enabled user quotas

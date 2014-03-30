@@ -121,6 +121,7 @@ def convert_winperf_if(info):
     for nr, nic_name in enumerate(nic_names):
         nic = nics[nic_name]
         mac_txt = nic.get('MACAddress')
+        bandwidth = saveint(nic.get('Speed'))
         if mac_txt:
             mac = "".join(map(lambda x: chr(int(x, 16)), mac_txt.split(':')))
         else:
@@ -129,7 +130,7 @@ def convert_winperf_if(info):
            str(nr + 1),
            nic_name,
            "loopback" in nic_name.lower() and '24' or '6',
-           nic[10], # Aktuelle Bandbreite
+           bandwidth or nic[10], # Aktuelle Bandbreite
            # NetConnectionStatus: 2 st up, 7 ist 'not connected'. If the plugin
            # wmic_if is missing and we have link information we need to assume 'up':
            nic.get('NetConnectionStatus', '2') == '2' and '1' or '2',

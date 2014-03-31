@@ -317,6 +317,9 @@ void TableStateHistory::answerQuery(Query *query)
     g_store->logCache()->lockLogCache();
     g_store->logCache()->logCachePreChecks();
 
+    // This flag might be set to true by the return value of processDataset(...)
+    _abort_query = false;
+
     // Keep track of the historic state of services/hosts here
     typedef map<HostServiceKey, HostServiceState*> state_info_t;
     state_info_t state_info;
@@ -389,6 +392,9 @@ void TableStateHistory::answerQuery(Query *query)
 
     while (0 != (entry = getNextLogentry()))
     {
+        if (_abort_query)
+            break;
+
         if (entry->_time >= _until) {
             getPreviousLogentry();
             break;
@@ -637,31 +643,33 @@ void TableStateHistory::answerQuery(Query *query)
 
     // Create final reports
     state_info_t::iterator it_hst = state_info.begin();
-    while (it_hst != state_info.end())
-    {
-        HostServiceState* hst = it_hst->second;
+    if (!_abort_query) {
+        while (it_hst != state_info.end())
+        {
+            HostServiceState* hst = it_hst->second;
 
-        // No trace since the last two nagios startup -> host/service has vanished
-        if (hst->_may_no_longer_exist) {
-            // Log last known state up to nagios restart
-            hst->_time  = hst->_last_known_time;
-            hst->_until = hst->_last_known_time;
-            process(query, hst);
+            // No trace since the last two nagios startup -> host/service has vanished
+            if (hst->_may_no_longer_exist) {
+                // Log last known state up to nagios restart
+                hst->_time  = hst->_last_known_time;
+                hst->_until = hst->_last_known_time;
+                process(query, hst);
 
-            // Set absent state
-            hst->_state = -1;
+                // Set absent state
+                hst->_state = -1;
+                hst->_until = hst->_time;
+                hst->_debug_info = "UNMONITORED";
+                if (hst->_log_output)
+                    free(hst->_log_output);
+                hst->_log_output = 0;
+            }
+
+            hst->_time  = _until - 1;
             hst->_until = hst->_time;
-            hst->_debug_info = "UNMONITORED";
-            if (hst->_log_output)
-                free(hst->_log_output);
-            hst->_log_output = 0;
+
+            process(query, hst);
+            it_hst++;
         }
-
-        hst->_time  = _until - 1;
-        hst->_until = hst->_time;
-
-        process(query, hst);
-        it_hst++;
     }
 
     // Cleanup !
@@ -889,7 +897,8 @@ inline void TableStateHistory::process(Query *query, HostServiceState *hs_state)
     }
 
     // if (hs_state->_duration > 0)
-    query->processDataset(hs_state);
+    _abort_query = !query->processDataset(hs_state);
+
     hs_state->_from = hs_state->_until;
 };
 

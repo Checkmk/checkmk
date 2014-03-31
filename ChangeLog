@@ -13,6 +13,9 @@
     BI:
     * 0741 FIX: BI editor: fixed display bug in "Create nodes based on a service search"...
 
+    Livestatus:
+    * 0742 FIX: table statehist: now able to cancel a running query if limit is reached...
+
 
 1.2.5i1:
     Core & Setup:

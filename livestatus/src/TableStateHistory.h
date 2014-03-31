@@ -43,6 +43,7 @@ class TableStateHistory : public Table
     Query   *_query;
     int      _since;
     int      _until;
+    bool     _abort_query;
 
     // Notification periods information, name: active(1)/inactive(0)
     typedef map<string, int> _notification_periods_t;

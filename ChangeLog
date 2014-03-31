@@ -6,6 +6,9 @@
     * 0764 lnx_quota: Added new check to monitor Linux File System Quota...
     * 0740 FIX: winperf_if: now able to handle bandwidth > 4GBit...
 
+    Multisite:
+    * 0765 NagVis-Maps-Snapin: Now visualizes downtime / acknowledgment states of maps...
+
 
 1.2.5i1:
     Core & Setup:

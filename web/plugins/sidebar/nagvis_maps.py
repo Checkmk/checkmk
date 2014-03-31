@@ -44,5 +44,24 @@ sidebar_snapins["nagvis_maps"] = {
     "render":      render_nagvis_maps,
     "allowed":     [ "user", "admin", "guest" ],
     "refresh":     True,
-    "styles":      ""
+    "styles":      """
+div.state1.statea {
+    border-color: #ff0;
+}
+div.state2.statea {
+    border-color: #f00;
+}
+div.statea {
+    background-color: #0b3;
+}
+div.state1.stated {
+    border-color: #ff0;
+}
+div.state2.stated {
+    border-color: #f00;
+}
+div.stated {
+    background-color: #0b3;
+}
+"""
 }

@@ -1,0 +1,9 @@
+Title: NagVis-Maps-Snapin: Now visualizes downtime / acknowledgment states of maps
+Level: 1
+Component: multisite
+Version: 1.2.5i2
+Date: 1396248631
+Class: feature
+
+The NagVis-Maps sidebar snapin now shows a green box with yellow or red borders when
+maps have a problematic summary state, but have been acknowledged or set into downtime.

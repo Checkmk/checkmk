@@ -15089,7 +15089,8 @@ def bi_called_rule(node):
             return subnode[1][0], info
     elif node[0] == "foreach_service":
         subnode = node[1][-1]
-        return subnode[1][0], _("Called for each service...")
+        if subnode[0] == 'call':
+            return subnode[1][0], _("Called for each service...")
 
 def count_bi_rule_references(aggregations, aggregation_rules, ruleid):
     aggr_refs = 0

@@ -128,6 +128,8 @@ def check_auth_automation():
     if secret and user and "/" not in user:
         path = defaults.var_dir + "/web/" + user + "/automation.secret"
         if os.path.isfile(path) and file(path).read().strip() == secret:
+            # Auth with automation secret succeeded - mark transid as unneeded in this case
+            html.set_ignore_transids()
             return user
     raise MKAuthException(_("Invalid automation secret for user %s") % user)
 

@@ -1,0 +1,33 @@
+Title: Changed transid implemtation to work as CSRF protection (Fixes CVE-2014-2330)
+Level: 3
+Component: multisite
+Version: 1.2.5i2
+Date: 1396259365
+Class: fix
+
+This change fixes possible attacks against Check_MK Multisite users. In previous
+versions a possible attacker could try to make the browsers of authenticated users
+open URLs of the Check_MK Multisite GUI to execute actions e.g. within WATO without
+knowledge of the attacked user.
+
+To make such an attack possible, there are several things needed: The user must be
+authenticated with multisite and have enough permission within multisite to execute
+the actions the attacker wants to use, the attacker needs to know the exact URL to the
+Multisite GUI. Then the attacker needs to make the user either click on a manipulated
+link or open a manipulated webpage which makes the browser of the user, where the user
+is authenticated with multisite, open the URL the attacker wants to make it open.
+
+The multisite GUI makes use of transids (transaction ids) when processing form
+submissions or actions. The transids were mainly used to prevent double execution
+of actions when reloading the page which performed the action in the browser.
+Now we changed internal handling of the transid to make it also prevent CSRF attacks.
+The transid is now some kind of shared secret between the webserver and the browser
+of the user. This ensures a form submission is intended by a previously requested page.
+
+This change impicates an incompatible change: In case you use a script which opens
+multisite pages to perform an action, e.g. set a downtime and use this with a regular
+user account which authenticates by username/password, the script won't work anymore
+after this change.
+The way to go is to adapt the script and change the user to authenticate with an
+automation secret instead of a password. For this kind of authentication, you will
+need to user other URL parameters (_username=... and _secret=...).

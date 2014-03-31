@@ -9,7 +9,7 @@ description:
  Status {online} is {OK}, status {offline} and {excluded} are {CRIT} and
  every other status is {WARN}.
 
- Mode {managed} is {OK} and every other mode is {WARN}.
+ Modes {managed} and {array} are {OK} and every other mode is {WARN}.
 
  The worst of both is returned as check result.
 

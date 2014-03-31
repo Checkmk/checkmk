@@ -62,7 +62,7 @@ def check_ibm_svc_mdisk(item, _no_params, info):
 
             # check mdisk_mode
             message += ", Mode %s" % mdisk_mode
-            if mdisk_mode != "managed":
+            if mdisk_mode not in ( "managed", "array" ):
                 status = max(status, 1)
                 message += "(!)"
 

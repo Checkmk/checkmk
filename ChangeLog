@@ -6,6 +6,9 @@
     * 0764 lnx_quota: Added new check to monitor Linux File System Quota...
     * 0740 FIX: winperf_if: now able to handle bandwidth > 4GBit...
 
+    BI:
+    * 0741 FIX: BI editor: fixed display bug in "Create nodes based on a service search"...
+
 
 1.2.5i1:
     Core & Setup:

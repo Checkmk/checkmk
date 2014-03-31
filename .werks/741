@@ -1,0 +1,9 @@
+Title: BI editor: fixed display bug in "Create nodes based on a service search"
+Level: 1
+Component: bi
+Version: 1.2.5i2
+Date: 1396254706
+Class: fix
+
+The WATO BI editor had some problems when displaying rules with the pattern<br>
+"Create nodes based on a service search" -> "State of a service"

@@ -24,20 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-dell_poweredge_pci_info = ( ".1.3.6.1.4.1.674.10892.5.4.1100.80.1", [
-                                      #"1", # pCIDevicechassisIndex       0
-                                      #"2", # pCIDeviceIndex              1
-                                      #"3", # pCIDeviceStateCapabilities
-                                      #"4", # pCIDeviceStateSettings      0
-                                      "5", # pCIDeviceStatus             0
-                                      "7", # pCIDeviceDataBusWidth       1
-                                      "8", # pCIDeviceManufacturerName   2
-                                      "9", # pCIDeviceDescriptionName    3
-                                      "12", # pCIDeviceFQDD              4
-                              ])
-
-dell_poweredge_pci_scan =  lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.674.10892.5"
-
 def inventory_dell_poweredge_pci(info):
     inventory = []
     for line in info:
@@ -74,7 +60,17 @@ check_info["dell_poweredge_pci"] = {
     "inventory_function"    : inventory_dell_poweredge_pci,
     "service_description"   : "PCI %s",
     "has_perfdata"          : False,
-    "snmp_info"             : dell_poweredge_pci_info,
-    "snmp_scan_function"    : dell_poweredge_pci_scan,
+    "snmp_info"             : ( ".1.3.6.1.4.1.674.10892.5.4.1100.80.1", [
+                                      #"1", # pCIDevicechassisIndex       0
+                                      #"2", # pCIDeviceIndex              1
+                                      #"3", # pCIDeviceStateCapabilities
+                                      #"4", # pCIDeviceStateSettings      0
+                                      "5", # pCIDeviceStatus             0
+                                      "7", # pCIDeviceDataBusWidth       1
+                                      "8", # pCIDeviceManufacturerName   2
+                                      "9", # pCIDeviceDescriptionName    3
+                                      "12", # pCIDeviceFQDD              4
+                              ]),
+    "snmp_scan_function"    : lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.674.10892.5",
 }
 

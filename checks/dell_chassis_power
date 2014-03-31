@@ -24,15 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-dell_chassis_power_info = ( ".1.3.6.1.4.1.674.10892.2", [
-                                      "3.1.5.0", # drsPowerCurrStatus         0
-                                      "4.1.1.2.1", # drsPotentialPower        1
-                                      "4.1.1.4.1", # drsMaxPowerSpecification 2
-                                      "4.1.1.13.1", # drsWattsReading         3
-                                      "4.1.1.14.1", # drsAmpsReading          4
-                              ])
-
-dell_chassis_power_scan =  lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.674.10892.2"
 
 def inventory_dell_chassis_power(info):
     if info:
@@ -62,7 +53,13 @@ check_info["dell_chassis_power"] = {
     "inventory_function"    : inventory_dell_chassis_power,
     "service_description"   : "Chassis Power",
     "has_perfdata"          : True,
-    "snmp_info"             : dell_chassis_power_info,
-    "snmp_scan_function"    : dell_chassis_power_scan,
+    "snmp_info"             : ( ".1.3.6.1.4.1.674.10892.2", [
+                                      "3.1.5.0", # drsPowerCurrStatus         0
+                                      "4.1.1.2.1", # drsPotentialPower        1
+                                      "4.1.1.4.1", # drsMaxPowerSpecification 2
+                                      "4.1.1.13.1", # drsWattsReading         3
+                                      "4.1.1.14.1", # drsAmpsReading          4
+                              ]),
+    "snmp_scan_function"    : lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.674.10892.2",
 }
 

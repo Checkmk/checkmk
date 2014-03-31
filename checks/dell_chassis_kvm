@@ -24,12 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-dell_chassis_kvm_info = ( ".1.3.6.1.4.1.674.10892.2", [
-                                      "3.1.2", # drsKVMCurrStatus
-                                      "1.2.2", # drsiKVMFirmwareVersion
-                              ])
-
-dell_chassis_kvm_scan =  lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.674.10892.2"
 
 def inventory_dell_chassis_kvm(info):
     if info:
@@ -58,7 +52,10 @@ check_info["dell_chassis_kvm"] = {
     "inventory_function"    : inventory_dell_chassis_kvm,
     "service_description"   : "Overall KVM Status",
     "has_perfdata"          : False,
-    "snmp_info"             : dell_chassis_kvm_info,
-    "snmp_scan_function"    : dell_chassis_kvm_scan,
+    "snmp_info"             : ( ".1.3.6.1.4.1.674.10892.2", [
+                                      "3.1.2", # drsKVMCurrStatus
+                                      "1.2.2", # drsiKVMFirmwareVersion
+                              ]),
+    "snmp_scan_function"    : lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.674.10892.2",
 }
 

@@ -24,27 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-dell_poweredge_amperage_info = ( ".1.3.6.1.4.1.674.10892.5.4.600.30.1", [
-                                      "1", # amperageProbechassisIndex
-                                      "2", # amperageProbeIndex
-                                      # "3", # amperageProbeStateCapabilities
-                                      "4", # amperageProbeStateSettings
-                                      "5", # amperageProbeStatus
-                                      "6", # amperageProbeReading
-                                      "7", # amperageProbeType
-                                      "8", # amperageProbeLocationName
-                                      #"9", # amperageProbeUpperNonRecoverableThreshold
-                                      "10", # amperageProbeUpperCriticalThreshold
-                                      "11", # amperageProbeUpperNonCriticalThreshold
-                                      #"12", # amperageProbeLowerNonCriticalThreshold
-                                      #"13", # amperageProbeLowerCriticalThreshold
-                                      #"14", # amperageProbeLowerNonRecoverableThreshold
-                                      #"15", # amperageProbeCapabilities
-                                      #"16", # amperageProbeDiscreteReading
-                              ])
-
-dell_poweredge_amperage_scan =  lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.674.10892.5"
-
 def inventory_dell_poweredge_amperage_power(info):
     inventory = []
     for line in info:
@@ -105,8 +84,25 @@ check_info["dell_poweredge_amperage.power"] = {
     "inventory_function"    : inventory_dell_poweredge_amperage_power,
     "service_description"   : "%s",
     "has_perfdata"          : True,
-    "snmp_info"             : dell_poweredge_amperage_info,
-    "snmp_scan_function"    : dell_poweredge_amperage_scan,
+    "snmp_info"             : ( ".1.3.6.1.4.1.674.10892.5.4.600.30.1", [
+                                      "1", # amperageProbechassisIndex
+                                      "2", # amperageProbeIndex
+                                      # "3", # amperageProbeStateCapabilities
+                                      "4", # amperageProbeStateSettings
+                                      "5", # amperageProbeStatus
+                                      "6", # amperageProbeReading
+                                      "7", # amperageProbeType
+                                      "8", # amperageProbeLocationName
+                                      #"9", # amperageProbeUpperNonRecoverableThreshold
+                                      "10", # amperageProbeUpperCriticalThreshold
+                                      "11", # amperageProbeUpperNonCriticalThreshold
+                                      #"12", # amperageProbeLowerNonCriticalThreshold
+                                      #"13", # amperageProbeLowerCriticalThreshold
+                                      #"14", # amperageProbeLowerNonRecoverableThreshold
+                                      #"15", # amperageProbeCapabilities
+                                      #"16", # amperageProbeDiscreteReading
+                              ]),
+    "snmp_scan_function"    : lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.674.10892.5",
 }
 
 #check_info["dell_poweredge_amperage.current"] = {

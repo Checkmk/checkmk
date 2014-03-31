@@ -24,26 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-dell_poweredge_mem_info = ( ".1.3.6.1.4.1.674.10892.5.4.1100.50.1", [
-                                      #"1", # memoryDevicechassisIndex       0
-                                      #"2", # memoryDeviceIndex              1
-                                      #"3", # memoryDeviceStateCapabilities
-                                      #"4", # memoryDeviceStateSettings      0
-                                      "5", # memoryDeviceStatus             0
-                                      #"6", # memoryDeviceReading
-                                      #"7", # memoryDeviceType
-                                      "8", # memoryDeviceLocationName       1
-                                      #"10", # memoryDeviceBankLocationName
-                                      "14", # memoryDeviceSize
-                                      "15", # memoryDeviceSpeed
-                                      "21", # memoryDeviceManufacturerName
-                                      "22", # memoryDevicePartNumberName
-                                      "23", # memoryDeviceSerialNumberName
-                                      #"26", # memoryDeviceFQDD
-                              ])
-
-dell_poweredge_mem_scan =  lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.674.10892.5"
-
 def inventory_dell_poweredge_mem(info):
     inventory = []
     for line in info:
@@ -81,7 +61,23 @@ check_info["dell_poweredge_mem"] = {
     "inventory_function"    : inventory_dell_poweredge_mem,
     "service_description"   : "%s",
     "has_perfdata"          : False,
-    "snmp_info"             : dell_poweredge_mem_info,
-    "snmp_scan_function"    : dell_poweredge_mem_scan,
+    "snmp_info"             : ( ".1.3.6.1.4.1.674.10892.5.4.1100.50.1", [
+                                      #"1", # memoryDevicechassisIndex       0
+                                      #"2", # memoryDeviceIndex              1
+                                      #"3", # memoryDeviceStateCapabilities
+                                      #"4", # memoryDeviceStateSettings      0
+                                      "5", # memoryDeviceStatus             0
+                                      #"6", # memoryDeviceReading
+                                      #"7", # memoryDeviceType
+                                      "8", # memoryDeviceLocationName       1
+                                      #"10", # memoryDeviceBankLocationName
+                                      "14", # memoryDeviceSize
+                                      "15", # memoryDeviceSpeed
+                                      "21", # memoryDeviceManufacturerName
+                                      "22", # memoryDevicePartNumberName
+                                      "23", # memoryDeviceSerialNumberName
+                                      #"26", # memoryDeviceFQDD
+                              ]),
+    "snmp_scan_function"    : lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.674.10892.5",
 }
 

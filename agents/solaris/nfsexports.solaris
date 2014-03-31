@@ -1,0 +1,57 @@
+#!/usr/bin/bash
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2010             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Check_MK agent plugin for monitoring nfsexports on Solaris. This plugin
+# has been tested with solaris 10 in a standalone and cluster setting.
+
+clusterconfigdir="/etc/cluster/ccr/global/directory"
+if [ -r $clusterconfigdir ]; then
+    # is a clustered nfs server
+    nfsconfig=/etc/cluster/ccr/global/`grep rgm $clusterconfigdir | grep nfs | grep rg_`
+    if [ -r $nsconfig ]; then
+        Pathprefix=`grep Path $nfsconfig | awk {'print $2'}`/SUNW.nfs
+        dfstabfile=$Pathprefix/dfstab.`grep -v FilesystemMountPoints $nfsconfig | grep SUNW.nfs | \
+            awk {'print $1'} | sed -e 's/RS_//'`
+        if [ -r $dfstabfile ]; then
+            EXPORTS=`grep -v  ^# $dfstabfile | grep -v ^$`
+            ps -aef | grep nfsd | grep $Pathprefix >/dev/null && DAEMONS="ok"
+        fi
+    fi
+else
+    # is a standalone nfs server
+    dfstabfile="/etc/dfs/dfstab"
+    if [ -r $dfstabfile ]; then
+        EXPORTS=`grep -v  ^# $dfstabfile | grep -v ^$`
+        svcs -a | grep nfs/server | grep ^online >/dev/null && DAEMONS="ok"
+    fi
+fi
+
+# any exports or have running daemons? then look for registered exports
+if [ "$EXPORTS" ]; then
+    echo "<<<nfsexports>>>"
+    if [ "$DAEMONS" ]; then
+        showmount -e | grep ^/
+    fi
+fi

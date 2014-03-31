@@ -1,0 +1,41 @@
+title: IBM SVC / V7000: CPU Utilization per Node
+agents: ibm_svc
+catalog: hw/storagehw/ibm
+license: GPL
+distribution: check_mk
+description:
+ Reports the CPU Utilization for each node of an IBM SVC / V7000 device.
+
+ The check returns {WARN} or {CRIT} if the utilization in percent is higher
+ then given levels and {OK} otherwise.
+
+item:
+ The name of the node.
+
+inventory:
+ Creates one check per node.
+
+perfdata:
+ One value: The utilization in percent, together with it's levels for
+ warn and crit.
+
+examples:
+ # set default levels to 70 and 80 percent:
+ ibm_svc_cpu_default_levels = (70.0, 80.0)
+
+ # Check CPU Utilization of Node SVC01 on a IBM SVC called my-svc with default levels
+ checks += [
+   ("my-svc", "ibm_svc_nodestats.cpu_util", 'SVC01', ibm_svc_cpu_default_levels)
+ ]
+
+ # or use individual levels for warn and crit
+ checks += [
+   ("my-svc", "ibm_svc_nodestats.cpu_util", 'SVC01', (75.0, 85.0))
+ ]
+
+[parameters]
+parameters (float, float): levels of CPU utilization for {WARN} and {CRIT} in percent
+
+[configuration]
+ibm_svc_cpu_default_levels (float, float): The standard levels for {WARN} and
+    {CRIT}, preset to (80.0, 90.0)

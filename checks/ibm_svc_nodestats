@@ -71,6 +71,15 @@
 # 5:BLUBBSVC02:sas_io:0:0:140325134930
 # [...]
 
+#   .--disk IO-------------------------------------------------------------.
+#   |                         _ _     _      ___ ___                       |
+#   |                      __| (_)___| | __ |_ _/ _ \                      |
+#   |                     / _` | / __| |/ /  | | | | |                     |
+#   |                    | (_| | \__ \   <   | | |_| |                     |
+#   |                     \__,_|_|___/_|\_\ |___\___/                      |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
 # parses agent output into a structure like:
 # {'Drives BLUBBSVC01': {'r_mb': 0, 'w_mb': 0},
 #  'Drives BLUBBSVC02': {'r_mb': 0, 'w_mb': 0},
@@ -133,3 +142,39 @@ check_info["ibm_svc_nodestats.diskio"] = {
     "has_perfdata"          : True,
 }
 
+#.
+#   .--cpu-----------------------------------------------------------------.
+#   |                                                                      |
+#   |                           ___ _ __  _   _                            |
+#   |                          / __| '_ \| | | |                           |
+#   |                         | (__| |_) | |_| |                           |
+#   |                          \___| .__/ \__,_|                           |
+#   |                              |_|                                     |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+ibm_svc_cpu_default_levels = ( 90.0, 95.0 )
+
+def inventory_ibm_svc_cpu(info):
+    inventory = []
+    for node_id, node_name, stat_name, stat_current, stat_peak, stat_peak_time in info:
+        if stat_name == "cpu_pc":
+            inventory.append( (node_name, "ibm_svc_cpu_default_levels") )
+    return inventory
+
+def check_ibm_svc_cpu(item, params, info):
+    for node_id, node_name, stat_name, stat_current, stat_peak, stat_peak_time in info:
+        if node_name == item and stat_name == "cpu_pc":
+            return check_cpu_util(int(stat_current), params)
+
+    return 3, "value cpu_pc not found in agent output for node %s" % item
+
+check_info["ibm_svc_nodestats.cpu_util"] = {
+    "check_function"        : check_ibm_svc_cpu,
+    "inventory_function"    : inventory_ibm_svc_cpu,
+    "service_description"   : "CPU utilization %s",
+    "has_perfdata"          : True,
+    "group"                 : "cpu_utilization_multiitem",
+    "includes"              : [ "cpu_util.include" ],
+}
+#.

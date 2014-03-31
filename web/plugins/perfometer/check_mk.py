@@ -475,6 +475,7 @@ perfometers["check_mk-hr_cpu"] = perfometer_cpu_utilization
 perfometers["check_mk-innovaphone_cpu"] = perfometer_cpu_utilization
 perfometers["check_mk-enterasys_cpu_util"] = perfometer_cpu_utilization
 perfometers["check_mk-juniper_trpz_cpu_util"] = perfometer_cpu_utilization
+perfometers["check_mk-ibm_svc_nodestats.cpu_util"] = perfometer_cpu_utilization
 
 def perfometer_ps_perf(row, check_command, perf_data):
     perf_dict = dict([(p[0], float(p[1])) for p in perf_data])

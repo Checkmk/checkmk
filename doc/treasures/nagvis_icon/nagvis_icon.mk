@@ -10,7 +10,8 @@ for _nm in glob.glob(_path):
     for _nhost in [ _l for _l in file(_nm).readlines() if _l.startswith('host_name')]:
         _nhost =  _nhost.split('=')[-1].strip() 
         _hosts.setdefault(_nhost, [])
-        _hosts[_nhost].append(_mapname)
+        if _mapname not in _hosts[_nhost]:
+            _hosts[_nhost].append(_mapname)
 
 extra_host_conf['_nagvismaps'] = []
 for _nhost, _maps in _hosts.items():

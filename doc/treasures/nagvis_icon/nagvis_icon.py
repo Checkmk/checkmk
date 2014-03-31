@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # Please refer to nagvis_icon.mk to see a way how to add the nagvismaps custom macro
 
+# copy me to ~/local/share/check_mk/web/pluins/icon and restart the site apache
+
 def paint_nagvis_image(what, row, tags, custom_vars):
     if what != 'host' or not custom_vars.get('NAGVISMAPS'):
         return

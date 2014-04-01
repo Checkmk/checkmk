@@ -994,12 +994,16 @@ class html:
     def transaction_valid(self):
         if not self.has_var("_transid"):
             return False
+
         id = self.var("_transid")
-        if not id or self.ignore_transids:
+        if self.ignore_transids and (not id or id == '-1'):
             return True # automation
 
+        if '/' not in id:
+            return False
+
         # Normal user/password auth user handling
-        timestamp, rand = id.split("/")
+        timestamp, rand = id.split("/", 1)
 
         # If age is too old (one week), it is always
         # invalid:

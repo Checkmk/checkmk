@@ -24,10 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Example output from agent:
-# Put here the example output from your TCP-Based agent. If the
-# check is SNMP-Based, then remove this section
-
 def inventory_tsm_paths(info):
     return [(None, None)]
 

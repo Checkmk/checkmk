@@ -40,8 +40,9 @@ def check_cisco_mem(item, params, info):
         if line[0] == item:
             mem_free =  saveint(line[2])
             mem_used =  saveint(line[1])
-    mem_total = mem_free + mem_used
-    return check_cisco_mem_sub(params, mem_used, mem_total)
+            mem_total = mem_free + mem_used
+            return check_cisco_mem_sub(params, mem_used, mem_total)
+    return 3, "No information found, please try a reinventory"
 
 def check_cisco_mem_sub(params, mem_used, mem_total):
     perc_used =  100 * (float(mem_used) / float(mem_total))

@@ -1,0 +1,8 @@
+Title: cisco_mem: Repaired error handling when updating from older versions
+Level: 1
+Component: checks
+Version: 1.2.4p1
+Date: 1396339892
+Class: fix
+
+The item changed since 2013, so if you update from a version older it will lead to a error.

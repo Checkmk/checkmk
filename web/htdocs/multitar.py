@@ -101,7 +101,6 @@ def get_file_content(the_tarfile, filename):
         tar = tarfile.open("r", fileobj = the_tarfile)
     else:
         tar = tarfile.open(the_tarfile, "r")
-    tar = tarfile.open(the_tarfile, "r")
     return tar.extractfile(filename).read()
 
 def extract_domains(tar, domains):

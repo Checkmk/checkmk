@@ -111,6 +111,7 @@ else:
                             ("dir",  "var/pnp4nagios/perfdata"),
                             ("dir",  "var/rrdcached"),
                           ],
+          "checksum"    : False,
         },
         "applicationlogs": {
           "group"       : _("Historic Data"),
@@ -122,6 +123,7 @@ else:
                             ("file", "var/nagios/livestatus.log"),
                             ("dir",  "var/pnp4nagios/log"),
                           ],
+          "checksum"    : False,
         },
         "mkeventstatus": {
           "group"       : _("Configuration"),

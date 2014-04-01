@@ -514,9 +514,9 @@ class html:
     def begin_radio_group(self, horizontal=False):
         if self.mobile:
             if horizontal:
-	        add = 'data-type="horizontal" '
-	    else:
-	        add = ''
+                add = 'data-type="horizontal" '
+            else:
+                add = ''
             self.write('<fieldset %s data-role="controlgroup">' % add)
 
     def end_radio_group(self):
@@ -539,7 +539,7 @@ class html:
         self.form_vars.append(varname)
 
     def begin_checkbox_group(self, horizonal=False):
-	self.begin_radio_group(horizonal)
+        self.begin_radio_group(horizonal)
 
     def end_checkbox_group(self):
         self.end_radio_group()
@@ -808,10 +808,10 @@ class html:
             self.store_new_transids()
 
     def add_status_icon(self, img, tooltip, url = None):
-	if url:
-	    self.status_icons[img] = tooltip, url
-	else:
-	    self.status_icons[img] = tooltip
+        if url:
+            self.status_icons[img] = tooltip, url
+        else:
+            self.status_icons[img] = tooltip
 
     def render_status_icons(self):
         h = '<a target="_top" href="%s"><img class=statusicon src="images/status_frameurl.png" title="%s"></a>\n' % \
@@ -825,12 +825,12 @@ class html:
                  (self.makeuri([("output_format", "csv_export")]), _("Export as CSV"))
 
         for img, tooltip in self.status_icons.items():
-	    if type(tooltip) == tuple:
-		tooltip, url = tooltip
-		h += '<a target="_top" href="%s"><img class=statusicon src="images/status_%s.png" title="%s"></a>\n' % \
-		     (url, img, tooltip)
-	    else:
-		h += '<img class=statusicon src="images/status_%s.png" title="%s">\n' % (img, tooltip)
+            if type(tooltip) == tuple:
+                tooltip, url = tooltip
+                h += '<a target="_top" href="%s"><img class=statusicon src="images/status_%s.png" title="%s"></a>\n' % \
+                     (url, img, tooltip)
+            else:
+                h += '<img class=statusicon src="images/status_%s.png" title="%s">\n' % (img, tooltip)
         return h
 
     def show_error(self, msg):

@@ -1,0 +1,8 @@
+Title: mem, fortigate_memory, solaris_mem: display total SWAP info in check output
+Level: 1
+Component: checks
+Version: 1.2.5i2
+Date: 1396336419
+Class: feature
+
+

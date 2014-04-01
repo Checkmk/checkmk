@@ -58,9 +58,9 @@ def check_memory(params, meminfo):
         pgtext = " + %.2f Pagetables" % (pagetables_mb / 1024.0)
     else:
         pgtext = ""
-    infotext = "%.2f GB used (%.2f RAM + %.2f SWAP%s, this is %.1f%% of %.2f RAM" % \
+    infotext = "%.2f GB used (%.2f RAM + %.2f SWAP%s, this is %.1f%% of %.2f RAM (%.2f total SWAP)" % \
                (totalused_mb / 1024.0, (memused-caches) / 1024.0 / 1024, swapused / 1024.0 / 1024,
-               pgtext, totalused_perc, totalmem_mb / 1024.0)
+               pgtext, totalused_perc, totalmem_mb / 1024.0, meminfo["SwapTotal"] / 1024.0 / 1024)
 
     # Take into account averaging
     average_min = params.get("average")

@@ -804,7 +804,8 @@ class html:
             self.body_end()
 
         # Hopefully this is the correct place to performe some "finalization" tasks.
-        self.store_new_transids()
+        if self.user:
+            self.store_new_transids()
 
     def add_status_icon(self, img, tooltip, url = None):
 	if url:

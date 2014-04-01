@@ -6180,7 +6180,8 @@ def mode_snapshot_detail(phase):
     if not os.path.exists(snapshot_dir + '/' + snapshot_name):
         raise MKUserError("_snapshot_name", _("The requested snapshot does not exist"))
 
-    status = get_snapshot_status(snapshot_name, validate_checksums = True)
+    if phase not in ["buttons", "action"]:
+        status = get_snapshot_status(snapshot_name, validate_checksums = True)
 
     if phase == "title":
         return _("Snapshot details of %s") % html.attrencode(status["name"])
@@ -6424,16 +6425,16 @@ def mode_snapshot(phase):
 
             elif status["type"] == "legacy" and status['checksums'] == None:
                 q = _('The integrity of this snapshot could not be verified.<br><br>'
-                      'You are importing a legacy snapshot which can not be verified. The snapshot contains '
+                      'You are restoring a legacy snapshot which can not be verified. The snapshot contains '
                       'files which contain code that will be executed during runtime of the monitoring. Please '
                       'ensure that the snapshot is a legit, not manipulated file.<br><br>'
                       'Do you want to continue restoring the snapshot?')
 
             else:
                 q = _('The integrity of this snapshot could not be verified.<br><br>'
-                      'If you import a snapshot on the same site as you exported it, the checksum should '
+                      'If you restore a snapshot on the same site as where it was created, the checksum should '
                       'always be OK. If not, it is likely that something has been modified in the snapshot.<br>'
-                      'When you exported the snapshot on another site, the checksum check will always fail.<br><br>'
+                      'When you restore the snapshot on a different site, the checksum check will always fail.<br><br>'
                       'The snapshot contains files which contain code that will be executed during runtime '
                       'of the monitoring. Please ensure that the snapshot is a legit, not manipulated file.<br><br>'
                       'Do you want to <i>ignore</i> the failed integrity check and restore the snapshot?')

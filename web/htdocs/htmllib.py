@@ -798,14 +798,14 @@ class html:
             self.javascript(self.final_javascript_code)
         self.write("</body></html>\n")
 
+        # Hopefully this is the correct place to performe some "finalization" tasks.
+        self.store_new_transids()
+
     def footer(self):
         if self.output_format == "html":
             self.bottom_footer()
             self.body_end()
 
-        # Hopefully this is the correct place to performe some "finalization" tasks.
-        if self.user:
-            self.store_new_transids()
 
     def add_status_icon(self, img, tooltip):
         self.status_icons[img] = tooltip
@@ -956,16 +956,17 @@ class html:
     # time we remove all entries from that list that are older
     # than one week.
     def store_new_transids(self):
-        valid_ids = self.load_transids()
+        if self.new_transids:
+            valid_ids = self.load_transids()
 
-        cleared_ids = []
-        now = time.time()
-        for valid_id in valid_ids:
-            timestamp, rand = valid_id.split("/")
-            if now - int(timestamp) < 604800: # 7 * 24 hours
-                cleared_ids.append(valid_id)
+            cleared_ids = []
+            now = time.time()
+            for valid_id in valid_ids:
+                timestamp, rand = valid_id.split("/")
+                if now - int(timestamp) < 604800: # 7 * 24 hours
+                    cleared_ids.append(valid_id)
 
-        self.save_transids(cleared_ids + self.new_transids)
+            self.save_transids(cleared_ids + self.new_transids)
 
     # Remove the used transid from the list of valid ones
     def invalidate_transid(self, used_id):

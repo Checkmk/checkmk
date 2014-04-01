@@ -149,7 +149,8 @@ else:
                              ("dir",  "var/rrdcached"),
                            ],
           "pre_restore"  : lambda: performancedata_restore(pre_restore = True),
-          "post_restore" : lambda: performancedata_restore(pre_restore = False)
+          "post_restore" : lambda: performancedata_restore(pre_restore = False),
+          "checksum"    : False,
         },
         "applicationlogs": {
           "group"       : _("Historic Data"),
@@ -161,6 +162,7 @@ else:
                             ("file", "var/nagios/livestatus.log"),
                             ("dir",  "var/pnp4nagios/log"),
                           ],
+          "checksum"    : False,
         },
         "mkeventstatus": {
           "group"       : _("Configuration"),

@@ -882,6 +882,7 @@ def automation_diag_host(args):
 def automation_create_snapshot(args):
     try:
         import tarfile, time, cStringIO, shutil, subprocess, thread, traceback, threading
+        from hashlib import sha256
         the_data = sys.stdin.read()
         data = eval(the_data)
 
@@ -951,7 +952,6 @@ def automation_create_snapshot(args):
 
         # Save pid of working process.
         file(filename_pid, "w").write("%d" % os.getpid())
-        tar_in_progress = tarfile.open(filename_work, "w")
 
         def cleanup():
             wipe_directory(work_dir)
@@ -981,6 +981,25 @@ def automation_create_snapshot(args):
                     pass
                 time.sleep(seconds)
 
+        def snapshot_secret():
+            path = default_config_dir + '/snapshot.secret'
+            try:
+                return file(path).read()
+            except IOError:
+                # create a secret during first use
+                try:
+                    s = os.urandom(256)
+                except NotImplementedError:
+                    s = sha256(time.time())
+                file(path, 'w').write(s)
+                return s
+
+        #
+        # Initialize the snapshot tar file and populate with initial information
+        #
+
+        tar_in_progress = tarfile.open(filename_work, "w")
+
         # Add comment to tar file
         if data.get("comment"):
             tarinfo       = get_basic_tarinfo("comment")
@@ -1001,11 +1020,15 @@ def automation_create_snapshot(args):
         # Close tar in progress, all other files are included via command line tar
         tar_in_progress.close()
 
+        #
         # Process domains (sorted)
+        #
+
         subtar_update_thread = thread.start_new_thread(update_subtar_size, (1,))
         domains = map(lambda x: x, data.get("domains").items())
         domains.sort()
 
+        subtar_info = {}
         for name, info in domains:
             current_domain = name # Set name for update size thread
             prefix          = info.get("prefix","")
@@ -1019,25 +1042,33 @@ def automation_create_snapshot(args):
             path_subtar = "%s/%s" % (work_dir, filename_subtar)
 
             if info.get("backup_command"):
-                command = info.get("backup_command") % {"prefix"      : prefix,
-                                                        "path_subtar" : path_subtar,
-                                                        "work_dir"    : work_dir}
+                command = info.get("backup_command") % {
+                    "prefix"      : prefix,
+                    "path_subtar" : path_subtar,
+                    "work_dir"    : work_dir
+                }
             else:
                 paths = map(lambda x: x[1] == "" and "." or x[1], info.get("paths", []))
-                command = "cd %s ; tar czf %s --ignore-failed-read --force-local %s -C %s %s" % \
-                          (prefix, path_subtar, exclude_options, prefix, " ".join(paths))
+                command = "tar czf %s --ignore-failed-read --force-local %s -C %s %s" % \
+                                        (path_subtar, exclude_options, prefix, " ".join(paths))
 
-            proc           = subprocess.Popen(command, shell=True, stdin = None, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+            proc = subprocess.Popen(command, shell=True, stdin = None,
+                                    stdout = subprocess.PIPE, stderr = subprocess.PIPE, cwd = prefix)
             stdout, stderr = proc.communicate()
             exit_code      = proc.wait()
             # Allow exit codes 0 and 1 (files changed during backup)
             if exit_code not in [0, 1]:
                 raise MKAutomationError("Error while creating backup of %s (Exit Code %d) - %s.\n%s" % (current_domain, exit_code, stderr, command))
 
-            subtar_size   = os.stat("%s" % path_subtar).st_size
+            subtar_size   = os.stat(path_subtar).st_size
+            subtar_hash   = sha256(file(path_subtar).read()).hexdigest()
+            subtar_signed = sha256(subtar_hash + snapshot_secret()).hexdigest()
+            subtar_info[filename_subtar] = (subtar_hash, subtar_signed)
+
             # Append tar.gz subtar to snapshot
-            command = "cd %s ; tar --append --file=%s %s ; rm %s" % (work_dir, filename_work, filename_subtar, filename_subtar)
-            proc = subprocess.Popen(command, shell=True)
+            command = "tar --append --file=%s %s ; rm %s" % \
+                    (filename_work, filename_subtar, filename_subtar)
+            proc = subprocess.Popen(command, shell=True, cwd = work_dir)
             proc.communicate()
             exit_code = proc.wait()
             if exit_code != 0:
@@ -1045,6 +1076,15 @@ def automation_create_snapshot(args):
 
             current_domain = ""
             update_status_file(name, "Finished:%d" % subtar_size)
+
+        # Now add the info file which contains hashes and signed hashes for
+        # each of the subtars
+        info = ''.join([ '%s %s %s\n' % (k, v[0], v[1]) for k, v in subtar_info.items() ]) + '\n'
+        tar_in_progress = tarfile.open(filename_work, "a")
+        tarinfo      = get_basic_tarinfo("checksums")
+        tarinfo.size = len(info)
+        tar_in_progress.addfile(tarinfo, cStringIO.StringIO(info))
+        tar_in_progress.close()
 
         current_domain = None
 
@@ -1054,6 +1094,7 @@ def automation_create_snapshot(args):
     except Exception, e:
         cleanup()
         raise MKAutomationError(str(e))
+
 
 def automation_notification_replay(args):
     nr = args[0]

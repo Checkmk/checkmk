@@ -106,6 +106,7 @@
 import sys, pprint, socket, re, subprocess, time, datetime,  \
        shutil, tarfile, cStringIO, math, fcntl, pickle, random
 import config, table, multitar, userdb, hooks, weblib, login
+from hashlib import sha256
 from lib import *
 from valuespec import *
 import forms
@@ -6007,7 +6008,7 @@ def effective_attributes(host, folder):
 #   '----------------------------------------------------------------------'
 
 # Returns status information for snapshots or snapshots in progress
-def get_snapshot_status(snapshot):
+def get_snapshot_status(snapshot, validate_checksums = False):
     if type(snapshot) == tuple:
         name, file_stream = snapshot
     else:
@@ -6025,6 +6026,13 @@ def get_snapshot_status(snapshot):
         "broken"          : False,
         "progress_status" : "",
     }
+
+    def access_snapshot(handler):
+        if file_stream:
+            file_stream.seek(0)
+            return handler(file_stream)
+        else:
+            return handler(snapshot_dir + name)
 
     def check_size():
         if file_stream:
@@ -6047,11 +6055,7 @@ def get_snapshot_status(snapshot):
             raise MKGeneralException(_("Invalid snapshot (incorrect file extension)"))
 
     def check_content():
-        if file_stream:
-            file_stream.seek(0)
-            status["files"] = multitar.list_tar_content(file_stream)
-        else:
-            status["files"] = multitar.list_tar_content(snapshot_dir + name)
+        status["files"] = access_snapshot(multitar.list_tar_content)
 
         if status.get("type") == "legacy":
             allowed_files = map(lambda x: "%s.tar" % x[1], backup_paths)
@@ -6061,12 +6065,63 @@ def get_snapshot_status(snapshot):
         else: # new snapshots
             for entry in ["comment", "created_by", "type"]:
                 if entry in status["files"]:
-                    if file_stream:
-                        status[entry] = multitar.get_file_content(file_stream, entry)
-                    else:
-                        status[entry] = multitar.get_file_content(snapshot_dir + name, entry)
+                    status[entry] = access_snapshot(lambda x: multitar.get_file_content(x, entry))
                 else:
                     raise MKGeneralException(_("Invalid snapshot (missing file: %s)") % entry)
+
+    def snapshot_secret():
+        path = defaults.default_config_dir + '/snapshot.secret'
+        try:
+            return file(path).read()
+        except IOError:
+            return '' # validation will fail in this case
+
+    def check_checksums():
+        for f in status["files"].values():
+            f['checksum'] = None
+
+        # checksums field might contain three states:
+        # a) None  - This is a legacy snapshot, no checksum file available
+        # b) False - No or invalid checksums
+        # c) True  - Checksums successfully validated
+        if status['type'] == 'legacy':
+            status['checksums'] = None
+            return
+
+        if 'checksums' not in status['files'].keys():
+            status['checksums'] = False
+            return
+
+        # Extract all available checksums from the snapshot
+        checksums_raw = access_snapshot(lambda x: multitar.get_file_content(x, 'checksums'))
+        checksums = {}
+        for l in checksums_raw.split('\n'):
+            line = l.strip()
+            if ' ' in line:
+                parts = line.split(' ')
+                if len(parts) == 3:
+                    checksums[parts[0]] = (parts[1], parts[2])
+
+        # now loop all known backup domains and check wheter or not they request
+        # checksum validation, there is one available and it is valid
+        status['checksums'] = True
+        for domain_id, domain in backup_domains.items():
+            filename = domain_id + '.tar.gz'
+            if not domain.get('checksum', True) or filename not in status['files']:
+                continue
+
+            if filename not in checksums:
+                continue
+
+            checksum, signed = checksums[filename]
+
+            # Get hashes of file in question
+            subtar = access_snapshot(lambda x: multitar.get_file_content(x, filename))
+            subtar_hash   = sha256(subtar).hexdigest()
+            subtar_signed = sha256(subtar_hash + snapshot_secret()).hexdigest()
+
+            status['files'][filename]['checksum'] = checksum == subtar_hash and signed == subtar_signed
+            status['checksums'] &= status['files'][filename]['checksum']
 
     try:
         if len(name) > 35:
@@ -6104,23 +6159,31 @@ def get_snapshot_status(snapshot):
         check_extension()
         check_content()
 
-    except MKGeneralException, e:
-        status["broken_text"] = e.reason
-        status["broken"]      = True
-        pass
+        if validate_checksums:
+            check_checksums()
+
     except Exception, e:
-        import traceback
-        status["broken_text"] = traceback.format_exc()
-        status["broken"]      = True
-        pass
+        if config.debug:
+            import traceback
+            status["broken_text"] = traceback.format_exc()
+            status["broken"]      = True
+        else:
+            status["broken_text"] = str(e)
+            status["broken"]      = True
     return status
 
 def mode_snapshot_detail(phase):
     snapshot_name = html.var("_snapshot_name")
-    status = get_snapshot_status(snapshot_name)
+
+    if ".." in snapshot_name or "/" in snapshot_name:
+        raise MKUserError("_snapshot_name", _("Invalid snapshot requested"))
+    if not os.path.exists(snapshot_dir + '/' + snapshot_name):
+        raise MKUserError("_snapshot_name", _("The requested snapshot does not exist"))
+
+    status = get_snapshot_status(snapshot_name, validate_checksums = True)
 
     if phase == "title":
-        return _("Snapshot details of %s")  % status["name"]
+        return _("Snapshot details of %s") % html.attrencode(status["name"])
     elif phase == "buttons":
         home_button()
         html.context_button(_("Back"), make_link([("mode", "snapshot")]), "back")
@@ -6136,7 +6199,7 @@ def mode_snapshot_detail(phase):
         html.show_user_errors()
 
     html.begin_form("snapshot_details", method="POST")
-    forms.header(_("Snapshot %s") % snapshot_name)
+    forms.header(_("Snapshot %s") % html.attrencode(snapshot_name))
 
     for entry in [ ("comment", _("Comment")), ("created_by", _("Created by")) ]:
         if status.get(entry[0]):
@@ -6149,41 +6212,63 @@ def mode_snapshot_detail(phase):
         html.write(_("Snapshot is empty!"))
     else:
         html.write("<table>")
-        html.write("<tr><th align='left'>%s</th><th align='right'>%s</th></tr>" % (_("Description"), _("Size")))
+        html.write("<tr><th align='left'>%s</th>"
+                   "<th align='right'>%s</th>"
+                   "<th>%s</th></tr>" % (_("Description"), _("Size"), _("Trusted")))
 
         domains        = []
         other_content  = []
         for filename, values in files.items():
-            if filename in ["comment", "type", "created_by"]:
+            if filename in ["comment", "type", "created_by", "checksums"]:
                 continue
             domain_key = filename[:-7]
             if domain_key in backup_domains.keys():
-                domains.append( (backup_domains[domain_key]["title"], filename, values) )
+                verify_checksum = backup_domains.get('checksum', True) # is checksum check enabled here?
+                domains.append((backup_domains[domain_key]["title"], verify_checksum, filename, values))
             else:
-                other_content.append( ("Other", filename, values) )
+                other_content.append((_("Other"), filename, values))
         domains.sort()
 
-
-        for (title, filename, values) in domains:
+        for (title, verify_checksum, filename, values) in domains:
             extra_info = ""
             if values.get("text"):
                 extra_info = "%s - " % values["text"]
             html.write("<tr><td>%s%s</td>"  % (extra_info, title))
-            html.write("<td align='right'>%s</td></tr>" % fmt_bytes(values["size"]))
+            html.write("<td align='right'>%s</td>" % fmt_bytes(values["size"]))
+
+            html.write("<td>")
+            if verify_checksum:
+                if values['checksum'] == True:
+                    checksum_title = _('Checksum valid and signed')
+                    checksum_icon  = ''
+                elif values['checksum'] == False:
+                    checksum_title = _('Checksum invalid and not signed')
+                    checksum_icon  = 'p'
+                else:
+                    checksum_title = _('Checksum not available')
+                    checksum_icon  = 'n'
+                html.icon(checksum_title, 'snapshot_%schecksum' % checksum_icon)
+            html.write("</td>")
+
+            html.write("</tr>")
 
         if other_content:
-            html.write("<tr><td><i>%s</i></td></tr>" % _("Other content"))
+            html.write("<tr><td colspan=\"3\"><i>%s</i></td></tr>" % _("Other content"))
             for (title, filename, values) in other_content:
-                html.write("<tr><td>%s</td>"  % filename)
-                html.write("<td align='right'>%s</td></tr>" % fmt_bytes(values["size"]))
+                html.write("<tr><td>%s</td>"  % html.attrencode(filename))
+                html.write("<td align='right'>%s</td>" % fmt_bytes(values["size"]))
+                html.write("<td></td>")
+                html.write("</tr>")
         html.write("</table>")
 
     forms.end()
+
     if snapshot_name != "uploaded_snapshot":
         delete_url = make_action_link([("mode", "snapshot"), ("_delete_file", snapshot_name)])
         html.buttonlink(delete_url, _("Delete Snapshot"))
         download_url = make_action_link([("mode", "snapshot"), ("_download_file", snapshot_name)])
         html.buttonlink(download_url, _("Download Snapshot"))
+
     if not status.get("progress_status") and not status.get("broken"):
         restore_url = make_action_link([("mode", "snapshot"), ("_restore_snapshot", snapshot_name)])
         html.buttonlink(restore_url, _("Restore Snapshot"))
@@ -6269,7 +6354,8 @@ def mode_snapshot(phase):
                 snapshot_data = {}
                 snapshot_name = "wato-snapshot-%s.tar" %  \
                                 time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime(time.time()))
-                snapshot_data["comment"]       = snapshot_options.get("comment") or "Snapshot created by %s" % config.user_id
+                snapshot_data["comment"]       = snapshot_options.get("comment") \
+                                                 or _("Snapshot created by %s") % config.user_id
                 snapshot_data["type"]          = "manual"
                 snapshot_data["snapshot_name"] = snapshot_name
                 snapshot_data["domains"]       = store_domains
@@ -6283,18 +6369,19 @@ def mode_snapshot(phase):
             filename      = uploaded_file[0]
 
             if ".." in filename or "/" in filename:
-                    raise MKUserError("_upload_file", _("Invalid filename %s (contains .. or /)"))
+                raise MKUserError("_upload_file", _("Invalid filename"))
             filename = os.path.basename(filename)
 
             if uploaded_file[0] == "":
                 raise MKUserError(None, _("Please select a file for upload."))
-            if html.check_transaction():
 
+            if html.check_transaction():
                 file_stream = cStringIO.StringIO(uploaded_file[2])
-                status = get_snapshot_status((filename, file_stream))
+                status = get_snapshot_status((filename, file_stream), validate_checksums = True)
 
                 if status.get("broken"):
-                    raise MKUserError("_upload_file", _("This is not a Check_MK snapshot!<br>%s") % status.get("broken_text"))
+                    raise MKUserError("_upload_file", _("This is not a Check_MK snapshot!<br>%s") % \
+                                                                            status.get("broken_text"))
                 else:
                     file(snapshot_dir + filename, "w").write(uploaded_file[2])
                     html.set_var("_snapshot_name", filename)
@@ -6329,12 +6416,30 @@ def mode_snapshot(phase):
             if snapshot_file not in snapshots:
                 raise MKUserError(None, _("Invalid file specified."))
 
-            c = wato_confirm(_("Confirm restore snapshot"),
-                             _("Are you sure you want to restore the snapshot <br><br>%s ?") %
-                                html.attrencode(snapshot_file)
-                            )
+            status = get_snapshot_status(snapshot_file, validate_checksums = True)
+
+            if status['checksums'] == True:
+                q = _("Are you sure you want to restore the snapshot %s?") % \
+                                                html.attrencode(snapshot_file)
+
+            elif status["type"] == "legacy" and status['checksums'] == None:
+                q = _('The integrity of this snapshot could not be verified.<br><br>'
+                      'You are importing a legacy snapshot which can not be verified. The snapshot contains '
+                      'files which contain code that will be executed during runtime of the monitoring. Please '
+                      'ensure that the snapshot is a legit, not manipulated file.<br><br>'
+                      'Do you want to continue restoring the snapshot?')
+
+            else:
+                q = _('The integrity of this snapshot could not be verified.<br><br>'
+                      'If you import a snapshot on the same site as you exported it, the checksum should '
+                      'always be OK. If not, it is likely that something has been modified in the snapshot.<br>'
+                      'When you exported the snapshot on another site, the checksum check will always fail.<br><br>'
+                      'The snapshot contains files which contain code that will be executed during runtime '
+                      'of the monitoring. Please ensure that the snapshot is a legit, not manipulated file.<br><br>'
+                      'Do you want to <i>ignore</i> the failed integrity check and restore the snapshot?')
+
+            c = wato_confirm(_("Confirm restore snapshot"), q)
             if c:
-                status = get_snapshot_status(snapshot_file)
                 if status["type"] == "legacy":
                     multitar.extract_from_file(snapshot_dir + snapshot_file, backup_paths)
                 else:
@@ -6385,6 +6490,8 @@ def mode_snapshot(phase):
         html.begin_form("upload_form", method = "POST")
         html.upload_file("_upload_file")
         html.button("upload_button", _("Restore from file"), "submit")
+        html.hidden_fields()
+        html.end_form()
 
         table.begin("snapshots", _("Snapshots"), empty_text=_("There are no snapshots available."))
         for name in snapshots:
@@ -6411,9 +6518,6 @@ def mode_snapshot(phase):
             elif status.get("progress_status"):
                 html.icon( status.get("progress_status"), "timeperiods")
         table.end()
-
-        html.hidden_fields()
-        html.end_form()
 
 def get_backup_domains(modes, extra_domains = {}):
     domains = {}

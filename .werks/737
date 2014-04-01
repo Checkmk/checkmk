@@ -1,0 +1,9 @@
+Title: megaraid_ldisks: now able to handle "No Virtual Drive Configured" states
+Level: 1
+Component: checks
+Version: 1.2.4p1
+Date: 1395842658
+Class: fix
+
+The check no longer crashes if the agent section contains lines like:<br>
+Adapter 1: No Virtual Drive Configured.

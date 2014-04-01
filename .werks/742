@@ -1,0 +1,10 @@
+Title: table statehist: now able to cancel a running query if limit is reached
+Level: 1
+Component: livestatus
+Version: 1.2.4p1
+Date: 1396266716
+Class: fix
+
+The livestatus table statehist was unable to end a query when
+the <tt>Timelimit:</tt> or <tt>Limit:</tt> options were reached.
+

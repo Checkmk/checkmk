@@ -74,6 +74,8 @@ class html:
         self.treestates = {}
         self.treestates_for_id = None
         self.caches = {}
+        self.new_transids = []
+        self.ignore_transids = False
 
     RETURN = 13
     SHIFT = 16
@@ -801,6 +803,10 @@ class html:
             self.bottom_footer()
             self.body_end()
 
+        # Hopefully this is the correct place to performe some "finalization" tasks.
+        if self.user:
+            self.store_new_transids()
+
     def add_status_icon(self, img, tooltip):
         self.status_icons[img] = tooltip
 
@@ -931,35 +937,61 @@ class html:
         if not self.has_var("_ajaxid"):
             self.javascript("if(parent && parent.frames[0]) parent.frames[0].location.reload();");
 
-    # Compute a (hopefully) unique transaction id
+    def set_ignore_transids(self):
+        self.ignore_transids = True
+
+    # Compute a (hopefully) unique transaction id. This is generated during rendering
+    # of a form or an action link, stored in a user specific file for later validation,
+    # sent to the users browser via HTML code, then submitted by the user together
+    # with the action (link / form) and then validated if it is a known transid. When
+    # it is a known transid, it will be used and invalidated. If the id is not known,
+    # the action will not be processed.
     def fresh_transid(self):
-        return "%d/%d" % (int(time.time()), random.getrandbits(32))
+        transid = "%d/%d" % (int(time.time()), random.getrandbits(32))
+        self.new_transids.append(transid)
+        return transid
 
     # Marks a transaction ID as used. This is done by saving
     # it in a user specific settings file "transids.mk". At this
     # time we remove all entries from that list that are older
-    # then one week.
-    def invalidate_transid(self, id):
-        used_ids = self.load_transids()
-        new_ids = []
-        now = time.time()
-        for used_id in used_ids:
-            timestamp, rand = used_id.split("/")
-            if now - int(timestamp) < 604800: # 7 * 24 hours
-                new_ids.append(used_id)
-        used_ids.append(id)
-        self.save_transids(used_ids)
+    # than one week.
+    def store_new_transids(self):
+        valid_ids = self.load_transids()
 
-    # Checks, if the current transaction is valid, i.e. now
-    # browser reload. The HTML variable _transid must be present.
-    # If it is empty or -1, then it's always valid (this is used
-    # for webservice calls).
+        cleared_ids = []
+        now = time.time()
+        for valid_id in valid_ids:
+            timestamp, rand = valid_id.split("/")
+            if now - int(timestamp) < 604800: # 7 * 24 hours
+                cleared_ids.append(valid_id)
+
+        self.save_transids(cleared_ids + self.new_transids)
+
+    # Remove the used transid from the list of valid ones
+    def invalidate_transid(self, used_id):
+        valid_ids = self.load_transids()
+        try:
+            valid_ids.remove(used_id)
+        except ValueError:
+            return
+        self.save_transids(valid_ids)
+
+    # Checks, if the current transaction is valid, i.e. in case of
+    # browser reload a browser reload, the form submit should not
+    # be handled  a second time.. The HTML variable _transid must be present.
+    #
+    # In case of automation users (authed by _secret in URL): If it is empty
+    # or -1, then it's always valid (this is used for webservice calls).
+    # This was also possible for normal users, but has been removed to preven
+    # security related issues.
     def transaction_valid(self):
         if not self.has_var("_transid"):
             return False
         id = self.var("_transid")
-        if not id or id == "-1":
+        if not id or self.ignore_transids:
             return True # automation
+
+        # Normal user/password auth user handling
         timestamp, rand = id.split("/")
 
         # If age is too old (one week), it is always
@@ -968,8 +1000,8 @@ class html:
         if now - int(timestamp) >= 604800: # 7 * 24 hours
             return False
 
-        # Now check, if this id is not yet invalidated
-        return id not in self.load_transids()
+        # Now check, if this id is a valid one
+        return id in self.load_transids()
 
     # Checks, if the current page is a transation, i.e. something
     # that is secured by a transid (such as a submitted form)

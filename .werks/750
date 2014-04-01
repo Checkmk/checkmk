@@ -1,0 +1,9 @@
+Title: Availability: fix exception when summary is on and some elements have never been OK
+Level: 1
+Component: reporting
+Class: fix
+State: unknown
+Version: 1.2.4p1
+Date: 1395393981
+
+

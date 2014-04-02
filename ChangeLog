@@ -1,4 +1,7 @@
 1.2.5i3:
+    Livestatus:
+    * 0747 FIX: livestatus table hostsbygroup: fixed bug with group_authorization strict...
+
 
 1.2.5i2:
     Checks & Agents:

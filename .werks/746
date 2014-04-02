@@ -1,0 +1,10 @@
+Title: zfsget: fixed problem with agent output of check_mk_agent.solaris
+Level: 1
+Component: checks
+Version: 1.2.4p2
+Date: 1396438010
+Class: feature
+
+The reported columns from the check_mk_agent.solaris did not match
+the columns expected in the check. This has been fixed.
+Might have fixed problem with other agents than check_mk_agent.linux, too.

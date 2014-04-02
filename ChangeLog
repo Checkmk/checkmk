@@ -1,4 +1,7 @@
 1.2.4p2:
+    Checks & Agents:
+    * 0746 zfsget: fixed problem with agent output of check_mk_agent.solaris...
+
 
 1.2.4p1:
     Core & Setup:

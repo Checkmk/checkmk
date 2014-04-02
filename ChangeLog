@@ -1,3 +1,5 @@
+1.2.4p2:
+
 1.2.4p1:
     Core & Setup:
     * 0282 FIX: TIMEPERIOD TRANSITION messages no longer cut at 64 bytes...

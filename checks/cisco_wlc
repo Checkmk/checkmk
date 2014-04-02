@@ -58,7 +58,7 @@ def check_cisco_wlc(item, params, info):
                 return 1, "Accesspoint state Warning" + node
             if state == 2:
                 return 2, "State Critical" + node
-            return 3, "Unknown state (%s) " % state 
+            return 3, "Unknown state (%s) " % state
 
     # Special treatment if this device is missing
     if params:

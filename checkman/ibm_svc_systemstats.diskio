@@ -5,7 +5,7 @@ license: GPL
 distribution: check_mk
 description:
  Reports the disk throughput for Drives, MDisks and VDisks of an IBM
- SVC / V7000 device in total in bytes per second. 
+ SVC / V7000 device in total in bytes per second.
 
  The check is only for reporting and returns always {OK}.
 

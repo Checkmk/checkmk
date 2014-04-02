@@ -6524,7 +6524,7 @@ def get_backup_domains(modes, extra_domains = {}):
     domains = {}
     for mode in modes:
         for domain, value in backup_domains.items():
-            if mode in value:
+            if mode in value and not value.get("deprecated"):
                 domains.update({domain: value})
     domains.update(extra_domains)
     return domains

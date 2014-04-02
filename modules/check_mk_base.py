@@ -1520,6 +1520,9 @@ def get_regex(pattern):
 # Names of texts usually output by checks
 nagios_state_names = ["OK", "WARN", "CRIT", "UNKNOWN"]
 
+# Symbolic representations of states
+state_markers = ["(.)", "(!)", "(!!)", "(?)"]
+
 # int() function that return 0 for strings the
 # cannot be converted to a number
 def saveint(i):

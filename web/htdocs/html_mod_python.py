@@ -151,7 +151,8 @@ class html_mod_python(htmllib.html):
         return config.load_user_file("transids", [])
 
     def save_transids(self, used_ids):
-        config.save_user_file("transids", used_ids)
+        if config.user_id:
+            config.save_user_file("transids", used_ids)
 
     def save_tree_states(self):
         config.save_user_file("treestates", self.treestates)

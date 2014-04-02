@@ -1,0 +1,17 @@
+Title: drbd: Roles and diskstates are now configurable via WATO
+Level: 1
+Component: checks
+Version: 1.2.5i2
+Date: 1396431230
+Class: feature
+
+You can now configure the result for each role scenario as well as set specific states
+for each diskstate or completely disable the evaluation for roles and diskstates.
+For example:<br><br>
+
+Roles:<br>
+Secondary/Secondary -> CRIT<br><br>
+
+Diskstates:<br>
+Secondary/Inconsistent -> CRIT<br>
+Primary/Attaching -> WARN<br>

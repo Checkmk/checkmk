@@ -20,15 +20,26 @@ examples:
  # and both nodes to up-to-date.
  checks += [
    ( 'srvnd01', 'drbd', 'drbd0',
-     ( [ 'Primary', 'Secondary' ], [ 'UpToDate', 'UpToDate' ] ) )
+        {'diskstates_inventory': ['UpToDate', 'UpToDate'], 'roles_inventory': ['Primary', 'Secondary']}
+   )
  ]
+
+ # Set Primary/Primary setup to OK, Secondary/Primary to WARN
+ # Set the diskstate "Inconsistent" to OK for Primary and Secondary
+ checkgroup_parameters['drbd'] = [
+ ( {'roles': [('primary_primary', 0), ('secondary_primary', 1)],
+    'diskstates': [('primary_Inconsistent', 0), ('secondary_Inconsistent', 0)]}, [], ALL_HOSTS, ALL_SERVICES ),
+ )
 
 inventory:
  Each configured DRBD device will result in one service during inventory. All
  devices with the connection state "Unconfigured" are skipped.
 
 [parameters]
-roles (list): The expected role of each node. Can also be set to None to disable
+parameters (dict): A dictionary with the following keys
+roles_inventory (list): The state of the drbd roles during the inventory (see example)
+roles_diskstates (list): The state of the drbd diskstates during the inventory (see example)
+roles (list of tuple): The expected roles and its state. Can also be set to None (instead of list) to disable
  alerting on this value.
-disk_states (list): The expected disk-state of each node. Can also be set to None
- to disable alerting on this value.
+roles (list of tuple): The expected role/diskstate value and its state. Can also be set to None (instead of list) to disable
+ alerting on this value.

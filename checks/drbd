@@ -168,6 +168,18 @@ drbd_cs_map = {
   'VerifyS':        0, 'VerifyT':        0,
 }
 
+drbd_ds_map = {
+ "primary_Diskless":     2, "secondary_Diskless":     2,
+ "primary_Attaching":    2, "secondary_Attaching":    2,
+ "primary_Failed":       2, "secondary_Failed":       2,
+ "primary_Negotiating":  2, "secondary_Negotiating":  2,
+ "primary_Inconsistent": 1, "secondary_Inconsistent": 1,
+ "primary_Outdated":     2, "secondary_Outdated":     2,
+ "primary_DUnknown":     2, "secondary_DUnknown":     2,
+ "primary_Consistent":   2, "secondary_Consistent":   2,
+ "primary_UpToDate":     0, "secondary_UpToDate":     0,
+}
+
 def inventory_drbd(info, checktype):
     inventory = []
     for line in info[2:]:
@@ -178,9 +190,9 @@ def inventory_drbd(info, checktype):
                 continue
 
             if checktype == 'drbd':
-                levels = '( [ "%s", "%s" ], [ "%s", "%s" ] )' % \
-                             (parsed['ro'][0], parsed['ro'][1],
-                              parsed['ds'][0], parsed['ds'][1])
+                levels = { "roles_inventory":      parsed['ro'],
+                           "diskstates_inventory": parsed['ds']
+                            }
             elif checktype == 'drbd.net':
                 levels = "drbd_net_default_levels"
             elif checktype == 'drbd.disk':
@@ -242,6 +254,13 @@ def drbd_get_block(item, info, checktype):
 
 def check_drbd_general(item, params, info):
     parsed = drbd_get_block(item, info, 'drbd')
+
+    if type(params) == tuple:
+        params_conv = {}
+        params_conv.update({ "roles_inventory": params[0] and params[0] or None })
+        params_conv.update({ "diskstates_inventory": (params[0] and params[1]) and params[1] or None})
+        params = params_conv
+
     if not parsed is None:
         if parsed['cs'] == 'Unconfigured':
             return (2, 'The device is "Unconfigured"')
@@ -253,15 +272,61 @@ def check_drbd_general(item, params, info):
         state  = drbd_cs_map[parsed['cs']]
         output = 'Connection State: %s' % parsed['cs']
 
-        output += ', Roles: %s/%s' % (parsed['ro'][0], parsed['ro'][1])
-        if params[0] is not None and parsed['ro'] != params[0]:
-            state = state < 2 and 2 or state
-            output += ' (Expected: %s/%s)' % (params[0][0], params[0][1])
 
-        output += ', Disk States: %s/%s' % (parsed['ds'][0], parsed['ds'][1])
-        if params[1] is not None and parsed['ds'] != params[1]:
-            state = state < 2 and 2 or state
-            output += ' (Expected: %s/%s)' % (params[1][0], params[1][1])
+        # Roles
+        output += ', Roles: %s/%s' % tuple(parsed['ro'])
+        current_roles = "_".join(map(str.lower, parsed["ro"]))
+
+        found_role_match = False
+        if "roles" in params:
+            roles = params.get("roles")
+            if roles:
+                for roles_entry, roles_state in roles:
+                    if roles_entry == current_roles:
+                        found_role_match = True
+                        state = max(state, roles_state)
+                        output += ' %s' % state_markers[roles_state]
+                        break
+            else: # Ignore roles if set to None
+                found_role_match = True
+
+        if not found_role_match:
+            if "roles_inventory" in params:
+                roles_inventory = params.get("roles_inventory")
+                if roles_inventory and parsed["ro"] != roles_inventory:
+                    state = max(2, state)
+                    output += ' (Expected: %s/%s)' % tuple(params.get("roles_inventory"))
+            else:
+                state = max(3, state)
+                output += ' (Check requires a new service discovery)'
+
+
+
+
+        output += ', Diskstates: %s/%s' % tuple(parsed['ds'])
+        # Do not evaluate diskstates. Either set by rule or through the
+        # legacy configuration option None in the check parameters tuple
+        if "diskstates"           in params and params["diskstates"] == None or \
+           "diskstates_inventory" in params and params["diskstates_inventory"] == None:
+            return (state, output)
+
+
+        params_diskstates_dict = dict(params.get("diskstates", []))
+        diskstates_info = set()
+        for ro, ds in [ (parsed["ro"][0], parsed["ds"][0]), (parsed["ro"][1], parsed["ds"][1]) ]:
+            diskstate = "%s_%s" % (ro.lower(), ds)
+            params_diskstate = params_diskstates_dict.get(diskstate)
+
+            if params_diskstate != None:
+                state = max(state, params_diskstate)
+                diskstates_info.add('%s/%s is %s' % (ro, ds, state_markers[params_diskstate]))
+            else:
+                default_state = drbd_ds_map.get(diskstate, 3)
+                if default_state > 0:
+                    diskstates_info.add('%s/%s is %s' % (ro, ds, state_markers[default_state]))
+                state = max(state, drbd_ds_map.get(diskstate, 3))
+        if diskstates_info:
+            output += " (%s)" % ", ".join(diskstates_info)
 
         return (state, output)
 

@@ -8,3 +8,5 @@ Class: incomp
 If a description of the the alert group state is not available from the device, the check
 now displays a textual representation of the alert code instead of the alert code itself.
 This makes the service output more readable and useful to the printer admin.
+
+With this change the printer_alerts_state_map is deprecated and will no longer be used.

@@ -1,4 +1,8 @@
 1.2.5i3:
+    Checks & Agents:
+    * 0601 printer_alerts: check can now display a textual representation of the alert code...
+            NOTE: Please refer to the migration notes!
+
 
 1.2.5i2:
     Checks & Agents:

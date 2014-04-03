@@ -1295,6 +1295,28 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_networking,
+    "lsnat",
+    _("Enterasys LSNAT Bindings"),
+    Dictionary(
+        elements = [
+                ( "current_bindings",
+                    Tuple(
+                        title = _("Number of current LSNAT bindings"),
+                              elements = [
+                                Integer(title = _("Warning if above"),  size = 10, unit=_("bindings")),
+                                Integer(title = _("Critical if above"), size = 10, unit=_("bindings")),
+                              ]
+                   )
+                ),
+        ],
+        optional_keys = False,
+    ),
+    None,
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_networking,
     "wlc_clients",
     _("WLC WiFi client connections"),
     Tuple(

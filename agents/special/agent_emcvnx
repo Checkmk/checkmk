@@ -165,7 +165,7 @@ except ValueError:
 
 if (user == None or user == '') and (password == None or password == ''):
     # try using security files
-    basecmd="naviseccli -h %s -Scope 0 " % host_address
+    basecmd="naviseccli -h %s " % host_address
 else:
     basecmd="naviseccli -h %s -User %s -Password '%s' -Scope 0 " % (host_address, user, password)
 

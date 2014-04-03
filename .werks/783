@@ -1,0 +1,8 @@
+Title: enterasys_lsnat: new check monitoring the current LSNAT bindings
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1396530940
+Class: feature
+
+

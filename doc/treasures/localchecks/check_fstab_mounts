@@ -1,0 +1,37 @@
+#!/usr/bin/python
+# This localcheck makes sure that every filesystem that is listed in /etc/fstab to
+# be mounted automatically, also appears mounted in /proc/mounts
+
+# /dev/mapper/vg0-lv--root /               ext4    errors=remount-ro 0       1
+# # /boot was on /dev/md0 during installation
+# UUID=bec44dfa-7c70-4da7-857a-2e324cc230bd /boot           ext4    defaults        0       2
+# /dev/mapper/vg0-lv--home /home           ext4    defaults        0       2
+# tmpfs  /omd/sites/aq/tmp tmpfs noauto,user,mode=755,uid=aq,gid=aq 0 0
+# tmpfs  /opt/omd/sites/zentrale/tmp tmpfs noauto,user,mode=755,uid=zentrale,gid=zentrale 0 0
+# tmpfs  /opt/omd/sites/hirn/tmp tmpfs noauto,user,mode=755,uid=hirn,gid=hirn 0 0
+# tmpfs  /opt/omd/sites/heute/tmp tmpfs noauto,user,mode=755,uid=heute,gid=heute 0 0
+
+mounted = [ l.split()[1] for l in file("/proc/mounts") ]
+
+missing = []
+count = 0
+for line in file("/etc/fstab"):
+    if not line.strip() or line.strip().startswith("#"):
+        continue
+
+    device, mountpoint, fstype, options, rest = line.split(None, 4)
+    options = options.split(",")
+    if "noauto" not in options and mountpoint not in mounted:
+        missing.append("%s is not mounted on %s" % (device, mountpoint))
+    else:
+        count += 1
+
+if missing:
+    state = 2
+    output = ", ".join(missing)
+
+else:
+    state = 0
+    output = "All %d expected filesystems of /etc/fstab are mounted" % count
+
+print "%d Mounted_Filesystems - %s" % (state, output)

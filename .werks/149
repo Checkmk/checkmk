@@ -1,0 +1,8 @@
+Title: cisco_secure: New check for Port Security on Cisco swichtes
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1396511368
+Class: feature
+
+

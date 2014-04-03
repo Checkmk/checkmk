@@ -2,6 +2,19 @@
     Checks & Agents:
     * 0601 printer_alerts: check can now display a textual representation of the alert code...
             NOTE: Please refer to the migration notes!
+    * 0149 cisco_secure: New check for Port Security on Cisco swichtes
+    * 0751 New localcheck for Linux that makes sure that filesystems in /etc/fstab are mounted...
+    * 0783 enterasys_lsnat: new check monitoring the current LSNAT bindings
+    * 0777 FIX: special agent emcvnx: did not work with security file authentication...
+
+    Multisite:
+    * 0779 Hostgroups (Summary): Empty hostgroups are no longer shown (can be re-enabled by filter)
+
+    WATO:
+    * 0781 FIX: host diag page: fixed problem with update of diagnose subwindows...
+
+    Livestatus:
+    * 0747 FIX: livestatus table hostsbygroup: fixed bug with group_authorization strict...
 
 
 1.2.5i2:

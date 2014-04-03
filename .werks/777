@@ -1,0 +1,9 @@
+Title: special agent emcvnx: did not work with security file authentication
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1396526883
+Class: fix
+
+when trying to authenticate with security files, the special agent did build
+invalid naviseccli command line. This is fixed now.

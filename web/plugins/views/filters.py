@@ -52,6 +52,21 @@ class FilterText(Filter):
     def heading_info(self, infoname):
         return html.var(self.htmlvars[0])
 
+
+
+class FilterHostgroupVisibility(Filter):
+    def __init__(self, name, title):
+        Filter.__init__(self, name, title, "hostgroups", [ "hostgroupshowempty" ], [])
+
+    def display(self):
+        html.checkbox("hostgroupshowempty", False, label="Show empty groups")
+
+    def filter(self, infoname):
+        if html.var("hostgroupshowempty"):
+            return ""
+        else:
+            return "Filter: num_hosts > 0"
+
 #                               filter          title              info       column           htmlvar
 declare_filter(100, FilterText("hostregex",    _("Hostname"),        "host",    "host_name",      "host",    "~~"),
                           _("Search field allowing regular expressions and partial matches"))
@@ -73,6 +88,9 @@ declare_filter(202, FilterText("service_display_name", _("Service alternative di
 
 declare_filter(101, FilterText("hostgroupnameregex",    _("Hostgroup"),        "hostgroup",    "hostgroup_name",      "hostgroup_name",    "~~"),
                                _("Search field allowing regular expressions and partial matches on the names of hostgroups"))
+
+declare_filter(102, FilterHostgroupVisibility("hostgroupvisibility", _("Empty Hostgroup Visibilitiy")),
+                               _("You can enable this checkbox to show empty hostgroups"))
 
 declare_filter(101, FilterText("servicegroupnameregex", _("Servicegroup"),   "servicegroup", "servicegroup_name",   "servicegroup_name", "~~"),
                           _("Search field allowing regular expression and partial matches"))

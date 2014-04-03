@@ -1,0 +1,16 @@
+Title: livestatus table hostsbygroup: fixed bug with group_authorization strict
+Level: 2
+Component: livestatus
+Version: 1.2.5i3
+Date: 1396445685
+Class: fix
+
+On calling the livestatus table hostsbygroup with an AuthUser the table
+did not hide the entire hostsgroup in case the group_authorization was set to <tt>strict</tt>
+and one host in the group was not a contact for the AuthUser.
+
+This has been fixed.
+
+With the group_authorization <tt>strict</tt> setting the AuthUser now
+needs to be a contact of every host in the hostgroup, otherwise the hostgroup
+is not shown at all.

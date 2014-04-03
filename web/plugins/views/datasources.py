@@ -118,7 +118,7 @@ multisite_datasources["servicesbyhostgroup"] = {
 multisite_datasources["hostgroups"] = {
     "title"   : _("Hostgroups"),
     "table"   : "hostgroups",
-    "infos"   : [ "hostgroup" ],
+    "infos"   : [ "hostgroup", "hostgroups" ],
     "keys"    : [ "hostgroup_name" ],
     "idkeys"  : [ "site", "hostgroup_name" ],
 }

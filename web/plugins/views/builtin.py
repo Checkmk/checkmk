@@ -924,7 +924,7 @@ multisite_builtin_views.update({
                              ('hg_num_services_unknown', None),
                              ('hg_num_services_pending', None)],
                 'public': True,
-                'show_filters': ['hostgroupnameregex'],
+                'show_filters': ['hostgroupnameregex', 'hostgroupvisibility'],
                 'sorters': [],
                 'title': _('Hostgroups (Summary)'),
                 'topic': _('Hostgroups') },

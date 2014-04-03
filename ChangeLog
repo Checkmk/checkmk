@@ -5,6 +5,9 @@
     Multisite:
     * 0779 Hostgroups (Summary): Empty hostgroups are no longer shown (can be re-enabled by filter)
 
+    WATO:
+    * 0781 FIX: host diag page: fixed problem with update of diagnose subwindows...
+
     Livestatus:
     * 0747 FIX: livestatus table hostsbygroup: fixed bug with group_authorization strict...
 

@@ -1,6 +1,7 @@
 1.2.5i3:
     Checks & Agents:
     * 0149 cisco_secure: New check for Port Security on Cisco swichtes
+    * 0777 FIX: special agent emcvnx: did not work with security file authentication...
 
     Multisite:
     * 0779 Hostgroups (Summary): Empty hostgroups are no longer shown (can be re-enabled by filter)

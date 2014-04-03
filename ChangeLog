@@ -1,6 +1,7 @@
 1.2.5i3:
     Checks & Agents:
     * 0149 cisco_secure: New check for Port Security on Cisco swichtes
+    * 0751 New localcheck for Linux that makes sure that filesystems in /etc/fstab are mounted...
     * 0777 FIX: special agent emcvnx: did not work with security file authentication...
 
     Multisite:

@@ -1,0 +1,11 @@
+Title: New localcheck for Linux that makes sure that filesystems in /etc/fstab are mounted
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1396529750
+Class: feature
+
+The new local check is in <tt>share/doc/check_mk/treasures/localchecks/check_fstab_mounts</tt>. Simply
+copy it to <tt>/usr/lib/check_mk_agent/local/</tt> on your Linux agents. It will alert you if any
+filesystem that is listed in <tt>/etc/fstab</tt> is not being mounted. Filesystems with the option
+<tt>noauto</tt> are excluded from the check.

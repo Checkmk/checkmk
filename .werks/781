@@ -1,0 +1,8 @@
+Title: host diag page: fixed problem with update of diagnose subwindows
+Level: 2
+Component: wato
+Version: 1.2.4p2
+Date: 1396522971
+Class: fix
+
+The subwindows in the host diagnostic page did not get updated properly, because of an incorrect transaction handling.

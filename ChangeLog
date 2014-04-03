@@ -2,6 +2,9 @@
     Checks & Agents:
     * 0746 zfsget: fixed problem with agent output of check_mk_agent.solaris...
 
+    WATO:
+    * 0781 FIX: host diag page: fixed problem with update of diagnose subwindows...
+
 
 1.2.4p1:
     Core & Setup:

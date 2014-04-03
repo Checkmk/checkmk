@@ -2690,13 +2690,13 @@ def mode_diag_host(phase):
             html.write('<table class="data test"><tr class="data odd0">')
             html.write('<td class="icons"><div>')
             html.write('<img class="icon" id="%s_img" src="">' % ident)
-            html.write('<a href="javascript:start_host_diag_test(\'%s\', \'%s\');">'
+            html.write('<a href="javascript:start_host_diag_test(\'%s\', \'%s\', \'%s\');">'
                        '<img class="icon retry" id="%s_retry" src="images/icon_retry_disabled.gif" title="%s"></a>' %
-                        (ident, hostname, ident, _('Retry this test')))
+                        (ident, hostname, html.fresh_transid(), ident, _('Retry this test')))
             html.write('</div></td>')
             html.write('<td><div class="log" id="%s_log"></div>' % ident)
             html.write('</tr></table>')
-            html.javascript('start_host_diag_test("%s", "%s")' % (ident, hostname))
+            html.javascript('start_host_diag_test("%s", "%s", "%s")' % (ident, hostname, html.fresh_transid()))
 
     html.write('</td></tr></table>')
     html.write('</div>')

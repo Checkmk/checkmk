@@ -163,3 +163,48 @@ check_info["ibm_svc_systemstats.cpu_util"] = {
 }
 #.
 
+#   .--cache---------------------------------------------------------------.
+#   |                                     _                                |
+#   |                       ___ __ _  ___| |__   ___                       |
+#   |                      / __/ _` |/ __| '_ \ / _ \                      |
+#   |                     | (_| (_| | (__| | | |  __/                      |
+#   |                      \___\__,_|\___|_| |_|\___|                      |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_ibm_svc_systemstats_cache(info):
+    inventory = []
+    for stat_name, stat_current, stat_peak, stat_peak_time in info:
+        if stat_name == "total_cache_pc":
+            inventory.append( (None, None) )
+    return inventory
+
+def check_ibm_svc_systemstats_cache(item, _no_params, info):
+    write_cache_pc = None
+    total_cache_pc = None
+
+    for stat_name, stat_current, stat_peak, stat_peak_time in info:
+        if stat_name == "total_cache_pc":
+            total_cache_pc = int(stat_current)
+        if stat_name == "write_cache_pc":
+            write_cache_pc = int(stat_current)
+
+    if total_cache_pc == None:
+        return 3, "value total_cache_pc not found in agent output"
+    if write_cache_pc == None:
+        return 3, "value write_cache_pc not found in agent output"
+
+    perfdata = [ ("write_cache_pc", write_cache_pc, None, None, 0, 100),
+                 ("total_cache_pc", total_cache_pc, None, None, 0, 100) ]
+
+    return 0, "Write cache usage is %d%%, total cache usage is %d%%" % \
+           (write_cache_pc, total_cache_pc), perfdata
+
+check_info["ibm_svc_systemstats.cache"] = {
+    "check_function"        : check_ibm_svc_systemstats_cache,
+    "inventory_function"    : inventory_ibm_svc_systemstats_cache,
+    "service_description"   : "IBM SVC Cache Total",
+    "has_perfdata"          : True,
+}
+
+#.

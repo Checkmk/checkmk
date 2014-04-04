@@ -891,6 +891,19 @@ def perfometer_check_mk_ibm_svc_license(row, check_command, perf_data):
 
 perfometers["check_mk-ibm_svc_license"] = perfometer_check_mk_ibm_svc_license
 
+def perfometer_check_mk_ibm_svc_cache(row, check_command, perf_data):
+    h = '<table><tr>'
+    write_cache_pc = int(perf_data[0][1])
+    total_cache_pc = int(perf_data[1][1])
+    read_cache_pc = total_cache_pc - write_cache_pc
+    free_cache_pc = 100 - total_cache_pc
+    h += perfometer_td(write_cache_pc, "#60e0a0")
+    h += perfometer_td(read_cache_pc,  "#60a0e0")
+    h += perfometer_td(free_cache_pc,  "white")
+    h += "</tr></table>"
+    return "%d%% write, %d%% read" % (write_cache_pc, read_cache_pc), h
+perfometers["check_mk-ibm_svc_nodestats.cache"] = perfometer_check_mk_ibm_svc_cache
+perfometers["check_mk-ibm_svc_systemstats.cache"] = perfometer_check_mk_ibm_svc_cache
 
 def perfometer_licenses_percent(row, check_command, perf_data):
     licenses = float(perf_data[0][1])

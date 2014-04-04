@@ -178,3 +178,56 @@ check_info["ibm_svc_nodestats.cpu_util"] = {
     "includes"              : [ "cpu_util.include" ],
 }
 #.
+#   .--cache---------------------------------------------------------------.
+#   |                                     _                                |
+#   |                       ___ __ _  ___| |__   ___                       |
+#   |                      / __/ _` |/ __| '_ \ / _ \                      |
+#   |                     | (_| (_| | (__| | | |  __/                      |
+#   |                      \___\__,_|\___|_| |_|\___|                      |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+# parses agent output into a structure like:
+# {'BLUBBSVC01': {'total_cache_pc': 70, 'write_cache_pc': 0},
+#  'BLUBBSVC02': {'total_cache_pc': 75, 'write_cache_pc': 0},
+#  'BLUBBSVC03': {'total_cache_pc': 65, 'write_cache_pc': 0},
+#  'BLUBBSVC04': {'total_cache_pc': 71, 'write_cache_pc': 0}}
+
+def ibm_svc_cache_parse(info):
+    parsed = {}
+    for node_id, node_name, stat_name, stat_current, stat_peak, stat_peak_time in info:
+        if stat_name in ("write_cache_pc", "total_cache_pc"):
+            if node_name not in parsed.keys():
+                parsed[node_name] = {}
+            parsed[node_name][stat_name] = int(stat_current)
+    return parsed
+
+def inventory_ibm_svc_cache(info):
+    inventory = []
+    parsed = ibm_svc_cache_parse(info)
+    for key in parsed.keys():
+        inventory.append( (key, None) )
+    return inventory
+
+def check_ibm_svc_cache(item, _no_params, info):
+    parsed = ibm_svc_cache_parse(info)
+
+    if item not in parsed.keys():
+        return 3, "%s not found in agent output" % item
+
+    write_cache_pc = parsed[item]["write_cache_pc"]
+    total_cache_pc = parsed[item]["total_cache_pc"]
+    perfdata = [ ("write_cache_pc", write_cache_pc, None, None, 0, 100),
+                 ("total_cache_pc", total_cache_pc, None, None, 0, 100) ]
+
+    return 0, "Write cache usage is %d%%, total cache usage is %d%%" % \
+           (write_cache_pc, total_cache_pc), perfdata
+
+check_info["ibm_svc_nodestats.cache"] = {
+    "check_function"        : check_ibm_svc_cache,
+    "inventory_function"    : inventory_ibm_svc_cache,
+    "service_description"   : "IBM SVC Cache %s",
+    "has_perfdata"          : True,
+}
+
+#.

@@ -4,6 +4,7 @@
 
     Checks & Agents:
     * 0746 zfsget: fixed problem with agent output of check_mk_agent.solaris...
+    * 0786 FIX: check_mk_agent.solaris: fixed problem with section <<<zfsget>>>...
 
     WATO:
     * 0784 Improved security of WATO bulk inventory by using transaction ids

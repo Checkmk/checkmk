@@ -2432,15 +2432,30 @@ register_check_parameters(
     "dict",
 )
 
+def transform_printer_supply(l):
+    if len(l) == 2:
+        return l[0], l[1], False
+    return l
+
 register_check_parameters(
     subgroup_printing,
     "printer_supply",
     _("Printer cardridge levels"),
-    Tuple(
-          help = _("Levels for printer cardridges."),
-          elements = [
-              Float(title = _("Warning remaining")),
-              Float(title = _("Critical remaining"))]
+    Transform(
+        Tuple(
+              kelp = _("Levels for printer cardridges."),
+              elements = [
+                  Float(title = _("Warning remaining")),
+                  Float(title = _("Critical remaining")),
+                  Checkbox(
+                        title = _("Upturn toner levels" ),
+                        help = _ ("Some Printers (eg. Konica for Drum Cartdiges) returning the available"
+                                  " fuel instead of what is left. In this case it's possible"
+                                  " to upturn the levels to handle this behavior"
+                                 )
+                        ),]
+             ),
+             forth = transform_printer_supply,
     ),
     TextAscii(
         title = _("cardridge specification"),

@@ -27,6 +27,7 @@ inventory:
 [parameters]
 warning(int): The supply level in percentage at which (and below) a warning is triggered
 critical(int): The supply level in percentage at which (and below) a critical state is reached.
+upturn(bool): Upturn the toner levels
 
 
 [configuration]

@@ -1,0 +1,8 @@
+Title: printer_suply: New option to upturn toner levels
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1396606612
+Class: feature
+
+Some Printers (eg. Konica for Drum Cartdiges) returning the available fuel instead of what is left. In this case it's possible to upturn the levels to handle this behavior

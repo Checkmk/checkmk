@@ -7,6 +7,7 @@
             NOTE: Please refer to the migration notes!
     * 0799 ibm_svc_systemstats.cpu_util: New check for CPU Utilization of an IBM SVC / V7000 device in total
     * 0800 ibm_svc_nodestats.cache, ibm_svc_systemstats.cache: New checks for Cache Usage of IBM SVC / V7000 devices
+    * 0150 printer_suply: New option to upturn toner levels...
     * 0777 FIX: special agent emcvnx: did not work with security file authentication...
 
     Multisite:

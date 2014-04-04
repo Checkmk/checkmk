@@ -42,7 +42,8 @@
 #['Fuser Unit OKI DATA CORP', '60000', '26174', '']
 #['Waste Toner box OKI DATA CORP', '1', '-2', '']
 
-printer_supply_default_levels = (20, 10)
+# Warn/Crit/upturn current
+printer_supply_default_levels = (20, 10, False)
 
 # When the printer reports -3 as fill threshold the toner
 # might be empty or might have some small remaining capacities
@@ -85,7 +86,11 @@ def check_printer_supply(item, params, info):
         if line[0].rstrip('\0') == item:
             maxlevel = int(line[1])
             current = saveint(line[2])
-            warn, crit = params # in percent
+            if len(params) == 2:
+                warn, crit = params # in percent
+                upturn = False
+            else:
+                warn, crit, upturn = params
             perfdata = [ ("pages", current, warn / 100.0 * maxlevel, crit / 100.0 * maxlevel, 0, maxlevel ) ]
 
             # handle cases with partial data
@@ -100,7 +105,10 @@ def check_printer_supply(item, params, info):
                     # no percentage possible. We compare directly against levels
                     return (0, "current level is %d" % current, [("pages", current)])
 
-            leftperc = 100.0 * current / maxlevel
+            if upturn:
+                leftperc = 100 - current
+            else:
+                leftperc = 100.0 * current / maxlevel
             infotext = "%.0f%% (levels at %.0f%% / %.0f%%)" % (leftperc, warn, crit)
             if leftperc <= crit:
                 return (2, infotext, perfdata)

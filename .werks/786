@@ -3,7 +3,7 @@ Level: 1
 Component: checks
 Class: fix
 State: unknown
-Version: 1.2.5i2
+Version: 1.2.5i3
 Date: 1396620030
 
 The check zfsget expected more fields in the section zfsget than

@@ -1,4 +1,7 @@
 1.2.5i3:
+    Core & Setup:
+    * 0785 FIX: Availability: fixed memory leak in table statehist...
+
     Checks & Agents:
     * 0149 cisco_secure: New check for Port Security on Cisco swichtes
     * 0751 New localcheck for Linux that makes sure that filesystems in /etc/fstab are mounted...
@@ -8,12 +11,14 @@
     * 0799 ibm_svc_systemstats.cpu_util: New check for CPU Utilization of an IBM SVC / V7000 device in total
     * 0800 ibm_svc_nodestats.cache, ibm_svc_systemstats.cache: New checks for Cache Usage of IBM SVC / V7000 devices
     * 0150 printer_suply: New option to upturn toner levels...
+    * 0801 ibm_svc_eventlog: New Check for Messages in Event log of IBM SVC / V7000 devices
     * 0777 FIX: special agent emcvnx: did not work with security file authentication...
 
     Multisite:
     * 0779 Hostgroups (Summary): Empty hostgroups are no longer shown (can be re-enabled by filter)
 
     WATO:
+    * 0784 Improved security of WATO bulk inventory by using transaction ids
     * 0781 FIX: host diag page: fixed problem with update of diagnose subwindows...
 
     Notifications:

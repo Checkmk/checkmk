@@ -13,6 +13,11 @@ description:
 
  The worst of both is returned as check result.
 
+ Please note: You need the Special Agent agent_ibmsvc to retrieve the monitoring
+ data from the device. Your monitoring user must be able to SSH to the device
+ with SSH Key Authentification. Please exchange SSH key. The Special Agent itself
+ can be configured by WATO.
+
 item:
  The name of the MDisk.
 

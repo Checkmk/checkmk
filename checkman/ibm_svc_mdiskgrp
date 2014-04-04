@@ -12,6 +12,11 @@ description:
  Additionally the status of the MDisksGrp is checked. On every other status
  than {online} the check results in {CRIT} status.
 
+ Please note: You need the Special Agent agent_ibmsvc to retrieve the monitoring
+ data from the device. Your monitoring user must be able to SSH to the device
+ with SSH Key Authentification. Please exchange SSH key. The Special Agent itself
+ can be configured by WATO.
+
 item:
  The name of the MDisksGrp
 

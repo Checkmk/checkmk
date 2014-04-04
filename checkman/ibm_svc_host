@@ -11,6 +11,11 @@ description:
  any unidentified status the check returns {WARN}. If some hosts report
  {offline} status the check returns {CRIT}.
 
+ Please note: You need the Special Agent agent_ibmsvc to retrieve the monitoring
+ data from the device. Your monitoring user must be able to SSH to the device
+ with SSH Key Authentification. Please exchange SSH key. The Special Agent itself
+ can be configured by WATO.
+
 perfdata:
  Five values are reported: The number of hosts reporting
  active, inactive, degraded, offline and unidentified status.

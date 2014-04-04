@@ -1,4 +1,4 @@
-Title: check_mk_agent.solaris: fixed problem with section <<<zfsget>>>
+Title: zfsget: fixed compatibility with older Solaris agents
 Level: 1
 Component: checks
 Class: fix

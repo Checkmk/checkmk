@@ -744,7 +744,7 @@ def rbn_match_host_event(rule, context):
                 return # Let this be handled by match_service_event
         allowed_events = rule["match_host_event"]
         state          = context["HOSTSTATE"]
-        last_state     = context["LASTHOSTSTATE"]
+        last_state     = context["PREVIOUSHOSTHARDSTATE"]
         events         = { "UP" : 'r', "DOWN" : 'd', "UNREACHABLE" : 'u' }
         return rbn_match_event(context, state, last_state, events, allowed_events)
 
@@ -758,7 +758,7 @@ def rbn_match_service_event(rule, context):
                 return # Let this be handled by match_host_event
         allowed_events = rule["match_service_event"]
         state          = context["SERVICESTATE"]
-        last_state     = context["LASTSERVICESTATE"]
+        last_state     = context["PREVIOUSSERVICEHARDSTATE"]
         events         = { "OK" : 'r', "WARNING" : 'w', "CRITICAL" : 'c', "UNKNOWN" : 'u' }
         return rbn_match_event(context, state, last_state, events, allowed_events)
 
@@ -777,9 +777,16 @@ def rbn_match_event(context, state, last_state, events, allowed_events):
     else:
         event = events.get(last_state, '?') + events.get(state, '?')
 
-    if event not in allowed_events:
-        return "Event type '%s' not handled by this rule. Allowed are: %s" % (
-                event, ", ".join(allowed_events))
+    notify_log("Event type is %s" % event)
+
+    # Now go through the allowed events. Handle '?' has matching all types!
+    for allowed in allowed_events:
+        if event == allowed or \
+            event[0] == '?' and event[1] == allowed[1]:
+            return
+
+    return "Event type '%s' not handled by this rule. Allowed are: %s" % (
+            event, ", ".join(allowed_events))
 
 
 def rbn_rule_contacts(rule, context):
@@ -1494,6 +1501,38 @@ def complete_raw_context(raw_context):
     contact = raw_context.get("CONTACTNAME")
     if not contact or contact == "check-mk-notify":
         add_rulebased_macros(raw_context)
+
+
+    # Add the previous hard state. This is neccessary for notification rules that depend on certain transitions,
+    # like OK -> WARN (but not CRIT -> WARN). The CMC sends PREVIOUSHOSTHARDSTATE and PREVIOUSSERVICEHARDSTATE.
+    # Nagios does not have this information and we try to deduct this.
+    if "PREVIOUSHOSTHARDSTATE" not in raw_context:
+        prev_state = raw_context["LASTHOSTSTATE"]
+        # When the attempts are > 1 then the last state could be identical with
+        # the current one, e.g. both critical. In that case we assume the
+        # previous hard state to be OK.
+        if prev_state == raw_context["HOSTSTATE"]:
+            prev_state = "UP"
+        elif "HOSTATTEMPT" not in raw_context or \
+            ("HOSTATTEMPT" in raw_context and raw_context["HOSTATTEMPT"] != "1"):
+            # Here We do not know. The transition might be OK -> WARN -> CRIT and
+            # the initial OK is completely lost. We use the artificial state "?"
+            # here, which matches all states and makes sure that when in doubt a
+            # notification is being sent out.
+            prev_state = "?"
+            notify_log("Previous host hard state not known. Allowing all states.")
+        raw_context["PREVIOUSHOSTHARDSTATE"] = prev_state
+
+    # Same for services
+    if raw_context["WHAT"] == "SERVICE" and "PREVIOUSSERVICEHARDSTATE" not in raw_context:
+        prev_state = raw_context["LASTSERVICESTATE"]
+        if prev_state == raw_context["SERVICESTATE"]:
+            prev_state = "OK"
+        elif "SERVICEATTEMPT" not in raw_context or \
+            ("SERVICEATTEMPT" in raw_context and raw_context["SERVICEATTEMPT"] != "1"):
+            prev_state = "?"
+            notify_log("Previous service hard state not known. Allowing all states.")
+        raw_context["PREVIOUSSERVICEHARDSTATE"] = prev_state
 
     convert_context_to_unicode(raw_context)
 

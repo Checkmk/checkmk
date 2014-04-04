@@ -1,0 +1,9 @@
+Title: FIX: correctly show original state in HTML notification mails
+Level: 1
+Component: notifications
+Class: fix
+State: unknown
+Version: 1.2.5i3
+Date: 1396612003
+
+This fix is relevant if you have the maximum check attempts &gt; 1.

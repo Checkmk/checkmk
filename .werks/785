@@ -1,0 +1,9 @@
+Title: Availability: fixed memory leak in table statehist
+Level: 2
+Component: core
+Version: 1.2.4p2
+Date: 1396616927
+Class: fix
+
+The cleanup procedure of the livestatus table statehist missed some items..
+This has been fixed.

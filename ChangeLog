@@ -1,4 +1,7 @@
 1.2.4p2:
+    Core & Setup:
+    * 0785 FIX: Availability: fixed memory leak in table statehist...
+
     Checks & Agents:
     * 0746 zfsget: fixed problem with agent output of check_mk_agent.solaris...
 

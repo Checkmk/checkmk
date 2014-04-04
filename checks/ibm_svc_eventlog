@@ -1,0 +1,61 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# <<<ibm_svc_eventlog:sep(58)>>>
+# 588:120404112526:mdiskgrp:6:md07_sas10k::alert:no:989001::Managed Disk Group space warning
+# 589:120404112851:mdiskgrp:7:md08_nlsas7k_1t::alert:no:989001::Managed Disk Group space warning
+# 590:120404112931:mdiskgrp:8:md09_nlsas7k_1t::alert:no:989001::Managed Disk Group space warning
+# 591:120404113001:mdiskgrp:9:md10_nlsas7k_1t::alert:no:989001::Managed Disk Group space warning
+# 592:120404113026:mdiskgrp:10:md11_nlsas7k_1t::alert:no:989001::Managed Disk Group space warning
+# 593:120404113111:mdiskgrp:11:md12_nlsas7k_1t::alert:no:989001::Managed Disk Group space warning
+# 1690:130801070656:drive:59:::alert:no:981020::Managed Disk error count warning threshold met
+# 2058:131030112416:drive:42:::alert:no:981020::Managed Disk error count warning threshold met
+
+def inventory_ibm_svc_eventlog(info):
+    return [ (None, None) ]
+
+def check_ibm_svc_eventlog(item, _no_params, info):
+    messagecount = 0
+    last_err = ""
+
+    for sequence_number, last_timestamp, object_type, object_id, object_name, copy_id, status, fixed, event_id, error_code, description in info:
+        messagecount += 1
+        last_err = description
+
+    if messagecount > 0:
+        return 1, "%d messages not expired and not yet fixed found in event log, last was: %s" % \
+            (messagecount, last_err)
+
+    return 0, "No messages not expired and not yet fixed found in event log"
+
+check_info["ibm_svc_eventlog"] = {
+    "check_function"        : check_ibm_svc_eventlog,
+    "inventory_function"    : inventory_ibm_svc_eventlog,
+    "service_description"   : "IBM SVC Eventlog",
+    "has_perfdata"          : False,
+}
+

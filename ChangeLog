@@ -1,4 +1,7 @@
 1.2.5i2:
+    Core & Setup:
+    * 0785 FIX: Availability: fixed memory leak in table statehist...
+
     Checks & Agents:
     * 0147 enterasys_fans: New Check to monitor fans of enterasys swichtes
     * 0774 ibm_svc_nodestats.diskio: new check for disk troughput per node on IBM SVC / V7000 devices

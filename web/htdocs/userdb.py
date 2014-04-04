@@ -166,14 +166,19 @@ multisite_dir = defaults.default_config_dir + "/multisite.d/wato/"
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-def declare_user_attribute(name, vs, user_editable = True, permission = None, show_in_table = False, topic = None, add_custom_macro = False):
+def declare_user_attribute(name, vs, user_editable = True, permission = None,
+                           show_in_table = False, topic = None, add_custom_macro = False,
+                           domain = "multisite"):
+
     user_attributes[name] = {
         'valuespec'         : vs,
         'user_editable'     : user_editable,
         'show_in_table'     : show_in_table,
         'topic'             : topic and topic or 'personal',
         'add_custom_macro'  : add_custom_macro,
+        'domain'            : domain,
     }
+
     # Permission needed for editing this attribute
     if permission:
         user_attributes[name]["permission"] = permission
@@ -354,7 +359,6 @@ def split_dict(d, keylist, positive):
     return dict([(k,v) for (k,v) in d.items() if (k in keylist) == positive])
 
 def save_users(profiles):
-    custom_values = user_attributes.keys()
 
     # Add custom macros
     core_custom_macros =  [ k for k,o in user_attributes.items() if o.get('add_custom_macro') ]
@@ -362,6 +366,8 @@ def save_users(profiles):
         for macro in core_custom_macros:
             if profiles[user].get(macro):
                 profiles[user]['_'+macro] = profiles[user][macro]
+
+    multisite_custom_values = [ k for k,v in user_attributes.items() if v["domain"] == "multisite" ]
 
     # Keys not to put into contact definitions for Check_MK
     non_contact_keys = [
@@ -374,7 +380,7 @@ def save_users(profiles):
         "connector",
         "num_failed",
         "last_seen",
-    ] + custom_values
+    ] + multisite_custom_values
 
     # Keys to put into multisite configuration
     multisite_keys   = [
@@ -384,7 +390,7 @@ def save_users(profiles):
         "alias",
         "language",
         "connector",
-    ] + custom_values
+    ] + multisite_custom_values
 
     # Remove multisite keys in contacts.
     contacts = dict(
@@ -400,9 +406,9 @@ def save_users(profiles):
                             for p, val in profile.items()
                             if p in multisite_keys + multisite_attributes(profile.get('connector'))])
 
-    filename = root_dir + "contacts.mk.new"
 
     # Check_MK's monitoring contacts
+    filename = root_dir + "contacts.mk.new"
     out = create_user_file(filename, "w")
     out.write("# Written by Multisite UserDB\n# encoding: utf-8\n\n")
     out.write("contacts.update(\n%s\n)\n" % pprint.pformat(contacts))
@@ -410,8 +416,8 @@ def save_users(profiles):
     os.rename(filename, filename[:-4])
 
     # Users with passwords for Multisite
-    make_nagios_directory(multisite_dir)
     filename = multisite_dir + "users.mk.new"
+    make_nagios_directory(multisite_dir)
     out = create_user_file(filename, "w")
     out.write("# Written by Multisite UserDB\n# encoding: utf-8\n\n")
     out.write("multisite_users = \\\n%s\n" % pprint.pformat(users))

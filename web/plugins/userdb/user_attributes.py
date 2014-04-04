@@ -50,3 +50,18 @@ declare_user_attribute(
 )
 
 
+declare_user_attribute(
+    "disable_notifications",
+    Checkbox(
+        title = _("Disable Notifications"),
+        label = _("Temporarily disable <b>all</b> notifications!"),
+        help = _("When this option is active the you will not get <b>any</b> "
+                 "alerts or other notifications via email, SMS or similar. "
+                 "This overrides all other notification settings or rules, so make "
+                 "sure that you know what you do."),
+    ),
+    permission = "general.disable_notifications",
+    domain = "check_mk",
+)
+
+

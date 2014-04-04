@@ -1,0 +1,16 @@
+Title: Allow users to disable their notifications completely
+Level: 2
+Component: notifications
+Version: 1.2.5i3
+Date: 1396619751
+Class: feature
+
+In the personal settings a user has now a convenient checkbox called
+<i>Temporarily disable all notifications!</i>.  This disables <b>all</b>
+notification for that user - regardless of wether plain, flexible or rule
+based notifications are in use.
+
+<b>Note:</b> Because this is a dangerous feature, it is protected with the
+new permission <i>Disable all personal notifications</i>.  This permission
+is switched <b>off</b> in the role <i>User</i> per default. If you like this
+feature then you need to enable that permission.

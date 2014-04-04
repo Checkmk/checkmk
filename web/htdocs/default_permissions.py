@@ -123,6 +123,13 @@ def load():
         [ 'admin', 'user' ]
     )
 
+    config.declare_permission('general.disable_notifications',
+        _('Disable all personal notifications'),
+        _('This permissions provides a checkbox in the personal settings of the user that '
+          'allows him to completely disable all of his notifications. Use with caution.'),
+        [ 'admin', ]
+    )
+
     config.declare_permission('general.edit_user_attributes',
         _('Edit personal user attributes'),
         _('This allows a user to edit his personal user attributes. You also need the permission '

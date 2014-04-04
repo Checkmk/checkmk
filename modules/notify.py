@@ -250,6 +250,10 @@ def locally_deliver_raw_context(raw_context, analyse=False):
         # flexible notifications even if they are enabled.
         contact = contacts.get(contactname)
 
+        if contact.get("disable_notifications", False):
+            notify_log("Notifications for %s are disabled in personal settings. Skipping." % contactname)
+            return
+
         # Get notification settings for the contact in question - if available.
         if contact:
             method = contact.get("notification_method", "email")
@@ -413,6 +417,7 @@ def notify_rulebased(raw_context, analyse=False):
             notify_log(" -> matches!")
             num_rule_matches += 1
             contacts = rbn_rule_contacts(rule, raw_context)
+
             plugin = rule["notify_plugin"]
             method = rule["notify_method"] # None: do cancel, [ str ]: plugin parameters
             bulk   = rule.get("bulk")
@@ -543,7 +548,7 @@ def rbn_add_contact_information(plugin_context, contact):
             plugin_context["CONTACT" + what.upper()] = contact.get(what, "")
         for key in contact.keys():
             if key[0] == '_':
-                plugin_context["CONTACT" + key.upper()] = contact[key]
+                plugin_context["CONTACT" + key.upper()] = unicode(contact[key])
     else:
         if contact.startswith("mailto:"): # Fake contact
             contact_dict = {
@@ -790,21 +795,29 @@ def rbn_match_event(context, state, last_state, events, allowed_events):
 
 
 def rbn_rule_contacts(rule, context):
-    contacts = set([])
+    the_contacts = set([])
     if rule.get("contact_object"):
-        contacts.update(rbn_object_contacts(context))
+        the_contacts.update(rbn_object_contacts(context))
     if rule.get("contact_all"):
-        contacts.update(rbn_all_contacts())
+        the_contacts.update(rbn_all_contacts())
     if rule.get("contact_all_with_email"):
-        contacts.update(rbn_all_contacts(with_email=True))
+        the_contacts.update(rbn_all_contacts(with_email=True))
     if "contact_users" in rule:
-        contacts.update(rule["contact_users"])
+        the_contacts.update(rule["contact_users"])
     if "contact_groups" in rule:
-        contacts.update(rbn_groups_contacts(rule["contact_groups"]))
+        the_contacts.update(rbn_groups_contacts(rule["contact_groups"]))
     if "contact_emails" in rule:
-        contacts.update(rbn_emails_contacts(rule["contact_emails"]))
-    return contacts
+        the_contacts.update(rbn_emails_contacts(rule["contact_emails"]))
 
+    all_enabled = []
+    for contactname in the_contacts:
+        contact = contacts.get(contactname)
+        if contact and contact.get("disable_notifications", False):
+            notify_log("   - skipping contact %s: he/she has disabled notifications" % contactname)
+        else:
+            all_enabled.append(contactname)
+
+    return all_enabled
 
 def rbn_object_contacts(context):
     commasepped = context.get("CONTACTS")
@@ -843,6 +856,7 @@ def rbn_groups_contacts(groups):
 
 def rbn_emails_contacts(emails):
     return [ "mailto:" + e for e in emails ]
+
 
 #.
 #   .--Flexible-Notifications----------------------------------------------.
@@ -1161,6 +1175,8 @@ def call_notification_script(plugin, plugin_context):
     # Export complete context to have all vars in environment.
     # Existing vars are replaced, some already existing might remain
     for key in plugin_context:
+        if type(plugin_context[key]) == bool:
+            notify_log("MIST: %s=%s ist bool" % (key, plugin_context[key]))
         os.putenv('NOTIFY_' + key, plugin_context[key].encode('utf-8'))
 
     notify_log("     executing %s" % path)

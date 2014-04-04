@@ -10734,8 +10734,12 @@ def mode_users(phase):
 
         return None
 
-    visible_custom_attrs = [ (name, attr) for name, attr in userdb.get_user_attributes()
-                                                    if attr.get('show_in_table', False) ]
+    visible_custom_attrs = [
+        (name, attr)
+        for name, attr
+        in userdb.get_user_attributes()
+        if attr.get('show_in_table', False)
+    ]
 
     entries = users.items()
     entries.sort(cmp = lambda a, b: cmp(a[1].get("alias", a[0]).lower(), b[1].get("alias", b[0]).lower()))
@@ -14684,10 +14688,11 @@ def page_user_profile():
         if config.may('general.edit_user_attributes'):
             for name, attr in userdb.get_user_attributes():
                 if attr['user_editable']:
-                    vs = attr['valuespec']
-                    forms.section(vs.title())
-                    vs.render_input("ua_" + name, user.get(name, vs.default_value()))
-                    html.help(vs.help())
+                    if not attr.get("permission") or config.may(attr["permission"]):
+                        vs = attr['valuespec']
+                        forms.section(vs.title())
+                        vs.render_input("ua_" + name, user.get(name, vs.default_value()))
+                        html.help(vs.help())
 
     # Save button
     forms.end()

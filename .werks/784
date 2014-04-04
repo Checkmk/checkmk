@@ -1,0 +1,8 @@
+Title: Improved security of WATO bulk inventory by using transaction ids
+Level: 2
+Component: wato
+Class: feature
+State: unknown
+Version: 1.2.5i2
+Date: 1396612529
+

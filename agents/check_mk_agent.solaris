@@ -126,7 +126,7 @@ then
     echo '<<<zfsget>>>'
     zfs get -Hp name,quota,used,avail,mountpoint,type
     echo '[df]'
-    df -l -k -F zfs 2>/dev/null | sed 1d
+    df -l -k -T -F zfs 2>/dev/null | sed 1d
 fi
 
 

@@ -1,0 +1,15 @@
+Title: check_mk_agent.solaris: fixed problem with section <<<zfsget>>>
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i2
+Date: 1396620030
+
+The check zfsget expected more fields in the section zfsget than
+that the check_mk_agent.solaris delivered - the fstype was missing
+This caused an exception in the zfsget check.
+
+The problem has been fixed in the check itself, so it can handle
+both agent output versions. Now its also fixed in the agent output.
+

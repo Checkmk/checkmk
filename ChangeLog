@@ -3,6 +3,7 @@
     * 0746 zfsget: fixed problem with agent output of check_mk_agent.solaris...
 
     WATO:
+    * 0784 Improved security of WATO bulk inventory by using transaction ids
     * 0781 FIX: host diag page: fixed problem with update of diagnose subwindows...
 
 

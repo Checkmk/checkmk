@@ -2907,6 +2907,12 @@ def mode_bulk_inventory(phase):
 
     elif phase == "action":
         if html.var("_item"):
+            if not html.check_transaction():
+                html.write(repr([ 'failed', 0, 0, 0, 0, 0, 0, ]) + "\n")
+                html.write(_("Error during inventory: Maximum number of retries reached. "
+                             "You need to restart the bulk inventory"))
+                return ""
+
             how = html.var("how")
             try:
                 site_id, folderpath, hostnamesstring = html.var("_item").split("|")
@@ -4632,8 +4638,16 @@ def interactive_progress(items, title, stats, finishvars, timewait, success_stat
     finish_url = make_link([("mode", "folder")] + finishvars)
     term_url = make_link([("mode", "folder")] + termvars)
 
-    html.javascript(('progress_scheduler("%s", "%s", 50, %s, "%s", %s, %s, "%s", "' + _("FINISHED.") + '");') %
-                     (html.var('mode'), base_url, json_items, finish_url,
+    # Reserve a certain amount of transids for the progress scheduler
+    # Each json item requires one transid. Additionally, each "Retry failed hosts" eats
+    # up another one. We reserve 20 additional transids for the retry function
+    # Note: The "retry option" ignores the bulk size
+    transids = []
+    for i in range(len(items) + 20):
+        transids.append(html.fresh_transid())
+    json_transids = '[ %s ]' % ',\n'.join([ "'" + h + "'" for h in transids])
+    html.javascript(('progress_scheduler("%s", "%s", 50, %s, %s, "%s", %s, %s, "%s", "' + _("FINISHED.") + '");') %
+                     (html.var('mode'), base_url, json_items, json_transids, finish_url,
                       success_stats, fail_stats, term_url))
 
 

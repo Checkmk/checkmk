@@ -64,6 +64,14 @@
 # drive_w_io:0:0:140325134929
 # drive_w_ms:0:0:140325134929
 
+#   .--disk IO-------------------------------------------------------------.
+#   |                         _ _     _      ___ ___                       |
+#   |                      __| (_)___| | __ |_ _/ _ \                      |
+#   |                     / _` | / __| |/ /  | | | | |                     |
+#   |                    | (_| | \__ \   <   | | |_| |                     |
+#   |                     \__,_|_|___/_|\_\ |___\___/                      |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 # parses agent output into a structure like:
 # {'Drives': {'r_mb': 0, 'w_mb': 0},
@@ -117,4 +125,41 @@ check_info["ibm_svc_systemstats.diskio"] = {
     "service_description"   : "IBM SVC Throughput %s Total",
     "has_perfdata"          : True,
 }
+
+#.
+#   .--cpu-----------------------------------------------------------------.
+#   |                                                                      |
+#   |                           ___ _ __  _   _                            |
+#   |                          / __| '_ \| | | |                           |
+#   |                         | (__| |_) | |_| |                           |
+#   |                          \___| .__/ \__,_|                           |
+#   |                              |_|                                     |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+ibm_svc_cpu_default_levels = ( 90.0, 95.0 )
+
+def inventory_ibm_svc_systemstats_cpu(info):
+    inventory = []
+    for stat_name, stat_current, stat_peak, stat_peak_time in info:
+        if stat_name == "cpu_pc":
+            inventory.append( (None, "ibm_svc_cpu_default_levels") )
+    return inventory
+
+def check_ibm_svc_systemstats_cpu(item, params, info):
+    for stat_name, stat_current, stat_peak, stat_peak_time in info:
+        if stat_name == "cpu_pc":
+            return check_cpu_util(int(stat_current), params)
+
+    return 3, "value cpu_pc not found in agent output for node %s" % item
+
+check_info["ibm_svc_systemstats.cpu_util"] = {
+    "check_function"        : check_ibm_svc_systemstats_cpu,
+    "inventory_function"    : inventory_ibm_svc_systemstats_cpu,
+    "service_description"   : "CPU utilization Total",
+    "has_perfdata"          : True,
+    "group"                 : "cpu_utilization",
+    "includes"              : [ "cpu_util.include" ],
+}
+#.
 

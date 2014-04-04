@@ -1,10 +1,11 @@
 1.2.5i3:
     Checks & Agents:
-    * 0601 printer_alerts: check can now display a textual representation of the alert code...
-            NOTE: Please refer to the migration notes!
     * 0149 cisco_secure: New check for Port Security on Cisco swichtes
     * 0751 New localcheck for Linux that makes sure that filesystems in /etc/fstab are mounted...
     * 0783 enterasys_lsnat: new check monitoring the current LSNAT bindings
+    * 0601 printer_alerts: check can now display a textual representation of the alert code...
+            NOTE: Please refer to the migration notes!
+    * 0799 ibm_svc_systemstats.cpu_util: New check for CPU Utilization of an IBM SVC / V7000 device in total
     * 0777 FIX: special agent emcvnx: did not work with security file authentication...
 
     Multisite:

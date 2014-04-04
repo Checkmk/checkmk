@@ -44,7 +44,9 @@ def check_enterasys_lsnat(no_item, params, info):
             state = 1
             state_info = state_markers[state]
 
-    return state, "Current bindings %d%s" % (lsnat_bindings, state_info)
+    perfdata = [ ("current_bindings", util, warn, crit) ]
+
+    return state, "Current bindings %d%s" % (lsnat_bindings, state_info), perfdata
 
 
 check_info["enterasys_lsnat"] = {
@@ -52,6 +54,7 @@ check_info["enterasys_lsnat"] = {
     "inventory_function"    : inventory_enterasys_lsnat,
     "service_description"   : "LSNAT Bindings",
     "group"                 : "lsnat",
+    "has_perfdata"          : True,
     "snmp_info"             : ( ".1.3.6.1.4.1.5624.1.2.74.1.1.5", [ "0" ] ),
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5624.2.1") and
                                           oid(".1.3.6.1.4.1.5624.1.2.74.1.1.5.0"),

@@ -1,0 +1,19 @@
+Title: FIX: compute correct state transitions for notifications
+Level: 2
+Component: notifications
+Version: 1.2.5i2
+Date: 1396610543
+Class: fix
+
+This fixes a problem with the combination of
+<ul>
+<li>Rule based notifications</li>
+<li>Maximum check attempts &gt; 1</li>
+<li>Rule conditions based on the <i>original</i> state of a host or service</li>
+</ul>
+
+When a service got CRIT while having more than one check attempt, the previous
+(soft) state would be displayed as CRIT, while it is OK in fact. This has
+been fixed natively when using the Check_MK Micro Core. When using Nagios then
+during the notification the previous hard state is not always known. In doubt
+a notification is being sent out rather then omitted.

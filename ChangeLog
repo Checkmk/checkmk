@@ -17,6 +17,9 @@
     WATO:
     * 0767 FIX: Signing and verification of WATO snapshot (addresses CVE-2014-2330)...
 
+    Notifications:
+    * 0752 FIX: FIX: compute correct state transitions for notifications...
+
     BI:
     * 0741 FIX: BI editor: fixed display bug in "Create nodes based on a service search"...
 

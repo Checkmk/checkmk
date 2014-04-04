@@ -158,7 +158,7 @@ tmpl_host_txt = '''
 Host:     $HOSTNAME$ ($HOSTALIAS$)
 Address:  $HOSTADDRESS$
 $HOSTLINK$
-State:    $LASTHOSTSTATE$ -> $HOSTSTATE$ ($NOTIFICATIONTYPE$) since $LASTHOSTSTATECHANGE_REL$
+State:    $PREVIOUSHOSTHARDSTATE$ -> $HOSTSTATE$ ($NOTIFICATIONTYPE$) since $LASTHOSTSTATECHANGE_REL$
 Output:   $HOSTOUTPUT$
 Perfdata: $HOSTPERFDATA$
 $LONGHOSTOUTPUT$
@@ -183,7 +183,7 @@ tmpl_host_html = tmpl_head_html + '''
 <tr class="odd0">
     <td class=left>State</td>
     <td class="state">
-        <span class="hstate$LASTHOSTSTATE$">$LASTHOSTSTATE$</span> &rarr;
+        <span class="hstate$PREVIOUSHOSTHARDSTATE$">$PREVIOUSHOSTHARDSTATE$</span> &rarr;
         <span class="hstate$HOSTSTATEID$">$HOSTSTATE$ ($NOTIFICATIONTYPE$)</span>
         since $LASTHOSTSTATECHANGE_REL$
     </td>
@@ -206,7 +206,7 @@ Host:     $HOSTNAME$ ($HOSTALIAS$)
 Address:  $HOSTADDRESS$$HOSTLINK$
 
 Service:  $SERVICEDESC$$SERVICELINK$
-State:    $LASTSERVICESTATE$ -> $SERVICESTATE$ ($NOTIFICATIONTYPE$) since $LASTSERVICESTATECHANGE_REL$
+State:    $PREVIOUSSERVICEHARDSTATE$ -> $SERVICESTATE$ ($NOTIFICATIONTYPE$) since $LASTSERVICESTATECHANGE_REL$
 Output:   $SERVICEOUTPUT$
 Perfdata: $SERVICEPERFDATA$
 $LONGSERVICEOUTPUT$
@@ -235,7 +235,7 @@ tmpl_service_html = tmpl_head_html + '''
 <tr class="odd0">
     <td class=left>State</td>
     <td class="state">
-        <span class="state$LASTSERVICESTATE$">$LASTSERVICESTATE$</span> &rarr;
+        <span class="state$PREVIOUSSERVICEHARDSTATE$">$PREVIOUSSERVICEHARDSTATE$</span> &rarr;
         <span class="state$SERVICESTATEID$">$SERVICESTATE$ ($NOTIFICATIONTYPE$)</span>
         since $LASTSERVICESTATECHANGE_REL$
     </td>

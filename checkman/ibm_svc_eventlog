@@ -8,6 +8,11 @@ description:
  and not yet fixed. Returns {WARN} if there is at least one and {OK} if
  there is none.
 
+ Please note: You need the Special Agent agent_ibmsvc to retrieve the monitoring
+ data from the device. Your monitoring user must be able to SSH to the device
+ with SSH Key Authentification. Please exchange SSH key. The Special Agent itself
+ can be configured by WATO.
+
 inventory:
  Creates exactly one check on every IBM SVC / V7000 device named
  IBM SVC Eventlog.

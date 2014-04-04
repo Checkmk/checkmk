@@ -8,6 +8,11 @@ description:
  of licenses is compared to the usage of licenses. The check returns
  {CRIT} if the usage is higher than the licensing and {OK} otherwise.
 
+ Please note: You need the Special Agent agent_ibmsvc to retrieve the monitoring
+ data from the device. Your monitoring user must be able to SSH to the device
+ with SSH Key Authentification. Please exchange SSH key. The Special Agent itself
+ can be configured by WATO.
+
 item:
  The name of the licensable feature. This is everything after used_ or
  license_ in the output of the lslicense command.

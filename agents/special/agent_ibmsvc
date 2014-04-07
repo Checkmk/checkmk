@@ -162,15 +162,6 @@ for module in command_options.keys():
             cmd += "lseventlog -expired no -fixed no -monitoring no -order severity -message no -delim : -nohdr;"
         else:
             cmd += "%s -nohdr -delim :;" % module
-
-        # in these 2 sections we need to run the lsdrive command additionaly
-        # to find out if there are drives. Only if there are some, the drives
-        # checks need to be created by inventory
-        if module in [ "lsnodestats", "lssystemstats" ]:
-            cmd += "echo \[lsdrive start\];"
-            cmd += "lsdrive -delim : -nohdr;"
-            cmd += "echo \[lsdrive end\];"
-
 cmd += "'"
 
 if opt_debug:

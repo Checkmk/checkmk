@@ -3,7 +3,7 @@ Level: 1
 Component: checks
 Class: fix
 State: unknown
-Version: 1.2.5i2p2
+Version: 1.2.5i2p1
 Date: 1396874528
 
 Any checks using the df.include library function had problems when their

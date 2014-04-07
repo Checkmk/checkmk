@@ -14,6 +14,7 @@
     * 0801 ibm_svc_eventlog: New Check for Messages in Event log of IBM SVC / V7000 devices
     * 0777 FIX: special agent emcvnx: did not work with security file authentication...
     * 0786 FIX: zfsget: fixed compatibility with older Solaris agents...
+    * 0809 FIX: brocade_fcport: Fixed recently introduced problem with port speed detection
 
     Multisite:
     * 0779 Hostgroups (Summary): Empty hostgroups are no longer shown (can be re-enabled by filter)

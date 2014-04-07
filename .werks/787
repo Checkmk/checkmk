@@ -1,0 +1,11 @@
+Title: df: fixed problems on some filesystem checks when legacy check parameters where used
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1396874528
+Class: fix
+
+Any checks using the df.include library function had problems when their
+check parameters where configured in a legacy syntax - in detail tuple(int, int)
+This caused invalid output from Agent messages. However, a reinventory
+of the check in question fixed the problems.

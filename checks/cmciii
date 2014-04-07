@@ -171,6 +171,9 @@ def parse_units(info):
     num = 0
     for unit_type, descname, state in info:
         num =+ 1
+        # no blanks in names since we use blanks in items
+        # later to split between unit_name and item_name
+        descname = re.sub(" ", "_", descname)
         if descname == '':
             descname = unit_type+"-"+str(num)
         units.append((unit_type, descname, state))
@@ -455,6 +458,13 @@ def inventory_cmciii_temp(info):
             inventory.append(  ("%s %s" % (unit_name, item_name), None)  )
     return inventory
 
+def parse_temp(val):
+    if re.search(" B0 ", val):
+        # is encoded string
+        val = re.sub(" ","", val).decode("hex")
+    val, t_unit = val.split(" ", 1)
+    return val, t_unit
+
 def check_cmciii_temp(item, params, info):
     unit_name, item_name = item.split(" ", 1)
     parsed = parse_cmciii_inputs(info[0])
@@ -465,14 +475,13 @@ def check_cmciii_temp(item, params, info):
 
     descr = entry.get('DescName')
     status = entry.get('Status')
-
-    value = re.sub(r' ','',entry.get('Value'))
     offset = entry.get('Offset')
 
-    highalarm = entry.get('SetPtHighAlarm').split(" ")[0]
-    highwarning = entry.get('SetPtHighWarning').split(" ")[0]
-    lowalarm = entry.get('SetPtLowAlarm').split(" ")[0]
-    lowwarning = entry.get('SetPtLowWarning').split(" ")[0]
+    value, t_unit = parse_temp(entry.get('Value'))
+    highalarm = parse_temp(entry.get('SetPtHighAlarm'))[0]
+    highwarning = parse_temp(entry.get('SetPtHighWarning'))[0]
+    lowalarm = parse_temp(entry.get('SetPtLowAlarm'))[0]
+    lowwarning = parse_temp(entry.get('SetPtLowWarning'))[0]
 
     if status == "OK":
         state = 0
@@ -480,7 +489,7 @@ def check_cmciii_temp(item, params, info):
     else:
         state = 2
 
-    perfdata = [ ("temp", value, 0, 0 ) ]
+    perfdata = [ ("temp", value+t_unit, 0, 0 ) ]
 
     infotext =  "%s %s %s - Limits low %s/%s high %s/%s, Offset %s" % \
                          ( descr, value, status, lowalarm, lowwarning, highwarning, highalarm, offset )
@@ -646,3 +655,69 @@ check_info['cmciii.state'] = {
     "snmp_scan_function"  : cmciii_scan,
     "snmp_info"           : cmciii_snmp_info,
 }
+
+#.
+#   .--humidity------------------------------------------------------------.
+#   |              _                     _     _ _ _                       |
+#   |             | |__  _   _ _ __ ___ (_) __| (_) |_ _   _               |
+#   |             | '_ \| | | | '_ ` _ \| |/ _` | | __| | | |              |
+#   |             | | | | |_| | | | | | | | (_| | | |_| |_| |              |
+#   |             |_| |_|\__,_|_| |_| |_|_|\__,_|_|\__|\__, |              |
+#   |                                                  |___/               |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_cmciii_humidity(info):
+    inventory = []
+    parsed = parse_cmciii_inputs(info[0])
+    units = parse_units(info[1])
+    for (unit, item_name), entry in parsed.iteritems():
+        unit_type, unit_name = units[int(unit)-1][0:2]
+        if item_name == 'Humidity' and unit_type == 'CMCIII-HUM':
+            inventory.append(  ("%s %s" % (unit_name, item_name), None)  )
+
+    return inventory
+
+def parse_hum(val):
+    return val.split(" ", 1)
+
+def check_cmciii_humidity(item, params, info):
+    unit_name, item_name = item.split(" ", 1)
+    parsed = parse_cmciii_inputs(info[0])
+    unit = get_unit_number(parse_units(info[1]), unit_name)
+    entry = parsed.get((unit, item_name))
+    if not entry:
+        return 3, "No such temperature data found"
+
+    descr = entry.get('DescName')
+    status = entry.get('Status')
+    offset = entry.get('Offset')
+
+    value = parse_hum(entry.get('Value'))[0]
+    highalarm = parse_hum(entry.get('SetPtHighAlarm'))[0]
+    highwarning = parse_hum(entry.get('SetPtHighWarning'))[0]
+    lowalarm = parse_hum(entry.get('SetPtLowAlarm'))[0]
+    lowwarning = parse_hum(entry.get('SetPtLowWarning'))[0]
+
+    if status == "OK":
+        state = 0
+        status = ""
+    else:
+        state = 2
+
+    perfdata = [ ("hum", value+"%", 0, 0 ) ]
+
+    infotext =  "%s %s%% %s - Limits low %s/%s high %s/%s, Offset %s" % \
+                         ( descr, value, status, lowalarm, lowwarning, highwarning, highalarm, offset )
+
+    return (state, infotext, perfdata)
+
+check_info['cmciii.humidity'] = {
+    "check_function"      : check_cmciii_humidity,
+    "inventory_function"  : inventory_cmciii_humidity,
+    "service_description" : "%s",
+    "snmp_scan_function"  : cmciii_scan,
+    "snmp_info"           : cmciii_snmp_info,
+}
+#.

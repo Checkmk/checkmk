@@ -3,7 +3,7 @@ Level: 2
 Component: wato
 Class: fix
 State: unknown
-Version: 1.2.5i2
+Version: 1.2.5i2p1
 Date: 1396522971
 
 The subwindows in the host diagnostic page did not get updated properly, because of an incorrect transaction handling.

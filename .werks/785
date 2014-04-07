@@ -3,7 +3,7 @@ Level: 2
 Component: core
 Class: fix
 State: unknown
-Version: 1.2.5i2
+Version: 1.2.5i2p1
 Date: 1396616927
 
 The cleanup procedure of the livestatus table statehist missed some items..

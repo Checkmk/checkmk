@@ -1,10 +1,12 @@
+1.2.5i2p2:
+    * 0787 FIX: df: fixed problems on some filesystem checks when legacy check parameters where used...
+
 1.2.5i2p1:
     Core & Setup:
     * 0785 FIX: Availability: fixed memory leak in table statehist...
 
     Checks & Agents:
     * 0786 FIX: zfsget: fixed compatibility with older Solaris agents...
-    * 0787 FIX: df: fixed problems on some filesystem checks when legacy check parameters where used...
 
     WATO:
     * 0784 Improved security of WATO bulk inventory by using transaction ids

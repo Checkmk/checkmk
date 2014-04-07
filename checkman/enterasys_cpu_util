@@ -4,11 +4,11 @@ catalog: hw/network/enterasys
 license: GPL
 distribution: check_mk
 description:
- This check shows the current average cpu utilization of all plugged-in CPU modules.
+ This check shows the current average cpu utilization for each plugged-in CPU modules.
 
 
 inventory:
- One check will be created
+ One check per module will be created
 
 perfdata:
  The actual utilization, together with it's warn and crit levels

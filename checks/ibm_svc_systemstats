@@ -64,6 +64,31 @@
 # drive_w_io:0:0:140325134929
 # drive_w_ms:0:0:140325134929
 
+# parses agent output into a structure like:
+# {'Drives': {'r_mb': 0, 'w_mb': 0, 'r_io': 0, 'w_io': 0},
+#  'MDisks': {'r_mb': 32, 'w_mb': 189, 'r_io': 1452, 'w_io': 3542},
+#  'VDisks': {'r_mb': 113, 'w_mb': 93, 'r_io': 2470, 'w_io': 2359}}
+
+def ibm_svc_systemstats_parse(info):
+    parsed = {}
+    for stat_name, stat_current, stat_peak, stat_peak_time in info:
+        if stat_name in ("vdisk_r_mb", "vdisk_w_mb", "vdisk_r_io", "vdisk_w_io"):
+            if "VDisks" not in parsed.keys():
+                parsed["VDisks"] = {}
+            stat_name = stat_name.replace("vdisk_", "")
+            parsed["VDisks"][stat_name] = int(stat_current)
+        if stat_name in ("mdisk_r_mb", "mdisk_w_mb", "mdisk_r_io", "mdisk_w_io"):
+            if "MDisks" not in parsed.keys():
+                parsed["MDisks"] = {}
+            stat_name = stat_name.replace("mdisk_", "")
+            parsed["MDisks"][stat_name] = int(stat_current)
+        if stat_name in ("drive_r_mb", "drive_w_mb", "drive_r_io", "drive_w_io"):
+            if "Drives" not in parsed.keys():
+                parsed["Drives"] = {}
+            stat_name = stat_name.replace("drive_", "")
+            parsed["Drives"][stat_name] = int(stat_current)
+    return parsed
+
 #   .--disk IO-------------------------------------------------------------.
 #   |                         _ _     _      ___ ___                       |
 #   |                      __| (_)___| | __ |_ _/ _ \                      |
@@ -73,39 +98,14 @@
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-# parses agent output into a structure like:
-# {'Drives': {'r_mb': 0, 'w_mb': 0},
-#  'MDisks': {'r_mb': 32, 'w_mb': 189},
-#  'VDisks': {'r_mb': 113, 'w_mb': 93}}
-
-def ibm_svc_systemstats_parse(info):
-    parsed = {}
-    for stat_name, stat_current, stat_peak, stat_peak_time in info:
-        if stat_name in ("vdisk_r_mb", "vdisk_w_mb"):
-            if "VDisks" not in parsed.keys():
-                parsed["VDisks"] = {}
-            stat_name = stat_name.replace("vdisk_", "")
-            parsed["VDisks"][stat_name] = int(stat_current)
-        if stat_name in ("mdisk_r_mb", "mdisk_w_mb"):
-            if "MDisks" not in parsed.keys():
-                parsed["MDisks"] = {}
-            stat_name = stat_name.replace("mdisk_", "")
-            parsed["MDisks"][stat_name] = int(stat_current)
-        if stat_name in ("drive_r_mb", "drive_w_mb"):
-            if "Drives" not in parsed.keys():
-                parsed["Drives"] = {}
-            stat_name = stat_name.replace("drive_", "")
-            parsed["Drives"][stat_name] = int(stat_current)
-    return parsed
-
-def inventory_ibm_svc_systemstats(info):
+def inventory_ibm_svc_systemstats_diskio(info): 
     inventory = []
     parsed = ibm_svc_systemstats_parse(info)
     for key in parsed.keys():
         inventory.append( (key, None) )
     return inventory
 
-def check_ibm_svc_systemstats(item, _no_params, info):
+def check_ibm_svc_systemstats_diskio(item, _no_params, info):
     parsed = ibm_svc_systemstats_parse(info)
 
     if item not in parsed.keys():
@@ -120,11 +120,48 @@ def check_ibm_svc_systemstats(item, _no_params, info):
         perfdata
 
 check_info["ibm_svc_systemstats.diskio"] = {
-    "check_function"        : check_ibm_svc_systemstats,
-    "inventory_function"    : inventory_ibm_svc_systemstats,
+    "check_function"        : check_ibm_svc_systemstats_diskio,
+    "inventory_function"    : inventory_ibm_svc_systemstats_diskio,
     "service_description"   : "IBM SVC Throughput %s Total",
     "has_perfdata"          : True,
 }
+
+#.
+#   .--iops----------------------------------------------------------------.
+#   |                          _                                           |
+#   |                         (_) ___  _ __  ___                           |
+#   |                         | |/ _ \| '_ \/ __|                          |
+#   |                         | | (_) | |_) \__ \                          |
+#   |                         |_|\___/| .__/|___/                          |
+#   |                                 |_|                                  |
+#   '----------------------------------------------------------------------'
+
+def inventory_ibm_svc_systemstats_iops(info):
+    inventory = []
+    parsed = ibm_svc_systemstats_parse(info)
+    for key in parsed.keys():
+        inventory.append( (key, None) )
+    return inventory
+
+def check_ibm_svc_systemstats_iops(item, _no_params, info):
+    parsed = ibm_svc_systemstats_parse(info)
+
+    if item not in parsed.keys():
+        return 3, "%s not found in agent output" % item
+
+    read_iops = parsed[item]['r_io']
+    write_iops = parsed[item]['w_io']
+    perfdata = [ ("read", read_iops), ("write", write_iops) ]
+
+    return 0, "%s IOs/sec read, %s IOs/sec write" %  (read_iops, write_iops), perfdata
+
+check_info["ibm_svc_systemstats.iops"] = {
+    "check_function"        : check_ibm_svc_systemstats_iops,
+    "inventory_function"    : inventory_ibm_svc_systemstats_iops,
+    "service_description"   : "IBM SVC IOPS %s Total",
+    "has_perfdata"          : True,
+}
+
 
 #.
 #   .--cpu-----------------------------------------------------------------.
@@ -162,7 +199,6 @@ check_info["ibm_svc_systemstats.cpu_util"] = {
     "includes"              : [ "cpu_util.include" ],
 }
 #.
-
 #   .--cache---------------------------------------------------------------.
 #   |                                     _                                |
 #   |                       ___ __ _  ___| |__   ___                       |

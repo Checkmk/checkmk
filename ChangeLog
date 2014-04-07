@@ -4,6 +4,7 @@
 
     Checks & Agents:
     * 0786 FIX: zfsget: fixed compatibility with older Solaris agents...
+    * 0787 FIX: df: fixed problems on some filesystem checks when legacy check parameters where used...
 
     WATO:
     * 0784 Improved security of WATO bulk inventory by using transaction ids

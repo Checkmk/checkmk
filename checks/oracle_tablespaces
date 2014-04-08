@@ -107,8 +107,9 @@ def get_tablespace_levels_in_bytes(size_bytes, params):
                 warn, crit = this_levels
                 break
         else:
-            return (None, None)
+            return None, None, ""
 
+    levels_text = "levels at "
     if magic:
         # convert warn/crit to percentage
         if type(warn) != float:
@@ -131,19 +132,25 @@ def get_tablespace_levels_in_bytes(size_bytes, params):
             crit_scaled = lowest_critical_level
         warn_bytes = savefloat(size_bytes * warn_scaled / 100)
         crit_bytes = savefloat(size_bytes * crit_scaled / 100)
+        levels_text += get_bytes_human_readable(warn_bytes)
+        levels_text += "/%s" % get_bytes_human_readable(crit_bytes)
     else:
         # warn/crit level are float => percentages of max size, otherwise MB
         if type(warn) == float:
             warn_bytes = warn / 100.0 * size_bytes
+            levels_text += "%.1f%%" % warn
         else:
             warn_bytes = warn * 1024 * 1024
+            levels_text += get_bytes_human_readable(warn_bytes)
 
         if type(crit) == float:
             crit_bytes = crit / 100.0 * size_bytes
+            levels_text += "/%.1f%%" % crit
         else:
             crit_bytes = crit * 1024 * 1024
+            levels_text += "/%s" % get_bytes_human_readable(crit_bytes)
 
-    return warn_bytes, crit_bytes
+    return warn_bytes, crit_bytes, levels_text
 
 
 def check_oracle_tablespaces(item, params, info):
@@ -242,15 +249,14 @@ def check_oracle_tablespaces(item, params, info):
         infotext += ", no autoextend"
 
 
-    warn, crit = get_tablespace_levels_in_bytes(max_size, params)
+    warn, crit, levels_text = get_tablespace_levels_in_bytes(max_size, params)
 
     # Check free space, but only if status is not READONLY
     if ts_status != "READONLY":
         if (crit is not None and free_space <= crit) \
            or (warn is not None and free_space <= warn):
             infotext += ", only %s left" % get_bytes_human_readable(free_space)
-            infotext += " (levels at %s/%s)" % (
-             get_bytes_human_readable(warn), get_bytes_human_readable(crit))
+            infotext += " (%s)" % levels_text
             if free_space <= crit:
                 status = 2
             else:

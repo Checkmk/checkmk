@@ -257,7 +257,7 @@ def check_oracle_tablespaces(item, params, info):
             else:
                 status = max(1, status)
 
-    perfdata = [ ("size", current_size, max_size - warn, max_size - crit),
+    perfdata = [ ("size", current_size, max_size - (warn or 0), max_size - (crit or 0)),
                  ("used", used),
                  ("max_size", max_size) ]
 

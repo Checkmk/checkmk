@@ -1,0 +1,17 @@
+Title: oracle_tablespaces: fixed bug when using dynamic filesystem levels
+Level: 1
+Component: checks
+Version: 1.2.5i2p1
+Date: 1396947332
+Class: fix
+
+The check did not process the dynamic levels correctly.
+If there was a rule with dynamic filesystem levels, e.g.
+<ul>
+<li>1 TB - 5%/2% free</li>
+<li>500 GB - 6%/3% free</li>
+<li>200 GB - 10%/4% free</li>
+<li>500 MB - 20%/15% free</li>
+</ul>
+and the filesystems size was 700GB, the levels of the 500 MB rule were actually used.
+

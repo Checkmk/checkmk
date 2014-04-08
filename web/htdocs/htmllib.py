@@ -752,7 +752,12 @@ class html:
                    _("<a href=\"http://mathias-kettner.de\"><img src=\"images/mk_logo_small.gif\"/></a>"))
         self.write("<hr class=header>\n")
         if self.enable_debug:
-            self.write("<div class=urldebug>%s</div>" % self.makeuri([]))
+            self.dump_get_vars()
+
+    def dump_get_vars(self):
+        self.begin_foldable_container("html", "debug_vars", True, _("GET/POST variables of this page"))
+        self.debug_vars(hide_with_mouse = False)
+        self.end_foldable_container()
 
     def body_start(self, title='', **args):
         self.html_head(title, **args)
@@ -1081,13 +1086,17 @@ class html:
             self.lowlevel_write("<pre>%s</pre>\n" % pprint.pformat(element))
 
 
-    def debug_vars(self, prefix = None):
-        self.lowlevel_write('<table onmouseover="this.style.display=\'none\';" class=debug_vars>')
+    def debug_vars(self, prefix=None, hide_with_mouse=True):
+        if hide_with_mouse:
+            hover = ' onmouseover="this.style.display=\'none\';"'
+        else:
+            hover = ""
+        self.lowlevel_write('<table %s class=debug_vars>' % hover)
         self.lowlevel_write("<tr><th colspan=2>POST / GET Variables</th></tr>")
         for name, value in sorted(self.vars.items()):
             if not prefix or name.startswith(prefix):
                 self.write("<tr><td class=left>%s</td><td class=right>%s</td></tr>\n" % (name, value))
-        self.write("</ul>")
+        self.write("</table>")
 
     def var(self, varname, deflt = None):
         return self.vars.get(varname, deflt)

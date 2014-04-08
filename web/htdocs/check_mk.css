@@ -287,44 +287,6 @@ ul.closed {
 
 
 /*-------------------------------------------------------------------------.
-|         ____       _                                                     |
-|        |  _ \  ___| |__  _   _  __ _  __   ____ _ _ __ ___               |
-|        | | | |/ _ \ '_ \| | | |/ _` | \ \ / / _` | '__/ __|              |
-|        | |_| |  __/ |_) | |_| | (_| |  \ V / (_| | |  \__ \              |
-|        |____/ \___|_.__/ \__,_|\__, |   \_/ \__,_|_|  |___/              |
-|                                |___/                                     |
-+--------------------------------------------------------------------------+
-| html.debug_vars() outputs the variables in the current URL.              |
-'-------------------------------------------------------------------------*/
-
-table.debug_vars {
-    border-collapse: collapse;
-    position: fixed;
-    right: 10px;
-    bottom: 10px;
-}
-table.debug_vars th {
-    border: 1px solid #080;
-    background-color: #8c8;
-    font-weight: bold;
-}
-table.debug_vars td.left {
-    background-color: #395;
-    color: white;
-    font-weight: bold;
-}
-table.debug_vars td.right {
-    background-color: #8fc;
-    color: black;
-    font-weight: bold;
-}
-table.debug_vars td {
-    padding: 2px 6px;
-    border: 1px solid #050;
-    font-family: courier, monospace;
-}
-
-/*-------------------------------------------------------------------------.
 |             __  __                                                       |
 |            |  \/  | ___  ___ ___  __ _  __ _  ___  ___                   |
 |            | |\/| |/ _ \/ __/ __|/ _` |/ _` |/ _ \/ __|                  |

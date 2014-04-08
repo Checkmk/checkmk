@@ -1,0 +1,10 @@
+Title: agent_ibmsvc: raw data for System Info Check and License Check now in correct format
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1396880282
+Class: fix
+
+The System Info Check did return noting and the License Check did not work when using
+special agent ibmsvc because the system commands were called with the wrong parameters.
+This is fixed now.

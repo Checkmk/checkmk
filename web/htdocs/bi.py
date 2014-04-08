@@ -1657,9 +1657,9 @@ def filter_tree_only_problems(tree):
     return state, assumed_state, node, new_subtrees
 
 
-def page_availability():
-    aggr_group = html.var("aggr_group")
-    aggr_name = html.var("aggr_name")
+def page_timeline():
+    aggr_group = html.var("av_aggr_group")
+    aggr_name = html.var("av_aggr_name")
 
     # First compile the required BI aggregates.
     if config.bi_precompile_on_demand:
@@ -1675,8 +1675,9 @@ def page_availability():
     else:
         raise MKGeneralException("No aggregation with the name %s" %
             aggr_name)
+    row = { "aggr_tree" : tree, "aggr_group" : aggr_group }
+    views.render_bi_availability(aggr_name, [row])
 
-    views.render_bi_availability(tree)
 
 
 #    ____        _

@@ -84,7 +84,6 @@ pagehandlers.update({
    "dashlet_servicestats"     : dashboard.dashlet_servicestats,
    "dashlet_pnpgraph"         : dashboard.dashlet_pnpgraph,
    "dashlet_nodata"           : dashboard.dashlet_nodata,
-   "bi_availability"          : bi.page_availability,
    "ajax_userdb_sync"         : userdb.ajax_sync,
    "notify"                   : notify.page_notify,
    "ajax_inv_render_tree"     : views.ajax_inv_render_tree,

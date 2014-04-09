@@ -9,6 +9,11 @@ description:
  The check returns {WARN} or {CRIT} if the utilization in percent is higher
  then given levels and {OK} otherwise.
 
+ Please note: You need the Special Agent agent_ibmsvc to retrieve the monitoring
+ data from the device. Your monitoring user must be able to SSH to the device
+ with SSH Key Authentification. Please exchange SSH key. The Special Agent itself
+ can be configured by WATO.
+
 item:
  The name of the node.
 

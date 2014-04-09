@@ -33,7 +33,7 @@ brocade_fcport_opstates  = [ 'unknown', 'online', 'offline', 'testing', 'faulty'
 # Taken from swFCPortAdmStatus
 brocade_fcport_admstates = [ '', 'online', 'offline', 'testing', 'faulty' ]
 # Taken from swFCPortSpeed
-brocade_fcport_speed     = [ '', '1Gbit', '2Gbit', 'auto-Neg', '4Gbit', '8Gbit', '10Gbit', 'unknown', '16Gbit' ]
+brocade_fcport_speed     = [ 'unknown', '1Gbit', '2Gbit', 'auto-Neg', '4Gbit', '8Gbit', '10Gbit', 'unknown', '16Gbit' ]
 
 
 # settings for inventory: which ports should be inventorized
@@ -49,7 +49,7 @@ factory_settings["brocade_fcport_default_levels"] = {
     "rxcrcs":           (3.0, 20.0),   # allowed percentage of CRC errors
     "rxencoutframes":   (3.0, 20.0),   # allowed percentage of Enc-OUT Frames
     "notxcredits":      (3.0, 20.0),   # allowed percentage of No Tx Credits
-    "c3discards":       (3.0, 20.0),   # allowed percentage of CRC errors
+    "c3discards":       (3.0, 20.0),   # allowed percentage of C3 discards
     "assumed_speed":    2.0,           # used, if speed not available in SNMP data
 }
 

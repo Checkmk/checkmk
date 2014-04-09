@@ -1,0 +1,8 @@
+Title: brocade_fcport: Fixed recently introduced problem with port speed detection
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1396852040
+Class: fix
+
+

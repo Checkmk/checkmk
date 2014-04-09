@@ -35,8 +35,8 @@
 
 def inventory_f5_bigip_cluster(info):
     # run inventory unless we found a device in unconfigured state
-    # don't need to loop over the input as there's only one status.
-    if len(info) == 1 and not info[0][0].startswith("-1"):
+    # don't need to loop over the input as there's only one status
+    if len(info) == 1 and not ( info[0][0].startswith("-1") or info[0][0] == '' ):
         return [(None, None)]
     return []
 

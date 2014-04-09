@@ -1,0 +1,12 @@
+Title: Linux multipath check can now use the alias instead of the UUID as item
+Level: 2
+Component: checks
+Version: 1.2.5i3
+Date: 1396952369
+Class: feature
+
+If you have set useful aliasses for you Linux multipath devices then you can
+now have Check_MK use these instead of the UUIDs for the service description.
+This makes alerting, BI aggregates and other stuff easier. The configuration
+is via a new rule set <i>Linux Multipath Inventory</i>. If you are now using
+WATO then please refer to the check's man page for details.

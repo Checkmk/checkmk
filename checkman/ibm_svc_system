@@ -7,6 +7,11 @@ description:
  Reports name, location, code_level and email_contact_location of an
  IBM SVC / V7000 device. The check always returns {OK}.
 
+ Please note: You need the Special Agent agent_ibmsvc to retrieve the monitoring
+ data from the device. Your monitoring user must be able to SSH to the device
+ with SSH Key Authentification. Please exchange SSH key. The Special Agent itself
+ can be configured by WATO.
+
 inventory:
  Creates exactly one check for every IBM SVC / V7000 named
  IBM SVC Info.

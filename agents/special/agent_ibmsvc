@@ -61,10 +61,10 @@ OPTIONS:
   -i MODULES, --modules MODULES Modules to query. This is a comma separated list of
                                 which may contain the keywords "lshost", "lslicense",
                                 "lsmdisk", "lsmdiskgrp", "lsnode", "lsnodestats",
-                                "lssystem", "lssystemstats" or "all" to define which
-                                information should be queried from the device. You can
-                                define to use only view of them to optimize performance.
-                                The default is "all".
+                                "lssystem", "lssystemstats", "lseventlog" or "all" to
+                                define which information should be queried from the
+                                device. You can define to use only view of them to
+                                optimize performance. The default is "all".
 
 """)
 
@@ -92,14 +92,24 @@ user            = None
 mortypes        = [ 'all' ]
 
 command_options = { 
-    "lshost"        : {"section_header" : "ibm_svc_host",        "active" : False},
-    "lslicense"     : {"section_header" : "ibm_svc_license",     "active" : False},
-    "lsmdisk"       : {"section_header" : "ibm_svc_mdisk",       "active" : False},
-    "lsmdiskgrp"    : {"section_header" : "ibm_svc_mdiskgrp",    "active" : False},
-    "lsnode"        : {"section_header" : "ibm_svc_node",        "active" : False},
-    "lsnodestats"   : {"section_header" : "ibm_svc_nodestats",   "active" : False},
-    "lssystem"      : {"section_header" : "ibm_svc_system",      "active" : False},
-    "lssystemstats" : {"section_header" : "ibm_svc_systemstats", "active" : False},
+    "lshost"        : {"section_header" : "ibm_svc_host",        "active" : False,
+                       "command" : "lshost -nohdr -delim :"},
+    "lslicense"     : {"section_header" : "ibm_svc_license",     "active" : False,
+                       "command" : "lslicense -delim :"},
+    "lsmdisk"       : {"section_header" : "ibm_svc_mdisk",       "active" : False,
+                       "command" : "lsmdisk -nohdr -delim :"},
+    "lsmdiskgrp"    : {"section_header" : "ibm_svc_mdiskgrp",    "active" : False,
+                       "command" : "lsmdiskgrp -nohdr -delim :"},
+    "lsnode"        : {"section_header" : "ibm_svc_node",        "active" : False,
+                       "command" : "lsnode -nohdr -delim :"},
+    "lsnodestats"   : {"section_header" : "ibm_svc_nodestats",   "active" : False,
+                       "command" : "lsnodestats -nohdr -delim :"},
+    "lssystem"      : {"section_header" : "ibm_svc_system",      "active" : False,
+                       "command" : "lssystem -delim :"},
+    "lssystemstats" : {"section_header" : "ibm_svc_systemstats", "active" : False,
+                       "command" : "lssystemstats -nohdr -delim :"},
+    "lseventlog"    : {"section_header" : "ibm_svc_eventlog",    "active" : False,
+                       "command" : "lseventlog -expired no -fixed no -monitoring no -order severity -message no -delim : -nohdr"},
 }
 
 for o,a in opts:
@@ -156,8 +166,8 @@ cmd = "ssh -o ConnectTimeout=%s %s %s@%s '" % (opt_timeout, opt_any_hostkey, use
 
 for module in command_options.keys():
     if command_options[module]["active"] == True:
-        cmd += "echo \<\<\<%s:sep\(58\)\>\>\>; %s -nohdr -delim :;" % (command_options[module]["section_header"], module)
-
+        cmd += "echo \<\<\<%s:sep\(58\)\>\>\>;" % command_options[module]["section_header"]
+        cmd += "%s;" % command_options[module]["command"]
 cmd += "'"
 
 if opt_debug:

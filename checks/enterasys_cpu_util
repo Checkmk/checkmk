@@ -26,25 +26,25 @@
 enterasys_cpu_default_levels = (90, 95)
 
 def inventory_enterasys_cpu_util(info):
-    return [ ( None, "enterasys_cpu_default_levels" )]
+    # [:-2] to remove the oid end
+    return [ ( x[0][:-2], "enterasys_cpu_default_levels" ) for x in info ]
 
-def check_enterasys_cpu_util(_no_item, params, info):
-    util = 0
-    for core_util in info:
-        util += saveint(core_util[0]) / 10
-    num_cpus = len(info)
-    usage = util / num_cpus
-    return check_cpu_util(usage, params)
+def check_enterasys_cpu_util( item, params, info):
+    for core, util in info:
+        if item == core[:-2]:
+            usage = saveint(util) / 10.0
+            return check_cpu_util(usage, params)
+    return 3, "Core not found in agent Outut"
 
 
 check_info["enterasys_cpu_util"] = {
     "check_function"        : check_enterasys_cpu_util,
     "inventory_function"    : inventory_enterasys_cpu_util,
-    "service_description"   : "CPU utilization",
-    "snmp_info"             : ( ".1.3.6.1.4.1.5624.1.2.49.1.1.1.1", [ 3 ]), #util in last 1min
+    "service_description"   : "CPU util %s",
+    "snmp_info"             : ( ".1.3.6.1.4.1.5624.1.2.49.1.1.1.1", [ OID_END,  3 ]), #util in last 1min
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5624.2.1"),
     "has_perfdata"          : True,
-    "group"                 : "cpu_utilization",
+    "group"                 : "cpu_utilization_multiitem",
     "includes"                : [ "cpu_util.include" ],
 
 }

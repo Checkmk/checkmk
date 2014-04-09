@@ -1,0 +1,8 @@
+Title: ibm_svc_nodestats.cache, ibm_svc_systemstats.cache: New checks for Cache Usage of IBM SVC / V7000 devices
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1396605368
+Class: feature
+
+

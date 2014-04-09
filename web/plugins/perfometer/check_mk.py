@@ -286,6 +286,7 @@ perfometers["check_mk-hitachi_hnas_temp"] = perfometer_temperature
 perfometers["check_mk-dell_poweredge_temp"] = perfometer_temperature
 perfometers["check_mk-dell_chassis_temp"] = perfometer_temperature
 perfometers["check_mk-innovaphone_temp"] = perfometer_temperature
+perfometers["check_mk-cmciii.temp"] = perfometer_temperature
 
 def perfometer_temperature_multi(row, check_command, perf_data):
     display_value = -1
@@ -476,6 +477,7 @@ perfometers["check_mk-innovaphone_cpu"] = perfometer_cpu_utilization
 perfometers["check_mk-enterasys_cpu_util"] = perfometer_cpu_utilization
 perfometers["check_mk-juniper_trpz_cpu_util"] = perfometer_cpu_utilization
 perfometers["check_mk-ibm_svc_nodestats.cpu_util"] = perfometer_cpu_utilization
+perfometers["check_mk-ibm_svc_systemstats.cpu_util"] = perfometer_cpu_utilization
 
 def perfometer_ps_perf(row, check_command, perf_data):
     perf_dict = dict([(p[0], float(p[1])) for p in perf_data])
@@ -535,6 +537,16 @@ perfometers["check_mk-esx_vsphere_counters.diskio"] = perfometer_check_mk_diskst
 perfometers["check_mk-emcvnx_disks"] = perfometer_check_mk_diskstat
 perfometers["check_mk-ibm_svc_nodestats.diskio"] = perfometer_check_mk_diskstat
 perfometers["check_mk-ibm_svc_systemstats.diskio"] = perfometer_check_mk_diskstat
+
+def perfometer_check_mk_iops_r_w(row, check_command, perf_data):
+    iops_r = int(perf_data[0][1])
+    iops_w = int(perf_data[1][1])
+    text = "%d/s r, %s/s w" % (iops_r, iops_w)
+
+    return text, perfometer_logarithmic_dual(
+            iops_r, "#60e0a0", iops_w, "#60a0e0", 100000, 10)
+perfometers["check_mk-ibm_svc_nodestats.iops"] = perfometer_check_mk_iops_r_w
+perfometers["check_mk-ibm_svc_systemstats.iops"] = perfometer_check_mk_iops_r_w
 
 def perfometer_in_out_mb_per_sec(row, check_command, perf_data):
     read_mbit = float(perf_data[0][1]) / 131072
@@ -758,11 +770,12 @@ def perfometer_cmc_lcp(row, check_command, perf_data):
 perfometers["check_mk-cmc_lcp"] = perfometer_cmc_lcp
 
 
-def perfometer_carel_uniflair_cooling(row, check_command, perf_data):
+def perfometer_humidity(row, check_command, perf_data):
     humidity = float(perf_data[0][1])
     return "%3.1f%%" % humidity, perfometer_linear(humidity, '#6f2')
 
-perfometers['check_mk-carel_uniflair_cooling'] = perfometer_carel_uniflair_cooling
+perfometers['check_mk-carel_uniflair_cooling'] = perfometer_humidity
+perfometers['check_mk-cmciii.humidity'] = perfometer_humidity
 
 def perfometer_eaton(row, command, perf):
     return u"%s°C" % str(perf[0][1]), perfometer_linear(float(perf[0][1]), 'silver')
@@ -890,6 +903,19 @@ def perfometer_check_mk_ibm_svc_license(row, check_command, perf_data):
 
 perfometers["check_mk-ibm_svc_license"] = perfometer_check_mk_ibm_svc_license
 
+def perfometer_check_mk_ibm_svc_cache(row, check_command, perf_data):
+    h = '<table><tr>'
+    write_cache_pc = int(perf_data[0][1])
+    total_cache_pc = int(perf_data[1][1])
+    read_cache_pc = total_cache_pc - write_cache_pc
+    free_cache_pc = 100 - total_cache_pc
+    h += perfometer_td(write_cache_pc, "#60e0a0")
+    h += perfometer_td(read_cache_pc,  "#60a0e0")
+    h += perfometer_td(free_cache_pc,  "white")
+    h += "</tr></table>"
+    return "%d%% write, %d%% read" % (write_cache_pc, read_cache_pc), h
+perfometers["check_mk-ibm_svc_nodestats.cache"] = perfometer_check_mk_ibm_svc_cache
+perfometers["check_mk-ibm_svc_systemstats.cache"] = perfometer_check_mk_ibm_svc_cache
 
 def perfometer_licenses_percent(row, check_command, perf_data):
     licenses = float(perf_data[0][1])

@@ -678,6 +678,8 @@ void TableStateHistory::answerQuery(Query *query)
         delete it_hst->second;
         it_hst++;
     }
+    state_info.clear();
+    object_blacklist.clear();
 
     g_store->logCache()->unlockLogCache();
 }

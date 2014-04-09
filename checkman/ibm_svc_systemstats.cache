@@ -1,0 +1,21 @@
+title: IBM SVC / V7000: Cache Usage in Total
+agents: ibm_svc
+catalog: hw/storagehw/ibm
+license: GPL
+distribution: check_mk
+description:
+ Reports the Write Cache Usage and Total Cache Usage for an
+ IBM SVC / V7000 device in Total in percent.
+
+ The check does report only and returns always {OK}.
+
+ Please note: You need the Special Agent agent_ibmsvc to retrieve the monitoring
+ data from the device. Your monitoring user must be able to SSH to the device
+ with SSH Key Authentification. Please exchange SSH key. The Special Agent itself
+ can be configured by WATO.
+
+inventory:
+ Creates one check per IBM SVC / V7000 device.
+
+perfdata:
+ Two values: The write cache usage and the total cache usage in percent.

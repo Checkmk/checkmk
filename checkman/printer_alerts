@@ -4,37 +4,27 @@ catalog: hw/printer
 license: GPL
 distribution: check_mk
 description:
- This check monitors the alerts reported by a printer supporting the
- {PRINTER-MIB}. The check generates one service per device and lists
- all known errors in the service output.
+
+ This check monitors the alerts reported by printers supporting the
+ {PRINTER-MIB}. The check generates one service per device.  For every
+ active printer alert group ({prtAlertGroup}) it determines the alert code
+ ({prtAlertCode}) and displays a textual representation of the alert code.
+ If available on the device, it also displays a description of the alert.
+
+ The state of the check is determined from a table defining the relation between
+ the alert code and the state of the check. This table is hardcoded. If you find
+ any possible improvements or shortcomings of the table, feel free to contact us.
 
 inventory:
  One check is being created for each device.
 
 examples:
- # This is the default (hard coded) definition of the
- # state code handling.
- # -> All state codes listed after "2:" result in a CRITICAL state
- # -> All state codes listed after "1:" result in a WARNING state
- # -> All state codes listed after "0:" result in a OK state
- printer_alerts_state_map = {
-   2: [ 8, 1101, 1102, 1112, 1114, 1115 ],
-   1: [ ],
-   0: [ 4, 6, 7, 19, 20, 23, 24, 25, 27, 35, 36, 37, 38, 502, 503, 504, 505, 506, 507, 802, 803, 804, 805, 806, 807, 808, 809, 810, 1001, 1002, 1005, 1106, 1107, 1108, 1111, 1113, 1302, 1304, 1501, 1502, 1503, 1504, 1505, 1506, 1509 ],
- }
-
  # Make 'Energiesparen' an OK state
  printer_alerts_text_map = {
      'Energiesparen' : 0,
  }
 
 [configuration]
-printer_alerts_state_map(dict): Can be used to configure state codes
- reported by the printer to result in individual nagios states. This
- dictionary contains three elements. One for each nagios state. Each
- element holds a list of state codes to result in this state.
- Take a look at the example section to see the defaults.
-
 printer_alerts_text_map(dict): Some printers send a status code of {-1} in some cases.
  But you can use the additional descriptive text sent by the printer for assigning
  a monitoring state by using this dictionary. The key is the descriptive text. The

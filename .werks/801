@@ -1,0 +1,8 @@
+Title: ibm_svc_eventlog: New Check for Messages in Event log of IBM SVC / V7000 devices
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1396612089
+Class: feature
+
+

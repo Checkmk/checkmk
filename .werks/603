@@ -1,0 +1,8 @@
+Title: cmciii checks: more general scan function plus perf-o-meters for humidity and temperature checks
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1397037965
+Class: fix
+
+

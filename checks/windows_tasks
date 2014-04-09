@@ -25,17 +25,18 @@
 # Boston, MA 02110-1301 USA.
 
 # Example output from agent:
-#TaskName             : \WebShopPictureUpload
-#Last Run Time        : 17.10.2013 23:00:00
-#Next Run Time        : 18.10.2013 23:00:00
-#Last Result          : 0
-#Scheduled Task State : Enabled
+# <<<windows_tasks:sep(58)>>>
+# TaskName             : \WebShopPictureUpload
+# Last Run Time        : 17.10.2013 23:00:00
+# Next Run Time        : 18.10.2013 23:00:00
+# Last Result          : 0
+# Scheduled Task State : Enabled
 #
-#TaskName             : \OfficeSoftwareProtectionPlatform\SvcRestartTask
-#Last Run Time        : N/A
-#Next Run Time        : Disabled
-#Last Result          : 1
-#Scheduled Task State : Disabled
+# TaskName             : \OfficeSoftwareProtectionPlatform\SvcRestartTask
+# Last Run Time        : N/A
+# Next Run Time        : Disabled
+# Last Result          : 1
+# Scheduled Task State : Disabled
 
 
 def windows_tasks_convert(info):
@@ -43,7 +44,7 @@ def windows_tasks_convert(info):
     last_task = False
     for line in info:
         name = line[0].strip()
-        value = "".join(line[1:]).strip()
+        value = ":".join(line[1:]).strip()
         if last_task and name != "TaskName":
             data[last_task][name] = value
 
@@ -72,6 +73,12 @@ def check_windows_tasks(item, _no_params, info):
             if values['Scheduled Task State'] != 'Enabled':
                 msg.append("Task not Enabled(!!)")
                 state = 2
+
+            if "Last Run Time" in values:
+                msg.append("last run time: %s" % values["Last Run Time"])
+
+            if "Next Run Time" in values:
+                msg.append("next run time: %s" % values["Next Run Time"])
 
             return state, ", ".join(msg)
 

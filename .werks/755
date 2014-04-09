@@ -1,0 +1,8 @@
+Title: Added variables LASTHOSTUP_REL and LASTSERVICEOK_REL to notification context
+Level: 1
+Component: notifications
+Version: 1.2.5i3
+Date: 1396873229
+Class: feature
+
+These two variables can now be used in notification scripts.

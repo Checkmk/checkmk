@@ -2432,15 +2432,30 @@ register_check_parameters(
     "dict",
 )
 
+def transform_printer_supply(l):
+    if len(l) == 2:
+        return l[0], l[1], False
+    return l
+
 register_check_parameters(
     subgroup_printing,
     "printer_supply",
     _("Printer cardridge levels"),
-    Tuple(
-          help = _("Levels for printer cardridges."),
-          elements = [
-              Float(title = _("Warning remaining")),
-              Float(title = _("Critical remaining"))]
+    Transform(
+        Tuple(
+              kelp = _("Levels for printer cardridges."),
+              elements = [
+                  Float(title = _("Warning remaining")),
+                  Float(title = _("Critical remaining")),
+                  Checkbox(
+                        title = _("Upturn toner levels" ),
+                        help = _ ("Some Printers (eg. Konica for Drum Cartdiges) returning the available"
+                                  " fuel instead of what is left. In this case it's possible"
+                                  " to upturn the levels to handle this behavior"
+                                 )
+                        ),]
+             ),
+             forth = transform_printer_supply,
     ),
     TextAscii(
         title = _("cardridge specification"),
@@ -3420,6 +3435,25 @@ register_check_parameters(
                  "60a9800043346937686f456f59386741), or the configured "
                  "alias.")),
     "first"
+)
+
+register_rule(
+    "checkparams/" + subgroup_storage,
+    varname   = "inventory_multipath_rules",
+    title     = _("Linux Multipath Inventory"),
+    valuespec = Dictionary(
+        elements = [
+            ("use_alias", Checkbox(
+                     title = _("Use the multipath alias as service name, if one is set"),
+                         label = _("use alias"),
+                         help = _("If a multipath device has an alias then you can use that for specifying "
+                                  "the device instead of the UUID. The alias will then be part of the service "
+                                  "description. The UUID will be output in the pluging outpout."))
+            ),
+        ],
+        help = _('This rule controls the inventory of Multipath devices on Linux.'),
+    ),
+    match = 'dict',
 )
 
 register_check_parameters(

@@ -51,6 +51,8 @@ def ibm_svc_mdiskgrp_to_mb(size):
        size = int(float(size.replace("PB", ""))) * 1024 * 1024 * 1024
     elif size.endswith("EB"):
        size = int(float(size.replace("EB", ""))) * 1024 * 1024 * 1024 * 1024
+    else:
+       size = int(float(size))
     return size
 
 def inventory_ibm_svc_mdiskgrp(info):

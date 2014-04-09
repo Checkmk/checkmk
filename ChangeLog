@@ -28,6 +28,7 @@
     * 0789 FIX: oracle_tablespaces: fixed bug when using dynamic filesystem levels...
     * 0603 FIX: cmciii checks: more general scan function plus perf-o-meters for humidity and temperature checks
     * 0604 FIX: windows_updates: now handles situations with forced reboot and no limits correctly
+    * 0605 FIX: enterasys_cpu_util enterasys_lsnat: syntax fixes
 
     Multisite:
     * 0779 Hostgroups (Summary): Empty hostgroups are no longer shown (can be re-enabled by filter)

@@ -98,7 +98,7 @@ def ibm_svc_systemstats_parse(info):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def inventory_ibm_svc_systemstats_diskio(info): 
+def inventory_ibm_svc_systemstats_diskio(info):
     inventory = []
     parsed = ibm_svc_systemstats_parse(info)
     for key in parsed.keys():

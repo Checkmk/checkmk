@@ -40,17 +40,17 @@
 #  done in get_availability_data().
 #
 #  - htdocs/views.py:show_view()
-#  - plugins/views/availability.py:render_availability() 
+#  - plugins/views/availability.py:render_availability()
 #    - plugins/views/availability.py:get_availability_data()
 #    - plugins/views/availability.py:do_render_availability()
 #      - plugins/views/availability.py:render_availability_table()
-#  
+#
 # 2a) timeline of hosts/services
 #  It is much the same as for 1a), just that in get_availability_data()
 #  an additional filter is being added for selecting just one host/serivce.
 #
 #  - htdocs/views.py:show_view()
-#  - plugins/views/availability.py:render_availability() 
+#  - plugins/views/availability.py:render_availability()
 #    - plugins/views/availability.py:get_availability_data()
 #    - plugins/views/availability.py:do_render_availability()
 #      - plugins/views/availability.py:render_timeline()
@@ -59,18 +59,18 @@
 #  In order to use the filter logic of the aggr datasource, we
 #  also start in show_view(). But this time we let the actual
 #  rows being computed - just we make sure that only the two
-#  columns aggr_name, aggr_group and aggr_tree are being fetched. The 
+#  columns aggr_name, aggr_group and aggr_tree are being fetched. The
 #  other columns won't be displayed. We just need the correct
 #  result set. With that we fork into render_bi_availability().
 #  This computes the historic states of the aggregate by using
 #  data from hosts/services from state_hist.
 #
 #  - htdocs/views.py:show_view()
-#    - plugins/views/availability.py:render_bi_availability() 
+#    - plugins/views/availability.py:render_bi_availability()
 #      - plugins/views/availability.py:get_bi_timeline()
 #      - plugins/views/availability.py:do_render_availability()
 #        - plugins/views/availability.py:render_availability_table()
-# 
+#
 # 2b) timeline of bi aggregates
 #  In this case we do not need any logic from the view, since
 #  we just diplay one element - which is identified by aggr_group

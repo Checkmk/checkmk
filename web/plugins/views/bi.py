@@ -74,9 +74,7 @@ def paint_bi_icons(row):
             ("view_name", "aggr_single"),
             ("aggr_name", row["aggr_name"])])
     html.icon_button(single_url, _("Show only this aggregation"), "showbi")
-    avail_url = "bi_availability.py?" + html.urlencode_vars([
-            ("aggr_group", row["aggr_group"]),
-            ("aggr_name",  row["aggr_name"])])
+    avail_url = single_url + "&mode=availability"
     html.icon_button(avail_url, _("Analyse availability of this aggregation"), "availability")
     if row["aggr_effective_state"]["in_downtime"]:
 	html.icon(_("This aggregation is currently in a scheduled downtime"), "downtime")

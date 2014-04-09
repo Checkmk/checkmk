@@ -1,0 +1,11 @@
+Title: oracle_tablespaces: now able to bear None values as warn/crit levels
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1396946661
+Class: fix
+
+The levels in the oracle_tablespaces parameters could be set to None
+if dynamic levels were used, but the filesystem was not within the limits
+of the dynamic levels.
+This caused an invalid check output.

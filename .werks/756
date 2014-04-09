@@ -1,0 +1,10 @@
+Title: Allow availability of multisite BI aggregates at once
+Level: 2
+Component: reporting
+Version: 1.2.5i3
+Date: 1396944483
+Class: feature
+
+Views containing multisite BI aggregates now also have the button <i>Availability</i> at
+the top of the view. Multisite BI aggregates can thus be displayed in one availability
+table - just as for hosts and services.

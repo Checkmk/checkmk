@@ -27,6 +27,7 @@
     * 0788 FIX: oracle_tablespaces: now able to bear None values as warn/crit levels...
     * 0789 FIX: oracle_tablespaces: fixed bug when using dynamic filesystem levels...
     * 0603 FIX: cmciii checks: more general scan function plus perf-o-meters for humidity and temperature checks
+    * 0604 FIX: windows_updates: now handles situations with forced reboot and no limits correctly
 
     Multisite:
     * 0779 Hostgroups (Summary): Empty hostgroups are no longer shown (can be re-enabled by filter)

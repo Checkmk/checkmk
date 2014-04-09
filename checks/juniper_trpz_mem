@@ -39,7 +39,7 @@ def check_juniper_trpz_mem(_no_item, params, info):
     perf = [( "usage", usage*1024, warn_a*1024, crit_a*1024, 0, mem_size )]
     message = "Used: %s/%s (%.0f%%)" % \
     ( get_bytes_human_readable(usage*1024), get_bytes_human_readable(mem_size*1024), usage_perc )
-    levels = " ( Warning/Critical at %0.f%%/%.0f%%)" % ( warn, crit )
+    levels = " (Warning/Critical at %0.f%%/%.0f%%)" % ( warn, crit )
     if usage_perc >= crit:
         return 2, message + levels, perf
     elif usage_perc >= warn:

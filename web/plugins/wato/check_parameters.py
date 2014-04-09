@@ -3437,6 +3437,25 @@ register_check_parameters(
     "first"
 )
 
+register_rule(
+    "checkparams/" + subgroup_storage,
+    varname   = "inventory_multipath_rules",
+    title     = _("Linux Multipath Inventory"),
+    valuespec = Dictionary(
+        elements = [
+            ("use_alias", Checkbox(
+                     title = _("Use the multipath alias as service name, if one is set"),
+                         label = _("use alias"),
+                         help = _("If a multipath device has an alias then you can use that for specifying "
+                                  "the device instead of the UUID. The alias will then be part of the service "
+                                  "description. The UUID will be output in the pluging outpout."))
+            ),
+        ],
+        help = _('This rule controls the inventory of Multipath devices on Linux.'),
+    ),
+    match = 'dict',
+)
+
 register_check_parameters(
      subgroup_storage,
     "multipath_count",

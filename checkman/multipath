@@ -24,9 +24,20 @@ item:
  alias as item.
 
 inventory:
- One check for each multipath device is created.
+ One check for each multipath device is created. Via {iventory_multipath_rules}
+ you can specify wether an alias should be used as item instead of the UUID.
+
+examples:
+ # Use the alias as item if one is being set
+ inventory_multipath_rules = [
+   ( {'use_alias': True}, [], ALL_HOSTS ),
+ ]
+
 
 [parameters]
 numpaths(int): The only parameter is the number of expected paths. This is not
   a tuple but a simple integer value.
 
+[configuration]
+inventory_multipath_rules(ruleset): A dictionary ruleset with currently the only possible
+  key being {use_alias}. See section inventory for details.

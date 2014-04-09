@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Configuration for using alias instead of UUID
+inventory_multipath_rules = []
 
 # Output from multipath -l has the following format:
 
@@ -252,11 +254,17 @@ def parse_multipath_output(info, only_uuid = None):
 # Get list of UUIDs of all multipath devices
 # Length of UUID is 360a9800043346937686f456f59386741
 def inventory_multipath(info):
+    settings = host_extra_conf_merged(g_hostname, inventory_multipath_rules)
+
     inventory = []
     parsed = parse_multipath_output(info)
     for uuid, info in parsed.items():
         # take current number of paths as target value
-        inventory.append( (uuid, " ".join(info['luns']), info['numpaths']) )
+        if "alias" in info and settings.get("use_alias"):
+            item = info["alias"]
+        else:
+            item = uuid
+        inventory.append( (item, info['numpaths']) )
     return inventory
 
 # item is UUID (e.g. '360a9800043346937686f456f59386741') or alias (e.g. 'mpath0')
@@ -269,9 +277,15 @@ def check_multipath(item, target_numpaths, info):
         return (3, "no map with uuid/alias %s" % item)
     mmap = parsed.values()[0]
 
+    # If the item is the alias, then show the UUID in the plugin output.
+    # If the item is the UUID, then vice versa.
     alias = mmap.get('alias')
-    if alias:
+    uuid = mmap.get('uuid')
+
+    if item == uuid and alias:
         aliasinfo = "(%s) " % alias
+    elif item == alias and uuid:
+        aliasinfo = "(%s) " % uuid
     else:
         aliasinfo = ""
 

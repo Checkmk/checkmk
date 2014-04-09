@@ -1,0 +1,9 @@
+Title: windows_updates: now handles situations with forced reboot and no limits correctly
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i3
+Date: 1397041383
+
+

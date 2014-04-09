@@ -49,7 +49,7 @@ factory_settings["brocade_fcport_default_levels"] = {
     "rxcrcs":           (3.0, 20.0),   # allowed percentage of CRC errors
     "rxencoutframes":   (3.0, 20.0),   # allowed percentage of Enc-OUT Frames
     "notxcredits":      (3.0, 20.0),   # allowed percentage of No Tx Credits
-    "c3discards":       (3.0, 20.0),   # allowed percentage of CRC errors
+    "c3discards":       (3.0, 20.0),   # allowed percentage of C3 discards
     "assumed_speed":    2.0,           # used, if speed not available in SNMP data
 }
 

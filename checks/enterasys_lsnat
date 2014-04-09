@@ -44,7 +44,7 @@ def check_enterasys_lsnat(no_item, params, info):
             state = 1
             state_info = state_markers[state]
 
-    perfdata = [ ("current_bindings", util, warn, crit) ]
+    perfdata = [ ("current_bindings", lsnat_bindings, warn, crit) ]
 
     return state, "Current bindings %d%s" % (lsnat_bindings, state_info), perfdata
 

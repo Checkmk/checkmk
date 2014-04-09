@@ -32,7 +32,7 @@ def inventory_enterasys_cpu_util(info):
 def check_enterasys_cpu_util( item, params, info):
     for core, util in info:
         if item == core[:-2]:
-            usage = saveint(util[0]) / 10
+            usage = saveint(util) / 10.0
             return check_cpu_util(usage, params)
     return 3, "Core not found in agent Outut"
 

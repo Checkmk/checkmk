@@ -1,4 +1,7 @@
 1.2.4p3:
+    Checks & Agents:
+    * 0889 FIX: logwatch: fix case where rule wouldn't be applied...
+
 
 1.2.4p2:
     Core & Setup:

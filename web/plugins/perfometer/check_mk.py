@@ -286,6 +286,7 @@ perfometers["check_mk-hitachi_hnas_temp"] = perfometer_temperature
 perfometers["check_mk-dell_poweredge_temp"] = perfometer_temperature
 perfometers["check_mk-dell_chassis_temp"] = perfometer_temperature
 perfometers["check_mk-innovaphone_temp"] = perfometer_temperature
+perfometers["check_mk-cmciii.temp"] = perfometer_temperature
 
 def perfometer_temperature_multi(row, check_command, perf_data):
     display_value = -1
@@ -769,11 +770,12 @@ def perfometer_cmc_lcp(row, check_command, perf_data):
 perfometers["check_mk-cmc_lcp"] = perfometer_cmc_lcp
 
 
-def perfometer_carel_uniflair_cooling(row, check_command, perf_data):
+def perfometer_humidity(row, check_command, perf_data):
     humidity = float(perf_data[0][1])
     return "%3.1f%%" % humidity, perfometer_linear(humidity, '#6f2')
 
-perfometers['check_mk-carel_uniflair_cooling'] = perfometer_carel_uniflair_cooling
+perfometers['check_mk-carel_uniflair_cooling'] = perfometer_humidity
+perfometers['check_mk-cmciii.humidity'] = perfometer_humidity
 
 def perfometer_eaton(row, command, perf):
     return u"%s°C" % str(perf[0][1]), perfometer_linear(float(perf[0][1]), 'silver')

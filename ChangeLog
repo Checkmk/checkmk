@@ -20,6 +20,7 @@
     * 0786 FIX: zfsget: fixed compatibility with older Solaris agents...
     * 0809 FIX: brocade_fcport: Fixed recently introduced problem with port speed detection
     * 0787 FIX: df: fixed problems on some filesystem checks when legacy check parameters where used...
+    * 0603 FIX: cmciii checks: more general scan function plus perf-o-meters for humidity and temperature checks
 
     Multisite:
     * 0779 Hostgroups (Summary): Empty hostgroups are no longer shown (can be re-enabled by filter)

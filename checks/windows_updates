@@ -98,15 +98,22 @@ def check_windows_updates(_unused, params, info):
             hour, minute, second = map(int, time.split(":"))
             force_date = datetime.datetime( year, month, day, hour, minute, second)
             now = datetime.datetime.now()
-            diff_warn = datetime.timedelta(seconds=force_warn)
-            diff_crit = datetime.timedelta(seconds=force_crit)
             nix = datetime.timedelta(seconds=0)
+            # check if force_date is in the future
             if force_date - now > nix:
+                if force_crit:
+                    diff_crit = datetime.timedelta(seconds=force_crit)
+                else:
+                    diff_crit = None
+                if force_warn:
+                    diff_warn = datetime.timedelta(seconds=force_warn)
+                else:
+                    diff_warn = None
                 sym = ""
-                if diff_crit > force_date - now:
+                if diff_crit and diff_crit > force_date - now:
                     status = 2
                     sym = "(!!)"
-                elif diff_warn > force_date - now:
+                elif diff_warn and diff_warn > force_date - now:
                     if status < 1:
                         status = 1
                     sym = "(!)"

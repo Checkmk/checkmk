@@ -492,10 +492,10 @@ def page_edit_views(msg=None):
             html.write('<td>')
             title = view['title']
             if not view["hidden"]:
-                html.write("<a href=\"view.py?view_name=%s\">%s</a>" % (viewname, title))
+                html.write("<a href=\"view.py?view_name=%s\">%s</a>" % (viewname, html.attrencode(title)))
             else:
-                html.write(title)
-            html.help(view['description'])
+                html.write(html.attrencode(title))
+            html.help(html.attrencode(view['description']))
             html.write("</td>")
 
             # Datasource

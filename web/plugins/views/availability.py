@@ -161,7 +161,7 @@ def render_availability(view, datasource, filterheaders, display_options,
         html.write(avoptions_html)
 
     if not html.has_user_errors():
-        if tl_aggr:
+        if timeline and tl_aggr:
             if not html.has_var("aggr_group"):
                 raise MKGeneralException("Missing GET variable <tt>aggr_group</tt>")
             aggr_group = html.var("aggr_group")

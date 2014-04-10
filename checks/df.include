@@ -215,7 +215,7 @@ def get_filesystem_levels(host, mountpoint, size_gb, params):
         crit_hr = get_bytes_human_readable(crit * mega)
         levels["levels_text"] = "(%s %s/%s)" % (label, warn_hr, crit_hr)
 
-    if params.get("inodes_levels"):
+    if "inodes_levels" in params:
         if type(levels["inodes_levels"]) == tuple:
             warn, crit = levels["inodes_levels"]
         else:

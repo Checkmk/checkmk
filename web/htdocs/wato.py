@@ -15753,7 +15753,7 @@ def mode_bi_edit_rule(phase):
         if new:
             return _("BI - Create New Rule")
         else:
-            return _("BI - Edit Rule") + " " + ruleid
+            return _("BI - Edit Rule") + " " + html.attrencode(ruleid)
 
 
     elif phase == "buttons":

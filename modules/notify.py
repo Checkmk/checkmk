@@ -1507,11 +1507,11 @@ def complete_raw_context(raw_context):
                                     urlencode('view.py?view_name=service&host=%s&service=%s' %
                                                  (raw_context['HOSTNAME'], raw_context['SERVICEDESC']))
 
-    # Relative Timestamps for host/service state changes
-    if 'LASTHOSTSTATECHANGE' in raw_context:
-        raw_context['LASTHOSTSTATECHANGE_REL'] = get_readable_rel_date(raw_context['LASTHOSTSTATECHANGE'])
-    if raw_context['WHAT'] != 'HOST' and 'LASTSERVICESTATECHANGE' in raw_context:
-        raw_context['LASTSERVICESTATECHANGE_REL'] = get_readable_rel_date(raw_context['LASTSERVICESTATECHANGE'])
+    # Relative Timestamps for several macros
+    for macro in [ 'LASTHOSTSTATECHANGE', 'LASTSERVICESTATECHANGE', 'LASTHOSTUP', 'LASTSERVICEOK' ]:
+        if macro in raw_context:
+            raw_context[macro + '_REL'] = get_readable_rel_date(raw_context[macro])
+
 
     # Rule based notifications enabled? We might need to complete a few macros
     contact = raw_context.get("CONTACTNAME")

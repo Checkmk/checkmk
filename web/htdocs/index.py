@@ -308,15 +308,15 @@ def handler(req, fields = None, profiling = True):
         html.unplug()
         apache.log_error("%s %s %s" % (req.uri, _('Internal error') + ':', e), apache.APLOG_ERR) # log in all cases
         if plain_error:
-            html.write(_("Internal error") + ": %s\n" % e)
+            html.write(_("Internal error") + ": %s\n" % html.attrencode(e))
         elif not fail_silently:
             html.header(_("Internal error"))
             if config.debug:
                 html.show_error("%s: %s<pre>%s</pre>" %
-                    (_('Internal error'), e, format_exception()))
+                    (_('Internal error'), html.attrencode(e), html.attrencode(format_exception())))
             else:
                 url = html.makeuri([("debug", "1")])
-                html.show_error("%s: %s (<a href=\"%s\">%s</a>)" % (_('Internal error') + ':', e, url, _('Retry with debug mode')))
+                html.show_error("%s: %s (<a href=\"%s\">%s</a>)" % (_('Internal error') + ':', html.attrencode(e), url, _('Retry with debug mode')))
             html.footer()
         response_code = apache.OK
 

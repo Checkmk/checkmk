@@ -17,11 +17,15 @@ description:
  {[3]} An error counter exceeds its  configured levels (CRC errors, Enc-OUT
  frames, no Tx credits, C3 discards)
 
- {Averaging}: This check supports averaging on all counters. Averaging is
+ Averaging: This check supports averaging on all counters. Averaging is
  turned on but setting the check parameter {"average"} to a number of minutes.
  In that case the check produces additional performance data for each parameter
  and all warning/error levels are only applied on the averaged value, not on
  the current one. This is especially helpful when using levels on the throughput.
+
+ Note: The counters CRC errors and Enc-OUT are represented as percentages in
+ relation to the number of received frames. C3 discards and no Tx credits are
+ in relation to the number of sent frames.
 
 item:
  The item is the port-number as two-digit or three-digit string (on switches

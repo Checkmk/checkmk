@@ -1,0 +1,10 @@
+Title: oracle_tablespaces: improved formatting of levels text in check output
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1396950872
+Class: feature
+
+If you configure percentage levels within WATO the check will display them
+as percentage in the check output, as well. Previously these values were always
+displayed as bytes

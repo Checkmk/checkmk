@@ -71,6 +71,40 @@
 # 5:BLUBBSVC02:sas_io:0:0:140325134930
 # [...]
 
+# parses agent output into a structure like:
+# {'Drives BLUBBSVC01': {'r_mb': 0, 'w_mb': 0, 'r_io': 0, 'w_io': 0},
+#  'Drives BLUBBSVC02': {'r_mb': 0, 'w_mb': 0, 'r_io': 0, 'w_io': 0},
+#  'Drives BLUBBSVC03': {'r_mb': 0, 'w_mb': 0, 'r_io': 0, 'w_io': 0},
+#  'Drives BLUBBSVC04': {'r_mb': 0, 'w_mb': 0, 'r_io': 0, 'w_io': 0},
+#  'MDisks BLUBBSVC01': {'r_mb': 1, 'w_mb': 16, 'r_io': 15, 'w_io': 865},
+#  'MDisks BLUBBSVC02': {'r_mb': 3, 'w_mb': 6, 'r_io': 245, 'w_io': 361},
+#  'MDisks BLUBBSVC03': {'r_mb': 28, 'w_mb': 5, 'r_io': 1194, 'w_io': 901},
+#  'MDisks BLUBBSVC04': {'r_mb': 0, 'w_mb': 162, 'r_io': 0, 'w_io': 1414},
+#  'VDisks BLUBBSVC01': {'r_mb': 0, 'w_mb': 0, 'r_io': 19, 'w_io': 110},
+#  'VDisks BLUBBSVC02': {'r_mb': 101, 'w_mb': 13, 'r_io': 1105, 'r_mb': 101},
+#  'VDisks BLUBBSVC03': {'r_mb': 12, 'w_mb': 80, 'r_io': 1345, 'r_mb': 12},
+#  'VDisks BLUBBSVC04': {'r_mb': 0, 'w_mb': 0, 'r_io': 0, 'w_io': 0}}
+
+def ibm_svc_nodestats_parse(info):
+    parsed = {}
+    for node_id, node_name, stat_name, stat_current, stat_peak, stat_peak_time in info:
+        if stat_name in ("vdisk_r_mb", "vdisk_w_mb", "vdisk_r_io", "vdisk_w_io"):
+            if "VDisks %s" % node_name not in parsed.keys():
+                parsed["VDisks %s" % node_name] = {}
+            stat_name = stat_name.replace("vdisk_", "")
+            parsed["VDisks %s" % node_name][stat_name] = int(stat_current)
+        if stat_name in ("mdisk_r_mb", "mdisk_w_mb", "mdisk_r_io", "mdisk_w_io"):
+            if "MDisks %s" % node_name not in parsed.keys():
+                parsed["MDisks %s" % node_name] = {}
+            stat_name = stat_name.replace("mdisk_", "")
+            parsed["MDisks %s" % node_name][stat_name] = int(stat_current)
+        if stat_name in ("drive_r_mb", "drive_w_mb", "drive_r_io", "drive_w_io"):
+            if "Drives %s" % node_name not in parsed.keys():
+                parsed["Drives %s" % node_name] = {}
+            stat_name = stat_name.replace("drive_", "")
+            parsed["Drives %s" % node_name][stat_name] = int(stat_current)
+    return parsed
+
 #   .--disk IO-------------------------------------------------------------.
 #   |                         _ _     _      ___ ___                       |
 #   |                      __| (_)___| | __ |_ _/ _ \                      |
@@ -80,48 +114,14 @@
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-# parses agent output into a structure like:
-# {'Drives BLUBBSVC01': {'r_mb': 0, 'w_mb': 0},
-#  'Drives BLUBBSVC02': {'r_mb': 0, 'w_mb': 0},
-#  'Drives BLUBBSVC03': {'r_mb': 0, 'w_mb': 0},
-#  'Drives BLUBBSVC04': {'r_mb': 0, 'w_mb': 0},
-#  'MDisks BLUBBSVC01': {'r_mb': 1, 'w_mb': 16},
-#  'MDisks BLUBBSVC02': {'r_mb': 3, 'w_mb': 6},
-#  'MDisks BLUBBSVC03': {'r_mb': 28, 'w_mb': 5},
-#  'MDisks BLUBBSVC04': {'r_mb': 0, 'w_mb': 162},
-#  'VDisks BLUBBSVC01': {'r_mb': 0, 'w_mb': 0},
-#  'VDisks BLUBBSVC02': {'r_mb': 101, 'w_mb': 13},
-#  'VDisks BLUBBSVC03': {'r_mb': 12, 'w_mb': 80},
-#  'VDisks BLUBBSVC04': {'r_mb': 0, 'w_mb': 0}}
-
-def ibm_svc_nodestats_parse(info):
-    parsed = {}
-    for node_id, node_name, stat_name, stat_current, stat_peak, stat_peak_time in info:
-        if stat_name in ("vdisk_r_mb", "vdisk_w_mb"):
-            if "VDisks %s" % node_name not in parsed.keys():
-                parsed["VDisks %s" % node_name] = {}
-            stat_name = stat_name.replace("vdisk_", "")
-            parsed["VDisks %s" % node_name][stat_name] = int(stat_current)
-        if stat_name in ("mdisk_r_mb", "mdisk_w_mb"):
-            if "MDisks %s" % node_name not in parsed.keys():
-                parsed["MDisks %s" % node_name] = {}
-            stat_name = stat_name.replace("mdisk_", "")
-            parsed["MDisks %s" % node_name][stat_name] = int(stat_current)
-        if stat_name in ("drive_r_mb", "drive_w_mb"):
-            if "Drives %s" % node_name not in parsed.keys():
-                parsed["Drives %s" % node_name] = {}
-            stat_name = stat_name.replace("drive_", "")
-            parsed["Drives %s" % node_name][stat_name] = int(stat_current)
-    return parsed
-
-def inventory_ibm_svc_nodestats(info):
+def inventory_ibm_svc_nodestats_diskio(info):
     inventory = []
     parsed = ibm_svc_nodestats_parse(info)
     for key in parsed.keys():
         inventory.append( (key, None) )
     return inventory
 
-def check_ibm_svc_nodestats(item, _no_params, info):
+def check_ibm_svc_nodestats_diskio(item, _no_params, info):
     parsed = ibm_svc_nodestats_parse(info)
 
     if item not in parsed.keys():
@@ -136,9 +136,45 @@ def check_ibm_svc_nodestats(item, _no_params, info):
         perfdata
 
 check_info["ibm_svc_nodestats.diskio"] = {
-    "check_function"        : check_ibm_svc_nodestats,
-    "inventory_function"    : inventory_ibm_svc_nodestats,
+    "check_function"        : check_ibm_svc_nodestats_diskio,
+    "inventory_function"    : inventory_ibm_svc_nodestats_diskio,
     "service_description"   : "IBM SVC Throughput %s",
+    "has_perfdata"          : True,
+}
+
+#.
+#   .--iops----------------------------------------------------------------.
+#   |                          _                                           |
+#   |                         (_) ___  _ __  ___                           |
+#   |                         | |/ _ \| '_ \/ __|                          |
+#   |                         | | (_) | |_) \__ \                          |
+#   |                         |_|\___/| .__/|___/                          |
+#   |                                 |_|                                  |
+#   '----------------------------------------------------------------------'
+
+def inventory_ibm_svc_nodestats_iops(info):
+    inventory = []
+    parsed = ibm_svc_nodestats_parse(info)
+    for key in parsed.keys():
+        inventory.append( (key, None) )
+    return inventory
+
+def check_ibm_svc_nodestats_iops(item, _no_params, info):
+    parsed = ibm_svc_nodestats_parse(info)
+
+    if item not in parsed.keys():
+        return 3, "%s not found in agent output" % item
+
+    read_iops = parsed[item]['r_io']
+    write_iops = parsed[item]['w_io']
+    perfdata = [ ("read", read_iops), ("write", write_iops) ]
+
+    return 0, "%s IOs/sec read, %s IOs/sec write" %  (read_iops, write_iops), perfdata
+
+check_info["ibm_svc_nodestats.iops"] = {
+    "check_function"        : check_ibm_svc_nodestats_iops,
+    "inventory_function"    : inventory_ibm_svc_nodestats_iops,
+    "service_description"   : "IBM SVC IOPS %s",
     "has_perfdata"          : True,
 }
 

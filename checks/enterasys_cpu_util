@@ -27,12 +27,12 @@ enterasys_cpu_default_levels = (90, 95)
 
 def inventory_enterasys_cpu_util(info):
     # [:-2] to remove the oid end
-    return [ ( x[0][:-2], "enterasys_cpu_default_levels" ) for x in info ] 
+    return [ ( x[0][:-2], "enterasys_cpu_default_levels" ) for x in info ]
 
 def check_enterasys_cpu_util( item, params, info):
     for core, util in info:
         if item == core[:-2]:
-            usage = saveint(util[0]) / 10
+            usage = saveint(util) / 10.0
             return check_cpu_util(usage, params)
     return 3, "Core not found in agent Outut"
 

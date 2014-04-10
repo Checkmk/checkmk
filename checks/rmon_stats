@@ -73,5 +73,7 @@ check_info["rmon_stats"] = {
                                         ]),
     # for the scan we need to check for any single object in the RMON tree,
     # we choose netDefaultGateway in the hope that it will always be present
-    'snmp_scan_function'    : lambda oid: oid(".1.3.6.1.2.1.16.19.12.0") != None,
+    'snmp_scan_function'    : lambda oid: ( oid(".1.3.6.1.2.1.1.1.0").lower().startswith("cisco") \
+                    or  oid(".1.3.6.1.2.1.1.1.0").startswith("10G Managed Switch)" ) \
+                    and oid(".1.3.6.1.2.1.16.19.12.0") != None,
 }

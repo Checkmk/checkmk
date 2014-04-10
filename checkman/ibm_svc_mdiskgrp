@@ -1,10 +1,11 @@
-title: IBM SVC / V7000: Status and Usage of MDisksGrps
+title: IBM SVC / Storwize V3700 / V7000: Status and Usage of MDisksGrps
 agents: ibm_svc
 catalog: hw/storagehw/ibm
 license: GPL
 distribution: check_mk
 description:
- Checks the status and usage of MDisksGrps in an IBM SVC / V7000 device.
+ Checks the status and usage of MDisksGrps in an IBM SVC / Storwize V3700 / V7000
+ device.
 
  It uses the check logic of the {df} check, so for configuration parameters
  and examples please refer to the man page of {df}.
@@ -21,7 +22,8 @@ item:
  The name of the MDisksGrp
 
 inventory:
- Creates one check for every MDiskGrp in th IBM SVC / V7000 device.
+ Creates one check for every MDiskGrp in th IBM SVC / Storwize V3700 / V7000
+ device.
 
 examples:
  # set levels for the MDiskGrp Quorum_1 to 90% for WARN and 95% for CRIT

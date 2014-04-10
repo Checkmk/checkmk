@@ -23,6 +23,7 @@
             NOTE: Please refer to the migration notes!
     * 0804 ibm_svc_portfc: New check for status of FC Ports in IBM SVC / Storwize V3700 / V7000 devices
     * 0805 ibm_svc_enclosure: New Check for Enclosures, Canisters and PSUs in IBM SVC / Storwize V3700 / V7000 devices
+    * 0806 ibm_svc_enclosurestats.temp: New Check for temperature in enclosures of IBM SVC / Storwize V3700 / V7000 devices
     * 0777 FIX: special agent emcvnx: did not work with security file authentication...
     * 0786 FIX: zfsget: fixed compatibility with older Solaris agents...
     * 0809 FIX: brocade_fcport: Fixed recently introduced problem with port speed detection

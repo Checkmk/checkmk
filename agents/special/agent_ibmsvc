@@ -62,10 +62,10 @@ OPTIONS:
                                 which may contain the keywords "lshost", "lslicense",
                                 "lsmdisk", "lsmdiskgrp", "lsnode", "lsnodestats",
                                 "lssystem", "lssystemstats", "lseventlog", "lsportfc"
-                                "lsenclosure" or "all" to define which information
-                                should be queried from the device. You can define to
-                                use only view of them to optimize performance. The
-                                default is "all".
+                                "lsenclosure", "lsenclosurestats" or "all" to define
+                                which information should be queried from the device.
+                                You can define to use only view of them to optimize
+                                performance. The default is "all".
 
 """)
 
@@ -115,6 +115,8 @@ command_options = {
                        "command" : "lsportfc -nohdr -delim :"},
     "lsenclosure"   : {"section_header" : "ibm_svc_enclosure",   "active" : False,
                        "command" : "lsenclosure -nohdr -delim :"},
+    "lsenclosurestats" : {"section_header" : "ibm_svc_enclosurestats", "active" : False,
+                       "command" : "lsenclosurestats -nohdr -delim :"},
 }
 
 for o,a in opts:

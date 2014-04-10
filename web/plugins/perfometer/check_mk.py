@@ -287,6 +287,7 @@ perfometers["check_mk-dell_poweredge_temp"] = perfometer_temperature
 perfometers["check_mk-dell_chassis_temp"] = perfometer_temperature
 perfometers["check_mk-innovaphone_temp"] = perfometer_temperature
 perfometers["check_mk-cmciii.temp"] = perfometer_temperature
+perfometers["check_mk-ibm_svc_enclosurestats.temp"] = perfometer_temperature
 
 def perfometer_temperature_multi(row, check_command, perf_data):
     display_value = -1

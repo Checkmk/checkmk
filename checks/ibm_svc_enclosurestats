@@ -1,0 +1,86 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# <<<ibm_svc_enclosurestats:sep(58)>>>
+# 1:power_w:207:218:140410113051
+# 1:temp_c:22:22:140410113246
+# 1:temp_f:71:71:140410113246
+# 2:power_w:126:128:140410113056
+# 2:temp_c:21:21:140410113246
+# 2:temp_f:69:69:140410113246
+# 3:power_w:123:126:140410113041
+# 3:temp_c:22:22:140410113246
+# 3:temp_f:71:71:140410113246
+# 4:power_w:133:138:140410112821
+# 4:temp_c:22:23:140410112836
+# 4:temp_f:71:73:140410112836
+
+
+#   .--temperature---------------------------------------------------------.
+#   |      _                                      _                        |
+#   |     | |_ ___ _ __ ___  _ __   ___ _ __ __ _| |_ _   _ _ __ ___       |
+#   |     | __/ _ \ '_ ` _ \| '_ \ / _ \ '__/ _` | __| | | | '__/ _ \      |
+#   |     | ||  __/ | | | | | |_) |  __/ | | (_| | |_| |_| | | |  __/      |
+#   |      \__\___|_| |_| |_| .__/ \___|_|  \__,_|\__|\__,_|_|  \___|      |
+#   |                       |_|                                            |
+#   '----------------------------------------------------------------------'
+
+ibm_svc_enclosurestats_temperature_default_levels = (35, 40)
+
+def inventory_ibm_svc_enclosurestats_temp(info):
+    inventory = []
+    for enclosure_id, stat_name, stat_current, stat_peak, stat_peak_time in info:
+        if stat_name == "temp_c":
+            inventory.append( (enclosure_id, "ibm_svc_enclosurestats_temperature_default_levels") )
+    return inventory
+
+def check_ibm_svc_enclosurestats_temp(item, params, info):
+    warn, crit = params
+    perfdata = []
+    status = 0
+
+    for enclosure_id, stat_name, stat_current, stat_peak, stat_peak_time in info:
+        if enclosure_id == item and stat_name == "temp_c":
+            stat_current = int(stat_current)
+            if stat_current > crit:
+                status = 2
+            elif stat_current > warn:
+                status = 1
+            perfdata = [ ('temp', str(stat_current)+"C", warn, crit) ]
+            return status, "Enclosure %s temperature is %s°C" % (enclosure_id, stat_current), perfdata
+
+    return 3, "Temperature for enclosure %s not found in agent output" % item
+
+check_info["ibm_svc_enclosurestats.temp"] = {
+    "check_function"        : check_ibm_svc_enclosurestats_temp,
+    "inventory_function"    : inventory_ibm_svc_enclosurestats_temp,
+    "service_description"   : "IBM SVC Temperature Enclosure %s",
+    "has_perfdata"          : True,
+    "group"                 : "hw_temperature",
+}
+
+#.

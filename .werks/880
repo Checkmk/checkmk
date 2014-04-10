@@ -1,0 +1,8 @@
+Title: Added support for 389 Directory Server to LDAP connector
+Level: 1
+Component: wato
+Version: 1.2.5i3
+Date: 1397114388
+Class: feature
+
+

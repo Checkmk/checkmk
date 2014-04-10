@@ -1,4 +1,7 @@
 1.2.5i2p2:
+    Checks & Agents:
+    * 0882 FIX: check_bi_local.py: fix crash in case of non-ascii characters...
+
 
 1.2.5i2p1:
     Core & Setup:

@@ -1,0 +1,11 @@
+Title: check_bi_local.py: fix crash in case of non-ascii characters
+Level: 2
+Component: checks
+State: unknown
+Version: 1.2.5i2p2
+Date: 1397124240
+Class: fix
+
+When you have an aggregate whos name contain a non-ascii character then
+the <tt>check_bi_local.py</tt> would fail and you would miss all aggregates
+from the point on. This has been fixed by encoding the output with UTF-8.

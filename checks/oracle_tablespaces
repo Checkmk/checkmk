@@ -102,12 +102,11 @@ def get_tablespace_levels_in_bytes(size_bytes, params):
     else:
         # A list of levels. Choose the correct one depending on the
         # size of the current tablespace
-        found = False
         for to_size, this_levels in params.get("levels"):
             if size_bytes > to_size:
                 warn, crit = this_levels
-                found = True
-        if not found:
+                break
+        else:
             return (None, None)
 
     if magic:

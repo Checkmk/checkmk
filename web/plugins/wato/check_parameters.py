@@ -255,14 +255,14 @@ register_rule(group + '/' + subgroup_inventory,
               default_value = [ '6', '32', '62', '117' ]
         )),
         ("rmon", Checkbox(
-              title = _("RMON statistics data"),
-              help = _("If you enable this option then for every switch port an additional service will be created "
-                       "that is always OK and collects RMON data. This will give you detailed information about "
-                       "the distribution about the packet sizes that are transferred over the port. Note: currently "
+              title = _("Collect RMON statistics data"),
+              help = _("If you enable this option, for every RMON capable switch port an additional service will "
+                       "be created which is always OK and collects RMON data. This will give you detailed information "
+                       "about the distribution of packet sizes transferred over the port. Note: currently "
                        "this extra RMON check does not honor the inventory settings for switch ports. In a future "
-                       "version of Check_MK RMON data will be added to the normal interface service and not add "
+                       "version of Check_MK RMON data may be added to the normal interface service and not add "
                        "an additional service."),
-              label = _("Create extra service with RMON statistics data"),
+              label = _("Create extra service with RMON statistics data (if available for the device)"),
         )),
         ],
         help = _('This rule can be used to control the inventory for network ports. '

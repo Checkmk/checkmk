@@ -61,10 +61,11 @@ OPTIONS:
   -i MODULES, --modules MODULES Modules to query. This is a comma separated list of
                                 which may contain the keywords "lshost", "lslicense",
                                 "lsmdisk", "lsmdiskgrp", "lsnode", "lsnodestats",
-                                "lssystem", "lssystemstats", "lseventlog" or "all" to
-                                define which information should be queried from the
-                                device. You can define to use only view of them to
-                                optimize performance. The default is "all".
+                                "lssystem", "lssystemstats", "lseventlog", "lsportfc"
+                                or "all" to define which information should be
+                                queried from the device. You can define to use only
+                                view of them to optimize performance. The default is
+                                "all".
 
 """)
 
@@ -110,6 +111,8 @@ command_options = {
                        "command" : "lssystemstats -nohdr -delim :"},
     "lseventlog"    : {"section_header" : "ibm_svc_eventlog",    "active" : False,
                        "command" : "lseventlog -expired no -fixed no -monitoring no -order severity -message no -delim : -nohdr"},
+    "lsportfc"      : {"section_header" : "ibm_svc_portfc", "active" : False,
+                       "command" : "lsportfc -nohdr -delim :"},
 }
 
 for o,a in opts:

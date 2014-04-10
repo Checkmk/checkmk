@@ -136,7 +136,7 @@ def inventory_if_common(info, has_nodeinfo = False):
 
     # Determine whether single, grouped or both
     for line in info:
-        node, line = if_extract_node(line,has_nodeinfo)
+        node, line = if_extract_node(line, has_nodeinfo)
         ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets, \
             inucast, inmcast, inbcast, ifInDiscards, ifInErrors, ifOutOctets, \
             outucast, outmcast, outbcast, ifOutDiscards, ifOutErrors, \

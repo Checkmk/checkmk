@@ -1,0 +1,13 @@
+Title: rmon_stats: now needs to be activated via a rule in order to be inventorized
+Level: 2
+Component: checks
+Version: 1.2.5i3
+Date: 1397117799
+Class: incomp
+
+The relatively new <tt>rmon_stats</tt> check creates one new service per network
+interface (if RMON is enabled on your switch). In order to keep low the number
+of services and the SNMP traffic this check is now <b>disabled per default</b>.
+
+In order to have RMON checks created please activate RMON in the rule set
+<i>Network Interface and Switch Port Inventory</i>.

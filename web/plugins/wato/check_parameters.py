@@ -222,9 +222,9 @@ _if_porttype_choices = [
   "fcipLink(224)" ), ("225", "rpr(225)" ), ("226", "qam(226)" ), ("227", "lmp(227)" ), ("228",
   "cblVectaStar(228)" ), ("229", "docsCableMCmtsDownstream(229)" ), ("230", "adsl2(230)" ), ]
 
-register_rule(group + '/' + subgroup_networking,
+register_rule(group + '/' + subgroup_inventory,
     varname   = "inventory_if_rules",
-    title     = _("Network interface and switch port Inventory"),
+    title     = _("Network Interface and Switch Port Inventory"),
     valuespec = Dictionary(
         elements = [
          ("use_desc", Checkbox(
@@ -253,6 +253,16 @@ register_rule(group + '/' + subgroup_networking,
               columns = 3,
               toggle_all = True,
               default_value = [ '6', '32', '62', '117' ]
+        )),
+        ("rmon", Checkbox(
+              title = _("RMON statistics data"),
+              help = _("If you enable this option then for every switch port an additional service will be created "
+                       "that is always OK and collects RMON data. This will give you detailed information about "
+                       "the distribution about the packet sizes that are transferred over the port. Note: currently "
+                       "this extra RMON check does not honor the inventory settings for switch ports. In a future "
+                       "version of Check_MK RMON data will be added to the normal interface service and not add "
+                       "an additional service."),
+              label = _("Create extra service with RMON statistics data"),
         )),
         ],
         help = _('This rule can be used to control the inventory for network ports. '
@@ -423,7 +433,7 @@ register_rule(group + '/' + subgroup_inventory,
 
 register_rule(group + '/' + subgroup_inventory,
     varname   = "inventory_sap_values",
-    title     = _('SAP Single Value Inventory'),
+    title     = _('SAP R/3 Single Value Inventory'),
     valuespec = Dictionary(
         elements = [
             ('match', Alternative(
@@ -564,7 +574,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_storage,
     "brocade_fcport",
-    _("Brocade FC FibreChannel ports"),
+    _("Brocade FibreChannel ports"),
     Dictionary(
         elements = [
             ("bw",

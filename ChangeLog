@@ -1,3 +1,5 @@
+1.2.5i2p2:
+
 1.2.5i2p1:
     Core & Setup:
     * 0785 FIX: Availability: fixed memory leak in table statehist...

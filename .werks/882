@@ -1,6 +1,6 @@
 Title: check_bi_local.py: fix crash in case of non-ascii characters
 Level: 2
-Component: checks
+Component: bi
 Version: 1.2.4p3
 Date: 1397124240
 Class: fix

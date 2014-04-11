@@ -68,10 +68,14 @@ check_mk_agent-64.res: check_mk_agent.rc
 	$(WINDRES_64) $< -O coff -o $@
 
 check_mk_agent.rc: check_mk_agent.rc.in
+	# length checks are needed to add missing parts to version.
+	# 6: e.g. 1.2.4
+	# 12: nightly builds
+	# 11: i1 releases
 	V=$(VERSION) ; V=$${V//./, } ; V=$${V//i/, 1} ; V=$${V//b/, 2} ; V=$${V//p/0} ; \
-	if [ $${#V} -eq 6 ]; then V+=", 0"; fi ; \  # e.g. 1.2.4
-	if [ $${#V} -eq 12 ]; then V+=", 0"; fi ; \ # nightly builds
-	if [ $${#V} -eq 11 ]; then V+="00"; fi ; \  # i1 releases
+	if [ $${#V} -eq 6 ]; then V+=", 0"; fi ; \
+	if [ $${#V} -eq 12 ]; then V+=", 0"; fi ; \
+	if [ $${#V} -eq 11 ]; then V+="00"; fi ; \
 	sed "s/%VERSION%/$(VERSION)/g;s/%YEAR%/$$(date +%Y)/g" check_mk_agent.rc.in > check_mk_agent.rc ; \
 	sed -i "s/%PVERSION%/$$V/g" check_mk_agent.rc
 

@@ -69,8 +69,9 @@ check_mk_agent-64.res: check_mk_agent.rc
 
 check_mk_agent.rc: check_mk_agent.rc.in
 	V=$(VERSION) ; V=$${V//./, } ; V=$${V//i/, 1} ; V=$${V//b/, 2} ; V=$${V//p/0} ; \
-	if [ $${#V} -eq 6 ]; then V+=", 0"; fi ; \
-	if [ $${#V} -eq 11 ]; then V+="00"; fi ; \
+	if [ $${#V} -eq 6 ]; then V+=", 0"; fi ; \  # e.g. 1.2.4
+	if [ $${#V} -eq 12 ]; then V+=", 0"; fi ; \ # nightly builds
+	if [ $${#V} -eq 11 ]; then V+="00"; fi ; \  # i1 releases
 	sed "s/%VERSION%/$(VERSION)/g;s/%YEAR%/$$(date +%Y)/g" check_mk_agent.rc.in > check_mk_agent.rc ; \
 	sed -i "s/%PVERSION%/$$V/g" check_mk_agent.rc
 

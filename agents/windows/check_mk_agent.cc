@@ -51,7 +51,6 @@
 #include <winsock2.h>
 #include <windows.h>
 #include <winbase.h>
-#include <psapi.h>
 #include <winreg.h>    // performance counters from registry
 #include <tlhelp32.h>  // list of processes
 #include <stdarg.h>
@@ -2247,14 +2246,10 @@ void section_mem(SOCKET &out)
     statex.dwLength = sizeof (statex);
     GlobalMemoryStatusEx (&statex);
 
-    PERFORMANCE_INFORMATION pi;
-    pi.cb = sizeof(pi);
-    GetPerformanceInfo(&pi, sizeof(pi));
-
     output(out, "MemTotal:     %11d kB\n", statex.ullTotalPhys     / 1024);
     output(out, "MemFree:      %11d kB\n", statex.ullAvailPhys     / 1024);
-    output(out, "SwapTotal:    %11d kB\n", ((pi.CommitLimit * pi.PageSize) - statex.ullTotalPhys) / 1024);
-    output(out, "SwapFree:     %11d kB\n", (((pi.CommitLimit - pi.CommitTotal) * pi.PageSize)- statex.ullAvailPhys) / 1024);
+    output(out, "SwapTotal:    %11d kB\n", (statex.ullTotalPageFile - statex.ullTotalPhys) / 1024);
+    output(out, "SwapFree:     %11d kB\n", (statex.ullAvailPageFile - statex.ullAvailPhys) / 1024);
     output(out, "PageTotal:    %11d kB\n", statex.ullTotalPageFile / 1024);
     output(out, "PageFree:     %11d kB\n", statex.ullAvailPageFile / 1024);
     output(out, "VirtualTotal: %11d kB\n", statex.ullTotalVirtual / 1024);

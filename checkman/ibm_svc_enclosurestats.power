@@ -1,0 +1,24 @@
+title: IBM SVC / Storwize V3700 / V7000: Power Consumption of Enclosures
+agents: ibm_svc
+catalog: hw/storagehw/ibm
+license: GPL
+distribution: check_mk
+description:
+ Displays the power consumption of enclosures of an IBM SVC / Storwize V3700 / V7000
+ device in watt.
+
+ The check is only for reporting and returns always {OK}.
+
+ Please note: You need the Special Agent agent_ibmsvc to retrieve the monitoring
+ data from the device. Your monitoring user must be able to SSH to the device
+ with SSH Key Authentification. Please exchange SSH key. The Special Agent itself
+ can be configured by WATO.
+
+item:
+ The ID of the enclosure.
+
+inventory:
+ Creates one check per enclosure.
+
+perfdata:
+ One value: The power consumption in watt.

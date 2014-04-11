@@ -1,0 +1,9 @@
+Title: windows agent: no longer reports negative SWAP values
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1397137476
+Class: fix
+
+SWAP values are calculated with the help of the pagefiles size.
+The function to determine the systems maximum/available pagefile size was incorrect.

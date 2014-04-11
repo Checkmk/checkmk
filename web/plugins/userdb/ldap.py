@@ -66,6 +66,12 @@ ldap_attr_map = {
         # group attributes
         'member':     'uniquemember',
     },
+    '389directoryserver': {
+        'user_id':    'uid',
+        'pw_changed': 'krbPasswordExpiration',
+        # group attributes
+        'member':     'uniquemember',
+    },
 }
 
 # LDAP attributes are case insensitive, we only use lower case!
@@ -77,6 +83,10 @@ ldap_filter_map = {
         'groups': '(objectclass=group)',
     },
     'openldap': {
+        'users': '(objectclass=person)',
+        'groups': '(objectclass=groupOfUniqueNames)',
+    },
+    '389directoryserver': {
         'users': '(objectclass=person)',
         'groups': '(objectclass=groupOfUniqueNames)',
     },

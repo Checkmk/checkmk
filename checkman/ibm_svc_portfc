@@ -1,18 +1,22 @@
-title: IBM SVC / Storwize V3700 / V7000: Messages in Event log
+title: IBM SVC / Storwize V3700 / V7000: Status of FC Ports
 agents: ibm_svc
 catalog: hw/storagehw/ibm
 license: GPL
 distribution: check_mk
 description:
- Checks the event log of IBM SVC / Storwize V3700 / V7000 devices for messsages
- not expired and not yet fixed. Returns {WARN} if there is at least one and {OK} if
- there is none.
+ Checks the status of FC Ports in an IBM SVC / Storwize V3700 / V7000
+ device.
+
+ Status {active} is {OK}, every other status is {CRIT}.
 
  Please note: You need the Special Agent agent_ibmsvc to retrieve the monitoring
  data from the device. Your monitoring user must be able to SSH to the device
  with SSH Key Authentification. Please exchange SSH key. The Special Agent itself
  can be configured by WATO.
 
+item:
+ The ID of the FC Port.
+
 inventory:
- Creates exactly one check on every IBM SVC / Storwize V3700 / V7000 device named
- IBM SVC Eventlog.
+ Creates one check for every FC Port in the IBM SVC / Storwize V3700 / V7000 device
+ with status {active}.

@@ -112,5 +112,5 @@ for name, state, output in data[1:]:
         text = "%d %s - %s" % (state_nr, descr, state)
         if output:
             text += " - " + output
-        print text
+        print text.encode("utf-8")
 

@@ -19,6 +19,12 @@
     * 0829 oracle_tablespaces: improved formatting of levels text in check output...
     * 0757 Linux multipath check can now use the alias instead of the UUID as item...
     * 0879 windows_tasks: output last and next run time
+    * 0881 rmon_stats: now needs to be activated via a rule in order to be inventorized...
+            NOTE: Please refer to the migration notes!
+    * 0804 ibm_svc_portfc: New check for status of FC Ports in IBM SVC / Storwize V3700 / V7000 devices
+    * 0805 ibm_svc_enclosure: New Check for Enclosures, Canisters and PSUs in IBM SVC / Storwize V3700 / V7000 devices
+    * 0806 ibm_svc_enclosurestats.temp: New Check for temperature in enclosures of IBM SVC / Storwize V3700 / V7000 devices
+    * 0807 ibm_svc_enclosurestats.power: New check for power consumption of enclosures of IBM SVC / Storwize V3700 / V7000 devices
     * 0777 FIX: special agent emcvnx: did not work with security file authentication...
     * 0786 FIX: zfsget: fixed compatibility with older Solaris agents...
     * 0809 FIX: brocade_fcport: Fixed recently introduced problem with port speed detection
@@ -30,12 +36,15 @@
     * 0604 FIX: windows_updates: now handles situations with forced reboot and no limits correctly
     * 0605 FIX: enterasys_cpu_util enterasys_lsnat: syntax fixes
     * 0889 FIX: logwatch: fix case where rule wouldn't be applied...
+    * 0882 FIX: check_bi_local.py: fix crash in case of non-ascii characters...
+    * 0830 FIX: windows agent: no longer reports negative SWAP values...
 
     Multisite:
     * 0779 Hostgroups (Summary): Empty hostgroups are no longer shown (can be re-enabled by filter)
 
     WATO:
     * 0784 Improved security of WATO bulk inventory by using transaction ids
+    * 0880 Added support for 389 Directory Server to LDAP connector
     * 0781 FIX: host diag page: fixed problem with update of diagnose subwindows...
 
     Notifications:
@@ -54,6 +63,7 @@
 1.2.5i2:
     Checks & Agents:
     * 0147 enterasys_fans: New Check to monitor fans of enterasys swichtes
+    * 0773 ibm_svc_system: new check for System Info of IBM SVC / V7000 devices
     * 0774 ibm_svc_nodestats.diskio: new check for disk troughput per node on IBM SVC / V7000 devices
     * 0775 ibm_svc_systemstats.diskio: new check for disk throughput in IBM SVC / V7000 devices in total
     * 0764 lnx_quota: Added new check to monitor Linux File System Quota...
@@ -215,7 +225,6 @@
     * 0770 innovaphone_licenses: New check to monitor licenses on innovaphone devices"
     * 0771 juniper_trpz_aps: Show the number of connected access points on juniper wlan controllers
     * 0772 added special agent for IBM SVC / V7000 storage systems...
-    * 0773 ibm_svc_system: new check for System Info of IBM SVC / V7000 devices
     * 0147 enterasys_fans: New Check to monitor fans of enterasys swichtes
     * 0103 FIX: services: Fixed bug with service inventory defined in main.mk...
     * 0299 FIX: borcade_mlx_fan: Prettified output, handling "other" state now

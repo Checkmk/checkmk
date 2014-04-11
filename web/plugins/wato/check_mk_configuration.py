@@ -618,8 +618,9 @@ register_configvar(group,
                           "the selection e.g. the attribute names used in LDAP queries will "
                           "be altered."),
                 choices = [
-                    ("ad",       _("Active Directory")),
-                    ("openldap", _("OpenLDAP")),
+                    ("ad",                 _("Active Directory")),
+                    ("openldap",           _("OpenLDAP")),
+                    ("389directoryserver", _("389 Directory Server")),
                 ],
             )),
             ("bind", Tuple(

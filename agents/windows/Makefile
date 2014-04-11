@@ -27,7 +27,7 @@ VERSION = 1.2.5i3
 WINDRES = i586-mingw32msvc-windres
 
 ifeq ($(shell uname),Linux)
-  CXX        = echo -e "\n\nWARNING: MinGW under Linux is broken! Use at your own risk!\n\n" ; i586-mingw32msvc-g++
+  CXX        = echo -e "\n\nWARNING: MinGW under Linux is broken! Use at your own risk!\n\n" ; i686-w64-mingw32-g++
   CXX_64     = x86_64-w64-mingw32-g++
   WINDRES_64 = x86_64-w64-mingw32-windres
 else
@@ -56,10 +56,10 @@ install_agent-64.exe: check_mk_agent-64.exe crash.exe nowin.exe
 	chmod +x install_agent-64.exe
 
 check_mk_agent.exe: check_mk_agent.cc Makefile check_mk_agent.res
-	$(CXX) -s -O2 -Wall -Werror -o $@ $< -static -lwsock32 check_mk_agent.res
+	$(CXX) -s -O2 -Wall -Werror -o $@ $< -static -lpsapi -lwsock32 check_mk_agent.res
 
 check_mk_agent-64.exe: check_mk_agent.cc Makefile check_mk_agent-64.res
-	$(CXX_64) -s -O2 -Wall -Werror -o $@ $< -static -lwsock32 check_mk_agent-64.res
+	$(CXX_64) -s -O2 -Wall -Werror -o $@ $< -static -lpsapi -lwsock32 check_mk_agent-64.res
 
 check_mk_agent.res: check_mk_agent.rc
 	$(WINDRES) $< -O coff -o $@

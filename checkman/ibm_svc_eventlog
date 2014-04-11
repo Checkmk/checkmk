@@ -1,11 +1,11 @@
-title: IBM SVC / V7000: Messages in Event log
+title: IBM SVC / Storwize V3700 / V7000: Messages in Event log
 agents: ibm_svc
 catalog: hw/storagehw/ibm
 license: GPL
 distribution: check_mk
 description:
- Checks the event log of IBM SVC / V7000 devices for messsages not expired
- and not yet fixed. Returns {WARN} if there is at least one and {OK} if
+ Checks the event log of IBM SVC / Storwize V3700 / V7000 devices for messsages
+ not expired and not yet fixed. Returns {WARN} if there is at least one and {OK} if
  there is none.
 
  Please note: You need the Special Agent agent_ibmsvc to retrieve the monitoring
@@ -14,5 +14,5 @@ description:
  can be configured by WATO.
 
 inventory:
- Creates exactly one check on every IBM SVC / V7000 device named
+ Creates exactly one check on every IBM SVC / Storwize V3700 / V7000 device named
  IBM SVC Eventlog.

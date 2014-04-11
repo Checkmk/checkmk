@@ -287,6 +287,7 @@ perfometers["check_mk-dell_poweredge_temp"] = perfometer_temperature
 perfometers["check_mk-dell_chassis_temp"] = perfometer_temperature
 perfometers["check_mk-innovaphone_temp"] = perfometer_temperature
 perfometers["check_mk-cmciii.temp"] = perfometer_temperature
+perfometers["check_mk-ibm_svc_enclosurestats.temp"] = perfometer_temperature
 
 def perfometer_temperature_multi(row, check_command, perf_data):
     display_value = -1
@@ -916,6 +917,12 @@ def perfometer_check_mk_ibm_svc_cache(row, check_command, perf_data):
     return "%d%% write, %d%% read" % (write_cache_pc, read_cache_pc), h
 perfometers["check_mk-ibm_svc_nodestats.cache"] = perfometer_check_mk_ibm_svc_cache
 perfometers["check_mk-ibm_svc_systemstats.cache"] = perfometer_check_mk_ibm_svc_cache
+
+def perfometer_check_mk_ibm_svc_power(row, check_command, perf_data):
+    watt = int(perf_data[0][1])
+    text = "%s Watt" % watt
+    return text, perfometer_logarithmic(watt, 150, 2, "#60f020")
+perfometers["check_mk-ibm_svc_enclosurestats.power"] = perfometer_check_mk_ibm_svc_power
 
 def perfometer_licenses_percent(row, check_command, perf_data):
     licenses = float(perf_data[0][1])

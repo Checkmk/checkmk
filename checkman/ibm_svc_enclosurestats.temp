@@ -1,0 +1,46 @@
+title: IBM SVC / Storwize V3700 / V7000: Temperature of Enclosures
+agents: ibm_svc
+catalog: hw/storagehw/ibm
+license: GPL
+distribution: check_mk
+description:
+ Checks the temperature in enclosures of an IBM SVC / Storwize V3700 / V7000 device.
+
+ The check returns {WARN} or {CRIT} if the temperature in degree celsius is higher
+ then given levels and {OK} otherwise.
+
+ Please note: You need the Special Agent agent_ibmsvc to retrieve the monitoring
+ data from the device. Your monitoring user must be able to SSH to the device
+ with SSH Key Authentification. Please exchange SSH key. The Special Agent itself
+ can be configured by WATO.
+
+item:
+ The ID of the enclosure.
+
+inventory:
+ Creates one check per enclosure.
+
+perfdata:
+ One value: The temperature in degree celsius, together with it's levels for
+ warn and crit.
+
+examples:
+ # set default levels to 30 and 45 percent:
+ ibm_svc_enclosurestats_temperature_default_levels = (30, 45)
+
+ # Check temperature of enclosure 1 on a IBM SVC called my-svc with default levels
+ checks += [
+   ("my-svc", "ibm_svc_enclosurestats.temp", '1', ibm_svc_enclosurestats_temperature_default_levels)
+ ]
+
+ # or use individual levels for warn and crit
+ checks += [
+   ("my-svc", "ibm_svc_enclosurestats.temp", '1', (40, 50))
+ ]
+
+[parameters]
+parameters (int, int): temperature levels in degree celsius for {WARN} and {CRIT}
+
+[configuration]
+ibm_svc_enclosurestats_temperature_default_levels (int, int): The standard levels
+    for {WARN} and {CRIT}, preset to (35, 40)

@@ -64,6 +64,9 @@
     Livestatus:
     * 0747 FIX: livestatus table hostsbygroup: fixed bug with group_authorization strict...
 
+    inv:
+    * 0886 FIX: Fix exception on non-UTF-8 encoded characters in software list
+
 
 1.2.5i2:
     Checks & Agents:

@@ -374,9 +374,13 @@ def render_inv_subtree_leaf(hostname, invpath, node):
     elif "render" in hint:
         hint["render"](node)
     elif type(node) == str:
-        html.write(node.decode("utf-8"))
+        try:
+            text = node.decode("utf-8")
+        except:
+            text = node
+        html.write(html.attrencode(node))
     elif type(node) == unicode:
-        html.write(node)
+        html.write(html.attrencode(node))
     elif type(node) == int:
         html.write(str(node))
     elif type(node) == float:

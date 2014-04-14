@@ -2,6 +2,9 @@
     Checks & Agents:
     * 0882 FIX: check_bi_local.py: fix crash in case of non-ascii characters...
 
+    HW/SW-Inventory:
+    * 0886 FIX: Fix exception on non-UTF-8 encoded characters in software list
+
 
 1.2.5i2p1:
     Core & Setup:

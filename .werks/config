@@ -9,6 +9,7 @@ components = [
    ( "ec",            "Event Console" ),
    ( "livestatus",    "Livestatus" ),
    ( "liveproxy",     "Livestatus-Proxy" ),
+   ( "inv",           "HW/SW-Inventory" ),
 ]
 
 classes = [

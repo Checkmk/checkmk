@@ -233,6 +233,10 @@ tmpl_service_html = tmpl_head_html + '''
     <th colspan=2>State</th>
 </tr>
 <tr class="odd0">
+    <td class="left">Date / Time</td>
+    <td>$LONGDATETIME$</td>
+</tr>
+<tr class="even0">
     <td class=left>State</td>
     <td class="state">
         <span class="state$PREVIOUSSERVICEHARDSTATE$">$PREVIOUSSERVICEHARDSTATE$</span> &rarr;
@@ -240,7 +244,7 @@ tmpl_service_html = tmpl_head_html + '''
         since $LASTSERVICESTATECHANGE_REL$
     </td>
 </tr>
-<tr class="even0">
+<tr class="odd0">
     <td class="left">Output</td>
     <td>$SERVICEOUTPUT$</td>
 </tr>

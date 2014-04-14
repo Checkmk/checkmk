@@ -1,0 +1,14 @@
+Title: New options --oid and --extraoid for cmk --snmpwalk
+Level: 2
+Component: core
+Version: 1.2.5i3
+Date: 1397462765
+Class: feature
+
+It is now possible to specify alternative or additional OIDs to fetch
+from a host when using <tt>cmk --snmpwalk</tt>. Please always specify
+numeric OIDs. Example:
+
+C+:
+OM:cmk --extraoid .1.3.6.1.4.1.8072 --snmpwalk switch4712
+C-:

@@ -1649,6 +1649,19 @@ if mkeventd_enabled:
     )
 
     register_configvar(group,
+        "log_messages",
+        Checkbox(title = _("Syslog-like message logging"),
+                 label = _("Log all messages into syslog-like logfiles"),
+                 help = _("When this option is enabled, then <b>every</b> incoming message is being "
+                          "logged into the directory <tt>messages</tt> in the Event Consoles state "
+                          "directory. The logfile rotation is analog to that of the history logfiles. "
+                          "Please note that if you have lots of incoming messages then these "
+                          "files can get very large."),
+                default_value = False),
+        domain = "mkeventd",
+    )
+
+    register_configvar(group,
         "rule_optimizer",
         Checkbox(title = _("Optimize rule execution"),
                  label = _("enable optimized rule execution"),

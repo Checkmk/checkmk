@@ -57,6 +57,9 @@
     Reporting & Availability:
     * 0756 Allow availability of multisite BI aggregates at once...
 
+    Event Console:
+    * 0885 New option for writing all messages into a syslog-like logfile...
+
     Livestatus:
     * 0747 FIX: livestatus table hostsbygroup: fixed bug with group_authorization strict...
 

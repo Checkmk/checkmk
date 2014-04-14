@@ -407,7 +407,7 @@ def log_event_history(event, what, who="", addinfo=""):
         columns += [ quote_tab(event.get(colname[6:], defval)) # drop "event_"
                      for colname, defval in event_columns ]
 
-        get_logfile().write("\t".join(map(to_utf8, columns)) + "\n")
+        get_logfile("history").write("\t".join(map(to_utf8, columns)) + "\n")
 
 def to_utf8(x):
     if type(x) == unicode:
@@ -429,9 +429,9 @@ active_history_period = None
 
 # Get file object to current log file, handle also
 # history and lifetime limit.
-def get_logfile():
+def get_logfile(basename):
     global active_history_period
-    log_dir = g_state_dir + "/history"
+    log_dir = g_state_dir + "/" + basename
     make_parentdirs(log_dir + "/foo")
 
     # Log into file starting at current history period,
@@ -732,6 +732,7 @@ class EventServer:
         self.open_syslog()
         self.open_syslog_tcp()
         self.open_snmptrap()
+
         self._rules = []
         self._hash_stats = []
         for facility in range(32):
@@ -1483,6 +1484,10 @@ class EventServer:
         self.process_event(self.parse_event(line, address))
 
     def process_event(self, event):
+        # Log all incoming messages into a syslog-like text file if that is enabled
+        if g_config["log_messages"]:
+            self.log_message(event)
+
         # Rule optimizer
         if g_config["rule_optimizer"]:
             self._hash_stats[event["facility"]][event["priority"]] += 1
@@ -1899,6 +1904,21 @@ class EventServer:
                 sorted(event.items())])).rstrip())
 
         return event
+
+    def log_message(self, event):
+        try:
+            get_logfile("messages").write("%s %s %s%s: %s\n" % (
+                time.strftime("%b %d %H:%M:%S", time.localtime(event["time"])),
+                event["host"],
+                event["application"],
+                event["pid"] and ("[%s]" % event["pid"]) or "",
+                event["text"]))
+        except Exception, e:
+            if opt_debug:
+                raise
+            # Better silently ignore errors. We could have run out of
+            # diskspace and make things worse by logging that we could
+            # not log.
 
 
 
@@ -2993,6 +3013,7 @@ def load_configuration():
         "debug_rules"           : False,
         "rule_optimizer"        : True,
         "log_rulehits"          : False,
+        "log_messages"          : False,
         "retention_interval"    : 60,
         "housekeeping_interval" : 60,
         "statistics_interval"   : 5,

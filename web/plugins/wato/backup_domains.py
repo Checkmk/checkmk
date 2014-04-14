@@ -180,6 +180,8 @@ else:
           "paths"       : [
                             ("dir",  "var/mkeventd/history"),
                             ("file", "var/mkeventd/status"),
+                            ("file", "var/mkeventd/messages"),
+                            ("dir",  "var/mkeventd/messages-history"),
                           ],
         },
         "dokuwiki": {

@@ -1,0 +1,8 @@
+Title: apache_status: now also sends an accept header to make it work with mod_security enables servers
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1397467941
+Class: fix
+
+

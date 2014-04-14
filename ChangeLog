@@ -1,5 +1,6 @@
 1.2.5i3:
     Core & Setup:
+    * 0884 New options --oid and --extraoid for cmk --snmpwalk...
     * 0785 FIX: Availability: fixed memory leak in table statehist...
 
     Checks & Agents:

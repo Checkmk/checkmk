@@ -4367,6 +4367,9 @@ def do_snmptranslate(walk):
         sys.stdout.write(format_string % (translation, line))
 
 def do_snmpwalk(hostnames):
+    if opt_oids and opt_extra_oids:
+        raise MKGeneralException("You cannot specify --oid and --extraoid at the same time.")
+
     if len(hostnames) == 0:
         sys.stderr.write("Please specify host names to walk on.\n")
         return
@@ -4386,10 +4389,14 @@ def do_snmpwalk_on(hostname, filename):
     ip = lookup_ipaddress(hostname)
 
     out = file(filename, "w")
-    for oid in [
+    oids_to_walk = opt_oids
+    if not opt_oids:
+        oids_to_walk = [
             ".1.3.6.1.2.1", # SNMPv2-SMI::mib-2
             ".1.3.6.1.4.1"  # SNMPv2-SMI::enterprises
-          ]:
+        ] + opt_extra_oids
+
+    for oid in oids_to_walk:
         if opt_verbose:
             sys.stdout.write("Walk on \"%s\"..." % oid)
             sys.stdout.flush()
@@ -4673,7 +4680,7 @@ def usage():
  cmk --restore BACKUPFILE.tar.gz      restore configuration and data
  cmk --flush [HOST1 HOST2...]         flush all data of some or all hosts
  cmk --donate                         Email data of configured hosts to MK
- cmk --snmpwalk HOST1 HOST2 ...       Do snmpwalk on host
+ cmk --snmpwalk HOST1 HOST2 ...       Do snmpwalk on one or more hosts
  cmk --snmptranslate HOST             Do snmptranslate on walk
  cmk --snmpget OID HOST1 HOST2 ...    Fetch single OIDs and output them
  cmk --scan-parents [HOST1 HOST2...]  autoscan parents, create conf.d/parents.mk
@@ -4705,6 +4712,10 @@ OPTIONS:
   --keepalive    used by Check_MK Mirco Core: run check and --notify in continous
                  mode. Read data from stdin and von from cmd line and environment
   --cmc-file=X   relative filename for CMC config file (used by -B/-U)
+  --extraoid A   Do --snmpwalk also on this OID, in addition to mib-2 and enterprises.
+                 You can specify this option multiple times.
+  --oid A        Do --snmpwalk on this OID instead of mib-2 and enterprises.
+                 You can specify this option multiple times.
 
 NOTES:
   -I can be restricted to certain check types. Write '--checks df -I' if you
@@ -4773,7 +4784,11 @@ NOTES:
 
   --snmpwalk does a complete snmpwalk for the specified hosts both
   on the standard MIB and the enterprises MIB and stores the
-  result in the directory %s.
+  result in the directory %s. Use the option --oid one or several
+  times in order to specify alternative OIDs to walk. You need to
+  specify numeric OIDs. If you want to keep the two standard OIDS
+  .1.3.6.1.2.1  and .1.3.6.1.4.1 then use --extraoid for just adding
+  additional OIDs to walk.
 
   --snmptranslate does not contact the host again, but reuses the hosts
   walk from the directory %s.%s
@@ -5807,7 +5822,8 @@ if __name__ == "__main__":
     short_options = 'SHVLCURODMmd:Ic:nhvpXPNBil'
     long_options = [ "help", "version", "verbose", "compile", "debug",
                      "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
-                     "flush", "package", "localize", "donate", "snmpwalk", "snmptranslate",
+                     "flush", "package", "localize", "donate", "snmpwalk", "oid=", "extraoid=",
+                     "snmptranslate",
                      "usewalk", "scan-parents", "procs=", "automation=", "notify",
                      "snmpget=", "profile", "keepalive", "keepalive-fd=", "create-rrd",
                      "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
@@ -5860,6 +5876,10 @@ if __name__ == "__main__":
             opt_keepalive_fd = int(a)
         elif o == '--usewalk':
             opt_use_snmp_walk = True
+        elif o == '--oid':
+            opt_oids.append(a)
+        elif o == '--extraoid':
+            opt_extra_oids.append(a)
         elif o == '--procs':
             max_num_processes = int(a)
         elif o == '--nowiki':

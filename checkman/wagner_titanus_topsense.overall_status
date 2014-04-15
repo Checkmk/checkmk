@@ -1,0 +1,14 @@
+title: Wagner Titanus Top Sens: Overall Status
+agents: snmp
+catalog: hw/environment/wagner
+license: GPL
+distribution: check_mk
+description:
+ Checks the Overall Status of Wagner Titanus Top Sens devices.
+
+ If pswFailureDisplay reports to be switched off, the check returns {OK} and
+ {CRIT} otherwise.
+
+inventory:
+ Creates exactly one check for each Top Sense device called
+ Overall Status.

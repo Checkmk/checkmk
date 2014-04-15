@@ -2,6 +2,9 @@
     Checks & Agents:
     * 0882 FIX: check_bi_local.py: fix crash in case of non-ascii characters...
 
+    Livestatus:
+    * 0831 FIX: table statehist: no longer crashes on TIMEPERIOD TRANSITION entries with an invalid syntax...
+
     HW/SW-Inventory:
     * 0886 FIX: Fix exception on non-UTF-8 encoded characters in software list
 

@@ -1,0 +1,14 @@
+Title: table statehist: no longer crashes on TIMEPERIOD TRANSITION entries with an invalid syntax
+Level: 1
+Component: livestatus
+Version: 1.2.5i2p2
+Date: 1397552565
+Class: fix
+
+The livestatus table could crash incomplete TIMEPERIOD TRANSITION logentries which where
+caused by a maximum line length. <br><br>
+<tt>Working:</tt><br>
+[1391727600] TIMEPERIOD TRANSITION: good_transition;0;1<br>
+<tt>Caused crash:</tt><br>
+[1391727600] TIMEPERIOD TRANSITION: this_timeperiod_transition_name_is_way_too_lo
+

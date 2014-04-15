@@ -28,6 +28,7 @@
     * 0807 ibm_svc_enclosurestats.power: New check for power consumption of enclosures of IBM SVC / Storwize V3700 / V7000 devices
     * 0808 brocade_mlx*: Checks now also work correctly with Brocade ADX / FGS / ICX devices
     * 0892 wagner_titanus_topsense: new info check and overall status check for Wagner Titanus Top Sens devices
+    * 0893 wagner_titanus_topsense.alarm: New check for Alarms Triggered on Wagner Titanus Top Sens devices
     * 0777 FIX: special agent emcvnx: did not work with security file authentication...
     * 0786 FIX: zfsget: fixed compatibility with older Solaris agents...
     * 0809 FIX: brocade_fcport: Fixed recently introduced problem with port speed detection

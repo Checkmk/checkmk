@@ -1,11 +1,11 @@
-title: Brocade NetIron MLX devices: Module Overall Status
+title: Brocade NetIron MLX / ADX / FGS / ICX devices: Module Overall Status
 agents: snmp
 catalog: hw/network/brocade
 license: GPL
 distribution: check_mk
 description:
- Checks the overall status of modules in Brocade NetIron MLX
- switching / routing devices.
+ Checks the overall status of modules in Brocade NetIron MLX / ADX / FGS /
+ ICX switching / routing devices.
 
  Returns {OK} on status 10 (running) and 11 (Blocked for full height card).
  Returns {WARN} on status 0 (empty), 2 (going down) and 9 (coming up).

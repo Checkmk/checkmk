@@ -1,0 +1,8 @@
+Title: brocade_mlx*: Checks now also work correctly with Brocade ADX / FGS / ICX devices
+Level: 2
+Component: checks
+Version: 1.2.5i3
+Date: 1397562878
+Class: feature
+
+

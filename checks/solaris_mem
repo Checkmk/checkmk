@@ -49,14 +49,22 @@ def inventory_solaris_mem_used(info):
     return [(None, {})]
 
 def check_solaris_mem_used(_no_item, params, info):
-    keys   = ['MemTotal', 'MemFree', 'SwapTotal', 'SwapFree']
-    values = [ solaris_mem_to_kbytes(v) for v in info[0] if v[0] in '01234567890' ]
+    values = []
+    mem_tokens = " ".join(info[0][1:]).split(",")
+    is_total_swap = False
+    for token in mem_tokens:
+        if "total swap" in token:
+            is_total_swap = True
+        values.append(solaris_mem_to_kbytes(token.split()[0]))
+
     if len(values) != 4:
         return 3, "Got unexpected information from agent"
 
     # convert swap-in-use to swap-total, as expected by check_memory()
-    values[2] = values[2] + values[3]
+    if not is_total_swap:
+        values[2] = values[2] + values[3]
 
+    keys   = ['MemTotal', 'MemFree', 'SwapTotal', 'SwapFree']
     return check_memory(params, dict(zip(keys, values)))
 
 check_info['solaris_mem'] = {

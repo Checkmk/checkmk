@@ -63,6 +63,7 @@
 
     Livestatus:
     * 0747 FIX: livestatus table hostsbygroup: fixed bug with group_authorization strict...
+    * 0831 FIX: table statehist: no longer crashes on TIMEPERIOD TRANSITION entries with an invalid syntax...
 
     HW/SW-Inventory:
     * 0886 FIX: Fix exception on non-UTF-8 encoded characters in software list

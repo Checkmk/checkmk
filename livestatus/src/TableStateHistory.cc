@@ -611,6 +611,15 @@ void TableStateHistory::answerQuery(Query *query)
             char *tp_name  = strtok_r(buffer, ";", &save_ptr);
             strtok_r(NULL, ";", &save_ptr);
             char *tp_state = strtok_r(NULL, ";", &save_ptr);
+            if (tp_state)
+                tp_state = strtok_r(NULL, ";", &save_ptr);
+
+            if (tp_state == NULL) {
+                // This line is broken...
+                logger(LOG_WARNING, "Error: Invalid syntax of TIMEPERIOD TRANSITION: %s", entry->_complete);
+                free(buffer);
+                break;
+            }
 
             _notification_periods[tp_name] = atoi(tp_state);
             state_info_t::iterator it_hst = state_info.begin();

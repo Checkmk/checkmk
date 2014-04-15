@@ -76,7 +76,7 @@
 #  we just diplay one element - which is identified by aggr_group
 #  and aggr_name. We immediately fork to page_timeline()
 #
-#  - htdocs/views.py:show_view()
+#  - htdocs/views.py:show_view() (jumps immediately to page_timeline)
 #    - htdocs/bi.py:page_timeline()
 #      - plugins/views/availability.py:render_bi_availability()
 #        - plugins/views/availability.py:do_render_availability()

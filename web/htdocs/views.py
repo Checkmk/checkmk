@@ -1313,7 +1313,7 @@ def prepare_display_options():
 # is about.
 def show_view(view, show_heading = False, show_buttons = True,
               show_footer = True, render_function = None, only_count=False):
-    if html.var("mode") == "availability" and html.has_var("aggr_name") and html.var("timeline"):
+    if html.var("mode") == "availability" and html.has_var("av_aggr_name") and html.var("timeline"):
         bi.page_timeline()
         return
 

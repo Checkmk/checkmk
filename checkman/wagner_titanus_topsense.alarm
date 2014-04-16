@@ -1,0 +1,17 @@
+title: Wagner Titanus Top Sens: Alarms Triggered
+agents: snmp
+catalog: hw/environment/wagner
+license: GPL
+distribution: check_mk
+description:
+ Checks if alarms have been triggered on an Wagner Titanus Top Sens device.
+
+ If pswMainAlarm is triggered, the check returns {CRIT}, if pswPreAlarm or
+ pswInfAlarm is triggered, it return {WARN} and if none of these is triggered
+ it returns {OK}.
+
+item:
+ The ID of the detector.
+
+inventory:
+ Creates two checks on every Top Sense device, one for each detector.

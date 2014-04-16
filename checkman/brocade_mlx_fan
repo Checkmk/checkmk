@@ -1,11 +1,11 @@
-title: Brocade NetIron MLX devices: Fans
+title: Brocade NetIron MLX / ADX / FGS / ICX devices: Fans
 agents: snmp
 catalog: hw/network/brocade
 license: GPL
 distribution: check_mk
 description:
- Checks the operational status of fans in Brocade NetIron MLX
- switching / routing devices.
+ Checks the operational status of fans in Brocade NetIron MLX  / ADX /
+ FGS / ICX switching / routing devices.
 
  Returns {OK} on status 2 (normal), {CRIT} on status 3 (failure)
  and {UNKN} on every other status.

@@ -1,11 +1,11 @@
-title: Brocade NetIron MLX devices: Power Supplies
+title: Brocade NetIron MLX / ADX / FGS / ICX devices: Power Supplies
 agents: snmp
 catalog: hw/network/brocade
 license: GPL
 distribution: check_mk
 description:
- Checks the operational status of power supplies on Brocade NetIron MLX
- switching / routing devices.
+ Checks the operational status of power supplies on Brocade NetIron MLX  / ADX
+ / FGS / ICX switching / routing devices.
 
  Returns {OK} on status 2 (normal), {CRIT} on status 3 (failure)
  and {UNKN} on every other status.

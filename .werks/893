@@ -1,0 +1,8 @@
+Title: wagner_titanus_topsense.alarm: New check for Alarms Triggered on Wagner Titanus Top Sens devices
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1397570062
+Class: feature
+
+

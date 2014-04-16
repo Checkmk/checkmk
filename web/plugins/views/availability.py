@@ -1184,20 +1184,23 @@ def render_availability_group(group_title, range_title, group_id, availability, 
     for site, host, service, display_name, states, considered_duration, total_duration, statistics, timeline_rows, group_ids in group_availability:
         table.row()
 
+        if what != "bi":
+            timeline_url = html.makeuri([
+                   ("timeline", "yes"),
+                   ("timeline_site", site),
+                   ("timeline_host", host),
+                   ("timeline_service", service)])
+        else:
+            timeline_url = html.makeuri([("timeline", "yes"), ("av_aggr_name", service), ("av_aggr_group", host)])
+
+
         if not "omit_buttons" in labelling and not do_csv:
             table.cell("", css="buttons")
             if what != "bi":
-                timeline_url = html.makeuri([
-                       ("timeline", "yes"),
-                       ("timeline_site", site),
-                       ("timeline_host", host),
-                       ("timeline_service", service)])
-
                 history_url = history_url_of(site, host, service, from_time, until_time)
                 html.icon_button(history_url, _("Event History"), "history")
                 html.icon_button(timeline_url, _("Timeline"), "timeline")
             else:
-                timeline_url = html.makeuri([("timeline", "yes"), ("av_aggr_name", service), ("av_aggr_group", host)])
                 html.icon_button(timeline_url, _("Timeline"), "timeline")
 
         host_url = "view.py?" + html.urlencode_vars([("view_name", "hoststatus"), ("site", site), ("host", host)])

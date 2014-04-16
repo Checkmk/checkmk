@@ -1,0 +1,10 @@
+Title: HW/SW Inventory should not be appear on Clusters or some Special Agents
+Component: inv
+State: open
+Date: 2014-04-16 09:35:42
+Targetversion: 1.2.5i1
+Class: bug
+
+In Wato there is no option like PHYSICAL_HOSTS or CLUSTER_HOSTS so there should be a easy way to deactivate the HW/SW Inventory check using Wato for clusters.
+If you have a big enviroment it is not fine solution to click through a couple of folders to find all clusters an add a Cluster Tag. 
+Same Problem with special agents like VMware ESX. 

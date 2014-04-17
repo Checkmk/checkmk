@@ -1,0 +1,21 @@
+title: Wagner Titanus Top Sens: Chamber Deviation from Calibration Point
+agents: snmp
+catalog: hw/environment/wagner
+license: GPL
+distribution: check_mk
+description:
+ Reports the Chamber Deviation from Calibration Point of Detectors in
+ Wagner Titanus Top Sens devices. The value is in percent from the chamber
+ deviation limits, where a chamber fault condition occures.
+
+ The check is informational only and returns always {OK}.
+
+inventory:
+ Creates two checks, one for every Detector.
+
+item:
+ The ID of the detector.
+
+perfdata:
+ One value: The chamber deviation in percent from the chamber deviation
+ limits.

@@ -937,3 +937,9 @@ def perfometer_smoke_percent(row, command, perf):
     return "%0.6f%%" % used_perc, perfometer_linear(used_perc, "#404040")
 
 perfometers['check_mk-wagner_titanus_topsense.smoke'] = perfometer_smoke_percent
+
+def perfometer_chamber_deviation(row, command, perf):
+    chamber_dev = float(perf[0][1])
+    return "%0.6f%%" % chamber_dev, perfometer_linear(chamber_dev, "#000080")
+
+perfometers['check_mk-wagner_titanus_topsense.chamber_deviation'] = perfometer_chamber_deviation

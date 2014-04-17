@@ -203,11 +203,17 @@ def notify_notify(raw_context, analyse=False):
         notify_log("Got raw notification context with %s variables" % len(raw_context))
 
     # Add some further variable for the conveniance of the plugins
-    complete_raw_context(raw_context)
 
     if notification_logging >= 2:
         notify_log("Raw notification context:\n"
-                   + "\n".join(["%s=%s" % v for v in sorted(raw_context.items())]))
+                   + "\n".join(["                    %s=%s" % v for v in sorted(raw_context.items())]))
+
+    raw_keys = list(raw_context.keys())
+    complete_raw_context(raw_context)
+
+    if notification_logging >= 2:
+        notify_log("Computed variables:\n"
+                   + "\n".join(sorted(["                    %s=%s" % (k, raw_context[k]) for k in raw_context if k not in raw_keys]))) 
 
     # Spool notification to remote host, if this is enabled
     if notification_spool_to:
@@ -1518,6 +1524,12 @@ def complete_raw_context(raw_context):
     if not contact or contact == "check-mk-notify":
         add_rulebased_macros(raw_context)
 
+    # For custom notifications the number is set to 0 by the core (Nagios and CMC). We force at least
+    # number 1 here, so that rules with conditions on numbers do not fail (the minimum is 1 here)
+    for what in [ "HOST", "SERVICE" ]:
+        key = what + "NOTIFICATIONNUMBER"
+        if key in raw_context and  raw_context[key] == "0":
+            raw_context[key] = "1"
 
     # Add the previous hard state. This is neccessary for notification rules that depend on certain transitions,
     # like OK -> WARN (but not CRIT -> WARN). The CMC sends PREVIOUSHOSTHARDSTATE and PREVIOUSSERVICEHARDSTATE.

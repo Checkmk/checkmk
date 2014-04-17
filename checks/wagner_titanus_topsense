@@ -41,8 +41,10 @@ wagner_titanus_topsense_info = [(".1.3.6.1.2.1.1",               [1,          # 
                                                                   1006]),     # pswFailureDisplayOn 9
                                                                               # off(0), on(1)
 
-                                (".1.3.6.1.4.1.34187.21501.2.1", [24584008]), # tsLSNbusOnline      0
-                                                                              # offline(0),online(1)
+                                (".1.3.6.1.4.1.34187.21501.2.1", [24584008,    # tsLSNbusOnline      0
+                                                                               # offline(0),online(1)
+                                                                  245810000,   # tsBarGraph1String
+                                                                  245820000]), # tsBarGraph2String
                   ]
 
 def wagner_titanus_topsense_scan(oid):
@@ -146,7 +148,7 @@ def check_wagner_titanus_topsense_alarm(item, _no_params, info):
         pre_alarm  = info[1][0][7]
         info_alarm = info[1][0][8]
     else:
-        return 3, "%s not found in SNMP" % item
+        return 3, "Alarm Detector %s not found in SNMP" % item
 
     status = 0
     message = "No Alarm"
@@ -172,4 +174,41 @@ check_info["wagner_titanus_topsense.alarm"] = {
 }
 
 #.
+#   .--smoke percent-------------------------------------------------------.
+#   |                      _                                        _      |
+#   |  ___ _ __ ___   ___ | | _____   _ __   ___ _ __ ___ ___ _ __ | |_    |
+#   | / __| '_ ` _ \ / _ \| |/ / _ \ | '_ \ / _ \ '__/ __/ _ \ '_ \| __|   |
+#   | \__ \ | | | | | (_) |   <  __/ | |_) |  __/ | | (_|  __/ | | | |_    |
+#   | |___/_| |_| |_|\___/|_|\_\___| | .__/ \___|_|  \___\___|_| |_|\__|   |
+#   |                                |_|                                   |
+#   '----------------------------------------------------------------------'
 
+def inventory_wagner_titanus_topsense_smoke(info):
+    return [ ("1", None), ("2", None) ]
+
+def check_wagner_titanus_topsense_smoke(item, _no_params, info):
+    if item == "1":
+        smoke_perc = float(info[2][0][1])
+    elif item == "2":
+        smoke_perc = float(info[2][0][2])
+    else:
+        return 3, "Smoke Detector %s not found in SNMP" % item
+
+    perfdata = [("smoke_perc", smoke_perc)]
+    if smoke_perc > 0:
+        status = 2
+    else:
+        status = 0
+
+    return status, "%0.6f%% smoke detected" % smoke_perc, perfdata
+
+check_info["wagner_titanus_topsense.smoke"] = {
+    "check_function"        : check_wagner_titanus_topsense_smoke,
+    "inventory_function"    : inventory_wagner_titanus_topsense_smoke,
+    "service_description"   : "Smoke Detector %s",
+    "has_perfdata"          : True,
+    "snmp_info"             : wagner_titanus_topsense_info,
+    "snmp_scan_function"    : wagner_titanus_topsense_scan
+}
+
+#.

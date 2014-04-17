@@ -2453,7 +2453,7 @@ void run_script_container(script_container *cont)
                 NULL);                // returns the thread identifier
 
         if (cont->execution_mode == SYNC ||
-            cont->execution_mode == ASYNC && g_default_script_async_execution == SEQUENTIAL)
+            (cont->execution_mode == ASYNC && g_default_script_async_execution == SEQUENTIAL))
             WaitForSingleObject(cont->worker_thread, INFINITE);
     }
 }

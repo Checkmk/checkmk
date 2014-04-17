@@ -2,6 +2,9 @@
     Checks & Agents:
     * 0889 FIX: logwatch: fix case where rule wouldn't be applied...
 
+    Event Console:
+    * 0902 FIX: event console view: fixed exception on rendering host tags for unknown hosts...
+
 
 1.2.4p2:
     Core & Setup:

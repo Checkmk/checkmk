@@ -725,6 +725,9 @@ def automation_restart(job="restart"):
             else:
                 do_create_cmc_config(opt_cmc_relfilename)
 
+            if bake_agents_on_restart:
+                do_bake_agents()
+
         except Exception, e:
 	    if backup_path:
 		os.rename(backup_path, objects_file)

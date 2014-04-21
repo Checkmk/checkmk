@@ -347,6 +347,7 @@ inv_exports                          = {} # Rulesets for inventory export hooks
 
 # Rulesets for agent bakery
 agent_config                         = {}
+bake_agents_on_restart               = True
 
 
 # global variables used to cache temporary values (not needed in check_mk_base)
@@ -372,7 +373,7 @@ special_agent_info                 = {}
 # Now include the other modules. They contain everything that is needed
 # at check time (and many of what is also needed at administration time).
 try:
-    modules =  [ 'check_mk_base', 'snmp', 'notify', 'prediction', 'cmc', 'inline_snmp', ]
+    modules = [ 'check_mk_base', 'snmp', 'notify', 'prediction', 'cmc', 'inline_snmp', 'agent_bakery' ]
     for module in modules:
         filename = modules_dir + "/" + module + ".py"
         if os.path.exists(filename):
@@ -4824,6 +4825,13 @@ def do_create_config():
         create_nagios_config(out)
     sys.stdout.write(tty_ok + "\n")
 
+    if bake_agents_on_restart and 'do_bake_agents' in globals():
+        sys.stdout.write("Baking agents...")
+        sys.stdout.flush()
+        do_bake_agents()
+        sys.stdout.write(tty_ok + "\n")
+
+
 def do_output_nagios_conf(args):
     if len(args) == 0:
         args = None
@@ -6032,11 +6040,7 @@ if __name__ == "__main__":
                 do_create_rrd(args)
                 done = True
             elif o in [ '-A', '--bake-agents' ]:
-                try:
-                    execfile(modules_dir + "/agent_bakery.py")
-                except:
-                    if opt_debug:
-                        raise
+                if 'do_bake_agents' not in globals():
                     sys.stderr.write("Agent baking is not implemented in your version of Check_MK. Sorry.\n")
                     sys.exit(1)
                 if args:

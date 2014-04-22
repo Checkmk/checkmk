@@ -1,0 +1,8 @@
+Title: availability: fixed bug causing the availability feature not considering timeperiod transitions
+Level: 1
+Component: core
+Version: 1.2.5i2p2
+Date: 1398171132
+Class: fix
+
+

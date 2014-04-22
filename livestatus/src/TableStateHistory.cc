@@ -609,7 +609,6 @@ void TableStateHistory::answerQuery(Query *query)
             char *save_ptr;
             char *buffer   = strdup(entry->_options);
             char *tp_name  = strtok_r(buffer, ";", &save_ptr);
-            strtok_r(NULL, ";", &save_ptr);
             char *tp_state = strtok_r(NULL, ";", &save_ptr);
             if (tp_state)
                 tp_state = strtok_r(NULL, ";", &save_ptr);

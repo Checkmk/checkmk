@@ -1,4 +1,7 @@
 1.2.5i2p2:
+    Core & Setup:
+    * 0903 FIX: availability: fixed bug causing the availability feature not considering timeperiod transitions
+
     Checks & Agents:
     * 0882 FIX: check_bi_local.py: fix crash in case of non-ascii characters...
     * 0832 FIX: solaris_mem: fixed invalid calculation of total swap...

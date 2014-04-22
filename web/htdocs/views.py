@@ -2735,7 +2735,7 @@ def get_painter_option(name):
     return opt.get("value", opt['valuespec'].default_value())
 
 def get_host_tags(row):
-    if "host_custom_variables" in row:
+    if type(row.get("host_custom_variables")) == dict:
         return row["host_custom_variables"].get("TAGS", "")
 
     for name, val in zip(row["host_custom_variable_names"],

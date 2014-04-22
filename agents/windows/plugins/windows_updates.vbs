@@ -6,7 +6,7 @@
 ' to a new inventorized service.
 '
 ' Author: Lars Michelsen <lm@mathias-kettner.de>, 2011-03-21
-' Editor: Patrick Schlüter <ps@pdv-systeme.de>, 2011-08-21
+' Editor: Patrick SchlÃ¼ter <ps@pdv-systeme.de>, 2011-08-21
 '
 ' Updated by Phil Randal, 2012-09-21, to cache results using a randomised check interval
 ' of 16 to 24 hours
@@ -16,6 +16,8 @@
 '
 ' Updated by Bastian Kuhn, 2014-03-03: Removed all caching functions cause the current agent
 ' has a native caching support. Make sure that you activate caching for this script in check_mk.ini
+' 
+' 2014-04-17: Fix by Stefan Kick to handle errors. Payed by Adaptron.
 ' -----------------------------------------------------------------------------------------
 
 Option Explicit
@@ -64,7 +66,18 @@ If CreateObject("Microsoft.Update.SystemInfo").RebootRequired Then
     reboot = 1
 End If
 
+On Error Resume Next
+
 Set result = updtSearcher.Search("IsInstalled = 0 and IsHidden = 0")
+
+If Err.Number <> 0 then
+        WScript.Echo "<<<windows_updates>>>"
+        Wscript.Echo "x x x"
+        Wscript.Echo "There was an error getting update information. Maybe Windows update is not activated. Error Number: " & Err.Number
+        WScript.Quit()
+End If
+
+
 Set colDownloads = result.Updates
 For Each objEntry in colDownloads
 

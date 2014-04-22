@@ -4975,3 +4975,22 @@ register_check_parameters(
     None,
     None, None,
 )
+
+register_check_parameters(
+    subgroup_environment,
+    "airflow_deviation",
+    _("Airflow Deviation in Percent"),
+    Tuple(
+        help = _("Levels for Airflow Deviation measured at airflow sensors "),
+        elements = [
+            Float(title = _("critical if below or equal"), unit = u"%", default_value = -20),
+            Float(title = _("warning if below or equal"),  unit = u"%", default_value = -20),
+            Float(title = _("warning if above or equal"),  unit = u"%", default_value = 20),
+            Float(title = _("critical if above or equal"), unit = u"%", default_value = 20),
+        ]),
+    TextAscii(
+        title = _("Detector ID"),
+        help = _("The identifier of the detector.")),
+    "first"
+)
+

@@ -1,0 +1,53 @@
+title: Wagner Titanus Top Sens: Airflow Deviation from Set Point
+agents: snmp
+catalog: hw/environment/wagner
+license: GPL
+distribution: check_mk
+description:
+ Checks the Airflow Deviation from Set Point of Detectors in
+ Wagner Titanus Top Sens devices. The value is in percent from the chosen
+ air flow limits within the devices  where an air flow fault condition
+ occures.
+
+ Returns {WARN} or {CRIT} if the value is out of the given ranges and
+ {OK} otherwise.
+
+inventory:
+ Creates two checks per device, one for every Detector.
+
+item:
+ The ID of the detector.
+
+perfdata:
+ One value: The airflow deviation in percent, together with it's upper
+ levels for warning and critical.
+
+examples:
+ # set other default levels
+ wagner_titanus_topsense_airflow_deviation_default_values = (-30.0, -10.0, 10.0, 30.0)
+
+ # check detector 1 with default levels
+ checks += [
+     ("ras", "wagner_titanus_topsense.airflow_deviation", '1', wagner_titanus_topsense_airflow_deviation_default_values)
+ ]
+
+ # check detector 1 with individual levels
+ checks += [
+     ( "ras", "wagner_titanus_topsense.airflow_deviation", '1', (-40.0, -30.0, 30.0, 40.0) )
+ ]
+
+[parameters]
+lower_crit(float): If the airflow deviation in percent from the set point
+    is lower or equal this value, the check returns {CRIT}.
+lower_warn(float): If the airflow deviation in percent from the set point
+    is lower or equal this value, the check returns {WARN}.
+upper_warn(float): If the airflow deviation in percent from the set point
+    is higher or equal this value, the check returns {WARN}.
+upper_crit(float): If the airflow deviation in percent from the set point
+    is higher or equal this value, the check returns {CRIT}.
+
+[configuration]
+wagner_titanus_topsense_airflow_deviation_default_values(float, float, float, float):
+    Lower level for critical, lower level for warning, upper level for warning,
+    upper level for critical, all in percent. 
+    Defaults to (-20.0, -20.0, 20.0, 20.0)

@@ -841,6 +841,13 @@ def perfometer_airflow_ls(row, check_command, perf_data):
 
 perfometers["check_mk-apc_inrow_airflow"] = perfometer_airflow_ls
 
+# Aiflow Deviation in Percent
+def perfometer_airflow_deviation(row, check_command, perf_data):
+    value = float(perf_data[0][1])
+    return "%0.2f%%" % value, perfometer_linear(abs(value), "silver")
+
+perfometers["check_mk-wagner_titanus_topsense.airflow_deviation"] = perfometer_airflow_deviation
+
 def perfometer_fanspeed(row, check_command, perf_data):
     value = float(perf_data[0][1])
     return "%.2f%%" % value, perfometer_linear(value, "silver")

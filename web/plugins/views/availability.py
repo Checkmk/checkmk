@@ -1354,6 +1354,8 @@ def render_bi_availability(title, aggr_rows):
     html.end_context_buttons()
 
     avoptions = render_availability_options()
+    timewarpcode = ""
+
     if not html.has_user_errors():
         rows = []
         for aggr_row in aggr_rows:
@@ -1424,6 +1426,9 @@ def get_bi_timeline(tree, aggr_group, avoptions, timewarp):
         query += "Filter: host_name = %s\n" % host
     query += "Or: %d\n" % len(hosts)
     data = html.live.query(query)
+    if not data:
+        raise MKGeneralException(_("No historical data available for this aggregation. Query was: <pre>%s</pre>") % query)
+
     html.live.set_prepend_site(False)
     html.live.set_only_sites(None)
     columns = ["site"] + columns

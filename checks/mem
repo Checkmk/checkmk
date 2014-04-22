@@ -81,7 +81,6 @@ check_info['mem.used'] = {
 factory_settings["memory_win_default_levels"] = {
     "memory"   : ( 80.0, 90.0 ),
     "pagefile" : ( 50.0, 70.0 ),
-    "swap"     : ( 70.0, 80.0 ),
 }
 
 def inventory_mem_win(info):
@@ -102,8 +101,7 @@ def check_mem_windows(item, params, info):
 
     for title, what, paramname in [
         ( "Memory",    "Mem",  "memory" ),
-        ( "Page file", "Page", "pagefile" ),
-        ( "Swap",      "Swap", "swap" )]:
+        ( "Page file", "Page", "pagefile" )]:
         total_kb = meminfo[what + "Total"]
         free_kb  = meminfo[what + "Free"]
         used_kb  = total_kb - free_kb

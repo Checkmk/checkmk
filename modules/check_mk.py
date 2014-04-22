@@ -345,6 +345,10 @@ check_periods                        = []
 snmp_check_interval                  = []
 inv_exports                          = {} # Rulesets for inventory export hooks
 
+# Rulesets for agent bakery
+agent_config                         = {}
+bake_agents_on_restart               = True
+
 
 # global variables used to cache temporary values (not needed in check_mk_base)
 ip_to_hostname_cache = None
@@ -369,7 +373,7 @@ special_agent_info                 = {}
 # Now include the other modules. They contain everything that is needed
 # at check time (and many of what is also needed at administration time).
 try:
-    modules =  [ 'check_mk_base', 'snmp', 'notify', 'prediction', 'cmc', 'inline_snmp' ]
+    modules = [ 'check_mk_base', 'snmp', 'notify', 'prediction', 'cmc', 'inline_snmp', 'agent_bakery' ]
     for module in modules:
         filename = modules_dir + "/" + module + ".py"
         if os.path.exists(filename):
@@ -4690,6 +4694,7 @@ def usage():
  cmk --create-rrd [--keepalive|SPEC]  create round robin database
  cmk -i, --inventory [HOST1 HOST2...] Do a HW/SW-Inventory of some ar all hosts
  cmk --inventory-as-check HOST        Do HW/SW-Inventory, behave like check plugin
+ cmk -A, --bake-agents [H1 H2 ..]     Bake agents for hosts (no in all versions)
  cmk -V, --version                    print version
  cmk -h, --help                       print this help
 
@@ -4797,16 +4802,16 @@ NOTES:
   hosts's parents. It creates the file conf.d/parents.mk which
   defines gateway hosts and parent declarations.
 
-  The core can call check_mk without options and the hostname and its IP
-  address as arguments. Much faster is using precompiled host checks,
-  though.
+  -A, --bake-agents creates RPM/DEB/MSI packages with host-specific
+  monitoring agents. Note: this feature is only contained in the
+  subscription version of Check_MK.
 
 
 """ % (check_mk_configfile,
        precompiled_hostchecks_dir,
        snmpwalks_dir,
        snmpwalks_dir,
-       local_mibs_dir and ("\n  You can add further mibs to %s" % local_mibs_dir) or "",
+       local_mibs_dir and ("\n  You can add further MIBs to %s" % local_mibs_dir) or "",
        )
 
 
@@ -4819,6 +4824,13 @@ def do_create_config():
         out = file(nagios_objects_file, "w")
         create_nagios_config(out)
     sys.stdout.write(tty_ok + "\n")
+
+    if bake_agents_on_restart and 'do_bake_agents' in globals():
+        sys.stdout.write("Baking agents...")
+        sys.stdout.flush()
+        do_bake_agents()
+        sys.stdout.write(tty_ok + "\n")
+
 
 def do_output_nagios_conf(args):
     if len(args) == 0:
@@ -5819,11 +5831,11 @@ def output_profile():
 # Do option parsing and execute main function -
 # if check_mk is not called as module
 if __name__ == "__main__":
-    short_options = 'SHVLCURODMmd:Ic:nhvpXPNBil'
+    short_options = 'ASHVLCURODMmd:Ic:nhvpXPNBil'
     long_options = [ "help", "version", "verbose", "compile", "debug",
                      "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
                      "flush", "package", "localize", "donate", "snmpwalk", "oid=", "extraoid=",
-                     "snmptranslate",
+                     "snmptranslate", "bake-agents",
                      "usewalk", "scan-parents", "procs=", "automation=", "notify",
                      "snmpget=", "profile", "keepalive", "keepalive-fd=", "create-rrd",
                      "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
@@ -6026,6 +6038,16 @@ if __name__ == "__main__":
                 read_config_files(False, True)
                 execfile(modules_dir + "/rrd.py")
                 do_create_rrd(args)
+                done = True
+            elif o in [ '-A', '--bake-agents' ]:
+                if 'do_bake_agents' not in globals():
+                    sys.stderr.write("Agent baking is not implemented in your version of Check_MK. Sorry.\n")
+                    sys.exit(1)
+                if args:
+                    hostnames = parse_hostname_list(args, with_clusters = False)
+                else:
+                    hostnames = None
+                do_bake_agents(hostnames)
                 done = True
 
 

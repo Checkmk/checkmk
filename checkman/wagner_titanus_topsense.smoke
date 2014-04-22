@@ -1,0 +1,18 @@
+title: Wagner Titanus Top Sens: Smoke Detectors
+agents: snmp
+catalog: hw/environment/wagner
+license: GPL
+distribution: check_mk
+description:
+ Checks the Levels reported by Smoke Detectors of Wagner Titanus Top Sens devices.
+
+ The check returns {OK} if the level is 0.000000 % and {CRIT} otherwise.
+
+inventory:
+ Creates two checks, one for every Smoke Detector.
+
+item:
+ The ID of the detector.
+
+perfdata:
+ One value: The level of smoke in percent.

@@ -1,0 +1,8 @@
+Title: windows_updates: Added Error Handling (Thanks to Stefan Kick)
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1397744176
+Class: fix
+
+The windows_update plugin now also handles windows servers with deactivated update function.

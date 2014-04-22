@@ -931,3 +931,9 @@ def perfometer_licenses_percent(row, check_command, perf_data):
     return "%.0f%% used" % used_perc, perfometer_linear( used_perc, 'orange' )
 
 perfometers['check_mk-innovaphone_licenses'] = perfometer_licenses_percent
+
+def perfometer_smoke_percent(row, command, perf):
+    used_perc = float(perf[0][1])
+    return "%0.6f%%" % used_perc, perfometer_linear(used_perc, "#404040")
+
+perfometers['check_mk-wagner_titanus_topsense.smoke'] = perfometer_smoke_percent

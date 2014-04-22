@@ -47,6 +47,9 @@ def inventory_windows_updates(info):
 def check_windows_updates(_unused, params, info):
     if info and len(info[0]) == 3:
         status = 0
+        # Workarround to return errors from the plugin
+        if info[0][0] == 'x':
+            return 2, ' '.join(info[1])
         reboot_required, num_imp, num_opt = map(saveint, info[0])
         imp_warn, imp_crit, opt_warn, opt_crit = params[0:4]
         if len(params) == 7:

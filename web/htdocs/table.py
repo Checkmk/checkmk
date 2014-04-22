@@ -109,13 +109,13 @@ def cell(*posargs, **kwargs):
     next_func = add_cell
     next_args = posargs, kwargs
 
-def add_cell(title="", text="", css=None, help=None):
+def add_cell(title="", text="", css=None, help=None, colspan=None):
     if type(text) != unicode:
         text = str(text)
     htmlcode = text + html.drain()
     if table["collect_headers"] == True:
         table["headers"].append((title, help))
-    table["rows"][-1][0].append((htmlcode, css))
+    table["rows"][-1][0].append((htmlcode, css, colspan))
 
 def end():
     global table
@@ -272,8 +272,9 @@ def end():
             if css:
                 html.write(' %s' % css)
             html.write('">\n')
-            for cell_content, css_classes in row:
-                html.write("    <td%s>" % (css_classes and (" class='%s'" % css_classes) or ""))
+            for cell_content, css_classes, colspan in row:
+                colspan = colspan and (' colspan="%d"' % colspan) or ''
+                html.write("    <td%s%s>" % (css_classes and (" class='%s'" % css_classes) or "", colspan))
                 html.write(cell_content)
                 html.write("</td>\n")
             html.write("</tr>\n")

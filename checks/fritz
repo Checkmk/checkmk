@@ -37,13 +37,15 @@ def fritz_parse_info(info):
 def inventory_fritz_conn(info):
     data = fritz_parse_info(info)
     if 'NewConnectionStatus' in data \
-       and 'NewExternalIPAddress' in data:
+       and 'NewExternalIPAddress' in data \
+       and data.get('NewConnectionStatus') != 'Unconfigured':
         return [(None, {})]
 
 fritz_conn_states = {
     'Connected':    0,
     'Connecting':   1,
     'Disconnected': 1,
+    'Unconfigured': 1,
 }
 
 def check_fritz_conn(_unused, _no_params, info):

@@ -47,7 +47,7 @@ def perfometer_check_mk(row, check_command, perf_data):
     else:
         color = "#f44"
 
-    return "%.1fs" % exectime, perfometer_linear(perc, color)
+    return "%.1f s" % exectime, perfometer_linear(perc, color)
 perfometers["check-mk"] = perfometer_check_mk
 
 def perfometer_check_mk_df(row, check_command, perf_data):
@@ -58,7 +58,7 @@ def perfometer_check_mk_df(row, check_command, perf_data):
     h += perfometer_td(perc_used, "#00ffc6")
     h += perfometer_td(perc_free, "white")
     h += "</tr></table>"
-    return "%0.2f%%" % perc_used, h
+    return "%0.2f %%" % perc_used, h
 
 perfometers["check_mk-df"] = perfometer_check_mk_df
 perfometers["check_mk-vms_df"] = perfometer_check_mk_df
@@ -463,7 +463,7 @@ perfometers["check_mk-oracle_logswitches"] = perfometer_oracle_sessions
 def perfometer_cpu_utilization(row, check_command, perf_data):
     util = float(perf_data[0][1]) # is already percentage
     color = "#60f020"
-    return "%.0f%%" % util, perfometer_linear(util, color)
+    return "%.0f %%" % util, perfometer_linear(util, color)
 
 #perfometer_linear(perc, color)
 perfometers["check_mk-h3c_lanswitch_cpu"] = perfometer_cpu_utilization
@@ -525,7 +525,7 @@ def perfometer_check_mk_diskstat(row, check_command, perf_data):
     read_bytes = float(perf_data[0][1])
     write_bytes = float(perf_data[1][1])
 
-    text = "%-.2fM/s  %-.2fM/s" % \
+    text = "%-.2f M/s  %-.2f M/s" % \
             (read_bytes / (1024*1024.0), write_bytes / (1024*1024.0))
 
     return text, perfometer_logarithmic_dual(
@@ -543,7 +543,7 @@ perfometers["check_mk-ibm_svc_systemstats.diskio"] = perfometer_check_mk_disksta
 def perfometer_check_mk_iops_r_w(row, check_command, perf_data):
     iops_r = int(perf_data[0][1])
     iops_w = int(perf_data[1][1])
-    text = "%d/s r, %s/s w" % (iops_r, iops_w)
+    text = "%d IO/s / %s IO/s" % (iops_r, iops_w)
 
     return text, perfometer_logarithmic_dual(
             iops_r, "#60e0a0", iops_w, "#60a0e0", 100000, 10)
@@ -918,7 +918,7 @@ def perfometer_check_mk_ibm_svc_license(row, check_command, perf_data):
         return "completely unlicensed", perfometer_linear(100, "silver")
     else:
         perc_used = 100 * used / licensed
-        return "%0.2f%% used" % perc_used, perfometer_linear(perc_used, "silver")
+        return "%0.2f %% used" % perc_used, perfometer_linear(perc_used, "silver")
 
 perfometers["check_mk-ibm_svc_license"] = perfometer_check_mk_ibm_svc_license
 
@@ -932,7 +932,7 @@ def perfometer_check_mk_ibm_svc_cache(row, check_command, perf_data):
     h += perfometer_td(read_cache_pc,  "#60a0e0")
     h += perfometer_td(free_cache_pc,  "white")
     h += "</tr></table>"
-    return "%d%% write, %d%% read" % (write_cache_pc, read_cache_pc), h
+    return "%d %% write, %d %% read" % (write_cache_pc, read_cache_pc), h
 perfometers["check_mk-ibm_svc_nodestats.cache"] = perfometer_check_mk_ibm_svc_cache
 perfometers["check_mk-ibm_svc_systemstats.cache"] = perfometer_check_mk_ibm_svc_cache
 

@@ -115,7 +115,7 @@ def check_ibm_svc_systemstats_diskio(item, _no_params, info):
     write_bytes = parsed[item]['w_mb'] * 1024 * 1024
     perfdata = [ ("read", read_bytes), ("write", write_bytes) ]
 
-    return 0, "%s/sec read, %s/sec write" % \
+    return 0, "%s/s read, %s/s write" % \
         (get_bytes_human_readable(read_bytes), get_bytes_human_readable(write_bytes)), \
         perfdata
 
@@ -153,7 +153,7 @@ def check_ibm_svc_systemstats_iops(item, _no_params, info):
     write_iops = parsed[item]['w_io']
     perfdata = [ ("read", read_iops), ("write", write_iops) ]
 
-    return 0, "%s IOs/sec read, %s IOs/sec write" %  (read_iops, write_iops), perfdata
+    return 0, "%s IO/s read, %s IO/s write" %  (read_iops, write_iops), perfdata
 
 check_info["ibm_svc_systemstats.iops"] = {
     "check_function"        : check_ibm_svc_systemstats_iops,
@@ -268,7 +268,7 @@ def check_ibm_svc_systemstats_cache(item, _no_params, info):
     perfdata = [ ("write_cache_pc", write_cache_pc, None, None, 0, 100),
                  ("total_cache_pc", total_cache_pc, None, None, 0, 100) ]
 
-    return 0, "Write cache usage is %d%%, total cache usage is %d%%" % \
+    return 0, "Write cache usage is %d %%, total cache usage is %d %%" % \
            (write_cache_pc, total_cache_pc), perfdata
 
 check_info["ibm_svc_systemstats.cache"] = {

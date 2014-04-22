@@ -37,17 +37,17 @@ examples:
  ]
 
 [parameters]
-lower_crit(float): If the airflow deviation in percent from the set point
-    is lower or equal this value, the check returns {CRIT}.
-lower_warn(float): If the airflow deviation in percent from the set point
-    is lower or equal this value, the check returns {WARN}.
-upper_warn(float): If the airflow deviation in percent from the set point
-    is higher or equal this value, the check returns {WARN}.
-upper_crit(float): If the airflow deviation in percent from the set point
-    is higher or equal this value, the check returns {CRIT}.
+parameters (tuple): Containing the four numbers lower_crit, lower_warn, upper_warn, upper_crit.
+    If the airflow deviation in percent from the set point
+    is lower or equal lower_crit, the check returns {CRIT}.
+    If the airflow deviation in percent from the set point
+    is lower or equal lower_warn, the check returns {WARN}.
+    If the airflow deviation in percent from the set point
+    is higher or equal upper_warn, the check returns {WARN}.
+    If the airflow deviation in percent from the set point
+    is higher or equal upper_crit, the check returns {CRIT}.
 
 [configuration]
 wagner_titanus_topsense_airflow_deviation_default_values(float, float, float, float):
-    Lower level for critical, lower level for warning, upper level for warning,
-    upper level for critical, all in percent. 
-    Defaults to (-20.0, -20.0, 20.0, 20.0)
+    Default values for lower_crit, lower_warn, upper_warn, upper_crit,
+    preset to (-20.0, -20.0, 20.0, 20.0)

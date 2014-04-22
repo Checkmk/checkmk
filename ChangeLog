@@ -32,8 +32,9 @@
     * 0893 wagner_titanus_topsense.alarm: New check for Alarms Triggered on Wagner Titanus Top Sens devices
     * 0894 wagner_titanus_topsense.smoke: New check for Smoke Detectors in Wagner Titanus Top Sens devices
     * 0895 wagner_titanus_topsense.chamber_deviation: New Check for Chamber Deviation from Calibration Point in Wagner Titanus Top Sens devices
-    * 0896 wagner_titanus_topsense.airflow_deviation: New Check for Airflow Deviation in Wagner Titanus Top Sens devices
     * 0152 fsc_fans: Added support for Wato configuration and upper limits
+    * 0896 wagner_titanus_topsense.airflow_deviation: New Check for Airflow Deviation in Wagner Titanus Top Sens devices
+    * 0897 wagner_titanus_topsense.temp: New Check for Temperature measured by Wagner Titanus Top Sens devices
     * 0777 FIX: special agent emcvnx: did not work with security file authentication...
     * 0786 FIX: zfsget: fixed compatibility with older Solaris agents...
     * 0809 FIX: brocade_fcport: Fixed recently introduced problem with port speed detection

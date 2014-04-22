@@ -35,6 +35,7 @@
     * 0152 fsc_fans: Added support for Wato configuration and upper limits
     * 0896 wagner_titanus_topsense.airflow_deviation: New Check for Airflow Deviation in Wagner Titanus Top Sens devices
     * 0897 wagner_titanus_topsense.temp: New Check for Temperature measured by Wagner Titanus Top Sens devices
+    * 0898 ibm_svc_nodestats.disk_latency, ibm_svc_systemstats.disk_latency: New Checks for Disk Latency in IBM SVC / Storwize V3700 / V7000 devices
     * 0777 FIX: special agent emcvnx: did not work with security file authentication...
     * 0786 FIX: zfsget: fixed compatibility with older Solaris agents...
     * 0809 FIX: brocade_fcport: Fixed recently introduced problem with port speed detection

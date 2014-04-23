@@ -1,0 +1,8 @@
+Title: zfsget: Fixed inventory of filesystems
+Level: 1
+Component: checks
+Version: 1.2.4p3
+Date: 1398265418
+Class: fix
+
+

@@ -1,6 +1,7 @@
 1.2.4p3:
     Checks & Agents:
     * 0889 FIX: logwatch: fix case where rule wouldn't be applied...
+    * 0154 FIX: zfsget: Fixed inventory of filesystems
 
     Event Console:
     * 0902 FIX: event console view: fixed exception on rendering host tags for unknown hosts...

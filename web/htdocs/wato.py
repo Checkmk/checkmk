@@ -2290,10 +2290,13 @@ def mode_object_parameters(phase):
                     # but we need to address it anyway.
                     grouprule = "checkgroup_parameters:" + checkgroup
                     if grouprule not in g_rulespecs:
-                        rulespec = g_rulespecs["static_checks:" + checkgroup]
-                        url = make_link([('mode', 'edit_ruleset'), ('varname', "static_checks:" + checkgroup), ('host', hostname)])
-                        render_rule_reason(_("Parameters"), url, _("Determined by inventory"), None, False,
-                                   rulespec["valuespec"]._elements[2].value_to_text(serviceinfo["parameters"]))
+                        rulespec = g_rulespecs.get("static_checks:" + checkgroup)
+                        if rulespec:
+                            url = make_link([('mode', 'edit_ruleset'), ('varname', "static_checks:" + checkgroup), ('host', hostname)])
+                            render_rule_reason(_("Parameters"), url, _("Determined by inventory"), None, False,
+                                       rulespec["valuespec"]._elements[2].value_to_text(serviceinfo["parameters"]))
+                        else:
+                            render_rule_reason(_("Parameters"), None, "", "", True, _("This check is not configurable via WATO"))
 
                     else:
                         rulespec = g_rulespecs[grouprule]

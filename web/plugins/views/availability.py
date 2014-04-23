@@ -1422,9 +1422,22 @@ def get_bi_timeline(tree, aggr_group, avoptions, timewarp):
             "Columns: " + " ".join(columns) + "\n" +\
             "Filter: time >= %d\nFilter: time <= %d\n" % range
 
-    for host in hosts:
+    # Create a specific filter. We really only want the services and hosts
+    # of the aggregation in question. That prevents status changes 
+    # irrelevant services from introducing new phases.
+    by_host = {}
+    for site, host, service in bi.find_all_leaves(tree):
+        by_host.setdefault(host, set([])).add(service)
+
+    for host, services in by_host.items():
         query += "Filter: host_name = %s\n" % host
-    query += "Or: %d\n" % len(hosts)
+        query += "Filter: service_description = \n"
+        for service in services:
+            query += "Filter: service_description = %s\n" % service
+        query += "Or: %d\nAnd: 2\n" % (len(services) + 1)
+    if len(hosts) != 1:
+        query += "Or: %d\n" % len(hosts)
+
     data = html.live.query(query)
     if not data:
         raise MKGeneralException(_("No historical data available for this aggregation. Query was: <pre>%s</pre>") % query)

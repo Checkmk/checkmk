@@ -1367,7 +1367,7 @@ def render_bi_availability(title, aggr_rows):
                 timewarp = None
             these_rows, tree_state = get_bi_timeline(tree, aggr_row["aggr_group"], avoptions, timewarp)
             rows += these_rows
-            if timewarp:
+            if timewarp and tree_state:
                 state, assumed_state, node, subtrees = tree_state
                 eff_state = state
                 if assumed_state != None:

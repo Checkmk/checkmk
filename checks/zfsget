@@ -95,7 +95,8 @@ def parse_zfsget(info):
     for entry in entries:
         if entry["mountpoint"].startswith("/"):
             entry["is_pool"] = '/' not in entry["name"]
-            parsed[entry["mountpoint"]] = entry
+            if entry['available'] != 0:
+                parsed[entry["mountpoint"]] = entry
 
     if start_of_df != None:
         zfsget_parse_df_info(parsed, info[start_of_df:])
@@ -146,8 +147,7 @@ def inventory_zfsget(info):
     parsed = parse_zfsget(info)
     for mountpoint, properties in parsed.items():
         if mountpoint not in inventory_df_exclude_mountpoints:
-            if properties["available"] != 0:
-                mplist.append(mountpoint)
+            mplist.append(mountpoint)
     return df_inventory(mplist)
 
 

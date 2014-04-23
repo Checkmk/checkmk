@@ -51,6 +51,7 @@
     * 0606 FIX: apache_status: now also sends an accept header to make it work with mod_security enables servers
     * 0832 FIX: solaris_mem: fixed invalid calculation of total swap...
     * 0810 FIX: fritz.link: Not inventorizing "unconfigured" interfaces anymore
+    * 0154 FIX: zfsget: Fixed inventory of filesystems
 
     Multisite:
     * 0779 Hostgroups (Summary): Empty hostgroups are no longer shown (can be re-enabled by filter)

@@ -1,0 +1,10 @@
+Title: Fixed exception in host parameter overview
+Level: 1
+Component: wato
+Class: fix
+State: unknown
+Version: 1.2.5i3
+Date: 1398252687
+
+The host parameter overview raised an exception when the check in question
+had a rulegroup defined which was unknown in the WATO-GUI.

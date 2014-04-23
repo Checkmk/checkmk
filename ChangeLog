@@ -46,6 +46,7 @@
     WATO:
     * 0784 Improved security of WATO bulk inventory by using transaction ids
     * 0880 Added support for 389 Directory Server to LDAP connector
+    * 0607 online help text for host creation in WATO now also explains hostname caching
     * 0781 FIX: host diag page: fixed problem with update of diagnose subwindows...
 
     Notifications:

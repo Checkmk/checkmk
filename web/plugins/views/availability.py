@@ -1440,7 +1440,8 @@ def get_bi_timeline(tree, aggr_group, avoptions, timewarp):
 
     data = html.live.query(query)
     if not data:
-        raise MKGeneralException(_("No historical data available for this aggregation. Query was: <pre>%s</pre>") % query)
+        return [], None
+        # raise MKGeneralException(_("No historical data available for this aggregation. Query was: <pre>%s</pre>") % query)
 
     html.live.set_prepend_site(False)
     html.live.set_only_sites(None)
@@ -1549,7 +1550,7 @@ def compute_tree_state(tree, status):
             state_output[1],
             state_output[2], # in_downtime
             False, # acknowledged
-            services_by_host[site_host]
+            services_by_host.get(site_host,[])
         ]
 
 

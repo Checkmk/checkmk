@@ -1,9 +1,12 @@
 Title: Wato service parametr icon
 Component: wato
-State: open
+Class: bug
+State: wontfix
 Date: 2014-04-16 09:39:19
 Targetversion: 1.2.5i1
-Class: bug
 
 If you reenter the service view in wato and you have missing services, they allready have the icon with the link to the parameter information page. But 
 the link only works after activating the new services.
+
+2014-04-23 15:49:40: changed state open -> wontfix
+Duplicate of #2153

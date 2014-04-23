@@ -241,7 +241,10 @@ class Integer(ValueSpec):
             style = "text-align: right;"
         else:
             style = ""
-        html.number_input(varprefix, self._display_format % convfunc(value), size = self._size, style = style)
+        if value == "": # This is needed for ListOfIntegers
+            html.text_input(varprefix, "", "number", size = self._size, style = style)
+        else:
+            html.number_input(varprefix, self._display_format % convfunc(value), size = self._size, style = style)
         if self._unit:
             html.write("&nbsp;")
             html.write(self._unit)
@@ -693,10 +696,12 @@ class ListOfStrings(ValueSpec):
     def from_html_vars(self, vp):
         value = []
         nr = 0
-        while html.has_var(vp + "_%d" % nr):
-            s = html.var(vp + "_%d" % nr).strip()
-            if s:
-                value.append(s)
+        while True:
+            varname = vp + "_%d" % nr
+            if not html.has_var(varname):
+                break
+            if html.var(varname, "").strip():
+                value.append(self._valuespec.from_html_vars(varname))
             nr += 1
         return value
 
@@ -718,6 +723,20 @@ class ListOfStrings(ValueSpec):
             for nr, s in enumerate(value):
                 self._valuespec.validate_value(s, vp + "_%d" % nr)
         ValueSpec.custom_validate(self, value, vp)
+
+class ListOfIntegers(ListOfStrings):
+    def __init__(self, **kwargs):
+        int_args = {}
+        for key in [ "minvalue", "maxvalue" ]:
+            if key in kwargs:
+                int_args[key] = kwargs[key]
+        int_args["display_format"] = "%s"
+        int_args["convfunc"] = lambda x: x != "" and saveint(x) or ""
+        int_args["minvalue"] = 17
+        int_args["default_value"] = 34
+        valuespec = Integer(**int_args)
+        kwargs["valuespec"] = valuespec
+        ListOfStrings.__init__(self, **kwargs)
 
 # Generic list-of-valuespec ValueSpec with Javascript-based
 # add/delete/move

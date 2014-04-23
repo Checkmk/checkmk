@@ -1,0 +1,8 @@
+Title: ibm_svc_nodestats.disk_latency, ibm_svc_systemstats.disk_latency: New Checks for Disk Latency in IBM SVC / Storwize V3700 / V7000 devices
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1398184884
+Class: feature
+
+

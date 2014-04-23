@@ -1048,6 +1048,12 @@ multisite_painters["host_is_active"] = {
     "columns" : [ "host_active_checks_enabled" ],
     "paint"   : lambda row: paint_nagiosflag(row, "host_active_checks_enabled", None),
 }
+multisite_painters["host_notifications_enabled"] = {
+    "title"   : _("Host notifications enabled"),
+    "short"   : _("Notif."),
+    "columns" : [ "host_notifications_enabled" ],
+    "paint"   : lambda row: paint_nagiosflag(row, "host_notifications_enabled", False),
+}
 
 multisite_painters["host_pnpgraph" ] = {
     "title"   : _("PNP host graph"),

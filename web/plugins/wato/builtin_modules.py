@@ -28,7 +28,7 @@
 # defined in a plugin because they contain i18n strings.
 # fields: mode, title, icon, permission, help
 
-modules = [
+modules += [
       ( "folder",           _("Hosts"),     "folder", "hosts",
       _("Manage monitored hosts and services and the hosts' folder structure.")),
 

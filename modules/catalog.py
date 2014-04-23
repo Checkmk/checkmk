@@ -11,6 +11,7 @@ manpage_catalog_titles = {
             "sensatronics" : "Sensatronics",
             "stulz"      : "STULZ",
             "wut"        : "Wiesemann & Theis",
+            "wagner"     : "WAGNER Group",
         "other"       : "Other devices",
         "network"     : "Networking (Switches, Routers, etc.)",
             "alcatel"    : "Alcatel",

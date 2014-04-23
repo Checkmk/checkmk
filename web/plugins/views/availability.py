@@ -76,7 +76,7 @@
 #  we just diplay one element - which is identified by aggr_group
 #  and aggr_name. We immediately fork to page_timeline()
 #
-#  - htdocs/views.py:show_view()
+#  - htdocs/views.py:show_view() (jumps immediately to page_timeline)
 #    - htdocs/bi.py:page_timeline()
 #      - plugins/views/availability.py:render_bi_availability()
 #        - plugins/views/availability.py:do_render_availability()
@@ -1184,20 +1184,23 @@ def render_availability_group(group_title, range_title, group_id, availability, 
     for site, host, service, display_name, states, considered_duration, total_duration, statistics, timeline_rows, group_ids in group_availability:
         table.row()
 
+        if what != "bi":
+            timeline_url = html.makeuri([
+                   ("timeline", "yes"),
+                   ("timeline_site", site),
+                   ("timeline_host", host),
+                   ("timeline_service", service)])
+        else:
+            timeline_url = html.makeuri([("timeline", "yes"), ("av_aggr_name", service), ("av_aggr_group", host)])
+
+
         if not "omit_buttons" in labelling and not do_csv:
             table.cell("", css="buttons")
             if what != "bi":
-                timeline_url = html.makeuri([
-                       ("timeline", "yes"),
-                       ("timeline_site", site),
-                       ("timeline_host", host),
-                       ("timeline_service", service)])
-
                 history_url = history_url_of(site, host, service, from_time, until_time)
                 html.icon_button(history_url, _("Event History"), "history")
                 html.icon_button(timeline_url, _("Timeline"), "timeline")
             else:
-                timeline_url = html.makeuri([("timeline", "yes"), ("av_aggr_name", service), ("av_aggr_group", host)])
                 html.icon_button(timeline_url, _("Timeline"), "timeline")
 
         host_url = "view.py?" + html.urlencode_vars([("view_name", "hoststatus"), ("site", site), ("host", host)])
@@ -1351,6 +1354,8 @@ def render_bi_availability(title, aggr_rows):
     html.end_context_buttons()
 
     avoptions = render_availability_options()
+    timewarpcode = ""
+
     if not html.has_user_errors():
         rows = []
         for aggr_row in aggr_rows:
@@ -1362,7 +1367,7 @@ def render_bi_availability(title, aggr_rows):
                 timewarp = None
             these_rows, tree_state = get_bi_timeline(tree, aggr_row["aggr_group"], avoptions, timewarp)
             rows += these_rows
-            if timewarp:
+            if timewarp and tree_state:
                 state, assumed_state, node, subtrees = tree_state
                 eff_state = state
                 if assumed_state != None:
@@ -1417,10 +1422,26 @@ def get_bi_timeline(tree, aggr_group, avoptions, timewarp):
             "Columns: " + " ".join(columns) + "\n" +\
             "Filter: time >= %d\nFilter: time <= %d\n" % range
 
-    for host in hosts:
+    # Create a specific filter. We really only want the services and hosts
+    # of the aggregation in question. That prevents status changes 
+    # irrelevant services from introducing new phases.
+    by_host = {}
+    for site, host, service in bi.find_all_leaves(tree):
+        by_host.setdefault(host, set([])).add(service)
+
+    for host, services in by_host.items():
         query += "Filter: host_name = %s\n" % host
-    query += "Or: %d\n" % len(hosts)
+        query += "Filter: service_description = \n"
+        for service in services:
+            query += "Filter: service_description = %s\n" % service
+        query += "Or: %d\nAnd: 2\n" % (len(services) + 1)
+    if len(hosts) != 1:
+        query += "Or: %d\n" % len(hosts)
+
     data = html.live.query(query)
+    if not data:
+        raise MKGeneralException(_("No historical data available for this aggregation. Query was: <pre>%s</pre>") % query)
+
     html.live.set_prepend_site(False)
     html.live.set_only_sites(None)
     columns = ["site"] + columns

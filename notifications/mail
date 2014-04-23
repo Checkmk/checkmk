@@ -4,6 +4,7 @@
 #
 # Argument 1: Full system path to the pnp4nagios index.php for fetching the graphs. Usually auto configured in OMD.
 # Argument 2: HTTP-URL-Prefix to open Multisite. When provided, several links are added to the mail.
+#             Example: http://myserv01/prod
 #
 # This script creates a nifty HTML email in multipart format with
 # attached graphs and such neat stuff. Sweet!

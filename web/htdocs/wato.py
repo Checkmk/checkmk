@@ -16760,16 +16760,16 @@ modes = {
 
 loaded_with_language = False
 def load_plugins():
-    global extra_buttons
     global loaded_with_language
     if loaded_with_language == current_language:
         return
 
     # Reset global vars
-    global extra_buttons, configured_host_tags, host_attributes
+    global extra_buttons, configured_host_tags, host_attributes, modules
     extra_buttons = []
     configured_host_tags = None
     host_attributes = []
+    modules = []
 
     load_notification_table()
 

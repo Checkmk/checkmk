@@ -1313,7 +1313,7 @@ def prepare_display_options():
 # is about.
 def show_view(view, show_heading = False, show_buttons = True,
               show_footer = True, render_function = None, only_count=False):
-    if html.var("mode") == "availability" and html.has_var("aggr_name") and html.var("timeline"):
+    if html.var("mode") == "availability" and html.has_var("av_aggr_name") and html.var("timeline"):
         bi.page_timeline()
         return
 
@@ -2735,7 +2735,7 @@ def get_painter_option(name):
     return opt.get("value", opt['valuespec'].default_value())
 
 def get_host_tags(row):
-    if "host_custom_variables" in row:
+    if type(row.get("host_custom_variables")) == dict:
         return row["host_custom_variables"].get("TAGS", "")
 
     for name, val in zip(row["host_custom_variable_names"],

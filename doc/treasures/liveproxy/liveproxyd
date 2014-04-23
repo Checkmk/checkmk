@@ -159,7 +159,6 @@ def send_heartbeat(sitename, sitestate):
         for channel in sitestate["channels"]:
             if channel["state"] == "ready":
                 if next_channel == None or channel["since"] < next_channel["since"]:
-                    min_since = channel["since"]
                     next_channel = channel
         if not next_channel:
             log("Cannot send heartbeat to %s: no channel ready" % sitename)

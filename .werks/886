@@ -1,0 +1,9 @@
+Title: Fix exception on non-UTF-8 encoded characters in software list
+Level: 2
+Component: inv
+Class: fix
+State: unknown
+Version: 1.2.5i3
+Date: 1397487819
+
+

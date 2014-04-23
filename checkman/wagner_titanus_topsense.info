@@ -1,0 +1,16 @@
+title: Wagner Titanus Top Sens: System Infos
+agents: snmp
+catalog: hw/environment/wagner
+license: GPL
+distribution: check_mk
+description:
+ Gathers some system information from Wagner Titanus Top Sens devices
+ and displays them. In detail these are:
+ Uptime, System Name, System Contact, System Location, Company, Model,
+ Revision and LSNi bus status.
+
+ This check is for information only and returns always {OK}.
+
+inventory:
+ Creates exactly one check for each Top Sense device called
+ Topsense Info.

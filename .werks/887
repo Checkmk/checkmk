@@ -1,0 +1,10 @@
+Title: Add new column painter "Host Notifications Enabled"
+Level: 1
+Component: multisite
+Version: 1.2.5i3
+Date: 1397655243
+Class: feature
+
+This new column has been added to the view <i>Host problems for NagStaMon</i> and is used
+for providing that information to NagStaMon. Note: You will need to update NagStaMon in order
+to use this new information.

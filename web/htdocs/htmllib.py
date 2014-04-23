@@ -326,7 +326,7 @@ class html:
                    'src="images/button_%s_lo.png" '
                    'onmouseover=\"hilite_icon(this, 1)\" '
                    'onmouseout=\"hilite_icon(this, 0)\">'
-                   '</a>' % (id, onclick, style, target, cssclass, url, help, icon))
+                   '</a>' % (id, onclick, style, target, cssclass, url, self.attrencode(help), icon))
 
     def empty_icon_button(self):
         self.write('<img class="iconbutton trans" src="images/trans.png">')

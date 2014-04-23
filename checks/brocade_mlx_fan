@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 def brocade_mlx_fan_combine_item(id, descr):
-    if descr == "":
+    if descr == "" or "(RPM " in descr:
         return id
     else:
         return "%s %s" % (id, descr)

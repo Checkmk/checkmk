@@ -1,0 +1,11 @@
+Title: Service parameters: check parameters are not shown for missing services
+Component: wato
+State: open
+Date: 2014-04-23 15:32:07
+Targetversion: 1.2.5i1
+Class: nastiness
+
+If you go to WATO service list of a host and one service is new/missing and you click
+on the icon for the parameters, then all settings are shown - except for the
+check paramters. These are available as soon as the check is inventorized. Either
+make sure that the parameters are also shown or remove the icon.

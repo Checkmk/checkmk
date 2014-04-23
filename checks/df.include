@@ -304,8 +304,13 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, inodes_t
     # TODO: In some future version use a fixed name as perf variable
     perf_var = mountpoint.replace(" ", "_")
     perfdata = [(perf_var, str(used_mb) + 'MB', warn_mb, crit_mb, 0, size_mb)]
-    infotext = "%.1f %% used (%.2f of %.1f GB), %s" % \
-                (used_perc, used_mb / 1024.0, size_gb, levels["levels_text"])
+
+    if size_gb < 10240:
+        infotext = "%.1f %% used (%.2f of %.2f GB), %s" % \
+                    (used_perc, used_mb / 1024.0, size_gb, levels["levels_text"])
+    else:
+        infotext = "%.1f %% used (%.2f of %.2f TB), %s" % \
+                    (used_perc, used_mb / 1024.0 / 1024.0, size_gb / 1024.0, levels["levels_text"])
 
     # Trends. The trends are computed in two steps. In the first step we
     # compute the delta to the last check, using a normal check_mk counter.

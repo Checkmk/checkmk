@@ -39,7 +39,7 @@
 # MSSQL_SQLEXPRESS:Databases master Log_File(s)_Size_(KB)
 
 def mssql_counters_item(line, add_counter_name):
-    obj, counter, instance, value = line
+    obj, counter, instance = line[:3]
 
     if obj.endswith(':Databases'):
         obj = obj[:-10]

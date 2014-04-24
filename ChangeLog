@@ -58,6 +58,7 @@
     Multisite:
     * 0779 Hostgroups (Summary): Empty hostgroups are no longer shown (can be re-enabled by filter)
     * 0887 Add new column painter "Host Notifications Enabled"...
+    * 0905 FIX: Multisite context buttons: links in context buttons are no longer called twice...
 
     WATO:
     * 0784 Improved security of WATO bulk inventory by using transaction ids

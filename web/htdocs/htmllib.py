@@ -382,7 +382,7 @@ class html:
         if hover_title:
             self.write(' title="%s"' % self.attrencode(hover_title))
         if bestof:
-            self.write(' onclick="count_context_button(this); document.location=this.href; " ')
+            self.write(' onclick="count_context_button(this); " ')
         if fkey and self.keybindings_enabled:
             title += '<div class=keysym>F%d</div>' % fkey
             self.add_keybinding([html.F1 + (fkey - 1)], "document.location='%s';" % self.attrencode(url))

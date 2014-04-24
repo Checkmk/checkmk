@@ -1,6 +1,7 @@
 1.2.5i2p2:
     Core & Setup:
     * 0903 FIX: availability: fixed bug causing the availability feature not considering timeperiod transitions
+    * 0888 FIX: Fix SNMP inventory check in simulation mode
 
     Checks & Agents:
     * 0882 FIX: check_bi_local.py: fix crash in case of non-ascii characters...

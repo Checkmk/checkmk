@@ -1,14 +1,17 @@
 1.2.4p3:
+    Core & Setup:
+    * 0888 FIX: Fix SNMP inventory check in simulation mode
+
     Checks & Agents:
     * 0889 FIX: logwatch: fix case where rule wouldn't be applied...
     * 0154 FIX: zfsget: Fixed inventory of filesystems
     * 0155 FIX: mssql_counters: harded check agains odd agent output
 
-    Event Console:
-    * 0902 FIX: event console view: fixed exception on rendering host tags for unknown hosts...
-
     BI:
     * 0882 FIX: check_bi_local.py: fix crash in case of non-ascii characters...
+
+    Event Console:
+    * 0902 FIX: event console view: fixed exception on rendering host tags for unknown hosts...
 
 
 1.2.4p2:

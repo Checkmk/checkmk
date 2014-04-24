@@ -351,7 +351,13 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_che
             # cache file is newer than check_interval, skip this check
             raise MKSkipCheck()
 
-        content = read_cache_file(cache_relpath, max_cache_age)
+        try:
+            content = read_cache_file(cache_relpath, max_cache_age)
+        except:
+            if simulation_mode and not opt_no_cache:
+                return # Simply ignore missing SNMP cache files
+            raise
+
         if content:
             return eval(content)
         # Not cached -> need to get info via SNMP

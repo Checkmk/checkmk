@@ -3,6 +3,7 @@
     * 0884 New options --oid and --extraoid for cmk --snmpwalk...
     * 0785 FIX: Availability: fixed memory leak in table statehist...
     * 0903 FIX: availability: fixed bug causing the availability feature not considering timeperiod transitions
+    * 0888 FIX: Fix SNMP inventory check in simulation mode
 
     Checks & Agents:
     * 0149 cisco_secure: New check for Port Security on Cisco swichtes

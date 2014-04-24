@@ -177,7 +177,7 @@ def end():
             for row, css, state in rows:
                 if state == "header":
                     continue
-                for cell_content, css_classes in row:
+                for cell_content, css_classes, colspan  in row:
                     if search_term in cell_content.lower():
                         filtered_rows.append((row, css, state))
                         break # skip other cells when matched

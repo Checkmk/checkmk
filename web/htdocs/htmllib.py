@@ -969,25 +969,23 @@ class html:
     # than one week.
     def store_new_transids(self):
         if self.new_transids:
-            valid_ids = self.load_transids()
-
+            valid_ids = self.load_transids(lock = True)
             cleared_ids = []
             now = time.time()
             for valid_id in valid_ids:
                 timestamp, rand = valid_id.split("/")
                 if now - int(timestamp) < 604800: # 7 * 24 hours
                     cleared_ids.append(valid_id)
-
-            self.save_transids(cleared_ids + self.new_transids)
+            self.save_transids(cleared_ids + self.new_transids, unlock = True)
 
     # Remove the used transid from the list of valid ones
     def invalidate_transid(self, used_id):
-        valid_ids = self.load_transids()
+        valid_ids = self.load_transids(lock = True)
         try:
             valid_ids.remove(used_id)
         except ValueError:
             return
-        self.save_transids(valid_ids)
+        self.save_transids(valid_ids, unlock = True)
 
     # Checks, if the current transaction is valid, i.e. in case of
     # browser reload a browser reload, the form submit should not

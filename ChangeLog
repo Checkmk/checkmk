@@ -52,6 +52,7 @@
     * 0832 FIX: solaris_mem: fixed invalid calculation of total swap...
     * 0810 FIX: fritz.link: Not inventorizing "unconfigured" interfaces anymore
     * 0154 FIX: zfsget: Fixed inventory of filesystems
+    * 0155 FIX: mssql_counters: harded check agains odd agent output
 
     Multisite:
     * 0779 Hostgroups (Summary): Empty hostgroups are no longer shown (can be re-enabled by filter)

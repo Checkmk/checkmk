@@ -1,0 +1,74 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+akcp_daisy_temp_defaultlevels = (28, 32)
+
+def inventory_akcp_daisy_temp(info):
+    inventory = []
+    pass_first = True
+    for port, subport, name, temp in info:
+        if subport != '-1':
+            # We have to ignore the first item, because it will be also reported
+            # by akcp_sensor_temp on the port were this sensor chain are connected
+            if pass_first:
+                pass_first = False
+                continue
+            inventory.append((name, 'akcp_daisy_temp_defaultlevels' )) 
+    return inventory
+
+def check_akcp_daisy_temp(item, params, info):
+    for port, subport, name, temp in info:
+        if name == item:
+            warn, crit = params
+            temp = savefloat(temp) / 10
+            infotext = "%.1f °C " % temp
+            levels = " (warn/crit at %.1f/%.1f °C)" % (warn, crit) 
+            perfdata = [ ( "temperature", temp, warn, crit ) ]
+            if temp > crit:
+                return 2, infotext + levels, perfdata
+            if temp > warn:
+                return 1, infotext + levels, perfdata
+            return 0, infotext
+    return 3, "Sensor not found"
+
+check_info["akcp_daisy_temp"] = {
+    'check_function':          check_akcp_daisy_temp,
+    'inventory_function':      inventory_akcp_daisy_temp,
+    'service_description':     'Temperature %s',
+    'has_perfdata':            True,
+    'snmp_info':               (
+        ".1.3.6.1.4.1.3854.1.2.2.1.19.33", 
+            [ 1, 2, 3, 4, 5, 6, 7 ],
+            [
+             OID_END, # Port/Subport
+             "2.1.1", # subport
+             "2.1.2", # Sensor Name
+             "2.1.14", # Degree Celsius
+            ]
+    ),
+    'snmp_scan_function':  lambda oid: oid(".1.3.6.1.2.1.1.2.0") in\
+                         [ ".1.3.6.1.4.1.3854.1.2.2.1.1", ".1.3.6.1.4.1.3854.1" ],
+    'group'             :  'room_temperature',
+}

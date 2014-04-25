@@ -1,0 +1,65 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+enterasys_temp_default_levels = (30, 35)
+
+def inventory_enterasys_temp(info):
+    if info[0][0] == "0":
+        return []
+    else:
+        return [ (None, "enterasys_temp_default_levels") ]
+
+def check_enterasys_temp(item, params, info):
+    warn, crit = params
+
+    # info for MIB: The ambient temperature of the room in which the chassis
+    # is located. If this sensor is broken or not supported, then
+    # this object will be set to zero. The value of this object
+    # is the actual temperature in degrees Fahrenheit * 10.
+    temp_value_snmp = int(info[0][0])
+    temp_c = (temp_value_snmp / 10 - 32) / 1.8
+    temp_c = float("%0.1f" % temp_c)
+
+    perfdata = [ ("temp", str(temp_c) + "C", warn, crit) ]
+    infotext = "Temperature is %0.1f C (warn/crit at %0.1f/%0.1f C)" % (temp_c, warn, crit)
+    status = 0
+    if temp_c >= crit:
+        status = 2
+    elif temp_c >= warn:
+        status = 1
+
+    return status, infotext, perfdata
+
+check_info["enterasys_temp"] = {
+    "check_function"        : check_enterasys_temp,
+    "inventory_function"    : inventory_enterasys_temp,
+    "service_description"   : "Temperature",
+    "has_perfdata"          : True,
+    "snmp_info"             : ( ".1.3.6.1.4.1.52.4.1.1.8.1", [ 1 ]), # chEnvAmbientTemp
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5624.2.1"),
+    "group"                 : "hw_single_temperature",
+}
+

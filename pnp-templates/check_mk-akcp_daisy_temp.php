@@ -1,0 +1,1 @@
+check_mk-akcp_sensor_temp.php

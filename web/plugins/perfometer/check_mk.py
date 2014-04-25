@@ -277,6 +277,7 @@ perfometers["check_mk-smart.temp"] = perfometer_temperature
 perfometers["check_mk-f5_bigip_temp"] = perfometer_temperature
 perfometers["check_mk-hp_proliant_temp"] = perfometer_temperature
 perfometers["check_mk-akcp_sensor_temp"] = perfometer_temperature
+perfometers["check_mk-akcp_daisy_temp"] = perfometer_temperature
 perfometers["check_mk-fsc_temp"] = perfometer_temperature
 perfometers["check_mk-viprinet_temp"] = perfometer_temperature
 perfometers["check_mk-hwg_temp"] = perfometer_temperature

@@ -1,0 +1,14 @@
+Title: Check event state: New option "Less Verbose Output"
+Level: 1
+Component: wato
+Version: 1.2.5i3
+Date: 1398690971
+Class: feature
+
+If enabled the check reports less information in its output.<br>
+You will see no information regarding the worst state or unacknowledged events.<br>
+ For example a default output without this option <br>
+<tt>WARN - 1 events (1 unacknowledged), worst state is WARN (Last line: Incomplete Content)</tt><br>
+Output with less verbosity<br>
+<tt>WARN - 1 events (Worst line: Incomplete Content)</tt>
+

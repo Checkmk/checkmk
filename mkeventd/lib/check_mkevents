@@ -56,6 +56,12 @@ try:
     except:
         opt_ignore_acknowledged = False
 
+    try:
+        del sys.argv[sys.argv.index('-l')]
+        opt_less_verbose = True
+    except:
+        opt_less_verbose = False
+
     if sys.argv[1] == '-H':
         remote_host = sys.argv[2]
         del sys.argv[1:3]
@@ -65,8 +71,9 @@ try:
     else:
         application = None
 except:
-    sys.stdout.write("Usage: check_mkevents [-H (REMOTE:PORT|/path/to/unix/socket)] [-a] HOST [APPLICATION]\n")
+    sys.stdout.write("Usage: check_mkevents [-H (REMOTE:PORT|/path/to/unix/socket)] [-a] [-l] HOST [APPLICATION]\n")
     sys.stdout.write("\n -a        do not take into account acknowledged events.\n")
+    sys.stdout.write("\n -l        less verbose output.\n")
     sys.stdout.write("\n")
     sys.exit(3)
 
@@ -112,11 +119,16 @@ if count == 0 and application:
 elif count == 0:
     sys.stdout.write("OK - no events for %s\n" % host_name)
 else:
-    sys.stdout.write(nagios_state_names[worst_state] + \
-         " - %d events (%d unacknowledged)" % (count, unhandled))
-    if worst_row:
-        sys.stdout.write(", worst state is %s (Last line: %s)" % \
-         (nagios_state_names[worst_state], worst_row['event_text'].encode('utf-8')))
+    if opt_less_verbose:
+        sys.stdout.write(nagios_state_names[worst_state] + " - %d events" % (count))
+        if worst_row:
+            sys.stdout.write(" (Worst line: %s)" % (worst_row['event_text'].encode('utf-8')))
+    else:
+        sys.stdout.write(nagios_state_names[worst_state] + \
+             " - %d events (%d unacknowledged)" % (count, unhandled))
+        if worst_row:
+            sys.stdout.write(", worst state is %s (Last line: %s)" % \
+             (nagios_state_names[worst_state], worst_row['event_text'].encode('utf-8')))
     sys.stdout.write("\n")
 
 sys.exit(worst_state)

@@ -104,6 +104,7 @@ def handler(req, fields = None, profiling = True):
         config.load_config() # load multisite.mk
         if html.var("debug"): # Debug flag may be set via URL
             config.debug = True
+        html.enable_debug = config.debug
         html.set_buffering(config.buffered_http_stream)
 
         # profiling can be enabled in multisite.mk

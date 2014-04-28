@@ -50,6 +50,7 @@
     Multisite:
     * 0779 Hostgroups (Summary): Empty hostgroups are no longer shown (can be re-enabled by filter)
     * 0887 Add new column painter "Host Notifications Enabled"...
+    * 0811 FIX: Fixed handling of exceptions occuring before login in debug mode
 
     WATO:
     * 0784 Improved security of WATO bulk inventory by using transaction ids

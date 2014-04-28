@@ -203,7 +203,7 @@ def get_filesystem_levels(host, mountpoint, size_gb, params):
             crit_scaled *= -1
         else:
             label = 'levels at'
-        levels["levels_text"] = "(%s %.2f/%.2f%%)" % (label, warn_scaled, crit_scaled)
+        levels["levels_text"] = "(%s %.2f/%.2f %%)" % (label, warn_scaled, crit_scaled)
     else:
         if warn * mega < 0 and crit * mega < 0:
             label = 'levels at free space below'
@@ -304,8 +304,13 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, inodes_t
     # TODO: In some future version use a fixed name as perf variable
     perf_var = mountpoint.replace(" ", "_")
     perfdata = [(perf_var, str(used_mb) + 'MB', warn_mb, crit_mb, 0, size_mb)]
-    infotext = "%.1f%% used (%.2f of %.1f GB), %s" % \
-                (used_perc, used_mb / 1024.0, size_gb, levels["levels_text"])
+
+    if size_gb < 10240:
+        infotext = "%.1f %% used (%.2f of %.2f GB), %s" % \
+                    (used_perc, used_mb / 1024.0, size_gb, levels["levels_text"])
+    else:
+        infotext = "%.1f %% used (%.2f of %.2f TB), %s" % \
+                    (used_perc, used_mb / 1024.0 / 1024.0, size_gb / 1024.0, levels["levels_text"])
 
     # Trends. The trends are computed in two steps. In the first step we
     # compute the delta to the last check, using a normal check_mk counter.
@@ -357,7 +362,7 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, inodes_t
                 wa, cr = trend_mb
                 warn_perf, crit_perf = wa, cr
                 if trend >= wa:
-                    problems.append("growing too fast (levels at %s/%s per %.1fh)(!" %
+                    problems.append("growing too fast (levels at %s/%s per %.1f h)(!" %
                        ( get_bytes_human_readable(wa * MB), get_bytes_human_readable(cr * MB), range))
                     status = max(1, status)
                     if trend >= cr:
@@ -379,7 +384,7 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, inodes_t
                 else:
                     warn_perf, crit_perf = wa, cr
                 if trend >= wa:
-                    problems.append("growing too fast (levels at %.3f%%/%.3f%% per %.1fh)(!" %
+                    problems.append("growing too fast (levels at %.3f %%/%.3f %% per %.1f h)(!" %
                        ( wa_perc, cr_perc, range))
                     status = max(1, status)
                     if trend >= cr:
@@ -455,7 +460,7 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, inodes_t
                 elif inodes_warn > inodes_avail_perc:
                     status = max(1, status)
                     problems.append("less than %.02f%% inodes available(!!)" % inodes_warn)
-        infotext += ", inodes available %dk/%0.2f%%" % (inodes_avail / 1000, inodes_avail_perc)
+        infotext += ", inodes available %dk/%0.2f %%" % (inodes_avail / 1000, inodes_avail_perc)
 
     if problems:
         infotext += " - %s" % ", ".join(problems)

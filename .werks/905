@@ -1,0 +1,10 @@
+Title: Multisite context buttons: links in context buttons are no longer called twice
+Level: 1
+Component: multisite
+Version: 1.2.5i3
+Date: 1398343626
+Class: fix
+
+The "onclick" attribute in the context button (buttons at the top of a page) additionally
+called the href link, which was already specified in the "href" attribute.
+This could lead to raise conditions where transactions (saving a formular) were not handled correctly.

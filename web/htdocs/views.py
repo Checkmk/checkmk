@@ -2738,6 +2738,9 @@ def get_host_tags(row):
     if type(row.get("host_custom_variables")) == dict:
         return row["host_custom_variables"].get("TAGS", "")
 
+    if type(row.get("host_custom_variable_names")) != list:
+        return ""
+
     for name, val in zip(row["host_custom_variable_names"],
                          row["host_custom_variable_values"]):
         if name == "TAGS":

@@ -38,16 +38,16 @@ if (isset($DS[2])) {
     $parts = explode("_", $servicedesc);
     $disk = $parts[2];
 
-    $opt[1] = "--vertical-label 'IOs/sec' -X0  --title \"$hostname / $servicedesc\" ";
+    $opt[1] = "--vertical-label 'IO/s' -X0  --title \"$hostname / $servicedesc\" ";
 
     $def[1]  =
                "HRULE:0#a0a0a0 ".
     # read
                "DEF:read=$RRD[read] ".
                "AREA:read#40c080:\"Read \" ".
-               "GPRINT:read:LAST:\"%8.0lf IOs/sec last\" ".
-               "GPRINT:read:AVERAGE:\"%6.0lf IOs/sec avg\" ".
-               "GPRINT:read:MAX:\"%6.0lf IOs/sec max\\n\" ";
+               "GPRINT:read:LAST:\"%8.0lf IO/s last\" ".
+               "GPRINT:read:AVERAGE:\"%6.0lf IO/s avg\" ".
+               "GPRINT:read:MAX:\"%6.0lf IO/s max\\n\" ";
 
     # read average as line in the same graph
     if (isset($RRD["read.avg"])) {
@@ -61,21 +61,21 @@ if (isset($DS[2])) {
                "DEF:write=$RRD[write] ".
                "CDEF:write_neg=write,-1,* ".
                "AREA:write_neg#4080c0:\"Write  \"  ".
-               "GPRINT:write:LAST:\"%6.0lf IOs/sec last\" ".
-               "GPRINT:write:AVERAGE:\"%6.0lf IOs/sec avg\" ".
-               "GPRINT:write:MAX:\"%6.0lf IOs/sec max\\n\" ".
+               "GPRINT:write:LAST:\"%6.0lf IO/s last\" ".
+               "GPRINT:write:AVERAGE:\"%6.0lf IO/s avg\" ".
+               "GPRINT:write:MAX:\"%6.0lf IO/s max\\n\" ".
                "";
 
     # show levels for read
     if ($WARN['read']) {
-        $def[1] .= "HRULE:$WARN[read]#ffd000:\"Warning for read at  " . sprintf("%6.1f", $WARN[1]) . " IOs/sec  \" ";
-        $def[1] .= "HRULE:$CRIT[read]#ff0000:\"Critical for read at  " . sprintf("%6.1f", $CRIT[1]) . " IOs/sec\\n\" ";
+        $def[1] .= "HRULE:$WARN[read]#ffd000:\"Warning for read at  " . sprintf("%6.1f", $WARN[1]) . " IO/s  \" ";
+        $def[1] .= "HRULE:$CRIT[read]#ff0000:\"Critical for read at  " . sprintf("%6.1f", $CRIT[1]) . " IO/s\\n\" ";
     }
 
     # show levels for write
     if ($WARN['write']) {
-        $def[1] .= "HRULE:-$WARN[write]#ffd000:\"Warning for write at " . sprintf("%6.1f", $WARN[2]) . " IOs/sec  \" ";
-        $def[1] .= "HRULE:-$CRIT[write]#ff0000:\"Critical for write at " . sprintf("%6.1f", $CRIT[2]) . " IOs/sec\\n\" ";
+        $def[1] .= "HRULE:-$WARN[write]#ffd000:\"Warning for write at " . sprintf("%6.1f", $WARN[2]) . " IO/s  \" ";
+        $def[1] .= "HRULE:-$CRIT[write]#ff0000:\"Critical for write at " . sprintf("%6.1f", $CRIT[2]) . " IO/s\\n\" ";
     }
 
 }

@@ -37,7 +37,11 @@ def inventory_brocade_mlx_temp(info):
     inventory = []
     for temp_descr, temp_id, temp_value in info:
         temp_descr = compose_item(temp_id, temp_descr)
-        if ((temp_descr, "brocade_mlx_temperature_default_levels") not in inventory):
+        # BigIron RX devices have problems when queried by SNMPv2c bulk walk and
+        # do not deliver values. So in this case we do not inventorize them to
+        # avoid the check to break
+        if ((temp_descr, "brocade_mlx_temperature_default_levels") not in inventory and \
+            temp_value != ""):
             inventory.append( (temp_descr, "brocade_mlx_temperature_default_levels") )
     return inventory
 

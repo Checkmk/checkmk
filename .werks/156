@@ -1,0 +1,8 @@
+Title: akcp_daisy_temp: New Check for akcp daisyTemp sensor chains
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1398413136
+Class: feature
+
+Further information about the sensor type can be found here: http://www.akcp.com/wp-content/uploads/2010/03/daisyTemp-sensor.pdf

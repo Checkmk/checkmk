@@ -1,0 +1,52 @@
+Konzept für ein automatisches Erzeugen eines Baumes
+---------------------------------------------------
+
+Ausgangspunkt: WATO sieht über die Ordnerstruktur für Hosts vor, dass man
+diese hierarchisch organisieren kann. Nun gibt es hier leider nur einen
+Baum. Manchmal möchte man die Hosts nur unter dem Gesichtspunkt von
+anderen Hierarchien sehen.
+
+Die Idee ist jetzt, dass man dazu die vorhandenen Hosttag-Gruppen
+verwendet. Denn jeder Host hat in jeder Taggruppe genau einen
+Wert. Der Benutzer könnte jetzt eine Anzahl von Taggruppen
+herauspicken, z.B.:
+
+1. Standort
+2. Anwendung
+3. Kritikalität
+
+Diese können dann in hierarchieebenen eines logischen Baumes
+umgewandelt werden. Auf der obersten Ebene wäre der Standort,
+darunter die Anwendung, darunter die Kritikalität.
+
+Das ganze könnte man wie folgt umsetzen:
+
+1. In den globalen Einstellungen für Multisite fügen wir eine neue Option ein,
+mit der man beliebige virtuelle Baumansichten anlegen kann. Das wird als
+Liste realisiert. Dort kann man pro Eintrag eingeben:
+  - Einen Titel für die Ansicht
+  - Eine sortierte Liste von Hosttaggruppen, die den Baum bilden sollen.
+
+2. Ein neues Sidebar-Snanip "Virtuelle Baumansicht" wird geschrieben. Dieses
+   erlaubt die Auswahl einer der oben realisierten virtuellen Bäume (falls
+   es mehr als einen gibt). Es stellt dann diesen Baum zum Aufklappen dar.
+
+   Wenn man auf einen Ast klickt, ergibt sich dadurch eine Liste von
+   Hosttags bzw. von nicht vorhandenen Hosttags (wenn man bei Checkbox-
+   Hosttags den negativen Wert wählt, oder ein Tag leer ist).
+
+   Man landet dann auf der Ansicht "All Hosts", bei welcher der Filter
+   für die Host-Tags vorausgefüllt ist.
+
+3. Die Ansicht "All Hosts" bekommt standardmäßig immer den Filter für
+   die Host Tags.
+
+
+Eine mögliche Ausbaustufe wäre, dass man das Verhalten des neuen
+Snapins analog zu dem "Folders"-Snapin macht. Das würde bedeuten,
+dass man nicht immer auf die Ansicht "All Hosts" gelangt, sondern
+auf die jeweils gewählte Ansicht. Dazu müsste in jeder Ansicht
+der Hosttag-Filter implizit vorhanden sein. Außerdem müsste
+der kombinierte Filter aus Ordner und Tags dann sauber funktionieren.
+Frage ist, ob das nicht zu komplex wird.
+

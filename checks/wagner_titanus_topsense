@@ -44,7 +44,13 @@ wagner_titanus_topsense_info = [(".1.3.6.1.2.1.1",               [1,          # 
                                 (".1.3.6.1.4.1.34187.21501.2.1", [24584008,    # tsLSNbusOnline      0
                                                                                # offline(0),online(1)
                                                                   245810000,   # tsBarGraph1String
-                                                                  245820000]), # tsBarGraph2String
+                                                                  245820000,   # tsBarGraph2String
+                                                                  245950000,   # tsD1ChamberValueString
+                                                                  246090000,   # tsD2ChamberValueString
+                                                                  245960000,   # tsD1AirFlowDeviationString
+                                                                  246100000,   # tsD2AirFlowDeviationString
+                                                                  245970000,   # tsD1AirTemperatureString
+                                                                  246110000]), # tsD2AirTemperatureString
                   ]
 
 def wagner_titanus_topsense_scan(oid):
@@ -207,6 +213,130 @@ check_info["wagner_titanus_topsense.smoke"] = {
     "inventory_function"    : inventory_wagner_titanus_topsense_smoke,
     "service_description"   : "Smoke Detector %s",
     "has_perfdata"          : True,
+    "snmp_info"             : wagner_titanus_topsense_info,
+    "snmp_scan_function"    : wagner_titanus_topsense_scan
+}
+
+#.
+#   .--chamber deviation---------------------------------------------------.
+#   |         _                     _                     _                |
+#   |     ___| |__   __ _ _ __ ___ | |__   ___ _ __    __| | _____   __    |
+#   |    / __| '_ \ / _` | '_ ` _ \| '_ \ / _ \ '__|  / _` |/ _ \ \ / /    |
+#   |   | (__| | | | (_| | | | | | | |_) |  __/ |    | (_| |  __/\ V /     |
+#   |    \___|_| |_|\__,_|_| |_| |_|_.__/ \___|_|     \__,_|\___| \_/      |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_wagner_titanus_topsense_chamber_deviation(info):
+    return [ ("1", None), ("2", None) ]
+
+def check_wagner_titanus_topsense_chamber_deviation(item, _no_params, info):
+    if item == "1":
+        chamber_deviation = float(info[2][0][3])
+    elif item == "2":
+        chamber_deviation = float(info[2][0][4])
+    else:
+        return 3, "Chamber Deviation Detector %s not found in SNMP" % item
+
+    perfdata = [("chamber_deviation", chamber_deviation)]
+
+    return 0, "%0.6f%% Chamber Deviation" % chamber_deviation, perfdata
+
+check_info["wagner_titanus_topsense.chamber_deviation"] = {
+    "check_function"        : check_wagner_titanus_topsense_chamber_deviation,
+    "inventory_function"    : inventory_wagner_titanus_topsense_chamber_deviation,
+    "service_description"   : "Chamber Deviation Detector %s",
+    "has_perfdata"          : True,
+    "snmp_info"             : wagner_titanus_topsense_info,
+    "snmp_scan_function"    : wagner_titanus_topsense_scan
+}
+
+#.
+#   .--air flow deviation--------------------------------------------------.
+#   |              _         __ _                     _                    |
+#   |         __ _(_)_ __   / _| | _____      __   __| | _____   __        |
+#   |        / _` | | '__| | |_| |/ _ \ \ /\ / /  / _` |/ _ \ \ / /        |
+#   |       | (_| | | |    |  _| | (_) \ V  V /  | (_| |  __/\ V /         |
+#   |        \__,_|_|_|    |_| |_|\___/ \_/\_/    \__,_|\___| \_/          |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+wagner_titanus_topsense_airflow_deviation_default_values = (-20.0, -20.0, 20.0, 20.0)
+
+def inventory_wagner_titanus_topsense_airflow_deviation(info):
+    return [ ("1", "wagner_titanus_topsense_airflow_deviation_default_values"),
+             ("2", "wagner_titanus_topsense_airflow_deviation_default_values") ]
+
+def check_wagner_titanus_topsense_airflow_deviation(item, params, info):
+    lower_crit, lower_warn, upper_warn, upper_crit = params
+    status=0
+    if item == "1":
+        airflow_deviation = float(info[2][0][5])
+    elif item == "2":
+        airflow_deviation = float(info[2][0][6])
+    else:
+        return 3, "Airflow Deviation Detector %s not found in SNMP" % item
+
+    if airflow_deviation >= upper_warn or airflow_deviation <= lower_warn:
+        status = 1
+    if airflow_deviation >= upper_crit or airflow_deviation <= lower_crit:
+        status = 2
+
+    perfdata = [("airflow_deviation", airflow_deviation, upper_warn, upper_crit, 0)]
+
+    return status, "Airflow Deviation is %0.6f%%" % airflow_deviation, perfdata
+
+check_info["wagner_titanus_topsense.airflow_deviation"] = {
+    "check_function"        : check_wagner_titanus_topsense_airflow_deviation,
+    "inventory_function"    : inventory_wagner_titanus_topsense_airflow_deviation,
+    "service_description"   : "Airflow Deviation Detector %s",
+    "has_perfdata"          : True,
+    "group"                 : "airflow_deviation",
+    "snmp_info"             : wagner_titanus_topsense_info,
+    "snmp_scan_function"    : wagner_titanus_topsense_scan
+}
+
+#.
+#   .--air temp------------------------------------------------------------.
+#   |                     _        _                                       |
+#   |                __ _(_)_ __  | |_ ___ _ __ ___  _ __                  |
+#   |               / _` | | '__| | __/ _ \ '_ ` _ \| '_ \                 |
+#   |              | (_| | | |    | ||  __/ | | | | | |_) |                |
+#   |               \__,_|_|_|     \__\___|_| |_| |_| .__/                 |
+#   |                                               |_|                    |
+#   '----------------------------------------------------------------------'
+
+wagner_titanus_topsense_temperature_default_values = (30, 35)
+
+def inventory_wagner_titanus_topsense_temp(info):
+    return [ ("1", "wagner_titanus_topsense_temperature_default_values"),
+             ("2", "wagner_titanus_topsense_temperature_default_values") ]
+
+def check_wagner_titanus_topsense_temp(item, params, info):
+    warn, crit = params
+    status=0
+    if item == "1":
+        temp = float(info[2][0][7])
+    elif item == "2":
+        temp = float(info[2][0][8])
+    else:
+        return 3, "Temperature Detector %s not found in SNMP" % item
+
+    if temp >= warn:
+        status = 1
+    if temp >= crit:
+        status = 2
+
+    perfdata = [("temp", str(temp) + "C", warn, crit)]
+
+    return status, "Temperature is %0.2f °C" % temp, perfdata
+
+check_info["wagner_titanus_topsense.temp"] = {
+    "check_function"        : check_wagner_titanus_topsense_temp,
+    "inventory_function"    : inventory_wagner_titanus_topsense_temp,
+    "service_description"   : "Temperature Detector %s",
+    "has_perfdata"          : True,
+    "group"                 : "room_temperature",
     "snmp_info"             : wagner_titanus_topsense_info,
     "snmp_scan_function"    : wagner_titanus_topsense_scan
 }

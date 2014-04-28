@@ -373,18 +373,26 @@ def get_role_permissions():
     return role_permissions
 
 # Helper functions
-def load_user_file(name, deflt):
+def load_user_file(name, deflt, lock = False):
     path = user_confdir + "/" + name + ".mk"
     try:
+        if lock:
+            aquire_lock(path)
+
         return eval(file(path).read())
     except:
         return deflt
 
-def save_user_file(name, content):
+def save_user_file(name, content, unlock = False):
     path = user_confdir + "/" + name + ".mk"
     try:
         write_settings_file(path, content)
+
+        if unlock:
+            release_lock(path)
     except Exception, e:
+        # Error while writing file -> release lock
+        release_lock(path)
         raise MKConfigError(_("Cannot save %s options for user <b>%s</b> into <b>%s</b>: %s") % \
                 (name, user_id, path, e))
 

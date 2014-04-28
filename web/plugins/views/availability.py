@@ -1354,6 +1354,8 @@ def render_bi_availability(title, aggr_rows):
     html.end_context_buttons()
 
     avoptions = render_availability_options()
+    timewarpcode = ""
+
     if not html.has_user_errors():
         rows = []
         for aggr_row in aggr_rows:
@@ -1365,7 +1367,7 @@ def render_bi_availability(title, aggr_rows):
                 timewarp = None
             these_rows, tree_state = get_bi_timeline(tree, aggr_row["aggr_group"], avoptions, timewarp)
             rows += these_rows
-            if timewarp:
+            if timewarp and tree_state:
                 state, assumed_state, node, subtrees = tree_state
                 eff_state = state
                 if assumed_state != None:
@@ -1420,10 +1422,27 @@ def get_bi_timeline(tree, aggr_group, avoptions, timewarp):
             "Columns: " + " ".join(columns) + "\n" +\
             "Filter: time >= %d\nFilter: time <= %d\n" % range
 
-    for host in hosts:
+    # Create a specific filter. We really only want the services and hosts
+    # of the aggregation in question. That prevents status changes 
+    # irrelevant services from introducing new phases.
+    by_host = {}
+    for site, host, service in bi.find_all_leaves(tree):
+        by_host.setdefault(host, set([])).add(service)
+
+    for host, services in by_host.items():
         query += "Filter: host_name = %s\n" % host
-    query += "Or: %d\n" % len(hosts)
+        query += "Filter: service_description = \n"
+        for service in services:
+            query += "Filter: service_description = %s\n" % service
+        query += "Or: %d\nAnd: 2\n" % (len(services) + 1)
+    if len(hosts) != 1:
+        query += "Or: %d\n" % len(hosts)
+
     data = html.live.query(query)
+    if not data:
+        return [], None
+        # raise MKGeneralException(_("No historical data available for this aggregation. Query was: <pre>%s</pre>") % query)
+
     html.live.set_prepend_site(False)
     html.live.set_only_sites(None)
     columns = ["site"] + columns
@@ -1531,7 +1550,7 @@ def compute_tree_state(tree, status):
             state_output[1],
             state_output[2], # in_downtime
             False, # acknowledged
-            services_by_host[site_host]
+            services_by_host.get(site_host,[])
         ]
 
 

@@ -1,0 +1,10 @@
+Title: Improved transaction handling in Web GUI
+Level: 1
+Component: multisite
+Version: 1.2.5i3
+Date: 1398346478
+Class: fix
+
+All transactions within the GUI are handled via transaction ids.
+In some instances these transaction ids were not stored correctly.
+This could lead to odd results, e.g. that entered data within formulars got discarded.

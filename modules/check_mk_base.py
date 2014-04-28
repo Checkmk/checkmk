@@ -351,7 +351,13 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_che
             # cache file is newer than check_interval, skip this check
             raise MKSkipCheck()
 
-        content = read_cache_file(cache_relpath, max_cache_age)
+        try:
+            content = read_cache_file(cache_relpath, max_cache_age)
+        except:
+            if simulation_mode and not opt_no_cache:
+                return # Simply ignore missing SNMP cache files
+            raise
+
         if content:
             return eval(content)
         # Not cached -> need to get info via SNMP
@@ -1552,17 +1558,17 @@ def get_bytes_human_readable(b, base=1024.0, bytefrac=True, unit="B"):
         b *= -1
 
     if b >= base * base * base * base:
-        return '%s%.2fT%s' % (prefix, b / base / base / base / base, unit)
+        return '%s%.2f T%s' % (prefix, b / base / base / base / base, unit)
     elif b >= base * base * base:
-        return '%s%.2fG%s' % (prefix, b / base / base / base, unit)
+        return '%s%.2f G%s' % (prefix, b / base / base / base, unit)
     elif b >= base * base:
-        return '%s%.2fM%s' % (prefix, b / base / base, unit)
+        return '%s%.2f M%s' % (prefix, b / base / base, unit)
     elif b >= base:
-        return '%s%.2fk%s' % (prefix, b / base, unit)
+        return '%s%.2f k%s' % (prefix, b / base, unit)
     elif bytefrac:
-        return '%s%.2f%s' % (prefix, b, unit)
+        return '%s%.2f %s' % (prefix, b, unit)
     else: # Omit byte fractions
-        return '%s%.0f%s' % (prefix, b, unit)
+        return '%s%.0f %s' % (prefix, b, unit)
 
 # Similar to get_bytes_human_readable, but optimized for file
 # sizes. Really only use this for files. We assume that for smaller
@@ -1571,30 +1577,30 @@ def get_bytes_human_readable(b, base=1024.0, bytefrac=True, unit="B"):
 # get_bytes_human_readable().
 def get_filesize_human_readable(size):
     if size < 4 * 1024 * 1024:
-        return "%dB" % int(size)
+        return "%d B" % int(size)
     elif size < 4 * 1024 * 1024 * 1024:
-        return "%.2fMB" % (float(size) / (1024 * 1024))
+        return "%.2f MB" % (float(size) / (1024 * 1024))
     else:
-        return "%.2fGB" % (float(size) / (1024 * 1024 * 1024))
+        return "%.2f GB" % (float(size) / (1024 * 1024 * 1024))
 
 
 def get_nic_speed_human_readable(speed):
     try:
         speedi = int(speed)
         if speedi == 10000000:
-            speed = "10MBit/s"
+            speed = "10 MBit/s"
         elif speedi == 100000000:
-            speed = "100MBit/s"
+            speed = "100 MBit/s"
         elif speedi == 1000000000:
-            speed = "1GBit/s"
+            speed = "1 GBit/s"
         elif speed < 1500:
-            speed = "%dBit/s" % speedi
+            speed = "%d Bit/s" % speedi
         elif speed < 1000000:
-            speed = "%.1fKBit/s" % (speedi / 1000.0)
+            speed = "%.1f KBit/s" % (speedi / 1000.0)
         elif speed < 1000000000:
-            speed = "%.2fMBit/s" % (speedi / 1000000.0)
+            speed = "%.2f MBit/s" % (speedi / 1000000.0)
         else:
-            speed = "%.2fGBit/s" % (speedi / 1000000000.0)
+            speed = "%.2f GBit/s" % (speedi / 1000000000.0)
     except:
         pass
     return speed

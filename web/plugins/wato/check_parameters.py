@@ -1115,7 +1115,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_os,
     "memory_pagefile_win",
-    _("Memory, pagefile and swap levels for Windows"),
+    _("Memory and pagefile levels for Windows"),
     Dictionary(
         elements = [
             ( "memory",
@@ -1137,7 +1137,7 @@ register_check_parameters(
                                      Filesize(title = _("Critical if less than")),
                                 ]
                             ),
-                            # Note: Memory values lesser 1MB will not work
+                            # Note: Filesize values lesser 1MB will not work
                             # -> need hide option in filesize valuespec
                             back  = lambda x: (x[0] / 1024 / 1024, x[1] / 1024 / 1024),
                             forth = lambda x: (x[0] * 1024 * 1024, x[1] * 1024 * 1024)
@@ -1163,40 +1163,13 @@ register_check_parameters(
                                      Filesize(title = _("Critical if less than")),
                                 ]
                             ),
-                            # Note: Memory values lesser 1MB will not work
+                            # Note: Filesize values lesser 1MB will not work
                             # -> need hide option in filesize valuespec
                             back  = lambda x: (x[0] / 1024 / 1024, x[1] / 1024 / 1024),
                             forth = lambda x: (x[0] * 1024 * 1024, x[1] * 1024 * 1024)
                         )
                    ],
                    default_value = (50.0, 70.0))
-            ),
-            ( "swap",
-               Alternative(
-                   title = _("Swap Levels"),
-                   elements = [
-                       Tuple(
-                           title = _("Swap usage in percent"),
-                           elements = [
-                               Percentage(title = _("Warning if above")),
-                               Percentage(title = _("Critical if above")),
-                           ]
-                       ),
-                       Transform(
-                            Tuple(
-                                title = _("Absolute free swap"),
-                                elements = [
-                                     Filesize(title = _("Warning if less than")),
-                                     Filesize(title = _("Critical if less than")),
-                                ]
-                            ),
-                            # Note: Memory values lesser 1MB will not work
-                            # -> need hide option in filesize valuespec
-                            back  = lambda x: (x[0] / 1024 / 1024, x[1] / 1024 / 1024),
-                            forth = lambda x: (x[0] * 1024 * 1024, x[1] * 1024 * 1024)
-                        )
-                   ],
-                   default_value = (70.0, 80.0))
             ),
             ("average",
                 Integer (
@@ -4975,3 +4948,22 @@ register_check_parameters(
     None,
     None, None,
 )
+
+register_check_parameters(
+    subgroup_environment,
+    "airflow_deviation",
+    _("Airflow Deviation in Percent"),
+    Tuple(
+        help = _("Levels for Airflow Deviation measured at airflow sensors "),
+        elements = [
+            Float(title = _("critical if below or equal"), unit = u"%", default_value = -20),
+            Float(title = _("warning if below or equal"),  unit = u"%", default_value = -20),
+            Float(title = _("warning if above or equal"),  unit = u"%", default_value = 20),
+            Float(title = _("critical if above or equal"), unit = u"%", default_value = 20),
+        ]),
+    TextAscii(
+        title = _("Detector ID"),
+        help = _("The identifier of the detector.")),
+    "first"
+)
+

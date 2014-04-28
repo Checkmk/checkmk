@@ -1,0 +1,11 @@
+Title: windows agent: register_service: fixed ImagePath registry entry
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1398679973
+Class: fix
+
+
+The registry key ImagePath in <tt>HKEY_LOCAL_MACHINE\System\CurentControlSet\Services\Check_MK_Agent</tt>
+was not quoted correctly. This could trigger a warning on some vulnerability scanners.
+

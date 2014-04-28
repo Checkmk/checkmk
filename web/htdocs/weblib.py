@@ -85,7 +85,7 @@ def get_rowselection(ident):
     return vo.get(ident, [])
 
 def set_rowselection(ident, rows, action):
-    vo = config.load_user_file("rowselection/%s" % selection_id(), {})
+    vo = config.load_user_file("rowselection/%s" % selection_id(), {}, True)
 
     if action == 'set':
         vo[ident] = rows
@@ -102,7 +102,7 @@ def set_rowselection(ident, rows, action):
     if not os.path.exists(config.user_confdir + '/rowselection'):
         make_nagios_directory(config.user_confdir + '/rowselection')
 
-    config.save_user_file("rowselection/%s" % selection_id(), vo)
+    config.save_user_file("rowselection/%s" % selection_id(), vo, True)
 
 def ajax_set_rowselection():
     ident = html.var('id')

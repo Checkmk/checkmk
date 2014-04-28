@@ -1,0 +1,9 @@
+Title: Table checkboxes: Fixed bug where selected checkboxes got ignored
+Level: 1
+Component: multisite
+Version: 1.2.5i3
+Date: 1398694950
+Class: fix
+
+Sometimes not all selected lines of a multisite table where actually processed.
+This happened especially often when the monitoring server had a high disk I/O.

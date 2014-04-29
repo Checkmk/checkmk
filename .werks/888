@@ -1,0 +1,8 @@
+Title: Fix SNMP inventory check in simulation mode
+Level: 1
+Component: core
+Version: 1.2.4p3
+Date: 1398330909
+Class: fix
+
+

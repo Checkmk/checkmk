@@ -56,6 +56,7 @@
     * 0810 FIX: fritz.link: Not inventorizing "unconfigured" interfaces anymore
     * 0154 FIX: zfsget: Fixed inventory of filesystems
     * 0155 FIX: mssql_counters: harded check agains odd agent output
+    * 0157 FIX: apc_symmetra_test: Fixed case of unkown last test date
 
     Multisite:
     * 0779 Hostgroups (Summary): Empty hostgroups are no longer shown (can be re-enabled by filter)

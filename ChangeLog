@@ -58,6 +58,7 @@
     * 0155 FIX: mssql_counters: harded check agains odd agent output
     * 0907 FIX: windows agent: register_service: fixed ImagePath registry entry...
     * 0608 FIX: oracle_asm_diskgroup: check now also handles older oracle version 11.1.0
+    * 0910 FIX: brocade.power: fixed an error where the check reports an UNKNOWN on power supply failure...
 
     Multisite:
     * 0779 Hostgroups (Summary): Empty hostgroups are no longer shown (can be re-enabled by filter)

@@ -1,0 +1,8 @@
+Title: mail notification script now uses 6 digit hex codes for colors to be better compatible with web based mail browsers
+Level: 1
+Component: notifications
+Version: 1.2.5i3
+Date: 1398772813
+Class: fix
+
+

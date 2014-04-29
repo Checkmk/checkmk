@@ -22,7 +22,7 @@ tmpl_head_html = '''
 <title>$SUBJECT$</title>
 <style>
 body {
-    background-color: #FFFFFF;
+    background-color: #ffffff;
     padding: 5px;
     font-family: arial,helvetica,sans-serif;
     font-size: 10px;
@@ -39,10 +39,10 @@ table {
 
 table th {
     font-weight: normal;
-    border-right: 1px solid #ccc;
-    background-color: #999;
+    border-right: 1px solid #cccccc;
+    background-color: #999999;
     text-align: center;
-    color: #fff;
+    color: #ffffff;
     vertical-align: middle;
     font-size: 9pt;
     height: 14px;
@@ -52,7 +52,7 @@ table th:last-child {
 }
 
 table tr > td {
-    border-right: 1px solid #ccc;
+    border-right: 1px solid #cccccc;
     padding: 2px 4px;
     height: 22px;
     vertical-align: middle;
@@ -85,23 +85,23 @@ table tr td.left {
     padding-right: 20px;
 }
 table tr.even0 td.left {
-    background-color: #bbb;
+    background-color: #bbbbbb;
 }
 table tr.odd0 td.left {
-    background-color: #ccc;
+    background-color: #cccccc;
 }
 
-tr.odd0  { background-color: #eee; }
-tr.even0 { background-color: #ddd; }
+tr.odd0  { background-color: #eeeeee; }
+tr.even0 { background-color: #dddddd; }
 
-td.odd0  { background-color: #eee; }
-td.even0 { background-color: #ddd; }
+td.odd0  { background-color: #eeeeee; }
+td.even0 { background-color: #dddddd; }
 
-tr.odd1  { background-color: #ffc; }
-tr.even1 { background-color: #ffa; }
+tr.odd1  { background-color: #ffffcc; }
+tr.even1 { background-color: #ffffaa; }
 
-tr.odd2  { background-color: #fcc; }
-tr.even2 { background-color: #faa; }
+tr.odd2  { background-color: #ffcccc; }
+tr.even2 { background-color: #ffaaaa; }
 
 tr.odd3  { background-color: #ffe0a0; }
 tr.even3 { background-color: #ffefaf; }
@@ -111,27 +111,27 @@ td.state {
 }
 
 .state0, .stateOK, .hstate0, .hstateUP, .state0 a, .hstate0 a {
-    background-color: #0b3; color: #fff;
+    background-color: #0b3; color: #ffffff;
 }
 
 .state1, .stateWARNING, .state1 a, tr.groupheader td.state1 {
-        background-color: #ff0; color: #000;
+        background-color: #ffff00; color: #000000;
 }
 
 .state2, .stateCRITICAL, .hstate1, .hstateDOWN, .state2 a, .hstate2 a {
-        background-color: #f00; color: #fff;
+        background-color: #ff0000; color: #ffffff;
 }
 
 .state3, .stateUNKNOWN, .hstate2, .hstateUNREACHABLE, .state3 a, .hstate2 a {
-        background-color: #f80; color: #fff;
+        background-color: #ff8800; color: #ffffff;
 }
 
 .statep, .statePENDING, .hstatep, .hstatePENDING, .statep a, .hstatep a {
-        background-color: #888; color: #fff;
+        background-color: #888888; color: #ffffff;
 }
 
 .stated, .stateDOWNTIME, .hstated, .hstateDOWNTIME, .stated a, .hstated a {
-        background-color: #0af; color: #fff;
+        background-color: #00aaff; color: #ffffff;
 }
 
 td.graphs {

@@ -35,12 +35,20 @@ def inventory_oracle_asm_diskgroup(info):
 
 def check_oracle_asm_diskgroup(item, params, info):
 
-    for state, typ, rebal, sector, block, au, total_mb,  \
-        free_mb, req_mir_free_mb, usable_file_mb, offline_disks, \
-        voting_files, name in info:
+    for line in info:
+        if len(line) == 13:
+            state, typ, rebal, sector, block, au, total_mb,  \
+                free_mb, req_mir_free_mb, usable_file_mb, offline_disks, \
+                voting_files, name = line
+        elif len(line) == 12:
+            state, typ, rebal, sector, block, au, total_mb,  \
+                free_mb, req_mir_free_mb, usable_file_mb, offline_disks, \
+                name = line
+        else:
+            name = ""
         if name.rstrip('/') == item:
             return df_check_filesystem(g_hostname, item, int(total_mb),
-                                       int(free_mb), params)
+                   int(free_mb), params)
     return (3, "Disk group not found")
 
 

@@ -131,7 +131,7 @@ def check_auth_automation():
             # Auth with automation secret succeeded - mark transid as unneeded in this case
             html.set_ignore_transids()
             return user
-    raise MKAuthException(_("Invalid automation secret for user %s") % user)
+    raise MKAuthException(_("Invalid automation secret for user %s") % html.attrencode(user))
 
 def check_auth():
     if html.var("_secret"):

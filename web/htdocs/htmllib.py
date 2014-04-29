@@ -1093,7 +1093,8 @@ class html:
         self.lowlevel_write("<tr><th colspan=2>POST / GET Variables</th></tr>")
         for name, value in sorted(self.vars.items()):
             if not prefix or name.startswith(prefix):
-                self.write("<tr><td class=left>%s</td><td class=right>%s</td></tr>\n" % (name, value))
+                self.write("<tr><td class=left>%s</td><td class=right>%s</td></tr>\n" %
+                    (self.attrencode(name), self.attrencode(value)))
         self.write("</table>")
 
     def var(self, varname, deflt = None):
@@ -1238,7 +1239,8 @@ class html:
     def begin_foldable_container(self, treename, id, isopen, title, indent=True, first=False, icon=None, fetch_url=None):
         self.folding_indent = indent
 
-        isopen = self.foldable_container_is_open(treename, id, isopen)
+        if self.user:
+            isopen = self.foldable_container_is_open(treename, id, isopen)
 
         img_num = isopen and "90" or "00"
         onclick = ' onclick="toggle_foldable_container(\'%s\', \'%s\', \'%s\')"' % (

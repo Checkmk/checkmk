@@ -1,0 +1,8 @@
+Title: Fixed handling of exceptions occuring before login in debug mode
+Level: 1
+Component: multisite
+Version: 1.2.5i3
+Date: 1398726038
+Class: fix
+
+

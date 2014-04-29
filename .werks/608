@@ -1,0 +1,8 @@
+Title: oracle_asm_diskgroup: check now also handles older oracle version 11.1.0
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1398767431
+Class: fix
+
+

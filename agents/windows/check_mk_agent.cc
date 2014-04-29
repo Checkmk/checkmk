@@ -3152,10 +3152,12 @@ void InstallService()
         char path[ _MAX_PATH + 1 ];
         if ( GetModuleFileName( 0, path, sizeof(path)/sizeof(path[0]) ) > 0 )
         {
+            char quoted_path[1024];
+            snprintf(quoted_path, sizeof(quoted_path), "\"%s\"", path);
             SC_HANDLE service = CreateService( serviceControlManager,
                     gszServiceName, gszServiceName,
                     SERVICE_ALL_ACCESS, SERVICE_WIN32_OWN_PROCESS,
-                    SERVICE_AUTO_START, SERVICE_ERROR_IGNORE, path,
+                    SERVICE_AUTO_START, SERVICE_ERROR_IGNORE, quoted_path,
                     0, 0, 0, 0, 0 );
             if ( service )
             {

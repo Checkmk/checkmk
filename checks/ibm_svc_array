@@ -1,0 +1,71 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# <<<ibm_svc_array:sep(58)>>>
+# 27:SSD_mdisk27:online:1:POOL_0_V7000_RZ:372.1GB:online:raid1:1:256:generic_ssd
+# 28:SSD_mdisk28:online:2:POOL_1_V7000_BRZ:372.1GB:online:raid1:1:256:generic_ssd
+# 29:SSD_mdisk0:online:1:POOL_0_V7000_RZ:372.1GB:online:raid1:1:256:generic_ssd
+# 30:SSD_mdisk1:online:2:POOL_1_V7000_BRZ:372.1GB:online:raid1:1:256:generic_ssd
+
+
+def inventory_ibm_svc_array(info):
+    inventory = []
+    for mdisk_id, mdisk_name, mdisk_status, mdisk_grp_id, mdisk_grp_name, capacity, \
+        raid_status, raid_level, redundancy, strip_size, tier in info:
+        inventory.append( (mdisk_id, None) )
+    return inventory
+
+def check_ibm_svc_array(item, _no_params, info):
+    status = 3
+    for mdisk_id, mdisk_name, mdisk_status, mdisk_grp_id, mdisk_grp_name, capacity, \
+        raid_status, raid_level, redundancy, strip_size, tier in info:
+        if mdisk_id == item:
+
+            # Check raid_status
+            message = "RAID Array %s reports status %s" % (item, raid_status) 
+            if raid_status == "online":
+                status = 0
+            elif raid_status == "offline" or raid_status == "degraded":
+                status = 2
+                message += "(!!)"
+            else:
+                status = 1
+                message += "(!)"
+
+            # add information
+            message += ", RAID Level: %s, Tier: %s" % (raid_level, tier)
+
+            return status, message
+    return 3, "RAID Array %s not found in agent output" % item
+
+check_info["ibm_svc_array"] = {
+    "check_function"        : check_ibm_svc_array,
+    "inventory_function"    : inventory_ibm_svc_array,
+    "service_description"   : "IBM SVC RAID Array %s",
+    "has_perfdata"          : False,
+}
+

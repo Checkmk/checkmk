@@ -1,0 +1,26 @@
+title: IBM SVC / Storwize V3700 / V7000: Status of RAID Arrays
+agents: ibm_svc
+catalog: hw/storagehw/ibm
+license: GPL
+distribution: check_mk
+description:
+ Checks the status of RAID Arrays in an IBM SVC / Storwize V3700 / V7000
+ device.
+
+ Status {online} is {OK}, status {offline} and {degraded} are {CRIT} and
+ every other status is {WARN}.
+
+ Other informations given in the check output is just informational and
+ does not trigger any state change.
+
+ Please note: You need the Special Agent agent_ibmsvc to retrieve the monitoring
+ data from the device. Your monitoring user must be able to SSH to the device
+ with SSH Key Authentification. Please exchange SSH key. The Special Agent itself
+ can be configured by WATO.
+
+item:
+ The ID of the RAID Array as delivered by lsarray command.
+
+inventory:
+ Creates one check for every RAID Array on the IBM SVC / Storwize V3700 / V7000
+ device.

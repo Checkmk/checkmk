@@ -1,0 +1,8 @@
+Title: ibm_svc_array: New check for Status of RAID Arrays in IBM SVC / Storwize devices.
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1398854374
+Class: feature
+
+

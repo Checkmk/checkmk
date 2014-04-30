@@ -418,6 +418,7 @@ def page_edit_views(msg=None):
             save_views(config.user_id)
             html.reload_sidebar()
         elif c == False:
+            html.footer()
             return
 
     if html.var('mode') == 'create':

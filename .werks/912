@@ -1,0 +1,9 @@
+Title: Multisite Views: Fixed bug where custom views could not get deleted
+Level: 2
+Component: multisite
+Class: fix
+State: unknown
+Version: 1.2.5i2p2
+Date: 1398863104
+
+

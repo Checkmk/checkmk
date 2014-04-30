@@ -8,6 +8,9 @@
     * 0832 FIX: solaris_mem: fixed invalid calculation of total swap...
     * 0910 FIX: brocade.power: fixed an error where the check reports an UNKNOWN on power supply failure...
 
+    Multisite:
+    * 0912 FIX: Multisite Views: Fixed bug where custom views could not get deleted
+
     WATO:
     * 0904 FIX: Fixed exception in host parameter overview...
 

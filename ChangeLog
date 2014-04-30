@@ -8,6 +8,9 @@
     * 0155 FIX: mssql_counters: harded check agains odd agent output
     * 0910 FIX: brocade.power: fixed an error where the check reports an UNKNOWN on power supply failure...
 
+    Multisite:
+    * 0912 FIX: Multisite Views: Fixed bug where custom views could not get deleted
+
     BI:
     * 0882 FIX: check_bi_local.py: fix crash in case of non-ascii characters...
 

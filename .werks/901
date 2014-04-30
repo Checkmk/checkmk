@@ -1,0 +1,10 @@
+Title: ibm_svc_portfc: more devices recognized
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1398850437
+Class: feature
+
+some devices provide more information if running the lsportfc command
+(especially: privide an additional field "cluster_use")
+The check now works with these devices too.

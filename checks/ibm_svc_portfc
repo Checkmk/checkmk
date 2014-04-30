@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Output may have 11 fields:
+# id:fc_io_port_id:port_id:type:port_speed:node_id:node_name:WWPN:nportid:status:attachment
 # Example output from agent:
 # <<<ibm_svc_portfc:sep(58)>>>
 # 0:1:1:fc:8Gb:1:node1:5005076803042126:030400:active:switch
@@ -34,23 +36,38 @@
 # 9:2:2:fc:8Gb:2:node2:5005076803082127:040500:active:switch
 # 10:3:3:fc:N/A:2:node2:50050768030C2127:000000:inactive_unconfigured:none
 # 11:4:4:fc:N/A:2:node2:5005076803102127:000000:inactive_unconfigured:none
+#
+# Output may have 12 fields:
+# id:fc_io_port_id:port_id:type:port_speed:node_id:node_name:WWPN:nportid:status:attachment:cluster_use
+# Example output from agent:
+# <<<ibm_svc_portfc:sep(58)>>>
+# 0:1:1:fc:8Gb:1:node1:5005076803042126:030400:active:switch:local_partner
+# 1:2:2:fc:8Gb:1:node1:5005076803082126:040400:active:switch:local_partner
+# 2:3:3:fc:N/A:1:node1:50050768030C2126:000000:inactive_unconfigured:none:local_partner
+# 3:4:4:fc:N/A:1:node1:5005076803102126:000000:inactive_unconfigured:none:local_partner
+# 8:1:1:fc:8Gb:2:node2:5005076803042127:030500:active:switch:local_partner
+# 9:2:2:fc:8Gb:2:node2:5005076803082127:040500:active:switch:local_partner
+# 10:3:3:fc:N/A:2:node2:50050768030C2127:000000:inactive_unconfigured:none:local_partner
+# 11:4:4:fc:N/A:2:node2:5005076803102127:000000:inactive_unconfigured:none:local_partner
+
 
 def inventory_ibm_svc_portfc(info):
     inventory = []
-    for fc_port_id, fc_io_port_id, port_id, fc_port_type, port_speed, \
-        node_id, node_name, WWPN, nportid, fc_port_status, attachment in info:
-        if fc_port_status == "active":
-            inventory.append( (fc_port_id, None) )
+    for line in info:
+        if len(line) in (11, 12) and line[9] == "active":
+            inventory.append( (line[0], None) )
     return inventory
 
 def check_ibm_svc_portfc(item, _no_params, info):
-    for fc_port_id, fc_io_port_id, port_id, fc_port_type, port_speed, \
-        node_id, node_name, WWPN, nportid, fc_port_status, attachment in info:
-        if fc_port_id == item:
-            if fc_port_status == "active":
-                return 0, "FC Port %s is %s" % (fc_port_id, fc_port_status)
-            else:
-                return 2, "FC Port %s is %s" % (fc_port_id, fc_port_status)
+    for line in info:
+        if len(line) in (11, 12):
+            fc_port_id = line[0]
+            fc_port_status = line[9]
+            if fc_port_id == item:
+                if fc_port_status == "active":
+                    return 0, "FC Port %s is %s" % (fc_port_id, fc_port_status)
+                else:
+                    return 2, "FC Port %s is %s" % (fc_port_id, fc_port_status)
 
     return 3, "FC Port %s not found in agent output" % item
 

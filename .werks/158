@@ -1,0 +1,8 @@
+Title: dell_om_disks: Handle hotspares more correctly
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1398848314
+Class: fix
+
+

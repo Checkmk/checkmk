@@ -22,6 +22,5 @@ item:
  The unique id of the path
 
 [parameters]
-parameters (dict): Each key represents a path state. It's values
- are the warn / crit levels and of type (int,int). Available key types
- are {active}, {dead}, {disabled}, {standby}, {unknown}
+parameters (dict): Each key represents a path state. The value is a int tuple
+ with (crit_min, warn_min, warn_max, crit_max). Available key types are {active}, {dead}, {disabled}, {standby}, {unknown}

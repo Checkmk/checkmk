@@ -260,14 +260,28 @@ def check_esx_vsphere_hostsystem_multipath(item, params, info):
                 state = 0
                 for state_name, state_values in state_infos.items():
                     if params.get(state_name):
-                        warn, crit = params.get(state_name)
+                        limits = params.get(state_name)
+                        if len(limits) == 2:
+                            warn_max, crit_max = limits
+                            crit_min, warn_min = 0, 0
+                        else:
+                            crit_min, warn_min, warn_max, crit_max = limits
+
+                        extra_info = ""
                         count = state_values[1]
-                        if count > crit:
-                            state = 2
-                            state_values[2] = "(!!)"
-                        elif count > warn:
+                        if count < crit_min:
+                            state = max(state, 2)
+                            state_values[2] = "(!!)(less than %d)" % crit_min
+                        elif count > crit_max:
+                            state = max(state, 2)
+                            state_values[2] = "(!!)(more than %d)" % crit_max
+                        elif count < warn_min:
                             state = max(state, 1)
-                            state_values[2] = "(!)"
+                            state_values[2] = "(!)(less than %d)" % warn_min
+                        elif count > warn_max:
+                            state = max(state, 1)
+                            state_values[2] = "(!)(more than %d)" % warn_max
+
             # Output message
             message = "Type %s" % path_type
             for element in "active", "dead", "disabled", "standby", "unknown":

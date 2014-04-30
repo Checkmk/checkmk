@@ -1,0 +1,9 @@
+Title: esx_vsphere_hostsystem.multipath: now able to configure paths minimum count
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1398858257
+Class: feature
+
+You can now configure the minimum levels for the active, dead, disabled, standby and
+unknown paths via WATO.

@@ -72,6 +72,7 @@
     * 0906 FIX: Improved transaction handling in Web GUI...
     * 0909 FIX: Table checkboxes: Fixed bug where selected checkboxes got ignored...
     * 0811 FIX: Fixed handling of exceptions occuring before login in debug mode
+    * 0912 FIX: Multisite Views: Fixed bug where custom views could not get deleted
 
     WATO:
     * 0784 Improved security of WATO bulk inventory by using transaction ids

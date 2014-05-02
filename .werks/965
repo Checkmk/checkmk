@@ -1,0 +1,25 @@
+Title: Cumulative permissions and contact groups for WATO folders
+Level: 2
+Component: wato
+Version: 1.2.5i3
+Date: 1399046559
+Class: feature
+
+WATO folders have now two new checkboxes in the <i>Permissions</i> attributes:
+
+<ul>
+<li><i>Give these groups also permission on all subfolders</i></li>
+<li><i>Add these groups as contacts in all subfolders</i></li>
+</ul>
+
+The first one will add the configured groups of a folder also as permitted
+groups to all subfolders (recursively). The second one will add the configured
+groups as <b>contact groups</b> to the hosts in all subfolders.
+
+The idea behind that is a simplification of the configuration. It is now
+sufficient to specify the groups of you more general administrators at
+the top of the folder tree and add more and more specific groups at
+the lower levels of your folder tree.
+
+In the table of hosts you now will see the permitted groups and the
+contact groups of a host as two separate columns.

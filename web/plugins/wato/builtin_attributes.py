@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 declare_host_attribute(ContactGroupsAttribute(),
-                       show_in_table = True,
+                       show_in_table = False,
                        show_in_folder = True)
 
 declare_host_attribute(NagiosTextAttribute("alias", "alias", _("Alias"),

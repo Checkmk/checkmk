@@ -714,7 +714,9 @@ def save_hosts(folder = None):
         # precedence over the folder entries.
 
         if "contactgroups" in host:
-            use, cgs = host["contactgroups"]
+            cgconfig = convert_cgroups_from_tuple(host["contactgroups"])
+            cgs = cgconfig["groups"]
+            use = cgconfig["use"]
             if use and cgs:
                 out.write("\nhost_contactgroups += [\n")
                 for cg in cgs:
@@ -770,11 +772,10 @@ def save_hosts(folder = None):
     # If the contact groups of the host are set to be used for the monitoring,
     # we create an according rule for the folder and an according rule for
     # each host that has an explicit setting for that attribute.
-    effective_folder_attributes = effective_attributes(None, folder)
-    use, cgs = effective_folder_attributes.get("contactgroups", (False, []))
-    if use and cgs:
+    perm_groups, contact_groups = collect_folder_groups(folder)
+    if contact_groups:
         out.write("\nhost_contactgroups.append(\n"
-                  "  ( %r, [ '/' + FOLDER_PATH + '/' ], ALL_HOSTS ))\n" % cgs)
+                  "  ( %r, [ '/' + FOLDER_PATH + '/' ], ALL_HOSTS ))\n" % list(contact_groups))
 
 
     # Write information about all host attributes into special variable - even
@@ -1038,8 +1039,8 @@ def check_host_permissions(hostname, exception=True, folder=None):
     if config.may("wato.all_folders"):
         return True
     host = folder[".hosts"][hostname]
-    effective = effective_attributes(host, folder)
-    use, cgs = effective.get("contactgroups", (None, []))
+    perm_groups, contact_groups = collect_host_groups(host, folder)
+    
     # Get contact groups of user
     users = userdb.load_users()
     if config.user_id not in users:
@@ -1048,12 +1049,12 @@ def check_host_permissions(hostname, exception=True, folder=None):
         user_cgs = users[config.user_id].get("contactgroups",[])
 
     for c in user_cgs:
-        if c in cgs:
+        if c in perm_groups:
             return True
 
     reason = _("Sorry, you have no permission on the host '<b>%s</b>'. The host's contact "
                "groups are <b>%s</b>, your contact groups are <b>%s</b>.") % \
-               (hostname, ", ".join(cgs), ", ".join(user_cgs))
+               (hostname, ", ".join(perm_groups), ", ".join(user_cgs))
     if exception:
         raise MKAuthException(reason)
     return reason
@@ -1093,8 +1094,7 @@ def check_folder_permissions(folder, how, exception=True, user = None, users = N
             return True
 
     # Get contact groups of that folder
-    effective = effective_attributes(None, folder)
-    use, cgs = effective.get("contactgroups", (None, []))
+    perm_groups, cgs = collect_folder_groups(folder)
 
     if not user:
         user = config.user_id
@@ -1108,14 +1108,14 @@ def check_folder_permissions(folder, how, exception=True, user = None, users = N
         user_cgs = users[user].get("contactgroups", [])
 
     for c in user_cgs:
-        if c in cgs:
+        if c in perm_groups:
             return True
 
     reason = _("Sorry, you have no permissions to the folder <b>%s</b>. ") % folder["title"]
-    if not cgs:
-        reason += _("The folder has no contact groups assigned to.")
+    if not perm_groups:
+        reason += _("The folder is not permitted for any contact group.")
     else:
-        reason += _("The folder's contact groups are <b>%s</b>. ") % ", ".join(cgs)
+        reason += _("The folder's permitted contact groups are <b>%s</b>. ") % ", ".join(perm_groups)
         if user_cgs:
             reason += _("Your contact groups are <b>%s</b>.") %  ", ".join(user_cgs)
         else:
@@ -1134,7 +1134,8 @@ def check_user_contactgroups(cgspec):
     if config.may("wato.all_folders"):
         return
 
-    use, cgs = cgspec
+    cgconf = convert_cgroups_from_tuple(cgspec)
+    cgs = cgconf["groups"]
     users = userdb.load_users()
     if config.user_id not in users:
         user_cgs = []
@@ -1146,6 +1147,53 @@ def check_user_contactgroups(cgspec):
               "because you are not member in that group. Your groups are: <b>%s</b>") %
                  ( c, ", ".join(user_cgs)))
 
+
+def get_folder_cgconf_from_attributes(attributes):
+    v = attributes.get("contactgroups", ( False, [] ))
+    cgconf = convert_cgroups_from_tuple(v)
+    return cgconf 
+
+# Get all contact groups of a folder, while honoring recursive
+# groups and permissions. Returns a pair of 
+# 1. The folders permitted groups (for WATO permissions)
+# 2. The folders contact groups (for hosts)
+def collect_folder_groups(folder, host=None):
+    perm_groups = set([])
+    host_groups = set([])
+    effective_folder_attributes = effective_attributes(host, folder)
+    cgconf = get_folder_cgconf_from_attributes(effective_folder_attributes)
+
+    # First set explicit groups
+    perm_groups.update(cgconf["groups"])
+    if cgconf["use"]:
+        host_groups.update(cgconf["groups"])
+
+    # Now consider recursion
+    if host:
+        parent = folder
+    elif ".parent" in folder:
+        parent = folder['.parent']
+    else:
+        parent = None
+
+    while parent:
+        effective_folder_attributes = effective_attributes(None, parent)
+        parconf = get_folder_cgconf_from_attributes(effective_folder_attributes)
+        parent_perm_groups, parent_host_groups = collect_folder_groups(parent)
+
+        if parconf["recurse_perms"]: # Parent gives us its permissions
+            perm_groups.update(parent_perm_groups)
+
+        if parconf["recurse_use"]:   # Parent give us its contact groups
+            host_groups.update(parent_host_groups)
+
+        parent = parent.get(".parent")
+    
+    return perm_groups, host_groups
+
+
+def collect_host_groups(host, folder):
+    return collect_folder_groups(folder, host)
 
 
 def show_subfolders(folder):
@@ -1221,17 +1269,16 @@ def show_subfolders(folder):
             html.write('</div>')
 
         html.write('<div class=infos>')
-        # Show contact groups of the folder
-        effective = effective_attributes(None, entry)
-        use, cgs = effective.get("contactgroups", (None, []))
         group_info = userdb.load_group_information().get("contact", {})
-        for num, cg in enumerate(cgs):
-            cgalias = group_info.get(cg,cg)
-            html.icon(_("Contactgroup assign to this folder"), "contactgroups")
+        perm_groups, contact_groups = collect_folder_groups(entry)
+        for num, pg in enumerate(perm_groups):
+            cgalias = group_info.get(pg, pg)
+            html.icon(_("Contactgroups that have permission on this folder"), "contactgroups")
             html.write(' %s<br>' % cgalias)
-            if num > 1 and len(cgs) > 4:
-                html.write(_('<i>%d more contact groups</i><br>') % (len(cgs) - num - 1))
+            if num > 1 and len(perm_groups) > 4:
+                html.write(_('<i>%d more contact groups</i><br>') % (len(perm_groups) - num - 1))
                 break
+
 
         num_hosts = num_hosts_in(entry, recurse=True)
         if num_hosts == 1:
@@ -1338,7 +1385,7 @@ def show_hosts(folder):
             more_than_ten_items = True
 
     # Compute colspan for bulk actions
-    colspan = 5
+    colspan = 6
     for attr, topic in host_attributes:
         if attr.show_in_table():
             colspan += 1
@@ -1359,21 +1406,30 @@ def show_hosts(folder):
         html.write("<input type=button class=checkgroup name=_toggle_group"
                        " onclick=\"toggle_all_rows();\" value=\"%s\" />" % _('X'))
         html.write("</th>")
-    html.write("<th>"+_("Actions")+"</th><th>"
-               + _("Hostname") + "</th><th>"
-               + _("Auth") + "</th>")
-    if not config.wato_hide_hosttags:
-        html.write("<th>" + _("Tags") + "</th>")
+
+    for h in _("Actions"), _("Hostname"):
+        html.write("<th>%s</th>" % h)
 
     for attr, topic in host_attributes:
         if attr.show_in_table():
             html.write("<th>%s</th>" % attr.title())
+
+    for h in _("Auth"), _("Permissions"), _("Contact Groups"):
+        html.write("<th>%s</th>" % h)
+
+    if not config.wato_hide_hosttags:
+        html.write("<th>" + _("Tags") + "</th>")
 
     if not g_folder.get(".lock_hosts") and config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
         html.write("<th class=right>" + _("Move To") + "</th>")
 
     html.write("</tr>\n")
     odd = "odd"
+
+    contact_group_names = userdb.load_group_information().get("contact", {})
+    def render_contact_group(c):
+        display_name = contact_group_names.get(c, c)
+        return '<a href="wato.py?mode=edit_contact_group&edit=%s">%s</a>' % (c, display_name)
 
     host_errors = validate_all_hosts(hostnames)
     rendered_hosts = []
@@ -1442,26 +1498,6 @@ def show_hosts(folder):
         html.write('</td>')
 
 
-        # Am I authorized?
-        auth = check_host_permissions(hostname, False)
-        if auth == True:
-            icon = "authok"
-            title = _("You have permission to this host.")
-        else:
-            icon = "autherr"
-            title = html.strip_tags(auth)
-        html.write('<td><img class=icon src="images/icon_%s.png" title="%s"></td>' % (icon, title))
-
-        if not config.wato_hide_hosttags:
-            # Raw tags
-            #
-            # Optimize wraps:
-            # 1. add <nobr> round the single tags to prevent wrap within tags
-            # 2. add "zero width space" (&#8203;)
-            tag_title = "|".join([ '%s' % t for t in host[".tags"] ])
-            html.write("<td title='%s' class='tag-ellipsis'>%s</td>" % (tag_title, "<b style='color: #888;'>|</b>&#8203;".join(
-                                                [ '<nobr>%s</nobr>' % t for t in host[".tags"] ])))
-
         # Show attributes
         for attr, topic in host_attributes:
             if attr.show_in_table():
@@ -1474,6 +1510,31 @@ def show_hosts(folder):
                 html.write('<td class="%s">' % tdclass)
                 html.write(tdcontent)
                 html.write("</td>\n")
+
+        # Am I authorized?
+        auth = check_host_permissions(hostname, False)
+        if auth == True:
+            icon = "authok"
+            title = _("You have permission to this host.")
+        else:
+            icon = "autherr"
+            title = html.strip_tags(auth)
+        html.write('<td><img class=icon src="images/icon_%s.png" title="%s"></td>' % (icon, title))
+
+        # Permissions and Contact groups - through complete recursion and inhertance
+        perm_groups, contact_groups = collect_host_groups(host, folder)
+        html.write("<td>%s</td>" % ", ".join(map(render_contact_group, perm_groups)))
+        html.write("<td>%s</td>" % ", ".join(map(render_contact_group, contact_groups)))
+
+        if not config.wato_hide_hosttags:
+            # Raw tags
+            #
+            # Optimize wraps:
+            # 1. add <nobr> round the single tags to prevent wrap within tags
+            # 2. add "zero width space" (&#8203;)
+            tag_title = "|".join([ '%s' % t for t in host[".tags"] ])
+            html.write("<td title='%s' class='tag-ellipsis'>%s</td>" % (tag_title, "<b style='color: #888;'>|</b>&#8203;".join(
+                                                [ '<nobr>%s</nobr>' % t for t in host[".tags"] ])))
 
         # Move to
         if not g_folder.get(".lock_hosts") and config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
@@ -1801,7 +1862,8 @@ def mode_editfolder(phase, new):
             log_pending(AFFECTED, new_folder, "new-folder", _("Created new folder %s") % title)
 
         else:
-            cgs_changed = attributes.get("contactgroups") != g_folder["attributes"].get("contactgroups")
+            cgs_changed = get_folder_cgconf_from_attributes(attributes) != \
+                          get_folder_cgconf_from_attributes(g_folder["attributes"])
             other_changed = attributes != g_folder["attributes"] and not cgs_changed
             if other_changed:
                 check_folder_permissions(g_folder, "write")
@@ -2036,7 +2098,8 @@ def mode_edithost(phase, new, cluster):
             # permissions on the host
             old_host = dict(g_folder[".hosts"][hostname].items())
             del old_host[".tags"] # not contained in new host
-            cgs_changed = host.get("contactgroups") != old_host.get("contactgroups")
+            cgs_changed = get_folder_cgconf_from_attributes(host) != \
+                          get_folder_cgconf_from_attributes(old_host)
             other_changed = old_host != host and not cgs_changed
             if other_changed:
                 check_host_permissions(hostname)
@@ -5514,6 +5577,19 @@ class HostSelectionAttribute(Attribute):
         return hostname and hostname or None
 
 
+# Convert old tuple representation to new dict representation of
+# folder's group settings
+def convert_cgroups_from_tuple(value):
+    if type(value) == dict:
+        return value
+    else:
+        return {
+            "groups"        : value[1],
+            "recurse_perms" : False,
+            "use"           : value[0],
+            "recurse_use"   : False,
+        }
+
 # Attribute needed for folder permissions
 class ContactGroupsAttribute(Attribute):
     # The constructor stores name and title. If those are
@@ -5533,34 +5609,47 @@ class ContactGroupsAttribute(Attribute):
         self._loaded_at = None
 
     def paint(self, value, hostname):
+        value = convert_cgroups_from_tuple(value)
+
         texts = []
-        use, cgs = value
         self.load_data()
         items = self._contactgroups.items()
         items.sort(cmp = lambda a,b: cmp(a[1], b[1]))
         for name, alias in items:
-            if name in cgs:
+            if name in value["groups"]:
                 display_name = alias and alias or name
                 texts.append('<a href="wato.py?mode=edit_contact_group&edit=%s">%s</a>' % (name, display_name))
         result = ", ".join(texts)
-        if texts and use:
+        if texts and value["use"]:
             result += "<span title='%s'><b>*</b></span>" % \
                   _("These contact groups are also used in the monitoring configuration.")
         return "", result
 
     def render_input(self, value):
+        value = convert_cgroups_from_tuple(value)
+
+        # If we're just editing a host, then some of the checkboxes will be missing.
+        # This condition is not very clean, but there is no other way to savely determine
+        # the context.
+        is_host = not not html.var("host")
+
         # Only show contact groups I'm currently in and contact
         # groups already listed here.
-        use, cgs = value
         self.load_data()
         items = self._contactgroups.items()
         items.sort(cmp = lambda a,b: cmp(a[1], b[1]))
         for name, alias in items:
-            html.checkbox(self._name + "_n_" + name, name in cgs)
+            html.checkbox(self._name + "_n_" + name, name in value["groups"])
             html.write(' <a href="%s">%s</a><br>' % (make_link([("mode", "edit_contact_group"), ("edit", name)]), alias and alias or name))
         html.write("<hr>")
-        html.checkbox(self._name + "_use", use)
-        html.write( " " + _("Add these contact groups to the host's contact groups in the monitoring configuration"))
+        if is_host:
+            html.checkbox(self._name + "_use", value["use"], label = _("Add these contact groups the host"))
+        else:
+            html.checkbox(self._name + "_recurse_perms", value["recurse_perms"], label = _("Give these groups also <b>permission on all subfolders</b>"))
+            html.write("<hr>")
+            html.checkbox(self._name + "_use", value["use"], label = _("Add these groups as <b>contacts</b> to all hosts in this folder"))
+            html.write("<br>")
+            html.checkbox(self._name + "_recurse_use", value["recurse_use"], label = _("Add these groups as <b>contacts in all subfolders</b>"))
 
     def load_data(self):
         # Make cache valid only during this HTTP request
@@ -5576,11 +5665,17 @@ class ContactGroupsAttribute(Attribute):
         for name in self._contactgroups:
             if html.get_checkbox(self._name + "_n_" + name):
                 cgs.append(name)
-        return html.get_checkbox(self._name + "_use"), cgs
+        return {
+            "groups"        : cgs,
+            "recurse_perms" : html.get_checkbox(self._name + "_recurse_perms"),
+            "use"           : html.get_checkbox(self._name + "_use"),
+            "recurse_use"   : html.get_checkbox(self._name + "_recurse_use"),
+        }
 
     def filter_matches(self, crit, value, hostname):
+        value = convert_cgroups_from_tuple(value)
         for c in crit[1]:
-            if c in value[1]:
+            if c in value["groups"]:
                 return True
         return False
 

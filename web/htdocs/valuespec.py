@@ -1346,20 +1346,36 @@ class MultiSelect(ListChoice):
 # Implements a choice of items which is realized with
 # two ListChoices select fields. One contains all available
 # items and one contains all selected items.
+# Optionally you can have the user influance the order of
+# the entries by simply clicking them in a certain order.
+# If that feature is not being used, then the original order
+# of the elements is always being kept.
 class DualListChoice(ListChoice):
     def __init__(self, **kwargs):
         ListChoice.__init__(self, **kwargs)
         self._autoheight = kwargs.get("autoheight", True)
+        self._custom_order = kwargs.get("custom_order", False)
 
     def render_input(self, varprefix, value):
         self.load_elements()
         selected   = []
         unselected = []
-        for e in self._elements:
-            if e[0] in value:
-                selected.append(e)
-            else:
-                unselected.append(e)
+        if self._custom_order:
+            edict = dict(self._elements)
+            allowed_keys = edict.keys()
+            for v in value:
+                if v in allowed_keys:
+                    selected.append((v, edict[v]))
+            for v in allowed_keys:
+                if v not in value:
+                    unselected.append((v, edict[v]))
+        else:
+            for e in self._elements:
+                if e[0] in value:
+                    selected.append(e)
+                else:
+                    unselected.append(e)
+
 
         html.write('<table><tr><td>')
         html.write(_('Available:'))
@@ -1368,11 +1384,12 @@ class DualListChoice(ListChoice):
         html.write('</td></tr><tr><td>')
         html.sorted_select(varprefix + '_unselected', unselected,
                            attrs = {'size': 5, 'style': self._autoheight and 'height:auto' or ''},
-                           onchange = 'vs_duallist_switch(this, \'%s\');' % varprefix)
+                           onchange = 'vs_duallist_switch(this, \'%s\', %d);' % (varprefix, self._custom_order and 1 or 0))
         html.write('</td><td>')
-        html.sorted_select(varprefix + '_selected', selected,
+        func = self._custom_order and html.select or html.sorted_select
+        func(varprefix + '_selected', selected,
                            attrs = {'size': 5, 'style': self._autoheight and 'height:auto' or '', 'multiple': 'multiple'},
-                           onchange = 'vs_duallist_switch(this, \'%s\');' % varprefix)
+                           onchange = 'vs_duallist_switch(this, \'%s\', 1);' % varprefix)
         html.write('</td></tr></table>')
         html.hidden_field(varprefix, '|'.join([k for k, v in selected]), id = varprefix, add_var = True)
 
@@ -1380,9 +1397,16 @@ class DualListChoice(ListChoice):
         self.load_elements()
         selected = html.var(varprefix, '').split('|')
         value = []
-        for key, title in self._elements:
-            if key in selected:
-                value.append(key)
+        if self._custom_order:
+            edict = dict(self._elements)
+            allowed_keys = edict.keys()
+            for v in selected:
+                if v in allowed_keys:
+                    value.append(v)
+        else:
+            for key, title in self._elements:
+                if key in selected:
+                    value.append(key)
         return value
 
 # A type-save dropdown choice with one extra field that

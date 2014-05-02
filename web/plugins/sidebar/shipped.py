@@ -1196,4 +1196,196 @@ if defaults.omd_root:
         """
     }
 
+#   .--Virt. Host Tree-----------------------------------------------------.
+#   |  __     ___      _       _   _           _     _____                 |
+#   |  \ \   / (_)_ __| |_    | | | | ___  ___| |_  |_   _| __ ___  ___    |
+#   |   \ \ / /| | '__| __|   | |_| |/ _ \/ __| __|   | || '__/ _ \/ _ \   |
+#   |    \ V / | | |  | |_ _  |  _  | (_) \__ \ |_    | || | |  __/  __/   |
+#   |     \_/  |_|_|   \__(_) |_| |_|\___/|___/\__|   |_||_|  \___|\___|   |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
+
+def compute_tag_tree(taglist):
+    html.live.set_prepend_site(True)
+    query = "GET hosts\n" \
+            "Columns: host_name state num_services_ok num_services_warn num_services_crit num_services_unknown custom_variables"
+    hosts = html.live.query(query)
+    html.live.set_prepend_site(False)
+    hosts.sort()
+
+    def get_tag_group_value(groupentries, tags):
+        for entry in groupentries:
+            if entry[0] in tags:
+                return entry[0], entry[1] # tag, title
+        # Not found -> try empty entry
+        for entry in groupentries:
+            if entry[0] == None:
+                return None, entry[1]
+
+        # No empty entry found -> get default (i.e. first entry)
+        return groupentries[0][:2]
+
+    taggroups = {}
+    for entry in config.wato_host_tags:
+        groupname = entry[0]
+        grouptitle = entry[1]
+        group = entry[2]
+        taggroups[groupname] = group
+
+    tree = {}
+    for site, host_name, state, num_ok, num_warn, num_crit, num_unknown, custom_variables in hosts:
+        # make state reflect the state of the services + host
+        if state:
+            state += 1 # shift 1->2 (DOWN->CRIT) and 2->3 (UNREACH->UNKNOWN)
+        if num_crit:
+            state = 2
+        elif num_unknown:
+            if state != 2:
+                state = 3
+        elif num_warn:
+            if not state:
+                state = 1
+
+        tags = custom_variables.get("TAGS", []).split()
+        tree_entry = tree
+        for tag in taglist:
+            if tag not in taggroups:
+                continue # Configuration error. User deleted tag group after configuring his tree
+            tag_value, tag_title = get_tag_group_value(taggroups[tag], tags)
+            tree_entry = tree_entry.setdefault((tag_title, tag_value), {})
+ 
+        if not tree_entry:
+            tree_entry.update({
+                "_num_hosts" : 0,
+                "_state" : 0,
+            })
+        tree_entry["_num_hosts"] += 1
+        if state == 2 or tree_entry["_state"] == 2:
+            tree_entry["_state"] = 2
+        else:
+            tree_entry["_state"] = max(state, tree_entry["_state"])
+
+    return tree
+
+def tag_tree_worst_state(tree):
+    if "_state" in tree:
+        return tree["_state"]
+    else:
+        states = map(tag_tree_worst_state, tree.values())
+        for x in states:
+            if x == 2:
+                return 2
+        return max(states)
+
+def tag_tree_url(taggroups, taglist):
+    urlvars = [("view_name", "allhosts"), ("filled_in", "filter")]
+    for nr, (group, tag) in enumerate(zip(taggroups, taglist)):
+        urlvars.append(("host_tag_%d_grp" % nr, group))
+        urlvars.append(("host_tag_%d_op" % nr, "is"))
+        urlvars.append(("host_tag_%d_val" % nr, tag or ""))
+    return html.makeuri_contextless(urlvars, "view.py")
+
+def tag_tree_bullet(state, leaf):
+    return '<div class="tagtree %sstatebullet state%d">&nbsp;</div> ' % ((leaf and "leaf " or ""), state)
+
+
+def render_tag_tree_level(taggroups, path, title, tree):
+    bullet = tag_tree_bullet(tag_tree_worst_state(tree), False)
+    if path:
+        html.begin_foldable_container("tag-tree", ".".join(map(str, path)), False, bullet + title)
+    items = tree.items()
+    items.sort()
+
+    for nr, ((title, tag), subtree) in enumerate(items):
+        subpath = path + [tag]
+        url = tag_tree_url(taggroups, subpath)
+        if "_num_hosts" in subtree:
+            title += " (%d)" % subtree["_num_hosts"]
+        href = '<a target=main href="%s">%s</a>' % (url, html.attrencode(title))
+        if "_num_hosts" in subtree:
+            html.write(tag_tree_bullet(subtree["_state"], True))
+            html.write(href)
+            html.write("<br>")
+        else:
+            render_tag_tree_level(taggroups, subpath, href, subtree)
+
+    if path:
+        html.end_foldable_container()
+
+virtual_host_tree_js = """
+function virtual_host_tree_changed(field)
+{
+    var tree_conf = field.value;
+    // Then send the info to python code via ajax call for persistance
+    get_url_sync('sidebar_ajax_tag_tree.py?conf=' + escape(tree_conf));
+    refresh_single_snapin("tag_tree");
+}
+"""
+
+def render_tag_tree():
+    virtual_host_trees = [
+       (u"Nach Typ des Hosts", [ "hosttyp", "avail",   "agent"], ),
+       (u"Nach Agent",         [ "agent",   "hosttyp", "avail"], ),
+       (u"Nach Verfügbarkeit", [ "avail",   "HTTP",    "SMTP" ], ),
+    ]
+
+    if not config.virtual_host_trees:
+        url = 'wato.py?varname=virtual_host_trees&mode=edit_configvar'
+        html.write(_('You have not defined any virtual host trees. You can '
+                     'do this in the global settings for <a target=main href="%s">Multisite</a>.') % url)
+        return
+
+    tree_conf = config.load_user_file("virtual_host_tree", 0)
+    choices = enumerate([v[0] for v in config.virtual_host_trees])
+    html.begin_form("vtree")
+    html.select("vtree", choices, tree_conf, onchange = 'virtual_host_tree_changed(this)')
+    html.write("<br>")
+    html.end_form()
+    html.final_javascript(virtual_host_tree_js)
+
+    title, taggroups = config.virtual_host_trees[tree_conf]
+
+    tree = compute_tag_tree(taggroups)
+    render_tag_tree_level(taggroups, [], _("Virtual Host Tree"), tree)
+
+sidebar_snapins["tag_tree"] = {
+    "title" : _("Virtual Host Tree"),
+    "description" : _("This snapin shows tree views of your hosts based on their tag classifications. You "
+                      "can configure which tags to use in your global settings of Multisite."),
+    "render" : render_tag_tree,
+    "allowed" : [ "admin", "user", "guest" ],
+    "styles" : """
+
+#snapin_tag_tree select {
+    background-color: #6DA1B8;
+    border-color: #123A4A;
+    color: #FFFFFF;
+    font-size: 8pt;
+    height: 19px;
+    margin-bottom: 2px;
+    margin-top: -2px;
+    padding: 0;
+    width: 230px;
+}
+
+#snapin_tag_tree div.statebullet {
+    position: relative;
+    top: 3px;
+    left: 1px;
+    float: none;
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    margin-right: 0px;
+    box-shadow: 0px 0px 0.7px #284850;
+}
+
+#snapin_tag_tree div.statebullet.leaf {
+    margin-left: 16px;
+}
+#snapin_tag_tree b {
+    font-weight: normal;
+}
+"""
+}

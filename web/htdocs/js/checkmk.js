@@ -1809,7 +1809,7 @@ function vs_passwordspec_randomize(img) {
     oInput.value = password;
 }
 
-function vs_duallist_switch(field, varprefix) {
+function vs_duallist_switch(field, varprefix, keeporder) {
     if (field.id != varprefix + '_selected') {
         // The other field is the one without "_unselected" suffix
         var other_id = varprefix + '_selected';
@@ -1832,12 +1832,19 @@ function vs_duallist_switch(field, varprefix) {
     var selected = field.options[field.selectedIndex];
     field.removeChild(selected);
 
-    // Determine the correct child to insert
-    var sibling = other_field.firstChild;
-    while (sibling != null) {
-        if (sibling.nodeType == 1 && sibling.label.toLowerCase() > selected.label.toLowerCase())
-            break;
-        sibling = sibling.nextSibling
+    // Determine the correct child to insert. If keeporder is being set,
+    // then new elements will aways be appended. That way the user can
+    // create an order of his choice. This is being used if DualListChoice
+    // has the option custom_order = True
+    var sibling = false;
+
+    if (!keeporder) {
+        sibling = other_field.firstChild;
+        while (sibling != null) {
+            if (sibling.nodeType == 1 && sibling.label.toLowerCase() > selected.label.toLowerCase())
+                break;
+            sibling = sibling.nextSibling
+        }
     }
 
     if (sibling)

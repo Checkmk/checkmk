@@ -698,6 +698,12 @@ function switch_site(switchvar) {
 
 var g_seconds_to_update = null;
 
+function refresh_single_snapin(name) {
+    var url = 'sidebar_snapin.py?names=' + name;
+    var ids = [ 'snapin_' + name ];
+    get_url(url, bulkUpdateContents, ids);
+}
+
 function sidebar_scheduler() {
     if (g_seconds_to_update == null)
         g_seconds_to_update = sidebar_update_interval;
@@ -918,6 +924,7 @@ function add_html_var(url, varname, value) {
         new_url += "?" + varname + "=" + escape(value);
     return new_url;
 }
+
 
 /************************************************
  * Popup Message Handling

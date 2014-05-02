@@ -66,6 +66,7 @@ pagehandlers.update({
    "sidebar_openclose"        : sidebar.ajax_openclose,
    "sidebar_move_snapin"      : sidebar.move_snapin,
    "sidebar_ajax_speedometer" : sidebar.ajax_speedometer,
+   "sidebar_ajax_tag_tree"    : sidebar.ajax_tag_tree,
    "sidebar_get_messages"     : sidebar.ajax_get_messages,
    "sidebar_message_read"     : sidebar.ajax_message_read,
    "ajax_search"              : sidebar.ajax_search,

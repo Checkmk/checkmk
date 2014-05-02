@@ -11725,6 +11725,7 @@ def group_hosttags_by_topic(hosttags):
         tags[topic].append((entry[0], title) + entry[2:])
     return sorted(tags.items(), key = lambda x: x[0])
 
+
 def mode_hosttags(phase):
     if phase == "title":
         return _("Host tag groups")

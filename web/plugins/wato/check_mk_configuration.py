@@ -242,6 +242,43 @@ register_configvar(group,
             default_value = False),
     domain = "multisite")
 
+
+def wato_host_tag_group_choices():
+    choices = []
+    for entry in config.wato_host_tags:
+        tgid = entry[0]
+        topic, tit = parse_hosttag_title(entry[1])
+        choices.append((tgid, tit))
+    return choices
+
+
+register_configvar(group,
+    "virtual_host_trees",
+    ListOf(
+        Tuple(
+            elements = [
+                TextUnicode(
+                    title = _("Title of the tree"),
+                    allow_empty = False,
+                ),
+                DualListChoice(
+                    allow_empty = False,
+                    custom_order = True,
+                    choices = wato_host_tag_group_choices,
+                )
+            ]
+        ),
+        add_label = _("Create new virtual host tree configuration"),
+        title = _("Virtual Host Trees"),
+        help = _("Here you can define tree configurations for the snapin <i>Virtual Host-Trees</i>. "
+                 "These trees organize your host based on their values in certain host tag groups. "
+                 "Each host tag group you select will create one level in the tree."),
+    ),
+    domain = "multisite",
+)
+
+
+
 register_configvar(group,
     "reschedule_timeout",
     Float(title = _("Timeout for rescheduling checks in Multisite"),

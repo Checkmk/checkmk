@@ -514,6 +514,7 @@ def ajax_speedometer():
 
     html.write(repr([scheduled_rate, program_start, percentage, last_perc, str(title)]))
 
+
 def ajax_switch_masterstate():
     site = html.var("site")
     column = html.var("switch")
@@ -641,6 +642,12 @@ def page_edit_bookmark():
     html.end_form()
 
     html.footer()
+
+def ajax_tag_tree():
+    newconf = int(html.var("conf"))
+    tree_conf = config.save_user_file("virtual_host_tree", newconf)
+
+
 
 #.
 #   .--Quicksearch---------------------------------------------------------.

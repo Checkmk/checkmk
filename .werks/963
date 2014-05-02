@@ -1,0 +1,21 @@
+Title: New snapin with virtual host trees
+Level: 2
+Component: multisite
+Version: 1.2.5i3
+Date: 1399027191
+Class: feature
+
+We have added a new snapin to Multisite: <i>Virtual Host Tree</i>. This snapin allows you to
+have trees of your hosts created based upon tags. In order to use this simply add the snapin
+to your sidebar and go to the <i>Global Settings</i>, section <i>Status GUI (Multisite)</i>
+and the new setting <i>Virtual Host Trees</i>.
+
+You can create an arbitrary number of virtual trees. They will be globally visible for
+all users. Each tree consists of a sequence of tag groups. Let's assume that you have
+created a virtual tree from the three fictive tag groups <i>Location</i>, <i>Application</i>
+and <i>Criticality</i>. The virtual host tree will then have tree levels. At the
+top level there is the selection of the location, on the second level the application
+and on the leaf-level the criticality.
+
+A click of an arbitrary node of the tree brings you to all hosts having the selected
+tags.

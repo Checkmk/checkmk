@@ -205,6 +205,9 @@ staleness_threshold = 1.5
 # Escape HTML in plugin output / log messages
 escape_plugin_output = True
 
+# Virtual host trees for the "Virtual Host Trees" snapin
+virtual_host_trees = []
+
 #     _   _               ____  ____
 #    | | | |___  ___ _ __|  _ \| __ )
 #    | | | / __|/ _ \ '__| | | |  _ \

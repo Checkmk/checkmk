@@ -974,7 +974,7 @@ class html:
             now = time.time()
             for valid_id in valid_ids:
                 timestamp, rand = valid_id.split("/")
-                if now - int(timestamp) < 604800: # 7 * 24 hours
+                if now - int(timestamp) < 86400: # one day
                     cleared_ids.append(valid_id)
             self.save_transids(cleared_ids + self.new_transids, unlock = True)
 

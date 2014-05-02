@@ -5556,7 +5556,7 @@ class ContactGroupsAttribute(Attribute):
         items = self._contactgroups.items()
         items.sort(cmp = lambda a,b: cmp(a[1], b[1]))
         for name, alias in items:
-            html.checkbox(self._name + "_" + name, name in cgs)
+            html.checkbox(self._name + "_n_" + name, name in cgs)
             html.write(' <a href="%s">%s</a><br>' % (make_link([("mode", "edit_contact_group"), ("edit", name)]), alias and alias or name))
         html.write("<hr>")
         html.checkbox(self._name + "_use", use)
@@ -5574,7 +5574,7 @@ class ContactGroupsAttribute(Attribute):
         cgs = []
         self.load_data()
         for name in self._contactgroups:
-            if html.get_checkbox(self._name + "_" + name):
+            if html.get_checkbox(self._name + "_n_" + name):
                 cgs.append(name)
         return html.get_checkbox(self._name + "_use"), cgs
 

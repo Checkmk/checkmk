@@ -1354,6 +1354,7 @@ sidebar_snapins["tag_tree"] = {
     "description" : _("This snapin shows tree views of your hosts based on their tag classifications. You "
                       "can configure which tags to use in your global settings of Multisite."),
     "render" : render_tag_tree,
+    "refresh" : True,
     "allowed" : [ "admin", "user", "guest" ],
     "styles" : """
 

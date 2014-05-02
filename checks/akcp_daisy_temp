@@ -29,13 +29,13 @@ def inventory_akcp_daisy_temp(info):
     inventory = []
     pass_first = True
     for port, subport, name, temp in info:
-        if subport != '-1':
+        if subport != '-1' and subport != '0':
             # We have to ignore the first item, because it will be also reported
-            # by akcp_sensor_temp on the port were this sensor chain are connected
+            # by akcp_sensor_temp on the port were this sensor chain is connected
             if pass_first:
                 pass_first = False
                 continue
-            inventory.append((name, 'akcp_daisy_temp_defaultlevels' )) 
+            inventory.append((name, 'akcp_daisy_temp_defaultlevels' ))
     return inventory
 
 def check_akcp_daisy_temp(item, params, info):
@@ -44,7 +44,7 @@ def check_akcp_daisy_temp(item, params, info):
             warn, crit = params
             temp = savefloat(temp) / 10
             infotext = "%.1f °C " % temp
-            levels = " (warn/crit at %.1f/%.1f °C)" % (warn, crit) 
+            levels = " (warn/crit at %.1f/%.1f °C)" % (warn, crit)
             perfdata = [ ( "temperature", temp, warn, crit ) ]
             if temp > crit:
                 return 2, infotext + levels, perfdata
@@ -59,8 +59,8 @@ check_info["akcp_daisy_temp"] = {
     'service_description':     'Temperature %s',
     'has_perfdata':            True,
     'snmp_info':               (
-        ".1.3.6.1.4.1.3854.1.2.2.1.19.33", 
-            [ 1, 2, 3, 4, 5, 6, 7 ],
+        ".1.3.6.1.4.1.3854.1.2.2.1.19.33",
+            [ 1, 2, 3, 4, 5, 6, 7, 8 ],
             [
              OID_END, # Port/Subport
              "2.1.1", # subport

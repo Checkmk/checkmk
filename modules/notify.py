@@ -392,6 +392,10 @@ def notify_keepalive():
                 sys.stdout.write("*")
                 sys.stdout.flush()
 
+
+	# Fix vor Python 2.4:
+        except SystemExit, e:
+            sys.exit(e)
         except Exception, e:
             if opt_debug:
                 raise

@@ -11,6 +11,9 @@
     Multisite:
     * 0912 FIX: Multisite Views: Fixed bug where custom views could not get deleted
 
+    Notifications:
+    * 0964 FIX: Fix hanging shutdown of CMC on RedHat 5.X...
+
     BI:
     * 0882 FIX: check_bi_local.py: fix crash in case of non-ascii characters...
 

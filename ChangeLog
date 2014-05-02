@@ -93,6 +93,7 @@
 
     Reporting & Availability:
     * 0756 Allow availability of multisite BI aggregates at once...
+    * 0962 FIX: Fix CSV-Export in availability table
 
     Event Console:
     * 0885 New option for writing all messages into a syslog-like logfile...

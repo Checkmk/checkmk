@@ -1,0 +1,89 @@
+Configuration of notification plugins
+-------------------------------------
+
+Currently the only API for making notification plugins configurable is via
+a list of unnamed number parameters. The values of this list can be configured
+at the place where the notification is being setup (i.e. in a channel of
+flexible notifications and in a rule in the RBN).
+
+For the legacy ASCII-email in addition there are global options.
+
+This is not flexible enough, for several reasons. Here are some
+examples of missing configuration options:
+
+* Configure a From address for HTML emails
+  - This should be done as a global option
+
+* Configure a Reply-To address for HTML emails
+  - This should be on options to be set in the actual notification
+    rule, so that different rules can set differen reply-tos.
+
+* Configure the general structure of HTML emails
+  Which fields should be displayed? How should the subject
+  look like, etc.
+  - This should be global. Otherwise the user would have to repeate
+    the complete configuration for each rule.
+
+* Configure credentials for an SMS gateway
+  - should be a global option
+
+
+So what we need is two things:
+
+1. WATO configuration for the global settings of a notification. We
+could do this either as true global options. Or we could do that
+rule based. The idea: every notification is about a specific host
+and maybe also a service. So we could use the WATO rule system
+for having different groups of hosts have different global
+notification settings.
+
+2. WATO configuration for the per-rule settings of a notification.
+In order to be as flexible as possible we could allow the *same*
+configuration values as for the global settings. If we implement
+this as a dictionary with optional values then the settings
+in a specific rule can simply override global settings. So for
+example you could specify a From: address via a global setting
+but override this in a single rule.
+
+
+IMPLEMENTATION
+--------------
+Each notification plugin can optionally register a WATO
+configuration for its options. This must be of type dictionary
+and is configured in share/check_mk/web/plugins/wato/notifcations.py
+For each configuration there will be created two WATO rules:
+one for host notifications, one for service notifications.
+
+The same configuration will also be added to the notification
+rules. Here we need to change the way the script selection and
+cancelling is being configured, since the configuration of
+the plugin must be displayed as soon as the plugin is being
+selected.
+
+For each plugin that has a configuration a second plugin
+needs to be registered: One that converts the dictionary
+into a list of command line arguments. When a notification
+is being created then the upper configuration rules are
+being executed, then rule-specific configuration can
+override the parameters and as a last step this is
+being converted into command line arguments.
+
+Plugins that do not have a WATO configuration (legacy
+style, self written plugins) directly use a list
+of strings - like now.
+
+
+ACTUAL CONFIGURATION PARAMTERS
+------------------------------
+We will start by implementing the following parameters for
+the HTML emails:
+
+1. From: address
+2. Reply-To: address
+3. Subject:
+--> It is allowed to use macros like $HOSTNAME$ here.
+
+4. Selection of data fields to show. This will be selection from
+a list of fields, e.g. "Host name", "Service Description", "Current state",
+"Type of notification", etc..
+

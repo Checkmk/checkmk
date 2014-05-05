@@ -1,0 +1,8 @@
+Title: WATO diag page: "Retry this test" only works once
+Component: wato
+State: open
+Date: 2014-05-05 18:14:16
+Targetversion: future
+Class: bug
+
+The javascript only receives one extra transaction id..

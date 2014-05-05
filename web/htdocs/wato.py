@@ -16650,7 +16650,7 @@ def make_link_to(vars, folder):
     return html.makeuri_contextless(vars)
 
 def make_action_link(vars):
-    return make_link(vars + [("_transid", html.fresh_transid())])
+    return make_link(vars + [("_transid", html.get_transid())])
 
 
 # Show confirmation dialog, send HTML-header if dialog is shown.

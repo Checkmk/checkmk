@@ -108,6 +108,7 @@
     * 0831 FIX: table statehist: no longer crashes on TIMEPERIOD TRANSITION entries with an invalid syntax...
 
     HW/SW-Inventory:
+    * 0913 lnx_distro: Now able to detect SuSE distributions...
     * 0886 FIX: Fix exception on non-UTF-8 encoded characters in software list
 
 

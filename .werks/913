@@ -1,0 +1,8 @@
+Title: lnx_distro: Now able to detect SuSE distributions
+Level: 1
+Component: inv
+Version: 1.2.5i3
+Date: 1399298913
+Class: feature
+
+The software inventory is now able to detect SuSE distributions and its codenames.

@@ -124,11 +124,7 @@ def render_availability(view, datasource, filterheaders, display_options,
 
     if html.output_format == "csv_export":
         do_csv = True
-        html.req.content_type = "text/csv; charset=UTF-8"
-        filename = '%s-%s.csv' % (title, time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
-        if type(filename) == unicode:
-            filename = filename.encode("utf-8")
-        html.req.headers_out['Content-Disposition'] = 'Attachment; filename=%s' % filename
+        av_output_csv_mimetype(title)
     else:
         do_csv = False
 
@@ -178,6 +174,13 @@ def render_availability(view, datasource, filterheaders, display_options,
         html.bottom_footer()
     if 'H' in display_options:
         html.body_end()
+
+def av_output_csv_mimetype(title):
+    html.req.content_type = "text/csv; charset=UTF-8"
+    filename = '%s-%s.csv' % (title, time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime(time.time())))
+    if type(filename) == unicode:
+        filename = filename.encode("utf-8")
+    html.req.headers_out['Content-Disposition'] = 'Attachment; filename="%s"' % filename
 
 avoption_entries = [
   # Time range selection
@@ -1334,26 +1337,38 @@ def check_av_levels(number, av_levels, considered_duration):
 # Render availability of a BI aggregate. This is currently
 # no view and does not support display options
 def render_bi_availability(title, aggr_rows):
+    html.add_status_icon("download_csv", _("Export as CSV"), html.makeuri([("output_format", "csv_export")]))
+
     timeline = html.var("timeline")
     if timeline:
         title = _("Timeline of ") + title
     else:
         title = _("Availability of ") + title
-    html.body_start(title, stylesheets=["pages","views","status", "bi"], javascripts=['bi'])
-    html.top_heading(title)
-    html.begin_context_buttons()
-    togglebutton("avoptions", False, "painteroptions", _("Configure details of the report"))
-    html.context_button(_("Status View"), html.makeuri([("mode", "status")]), "status")
-    if timeline:
-        html.context_button(_("Availability"), html.makeuri([("timeline", "")]), "availability")
-    elif len(aggr_rows) == 1:
-        aggr_name = aggr_rows[0]["aggr_name"]
-        aggr_group = aggr_rows[0]["aggr_group"]
-        timeline_url = html.makeuri([("timeline", "1"), ("av_aggr_name", aggr_name), ("av_aggr_group", aggr_group)])
-        html.context_button(_("Timeline"), timeline_url, "timeline")
-    html.end_context_buttons()
+    if html.output_format != "csv_export":
+        html.body_start(title, stylesheets=["pages","views","status", "bi"], javascripts=['bi'])
+        html.top_heading(title)
+        html.begin_context_buttons()
+        togglebutton("avoptions", False, "painteroptions", _("Configure details of the report"))
+        html.context_button(_("Status View"), html.makeuri([("mode", "status")]), "status")
+        if timeline:
+            html.context_button(_("Availability"), html.makeuri([("timeline", "")]), "availability")
+        elif len(aggr_rows) == 1:
+            aggr_name = aggr_rows[0]["aggr_name"]
+            aggr_group = aggr_rows[0]["aggr_group"]
+            timeline_url = html.makeuri([("timeline", "1"), ("av_aggr_name", aggr_name), ("av_aggr_group", aggr_group)])
+            html.context_button(_("Timeline"), timeline_url, "timeline")
+        html.end_context_buttons()
 
+    html.plug()
     avoptions = render_availability_options()
+    range, range_title = avoptions["range"]
+    avoptions_html = html.drain()
+    html.unplug()
+    if html.output_format == "csv_export":
+        av_output_csv_mimetype(title)
+    else:
+        html.write(avoptions_html)
+
     timewarpcode = ""
 
     if not html.has_user_errors():
@@ -1400,8 +1415,9 @@ def render_bi_availability(title, aggr_rows):
 
         do_render_availability(rows, "bi", avoptions, timeline, timewarpcode)
 
-    html.bottom_footer()
-    html.body_end()
+    if html.output_format != "csv_export":
+        html.bottom_footer()
+        html.body_end()
 
 def get_bi_timeline(tree, aggr_group, avoptions, timewarp):
     range, range_title = avoptions["range"]

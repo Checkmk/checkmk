@@ -1,0 +1,14 @@
+Title: check_mk_exit_status does not work for SNMP based devices
+Component: checks
+State: open
+Date: 2014-05-06 11:50:46
+Targetversion: 1.2.5i1
+Class: bug
+
+If you do checks on devices not switched on 24x7, you define a rule 
+"Status of Check_MK Service", which sets check_mk_exit_status
+
+For devices using the Check_MK agent, this works fine.
+For devices using SNMP it does not work. 
+But also maybe a printer (queried by SNMP) may be switched off during
+none office hours.

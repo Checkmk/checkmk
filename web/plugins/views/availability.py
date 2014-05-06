@@ -877,7 +877,10 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration,
         table.cell(_("Links"), css="buttons")
         if what == "bi":
             url = html.makeuri([("timewarp", str(int(row["from"])))])
-            html.icon_button(url, _("Time warp - show BI aggregate during this time period"), "timewarp")
+            if html.var("timewarp") and int(html.var("timewarp")) == int(row["from"]):
+                html.disabled_icon_button("timewarp_off")
+            else:
+                html.icon_button(url, _("Time warp - show BI aggregate during this time period"), "timewarp")
         else:
             url = html.makeuri([("anno_site", tl_site),
                                 ("anno_host", tl_host),
@@ -1403,7 +1406,24 @@ def render_bi_availability(title, aggr_rows):
                                          expansion_level=bi.load_ex_level(), only_problems=False, lazy=False)
                 html.plug()
                 html.write('<h3>')
-                html.icon_button(html.makeuri([("timewarp", "")]), _("Close Timewarp"), "close")
+
+                # render icons for back and forth
+                if int(these_rows[0]["from"]) == timewarp:
+                    html.disabled_icon_button("back_off")
+                have_forth = False
+                previous_row = None
+                for row in these_rows:
+                    if int(row["from"]) == timewarp and previous_row != None:
+                        html.icon_button(html.makeuri([("timewarp", str(int(previous_row["from"])))]), _("Jump one phase back"), "back")
+                    elif previous_row and int(previous_row["from"]) == timewarp and row != these_rows[-1]:
+                        html.icon_button(html.makeuri([("timewarp", str(int(row["from"])))]), _("Jump one phase forth"), "forth")
+                        have_forth = True
+                    previous_row = row
+                if not have_forth:
+                    html.disabled_icon_button("forth_off")
+
+                html.write(" &nbsp; ")
+                html.icon_button(html.makeuri([("timewarp", "")]), _("Close Timewarp"), "closetimewarp")
                 timewarpcode = html.drain()
                 html.unplug()
                 timewarpcode += '%s %s</h3>' % (_("Timewarp to "), time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timewarp))) + \

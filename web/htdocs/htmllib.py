@@ -332,6 +332,9 @@ class html:
     def empty_icon_button(self):
         self.write('<img class="iconbutton trans" src="images/trans.png">')
 
+    def disabled_icon_button(self, icon):
+        self.write('<img class="iconbutton" align=absmiddle src="images/icon_%s.png">' % icon)
+
     def jsbutton(self, varname, text, onclick, style=''):
         if style:
             style = ' style="%s"' % style

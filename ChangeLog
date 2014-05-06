@@ -98,6 +98,7 @@
     Reporting & Availability:
     * 0756 Allow availability of multisite BI aggregates at once...
     * 0966 CSV export for availability works now also for BI aggregates
+    * 0967 BI Availability timewarp: new buttons for moving back and forth
     * 0962 FIX: Fix CSV-Export in availability table
 
     Event Console:

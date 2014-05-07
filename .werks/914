@@ -1,0 +1,10 @@
+Title: Improved transaction handling to speedup the Web-GUI
+Level: 1
+Component: multisite
+Version: 1.2.5i3
+Date: 1399306196
+Class: feature
+
+On some systems the number of transaction ids could get very high,
+thus slowing down the web interface. This has been improved by re-using
+the same transaction id on a page multiple times.

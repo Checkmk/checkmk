@@ -34,6 +34,8 @@
 # <<<lnx_distro:sep(124)>>>
 # /etc/redhat-release|Red Hat Enterprise Linux Server release 6.5 (Santiago)
 
+# <<<lnx_distro:sep(124):persist(1399310551)>>>
+# /etc/SuSE-release|SUSE Linux Enterprise Server 11 (x86_64)|VERSION = 11|PATCHLEVEL = 2
 
 
 def inv_lnx_distro(info):
@@ -45,6 +47,28 @@ def inv_lnx_distro(info):
             inv_lnx_parse_debian(node, line[1])
         elif line[0] == '/etc/redhat-release':
             inv_lnx_parse_redhat_release(node, line[1])
+        elif line[0] == '/etc/SuSE-release':
+            inv_lnx_parse_suse_release(node, line[1:])
+
+def inv_lnx_parse_suse_release(node, line):
+    node["type"] = "linux"
+    node["vendor"] = "SuSE"
+    version = "%s.%s" % (line[1].split()[-1], line[2].split()[-1])
+    node["version"] = version
+    if version == "11.2":
+        node["code_name"] = "Emerald"
+    elif version == "11.3":
+        node["code_name"] = "Teal"
+    elif version == "11.4":
+        node["code_name"] = "Celadon"
+    elif version == "12.1":
+        node["code_name"] = "Asparagus"
+    elif version == "12.2":
+        node["code_name"] = "Mantis"
+    elif version == "12.3":
+        node["code_name"] = "Darthmouth"
+    elif version == "13.1":
+        node["code_name"] = "Bottle"
 
 def inv_lnx_parse_redhat_release(node, line):
     node["type"] = "linux"

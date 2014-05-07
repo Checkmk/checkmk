@@ -76,6 +76,7 @@ class html:
         self.caches = {}
         self.new_transids = []
         self.ignore_transids = False
+        self.current_transid = None
 
     RETURN = 13
     SHIFT = 16
@@ -178,7 +179,7 @@ class html:
                     enctype, onsubmit))
         self.hidden_field("filled_in", name)
         if add_transid:
-            self.hidden_field("_transid", str(self.fresh_transid()))
+            self.hidden_field("_transid", str(self.get_transid()))
         self.hidden_fields(self.global_vars)
         self.form_name = name
 
@@ -250,7 +251,7 @@ class html:
             return filename
 
     def makeactionuri(self, addvars):
-        return self.makeuri(addvars + [("_transid", self.fresh_transid())])
+        return self.makeuri(addvars + [("_transid", self.get_transid())])
 
     def makeuri_contextless(self, vars, filename=None):
         if not filename:
@@ -279,7 +280,7 @@ class html:
 
     def buttonlink(self, href, text, add_transid=False, obj_id='', style='', title='', disabled=''):
         if add_transid:
-            href += "&_transid=%s" % self.fresh_transid()
+            href += "&_transid=%s" % self.get_transid()
         if not obj_id:
             obj_id = self.some_id()
         obj_id = ' id=%s' % obj_id
@@ -330,6 +331,9 @@ class html:
 
     def empty_icon_button(self):
         self.write('<img class="iconbutton trans" src="images/trans.png">')
+
+    def disabled_icon_button(self, icon):
+        self.write('<img class="iconbutton" align=absmiddle src="images/icon_%s.png">' % icon)
 
     def jsbutton(self, varname, text, onclick, style=''):
         if style:
@@ -962,6 +966,11 @@ class html:
         transid = "%d/%d" % (int(time.time()), random.getrandbits(32))
         self.new_transids.append(transid)
         return transid
+
+    def get_transid(self):
+        if not self.current_transid:
+            self.current_transid = self.fresh_transid()
+        return self.current_transid
 
     # Marks a transaction ID as used. This is done by saving
     # it in a user specific settings file "transids.mk". At this

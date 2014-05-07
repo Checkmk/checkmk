@@ -1,0 +1,23 @@
+#!/bin/bash
+# Needed to get read CPU usage of processes (and other data) on Linux, since
+# ps only outputs the cumulated CPU usage since the process start
+
+# Configuration: /etc/check_mk/psperf.cfg
+# Each line contains one pattern for pgrep. Arguments of pgrep are supported
+# Example:
+# cups
+# -u ntp
+# This will find processes with the name 'cups' and processes owned by the user ntp.
+# The check ps will parse this additional information in order to compute
+# the current CPU utilization of a process.
+
+if [ -e "$MK_CONFDIR/psperf.cfg" ] ; then
+    echo '<<<ps>>>'
+    echo '[proc_stat]'
+    while read LINE
+    do
+        for pid in $(pgrep $LINE) ; do
+            cat /proc/$pid/stat
+        done
+    done < "$MK_CONFDIR/psperf.cfg"
+fi

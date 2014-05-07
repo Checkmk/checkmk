@@ -1,0 +1,24 @@
+Title: Avoid multiple notifications for a single problem on a single host
+Component: checks
+State: open
+Date: 2014-05-06 11:42:27
+Targetversion: 1.2.5i1
+Class: feature
+
+you have e. g. a machine with some oracle instances
+per instance there are multiple checks
+now if one instance goes down, you get multiple notifications (one per check)
+this is normally unwanted
+
+in classical Nagios setups service dependencies are used to avoid these
+but service dependencies have conceptual weaknesses
+a notification may or may not be sent, depending on the timing of the both checks
+
+as an alternative solution Mathias suggests:
+Throw counter wrap exceptions in case a dependent service fails
+dependent services should get stale in this case
+but this means a check needs to know on which other services it depends
+for the named oracle checks this should work fine
+
+so let's try it this way
+for other szenarios we might find a similar way

@@ -1,0 +1,8 @@
+Title: brocade_vdx_status: New check to monitor the operational state of vdx switches.
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1399471871
+Class: feature
+
+

@@ -787,7 +787,7 @@ def save_mkeventd_rules(rules):
 
 def mode_mkeventd_rules(phase):
     if phase == "title":
-        return _("Rules for event corelation")
+        return _("Rules for event correlation")
 
     elif phase == "buttons":
         home_button()
@@ -1100,9 +1100,9 @@ def mode_mkeventd_edit_rule(phase):
 
         save_mkeventd_rules(rules)
         if new:
-            log_mkeventd("new-rule", _("Created new event corelation rule with id %s" % rule["id"]))
+            log_mkeventd("new-rule", _("Created new event correlation rule with id %s" % rule["id"]))
         else:
-            log_mkeventd("edit-rule", _("Modified event corelation rule %s" % rule["id"]))
+            log_mkeventd("edit-rule", _("Modified event correlation rule %s" % rule["id"]))
             # Reset hit counters of this rule
             mkeventd.query("COMMAND RESETCOUNTERS;" + rule["id"])
         return "mkeventd_rules"
@@ -1413,7 +1413,7 @@ if mkeventd_enabled:
     config.declare_permission("mkeventd.edit",
        _("Configuration of event rules"),
        _("This permission allows the creation, modification and "
-         "deletion of event corelation rules."),
+         "deletion of event correlation rules."),
          ["admin"])
 
     config.declare_permission("mkeventd.activate",
@@ -1431,7 +1431,7 @@ if mkeventd_enabled:
 
     modules.append(
       ( "mkeventd_rules",  _("Event Console"), "mkeventd", "mkeventd.edit",
-      _("Manage event classification and corelation rules for the "
+      _("Manage event classification and correlation rules for the "
         "event console")))
 
 

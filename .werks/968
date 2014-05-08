@@ -1,18 +1,18 @@
-Title: Notification plugins now configurable via WATO
+Title: Notification scripts are now configurable via WATO
 Level: 2
 Component: notifications
 Version: 1.2.5i3
 Date: 1399542362
 Class: feature
 
-Check_MK now has a new alternative API for notification script, which allows
-them to be configured via WATO. The classical API provided the possibility of
-a list of strings that was passed to the script as <tt>PARAMETER_1</tt>,
-<tt>PARAMETER_2</tt>, etc. The new API passes arguments according
-to keys in a configured dictionary, like <tt>PARAMETER_FROM</tt> and
-<tt>PARAMETER_REPLY_TO</tt>.
+Check_MK now has a new alternative API for notification scripts, which allows
+them to be configured via WATO. The classical API provided the possibility
+of a list of strings that was passed to the script in form of variables like
+<tt>PARAMETER_1</tt>, <tt>PARAMETER_2</tt>, etc. The new API passes parameters
+according to keys of a WATO-configured dictionary, like <tt>PARAMETER_FROM</tt>
+and <tt>PARAMETER_REPLY_TO</tt>.
 
-Two notification scripts have been converted to use the new API: <tt>mail</tt>
+Two notification scripts have already been converted to use the new API: <tt>mail</tt>
 (sending HTML emails) and <tt>mkeventd</tt> (forwarding to the Event Console).
 
 The configuration of a notification script does only work with the new
@@ -20,14 +20,23 @@ The configuration of a notification script does only work with the new
 
 <ul>
 <li>In new rulesets below <i>Host &amp; Service Parameters</i> &rarr; <i>Monitoring Configuration</i> &rarr; <i>Notifications</i></li>
-<li>Right in a notification rule</li>
+<li>In a notification rule</li>
 </ul>
 
 Both configurations are being merged on a per-key basis. That way you
 can e.g. setup a <tt>From:</tt> header for your outgoing emails via
 a global rule, but select various different <tt>Reply-To:</tt> addresses
 in different notification rules.
-
 If a configuration key appears both in <i>Host &amp; Service Parameters</i> and
 in a notification rule then the latter one has precedence.
 
+Within that effort the HTML email script is now far more configurable. You
+can now configure:
+
+<ul>
+<li>The From- and Reply-To Address</li>
+<li>The subjects for host and service notifications</li>
+<li>An URL-Prefix for your Multisite interface (this makes hosts and services
+in the notifications clickable<li>
+<li>A choice of optional information to be displayed in the emails</li>
+</ul>

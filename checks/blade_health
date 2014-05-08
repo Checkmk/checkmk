@@ -38,9 +38,7 @@ def inventory_blade_health(info):
 
 def check_blade_health(_no_item, _no_params, info):
     state = info[0][0]
-    descr = ''
-    if len(info[0]) > 1:
-        descr = ': %s' % info[0][1]
+    descr = ": " + ", ".join([ line[1] for line in info if len(line) > 1 ])
 
     if state == "255":
         return (0, "State is good")
@@ -52,8 +50,6 @@ def check_blade_health(_no_item, _no_params, info):
         return (2, "State is critical!" + descr)
     else:
         return (3, "Undefined state code %s%s" % (state, descr))
-
-
 
 
 

@@ -67,6 +67,7 @@
     * 0910 FIX: brocade.power: fixed an error where the check reports an UNKNOWN on power supply failure...
     * 0158 FIX: dell_om_disks: Handle hotspares more correctly
     * 0161 FIX: cisco_fru_power: Exluded not existing devices from the inventory
+    * 0969 FIX: blade_health: correctly output error message in non-OK state
 
     Multisite:
     * 0779 Hostgroups (Summary): Empty hostgroups are no longer shown (can be re-enabled by filter)

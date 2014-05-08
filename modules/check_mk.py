@@ -344,6 +344,7 @@ check_mk_agent_target_versions       = [] # Rule for defining expected version f
 check_periods                        = []
 snmp_check_interval                  = []
 inv_exports                          = {} # Rulesets for inventory export hooks
+notification_parameters              = {} # Rulesets for parameters of notification scripts
 
 # Rulesets for agent bakery
 agent_config                         = {}

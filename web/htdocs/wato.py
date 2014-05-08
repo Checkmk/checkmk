@@ -7700,7 +7700,15 @@ def load_notification_rules():
     try:
         vars = { "notification_rules" : [] }
         execfile(filename, vars, vars)
-        return vars["notification_rules"]
+        notification_rules = vars["notification_rules"]
+        # Convert to new plugin configuration format
+        for rule in notification_rules:
+            if "notify_method" in rule:
+                method = rule["notify_method"]
+                plugin = rule["notify_plugin"]
+                del rule["notify_method"]
+                rule["notify_plugin"] = ( plugin, method )
+        return notification_rules
     except:
         if config.debug:
             raise MKGeneralException(_("Cannot read configuration file %s: %s" %
@@ -7736,7 +7744,14 @@ def vs_notification_scripts():
     return DropdownChoice(
        title = _("Notification Script"),
        choices = notification_script_choices,
-       default_value = "mail",
+       default_value = "mail"
+    )
+
+def vs_notification_methods():
+    return CascadingDropdown(
+        title = _("Notification Method"),
+        choices = notification_script_choices_with_parameters,
+        default_value = ( "mail", {} )
     )
 
 def vs_notification_rule(userid = None):
@@ -8018,27 +8033,27 @@ def vs_notification_rule(userid = None):
         [
             # Notification
             ( "notify_plugin",
-              vs_notification_scripts(),
+              vs_notification_methods(),
             ),
 
-            ( "notify_method",
-              Alternative(
-                  title = _("Parameters / Cancelling"),
-                  style = "dropdown",
-                  elements = [
-                      ListOfStrings(
-                          title = _("Call the script with the following parameters"),
-                          valuespec = TextUnicode(size = 24),
-                          orientation = "horizontal",
-                      ),
-                      FixedValue(
-                          value = None,
-                          title = _("Cancel all previous notifications with this method"),
-                          totext = "",
-                      ),
-                  ]
-              )
-            ),
+            # ( "notify_method",
+            #   Alternative(
+            #       title = _("Parameters / Cancelling"),
+            #       style = "dropdown",
+            #       elements = [
+            #           ListOfStrings(
+            #               title = _("Call the script with the following parameters"),
+            #               valuespec = TextUnicode(size = 24),
+            #               orientation = "horizontal",
+            #           ),
+            #           FixedValue(
+            #               value = None,
+            #               title = _("Cancel all previous notifications with this method"),
+            #               totext = "",
+            #           ),
+            #       ]
+            #   )
+            # ),
 
             ( "bulk",
               Dictionary(
@@ -8099,13 +8114,13 @@ def vs_notification_rule(userid = None):
     )
 
 def validate_notification_rule(rule, varprefix):
-    if "bulk" in rule and rule["notify_method"] == None:
+    if "bulk" in rule and rule["notify_plugin"][1] == None:
         raise MKUserError(varprefix + "_p_bulk_USE",
              _("It does not make sense to add a bulk configuration for cancelling rules."))
 
     if "bulk" in rule:
         if rule["notify_plugin"]:
-            info = load_notification_scripts()[rule["notify_plugin"]]
+            info = load_notification_scripts()[rule["notify_plugin"][0]]
             if not info["bulk"]:
                 raise MKUserError(varprefix + "_p_notify_plugin",
                       _("The notification script %s does not allow bulking.") % info["title"])
@@ -8197,13 +8212,16 @@ def render_notification_rules(rules, userid="", show_title=False, show_buttons=T
             else:
                 html.empty_icon_button()
 
+            notify_method = rule["notify_plugin"]
+            notify_plugin = notify_method[0]
+
             table.cell(_("Type"), css="narrow")
-            if rule["notify_method"] == None:
+            if notify_method[1] == None:
                 html.icon(_("Cancel notifications for this plugin type"), "notify_cancel")
             else:
                 html.icon(_("Create a notification"), "notify_create")
 
-            table.cell(_("Plugin"), rule["notify_plugin"] or _("Plain Email"), css="narrow")
+            table.cell(_("Plugin"), notify_plugin or _("Plain Email"), css="narrow nowrap")
 
             table.cell(_("Bulk"), css="narrow")
             if "bulk" in rule:
@@ -8333,12 +8351,14 @@ def mode_notifications(phase):
              "<br><br>"
              "You can change this setting <a href=\"%s\">here</a>.") % url)
 
-    elif not current_settings.get("notification_fallback_email"):
-        url = 'wato.py?mode=edit_configvar&varname=notification_fallback_email'
-        html.show_warning(
-          _("<b>Warning</b><br><br>You haven't configured a fallback email address "
-            "in case of a problem in your notification rules. Please configure "
-            "one <a href=\"%s\">here</a>.") % url)
+    # Do not warn for missing fallback email address anymore. It might be a
+    # useful feature to not have one - after all.
+    ## elif not current_settings.get("notification_fallback_email"):
+    ##     url = 'wato.py?mode=edit_configvar&varname=notification_fallback_email'
+    ##     html.show_warning(
+    ##       _("<b>Warning</b><br><br>You haven't configured a fallback email address "
+    ##         "in case of a problem in your notification rules. Please configure "
+    ##         "one <a href=\"%s\">here</a>.") % url)
 
     if show_bulks:
         if not render_bulks(only_ripe = False): # Warn if there are unsent bulk notificatios
@@ -10625,11 +10645,37 @@ def notification_script_choices():
     scripts = load_notification_scripts()
 
     choices = [ (name, info["title"]) for (name, info) in scripts.items() ]
-    choices.append((None, _("Plain Text Email (using configured templates)")))
+    choices.append((None, _("ASCII Email")))
     choices.sort(cmp = lambda a,b: cmp(a[1], b[1]))
     # Make choices localizable
     choices = [ (k, _(v)) for k, v in choices ]
     return choices
+
+
+def notification_script_choices_with_parameters():
+    choices = []
+    for script_name, title in notification_script_choices():
+        if script_name in g_notification_parameters:
+            vs = g_notification_parameters[script_name]
+        else:
+            vs = ListOfStrings(
+                 title = _("Call with the following parameters:"),
+                 valuespec = TextUnicode(size = 24),
+                 orientation = "horizontal",
+            )
+        choices.append((script_name, title, 
+            Alternative(
+                style = "dropdown",
+                elements = [
+                    vs,
+                    FixedValue(None, totext = _("previous notifications of this type are cancelled"), 
+                               title = _("Cancel previous notifications")),
+                ]
+            )
+        ))
+    return choices
+
+
 
 def notification_script_title(name):
     return dict(notification_script_choices()).get(name, name)
@@ -14231,6 +14277,7 @@ def register_rule(group, varname, valuespec = None, title = None,
                   match = "first", optional = False, factory_default = NO_FACTORY_DEFAULT):
     if not itemname and itemtype == "service":
         itemname = _("Service")
+
     ruleset = {
         "group"           : group,
         "varname"         : varname,
@@ -14321,6 +14368,32 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec, 
         ),
         itemspec = itemspec,
         match = "all")
+
+# Registers notification parameters for a certain notification script,
+# e.g. "mail" or "sms". This will create:
+# - A WATO host rule
+# - A parametrization of the not-script also in the RBN module
+# Notification parameters are always expected to be of type Dictionary.
+# The match type will be set to "dict".
+g_notification_parameters = {}
+def register_notification_parameters(scriptname, valuespec):
+
+    script_title = notification_script_title(scriptname)
+    title = _("Parameters for %s") % script_title
+    valuespec._title = _("Call with the following parameters:")
+
+    register_rule(
+        "monconf/" + _("Notifications"),
+        "notification_parameters:" + scriptname,
+        valuespec,
+        title,
+        itemtype = None,
+        match = "dict"
+    )
+
+    g_notification_parameters[scriptname] = valuespec
+
+
 
 
 # The following function looks like a value spec and in fact

@@ -10,8 +10,18 @@
 # do not leave this empty then the notifications are
 # being sent via syslog/UDP (port 514) to that address.
 
-FACILITY=${NOTIFY_PARAMETER_1:-16}
-REMOTE=${NOTIFY_PARAMETER_2:-}
+# Default values
+FACILITY=16
+REMOTE=""
+
+# Old-style parameters
+if [ "$NOTIFY_PARAMETER_1" ] ; then FACILITY="${NOTIFY_PARAMETER_1}" ; fi
+if [ "$NOTIFY_PARAMETER_2" ] ; then REMOTE="${NOTIFY_PARAMETER_2}" ; fi
+
+# New-style parameters
+if [ -n "$NOTIFY_PARAMETER_FACILITY" ] ; then FACILITY="${NOTIFY_PARAMETER_FACILITY}" ; fi
+if [ -n "$NOTIFY_PARAMETER_REMOTE" ] ;   then REMOTE="${NOTIFY_PARAMETER_REMOTE}" ; fi
+
 
 if [ "$NOTIFY_WHAT" = HOST ]
 then

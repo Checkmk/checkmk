@@ -30,13 +30,13 @@ in different notification rules.
 If a configuration key appears both in <i>Host &amp; Service Parameters</i> and
 in a notification rule then the latter one has precedence.
 
-Within that effort the HTML email script is now far more configurable. You
+Within that effort the HTML email script has been made far more configurable. You
 can now configure:
 
 <ul>
 <li>The From- and Reply-To Address</li>
 <li>The subjects for host and service notifications</li>
 <li>An URL-Prefix for your Multisite interface (this makes hosts and services
-in the notifications clickable<li>
+in the notifications clickable</li>
 <li>A choice of optional information to be displayed in the emails</li>
 </ul>

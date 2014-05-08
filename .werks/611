@@ -1,0 +1,8 @@
+Title: nfsexports.solaris: fix in determination of path prefix
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1399564395
+Class: fix
+
+

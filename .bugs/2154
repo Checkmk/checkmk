@@ -1,0 +1,20 @@
+Title: Online-Status of users not correct
+Component: wato
+State: open
+Date: 2014-05-07 11:52:58
+Targetversion: 1.2.5i1
+Class: bug
+
+In the WATO users page there is a gray or green ball that indicates
+wether a user is currently online. This is assumed to work as follows:
+
+- every time a user calls a page his file var/check_mk/web/USER/last_seen.mk
+  is being updated
+- If the timestamp in that file is not older then config.user_online_maxage seconds
+  the user is assumed to be online
+
+In one larger customer site that feature didn't work. I've changed the value to 10 minutes.
+At least 50 users where active, but just a couple being displayed as online. It could be
+the case that some cache prohibits the correct update of the last_seen information in
+WATO, so that the last_seen.mk files are not being loaded and an old state of them being
+used.

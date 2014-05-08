@@ -428,34 +428,39 @@ def notify_rulebased(raw_context, analyse=False):
             num_rule_matches += 1
             contacts = rbn_rule_contacts(rule, raw_context)
 
-            plugin = rule["notify_plugin"]
-            method = rule["notify_method"] # None: do cancel, [ str ]: plugin parameters
+            # Handle old-style and new-style rules
+            if "notify_method" in rule: # old-style
+                plugin = rule["notify_plugin"]
+                plugin_parameters = rule["notify_method"] # None: do cancel, [ str ]: plugin parameters
+            else:
+                plugin, plugin_parameters = rule["notify_plugin"]
+
             bulk   = rule.get("bulk")
 
-            if method == None: # cancelling
+            if plugin_parameters == None: # cancelling
                 for contact in contacts:
                     key = contact, plugin
                     if key in notifications:
-                        locked, method, bulk = notifications[key]
+                        locked, plugin_parameters, bulk = notifications[key]
                         if locked and "contact" in rule:
                             notify_log("   - cannot cancel notification of %s via %s: it is locked" % key)
                         else:
                             notify_log("   - cancelling notification of %s via %s" % key)
                             del notifications[key]
             else:
+                final_parameters = rbn_finalize_plugin_parameters(raw_context["HOSTNAME"], plugin, plugin_parameters)
                 for contact in contacts:
                     key = contact, plugin
                     plugintxt = plugin or "plain email"
                     if key in notifications:
-                        locked, method, old_bulk = notifications[key]
+                        locked, previous_parameters, old_bulk = notifications[key]
                         if locked and "contact" in rule:
                             notify_log("   - cannot modify notification of %s via %s: it is locked" % (contact, plugintxt))
                             continue
                         notify_log("   - modifying notification of %s via %s" % (contact, plugintxt))
                     else:
                         notify_log("   - adding notification of %s via %s" % (contact, plugintxt))
-                    # Hint: method is the list of plugin parameters in this case
-                    notifications[key] = ( not rule.get("allow_disable"), method, bulk )
+                    notifications[key] = ( not rule.get("allow_disable"), final_parameters, bulk )
 
             rule_info.append(("match", rule, ""))
 
@@ -506,6 +511,11 @@ def notify_rulebased(raw_context, analyse=False):
 
     analysis_info = rule_info, plugin_info
     return analysis_info
+
+def rbn_finalize_plugin_parameters(hostname, plugin, rule_parameters):
+    parameters = host_extra_conf_merged(hostname, notification_parameters.get(plugin, []))
+    parameters.update(rule_parameters)
+    return parameters
 
 def add_rulebased_macros(raw_context):
     # For the rule based notifications we need the list of contacts
@@ -1132,15 +1142,44 @@ def notify_via_email(plugin_context):
 # 1: Could not send now, please retry later
 # 2: Cannot send, retry does not make sense
 
+# Add the plugin parameters to the envinroment. We have two types of parameters:
+# - list, the legacy style. This will lead to PARAMETERS_1, ...
+# - dict, the new style for scripts with WATO rule. This will lead to
+#         PARAMETER_FOO_BAR for a dict key named "foo_bar".
 def create_plugin_context(raw_context, params):
     plugin_context = {}
     plugin_context.update(raw_context) # Make a real copy
 
-    plugin_context["PARAMETERS"] = " ".join(params)
-    for nr, param in enumerate(params):
-        plugin_context["PARAMETER_%d" % (nr + 1)] = param
+    if type(params) == list:
+        plugin_context["PARAMETERS"] = " ".join(params)
+        for nr, param in enumerate(params):
+            plugin_context["PARAMETER_%d" % (nr + 1)] = param
+    else:
+        for key, value in params.items():
+            plugin_context["PARAMETER_" + key.upper()] = plugin_param_to_string(value)
     return plugin_context
 
+
+def create_bulk_parameter_context(params):
+    dict_context = create_plugin_context({}, params)
+    return [ "%s=%s\n" % e for e in dict_context.items() ]
+
+
+def plugin_param_to_string(value):
+    if type(value) in ( str, unicode ):
+        return value
+    elif type(value) in ( int, float ):
+        return str(value)
+    elif value == None:
+        return ""
+    elif value == True:
+        return "yes"
+    elif value == False:
+        return ""
+    elif type(value) in ( tuple, list ):
+        return "\t".join(value)
+    else:
+        return repr(value) # Should never happen
 
 
 def path_to_notification_script(plugin):
@@ -1419,9 +1458,8 @@ def notify_bulk(dirname, uuids):
         if old_params == None:
             old_params = params
         elif params != old_params:
-            notify_log("     Parameters (%s) are different from previous (%s), skipping" % (
-                    ",".join(params), ",".join(old_params)))
-            unhandled_uuids.append(uuid)
+            notify_log("     Parameters are different from previous, postponing into separate bulk")
+            unhandled_uuids.append((mtime, uuid))
             continue
         bulk_context.append("\n")
         for varname, value in context.items():
@@ -1433,10 +1471,7 @@ def notify_bulk(dirname, uuids):
         plugin_name = "bulk " + (plugin or "plain email")
         core_notification_log(plugin_name, context)
 
-    parameter_context = [ "PARAMETERS=" + " ".join(old_params) + "\n" ]
-    for nr, param in enumerate(old_params):
-        parameter_context.append("PARAMETER_%d=%s\n" % (nr + 1, param))
-
+    parameter_context = create_bulk_parameter_context(old_params)
     context_text = "".join(parameter_context + bulk_context)
     call_bulk_notification_script(plugin, context_text)
 
@@ -1565,6 +1600,11 @@ def complete_raw_context(raw_context):
             prev_state = "?"
             notify_log("Previous service hard state not known. Allowing all states.")
         raw_context["PREVIOUSSERVICEHARDSTATE"] = prev_state
+
+    # Add short variants for state names (at most 4 characters)
+    for key, value in raw_context.items():
+        if key.endswith("STATE"):
+            raw_context[key[:-5] + "SHORTSTATE"] = value[:4]
 
     convert_context_to_unicode(raw_context)
 

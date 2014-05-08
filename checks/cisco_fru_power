@@ -57,7 +57,7 @@ def inventory_cisco_fru_power(info):
     # - in state 5:offEnvPower
     return [ (line[0], None)
              for line in info
-             if line[2] not in ('', '1', '5') ]
+             if line[2] not in ('', '0', '1', '5') ]
 
 
 def check_cisco_fru_power(item, _no_params, info):

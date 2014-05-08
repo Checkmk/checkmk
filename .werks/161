@@ -1,0 +1,8 @@
+Title: cisco_fru_power: Exluded not existing devices from the inventory
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1399474575
+Class: fix
+
+

@@ -54,13 +54,18 @@ def check_brocade_mlx_temp(item, params, info):
     for temp_descr, temp_id, temp_value in info:
         current_item = compose_item(temp_id, temp_descr)
         if current_item == item:
-            # Info from the MIB: "Each unit is 0.5 degrees Celcius."
-            temp_value = int(temp_value) / 2
-
             # OID_END needs to be used for sensor id because especially
             # Active management modules may have more temperature sensors
             # with the same description
             temp_id = re.sub("[0-9]+\.", "", temp_id)
+
+            # some devices do not deliver values on one single check in
+            # between - setting to unknown in this case
+            if temp_value == "":
+               return 3, "No temperature value delivered by SNMP for sensor " + temp_id
+
+            # Info from the MIB: "Each unit is 0.5 degrees Celcius."
+            temp_value = int(temp_value) / 2
 
             txt = "Sensor %s: %s°C" % (temp_id, temp_value)
             if temp_value > crit:

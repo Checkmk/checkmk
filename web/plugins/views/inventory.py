@@ -579,6 +579,7 @@ inventory_displayhints.update({
     ".software.packages:*.summary"                     : { "title" : _("Description"), },
     ".software.packages:*.version"                     : { "title" : _("Version"), },
     ".software.packages:*.package_version"             : { "title" : _("Package Version"), },
+    ".software.packages:*.install_date"                : { "title" : _("Install Date"), },
     ".software.packages:*.size"                        : { "title" : _("Size"), "paint" : "count" },
 })
 
@@ -812,7 +813,7 @@ for name, title, sortfunc in [
     ( "arch",            _("CPU Architecture"), cmp ),
     ( "package_type",    _("Type"),             cmp ),
     ( "version",         _("Version"),          cmp_version ),
-    ( "package_version", _("Package Version"),  cmp_version ),
+    ( "install_date",    _("Install Date"),     cmp ),
     ]:
     declare_swpacs_columns(name, title, sortfunc)
 

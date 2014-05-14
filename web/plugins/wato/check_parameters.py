@@ -1904,7 +1904,7 @@ register_check_parameters(
                )),
              ( "traffic",
                Alternative(
-                   title = _("Used bandwidth (traffic)"),
+                   title = _("Used bandwidth (maximum traffic)"),
                    help = _("Settings levels on the used bandwidth is optional. If you do set "
                             "levels you might also consider using an averaging."),
                    elements = [
@@ -1921,6 +1921,29 @@ register_check_parameters(
                            elements = [
                                Integer(title = _("Warning if above"), label = _("bits / bytes per second")),
                                Integer(title = _("Critical if above"), label = _("bits / bytes per second")),
+                           ]
+                        )
+                   ])
+               ),
+             ( "traffic_minimum",
+               Alternative(
+                   title = _("Used bandwidth (minimum traffic)"),
+                   help = _("Settings levels on the used bandwidth is optional. If you do set "
+                            "levels you might also consider using an averaging."),
+                   elements = [
+                       Tuple(
+                           title = _("Percentual levels (in relation to port speed)"),
+                           elements = [
+                               Percentage(title = _("Warning if below"), label = _("% of port speed")),
+                               Percentage(title = _("Critical if below"), label = _("% of port speed")),
+                           ]
+                       ),
+                       Tuple(
+                           title = _("Absolute levels in bits or bytes per second"),
+                           help = _("Depending on the measurement unit (defaults to byte) the absolute levels are set in bit or byte"),
+                           elements = [
+                               Integer(title = _("Warning if below"), label = _("bits / bytes per second")),
+                               Integer(title = _("Critical if below"), label = _("bits / bytes per second")),
                            ]
                         )
                    ])

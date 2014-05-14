@@ -350,6 +350,12 @@ def check_if_common_single(item, params, info, force_counter_wrap = False, has_n
     else:
         bw_warn_param, bw_crit_param = None, None
 
+    # Traffic minimum checking might be turned off
+    if "traffic_minimum" in params:
+        bw_warn_min_param, bw_crit_min_param = params["traffic_minimum"]
+    else:
+        bw_warn_min_param, bw_crit_min_param = None, None
+
     for line in info:
         node, line = if_extract_node(line,has_nodeinfo)
         ifIndex, ifDescr, ifType, ifSpeed, ifOperStatus, ifInOctets,  \
@@ -425,15 +431,20 @@ def check_if_common_single(item, params, info, force_counter_wrap = False, has_n
                 infotext += "speed unknown"
 
 
-            bw_warn, bw_crit = bw_warn_param, bw_crit_param
+            bw_warn, bw_crit         = bw_warn_param, bw_crit_param
+            bw_warn_min, bw_crit_min = bw_warn_min_param, bw_crit_min_param
             # If the measurement unit is set to bit and the bw levels
             # are of type int convert these 'bit' entries to byte
             # still reported as bytes to stay compatible with older rrd data
             if unit == "Bit":
                 if type(bw_warn_param) == int:
-                    bw_warn = bw_warn / 8
+                    bw_warn     = bw_warn / 8
                 if type(bw_crit_param) == int:
-                    bw_crit = bw_crit / 8
+                    bw_crit     = bw_crit / 8
+                if type(bw_warn_min_param) == int:
+                    bw_warn_min     = bw_warn_min / 8
+                if type(bw_crit_min_param) == int:
+                    bw_crit_min     = bw_crit_min / 8
 
             # convert percentages to absolute values if levels are float
             # this is only possible if a reference speed is available.
@@ -442,15 +453,24 @@ def check_if_common_single(item, params, info, force_counter_wrap = False, has_n
                     bw_warn = bw_warn_param / 100.0 * ref_speed # bytes
                 if type(bw_crit_param) == float:
                     bw_crit = bw_crit_param / 100.0 * ref_speed # bytes
+                if type(bw_warn_min_param) == float:
+                    bw_warn_min = bw_warn_min_param / 100.0 * ref_speed # bytes
+                if type(bw_crit_min_param) == float:
+                    bw_crit_min = bw_crit_min_param / 100.0 * ref_speed # bytes
             # Ignore percentual levels if no reference speed is available
             else:
                 if type(bw_warn_param) == float:
                     bw_warn = None
                 if type(bw_crit_param) == float:
                     bw_crit = None
+                if type(bw_warn_min_param) == float:
+                    bw_warn_min = None
+                if type(bw_crit_min_param) == float:
+                    bw_crit_min = None
 
 
             bw_warn_in, bw_crit_in, bw_warn_out, bw_crit_out = [bw_warn, bw_crit] * 2
+            bw_warn_min_in, bw_crit_min_in, bw_warn_min_out, bw_crit_min_out = [bw_warn_min, bw_crit_min] * 2
             for speed_in in [ assumed_speed_in, assumed_speed_out ]:
                 if not speed_in:
                     continue
@@ -458,6 +478,10 @@ def check_if_common_single(item, params, info, force_counter_wrap = False, has_n
                     bw_warn_in = bw_warn_param / 100.0 * speed_in / 8
                 if type(bw_crit_param) == float:
                     bw_crit_in = bw_crit_param / 100.0 * speed_in / 8
+                if type(bw_warn_min_param) == float:
+                    bw_warn_min_in = bw_warn_min_param / 100.0 * speed_in / 8
+                if type(bw_crit_min_param) == float:
+                    bw_crit_min_in = bw_crit_min_param / 100.0 * speed_in / 8
                 break
 
             for speed_out in [ assumed_speed_out, assumed_speed_in ]:
@@ -467,6 +491,10 @@ def check_if_common_single(item, params, info, force_counter_wrap = False, has_n
                     bw_warn_out = bw_warn_param / 100.0 * speed_out / 8
                 if type(bw_crit_param) == float:
                     bw_crit_out = bw_crit_param / 100.0 * speed_out / 8
+                if type(bw_warn_min_param) == float:
+                    bw_warn_min_out = bw_warn_min_param / 100.0 * speed_out / 8
+                if type(bw_crit_min_param) == float:
+                    bw_crit_min_out = bw_crit_min_param / 100.0 * speed_out / 8
                 break
 
 
@@ -531,9 +559,9 @@ def check_if_common_single(item, params, info, force_counter_wrap = False, has_n
                     else:
                         return "%s/s" % get_bytes_human_readable(value)
 
-                for what, errorrate, okrate, traffic, speed, bw_warn, bw_crit in \
-                   [ ("in",  rates[4], rates[1] + rates[2], rates[0], speed_in, bw_warn_in, bw_crit_in),
-                     ("out", rates[9], rates[6] + rates[7], rates[5], speed_out, bw_warn_out, bw_crit_out) ]:
+                for what, errorrate, okrate, traffic, speed, bw_warn, bw_crit, bw_warn_min, bw_crit_min in \
+                   [ ("in",  rates[4], rates[1] + rates[2], rates[0], speed_in, bw_warn_in, bw_crit_in, bw_warn_min_in, bw_crit_min_in),
+                     ("out", rates[9], rates[6] + rates[7], rates[5], speed_out, bw_warn_out, bw_crit_out, bw_warn_min_out, bw_crit_min_out) ]:
 
                     infotext += ", %s: %s" % (what, format_value(traffic))
 
@@ -559,6 +587,12 @@ def check_if_common_single(item, params, info, force_counter_wrap = False, has_n
                     elif bw_warn != None and traffic >= bw_warn:
                         state = max(state, 1)
                         infotext += ' (!) >= ' + format_value(bw_warn)
+                    if bw_crit_min != None and traffic < bw_crit_min:
+                        state = 2
+                        infotext += ' (!!) < ' + format_value(bw_crit_min)
+                    elif bw_warn_min != None and traffic < bw_warn_min:
+                        state = max(state, 1)
+                        infotext += ' (!) >= ' + format_value(bw_warn_min)
 
                     pacrate = okrate + errorrate
                     if pacrate > 0.0: # any packets transmitted?

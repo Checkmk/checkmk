@@ -1,0 +1,8 @@
+Title: brocade_mlx_temp: special treatment for devices sometimes not delivering temperature by SNMP
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1399896720
+Class: fix
+
+

@@ -87,10 +87,10 @@ def check_dell_om_disks(item, _no_params, info):
             size = saveint(sizeMB)*1024*1024
             msg = ["%s (%s, %s)" % ( name, pid, get_bytes_human_readable(size) ) ]
             label = ""
-            if dstate in [ 40, 35, 34, 26, 7, 4, 1 ]:
+            if dstate in [ 40, 35, 34, 26, 7, 4]:
                 state = 1
                 label = "(!)"
-            elif dstate not in [ 3 ]:
+            elif dstate not in [ 3, 1 ]:
                 state = 2
                 label = "(!!)"
 

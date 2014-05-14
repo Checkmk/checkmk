@@ -44,6 +44,7 @@
     * 0911 esx_vsphere_hostsystem.multipath: now able to configure paths minimum count...
     * 0159 brocade: Added support for brocade fdx switches
     * 0160 brocade_vdx_status: New check to monitor the operational state of vdx switches.
+    * 0916 if: now able to configure minimum bandwidth limits
     * 0777 FIX: special agent emcvnx: did not work with security file authentication...
     * 0786 FIX: zfsget: fixed compatibility with older Solaris agents...
     * 0809 FIX: brocade_fcport: Fixed recently introduced problem with port speed detection
@@ -68,6 +69,8 @@
     * 0158 FIX: dell_om_disks: Handle hotspares more correctly
     * 0161 FIX: cisco_fru_power: Exluded not existing devices from the inventory
     * 0969 FIX: blade_health: correctly output error message in non-OK state
+    * 0611 FIX: nfsexports.solaris: fix in determination of path prefix
+    * 0953 FIX: brocade_mlx_temp: special treatment for devices sometimes not delivering temperature by SNMP
 
     Multisite:
     * 0779 Hostgroups (Summary): Empty hostgroups are no longer shown (can be re-enabled by filter)
@@ -119,6 +122,7 @@
 
     HW/SW-Inventory:
     * 0913 lnx_distro: Now able to detect SuSE distributions...
+    * 0610 mk_inventory: windows inventory check now included, install date added to data
     * 0886 FIX: Fix exception on non-UTF-8 encoded characters in software list
 
 

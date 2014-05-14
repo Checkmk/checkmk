@@ -31,7 +31,7 @@ if [ -r $clusterconfigdir ]; then
     # is a clustered nfs server
     nfsconfig=/etc/cluster/ccr/global/`grep rgm $clusterconfigdir | grep nfs | grep rg_`
     if [ -r $nsconfig ]; then
-        Pathprefix=`grep Path $nfsconfig | awk {'print $2'}`/SUNW.nfs
+        Pathprefix=`grep Pathprefix $nfsconfig | awk {'print $2'}`/SUNW.nfs
         dfstabfile=$Pathprefix/dfstab.`grep -v FilesystemMountPoints $nfsconfig | grep SUNW.nfs | \
             awk {'print $1'} | sed -e 's/RS_//'`
         if [ -r $dfstabfile ]; then

@@ -1,0 +1,25 @@
+Title: liveproxyd: handle situations with more then 1024 open files
+Level: 2
+Component: liveproxy
+Version: 1.2.5i3
+Date: 1400056696
+Class: fix
+
+When you are using the Livestatus Proxy Daemon for connecting lots
+of sites and you have lots of concurrent users then two things could
+happen:
+
+1. You might run out of files. The reason is that per default on most
+Linux systems the number of files a process is allowed to keep open
+is limited to 1024. The can be increased by using <tt>/etc/security/limits.conf</tt>.
+The script launching the <tt>liveproxyd</tt> need to issue a <tt>ulimit -S -n unlimited</tt>
+before starting. In the OMD builds of the Check_MK Monitoring System this
+has been added for recent development builds. The <tt>liveproxyd</tt> now handles
+this situation better and does not long run into a busy CPU loop. It waits for
+5 seconds and restarts itself instead.
+
+2. Even if you increased the number of allowed open files the <tt>liveproxyd</tt>
+could never open more than 1024 files on most Python versions (due to a limit of
+the system call <tt>select()</tt>. This has been fixed by using the <tt>poll()</tt>
+system call.
+

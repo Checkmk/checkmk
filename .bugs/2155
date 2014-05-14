@@ -1,0 +1,18 @@
+Title: Host named like a Python module will break precompiled checks
+Component: core
+State: open
+Date: 2014-05-14 13:57:30
+Targetversion: 1.2.5i1
+Class: bug
+
+Operating System: Debian 7
+
+We created a host named 'random' while using Nagios as Core. That leads to
+the files random.py and random in var/check_mk/precompiled. The bug: the
+other precompiled host checks import 'tempfile' and that in turn imports
+'random'. Now somehow the precompiled directory seems to be part of the
+import path in that situation and the Check_MK host files is being imported
+instead of the real random module.
+
+This only seems to affect that indrectly imported module. A test with creating a
+host with the name 'os' did not show any abnormalities.

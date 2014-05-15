@@ -1733,7 +1733,13 @@ filesystem_elements = [
            elements = [
                Integer(title = _("Warning if below"), unit = _("hours"), default_value = 12,),
                Integer(title = _("Critical if below"), unit = _("hours"), default_value = 6, ),
-           ])),
+            ])),
+    ( "trend_showtimeleft",
+            FixedValue(True, title = _("Display timeleft in check output"), totext = "",
+                       help = _("Normally the timeleft until disk full is only displayed when "
+                                "the configured levels have been breached. If you set this option "
+                                "the check always reports this information"))
+    ),
     ( "trend_perfdata",
       Checkbox(
           title = _("Trend performance data"),

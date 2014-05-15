@@ -1,0 +1,12 @@
+Title: df checks: now able to show time left until disk full as perfometer and pnpgraph
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1400160728
+Class: feature
+
+There WATO rule <tt>Filesystems (used space and growth)</tt> now has an option where you can
+configure whether the time left until disk full information is always shown.
+<br>
+If this option is set the multsite perfometer for the check is split horizontally and will
+additionally show the days left information. A new "Days left" pnpgraph is also available.

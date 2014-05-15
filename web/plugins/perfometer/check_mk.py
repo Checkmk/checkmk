@@ -51,14 +51,51 @@ def perfometer_check_mk(row, check_command, perf_data):
 perfometers["check-mk"] = perfometer_check_mk
 
 def perfometer_check_mk_df(row, check_command, perf_data):
-    h = '<table><tr>'
     varname, value, unit, warn, crit, minn, maxx = perf_data[0]
+
+    hours_left = None
+    for data in perf_data:
+        if data[0] == "trend_hoursleft":
+            hours_left = float(data[1])
+            break
+
     perc_used = 100 * (float(value) / float(maxx))
     perc_free = 100 - float(perc_used)
-    h += perfometer_td(perc_used, "#00ffc6")
-    h += perfometer_td(perc_free, "white")
-    h += "</tr></table>"
-    return "%0.2f %%" % perc_used, h
+    if hours_left or hours_left == 0:
+        h = '<div class="stacked"><table><tr>'
+        h += perfometer_td(perc_used, "#00ffc6")
+        h += perfometer_td(perc_free, "white")
+        h += "</tr></table><table><tr>"
+
+        if hours_left == -1.0:
+            h += perfometer_td(100, "#39c456")
+            h += '</tr></table></div>'
+            return "%0.1f%% / not growing" % (perc_used), h
+
+        days_left = hours_left / 24
+        if days_left > 30:
+            color = "#39c456" # OK
+        elif days_left < 7:
+            color = "#d94747" # CRIT
+        else:
+            color = "#d7d139" # WARN
+
+        half = math.log(30.0, 2) # value to be displayed at 50%
+        pos = 50 + 10.0 * (math.log(days_left, 2) - half)
+        if pos < 2:
+            pos = 2
+        if pos > 98:
+            pos = 98
+        h += perfometer_td(100 - pos, color)
+        h += perfometer_td(pos, "white")
+        h += '</tr></table></div>'
+        return "%0.1f%%/%0.1f days left" % (perc_used, days_left), h
+    else:
+        h = '<table><tr>'
+        h += perfometer_td(perc_used, "#00ffc6")
+        h += perfometer_td(perc_free, "white")
+        h += "</tr></table>"
+        return "%0.2f %%" % perc_used, h
 
 perfometers["check_mk-df"] = perfometer_check_mk_df
 perfometers["check_mk-vms_df"] = perfometer_check_mk_df

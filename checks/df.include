@@ -392,6 +392,39 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, inodes_t
                         problems[-1] += "!"
                     problems[-1] += ")"
 
+
+            # compute time until filesystem is full (only for positive trend, of course)
+
+            # The start value of hours_left is negative. The pnp graph and the perfometer
+            # will interpret this as inifinite -> not growing
+            hours_left = -1
+            if trend > 0:
+                space_left = size_mb - used_mb
+                hours_left = space_left / trend * range
+                timeleft = levels.get("trend_timeleft")
+                def format_hours(hours):
+                    if hours > 4 * 7 * 24: # 4 weeks
+                        return "%0d weeks" % (hours/ (7 * 24))
+                    elif hours > 7 * 24:   # 1 week
+                        return "%0.1f weeks" % (hours/ (7 * 24))
+                    elif hours > 2 * 24:   # 2 days
+                        return "%0.1f days" % (hours/24)
+                    else:
+                        return "%d hours" % hours
+
+                if timeleft:
+                    wa, cr = timeleft
+                    if hours_left <= cr:
+                        status = 2
+                        problems.append("only %s until disk full(!!)" % format_hours(hours_left))
+                    elif hours_left <= wa:
+                        status = max(status, 1)
+                        problems.append("only %s until disk full(!)" % format_hours(hours_left))
+                    elif hours_left <= wa * 2 or levels.get("trend_showtimeleft"):
+                        problems.append("time left until disk full: %s" % format_hours(hours_left))
+                elif levels.get("trend_showtimeleft"):
+                    problems.append("time left until disk full: %s" % format_hours(hours_left))
+
             if levels.get("trend_perfdata"):
                 # New in 1.1.13i3: output trend not as MB / trend_range, but as
                 # MB / 24 hours. The same holds for the warn and crit information.
@@ -402,21 +435,8 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, inodes_t
                                 crit_perf != None and (crit_perf / range_sec * H24) or None,
                                 0, size_mb / range))
 
-            # compute time until filesystem is full (only for positive trend, of course)
-            if trend > 0:
-                space_left = size_mb - used_mb
-                hours_left = space_left / trend * range
-                timeleft = levels.get("trend_timeleft")
-                if timeleft:
-                    wa, cr = timeleft
-                    if hours_left <= cr:
-                        status = 2
-                        problems.append("only %.1fh until disk full(!!)" % hours_left)
-                    elif hours_left <= wa:
-                        status = max(status, 1)
-                        problems.append("only %.1fh until disk full(!)" % hours_left)
-                    elif hours_left <= wa * 2:
-                        problems.append("time left: %.1fh" % hours_left)
+            if levels.get("trend_showtimeleft"):
+                perfdata.append(("trend_hoursleft", hours_left))
 
 
         except MKCounterWrapped:
@@ -441,6 +461,10 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, inodes_t
        elif used_mb >= warn_mb:
            status = max(1, status)
 
+    if problems:
+        infotext += " - %s" % ", ".join(problems)
+        problems = []
+
     # Check inode levels
     if inodes_total:
         inodes_avail_perc = 100.0 * inodes_avail / inodes_total
@@ -464,4 +488,6 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, inodes_t
 
     if problems:
         infotext += " - %s" % ", ".join(problems)
+        problems = []
+
     return (status, infotext, perfdata)

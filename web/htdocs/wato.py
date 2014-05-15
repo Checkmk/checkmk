@@ -438,19 +438,6 @@ def save_folder_and_hosts(folder):
     if not folder.get(".lock_hosts"):
         save_hosts(folder)
 
-
-# Removed in version 1.2.1i2 - unused, and might cause
-# trouble when saving locked folders
-## Save a folder and all of its subfolders (recursively)
-#def save_folders(folder):
-#    save_folder(folder)
-#    for subfolder in folder[".folders"].values():
-#        save_folders(subfolder)
-#
-#
-#def save_all_folders():
-#    save_folders(g_root_folder)
-
 def folder_config_exists(dir):
     return os.path.exists(dir + "/.wato")
 
@@ -2049,11 +2036,14 @@ def mode_edithost(phase, new, cluster):
         html.context_button(_("Folder"), make_link([("mode", "folder")]), "back")
         if not new:
             host_status_button(hostname, "hoststatus")
-        if not new:
+
             html.context_button(_("Services"),
                   make_link([("mode", "inventory"), ("host", hostname)]), "services")
             html.context_button(_("Parameters"),
                   make_link([("mode", "object_parameters"), ("host", hostname)]), "rulesets")
+            if not g_folder.get(".lock_hosts"):
+                html.context_button(_("Rename %s") % (cluster and _("Cluster") or _("Host")),
+                  make_link([("mode", "rename_host"), ("host", hostname)]), "rename_host")
             if not cluster:
                 html.context_button(_("Diagnostic"),
                       make_link([("mode", "diag_host"), ("host", hostname)]), "diagnose")
@@ -2084,12 +2074,7 @@ def mode_edithost(phase, new, cluster):
             config.need_permission("wato.manage_hosts")
             check_folder_permissions(g_folder, "write")
             check_user_contactgroups(host.get("contactgroups", (False, [])))
-            if not hostname:
-                raise MKUserError("host", _("Please specify a host name."))
-            elif hostname in g_folder[".hosts"]:
-                raise MKUserError("host", _("A host with this name already exists."))
-            elif not re.match("^[a-zA-Z0-9-_.]+$", hostname):
-                raise MKUserError("host", _("Invalid host name: must contain only characters, digits, dash, underscore and dot."))
+            check_new_hostname("host", hostname)
         else:
             config.need_permission("wato.edit_hosts")
 
@@ -2243,6 +2228,269 @@ def delete_host_after_confirm(delname):
         return ""
     else:
         return None # browser reload
+
+def check_new_hostname(varname, hostname):
+    if not hostname:
+        raise MKUserError(varname, _("Please specify a host name."))
+    elif hostname in g_folder[".hosts"]:
+        raise MKUserError(varname, _("A host with this name already exists."))
+    elif not re.match("^[a-zA-Z0-9-_.]+$", hostname):
+        raise MKUserError(varname, _("Invalid host name: must contain only characters, digits, dash, underscore and dot."))
+
+
+#.
+#   .--Rename Host---------------------------------------------------------.
+#   |     ____                                   _   _           _         |
+#   |    |  _ \ ___ _ __   __ _ _ __ ___   ___  | | | | ___  ___| |_       |
+#   |    | |_) / _ \ '_ \ / _` | '_ ` _ \ / _ \ | |_| |/ _ \/ __| __|      |
+#   |    |  _ <  __/ | | | (_| | | | | | |  __/ |  _  | (_) \__ \ |_       |
+#   |    |_| \_\___|_| |_|\__,_|_| |_| |_|\___| |_| |_|\___/|___/\__|      |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Mode for renaming an existing host.                                  |
+#   '----------------------------------------------------------------------'
+
+def mode_rename_host(phase):
+    hostname = html.var("host")
+    host = g_folder[".hosts"][hostname]
+    is_cluster = ".nodes" in host
+
+    if phase == "title":
+        return _("Rename %s %s") % (is_cluster and _("Cluster") or _("Host"), hostname)
+
+    elif phase == "buttons":
+        html.context_button(_("Host Properties"), make_link([("mode", "edithost"), ("host", hostname)]), "back")
+        return
+
+    elif phase == "action":
+        if g_folder.get(".lock_hosts"):
+            raise MKGeneralException(_("This folder is locked. You cannot rename a host here."))
+
+        newname = html.var("newname")
+        check_new_hostname("newname", newname)
+        c = wato_confirm(_("Confirm renaming of host"),
+                         _("Are you sure you want to rename the host <b>%s</b> into <b>%s</b>?") % 
+                         (hostname, newname))
+        if c:
+            actions = rename_host(host, newname)
+            log_pending(AFFECTED, newname, "rename-host", _("Renamed host %s into %s") % (hostname, newname))
+            html.set_var("host", newname)
+            action_txt =  "".join([ "<li>%s</li>" % a for a in actions ])
+            return "edithost", _("Renamed host <b>%s</b> into <b>%s</b>:<br><ul>%s</ul>") % (hostname, newname, action_txt)
+        elif c == False: # not yet confirmed
+            return ""
+        return
+
+    html.write("<h2>%s</h2>" % _("Host Renaming"))
+    html.write("<p>%s</p>" % _("The renaming of hosts is a complex operation since a host's name is being "
+                               "used as a unique key in various places. If you choose to rename a host then "
+                               "the renaming will be done in the following places:"))
+    html.write("<ul>")
+    html.write("<li>%s</li>" % _("Name of the host in the WATO folder."))
+    html.write("<li>%s</li>" % _("Cluster definitions (if the host is the node of a cluster"))
+    html.write("<li>%s</li>" % _("Configuration rules (when the host is explicitely named in the rule condition"))
+    html.write("<li>%s</li>" % _("Global and user specific notification rules"))
+    html.write("<li>%s</li>" % _("Check_MK temporary and cache information"))
+    html.write("<li>%s</li>" % _("The service configuration of the host"))
+    html.write("<li>%s</li>" % _("Stored logfiles (from logwatch plugin)"))
+    html.write("<li>%s</li>" % _("Stored SNMP walks"))
+    html.write("<li>%s</li>" % _("Performance data (RR databased)"))
+    html.write("<li>%s</li>" % _("NagVis map definitions"))
+    html.write("</ul>")
+
+    html.begin_form("rename_host", method="POST")
+    forms.header(_("Rename"))
+    forms.section(_("Current name"))
+    html.write(hostname)
+    forms.section(_("New name"))
+    html.text_input("newname", "")
+    forms.end()
+    html.set_focus("newname")
+    html.image_button("rename", _("Rename host!"), "submit")
+    html.hidden_fields()
+    html.end_form()
+
+def rename_host(host, newname):
+    def rename_in_list(thelist):
+        did_rename = False
+        for nr, element in enumerate(thelist):
+            if element == oldname:
+                thelist[nr] = newname
+                did_rename = True
+        return did_rename
+
+    actions = []
+
+    # 1. Fix WATO configuration itself ----------------
+
+    # Hostname itself in the current folder
+    oldname = host[".name"]
+    g_folder[".hosts"][newname] = host
+    host[".name"] = newname
+    del g_folder[".hosts"][oldname]
+    save_folder_and_hosts(g_folder)
+    mark_affected_sites_dirty(g_folder)
+    actions.append(_("Renamed the hostname in the WATO folder."))
+
+    # Is this host node of a cluster?
+    all_hosts = load_all_hosts()
+    clusters = []
+    for somehost in all_hosts.values():
+        if ".nodes" in somehost:
+            nodes = somehost[".nodes"]
+            if rename_in_list(somehost[".nodes"]):
+                clusters.append(somehost[".name"])
+                folder = somehost['.folder']
+                save_folder_and_hosts(folder)
+                mark_affected_sites_dirty(folder)
+
+    if clusters:
+        actions.append(_("Renamed host as node in the following cluster definitions: %s.") % (", ".join(clusters)))
+
+    # Rules that explicitely name that host (no regexes)
+    changed_rulesets = []
+    def rename_host_in_folder_rules(folder):
+        rulesets = load_rulesets(folder)
+        changed = False
+        for varname, rules in rulesets.items():
+            rulespec = g_rulespecs[varname]
+            for nr, rule in enumerate(rules):
+                value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
+                if rename_in_list(host_list):
+                    newrule = construct_rule(rulespec, value, tag_specs, host_list, item_list, rule_options)
+                    rules[nr] = newrule
+                    changed_rulesets.append(varname)
+                    changed = True
+        if changed:
+            save_rulesets(folder, rulesets)
+            mark_affected_sites_dirty(folder)
+
+        for subfolder in folder['.folders'].values():
+            rename_host_in_folder_rules(subfolder)
+
+    rename_host_in_folder_rules(g_root_folder)
+    if changed_rulesets:
+        unique = set(changed_rulesets)
+        for varname in unique:
+            actions.append(_("Changed explicit hostname in %d rules in ruleset <i>%s</i>.") % (
+              changed_rulesets.count(varname), g_rulespecs[varname]["title"]))
+
+
+    ## ACHTUNG:
+    ## Hier sollte zunächst die neue Konfig erzeugt werden. Wenn das nicht
+    ## klappt ist es Kacke. Dann müsste man zurückrollen. Wenn ja, dann müsste
+    ## man den Core anhalten, dann die OMD-Welt umbenennen, dann den Core wieder
+    ## starten.
+
+    # 3. Check_MK stuff ------------------------------------------------
+    # Things like autochecks, counters, etc. This has to be done via an
+    # automation, since it might have to happen on a remote site.
+    for what in check_mk_automation(host[".siteid"], "rename-host", [oldname, newname]):
+        if what == "cache":
+            actions.append(_("Renamed file with cached agent output."))
+        elif what == "counters":
+            actions.append(_("Renamed file with performance counters."))
+        elif what == "piggyback-load":
+            actions.append(_("Renamed file with piggyback information from other host."))
+        elif what == "piggyback-pig":
+            actions.append(_("Renamed files with piggyback information for other hosts."))
+        elif what == "autochecks":
+            actions.append(_("Renamed auto-disovered checks of the host."))
+        elif what == "logwatch":
+            actions.append(_("Renamed logfile information of logwatch plugin."))
+        elif what == "snmpwalk":
+            actions.append(_("Renamed stored SNMP walk."))
+        elif what == "rrd":
+            actions.append(_("Renamed RR databases with performance data."))
+        elif what == "rrdcached":
+            actions.append(_("Renamed RRD updates in journal of RRD Cache."))
+        elif what == "pnpspool":
+            actions.append(_("Renamed hostname in spool files of PNP4Nagios."))
+        elif what == "nagvis":
+            actions.append(_("Renamed hostname in all NagVis maps."))
+
+
+
+    # Notification settings ----------------------------------------------
+    # Notification rules - both global and users' ones
+    def rename_in_notification_rules(rules):
+        num_changed = 0
+        for rule in rules:
+            for key in [ "match_hosts", "match_exclude_hosts" ]:
+                if rule.get(key):
+                    if rename_in_list(rule[key]):
+                        num_changed += 1
+        return num_changed
+
+    users = userdb.load_users(lock = True)
+    some_user_changed = False
+    for userid, user in users.items():
+        if user.get("notification_rules"):
+            rules = user["notification_rules"]
+            num_changed = rename_in_notification_rules(rules)
+            if num_changed:
+                actions.append("Changed explicit hosts in %d notification rules of user %s" % (num_changed, userid))
+                some_changed = True
+
+    rules = load_notification_rules()
+    num_changed = rename_in_notification_rules(rules)
+    if num_changed:
+        actions.append(_("Changed explicit hosts in %d global notification rules") % num_changed)
+        save_notification_rules(rules)
+
+    # Notification channels of flexible notifcations also can have host conditions
+    for userid, user in users.items():
+        method = user.get("notification_method")
+        if method and type(method) == tuple and method[0] == "flexible":
+            channels_changed = 0
+            for channel in method[1]:
+                if channel.get("only_hosts"):
+                    num_changed = rename_in_list(channel["only_hosts"])
+                    if num_changed:
+                        channels_changed += 1
+                        some_user_changed = True
+            if channels_changed:
+                actions.append("Changed explicit hosts in %d flexible notification configurations of user %s" % (channels_changed, userid))
+
+    if some_user_changed:
+        userdb.save_users(users)
+
+    # State of Multisite ---------------------------------------
+    # Favorites of users and maybe other settings. We simply walk through
+    # all directories rather then through the user database. That way we 
+    # are sure that also currently non-existant users are being found and
+    # also only users that really have a profile.
+    users_changed = 0
+    total_changed = 0
+    for userid in os.listdir(config.config_dir):
+        if userid[0] != '.':
+            favpath = config.config_dir + "/" + userid + "/favorites.mk"
+            if os.path.exists(favpath):
+                try:
+                    num_changed = 0
+                    favorites = eval(file(favpath).read())
+                    for nr, entry in enumerate(favorites):
+                        if entry == oldname:
+                            favorites[nr] = newname
+                            num_changed += 1
+                        elif entry.startswith(oldname + ";"):
+                            favorites[nr] = newname + ";" + entry.split(";")[1]
+                            num_changed += 1
+                    if num_changed:
+                        file(favpath, "w").write(repr(favorites) + "\n")
+                        users_changed += 1
+                        total_changed += num_changed
+                except:
+                    if config.debug:
+                        raise
+    if users_changed:
+        actions.append(_("Renamed %d favorite entries of %d users") % (total_changed, users_changed))
+
+
+    call_hook_hosts_changed(g_root_folder)
+    return actions
+
+
 
 #.
 #   .--Host & Services Parameters Overview pages---------------------------.
@@ -5086,7 +5334,7 @@ def check_mk_local_automation(command, args=[], indata=""):
         # if config.debug:
         #     html.write("<div class=message>Running <tt>%s</tt></div>\n" % " ".join(cmd))
         p = subprocess.Popen(cmd,
-            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=True)
     except Exception, e:
         if commandargs[0] == 'sudo':
             raise MKGeneralException("Cannot execute <tt>%s</tt>: %s<br /><br >%s" % (commandargs[0], e, sudo_msg))
@@ -16871,7 +17119,8 @@ modes = {
    "editfolder"         : (["hosts" ], lambda phase: mode_editfolder(phase, False)),
    "newhost"            : (["hosts", "manage_hosts"], lambda phase: mode_edithost(phase, True, False)),
    "newcluster"         : (["hosts", "manage_hosts"], lambda phase: mode_edithost(phase, True, True)),
-   "bulk_import"         : (["hosts", "manage_hosts"], lambda phase: mode_bulk_import(phase)),
+   "rename_host"        : (["hosts", "manage_hosts"], lambda phase: mode_rename_host(phase)),
+   "bulk_import"        : (["hosts", "manage_hosts"], lambda phase: mode_bulk_import(phase)),
    "edithost"           : (["hosts"], lambda phase: mode_edithost(phase, False, None)),
    "parentscan"         : (["hosts"], mode_parentscan),
    "firstinventory"     : (["hosts", "services"], lambda phase: mode_inventory(phase, True)),

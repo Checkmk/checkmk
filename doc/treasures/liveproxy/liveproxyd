@@ -252,7 +252,7 @@ def do_select(timeout):
                 p.register(channel["socket"], select.POLLIN)
 
     try:
-        readylist = p.poll(timeout)
+        readylist = p.poll(timeout * 1000)
         r_able = []
         w_able = []
         for fd, event in readylist:

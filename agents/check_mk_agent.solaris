@@ -129,6 +129,12 @@ then
     df -l -k -F zfs 2>/dev/null | sed 1d
 fi
 
+# ZFS arc cache
+if type mdb &>/dev/null
+then
+    echo '<<<zfs_arc_cache>>>'
+    echo "::arc" | mdb -k
+fi
 
 # Processes
 echo '<<<ps>>>'

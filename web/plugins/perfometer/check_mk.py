@@ -1000,3 +1000,11 @@ def perfometer_chamber_deviation(row, command, perf):
     return "%0.6f%%" % chamber_dev, perfometer_linear(chamber_dev, "#000080")
 
 perfometers['check_mk-wagner_titanus_topsense.chamber_deviation'] = perfometer_chamber_deviation
+
+def perfometer_cache_hit_ratio(row, check_command, perf_data):
+    hit_ratio = float(perf_data[0][1]) # is already percentage
+    color = "#60f020"
+    return "%.2f %% hits" % hit_ratio, perfometer_linear(hit_ratio, color)
+
+perfometers["check_mk-zfs_arc_cache"] = perfometer_cache_hit_ratio
+perfometers["check_mk-zfs_arc_cache.l2"] = perfometer_cache_hit_ratio

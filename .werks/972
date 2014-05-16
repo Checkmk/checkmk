@@ -1,0 +1,11 @@
+Title: Do not loose site specific global settings anymore when chaning a site's configuration
+Level: 2
+Component: wato
+Class: fix
+State: unknown
+Version: 1.2.5i3
+Date: 1400233980
+
+When you use distributed monitoring and have a site with site specific global settings
+and afterwards edited the settings of the site connections then the global settings
+got lost. This has now been fixed.

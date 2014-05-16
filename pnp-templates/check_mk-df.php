@@ -132,15 +132,18 @@ if (isset($RRD['trend_hoursleft'])) {
     // Trend
     $opt[4] = "--vertical-label 'Days left' -l -1 -u 365 -X0 --title '$hostname: Days left for $fstitle' ";
     $def[4] = "DEF:hours_left=${RRD_AVG['trend_hoursleft']} ";
+    $def[4] .= "DEF:hours_left_min=${RRD_MIN['trend_hoursleft']} ";
     // negative hours indicate no growth
     // the dataset hours_left_isneg stores this info for each point as True/False
-    $def[4] .= "CDEF:hours_left_isneg=hours_left,-1,EQ ";
+    $def[4] .= "CDEF:hours_left_isneg=hours_left_min,-1,EQ ";
+    $def[4] .= "CDEF:hours_left_unmon=hours_left_min,400,0,IF ";
     $def[4] .= "CDEF:days_left=hours_left,24,/ ";
     $def[4] .= "CDEF:days_left_cap=days_left,400,MIN ";
     // Convert negative points to 400 (y-axis cap)
     $def[4] .= "CDEF:days_left_cap_positive=hours_left_isneg,400,days_left_cap,IF ";
     // The AREA has a rendering problem. Points are too far to the right
-    $def[4] .= "AREA:400#AA2200: ";
+    $def[4] .= "AREA:hours_left_unmon#AA2200: ";
+
     $def[4] .= "AREA:days_left_cap_positive#22AA44:\"Days left\:\" ";
     $def[4] .= "GPRINT:days_left:LAST:\"%7.2lf days\" ";
 

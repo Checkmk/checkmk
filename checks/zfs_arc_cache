@@ -1,0 +1,238 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# <<<zfs_arc_cache>>>
+# hits                      = 106259988004
+# misses                    = 27664604758
+# demand_data_hits          = 23694052185
+# demand_data_misses        = 2806853416
+# demand_metadata_hits      = 73187550363
+# demand_metadata_misses    = 1557349557
+# prefetch_data_hits        = 3100882779
+# prefetch_data_misses      = 21062611239
+# prefetch_metadata_hits    = 6277502677
+# prefetch_metadata_misses  = 2237790546
+# mru_hits                  = 44007947284
+# mru_ghost_hits            = 2418664836
+# mfu_hits                  = 52875478045
+# mfu_ghost_hits            = 1458768458
+# deleted                   = 25139978315
+# recycle_miss              = 3965481664
+# mutex_miss                = 323199589
+# evict_skip                = 2543918629307
+# evict_l2_cached           =         0
+# evict_l2_eligible         = 253548767148544
+# evict_l2_ineligible       = 36185885241856
+# hash_elements             =    182514
+# hash_elements_max         =    388216
+# hash_collisions           = 6825894732
+# hash_chains               =     14194
+# hash_chain_max            =         8
+# p                         =       914 MB
+# c                         =      2010 MB
+# c_min                     =      2010 MB
+# c_max                     =       320 MB
+# size                      =      1554 MB
+# hdr_size                  =  36128904
+# data_size                 = 951095808
+# other_size                = 642656472
+# l2_hits                   =         0
+# l2_misses                 =         0
+# l2_feeds                  =         0
+# l2_rw_clash               =         0
+# l2_read_bytes             =         0
+# l2_write_bytes            =         0
+# l2_writes_sent            =         0
+# l2_writes_done            =         0
+# l2_writes_error           =         0
+# l2_writes_hdr_miss        =         0
+# l2_evict_lock_retry       =         0
+# l2_evict_reading          =         0
+# l2_free_on_write          =         0
+# l2_abort_lowmem           =         0
+# l2_cksum_bad              =         0
+# l2_io_error               =         0
+# l2_size                   =         0
+# l2_hdr_size               =         0
+# memory_throttle_count     =    439874
+# arc_no_grow               =         1
+# arc_tempreserve           =         0 MB
+# arc_meta_used             =      1322 MB
+# arc_meta_limit            =        80 MB
+# arc_meta_max              =      2077 MB
+
+
+# parses agent output in a structure like
+# {'arc_meta_limit': 80,
+#  'arc_meta_max': 2077,
+#  'arc_meta_used': 1322,
+# [...]
+# }
+
+def zfs_arc_cache_parse(info):
+    parsed = {}
+    for line in info:
+        if len(line) > 2 and line[1] == "=":
+            parsed[line[0]] = int(line[2])
+    return parsed
+
+#   .--cache---------------------------------------------------------------.
+#   |                                     _                                |
+#   |                       ___ __ _  ___| |__   ___                       |
+#   |                      / __/ _` |/ __| '_ \ / _ \                      |
+#   |                     | (_| (_| | (__| | | |  __/                      |
+#   |                      \___\__,_|\___|_| |_|\___|                      |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_zfs_arc_cache(info):
+    parsed = zfs_arc_cache_parse(info)
+    if "hits" in parsed.keys() and "misses" in parsed.keys():
+        return [ (None, None) ]
+    else:
+        return []
+
+def check_zfs_arc_cache(_no_item, _no_params, info):
+    parsed = zfs_arc_cache_parse(info)
+    status = 0
+    perfdata = []
+    message = "ZFS arc cache:"
+
+    # hit ratio
+    if "hits" in parsed.keys() and "misses" in parsed.keys():
+        hit_ratio = float(parsed["hits"]) / (parsed["hits"] + parsed["misses"]) * 100
+        message += " hit ratio: %0.2f %%" % hit_ratio
+        perfdata.append(("hit_ratio", "%0.2f" % hit_ratio, '', '', 0, 100))
+    else:
+        message += " no info about hit ratio available"
+        perfdata.append(("hit_ratio", 0, '', '', 0, 100))
+        status = 3
+
+    # prefetch data hit ratio
+    if "prefetch_data_hits" in parsed.keys() and "prefetch_data_misses" in parsed.keys():
+        prefetch_data_hit_ratio = float(parsed["prefetch_data_hits"]) / (parsed["prefetch_data_hits"] + parsed["prefetch_data_misses"]) * 100
+        message += ", prefetch data hit ratio: %0.2f %%" % prefetch_data_hit_ratio 
+        perfdata.append(("prefetch_data_hit_ratio", "%0.2f" % prefetch_data_hit_ratio, '', '', 0, 100))
+    else:
+        message += ", no info about prefetch data hit ratio available"
+        perfdata.append(("prefetch_data_hit_ratio", 0, '', '', 0, 100))
+        status = 3
+
+    # prefetch metadata hit ratio
+    if "prefetch_metadata_hits" in parsed.keys() and "prefetch_metadata_misses" in parsed.keys():
+        prefetch_metadata_hit_ratio = float(parsed["prefetch_metadata_hits"]) / (parsed["prefetch_metadata_hits"] + parsed["prefetch_metadata_misses"]) * 100
+        message += ", prefetch metadata hit ratio: %0.2f %%" % prefetch_metadata_hit_ratio
+        perfdata.append(("prefetch_metadata_hit_ratio", "%0.2f" % prefetch_metadata_hit_ratio, '', '', 0, 100))
+    else:
+        message += ", no info about prefetch metadata hit ratio available"
+        perfdata.append(("prefetch_metadata_hit_ratio", 0, '', '', 0, 100))
+        status = 3
+
+    # size
+    if "size" in parsed.keys():
+        message += ", cache size: %d MB" % parsed["size"]
+        perfdata.append(("size", parsed["size"] * 1024 * 1024, '', '', 0))
+    else:
+        message += ", no info about cache size available"
+        perfdata.append(("size", 0, '', '', 0))
+        status = 3
+
+    # arc_meta
+    if "arc_meta_used" in parsed.keys() and "arc_meta_limit" in parsed.keys() and "arc_meta_max" in parsed.keys():
+        message += ", arc meta %d MB used, limit %d MB, max %d MB" \
+                   % (parsed["arc_meta_used"], parsed["arc_meta_limit"], parsed["arc_meta_max"]) 
+        perfdata.append(("arc_meta_used", parsed["arc_meta_used"] * 1024 * 1024, '', '', 0))
+        perfdata.append(("arc_meta_limit", parsed["arc_meta_limit"] * 1024 * 1024, '', '', 0))
+        perfdata.append(("arc_meta_max", parsed["arc_meta_max"] * 1024 * 1024, '', '', 0))
+    else:
+        message += ", no info about prefetch arc meta available"
+        perfdata.append(("arc_meta_used", 0, '', '', 0))
+        perfdata.append(("arc_meta_limit", 0, '', '', 0))
+        perfdata.append(("arc_meta_max", 0, '', '', 0))
+        status = 3
+
+    return status, message, perfdata
+
+check_info["zfs_arc_cache"] = {
+    "check_function"        : check_zfs_arc_cache,
+    "inventory_function"    : inventory_zfs_arc_cache,
+    "service_description"   : "ZFS arc cache",
+    "has_perfdata"          : True,
+}
+
+#.
+#   .--L2 cache------------------------------------------------------------.
+#   |               _     ____                   _                         |
+#   |              | |   |___ \    ___ __ _  ___| |__   ___                |
+#   |              | |     __) |  / __/ _` |/ __| '_ \ / _ \               |
+#   |              | |___ / __/  | (_| (_| | (__| | | |  __/               |
+#   |              |_____|_____|  \___\__,_|\___|_| |_|\___|               |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_zfs_arc_cache_l2(info):
+    parsed = zfs_arc_cache_parse(info)
+    # if l2_size == 0 there is no l2 cache available at all
+    if "l2_size" in parsed.keys() and parsed["l2_size"] > 0:
+        return [ (None, None) ]
+    else:
+        return []
+
+def check_zfs_arc_cache_l2(_no_item, _no_params, info):
+    parsed = zfs_arc_cache_parse(info)
+    status = 0
+    perfdata = []
+    message = "ZFS arc cache L2:"
+
+    # hit ratio
+    if "l2_hits" in parsed.keys() and "l2_misses" in parsed.keys():
+        l2_hit_ratio = float(parsed["l2_hits"]) / (parsed["l2_hits"] + parsed["l2_misses"]) * 100
+        message += " L2 hit ratio: %0.2f %%" % l2_hit_ratio
+        perfdata.append(("l2_hit_ratio", "%0.2f" % l2_hit_ratio, '', '', 0, 100))
+    else:
+        message += " no info about L2 hit ratio available"
+        perfdata.append(("l2_hit_ratio", 0, '', '', 0, 100))
+        status = 3
+
+    # size
+    if "l2_size" in parsed.keys():
+        message += ", L2 size: %s" % get_bytes_human_readable(parsed["l2_size"])
+        perfdata.append(("l2_size", parsed["l2_size"], '', '', 0))
+    else:
+        message += ", no info about L2 size available"
+        perfdata.append(("l2_size", 0, '', '', 0))
+        status = 3
+    return status, message, perfdata
+
+check_info["zfs_arc_cache.l2"] = {
+    "check_function"        : check_zfs_arc_cache_l2,
+    "inventory_function"    : inventory_zfs_arc_cache_l2,
+    "service_description"   : "ZFS arc cache L2",
+    "has_perfdata"          : True,
+}
+
+#.

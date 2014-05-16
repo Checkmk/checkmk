@@ -1,0 +1,8 @@
+Title: zfs_arc_cache, zfs_arc_cache.l2: New Checks for Hit Ratios and Sizes of ZFS
+Level: 2
+Component: checks
+Version: 1.2.5i3
+Date: 1400237389
+Class: feature
+
+

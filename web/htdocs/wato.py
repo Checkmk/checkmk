@@ -4535,7 +4535,7 @@ def check_mk_local_automation(command, args=[], indata=""):
                     "<li>Retry this operation</li></ol>\n" %
                     (html.apache_user(), sudoline))
 
-    if command == 'restart':
+    if command in [ 'restart', 'reload' ]:
         try:
             call_hook_pre_activate_changes()
         except Exception, e:
@@ -4569,7 +4569,7 @@ def check_mk_local_automation(command, args=[], indata=""):
 
 
     # On successful "restart" command execute the activate changes hook
-    if command == 'restart':
+    if command in [ 'restart', 'reload' ]:
         call_hook_activate_changes()
 
     try:

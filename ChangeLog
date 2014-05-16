@@ -12,6 +12,9 @@
     Multisite:
     * 0912 FIX: Multisite Views: Fixed bug where custom views could not get deleted
 
+    WATO:
+    * 0971 FIX: Fix missing authentication of PHP addons in D-WATO when activation mode is reload...
+
     Notifications:
     * 0964 FIX: Fix hanging shutdown of CMC on RedHat 5.X...
 

@@ -55,7 +55,6 @@ OMD:
 
 ES FEHLT:
 
-* nagios.log (analog von CMC)
 * retentions.dat (analog bei CMC)
 * Stop/Start vom Core inkl. Config erzeugen zu rechter Zeit
 * Nachdenken, ob noch was fehlt.

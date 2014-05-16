@@ -996,6 +996,27 @@ def omd_rename_host(oldname, newname):
     # Logfiles and history files of CMC and Nagios. Problem
     # here: the exact place of the hostname varies between the
     # various log entry lines
+    sed_commands = r'''
+s/(INITIAL|CURRENT) (HOST|SERVICE) STATE: %(old)s;/\1 \2 STATE: %(new)s;/
+s/(HOST|SERVICE) (DOWNTIME |FLAPPING |)ALERT: %(old)s;/\1 \2ALERT: %(new)s;/
+s/PASSIVE (HOST|SERVICE) CHECK: %(old)s;/PASSIVE \1 CHECK: %(new)s;/
+s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
+''' % { "old" : oldname, "new" : newname }
+    patterns = [
+        "var/check_mk/core/history",
+        "var/check_mk/core/archive/*",
+        "var/nagios/nagios.log",
+        "var/nagios/archive/*",
+    ]
+    one_matched = False
+    for pattern in patterns:
+        command = "sed -ri --file=/dev/fd/0 %s/%s >/dev/null 2>&1" % (omd_root, pattern)
+        p = os.popen(command, "w")
+        p.write(sed_commands)
+        if not p.close():
+            one_matched = True
+    if one_matched:
+        actions.append("history")
 
     # NagVis maps
     if not os.system("sed -i 's/^[[:space:]]*host_name=%s[[:space:]]*$/host_name=%s/' "

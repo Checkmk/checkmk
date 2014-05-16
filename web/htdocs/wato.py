@@ -2276,30 +2276,30 @@ def mode_rename_host(phase):
             log_pending(AFFECTED, newname, "rename-host", _("Renamed host %s into %s") % (hostname, newname))
             html.set_var("host", newname)
             action_txt =  "".join([ "<li>%s</li>" % a for a in actions ])
-            return "edithost", _("Renamed host <b>%s</b> into <b>%s</b>:<br><ul>%s</ul>") % (hostname, newname, action_txt)
+            return "edithost", _("Renamed host <b>%s</b> into <b>%s</b> at the following places:<br><ul>%s</ul>") % (
+                                 hostname, newname, action_txt)
         elif c == False: # not yet confirmed
             return ""
         return
 
-    html.write("<h2>%s</h2>" % _("Host Renaming"))
-    html.write("<p>%s</p>" % _("The renaming of hosts is a complex operation since a host's name is being "
-                               "used as a unique key in various places. If you choose to rename a host then "
-                               "the renaming will be done in the following places:"))
-    html.write("<ul>")
-    html.write("<li>%s</li>" % _("Name of the host in the WATO folder."))
-    html.write("<li>%s</li>" % _("Cluster definitions (if the host is the node of a cluster"))
-    html.write("<li>%s</li>" % _("Configuration rules (when the host is explicitely named in the rule condition"))
-    html.write("<li>%s</li>" % _("Global and user specific notification rules"))
-    html.write("<li>%s</li>" % _("Check_MK temporary and cache information"))
-    html.write("<li>%s</li>" % _("The service configuration of the host"))
-    html.write("<li>%s</li>" % _("Stored logfiles (from logwatch plugin)"))
-    html.write("<li>%s</li>" % _("Stored SNMP walks"))
-    html.write("<li>%s</li>" % _("Performance data (RR databased)"))
-    html.write("<li>%s</li>" % _("NagVis map definitions"))
-    html.write("</ul>")
+    html.help(_("The renaming of hosts is a complex operation since a host's name is being "
+               "used as a unique key in various places. If you choose to rename a host then "
+               "the renaming will be done in the following places:"))
+    ### html.write("<ul>")
+    ### html.write("<li>%s</li>" % _("Name of the host in the WATO folder."))
+    ### html.write("<li>%s</li>" % _("Cluster definitions (if the host is the node of a cluster"))
+    ### html.write("<li>%s</li>" % _("Configuration rules (when the host is explicitely named in the rule condition"))
+    ### html.write("<li>%s</li>" % _("Global and user specific notification rules"))
+    ### html.write("<li>%s</li>" % _("Check_MK temporary and cache information"))
+    ### html.write("<li>%s</li>" % _("The service configuration of the host"))
+    ### html.write("<li>%s</li>" % _("Stored logfiles (from logwatch plugin)"))
+    ### html.write("<li>%s</li>" % _("Stored SNMP walks"))
+    ### html.write("<li>%s</li>" % _("Performance data (RR databased)"))
+    ### html.write("<li>%s</li>" % _("NagVis map definitions"))
+    ### html.write("</ul>")
 
     html.begin_form("rename_host", method="POST")
-    forms.header(_("Rename"))
+    forms.header(_("Rename to host %s") % hostname)
     forms.section(_("Current name"))
     html.write(hostname)
     forms.section(_("New name"))
@@ -2330,7 +2330,7 @@ def rename_host(host, newname):
     del g_folder[".hosts"][oldname]
     save_folder_and_hosts(g_folder)
     mark_affected_sites_dirty(g_folder)
-    actions.append(_("Renamed the hostname in the WATO folder."))
+    actions.append(_("The WATO folder"))
 
     # Is this host node of a cluster?
     all_hosts = load_all_hosts()
@@ -2345,7 +2345,7 @@ def rename_host(host, newname):
                 mark_affected_sites_dirty(folder)
 
     if clusters:
-        actions.append(_("Renamed host as node in the following cluster definitions: %s.") % (", ".join(clusters)))
+        actions.append(_("The following cluster definitions: %s") % (", ".join(clusters)))
 
     # Rules that explicitely name that host (no regexes)
     changed_rulesets = []
@@ -2372,7 +2372,7 @@ def rename_host(host, newname):
     if changed_rulesets:
         unique = set(changed_rulesets)
         for varname in unique:
-            actions.append(_("Changed explicit hostname in %d rules in ruleset <i>%s</i>.") % (
+            actions.append(_("%d WATO rules in ruleset <i>%s</i>") % (
               changed_rulesets.count(varname), g_rulespecs[varname]["title"]))
 
 
@@ -2387,27 +2387,29 @@ def rename_host(host, newname):
     # automation, since it might have to happen on a remote site.
     for what in check_mk_automation(host[".siteid"], "rename-host", [oldname, newname]):
         if what == "cache":
-            actions.append(_("Renamed file with cached agent output."))
+            actions.append(_("Cached output of monitoring agents"))
         elif what == "counters":
-            actions.append(_("Renamed file with performance counters."))
+            actions.append(_("Files with performance counters"))
         elif what == "piggyback-load":
-            actions.append(_("Renamed file with piggyback information from other host."))
+            actions.append(_("Piggyback information from other host"))
         elif what == "piggyback-pig":
-            actions.append(_("Renamed files with piggyback information for other hosts."))
+            actions.append(_("Piggyback information for other hosts"))
         elif what == "autochecks":
-            actions.append(_("Renamed auto-disovered checks of the host."))
+            actions.append(_("Auto-disovered services of the host"))
         elif what == "logwatch":
-            actions.append(_("Renamed logfile information of logwatch plugin."))
+            actions.append(_("Logfile information of logwatch plugin"))
         elif what == "snmpwalk":
-            actions.append(_("Renamed stored SNMP walk."))
+            actions.append(_("A stored SNMP walk"))
         elif what == "rrd":
-            actions.append(_("Renamed RR databases with performance data."))
+            actions.append(_("RR databases with performance data"))
         elif what == "rrdcached":
-            actions.append(_("Renamed RRD updates in journal of RRD Cache."))
+            actions.append(_("RRD updates in journal of RRD Cache"))
         elif what == "pnpspool":
-            actions.append(_("Renamed hostname in spool files of PNP4Nagios."))
+            actions.append(_("Spool files of PNP4Nagios"))
         elif what == "nagvis":
-            actions.append(_("Renamed hostname in all NagVis maps."))
+            actions.append(_("NagVis maps"))
+        elif what == "history":
+            actions.append(_("Monitoring history entries (events and availability)"))
 
 
 
@@ -2429,13 +2431,13 @@ def rename_host(host, newname):
             rules = user["notification_rules"]
             num_changed = rename_in_notification_rules(rules)
             if num_changed:
-                actions.append("Changed explicit hosts in %d notification rules of user %s" % (num_changed, userid))
+                actions.append("%d notification rules of user %s" % (num_changed, userid))
                 some_changed = True
 
     rules = load_notification_rules()
     num_changed = rename_in_notification_rules(rules)
     if num_changed:
-        actions.append(_("Changed explicit hosts in %d global notification rules") % num_changed)
+        actions.append(_("%d global notification rules") % num_changed)
         save_notification_rules(rules)
 
     # Notification channels of flexible notifcations also can have host conditions
@@ -2450,7 +2452,7 @@ def rename_host(host, newname):
                         channels_changed += 1
                         some_user_changed = True
             if channels_changed:
-                actions.append("Changed explicit hosts in %d flexible notification configurations of user %s" % (channels_changed, userid))
+                actions.append("%d flexible notification configurations of user %s" % (channels_changed, userid))
 
     if some_user_changed:
         userdb.save_users(users)
@@ -2484,7 +2486,7 @@ def rename_host(host, newname):
                     if config.debug:
                         raise
     if users_changed:
-        actions.append(_("Renamed %d favorite entries of %d users") % (total_changed, users_changed))
+        actions.append(_("%d favorite entries of %d users") % (total_changed, users_changed))
 
 
     call_hook_hosts_changed(g_root_folder)

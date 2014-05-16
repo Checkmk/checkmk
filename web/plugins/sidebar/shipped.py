@@ -1236,16 +1236,20 @@ def compute_tag_tree(taglist):
     tree = {}
     for site, host_name, state, num_ok, num_warn, num_crit, num_unknown, custom_variables in hosts:
         # make state reflect the state of the services + host
+        have_svc_problems = False
         if state:
             state += 1 # shift 1->2 (DOWN->CRIT) and 2->3 (UNREACH->UNKNOWN)
         if num_crit:
             state = 2
+            have_svc_problems = True
         elif num_unknown:
             if state != 2:
                 state = 3
+            have_svc_problems = True
         elif num_warn:
             if not state:
                 state = 1
+            have_svc_problems = True
 
         tags = custom_variables.get("TAGS", []).split()
         tree_entry = tree
@@ -1258,9 +1262,10 @@ def compute_tag_tree(taglist):
         if not tree_entry:
             tree_entry.update({
                 "_num_hosts" : 0,
-                "_state" : 0,
+                "_state"     : 0,
             })
         tree_entry["_num_hosts"] += 1
+        tree_entry["_svc_problems"] = tree_entry.get("_svc_problems", False) or have_svc_problems
         if state == 2 or tree_entry["_state"] == 2:
             tree_entry["_state"] = 2
         else:
@@ -1278,8 +1283,10 @@ def tag_tree_worst_state(tree):
                 return 2
         return max(states)
 
-def tag_tree_url(taggroups, taglist):
-    urlvars = [("view_name", "allhosts"), ("filled_in", "filter")]
+def tag_tree_url(taggroups, taglist, viewname):
+    urlvars = [("view_name", viewname), ("filled_in", "filter")]
+    if viewname == "svcproblems":
+        urlvars += [ ("st1", "on"), ("st2", "on"), ("st3", "on") ]
     for nr, (group, tag) in enumerate(zip(taggroups, taglist)):
         urlvars.append(("host_tag_%d_grp" % nr, group))
         urlvars.append(("host_tag_%d_op" % nr, "is"))
@@ -1299,12 +1306,17 @@ def render_tag_tree_level(taggroups, path, title, tree):
 
     for nr, ((title, tag), subtree) in enumerate(items):
         subpath = path + [tag]
-        url = tag_tree_url(taggroups, subpath)
+        url = tag_tree_url(taggroups, subpath, "allhosts")
         if "_num_hosts" in subtree:
             title += " (%d)" % subtree["_num_hosts"]
         href = '<a target=main href="%s">%s</a>' % (url, html.attrencode(title))
         if "_num_hosts" in subtree:
+            
             html.write(tag_tree_bullet(subtree["_state"], True))
+            if subtree.get("_svc_problems"):
+                url = tag_tree_url(taggroups, subpath, "svcproblems")
+                html.icon_button(url, _("Show the service problems contained in this branch"), 
+                        "svc_problems", target="main") 
             html.write(href)
             html.write("<br>")
         else:
@@ -1324,12 +1336,6 @@ function virtual_host_tree_changed(field)
 """
 
 def render_tag_tree():
-    virtual_host_trees = [
-       (u"Nach Typ des Hosts", [ "hosttyp", "avail",   "agent"], ),
-       (u"Nach Agent",         [ "agent",   "hosttyp", "avail"], ),
-       (u"Nach Verfügbarkeit", [ "avail",   "HTTP",    "SMTP" ], ),
-    ]
-
     if not config.virtual_host_trees:
         url = 'wato.py?varname=virtual_host_trees&mode=edit_configvar'
         html.write(_('You have not defined any virtual host trees. You can '
@@ -1357,6 +1363,13 @@ sidebar_snapins["tag_tree"] = {
     "refresh" : True,
     "allowed" : [ "admin", "user", "guest" ],
     "styles" : """
+
+#snapin_tag_tree img.iconbutton { 
+    width: 12px;
+    height: 12px;
+    position: relative;
+    top: -2px;
+}
 
 #snapin_tag_tree select {
     background-color: #6DA1B8;

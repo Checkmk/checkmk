@@ -1566,6 +1566,7 @@ multisite_builtin_views.update({
                                   'svcstate',
                                   'svchardstate',
                                   'serviceregex',
+                                  'host_tags',
                                   'hoststate'],
                  'sorters': [('svcstate', True),
                              ('stateage', False),

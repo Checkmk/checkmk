@@ -63,6 +63,8 @@ def do_automation(cmd, args):
                 result = automation_scan_parents(args)
             elif cmd == "diag-host":
                 result = automation_diag_host(args)
+            elif cmd == "rename-host":
+                result = automation_rename_host(args)
             elif cmd == "create-snapshot":
                 result = automation_create_snapshot(args)
 	    elif cmd == "notification-replay":
@@ -881,6 +883,129 @@ def automation_diag_host(args):
 
     except Exception, e:
         return 1, str(e)
+
+# WATO calls this automation when a host has been renamed. We need to change
+# several file and directory names.
+def automation_rename_host(args):
+    oldname = args[0]
+    newname = args[1]
+    actions = []
+
+    # Rename temporary files of the host
+    for d in [ "cache", "counters" ]:
+        if rename_host_file(tmp_dir + "/" + d + "/", oldname, newname):
+            actions.append(d)
+
+    if rename_host_dir(tmp_dir + "/piggyback/", oldname, newname):
+        actions.append("piggyback-load")
+
+    # Rename piggy files *created* by the host
+    piggybase = tmp_dir + "/piggyback/"
+    if os.path.exists(piggybase):
+        for piggydir in os.listdir(piggybase):
+            if rename_host_file(piggybase + piggydir, oldname, newname):
+                actions.append("piggyback-pig")
+
+    # Autochecks: Here we have the problem, that these files cannot
+    # be read and written again with eval/repr, since they contain
+    # variable names that would get expanded. We does this by parsing
+    # the lines ourselves. Also we assume cleaned up autochecks files.
+    acpath = autochecksdir + "/" + oldname + ".mk"
+    if os.path.exists(acpath):
+        out = file(autochecksdir + "/" + newname + ".mk", "w")
+        for line in file(acpath):
+            if "'" + oldname + "'" in line:
+                front, tail = line.split(",", 1)
+                front = front.replace("'" + oldname + "'", "'" + newname + "'")
+                line = front + "," + tail
+            out.write(line)
+        out.close()
+        os.remove(acpath) # Remove old file
+        actions.append("autochecks")
+
+    # Logwatch
+    if rename_host_dir(logwatch_dir, oldname, newname):
+        actions.append("logwatch")
+
+    # SNMP walks
+    if rename_host_file(snmpwalks_dir, oldname, newname):
+        actions.append("snmpwalk")
+
+    # OMD-Stuff. Note: The question really is whether this should be
+    # included in Check_MK. The point is - however - that all these
+    # actions need to take place while the core is stopped.
+    if omd_root:
+        actions += omd_rename_host(oldname, newname)
+
+    # Start monitoring again
+
+    return actions
+
+
+def rename_host_dir(basedir, oldname, newname):
+    if os.path.exists(basedir + "/" + oldname):
+        if os.path.exists(basedir + "/" + newname):
+            shutil.rmtree(basedir + "/" + newname)
+        os.rename(basedir + "/" + oldname, basedir + "/" + newname)
+        return 1
+    return 0
+
+def rename_host_file(basedir, oldname, newname):
+    if os.path.exists(basedir + "/" + oldname):
+        if os.path.exists(basedir + "/" + newname):
+            os.remove(basedir + "/" + newname)
+        os.rename(basedir + "/" + oldname, basedir + "/" + newname)
+        return 1
+    return 0
+
+# This functions could be moved out of Check_MK.
+def omd_rename_host(oldname, newname):
+    actions = []
+
+    # Temporarily stop processing of performance data
+    npcd_running = os.path.exists(omd_root + "/tmp/pnp4nagios/run/npcd.pid")
+    if npcd_running:
+        os.system("omd stop npcd >/dev/null 2>&1 </dev/null")
+
+    rrdcache_running = os.path.exists(omd_root + "/tmp/run/rrdcached.sock")
+    if rrdcache_running:
+        os.system("omd stop rrdcached >/dev/null 2>&1 </dev/null")
+
+    # RRD files
+    if rename_host_dir(rrd_path, oldname, newname):
+        actions.append("rrd")
+
+    # entries of rrdcached journal
+    dirpath = omd_root + "/var/rrdcached/"
+    if not os.system("sed -i 's@/perfdata/%s/@/perfdata/%s/@' "
+        "%s/var/rrdcached/rrd.journal.* 2>/dev/null" % ( oldname, newname, omd_root)):
+        actions.append("rrdcached")
+
+    # Spoolfiles of NPCD
+    if not os.system("sed -i 's/HOSTNAME::%s	/HOSTNAME::%s	/' "
+                     "%s/var/pnp4nagios/perfdata.dump %s/var/pnp4nagios/spool/perfdata.* 2>/dev/null" % (
+                     oldname, newname, omd_root, omd_root)):
+        actions.append("pnpspool")
+
+    if rrdcache_running:
+        os.system("omd start rrdcached >/dev/null 2>&1 </dev/null")
+
+    if npcd_running:
+        os.system("omd start npcd >/dev/null 2>&1 </dev/null")
+
+    # Logfiles and history files of CMC and Nagios. Problem
+    # here: the exact place of the hostname varies between the
+    # various log entry lines
+
+    # NagVis maps
+    if not os.system("sed -i 's/^[[:space:]]*host_name=%s[[:space:]]*$/host_name=%s/' "
+                     "%s/etc/nagvis/maps/*.cfg 2>/dev/null" % (
+                     oldname, newname, omd_root)):
+        actions.append("nagvis")
+
+    return actions
+
+
 
 def automation_create_snapshot(args):
     try:

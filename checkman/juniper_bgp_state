@@ -1,0 +1,19 @@
+title: Juniper Routers: BGP Status
+agents: snmp
+catalog: hw/network/juniper
+license: GPL
+distribution: check_mk
+description:
+ Checks the BGP status for the connection to one peer at Juniper Routers.
+
+ If the operational status (jnxBgpM2PeerStatus) is not {running} it returns
+ {WARN} - that means: The connection has probably been shutdown manually.
+ If the operational status is {running} it looks for the state of the
+ connection (jnxBgpM2PeerState). On {established} it returns {OK} and {CRIT}
+ on every other.
+
+item:
+ The IP address of the peer.
+
+inventory:
+ Finds one check for every BGP connection reported by SNMP.

@@ -1283,6 +1283,15 @@ def tag_tree_worst_state(tree):
                 return 2
         return max(states)
 
+def tag_tree_has_svc_problems(tree):
+    if "_svc_problems" in tree:
+        return tree["_svc_problems"]
+    else:
+        for x in tree.values():
+            if tag_tree_has_svc_problems(x):
+                return True
+        return False
+
 def tag_tree_url(taggroups, taglist, viewname):
     urlvars = [("view_name", viewname), ("filled_in", "filter")]
     if viewname == "svcproblems":
@@ -1299,6 +1308,14 @@ def tag_tree_bullet(state, leaf):
 
 def render_tag_tree_level(taggroups, path, title, tree):
     bullet = tag_tree_bullet(tag_tree_worst_state(tree), False)
+    if tag_tree_has_svc_problems(tree):
+        html.plug()
+        url = tag_tree_url(taggroups, path, "svcproblems")
+        html.icon_button(url, _("Show the service problems contained in this branch"), 
+                "svc_problems", target="main") 
+        bullet += html.drain()
+        html.unplug()
+
     if path:
         html.begin_foldable_container("tag-tree", ".".join(map(str, path)), False, bullet + title)
     items = tree.items()

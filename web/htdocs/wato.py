@@ -2408,6 +2408,8 @@ def rename_host(host, newname):
             actions.append(_("NagVis maps"))
         elif what == "history":
             actions.append(_("Monitoring history entries (events and availability)"))
+        elif what == "retention":
+            actions.append(_("The current monitoring state (including ackowledgements and downtimes)"))
 
 
 

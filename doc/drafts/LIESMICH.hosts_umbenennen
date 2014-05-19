@@ -53,8 +53,31 @@ OMD:
 
   ==> Auch das muss mit einer Automation gehen
 
+2. Damit ein Fehler beim Konfig erzeugen ausgeschlossen werden kann, muss
+ich sicherstellen, dass die IP-Adresse des neuen Namens (ebenfalls)
+auflösbar ist - und zwar von der Monitoring-Site. Man könnte das zur
+Not so machen, dass - im Falle eines Scheiterns der Auflösung - die bisherige
+IP-Adresse verwendet wird. Das müsste aber ja dann bei der Konfigerzeugung
+passieren. Oder wir schieben eine Automation vor, welche das prüft. Oder
+wir packen das in den DNS-Cache rein. Einfach die alte Adresse ermitteln
+und im DNS-Cache unter dem neuen Namen speichern.
+
+3. Wenn das Konfig-Erzeugen trotzdem nicht klappt, wird einfach die alte Konfig
+weiterverwendet und die automation scheitern *am Schluss* mit einem Fehler.
+
+4. Vorgehen:
+ - IP-Adresse des alten Namen in den DNS-Cache eintragen
+ - Feststellen, ob der Core läuft. Wenn ja stoppen und sich das merken
+ - Dann alles machen
+ - Jetzt die Konfig erzeugen und prüfen. Wenn ein Fehler auftritt, zurückrollen
+ - Und den Core wieder starten (beides mit automation_restart)
+
+-------------------------------------------------------------------------------
 ES FEHLT:
 
 * retentions.dat (analog bei CMC)
-* Stop/Start vom Core inkl. Config erzeugen zu rechter Zeit
+* Problem mit Fehler bei der IP-Adresse lösen
 * Nachdenken, ob noch was fehlt.
+* BI and BI Assumptions??
+* Erlauben nur, wenn die Site sauber ist
+* Vor der automation noch einen sync erzwingen

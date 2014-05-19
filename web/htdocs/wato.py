@@ -2269,7 +2269,8 @@ def mode_rename_host(phase):
         newname = html.var("newname")
         check_new_hostname("newname", newname)
         c = wato_confirm(_("Confirm renaming of host"),
-                         _("Are you sure you want to rename the host <b>%s</b> into <b>%s</b>?") % 
+                         _("Are you sure you want to rename the host <b>%s</b> into <b>%s</b>? "
+                           "This involves a restart of the monitoring core!") % 
                          (hostname, newname))
         if c:
             actions = rename_host(host, newname)
@@ -2283,8 +2284,8 @@ def mode_rename_host(phase):
         return
 
     html.help(_("The renaming of hosts is a complex operation since a host's name is being "
-               "used as a unique key in various places. If you choose to rename a host then "
-               "the renaming will be done in the following places:"))
+               "used as a unique key in various places. It also involves stopping and starting "
+               "of the monitoring core."))
     ### html.write("<ul>")
     ### html.write("<li>%s</li>" % _("Name of the host in the WATO folder."))
     ### html.write("<li>%s</li>" % _("Cluster definitions (if the host is the node of a cluster"))
@@ -2376,15 +2377,12 @@ def rename_host(host, newname):
               changed_rulesets.count(varname), g_rulespecs[varname]["title"]))
 
 
-    ## ACHTUNG:
-    ## Hier sollte zunächst die neue Konfig erzeugt werden. Wenn das nicht
-    ## klappt ist es Kacke. Dann müsste man zurückrollen. Wenn ja, dann müsste
-    ## man den Core anhalten, dann die OMD-Welt umbenennen, dann den Core wieder
-    ## starten.
-
     # 3. Check_MK stuff ------------------------------------------------
     # Things like autochecks, counters, etc. This has to be done via an
-    # automation, since it might have to happen on a remote site.
+    # automation, since it might have to happen on a remote site. During
+    # this automation the core will be stopped, after the renaming has
+    # taken place a new configuration will be created and the core started
+    # again.
     for what in check_mk_automation(host[".siteid"], "rename-host", [oldname, newname]):
         if what == "cache":
             actions.append(_("Cached output of monitoring agents"))
@@ -2410,6 +2408,8 @@ def rename_host(host, newname):
             actions.append(_("NagVis maps"))
         elif what == "history":
             actions.append(_("Monitoring history entries (events and availability)"))
+        elif what == "retention":
+            actions.append(_("The current monitoring state (including ackowledgements and downtimes)"))
 
 
 

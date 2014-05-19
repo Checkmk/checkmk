@@ -4880,23 +4880,35 @@ def do_check_nagiosconfig():
         return True
 
 
-def do_restart_core(only_reload):
-    action = only_reload and "load" or "start"
-    sys.stdout.write("Re%sing monitoring core..." % action)
-    sys.stdout.flush()
+# Action can be restart, reload, start or stop
+def do_core_action(action, quiet=False):
+    if not quiet:
+        sys.stdout.write("%sing monitoring core..." % action.title())
+        sys.stdout.flush()
     if monitoring_core == "nagios":
         os.putenv("CORE_NOVERIFY", "yes")
-        command = nagios_startscript + " re%s 2>&1" % action
+        command = nagios_startscript + " %s 2>&1" % action
     else:
-        command = "omd re%s cmc 2>&1" % action
+        command = "omd %s cmc 2>&1" % action
 
     process = os.popen(command, "r")
     output = process.read()
     if process.close():
-        sys.stdout.write("ERROR: %s\n" % output)
-        raise MKGeneralException("Cannot re%s the monitoring core: %s" % (action, output))
+        if not quiet:
+            sys.stdout.write("ERROR: %s\n" % output)
+        raise MKGeneralException("Cannot %s the monitoring core: %s" % (action, output))
     else:
-        sys.stdout.write(tty_ok + "\n")
+        if not quiet:
+            sys.stdout.write(tty_ok + "\n")
+
+def core_is_running():
+    if monitoring_core == "nagios":
+        command = nagios_startscript + " status >/dev/null 2>&1" 
+    else:
+        command = "omd status cmc >/dev/null 2>&1"
+    code = os.system(command)
+    return not code
+
 
 def do_reload():
     do_restart(True)
@@ -4933,7 +4945,7 @@ def do_restart(only_reload = False):
                 os.remove(backup_path)
             if monitoring_core != "cmc":
                 do_precompile_hostchecks()
-            do_restart_core(only_reload)
+            do_core_action(only_reload and "reload" or "restart")
         else:
             sys.stderr.write("Nagios configuration is invalid. Rolling back.\n")
             if backup_path:

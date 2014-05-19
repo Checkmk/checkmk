@@ -1,0 +1,13 @@
+title: Brocade VDX devices: Network interfaces via standard MIB using 64 Bit counters
+agents: snmp
+catalog: hw/network/brocade
+license: GPL
+distribution: check_mk
+description:
+ This check does exactly the same as {if64} but retrieves {ifName} instead
+ of {ifDescr}, because {ifDescr} is not useful in Brocade VDX devices.
+
+ Please refer to the if64 manpage for documentation. 
+
+
+

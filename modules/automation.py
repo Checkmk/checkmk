@@ -680,7 +680,7 @@ def automation_delete_host(args):
         "%s/%s.*"  % (tcp_cache_dir, hostname)]:
         os.system("rm -rf '%s'" % path)
 
-def automation_restart(job="restart"):
+def automation_restart(job = "restart", use_rushd = True):
     # make sure, Nagios does not inherit any open
     # filedescriptors. This really happens, e.g. if
     # check_mk is called by WATO via Apache. Nagios inherits
@@ -695,7 +695,8 @@ def automation_restart(job="restart"):
                 pass
     else:
         objects_file = var_dir + "/core/config"
-        job = "reload" # force reload for CMC
+        if job == "restart":
+            job = "reload" # force reload for CMC
 
     # os.closerange(3, 256) --> not available in older Python versions
 
@@ -725,7 +726,7 @@ def automation_restart(job="restart"):
             if monitoring_core == "nagios":
                 create_nagios_config(file(objects_file, "w"))
             else:
-                do_create_cmc_config(opt_cmc_relfilename)
+                do_create_cmc_config(opt_cmc_relfilename, use_rushd = use_rushd)
 
             if "do_bake_agents" in globals() and bake_agents_on_restart:
                 do_bake_agents()
@@ -742,10 +743,7 @@ def automation_restart(job="restart"):
                 os.remove(backup_path)
             if monitoring_core != "cmc":
                 do_precompile_hostchecks()
-            if job == 'restart':
-                do_restart_core(False)
-            elif job == 'reload':
-                do_restart_core(True)
+            do_core_action(job)
         else:
             if backup_path:
                 os.rename(backup_path, objects_file)
@@ -891,21 +889,6 @@ def automation_rename_host(args):
     newname = args[1]
     actions = []
 
-    # Rename temporary files of the host
-    for d in [ "cache", "counters" ]:
-        if rename_host_file(tmp_dir + "/" + d + "/", oldname, newname):
-            actions.append(d)
-
-    if rename_host_dir(tmp_dir + "/piggyback/", oldname, newname):
-        actions.append("piggyback-load")
-
-    # Rename piggy files *created* by the host
-    piggybase = tmp_dir + "/piggyback/"
-    if os.path.exists(piggybase):
-        for piggydir in os.listdir(piggybase):
-            if rename_host_file(piggybase + piggydir, oldname, newname):
-                actions.append("piggyback-pig")
-
     # Autochecks: Here we have the problem, that these files cannot
     # be read and written again with eval/repr, since they contain
     # variable names that would get expanded. We does this by parsing
@@ -923,6 +906,32 @@ def automation_rename_host(args):
         os.remove(acpath) # Remove old file
         actions.append("autochecks")
 
+    # Reread all autochecks. This is neccessary when creating the config
+    # for the core.
+    reread_autochecks()
+
+    # At this place WATO already has changed it's configuration. All further
+    # data might be changed by the still running core. So we need to stop
+    # it now.
+    core_was_running = core_is_running()
+    if core_was_running:
+        do_core_action("stop", quiet=True)
+
+    # Rename temporary files of the host
+    for d in [ "cache", "counters" ]:
+        if rename_host_file(tmp_dir + "/" + d + "/", oldname, newname):
+            actions.append(d)
+
+    if rename_host_dir(tmp_dir + "/piggyback/", oldname, newname):
+        actions.append("piggyback-load")
+
+    # Rename piggy files *created* by the host
+    piggybase = tmp_dir + "/piggyback/"
+    if os.path.exists(piggybase):
+        for piggydir in os.listdir(piggybase):
+            if rename_host_file(piggybase + piggydir, oldname, newname):
+                actions.append("piggyback-pig")
+
     # Logwatch
     if rename_host_dir(logwatch_dir, oldname, newname):
         actions.append("logwatch")
@@ -937,7 +946,16 @@ def automation_rename_host(args):
     if omd_root:
         actions += omd_rename_host(oldname, newname)
 
-    # Start monitoring again
+    # Start monitoring again. In case of CMC we need to ignore
+    # any configuration created by the CMC Rushahead daemon
+    if core_was_running:
+        automation_restart("start", use_rushd = False)
+        if monitoring_core == "cmc":
+            try:
+                os.remove(var_dir + "/core/config.rush")
+                os.remove(var_dir + "/core/config.rush.id")
+            except:
+                pass
 
     return actions
 

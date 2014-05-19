@@ -58,3 +58,29 @@ ES FEHLT:
 * retentions.dat (analog bei CMC)
 * Stop/Start vom Core inkl. Config erzeugen zu rechter Zeit
 * Nachdenken, ob noch was fehlt.
+
+
+Beim Stoppen/Starten des Cores muss ich sicherstellen:
+
+1. Das ganze Umbenennen sollte nur dann antriggerbar sein, wenn bei der
+entsprechenden Site keine Pending Changes da sind. Ansonsten Hinweis.
+
+2. Damit ein Fehler beim Konfig erzeugen ausgeschlossen werden kann, muss
+ich sicherstellen, dass die IP-Adresse des neuen Namens (ebenfalls)
+auflösbar ist - und zwar von der Monitoring-Site. Man könnte das zur
+Not so machen, dass - im Falle eines Scheiterns der Auflösung - die bisherige
+IP-Adresse verwendet wird. Das müsste aber ja dann bei der Konfigerzeugung
+passieren. Oder wir schieben eine Automation vor, welche das prüft. Oder
+wir packen das in den DNS-Cache rein. Einfach die alte Adresse ermitteln
+und im DNS-Cache unter dem neuen Namen speichern.
+
+3. Wenn das Konfig-Erzeugen trotzdem nicht klappt, wird einfach die alte Konfig
+weiterverwendet und die automation scheitern *am Schluss* mit einem Fehler.
+
+4. Vorgehen:
+ - IP-Adresse des alten Namen in den DNS-Cache eintragen
+ - Feststellen, ob der Core läuft. Wenn ja stoppen und sich das merken
+ - Dann alles machen
+ - Jetzt die Konfig erzeugen und prüfen. Wenn ein Fehler auftritt, zurückrollen
+ - Und den Core wieder starten (beides mit automation_restart)
+

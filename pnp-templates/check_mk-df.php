@@ -35,6 +35,7 @@ foreach ($NAME as $i => $n) {
     $CRIT[$n] = $CRIT[$i];
     $MIN[$n]  = $MIN[$i];
     $MAX[$n]  = $MAX[$i];
+    $ACT[$n]  = $ACT[$i];
 }
 
 # RRDtool Options
@@ -145,8 +146,12 @@ if (isset($RRD['trend_hoursleft'])) {
     $def[4] .= "AREA:hours_left_unmon#AA2200: ";
 
     $def[4] .= "AREA:days_left_cap_positive#22AA44:\"Days left\:\" ";
-    $def[4] .= "GPRINT:days_left:LAST:\"%7.2lf days\" ";
-
+    if ($ACT[4] == -1)
+    {
+        $def[4] .= "COMMENT:\"Not growing\" ";
+    }
+    else {
+        $def[4] .= "GPRINT:days_left:LAST:\"%7.2lf days\" ";
+    }
 }
-
 ?>

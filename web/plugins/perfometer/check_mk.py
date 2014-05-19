@@ -89,7 +89,11 @@ def perfometer_check_mk_df(row, check_command, perf_data):
         h += perfometer_td(100 - pos, color)
         h += perfometer_td(pos, "white")
         h += '</tr></table></div>'
-        return "%0.1f%%/%0.1f days left" % (perc_used, days_left), h
+        if days_left > 365:
+            days_left = " >365"
+        else:
+            days_left = "%0.1f" % days_left
+        return "%0.1f%%/%s days left" % (perc_used, days_left), h
     else:
         h = '<table><tr>'
         h += perfometer_td(perc_used, "#00ffc6")

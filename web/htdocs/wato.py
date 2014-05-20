@@ -2292,18 +2292,6 @@ def mode_rename_host(phase):
     html.help(_("The renaming of hosts is a complex operation since a host's name is being "
                "used as a unique key in various places. It also involves stopping and starting "
                "of the monitoring core. You cannot rename a host while you have pending changes."))
-    ### html.write("<ul>")
-    ### html.write("<li>%s</li>" % _("Name of the host in the WATO folder."))
-    ### html.write("<li>%s</li>" % _("Cluster definitions (if the host is the node of a cluster"))
-    ### html.write("<li>%s</li>" % _("Configuration rules (when the host is explicitely named in the rule condition"))
-    ### html.write("<li>%s</li>" % _("Global and user specific notification rules"))
-    ### html.write("<li>%s</li>" % _("Check_MK temporary and cache information"))
-    ### html.write("<li>%s</li>" % _("The service configuration of the host"))
-    ### html.write("<li>%s</li>" % _("Stored logfiles (from logwatch plugin)"))
-    ### html.write("<li>%s</li>" % _("Stored SNMP walks"))
-    ### html.write("<li>%s</li>" % _("Performance data (RR databased)"))
-    ### html.write("<li>%s</li>" % _("NagVis map definitions"))
-    ### html.write("</ul>")
 
     html.begin_form("rename_host", method="POST")
     forms.header(_("Rename to host %s") % hostname)

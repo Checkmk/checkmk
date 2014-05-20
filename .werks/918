@@ -1,0 +1,10 @@
+Title: notification: fixed exception when sending notifications as sms / ascii mail
+Level: 2
+Component: notifications
+Version: 1.2.5i3
+Date: 1400580654
+Class: fix
+
+Flexible notification plugins with configurable parameters did not work if
+the parameters were configured as list of strings.
+This exception happened on notications send by ASCII mails and sms.

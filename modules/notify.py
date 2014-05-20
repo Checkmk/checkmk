@@ -513,9 +513,13 @@ def notify_rulebased(raw_context, analyse=False):
     return analysis_info
 
 def rbn_finalize_plugin_parameters(hostname, plugin, rule_parameters):
-    parameters = host_extra_conf_merged(hostname, notification_parameters.get(plugin, []))
-    parameters.update(rule_parameters)
-    return parameters
+    # Right now we are only able to finalize notification plugins with dict parameters..
+    if type(rule_parameters) == dict:
+        parameters = host_extra_conf_merged(hostname, notification_parameters.get(plugin, []))
+        parameters.update(rule_parameters)
+        return parameters
+    else:
+        return rule_parameters
 
 def add_rulebased_macros(raw_context):
     # For the rule based notifications we need the list of contacts

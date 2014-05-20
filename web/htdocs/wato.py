@@ -2331,6 +2331,7 @@ def rename_host(host, newname):
     # Is this host node of a cluster?
     all_hosts = load_all_hosts()
     clusters = []
+    parents = []
     for somehost in all_hosts.values():
         if ".nodes" in somehost:
             nodes = somehost[".nodes"]
@@ -2340,8 +2341,18 @@ def rename_host(host, newname):
                 save_folder_and_hosts(folder)
                 mark_affected_sites_dirty(folder)
 
+        if somehost.get("parents"):
+            if rename_host_in_list(somehost["parents"], oldname, newname):
+                parents.append(somehost[".name"])
+                folder = somehost['.folder']
+                save_folder_and_hosts(folder)
+                mark_affected_sites_dirty(folder)
+
     if clusters:
         actions.append(_("The following cluster definitions: %s") % (", ".join(clusters)))
+
+    if parents:
+        actions.append(_("The parents of the following hosts: %s") % (", ".join(parents)))
 
     # Rules that explicitely name that host (no regexes)
     changed_rulesets = []

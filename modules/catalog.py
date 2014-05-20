@@ -46,6 +46,7 @@ manpage_catalog_titles = {
             "ibm"        : "IBM",
         "storagehw"   : "Storage (filers, SAN, tape libs)",
             "brocade"    : "Brocade",
+            "fastlta"    : "FAST LTA",
             "fujitsu"    : "Fujitsu",
             "mcdata"     : "McDATA",
             "netapp"     : "NetApp",

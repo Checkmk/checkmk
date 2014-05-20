@@ -92,6 +92,83 @@ register_notification_parameters("mail",
         ]
     )
 )
+register_notification_parameters("asciimail",
+    Dictionary(
+        elements = [
+            ( "from",
+              TextAscii(
+                  title = _("From: Adress"),
+                  size = 40,
+                  allow_empty = False,
+              )
+            ),
+            ( "reply_to",
+              TextAscii(
+                  title = _("Reply-To: Adress"),
+                  size = 40,
+                  allow_empty = False,
+              )
+            ),
+            ( "host_subject",
+              TextUnicode(
+                  title = _("Subject for host notifications"),
+                  help = _("Here you are allowed to use all macros that are defined in the "
+                           "notification context."),
+                  default_value = "Check_MK: $HOSTNAME$ - $EVENT_TXT$",
+                  size = 64,
+               )
+            ),
+            ( "service_subject",
+              TextUnicode(
+                  title = _("Subject for service notifications"),
+                  help = _("Here you are allowed to use all macros that are defined in the "
+                           "notification context."),
+                  default_value = "Check_MK: $HOSTNAME$/$SERVICEDESC$ $EVENT_TXT$",
+                  size = 64,
+               )
+            ),
+            ( "common_body",
+              TextAreaUnicode(
+                  title = _("Body head for both host and service notifications"),
+                  rows = 7,
+                  cols = 58,
+                  monospaced = True,
+                  default_value = """Host:     $HOSTNAME$
+Alias:    $HOSTALIAS$
+Address:  $HOSTADDRESS$
+""",
+              )
+            ),
+            ( "host_body",
+              TextAreaUnicode(
+                  title = _("Body tail for host notifications"),
+                  rows = 9,
+                  cols = 58,
+                  monospaced = True,
+                  default_value = """Event:    $EVENT_TXT$
+Output:   $HOSTOUTPUT$
+Perfdata: $HOSTPERFDATA$
+$LONGHOSTOUTPUT$
+""",
+              )
+            ),
+            ( "service_body",
+              TextAreaUnicode(
+                  title = _("Body tail for service notifications"),
+                  rows = 11,
+                  cols = 58,
+                  monospaced = True,
+                  default_value = """Service:  $SERVICEDESC$
+Event:    $EVENT_TXT$
+Output:   $SERVICEOUTPUT$
+Perfdata: $SERVICEPERFDATA$
+$LONGSERVICEOUTPUT$
+""",
+              )
+            ),
+        ]
+    )
+)
 
 
 

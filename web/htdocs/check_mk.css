@@ -451,6 +451,10 @@ table.valuespec_listof option[selected] {
     font-weight: bold;
 }
 
+textarea.tt {
+    font-family: monospace;
+}
+
 div.listofstrings.horizontal {
     clear: left;
 }

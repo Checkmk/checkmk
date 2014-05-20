@@ -574,9 +574,13 @@ class TextAreaUnicode(TextUnicode):
         self._cols = kwargs.get("cols", 60)
         self._rows = kwargs.get("rows", 20)  # Allowed: "auto" -> Auto resizing
         self._minrows = kwargs.get("minrows", 0) # Minimum number of initial rows when "auto"
+        self._monospaced = kwargs.get("monospaced", False) # select TT font
 
     def value_to_text(self, value):
-        return "<pre class=ve_textarea>%s</pre>" % value
+        if self._monospaced:
+            return "<pre class=ve_textarea>%s</pre>" % html.attrencode(value)
+        else:
+            return html.attrencode(value).replace("\n", "<br>")
 
     def render_input(self, varprefix, value):
         if value == None:
@@ -593,12 +597,18 @@ class TextAreaUnicode(TextUnicode):
             attrs = {}
             rows = self._rows
 
+        if self._monospaced:
+            attrs["class"] = "tt"
+
         html.text_area(varprefix, value, rows=rows, cols=self._cols, attrs = attrs)
 
 
     # Overridded because we do not want to strip() here and remove '\r'
     def from_html_vars(self, varprefix):
-        return html.var_utf8(varprefix, "").replace('\r', '')
+        text = html.var_utf8(varprefix, "").replace('\r', '')
+        if text and not text.endswith("\n"):
+            text += "\n" # force newline at end
+        return text
 
 # A variant of TextAscii() that validates a path to a filename that
 # lies in an existing directory.

@@ -1166,7 +1166,8 @@ def create_plugin_context(raw_context, params):
 
 def create_bulk_parameter_context(params):
     dict_context = create_plugin_context({}, params)
-    return [ "%s=%s\n" % e for e in dict_context.items() ]
+    return [ "%s=%s\n" % (varname, value.replace("\r", "").replace("\n", "\1"))
+             for (varname, value) in dict_context.items() ]
 
 
 def plugin_param_to_string(value):
@@ -1467,7 +1468,7 @@ def notify_bulk(dirname, uuids):
             continue
         bulk_context.append("\n")
         for varname, value in context.items():
-            bulk_context.append("%s=%s\n" % (varname, value))
+            bulk_context.append("%s=%s\n" % (varname, value.replace("\r", "").replace("\n", "\1")))
 
         # Do not forget to add this to the monitoring log. We create
         # a single entry for each notification contained in the bulk.

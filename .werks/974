@@ -1,0 +1,14 @@
+Title: New notification plugin for ASCII emails
+Level: 2
+Component: notifications
+Version: 1.2.5i3
+Date: 1400599307
+Class: feature
+
+There is now a new notification script for ASCII emails. Just like the
+HTML email template it is configurable with WATO via host rules and
+notification rules. You can configure several header fields as well
+as the exact body content. It also supports bulk notifications.
+
+This new script obsoletes the plain builtin ASCII emails that are
+now called <i>ASCII email (legacy)</i>.

@@ -949,6 +949,8 @@ def automation_rename_host(args):
     # Start monitoring again. In case of CMC we need to ignore
     # any configuration created by the CMC Rushahead daemon
     if core_was_running:
+        global ignore_ip_lookup_failures
+        ignore_ip_lookup_failures = True # force config generation to succeed. The core *must* start.
         automation_restart("start", use_rushd = False)
         if monitoring_core == "cmc":
             try:
@@ -956,6 +958,9 @@ def automation_rename_host(args):
                 os.remove(var_dir + "/core/config.rush.id")
             except:
                 pass
+
+        if failed_ip_lookups:
+            actions.append("ipfail")
 
     return actions
 
@@ -991,9 +996,14 @@ def omd_rename_host(oldname, newname):
     if rrdcache_running:
         os.system("omd stop rrdcached >/dev/null 2>&1 </dev/null")
 
+    # Fix pathnames in XML files
+    dirpath = omd_root + "/var/pnp4nagios/perfdata/" + oldname
+    os.system("sed -i 's@/perfdata/%s/@/perfdata/%s/@' %s/*.xml" % (oldname, newname, dirpath))
+
     # RRD files
     if rename_host_dir(rrd_path, oldname, newname):
         actions.append("rrd")
+
 
     # entries of rrdcached journal
     dirpath = omd_root + "/var/rrdcached/"
@@ -1043,6 +1053,13 @@ s/(HOST|SERVICE) NOTIFICATION: ([^;]+);%(old)s;/\1 NOTIFICATION: \2;%(new)s;/
         if not os.system("sed -ri 's/^host_name=%s$/host_name=%s/' %s/var/nagios/retention.dat" % (
                     oldregex, newregex, omd_root)):
             actions.append("retention")
+
+    else: # CMC
+        # Create a file "renamed_hosts" with the information about the
+        # renaming of the hosts. The core will honor this file when it
+        # reads the status file with the saved state.
+        file(var_dir + "/core/renamed_hosts", "w").write("%s\n%s\n" % (oldname, newname))
+        actions.append("retention")
 
     # NagVis maps
     if not os.system("sed -i 's/^[[:space:]]*host_name=%s[[:space:]]*$/host_name=%s/' "

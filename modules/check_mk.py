@@ -1207,6 +1207,10 @@ def get_datasource_program(hostname, ipaddress):
     else:
         return programs[0].replace("<IP>", ipaddress).replace("<HOST>", hostname)
 
+# Variables needed during the renaming of hosts (see automation.py)
+ignore_ip_lookup_failures = False
+failed_ip_lookups = []
+
 # Determine the IP address of a host
 def lookup_ipaddress(hostname):
     # Quick hack, where all IP addresses are faked (--fake-dns)
@@ -1982,7 +1986,10 @@ def create_nagios_hostdefs(outfile, hostname):
         ip = lookup_ipaddress(hostname)
     except:
         if not is_clust:
-            raise MKGeneralException("Cannot determine ip address of %s. Please add to ipaddresses." % hostname)
+            if ignore_ip_lookup_failures:
+                failed_ip_lookups.append(hostname)
+            else:
+                raise MKGeneralException("Cannot determine ip address of %s. Please add to ipaddresses." % hostname)
         ip = None
 
     #   _

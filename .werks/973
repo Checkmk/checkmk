@@ -1,0 +1,35 @@
+Title: Renaming of hosts via WATO
+Level: 2
+Component: wato
+Version: 1.2.5i3
+Date: 1400582297
+Class: feature
+
+WATO has now a new function <i>Rename Host</i>. You will find a button with that name
+in the Properties of a host. It allows a renaming of an existing host. Before you
+can use that feature you need to have all changes activated, so nothing is pending.
+
+Renaming a host is a complex precedure that will not only rename the host in WATO,
+but also in:
+
+<ul>
+<li>all rules from <i>Host &amp; Service Parameters</i></li>
+<li>cluster's node definitions</li>
+<li>a host's parent definitions</li>
+<li>Business Intelligence rules</li>
+<li>notification rules (both rule based and flexible notifications)</li>
+<li>internal Check_MK data like caches and performance counters</li>
+<li>auto-disovered services of the host</li>
+<li>logfile information of logwatch plugin</li>
+<li>stored SNMP walks</li>
+<li>RR databases with performance data</li>
+<li>RRD updates in journal of RRD Cache</li>
+<li>spool files of PNP4Nagios</li>
+<li>NagVis maps</li>
+<li>monitoring history entries (events and availability)</li>
+<li>the current monitoring state (including ackowledgements and downtimes)</li>
+</ul>
+
+Please note that renaming of a host involves a temporary stop of the monitoring
+core. This is neccessary in order to avoid situation where the old and the new
+name of a host is being used at the same time.

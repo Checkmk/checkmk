@@ -2266,6 +2266,9 @@ def mode_rename_host(phase):
         if g_folder.get(".lock_hosts"):
             raise MKGeneralException(_("This folder is locked. You cannot rename a host here."))
 
+        if parse_audit_log("pending"):
+            raise MKGeneralException(_("You cannot rename a host while you have pending changes."))
+
         newname = html.var("newname")
         check_new_hostname("newname", newname)
         c = wato_confirm(_("Confirm renaming of host"),
@@ -2273,8 +2276,11 @@ def mode_rename_host(phase):
                            "This involves a restart of the monitoring core!") % 
                          (hostname, newname))
         if c:
-            actions = rename_host(host, newname)
+            # Creating pending entry. That makes the site dirty and that will force a sync of
+            # the config to that site before the automation is being done.
             log_pending(AFFECTED, newname, "rename-host", _("Renamed host %s into %s") % (hostname, newname))
+            actions = rename_host(host, newname) # Already activates the changes!
+            log_commit_pending() # All activated by the underlying rename automation
             html.set_var("host", newname)
             action_txt =  "".join([ "<li>%s</li>" % a for a in actions ])
             return "edithost", _("Renamed host <b>%s</b> into <b>%s</b> at the following places:<br><ul>%s</ul>") % (
@@ -2285,7 +2291,7 @@ def mode_rename_host(phase):
 
     html.help(_("The renaming of hosts is a complex operation since a host's name is being "
                "used as a unique key in various places. It also involves stopping and starting "
-               "of the monitoring core."))
+               "of the monitoring core. You cannot rename a host while you have pending changes."))
     ### html.write("<ul>")
     ### html.write("<li>%s</li>" % _("Name of the host in the WATO folder."))
     ### html.write("<li>%s</li>" % _("Cluster definitions (if the host is the node of a cluster"))
@@ -2311,14 +2317,15 @@ def mode_rename_host(phase):
     html.hidden_fields()
     html.end_form()
 
+def rename_host_in_list(thelist, oldname, newname):
+    did_rename = False
+    for nr, element in enumerate(thelist):
+        if element == oldname:
+            thelist[nr] = newname
+            did_rename = True
+    return did_rename
+
 def rename_host(host, newname):
-    def rename_in_list(thelist):
-        did_rename = False
-        for nr, element in enumerate(thelist):
-            if element == oldname:
-                thelist[nr] = newname
-                did_rename = True
-        return did_rename
 
     actions = []
 
@@ -2339,7 +2346,7 @@ def rename_host(host, newname):
     for somehost in all_hosts.values():
         if ".nodes" in somehost:
             nodes = somehost[".nodes"]
-            if rename_in_list(somehost[".nodes"]):
+            if rename_host_in_list(somehost[".nodes"], oldname, newname):
                 clusters.append(somehost[".name"])
                 folder = somehost['.folder']
                 save_folder_and_hosts(folder)
@@ -2357,7 +2364,7 @@ def rename_host(host, newname):
             rulespec = g_rulespecs[varname]
             for nr, rule in enumerate(rules):
                 value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
-                if rename_in_list(host_list):
+                if rename_host_in_list(host_list, oldname, newname):
                     newrule = construct_rule(rulespec, value, tag_specs, host_list, item_list, rule_options)
                     rules[nr] = newrule
                     changed_rulesets.append(varname)
@@ -2376,6 +2383,13 @@ def rename_host(host, newname):
             actions.append(_("%d WATO rules in ruleset <i>%s</i>") % (
               changed_rulesets.count(varname), g_rulespecs[varname]["title"]))
 
+    # Business Intelligence rules
+    num_bi = rename_host_in_bi(oldname, newname)
+    if num_bi:
+        actions.append(_("%d BI rules and aggregations") % num_bi)
+
+    # Now make sure that the remote site that contains that host is being
+    # synced.
 
     # 3. Check_MK stuff ------------------------------------------------
     # Things like autochecks, counters, etc. This has to be done via an
@@ -2383,6 +2397,7 @@ def rename_host(host, newname):
     # this automation the core will be stopped, after the renaming has
     # taken place a new configuration will be created and the core started
     # again.
+    ip_lookup_failed = True
     for what in check_mk_automation(host[".siteid"], "rename-host", [oldname, newname]):
         if what == "cache":
             actions.append(_("Cached output of monitoring agents"))
@@ -2410,8 +2425,11 @@ def rename_host(host, newname):
             actions.append(_("Monitoring history entries (events and availability)"))
         elif what == "retention":
             actions.append(_("The current monitoring state (including ackowledgements and downtimes)"))
-
-
+        elif what == "ipfail":
+            actions.append("<div class=error>%s</div>" % (_("<b>WARNING:</b> the IP address lookup of "
+                   "<tt>%s</tt> has failed. The core has been started by using the address <tt>0.0.0.0</tt> for the while. "
+                   "You will not be able to activate any changes until you have either updated your "
+                   "DNS or configured an explicit address for <tt>%s</tt>.") % (newname, newname)))
 
     # Notification settings ----------------------------------------------
     # Notification rules - both global and users' ones
@@ -2420,7 +2438,7 @@ def rename_host(host, newname):
         for rule in rules:
             for key in [ "match_hosts", "match_exclude_hosts" ]:
                 if rule.get(key):
-                    if rename_in_list(rule[key]):
+                    if rename_host_in_list(rule[key], oldname, newname):
                         num_changed += 1
         return num_changed
 
@@ -2447,7 +2465,7 @@ def rename_host(host, newname):
             channels_changed = 0
             for channel in method[1]:
                 if channel.get("only_hosts"):
-                    num_changed = rename_in_list(channel["only_hosts"])
+                    num_changed = rename_host_in_list(channel["only_hosts"], oldname, newname)
                     if num_changed:
                         channels_changed += 1
                         some_user_changed = True
@@ -2487,7 +2505,6 @@ def rename_host(host, newname):
                         raise
     if users_changed:
         actions.append(_("%d favorite entries of %d users") % (total_changed, users_changed))
-
 
     call_hook_hosts_changed(g_root_folder)
     return actions
@@ -9840,9 +9857,10 @@ def mode_edit_site(phase):
 
         # Do not forget to add those settings (e.g. "globals") that
         # are not edited with this dialog
-        for key in old_site.keys():
-            if key not in new_site:
-                new_site[key] = old_site[key]
+        if not new:
+            for key in old_site.keys():
+                if key not in new_site:
+                    new_site[key] = old_site[key]
 
         save_sites(sites)
 
@@ -15788,6 +15806,38 @@ def save_bi_rules(aggregations, aggregation_rules):
             out.write("aggregations.append(\n")
         out.write(replace_constants(pprint.pformat(convert_aggregation_to_bi(aggregation))))
         out.write(")\n")
+
+def rename_host_in_bi(oldname, newname):
+    renamed = 0
+    aggregations, rules = load_bi_rules()
+    for aggregation in aggregations:
+        renamed += rename_host_in_bi_aggregation(aggregation, oldname, newname)
+    for rule in rules.values():
+        renamed += rename_host_in_bi_rule(rule, oldname, newname)
+    if renamed:
+        save_bi_rules(aggregations, rules)
+    return renamed
+
+def rename_host_in_bi_aggregation(aggregation, oldname, newname):
+    node = aggregation["node"]
+    if node[0] == 'call':
+        if rename_host_in_list(aggregation["node"][1][1], oldname, newname):
+            return 1
+    return 0
+
+def rename_host_in_bi_rule(rule, oldname, newname):
+    renamed = 0
+    nodes = rule["nodes"]
+    for nr, node in enumerate(nodes):
+        if node[0] in [ "host", "service", "remaining" ]:
+            if node[1][0] == oldname:
+                nodes[nr] = (node[0], ( newname, ) + node[1][1:])
+            renamed = 1
+        elif node[0] == "call":
+            if rename_host_in_list(node[1][1], oldname, newname):
+                renamed = 1
+    return renamed
+
 
 bi_aggregation_functions = {}
 

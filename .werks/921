@@ -1,0 +1,9 @@
+Title: dashboards: fixed bug not updating header timestamp
+Level: 1
+Component: multisite
+Version: 1.2.5i3
+Date: 1400687252
+Class: fix
+
+The header timestamp for dashboards only got updated if there were at least one 'url'-dashlet present.
+If a dashboard only contained links to views the header time was never updated.

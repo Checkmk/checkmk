@@ -151,6 +151,11 @@ function dashboard_scheduler(force) {
         }
     }
     setTimeout(function() { dashboard_scheduler(0); }, 1000);
+    // Update timestamp every minute
+    // Required if there are no refresh_dashlets present or all refresh times are > 60sec
+    if (timestamp % 60 == 0) {
+        updateHeaderTime();
+    }
 }
 
 function dashboard_update_contents(id, code) {

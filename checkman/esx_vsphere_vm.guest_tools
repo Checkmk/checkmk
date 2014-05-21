@@ -21,9 +21,8 @@ inventory:
  On each VM one check is generated.
 
 [parameters]
-parameters (dict): A dictionary with the following keys
-{"guestToolsUnmanaged"}:    1  # default WARN
-{"guestToolsNeedUpgrade"}   1  # default WARN
-{"guestToolsCurrent"}:      0  # default OK
-{"guestToolsNotInstalled"}: 2  # default CRIT
+parameters (dict): A dictionary with the following keys, that define the state of the check in
+ the various possible error conditions. Use {0} for OK, {1} for WARN, {2} for CRIT and {3} for
+ UNKNOWN. The default settings are: {"guestToolsUnmanaged"}: 1, {"guestToolsNeedUpgrade"}:  1,
+ {"guestToolsCurrent"}: 0, {"guestToolsNotInstalled"}: 2
 

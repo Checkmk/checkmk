@@ -43,7 +43,7 @@ def check_fast_lta_silent_cubes_status(item, params, info):
 check_info["fast_lta_silent_cubes.capacity"] = {
     "check_function"        : check_fast_lta_silent_cubes_status,
     "inventory_function"    : inventory_fast_lta_silent_cubes_status,
-    "service_description"   : "Silent Cubes Capacity %s",
+    "service_description"   : "Fast LTA SC Capacity %s",
     "has_perfdata"          : True,
     "group"                 : "filesystem",
     "includes"              : [ "df.include" ],

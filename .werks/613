@@ -1,0 +1,8 @@
+Title: liveproxyd: fewer log messages in case a site is unreachable
+Level: 1
+Component: reporting
+Version: 1.2.5i3
+Date: 1400679878
+Class: fix
+
+

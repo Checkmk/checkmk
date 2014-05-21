@@ -124,7 +124,6 @@
     * 0966 CSV export for availability works now also for BI aggregates
     * 0967 BI Availability timewarp: new buttons for moving back and forth
     * 0962 FIX: Fix CSV-Export in availability table
-    * 0613 FIX: liveproxyd: fewer log messages in case a site is unreachable
 
     Event Console:
     * 0885 New option for writing all messages into a syslog-like logfile...
@@ -136,6 +135,7 @@
 
     Livestatus-Proxy:
     * 0970 FIX: liveproxyd: handle situations with more then 1024 open files...
+    * 0613 FIX: liveproxyd: fewer log messages in case a site is unreachable
 
     HW/SW-Inventory:
     * 0913 lnx_distro: Now able to detect SuSE distributions...

@@ -1,0 +1,8 @@
+Title: fast_lta_silent_cubes.capacity: New check for Total Capacity over all Silent Cubes on FAST LTA Storage Systems
+Level: 2
+Component: checks
+Version: 1.2.5i3
+Date: 1400660881
+Class: feature
+
+

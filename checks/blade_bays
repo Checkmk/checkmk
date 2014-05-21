@@ -59,6 +59,8 @@ def check_blade_bays(item, _no_params, info):
                     (blade_bays_module_state.get(state, 'Unhandled'), type, line[3]))
             elif state == 2:
                 return (1, "Not present")
+            elif state == 3:
+                return (1, "Device is switched off")
             elif state == 0:
                 return (1, "Device is in standby")
             else:

@@ -1,0 +1,8 @@
+Title: blade_bays: now also detects if blade server is switched off
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1400676633
+Class: feature
+
+

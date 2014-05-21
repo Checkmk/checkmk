@@ -54,6 +54,7 @@
     * 0957 fast_lta_silent_cubes.capacity: New check for Total Capacity over all Silent Cubes on FAST LTA Storage Systems
     * 0975 esx_vsphere_vm.guest_tools: renamed check (formerly esx_vsphere_vm.guestTools)...
             NOTE: Please refer to the migration notes!
+    * 0920 blade_bays: now also detects if blade server is switched off
     * 0777 FIX: special agent emcvnx: did not work with security file authentication...
     * 0786 FIX: zfsget: fixed compatibility with older Solaris agents...
     * 0809 FIX: brocade_fcport: Fixed recently introduced problem with port speed detection
@@ -80,6 +81,7 @@
     * 0969 FIX: blade_health: correctly output error message in non-OK state
     * 0611 FIX: nfsexports.solaris: fix in determination of path prefix
     * 0953 FIX: brocade_mlx_temp: special treatment for devices sometimes not delivering temperature by SNMP
+    * 0958 FIX: df.include: failed for checks with grouping patterns...
 
     Multisite:
     * 0779 Hostgroups (Summary): Empty hostgroups are no longer shown (can be re-enabled by filter)

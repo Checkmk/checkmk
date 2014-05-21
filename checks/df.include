@@ -252,8 +252,8 @@ def df_check_filesystem_list(item, params, fslist_blocks, fslist_inodes = None):
         total_blocks_size   = 0
         total_blocks_avail  = 0
         total_inodes        = 0
-        total_inodse_avail  = 0
-        for idx, (mp, size_mb, avail_mb) in enumerate(fslist_block):
+        total_inodes_avail  = 0
+        for idx, (mp, size_mb, avail_mb) in enumerate(fslist_blocks):
             for pattern in patterns:
                 if fnmatch.fnmatch(mp, pattern):
                     count += 1
@@ -268,7 +268,7 @@ def df_check_filesystem_list(item, params, fslist_blocks, fslist_inodes = None):
         if count == 0:
             return (3, "No filesystem matching the patterns")
         else:
-            status, infotext, perfdata = df_check_filesystem_single(g_hostname, item, total_size, total_avail, params)
+            status, infotext, perfdata = df_check_filesystem_single(g_hostname, item, total_blocks_size, total_blocks_avail, total_inodes, total_inodes_avail, params)
             infotext += " (%d filesystems)" % count
             return status, infotext, perfdata
     else:

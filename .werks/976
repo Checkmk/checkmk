@@ -1,0 +1,17 @@
+Title: Show preview of active and custom checks in WATO services table
+Level: 2
+Component: wato
+Version: 1.2.5i3
+Date: 1400679742
+Class: feature
+
+In the list of the services of a host now also for active and custom checks
+(i.e. non Check_MK-services) the output of the check plugin is being
+displayed. This is done by a Check_MK executing the check plugin with the
+configured arguments instead of the monitoring core.
+
+This can be used to test the outcome of check plugins before any changes
+are being activated.
+
+Note: because of issues with permissions and pathnames this feature only
+works on OMD based platforms.

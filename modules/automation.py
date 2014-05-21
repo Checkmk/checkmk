@@ -51,6 +51,8 @@ def do_automation(cmd, args):
                 result = automation_inventory(args)
             elif cmd == "analyse-service":
                 result = automation_analyse_service(args)
+            elif cmd == "active-check":
+                result = automation_active_check(args)
             elif cmd == "get-autochecks":
                 result = automation_get_autochecks(args)
             elif cmd == "set-autochecks":
@@ -1299,3 +1301,81 @@ def automation_notification_analyse(args):
 def automation_get_bulks(args):
     only_ripe = args[0] == "1"
     return find_bulks(only_ripe)
+
+def automation_active_check(args):
+    hostname, plugin, item = args
+    actchecks = []
+    needed_commands = []
+
+    if plugin == "custom":
+        custchecks = host_extra_conf(hostname, custom_checks)
+        for entry in custchecks:
+            if entry["service_description"] == item:
+                command_line = replace_core_macros(hostname, entry.get("command_line", ""))
+                if command_line:
+                    command_line = autodetect_plugin(command_line)
+                    return execute_check_plugin(command_line)
+    else:
+        rules = active_checks.get(plugin)
+        if rules:
+            entries = host_extra_conf(hostname, rules)
+            if entries:
+                act_info = active_check_info[plugin]
+                for params in entries:
+                    description = act_info["service_description"](params).replace('$HOSTNAME$', hostname)
+                    if description == item:
+                        args = act_info["argument_function"](params)
+                        command_line = replace_core_macros(hostname, act_info["command_line"].replace("$ARG1$", args))
+                        return execute_check_plugin(command_line)
+
+
+def load_resource_cfg(macros):
+    try:
+        for line in file(omd_root + "/etc/nagios/resource.cfg"):
+            line = line.strip()
+            if not line or line[0] == '#':
+                continue
+            varname, value = line.split('=', 1)
+            macros[varname] = value
+    except:
+        if opt_debug:
+            raise
+
+# Simulate replacing some of the more important macros of hosts. We
+# cannot use dynamic macros, of course. Note: this will not work
+# without OMD, since we do not know the value of $USER1$ and $USER2$
+# here. We could read the Nagios resource.cfg file, but we do not
+# know for sure the place of that either.
+def replace_core_macros(hostname, commandline):
+    macros  = {
+        "$HOSTNAME$"    : hostname,
+        "$HOSTADDRESS$" : lookup_ipaddress(hostname),
+    }
+    load_resource_cfg(macros)
+    for varname, value in macros.items():
+        commandline = commandline.replace(varname, value)
+    return commandline
+
+
+def execute_check_plugin(commandline):
+    try:
+        p = os.popen(commandline + " 2>&1")
+        output = p.read().strip()
+        ret = p.close()
+        if not ret:
+            status = 0
+        else:
+            if ret & 0xff == 0:
+                status = ret / 256
+            else:
+                status = 3
+        if status < 0 or  status > 3:
+            status = 3
+        output = output.split("|",1)[0] # Drop performance data
+        return status, output
+
+    except Exception, e:
+        if opt_debug:
+            raise
+        return 3, "UNKNOWN - Cannot execute command: %s" % e
+

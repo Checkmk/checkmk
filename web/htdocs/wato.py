@@ -3237,6 +3237,7 @@ def show_service_table(host, firsttime):
 
     # This option will later be switchable somehow
 
+    divid = 0
     for state_name, state_type, checkbox in [
         ( _("Available (missing) services"), "new", firsttime ),
         ( _("Already configured services"), "old", True, ),
@@ -3272,7 +3273,15 @@ def show_service_table(host, firsttime):
             table.cell(_("Checkplugin"),         ct)
             table.cell(_("Item"),                item)
             table.cell(_("Service Description"), html.attrencode(descr))
-            table.cell(_("Plugin output"),       html.attrencode(output))
+            table.cell(_("Plugin output"))
+
+            if defaults.omd_root and state_type in ( "custom", "active" ):
+                divid += 1
+                html.write("<div id='activecheck%d'><img class=icon title='%s' src='images/icon_reloading.gif'></div>" % (divid, hostname))
+                html.final_javascript("execute_active_check('%s', '%s', '%s', '%s', 'activecheck%d');" % (
+                     host[".siteid"] or '', hostname, ct, item.replace("'", "\'"), divid))
+            else:
+                html.write(html.attrencode(output))
 
             # Icon for Rule editor, Check parameters
             varname = None
@@ -3345,6 +3354,16 @@ def show_service_table(host, firsttime):
 
     table.end()
     html.end_form()
+
+
+def ajax_execute_check():
+    site      = html.var("site")
+    hostname  = html.var("host")
+    checktype = html.var("checktype")
+    item      = html.var("item")
+    status, output = check_mk_automation(site, "active-check", [ hostname, checktype, item ])
+    statename = nagios_short_state_names.get(status, "UNKN")
+    html.write("%d\n%s\n%s" % (status, statename, output))
 
 
 #.

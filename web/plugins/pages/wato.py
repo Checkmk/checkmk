@@ -27,13 +27,14 @@
 import wato
 
 pagehandlers.update({
-    "wato"                   : wato.page_handler,
-    "wato_ajax_replication"  : wato.ajax_replication,
-    "wato_ajax_activation"   : wato.ajax_activation,
-    "automation_login"       : wato.page_automation_login,
-    "automation"             : wato.page_automation,
-    "user_profile"           : wato.page_user_profile,
-    "ajax_set_foldertree"    : wato.ajax_set_foldertree,
-    "wato_ajax_diag_host"    : wato.ajax_diag_host,
-    "wato_ajax_profile_repl" : wato.ajax_profile_repl,
+    "wato"                    : wato.page_handler,
+    "wato_ajax_replication"   : wato.ajax_replication,
+    "wato_ajax_activation"    : wato.ajax_activation,
+    "automation_login"        : wato.page_automation_login,
+    "automation"              : wato.page_automation,
+    "user_profile"            : wato.page_user_profile,
+    "ajax_set_foldertree"     : wato.ajax_set_foldertree,
+    "wato_ajax_diag_host"     : wato.ajax_diag_host,
+    "wato_ajax_profile_repl"  : wato.ajax_profile_repl,
+    "wato_ajax_execute_check" : wato.ajax_execute_check,
 })

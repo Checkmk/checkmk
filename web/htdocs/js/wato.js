@@ -823,3 +823,45 @@ function start_host_diag_test(ident, hostname, transid) {
             + '&_transid=' + transid + vars,
               handle_host_diag_result, ident);
 }
+
+// .-Active Checks---------------------------------------------------------.
+// |       _        _   _              ____ _               _              |
+// |      / \   ___| |_(_)_   _____   / ___| |__   ___  ___| | _____       |
+// |     / _ \ / __| __| \ \ / / _ \ | |   | '_ \ / _ \/ __| |/ / __|      |
+// |    / ___ \ (__| |_| |\ V /  __/ | |___| | | |  __/ (__|   <\__ \      |
+// |   /_/   \_\___|\__|_| \_/ \___|  \____|_| |_|\___|\___|_|\_\___/      |
+// |                                                                       |
+// '-----------------------------------------------------------------------'
+
+function execute_active_check(site, hostname, checktype, item, divid)
+{
+    var oDiv = document.getElementById(divid);
+    var url = "wato_ajax_execute_check.py?" +
+           "site="       + escape(site) +
+           "&host="      + escape(hostname)  +
+           "&checktype=" + escape(checktype) +
+           "&item="      + escape(item);
+    get_url(url, handle_execute_active_check, oDiv);
+}
+
+
+function handle_execute_active_check(oDiv, response_text)
+{
+    // Response is STATUS\nOUTPUT
+    var parts = response_text.split("\n", 3);
+    var state = parts[0];
+    var statename = parts[1];
+    var output = parts[2];
+    oDiv.innerHTML = output;
+
+    // Change name and class of status columns
+    var oTr = oDiv.parentNode.parentNode;
+    if (hasClass(oTr, "even0"))
+        var rowtype = "even";
+    else
+        var rowtype = "odd";
+    oTr.className = "data " + rowtype + state;
+    var oTdState = oTr.childNodes[1]; // 0 is a text node due to a \n
+    oTdState.className = "state statesvc state" + state;
+    oTdState.innerHTML = statename;
+}

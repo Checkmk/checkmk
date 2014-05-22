@@ -217,8 +217,8 @@ def inv_dmidecode_parse_mem_device(lines):
 
     if device["size"] != "No Module Installed":
         # Convert speed and size into numbers
-        device["speed"] = dmidecode_parse_speed(device["speed"])
-        device["size"] = dmidecode_parse_size(device["size"])
+        device["speed"] = dmidecode_parse_speed(device.get("speed", "Unknown"))
+        device["size"] = dmidecode_parse_size(device.get("size", "Unknown"))
         array["devices"].append(device)
 
 
@@ -262,6 +262,8 @@ def dmidecode_parse_speed(v): # into Hz (float)
         return float(parts[0])
 
 def dmidecode_parse_voltage(v):
+    if v == "Unknown":
+        return None
     return float(v.split()[0])
 
 def dmidecode_parse_time(v): # 155 ns

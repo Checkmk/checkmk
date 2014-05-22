@@ -143,6 +143,7 @@
     * 0913 lnx_distro: Now able to detect SuSE distributions...
     * 0610 mk_inventory: windows inventory check now included, install date added to data
     * 0886 FIX: Fix exception on non-UTF-8 encoded characters in software list
+    * 0922 FIX: dmidecode: fixed exceptions on missing/unknown data
 
 
 1.2.5i2:

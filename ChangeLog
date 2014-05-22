@@ -126,6 +126,7 @@
     * 0966 CSV export for availability works now also for BI aggregates
     * 0967 BI Availability timewarp: new buttons for moving back and forth
     * 0962 FIX: Fix CSV-Export in availability table
+    * 0890 FIX: Fix availability computation for hosts...
 
     Event Console:
     * 0885 New option for writing all messages into a syslog-like logfile...

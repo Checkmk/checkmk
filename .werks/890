@@ -1,0 +1,10 @@
+Title: Fix availability computation for hosts
+Level: 2
+Component: reporting
+Class: fix
+State: unknown
+Version: 1.2.5i3
+Date: 1400747938
+
+The host state "down" was classified as "host_down". This lead to incorrect numbers
+for host availability.

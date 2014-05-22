@@ -1,0 +1,8 @@
+Title: dmidecode: fixed exceptions on missing/unknown data
+Level: 1
+Component: inv
+Version: 1.2.5i3
+Date: 1400766476
+Class: fix
+
+

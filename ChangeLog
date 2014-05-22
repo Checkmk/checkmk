@@ -24,6 +24,7 @@
 
     Reporting & Availability:
     * 0890 FIX: Fix availability computation for hosts...
+    * 0891 FIX: Fix HTML encoding of tootip in inline timeline of availability
 
     Event Console:
     * 0902 FIX: event console view: fixed exception on rendering host tags for unknown hosts...

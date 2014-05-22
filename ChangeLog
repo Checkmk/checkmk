@@ -22,6 +22,9 @@
     BI:
     * 0882 FIX: check_bi_local.py: fix crash in case of non-ascii characters...
 
+    Reporting & Availability:
+    * 0890 FIX: Fix availability computation for hosts...
+
     Event Console:
     * 0902 FIX: event console view: fixed exception on rendering host tags for unknown hosts...
 

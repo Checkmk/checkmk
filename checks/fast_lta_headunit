@@ -65,6 +65,9 @@ def check_fast_lta_headunit_status(item, _no_params, info):
 
     if info[0][0][0] == "60":
         status = 0
+    elif info[0][0][0] == "70" and info[0][0][1] == "0":
+        # on Slave node appReadOnly is also an ok state
+        status = 0
     else:
         status = 2
 

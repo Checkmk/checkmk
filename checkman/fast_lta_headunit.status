@@ -6,6 +6,7 @@ distribution: check_mk
 description:
  Checks the Head Unit Status of a FAST LTA Storage System.
  Returns {OK} on status {appReady} and {CRIT} on every other.
+ On the slave node status {appReadOnly} is {OK} too.
 
 inventory:
  Finds exactly one check on every system (head unit).

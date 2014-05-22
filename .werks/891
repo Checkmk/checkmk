@@ -1,0 +1,9 @@
+Title: Fix HTML encoding of tootip in inline timeline of availability
+Level: 1
+Component: reporting
+Class: fix
+State: unknown
+Version: 1.2.5i3
+Date: 1400748002
+
+

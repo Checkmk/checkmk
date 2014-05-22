@@ -1329,7 +1329,7 @@ def automation_active_check(args):
                         return execute_check_plugin(command_line)
 
 
-def load_resource_cfg(macros):
+def load_resource_file(macros):
     try:
         for line in file(omd_root + "/etc/nagios/resource.cfg"):
             line = line.strip()
@@ -1351,7 +1351,7 @@ def replace_core_macros(hostname, commandline):
         "$HOSTNAME$"    : hostname,
         "$HOSTADDRESS$" : lookup_ipaddress(hostname),
     }
-    load_resource_cfg(macros)
+    load_resource_file(macros)
     for varname, value in macros.items():
         commandline = commandline.replace(varname, value)
     return commandline

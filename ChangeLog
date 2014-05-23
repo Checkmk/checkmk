@@ -83,6 +83,7 @@
     * 0611 FIX: nfsexports.solaris: fix in determination of path prefix
     * 0953 FIX: brocade_mlx_temp: special treatment for devices sometimes not delivering temperature by SNMP
     * 0958 FIX: df.include: failed for checks with grouping patterns...
+    * 0924 FIX: windows agent: now able to execute python scripts again
 
     Multisite:
     * 0779 Hostgroups (Summary): Empty hostgroups are no longer shown (can be re-enabled by filter)

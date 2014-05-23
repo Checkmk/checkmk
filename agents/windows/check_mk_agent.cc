@@ -2466,6 +2466,11 @@ char *add_interpreter(char *path, char *newpath)
         snprintf(newpath, 256, "perl.exe \"%s\"", path);
         return newpath;
     }
+    else if (!strcmp(path + strlen(path) - 3, ".py")) {
+        // Python scripts get python interpreter
+        snprintf(newpath, 256, "python.exe \"%s\"", path);
+        return newpath;
+    }
     else {
         snprintf(newpath, 256, "\"%s\"", path);
         return newpath;

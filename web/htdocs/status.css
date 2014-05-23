@@ -96,6 +96,8 @@ b.stmark {
     border-radius: 4px;
     font-size: 7pt;
     border: 1px solid #666;
+    position: relative;
+    top: -1px;
 }
 
 /* inline icon in plugin output for URLs */

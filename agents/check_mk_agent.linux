@@ -512,6 +512,12 @@ if ls /sys/class/thermal/thermal_zone* >/dev/null 2>&1; then
     done
 fi
 
+# Libelle Business Shadow
+if type trd >/dev/null; then
+   echo "<<<libelle_business_shadow:sep(58)>>>"
+   trd -s
+fi
+
 # MK's Remote Plugin Executor
 if [ -e "$MK_CONFDIR/mrpe.cfg" ]
 then

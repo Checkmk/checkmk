@@ -127,6 +127,13 @@ for hba in /dev/fcd* ; do
                       -e "Code version" -e "Hardware Path" -e "Port World"
 done
 
+# Libelle Business Shadow
+if type trd >/dev/null 2>&1
+then
+  echo '<<<libelle_business_shadow:sep(58)>>>'
+  trd -s
+fi
+
 
 # Einbinden von lokalen Plugins, die eine eigene Sektion ausgeben
 if cd $PLUGINSDIR

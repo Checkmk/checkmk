@@ -251,6 +251,12 @@ then
            }'
 fi
 
+# Libelle Business Shadow
+if type trd >/dev/null 2>&1
+then
+    echo '<<<libelle_business_shadow:sep(58)>>>'
+    trd -s
+fi
 
 
 # MK's Remote Plugin Executor

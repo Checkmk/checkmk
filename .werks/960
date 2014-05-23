@@ -1,0 +1,8 @@
+Title: libelle_business_shadow.archive_dir: New check for the Archive Dir of Libelle Business Shadow
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1400870806
+Class: feature
+
+checks the total / used capacity

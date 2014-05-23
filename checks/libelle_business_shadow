@@ -230,6 +230,21 @@
 
 #.
 
+def check_libelle_business_shadow_to_mb(size):
+    if size.endswith("MB"):
+       size = int(float(size.replace("MB", "")))
+    elif size.endswith("GB"):
+       size = int(float(size.replace("GB", ""))) * 1024
+    elif size.endswith("TB"):
+       size = int(float(size.replace("TB", ""))) * 1024 * 1024
+    elif size.endswith("PB"):
+       size = int(float(size.replace("PB", ""))) * 1024 * 1024 * 1024
+    elif size.endswith("EB"):
+       size = int(float(size.replace("EB", ""))) * 1024 * 1024 * 1024 * 1024
+    else:
+       size = int(float(size))
+    return size
+
 # parses agent output into a dict
 def check_libelle_business_shadow_parse(info):
     parsed = {}
@@ -246,6 +261,10 @@ def check_libelle_business_shadow_parse(info):
             line[0].startswith("trdarchiver   ") ):
             parsed["process"] = re.sub(" +$", "", line[0])
             parsed["process_status"] = re.sub("^[0-9]+ +", "", line[3])
+        elif len(line) > 1 and line[0].startswith("Archive-Dir total   "):
+            parsed["arch_total_mb"] = check_libelle_business_shadow_to_mb(re.sub(" ", "", line[1]))
+        elif len(line) > 1 and line[0].startswith("Archive-Dir free   "):
+            parsed["arch_free_mb"] = check_libelle_business_shadow_to_mb(re.sub(" ", "", line[1]))
     return parsed
 
 #   .--info----------------------------------------------------------------.
@@ -352,6 +371,40 @@ check_info["libelle_business_shadow.process"] = {
     "inventory_function"    : inventory_libelle_business_shadow_process,
     "service_description"   : "Libelle Business Shadow Process",
     "has_perfdata"          : False,
+}
+
+#.
+#   .--archive dir---------------------------------------------------------.
+#   |                          _     _                 _ _                 |
+#   |            __ _ _ __ ___| |__ (_)_   _____    __| (_)_ __            |
+#   |           / _` | '__/ __| '_ \| \ \ / / _ \  / _` | | '__|           |
+#   |          | (_| | | | (__| | | | |\ V /  __/ | (_| | | |              |
+#   |           \__,_|_|  \___|_| |_|_| \_/ \___|  \__,_|_|_|              |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_libelle_business_shadow_archive_dir(info):
+    parsed = check_libelle_business_shadow_parse(info)
+    if "arch_total_mb" in parsed.keys() and "arch_free_mb" in parsed.keys():
+        return [ ("Archive Dir", {}) ]
+    else:
+        return []
+
+def check_libelle_business_shadow_archive_dir(item, params, info):
+    parsed = check_libelle_business_shadow_parse(info)
+    fslist = []
+    fslist.append((item, parsed["arch_total_mb"], parsed["arch_free_mb"]))
+
+    return df_check_filesystem_list(item, params, fslist)
+
+
+check_info["libelle_business_shadow.archive_dir"] = {
+    "check_function"        : check_libelle_business_shadow_archive_dir,
+    "inventory_function"    : inventory_libelle_business_shadow_archive_dir,
+    "service_description"   : "Libelle Business Shadow %s",
+    "has_perfdata"          : True,
+    "group"                 : "filesystem",
+    "includes"              : [ "df.include" ],
 }
 
 #.

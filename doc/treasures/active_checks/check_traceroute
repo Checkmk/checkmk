@@ -63,15 +63,17 @@ import os, sys, getopt, subprocess
 def option_to_state(c):
     return { "w" : 1, "c" : 2 }[c.lower()]
 
-def check_traceroute(target, routes, nodns):
+def check_traceroute(target, routes, nodns, method):
     args = ["traceroute"]
     if nodns:
         args.append("-n")
+    if method:
+        args.append(method)
     args.append(target)
     p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=False)
     sto, ste = p.communicate()
     if p.returncode:
-        return 3, "UNKNOWN - " + ste.replace("\n", " ")
+        return 3, "UNKNOWN - " + ste.replace("\n", " "), ""
 
     # find all visited routers
     routers = set([])
@@ -123,6 +125,8 @@ Other options:
  -h, --help     show this help and exit
  --debug        show Python exceptions verbosely
  -n             disable reverse DNS lookups
+ -I             Use ICMP ECHO for probes
+ -T             Use TCP SYN for probes
 
 """
 
@@ -131,8 +135,9 @@ os.unsetenv("LANG")
 opt_verbose       = 0
 opt_debug         = False
 opt_nodns         = False
+opt_method        = None
 
-short_options = "hw:W:c:C:n"
+short_options = "hw:W:c:C:nTI"
 long_options = [ "verbose", "help", "debug", ]
 
 routes = []
@@ -150,6 +155,8 @@ try:
             routes.append((o[1], a))
         elif o == '-n':
             opt_nodns = True
+        elif o in [ '-T', '-I' ]:
+            opt_method = o
 
     # now handle action options
     for o, a in opts:
@@ -162,7 +169,7 @@ try:
 
     target = args[0]
 
-    status, output, long_output = check_traceroute(target, routes, opt_nodns)
+    status, output, long_output = check_traceroute(target, routes, opt_nodns, opt_method)
     sys.stdout.write(output.strip() + "\n" + long_output)
     sys.exit(status)
 

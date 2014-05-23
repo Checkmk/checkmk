@@ -1353,8 +1353,18 @@ register_rule(group,
                   add_label = _("Add Condition"),
               )
             ),
+            ( "method",
+              DropdownChoice(
+                  title = _("Method or probing"),
+                  choices = [
+                      ( None,   _("UDP (default behaviour of tcpdump)") ),
+                      ( "icmp", _("ICMP Echo Request") ),
+                      ( "tcp",  _("TCP SYN") ),
+                  ]
+              )
+            ),
         ],
-        required_keys = [ "dns", "routers" ],
+        optional_keys = False,
     ),
     match = 'all'
 )

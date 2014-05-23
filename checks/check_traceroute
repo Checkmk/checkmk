@@ -28,6 +28,13 @@ def check_traceroute_arguments(params):
     args = ""
     if params["dns"]:
         args += "-n "
+    method = params["method"]
+    if method == "icmp":
+        args += "-I "
+    elif method == "tcp":
+        args += "-T "
+    # else: None -> default method
+
     for router, state in params["routers"]:
         args += "-%s %s " % (state, quote_shell_string(router))
     args += '"$HOSTADDRESS$"'

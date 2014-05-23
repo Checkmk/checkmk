@@ -95,6 +95,7 @@
     * 0811 FIX: Fixed handling of exceptions occuring before login in debug mode
     * 0912 FIX: Multisite Views: Fixed bug where custom views could not get deleted
     * 0921 FIX: dashboards: fixed bug not updating header timestamp...
+    * 0923 FIX: json export: fixed bug not stripping html tags from output
 
     WATO:
     * 0784 Improved security of WATO bulk inventory by using transaction ids

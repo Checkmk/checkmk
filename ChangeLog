@@ -10,6 +10,7 @@
 
     Multisite:
     * 0912 FIX: Multisite Views: Fixed bug where custom views could not get deleted
+    * 0923 FIX: json export: fixed bug not stripping html tags from output
 
     WATO:
     * 0904 FIX: Fixed exception in host parameter overview...

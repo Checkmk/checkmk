@@ -11,6 +11,7 @@
 
     Multisite:
     * 0912 FIX: Multisite Views: Fixed bug where custom views could not get deleted
+    * 0923 FIX: json export: fixed bug not stripping html tags from output
 
     WATO:
     * 0971 FIX: Fix missing authentication of PHP addons in D-WATO when activation mode is reload...

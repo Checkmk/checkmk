@@ -1,0 +1,27 @@
+Title: ps: improved/fixed calculation of CPU utilization (linux)
+Level: 2
+Component: checks
+Version: 1.2.5i3
+Date: 1401100287
+Class: feature
+
+Previously, the CPU utilization value was taken from the output <tt>pcpu</tt> from
+the ps command. This value didn't reflect the exact utilization since the last check
+because its definition is <br>
+<pre>
+CPU usage is currently expressed as the percentage of time spent running
+during the entire lifetime of a process.  This is not ideal, and it does not
+conform to the standards that ps otherwise conforms to.  CPU usage is
+unlikely to add up to exactly 100%.
+</pre>
+
+The evaluation of the <tt>pcpu</tt> field has been removed and got replaced
+by the field <tt>cputime</tt>, which reflects the number of cpu seconds since program start.
+With the <tt>cputime</tt> we are able to determine the correct value.
+
+To utilize this new calculation method, you need to update the check_mk_agent on the target host.
+The ps check itself is able to handle both formats, <tt>pcpu</tt> and <tt>cputime</tt>.
+
+<br>
+Note: This bug only applied to hosts using the linux check_mk_agent
+

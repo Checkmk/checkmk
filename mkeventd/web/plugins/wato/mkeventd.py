@@ -1994,9 +1994,17 @@ register_rule(
     match = 'all',
 )
 
-sl_help = _("This rule set is useful if you send your monitoring notifications "
-            "into the Event Console. A service level set by this rule will be "
-            "used as the service level of the resulting event in the Event Console.")
+sl_help = _("A service level is a number that describes the business impact of a host or "
+            "service. This level can be used in rules for notifications, as a filter in "
+            "views or as a criteria in rules for the Event Console. A higher service level "
+            "is assumed to be more business critical. This ruleset allows to assign service "
+            "levels to hosts and/or services. Note: if you assign a service level to "
+            "a host with the ruleset <i>Service Level of hosts</i>, then this level is "
+            "inherited to all services that do <b>not</b> have explicitely assigned a service "
+            "with the ruleset <i>Service Level of services</i>. Assigning no service level "
+            "is equal to defining a level of 0.<br><br>The list of available service "
+            "levels is configured via a <a href='%s'>global option.</a>" %
+            "wato.py?varname=mkeventd_service_levels&mode=edit_configvar")
 
 register_rule(
     "grouping",

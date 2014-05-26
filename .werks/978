@@ -24,3 +24,14 @@ RP:mkdir -p /var/lib/check_mk_agent/job
 RP:chown foo.foo /var/lib/check_mk_agent/job
 C-:
 
+If you update the Check_MK Agent with RPMs/DEB from the new agent bakery or by
+an RPM/DEB created from the source code with <tt>make rpm</tt> or <tt>make deb</tt>
+then the permissions of <tt>/var/lib/check_mk_agent/job</tt> are automatically
+fixed.
+
+If you have installed the agent manually then please make sure that the permissions
+of the job directory are set properly:
+
+C+:
+RP:chmod 755 /var/lib/check_mk_agent/job
+C-:

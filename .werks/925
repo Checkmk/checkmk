@@ -1,4 +1,4 @@
-Title: ps: improved/fixed calculation of CPU utilization
+Title: ps: improved/fixed calculation of CPU utilization (linux)
 Level: 2
 Component: checks
 Version: 1.2.5i3
@@ -21,4 +21,7 @@ With the <tt>cputime</tt> we are able to determine the correct value.
 
 To utilize this new calculation method, you need to update the check_mk_agent on the target host.
 The ps check itself is able to handle both formats, <tt>pcpu</tt> and <tt>cputime</tt>.
+
+<br>
+Note: This bug only applied to hosts using the linux check_mk_agent
 

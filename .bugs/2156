@@ -1,0 +1,16 @@
+Title: Do always create contact groups, even if no host/service is contained
+Component: core
+State: open
+Date: 2014-05-26 14:18:35
+Targetversion: future
+Class: bug
+
+The rule based notifications allow the selection of a contact group as
+a rule's contact selection. If you create contact groups with WATO that do
+not contain any host or service then these groups will not be created with
+the Nagios core - and thus the notification will not be sent out. The
+Micro Core is not affected as it seems.
+
+Beware: an unpatched Nagios might not consider this as a valid configuration.
+If that is the case then we need a global config option. We then set this
+option to True for OMD installations and patch Nagios in OMD.

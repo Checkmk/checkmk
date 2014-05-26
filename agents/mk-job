@@ -39,12 +39,18 @@ if [ $# -lt 2 ]; then
     exit 1
 fi
 
-OUTPUT_PATH=/var/lib/check_mk_agent/job
+MYSELF=$(id -nu)
+OUTPUT_PATH=/var/lib/check_mk_agent/job/$MYSELF
 IDENT=$1
 shift
 
 if [ ! -d "$OUTPUT_PATH" ]; then
-    mkdir -p "$OUTPUT_PATH"
+    if [ "$MYSELF" = root ] ; then
+        mkdir -p "$OUTPUT_PATH"
+    else
+        echo "ERROR: Missing output directory $OUTPUT_PATH for non-root user '$MYSELF'." >&2
+        exit 1
+    fi
 fi
 
 if ! type $1 >/dev/null 2>&1; then

@@ -118,6 +118,7 @@ perfometers["check_mk-emcvnx_raidgroups.capacity"] = perfometer_check_mk_df
 perfometers["check_mk-emcvnx_raidgroups.capacity_contiguous"] = perfometer_check_mk_df
 perfometers["check_mk-ibm_svc_mdiskgrp"] = perfometer_check_mk_df
 perfometers["check_mk-fast_lta_silent_cubes.capacity"] = perfometer_check_mk_df
+perfometers["check_mk-libelle_business_shadow.archive_dir"] = perfometer_check_mk_df
 
 def perfometer_esx_vsphere_datastores(row, check_command, perf_data):
     used_mb        = perf_data[0][1]

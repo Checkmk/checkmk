@@ -1,0 +1,14 @@
+title: Libelle Business Shadow: Active Process
+agents: linux, aix, solaris, hpux
+catalog: app/libelle
+license: GPL
+distribution: check_mk
+description:
+ Checks for an active trdrecover or trdarchive process at Libelle Business
+ Shadow and reports it's status.
+
+ It returns {OK} if one of them is found and has status {RUN}.
+ {CRIT} is returned otherwise.
+
+inventory:
+ Creates exactly one check per device.

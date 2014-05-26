@@ -82,6 +82,7 @@
     * 0611 FIX: nfsexports.solaris: fix in determination of path prefix
     * 0953 FIX: brocade_mlx_temp: special treatment for devices sometimes not delivering temperature by SNMP
     * 0958 FIX: df.include: failed for checks with grouping patterns...
+    * 0614 FIX: cmciii.temp, cmciii.humidity: fixed bugs to get performance data back
 
     Multisite:
     * 0779 Hostgroups (Summary): Empty hostgroups are no longer shown (can be re-enabled by filter)

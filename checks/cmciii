@@ -463,6 +463,9 @@ def parse_temp(val):
         # is encoded string
         val = re.sub(" ","", val).decode("hex")
     val, t_unit = val.split(" ", 1)
+    # omit special characters in unit, because they
+    # cause problems in rrdtools
+    t_unit = re.sub("[^\w]","", t_unit)
     return val, t_unit
 
 def check_cmciii_temp(item, params, info):
@@ -706,7 +709,7 @@ def check_cmciii_humidity(item, params, info):
     else:
         state = 2
 
-    perfdata = [ ("hum", value+"%", 0, 0 ) ]
+    perfdata = [ ("hum", value, 0, 0 ) ]
 
     infotext =  "%s %s%% %s - Limits low %s/%s high %s/%s, Offset %s" % \
                          ( descr, value, status, lowalarm, lowwarning, highwarning, highalarm, offset )
@@ -719,5 +722,6 @@ check_info['cmciii.humidity'] = {
     "service_description" : "%s",
     "snmp_scan_function"  : cmciii_scan,
     "snmp_info"           : cmciii_snmp_info,
+    "has_perfdata"        : True,
 }
 #.

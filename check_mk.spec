@@ -195,7 +195,7 @@ rm -rf $RPM_BUILD_ROOT
 %dir /usr/lib/check_mk_agent/local
 %dir /usr/lib/check_mk_agent/plugins
 %dir /var/lib/check_mk_agent
-%dir %attr(1777,-,-)/var/lib/check_mk_agent/job
+%dir /var/lib/check_mk_agent/job
 
 %files agent-scriptless
 %config(noreplace) /etc/xinetd.d/check_mk

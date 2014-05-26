@@ -1311,3 +1311,60 @@ register_rule(group,
     ),
     match = 'all'
 )
+
+register_rule(group,
+    "active_checks:traceroute",
+    Dictionary(
+        title = _("Check current routing (uses <tt>traceroute</tt>)"),
+        help = _("This active check uses <tt>traceroute</tt> in order to determine the current "
+                 "routing from the monitoring host to the target host. You can specify any number "
+                 "of missing or expected routes in that way detect e.g. an (unintended) failover "
+                 "to a secondary route."),
+        elements = [
+            ( "dns",
+              Checkbox(
+                  title = _("Name resolution"),
+                  label = _("Use DNS to convert IP addresses into hostnames"),
+                  help = _("If you use this option, then <tt>traceroute</tt> is <b>not</b> being "
+                           "called with the option <tt>-n</tt>. That means that all IP addresses "
+                           "are tried to be converted into names. This usually adds additional "
+                           "execution time. Also DNS resolution might fail for some addresses."),
+            )),
+            ( "routers",
+              ListOf(
+                  Tuple(
+                      elements = [
+                          TextAscii(
+                              title = _("Router (FQDN, IP-Address)"),
+                              allow_empty = False,
+                          ),
+                          DropdownChoice(
+                              title = _("How"),
+                              choices = [
+                                 ( 'W', _("WARN - if this router is not being used") ),
+                                 ( 'C', _("CRIT - if this router is not being used") ),
+                                 ( 'w', _("WARN - if this router is being used") ),
+                                 ( 'c', _("CRIT - if this router is being used") ),
+                              ]
+                         ),
+                      ]
+                  ),
+                  title = _("Router that must or must not be used"),
+                  add_label = _("Add Condition"),
+              )
+            ),
+            ( "method",
+              DropdownChoice(
+                  title = _("Method or probing"),
+                  choices = [
+                      ( None,   _("UDP (default behaviour of tcpdump)") ),
+                      ( "icmp", _("ICMP Echo Request") ),
+                      ( "tcp",  _("TCP SYN") ),
+                  ]
+              )
+            ),
+        ],
+        optional_keys = False,
+    ),
+    match = 'all'
+)

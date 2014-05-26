@@ -239,6 +239,7 @@ function post_url(url, params) {
     AJAX.send(params);
 }
 
+
 function bulkUpdateContents(ids, codes) {
     var codes = eval(codes);
     for (var i = 0, len = ids.length; i < len; i++) {

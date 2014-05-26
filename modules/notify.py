@@ -767,7 +767,7 @@ def rbn_match_servicelevel(rule, context):
 def rbn_match_host_event(rule, context):
     if "match_host_event" in rule:
         if context["WHAT"] != "HOST":
-            if "match_host_event" not in rule:
+            if "match_service_event" not in rule:
                 return "This is a service notification, but the rule just matches host events"
             else:
                 return # Let this be handled by match_service_event

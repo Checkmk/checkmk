@@ -1,0 +1,11 @@
+Title: check_traceroute: new active check for checking presence and absence of routes
+Level: 2
+Component: checks
+Version: 1.2.5i3
+Date: 1400852211
+Class: feature
+
+This check does a traceroute to the target host and checks which route(s)
+are being taken. You can check both for missing and present routes and attach
+WARN or CRIT state to them. traceroute is expected to be in the search path
+and installed with SUID root bit.

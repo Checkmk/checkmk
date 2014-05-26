@@ -1,0 +1,12 @@
+title: Libelle Business Shadow: Status
+agents: linux, aix, solaris, hpux
+catalog: app/libelle
+license: GPL
+distribution: check_mk
+description:
+ Checks the Status of Libelle Business Shadow.
+
+ It returns {OK} on Status {RUN} and {CRIT} otherwise.
+
+inventory:
+ Creates exactly one check per device.

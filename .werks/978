@@ -1,0 +1,37 @@
+Title: Fix security issue with mk-job on Linux
+Level: 2
+Component: checks
+Version: 1.2.5i3
+Date: 1401093260
+Class: incomp
+
+By use of symlinks or hardlinks normal users could inject files to be read
+with root permissions. This was due to the fact that <tt>/var/lib/check_mk_agent/job</tt>
+was installed with the permissions <tt>1777</tt>, just as <tt>/tmp</tt>. That way
+a normal user could have placed a symlink to a file there that is only readable
+by <tt>root</tt>. The content of that file would then appear in the agent output.
+
+This has been fixed by not longer using <tt>/var/lib/check_mk_agent/job</tt> directly,
+but by creating a separate subdirectory below that for each user. This is done by
+a new version of <tt>/usr/bin/mk-job</tt>, so please make sure that if you update
+the agent that you also update <tt>mk-job</tt>.
+
+Also you now have to create job subdirectories for non-<tt>root</tt> jobs manually.
+If you have a job running as user <tt>foo</tt>, then do:
+
+C+:
+RP:mkdir -p /var/lib/check_mk_agent/job
+RP:chown foo.foo /var/lib/check_mk_agent/job
+C-:
+
+If you update the Check_MK Agent with RPMs/DEB from the new agent bakery or by
+an RPM/DEB created from the source code with <tt>make rpm</tt> or <tt>make deb</tt>
+then the permissions of <tt>/var/lib/check_mk_agent/job</tt> are automatically
+fixed.
+
+If you have installed the agent manually then please make sure that the permissions
+of the job directory are set properly:
+
+C+:
+RP:chmod 755 /var/lib/check_mk_agent/job
+C-:

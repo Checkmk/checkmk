@@ -76,13 +76,14 @@ ANY_USER = None
 GRAB_USER = False
 
 def ps_parse_info(info):
-    result = []
+    ps_result = []
     lines = iter(info)
     wmic_info = {}
     use_wmic_info = True
     cpu_cores = 1
+
     try:
-        is_wmic = False
+        is_wmic        = False
         while True:
             line = lines.next()
             if line[-1] == '[wmic process]':
@@ -101,7 +102,7 @@ def ps_parse_info(info):
                     # We need to determine the number of cpu_cores without the wmic_info
                     if line[2].lower() == "system idle process":
                         cpu_cores = int(line[1][1:-1].split(",")[9])
-                result.append(line)
+                ps_result.append(line)
             else:
                 row = dict(zip(wmic_headers, line))
                 wmic_info[(row["node"], row["Name"], row["ProcessId"])] = row
@@ -119,7 +120,7 @@ def ps_parse_info(info):
                     return value
         info = []
         seen_pids = set([]) # Remove duplicate entries
-        for line in result:
+        for line in ps_result:
             psinfo = get_ps_info(line[0], line[1])
             # Get number of CPU cores from system idle process
             if psinfo:
@@ -372,7 +373,21 @@ def check_procs(item, params, info, with_perfdata):
                         percent_cpu += user_perc + kernel_perc
                         handle_count += handle_c
                     else:
-                        percent_cpu += savefloat(addinfo[3])
+                        if ":" in addinfo[3]:
+                            if "-" in addinfo[3]:
+                                tokens     = addinfo[3].split("-")
+                                days       = int(tokens[0])
+                                addinfo[3] = tokens[1]
+                            else:
+                                days = 0
+                            pid = addinfo[4]
+                            hours, minutes, seconds = map(int, addinfo[3].split(":"))
+                            total_seconds = 86400 * days + 3600 * hours + 60 * minutes + seconds
+                            timedif, cputime = get_counter("ps_stat.pcpu.%s" % pid, now, total_seconds)
+                            pcpu = cputime * 100
+                        else:
+                            pcpu = savefloat(addinfo[3])
+                        percent_cpu += pcpu
                     extended_perfdata = True
 
     if "cpulevels" in params:

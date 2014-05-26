@@ -1309,12 +1309,14 @@ def tag_tree_bullet(state, leaf):
 def render_tag_tree_level(taggroups, path, title, tree):
     bullet = tag_tree_bullet(tag_tree_worst_state(tree), False)
     if tag_tree_has_svc_problems(tree):
-        html.plug()
-        url = tag_tree_url(taggroups, path, "svcproblems")
-        html.icon_button(url, _("Show the service problems contained in this branch"), 
-                "svc_problems", target="main") 
-        bullet += html.drain()
-        html.unplug()
+        # We cannot use html.plug() here, since this is not (yet)
+        # reentrant and it is used by the sidebar snapin updater.
+        # So we need to duplicate the code of icon_button here:
+        bullet += ('<a target="main" onfocus="if (this.blur) this.blur();" href="%s">'
+                   '<img align=absmiddle class=iconbutton title="%s" src="images/button_svc_problems_lo.png" '
+                   'onmouseover="hilite_icon(this, 1)" onmouseout="hilite_icon(this, 0)"></a>' % (
+                    tag_tree_url(taggroups, path, "svcproblems"),
+                   _("Show the service problems contained in this branch")))
 
     if path:
         html.begin_foldable_container("tag-tree", ".".join(map(str, path)), False, bullet + title)

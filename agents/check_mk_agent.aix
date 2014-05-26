@@ -114,6 +114,13 @@ echo '<<<aix_lvm>>>'
 echo '<<<tcp_conn_stats>>>'
 netstat -ntfinet | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x]; } }'
 
+# Libelle Business Shadow
+if type trd >/dev/null 2>&1
+then
+  echo '<<<libelle_business_shadow:sep(58)>>>'
+  trd -s
+fi
+
 
 if cd $PLUGINSDIR 2>/dev/null
 then

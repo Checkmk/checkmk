@@ -203,6 +203,8 @@ def do_inv_check(hostname):
             sys.stdout.write("OK - found %d entries\n" % num_entries)
             sys.exit(0)
     except Exception, e:
+        if opt_debug:
+            raise
         sys.stdout.write("WARN - Inventory failed: %s\n" % e)
         sys.exit(1)
 

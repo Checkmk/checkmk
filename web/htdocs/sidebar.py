@@ -645,8 +645,17 @@ def page_edit_bookmark():
 
 def ajax_tag_tree():
     newconf = int(html.var("conf"))
-    tree_conf = config.save_user_file("virtual_host_tree", newconf)
+    tree_conf = config.load_user_file("virtual_host_tree", {"tree": 0, "cwd": {}})
+    if type(tree_conf) == int:
+        tree_conf = {"cwd":{}} # convert from old style
+    tree_conf["tree"] = newconf
+    config.save_user_file("virtual_host_tree", tree_conf)
 
+def ajax_tag_tree_enter():
+    path = html.var("path") and html.var("path").split("|") or []
+    tree_conf = config.load_user_file("virtual_host_tree", {"tree": 0, "cwd": {}})
+    tree_conf["cwd"][tree_conf["tree"]] = path
+    config.save_user_file("virtual_host_tree", tree_conf)
 
 
 #.

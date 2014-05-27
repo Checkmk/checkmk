@@ -1302,24 +1302,44 @@ def tag_tree_url(taggroups, taglist, viewname):
         urlvars.append(("host_tag_%d_val" % nr, tag or ""))
     return html.makeuri_contextless(urlvars, "view.py")
 
-def tag_tree_bullet(state, leaf):
-    return '<div class="tagtree %sstatebullet state%d">&nbsp;</div> ' % ((leaf and "leaf " or ""), state)
+def tag_tree_bullet(state, path, leaf):
+    code = '<div class="tagtree %sstatebullet state%d">&nbsp;</div>' % ((leaf and "leaf " or ""), state)
+    if not leaf:
+        code = '<a title="%s" href="javascript:virtual_host_tree_enter(%r);">' % \
+           (_("Display the tree only below this node"), "|".join(path)) + code + "</a>"
+    return code + " "
 
 
-def render_tag_tree_level(taggroups, path, title, tree):
-    bullet = tag_tree_bullet(tag_tree_worst_state(tree), False)
-    if tag_tree_has_svc_problems(tree):
-        # We cannot use html.plug() here, since this is not (yet)
-        # reentrant and it is used by the sidebar snapin updater.
-        # So we need to duplicate the code of icon_button here:
-        bullet += ('<a target="main" onfocus="if (this.blur) this.blur();" href="%s">'
-                   '<img align=absmiddle class=iconbutton title="%s" src="images/button_svc_problems_lo.png" '
-                   'onmouseover="hilite_icon(this, 1)" onmouseout="hilite_icon(this, 0)"></a>' % (
-                    tag_tree_url(taggroups, path, "svcproblems"),
-                   _("Show the service problems contained in this branch")))
+def is_tag_subdir(path, cwd):
+    if not cwd:
+        return True
+    elif not path:
+        return False
+    elif path[0] != cwd[0]:
+        return False
+    else:
+        return is_tag_subdir(path[1:], cwd[1:])
 
-    if path:
-        html.begin_foldable_container("tag-tree", ".".join(map(str, path)), False, bullet + title)
+def render_tag_tree_level(taggroups, path, cwd, title, tree):
+    if not is_tag_subdir(path, cwd) and not is_tag_subdir(cwd, path):
+        return
+
+    if path != cwd and is_tag_subdir(path, cwd):
+        bullet = tag_tree_bullet(tag_tree_worst_state(tree), path, False)
+        if tag_tree_has_svc_problems(tree):
+            # We cannot use html.plug() here, since this is not (yet)
+            # reentrant and it is used by the sidebar snapin updater.
+            # So we need to duplicate the code of icon_button here:
+            bullet += ('<a target="main" onfocus="if (this.blur) this.blur();" href="%s">'
+                       '<img align=absmiddle class=iconbutton title="%s" src="images/button_svc_problems_lo.png" '
+                       'onmouseover="hilite_icon(this, 1)" onmouseout="hilite_icon(this, 0)"></a>' % (
+                        tag_tree_url(taggroups, path, "svcproblems"),
+                       _("Show the service problems contained in this branch")))
+
+
+        if path:
+            html.begin_foldable_container("tag-tree", ".".join(map(str, path)), False, bullet + title)
+
     items = tree.items()
     items.sort()
 
@@ -1330,18 +1350,19 @@ def render_tag_tree_level(taggroups, path, title, tree):
             title += " (%d)" % subtree["_num_hosts"]
         href = '<a target=main href="%s">%s</a>' % (url, html.attrencode(title))
         if "_num_hosts" in subtree:
-            
-            html.write(tag_tree_bullet(subtree["_state"], True))
-            if subtree.get("_svc_problems"):
-                url = tag_tree_url(taggroups, subpath, "svcproblems")
-                html.icon_button(url, _("Show the service problems contained in this branch"), 
-                        "svc_problems", target="main") 
-            html.write(href)
-            html.write("<br>")
-        else:
-            render_tag_tree_level(taggroups, subpath, href, subtree)
 
-    if path:
+            if is_tag_subdir(path, cwd):
+                html.write(tag_tree_bullet(subtree["_state"], subpath, True))
+                if subtree.get("_svc_problems"):
+                    url = tag_tree_url(taggroups, subpath, "svcproblems")
+                    html.icon_button(url, _("Show the service problems contained in this branch"), 
+                            "svc_problems", target="main") 
+                html.write(href)
+                html.write("<br>")
+        else:
+            render_tag_tree_level(taggroups, subpath, cwd, href, subtree)
+
+    if path and path != cwd and is_tag_subdir(path, cwd):
         html.end_foldable_container()
 
 virtual_host_tree_js = """
@@ -1350,6 +1371,12 @@ function virtual_host_tree_changed(field)
     var tree_conf = field.value;
     // Then send the info to python code via ajax call for persistance
     get_url_sync('sidebar_ajax_tag_tree.py?conf=' + escape(tree_conf));
+    refresh_single_snapin("tag_tree");
+}
+
+function virtual_host_tree_enter(path)
+{
+    get_url_sync('sidebar_ajax_tag_tree_enter.py?path=' + escape(path));
     refresh_single_snapin("tag_tree");
 }
 """
@@ -1361,18 +1388,31 @@ def render_tag_tree():
                      'do this in the global settings for <a target=main href="%s">Multisite</a>.') % url)
         return
 
-    tree_conf = config.load_user_file("virtual_host_tree", 0)
+    tree_conf = config.load_user_file("virtual_host_tree", {"tree": 0, "cwd": {}})
+    if type(tree_conf) == int:
+        tree_conf = {"tree": tree_conf, "cwd":{}} # convert from old style
+
+
     choices = enumerate([v[0] for v in config.virtual_host_trees])
     html.begin_form("vtree")
-    html.select("vtree", choices, tree_conf, onchange = 'virtual_host_tree_changed(this)')
+
+    # Give chance to change one level up, if we are in a subtree
+    cwd = tree_conf["cwd"].get(tree_conf["tree"])
+    if cwd:
+        upurl = "javascript:virtual_host_tree_enter(%r)" % "|".join(cwd[:-1])
+        html.icon_button(upurl, _("Go up one tree level"), "back")
+
+    html.select("vtree", choices, tree_conf["tree"], onchange = 'virtual_host_tree_changed(this)')
     html.write("<br>")
     html.end_form()
     html.final_javascript(virtual_host_tree_js)
 
-    title, taggroups = config.virtual_host_trees[tree_conf]
+    title, taggroups = config.virtual_host_trees[tree_conf["tree"]]
 
     tree = compute_tag_tree(taggroups)
-    render_tag_tree_level(taggroups, [], _("Virtual Host Tree"), tree)
+
+
+    render_tag_tree_level(taggroups, [], cwd, _("Virtual Host Tree"), tree)
 
 sidebar_snapins["tag_tree"] = {
     "title" : _("Virtual Host Tree"),
@@ -1383,11 +1423,7 @@ sidebar_snapins["tag_tree"] = {
     "allowed" : [ "admin", "user", "guest" ],
     "styles" : """
 
-#snapin_tag_tree img.iconbutton { 
-    width: 12px;
-    height: 12px;
-    position: relative;
-    top: -2px;
+#snapin_tag_tree img.iconbutton {
 }
 
 #snapin_tag_tree select {
@@ -1414,11 +1450,30 @@ sidebar_snapins["tag_tree"] = {
     box-shadow: 0px 0px 0.7px #284850;
 }
 
-#snapin_tag_tree div.statebullet.leaf {
+#snapin_tag_tree ul > div.statebullet.leaf {
     margin-left: 16px;
 }
 #snapin_tag_tree b {
     font-weight: normal;
+}
+
+#snapin_tag_tree {
+    position: relative;
+    top: 0px;
+    left: 0px;
+}
+#snapin_tag_tree form img.iconbutton {
+    width: 16px;
+    height: 16px;
+    float: none;
+    display: inline-box;
+    position: absolute;
+    top: 9px;
+    left: 14px;
+}
+#snapin_tag_tree select {
+    width: 198px;
+    margin-left: 17px;
 }
 """
 }

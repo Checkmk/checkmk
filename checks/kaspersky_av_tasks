@@ -1,0 +1,82 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+#Number of tasks: 15
+#Name: System:EventManager
+#        Id: 1
+#        Runtime ID: 1314160393
+#        Class: EventManager
+#        State: Started
+#Name: System:AVS
+#        Id: 2
+#        Runtime ID: 1314160398
+#        Class: AVS
+#        State: Started
+#Name: System:Quarantine
+#        Id: 3
+#        Runtime ID: 1314160399
+#        Class: Quarantine
+#        State: Started
+#Name: System:Statistics
+#        Id: 4
+#        Runtime ID: 1314160396
+#        Class: Statistics
+#        State: Started
+#
+
+def inventory_kaspersky_av_tasks(info):
+    inventory = []
+    jobs = [
+            'Real-time protection',
+            'System:EventManager'
+    ]
+    for line in [ x for x in info if x[0].startswith("Name")]:
+        job = " ".join(line[1:])
+        if job in jobs:
+            inventory.append( (job, None ))
+    return inventory
+
+def check_kaspersky_av_tasks(item, _no_params, info):
+    found = False
+    for line in info:
+        if found:
+            if line[0].startswith('State'):
+                state = 0
+                if line[1] != "Started":
+                    state = 2
+                return state, "Current state is " + line[1]
+        if line[0].startswith('Name') and " ".join(line[1:]) == item:
+            found = True
+    return 3, "Task not found in agent output"
+
+check_info["kaspersky_av_tasks"] = {
+    "check_function"        : check_kaspersky_av_tasks,
+    "inventory_function"    : inventory_kaspersky_av_tasks,
+    "service_description"   : "AV Task %s",
+    "has_perfdata"          : False,
+}
+

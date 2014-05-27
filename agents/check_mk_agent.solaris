@@ -130,7 +130,7 @@ then
 fi
 
 # ZFS arc cache
-if type mdb &>/dev/null
+if type mdb >/dev/null 2>&1
 then
     echo '<<<zfs_arc_cache>>>'
     echo "::arc" | mdb -k

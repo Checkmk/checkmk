@@ -28,6 +28,7 @@
     Multisite:
     * 0912 FIX: Multisite Views: Fixed bug where custom views could not get deleted
     * 0923 FIX: json export: fixed bug not stripping html tags from output
+    * 0982 SEC: Fix two XSS weaknesses according to CVSS 8.5 AV:N/AC:M/Au:S/C:C/I:C/A:C...
 
     WATO:
     * 0971 FIX: Fix missing authentication of PHP addons in D-WATO when activation mode is reload...

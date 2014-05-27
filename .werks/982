@@ -1,0 +1,19 @@
+Title: Fix two XSS weaknesses according to CVSS 8.5 AV:N/AC:M/Au:S/C:C/I:C/A:C
+Level: 2
+Component: multisite
+Version: 1.2.4p4
+Date: 1401183811
+Class: security
+
+This fixes the following issue:
+
+The check_mk application is susceptible to reflected XSS attacks. This is
+mainly the result of inproper output encoding. Reflected XSS can be triggered
+by sending a malicious URL to a user of the check_mk application. Once the
+XSS attack is triggered, the attacker has access to the full check_mk (and
+nagios) application with the access rights of the logged in victim.
+
+The fix applies to the function:
+
+htmllib.py: render_status_icons()
+actions.py: ajax_action()

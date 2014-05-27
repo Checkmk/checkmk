@@ -57,7 +57,8 @@
 # Note: This node is also being filled by dmidecode
 def inv_lnx_cpuinfo(info):
     node = inv_tree("hardware.cpu.")
-    num_cpus = 0
+    num_threads_total = 0
+    num_sockets = 0
     for varname, value in info:
         if varname == "cpu cores":
             node["cores_per_cpu"] = int(value)
@@ -74,15 +75,19 @@ def inv_lnx_cpuinfo(info):
             node["cache_size"] = int(value.split()[0]) * 1024 # everything is normalized to bytes!
         elif varname == "model name":
             node["model"] = value
+        # For the following two entries we assume that all
+        # entries are numbered in increasing order in /proc/cpuinfo.
         elif varname == "processor":
-            num_cpus = int(value) + 1
+            num_threads_total = int(value) + 1
+        elif varname == "physical id":
+            num_sockets = int(value) + 1
 
-    if num_cpus:
+    if num_threads_total:
         node.setdefault("cores_per_cpu", 1)
         node.setdefault("threads_per_cpu", 1)
-        node["cores"]   = num_cpus * node["cores_per_cpu"]
-        node["threads"] = num_cpus * node["threads_per_cpu"]
-        node["cpus"]    = num_cpus
+        node["cores"]   = num_sockets * node["cores_per_cpu"]
+        node["threads"] = num_sockets * node["threads_per_cpu"]
+        node["cpus"]    = num_sockets
 
 inv_info['lnx_cpuinfo'] = {
    "inv_function"           : inv_lnx_cpuinfo,

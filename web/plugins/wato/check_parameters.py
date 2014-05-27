@@ -4687,6 +4687,21 @@ register_check_parameters(
     "first"
 )
 
+register_check_parameters(
+   subgroup_applications,
+   "antivir_update_age",
+   _("Age of last AntiVirus update"),
+   Tuple(
+       title = _("Age of last AntiVirus update"),
+           elements = [
+               Age(title = _("Warning level for time since last update")),
+               Age(title = _("Critical level for time since last update")),
+           ]
+   ),
+   None,
+   "first"
+)
+
 register_check_parameters(subgroup_applications,
     "logwatch_ec",
     _('Logwatch Event Console Forwarding'),

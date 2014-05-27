@@ -1,0 +1,12 @@
+if [ -f /opt/Symantec/symantec_antivirus/sav ]
+then
+    echo "<<<symantec_av_updates>>>"
+    /opt/Symantec/symantec_antivirus/sav info -d
+
+    echo "<<<symantec_av_progstate>>>"
+    /opt/Symantec/symantec_antivirus/sav info -a
+
+    echo "<<<symantec_av_quarantine>>>"
+    /opt/Symantec/symantec_antivirus/sav quarantine -l
+fi
+

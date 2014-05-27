@@ -4056,12 +4056,18 @@ void listen_tcp_loop()
             connection = RemoveSocketInheritance(connection);
             if (connection != INVALID_SOCKET) {
                 uint32_t ip = 0;
-                if (remote_addr.sin_family == AF_INET)
+                char     ip_hr[256];
+                if (remote_addr.sin_family == AF_INET) {
                     ip = remote_addr.sin_addr.s_addr;
+                    snprintf(ip_hr, sizeof(ip_hr), "%u.%u.%u.%u",
+                             ip & 0xff, (ip >> 8) & 0xff, (ip >> 16) & 0xff, (ip >> 24) & 0xff);
+                } else
+                    snprintf(ip_hr, sizeof(ip_hr), "None");
                 if (check_only_from(ip)) {
                     open_crash_log();
-                    crash_log("Accepted client connection from %u.%u.%u.%u.",
-                            ip & 0xff, (ip >> 8) & 0xff, (ip >> 16) & 0xff, (ip >> 24) & 0xff);
+                    crash_log("Accepted client connection from %s.", ip_hr);
+
+                    SetEnvironmentVariable("REMOTE_HOST", ip_hr);
                     output_data(connection);
                     close_crash_log();
                 }

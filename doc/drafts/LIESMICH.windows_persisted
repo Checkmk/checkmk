@@ -1,0 +1,20 @@
+
+Man möchte in windows also ein persisted Feature in den Agent bauen..
+
+- script container struct erweitern um eine liste von hosts und ihrem letzten
+  persisted zeitpunkt
+
+- beim Senden der Daten an einen Host prüfen ob
+  a) persisted Daten wieder gemeldet werden sollen
+  b) wenn ja, das Sammeln der Daten wieder anwerfen, aber noch nichts melden
+  c) beim nächsten Aufruf sind die Daten bestimmt aktuell, diese melden
+     und den persisted timestamp des Hosts aktualisieren
+
+Jedes Skript kann man einzeln in der check_mk.ini konfigurieren.
+
+# Daten alle 60 Minuten (hostabhängig) in die Welt hinaus senden
+persisted mk_inventory.ps1 = 60
+
+Weitere Überlegung. Vielleicht nicht unbedingt persisted nennen.
+Das Feature kann man evtl. auch anderweitig einsetzen.
+

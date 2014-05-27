@@ -1,0 +1,12 @@
+title: Kaspersky Anti Virus Program Tasks status
+agents: linux
+catalog: app/kaspersky
+license: GPL
+distribution: check_mk
+description:
+ This checks if the tasks Real-time protection and System EventManger are running.
+ Otherwise a critical state will be triggert 
+ You need to install the plugin {kaspersky_av} into the {plugins} directory of your agent.
+
+inventory:
+ One service will be created for each task will be created.

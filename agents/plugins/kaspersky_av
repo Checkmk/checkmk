@@ -1,0 +1,13 @@
+if [ -f /opt/kaspersky/kav4fs/bin/kav4fs-control ]
+then
+   echo "<<<kaspersky_av_updates:sep(58)>>>"
+   /opt/kaspersky/kav4fs/bin/kav4fs-control --get-stat Update
+
+  echo "<<<kaspersky_av_quarantine:sep(58)>>>"
+  /opt/kaspersky/kav4fs/bin/kav4fs-control -Q --get-stat
+
+  echo "<<<kaspersky_av_tasks>>>"
+  /opt/kaspersky/kav4fs/bin/kav4fs-control --get-task-list
+
+fi
+

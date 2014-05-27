@@ -1,0 +1,8 @@
+Title: kaspersky_av_quarantine,kaspersky_av_tasks,kaspersky_av_updates: New checks for kaspersky anti virus on linux
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1401198410
+Class: feature
+
+

@@ -14895,12 +14895,22 @@ def validate_all_hosts(hostnames, force_all = False):
 #   '----------------------------------------------------------------------'
 
 import base64
+try:
+    import ast
+except:
+    ast = None
 
 def mk_eval(s):
-    return pickle.loads(base64.b64decode(s))
+    if ast and not config.wato_legacy_eval:
+        return ast.literal_eval(base64.b64decode(s))
+    else:
+        return pickle.loads(base64.b64decode(s))
 
 def mk_repr(s):
-    return base64.b64encode(pickle.dumps(s))
+    if ast and not config.wato_legacy_eval:
+        return base64.b64encode(repr(s))
+    else:
+        return base64.b64encode(pickle.dumps(s))
 
 # Returns true when at least one folder is defined in WATO
 def have_folders():

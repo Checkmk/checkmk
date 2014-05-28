@@ -1,0 +1,12 @@
+Title: windows agent: now able to evaluate logfiles written in unicode (2 bytes per character)
+Level: 2
+Component: checks
+Version: 1.2.5i3
+Date: 1401284347
+Class: feature
+
+The windows agent was unable to process logfiles which were written as unicode. Those files
+had binary zeros every other byte, rendering the normal "readline" logfile processing useless.<br>
+The agent can now read unicode files correctly, convert each line to a multibyte representation
+(most of the time it is only a single byte) and apply the configured logfile patterns accordingly.
+

@@ -170,7 +170,15 @@ enum script_status {
 
 enum script_type {
     PLUGIN,
-    LOCAL
+    LOCAL,
+    MRPE
+};
+
+// Used by mrpe and local/plugins scripts
+struct runas_include{
+    char        path[256];
+    char        user[256];
+    script_type type;
 };
 
 struct script_container {
@@ -183,6 +191,7 @@ struct script_container {
     time_t                 buffer_time;
     char                  *buffer;
     char                  *buffer_work;
+    char                  *run_as_user;
     script_type            type;
     script_execution_mode  execution_mode;
     script_status          status;
@@ -223,6 +232,9 @@ execution_mode_configs_t execution_mode_configs_local, execution_mode_configs_pl
 typedef map<string, script_container*> script_containers_t;
 script_containers_t script_containers;
 
+typedef vector<runas_include*> script_include_t;
+script_include_t g_script_includes;
+
 // Command definitions for MRPE
 struct mrpe_entry {
     char run_as_user[256];
@@ -231,10 +243,6 @@ struct mrpe_entry {
     char service_description[256];
 };
 
-struct mrpe_include{
-    char path[256];
-    char user[256];
-};
 
 struct process_entry {
     unsigned long long process_id;
@@ -349,10 +357,10 @@ winperf_counters_t g_winperf_counters;
 
 // Configuration of mrpe entries
 typedef vector<mrpe_entry*> mrpe_entries_t;
-typedef vector<mrpe_include*> mrpe_include_t;
+typedef vector<runas_include*> mrpe_include_t;
 mrpe_entries_t g_mrpe_entries;
 mrpe_entries_t g_included_mrpe_entries;
-mrpe_include_t g_mrpe_include;
+mrpe_include_t g_mrpe_includes;
 
 // Configuration of execution suffixed
 typedef vector<char *> execute_suffixes_t;
@@ -2508,6 +2516,21 @@ bool handle_script_config_variable(char *var, char *value, script_type type)
             execution_mode_configs_plugin.push_back(entry);
         else
             execution_mode_configs_local.push_back(entry);
+    } else if (!strncmp(var, "include", 7)) {
+        char *user = NULL;
+        if (strlen(var) > 7)
+            user = lstrip(var + 7);
+
+        runas_include* tmp = new runas_include();
+        memset(tmp, 0, sizeof(tmp));
+
+        if (user)
+            snprintf(tmp->user, sizeof(tmp->user), user);
+
+        tmp->type = type;
+        snprintf(tmp->path, sizeof(tmp->path), value);
+        g_script_includes.push_back(tmp);
+        return true;
     }
     return true;
 }
@@ -2890,8 +2913,8 @@ void update_mrpe_includes()
     FILE *file;
     char  line[512];
     int   lineno = 0;
-    for (mrpe_include_t::iterator it_include = g_mrpe_include.begin();
-         it_include != g_mrpe_include.end(); it_include++)
+    for (mrpe_include_t::iterator it_include = g_mrpe_includes.begin();
+         it_include != g_mrpe_includes.end(); it_include++)
     {
         char* path = (*it_include)->path;
         file = fopen(path, "r");
@@ -3906,13 +3929,13 @@ bool handle_mrpe_config_variable(char *var, char *value)
         if (strlen(var) > 7)
             user = lstrip(var + 7);
 
-        mrpe_include* tmp = new mrpe_include();
+        runas_include* tmp = new runas_include();
         memset(tmp, 0, sizeof(tmp));
 
         if (user)
             snprintf(tmp->user, sizeof(tmp->user), user);
         snprintf(tmp->path, sizeof(tmp->path), value);
-        g_mrpe_include.push_back(tmp);
+        g_mrpe_includes.push_back(tmp);
         return true;
     }
     return false;
@@ -4346,9 +4369,8 @@ DWORD WINAPI DataCollectionThread( LPVOID lpParam )
     return 0;
 }
 
-void determine_available_scripts(script_type type)
+void determine_available_scripts(char *dirname, script_type type, char* run_as_user)
 {
-    char *dirname = type == PLUGIN ? g_plugins_dir : g_local_dir;
     DIR  *dir     = opendir(dirname);
     if (dir) {
         struct dirent *de;
@@ -4359,6 +4381,7 @@ void determine_available_scripts(script_type type)
                 char path[512];
                 snprintf(path, sizeof(path), "%s\\%s", dirname, name);
                 char newpath[512];
+                char command_with_user[1024];
                 // If the path in question is a directory -> continue
                 DWORD dwAttr = GetFileAttributes(path);
                 if(dwAttr != INVALID_FILE_ATTRIBUTES && (dwAttr & FILE_ATTRIBUTE_DIRECTORY)) {
@@ -4366,19 +4389,25 @@ void determine_available_scripts(script_type type)
                 }
 
                 char *command = add_interpreter(path, newpath);
+                if (run_as_user != NULL && strlen(run_as_user) > 1)
+                    snprintf(command_with_user, sizeof(command_with_user), "runas /User:%s %s", run_as_user, command);
+                else
+                    snprintf(command_with_user, sizeof(command_with_user), "%s", command);
+
                 // Look if there is already an script_container available for this program
                 script_container* cont = NULL;
-                script_containers_t::iterator it_cont = script_containers.find(string(command));
+                script_containers_t::iterator it_cont = script_containers.find(string(command_with_user));
                 if (it_cont == script_containers.end()) {
                     // create new entry for this program
                     cont = new script_container();
-                    cont->path             = strdup(command);
+                    cont->path             = strdup(command_with_user);
                     cont->script_path      = strdup(path);
                     cont->buffer_time      = 0;
                     cont->buffer           = NULL;
                     cont->buffer_work      = NULL;
                     cont->type             = type;
                     cont->should_terminate = 0;
+                    cont->run_as_user      = run_as_user;
                     cont->execution_mode   = get_script_execution_mode(name, type);
                     cont->timeout          = get_script_timeout(name, type);
                     cont->max_retries      = get_script_max_retries(name, type);
@@ -4446,9 +4475,16 @@ void output_data(SOCKET &out)
         output_crash_log(out);
 
     update_script_statistics();
+
+
     // Check if there are new scripts available
-    determine_available_scripts(PLUGIN);
-    determine_available_scripts(LOCAL);
+    // Scripts in default paths
+    determine_available_scripts(g_plugins_dir, PLUGIN, NULL);
+    determine_available_scripts(g_local_dir,   LOCAL,  NULL);
+    // Scripts included with user permissions
+    for (script_include_t::iterator it_include = g_script_includes.begin();
+         it_include != g_script_includes.end(); it_include++)
+        determine_available_scripts((*it_include)->path, (*it_include)->type, (*it_include)->user);
 
     if (enabled_sections & SECTION_CHECK_MK)
         section_check_mk(out);

@@ -1,4 +1,7 @@
 1.2.4p4:
+    Checks & Agents:
+    * 0932 FIX: prediction: fixed bug where predicted levels were not recalculated
+
 
 1.2.4p3:
     Core & Setup:

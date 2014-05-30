@@ -271,7 +271,7 @@ def get_predictive_levels(dsname, params, cf, levels_factor=1.0):
     if last_info and last_info["time"] + period_info["valid"] * period_info["slice"] < now:
         if opt_debug:
             sys.stderr.write("Prediction of %s outdated.\n" % timegroup)
-            last_info = None
+        last_info = None
 
     if last_info:
         # TODO: faster file format. Binary encoded?

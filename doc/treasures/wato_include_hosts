@@ -20,6 +20,7 @@ _remove_unknown_hosts = True
 # TODO: add the complete include dir from a shadow path so they do not
 # interfere with the rest of the configuration
 
+# TODO: exit if this script is appened multiple times to a hosts.mk file
 import os, inspect
 def add_host_data(_filename):
     global all_hosts, host_attributes, ipaddresses, extra_host_conf

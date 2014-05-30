@@ -97,6 +97,7 @@
     * 0958 FIX: df.include: failed for checks with grouping patterns...
     * 0924 FIX: windows agent: now able to execute python scripts again
     * 0614 FIX: cmciii.temp, cmciii.humidity: fixed bugs to get performance data back
+    * 0932 FIX: prediction: fixed bug where predicted levels were not recalculated
 
     Multisite:
     * 0779 Hostgroups (Summary): Empty hostgroups are no longer shown (can be re-enabled by filter)

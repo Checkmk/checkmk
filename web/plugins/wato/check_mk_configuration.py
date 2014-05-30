@@ -497,6 +497,17 @@ register_configvar(group,
 
 
 register_configvar(group,
+    "wato_upload_insecure_snapshots",
+    Checkbox(title = _("Allow upload of insecure WATO snapshots"),
+             label = _("upload insecure snapshots"),
+             help = _("When enabled, insecure snapshots are allowed. Please keep in mind that the upload "
+                      "of unverified snapshots represent a security risk, since the content of a snapshot is executed "
+                      "during runtime. Any manipulations in the content - either willingly or unwillingly (XSS attack) "
+                      "- pose a serious security risk."),
+             default_value = False),
+    domain = "multisite")
+
+register_configvar(group,
     "wato_hide_hosttags",
     Checkbox(title = _("Hide hosttags in WATO folder view"),
              label = _("hide hosttags"),

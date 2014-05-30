@@ -1,0 +1,13 @@
+Title: WATO snapshots: disabled upload of legacy snaphots and snapshots with invalid checksums
+Level: 2
+Component: wato
+Version: 1.2.5i3
+Date: 1401449745
+Class: feature
+
+The upload of insecure snapshots has been disabled per default, because those
+snapshots represent a security risk if their content were modified willingly or unwillingly.
+Insecure snapshots are all legacy snapshots and snapshots of the newer type, but with an invalid checksum.
+
+You can re-enable the upload of insecure snapshots via the new global setting<br>
+<tt>Configuration GUI (WATO) -> Allow upload of insecure WATO snapshots</tt>

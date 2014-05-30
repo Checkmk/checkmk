@@ -6780,6 +6780,24 @@ def mode_snapshot(phase):
                 if status.get("broken"):
                     raise MKUserError("_upload_file", _("This is not a Check_MK snapshot!<br>%s") % \
                                                                             status.get("broken_text"))
+                elif not status.get("checksums") and not config.wato_upload_insecure_snapshots:
+                    if status["type"] == "legacy":
+                        raise MKUserError("_upload_file", _('The integrity of this snapshot could not be verified.<br><br>'
+                                          'You are restoring a legacy snapshot which can not be verified. The snapshot contains '
+                                          'files which contain code that will be executed during runtime of the monitoring.<br><br>'
+                                          'The upload of insecure snapshots is currently disabled in WATO. If you want to allow '
+                                          'the upload of insecure snapshots you can activate it in the Global Settings under<br>'
+                                          '<tt>Configuration GUI (WATO) -> Allow upload of insecure WATO snapshots</tt>'))
+                    else:
+                       raise MKUserError("_upload_file", _('The integrity of this snapshot could not be verified.<br><br>'
+                                          'If you restore a snapshot on the same site as where it was created, the checksum should '
+                                          'always be OK. If not, it is likely that something has been modified in the snapshot.<br>'
+                                          'When you restore the snapshot on a different site, the checksum check will always fail. '
+                                          'The snapshot contains files which contain code that will be executed during runtime '
+                                          'of the monitoring.<br><br>'
+                                          'The upload of insecure snapshots is currently disabled in WATO. If you want to allow '
+                                          'the upload of insecure snapshots you can activate it in the Global Settings under<br>'
+                                          '<tt>Configuration GUI (WATO) -> Allow upload of insecure WATO snapshots</tt>'))
                 else:
                     file(snapshot_dir + filename, "w").write(uploaded_file[2])
                     html.set_var("_snapshot_name", filename)

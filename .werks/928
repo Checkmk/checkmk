@@ -14,7 +14,7 @@ This check is configured with the configuration file <tt>runas.cfg</tt>.
 In a default installation this file is located within the Check_MK config directory under <tt>/etc/check_mk/runas.cfg</tt>.
 
 The <tt>runas.cfg</tt> configuration syntax is as follow<br>
-[Script type] [User context] [File / Directory ]
+<tt>[Script type] [User context] [File/Directory]</tt>
 
 The <tt>Script type</tt> can be set to <tt>mrpe</tt>, <tt>local</tt> and <tt>plugin</tt>.<br>
 The <tt>User context</tt> represents the user. If you do not want to change the context set this field to "<tt>-</tt>"<br>

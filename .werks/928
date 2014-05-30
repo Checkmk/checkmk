@@ -1,0 +1,39 @@
+Title: runas: new plugin script to include and execute mrpe, local and plugin scripts as different user
+Level: 2
+Component: checks
+Version: 1.2.5i3
+Date: 1401442173
+Class: feature
+
+With the new plugin <tt>runas</tt> you can configure additional include files and
+directories for mrpe, local and plugin scripts. You can also change the user context
+of each of these scripts. It allows non-root users to add additional scripts which might
+get executed with reduced permission.
+
+This check is configured with the configuration file <tt>runas.cfg</tt>.
+In a default installation this file is located within the Check_MK config directory under <tt>/etc/check_mk/runas.cfg</tt>.
+
+The <tt>runas.cfg</tt> configuration syntax is as follow
+[Script type] [User context] [File / Directory ]
+
+The <tt>Script type</tt> can be set to <tt>mrpe</tt>, <tt>local</tt> and <tt>plugin</tt>.
+The <tt>User context</tt> represents the user. If you do not want to change the context set this field to <tt>-</tt>
+Depending on the script type the third value points to a file or directory.
+The mrpe type requires a target file which contains the mrpe commands.
+Local and plugins types require are target folder, which contains the executable local and plugin scripts.<br>
+
+Here is an example configuration:
+
+F+:/etc/check_mk/runas.cfg
+mrpe ab /home/ab/mrpe_commands.cfg
+mrpe lm /home/lm/mrpe_commands.cfg
+mrpe - /root/mrpe/extra_commands.cfg
+plugin ab /var/ab/plugins
+local ab /var/ab/local
+F-:
+
+<b>Note:</b>You need to set up the local and plugin scripts in different folders, because the line
+<tt>plugin ab /var/ab/plugins</tt> indicates that all executable files within this folder are treated as plugins.
+
+
+

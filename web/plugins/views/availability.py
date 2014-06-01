@@ -575,7 +575,7 @@ def render_availability_options():
 
 def get_availability_data(datasource, filterheaders, range, only_sites, limit, single_object, include_output, avoptions):
     has_service = "service" in datasource["infos"]
-    av_filter = "Filter: time >= %d\nFilter: time <= %d\n" % range
+    av_filter = "Filter: time >= %d\nFilter: time < %d\n" % range
     if single_object:
         tl_site, tl_host, tl_service = single_object
         av_filter += "Filter: host_name = %s\nFilter: service_description = %s\n" % (
@@ -1459,7 +1459,7 @@ def get_bi_timeline(tree, aggr_group, avoptions, timewarp):
     html.live.set_limit() # removes limit
     query = "GET statehist\n" + \
             "Columns: " + " ".join(columns) + "\n" +\
-            "Filter: time >= %d\nFilter: time <= %d\n" % range
+            "Filter: time >= %d\nFilter: time < %d\n" % range
 
     # Create a specific filter. We really only want the services and hosts
     # of the aggregation in question. That prevents status changes 

@@ -1,0 +1,90 @@
+
+# This file needs to be appended to the existing hosts.mk file
+# Upon parsing the hosts.mk file the include dir is evaluated.
+# Within the include dir there are host definition files with the format
+#
+# ipaddress:1.2.3.4
+# tag_agent:cmk-agent
+# tag_criticality:critical
+# tag_networking:lan
+# alias:Alias of Host A
+#
+# If the WATO folder is saved the already existing hosts are merged with
+# the hosts of the included files. After the hosts.mk is newly written this
+# script appendix is removed, too.
+
+# Configuration options
+_include_dir          = ".devops"
+_remove_unknown_hosts = True
+
+# TODO: add the complete include dir from a shadow path so they do not
+# interfere with the rest of the configuration
+
+# TODO: exit if this script is appened multiple times to a hosts.mk file
+import os, inspect
+def add_host_data(_filename):
+    global all_hosts, host_attributes, ipaddresses, extra_host_conf
+
+    try:
+        _host_ip         = None
+        _tags_plain      = []
+        _host_attributes = {}
+        _alias           = None
+
+        _lines = file(_filename).readlines()
+        _hostname = os.path.basename(_filename)
+        # Parse data
+        for _line in _lines:
+            _what, _data = _line.split(":",1)
+            _data = _data[:-1]
+            if _what.startswith("tag_"):
+                _tags_plain.append(_data)
+            elif _what == "ipaddress":
+                _host_ip = _data
+            elif _what == "alias":
+                _alias   = _data
+            _host_attributes.update({_what: _data})
+
+        # Add data to config
+        all_hosts += [ _hostname + "|" + "|".join(_tags_plain) + "|/" + FOLDER_PATH + "/" ]
+        if _host_ip:
+            ipaddresses.update({_hostname: _host_ip})
+
+        if _alias:
+            extra_host_conf.setdefault('alias', []).extend([(_alias, [_hostname])])
+
+        host_attributes.update({_hostname: _host_attributes})
+    except Exception, e:
+        pass
+
+_hosts_mk_path = os.path.dirname(inspect.getsourcefile(lambda _: None))
+for _dirpath, _dirname, _filenames in os.walk(_hosts_mk_path + "/" + _include_dir):
+    for _filename in _filenames:
+        if _filename.startswith("."):
+            continue
+        for _hh in all_hosts:
+            if _hh.startswith(_filename + "|"):
+                # Host already in config
+                break
+        else:
+            # Add host to config
+            add_host_data("%s/%s" % (_dirpath, _filename))
+
+
+# Remove any hosts with no avaiable include files
+if _remove_unknown_hosts:
+    _hosts_to_remove = []
+    for _idx, _hh in enumerate(all_hosts):
+        print _idx, _hh
+        if _hh.endswith("|/%s/" % FOLDER_PATH):
+            _hostname = _hh.split("|",1)[0]
+            if _hostname not in _filenames:
+                _hosts_to_remove.append( (_hostname, _idx) )
+
+    for _hostname, _idx in _hosts_to_remove[::-1]:
+        del all_hosts[_idx]
+        if _hostname in ipaddresses:
+            del ipaddresses[_hostname]
+        if _hostname in host_attributes:
+            del host_attributes[_hostname]
+

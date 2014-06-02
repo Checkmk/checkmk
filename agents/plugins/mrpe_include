@@ -1,4 +1,8 @@
 #!/bin/bash
+
+# Note: This script is deprecated and has been replaced by the script runas
+# which is able to handle mrpe, local and plugin scripts
+
 echo '<<<mrpe>>>'
 grep -Ev '^[[:space:]]*($|#)' "$MK_CONFDIR/mrpe_include.cfg" | \
 while read user include

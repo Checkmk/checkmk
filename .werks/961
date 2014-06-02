@@ -1,0 +1,8 @@
+Title: fast_lta_volumes: new check of capacity of volumes in FAST LTA Storage Systems
+Level: 1
+Component: checks
+Version: 1.2.5i3
+Date: 1401720926
+Class: feature
+
+Thanks to Christian Dewald / Agfa HealthCare for the donation.

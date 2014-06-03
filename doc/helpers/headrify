@@ -39,6 +39,10 @@ EOF
 
 headrify ()
 {
+  if [ ! -f "$file" ] ; then
+      echo "Skipping $file. It's not a file."
+      return
+  fi
   echo "$file..."
   PERMISSIONS=$(stat -c %a "$file")
   TMP=$(mktemp .headrify.new.XXXXXX)
@@ -89,7 +93,7 @@ headrify ()
   else
       cat $file >> $TMP
   fi
-  mv $TMP $file
+  mv $TMP $file || rm -f $TMP
   chmod $PERMISSIONS "$file"
 }
 

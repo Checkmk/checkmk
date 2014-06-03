@@ -136,7 +136,7 @@ for o,a in opts:
     elif o in [ '-t', '--timeout' ]:
         opt_timeout = int(a)
     elif o in [ '-k', '--accept-any-hostkey' ]:
-        opt_any_hostkey = "-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+        opt_any_hostkey = "-o StrictHostKeyChecking=no"
     elif o in [ '-h', '--help' ]:
         usage()
         sys.exit(0)
@@ -182,12 +182,21 @@ cmd += "'"
 
 if opt_debug:
     sys.stderr.write("executing external command: %s\n" % cmd)
-try:
-    for line in subprocess.check_output(cmd, shell=True).split('\n'):
-        print line,
-except subprocess.CalledProcessError:
+
+
+result = subprocess.Popen(cmd, shell=True, stdout = subprocess.PIPE, stderr = subprocess.PIPE, stdin = None)
+stdout, stderr = result.communicate()
+exit_code = result.wait()
+
+if exit_code not in  [ 0, 1 ]:
     print "Error connecting via ssh"
-    sys.exit(1)
+    sys.exit(2)
+
+if stdout.startswith("CMMVC7016E"):
+    print str(stdout)
+    sys.exit(2)
+for line in stdout.split('\n'):
+    print line
 
 
 #############################################################################
@@ -206,3 +215,4 @@ def output_profile():
 
 if g_profile:
     output_profile()
+

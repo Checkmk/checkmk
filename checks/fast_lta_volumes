@@ -24,33 +24,37 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Example output from agent:
+def inventory_fast_lta_volumes(info):
+    inventory = []
+    for volname, volquota, volused in info:
+        inventory.append((volname, {}))
+    return inventory
 
-symantec_av_updates_default_levels = ( 259200, 345600 )
 
-def inventory_symantec_av_updates(info):
-    return [( None, 'symantec_av_updates_default_levels' )]
+def check_fast_lta_volumes(item, params, info):
+    fslist = []
+    for volname, volquota, volused in info:
+        if volname == item:
+            fslist = []
+            size_mb   = int(volquota) / 1048576.0
+            avail_mb  = ( int(volquota) - int(volused) ) / 1048576.0
+            fslist.append((item, size_mb, avail_mb))
+            return df_check_filesystem_list(item, params, fslist)
 
-def check_symantec_av_updates( _no_item, params, info):
-    warn, crit = params
-    last =  info[0][0]
-    last =  datetime.datetime.strptime(last, "%m/%d/%y").date()
-    age = abs((datetime.datetime.now().date() - last).days)
-    age = 60*60*25*age
-    rev = info[0][-1]
+    return 3, "Volume %s not found" % item
 
-    message = "%d days since last update" % age
-    if age > crit:
-        return 2, message
-    if age > warn:
-        return 1, message
-    return 0, message
 
-check_info["symantec_av_updates"] = {
-    "check_function"        : check_symantec_av_updates,
-    "group"                 : "antivir_update_age",
-    "inventory_function"    : inventory_symantec_av_updates,
-    "service_description"   : "AV Update Status",
-    "has_perfdata"          : False,
+check_info["fast_lta_volumes"] = {
+    "check_function"        : check_fast_lta_volumes,
+    "inventory_function"    : inventory_fast_lta_volumes,
+    "service_description"   : "Fast LTA Volume %s",
+    "has_perfdata"          : True,
+    "group"                 : "filesystem",
+    "includes"              : [ "df.include" ],
+    "snmp_info"             : (".1.3.6.1.4.1.27417.5.1.1", [2,  # Volume name
+                                                            9,  # Volume Quota
+                                                            11] # Volume used space
+                              ),
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.8072.3.2.10"),
 }
 

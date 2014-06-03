@@ -1027,7 +1027,7 @@ def check_host_permissions(hostname, exception=True, folder=None):
         return True
     host = folder[".hosts"][hostname]
     perm_groups, contact_groups = collect_host_groups(host, folder)
-    
+
     # Get contact groups of user
     users = userdb.load_users()
     if config.user_id not in users:
@@ -1138,10 +1138,10 @@ def check_user_contactgroups(cgspec):
 def get_folder_cgconf_from_attributes(attributes):
     v = attributes.get("contactgroups", ( False, [] ))
     cgconf = convert_cgroups_from_tuple(v)
-    return cgconf 
+    return cgconf
 
 # Get all contact groups of a folder, while honoring recursive
-# groups and permissions. Returns a pair of 
+# groups and permissions. Returns a pair of
 # 1. The folders permitted groups (for WATO permissions)
 # 2. The folders contact groups (for hosts)
 def collect_folder_groups(folder, host=None):
@@ -1175,7 +1175,7 @@ def collect_folder_groups(folder, host=None):
             host_groups.update(parent_host_groups)
 
         parent = parent.get(".parent")
-    
+
     return perm_groups, host_groups
 
 
@@ -2273,7 +2273,7 @@ def mode_rename_host(phase):
         check_new_hostname("newname", newname)
         c = wato_confirm(_("Confirm renaming of host"),
                          _("Are you sure you want to rename the host <b>%s</b> into <b>%s</b>? "
-                           "This involves a restart of the monitoring core!") % 
+                           "This involves a restart of the monitoring core!") %
                          (hostname, newname))
         if c:
             # Creating pending entry. That makes the site dirty and that will force a sync of
@@ -2476,7 +2476,7 @@ def rename_host(host, newname):
 
     # State of Multisite ---------------------------------------
     # Favorites of users and maybe other settings. We simply walk through
-    # all directories rather then through the user database. That way we 
+    # all directories rather then through the user database. That way we
     # are sure that also currently non-existant users are being found and
     # also only users that really have a profile.
     users_changed = 0
@@ -10972,12 +10972,12 @@ def notification_script_choices_with_parameters():
                  valuespec = TextUnicode(size = 24),
                  orientation = "horizontal",
             )
-        choices.append((script_name, title, 
+        choices.append((script_name, title,
             Alternative(
                 style = "dropdown",
                 elements = [
                     vs,
-                    FixedValue(None, totext = _("previous notifications of this type are cancelled"), 
+                    FixedValue(None, totext = _("previous notifications of this type are cancelled"),
                                title = _("Cancel previous notifications")),
                 ]
             )

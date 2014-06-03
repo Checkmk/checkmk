@@ -40,7 +40,7 @@ def check_symantec_av_updates( _no_item, params, info):
     rev = info[0][-1]
 
     message = "%d days since last update" % age
-    if age > crit: 
+    if age > crit:
         return 2, message
     if age > warn:
         return 1, message

@@ -46,7 +46,7 @@ def check_ibm_svc_array(item, _no_params, info):
         if mdisk_id == item:
 
             # Check raid_status
-            message = "RAID Array %s reports status %s" % (item, raid_status) 
+            message = "RAID Array %s reports status %s" % (item, raid_status)
             if raid_status == "online":
                 status = 0
             elif raid_status == "offline" or raid_status == "degraded":

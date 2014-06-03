@@ -1258,7 +1258,7 @@ def compute_tag_tree(taglist):
                 continue # Configuration error. User deleted tag group after configuring his tree
             tag_value, tag_title = get_tag_group_value(taggroups[tag], tags)
             tree_entry = tree_entry.setdefault((tag_title, tag_value), {})
- 
+
         if not tree_entry:
             tree_entry.update({
                 "_num_hosts" : 0,
@@ -1355,8 +1355,8 @@ def render_tag_tree_level(taggroups, path, cwd, title, tree):
                 html.write(tag_tree_bullet(subtree["_state"], subpath, True))
                 if subtree.get("_svc_problems"):
                     url = tag_tree_url(taggroups, subpath, "svcproblems")
-                    html.icon_button(url, _("Show the service problems contained in this branch"), 
-                            "svc_problems", target="main") 
+                    html.icon_button(url, _("Show the service problems contained in this branch"),
+                            "svc_problems", target="main")
                 html.write(href)
                 html.write("<br>")
         else:

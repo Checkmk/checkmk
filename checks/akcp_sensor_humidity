@@ -52,11 +52,11 @@ def check_akcp_sensor_humidity(item, params, info):
                             ( humidity, warnlow, critlow, warnhigh, crithigh)
                     perfdata = [ ( "humidity", humidity, critlow, warnlow, warnhigh, crithigh ) ]
                     if inthumidity <= critlow or inthumidity >= crithigh:
-                        return 2, "Humidity is: " + infotext, perfdata 
+                        return 2, "Humidity is: " + infotext, perfdata
                     elif inthumidity <= warnlow or inthumidity >= warnhigh:
-                        return 1, "Humidity is: " + infotext, perfdata 
+                        return 1, "Humidity is: " + infotext, perfdata
                     else:
-                        return 0, "Humidity is: " + infotext, perfdata 
+                        return 0, "Humidity is: " + infotext, perfdata
                 else:
                     return 3, "Sensor is offline"
     return 3, "Sensor not found"

@@ -205,14 +205,14 @@ inline bool Logfile::processLogLine(uint32_t lineno, unsigned logclasses)
 
 logfile_entries_t* Logfile::getEntriesFromQuery(Query *query, LogCache *logcache, time_t since, time_t until, unsigned logclasses)
 {
-    updateReferences();
+    updateReferences(); // Make sure existing references to objects point to correct world
     load(logcache, since, until, logclasses); // make sure all messages are present
     return &_entries;
 }
 
 bool Logfile::answerQuery(Query *query, LogCache *logcache, time_t since, time_t until, unsigned logclasses)
 {
-    updateReferences();
+    updateReferences(); // Make sure existing references to objects point to correct world
     load(logcache, since, until, logclasses); // make sure all messages are present
     uint64_t sincekey = makeKey(since, 0);
     logfile_entries_t::iterator it = _entries.lower_bound(sincekey);
@@ -230,7 +230,7 @@ bool Logfile::answerQuery(Query *query, LogCache *logcache, time_t since, time_t
 
 bool Logfile::answerQueryReverse(Query *query, LogCache *logcache, time_t since, time_t until, unsigned logclasses)
 {
-    updateReferences();
+    updateReferences(); // Make sure existing references to objects point to correct world
     load(logcache, since, until, logclasses); // make sure all messages are present
     uint64_t untilkey = makeKey(until, 999999999);
     logfile_entries_t::iterator it = _entries.upper_bound(untilkey);

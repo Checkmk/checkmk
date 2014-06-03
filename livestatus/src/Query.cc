@@ -792,6 +792,17 @@ void Query::start()
 }
 
 
+bool Query::timelimitReached()
+{
+    if (_time_limit >= 0 && time(0) >= _time_limit_timeout) {
+        logger(LG_INFO, "Maximum query time of %d seconds exceeded!", _time_limit);
+        _output->setError(RESPONSE_CODE_LIMIT_EXCEEDED, "Maximum query time of %d seconds exceeded!", _time_limit);
+        return true;
+    }
+    else
+        return false;
+}
+
 bool Query::processDataset(void *data)
 {
     if (_output->size() > g_max_response_size) {
@@ -809,11 +820,8 @@ bool Query::processDataset(void *data)
 
         // When we reach the time limit we let the query fail. Otherwise the user will
         // not know that the answer is incomplete.
-        if (_time_limit >= 0 && time(0) >= _time_limit_timeout) {
-            logger(LG_INFO, "Maximum query time of %d seconds exceeded!", _time_limit);
-            _output->setError(RESPONSE_CODE_LIMIT_EXCEEDED, "Maximum query time of %d seconds exceeded!", _time_limit);
+        if (timelimitReached())
             return false;
-        }
 
         if (doStats())
         {

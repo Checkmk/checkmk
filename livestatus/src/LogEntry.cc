@@ -348,16 +348,22 @@ inline bool LogEntry::handleTextEntry()
 
 inline bool LogEntry::handleProgrammEntry()
 {
-    if (strstr(_text, "starting... (PID=")){
+    if (strstr(_text, "starting...") ||
+        strstr(_text, "active mode..."))
+    {
         _logclass = LOGCLASS_PROGRAM;
-        _type     = NAGIOS_STARTING;
+        _type     = CORE_STARTING;
         return true;
     }
-    else if (strstr(_text, "restarting...") ||
-            strstr(_text, "shutting down...") ||
+    else if (strstr(_text, "shutting down...") ||
             strstr(_text, "Bailing out") ||
-            strstr(_text, "active mode...") ||
             strstr(_text, "standby mode..."))
+    {
+        _logclass = LOGCLASS_PROGRAM;
+        _type     = CORE_STOPPING;
+        return true;
+    }
+    else if (strstr(_text, "restarting..."))
     {
         _logclass = LOGCLASS_PROGRAM;
         return true;

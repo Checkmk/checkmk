@@ -34,6 +34,8 @@ class NegatingFilter : public Filter
 public:
     NegatingFilter(Filter *filter) : _filter(filter) {}
     ~NegatingFilter() { delete _filter; }
+    bool isNegatingFilter() { return true; }
+    Filter *subfilter() { return _filter; }
     bool accepts(void *data) { return !_filter->accepts(data); }
 };
 

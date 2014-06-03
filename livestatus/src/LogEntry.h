@@ -40,21 +40,22 @@
 #include "nagios.h"
 
 enum LogEntryType {
-    NONE,
-    ALERT_HOST,
-    ALERT_SERVICE,
-    DOWNTIME_ALERT_HOST,
-    DOWNTIME_ALERT_SERVICE,
-    STATE_HOST,
-    STATE_HOST_INITIAL,
-    STATE_SERVICE,
-    STATE_SERVICE_INITIAL,
-    FLAPPING_HOST,
-    FLAPPING_SERVICE,
-    TIMEPERIOD_TRANSITION,
-    NAGIOS_STARTING,
-    LOG_VERSION,
-    LOG_INITIAL_STATES,
+    NONE                   = 0,
+    ALERT_HOST             = 1,
+    ALERT_SERVICE          = 2,
+    DOWNTIME_ALERT_HOST    = 3,
+    DOWNTIME_ALERT_SERVICE = 4,
+    STATE_HOST             = 5,
+    STATE_HOST_INITIAL     = 6,
+    STATE_SERVICE          = 7,
+    STATE_SERVICE_INITIAL  = 8,
+    FLAPPING_HOST          = 9,
+    FLAPPING_SERVICE       = 10,
+    TIMEPERIOD_TRANSITION  = 11,
+    CORE_STARTING          = 12,
+    CORE_STOPPING          = 13,
+    LOG_VERSION            = 14,
+    LOG_INITIAL_STATES     = 15,
 };
 
 struct LogEntry

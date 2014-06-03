@@ -48,7 +48,7 @@ livestatus_so_SOURCES = \
 	OffsetStringHostMacroColumn.cc StatsColumn.cc IntAggregator.cc CountAggregator.cc \
 	DoubleAggregator.cc AttributelistColumn.cc AttributelistFilter.cc \
 	global_counters.c  module.c  logger.c waittriggers.c TimeperiodsCache.cc pnp4nagios.cc \
-	ContactgroupsColumn.cc CustomTimeperiodColumn.cc opids.cc auth.cc
+	ContactgroupsColumn.cc CustomTimeperiodColumn.cc HostServiceState.cc opids.cc auth.cc
 
 livestatus_so_CXXFLAGS = -I$(top_srcdir)/$(nagios_headers) -fPIC
 livestatus_so_CFLAGS   = $(livestatus_so_CXXFLAGS)

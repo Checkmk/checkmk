@@ -4910,7 +4910,7 @@ def do_core_action(action, quiet=False):
 
 def core_is_running():
     if monitoring_core == "nagios":
-        command = nagios_startscript + " status >/dev/null 2>&1" 
+        command = nagios_startscript + " status >/dev/null 2>&1"
     else:
         command = "omd status cmc >/dev/null 2>&1"
     code = os.system(command)

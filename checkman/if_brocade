@@ -7,7 +7,7 @@ description:
  This check does exactly the same as {if64} but retrieves {ifName} instead
  of {ifDescr}, because {ifDescr} is not useful in Brocade VDX devices.
 
- Please refer to the if64 manpage for documentation. 
+ Please refer to the if64 manpage for documentation.
 
 
 

@@ -4,7 +4,7 @@ catalog: os/storage
 license: GPL
 distribution: check_mk
 description:
- Reports the cache hit ratio, the prefetch data hit ratio, the 
+ Reports the cache hit ratio, the prefetch data hit ratio, the
  prefetch metadata hit ratio, the cache size and used/limit/max values
  for arc meta of ZFS.
 
@@ -12,7 +12,7 @@ description:
 
 perfdata:
  7 values are reported:
- hit_ratio in precent, prefetch_data_hit_ratio in percent, 
+ hit_ratio in precent, prefetch_data_hit_ratio in percent,
  prefetch_metadata_hit_ratio in percent, size (which is the total cache size)
  in bytes, arc_meta_used in bytes, arc_meta_limit in bytes and
  arc_meta_max in bytes

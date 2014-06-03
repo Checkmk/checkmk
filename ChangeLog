@@ -1,3 +1,5 @@
+1.2.5i4:
+
 1.2.5i3:
     Core & Setup:
     * 0884 New options --oid and --extraoid for cmk --snmpwalk...

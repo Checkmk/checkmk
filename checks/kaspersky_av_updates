@@ -44,7 +44,7 @@ def check_kaspersky_av_updates(item, _no_params, info):
     if info['Current AV databases state'] != 'UpToDate':
         state = 2
         message += "(!!)"
-    message += ", Database Date: %s, Last Update: %s" % ( info['Current AV databases date'], 
+    message += ", Database Date: %s, Last Update: %s" % ( info['Current AV databases date'],
                                                           info['Last AV databases update date'] )
 
     return state, message

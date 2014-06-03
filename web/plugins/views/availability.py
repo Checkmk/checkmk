@@ -1462,7 +1462,7 @@ def get_bi_timeline(tree, aggr_group, avoptions, timewarp):
             "Filter: time >= %d\nFilter: time < %d\n" % range
 
     # Create a specific filter. We really only want the services and hosts
-    # of the aggregation in question. That prevents status changes 
+    # of the aggregation in question. That prevents status changes
     # irrelevant services from introducing new phases.
     by_host = {}
     for site, host, service in bi.find_all_leaves(tree):

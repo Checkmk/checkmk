@@ -358,7 +358,7 @@ def construct_content(context):
     else:
         elements = [ "perfdata", "graph", "abstime", "address", "longoutput" ]
 
-    # If argument 2 is given (old style) or the parameter url_prefix is set (new style), 
+    # If argument 2 is given (old style) or the parameter url_prefix is set (new style),
     # we know the base url to the installation and can add
     # links to hosts and services. ubercomfortable!
     if context.get('PARAMETER_2'):
@@ -401,7 +401,7 @@ def construct_content(context):
     # - Downtimes             Started, Ended, Cancelled
     #   NOTIFICATIONTYPE is "DOWNTIMESTART", "DOWNTIMECANCELLED", or "DOWNTIMESTOPPED"
 
-    # - Acknowledgements 
+    # - Acknowledgements
     #   NOTIFICATIONTYPE is "ACKNOWLEDGEMENT"
 
     # - Custom notifications

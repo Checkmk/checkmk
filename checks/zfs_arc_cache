@@ -135,7 +135,7 @@ def check_zfs_arc_cache(_no_item, _no_params, info):
     # prefetch data hit ratio
     if "prefetch_data_hits" in parsed.keys() and "prefetch_data_misses" in parsed.keys():
         prefetch_data_hit_ratio = float(parsed["prefetch_data_hits"]) / (parsed["prefetch_data_hits"] + parsed["prefetch_data_misses"]) * 100
-        message += ", prefetch data hit ratio: %0.2f %%" % prefetch_data_hit_ratio 
+        message += ", prefetch data hit ratio: %0.2f %%" % prefetch_data_hit_ratio
         perfdata.append(("prefetch_data_hit_ratio", "%0.2f" % prefetch_data_hit_ratio, '', '', 0, 100))
     else:
         message += ", no info about prefetch data hit ratio available"
@@ -164,7 +164,7 @@ def check_zfs_arc_cache(_no_item, _no_params, info):
     # arc_meta
     if "arc_meta_used" in parsed.keys() and "arc_meta_limit" in parsed.keys() and "arc_meta_max" in parsed.keys():
         message += ", arc meta %d MB used, limit %d MB, max %d MB" \
-                   % (parsed["arc_meta_used"], parsed["arc_meta_limit"], parsed["arc_meta_max"]) 
+                   % (parsed["arc_meta_used"], parsed["arc_meta_limit"], parsed["arc_meta_max"])
         perfdata.append(("arc_meta_used", parsed["arc_meta_used"] * 1024 * 1024, '', '', 0))
         perfdata.append(("arc_meta_limit", parsed["arc_meta_limit"] * 1024 * 1024, '', '', 0))
         perfdata.append(("arc_meta_max", parsed["arc_meta_max"] * 1024 * 1024, '', '', 0))

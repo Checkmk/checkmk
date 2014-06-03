@@ -27,26 +27,26 @@
 #   .--Example output from agent-------------------------------------------.
 # <<<libelle_business_shadow:sep(58)>>>
 #   DBShadow Oracle                           Libelle AG
-#   trd : Shared Memory            
-#   Release: 5.7.6.0.053 (31003)                         
-#  
-#   Process-Id           : 7929872   
+#   trd : Shared Memory
+#   Release: 5.7.6.0.053 (31003)
+#
+#   Process-Id           : 7929872
 #   Start-Time           : 12.05.2014 16:55
 #   Shm-Id               : 2097154
 #   Sem-Id               : 23068672
-#   Number DB            : 2    
+#   Number DB            : 2
 #   Company              : khkirchheim
 #   DB Size              : 999
-#   Business             : 2    
-#   Long-Distance        : 0    
-#   Raw-Device           : 0    
-#   Flat-Files           : 0    
-#   Trace                : OFF 
+#   Business             : 2
+#   Long-Distance        : 0
+#   Raw-Device           : 0
+#   Flat-Files           : 0
+#   Trace                : OFF
 #   Host                 : kkn-dbnode1-2351
 #   System               : aix.61
 #   Status               : RUN
 #   Authentication Type  : none
-# 
+#
 #   -------------- TRD-Parameter --------------
 #   TRD_ARCHDIR_REPEAT            : 30
 #   TRD_ARCHIVER_TYPE             : turbo
@@ -69,12 +69,12 @@
 #   TRD_HOME_SIZE_REQUIRED        : 1000
 #   TRD_HOSTNAME                  : kkn-dbnode1-2351
 #   TRD_LANGUAGE                  : english
-#   TRD_MAIL_LOCALINTERFACE       : 
+#   TRD_MAIL_LOCALINTERFACE       :
 #   TRD_MAX_CONNECTIONS           : 100
 #   TRD_MAX_FF_ENTRIES            : 200
 #   TRD_MAX_MAPPINGS              : 200
 #   TRD_MAX_USER_MAPPINGS         : 200
-#   TRD_PARALLEL_TRANS_PORTS      : 
+#   TRD_PARALLEL_TRANS_PORTS      :
 #   TRD_PORT                      : 7200
 #   TRD_POWERUP                   : 0
 #   TRD_RECOVERTIMEOUT            : 1500
@@ -90,16 +90,16 @@
 #   TRD_TRACELEVEL                : 30
 #   TRD_UI_NUM                    : 20
 #   TRD_USE_ACCOUNT_TYPE          : local
-# 
+#
 #   -------------- Process List --------------
 #   Pid : 7929872   -1                               Timestamp : 22.05.2014 17:36:38   Type : main
 #   Pid : 7929872   -258                             Timestamp : 22.05.2014 17:36:38   Type : listen
 #   Pid : 2556268   -1                               Timestamp : 22.05.2014 17:36:37   Type : recover KHVN1
-#  
+#
 #   ============== Configuration KHVN1 ===============
-#  
+#
 #   -------------- Parameter -----------------
-#   APPLICATION_SYSTEM             = 
+#   APPLICATION_SYSTEM             =
 #   ARCHIVE_ALTERNATE_PATH         = /u02/oradata/khvn/archive_stby
 #   ARCHIVE_CHECK_DB               = 1
 #   ARCHIVE_COLD                   = FALSE
@@ -113,11 +113,11 @@
 #   CHECK_DISKSPACE                = TRUE
 #   COMPRESSED_COPY                = TRUE
 #   COPY_BACK                      = FALSE
-#   COPY_BACKUP_DIRECTORY          = 
+#   COPY_BACKUP_DIRECTORY          =
 #   COPY_CHECK_MIRROR              = TRUE
 #   COPY_COLD                      = FALSE
 #   COPY_CONTINUE                  = FALSE
-#   COPY_FROM_COPY                 = 
+#   COPY_FROM_COPY                 =
 #   COPY_START_ARCHIVER            = TRUE
 #   COPY_START_RECOVER             = TRUE
 #   COPY_STATUS                    = STOP
@@ -125,14 +125,14 @@
 #   CREATE_FULL_DIRECTORY          = TRUE
 #   CURRENT_FUNCTION               = recover
 #   CURRENT_STATUS                 = 20140522 17:36:17;normal;archiver:131511;recover:131492;
-#   CUSTOM1                        = 
-#   CUSTOM2                        = 
-#   DBS_PATH                       = 
-#   DB_USER                        = 
+#   CUSTOM1                        =
+#   CUSTOM2                        =
+#   DBS_PATH                       =
+#   DB_USER                        =
 #   DEFINED_SWITCH                 = FALSE
 #   DESCRIPTION                    = KHVN1
 #   EMERGENCY_AUTOMATIC            = FALSE
-#   EMERGENCY_SID                  = 
+#   EMERGENCY_SID                  =
 #   EMERGENCY_WAIT_TIME            = 0
 #   EXTERNAL_BACKUP                = FALSE
 #   EXTERNAL_COPY                  = FALSE
@@ -143,20 +143,20 @@
 #   FF_RECOVER_NUM                 = 1
 #   FF_SWITCH_NUM                  = 1
 #   HIGH_COMPRESSION               = FALSE
-#   INTERNAL_PASSWORD              = 
+#   INTERNAL_PASSWORD              =
 #   LOGFORMAT                      = logarcKHVN.743803837.|.0f.1
 #   MAKE_DB                        = FALSE
 #   MIRROR_ARCHIVE_PATH            = /u02/oradata/khvn/archive
 #   MIRROR_A_INTERFACE             = kkn-dbnode1-2351
 #   MIRROR_B_INTERFACE             = kkn-dbnode1-2351
-#   MIRROR_DBS_PATH                = 
+#   MIRROR_DBS_PATH                =
 #   MIRROR_HOME                    = /u01/app/ora10/product/10.2.0/db_1
 #   MIRROR_HOST                    = kkn-dbnode1-2351
-#   MIRROR_INSTANCE                = 
-#   MIRROR_PASSWORD                = 
+#   MIRROR_INSTANCE                =
+#   MIRROR_PASSWORD                =
 #   MIRROR_RELEASE                 = 10.2.0.4.0
 #   MIRROR_SID                     = KHVNS
-#   MIRROR_USER                    = 
+#   MIRROR_USER                    =
 #   NAME                           = KHVN1
 #   ORACLE_HOME                    = /u01/app/ora10/product/10.2.0/db_1
 #   ORACLE_RELEASE                 = 10.2.0.4.0
@@ -175,10 +175,10 @@
 #   RECOVER_MODE                   = TIME_DELAY
 #   RECOVER_NUM                    = 131493
 #   RECOVER_OPEN_READONLY          = FALSE
-#   RECOVER_REDO_LOG_PATH          = 
+#   RECOVER_REDO_LOG_PATH          =
 #   RECOVER_ROLLBACK               = FALSE
-#   RECOVER_ROLLBACK_PATH          = 
-#   RECOVER_ROLLBACK_SIZE          = 
+#   RECOVER_ROLLBACK_PATH          =
+#   RECOVER_ROLLBACK_SIZE          =
 #   RECOVER_START_CLEAR_LOGFILES   = FALSE
 #   RECOVER_START_MAKE_DB          = FALSE
 #   RECOVER_STATUS                 = RUN
@@ -187,30 +187,30 @@
 #   RECOVER_TO                     = 31.12.2099 23:59:00
 #   RECOVER_TO_NUMBER              = 41284
 #   RECOVER_VERIFY_STATUS          = STOP
-#   RECOVER_VERIFY_SYNC            = 
+#   RECOVER_VERIFY_SYNC            =
 #   SAME_FS_PARALLEL               = TRUE
 #   STANDBY                        = TRUE
 #   STRUCTURE_CHANGE               = TRUE
 #   STRUCTURE_CHECK_INTERVAL       = 60
 #   STRUCTURE_CHECK_NOLOGGING      = TRUE
 #   STRUCTURE_STATUS               = STOP
-#   TRD_PASSWORD                   = 
-#  
+#   TRD_PASSWORD                   =
+#
 #   --------- CRON Check Mirror Files ----------
 #   CRON[ 0] : 1000010 010000000000
-#  
+#
 #   -------------- Active Processes ----------
-#   trdcopy        : 
-#   trdarchiver    : 
+#   trdcopy        :
+#   trdarchiver    :
 #   trdrecover     : 2556268  22.05.2014 17:36:34  RUN
-#   trdstructure   : 
-#  
+#   trdstructure   :
+#
 #   -------------- Statistic of Recover ------
 #   Last update                  : 22.05.2014 17:36:34
 #   Archive-Dir total            : 150 GB
 #   Archive-Dir free             : 143 GB
-#   Archive-Dir limit warning    : 70 
-#   Arshive-Dir limit error      : 90 
+#   Archive-Dir limit warning    : 70
+#   Arshive-Dir limit error      : 90
 #   Number of total files        : 18
 #   Number logfiles recovered    : 1034
 #   logfile-size recovered       : 123 GB
@@ -220,13 +220,13 @@
 #   Maximum                      : 2.4 GB/h
 #   Current                      : 6 files/h
 #   Current                      : 1.1 GB/h
-#   Min. Rollback                : 
+#   Min. Rollback                :
 #   State of mirror              : 22.05.2014 13:26:50
-#   Max. Rollforward             : 
-#  
+#   Max. Rollforward             :
+#
 #   -------------- Last Message --------------
 #   recover 20140522172734OK      1212Recover of /u02/oradata/khvn/archive/logarcKHVN.743803837.131493.1 at 17:40 22.05.2014.
-# 
+#
 
 #.
 

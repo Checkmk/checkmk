@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 # Example output from agent:
-# List of Objects, else Empty 
+# List of Objects, else Empty
 
 def inventory_symantec_av_quarantine(info):
     return [( None, None )]

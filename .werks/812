@@ -1,7 +1,7 @@
 Title: nginx_status: New check for monitoring status information of the Nginx web server
 Level: 2
 Component: checks
-Version: 1.2.5i3
+Version: 1.2.5i4
 Date: 1401803233
 Class: feature
 

@@ -1,0 +1,119 @@
+#!/usr/bin/python
+# encoding: utf-8
+# Check_MK-Agent-Plugin - Nginx Server Status
+#
+# Fetches the stub nginx_status page from detected or configured nginx
+# processes to gather status information about this process.
+#
+# Take a look at the check man page for details on how to configure this
+# plugin and check.
+#
+# By default this plugin tries to detect all locally running processes
+# and to monitor them. If this is not good for your environment you might
+# create an nginx_status.cfg file in MK_CONFDIR and populate the servers
+# list to prevent executing the detection mechanism.
+
+import os, sys, urllib2, re
+
+config_dir = os.getenv("MK_CONFDIR", "/etc/check_mk")
+config_file = config_dir + "/nginx_status.cfg"
+
+# None or list of (proto, ipaddress, port) tuples.
+# proto is 'http' or 'https'
+servers = None
+ssl_ports = [ 443, ]
+
+if os.path.exists(config_file):
+    execfile(config_file)
+
+def try_detect_servers():
+    pids    = []
+    results = []
+    for line in os.popen('netstat -tlnp 2>/dev/null').readlines():
+        parts = line.split()
+        # Skip lines with wrong format
+        if len(parts) < 7 or '/' not in parts[6]:
+            continue
+
+        pid, proc = parts[6].split('/', 1)
+        to_replace = re.compile('^.*/')
+        proc = to_replace.sub('', proc)
+
+        procs = [ 'nginx', 'nginx:' ]
+        # the pid/proc field length is limited to 19 chars. Thus in case of
+        # long PIDs, the process names are stripped of by that length.
+        # Workaround this problem here
+        procs = [ p[:19 - len(pid) - 1] for p in procs ]
+
+        # Skip unwanted processes
+        if proc not in procs:
+            continue
+
+        # Add only the first found port of a single server process
+        if pid in pids:
+            continue
+        pids.append(pid)
+
+        proto = 'http'
+        address, port = parts[3].rsplit(':', 1)
+        port = int(port)
+
+        # Use localhost when listening globally
+        if address == '0.0.0.0':
+            address = '127.0.0.1'
+        elif address == '::':
+            address = '::1'
+
+        # Switch protocol if port is SSL port. In case you use SSL on another
+        # port you would have to change/extend the ssl_port list
+        if port in ssl_ports:
+            proto = 'https'
+
+        results.append((proto, address, port))
+
+    return results
+
+if servers is None:
+    servers = try_detect_servers()
+
+if not servers:
+    sys.exit(0)
+
+print '<<<nginx_status>>>'
+for server in servers:
+    if isinstance(server, tuple):
+        proto, address, port = server
+        page = 'nginx_status'
+    else:
+        proto = server['protocol']
+        address = server['address']
+        port = server['port']
+        page = server.get('page', 'nginx_status')
+
+    try:
+        url = '%s://%s:%s/%s' % (proto, address, port, page)
+        # Try to fetch the status page for each server
+        try:
+            request = urllib2.Request(url, headers={"Accept" : "text/plain"})
+            fd = urllib2.urlopen(request)
+        except urllib2.URLError, e:
+            if 'SSL23_GET_SERVER_HELLO:unknown protocol' in str(e):
+                # HACK: workaround misconfigurations where port 443 is used for
+                # serving non ssl secured http
+                url = 'http://%s:%s/%s' % (address, port, page)
+                fd = urllib2.urlopen(url)
+            else:
+                raise
+
+        for line in fd.read().split('\n'):
+            if not line.strip():
+                continue
+            if line.lstrip()[0] == '<':
+                # seems to be html output. Skip this server.
+                break
+            print address, port, line
+    except urllib2.HTTPError, e:
+        sys.stderr.write('HTTP-Error (%s:%d): %s %s\n' % (address, port, e.code, e))
+
+    except Exception, e:
+        sys.stderr.write('Exception (%s:%d): %s\n' % (address, port, e))

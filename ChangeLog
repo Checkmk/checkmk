@@ -113,6 +113,7 @@
     * 0921 FIX: dashboards: fixed bug not updating header timestamp...
     * 0923 FIX: json export: fixed bug not stripping html tags from output
     * 0931 FIX: pnp-template ps.perf: fixed display bug of cpu averaging
+    * 0934 FIX: Logwatch messages with class unknown ( 'u' ) now displayed as WARN...
 
     WATO:
     * 0784 Improved security of WATO bulk inventory by using transaction ids

@@ -1,0 +1,11 @@
+Title: Logwatch messages with class unknown ( 'u' ) now displayed as WARN
+Level: 1
+Component: multisite
+Class: fix
+State: unknown
+Version: 1.2.5i3
+Date: 1401799125
+
+Certain windows messages don't have a correct error level classification
+and there get reported as the error type 'u' (unknown).<br>
+Unknown types were not shown correctly in the multisite logfile viewer.

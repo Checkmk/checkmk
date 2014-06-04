@@ -5,6 +5,9 @@
     Multisite:
     * 0934 FIX: Logwatch messages with class unknown ( 'u' ) now displayed as WARN...
 
+    WATO:
+    * 0813 FIX: LDAP: Improved slightly missleading logging of LDAP sync actions...
+
 
 1.2.5i3:
     Core & Setup:

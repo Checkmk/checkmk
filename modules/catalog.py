@@ -57,6 +57,7 @@ manpage_catalog_titles = {
     "app"      : "Applications",
         "apache"        : "Apache Webserver",
         "db2"           : "IBM DB2",
+        "citrix"        : "Citrix",
         "exchange"      : "Microsoft Exchange",
         "java"          : "Java (Tomcat, Weblogic, JBoss, etc.)",
         "libelle"       : "Libelle Business Shadow",

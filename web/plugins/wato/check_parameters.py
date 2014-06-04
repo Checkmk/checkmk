@@ -5042,3 +5042,38 @@ register_check_parameters(
     "first"
 )
 
+register_check_parameters(
+    subgroup_applications,
+    "citrix_licenses",
+    _("Number of used Citrix licenses"),
+    Alternative(
+        style = "dropdown",
+        default_value = None,
+        elements = [
+              Tuple(
+                  title = _("Absolute Levels for unused licenses"),
+                  elements = [
+                      Integer(title = _("Warning at"), default_value = 5, unit = _("unused licenses")),
+                      Integer(title = _("Critical at"), default_value = 0, unit = _("unused licenses")),
+                  ]
+              ),
+              Tuple(
+                  title = _("Percentual Levels for unused licenses"),
+                  elements = [
+                      Percentage(title = _("Warning at"), default_value = 10.0),
+                      Percentage(title = _("Critical at"), default_value = 0),
+                  ]
+             ),
+             FixedValue(
+                 None,
+                 totext = _("critical if all are used"),
+                 title = _("Go critical if all licenses are used"),
+             ),
+        ]
+    ),
+    TextAscii(
+       title = _("ID of the license, e.g. <tt>PVSD_STD_CCS</tt>"),
+       allow_empty = False,
+    ),
+    "dict"
+)

@@ -1131,6 +1131,21 @@ register_configvar(group,
     need_restart = True
 )
 
+register_configvar(group,
+    "record_inline_snmp_stats",
+    Checkbox(
+        title = _("Record statistics of Inline SNMP"),
+        label = _("Enable recording of Inline SNMP statistics"),
+        help = _("When you have enabled Inline SNMP, you can use this flag to enable recording of "
+                 "some performance related values. The recorded values are stored in a single file "
+                 "at <tt>var/check_mk/snmp.stats</tt>.<br><br>"
+                 "<i>Please note:</i> Only enable this for a short period, because it will "
+                 "decrease the performance of your monitoring."),
+        default_value = False
+    ),
+    need_restart = True
+)
+
 group = _("Service discovery")
 
 register_configvar(group,

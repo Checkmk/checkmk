@@ -839,7 +839,7 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration,
 
     # Render graphical representation
     # Make sure that each cell is visible, if possible
-    min_percentage = min(100.0 / len(timeline_rows), style == "inline" and 0.1 or 0.5)
+    min_percentage = min(100.0 / len(timeline_rows), style == "inline" and 0.0 or 0.5)
     rest_percentage = 100 - len(timeline_rows) * min_percentage
     html.write('<div class="timelinerange %s">' % style)
     if style == "standalone":
@@ -848,6 +848,19 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration,
 
     html.write('<table class="timeline %s">' % style)
     html.write('<tr class=timeline>')
+    chaos_begin = None
+    chaos_end = None
+    chaos_count = 0
+    chaos_width = 0
+
+    def output_chaos_period(chaos_begin, chaos_end, chaos_count, chaos_width):
+        title = _("%d chaotic state changes from %s until %s (%s)") % (
+            chaos_count,
+            render_date(chaos_begin), render_date(chaos_end),
+            render_number(chaos_end - chaos_begin, considered_duration))
+        html.write('<td style="width: %.3f%%" title="%s" class="chaos"></td>' % (
+                   max(0.2, chaos_width), html.attrencode(title)))
+
     for row_nr, (row, state_id) in enumerate(timeline_rows):
         for sid, css, sname, help in availability_columns:
             if sid == state_id:
@@ -857,9 +870,24 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration,
                     help and help or sname)
                 if row["log_output"]:
                     title += " - " + row["log_output"]
-                width = min_percentage + rest_percentage * row["duration"] / considered_duration
+                width = rest_percentage * row["duration"] / considered_duration
+                if style == "inline" and width < 0.05:
+                    if not chaos_begin:
+                        chaos_begin = row["from"]
+                    chaos_width += width
+                    chaos_count += 1
+                    chaos_end = row["until"]
+                    continue
+                elif chaos_begin and chaos_count > 1:
+                    output_chaos_period(chaos_begin, chaos_end, chaos_count, chaos_width)
+                    chaos_begin = None
+                    chaos_count = 0
+                    chaos_width = 0
+                    continue
+
+                width += min_percentage
                 html.write('<td onmouseover="timeline_hover(%d, 1);" onmouseout="timeline_hover(%d, 0);" '
-                           'style="width: %.1f%%" title="%s" class="%s"></td>' % (
+                           'style="width: %.3f%%" title="%s" class="%s"></td>' % (
                            row_nr, row_nr, width, html.attrencode(title), css))
     html.write('</tr></table>')
 

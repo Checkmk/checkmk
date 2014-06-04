@@ -243,6 +243,7 @@ max_num_processes                  = 50
 # SNMP communities and encoding
 has_inline_snmp                    = False # is set to True by inline_snmp module, when available
 use_inline_snmp                    = True
+record_inline_snmp_stats           = False
 snmp_default_community             = 'public'
 snmp_communities                   = []
 snmp_timing                        = []
@@ -1286,21 +1287,31 @@ def do_update_dns_cache():
     # Temporarily disable *use* of cache, we want to force an update
     global use_dns_cache
     use_dns_cache = False
+    updated = 0
+    failed = []
 
     if opt_verbose:
         print "Updating DNS cache..."
     for hostname in all_active_hosts() + all_active_clusters():
+        if opt_verbose:
+            sys.stdout.write("%s..." % hostname)
+            sys.stdout.flush()
         # Use intelligent logic. This prevents DNS lookups for hosts
         # with statically configured addresses, etc.
         try:
-            lookup_ipaddress(hostname)
-        except Exception, e:
+            ip = lookup_ipaddress(hostname)
             if opt_verbose:
-                print "Failed to lookup IP address of %s: %s" % (hostname, e)
+                sys.stdout.write("%s\n" % ip)
+            updated += 1
+        except Exception, e:
+            failed.append(hostname)
+            if opt_verbose:
+                sys.stdout.write("lookup failed: %s\n" % e)
             if opt_debug:
                 raise
             continue
 
+    return updated, failed
 
 def agent_port_of(hostname):
     ports = host_extra_conf(hostname, agent_ports)
@@ -3294,7 +3305,7 @@ no_inventory_possible = None
                  'piggyback_max_cachefile_age',
                  'simulation_mode', 'agent_simulator', 'aggregate_check_mk', 'debug_log',
                  'check_mk_perfdata_with_times', 'livestatus_unix_socket',
-                 'has_inline_snmp', 'use_inline_snmp',
+                 'has_inline_snmp', 'use_inline_snmp', 'record_inline_snmp_stats',
                  ]:
         output.write("%s = %r\n" % (var, globals()[var]))
 

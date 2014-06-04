@@ -990,11 +990,12 @@ perfometers["check_mk-ibm_svc_enclosurestats.power"] = perfometer_check_mk_ibm_s
 
 def perfometer_licenses_percent(row, check_command, perf_data):
     licenses = float(perf_data[0][1])
-    max_avail = float(perf_data[0][5])
-    used_perc = ( licenses / 100 ) * max_avail
+    max_avail = float(perf_data[0][6])
+    used_perc = 100.0 * licenses / max_avail
     return "%.0f%% used" % used_perc, perfometer_linear( used_perc, 'orange' )
 
 perfometers['check_mk-innovaphone_licenses'] = perfometer_licenses_percent
+perfometers['check_mk-citrix_licenses'] = perfometer_licenses_percent
 
 def perfometer_smoke_percent(row, command, perf):
     used_perc = float(perf[0][1])
@@ -1015,3 +1016,4 @@ def perfometer_cache_hit_ratio(row, check_command, perf_data):
 
 perfometers["check_mk-zfs_arc_cache"] = perfometer_cache_hit_ratio
 perfometers["check_mk-zfs_arc_cache.l2"] = perfometer_cache_hit_ratio
+

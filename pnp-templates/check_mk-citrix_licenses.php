@@ -1,5 +1,4 @@
-#!/bin/bash
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -7,7 +6,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2012             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -24,20 +23,15 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-if which mysqladmin > /dev/null
-then
-  # Check if mysqld is running and root password setup
-  echo "<<<mysql_ping>>>"
-  mysqladmin --defaults-extra-file=$MK_CONFDIR/mysql.cfg ping 2>&1
+$license = substr($servicedesc, 16);
+$opt[1] = "--vertical-label Licenses -l 0 -u $MAX[1] --title 'Used Citrix Licenses - $license'";
 
-  mysql --defaults-extra-file=$MK_CONFDIR/mysql.cfg -sN \
-     -e "select '<<<mysql>>>' ;
-         show global status ; show global variables ;
-
-         select '<<<mysql_capacity>>>' ;
-         SELECT table_schema, sum(data_length + index_length), sum(data_free)
-         FROM information_schema.TABLES GROUP BY table_schema ;
-
-         SELECT '<<<mysql_slave>>>' ;
-         show slave status\G"
-fi
+$def[1] = ""
+          . "DEF:used=$RRDFILE[1]:$DS[1]:MAX "
+          . "AREA:used#60d070:\"Used Licenses: \" "
+          . "GPRINT:used:LAST:\"last\\: % 6.0lf\" "
+          . "GPRINT:used:MAX:\"maximum\\: % 6.0lf\" "
+          . "GPRINT:used:AVERAGE:\"average\\:% 6.0lf\\n\" "
+          . "HRULE:$MAX[1]#000000:\"Installed Licences\" "
+          . "LINE:used#008000 "
+          . "";

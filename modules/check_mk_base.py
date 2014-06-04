@@ -1015,6 +1015,9 @@ def do_check(hostname, ipaddress, only_check_types = None):
     else:
         output += "execution time %.1f sec|execution_time=%.3f\n" % (run_time, run_time)
 
+    if record_inline_snmp_stats and has_inline_snmp and use_inline_snmp:
+        save_snmp_stats()
+
     if opt_keepalive:
         global total_check_output
         total_check_output += output

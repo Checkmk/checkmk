@@ -43,6 +43,9 @@ def do_automation(cmd, args):
             result = automation_delete_host(args)
         elif cmd == "notification-get-bulks":
             result = automation_get_bulks(args)
+        elif cmd == "update-dns-cache":
+            read_config_files(with_autochecks=False)
+            result = automation_update_dns_cache()
         else:
             read_config_files()
             if cmd == "try-inventory":
@@ -1378,4 +1381,8 @@ def execute_check_plugin(commandline):
         if opt_debug:
             raise
         return 3, "UNKNOWN - Cannot execute command: %s" % e
+
+
+def automation_update_dns_cache():
+    return do_update_dns_cache()
 

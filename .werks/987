@@ -1,0 +1,14 @@
+Title: New button for updating DNS cache
+Level: 2
+Component: wato
+Version: 1.2.5i4
+Date: 1401897453
+Class: feature
+
+In the host details page in WATO there is now a new button <i>Update DNS Cache</i>. If you
+press this button, then all cached IP addresses of hosts on the same site as the host currently
+edited are being updated.
+
+Use this button when you have not specified an explicit address for a host and that host's
+IP address has been changed in your DNS (and you are not willing to wait for the next
+regular update).

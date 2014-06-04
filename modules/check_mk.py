@@ -1287,6 +1287,8 @@ def do_update_dns_cache():
     # Temporarily disable *use* of cache, we want to force an update
     global use_dns_cache
     use_dns_cache = False
+    updated = 0
+    failed = []
 
     if opt_verbose:
         print "Updating DNS cache..."
@@ -1298,14 +1300,18 @@ def do_update_dns_cache():
         # with statically configured addresses, etc.
         try:
             ip = lookup_ipaddress(hostname)
-            sys.stdout.write("%s\n" % ip)
+            if opt_verbose:
+                sys.stdout.write("%s\n" % ip)
+            updated += 1
         except Exception, e:
+            failed.append(hostname)
             if opt_verbose:
                 sys.stdout.write("lookup failed: %s\n" % e)
             if opt_debug:
                 raise
             continue
 
+    return updated, failed
 
 def agent_port_of(hostname):
     ports = host_extra_conf(hostname, agent_ports)

@@ -267,3 +267,51 @@ void Logfile::updateReferences()
 #endif
 }
 
+// Read complete file into newly allocated buffer. Returns a pointer
+// to a malloced buffer, that the caller must free (or 0, in case of
+// an error). The buffer is 2 bytes larger then the file. One byte
+// at the beginning and at the end of the buffer are '\0'.
+char *Logfile::readIntoBuffer(int *size)
+{
+    int fd = open(_path, O_RDONLY);
+    if (fd < 0) {
+        logger(LOG_WARNING, "Cannot open %s for reading: %s", _path, strerror(errno));
+        return 0;
+    }
+
+    off_t o = lseek(fd, 0, SEEK_END);
+    if (o == -1) {
+        logger(LOG_WARNING, "Cannot seek to end of %s: %s", _path, strerror(errno));
+        close(fd);
+        return 0;
+    }
+
+    *size = o;
+    lseek(fd, 0, SEEK_SET);
+
+    char *buffer = (char *)malloc(*size + 2); // add space for binary 0 at beginning and end
+    if (!buffer) {
+        logger(LOG_WARNING, "Cannot malloc buffer for reading %s: %s", _path, strerror(errno));
+        close(fd);
+        return 0;
+    }
+
+    int r = read(fd, buffer + 1, *size);
+    if (r < 0) {
+        logger(LOG_WARNING, "Cannot read %d bytes from %s: %s", *size, _path, strerror(errno));
+        free(buffer);
+        close(fd);
+        return 0;
+    }
+    else if (r != *size) {
+        logger(LOG_WARNING, "Read only %d out of %d bytes from %s", r, *size, _path);
+        free(buffer);
+        close(fd);
+        return 0;
+    }
+    buffer[0]       = 0; 
+    buffer[*size+1] = 0; // zero-terminate
+
+    close(fd);
+    return buffer;
+}

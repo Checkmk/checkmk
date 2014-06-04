@@ -87,6 +87,8 @@ struct LogEntry
     LogEntry(unsigned lineno, char *line);
     ~LogEntry();
     unsigned updateReferences();
+    static int serviceStateToInt(char *s);
+    static int hostStateToInt(char *s);
 
 private:
     bool handleStatusEntry();
@@ -98,8 +100,6 @@ private:
     bool handleLogversionEntry();
     bool handleInfoEntry();
     bool handleTextEntry();
-    int serviceStateToInt(char *s);
-    int hostStateToInt(char *s);
 };
 
 #endif // LogEntry_h

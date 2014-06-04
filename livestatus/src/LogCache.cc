@@ -22,13 +22,15 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#include <time.h>
-#include <sys/types.h>
 #include <dirent.h>
-#include <unistd.h>
-#include <stddef.h>
+#include <fcntl.h>
 #include <stdarg.h>
+#include <stddef.h>
 #include <stdlib.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
 
 #include "nagios.h"
 #include "logger.h"
@@ -296,4 +298,5 @@ void LogCache::handleNewMessage(Logfile *logfile, time_t since __attribute__ ((_
         debug("Cannot unload more messages. Still %d loaded (max is %d)",
                 num_cached_log_messages, _max_cached_messages);
 }
+
 

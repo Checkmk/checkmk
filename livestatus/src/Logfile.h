@@ -61,6 +61,7 @@ public:
     ~Logfile();
 
     char *path() { return _path; }
+    char *readIntoBuffer(int *size);
     void load(LogCache *LogCache, time_t since, time_t until, unsigned logclasses);
     void flush();
     time_t since() { return _since; }

@@ -48,6 +48,8 @@ protected:
 public:
     Filter() : _query(0), _column(0) {}
     virtual ~Filter() {}
+    virtual bool isAndingFilter() { return false; }
+    virtual bool isNegatingFilter() { return false; }
     string errorMessage() { return _error_message; }
     unsigned errorCode() { return _error_code; }
     bool hasError() { return _error_message != ""; }

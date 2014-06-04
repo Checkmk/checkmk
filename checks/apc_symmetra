@@ -29,6 +29,8 @@
 # PowerNet-MIB::upsBasicOutputStatus.0     .1.3.6.1.4.1.318.1.1.1.4.1.1.0
 # PowerNet-MIB::upsAdvBatteryCapacity.0    .1.3.6.1.4.1.318.1.1.1.2.2.1.0
 # PowerNet-MIB::upsAdvBatteryTemperature.0 .1.3.6.1.4.1.318.1.1.1.2.2.2.0
+# PowerNet-MIB::upsAdvBatteryReplaceIndicator.0 .1.3.6.1.4.1.318.1.1.1.2.2.4.0
+# PowerNet-MIB::upsAdvBatteryNumOfBadBattPacks.0 .1.3.6.1.4.1.318.1.1.1.2.2.6.0
 # PowerNet-MIB::upsAdvBatteryCurrent.0     .1.3.6.1.4.1.318.1.1.1.2.2.9.0
 # PowerNet-MIB::upsAdvOutputVoltage.0      .1.3.6.1.4.1.318.1.1.1.4.2.1.0
 # PowerNet-MIB::upsAdvOutputCurrent.0      .1.3.6.1.4.1.318.1.1.1.4.2.4.0
@@ -78,9 +80,10 @@ factory_settings["apc_default_levels"] = {
 
 def check_apc(item, params, info):
     BasicBatteryStatus, BasicOutputStatus, AdvBatteryCapacity, \
-    AdvBatteryTemperature, AdvBatteryCurrent, AdvInputVoltage, AdvOutputVoltage, \
+    AdvBatteryTemperature, AdvBatteryReplaceIndicator, AdvBatteryNumOfBadBattPacks, \
+    AdvBatteryCurrent, AdvInputVoltage, AdvOutputVoltage, \
     AdvOutputCurrent, AdvBatteryRunTimeRemaining, AdvTestCalibrationResults, AdvOutputLoad \
-                                                = [ saveint(x) for x in info[0][:11] ]
+                                                = [ saveint(x) for x in info[0][:13] ]
 
     LastDiagnosticsDate = info[0][-1]
     RunTimeRemaining = AdvBatteryRunTimeRemaining / 100
@@ -110,11 +113,23 @@ def check_apc(item, params, info):
     if BasicBatteryStatus != 2:
         state = 2
         infotxt += "(!!)"
+        single_states.append( (state, infotxt, None) )
     else:
         state = 0
-    single_states.append( (state, infotxt, None) )
 
-    # 2. Check basic output status
+    # 2. Check battery replacement status
+    if AdvBatteryReplaceIndicator == 2:
+        if AdvBatteryNumOfBadBattPacks == 1:
+            infotxt = "one battery needs replacement(!)"
+            state = 1
+        else:
+            infotxt = "%i batteries need replacement(!!)" % AdvBatteryNumOfBadBattPacks
+            state = 2
+        single_states.append( (state, infotxt, None) )
+    elif state == 0: # if normal only print when replacement status is also OK, to save on service output text
+        single_states.append( (state, infotxt, None) )
+
+    # 3. Check basic output status
     status_text = { 1:"unknown", 2:"online", 3:"on battery", 4:"on smart boost", 5:"timed sleeping",
                     6:"software bypass", 7:"off", 8:"rebooting", 9:"switched bypass",
                    10:"hardware failure bypass", 11:"sleeping until power return",
@@ -129,7 +144,7 @@ def check_apc(item, params, info):
         state = 0
     single_states.append( (state, infotxt, None) )
 
-    # 3. Check battery capacity
+    # 4. Check battery capacity
     state = 0
     infotxt = "capacity %d%% (crit at " % AdvBatteryCapacity
 
@@ -146,7 +161,7 @@ def check_apc(item, params, info):
 
     single_states.append( (state, infotxt, ("capacity", AdvBatteryCapacity, "", crit_capacity, 0, 100)) )
 
-    # 4. Check System temperature
+    # 5. Check System temperature
     # The Name AdvBatteryTemperature is a wrong naming in the vendor mib.
     infotxt = "sys. temp. %dC" % AdvBatteryTemperature
     if AdvBatteryTemperature >= crit_sys_temp:
@@ -156,7 +171,7 @@ def check_apc(item, params, info):
         state = 0
     single_states.append( (state, infotxt, ("systemp", AdvBatteryTemperature, "", crit_sys_temp) ) )
 
-    # 5. Check battery current
+    # 6. Check battery current
     infotxt = "bat. curr. %dA" % AdvBatteryCurrent
     if AdvBatteryCurrent >= crit_batt_curr:
         state = 2
@@ -168,7 +183,7 @@ def check_apc(item, params, info):
     # 6a. Simply show input voltage (no performance data)
     single_states.append( (0, "input voltage %dV" % AdvInputVoltage, None) )
 
-    # 6. Check output voltage
+    # 7. Check output voltage
     infotxt = "output voltage %dV" % AdvOutputVoltage
     if AdvOutputVoltage <= crit_voltage:
         state = 2
@@ -177,17 +192,17 @@ def check_apc(item, params, info):
         state = 0
     single_states.append( (state, infotxt, ("voltage", AdvOutputVoltage, "", crit_voltage, 0) ) )
 
-    # 7. Simply add output current as perfdata
+    # 8. Simply add output current as perfdata
     single_states.append( (0, "output current %dA" % AdvOutputCurrent, ("current", AdvOutputCurrent)) )
 
-    # 8. run time remaining
+    # 9. run time remaining
     # RunTimeRemaining formatiert == "26:00.00"
     hrs = int(RunTimeRemaining) / 3600
     mins, secs = divmod(int(RunTimeRemaining) % 3600, 60)
     single_states.append( (0, "run time remaining: %02d:%02d:%02d" % (hrs, mins, secs),
                             ("runtime", RunTimeRemaining/60)) )
 
-    # 9. Adv Output load (load in percent)
+    # 10. Adv Output load (load in percent)
     load_state = 0
     loadwarn, loadcrit = None, None
     label = ""
@@ -227,6 +242,8 @@ check_info['apc_symmetra'] = {
                             "4.1.1.0", # BasicOutputStatus,
                             "2.2.1.0", # AdvBatteryCapacity,
                             "2.2.2.0", # AdvBatteryTemperature,
+                            "2.2.4.0", # AdvBatteryReplaceIndicator,
+                            "2.2.6.0", # AdvBatteryNumOfBadBattPacks,
                             "2.2.9.0", # AdvBatteryCurrent,
                             "3.2.1.0", # AdvInputVoltage,
                             "4.2.1.0", # AdvOutputVoltage,

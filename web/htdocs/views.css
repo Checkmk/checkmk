@@ -586,6 +586,10 @@ table.timeline td {
     border-style: none;
 }
 
+table.timeline td.chaos {
+    background-color: #8844ff;
+}
+
 table.timeline.standalone td {
     border: 1px solid #444;
 }

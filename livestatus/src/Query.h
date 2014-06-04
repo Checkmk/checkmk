@@ -97,6 +97,7 @@ public:
     Query(InputBuffer *, OutputBuffer *out, Table *);
     ~Query();
     bool processDataset(void *);
+    bool timelimitReached();
     void start();
     void finish();
     void setDefaultColumns(const char *);

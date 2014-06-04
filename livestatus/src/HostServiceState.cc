@@ -22,38 +22,47 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef AndingFilter_h
-#define AndingFilter_h
+#include "HostServiceState.h"
 
-#include "config.h"
-
-#include "Filter.h"
-#include <deque>
-
-class AndingFilter : public Filter
+HostServiceState::~HostServiceState()
 {
-public:
-    typedef deque<Filter *> _subfilters_t;
+    if (_log_output != 0)
+        free(_log_output);
+}
 
-protected:
-    _subfilters_t _subfilters;
+void HostServiceState::computePerStateDurations()
+{
+    _duration_state_UNMONITORED = 0;
+    _duration_part_UNMONITORED = 0;
+    _duration_state_OK = 0;
+    _duration_part_OK = 0;
+    _duration_state_WARNING = 0;
+    _duration_part_WARNING = 0;
+    _duration_state_CRITICAL = 0;
+    _duration_part_CRITICAL = 0;
+    _duration_state_UNKNOWN = 0;
+    _duration_part_UNKNOWN = 0;
 
-public:
-    AndingFilter() {}
-    ~AndingFilter();
-    bool isAndingFilter() { return true; }
-    void addSubfilter(Filter *);
-    Filter *stealLastSubfiler();
-    bool accepts(void *data);
-    void combineFilters(int count, int andor);
-    unsigned numFilters() { return _subfilters.size(); }
-    _subfilters_t::iterator begin() { return _subfilters.begin(); }
-    _subfilters_t::iterator end() { return _subfilters.end(); }
-    void *findIndexFilter(const char *columnname);
-    void findIntLimits(const char *columnname, int *lower, int *upper);
-    bool optimizeBitmask(const char *columnname, uint32_t *mask);
-};
-
-
-#endif // AndingFilter_h
-
+    switch (_state) {
+        case -1:
+            _duration_state_UNMONITORED = _duration;
+            _duration_part_UNMONITORED = _duration_part;
+            break;
+        case 0:
+            _duration_state_OK = _duration;
+            _duration_part_OK = _duration_part;
+            break;
+        case 1:
+            _duration_state_WARNING = _duration;
+            _duration_part_WARNING = _duration_part;
+            break;
+        case 2:
+            _duration_state_CRITICAL = _duration;
+            _duration_part_CRITICAL = _duration_part;
+            break;
+        case 3:
+            _duration_state_UNKNOWN = _duration;
+            _duration_part_UNKNOWN = _duration_part;
+            break;
+    }
+}

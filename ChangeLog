@@ -8,6 +8,9 @@
     WATO:
     * 0813 FIX: LDAP: Improved slightly missleading logging of LDAP sync actions...
 
+    Reporting & Availability:
+    * 0985 Availability: display phases of freqent state changes as "chaos"...
+
 
 1.2.5i3:
     Core & Setup:

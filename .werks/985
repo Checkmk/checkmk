@@ -1,0 +1,9 @@
+Title: Availability: display phases of freqent state changes as "chaos"
+Level: 1
+Component: reporting
+Version: 1.2.5i4
+Date: 1401874149
+Class: feature
+
+This makes sure that phases with thousand state changes with in a
+short time are being displayed as correctly as possible.

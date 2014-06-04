@@ -8,8 +8,9 @@ description:
  a Brocade switch.
 
 item:
- The number of the power supply (1, 2, 3 ...) like descripted in the SNMP output.
+ The number of the power supply (1, 2, 3 ...) as described in the SNMP output.
 
 inventory:
- The inventory creates a service for each power supply.
+ The inventory creates a service for each power supply unless it is marked as absent
+ in {swSensorStatus}
 

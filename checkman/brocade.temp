@@ -7,13 +7,15 @@ description:
  This checks monitors the hardware temperatures of a Brocade FC switch.
 
 item:
- The Number of the sensor (1, 2, 3 ...) like descripted in the SNMP output.
+ The number of the sensor (1, 2, 3 ...) as described in the SNMP output.
 
 perfdata:
  The current temperature value for each sensor
 
 inventory:
- The inventory creates a service for each sensor.
+ The inventory creates a service for each sensor unless it is marked as absent
+ in {swSensorStatus}
+
 
 [parameters]
 warn(int): the temperature at which a WARN state is reached

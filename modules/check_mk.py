@@ -243,6 +243,7 @@ max_num_processes                  = 50
 # SNMP communities and encoding
 has_inline_snmp                    = False # is set to True by inline_snmp module, when available
 use_inline_snmp                    = True
+record_inline_snmp_stats           = False
 snmp_default_community             = 'public'
 snmp_communities                   = []
 snmp_timing                        = []
@@ -3294,7 +3295,7 @@ no_inventory_possible = None
                  'piggyback_max_cachefile_age',
                  'simulation_mode', 'agent_simulator', 'aggregate_check_mk', 'debug_log',
                  'check_mk_perfdata_with_times', 'livestatus_unix_socket',
-                 'has_inline_snmp', 'use_inline_snmp',
+                 'has_inline_snmp', 'use_inline_snmp', 'record_inline_snmp_stats',
                  ]:
         output.write("%s = %r\n" % (var, globals()[var]))
 

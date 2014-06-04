@@ -4970,13 +4970,13 @@ def mode_changelog(phase):
 def foreign_changes():
     changes = {}
     for t, linkinfo, user, action, text in parse_audit_log("pending"):
-        if user != config.user_id:
+        if user != '-' and user != config.user_id:
             changes.setdefault(user, 0)
             changes[user] += 1
     return changes
 
 
-def log_entry(linkinfo, action, message, logfilename):
+def log_entry(linkinfo, action, message, logfilename, user_id = None):
     if type(message) == unicode:
         message = message.encode("utf-8")
     message = message.strip()
@@ -4991,16 +4991,21 @@ def log_entry(linkinfo, action, message, logfilename):
     else:
         link = ":" + linkinfo
 
+    if user_id == None:
+        user_id = config.user_id
+    elif user_id == '':
+        user_id = '-'
+
     log_file = log_dir + logfilename
     make_nagios_directory(log_dir)
     f = create_user_file(log_file, "ab")
-    f.write("%d %s %s %s %s\n" % (int(time.time()), link, config.user_id, action, message))
+    f.write("%d %s %s %s %s\n" % (int(time.time()), link, user_id, action, message))
 
 
-def log_audit(linkinfo, what, message):
+def log_audit(linkinfo, what, message, user_id = None):
     if config.wato_use_git:
         g_git_messages.append(message)
-    log_entry(linkinfo, what, message, "audit.log")
+    log_entry(linkinfo, what, message, "audit.log", user_id)
 
 # status is one of:
 # SYNC        -> Only sync neccessary
@@ -5011,13 +5016,13 @@ def log_audit(linkinfo, what, message):
 # LOCALRESTART-> Called after inventory. In distributed mode, affected
 #                sites have already been marked for restart. Do nothing here.
 #                In non-distributed mode mark for restart
-def log_pending(status, linkinfo, what, message):
-    log_audit(linkinfo, what, message)
+def log_pending(status, linkinfo, what, message, user_id = None):
+    log_audit(linkinfo, what, message, user_id)
     need_sidebar_reload()
 
     if not is_distributed():
         if status != SYNC:
-            log_entry(linkinfo, what, message, "pending.log")
+            log_entry(linkinfo, what, message, "pending.log", user_id)
         cmc_rush_ahead()
 
 
@@ -5025,7 +5030,7 @@ def log_pending(status, linkinfo, what, message):
     # the site is really affected. This needs to be optimized
     # in future.
     else:
-        log_entry(linkinfo, what, message, "pending.log")
+        log_entry(linkinfo, what, message, "pending.log", user_id)
         for siteid, site in config.sites.items():
 
             changes = {}
@@ -5255,12 +5260,13 @@ def render_audit_log(log, what, with_filename = False, hilite_others=False):
     even = "even"
     for t, linkinfo, user, action, text in log:
         even = even == "even" and "odd" or "even"
-        hilite = hilite_others and config.user_id != user
+        hilite = hilite_others and user != '-' and config.user_id != user
         htmlcode += '<tr class="data %s%d">' % (even, hilite and 2 or 0)
         htmlcode += '<td class=nobreak>%s</td>' % render_linkinfo(linkinfo)
         htmlcode += '<td class=nobreak>%s</td>' % fmt_date(float(t))
         htmlcode += '<td class=nobreak>%s</td>' % fmt_time(float(t))
         htmlcode += '<td class=nobreak>'
+        user = user == '-' and ('<i>%s</i>' % _('internal')) or user
         if hilite:
             htmlcode += '<img class=icon src="images/icon_foreign_changes.png" title="%s">' \
                      % _("This change has been made by another user")

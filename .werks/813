@@ -1,0 +1,13 @@
+Title: LDAP: Improved slightly missleading logging of LDAP sync actions
+Level: 1
+Component: wato
+Class: fix
+State: unknown
+Version: 1.2.5i3
+Date: 1401863855
+
+In some situations a call to WATO issued by the user are causing LDAP syncs,
+for example when a user starts the sync interactively or the cache lifetime
+has exceeded. In the past, the name of the triggering user was logged
+to the audit / pending log, which was a bit missleading. Now, the name
+of the user is not logged anymore.

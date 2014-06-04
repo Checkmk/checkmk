@@ -4,20 +4,27 @@ catalog: hw/power/apc
 license: GPL
 distribution: check_mk
 description:
- This check monitors eight aspects of an APC Symmetra UPS: {(1)} the battery status,
- {(2)} the output status, {(3)} the battery capacity, {(4)} the battery
- temperature, {(5)} the battery current, {(6)} the output voltage and
- {(7)} the output current, {(8)} the remaing run time. The output current and
- remaining run time are not checked against a level but are just displayed, {(9)} the current
- load in percent.
+
+ This check monitors ten aspects of an APC Symmetra UPS: {(1)} the
+ battery status, {(2)} the battery replacement status including the number
+ of batteries to be replaced, {(3)} the output status, {(4)} the battery
+ capacity, {(5)} the battery temperature, {(6)} the battery current, {(7)}
+ the output voltage, {(8)} the output current, {(9)} the remaing run time,
+ and {(10)} the current load in percent.
+
+ The output current and remaining run time are not checked against a level,
+ but just displayed. {(2)} is only displayed if a problem is found, the level
+ is {WARN} if one battery needs to be replaced and {CRIT} if more than one
+ battery needs to be replaced. {(1)} is not displayed if the state is normal
+ but a problem in {(2)} was found.
 
  The check output includes the calibration status of the UPS. During a
- calibration the check result in section {(2)} is OK even though the UPS is running
- on battery.
- The check reads the date of the last calibration and optionally applies an alternative
- level for the battery capacity on the day of the calibration. This is because the battery
- capacity is reduced after calibration and may cause an unwanted critical condition
- with the standard level. In addition a time span after the day of the calibration
+ calibration the check result in section {(2)} is OK even though the UPS is
+ running on battery.  The check reads the date of the last calibration and
+ optionally applies an alternative level for the battery capacity on the
+ day of the calibration. This is because the battery capacity is reduced
+ after calibration and may cause an unwanted critical condition with the
+ standard level. In addition a time span after the day of the calibration
  can be configured during which the post-calibration phase still persists.
 
 examples:

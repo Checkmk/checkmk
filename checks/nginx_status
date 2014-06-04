@@ -1,0 +1,112 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+def nginx_status_parse(info):
+    if len(info) != 4:
+        return {} # skip unknown data format
+
+    data = {}
+    for i, line in enumerate(info):
+        address, port = line[:2]
+        if len(line) < 3:
+            continue # Skip unexpected lines
+        item = '%s:%s' % (address, port)
+
+        if item not in data:
+            # new server block start
+            data[item] = {
+                'active'   : int(info[i+0][4]),
+                'accepted' : int(info[i+2][2]),
+                'handled'  : int(info[i+2][3]),
+                'requests' : int(info[i+2][4]),
+                'reading'  : int(info[i+3][3]),
+                'writing'  : int(info[i+3][5]),
+                'waiting'  : int(info[i+3][7]),
+            }
+
+    return data
+
+def inventory_nginx_status(info):
+    data = nginx_status_parse(info)
+    inv = []
+    for item in data.keys():
+        inv.append((item, {}))
+    return inv
+
+def check_nginx_status(item, params, info):
+    if params == None:
+        params = {}
+
+    all_data = nginx_status_parse(info)
+    if item not in all_data:
+        return 3, 'Unable to find instance in agent output'
+    data = all_data[item]
+
+    # Add some more values, derived from the raw ones...
+    data['requests_per_conn'] = data['requests'] / data['handled']
+
+    this_time = int(time.time())
+    for key in [ 'accepted', 'handled', 'requests' ]:
+        try:
+            timedif, per_sec = get_counter("nginx_status.%s" % key, this_time, data[key])
+        except MKCounterWrapped:
+            per_sec = 0
+        data['%s_per_sec' % key] = per_sec
+
+    perfdata = data.items()
+    perfdata.sort()
+
+    worst_state = 0
+
+    conn_warn, conn_crit = params.get('active_connections', (None, None))
+    conn_txt = ''
+    if conn_crit != None and data['active'] > conn_crit:
+        worst_state = max(worst_state, 2)
+        conn_txt = ' (!!)'
+    elif conn_warn != None and data['active'] > conn_warn:
+        worst_state = max(worst_state, 1)
+        conn_txt = ' (!)'
+
+    output = [
+        'Active: %d%s (%d reading, %d writing, %d waiting)' %
+            (data['active'], conn_txt, data['reading'], data['writing'], data['waiting']),
+        'Requests: %0.2f/s (%0.2f/Connection)' % (data['requests_per_sec'], data['requests_per_conn']),
+    ]
+
+    if data['accepted'] == data['handled']:
+        output.append('Accepted/Handled: %0.2f/s' % data['accepted_per_sec'])
+    else:
+        output.append('Accepted: %0.2f/s, Handled: %0.2f/s' % (data['accepted_per_sec'], data['handled_per_sec']))
+
+    return worst_state, ', '.join(output), perfdata
+
+check_info['nginx_status'] = {
+    "check_function" :      check_nginx_status,
+    "inventory_function" :  inventory_nginx_status,
+    "service_description" : "Nginx %s Status",
+    "has_perfdata" :        True,
+    "group" :               "nginx_status"
+}

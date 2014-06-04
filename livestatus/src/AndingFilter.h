@@ -32,12 +32,16 @@
 
 class AndingFilter : public Filter
 {
-protected:
+public:
     typedef deque<Filter *> _subfilters_t;
+
+protected:
     _subfilters_t _subfilters;
+
 public:
     AndingFilter() {}
     ~AndingFilter();
+    bool isAndingFilter() { return true; }
     void addSubfilter(Filter *);
     Filter *stealLastSubfiler();
     bool accepts(void *data);

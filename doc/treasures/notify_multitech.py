@@ -2,9 +2,53 @@
 # Send SMS via MultiTech SMS-Gateway # encoding: utf-8
 #
 # This notification script can be put below share/check_mk/notifications. It sends
-# SMS via a MultiTech SMS-Gateway. Please add your personal configuration directly in this
+# SMS via a MultiTech SMS-Gateway
+# (http://www.multitech.com/en_US/PRODUCTS/Families/MultiModemiSMS/)
+# Please add your personal configuration directly in this
 # script. The target phone number is take from the contact's pager address.
 # You can override this by specifying it as a parameter
+#
+# Some hints for setup of the MultiTech SMS-Gateway:
+#
+# * Please use at least Firmware Version 1.51.9 earlier versions did cause much
+#   trouble. The devices are not yet delivered with this version, so an upgrade is
+#   required. You get SF100-u-v1.51.9-16Jan2013.bin.zip e. g. at
+#   https://shop.netways.de/attachment.php?id_attachment=64
+#
+# * Deactivate the PIN of the SIM card. This can be done most easy by inserting
+#   the SIM into a mobile phone.
+#
+# * By default, the device has IP 192.168.2.1, user admin, password admin.
+#   You can change these in the admin interface by browser (http).
+#
+# * Look into the status information in the web interface to make sure, the
+#   SIM card is displayed as enabled there.
+#   If not: Make sure you did insert the SIM card with contacts to the bottom,
+#   and the cut off corner to the front right.
+#
+# * Under
+#     Administration > Admin Access > Allowed Networks
+#   you can restrict access to the device. Make sure, the IPs of the sending
+#   Check_MK machines are included there.
+#
+# * Under
+#     SMS Services > Send API
+#   enable HTTP Status, set port to 80
+#
+# * Under
+#     SMS Services > International Number
+#   clear the check box "Disable International Number"
+#
+# * Under
+#     SMS Services > Send SMS Users
+#   create a user for Check_MK. This one needs to be entered below.
+#
+# * Do not forget to go to the "Save & Restart" tab and click "save" there.
+#   This writes your changes into the flash memory of the device. Otherwise
+#   they will be lost on next reboot.
+#
+
+
 import sys, os, urllib
 
 # This does not need to be changed

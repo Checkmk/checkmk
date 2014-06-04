@@ -1,0 +1,10 @@
+Title: nginx_status: New check for monitoring status information of the Nginx web server
+Level: 2
+Component: checks
+Version: 1.2.5i4
+Date: 1401803233
+Class: feature
+
+Implemented a new check which uses the Nginx stub status module to monitoring inner
+information of the Nginx process about number of active connections, connections per
+second, requests per second and so on.

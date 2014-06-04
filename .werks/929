@@ -1,0 +1,25 @@
+Title: windows agent: now able to include and execute additional local and plugin scripts as different user
+Level: 2
+Component: checks
+Version: 1.2.5i3
+Date: 1401444688
+Class: feature
+
+In the <tt>[local]</tt> and <tt>[plugin]</tt> sections the new option <tt>include</tt> has been introduced.
+With this option you can configure additional local and plugin directories, which should get parsed.
+You can also configure that the scripts in the given directories should get executed as a different user.
+<br><br>
+Example configuration:<br>
+
+F+:check_mk.ini
+[plugins]
+    # The scripts in the following folder are executed as user \\ab
+    include \\ab = C:\users\ab\plugins
+    # The scripts in the following folder are executed without any
+    # changes to the user permission
+    include - = C:\scripts\plugins
+F-:
+
+<b>Important:</b> Keep in mind that the agent needs the permission to run
+scripts as other user. Internally it uses the windows command <tt>runas /User:</tt>
+which prompts for a password if the windows agent has no permission to change to this user.

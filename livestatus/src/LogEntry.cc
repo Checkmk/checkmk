@@ -4,24 +4,23 @@
 // |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
 // |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 // |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
-// |                                     |_____|                      |
-// |          __  __ _                   ____                         |
-// |         |  \/  (_) ___ _ __ ___    / ___|___  _ __ ___           |
-// |         | |\/| | |/ __| '__/ _ \  | |   / _ \| '__/ _ \          |
-// |         | |  | | | (__| | | (_) | | |__| (_) | | |  __/          |
-// |         |_|  |_|_|\___|_|  \___/   \____\___/|_|  \___|          |
 // |                                                                  |
 // | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
 // +------------------------------------------------------------------+
 //
-// This file is part of the Check_MK Micro Core.  Copyright by Mathias
-// Kettner,  Preysingstr. 74,  81667 München, Germany.  All rights are
-// reserved. You may *not* redistribute or modify this software unless
-// you have a  written  permission of the owner.  This file  is  *not*
-// available under GNU GPL. If you do not like this then please use  a
-// different monitoring core.
+// This file is part of Check_MK.
+// The official homepage is at http://mathias-kettner.de/check_mk.
 //
-// Please note: This software is experimental. Use at your own risk.
+// check_mk is free software;  you can redistribute it and/or modify it
+// under the  terms of the  GNU General Public License  as published by
+// the Free Software Foundation in version 2.  check_mk is  distributed
+// in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+// out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+// PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+// ails.  You should have  received  a copy of the  GNU  General Public
+// License along with GNU Make; see the file  COPYING.  If  not,  write
+// to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+// Boston, MA 02110-1301 USA.
 
 #include <string.h>
 #include <time.h>
@@ -349,16 +348,22 @@ inline bool LogEntry::handleTextEntry()
 
 inline bool LogEntry::handleProgrammEntry()
 {
-    if (strstr(_text, "starting... (PID=")){
+    if (strstr(_text, "starting...") ||
+        strstr(_text, "active mode..."))
+    {
         _logclass = LOGCLASS_PROGRAM;
-        _type     = NAGIOS_STARTING;
+        _type     = CORE_STARTING;
         return true;
     }
-    else if (strstr(_text, "restarting...") ||
-            strstr(_text, "shutting down...") ||
+    else if (strstr(_text, "shutting down...") ||
             strstr(_text, "Bailing out") ||
-            strstr(_text, "active mode...") ||
             strstr(_text, "standby mode..."))
+    {
+        _logclass = LOGCLASS_PROGRAM;
+        _type     = CORE_STOPPING;
+        return true;
+    }
+    else if (strstr(_text, "restarting..."))
     {
         _logclass = LOGCLASS_PROGRAM;
         return true;

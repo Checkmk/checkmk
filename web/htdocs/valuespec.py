@@ -176,7 +176,7 @@ class Age(ValueSpec):
         html.write("<div>")
         if self._label:
             html.write(self._label + " ")
-        html.number_input(varprefix+'_days', days, 2)
+        html.number_input(varprefix+'_days', days, 3)
         html.write(" %s " % _("days"))
         html.number_input(varprefix+'_hours', hours, 2)
         html.write(" %s " % _("hours"))

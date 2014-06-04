@@ -4,7 +4,7 @@ catalog: app/symantec
 license: GPL
 distribution: check_mk
 description:
- This check checks for file in quarantine reportet from symantec anti virus. 
+ This check checks for file in quarantine reportet from symantec anti virus.
  A Critical State will be triggert if the quarantine queue isn'd empty.
  You just need to install the plugin {symantec_av} into the {plugins} directory of your agent.
 

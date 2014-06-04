@@ -1,0 +1,9 @@
+Title: WATO snapshots: excluded some superfluous files from nagvis backup domaim
+Level: 1
+Component: wato
+Version: 1.2.5i3
+Date: 1401697554
+Class: fix
+
+The nagvis backup domain contained some files with hardcoded site names.
+This caused problems if this snaphot was restored on a different site.

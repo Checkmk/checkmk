@@ -1214,6 +1214,32 @@ register_check_parameters(
 )
 
 register_check_parameters(
+    subgroup_applications,
+    "nginx_status",
+    ("Nginx Status"),
+    Dictionary(
+        elements = [
+            ( "active_connections",
+              Tuple(
+                  title = _("Active Connections"),
+                  help = _("You can configure upper thresholds for the currently active "
+                           "connections handled by the web server."),
+                  elements = [
+                      Integer(title = _("Warning if above"),  unit = _("connections")),
+                      Integer(title = _("Critical if above"), unit = _("connections"))
+                  ]
+              )
+            )
+        ]
+    ),
+    TextAscii(
+        title = _("Nginx Server"),
+        help  = _("A string-combination of servername and port, e.g. 127.0.0.1:80.")
+    ),
+    "first"
+)
+
+register_check_parameters(
     subgroup_networking,
     "viprinet_router",
     _("Viprinet router"),

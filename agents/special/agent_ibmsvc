@@ -27,7 +27,7 @@
 # needs to issue a command like
 # ssh USER@HOSTNAME 'echo \<\<\<ibm_svc_host:sep\(58\)\>\>\>; lshost -nohdr -delim :; echo \<\<\<ibm_svc_license:sep\(58\)\>\>\>; lslicense -delim :; echo \<\<\<ibm_svc_mdisk:sep\(58\)\>\>\>; lsmdisk -nohdr -delim :; echo \<\<\<ibm_svc_mdiskgrp:sep\(58\)\>\>\>; lsmdiskgrp -nohdr -delim :; echo \<\<\<ibm_svc_node:sep\(58\)\>\>\>; lsnode -nohdr -delim :; echo \<\<\<ibm_svc_nodestats:sep\(58\)\>\>\>; lsnodestats -nohdr -delim :; echo \<\<\<ibm_svc_system:sep\(58\)\>\>\>; lssystem -delim :; echo \<\<\<ibm_svc_systemstats:sep\(58\)\>\>\>; lssystemstats -nohdr -delim :'
 
-import sys, os, getopt, re
+import sys, os, getopt, re, subprocess
 
 import inspect, pprint # FOR DEBUGGING
 
@@ -136,7 +136,7 @@ for o,a in opts:
     elif o in [ '-t', '--timeout' ]:
         opt_timeout = int(a)
     elif o in [ '-k', '--accept-any-hostkey' ]:
-        opt_any_hostkey = "-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+        opt_any_hostkey = "-o StrictHostKeyChecking=no"
     elif o in [ '-h', '--help' ]:
         usage()
         sys.exit(0)
@@ -182,8 +182,21 @@ cmd += "'"
 
 if opt_debug:
     sys.stderr.write("executing external command: %s\n" % cmd)
-for line in os.popen(cmd).readlines():
-    print line,
+
+
+result = subprocess.Popen(cmd, shell=True, stdout = subprocess.PIPE, stderr = subprocess.PIPE, stdin = None)
+stdout, stderr = result.communicate()
+exit_code = result.wait()
+
+if exit_code not in  [ 0, 1 ]:
+    print "Error connecting via ssh"
+    sys.exit(2)
+
+if stdout.startswith("CMMVC7016E"):
+    print str(stdout)
+    sys.exit(2)
+for line in stdout.split('\n'):
+    print line
 
 
 #############################################################################
@@ -202,3 +215,4 @@ def output_profile():
 
 if g_profile:
     output_profile()
+

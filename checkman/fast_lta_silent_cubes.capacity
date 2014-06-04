@@ -17,7 +17,7 @@ item:
 
 perfdata:
  Three values: The first value is the used space in total over all connected
- silent cubes in MB. Also the minimum (0 MB), maximum (total size over all 
+ silent cubes in MB. Also the minimum (0 MB), maximum (total size over all
  silent cubes) and the warning and critical levels in MB are provided.
  The second is the change of the usage in MB per range since the last check
  (e.g. in MB per 24 hours) and the 3rd is the averaged change (so called

@@ -144,6 +144,10 @@ def inventory_if_common(info, has_nodeinfo = False):
         ifDescr = cleanup_if_strings(ifDescr)
         ifAlias = cleanup_if_strings(ifAlias)
 
+        # Fix bug in brocade switches
+        if ifIndex == '':
+            continue
+
         # Fix bug in TP Link switches
         ifSpeed = saveint(ifSpeed)
         if ifSpeed > 9000000 * 100 * 1000:

@@ -1027,7 +1027,7 @@ def check_host_permissions(hostname, exception=True, folder=None):
         return True
     host = folder[".hosts"][hostname]
     perm_groups, contact_groups = collect_host_groups(host, folder)
-    
+
     # Get contact groups of user
     users = userdb.load_users()
     if config.user_id not in users:
@@ -1138,10 +1138,10 @@ def check_user_contactgroups(cgspec):
 def get_folder_cgconf_from_attributes(attributes):
     v = attributes.get("contactgroups", ( False, [] ))
     cgconf = convert_cgroups_from_tuple(v)
-    return cgconf 
+    return cgconf
 
 # Get all contact groups of a folder, while honoring recursive
-# groups and permissions. Returns a pair of 
+# groups and permissions. Returns a pair of
 # 1. The folders permitted groups (for WATO permissions)
 # 2. The folders contact groups (for hosts)
 def collect_folder_groups(folder, host=None):
@@ -1175,7 +1175,7 @@ def collect_folder_groups(folder, host=None):
             host_groups.update(parent_host_groups)
 
         parent = parent.get(".parent")
-    
+
     return perm_groups, host_groups
 
 
@@ -2273,7 +2273,7 @@ def mode_rename_host(phase):
         check_new_hostname("newname", newname)
         c = wato_confirm(_("Confirm renaming of host"),
                          _("Are you sure you want to rename the host <b>%s</b> into <b>%s</b>? "
-                           "This involves a restart of the monitoring core!") % 
+                           "This involves a restart of the monitoring core!") %
                          (hostname, newname))
         if c:
             # Creating pending entry. That makes the site dirty and that will force a sync of
@@ -2476,7 +2476,7 @@ def rename_host(host, newname):
 
     # State of Multisite ---------------------------------------
     # Favorites of users and maybe other settings. We simply walk through
-    # all directories rather then through the user database. That way we 
+    # all directories rather then through the user database. That way we
     # are sure that also currently non-existant users are being found and
     # also only users that really have a profile.
     users_changed = 0
@@ -4970,13 +4970,13 @@ def mode_changelog(phase):
 def foreign_changes():
     changes = {}
     for t, linkinfo, user, action, text in parse_audit_log("pending"):
-        if user != config.user_id:
+        if user != '-' and user != config.user_id:
             changes.setdefault(user, 0)
             changes[user] += 1
     return changes
 
 
-def log_entry(linkinfo, action, message, logfilename):
+def log_entry(linkinfo, action, message, logfilename, user_id = None):
     if type(message) == unicode:
         message = message.encode("utf-8")
     message = message.strip()
@@ -4991,16 +4991,21 @@ def log_entry(linkinfo, action, message, logfilename):
     else:
         link = ":" + linkinfo
 
+    if user_id == None:
+        user_id = config.user_id
+    elif user_id == '':
+        user_id = '-'
+
     log_file = log_dir + logfilename
     make_nagios_directory(log_dir)
     f = create_user_file(log_file, "ab")
-    f.write("%d %s %s %s %s\n" % (int(time.time()), link, config.user_id, action, message))
+    f.write("%d %s %s %s %s\n" % (int(time.time()), link, user_id, action, message))
 
 
-def log_audit(linkinfo, what, message):
+def log_audit(linkinfo, what, message, user_id = None):
     if config.wato_use_git:
         g_git_messages.append(message)
-    log_entry(linkinfo, what, message, "audit.log")
+    log_entry(linkinfo, what, message, "audit.log", user_id)
 
 # status is one of:
 # SYNC        -> Only sync neccessary
@@ -5011,13 +5016,13 @@ def log_audit(linkinfo, what, message):
 # LOCALRESTART-> Called after inventory. In distributed mode, affected
 #                sites have already been marked for restart. Do nothing here.
 #                In non-distributed mode mark for restart
-def log_pending(status, linkinfo, what, message):
-    log_audit(linkinfo, what, message)
+def log_pending(status, linkinfo, what, message, user_id = None):
+    log_audit(linkinfo, what, message, user_id)
     need_sidebar_reload()
 
     if not is_distributed():
         if status != SYNC:
-            log_entry(linkinfo, what, message, "pending.log")
+            log_entry(linkinfo, what, message, "pending.log", user_id)
         cmc_rush_ahead()
 
 
@@ -5025,7 +5030,7 @@ def log_pending(status, linkinfo, what, message):
     # the site is really affected. This needs to be optimized
     # in future.
     else:
-        log_entry(linkinfo, what, message, "pending.log")
+        log_entry(linkinfo, what, message, "pending.log", user_id)
         for siteid, site in config.sites.items():
 
             changes = {}
@@ -5255,12 +5260,13 @@ def render_audit_log(log, what, with_filename = False, hilite_others=False):
     even = "even"
     for t, linkinfo, user, action, text in log:
         even = even == "even" and "odd" or "even"
-        hilite = hilite_others and config.user_id != user
+        hilite = hilite_others and user != '-' and config.user_id != user
         htmlcode += '<tr class="data %s%d">' % (even, hilite and 2 or 0)
         htmlcode += '<td class=nobreak>%s</td>' % render_linkinfo(linkinfo)
         htmlcode += '<td class=nobreak>%s</td>' % fmt_date(float(t))
         htmlcode += '<td class=nobreak>%s</td>' % fmt_time(float(t))
         htmlcode += '<td class=nobreak>'
+        user = user == '-' and ('<i>%s</i>' % _('internal')) or user
         if hilite:
             htmlcode += '<img class=icon src="images/icon_foreign_changes.png" title="%s">' \
                      % _("This change has been made by another user")
@@ -6780,6 +6786,24 @@ def mode_snapshot(phase):
                 if status.get("broken"):
                     raise MKUserError("_upload_file", _("This is not a Check_MK snapshot!<br>%s") % \
                                                                             status.get("broken_text"))
+                elif not status.get("checksums") and not config.wato_upload_insecure_snapshots:
+                    if status["type"] == "legacy":
+                        raise MKUserError("_upload_file", _('The integrity of this snapshot could not be verified.<br><br>'
+                                          'You are restoring a legacy snapshot which can not be verified. The snapshot contains '
+                                          'files which contain code that will be executed during runtime of the monitoring.<br><br>'
+                                          'The upload of insecure snapshots is currently disabled in WATO. If you want to allow '
+                                          'the upload of insecure snapshots you can activate it in the Global Settings under<br>'
+                                          '<tt>Configuration GUI (WATO) -> Allow upload of insecure WATO snapshots</tt>'))
+                    else:
+                       raise MKUserError("_upload_file", _('The integrity of this snapshot could not be verified.<br><br>'
+                                          'If you restore a snapshot on the same site as where it was created, the checksum should '
+                                          'always be OK. If not, it is likely that something has been modified in the snapshot.<br>'
+                                          'When you restore the snapshot on a different site, the checksum check will always fail. '
+                                          'The snapshot contains files which contain code that will be executed during runtime '
+                                          'of the monitoring.<br><br>'
+                                          'The upload of insecure snapshots is currently disabled in WATO. If you want to allow '
+                                          'the upload of insecure snapshots you can activate it in the Global Settings under<br>'
+                                          '<tt>Configuration GUI (WATO) -> Allow upload of insecure WATO snapshots</tt>'))
                 else:
                     file(snapshot_dir + filename, "w").write(uploaded_file[2])
                     html.set_var("_snapshot_name", filename)
@@ -10954,12 +10978,12 @@ def notification_script_choices_with_parameters():
                  valuespec = TextUnicode(size = 24),
                  orientation = "horizontal",
             )
-        choices.append((script_name, title, 
+        choices.append((script_name, title,
             Alternative(
                 style = "dropdown",
                 elements = [
                     vs,
-                    FixedValue(None, totext = _("previous notifications of this type are cancelled"), 
+                    FixedValue(None, totext = _("previous notifications of this type are cancelled"),
                                title = _("Cancel previous notifications")),
                 ]
             )

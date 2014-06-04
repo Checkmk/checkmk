@@ -1291,13 +1291,17 @@ def do_update_dns_cache():
     if opt_verbose:
         print "Updating DNS cache..."
     for hostname in all_active_hosts() + all_active_clusters():
+        if opt_verbose:
+            sys.stdout.write("%s..." % hostname)
+            sys.stdout.flush()
         # Use intelligent logic. This prevents DNS lookups for hosts
         # with statically configured addresses, etc.
         try:
-            lookup_ipaddress(hostname)
+            ip = lookup_ipaddress(hostname)
+            sys.stdout.write("%s\n" % ip)
         except Exception, e:
             if opt_verbose:
-                print "Failed to lookup IP address of %s: %s" % (hostname, e)
+                sys.stdout.write("lookup failed: %s\n" % e)
             if opt_debug:
                 raise
             continue

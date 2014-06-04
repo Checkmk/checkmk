@@ -59,7 +59,7 @@ manpage_catalog_titles = {
         "db2"           : "IBM DB2",
         "exchange"      : "Microsoft Exchange",
         "java"          : "Java (Tomcat, Weblogic, JBoss, etc.)",
-        "libelle"       : "Libelle Business Shadow"
+        "libelle"       : "Libelle Business Shadow",
         "mailman"       : "Mailman",
         "mssql"         : "Microsoft SQL Server",
         "mysql"         : "MySQL",

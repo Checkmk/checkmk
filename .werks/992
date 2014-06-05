@@ -1,0 +1,12 @@
+Title: zfs_arc_cache: returns OK even if values of arc meta are missing
+Level: 1
+Component: checks
+Version: 1.2.5i4
+Date: 1401970608
+Class: fix
+
+If a ZFS does not report any data about arc meta, the check up to now did
+return UNKNOWN state. Now in this case it returns OK, because this is a valid
+state for a ZFS too.
+
+Additional adding PNP templates for the graphs.

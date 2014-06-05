@@ -11,11 +11,14 @@ description:
  This check is only for reporting and always returns {OK}.
 
 perfdata:
- 7 values are reported:
+ 4 or 7 values are reported:
  hit_ratio in precent, prefetch_data_hit_ratio in percent,
  prefetch_metadata_hit_ratio in percent, size (which is the total cache size)
  in bytes, arc_meta_used in bytes, arc_meta_limit in bytes and
  arc_meta_max in bytes
+
+ arc_meta_used, arc_meta_limit and arc_meta_max are optional and only
+ available if reported by the agent
 
 inventory:
  Creates exactly on check on every machine delivering information

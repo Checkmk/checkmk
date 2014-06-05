@@ -162,18 +162,14 @@ def check_zfs_arc_cache(_no_item, _no_params, info):
         status = 3
 
     # arc_meta
+    # these values may be missing, this is ok too
+    # in this case just do not report these values
     if "arc_meta_used" in parsed.keys() and "arc_meta_limit" in parsed.keys() and "arc_meta_max" in parsed.keys():
         message += ", arc meta %d MB used, limit %d MB, max %d MB" \
                    % (parsed["arc_meta_used"], parsed["arc_meta_limit"], parsed["arc_meta_max"])
         perfdata.append(("arc_meta_used", parsed["arc_meta_used"] * 1024 * 1024, '', '', 0))
         perfdata.append(("arc_meta_limit", parsed["arc_meta_limit"] * 1024 * 1024, '', '', 0))
         perfdata.append(("arc_meta_max", parsed["arc_meta_max"] * 1024 * 1024, '', '', 0))
-    else:
-        message += ", no info about prefetch arc meta available"
-        perfdata.append(("arc_meta_used", 0, '', '', 0))
-        perfdata.append(("arc_meta_limit", 0, '', '', 0))
-        perfdata.append(("arc_meta_max", 0, '', '', 0))
-        status = 3
 
     return status, message, perfdata
 

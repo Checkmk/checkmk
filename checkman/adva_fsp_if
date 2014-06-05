@@ -1,0 +1,59 @@
+title: Adva FSP 3000 Optical Transport: Optical Interface Status
+catalog: hw/network/adva
+agents: snmp
+license: GPL
+distribution: check_mk
+description:
+ This checks monitors the state and laser parameters of interfaces of the
+ ADVA FSP 3000 scalable optical transport solution.
+
+ State information is collected from the SNMP IF-MIB parameters {ifAdminStatus} and
+ {ifOperStatus}. Laser information is collected from the FspR7-MIB parameters
+ {currentPmSnapshotOutputPower} and {currentPmSnapshotInputPower}. 
+
+ Lower warning and critical limits can be configured for the input (received)
+ and output (transmit) power of the laser. Per default, not limits are imposed,
+ since meaningful values depend on the type of interface.
+
+
+item:
+ There are three allowed ways to specify an interface: {1}: the last component
+ of the SNMP OID number (as string), the {ifDescr} of the port or the {ifAlias}
+ of the port. If you are using the alias, you have to make sure that it is
+ unique by configuring useful aliases in the switch. Check_MK does not check
+ for uniqueness.
+ The default is to use the {ifDescr}.
+
+perfdata:
+ The input and output laser power
+
+inventory:
+ The inventory creates one service for each interface that fulfills
+ configurable conditions.  Per default these are interfaces which currently
+ are {up} and are of type {1} (other), {6} (ethernetCsmacd), and {56}
+ (fibreChannel).
+
+[parameters]
+parameters (dict):
+        {"min_input_power"}: a tuple of warning and critical values in dBm,
+                             default is (None, None)
+        {"min_output_power"}: a tuple of warning and critical values in dBm,
+                             default is (None, None)
+
+[configuration]
+adva_fsp_if_inventory_porttypes (list of strings):  List of interface types the inventory should create checks for.
+  Default is {[ '1', '6', '56' ]}, which means that all other, ethernet and fibre channel interfaces
+  will be monitored. Please see the SNMP MIB description of {ifType} for a complete list of port types.
+
+adva_fsp_if_inventory_portstates (list of strings): Per default this variable is set to {['1']}, which means that
+  only ports found in the state {up} are being added to the monitoring. If you set this to {['1', '2', '5']} then
+  also ports in state {down} and {dormant} will be monitored.
+
+adva_fsp_if_inventory_uses_description (boolean): Whether inventory should use
+  the interface description as item (instead of the interface index). Default
+  is {True}.
+
+adva_fsp_if_inventory_uses_alias (boolean): Whether inventory should use
+  the interface alias as item. In this case make sure that it is
+  unique by configuring useful aliases in the switch. Check_MK does not check
+  for uniqueness. Default is {False}.

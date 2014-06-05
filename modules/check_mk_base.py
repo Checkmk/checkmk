@@ -1466,6 +1466,9 @@ def parse_version(v):
 
 def is_expected_agent_version(agent_version, expected_version):
     try:
+        if agent_version == '(unknown)':
+            return False
+
         if type(expected_version) == str and expected_version != agent_version:
             return False
 

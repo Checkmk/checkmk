@@ -1,0 +1,22 @@
+title: Adva FSP 3000 Optical Transport: Current of Power Supplies
+catalog: hw/network/adva
+agents: snmp
+license: GPL
+distribution: check_mk
+description:
+ This checks monitors the current measured for power supplies of the
+ ADVA FSP 3000 scalable optical transport solution.
+
+ No limits are set in the check, since limits are configured in the
+ device itself. The upper limit for the current is
+ read from the device. If the current value is outside the allowed
+ range the check is {CRIT}, otherwise it is {OK}.
+
+item:
+ The name of the power supply module
+
+perfdata:
+ One variable: the current in Ampere
+
+inventory:
+ All connected power supply units are detected

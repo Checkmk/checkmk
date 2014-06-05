@@ -1293,21 +1293,31 @@ def do_update_dns_cache():
     # Temporarily disable *use* of cache, we want to force an update
     global use_dns_cache
     use_dns_cache = False
+    updated = 0
+    failed = []
 
     if opt_verbose:
         print "Updating DNS cache..."
     for hostname in all_active_hosts() + all_active_clusters():
+        if opt_verbose:
+            sys.stdout.write("%s..." % hostname)
+            sys.stdout.flush()
         # Use intelligent logic. This prevents DNS lookups for hosts
         # with statically configured addresses, etc.
         try:
-            lookup_ipaddress(hostname)
-        except Exception, e:
+            ip = lookup_ipaddress(hostname)
             if opt_verbose:
-                print "Failed to lookup IP address of %s: %s" % (hostname, e)
+                sys.stdout.write("%s\n" % ip)
+            updated += 1
+        except Exception, e:
+            failed.append(hostname)
+            if opt_verbose:
+                sys.stdout.write("lookup failed: %s\n" % e)
             if opt_debug:
                 raise
             continue
 
+    return updated, failed
 
 def agent_port_of(hostname):
     ports = host_extra_conf(hostname, agent_ports)

@@ -36,8 +36,8 @@
 
 def brocade_sensor_convert(info, what):
     return_list = []
-    for state, name in info:
-        if name.startswith(what) and (saveint(state) > 0 or what == "Power"):
+    for presence, state, name in info:
+        if name.startswith(what) and presence != "6" and (saveint(state) > 0 or what == "Power"):
             sensor_id  = name.split('#')[-1]
             return_list.append([sensor_id, name, state])
     return return_list
@@ -47,16 +47,20 @@ def brocade_scan(oid):
             oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.24.1.1588.2.1.1") or \
             oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1588.2.2.1")
 
-brocade_info = ('.1.3.6.1.4.1.1588.2.1.1.1.1.22.1', [ 4, 5 ])
+brocade_info = ('.1.3.6.1.4.1.1588.2.1.1.1.1.22.1', [
+                    3, # swSensorStatus, 6 = absent
+                    4, # swSensorValue, -2147483648 = unknown
+                    5, # swSensorInfo
+                ])
 
 brocade_fan_default_levels = { "lower": (3000 , 2800 ) }
 
 def inventory_brocade_fan(info):
-    info = brocade_sensor_convert(info, "FAN")
-    return [ (x[0], 'brocade_fan_default_levels') for x in info ]
+    converted = brocade_sensor_convert(info, "FAN")
+    return [ (x[0], 'brocade_fan_default_levels') for x in converted ]
 
 def check_brocade_fan(item, params, info):
-    info = brocade_sensor_convert(info, "FAN")
+    converted = brocade_sensor_convert(info, "FAN")
     if type(params) is tuple:  # old format
         warn, crit = params
     else:  # new format
@@ -66,7 +70,7 @@ def check_brocade_fan(item, params, info):
         else:
             upperwarn, uppercrit = ( None, None )
 
-    for snmp_item, name, value in info:
+    for snmp_item, name, value in converted:
         if item == snmp_item:
             state = 0
             label = ""
@@ -98,12 +102,12 @@ check_info["brocade.fan"] = {
 }
 
 def inventory_brocade_power(info):
-    info = brocade_sensor_convert(info, "Power")
-    return [ (x[0], None) for x in info ]
+    converted = brocade_sensor_convert(info, "Power")
+    return [ (x[0], None) for x in converted ]
 
 def check_brocade_power(item, _no_params, info):
-    info = brocade_sensor_convert(info, "Power")
-    for snmp_item, name, value in info:
+    converted = brocade_sensor_convert(info, "Power")
+    for snmp_item, name, value in converted:
         if item == snmp_item:
             value = saveint(value)
             if value != 1:
@@ -124,13 +128,13 @@ check_info["brocade.power"] = {
 brocade_temp_default_levels = ( 30, 40 )
 
 def inventory_brocade_temp(info):
-    info = brocade_sensor_convert(info, "SLOT")
-    return [ (x[0], 'brocade_temp_default_levels') for x in info ]
+    converted = brocade_sensor_convert(info, "SLOT")
+    return [ (x[0], 'brocade_temp_default_levels') for x in converted ]
 
 def check_brocade_temp(item, params, info):
-    info = brocade_sensor_convert(info, "SLOT")
+    converted = brocade_sensor_convert(info, "SLOT")
     warn, crit = params
-    for snmp_item, name, value in info:
+    for snmp_item, name, value in converted:
         if item == snmp_item:
             state = 0
             label = ""

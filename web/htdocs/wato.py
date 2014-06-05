@@ -2047,8 +2047,22 @@ def mode_edithost(phase, new, cluster):
             if not cluster:
                 html.context_button(_("Diagnostic"),
                       make_link([("mode", "diag_host"), ("host", hostname)]), "diagnose")
+            html.context_button(_("Update DNS Cache"),
+                      html.makeactionuri([("_update_dns_cache", "1")]), "update")
 
     elif phase == "action":
+        if html.var("_update_dns_cache"):
+            if html.check_transaction():
+                config.need_permission("wato.update_dns_cache")
+                num_updated, failed_hosts = check_mk_automation(host[".siteid"], "update-dns-cache", [])
+                infotext = _("Successfully updated IP addresses of %d hosts.") % num_updated
+                if failed_hosts:
+                    infotext += "<br><br><b>Hostnames failed to lookup:</b> " + ", ".join(["<tt>%s</tt>" % h for h in failed_hosts])
+                return None, infotext
+            else:
+                return None
+
+
         if not new and html.var("delete"): # Delete this host
             config.need_permission("wato.manage_hosts")
             check_folder_permissions(g_folder, "write")
@@ -17433,6 +17447,12 @@ def load_plugins():
            "and disabled by default. It allows you to create a number of random "
            "hosts and thus simulate larger environments."),
          [ ])
+
+    config.declare_permission("wato.update_dns_cache",
+         _("Update DNS Cache"),
+         _("Updating the DNS cache is neccessary in order to reflect IP address "
+           "changes in hosts that are configured without an explicit address."),
+         [ "admin", "user" ])
 
     config.declare_permission("wato.services",
          _("Manage services"),

@@ -1,0 +1,8 @@
+Title: brocade.fan, brocade.power, brocade.temp: will now only discover services which are not marked as absent
+Level: 1
+Component: checks
+Version: 1.2.5i4
+Date: 1401899225
+Class: fix
+
+

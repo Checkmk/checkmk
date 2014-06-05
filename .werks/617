@@ -1,0 +1,8 @@
+Title: adva_fsp_if: new check to monitor interfaces of the ADVA FSP 3000 scalable optical transport solution
+Level: 1
+Component: checks
+Version: 1.2.5i4
+Date: 1401970558
+Class: feature
+
+

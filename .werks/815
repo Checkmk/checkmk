@@ -1,0 +1,8 @@
+Title: mysql_slave: New check for monitoring MySQL slave sync state
+Level: 1
+Component: checks
+Version: 1.2.5i4
+Date: 1401953646
+Class: feature
+
+

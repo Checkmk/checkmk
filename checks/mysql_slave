@@ -1,0 +1,88 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+def inventory_mysql_slave(info):
+    if info:
+        return [(None, {})]
+
+def parse_mysql_slave(info):
+    data = {}
+    for l in info:
+        if ':' in l[0]:
+            val = ' '.join(l[1:])
+
+            # Parse some values
+            try:
+                val = int(val)
+            except ValueError:
+                if val == 'Yes':
+                    val = True
+                elif val == 'No':
+                    val = False
+                elif val == 'None':
+                    val = None
+
+            data[l[0][:-1]] = val
+    return data
+
+def check_mysql_slave(_unused, params, info):
+    data = parse_mysql_slave(info)
+
+    state = 0
+    perfdata = []
+    output = []
+
+    if data['Slave_IO_Running']:
+        output.append('Slave-IO: running')
+    else:
+        output.append('Slave-IO: not running(!!)')
+
+    if data['Slave_SQL_Running']:
+        output.append('Slave-SQL: running')
+    else:
+        output.append('Slave-SQL: not running(!!)')
+
+    out = 'Time behind Master: %s' % get_age_human_readable(data['Seconds_Behind_Master'])
+    warn, crit = params.get('seconds_behind_master', (None, None))
+    if crit != None and data['Seconds_Behind_Master'] > crit:
+        state = 2
+        out += '(!!)'
+    elif warn != None and data['Seconds_Behind_Master'] > warn:
+        state = 1
+        out += '(!)'
+    output.append(out)
+    perfdata.append(('seconds_behind_master', data['Seconds_Behind_Master'], warn, crit))
+
+    return state, ', '.join(output), perfdata
+
+check_info['mysql_slave'] = {
+    "check_function"          : check_mysql_slave,
+    "inventory_function"      : inventory_mysql_slave,
+    "service_description"     : "MySQL DB Slave",
+    "has_perfdata"            : False,
+    "group"                   : "mysql_slave",
+}
+

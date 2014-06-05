@@ -3028,6 +3028,30 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "mysql_slave",
+    _("MySQL Slave"),
+    Dictionary(
+        elements = [
+            ( "seconds_behind_master",
+                Tuple(
+                    title = _("Seconds behind master (Slave lag)"),
+                    help = _("When the slave is actively processing updates, this field shows the difference "
+                             "between the current timestamp on the slave and the original timestamp logged on "
+                             "the master for the most event currently being processed on the slave. "
+                             "You can configure the amount of time you treat as a problem here."),
+                    elements = [
+                       Age(title = _("Warning if above")),
+                       Age(title = _("Critical if above")),
+                    ]
+                )
+            ),
+        ]),
+    None,
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_applications,
     "f5_connections",
     _("F5 Loadbalancer Connections"),
     Dictionary(

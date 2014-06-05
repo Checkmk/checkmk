@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -7,7 +6,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -24,32 +23,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+$opt[1] = "--vertical-label 'Seconds' -l0 --title \"Seconds behind master\" ";
 
-symantec_av_updates_default_levels = ( 259200, 345600 )
+$def[1] = "DEF:sec=$RRDFILE[1]:$DS[1]:MAX ";
+$def[1] .= "AREA:sec#80f000:\"Slave lag\" ";
+$def[1] .= "LINE:sec#408000 ";
+$def[1] .= "GPRINT:sec:LAST:\"%7.2lf sec LAST\" ";
+$def[1] .= "GPRINT:sec:MAX:\"%7.2lf sec MAX\" ";
 
-def inventory_symantec_av_updates(info):
-    return [( None, 'symantec_av_updates_default_levels' )]
-
-def check_symantec_av_updates( _no_item, params, info):
-    warn, crit = params
-    last =  info[0][0]
-    last =  datetime.datetime.strptime(last, "%m/%d/%y").date()
-    age = abs((datetime.datetime.now().date() - last).days)
-    age = 60*60*25*age
-    rev = info[0][-1]
-
-    message = "%s days since last update" % get_age_human_readable(age)
-    if age > crit:
-        return 2, message
-    if age > warn:
-        return 1, message
-    return 0, message
-
-check_info["symantec_av_updates"] = {
-    "check_function"        : check_symantec_av_updates,
-    "group"                 : "antivir_update_age",
-    "inventory_function"    : inventory_symantec_av_updates,
-    "service_description"   : "AV Update Status",
-    "has_perfdata"          : False,
-}
-
+?>

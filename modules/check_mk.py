@@ -3311,7 +3311,7 @@ no_inventory_possible = None
                  'piggyback_max_cachefile_age',
                  'simulation_mode', 'agent_simulator', 'aggregate_check_mk', 'debug_log',
                  'check_mk_perfdata_with_times', 'livestatus_unix_socket',
-                 'has_inline_snmp', 'use_inline_snmp', 'record_inline_snmp_stats',
+                 'use_inline_snmp', 'record_inline_snmp_stats',
                  ]:
         output.write("%s = %r\n" % (var, globals()[var]))
 
@@ -3352,6 +3352,8 @@ no_inventory_possible = None
 
         if has_inline_snmp and use_inline_snmp:
             output.write(stripped_python_file(modules_dir + "/inline_snmp.py"))
+    else:
+        output.write("has_inline_snmp = False\n")
 
     if agent_simulator:
         output.write(stripped_python_file(modules_dir + "/agent_simulator.py"))
@@ -3469,7 +3471,7 @@ no_inventory_possible = None
     output.write("def get_piggyback_translation(hostname):\n    return %r\n\n" % get_piggyback_translation(hostname))
 
     # Expected agent version
-    output.write("def agent_target_version(hostname):\n    return %r\n\n" % agent_target_version(hostname))
+    output.write("def agent_target_version(hostname):\n    return %r\n\n" % (agent_target_version(hostname),))
 
     # SNMP character encoding
     output.write("def get_snmp_character_encoding(hostname):\n    return %r\n\n"

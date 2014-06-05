@@ -3,6 +3,7 @@
     * 0812 nginx_status: New check for monitoring status information of the Nginx web server...
     * 0986 citrix_licenses: new check for monitoring Citrix licenses
     * 0814 Agent versions can now be checked with "at least version X" parameters...
+    * 0815 mysql_slave: New check for monitoring MySQL slave sync state
     * 0616 FIX: brocade.fan, brocade.power, brocade.temp: will now only discover services which are not marked as absent
 
     Multisite:

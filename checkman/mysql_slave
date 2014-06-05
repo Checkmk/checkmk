@@ -1,0 +1,29 @@
+title: MySQL Database: Slave Sync Status
+agents: linux
+catalog: app/mysql
+license: GPL
+distribution: check_mk
+description:
+  This check monitors the synchronsiation state of MySQL slave databases.
+
+  This check needs the agent plugin {mk_mysql} to be installed on the
+  monitored database server. Further details about this plugin and
+  monitoring of MySQL can be found in the Check_MK online documentation
+  in the article "Monitoring MySQL with Check_MK".
+
+inventory:
+  On each host where the agent plugin {mk_mysql} is being installed
+  and the MySQL daemon is running one service is being generated.
+
+[parameters]
+parameters (dict): A dictionary with currentl just one possible key: {"seconds_behind_master"}. This
+  is a pair if two floating point numbers:
+
+  {warn} (float): The maximum number of seconds behind the master that triggers
+    a {WARN} state.
+
+  {crit} (float): The maximum number of seconds behind the master that triggers
+    a {CRIT} state.
+
+  If {seconds_behind_master} is not set, the check always reports {CRITICAL} states
+  when either the slave IO or slave SQL are reported as not running.

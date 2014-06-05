@@ -651,12 +651,18 @@ def check_interval_of(hostname, checkname):
 def agent_target_version(hostname):
     agent_target_versions = host_extra_conf(hostname, check_mk_agent_target_versions)
     if len(agent_target_versions) > 0:
-        if agent_target_versions[0] == "ignore":
+        spec = agent_target_versions[0]
+        if spec == "ignore":
             return None
-        elif agent_target_versions[0] == "site":
+        elif spec == "site":
             return check_mk_version
+        elif type(spec) == str:
+            # Compatibility to old value specification format (a single version string)
+            return spec
+        elif spec[0] == 'specific':
+            return spec[1]
         else:
-            return agent_target_versions[0]
+            return spec # return the whole spec in case of an "at least version" config
 
 regex_cache = {}
 def regex(r):

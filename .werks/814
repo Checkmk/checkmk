@@ -1,0 +1,10 @@
+Title: Agent versions can now be checked with "at least version X" parameters
+Level: 1
+Component: checks
+Version: 1.2.5i4
+Date: 1401949735
+Class: feature
+
+The rule "Check for correct version of Check_MK agent" can now check for minimal
+versions instead of specific ones. You can configure minimal build and/or release
+versions your agents need to be.

@@ -3469,7 +3469,7 @@ no_inventory_possible = None
     output.write("def get_piggyback_translation(hostname):\n    return %r\n\n" % get_piggyback_translation(hostname))
 
     # Expected agent version
-    output.write("def agent_target_version(hostname):\n    return %r\n\n" % agent_target_version(hostname))
+    output.write("def agent_target_version(hostname):\n    return %r\n\n" % (agent_target_version(hostname),))
 
     # SNMP character encoding
     output.write("def get_snmp_character_encoding(hostname):\n    return %r\n\n"

@@ -5395,7 +5395,10 @@ def copy_globals():
     global_saved = {}
     for varname, value in globals().items():
         # Some global caches are allowed to change.
-        if varname not in [ "g_service_description", "g_multihost_checks", "g_check_table_cache", "g_singlehost_checks", "total_check_outout" ] \
+        if varname not in [ "g_service_description", "g_multihost_checks",
+                            "g_check_table_cache", "g_singlehost_checks",
+                            "total_check_outout", "g_nodesof_cache",
+                            "g_initial_times" ] \
             and type(value).__name__ not in [ "function", "module", "SRE_Pattern" ]:
             global_saved[varname] = copy.copy(value)
     return global_saved

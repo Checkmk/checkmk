@@ -82,7 +82,7 @@ check_info['mysql_slave'] = {
     "check_function"          : check_mysql_slave,
     "inventory_function"      : inventory_mysql_slave,
     "service_description"     : "MySQL DB Slave",
-    "has_perfdata"            : False,
+    "has_perfdata"            : True,
     "group"                   : "mysql_slave",
 }
 

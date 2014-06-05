@@ -24,7 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Example output from agent:
 
 symantec_av_updates_default_levels = ( 259200, 345600 )
 
@@ -39,7 +38,7 @@ def check_symantec_av_updates( _no_item, params, info):
     age = 60*60*25*age
     rev = info[0][-1]
 
-    message = "%d days since last update" % age
+    message = "%s days since last update" % get_age_human_readable(age)
     if age > crit:
         return 2, message
     if age > warn:

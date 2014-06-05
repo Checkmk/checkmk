@@ -36,8 +36,8 @@ then
 
          select '<<<mysql_capacity>>>' ;
          SELECT table_schema, sum(data_length + index_length), sum(data_free)
-         FROM information_schema.TABLES GROUP BY table_schema ;
+         FROM information_schema.TABLES GROUP BY table_schema"
 
-         SELECT '<<<mysql_slave>>>' ;
-         show slave status\G"
+  mysql --defaults-extra-file=$MK_CONFDIR/mysql.cfg -s \
+     -e "SELECT '<<<mysql_slave>>>' ; show slave status\G"
 fi

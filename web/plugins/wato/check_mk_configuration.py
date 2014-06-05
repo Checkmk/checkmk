@@ -2286,18 +2286,40 @@ register_rule(group,
 
 register_rule(group,
     "check_mk_agent_target_versions",
-    OptionalDropdownChoice(
-        title = _("Check for correct version of Check_MK agent"),
-        help = _("If you want to make sure all of your Check_MK agents are running"
-                 " one specific version, you may set it by this rule. Agents running "
-                 " some different version return a none ok state then"),
-        choices = [
-           ("ignore", _("Ignore the version")),
-           ("site",   _("Same version as the monitoring site")),
-           ],
-        otherlabel    = _("Specific version"),
-        explicit      = TextAscii(allow_empty = False),
-        default_value = "ignore",
+    Transform(
+        CascadingDropdown(
+            title = _("Check for correct version of Check_MK agent"),
+            help = _("If you want to make sure all of your Check_MK agents are running"
+                     " one specific version, you may set it by this rule. Agents running "
+                     " some different version return a none ok state then"),
+            choices = [
+                ("ignore",   _("Ignore the version")),
+                ("site",     _("Same version as the monitoring site")),
+                ("specific", _("Specific version"),
+                    TextAscii(
+                        allow_empty = False,
+                    )
+                ),
+                ("at_least", _("At least"),
+                    Dictionary(
+                        elements = [
+                            ('release', TextAscii(
+                                title = _('Official Release version'),
+                                allow_empty = False,
+                            )),
+                            ('daily_build', TextAscii(
+                                title = _('Daily build'),
+                                allow_empty = False,
+                            )),
+                        ]
+                    ),
+                ),
+            ],
+            default_value = "ignore",
+        ),
+        # In the past, this was a OptionalDropdownChoice() which values could be strings:
+        # ignore, site or a custom string representing a version number.
+        forth = lambda x: type(x) == str and x not in [ "ignore", "site" ] and ("specific", x) or x
     )
 )
 

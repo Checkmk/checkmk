@@ -93,8 +93,6 @@ def check_adva_fsp_if(item, params, info):
 
             perfdata    = []
 
-            print params
-
             try:
                 output_power = float(line[6])/10.0
                 owarn, ocrit = params.get("min_output_power")

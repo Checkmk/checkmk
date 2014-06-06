@@ -202,10 +202,45 @@ vs_mkeventd_actions = \
     )
 
 
-class RuleState(MonitoringState):
+class RuleState(CascadingDropdown):
     def __init__(self, **kwargs):
-        MonitoringState.__init__(self, **kwargs)
-        self._choices.append((-1, _("(set by syslog)")))
+        choices = [
+            ( 0, _("OK")),
+            ( 1, _("WARN")),
+            ( 2, _("CRIT")),
+            ( 3, _("UNKNOWN")),
+            (-1, _("(set by syslog)")),
+            ('text_pattern', _('(set by message text)'),
+                Dictionary(
+                    elements = [
+                        ('2', RegExpUnicode(
+                            title = _("CRIT Pattern"),
+                            help = _("When the given regular expression (infix search) matches "
+                                     "the events state is set to CRITICAL."),
+                            size = 64,
+                        )),
+                        ('1', RegExpUnicode(
+                            title = _("WARN Pattern"),
+                            help = _("When the given regular expression (infix search) matches "
+                                     "the events state is set to WARNING."),
+                            size = 64,
+                        )),
+                        ('0', RegExpUnicode(
+                            title = _("OK Pattern"),
+                            help = _("When the given regular expression (infix search) matches "
+                                     "the events state is set to OK."),
+                            size = 64,
+                        )),
+                    ],
+                    help = _('Individual patterns matching the text (which must have been matched by '
+                             'the generic "text to match pattern" before) which set the state of the '
+                             'generated event depending on the match.<br><br>'
+                             'First the CRITICAL pattern is tested, then WARNING and OK at last. '
+                             'When none of the patterns matches, the events state is set to UNKNOWN.'),
+                )
+            ),
+        ]
+        CascadingDropdown.__init__(self, choices = choices, **kwargs)
 
 vs_mkeventd_rule = Dictionary(
     title = _("Rule Properties"),
@@ -966,8 +1001,15 @@ def mode_mkeventd_rules(phase):
             if rule.get("drop"):
                 table.cell(_("Priority"), _("DROP"), css="state statep")
             else:
-                txt = {0:_("OK"), 1:_("WARN"), 2:_("CRIT"), 3:_("UNKNOWN"), -1:_("(syslog)")}[rule["state"]]
-                table.cell(_("Priority"), txt,  css="state state%d" % rule["state"])
+                if type(rule['state']) == tuple:
+                    stateval = rule["state"][0]
+                else:
+                    stateval = rule["state"]
+                txt = { 0: _("OK"),   1:_("WARN"),
+                        2: _("CRIT"), 3:_("UNKNOWN"),
+                       -1: _("(syslog)"),
+                       'text_pattern':_("(set by message text)") }[stateval]
+                table.cell(_("Priority"), txt,  css="state state%s" % stateval)
 
             # Syslog priority
             if "match_priority" in rule:

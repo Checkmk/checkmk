@@ -19,6 +19,9 @@
     Reporting & Availability:
     * 0985 Availability: display phases of freqent state changes as "chaos"...
 
+    Event Console:
+    * 0816 States of events can now be set by patterns...
+
 
 1.2.5i3:
     Core & Setup:

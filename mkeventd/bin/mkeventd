@@ -1369,6 +1369,22 @@ class EventServer:
         count_rules = 0
         count_unspecific = 0
 
+        def compile_matching_value(key, val):
+            value = val.strip()
+            # Remove leading .* from regex. This is redundant and
+            # dramatically destroys performance when doing an infix search.
+            if key in [ "match", "match_ok" ]:
+                while value.startswith(".*") and not value.startswith(".*?"):
+                    value = value[2:]
+
+            if not value:
+                return None
+
+            if is_regex(value):
+                return re.compile(value, re.IGNORECASE)
+            else:
+                return val.lower()
+
         for rule in rules:
             if rule.get("disabled"):
                 count_disabled += 1
@@ -1387,19 +1403,22 @@ class EventServer:
                 try:
                     for key in [ "match", "match_ok", "match_host", "match_application" ]:
                         if key in rule:
-                            value = rule[key].strip()
-                            # Remote leading .* from regex. This is redundant and
-                            # dramatically destroys performance when doing an infix search.
-                            if key in [ "match", "match_ok" ]:
-                                while value.startswith(".*") and not value.startswith(".*?"):
-                                    value = value[2:]
-                            if not value:
+                            value = compile_matching_value(key, rule[key])
+                            if value == None:
                                 del rule[key]
                                 continue
-                            if is_regex(value):
-                                rule[key] = re.compile(value, re.IGNORECASE)
-                            else:
-                                rule[key] = rule[key].lower()
+
+                            rule[key] = value
+
+                    if 'state' in rule and type(rule['state']) == tuple and rule['state'][0] == 'text_pattern':
+                        for key in [ '2', '1', '0' ]:
+                            if key in rule['state'][1]:
+                                value = compile_matching_value('state', rule['state'][1][key])
+                                if value == None:
+                                    del rule['state'][1][key]
+                                else:
+                                    rule['state'][1][key] = value
+
                 except Exception, e:
                     if opt_debug:
                         raise
@@ -1681,8 +1700,20 @@ class EventServer:
                 event["state"] = 2
             else:
                 event["state"] = 1
+        elif type(rule["state"]) == tuple and rule["state"][0] == "text_pattern":
+            for key in [ '2', '1', '0', '3' ]:
+                if key in rule["state"][1]:
+                    log(repr(rule["state"][1][key]))
+                    match_groups = match(rule["state"][1][key], event["text"], complete = False)
+                    if match_groups != False:
+                        event["state"] = int(key)
+                        break
+                elif key == '3': # No rule matched!
+                    event["state"] = 3
+
         else:
             event["state"] = rule["state"]
+
         if "sl" not in event:
             event["sl"] = rule["sl"]
         event["first"] = event["time"]

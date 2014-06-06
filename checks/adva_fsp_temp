@@ -1,0 +1,140 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+def inventory_adva_fsp_temp(info):
+    inventory = []
+    for line in info:
+        # Ignore unconnected sensors
+        #if len(line) == 5 and line[4] != "" and line[3] != "" and int(line[0]) >= -2730:
+        if len(line) == 5 and line[0] != "" and line[4] != "" and int(line[0]) >= -2730:
+            inventory.append( (line[4], None) )
+    return inventory
+
+def check_adva_fsp_temp(item, params, info):
+    for line in info:
+        if len(line) == 5 and line[4] == item:
+            temp, high, low, descr = line[0:4]
+            temp = float(temp)/10
+            high = float(high)/10
+            low = float(low)/10
+            if low > -273:
+                infotext = "%.1f C (limits %.1fC/%.1fC) at %s" % (temp, low, high, descr)
+                perfdata = [ ("temp", temp, "", str(low)+":"+str(high),  ) ]
+            else:
+                infotext = "%.1f C (limit %.1fC) at %s" % (temp, high, descr)
+                perfdata = [ ("temp", temp, "", high,  ) ]
+
+            if temp <= -2730:
+                return(3, "Invalid Sensor Data")
+            elif temp >= high or temp <= low:
+                state = 2
+            else:
+                state = 0
+
+            if params.get("trend_range"):
+                problems = []
+                try:
+                    range = params["trend_range"] # in minutes
+                    range_sec = range * 60.0
+                    this_time = time.time()
+
+                    # first compute current rate in C/s by computing delta since last check
+                    timedif, rate = get_counter("temp.%s.delta" % item, this_time, temp, True)
+
+                    # average trend, initialize with zero, rate_avg is in C/s
+                    timedif, rate_avg = get_average("temp.%s.trend" % item,
+                                                    this_time, rate, range_sec / 60.0, True) #?
+
+                    # rate_avg is growth in C/s, trend is in C per trend range minutes
+                    trend = float(rate_avg * range_sec)
+                    sign = trend > 0 and "+" or ""
+                    infotext += ", rate: %s%.2fC/%g min" %  (sign, trend, range)
+
+                    # apply levels for absolute growth in C / interval
+                    trend_c = params.get("trend_c")
+                    if trend_c:
+                        wa, cr = trend_c
+                        if trend >= cr:
+                            problems.append("rising faster than %sC/%g min(!!)" % ( cr, range ))
+                            state = 2
+                        elif trend >= wa:
+                            problems.append("rising faster than %sC/%g min(!)" % ( wa, range ))
+                            state = max(1, state)
+                    else:
+                        wa, cr = None, None
+
+                    # compute time until filesystem is full (only for positive trend, of course)
+                    # The start value of minutes_left is negative. The pnp graph and the perfometer
+                    # will interpret this as inifinite -> not growing
+                    minutes_left = -1
+                    if trend > 0:
+                        diff_to_high = high - temp
+                        minutes_left = diff_to_high / trend * range
+                        timeleft = params.get("trend_timeleft")
+                        def format_minutes(minutes):
+                            if minutes > 60:   # hours
+                                hours = minutes / 60
+                                minutes += - int(hours) * 60
+                                return "%dh %02dm" % (hours, minutes)
+                            else:
+                                return "%d minutes" % minutes
+
+                        if timeleft:
+                            wa, cr = timeleft
+                            if minutes_left <= cr:
+                                state = 2
+                                problems.append("%s until temp limit reached(!!)" % format_minutes(minutes_left))
+                            elif minutes_left <= wa:
+                                state = max(state, 1)
+                                problems.append("%s until temp limit reached(!)" % format_minutes(minutes_left))
+
+                except MKCounterWrapped:
+                    pass
+
+                if problems:
+                    infotext += " - %s" % ", ".join(problems)
+
+            return (state, "%s" % infotext, perfdata)
+
+    return (3, "Sensor %s not found in SNMP data" % item)
+
+check_info['adva_fsp_temp'] = {
+    "inventory_function"    : inventory_adva_fsp_temp,
+    "check_function"        : check_adva_fsp_temp,
+    "service_description"   : "Temperature %s",
+    "has_perfdata"          : True,
+    "snmp_info"             : ( ".1.3.6.1.4.1.2544", [
+                                    "1.11.2.4.2.1.1.1", # moduleDiagnosticsTemp
+                                    "1.11.2.4.2.1.1.2", # moduleDiagnosticsUpperTempThres
+                                    "1.11.2.4.2.1.1.3", # moduleDiagnosticsLowerTempThres
+                                    "2.5.5.1.1.1",
+                                    "2.5.5.2.1.5",
+                                    #"2.5.5.1.1.10",
+                              ]),
+    "snmp_scan_function"    : lambda oid:
+                                oid(".1.3.6.1.2.1.1.1.0") == "Fiber Service Platform F7",
+    "group"                 : "temperature_trends",
+}

@@ -812,6 +812,7 @@ for name, title, sortfunc in [
     ( "summary",         _("Summary"),          cmp ),
     ( "arch",            _("CPU Architecture"), cmp ),
     ( "package_type",    _("Type"),             cmp ),
+    ( "package_version", _("Package Version"),  cmp_version ),
     ( "version",         _("Version"),          cmp_version ),
     ( "install_date",    _("Install Date"),     cmp ),
     ]:

@@ -23,6 +23,9 @@
     Event Console:
     * 0816 States of events can now be set by patterns...
 
+    HW/SW-Inventory:
+    * 0818 FIX: Fixed exception in HW/SW inventory search dialog...
+
 
 1.2.5i3:
     Core & Setup:

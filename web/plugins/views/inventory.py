@@ -646,7 +646,8 @@ multisite_builtin_views["inv_hosts_cpu"] = {
     # General options
     'datasource'                   : 'hosts',
     'topic'                        : _('Inventory'),
-    'title'                        : _('CPU-Related Inventory of all Hosts'),
+    'title'                        : _('CPU Related Inventory of all Hosts'),
+    'linktitle'                    : _('CPU Inv. (all Hosts)'),
     'description'                  : _('A list of all hosts with some CPU related inventory data'),
     'public'                       : True,
     'hidden'                       : False,
@@ -821,6 +822,7 @@ for name, title, sortfunc in [
     ( "summary",         _("Summary"),          cmp ),
     ( "arch",            _("CPU Architecture"), cmp ),
     ( "package_type",    _("Type"),             cmp ),
+    ( "package_version", _("Package Version"),  cmp_version ),
     ( "version",         _("Version"),          cmp_version ),
     ( "install_date",    _("Install Date"),     cmp ),
     ]:

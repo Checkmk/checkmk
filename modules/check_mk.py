@@ -3352,6 +3352,8 @@ no_inventory_possible = None
 
         if has_inline_snmp and use_inline_snmp:
             output.write(stripped_python_file(modules_dir + "/inline_snmp.py"))
+        else:
+            output.write("has_inline_snmp = False\n")
     else:
         output.write("has_inline_snmp = False\n")
 

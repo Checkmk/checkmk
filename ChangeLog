@@ -179,6 +179,7 @@
     * 0610 mk_inventory: windows inventory check now included, install date added to data
     * 0886 FIX: Fix exception on non-UTF-8 encoded characters in software list
     * 0922 FIX: dmidecode: fixed exceptions on missing/unknown data
+    * 0818 FIX: Fixed exception in HW/SW inventory search dialog...
 
 
 1.2.5i2:

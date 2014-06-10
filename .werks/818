@@ -1,0 +1,9 @@
+Title: Fixed exception in HW/SW inventory search dialog
+Level: 1
+Component: inv
+Class: fix
+State: unknown
+Version: 1.2.5i3
+Date: 1402387217
+
+Fixed "KeyError: 'invswpac_package_version'" exception when opening this dialog.

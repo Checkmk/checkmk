@@ -2,6 +2,9 @@
     Checks & Agents:
     * 0932 FIX: prediction: fixed bug where predicted levels were not recalculated
 
+    WATO:
+    * 0817 FIX: Fixed error during creating new sites in WATO...
+
 
 1.2.4p3:
     Core & Setup:

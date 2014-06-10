@@ -8021,9 +8021,10 @@ def mode_edit_site(phase):
 
         # Do not forget to add those settings (e.g. "globals") that
         # are not edited with this dialog
-        for key in old_site.keys():
-            if key not in new_site:
-                new_site[key] = old_site[key]
+        if not new:
+            for key in old_site.keys():
+                if key not in new_site:
+                    new_site[key] = old_site[key]
 
         save_sites(sites)
 

@@ -119,6 +119,7 @@
     * 0923 FIX: json export: fixed bug not stripping html tags from output
     * 0931 FIX: pnp-template ps.perf: fixed display bug of cpu averaging
     * 0934 FIX: Logwatch messages with class unknown ( 'u' ) now displayed as WARN...
+    * 0166 FIX: mobile gui: Fixed colors of command list...
     * 0820 FIX: Fixed wrong NagVis links in "custom links" snapin
     * 0938 FIX: logwatch: fixed incorrect display of warning messages
 

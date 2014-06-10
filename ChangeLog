@@ -23,6 +23,9 @@
     Event Console:
     * 0816 States of events can now be set by patterns...
 
+    HW/SW-Inventory:
+    * 0620 new version of Check_MKs hardware and software inventory including a much extended windows agent and inventory functions
+
 
 1.2.5i3:
     Core & Setup:

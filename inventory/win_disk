@@ -24,35 +24,34 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Example output
-# <<<win_wmi_software:sep(124)>>>
-# 64 Bit HP CIO Components Installer|Hewlett-Packard|15.2.1
-# Adobe Flash Player 12 ActiveX|Adobe Systems Incorporated|12.0.0.70
-# Microsoft Visio 2010 Interactive Guide DEU|Microsoft|1.2.1
-# Microsoft Outlook 2010 Interactive Guide DEU|Microsoft|1.2.1
-# VMware vSphere Client 4.1|VMware, Inc.|4.1.0.17435
-# Microsoft Office Professional Plus 2010|Microsoft Corporation|14.0.7015.1000
+# Example output:
+# <<<win_disk:sep(58)>>>
+# Manufacturer  : (Standardlaufwerke)
+# Model         : VBOX HARDDISK ATA Device
+# Name          : \\.\PHYSICALDRIVE0
+# SerialNumber  : 42566539323537333930652d3836636263352065
+# InterfaceType : IDE
+# Size          : 32210196480
+# Partitions    : 2
 
+def inv_win_disk(info):
+    node = inv_tree("hardware.harddisks.")
+    for varname, value in info:
+        varname = re.sub(" *","", varname)
+        value = re.sub("^ ", "", value)
+        if varname == "SerialNumber":
+            node["serial"] = value
+        elif varname == "Manufacturer":
+            node["vendor"] = value
+        elif varname == "Name":
+            node["product"] = value
+        elif varname == "Model":
+            node["model"] = value
+        elif varname == "InterfaceType":
+            node["type"] = value
+        elif varname == "Size":
+            node["size"] = int(value)
 
-def inv_win_wmi_software(info):
-    paclist = inv_tree("software.packages:")
-    for line in info:
-        pacname, vendor, version = line[0:3]
-        dat = line[3]
-        install_date = ""
-        if len(dat) == 8 and re.match("^20", dat):
-            install_date = int(time.mktime(time.strptime(dat, "%Y%m%d")))
-
-        entry = {
-            "name"            : pacname,
-            "version"         : version,
-            "vendor"          : vendor,
-            "install_date"    : install_date,
-            "package_type"    : "wmi",
-        }
-        paclist.append(entry)
-
-
-inv_info['win_wmi_software'] = {
-   "inv_function"           : inv_win_wmi_software,
+inv_info['win_disk'] = {
+   "inv_function"           : inv_win_disk,
 }

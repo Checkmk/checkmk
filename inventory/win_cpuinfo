@@ -1,0 +1,118 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output:
+# <<<win_cpuinfo:sep(58)>>>
+# Name                      : Intel(R) Core(TM)2 Duo CPU     T9600  @ 2.80GHz
+# Manufacturer              : GenuineIntel
+# Caption                   : Intel64 Family 6 Model 23 Stepping 10
+# DeviceID                  : CPU0
+# MaxClockSpeed             : 2783
+# DataWidth                 : 64
+# L2CacheSize               :
+# L3CacheSize               : 0
+# NumberOfCores             : 1
+# NumberOfLogicalProcessors : 1
+# Status                    : OK
+
+
+def win_cpuinfo_parse_speed(v): # into Hz (float)
+    if v == "Unknown" or v == "":
+        return None
+    parts = v.split()
+    if len(parts) == 1:
+        return float(parts[0])
+    elif parts[1] == "GHz":
+        return float(parts[0]) * 1000000000.0
+    elif parts[1] == "MHz":
+        return float(parts[0]) * 1000000.0
+    elif parts[1] == "kHz":
+        return float(parts[0]) * 1000.0
+    elif parts[1] == "Hz":
+        return float(parts[0])
+
+def win_cpuinfo_parse_voltage(v):
+    if v == "Unknown" or v == "":
+        return None
+    parts = v.split()
+    return float(parts[0])
+
+def inv_win_cpuinfo(info):
+    node = inv_tree("hardware.cpu.")
+    num_threads_total = 0
+    num_procs = 0
+    for varname, value in info:
+        varname = re.sub(" *","", varname)
+        value = re.sub("^ ", "", value)
+        if varname == "NumberOfCores":
+            node["cores_per_cpu"] = int(value)
+        elif varname == "NumberOfLogicalProcessors":
+            node["threads_per_cpu"] = int(value)
+        elif varname == "Manufacturer":
+            node["vendor"] = {
+                "GenuineIntel" : "intel",
+                "AuthenticAMD" : "amd",
+            }.get(value, value)
+        # there is also the L3CacheSize
+        elif varname == "L2CacheSize" and value != "":
+            # normalized to bytes!
+            node["cache_size"] = saveint(value) * 1024
+        elif varname == "Name":
+            node["model"] = value
+        # For the following two entries we assume that all
+        # entries are numbered in increasing order in /proc/cpuinfo.
+        elif varname == "DeviceID":
+            num_procs += 1
+        elif varname == "CurrentVoltage":
+            node["voltage"] = win_cpuinfo_parse_voltage(value)
+        elif varname == "MaxClockSpeed":
+            node["max_speed"] = win_cpuinfo_parse_speed(value)
+        #elif varname == "AddressWidth":
+        #    if value == "64":
+        #        node["arch"] = "x86_64"
+        #    else:
+        #        node["arch"] = "i386"
+        elif varname == "Architecture":
+                node["arch"] = {
+                        "0" : "i386",
+                        "1" : "MIPS",
+                        "2" : "Alpha",
+                        "3" : "PowerPC",
+                        "6" : "Itanium",
+                        "9" : "x86_64",
+                }.get(value,value)
+
+    if num_procs:
+        node.setdefault("cores_per_cpu", 1)
+        node.setdefault("threads_per_cpu", 1)
+        node["cpus"]    = num_procs
+        node["cores"]   = num_procs * node["cores_per_cpu"]
+        node["threads"] = num_procs * node["threads_per_cpu"]
+
+inv_info['win_cpuinfo'] = {
+   "inv_function"           : inv_win_cpuinfo,
+}
+

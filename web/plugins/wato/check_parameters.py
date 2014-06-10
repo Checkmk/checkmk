@@ -378,8 +378,8 @@ register_rule(group + '/' + subgroup_inventory,
               Tuple(
                 title = _("Levels on CPU utilization"),
                 elements = [
-                   Percentage(title = _("Warning if above"), default_value = 90),
-                   Percentage(title = _("Critical if above"), default_value = 98),
+                   Percentage(title = _("Warning if above"),  default_value = 90, maxvalue = 10000),
+                   Percentage(title = _("Critical if above"), default_value = 98, maxvalue = 10000),
                 ],
             )),
             ( "cpu_average",
@@ -4927,8 +4927,8 @@ register_check_parameters(
                   Tuple(
                     title = _("Levels on CPU utilization"),
                     elements = [
-                       Percentage(title = _("Warning if above"), default_value = 90),
-                       Percentage(title = _("Critical if above"), default_value = 98),
+                       Percentage(title = _("Warning if above"),  default_value = 90, maxvalue = 10000),
+                       Percentage(title = _("Critical if above"), default_value = 98, maxvalue = 10000),
                     ],
                 )),
                 ( "cpu_average",

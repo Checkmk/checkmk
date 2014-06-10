@@ -1,0 +1,12 @@
+Title: CPU utilization: increased maximum value to 10000
+Level: 1
+Component: wato
+Class: fix
+State: unknown
+Version: 1.2.5i3
+Date: 1402394358
+
+The maximum value for the CPU utilization in the WATO rules "State and count of processes"
+and "Process inventory" was set to 101 percent. There were some instances where this value was higher than this limit.
+For example if an application used multiple CPUs or the utilization value was calculated for a group of processes.
+

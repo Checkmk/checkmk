@@ -4100,6 +4100,53 @@ register_check_parameters(
 )
 
 register_check_parameters(
+    subgroup_environment,
+    "temperature_trends",
+    _("Temperature trends for devices with builtin levels"),
+    Dictionary(
+        title = _("Temperature Trend Analysis"),
+        help = _("This rule enables and configures a trend analysis and corresponding limits for devices, "
+                 "which have their own limits configured on the device. It will only work for supported "
+                 "checks, right now the adva_fsp_temp check"),
+        elements = [
+            (  "trend_range",
+               Optional(
+                   Integer(
+                       title = _("Time range for temperature trend computation"),
+                       default_value = 30,
+                       minvalue = 5,
+                       unit= _("minutes")),
+                   title = _("Trend computation"),
+                   label = _("Enable trend computation")
+                )
+            ),
+            (  "trend_c",
+               Tuple(
+                   title = _("Levels on trends in degrees Celsius per time range"),
+                   elements = [
+                       Integer(title = _("Warning if above"), unit = _("C / range"), default_value = 5),
+                       Integer(title = _("Critical if above"), unit = _("C / range"), default_value = 10)
+                   ]
+                )
+            ),
+            (  "trend_timeleft",
+               Tuple(
+                   title = _("Levels on the time left until limit is reached"),
+                   elements = [
+                       Integer(title = _("Warning if below"), unit = _("minutes"), default_value = 240,),
+                       Integer(title = _("Critical if below"), unit = _("minutes"), default_value = 120, ),
+                    ]
+                )
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("Sensor ID"),
+        help = _("The identifier of the thermal sensor.")),
+    "dict"
+)
+
+register_check_parameters(
    subgroup_os,
     "ntp_time",
     _("State of NTP time synchronisation"),

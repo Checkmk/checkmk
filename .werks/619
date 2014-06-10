@@ -1,0 +1,8 @@
+Title: adva_fsp_temp: new check to monitor temperature and temperature trends on ADVA scalable optical transport solutions
+Level: 1
+Component: checks
+Version: 1.2.5i4
+Date: 1402064038
+Class: feature
+
+

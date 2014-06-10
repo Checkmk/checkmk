@@ -1,0 +1,29 @@
+title: Adva FSP 3000 Optical Transport: Temperature
+catalog: hw/network/adva
+agents: snmp
+license: GPL
+distribution: check_mk
+description:
+ This checks monitors the temperature of ports and modules of the Adva
+ FSP 3000 scalable optical transport solution.
+
+ No limits are set for the temperatur , since limits are configured in the
+ device itself. The upper and lower limits for the temperature are
+ read from the device. If the current value is outside the allowed
+ range the check is {CRIT}, otherwise it is {OK}.
+
+ In addition temperature trends are monitored by the check. If the rate of
+ temperature increase is above a configured rate per configured time range,
+ the check becomes {WARN} or {CRIT}. The check can also predict in which
+ period of time the upper limit for the temperature configured on the device
+ will be reached and will become {WARN} or {CRIT} if this time period is
+ shorter than the configured one.
+
+item:
+ The name of the module or port
+
+perfdata:
+ One variable: the temperature
+
+inventory:
+ All temperature sensors on all modules/ports are detected

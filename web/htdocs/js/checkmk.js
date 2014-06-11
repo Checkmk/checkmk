@@ -1662,46 +1662,11 @@ function valuespec_cascading_change(oSelect, varprefix, count) {
     }
 }
 
-function getEffectiveStyle(e, attr) {
-    if(e.style[attr]) {
-        // Object local
-        return e.style[attr];
-    } else if(document.defaultView && document.defaultView.getComputedStyle) {
-        // DOM
-        return document.defaultView.getComputedStyle(e, null).getPropertyValue(attr);
-    } else if(e.currentStyle){
-        // IE
-        var ie_attr = attr.replace(/\-(\w)/g, function (strMatch, p1){
-            return p1.toUpperCase();
-        });
-        var f = e.currentStyle[ie_attr];
-        if(f.length > 0) {
-            return f;
-        }
-    }
-    return null;
-}
-
 function valuespec_textarea_resize(oArea) {
-    var padding_top_txt    = getEffectiveStyle(oArea, "padding-top");
-    var padding_bottom_txt = getEffectiveStyle(oArea, "padding-bottom");
-    var padding_top    = 0;
-    var padding_bottom = 0;
-
-    if (padding_top_txt == null) {
-        // Fallback for Firefox and Chrome
-        if ((/Firefox./i.test(navigator.userAgent)) || (/Chrome/i.test(navigator.userAgent))) {
-            padding_top    = 3;
-            padding_bottom = 3;
-        }
-    } else {
-        if (padding_top_txt.length > 2)
-            padding_top    = padding_top_txt.substring(0, padding_top_txt.length - 2);
-        if (padding_bottom_txt.length > 2)
-            padding_bottom = padding_bottom_txt.substring(0, padding_bottom_txt.length - 2);
-    }
-
-    oArea.style.height = (oArea.scrollHeight - padding_top - padding_bottom) + "px";
+    oArea.style.height = (oArea.scrollHeight
+       - (/Chrome/i.test(navigator.userAgent) ? 6 : 0)
+       - (/Firefox.29.0/i.test(navigator.userAgent) ? 6 : 0)
+    ) + "px";
 }
 
 

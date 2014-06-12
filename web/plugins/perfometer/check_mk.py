@@ -1035,3 +1035,33 @@ def perfometer_current(row, check_command, perf_data):
     return display_string, perfometer_linear(current_perc, display_color)
 
 perfometers["check_mk-adva_fsp_current"] = perfometer_current
+
+def perfometer_raritan_pdu_inlet(row, check_command, perf_data):
+    display_color = "#50f020"
+    cap = perf_data[0][0]
+    value = float(perf_data[0][1])
+    unit = perf_data[0][2]
+    display_str = perf_data[0][1] + " " + unit
+
+    if cap == "rmsCurrent":
+        return display_str, perfometer_logarithmic(value, 1, 2, display_color)
+    elif cap == "unbalancedCurrent":
+        return display_str, perfometer_linear(value, display_color)
+    elif cap == "rmsVoltage":
+        return display_str, perfometer_logarithmic(value, 500, 2, display_color)
+    elif cap == "activePower":
+        return display_str, perfometer_logarithmic(value, 20, 2, display_color)
+    elif cap == "apparentPower":
+        return display_str, perfometer_logarithmic(value, 20, 2, display_color)
+    elif cap == "powerFactor":
+        return display_str, perfometer_linear(value * 100, display_color)
+    elif cap == "activeEnergy":
+        return display_str, perfometer_logarithmic(value, 100000, 2, display_color)
+    elif cap == "apparentEnergy":
+        return display_str, perfometer_logarithmic(value, 100000, 2, display_color)
+
+    return "unimplemented" , perfometer_linear(0, "#ffffff")
+
+perfometers["check_mk-raritan_pdu_inlet"] = perfometer_raritan_pdu_inlet
+
+

@@ -81,6 +81,11 @@ def inv_lnx_cpuinfo(info):
             num_threads_total = int(value) + 1
         elif varname == "physical id":
             num_sockets = int(value) + 1
+        elif varname == "flags":
+            if re.search(" lm ", value):
+                node["arch"] = "x86_64"
+            else:
+                node["arch"] = "i386"
 
     if num_threads_total:
         node.setdefault("cores_per_cpu", 1)

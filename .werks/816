@@ -1,0 +1,15 @@
+Title: States of events can now be set by patterns
+Level: 2
+Component: ec
+Version: 1.2.5i4
+Date: 1402053935
+Class: feature
+
+The states of events created by a rule can now be set by regex patterns. A rule can now
+create events with different states. The mechanism is as follows:
+
+1. The "text to match" patterns needs to match a message
+2. When a rule has configured "(set by message text)" as state, and patterns are defined
+for the single states, the message will be matches agains these patterns to calculate
+the state of the event.
+3. When none of these patterns matches, the event is set to UNKNOWN

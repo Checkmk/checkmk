@@ -1,0 +1,74 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output:
+# <<<win_bios:sep(58)>>>
+# Manufacturer       : innotek GmbH
+# Name               : Default System BIOS
+# BIOSVersion        : {VBOX   - 1}
+# ListOfLanguages    : 
+# PrimaryBIOS        : True
+# ReleaseDate        : 20061201000000.000000+000
+# SMBIOSBIOSVersion  : VirtualBox
+# SMBIOSMajorVersion : 2
+# SMBIOSMinorVersion : 5
+
+
+def inv_win_bios(info):
+    node = inv_tree("hardware.bios.")
+    smbios_version = ""
+    bios_version = ""
+    for varname, value in info:
+        varname = re.sub(" *","", varname)
+        value = re.sub("^ ", "", value)
+        if varname == "BIOSVersion":
+            bios_version = value
+        elif varname == "SMBIOSBIOSVersion":
+            smbios_version = value
+        elif varname == "SMBIOSMajorVersion":
+            major_version = value
+        elif varname == "SMBIOSMinorVersion":
+            minor_version = value
+        elif varname == "ReleaseDate":
+            # The ReleaseDate property indicates the release date of the
+            # Win32 BIOS in the Coordinated Universal Time (UTC) format
+            # of YYYYMMDDHHMMSS.MMMMMM(+-)OOO.
+            node["date"] = int(time.mktime(time.strptime(value.split(".")[0], "%Y%m%d%H%M%S")))
+        elif varname == "Manufacturer":
+            node["vendor"] = value
+        elif varname == "Name":
+            node["model"] = value
+
+    if smbios_version:
+        node["version"] = smbios_version + " " + major_version + \
+            "." + minor_version
+    else: 
+        node["version"] = bios_version
+
+inv_info['win_bios'] = {
+   "inv_function"           : inv_win_bios,
+}
+

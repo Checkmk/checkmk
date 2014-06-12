@@ -335,6 +335,7 @@ perfometers["check_mk-cmciii.temp"] = perfometer_temperature
 perfometers["check_mk-ibm_svc_enclosurestats.temp"] = perfometer_temperature
 perfometers["check_mk-wagner_titanus_topsense.temp"] = perfometer_temperature
 perfometers["check_mk-enterasys_temp"] = perfometer_temperature
+perfometers["check_mk-adva_fsp_temp"] = perfometer_temperature
 
 def perfometer_temperature_multi(row, check_command, perf_data):
     display_value = -1
@@ -1017,3 +1018,20 @@ def perfometer_cache_hit_ratio(row, check_command, perf_data):
 perfometers["check_mk-zfs_arc_cache"] = perfometer_cache_hit_ratio
 perfometers["check_mk-zfs_arc_cache.l2"] = perfometer_cache_hit_ratio
 
+def perfometer_current(row, check_command, perf_data):
+    display_color = "#50f020"
+
+    value=savefloat(perf_data[0][1])
+    crit=savefloat(perf_data[0][4])
+    warn=savefloat(perf_data[0][3])
+    current_perc = value/crit*90 # critical is at 90% to allow for more than crit
+
+    if value > warn:
+        display_color = "#FDC840"
+    if value > crit:
+        display_color = "#FF0000"
+
+    display_string = "%.1f Ampere" % value
+    return display_string, perfometer_linear(current_perc, display_color)
+
+perfometers["check_mk-adva_fsp_current"] = perfometer_current

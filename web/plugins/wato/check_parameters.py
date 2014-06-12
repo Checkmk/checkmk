@@ -378,8 +378,8 @@ register_rule(group + '/' + subgroup_inventory,
               Tuple(
                 title = _("Levels on CPU utilization"),
                 elements = [
-                   Percentage(title = _("Warning if above"), default_value = 90),
-                   Percentage(title = _("Critical if above"), default_value = 98),
+                   Percentage(title = _("Warning if above"),  default_value = 90, maxvalue = 10000),
+                   Percentage(title = _("Critical if above"), default_value = 98, maxvalue = 10000),
                 ],
             )),
             ( "cpu_average",
@@ -2314,7 +2314,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_os,
     "vm_guest_tools",
-    _("Virtual machine guest tools status"),
+    _("Virtual machine (for example ESX) guest tools status"),
      Dictionary(
          optional_keys = False,
          elements = [
@@ -2350,7 +2350,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_os,
     "vm_heartbeat",
-    _("Virtual machine heartbeat status"),
+    _("Virtual machine (for example ESX) heartbeat status"),
      Dictionary(
          optional_keys = False,
          elements = [
@@ -3425,7 +3425,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_virt,
     "vm_state",
-    _("Overall state of a virtual machine"),
+    _("Overall state of a virtual machine (for example ESX VMs)"),
     None,
     None, None
 )
@@ -4097,6 +4097,53 @@ register_check_parameters(
         title = _("Sensor ID"),
         help = _("The identificator of the thermal sensor.")),
     "first"
+)
+
+register_check_parameters(
+    subgroup_environment,
+    "temperature_trends",
+    _("Temperature trends for devices with builtin levels"),
+    Dictionary(
+        title = _("Temperature Trend Analysis"),
+        help = _("This rule enables and configures a trend analysis and corresponding limits for devices, "
+                 "which have their own limits configured on the device. It will only work for supported "
+                 "checks, right now the adva_fsp_temp check"),
+        elements = [
+            (  "trend_range",
+               Optional(
+                   Integer(
+                       title = _("Time range for temperature trend computation"),
+                       default_value = 30,
+                       minvalue = 5,
+                       unit= _("minutes")),
+                   title = _("Trend computation"),
+                   label = _("Enable trend computation")
+                )
+            ),
+            (  "trend_c",
+               Tuple(
+                   title = _("Levels on trends in degrees Celsius per time range"),
+                   elements = [
+                       Integer(title = _("Warning if above"), unit = _("C / range"), default_value = 5),
+                       Integer(title = _("Critical if above"), unit = _("C / range"), default_value = 10)
+                   ]
+                )
+            ),
+            (  "trend_timeleft",
+               Tuple(
+                   title = _("Levels on the time left until limit is reached"),
+                   elements = [
+                       Integer(title = _("Warning if below"), unit = _("minutes"), default_value = 240,),
+                       Integer(title = _("Critical if below"), unit = _("minutes"), default_value = 120, ),
+                    ]
+                )
+            ),
+        ]
+    ),
+    TextAscii(
+        title = _("Sensor ID"),
+        help = _("The identifier of the thermal sensor.")),
+    "dict"
 )
 
 register_check_parameters(
@@ -4953,8 +5000,8 @@ register_check_parameters(
                   Tuple(
                     title = _("Levels on CPU utilization"),
                     elements = [
-                       Percentage(title = _("Warning if above"), default_value = 90),
-                       Percentage(title = _("Critical if above"), default_value = 98),
+                       Percentage(title = _("Warning if above"),  default_value = 90, maxvalue = 10000),
+                       Percentage(title = _("Critical if above"), default_value = 98, maxvalue = 10000),
                     ],
                 )),
                 ( "cpu_average",

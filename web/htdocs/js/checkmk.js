@@ -1663,10 +1663,7 @@ function valuespec_cascading_change(oSelect, varprefix, count) {
 }
 
 function valuespec_textarea_resize(oArea) {
-    oArea.style.height = (oArea.scrollHeight
-       - (/Chrome/i.test(navigator.userAgent) ? 6 : 0)
-       - (/Firefox.29.0/i.test(navigator.userAgent) ? 6 : 0)
-    ) + "px";
+    oArea.style.height =  Math.max(oArea.scrollHeight , oArea.clientHeight) + "px";
 }
 
 

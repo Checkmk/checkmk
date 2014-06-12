@@ -535,7 +535,10 @@ def inv_paint_bytes_rounded(b):
         return "number", "%d&nbsp;%s" % (b, units[0])
 
 def inv_paint_volt(volt):
-    return "number", "%.1f V" % volt
+    if volt:
+        return "number", "%.1f V" % volt
+    else:
+        return "", ""
 
 inventory_displayhints.update({
     "."                                                : { "title" : _("Inventory") },
@@ -552,6 +555,7 @@ inventory_displayhints.update({
     ".hardware.cpu.threads_per_cpu"                    : { "title" : _("Hyperthreads per CPU"),           "paint" : "count" },
     ".hardware.cpu.threads"                            : { "title" : _("Total Number of Hyperthreads"),   "paint" : "count" },
     ".hardware.cpu.cpus"                               : { "title" : _("Total Number of CPUs"),  "short" : _("CPUs"),  "paint" : "count" },
+    ".hardware.cpu.arch"                               : { "title" : _("CPU Architecture"),  "short" : _("CPU Arch"), },
     ".hardware.cpu.cores"                              : { "title" : _("Total Number of Cores"), "short" : _("Cores"), "paint" : "count" },
     ".hardware.memory."                                : { "title" : _("Memory (RAM)"), },
     ".hardware.memory.total_ram_usable"                : { "title" : _("Total usable RAM"),               "paint" : "bytes_rounded" },
@@ -567,10 +571,15 @@ inventory_displayhints.update({
     ".hardware.memory.arrays:*.devices:*.size"         : { "title" : _("Size"),                   "paint" : "bytes", },
     ".hardware.memory.arrays:*.devices:*.speed"        : { "title" : _("Speed"),                  "paint" : "hz", },
     ".hardware.system."                                : { "title" : _("System") },
+    ".hardware.harddisks."                             : { "title" : _("Hard Disks") },
+    ".hardware.video."                                 : { "title" : _("Video Cards") },
 
     ".software."                                       : { "title" : _("Software"), "icon" : "software" },
     ".software.os."                                    : { "title" : _("Operating System") },
     ".software.os.name"                                : { "title" : _("Name"), "short" : _("Operating System") },
+    ".software.os.kernel"                              : { "title" : _("Kernel Version"), "short" : _("Kernel") },
+    ".software.os.arch"                                : { "title" : _("Kernel Architecture"), "short" : _("Architecture") },
+    ".software.os.service_pack"                        : { "title" : _("Service Pack"), "short" : _("Service Pack") },
     ".software.packages:"                              : { "title" : _("Packages"), "icon" : "packages", "render": render_inv_dicttable,
                                                            "keyorder" : [ "name", "version", "arch", "package_type", "summary"] },
     ".software.packages:*.name"                        : { "title" : _("Name"), },
@@ -637,7 +646,8 @@ multisite_builtin_views["inv_hosts_cpu"] = {
     # General options
     'datasource'                   : 'hosts',
     'topic'                        : _('Inventory'),
-    'title'                        : _('CPU-Related Inventory of all Hosts'),
+    'title'                        : _('CPU Related Inventory of all Hosts'),
+    'linktitle'                    : _('CPU Inv. (all Hosts)'),
     'description'                  : _('A list of all hosts with some CPU related inventory data'),
     'public'                       : True,
     'hidden'                       : False,
@@ -812,6 +822,7 @@ for name, title, sortfunc in [
     ( "summary",         _("Summary"),          cmp ),
     ( "arch",            _("CPU Architecture"), cmp ),
     ( "package_type",    _("Type"),             cmp ),
+    ( "package_version", _("Package Version"),  cmp_version ),
     ( "version",         _("Version"),          cmp_version ),
     ( "install_date",    _("Install Date"),     cmp ),
     ]:

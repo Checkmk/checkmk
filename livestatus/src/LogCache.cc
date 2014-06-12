@@ -62,6 +62,10 @@ int num_cached_log_messages = 0;
 // Debugging logging is hard if debug messages are logged themselves...
 void debug(const char *loginfo, ...)
 {
+    // Disable debugging, if not working in code. This can result in
+    // a symlink attack otherwise...
+    return;
+
     if (g_debug_level >= 3)
         return;
 

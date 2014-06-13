@@ -107,7 +107,8 @@ def check_raritan_pdu_inlet(item, params, info):
             status_txt = states[status]
             value = float(line[5]) / 10.0**digits
             message = "sensor " + name
-            message += "status \"%s\", value %.2f%s" % (status_txt,value,unit)
+            message += "status \"%s\", value %.2f %s" % (status_txt,value,unit)
+            perfdata = [ (cap, str(value)+unit) ]
             if avail != "1" or status in ( 2, 6 ):
                 state = 2
             elif status == 4:
@@ -115,13 +116,13 @@ def check_raritan_pdu_inlet(item, params, info):
             else:
                 state = 1
 
-    return (state, message)
+    return (state, message, perfdata)
 
 check_info['raritan_pdu_inlet'] = {
   "inventory_function"  : inventory_raritan_pdu_inlet,
   "check_function"      : check_raritan_pdu_inlet,
   "service_description" : "Inlet Sensor %s",
-  "has_perfdata"        : False,
+  "has_perfdata"        : True,
   "snmp_info"           : [
             (".1.3.6.1.4.1.13742.6",  # General properties of the inlet
                  [

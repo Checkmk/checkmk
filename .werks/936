@@ -1,0 +1,8 @@
+Title: agent_ibmsvc: improved error messages on using wrong credentials
+Level: 1
+Component: checks
+Version: 1.2.5i4
+Date: 1402646582
+Class: fix
+
+

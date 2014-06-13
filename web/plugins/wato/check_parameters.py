@@ -2314,7 +2314,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_os,
     "vm_guest_tools",
-    _("Virtual machine guest tools status"),
+    _("Virtual machine (for example ESX) guest tools status"),
      Dictionary(
          optional_keys = False,
          elements = [
@@ -2350,7 +2350,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_os,
     "vm_heartbeat",
-    _("Virtual machine heartbeat status"),
+    _("Virtual machine (for example ESX) heartbeat status"),
      Dictionary(
          optional_keys = False,
          elements = [
@@ -3425,7 +3425,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_virt,
     "vm_state",
-    _("Overall state of a virtual machine"),
+    _("Overall state of a virtual machine (for example ESX VMs)"),
     None,
     None, None
 )

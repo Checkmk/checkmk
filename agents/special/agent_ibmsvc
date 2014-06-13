@@ -93,7 +93,7 @@ host_address    = None
 user            = None
 mortypes        = [ 'all' ]
 
-command_options = { 
+command_options = {
     "lshost"        : {"section_header" : "ibm_svc_host",        "active" : False,
                        "command" : "lshost -nohdr -delim :"},
     "lslicense"     : {"section_header" : "ibm_svc_license",     "active" : False,
@@ -189,13 +189,17 @@ stdout, stderr = result.communicate()
 exit_code = result.wait()
 
 if exit_code not in  [ 0, 1 ]:
-    print "Error connecting via ssh"
+    sys.stderr.write("Error connecting via ssh")
     sys.exit(2)
 
-if stdout.startswith("CMMVC7016E"):
-    print str(stdout)
+lines = stdout.split('\n')
+
+if lines[0].startswith("CMMVC7016E") or (len(lines) > 1 and lines[1].startswith("CMMVC7016E")):
+    sys.stderr.write(stdout)
     sys.exit(2)
-for line in stdout.split('\n'):
+
+# Quite strange.. Why not simply print stdout?
+for line in lines:
     print line
 
 

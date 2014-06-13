@@ -1,0 +1,13 @@
+Title: zfsget: better filesystem selection and calculation of sizes
+Level: 2
+Component: checks
+Version: 1.2.5i3
+Date: 1402667669
+Class: fix
+
+zfsget now only inventorizes filesystems of type "filesystem".
+
+If a mountpoint is present several times in the zfsget section of the agent
+data (with different device name), and also in the df section, the entry
+in the zfsget section with the device name from the df section is taken for
+calculating the data.

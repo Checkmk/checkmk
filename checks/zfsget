@@ -91,18 +91,40 @@ def parse_zfsget(info):
     if entry:
         entries.append(entry)
 
+    # parsed has the device name as key, because there may exist
+    # several device names per mount point, and we know only
+    # later which one to take
     parsed = {}
     for entry in entries:
         if entry["mountpoint"].startswith("/"):
             entry["is_pool"] = '/' not in entry["name"]
-            if entry['available'] != 0:
-                parsed[entry["mountpoint"]] = entry
+            if entry['available'] !=0 and entry['type'] == 'filesystem':
+                parsed[entry["name"]] = entry
 
+    # parsed_df and parsed_final have the mount point as key
+    parsed_final = {}
     if start_of_df != None:
-        zfsget_parse_df_info(parsed, info[start_of_df:])
+        parsed_df = zfsget_parse_df_info(parsed, info[start_of_df:])
+        for mountpoint, entry_df in parsed_df.items():
+            found = False
+            # for every mount point in the df section, if the device name
+            # is also present in the "parsed" variable, we take those data
+            for name, entry in parsed.items():
+                if entry_df["name"] == name:
+                    parsed_final[mountpoint] = entry
+                    found = True
+            # if a mount point in the df section is not present in the
+            # parsed variable, we take the data from the df section
+            if not found:
+                parsed_final[mountpoint] = entry_df
+    else:
+        # if there is no df section we take the other data,
+        # should there be several device names per mount point,
+        # (not sure if this can happen) the last one wins
+        for name, entry in parsed.items():
+            parsed_final[entry["mountpoint"]] = entry
 
-    return parsed
-
+    return parsed_final
 
 def zfsget_parse_df_info(entries, info):
     new_entries = {}
@@ -112,11 +134,10 @@ def zfsget_parse_df_info(entries, info):
             device, kbytes, used, avail, percent, mountpoint = entry
         else:
             device, fs_type, kbytes, used, avail, percent, mountpoint = entry
-        # ignore entries already contained in zfsget and also
-        # entries for virtual filesystems (like swap)
-        if mountpoint.startswith("/") and mountpoint not in entries:
+        if mountpoint.startswith("/"):
             entry = {}
             total = int(kbytes) / 1024.0
+            entry["name"] = device
             entry["total"] = total
             entry["used"] = int(used) / 1024.0
             entry["available"] = total - entry["used"]
@@ -138,9 +159,7 @@ def zfsget_parse_df_info(entries, info):
                 drop.append(mountpoint)
         for mp in drop:
             del new_entries[mp]
-    entries.update(new_entries)
-
-
+    return new_entries
 
 def inventory_zfsget(info):
     mplist = []

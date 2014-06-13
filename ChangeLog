@@ -102,6 +102,7 @@
     * 0616 FIX: brocade.fan, brocade.power, brocade.temp: will now only discover services which are not marked as absent
     * 0992 FIX: zfs_arc_cache: returns OK even if values of arc meta are missing...
     * 0936 FIX: agent_ibmsvc: improved error messages on using wrong credentials
+    * 0621 FIX: zfsget: better filesystem selection and calculation of sizes...
 
     Multisite:
     * 0779 Hostgroups (Summary): Empty hostgroups are no longer shown (can be re-enabled by filter)

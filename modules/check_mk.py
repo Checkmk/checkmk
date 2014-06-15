@@ -5468,6 +5468,8 @@ def do_check_keepalive():
                     sys.stderr.write("WARNING: new variable appeared: %s" % ", ".join(new_vars))
 
         except Exception, e:
+            signal.signal(signal.SIGALRM, signal.SIG_IGN) # Prevent ALRM from CheckHelper.cc
+            signal.alarm(0)
             if opt_debug:
                 raise
             total_check_output = "UNKNOWN - %s\n" % e

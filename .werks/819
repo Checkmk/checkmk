@@ -1,0 +1,11 @@
+Title: Fixed keepalive termination in case of exceptions during checking
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i3
+Date: 1402839420
+
+For example regular appearing exceptions like "Cannot resolve hostname..." were
+terminating the keepalive instance. This restart of the keepalive process is not
+expected to be done in such situations.

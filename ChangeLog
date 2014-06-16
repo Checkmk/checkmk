@@ -2,6 +2,9 @@
     Checks & Agents:
     * 0932 FIX: prediction: fixed bug where predicted levels were not recalculated
 
+    Multisite:
+    * 0820 FIX: Fixed wrong NagVis links in "custom links" snapin
+
     WATO:
     * 0817 FIX: Fixed error during creating new sites in WATO...
 

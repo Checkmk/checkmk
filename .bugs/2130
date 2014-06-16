@@ -1,0 +1,9 @@
+Title: Dynamic file system levels can not be edited
+Component: wato
+State: open
+Date: 2014-06-16 15:38:54
+Targetversion: 1.2.5i1
+Class: bug
+
+When a df rule has dynamic file system levels configured, this is saved and can be used, but when
+opened in WATO again, the value can not be loaded again.

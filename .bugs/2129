@@ -1,0 +1,10 @@
+Title: check_dns: Multiple expected IP addresses can be set in two ways
+Component: wato
+State: open
+Date: 2014-06-16 15:36:50
+Targetversion: 1.2.5i1
+Class: bug
+
+The check accept either multiple "-a <host>" or "-a <host1>,<host2>. This depends on the
+way you want the check to work. Either expect all of the addresses to be part of the
+answer or just one of the given ones.

@@ -262,6 +262,8 @@ def mon_perfdata(node):
         'EXTERNAL_USER_NAME': cfg['user'],
         'TID': tid(node),
     })
+    if f.PROPERTIES.value['DECIMALS'] != 0:
+        value = (value + 0.0) / 10**f.PROPERTIES.value['DECIMALS']
     uom = f.PROPERTIES.value['VALUNIT'].strip()
 
     return value, uom

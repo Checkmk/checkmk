@@ -24,13 +24,18 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+adva_fsp_temp_default_levels = {
+    "trend_range": None, # range in minutes, default is no trend computation
+    "trend_c": (5,10), # in degrees Celcius
+    "trend_timeleft": (240, 120), # in minutes
+}
+
 def inventory_adva_fsp_temp(info):
     inventory = []
     for line in info:
         # Ignore unconnected sensors
-        #if len(line) == 5 and line[4] != "" and line[3] != "" and int(line[0]) >= -2730:
         if len(line) == 5 and line[0] != "" and line[4] != "" and int(line[0]) >= -2730:
-            inventory.append( (line[4], None) )
+            inventory.append( (line[4], "adva_fsp_temp_default_levels") )
     return inventory
 
 def check_adva_fsp_temp(item, params, info):
@@ -86,7 +91,7 @@ def check_adva_fsp_temp(item, params, info):
                     else:
                         wa, cr = None, None
 
-                    # compute time until filesystem is full (only for positive trend, of course)
+                    # compute time until temperature limit is reached  (only for positive trend, of course)
                     # The start value of minutes_left is negative. The pnp graph and the perfometer
                     # will interpret this as inifinite -> not growing
                     minutes_left = -1
@@ -126,6 +131,7 @@ check_info['adva_fsp_temp'] = {
     "check_function"        : check_adva_fsp_temp,
     "service_description"   : "Temperature %s",
     "has_perfdata"          : True,
+    "default_levels_variable" : "adva_fsp_temp_default_levels",
     "snmp_info"             : ( ".1.3.6.1.4.1.2544", [
                                     "1.11.2.4.2.1.1.1", # moduleDiagnosticsTemp
                                     "1.11.2.4.2.1.1.2", # moduleDiagnosticsUpperTempThres

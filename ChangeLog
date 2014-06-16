@@ -3,6 +3,7 @@
     * 0932 FIX: prediction: fixed bug where predicted levels were not recalculated
 
     Multisite:
+    * 0166 FIX: mobile gui: Fixed colors of command list...
     * 0820 FIX: Fixed wrong NagVis links in "custom links" snapin
 
     WATO:

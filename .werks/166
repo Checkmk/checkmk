@@ -1,0 +1,8 @@
+Title: mobile gui: Fixed colors of command list
+Level: 1
+Component: multisite
+Version: 1.2.4p4
+Date: 1402388501
+Class: fix
+
+The link color is now black instead of white. This is much more readable.

@@ -360,7 +360,7 @@ def parse_file(host, file, hidecontext = False):
                     line_level = 1
                     line_class = 'WARN'
 
-                if line[0] == 'u':
+                elif line[0] == 'u':
                     line_level = 1
                     line_class = 'WARN'
 

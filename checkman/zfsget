@@ -17,7 +17,7 @@ description:
  filesystems live together in a common "pool". Each of the filesystems
  has its own amount of used space. But they share a common free space.
  If you want to compute the {percentage} of used/free space of a filesystem,
- then you run into trouble. Let's take the following example:
+ you may run into trouble. Let's take the following example:
 
  Lets say we have a pool P of the size 10GB where the filesystems A and B
  live. Lets assume that A currently uses 2GB and B uses 7GB. That makes 1GB
@@ -29,6 +29,6 @@ description:
  as 3GB with 2GB used (which makes 66.6%). That way all filesystems will
  become critical if the available pool space goes to zero.
 
- Filesystems with a {quota} are handled differntly, however! Here the quota
- is reported as the total size. If A would have a quota of 5GB then we report
+ Filesystems with a {quota} are handled differently, however. Here the quota
+ is reported as the total size. If A has a quota of 5GB, we report
  2GB out of 5GB used.

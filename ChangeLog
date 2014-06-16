@@ -7,8 +7,11 @@
     * 0617 adva_fsp_if: new check to monitor interfaces of the ADVA FSP 3000 scalable optical transport solution
     * 0618 adva_fsp_current: new check for the power supply units of the ADVA FSP 3000 scalable optical transport solution
     * 0619 adva_fsp_temp: new check to monitor temperature and temperature trends on ADVA scalable optical transport solutions
+    * 0993 raritan_pdu_inlet: now delivers performance data
     * 0616 FIX: brocade.fan, brocade.power, brocade.temp: will now only discover services which are not marked as absent
     * 0992 FIX: zfs_arc_cache: returns OK even if values of arc meta are missing...
+    * 0936 FIX: agent_ibmsvc: improved error messages on using wrong credentials
+    * 0621 FIX: zfsget: better filesystem selection and calculation of sizes...
     * 0819 FIX: Fixed keepalive termination in case of exceptions during checking...
 
     Multisite:

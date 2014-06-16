@@ -16,6 +16,9 @@ description:
 item:
  The ID Number of the inlet and the sensor type.
 
+perfdata:
+ Exactly one number: The measured value together with it's unit.
+
 inventory:
  During inventory all available sensors of the inlet and their type are
  determined. One check per sensor is created.

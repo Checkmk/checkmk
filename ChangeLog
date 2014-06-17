@@ -10,7 +10,7 @@
     * 0136 FIX: cisco_fru_power: Prevent inventory of not exsisting devices
     * 0673 FIX: zfsget: Fixed broken check - was not compatible to current agent output of "df"
     * 0719 FIX: postfix_mailq: fix Linux agent in case of ssmtp being installed
-    * 0585 FIX: check_mk_agent.linux: more efficient handling of cups printer queues...
+    * 0622 FIX: cisco_temp_sensor: fix to also work with newer IOS versions
 
     Multisite:
     * 0278 FIX: Fixed bookmark icon images for non-english user languages...

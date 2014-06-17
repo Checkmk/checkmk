@@ -1,0 +1,8 @@
+Title: cisco_temp_sensor: fix to also work with newer IOS versions
+Level: 1
+Component: checks
+Version: 1.2.4p1
+Date: 1403003070
+Class: fix
+
+

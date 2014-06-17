@@ -9,7 +9,7 @@ description:
  It uses a combination of data from the standardized
  sensors MIB and vendor specific information.
 
- Warning and critical levels are retrieved from the device
+ Upper warning and critical levels are retrieved from the device
  via SNMP and thus need not to be configured.
 
 item:

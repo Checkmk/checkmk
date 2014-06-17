@@ -104,6 +104,7 @@
     * 0936 FIX: agent_ibmsvc: improved error messages on using wrong credentials
     * 0621 FIX: zfsget: better filesystem selection and calculation of sizes...
     * 0819 FIX: Fixed keepalive termination in case of exceptions during checking...
+    * 0622 FIX: cisco_temp_sensor: fix to also work with newer IOS versions
 
     Multisite:
     * 0779 Hostgroups (Summary): Empty hostgroups are no longer shown (can be re-enabled by filter)

@@ -56,7 +56,9 @@ body.mobile div.error {
     background-color: #fcc;
 }
 
-
+body.mobile div.command_group a {
+     color: black;
+}
 
 body.mobile table.data {
     /* width: 10px;*/ /* 100%; */

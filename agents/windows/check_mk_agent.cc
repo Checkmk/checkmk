@@ -75,7 +75,7 @@
 //  | Declarations of macrosk, structs and function prototypes             |
 //  '----------------------------------------------------------------------'
 
-#define CHECK_MK_VERSION "1.2.4p1"
+#define CHECK_MK_VERSION "1.2.4p4"
 #define CHECK_MK_AGENT_PORT 6556
 #define SERVICE_NAME "Check_MK_Agent"
 #define KiloByte 1024
@@ -2216,6 +2216,11 @@ char *add_interpreter(char *path, char *newpath)
         snprintf(newpath, 256, "powershell.exe -NoLogo -ExecutionPolicy RemoteSigned \"& \'%s\'\"", path);
         return newpath;
     }
+    else if (!strcmp(path + strlen(path) - 3, ".pl")) {
+        // Perl scripts get perl.exe as interpreter
+        snprintf(newpath, 256, "perl.exe \"%s\"", path);
+        return newpath;
+    }
     else {
         snprintf(newpath, 256, "\"%s\"", path);
         return newpath;
@@ -2448,7 +2453,7 @@ void run_script_container(script_container *cont)
                 NULL);                // returns the thread identifier
 
         if (cont->execution_mode == SYNC ||
-            cont->execution_mode == ASYNC && g_default_script_async_execution == SEQUENTIAL)
+            (cont->execution_mode == ASYNC && g_default_script_async_execution == SEQUENTIAL))
             WaitForSingleObject(cont->worker_thread, INFINITE);
     }
 }

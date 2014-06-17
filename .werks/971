@@ -1,0 +1,11 @@
+Title: Fix missing authentication of PHP addons in D-WATO when activation mode is reload
+Level: 1
+Component: wato
+Version: 1.2.4p3
+Date: 1400232694
+Class: fix
+
+When you set the activation mode in WATO from <i>restart</i> to <i>reload</i> and use
+distributed WATO then on the remote sites the hook for creating the authentication
+information for PHP addons like PNP4Nagios and NagVis would not be created. This has
+been fixed now.

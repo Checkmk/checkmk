@@ -342,6 +342,7 @@ function progress_retry() {
     document.getElementById('progress_abort').style.display    = '';
     progress_clean_log();
     clear_progress_stats();
+    // Note: no bulksize limit is applied here
     progress_items = failed_items;
     failed_items = Array();
     progress_scheduler(progress_mode, progress_url, progress_timeout, [], "", "");
@@ -432,12 +433,13 @@ function progress_clean_log() {
     log = null;
 }
 
-function progress_scheduler(mode, url_prefix, timeout, items, end_url, success_stats, fail_stats, term_url, finished_txt) {
+function progress_scheduler(mode, url_prefix, timeout, items, transids, end_url, success_stats, fail_stats, term_url, finished_txt) {
     // Initialize
     if (progress_items === null) {
         total_num_items        = items.length;
         progress_items         = items;
         failed_items           = Array();
+        progress_transids      = transids;
         progress_total_num     = items.length;
         progress_end_url       = end_url;
         progress_term_url      = term_url;
@@ -465,7 +467,8 @@ function progress_scheduler(mode, url_prefix, timeout, items, end_url, success_s
             // Remove leading pipe signs (when having no folder set)
             // update_progress_title(percentage + "%");
             update_progress_title(title);
-            get_url(url_prefix + '&_transid=-1&_item=' + escape(progress_items[0]),
+            use_transid = progress_transids.shift();
+            get_url(url_prefix + '&_transid=' + use_transid + '&_item=' + escape(progress_items[0]),
                 progress_handle_response,    // regular handler (http code 200)
                 [ mode, progress_items[0] ], // data to hand over to handlers
                 progress_handle_error        // error handler
@@ -799,7 +802,7 @@ function handle_host_diag_result(ident, response_text) {
     retry.style.display = 'inline';
 }
 
-function start_host_diag_test(ident, hostname) {
+function start_host_diag_test(ident, hostname, transid) {
     var log   = document.getElementById(ident + '_log');
     var img   = document.getElementById(ident + '_img');
     var retry = document.getElementById(ident + '_retry');
@@ -817,6 +820,6 @@ function start_host_diag_test(ident, hostname) {
     img.src = "images/icon_loading.gif";
     log.innerHTML = "...";
     get_url("wato_ajax_diag_host.py?host=" + escape(hostname) + "&_test=" + escape(ident)
-            + '&_transid=-1' + vars,
+            + '&_transid=' + transid + vars,
               handle_host_diag_result, ident);
 }

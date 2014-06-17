@@ -1150,7 +1150,7 @@ register_rule(group,
                       )),
                       ( "output",
                         TextUnicode(
-                            title = _("Plugin output in case of absent abdates"),
+                            title = _("Plugin output in case of absent updates"),
                             size = 40,
                             allow_empty = False,
                             default_value = _("Check result did not arrive in time")

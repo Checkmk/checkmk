@@ -37,7 +37,7 @@
 def brocade_sensor_convert(info, what):
     return_list = []
     for state, name in info:
-        if name.startswith(what) and saveint(state) > 0:
+        if name.startswith(what) and (saveint(state) > 0 or what == "Power"):
             sensor_id  = name.split('#')[-1]
             return_list.append([sensor_id, name, state])
     return return_list

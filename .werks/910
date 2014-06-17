@@ -1,0 +1,8 @@
+Title: brocade.power: fixed an error where the check reports an UNKNOWN on power supply failure
+Level: 1
+Component: checks
+Version: 1.2.4p3
+Date: 1398783896
+Class: fix
+
+Power supply failures now get reported as CRIT

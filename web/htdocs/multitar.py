@@ -101,7 +101,6 @@ def get_file_content(the_tarfile, filename):
         tar = tarfile.open("r", fileobj = the_tarfile)
     else:
         tar = tarfile.open(the_tarfile, "r")
-    tar = tarfile.open(the_tarfile, "r")
     return tar.extractfile(filename).read()
 
 def extract_domains(tar, domains):
@@ -232,8 +231,8 @@ def extract(tar, components):
         try:
             subtarstream = tar.extractfile(name + ".tar")
         except:
-            pass # may be missing, e.g. sites.tar is only present
-                 # if some sites have been created.
+            continue # may be missing, e.g. sites.tar is only present
+                     # if some sites have been created.
 
         if what == "dir":
             target_dir = path

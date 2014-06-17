@@ -1,0 +1,9 @@
+Title: hpux_if: Fixed exception during parsing of provided data on some systems
+Level: 1
+Component: checks
+Version: 1.2.4p1
+Date: 1395998553
+Class: fix
+
+Some systems provide float values instead of ints. Parsing failed in this case
+with a ValueError exception.

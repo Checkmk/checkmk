@@ -1,0 +1,21 @@
+Title: Signing and verification of WATO snapshot (addresses CVE-2014-2330)
+Level: 2
+Component: wato
+Version: 1.2.4p1
+Date: 1396346149
+Class: fix
+
+This change addresses possible attacks against Check_MK using the WATO "Backup & Restore" module,
+known as CVE-2014-2330.
+
+In previous versions there were no checksum verifications or signings of the snapshots contents
+implemented. This has been changed now. The files within the snapshot which contain Check_MK
+configuration files and definitions of check commands etc. are now verified using checksums and
+signed.
+
+When you import / export a snapshot on a single site, there is no difference to the former handling.
+When you or someone else modifies the snapshots between import and export, the restore process will
+warn you about the modification and let you decide if you trust the file and restore it anyways or
+terminate the restore process.
+In the case you import a snapshot from another site, the singing can not be verified. In this case,
+you get a warning about this and can continue or skip the restore process.

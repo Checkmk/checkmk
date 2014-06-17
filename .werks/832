@@ -1,0 +1,12 @@
+Title: solaris_mem: fixed invalid calculation of total swap
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.4p3
+Date: 1397556871
+
+Solaris systems which reported the memory information like<br>
+Memory: 10G phys mem, 1905M free mem, 8002M total swap, 8002M free swap<br>
+got incorrect total swap values in the check.
+

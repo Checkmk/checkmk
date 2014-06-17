@@ -1,0 +1,9 @@
+Title: event console view: fixed exception on rendering host tags for unknown hosts
+Level: 1
+Component: ec
+Version: 1.2.4p3
+Date: 1397739863
+Class: fix
+
+The event console was unable to render specific host tag columns
+when the monitoring system had no knowledge of the host in question.

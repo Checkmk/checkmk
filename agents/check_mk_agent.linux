@@ -93,7 +93,7 @@ function run_cached () {
 }
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.4p1
+echo Version: 1.2.4p4
 echo AgentOS: linux
 echo PluginsDirectory: $PLUGINSDIR
 echo LocalDirectory: $LOCALDIR
@@ -482,10 +482,20 @@ then
     done
 fi
 
-# Get statistics about monitored jobs
-if cd /var/lib/check_mk_agent/job; then
+# Get statistics about monitored jobs. Below the job directory there
+# is a sub directory per user that ran a job. That directory must be
+# owned by the user so that a symlink or hardlink attack for reading
+# arbitrary files can be avoided.
+if pushd /var/lib/check_mk_agent/job >/dev/null; then
     echo '<<<job>>>'
-    head -n -0 -v *
+    for username in *
+    do
+        if [ -d "$username" ] && cd "$username" ; then
+            su "$username" -c "head -n -0 -v *"
+            cd ..
+        fi
+    done
+    popd > /dev/null
 fi
 
 # Gather thermal information provided e.g. by acpi

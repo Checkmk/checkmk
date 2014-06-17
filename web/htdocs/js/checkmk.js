@@ -106,6 +106,28 @@ if (!document.getElementsByClassName) {
   }
 }
 
+// Again, some IE 7 fun: The IE7 mixes up name and id attributes of objects.
+// When using getElementById() where we really only want to match objects by
+// their id, the clever IE7 also searches objects by their names, wow. crap.
+if (navigator.appVersion.indexOf("MSIE 7.") != -1)
+{
+    document._getElementById = document.getElementById;
+    document.getElementById = function(id) {
+        var e = document._getElementById(id);
+        if (e) {
+            if (e.attributes['id'].value == id)
+                return e;
+            else {
+                for (var i = 1; i < document.all[id].length; i++) {
+                    if(document.all[id][i].attributes['id'].value == id)
+                        return document.all[id][i];
+                }
+            }
+        }
+        return null;
+    };
+}
+
 function getTarget(event) {
   return event.target ? event.target : event.srcElement;
 }

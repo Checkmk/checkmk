@@ -725,7 +725,7 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
                         consider = False
                     else:
                         s = "in_downtime"
-                elif span["host_down"] and avoptions["consider"]["host_down"]:
+                elif what != "host" and span["host_down"] and avoptions["consider"]["host_down"]:
                     s = "host_down"
                 elif span["is_flapping"] and avoptions["consider"]["flapping"]:
                     s = "flapping"
@@ -858,7 +858,7 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration,
                 width = min_percentage + rest_percentage * row["duration"] / considered_duration
                 html.write('<td onmouseover="timeline_hover(%d, 1);" onmouseout="timeline_hover(%d, 0);" '
                            'style="width: %.1f%%" title="%s" class="%s"></td>' % (
-                           row_nr, row_nr, width, title, css))
+                           row_nr, row_nr, width, html.attrencode(title), css))
     html.write('</tr></table>')
 
     if style == "inline":
@@ -890,6 +890,9 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration,
         for sid, css, sname, help in availability_columns:
             if sid == state_id:
                 table.cell(_("State"), sname, css=css + " state narrow")
+                break
+        else:
+            table.cell(_("State"), "(%s/%s)" % (sid,sname))
         table.cell(_("Additional information"), row["log_output"])
 
     table.end()
@@ -1231,7 +1234,8 @@ def render_availability_group(group_title, range_title, group_id, availability, 
             elif show_summary:
                 summary.setdefault(sid, 0.0)
                 if avoptions["timeformat"].startswith("percentage"):
-                    summary[sid] += float(number) / considered_duration
+                    if considered_duration > 0:
+                        summary[sid] += float(number) / considered_duration
                 else:
                     summary[sid] += number
 
@@ -1307,6 +1311,9 @@ def render_availability_group(group_title, range_title, group_id, availability, 
     table.end()
 
 def check_av_levels(number, av_levels, considered_duration):
+    if considered_duration == 0:
+        return 0
+
     perc = 100 * float(number) / float(considered_duration)
     warn, crit = av_levels
     if perc < crit:

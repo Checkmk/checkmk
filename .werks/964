@@ -1,0 +1,11 @@
+Title: Fix hanging shutdown of CMC on RedHat 5.X
+Level: 2
+Component: notifications
+Version: 1.2.4p3
+Date: 1399031217
+Class: fix
+
+When using the CMC on RedHat/CentOS 5.X then the CMC would not correctly
+shutdown. The reason is, that the Python implementation of that OSes
+raises an Exception on sys.exit, while newer versions don't. This has
+been fixed by handling <tt>SystemExit</tt> explicitely.

@@ -1,0 +1,12 @@
+Title: logwatch: fix case where rule wouldn't be applied
+Level: 2
+Component: checks
+Version: 1.2.4p3
+Date: 1397053661
+Class: fix
+
+If you are using CMC core <tt>cmk -v</tt> on the commandline and
+had inventorized the checks by a newer version of Check_MK then the
+reclassification patterns of logwatch would not work. This has been
+fixed. The reason was that the inventory now correctly sets <tt>None</tt>
+as a parameter whereas older versions used an empty string.

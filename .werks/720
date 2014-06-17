@@ -1,0 +1,11 @@
+Title: Fix timeperiod computation with CMC and flexible notifications
+Level: 1
+Component: notifications
+Version: 1.2.4p1
+Date: 1393342421
+Class: fix
+
+If you used the Check_MK Micro Core and flexible notifications and
+used the state of a timeperiod as a notification condition then
+this condition would fail. Timeperiods would be computed just once
+after every configuration restart. This has been fixed now.

@@ -21,6 +21,7 @@
     * 0166 FIX: mobile gui: Fixed colors of command list...
     * 0820 FIX: Fixed wrong NagVis links in "custom links" snapin
     * 0938 FIX: logwatch: fixed incorrect display of warning messages
+    * 0939 FIX: Fixed multisite exception caused by missing explanation text for a AUTODELETE event action
 
     WATO:
     * 0987 New button for updating DNS cache...

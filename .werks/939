@@ -1,0 +1,9 @@
+Title: Fixed multisite exception caused by missing explanation text for a AUTODELETE event action
+Level: 2
+Component: multisite
+Class: fix
+State: unknown
+Version: 1.2.5i3
+Date: 1403079248
+
+

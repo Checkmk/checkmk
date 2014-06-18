@@ -15,6 +15,7 @@ components = [
 classes = [
   ( "feature",      "New Feature",          "" ),
   ( "fix",          "Bug Fix",              "FIX" ),
+  ( "security",     "Security Fix",         "SEC" ),
   ( "incomp",       "Incompatible Change",  "" ),
 ]
 

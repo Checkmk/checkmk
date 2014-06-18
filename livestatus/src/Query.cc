@@ -263,6 +263,13 @@ Filter *Query::createFilter(Column *column, int operator_id, char *value)
 void Query::parseAndOrLine(char *line, int andor, bool filter)
 {
     char *value = next_field(&line);
+    if (!value) {
+        _output->setError(RESPONSE_CODE_INVALID_HEADER, "Missing value for %s%s: need non-zero integer number",
+                filter ? "" : "WaitCondition",
+                andor == ANDOR_OR ? "Or" : "And");
+        return;
+    }
+
     int number = atoi(value);
     if (!isdigit(value[0]) || number <= 0) {
         _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid value for %s%s: need non-zero integer number",
@@ -311,6 +318,11 @@ void Query::parseNegateLine(char *line, bool filter)
 void Query::parseStatsAndOrLine(char *line, int andor)
 {
     char *value = next_field(&line);
+    if (!value) {
+        _output->setError(RESPONSE_CODE_INVALID_HEADER, "Missing value for Stats%s: need non-zero integer number",
+                andor == ANDOR_OR ? "Or" : "And");
+    }
+
     int number = atoi(value);
     if (!isdigit(value[0]) || number <= 0) {
         _output->setError(RESPONSE_CODE_INVALID_HEADER, "Invalid value for Stats%s: need non-zero integer number",
@@ -559,6 +571,12 @@ void Query::parseSeparatorsLine(char *line)
 void Query::parseOutputFormatLine(char *line)
 {
     char *format = next_field(&line);
+    if (!format) {
+        _output->setError(RESPONSE_CODE_INVALID_HEADER,
+               "Missing output format. Only 'csv' and 'json' are available.");
+        return;
+    }
+
     if (!strcmp(format, "csv"))
         _output_format = OUTPUT_FORMAT_CSV;
     else if (!strcmp(format, "json"))
@@ -573,6 +591,12 @@ void Query::parseOutputFormatLine(char *line)
 void Query::parseColumnHeadersLine(char *line)
 {
     char *value = next_field(&line);
+    if (!value) {
+        _output->setError(RESPONSE_CODE_INVALID_HEADER,
+              "Missing value for ColumnHeaders: must be 'on' or 'off'");
+        return;
+    }
+
     if (!strcmp(value, "on"))
         _show_column_headers = true;
     else if (!strcmp(value, "off"))
@@ -585,6 +609,12 @@ void Query::parseColumnHeadersLine(char *line)
 void Query::parseKeepAliveLine(char *line)
 {
     char *value = next_field(&line);
+    if (!value) {
+        _output->setError(RESPONSE_CODE_INVALID_HEADER,
+                "Missing value for KeepAlive: must be 'on' or 'off'");
+        return;
+    }
+
     if (!strcmp(value, "on"))
         _output->setDoKeepalive(true);
     else if (!strcmp(value, "off"))
@@ -597,6 +627,12 @@ void Query::parseKeepAliveLine(char *line)
 void Query::parseResponseHeaderLine(char *line)
 {
     char *value = next_field(&line);
+    if (!value) {
+        _output->setError(RESPONSE_CODE_INVALID_HEADER,
+                "Missing value for ResponseHeader: must be 'off' or 'fixed16'");
+        return;
+    }
+
     if (!strcmp(value, "off"))
         _output->setResponseHeader(RESPONSE_HEADER_OFF);
     else if (!strcmp(value, "fixed16"))

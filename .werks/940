@@ -1,0 +1,23 @@
+Title: Fixed various core SIGSEGV when using malformed livestatus queries
+Level: 2
+Component: core
+Class: security
+State: unknown
+Version: 1.2.5i3
+Date: 1403082179
+
+Some malformed livestatus queries could crash the monitoring core.
+This happened whenever the value field for certain keys was missing.<br>
+
+For example
+C+:
+
+lq "GET hosts\nColumnHeaders:\n"
+
+lq "GET hosts\nAnd:\n"
+
+lq "GET hosts\nKeepalive:\n
+
+C-:
+
+

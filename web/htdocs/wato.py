@@ -1060,12 +1060,20 @@ def get_folder_permissions_of_users(users):
 
     users = userdb.load_users()
     for username in users.iterkeys():
-        permissions[username] = {}
+        perms = {}
         for folder_path, folder in folders.iteritems():
-            permissions[username][folder_path] = {
-                'read':  check_folder_permissions(folder, 'read', False, username, users) == True,
-                'write': check_folder_permissions(folder, 'write', False, username, users) == True,
-            }
+            readable = check_folder_permissions(folder, 'read', False, username, users) == True
+            writable = check_folder_permissions(folder, 'write', False, username, users) == True
+
+            if readable or writable:
+                perms[folder_path] = {}
+                if readable:
+                    perms[folder_path]['read'] = True
+                if writable:
+                    perms[folder_path]['write'] = True
+
+        if perms:
+            permissions[username] = perms
     return permissions
 
 def check_folder_permissions(folder, how, exception=True, user = None, users = None):

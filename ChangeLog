@@ -1,4 +1,7 @@
 1.2.4p4:
+    Core & Setup:
+    * 0940 Fixed various core SIGSEGV when using malformed livestatus queries...
+
     Checks & Agents:
     * 0932 FIX: prediction: fixed bug where predicted levels were not recalculated
 

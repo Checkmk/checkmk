@@ -1660,7 +1660,7 @@ def raw_context_from_string(data):
     try:
         for line in data.split('\n'):
             varname, value = line.strip().split("=", 1)
-            context[varname] = value
+            context[varname] = value.replace(r"\n", "\n").replace("\\\\", "\\")
     except Exception, e: # line without '=' ignored or alerted
         if opt_debug:
             raise

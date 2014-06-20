@@ -112,7 +112,14 @@ function get_folder_permissions($username) {
     if(!isset($mk_folders[$username])) {
         return array();
     } else {
-        return $mk_folders[$username];
+        $permissions = $mk_folders[$username];
+        foreach ($permissions as $folder => $perms) {
+            if (!isset($perms['read']))
+                $perms['read'] = false;
+            elseif (!isset($perms['write']))
+                $perms['write'] = false;
+        }
+        return $permissions;
     }
 }
 

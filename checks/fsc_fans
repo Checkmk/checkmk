@@ -34,7 +34,7 @@ def check_fsc_fans(item, params, info):
         up_warn, up_crit = None, None
     else:
         low_warn, low_crit = params['lower']
-        up_warn, up_crit = params['upper']
+        up_warn, up_crit = params.get('upper', ( None, None))
 
     for line in info: # , value1, value2 in info:
         name = line[0]

@@ -1,0 +1,8 @@
+Title: fsc_fans: upper levels for fan RPMs are now optional also for the check
+Level: 1
+Component: checks
+Version: 1.2.5i4
+Date: 1403016253
+Class: fix
+
+

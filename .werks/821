@@ -1,0 +1,10 @@
+Title: Reducing size of auth.php (needed for authorisation in NagVis) in large environments
+Level: 1
+Component: wato
+Version: 1.2.5i4
+Date: 1403078473
+Class: fix
+
+In environments with a large user base or a large folder structure, the auth.php file which
+is being generated while modifying users, roles and activating the pending changes, the file
+could get very large. This change reduces the size of the file in such a case dramatically.

@@ -223,7 +223,7 @@ def render_dashlet(nr, dashlet, wato_folder):
 
     # The method "view" is a shortcut for "iframe" with a certain url
     if "view" in dashlet:
-        dashlet["iframe"] = "view.py?view_name=%s&_display_options=HRSIXL&_body_class=dashlet" % dashlet["view"]
+        dashlet["iframe"] = "view.py?view_name=%s&display_options=HRSIXL&_display_options=HRSIXL&_body_class=dashlet" % dashlet["view"]
 
     if dashlet.get("reload_on_resize"):
         dashlet["onload"] = "dashlet_add_dimensions('dashlet_%d', this)" % nr

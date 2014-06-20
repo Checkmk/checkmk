@@ -7,12 +7,12 @@ description:
  This checks monitors the temperature of ports and modules of the Adva
  FSP 3000 scalable optical transport solution.
 
- No limits are set for the temperatur , since limits are configured in the
+ No limits are set for the temperature, since limits are configured in the
  device itself. The upper and lower limits for the temperature are
  read from the device. If the current value is outside the allowed
  range the check is {CRIT}, otherwise it is {OK}.
 
- In addition temperature trends are monitored by the check. If the rate of
+ In addition {temperature trends} are monitored by the check. If the rate of
  temperature increase is above a configured rate per configured time range,
  the check becomes {WARN} or {CRIT}. The check can also predict in which
  period of time the upper limit for the temperature configured on the device
@@ -27,3 +27,42 @@ perfdata:
 
 inventory:
  All temperature sensors on all modules/ports are detected
+
+examples:
+ # Set levels via dictionary, old check_mk syntax
+ check_parameters = [
+ ( {'trend_range': 60,
+    'trend_c': (1, 5),
+    'trend_timeleft': (1000, 500)
+ }, [], ALL_HOSTS, [ "PL" ] )
+ ]
+
+ # set levels via wato syntax:
+ checkgroup_parameters.setdefault('temperature_trends', [])
+
+ checkgroup_parameters['temperature_trends'] = [
+   ( {'trend_c': (1, 5), 'trend_timeleft': (1000, 500), 'trend_range': 60}, [], ALL_HOSTS, ALL_SERVICES ),
+   ] + checkgroup_parameters['temperature_trends']
+
+ # set default values
+ adva_fsp_temp_default_levels = {
+     # range in minutes, default is no trend computation
+     'trend_range': None,
+     'trend_c': (1, 5), 
+     'trend_timeleft': (240, 120),
+ }
+
+[parameters]
+parameters (dict): a dictionary containing the parameters for the trend
+ computation with the following keys:
+
+ {"trend_range"}: The time range in minutes over which trends are computed.
+ If you set this to None then trend computing is disabled and the check
+ outputs only one performance data value.
+
+ {"trend_c"}: A tuple of numbers specifying limits for the temperature increase
+ in degrees Celcius within the configured time range
+
+ {"trend_timeleft"}: A tuple of numbers specifying the minimum time in minutes
+ left before the temperature limit is reached
+

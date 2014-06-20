@@ -88,7 +88,7 @@ action_whats = {
   "NOCOUNT"      : _("Event deleted in counting state because rule does not count anymore"),
   "DELAYOVER"    : _("Event opened because the delay time has elapsed before cancelling event arrived."),
   "EXPIRED"      : _("Event deleted because its livetime expired"),
-  "COUNTREACHED" : _("Event deleted bacause required count had been reached"),
+  "COUNTREACHED" : _("Event deleted because required count had been reached"),
   "COUNTFAILED"  : _("Event created by required count was not reached in time"),
   "UPDATE"       : _("Event information updated by user"),
   "NEW"          : _("New event created"),
@@ -97,6 +97,7 @@ action_whats = {
   "SCRIPT"       : _("Script executed"),
   "CANCELLED"    : _("The event was cancelled because the corresponding OK message was received"),
   "ARCHIVED"     : _("Event was archived because no rule matched and archiving is activated in global settings."),
+  "AUTODELETE"   : _("Event was deleted automatically"),
 }
 
 def service_levels():

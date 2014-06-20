@@ -1271,7 +1271,12 @@ def x_best_state(l, x):
 
 def aggr_nth_state(nodelist, n, worst_state, ignore_states = None):
     states = [ i[0]["state"] for i in nodelist if not ignore_states or i[0]["state"] not in ignore_states ]
-    state = x_best_state(states, n)
+    # In case of the ignored states it might happen that the states list is empty. Use the
+    # OK state in this case.
+    if not states:
+        state = OK
+    else:
+        state = x_best_state(states, n)
 
     # limit to worst state
     if state_weight(state) > state_weight(worst_state):

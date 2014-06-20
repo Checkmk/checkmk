@@ -21,9 +21,9 @@ import quopri
 import tempfile
 
 omd_root = os.environ.get('OMD_ROOT')
-pop_server = "pop.1und1.de" 
-pop_user   = "monitor@grillwerkstatt.at"
-pop_pass   = "LTWmonitor2013"
+pop_server = "pop.yourmailserver.com"
+pop_user   = "your-username@domain.com"
+pop_pass   = "secretpassword"
 
 M = poplib.POP3_SSL(pop_server)
 M.user(pop_user)

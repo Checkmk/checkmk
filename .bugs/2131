@@ -1,9 +1,12 @@
 Title: Sorting views in dashlets, breaks layout
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2014-06-16 15:40:12
 Targetversion: 1.2.5i1
-Class: bug
 
 When a view is sorted within a dashlet, the display_options seem to be mixed. Suddenly the view header
 is visible.
+
+2014-06-20 09:20:57: changed state open -> done
+Fixed.

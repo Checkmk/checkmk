@@ -408,7 +408,7 @@ def notification_context_from_string(data):
         for line in data.split('\n'):
             varname, value = line.strip().split("=", 1)
             # Linefeeds are encoded with \n when sent by CMC
-            context[varname] = value.replace(r"\n", "\n")
+            context[varname] = value.replace(r"\n", "\n").replace("\\\\", "\\")
     except Exception, e: # line without '=' ignored or alerted
         if opt_debug:
             raise

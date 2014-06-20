@@ -205,8 +205,10 @@ def notify_notify(raw_context, analyse=False):
     # Add some further variable for the conveniance of the plugins
 
     if notification_logging >= 2:
+        encoded_context = dict(raw_context.items())
+        convert_context_to_unicode(encoded_context)
         notify_log("Raw notification context:\n"
-                   + "\n".join(["                    %s=%s" % v for v in sorted(raw_context.items())]))
+                   + "\n".join(["                    %s=%s" % v for v in sorted(encoded_context.items())]))
 
     raw_keys = list(raw_context.keys())
     complete_raw_context(raw_context)

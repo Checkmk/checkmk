@@ -3,7 +3,7 @@ Level: 1
 Component: multisite
 Version: 1.2.3i7
 Date: 1384935234
-Class: feature
+Class: security
 
 It is now possible to disable the HTML escaping in plugin outputs and
 log messages. This is useful if one really wants to use HTML codes

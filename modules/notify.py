@@ -403,12 +403,12 @@ def notify_keepalive():
 
 
 def notification_context_from_string(data):
-    # Context is line-by-line in g_notify_readahead_buffer
     context = {}
     try:
         for line in data.split('\n'):
             varname, value = line.strip().split("=", 1)
-            context[varname] = value
+            # Linefeeds are encoded with \n when sent by CMC
+            context[varname] = value.replace(r"\n", "\n")
     except Exception, e: # line without '=' ignored or alerted
         if opt_debug:
             raise

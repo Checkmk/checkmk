@@ -31,19 +31,32 @@
 # 3:online:expansion:yes:0:io_grp0:2072-24E:7804326:2:2:2:2:24
 # 4:online:expansion:yes:0:io_grp0:2072-24E:7804352:2:2:2:2:24
 
+# After a firmware upgrade the output looked like this:
+# 1:online:control:yes:0:io_grp0:2072-24C:7804037:2:2:2:2:24:0:0
+# 2:online:expansion:yes:0:io_grp0:2072-24E:7804306:2:2:2:2:24:0:0
+# 3:online:expansion:yes:0:io_grp0:2072-24E:7804326:2:2:2:2:24:0:0
+# 4:online:expansion:yes:0:io_grp0:2072-24E:7804352:2:2:2:2:24:0:0
+
+# The names of the columns are:
+# id:status:type:managed:IO_group_id:IO_group_name:product_MTM:serial_number:total_canisters:online_canisters:total_PSUs:online_PSUs:drive_slots:total_fan_modules:online_fan_modules
+
+
 def inventory_ibm_svc_enclosure(info):
     inventory = []
-    for enclosure_id, enclosure_status, enclosure_type, managed, IO_group_id, \
-        IO_group_name, product_MTM, serial_number, total_canisters, online_canisters, \
-        total_PSUs, online_PSUs, drive_slots in info:
+    for line in info:
+        enclosure_id = line[0]
         inventory.append( (enclosure_id, None) )
     return inventory
 
 def check_ibm_svc_enclosure(item, _no_params, info):
-    for enclosure_id, enclosure_status, enclosure_type, managed, IO_group_id, \
-        IO_group_name, product_MTM, serial_number, total_canisters, online_canisters, \
-        total_PSUs, online_PSUs, drive_slots in info:
-        if enclosure_id == item:
+    for line in info:
+        if line[0] == item:
+            if len(line) < 15: # old format
+                line = line + ["0", "0"] # do not modify line!
+
+            enclosure_id, enclosure_status, enclosure_type, managed, IO_group_id, \
+                IO_group_name, product_MTM, serial_number, total_canisters, online_canisters, \
+                total_PSUs, online_PSUs, drive_slots, total_fan_modules, online_fan_modules = line
 
             # Check status
             message = "Enclosure %s is %s" % (enclosure_id, enclosure_status)
@@ -55,19 +68,25 @@ def check_ibm_svc_enclosure(item, _no_params, info):
 
             # Check canisters
             if online_canisters == total_canisters:
-                status = max(0, status)
                 message += ", all %s canisters are online" % total_canisters
             else:
-                status = max(2, status)
-                message += ", %s(!!) of %s canisters are online" % (online_canisters, total_canisters)
+                status = 2
+                message += ", only %s of %s canisters are online(!!)" % (online_canisters, total_canisters)
 
             # Check PSUs
             if online_PSUs == total_PSUs:
-                status = max(0, status)
                 message += ", all %s PSUs are online" % total_PSUs
             else:
-                status = max(2, status)
-                message += ", %s(!!) of %s PSUs are online" % (online_PSUs, total_PSUs)
+                status = 2
+                message += ", only %s of %s PSUs are online(!!)" % (online_PSUs, total_PSUs)
+
+            # Check FANs (only new firmware)
+            if online_fan_modules == total_fan_modules:
+                if total_fan_modules != "0":
+                    message += ", all %s fan modules are online" % total_fan_modules
+            else:
+                status = 2
+                message += ", only %s of %s fan modules are online(!!)" % (online_fan_modules, total_fan_modules)
 
             return status, message
 

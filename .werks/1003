@@ -1,0 +1,8 @@
+Title: ibm_svc_enclosure: support new firmware, also check fan modules
+Level: 1
+Component: checks
+Version: 1.2.5i4
+Date: 1403364378
+Class: feature
+
+

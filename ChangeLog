@@ -1,11 +1,12 @@
 1.2.4p4:
     Core & Setup:
-    * 0940 Fixed various core SIGSEGV when using malformed livestatus queries...
+    * 0940 SEC: Fixed various core SIGSEGV when using malformed livestatus queries...
 
     Checks & Agents:
     * 0932 FIX: prediction: fixed bug where predicted levels were not recalculated
 
     Multisite:
+    * 0982 SEC: Fix two XSS weaknesses according to CVSS 8.5 AV:N/AC:M/Au:S/C:C/I:C/A:C...
     * 0166 FIX: mobile gui: Fixed colors of command list...
     * 0820 FIX: Fixed wrong NagVis links in "custom links" snapin
     * 0939 FIX: Fixed multisite exception caused by missing explanation text for a AUTODELETE event action

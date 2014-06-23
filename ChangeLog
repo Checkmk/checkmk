@@ -28,6 +28,7 @@
     * 0938 FIX: logwatch: fixed incorrect display of warning messages
     * 0939 FIX: Fixed multisite exception caused by missing explanation text for a AUTODELETE event action
     * 0822 FIX: Sorting columns in view dashlets is now working again
+    * 0941 FIX: esx_vsphere_hostsystem.cpu_usage: pnpgraph now displays AVERAGE instead of MAX values in all timeframes...
 
     WATO:
     * 0987 New button for updating DNS cache...

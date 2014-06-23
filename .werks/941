@@ -1,0 +1,8 @@
+Title: esx_vsphere_hostsystem.cpu_usage: pnpgraph now displays AVERAGE instead of MAX values in all timeframes
+Level: 1
+Component: multisite
+Version: 1.2.5i4
+Date: 1403539365
+Class: fix
+
+Affected pnptemplates are: check_mk-enterasys_cpu_util, check_mk-esx_vsphere_hostsystem.cpu_usage, check_mk-innovaphone_cpu

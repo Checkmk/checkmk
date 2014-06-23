@@ -1,3 +1,5 @@
+1.2.5i5:
+
 1.2.5i4:
     Core & Setup:
     * 0940 SEC: Fixed various core SIGSEGV when using malformed livestatus queries...

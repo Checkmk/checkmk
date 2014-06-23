@@ -1,0 +1,9 @@
+Title: Fix crash when debugging notifications with non-Ascii characters
+Level: 2
+Component: notifications
+Version: 1.2.5i4
+Date: 1403272237
+Class: fix
+
+When full notification debugging was enabled then notifications with
+a non-Ascii character would raise an exception and not be sent.

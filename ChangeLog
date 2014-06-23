@@ -13,6 +13,8 @@
     * 0939 FIX: Fixed multisite exception caused by missing explanation text for a AUTODELETE event action
 
     WATO:
+    * 0984 Fix code injection for logged in users via automation url...
+            NOTE: Please refer to the migration notes!
     * 0817 FIX: Fixed error during creating new sites in WATO...
 
 

@@ -1,0 +1,12 @@
+Title: mk_sap: Fixed some wrong calculated values (decimal numbers)
+Level: 1
+Component: checks
+Version: 1.2.5i4
+Date: 1403503150
+Class: fix
+
+The values provided by SAP seem to be integers with a second value
+which can be used to tell the asking program the number of decimals.
+e.g. when this value states 2, a load value of 901 is converted to
+9.01. This value has not been used in the past which lead to odd
+check results.

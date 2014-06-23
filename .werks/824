@@ -1,0 +1,12 @@
+Title: Valuespecs: Fixed several possible HTML injections in valuespecs
+Level: 1
+Component: wato
+Version: 1.2.5i4
+Date: 1403505656
+Class: security
+
+Several HTML injections in valuespecs of different types (mostly used in WATO)
+were missing good escaping of values. This has been added to prevent HTML
+code injections which could be used for XSS attacks. This only affects WATO
+and logged in users which are permitted to use WATO and open the page
+(e.g. the list of rules) which displays the values.

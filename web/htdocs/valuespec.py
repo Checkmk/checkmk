@@ -464,7 +464,7 @@ class EmailAddress(TextAscii):
         if not value:
             return TextAscii.value_to_text(self, value)
         elif self._make_clickable:
-            return '<a href="mailto:%s">%s</a>' % (value, value)
+            return '<a href="mailto:%s">%s</a>' % (html.attrencode(value), html.attrencode(value))
         else:
             return value
 
@@ -566,7 +566,7 @@ class HTTPUrl(TextAscii):
         # any path component
         return '<a %shref="%s">%s</a>' % (
             (self._target and 'target="%s" ' % self._target or ""),
-            url, text)
+            html.attrencode(url), html.attrencode(text))
 
 class TextAreaUnicode(TextUnicode):
     def __init__(self, **kwargs):
@@ -1031,7 +1031,7 @@ class DropdownChoice(ValueSpec):
                     return title.split(self._help_separator, 1)[0].strip()
                 else:
                     return title
-        return _("(other: %s)" % value)
+        return _("(other: %s)" % html.attrencode(value))
 
     def from_html_vars(self, varprefix):
         sel = html.var(varprefix)
@@ -2224,7 +2224,7 @@ class Alternative(ValueSpec):
                 output = "%s<br>" % vs.title()
             return output + vs.value_to_text(value)
         else:
-            return _("invalid:") + " " + str(value)
+            return _("invalid:") + " " + html.attrencode(str(value))
 
     def from_html_vars(self, varprefix):
         nr = int(html.var(varprefix + "_use"))

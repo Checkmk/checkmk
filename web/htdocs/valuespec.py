@@ -390,6 +390,10 @@ class TextAscii(ValueSpec):
                                                                     type_name(value))
 
     def validate_value(self, value, varprefix):
+        try:
+            unicode(value)
+        except:
+            raise MKUserError(varprefix, _("Non-ASCII characters are not allowed here."))
         if self._none_is_empty and value == "":
             raise MKUserError(varprefix, _("An empty value must be represented with None here."))
         if not self._allow_empty and value.strip() == "":

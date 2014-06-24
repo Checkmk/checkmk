@@ -117,25 +117,33 @@ function resize_dashlets(id, code)
     oDash = null;
 }
 
+var g_dashboard_resizer = null;
+
 function set_dashboard_size()
 {
-  var body_padding = 5;
-  var width  = pageWidth();
-  var height = pageHeight();
-  width  = width - 2*screen_margin - 2*body_padding;
-  height = height - 2*screen_margin - header_height - body_padding;
 
-  oDash = document.getElementById("dashboard");
-  oDash.style.position = 'absolute';
-  oDash.style.left     = screen_margin + "px";
-  oDash.style.top      = (header_height + screen_margin) + "px";
-  oDash.style.width    = width + "px";
-  oDash.style.height   = height + "px";
+    if (g_dashboard_resizer !== null) {
+        g_dashboard_resizer.abort();
+        g_dashboard_resizer = null;
+    }
 
-  ajax_url = 'dashboard_resize.py?name=' + dashboard_name
-           + '&width=' + width
-           + '&height=' + height;
-  get_url(ajax_url, resize_dashlets);
+    var body_padding = 5;
+    var width  = pageWidth();
+    var height = pageHeight();
+    width  = width - 2*screen_margin - 2*body_padding;
+    height = height - 2*screen_margin - header_height - body_padding;
+
+    oDash = document.getElementById("dashboard");
+    oDash.style.position = 'absolute';
+    oDash.style.left     = screen_margin + "px";
+    oDash.style.top      = (header_height + screen_margin) + "px";
+    oDash.style.width    = width + "px";
+    oDash.style.height   = height + "px";
+
+    ajax_url = 'dashboard_resize.py?name=' + dashboard_name
+             + '&width=' + width
+             + '&height=' + height;
+    g_dashboard_resizer = get_url(ajax_url, resize_dashlets);
 }
 
 function dashboard_scheduler(initial) {

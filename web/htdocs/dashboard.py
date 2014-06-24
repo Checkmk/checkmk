@@ -215,12 +215,14 @@ var dashboard_name = '%s';
 var dashboard_mtime = %d;
 set_dashboard_size();
 window.onresize = function () { set_dashboard_size(); }
-window.onload = function () { set_dashboard_size(); }
 dashboard_scheduler(1);
     """ % (header_height, screen_margin, title_height, dashlet_padding,
            corner_overlap, refresh_dashlets, name, board['mtime']))
 
     html.body_end() # omit regular footer with status icons, etc.
+
+def render_dashlet_content(the_dashlet):
+    dashlets[the_dashlet['type']]['render'](the_dashlet['parameters'])
 
 # Create the HTML code for one dashlet. Each dashlet has an id "dashlet_%d",
 # where %d is its index (in board["dashlets"]). Javascript uses that id
@@ -522,9 +524,6 @@ def ajax_dashlet():
         raise MKGeneralException(_('The requested dashlet type does not exist.'))
 
     render_dashlet_content(the_dashlet)
-
-def render_dashlet_content(the_dashlet):
-    dashlets[the_dashlet['type']]['render'](the_dashlet['parameters'])
 
 #.
 #   .--Dashboard List------------------------------------------------------.

@@ -1,4 +1,7 @@
 1.2.4p5:
+    Checks & Agents:
+    * 0994 FIX: agent plugin smart: fixed syntax error
+
 
 1.2.4p4:
     Core & Setup:

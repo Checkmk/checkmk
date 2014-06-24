@@ -71,13 +71,13 @@ visible_views = [ "allhosts", "searchsvc" ]
 def views_by_topic():
     s = [ (view.get("topic") or _("Other"), view.get("title"), name)
           for name, view
-          in html.available_views.items()
+          in views.permitted_views().items()
           if not view["hidden"] and not view.get("mobile")]
 
     # Add all the dashboards to the views list
     s += [ (_('Dashboards'), d['title'] and d['title'] or d_name, d_name)
            for d_name, d
-           in dashboard.permitted_dashboards()
+           in dashboard.permitted_dashboards().items()
     ]
 
     s.sort()
@@ -99,6 +99,9 @@ def views_by_topic():
     return result
 
 def render_views():
+    views.load_views()
+    dashboard.load_dashboards()
+
     def render_topic(topic, s):
         first = True
         for t, title, name in s:

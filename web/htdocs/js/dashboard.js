@@ -138,7 +138,7 @@ function set_dashboard_size()
   get_url(ajax_url, resize_dashlets);
 }
 
-function dashboard_scheduler(force) {
+function dashboard_scheduler(initial) {
     var timestamp = Date.parse(new Date()) / 1000;
     var newcontent = "";
     for(var i = 0; i < refresh_dashlets.length; i++) {
@@ -146,7 +146,8 @@ function dashboard_scheduler(force) {
         var refresh = refresh_dashlets[i][1];
         var url     = refresh_dashlets[i][2];
 
-        if (force || (refresh > 0 && timestamp % refresh == 0)) {
+        if ((initial && document.getElementById("dashlet_inner_" + nr).innerHTML == '')
+                || (refresh > 0 && timestamp % refresh == 0)) {
             get_url(url, dashboard_update_contents, "dashlet_inner_" + nr);
         }
     }

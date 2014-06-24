@@ -25,16 +25,19 @@
 # Boston, MA 02110-1301 USA.
 
 builtin_dashboards["main"] = {
-    "title" : _("Main Overview"),
+    "title"       : _("Main Overview"),
+    "description" : _("This dashboard gives you a general overview on the state of your "
+                      "monitored devices."),
     "dashlets" : [
         {
             "title"      : _("Host Statistics"),
-            "url"        : "dashlet_hoststats.py",
+            "type"       : 'hoststats',
             "position"   : (1, 1),
             "size"       : (30, 18),
             "shadow"     : True,
             "background" : True,
             "refresh"    : 60,
+            "parameters" : {},
         },
         {
             "title"      : _("Service Statistics"),
@@ -44,27 +47,31 @@ builtin_dashboards["main"] = {
             "shadow"     : True,
             "background" : True,
             "refresh"    : 60,
+            "parameters" : {},
         },
         {
+            "type"       : "view",
             "title"      : _("Host Problems (unhandled)"),
             "title_url"  : "view.py?view_name=hostproblems&is_host_acknowledged=0",
-            "view"       : "hostproblems_dash",
             "position"   : (-1, 1),
             "size"       : (GROW, 18),
+            "parameters" : {"view_name": "hostproblems_dash"},
         },
         {
+            "type"       : "view",
             "title"      : _("Service Problems (unhandled)"),
             "title_url"  : "view.py?view_name=svcproblems&is_service_acknowledged=0",
-            "view"       : "svcproblems_dash",
             "position"   : (1, 19),
             "size"       : (GROW, MAX),
+            "parameters" : {"view_name": "svcproblems_dash"},
         },
         {
+            "type"       : "view",
             "title"      : _("Events of recent 4 hours"),
             "title_url"  : "view.py?view_name=events_dash",
-            "view"       : "events_dash",
             "position"   : (-1, -1),
             "size"       : (GROW, GROW),
+            "parameters" : {"view_name": "events_dash"},
         },
     ]
 }
@@ -72,7 +79,9 @@ builtin_dashboards["main"] = {
 #Only work in OMD installations
 if defaults.omd_site:
     builtin_dashboards["topology"] = {
-        "title" : _("Network Topology"),
+        "title"       : _("Network Topology"),
+        "description" : _("This dashboard uses the parent relationships of your hosts to display a "
+                          "hierarchical map."),
         "dashlets" : [
             {
                 "title"            : "Topology of Site " + defaults.omd_site,
@@ -83,12 +92,14 @@ if defaults.omd_site:
                 "reload_on_resize" : True,
                 "position"         : (1, 0),
                 "size"             : (GROW, GROW),
+                "parameters"       : {},
             },
         ]
     }
 
 builtin_dashboards["simple_problems"] = {
-    "title" : _("Host &amp; Services Problems"),
+    "title"       : _("Host &amp; Services Problems"),
+    "description" : _("A compact dashboard which lists your unhandled host and service problems."),
     "dashlets" : [
         {
             "title"      : _("Host Problems (unhandled)"),
@@ -96,6 +107,7 @@ builtin_dashboards["simple_problems"] = {
             "view"       : "hostproblems_dash",
             "position"   : (1, 1),
             "size"       : (GROW, 18),
+            "parameters" : {},
         },
         {
             "title"      : _("Service Problems (unhandled)"),
@@ -103,6 +115,7 @@ builtin_dashboards["simple_problems"] = {
             "view"       : "svcproblems_dash",
             "position"   : (1, 19),
             "size"       : (GROW, MAX),
+            "parameters" : {},
         },
     ]
 }

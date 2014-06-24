@@ -25,14 +25,12 @@
 # Boston, MA 02110-1301 USA.
 
 import config, defaults, livestatus, time, os, re, pprint, time, copy
-import weblib, traceback, forms, valuespec, inventory
+import weblib, traceback, forms, valuespec, inventory, visuals
 from lib import *
 from pagefunctions import *
 
 max_display_columns   = 12
 max_sort_columns      = 5
-
-view_inherit_attrs = [ 'title', 'linktitle', 'topic', 'description' ]
 
 # Python 2.3 does not have 'set' in normal namespace.
 # But it can be imported from 'sets'
@@ -80,7 +78,7 @@ def load_plugins():
                 config.builtin_role_ids)
 
     # Make sure that custom views also have permissions
-    config.declare_dynamic_permissions(declare_custom_view_permissions)
+    config.declare_dynamic_permissions(lambda: visuals.declare_custom_permissions('views'))
 
     # Add painter names to painter objects (e.g. for JSON web service)
     for n, p in multisite_painters.items():
@@ -250,275 +248,55 @@ def get_all_filtervars():
 
 # Load all views - users or builtins
 def load_views():
-    declare_custom_view_permissions()
-    html.multisite_views = {}
-
-    # first load builtins. Set username to ''
-    for name, view in multisite_builtin_views.items():
-        view["owner"] = '' # might have been forgotten on copy action
-        view["public"] = True
-        view["name"] = name
-        html.multisite_views[('', name)] = view
-
-    # Now scan users subdirs for files "views.mk"
-    subdirs = os.listdir(config.config_dir)
-    for user in subdirs:
-        try:
-            dirpath = config.config_dir + "/" + user
-            if os.path.isdir(dirpath):
-                path = dirpath + "/views.mk"
-                if not os.path.exists(path):
-                    continue
-                f = file(path, "r", 65536)
-                sourcecode = f.read()
-                t = 0
-                while sourcecode == "": # This should never happen. But it happened. Don't know why.
-                    # It's just a plain file. No fsync or stuff helped. Hack around a bit.
-                    time.sleep(0.2)
-                    sourcecode = f.read()
-                    t += 1
-                    if t > 10:
-                        raise MKGeneralException(_("Cannot load views from %s/view.mk: file empty or not flushed") % dirpath)
-                views = eval(sourcecode)
-                for name, view in views.items():
-                    view["owner"] = user
-                    view["name"] = name
-
-                    if view['datasource'] not in multisite_datasources:
-                        continue
-
-                    # Maybe resolve inherited attributes
-                    builtin_view = html.multisite_views.get(('', name))
-                    if builtin_view:
-                        for attr in view_inherit_attrs:
-                            if attr not in view and attr in builtin_view:
-                                view[attr] = builtin_view[attr]
-
-                    html.multisite_views[(user, name)] = view
-
-                    # Repair views with missing 'title' or 'description'
-                    for key in [ "title", "description" ]:
-                        if key not in view:
-                            view[key] = _("Missing %s") % key
-
-        except SyntaxError, e:
-            raise MKGeneralException(_("Cannot load views from %s/views.mk: %s") % (dirpath, e))
-
-    html.available_views = available_views()
-
-# Load all users views just in order to declare permissions of custom views
-def declare_custom_view_permissions():
-    # Now scan users subdirs for files "views.mk"
-    subdirs = os.listdir(config.config_dir)
-    for user in subdirs:
-        try:
-            dirpath = config.config_dir + "/" + user
-            if os.path.isdir(dirpath):
-                path = dirpath + "/views.mk"
-                if not os.path.exists(path):
-                    continue
-                views = eval(file(path).read())
-                for name, view in views.items():
-                    if view["public"] and not config.permission_exists("view." + name):
-                        config.declare_permission("view." + name, view["title"],
-                                    view["description"], ['admin','user','guest'])
-        except:
-            if config.debug:
-                raise
-
-# Get the list of views which are available to the user
-# (which could be retrieved with get_view)
-def available_views():
-    user = config.user_id
-    views = {}
-
-    # 1. user's own views, if allowed to edit views
-    if config.may("general.edit_views"):
-        for (u, n), view in html.multisite_views.items():
-            if u == user:
-                views[n] = view
-
-    # 2. views of special users allowed to globally override builtin views
-    for (u, n), view in html.multisite_views.items():
-        if n not in views and view["public"] and config.user_may(u, "general.force_views"):
-            # Honor original permissions for the current user
-            permname = "view.%s" % n
-            if config.permission_exists(permname) \
-                and not config.may(permname):
-                continue
-            views[n] = view
-
-    # 3. Builtin views, if allowed.
-    for (u, n), view in html.multisite_views.items():
-        if u == '' and n not in views and config.may("view.%s" % n):
-            views[n] = view
-
-    # 4. other users views, if public. Sill make sure we honor permission
-    #    for builtin views. Also the permission "general.see_user_views" is
-    #    necessary.
-    if config.may("general.see_user_views"):
-        for (u, n), view in html.multisite_views.items():
-            if n not in views and view["public"] and config.user_may(u, "general.publish_views"):
-                # Is there a builtin view with the same name? If yes, honor permissions.
-                permname = "view.%s" % n
-                if config.permission_exists(permname) \
-                    and not config.may(permname):
-                    continue
-                views[n] = view
-
-    return views
+    global multisite_views, available_views
+    multisite_views = visuals.load('views', multisite_builtin_views,
+                    lambda v: v['datasource'] not in multisite_datasources)
+    available_views = visuals.available('views', multisite_views)
 
 def save_views(us):
-    userviews = {}
-    for (user, name), view in html.multisite_views.items():
-        if us == user:
-            builtin_view = html.multisite_views.get(('', name))
-            # need a copy here as we might remove the inherited attributes which
-            # are added during load_views() but should not be persisted.
-            if builtin_view:
-                userviews[name] = copy.deepcopy(view)
-                for attr in view_inherit_attrs:
-                    if attr in view and builtin_view.get(attr) == view[attr]:
-                        del userviews[name][attr]
+    visuals.save('views', multisite_views)
+
+def permitted_views():
+    return available_views
+
+#   .--Table of views------------------------------------------------------.
+#   |   _____     _     _               __         _                       |
+#   |  |_   _|_ _| |__ | | ___    ___  / _| __   _(_) _____      _____     |
+#   |    | |/ _` | '_ \| |/ _ \  / _ \| |_  \ \ / / |/ _ \ \ /\ / / __|    |
+#   |    | | (_| | |_) | |  __/ | (_) |  _|  \ V /| |  __/\ V  V /\__ \    |
+#   |    |_|\__,_|_.__/|_|\___|  \___/|_|     \_/ |_|\___| \_/\_/ |___/    |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Show list of all views with buttons for editing                      |
+#   '----------------------------------------------------------------------'
+
+def page_edit_views():
+    def render_create_form():
+        if html.var('mode') == 'create':
+            datasource = html.var('datasource')
+            if not datasource:
+                html.show_error(_('Please select a datasource. The datasource specifies which kind of objects '
+                                  'can be rendered within the view.'))
             else:
-                userviews[name] = view
-    config.save_user_file("views", userviews)
+                html.immediate_browser_redirect(1, "edit_view.py?mode=create&datasource=%s" % datasource)
+                return
 
+        html.begin_form("create_view")
+        html.hidden_field('mode', 'create')
+        html.button("create", _("Create New View"))
+        html.write(_(" for datasource: "))
+        html.sorted_select("datasource", [('', _('--- Select a Datasource ---'))]
+                  + [ (k, v["title"]) for k, v in multisite_datasources.items() ])
+        html.end_form()
 
-# ----------------------------------------------------------------------
-#   _____     _     _               __         _
-#  |_   _|_ _| |__ | | ___    ___  / _| __   _(_) _____      _____
-#    | |/ _` | '_ \| |/ _ \  / _ \| |_  \ \ / / |/ _ \ \ /\ / / __|
-#    | | (_| | |_) | |  __/ | (_) |  _|  \ V /| |  __/\ V  V /\__ \
-#    |_|\__,_|_.__/|_|\___|  \___/|_|     \_/ |_|\___| \_/\_/ |___/
-#
-# ----------------------------------------------------------------------
-# Show list of all views with buttons for editing
-def page_edit_views(msg=None):
-    if not config.may("general.edit_views"):
-        raise MKAuthException(_("You are not allowed to edit views."))
-
-    html.header(_("Edit views"), stylesheets=["pages","views","status"])
-    html.help(_("Here you can create and edit customizable <b>views</b>. A view "
-            "displays monitoring status or log data by combining filters, sortings, "
-            "groupings and other aspects."))
-
-    if msg: # called from page_edit_view() after saving
-        html.message(msg)
+    cols = [ (_('Datasource'), lambda v: multisite_datasources[v["datasource"]]['title']) ]
 
     load_views()
-
-    # Deletion of views
-    delname  = html.var("_delete")
-    if delname:
-        deltitle = html.multisite_views[(config.user_id, delname)]['title']
-        c = html.confirm(_("Please confirm the deletion of the view \"%s\".") % deltitle)
-        if c:
-            del html.multisite_views[(config.user_id, delname)]
-            save_views(config.user_id)
-            html.reload_sidebar()
-        elif c == False:
-            html.footer()
-            return
-
-    if html.var('mode') == 'create':
-        datasource = html.var('datasource')
-        if not datasource:
-            html.show_error(_('Please select a datasource. The datasource specifies which kind of objects '
-                              'can be rendered within the view.'))
-        else:
-            html.immediate_browser_redirect(1, "edit_view.py?mode=create&datasource=%s" % datasource)
-            return
-
-    html.begin_form("create_view")
-    html.hidden_field('mode', 'create')
-    html.button("create", _("Create New View"))
-    html.write(_(" for datasource: "))
-    html.sorted_select("datasource", [('', _('--- Select a Datasource ---'))]
-              + [ (k, v["title"]) for k, v in multisite_datasources.items() ])
-    html.end_form()
-
-    html.write('<h3>' + _("Existing Views") + '</h3>')
-    html.write('<table class=data>')
-    html.write("<tr>")
-    html.write("<th>%s</th>" % _("Actions"))
-    html.write("<th>%s</th>" % _("View Name"))
-    html.write("<th>%s</th>" % _("Title"))
-    html.write("<th>%s</th>" % _("Datasource"))
-    html.write("<th>%s</th>" % _("Owner"))
-    html.write("<th>%s</th>" % _("Public"))
-    html.write("<th>%s</th>" % _("Hidden"))
-    html.write("</tr>")
-
-
-    keys_sorted = html.multisite_views.keys()
-    keys_sorted.sort(cmp = lambda a,b: -cmp(a[0],b[0]) or cmp(a[1], b[1]))
-
-    odd = "odd"
-    for (owner, viewname) in keys_sorted:
-        if owner == "" and not config.may("view.%s" % viewname):
-            continue
-        view = html.multisite_views[(owner, viewname)]
-        if owner == config.user_id or (view["public"] \
-            and (owner == "" or config.user_may(owner, "general.publish_views"))):
-
-            odd = odd == "odd" and "even" or "odd"
-            html.write('<tr class="data %s0">' % odd)
-
-            # Actions
-            html.write('<td class=buttons>')
-
-            # Edit
-            if owner == config.user_id:
-                html.icon_button("edit_view.py?load_view=%s" % viewname, _("Edit"), "edit")
-
-            # Clone / Customize
-            buttontext = not owner and _("Customize this view") \
-                         or _("Create a clone of this view")
-            backurl = html.urlencode(html.makeuri([]))
-            clone_url = "edit_view.py?clonefrom=%s&load_view=%s&back=%s" \
-                        % (owner, viewname, backurl)
-            html.icon_button(clone_url, buttontext, "clone")
-
-            # Delete
-            if owner == config.user_id:
-                html.icon_button("edit_views.py?_delete=%s"
-                                 % viewname, _("Delete this view!"), "delete")
-            html.write('</td>')
-
-            # View Name
-            html.write('<td>%s</td>' % viewname)
-
-            # Title
-            html.write('<td>')
-            title = view['title']
-            if not view["hidden"]:
-                html.write("<a href=\"view.py?view_name=%s\">%s</a>" % (viewname, html.attrencode(title)))
-            else:
-                html.write(html.attrencode(title))
-            html.help(html.attrencode(view['description']))
-            html.write("</td>")
-
-            # Datasource
-            html.write("<td class=content>%s</td>\n" % multisite_datasources[view["datasource"]]['title'])
-
-            # Owner
-            if owner == "":
-                ownertxt = "<i>" + _("builtin") + "</i>"
-            else:
-                ownertxt = owner
-            html.write("<td>%s</td>" % ownertxt)
-            html.write("<td>%s</td>" % (view["public"] and _("yes") or _("no")))
-            html.write("<td>%s</td>" % (view["hidden"] and _("yes") or _("no")))
-            html.write("</tr>\n")
-
-    html.write("</table>\n")
-    html.footer()
-
+    visuals.page_list('views', multisite_views, render_create_form, cols)
 
 def select_view(varname, only_with_hidden = False):
     choices = [("", "")]
-    for name, view in html.available_views.items():
+    for name, view in available_views.items():
         if not only_with_hidden or len(view["hide_filters"]) > 0:
             if view.get('mobile', False):
                 title = _('Mobile: ') + view["title"]
@@ -551,7 +329,7 @@ def page_edit_view():
         cloneuser = html.var("clonefrom")
         if cloneuser:
             mode  = 'clone'
-            view = copy.deepcopy(html.multisite_views.get((cloneuser, viewname), None))
+            view = copy.deepcopy(multisite_views.get((cloneuser, viewname), None))
             if not view:
                 raise MKUserError('cloneuser', _('The view does not exist.'))
             # Make sure, name is unique
@@ -561,7 +339,7 @@ def page_edit_view():
                 newname = viewname
             # Name conflict -> try new names
             n = 1
-            while (config.user_id, newname) in html.multisite_views:
+            while (config.user_id, newname) in multisite_views:
                 n += 1
                 newname = viewname + "_clone%d" % n
             view["name"] = newname
@@ -570,9 +348,9 @@ def page_edit_view():
             if cloneuser == config.user_id:
                 view["title"] += _(" (Copy)")
         else:
-            view = html.multisite_views.get((config.user_id, viewname))
+            view = multisite_views.get((config.user_id, viewname))
             if not view:
-                view = html.multisite_views.get(('', viewname)) # load builtin view
+                view = multisite_views.get(('', viewname)) # load builtin view
 
         datasourcename = view["datasource"]
         if view:
@@ -615,13 +393,13 @@ def page_edit_view():
             if html.var("save"):
                 if html.check_transaction():
                     load_views()
-                    html.multisite_views[(config.user_id, view["name"])] = view
+                    multisite_views[(config.user_id, view["name"])] = view
                     oldname = html.var("old_name")
                     # Handle renaming of views
                     if oldname and oldname != view["name"]:
                         # -> delete old entry
-                        if (config.user_id, oldname) in html.multisite_views:
-                            del html.multisite_views[(config.user_id, oldname)]
+                        if (config.user_id, oldname) in multisite_views:
+                            del multisite_views[(config.user_id, oldname)]
                         # -> change view_name in back parameter
                         if html.has_var('back'):
                             html.set_var('back', html.var('back', '').replace('view_name=' + oldname,
@@ -1024,13 +802,13 @@ def create_view(vs):
 
         cloneuser = html.var("clonefrom")
         if cloneuser:
-            base_view = html.multisite_views.get((cloneuser, oldname), None)
+            base_view = multisite_views.get((cloneuser, oldname), None)
         else:
-            base_view = html.multisite_views.get((config.user_id, oldname))
+            base_view = multisite_views.get((config.user_id, oldname))
             if not base_view:
-                base_view = html.multisite_views.get(('', oldname)) # load builtin view
-    elif mode == 'edit' and ('', oldname) in html.multisite_views:
-        base_view = html.multisite_views.get(('', oldname)) # load builtin view
+                base_view = multisite_views.get(('', oldname)) # load builtin view
+    elif mode == 'edit' and ('', oldname) in multisite_views:
+        base_view = multisite_views.get(('', oldname)) # load builtin view
         if oldname == name:
             override = True
 
@@ -1109,7 +887,7 @@ def create_view(vs):
         viewname = html.var("group_link_%d" % n)
         tooltip = html.var("group_tooltip_%d" % n)
         if pname:
-            if viewname not in  html.available_views:
+            if viewname not in available_views:
                 viewname = None
             group_painternames.append((pname, viewname, tooltip))
 
@@ -1126,7 +904,7 @@ def create_view(vs):
         join_index = html.var('col_join_index_%d' % n)
         col_title  = html.var('col_title_%d' % n)
         if pname and pname != '-':
-            if viewname not in  html.available_views:
+            if viewname not in available_views:
                 viewname = None
 
             allowed_cols = collist_of_collection(allowed_for_datasource(multisite_painters, datasourcename))
@@ -1187,7 +965,7 @@ def page_view():
     view_name = html.var("view_name")
     if view_name == None:
         raise MKGeneralException(_("Missing the variable view_name in the URL."))
-    view = html.available_views.get(view_name)
+    view = available_views.get(view_name)
     if not view:
         raise MKGeneralException(_("No view defined with the name '%s'.") % html.attrencode(view_name))
 
@@ -1215,7 +993,7 @@ def get_needed_columns(painters):
         v = entry[1]
         columns += p["columns"]
         if v:
-            linkview = html.available_views.get(v)
+            linkview = available_views.get(v)
             if linkview:
                 for ef in linkview["hide_filters"]:
                     f = multisite_filters[ef]
@@ -1961,7 +1739,7 @@ def collect_context_links(thisview, active_filters):
 
     context_links = []
     # sort view buttons somehow
-    sorted_views = html.available_views.values()
+    sorted_views = available_views.values()
     sorted_views.sort(cmp = lambda b,a: cmp(a.get('icon'), b.get('icon')))
 
     for view in sorted_views:
@@ -2422,17 +2200,17 @@ def filter_selected_rows(view, rows, selected_ids):
 
 
 def get_context_link(user, viewname):
-    if viewname in html.available_views:
+    if viewname in available_views:
         return "view.py?view_name=%s" % viewname
     else:
         return None
 
 def ajax_export():
     load_views()
-    for name, view in html.available_views.items():
+    for name, view in available_views.items():
         view["owner"] = ''
         view["public"] = True
-    html.write(pprint.pformat(html.available_views))
+    html.write(pprint.pformat(available_views))
 
 
 def page_message_and_forward(message, default_url, addhtml=""):
@@ -2506,7 +2284,7 @@ def link_to_view(content, row, linkview):
     if 'I' not in html.display_options:
         return content
 
-    view = html.available_views.get(linkview)
+    view = available_views.get(linkview)
     if view:
         filters = [ multisite_filters[fn] for fn in view["hide_filters"] ]
         vars = []

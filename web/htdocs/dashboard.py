@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config, defaults, pprint, time
+import config, defaults, visuals, pprint, time
 from lib import *
 import wato
 
@@ -37,6 +37,7 @@ except NameError:
 
 loaded_with_language = False
 builtin_dashboards = {}
+dashlets = {}
 
 # Declare constants to be used in the definitions of the dashboards
 GROW = 0
@@ -57,7 +58,7 @@ raster          = 10, 10        # Raster the dashlet choords are measured in
 # thus must be reinitialized everytime a language-change has
 # been detected.
 def load_plugins():
-    global loaded_with_language
+    global loaded_with_language, dashboards
     if loaded_with_language == current_language:
         return
 
@@ -65,40 +66,65 @@ def load_plugins():
     # just may add custom dashboards by adding to builtin_dashboards.
     load_web_plugins("dashboard", globals())
 
+    # be compatible to old definitions, where even internal dashlets were
+    # referenced by url, e.g. dashboard['url'] = 'hoststats.py'
+    # FIXME: can be removed one day. Mark as incompatible change or similar.
+    for name, dashboard in builtin_dashboards.items():
+        for dashlet in dashboard['dashlets']:
+            dashlet.setdefault('parameters', {})
+            if dashlet.get('url', '').startswith('dashlet_') and dashlet['url'].endswith('.py'):
+                dashlet['type'] = dashlet['url'][8:-3]
+                del dashlet['url']
+            elif dashlet.get('url', '') != '':
+                dashlet['type'] = 'url'
+            elif dashlet.get('view', '') != '':
+                dashlet['type'] = 'view'
+                dashlet['parameters']['view_name'] = dashlet['view']
+                del dashlet['view']
+
+        # add the modification time to make reload of dashboards work
+        dashboard['mtime'] = int(time.time())
+
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
     # are loaded).
     loaded_with_language = current_language
 
-    # In future there will be user editable dashboards just like
-    # views which will be loaded. Currently we only use the builtin
-    # dashboads.
-    global dashboards
-    dashboards = builtin_dashboards
+    # Clear this structure to prevent users accessing dashboard structures created
+    # by other users, make them see these dashboards
+    dashboards = {}
 
     # Declare permissions for all dashboards
     config.declare_permission_section("dashboard", _("Dashboards"), do_sort = True)
-    for name, dashboard in dashboards.items():
+    for name, view in builtin_dashboards.items():
         config.declare_permission("dashboard.%s" % name,
-                dashboard["title"],
-                dashboard.get("description", ''),
+                view["title"],
+                view["description"],
                 config.builtin_role_ids)
 
+    # Make sure that custom views also have permissions
+    config.declare_dynamic_permissions(lambda: visuals.declare_custom_permissions('dashboards'))
+
+def load_dashboards():
+    global dashboards, available_dashboards
+    dashboards = visuals.load('dashboards', builtin_dashboards)
+    available_dashboards = visuals.available('dashboards', dashboards)
+
+def save_dashboards(us):
+    visuals.save('dashboards', dashboards)
+
 def permitted_dashboards():
-    return [ (name, dashboard) for name, dashboard
-        in dashboards.items()
-        if config.may("dashboard.%s" % name)
-    ]
+    return available_dashboards
 
 # HTML page handler for generating the (a) dashboard. The name
 # of the dashboard to render is given in the HTML variable 'name'.
 # This defaults to "main".
 def page_dashboard():
+    load_dashboards()
+
     name = html.var("name", "main")
-    if name not in dashboards:
-        raise MKGeneralException("No such dashboard: '<b>%s</b>'" % name)
-    if not config.may("dashboard.%s" % name):
-        raise MKAuthException(_("You are not allowed to access this dashboard."))
+    if name not in available_dashboards:
+        raise MKGeneralException(_("The requested dashboard can not be found."))
 
     render_dashboard(name)
 
@@ -115,7 +141,7 @@ def add_wato_folder_to_url(url, wato_folder):
 
 # Actual rendering function
 def render_dashboard(name):
-    board = dashboards[name]
+    board = available_dashboards[name]
 
     # The dashboard may be called with "wato_folder" set. In that case
     # the dashboard is assumed to restrict the shown data to a specific
@@ -160,9 +186,14 @@ def render_dashboard(name):
         # dashlets using the 'url' method will be refreshed by us. Those
         # dashlets using static content (such as an iframe) will not be
         # refreshed by us but need to do that themselves.
-        if "url" in dashlet:
+        if "url" in dashlet or \
+           ('type' in dashlet and 'render' in dashlets[dashlet['type']]
+            and dashlets[dashlet['type']].get('refresh')):
+            url = dashlet.get("url", "dashboard_dashlet.py?board="+name+"&id="+ \
+                                     str(nr)+"&mtime="+str(board['mtime']));
+            # FIXME: remove add_wato_folder_to_url
             refresh_dashlets.append([nr, dashlet.get("refresh", 0),
-              str(add_wato_folder_to_url(dashlet["url"], wato_folder))])
+              str(add_wato_folder_to_url(url, wato_folder))])
 
         # Paint the dashlet's HTML code
         render_dashlet(nr, dashlet, wato_folder)
@@ -181,12 +212,13 @@ var dashlet_padding = Array%s;
 var corner_overlap = %d;
 var refresh_dashlets = %r;
 var dashboard_name = '%s';
+var dashboard_mtime = %d;
 set_dashboard_size();
 window.onresize = function () { set_dashboard_size(); }
 window.onload = function () { set_dashboard_size(); }
 dashboard_scheduler(1);
     """ % (header_height, screen_margin, title_height, dashlet_padding,
-           corner_overlap, refresh_dashlets, name))
+           corner_overlap, refresh_dashlets, name, board['mtime']))
 
     html.body_end() # omit regular footer with status icons, etc.
 
@@ -196,7 +228,6 @@ dashboard_scheduler(1);
 # actual dashlet content. The margin between the inner and outer div is
 # used for stylish layout stuff (shadows, etc.)
 def render_dashlet(nr, dashlet, wato_folder):
-
     html.write('<div class=dashlet id="dashlet_%d">' % nr)
     # render shadow
     if dashlet.get("shadow", True):
@@ -217,22 +248,27 @@ def render_dashlet(nr, dashlet, wato_folder):
         bg = ""
     html.write('<div class="dashlet_inner%s" id="dashlet_inner_%d">' % (bg, nr))
 
+    html.log(repr(dashlet.keys()))
+    dashlet_type = dashlets[dashlet['type']]
+
     # Optional way to render a dynamic iframe URL
-    if "iframefunc" in dashlet:
-        dashlet["iframe"] = dashlet["iframefunc"]()
+    if "iframe_urlfunc" in dashlet_type:
+        dashlet["iframe"] = dashlet_type["iframe_urlfunc"](dashlet['parameters'])
 
-    # The method "view" is a shortcut for "iframe" with a certain url
-    if "view" in dashlet:
-        dashlet["iframe"] = "view.py?view_name=%s&display_options=HRSIXL&_display_options=HRSIXL&_body_class=dashlet" % dashlet["view"]
-
+    # FIXME:
     if dashlet.get("reload_on_resize"):
         dashlet["onload"] = "dashlet_add_dimensions('dashlet_%d', this)" % nr
 
     # The content is rendered only if it is fixed. In the
     # other cases the initial (re)-size will paint the content.
-    if "content" in dashlet: # fixed content
+    if "render" in dashlet_type:
+        render_dashlet_content(dashlet)
+
+    elif "content" in dashlet: # fixed content
         html.write(dashlet["content"])
+
     elif "iframe" in dashlet: # fixed content containing iframe
+        # FIXME:
         if not dashlet.get("reload_on_resize"):
             url = add_wato_folder_to_url(dashlet["iframe"], wato_folder)
         else:
@@ -243,6 +279,7 @@ def render_dashlet(nr, dashlet, wato_folder):
         html.write('<iframe id="dashlet_iframe_%d" allowTransparency="true" frameborder="0" width="100%%" '
                    'height="100%%" src="%s"> </iframe>' % (nr, url))
         html.write('</div>')
+        # FIXME:
         if dashlet.get("reload_on_resize"):
             html.javascript('reload_on_resize["%d"] = "%s"' %
                             (nr, add_wato_folder_to_url(dashlet["iframe"], wato_folder)))
@@ -305,7 +342,8 @@ def ajax_resize():
         def __add__(self, b):
             return vec((self[0] + b[0], self[1] + b[1]))
 
-    board = dashboards[html.var("name")]
+    load_dashboards()
+    board = available_dashboards[html.var("name")]
 
     screensize = vec((int(html.var("width")), int(html.var("height"))))
     rastersize = screensize / raster
@@ -437,262 +475,72 @@ def ajax_resize():
 
     html.write(repr(resize_info))
 
+#.
+#   .--Draw Dashlet--------------------------------------------------------.
+#   |     ____                       ____            _     _      _        |
+#   |    |  _ \ _ __ __ ___      __ |  _ \  __ _ ___| |__ | | ___| |_      |
+#   |    | | | | '__/ _` \ \ /\ / / | | | |/ _` / __| '_ \| |/ _ \ __|     |
+#   |    | |_| | | | (_| |\ V  V /  | |_| | (_| \__ \ | | | |  __/ |_      |
+#   |    |____/|_|  \__,_| \_/\_/   |____/ \__,_|___/_| |_|_|\___|\__|     |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Draw dashlet HTML code which are rendered by the multisite dashboard |
+#   '----------------------------------------------------------------------'
 
-def dashlet_overview():
-    html.write(
-        '<table class=dashlet_overview>'
-        '<tr><td valign=top>'
-        '<a href="http://mathias-kettner.de/check_mk.html"><img style="margin-right: 30px;" src="images/check_mk.trans.120.png"></a>'
-        '</td>'
-        '<td><h2>Check_MK Multisite</h2>'
-        'Welcome to Check_MK Multisite. If you want to learn more about Multsite, please visit '
-        'our <a href="http://mathias-kettner.de/checkmk_multisite.html">online documentation</a>. '
-        'Multisite is part of <a href="http://mathias-kettner.de/check_mk.html">Check_MK</a> - an Open Source '
-        'project by <a href="http://mathias-kettner.de">Mathias Kettner</a>.'
-        '</td>'
-    )
+def ajax_dashlet():
+    board = html.var('board')
+    if not board:
+        raise MKGeneralException(_('The name of the dashboard is missing.'))
 
-    html.write('</tr></table>')
+    ident = html.var('id')
+    if not ident:
+        raise MKGeneralException(_('The ident of the dashlet is missing.'))
 
-def dashlet_mk_logo():
-    html.write('<a href="http://mathias-kettner.de/check_mk.html">'
-     '<img style="margin-right: 30px;" src="images/check_mk.trans.120.png"></a>')
+    load_dashboards()
 
+    if board not in available_dashboards:
+        raise MKGeneralException(_('The requested dashboard does not exist.'))
+    dashboard = available_dashboards[board]
 
+    mtime = html.var('mtime')
+    if not mtime:
+        raise MKGeneralException(_('The dashboard modification time is missing.'))
 
-def dashlet_hoststats():
-    table = [
-       ( _("Up"), "#0b3",
-        "searchhost&is_host_scheduled_downtime_depth=0&hst0=on",
-        "Stats: state = 0\n" \
-        "Stats: scheduled_downtime_depth = 0\n" \
-        "StatsAnd: 2\n"),
+    if mtime < dashboard['mtime']:
+        raise MKGeneralException('RELOAD') # FIXME
 
-       ( _("Down"), "#f00",
-        "searchhost&is_host_scheduled_downtime_depth=0&hst1=on",
-        "Stats: state = 1\n" \
-        "Stats: scheduled_downtime_depth = 0\n" \
-        "StatsAnd: 2\n"),
+    the_dashlet = None
+    for nr, dashlet in enumerate(dashboard['dashlets']):
+        if nr == int(ident):
+            the_dashlet = dashlet
+            break
 
-       ( _("Unreachable"), "#f80",
-        "searchhost&is_host_scheduled_downtime_depth=0&hst2=on",
-        "Stats: state = 2\n" \
-        "Stats: scheduled_downtime_depth = 0\n" \
-        "StatsAnd: 2\n"),
+    if not the_dashlet:
+        raise MKGeneralException(_('The dashlet can not be found on the dashboard.'))
 
-       ( _("In Downtime"), "#0af",
-        "searchhost&search=1&is_host_scheduled_downtime_depth=1",
-        "Stats: scheduled_downtime_depth > 0\n" \
-       )
-    ]
-    filter = "Filter: custom_variable_names < _REALNAME\n"
+    if the_dashlet['type'] not in dashlets:
+        raise MKGeneralException(_('The requested dashlet type does not exist.'))
 
-    render_statistics(html.var('id', "hoststats"), "hosts", table, filter)
+    render_dashlet_content(the_dashlet)
 
-def dashlet_servicestats():
-    table = [
-       ( _("OK"), "#0b3",
-        "searchsvc&hst0=on&st0=on&is_in_downtime=0",
-        "Stats: state = 0\n" \
-        "Stats: scheduled_downtime_depth = 0\n" \
-        "Stats: host_scheduled_downtime_depth = 0\n" \
-        "Stats: host_state = 0\n" \
-        "Stats: host_has_been_checked = 1\n" \
-        "StatsAnd: 5\n"),
+def render_dashlet_content(the_dashlet):
+    dashlets[the_dashlet['type']]['render'](the_dashlet['parameters'])
 
-       ( _("In Downtime"), "#0af",
-        "searchsvc&is_in_downtime=1",
-        "Stats: scheduled_downtime_depth > 0\n" \
-        "Stats: host_scheduled_downtime_depth > 0\n" \
-        "StatsOr: 2\n"),
+#.
+#   .--Dashboard List------------------------------------------------------.
+#   |           ____            _     _        _     _     _               |
+#   |          |  _ \  __ _ ___| |__ | |__    | |   (_)___| |_             |
+#   |          | | | |/ _` / __| '_ \| '_ \   | |   | / __| __|            |
+#   |          | |_| | (_| \__ \ | | | |_) |  | |___| \__ \ |_             |
+#   |          |____/ \__,_|___/_| |_|_.__(_) |_____|_|___/\__|            |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
-       ( _("On Down host"), "#048",
-        "searchsvc&hst1=on&hst2=on&hstp=on&is_in_downtime=0",
-        "Stats: scheduled_downtime_depth = 0\n" \
-        "Stats: host_scheduled_downtime_depth = 0\n" \
-        "Stats: host_state != 0\n" \
-        "StatsAnd: 3\n"),
+def page_edit_dashboards():
+    def render_buttons():
+        html.context_button(_("Create Dashboard"), "edit_dashboard.py", 'new')
 
-       ( _("Warning"), "#ff0",
-        "searchsvc&hst0=on&st1=on&is_in_downtime=0",
-        "Stats: state = 1\n" \
-        "Stats: scheduled_downtime_depth = 0\n" \
-        "Stats: host_scheduled_downtime_depth = 0\n" \
-        "Stats: host_state = 0\n" \
-        "Stats: host_has_been_checked = 1\n" \
-        "StatsAnd: 5\n"),
-
-       ( _("Unknown"), "#f80",
-        "searchsvc&hst0=on&st3=on&is_in_downtime=0",
-        "Stats: state = 3\n" \
-        "Stats: scheduled_downtime_depth = 0\n" \
-        "Stats: host_scheduled_downtime_depth = 0\n" \
-        "Stats: host_state = 0\n" \
-        "Stats: host_has_been_checked = 1\n" \
-        "StatsAnd: 5\n"),
-
-       ( _("Critical"), "#f00",
-        "searchsvc&hst0=on&st2=on&is_in_downtime=0",
-        "Stats: state = 2\n" \
-        "Stats: scheduled_downtime_depth = 0\n" \
-        "Stats: host_scheduled_downtime_depth = 0\n" \
-        "Stats: host_state = 0\n" \
-        "Stats: host_has_been_checked = 1\n" \
-        "StatsAnd: 5\n"),
-    ]
-    filter = "Filter: host_custom_variable_names < _REALNAME\n"
-
-    render_statistics(html.var('id', "servicestats"), "services", table, filter)
-
-
-def render_statistics(pie_id, what, table, filter):
-    html.write("<div class=stats>")
-    pie_diameter     = 130
-    pie_left_aspect  = 0.5
-    pie_right_aspect = 0.8
-
-    # Is the query restricted to a certain WATO-path?
-    wato_folder = html.var("wato_folder")
-    if wato_folder:
-        # filter += "Filter: host_state = 0"
-        filter += "Filter: host_filename ~ ^/wato/%s/\n" % wato_folder.replace("\n", "")
-
-    # Is the query restricted to a host contact group?
-    host_contact_group = html.var("host_contact_group")
-    if host_contact_group:
-        filter += "Filter: host_contact_groups >= %s\n" % host_contact_group.replace("\n", "")
-
-    # Is the query restricted to a service contact group?
-    service_contact_group = html.var("service_contact_group")
-    if service_contact_group:
-        filter += "Filter: service_contact_groups >= %s\n" % service_contact_group.replace("\n", "")
-
-    query = "GET %s\n" % what
-    for entry in table:
-        query += entry[3]
-    query += filter
-
-    result = html.live.query_summed_stats(query)
-    pies = zip(table, result)
-    total = sum([x[1] for x in pies])
-
-    html.write('<canvas class=pie width=%d height=%d id="%s_stats" style="float: left"></canvas>' %
-            (pie_diameter, pie_diameter, pie_id))
-    html.write('<img src="images/globe.png" class="globe">')
-
-    html.write('<table class="hoststats%s" style="float:left">' % (
-        len(pies) > 1 and " narrow" or ""))
-    table_entries = pies
-    while len(table_entries) < 6:
-        table_entries = table_entries + [ (("", "#95BBCD", "", ""), "&nbsp;") ]
-    table_entries.append(((_("Total"), "", "all%s" % what, ""), total))
-    for (name, color, viewurl, query), count in table_entries:
-        url = "view.py?view_name=" + viewurl + "&filled_in=filter&search=1&wato_folder=" \
-              + html.urlencode(html.var("wato_folder", ""))
-        if host_contact_group:
-            url += '&opthost_contactgroup=' + host_contact_group
-        if service_contact_group:
-            url += '&optservice_contactgroup=' + service_contact_group
-        html.write('<tr><th><a href="%s">%s</a></th>' % (url, name))
-        style = ''
-        if color:
-            style = ' style="background-color: %s"' % color
-        html.write('<td class=color%s>'
-                   '</td><td><a href="%s">%s</a></td></tr>' % (style, url, count))
-
-    html.write("</table>")
-
-    r = 0.0
-    pie_parts = []
-    if total > 0:
-        # Count number of non-empty classes
-        num_nonzero = 0
-        for info, value in pies:
-            if value > 0:
-                num_nonzero += 1
-
-        # Each non-zero class gets at least a view pixels of visible thickness.
-        # We reserve that space right now. All computations are done in percent
-        # of the radius.
-        separator = 0.02                                    # 3% of radius
-        remaining_separatorspace = num_nonzero * separator  # space for separators
-        remaining_radius = 1 - remaining_separatorspace     # remaining space
-        remaining_part = 1.0 # keep track of remaining part, 1.0 = 100%
-
-        # Loop over classes, begin with most outer sphere. Inner spheres show
-        # worse states and appear larger to the user (which is the reason we
-        # are doing all this stuff in the first place)
-        for (name, color, viewurl, q), value in pies[::1]:
-            if value > 0 and remaining_part > 0: # skip empty classes
-
-                # compute radius of this sphere *including all inner spheres!* The first
-                # sphere always gets a radius of 1.0, of course.
-                radius = remaining_separatorspace + remaining_radius * (remaining_part ** (1/3.0))
-                pie_parts.append('chart_pie("%s", %f, %f, %r, true);' % (pie_id, pie_right_aspect, radius, color))
-                pie_parts.append('chart_pie("%s", %f, %f, %r, false);' % (pie_id, pie_left_aspect, radius, color))
-
-                # compute relative part of this class
-                part = float(value) / total # ranges from 0 to 1
-                remaining_part           -= part
-                remaining_separatorspace -= separator
-
-
-    html.write("</div>")
-    html.javascript("""
-function chart_pie(pie_id, x_scale, radius, color, right_side) {
-    var context = document.getElementById(pie_id + "_stats").getContext('2d');
-    if (!context)
-        return;
-    var pie_x = %(x)f;
-    var pie_y = %(y)f;
-    var pie_d = %(d)f;
-    context.fillStyle = color;
-    context.save();
-    context.translate(pie_x, pie_y);
-    context.scale(x_scale, 1);
-    context.beginPath();
-    if(right_side)
-        context.arc(0, 0, (pie_d / 2) * radius, 1.5 * Math.PI, 0.5 * Math.PI, false);
-    else
-        context.arc(0, 0, (pie_d / 2) * radius, 0.5 * Math.PI, 1.5 * Math.PI, false);
-    context.closePath();
-    context.fill();
-    context.restore();
-    context = null;
-}
-
-
-if (has_canvas_support()) {
-    %(p)s
-}
-""" % { "x" : pie_diameter / 2, "y": pie_diameter/2, "d" : pie_diameter, 'p': '\n'.join(pie_parts) })
-
-def dashlet_pnpgraph():
-    render_pnpgraph(
-        html.var("site"), html.var("host"), html.var("service"),
-        int(html.var("source", 0)), int(html.var("view", 0)),
-    )
-
-def dashlet_nodata():
-    html.write("<div class=nograph><div class=msg>")
-    html.write(html.var("message", _("No data available.")))
-    html.write("</div></div>")
-
-def render_pnpgraph(site, host, service = None, source = 0, view = 0):
-    if not host:
-        html.message("Invalid URL to this dashlet. Missing <tt>host</tt>")
-        return;
-    if not service:
-        service = "_HOST_"
-
-    if not site:
-        base_url = defaults.url_prefix
-    else:
-        base_url = html.site_status[site]["site"]["url_prefix"]
-    base_url += "pnp4nagios/index.php/"
-    var_part = "?host=%s&srv=%s&view=0&source=%d&view=%d&theme=multisite&_t=%d" % \
-            (pnp_cleanup(host), pnp_cleanup(service), source, view, int(time.time()))
-
-    pnp_url = base_url + "graph" + var_part
-    img_url = base_url + "image" + var_part
-    html.write('<a href="%s"><img border=0 src="%s"></a>' % (pnp_url, img_url))
+    load_dashboards()
+    visuals.page_list('dashboards', dashboards, render_context_buttons = render_buttons)

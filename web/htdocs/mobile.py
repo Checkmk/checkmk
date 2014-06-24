@@ -184,7 +184,7 @@ def page_index():
     jqm_page_header(title, right_button=("javascript:document.location.reload();", _("Reload"), "refresh"),id="data")
     views.load_views()
     items = []
-    for view_name, view in html.available_views.items():
+    for view_name, view in views.permitted_views().items():
         if view.get("mobile") and not view.get("hidden"):
             url = "mobile_view.py?view_name=%s" % view_name
             count = ""
@@ -211,7 +211,7 @@ def page_view():
     if not view_name:
         return page_index()
 
-    view = html.available_views.get(view_name)
+    view = views.permitted_views().get(view_name)
     if not view:
         raise MKGeneralException("No view defined with the name '%s'." % view_name)
 

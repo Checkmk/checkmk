@@ -1,0 +1,9 @@
+Title: livedump: Fix exception in case no contact groups are defined for a service
+Level: 1
+Component: livestatus
+State: unknown
+Version: 1.2.5i4p1
+Date: 1403617324
+Class: fix
+
+

@@ -1,0 +1,8 @@
+Title: check_mk-winperf.cpuusage.php: now displays AVERAGE values instead of MAX
+Level: 1
+Component: multisite
+Version: 1.2.5i4
+Date: 1403592799
+Class: fix
+
+This change makes pnpgraphs with greater timeframes consistent

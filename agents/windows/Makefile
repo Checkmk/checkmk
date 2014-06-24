@@ -23,7 +23,7 @@
 # Boston, MA 02110-1301 USA.
 
 SHELL   = /bin/bash
-VERSION = 1.2.5i4
+VERSION = 1.2.5i5
 WINDRES = i586-mingw32msvc-windres
 
 ifeq ($(shell uname),Linux)

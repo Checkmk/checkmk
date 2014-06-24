@@ -310,7 +310,7 @@ char *Logfile::readIntoBuffer(int *size)
         close(fd);
         return 0;
     }
-    buffer[0]       = 0; 
+    buffer[0]       = 0;
     buffer[*size+1] = 0; // zero-terminate
 
     close(fd);

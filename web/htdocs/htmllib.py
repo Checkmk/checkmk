@@ -244,7 +244,7 @@ class html:
             vars = [ i for i in vars if not i[0].startswith(remove_prefix) ]
         vars = vars + addvars
         if filename == None:
-            filename = self.myfile + ".py"
+            filename = self.urlencode(self.myfile) + ".py"
         if vars:
             return filename + "?" + self.urlencode_vars(vars)
         else:

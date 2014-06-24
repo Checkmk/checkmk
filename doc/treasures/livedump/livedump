@@ -96,7 +96,8 @@ def livedump_config():
         encode_row(row)
         check_commands.add(row["check_command"])
         row["contactsstring"] = (",".join(row["contacts"])).encode("utf-8")
-        row["contact_groups"] = (",".join(row["contact_groups"])).encode("utf-8")
+        if "contact_groups" in row:
+            row["contact_groups"] = (",".join(row["contact_groups"])).encode("utf-8")
 
     # Dump host config
     query = \

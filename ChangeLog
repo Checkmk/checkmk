@@ -2,6 +2,9 @@
     Checks & Agents:
     * 0994 FIX: agent plugin smart: fixed syntax error
 
+    Livestatus:
+    * 0988 FIX: livedump: Fix exception in case no contact groups are defined for a service
+
 
 1.2.5i4:
     Core & Setup:

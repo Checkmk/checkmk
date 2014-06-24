@@ -100,7 +100,7 @@ function run_cached () {
 }
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.5i4
+echo Version: 1.2.5i4p1
 echo AgentOS: linux
 echo PluginsDirectory: $PLUGINSDIR
 echo LocalDirectory: $LOCALDIR

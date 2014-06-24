@@ -26,7 +26,7 @@
 
 $opt[1] = "--vertical-label 'Percent' -l0 -u100 --title \"CPU Utilization of $hostname\" ";
 
-$def[1] = "DEF:usage=$RRDFILE[1]:$DS[1]:MAX ";
+$def[1] = "DEF:usage=$RRDFILE[1]:$DS[1]:AVERAGE";
 $def[1] .= "AREA:usage#60f020:\"CPU utilization\" ";
 $def[1] .= "LINE:usage#40d010 ";
 

@@ -29,14 +29,14 @@ register_notification_parameters("mail",
         elements = [
             ( "from",
               TextAscii(
-                  title = _("From: Adress"),
+                  title = _("From: Address"),
                   size = 40,
                   allow_empty = False,
               )
             ),
             ( "reply_to",
               TextAscii(
-                  title = _("Reply-To: Adress"),
+                  title = _("Reply-To: Address"),
                   size = 40,
                   allow_empty = False,
               )
@@ -96,15 +96,15 @@ register_notification_parameters("asciimail",
     Dictionary(
         elements = [
             ( "from",
-              TextAscii(
-                  title = _("From: Adress"),
+              EmailAddress(
+                  title = _("From: Address"),
                   size = 40,
                   allow_empty = False,
               )
             ),
             ( "reply_to",
-              TextAscii(
-                  title = _("Reply-To: Adress"),
+              EmailAddress(
+                  title = _("Reply-To: Address"),
                   size = 40,
                   allow_empty = False,
               )

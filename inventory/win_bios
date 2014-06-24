@@ -29,7 +29,7 @@
 # Manufacturer       : innotek GmbH
 # Name               : Default System BIOS
 # BIOSVersion        : {VBOX   - 1}
-# ListOfLanguages    : 
+# ListOfLanguages    :
 # PrimaryBIOS        : True
 # ReleaseDate        : 20061201000000.000000+000
 # SMBIOSBIOSVersion  : VirtualBox
@@ -65,7 +65,7 @@ def inv_win_bios(info):
     if smbios_version:
         node["version"] = smbios_version + " " + major_version + \
             "." + minor_version
-    else: 
+    else:
         node["version"] = bios_version
 
 inv_info['win_bios'] = {

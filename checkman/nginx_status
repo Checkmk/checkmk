@@ -74,4 +74,4 @@ perfdata:
 [parameters]
 parameters(dict): a dictionary with these optional keys:
 
- {"active_connections"} : (int, int) - warn/crit levels for the number of currently active connections 
+ {"active_connections"} : (int, int) - warn/crit levels for the number of currently active connections

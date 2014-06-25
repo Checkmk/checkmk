@@ -6,6 +6,9 @@
     WATO:
     * 0990 FIX: Fix HTTP error handling in bulk inventory...
 
+    Reporting & Availability:
+    * 0991 FIX: Availability: optionally show time stamps as UNIX epoch time...
+
     Livestatus:
     * 0988 FIX: livedump: Fix exception in case no contact groups are defined for a service
 

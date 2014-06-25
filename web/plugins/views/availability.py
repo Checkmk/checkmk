@@ -397,6 +397,16 @@ avoption_entries = [
   ),
 
   # Format of numbers
+  ( "dateformat",
+    "single",
+    DropdownChoice(
+        title = _("Format time stamps as"),
+        choices = [
+            ("yyyy-mm-dd hh:mm:ss", _("YYYY-MM-DD HH:MM:SS") ),
+            ("epoch",               _("Unix Timestamp (Epoch)") ),
+        ],
+    )
+  ),
   ( "timeformat",
     "single",
     DropdownChoice(
@@ -491,6 +501,7 @@ def render_availability_options():
             "host_down"           : True,
             "unmonitored"         : True,
         },
+        "dateformat"     : "yyyy-mm-dd hh:mm:ss",
         "timeformat"     : "percentage_2",
         "labelling"      : [],
         "rangespec"      : "d0",
@@ -826,7 +837,10 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration,
     if time.localtime(from_time)[:3] != time.localtime(until_time-1)[:3]:
         format = "%Y-%m-%d " + format
     def render_date(ts):
-        return time.strftime(format, time.localtime(ts))
+        if avoptions["dateformat"] == "epoch":
+            return str(int(ts))
+        else: 
+            return time.strftime(format, time.localtime(ts))
 
     if type(timeline) == tuple:
         tl_site, tl_host, tl_service = timeline

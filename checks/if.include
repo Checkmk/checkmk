@@ -503,7 +503,7 @@ def check_if_common_single(item, params, info, force_counter_wrap = False):
                     infotext += ", %s: %s" % (what, format_value(traffic))
 
                     if speed:
-                        perc_used = 100.0 * traffic / speed
+                        perc_used = 100.0 * traffic / (speed / 8)
 
                         assumed_info = ""
                         if assumed_speed_in or assumed_speed_out:

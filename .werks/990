@@ -1,0 +1,10 @@
+Title: Fix HTTP error handling in bulk inventory
+Level: 1
+Component: wato
+Version: 1.2.4p5
+Date: 1403695916
+Class: fix
+
+If during a bulk inventory some HTTP error occurs (e.g. due to an Apache
+restart) then now the failed hosts are exactly being displayed and the
+number of failed hosts is correct.

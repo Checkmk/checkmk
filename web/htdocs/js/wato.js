@@ -29,7 +29,7 @@
 function getElementsByClass(cl) {
     var items = new Array();
     var elements = document.getElementsByTagName('*');
-    for(var i = 0; i < elements.length; i++)
+    for (var i = 0; i < elements.length; i++)
         if (elements[i].className == cl)
             items.push(elements[i]);
     return items;
@@ -260,36 +260,53 @@ function progress_handle_error(data, code) {
     progress_handle_response(data, '', code);
 }
 
-function progress_handle_response(data, code, http_code) {
+function progress_handle_response(data, code, http_code)
+{
     var mode = data[0];
     var item = data[1];
 
     var header = null;
     var body = null;
-    if(http_code !== undefined) {
+    if (http_code !== undefined) {
         // If the request failed report the item as failed
+        // Note: the item is either a plain item (single-item-mode), or
+        // a list of items which are separated with ;. Also it is possible
+        // that additional parameters are prefixed to the item separated
+        // by pipes. The bulk inventory uses that format for doing a couple
+        // of hosts at the same time. So here we detect both variants.
+
+        var parts = data[1].split("|");
+        var last_part = parts[parts.length-1];
+        var items = last_part.split(";");
+        var num_failed = items.length;
+
         // - Report failed state
         // - Update the total count (item 0 = 1)
         // - Update the failed stats
-        header = [ 'failed', 1 ];
-        for(var i = 1; i <= Math.max.apply(Math, progress_fail_stats); i++) {
-            if(progress_fail_stats.indexOf(i) !== -1) {
-                header.push(1);
-            } else {
+        header = [ 'failed', num_failed ];
+        for (var i = 1; i <= Math.max.apply(Math, progress_fail_stats); i++) {
+            if (progress_fail_stats.indexOf(i) !== -1) {
+                header.push(num_failed);
+            }
+            else {
                 header.push(0);
             }
         }
-        body = 'Inventory of ' + item + ' failed\n'
-              +'<div class=exc><h1>HTTP-Request failed</h1>'
-              +'HTTP-Code: ' + http_code + '<br />'
-              +'Parameters: ' + data + '</div>\n';
-    } else {
+
+        body = '';
+        for (var i=0; i < items.length; i++)
+        {
+            body += items[i] + ' failed: HTTP-Request failed with code ' + http_code + '<br>';
+        }
+    }
+    else {
         // Regular response processing
         try {
             var header = eval(code.split("\n", 1)[0]);
             if (header === null)
                 alert('Header is null!');
-        } catch(err) {
+        }
+        catch(err) {
             alert('Invalid response: ' + code);
         }
 

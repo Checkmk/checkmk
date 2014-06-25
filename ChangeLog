@@ -3,6 +3,9 @@
     * 0994 FIX: agent plugin smart: fixed syntax error
     * 0989 FIX: logwatch.ec: Fix forwarding multiple messages via syslog/TCP...
 
+    WATO:
+    * 0990 FIX: Fix HTTP error handling in bulk inventory...
+
     Livestatus:
     * 0988 FIX: livedump: Fix exception in case no contact groups are defined for a service
 

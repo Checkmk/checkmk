@@ -79,6 +79,7 @@ pagehandlers.update({
    "edit_bookmark"            : sidebar.page_edit_bookmark,
    "nagios_action"            : actions.ajax_action,
    "edit_dashboards"          : dashboard.page_edit_dashboards,
+   "edit_dashboard"           : dashboard.page_edit_dashboard,
    "dashboard"                : dashboard.page_dashboard,
    "dashboard_resize"         : dashboard.ajax_resize,
    "dashboard_dashlet"        : dashboard.ajax_dashlet,

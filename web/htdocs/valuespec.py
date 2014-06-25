@@ -2843,6 +2843,7 @@ class FileUpload(ValueSpec):
 
 class IconSelector(ValueSpec):
     def __init__(self, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
         self._prefix      = kwargs.get('prefix', 'icon_')
         self._subdir      = kwargs.get('subdir', '')
         self._num_cols    = kwargs.get('num_cols', 12)

@@ -96,10 +96,10 @@ def load_plugins():
 
     # Declare permissions for all dashboards
     config.declare_permission_section("dashboard", _("Dashboards"), do_sort = True)
-    for name, view in builtin_dashboards.items():
+    for name, board in builtin_dashboards.items():
         config.declare_permission("dashboard.%s" % name,
-                view["title"],
-                view["description"],
+                board["title"],
+                board["description"],
                 config.builtin_role_ids)
 
     # Make sure that custom views also have permissions
@@ -160,7 +160,7 @@ def render_dashboard(name):
     # The title of the dashboard needs to be prefixed with the WATO path,
     # in order to make it clear to the user, that he is seeing only partial
     # data.
-    title = board["title"]
+    title = _u(board["title"])
 
     global header_height
     if title is None:
@@ -543,3 +543,25 @@ def page_edit_dashboards():
 
     load_dashboards()
     visuals.page_list('dashboards', dashboards, render_context_buttons = render_buttons)
+
+#.
+#   .--Dashb. Config-------------------------------------------------------.
+#   |     ____            _     _         ____             __ _            |
+#   |    |  _ \  __ _ ___| |__ | |__     / ___|___  _ __  / _(_) __ _      |
+#   |    | | | |/ _` / __| '_ \| '_ \   | |   / _ \| '_ \| |_| |/ _` |     |
+#   |    | |_| | (_| \__ \ | | | |_) |  | |__| (_) | | | |  _| | (_| |     |
+#   |    |____/ \__,_|___/_| |_|_.__(_)  \____\___/|_| |_|_| |_|\__, |     |
+#   |                                                           |___/      |
+#   +----------------------------------------------------------------------+
+#   | Configures the global settings of a dashboard.                       |
+#   '----------------------------------------------------------------------'
+
+def page_edit_dashboard():
+    load_dashboards()
+    visuals.page_edit_visual('dashboards', dashboards, create_handler = create_dashboard)
+
+def create_dashboard(old_dashboard, dashboard):
+    # Do not remove the dashlet configuration during general property editing
+    dashboard['dashlets'] = old_dashboard.get('dashlets', [])
+    dashboard['mtime'] = int(time.time())
+    return dashboard

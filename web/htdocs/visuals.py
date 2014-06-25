@@ -27,6 +27,7 @@
 import os
 
 from lib import *
+from valuespec import *
 import config, table
 
 #   .--Save/Load-----------------------------------------------------------.
@@ -42,8 +43,8 @@ import config, table
 
 def save(what, visuals):
     userviews = {}
-    for (user, name), view in visuals.items():
-        if us == user:
+    for (user_id, name), view in visuals.items():
+        if config.user_id == user_id:
             userviews[name] = view
     config.save_user_file(what, userviews)
 
@@ -242,14 +243,14 @@ def page_list(what, visuals, render_create_form = None, custom_columns = [], ren
 
             # Edit
             if owner == config.user_id:
-                html.icon_button("edit_view.py?load_view=%s" % viewname, _("Edit"), "edit")
+                html.icon_button("edit_%s.py?load_name=%s" % (what_s, viewname), _("Edit"), "edit")
 
             # Clone / Customize
             buttontext = not owner and _("Customize this %s") % what_s \
                          or _("Create a clone of this %s") % what_s
             backurl = html.urlencode(html.makeuri([]))
-            clone_url = "edit_view.py?clonefrom=%s&load_view=%s&back=%s" \
-                        % (owner, viewname, backurl)
+            clone_url = "edit_%s.py?load_user=%s&load_name=%s&back=%s" \
+                        % (what_s, owner, viewname, backurl)
             html.icon_button(clone_url, buttontext, "clone")
 
             # Delete
@@ -262,12 +263,12 @@ def page_list(what, visuals, render_create_form = None, custom_columns = [], ren
 
             # Title
             table.cell(_('Title'))
-            title = view['title']
+            title = _u(view['title'])
             if not view["hidden"]:
                 html.write("<a href=\"view.py?view_name=%s\">%s</a>" % (viewname, html.attrencode(title)))
             else:
                 html.write(html.attrencode(title))
-            html.help(html.attrencode(view['description']))
+            html.help(html.attrencode(_u(view['description'])))
 
             # Custom cols
             for title, renderer in custom_columns:
@@ -283,4 +284,207 @@ def page_list(what, visuals, render_create_form = None, custom_columns = [], ren
             table.cell(_('Hidden'), view["hidden"] and _("yes") or _("no"))
 
     table.end()
+    html.footer()
+
+#.
+#   .--Edit Visual---------------------------------------------------------.
+#   |           _____    _ _ _    __     ___                 _             |
+#   |          | ____|__| (_) |_  \ \   / (_)___ _   _  __ _| |            |
+#   |          |  _| / _` | | __|  \ \ / /| / __| | | |/ _` | |            |
+#   |          | |__| (_| | | |_    \ V / | \__ \ |_| | (_| | |            |
+#   |          |_____\__,_|_|\__|    \_/  |_|___/\__,_|\__,_|_|            |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Edit global settings of the visual                                   |
+#   '----------------------------------------------------------------------'
+
+def page_edit_visual(what, all_visuals, custom_field_handler = None, create_handler = None, try_handler = None):
+    what_s = what[:-1]
+    if not config.may("general.edit_" + what):
+        raise MKAuthException(_("You are not allowed to edit %s.") % what)
+
+    view = {}
+
+    # Load existing view from disk - and create a copy if 'load_user' is set
+    viewname = html.var("load_name")
+    oldname  = viewname
+    mode     = html.var('mode', 'edit')
+    if viewname:
+        cloneuser = html.var("load_user")
+        if cloneuser:
+            mode  = 'clone'
+            view = copy.deepcopy(all_visuals.get((cloneuser, viewname), None))
+            if not view:
+                raise MKUserError('cloneuser', _('The %s does not exist.') % what_s)
+
+            # Make sure, name is unique
+            if cloneuser == config.user_id: # Clone own view
+                newname = viewname + "_clone"
+            else:
+                newname = viewname
+            # Name conflict -> try new names
+            n = 1
+            while (config.user_id, newname) in all_visuals:
+                n += 1
+                newname = viewname + "_clone%d" % n
+            view["name"] = newname
+            viewname = newname
+            oldname = None # Prevent renaming
+            if cloneuser == config.user_id:
+                view["title"] += _(" (Copy)")
+        else:
+            view = all_visuals.get((config.user_id, viewname))
+            if not view:
+                view = all_visuals.get(('', viewname)) # load builtin view
+
+    else:
+        mode = 'create'
+
+    if mode == 'clone':
+        title = _('Clone %s') % what_s.title()
+    elif mode == 'create':
+        title = _('Create %s') % what_s.title()
+    else:
+        title = _('Edit %s') % what_s.title()
+
+    html.header(title, stylesheets=["pages", "views", "status", "bi"])
+    html.begin_context_buttons()
+    back_url = html.var("back", "")
+    if back_url:
+        html.context_button(_("Back"), back_url, "back")
+    html.context_button(_("All %s") % what.title(), "edit_%s.py" % what)
+    html.end_context_buttons()
+
+
+    vs_general = Dictionary(
+        title = _("General Properties"),
+        render = 'form',
+        optional_keys = None,
+        elements = [
+            ('name', TextAscii(
+                title = _('Name'),
+                help = _("The name will be used in URLs that point to a view, e.g. "
+                         "<tt>view.py?view_name=<b>myview</b></tt>. It will also be used "
+                         "internally for identifying a view. You can create several views "
+                         "with the same title but only one per view name. If you create a "
+                         "view that has the same view name as a builtin view, then your "
+                         "view will override that (shadowing it)."),
+                regex = '^[a-zA-Z0-9_]+$',
+                regex_error = _('The name of the view may only contain letters, digits and underscores.'),
+                size = 24, allow_empty = False)),
+            ('title', TextUnicode(
+                title = _('Title') + '<sup>*</sup>',
+                size = 50, allow_empty = False)),
+            ('topic', TextUnicode(
+                title = _('Topic') + '<sup>*</sup>',
+                size = 50)),
+            ('description', TextAreaUnicode(
+                title = _('Description') + '<sup>*</sup>',
+                rows = 4, cols = 50)),
+            ('linktitle', TextUnicode(
+                title = _('Button Text') + '<sup>*</sup>',
+                help = _('If you define a text here, then it will be used in '
+                         'context buttons linking to the %s instead of the regular title.') % what_s,
+                size = 26)),
+            ('icon', IconSelector(
+                title = _('Button Icon'),
+            )),
+            ('visibility', ListChoice(
+                title = _('Visibility'),
+                choices = (config.may("general.publish_" + what) and [
+                           ('public', _('Make this %s available for all users') % what_s),
+                           ] or []) +
+                          [ ('hidden', _('Hide this %s from the sidebar') % what_s),
+                            ('hidebutton', _('Do not show a context button to this %s') % what_s)
+                          ],
+            )),
+        ],
+    )
+
+    # handle case of save or try or press on search button
+    if html.var("save") or html.var("try") or html.var("search"):
+        try:
+            general_properties = vs_general.from_html_vars('general')
+            vs_general.validate_value(general_properties, 'general')
+
+            if not general_properties['linktitle']:
+                general_properties['linktitle'] = general_properties['title']
+            if not general_properties['topic']:
+                general_properties['topic'] = _("Other")
+
+            old_view = view
+            view = {
+                'name'        : general_properties['name'],
+                'title'       : general_properties['title'],
+                'topic'       : general_properties['topic'],
+                'description' : general_properties['description'],
+                'linktitle'   : general_properties['linktitle'],
+                'icon'        : general_properties['icon'],
+                'public'      : 'public' in general_properties['visibility'] and config.may("general.publish_" + what),
+                'hidden'      : 'hidden' in general_properties['visibility'],
+                'hidebutton'  : 'hidebutton' in general_properties['visibility'],
+            }
+
+            if create_handler:
+                view = create_handler(old_view, view)
+
+            if html.var("save"):
+                back = html.var('back')
+                if not back:
+                    back = 'edit_%s.py' % what
+
+                if html.check_transaction():
+                    all_visuals[(config.user_id, view["name"])] = view
+                    oldname = html.var("load_name")
+                    # Handle renaming of views
+                    if oldname and oldname != view["name"]:
+                        # -> delete old entry
+                        if (config.user_id, oldname) in all_visuals:
+                            del all_visuals[(config.user_id, oldname)]
+                        # -> change view_name in back parameter
+                        if back:
+                            back = back.replace('view_name=' + oldname, 'view_name=' + view["name"])
+                    save(what, all_visuals)
+
+                html.immediate_browser_redirect(1, back)
+                html.message(_('Your %s has been saved.') % what_s)
+                html.reload_sidebar()
+                html.footer()
+                return
+
+        except MKUserError, e:
+            html.write("<div class=error>%s</div>\n" % e.message)
+            html.add_user_error(e.varname, e.message)
+
+    html.begin_form("view")
+    html.hidden_field("back", back_url)
+    html.hidden_field("mode", mode)
+    html.hidden_field("load_user", html.var("load_user", "")) # safe old name in case user changes it
+    html.hidden_field("load_name", oldname) # safe old name in case user changes it
+
+    vs_general.render_input("general", view)
+
+    if custom_field_handler:
+        custom_field_handler(view)
+
+    forms.end()
+    url = "wato.py?mode=edit_configvar&varname=user_localizations"
+    html.message("<sup>*</sup>" + _("These texts may be localized depending on the users' "
+          "language. You can configure the localizations <a href=\"%s\">in the global settings</a>.") % url)
+
+    html.button("save", _("Save"))
+
+    if try_handler:
+        html.write(" ")
+        html.button("try", _("Try out"))
+        html.end_form()
+
+        if html.has_var("try") or html.has_var("search"):
+            html.set_var("search", "on")
+            if view:
+                import bi
+                bi.reset_cache_status()
+                try_handler(view)
+            return # avoid second html footer
+
     html.footer()

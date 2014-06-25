@@ -73,8 +73,8 @@ def load_plugins():
     config.declare_permission_section("view", _("Multisite Views"), do_sort = True)
     for name, view in multisite_builtin_views.items():
         config.declare_permission("view.%s" % name,
-                view["title"],
-                view["description"],
+                _u(view["title"]),
+                _u(view["description"]),
                 config.builtin_role_ids)
 
     # Make sure that custom views also have permissions
@@ -84,78 +84,16 @@ def load_plugins():
     for n, p in multisite_painters.items():
         p["name"] = n
 
-
-##################################################################################
-# Layouts
-##################################################################################
-
-
-def show_filter(f):
-    if not f.visible():
-        html.write('<div style="display:none">')
-        f.display()
-        html.write('</div>')
-    else:
-        html.write('<div class="floatfilter %s">' % (f.double_height() and "double" or "single"))
-        html.write('<div class=legend>%s</div>' % f.title)
-        html.write('<div class=content>')
-        f.display()
-        html.write("</div>")
-        html.write("</div>")
-
-def show_filter_form(is_open, filters):
-    # Table muss einen anderen Namen, als das Formular
-    html.write('<div class="view_form" id="filters" %s>'
-            % (not is_open and 'style="display: none"' or '') )
-
-    html.begin_form("filter")
-    html.write("<table border=0 cellspacing=0 cellpadding=0 class=filterform><tr><td>")
-
-    # sort filters according to title
-    s = [(f.sort_index, f.title, f) for f in filters if f.available()]
-    s.sort()
-    col = 0
-
-    # First show filters with double height (due to better floating
-    # layout)
-    for sort_index, title, f in s:
-        if f.double_height():
-            show_filter(f)
-
-    # Now single height filters
-    for sort_index, title, f in s:
-        if not f.double_height():
-            show_filter(f)
-
-    html.write("</td></tr><tr><td>")
-    html.button("search", _("Search"), "submit")
-    html.write("</td></tr></table>")
-
-    html.hidden_fields()
-    html.end_form()
-
-    html.write("</div>")
-
-def show_painter_options(painter_options):
-    html.write('<div class="view_form" id="painteroptions" style="display: none">')
-    html.begin_form("painteroptions")
-    forms.header(_("Display Options"))
-    for on in painter_options:
-        vs = multisite_painter_options[on]['valuespec']
-        forms.section(vs.title())
-        vs.render_input('po_' + on, get_painter_option(on))
-    forms.end()
-
-    html.button("painter_options", _("Submit"), "submit")
-
-    html.hidden_fields()
-    html.end_form()
-    html.write('</div>')
-
-
-##################################################################################
-# Filters
-##################################################################################
+#   .--Filters-------------------------------------------------------------.
+#   |                     _____ _ _ _                                      |
+#   |                    |  ___(_) | |_ ___ _ __ ___                       |
+#   |                    | |_  | | | __/ _ \ '__/ __|                      |
+#   |                    |  _| | | | ||  __/ |  \__ \                      |
+#   |                    |_|   |_|_|\__\___|_|  |___/                      |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 def declare_filter(sort_index, f, comment = None):
     multisite_filters[f.name] = f
@@ -259,6 +197,7 @@ def save_views(us):
 def permitted_views():
     return available_views
 
+#.
 #   .--Table of views------------------------------------------------------.
 #   |   _____     _     _               __         _                       |
 #   |  |_   _|_ _| |__ | | ___    ___  / _| __   _(_) _____      _____     |
@@ -299,143 +238,41 @@ def select_view(varname, only_with_hidden = False):
     for name, view in available_views.items():
         if not only_with_hidden or len(view["hide_filters"]) > 0:
             if view.get('mobile', False):
-                title = _('Mobile: ') + view["title"]
+                title = _('Mobile: ') + _u(view["title"])
             else:
-                title = view["title"]
+                title = _u(view["title"])
             choices.append(("%s" % name, title))
     html.sorted_select(varname, choices, "")
 
-# -------------------------------------------------------------------------
-#   _____    _ _ _    __     ___
-#  | ____|__| (_) |_  \ \   / (_) _____      __
-#  |  _| / _` | | __|  \ \ / /| |/ _ \ \ /\ / /
-#  | |__| (_| | | |_    \ V / | |  __/\ V  V /
-#  |_____\__,_|_|\__|    \_/  |_|\___| \_/\_/
-#  Edit one view
-# -------------------------------------------------------------------------
+#.
+#   .--Edit View-----------------------------------------------------------.
+#   |             _____    _ _ _    __     ___                             |
+#   |            | ____|__| (_) |_  \ \   / (_) _____      __              |
+#   |            |  _| / _` | | __|  \ \ / /| |/ _ \ \ /\ / /              |
+#   |            | |__| (_| | | |_    \ V / | |  __/\ V  V /               |
+#   |            |_____\__,_|_|\__|    \_/  |_|\___| \_/\_/                |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 def page_edit_view():
-    if not config.may("general.edit_views"):
-        raise MKAuthException(_("You are not allowed to edit views."))
-
     load_views()
-    view = {}
 
-    # Load existing view from disk - and create a copy if 'clonefrom' is set
-    viewname = html.var("load_view")
-    oldname = viewname
-    mode = html.var('mode', 'edit')
-    if viewname:
-        cloneuser = html.var("clonefrom")
-        if cloneuser:
-            mode  = 'clone'
-            view = copy.deepcopy(multisite_views.get((cloneuser, viewname), None))
-            if not view:
-                raise MKUserError('cloneuser', _('The view does not exist.'))
-            # Make sure, name is unique
-            if cloneuser == config.user_id: # Clone own view
-                newname = viewname + "_clone"
-            else:
-                newname = viewname
-            # Name conflict -> try new names
-            n = 1
-            while (config.user_id, newname) in multisite_views:
-                n += 1
-                newname = viewname + "_clone%d" % n
-            view["name"] = newname
-            viewname = newname
-            oldname = None # Prevent renaming
-            if cloneuser == config.user_id:
-                view["title"] += _(" (Copy)")
-        else:
-            view = multisite_views.get((config.user_id, viewname))
-            if not view:
-                view = multisite_views.get(('', viewname)) # load builtin view
+    visuals.page_edit_visual('views', multisite_views,
+        custom_field_handler = custom_field_handler,
+        create_handler = create_view,
+        try_handler = lambda view: show_view(view, False, False)
+    )
 
-        datasourcename = view["datasource"]
-        if view:
-            load_view_into_html_vars(view)
+def custom_field_handler(view):
+    datasourcename = view.get("datasource", html.var("datasource"))
+    if not datasourcename:
+        raise MKInternalError(_("No datasource defined."))
 
-    # set datasource name if a new view is being created
-    elif html.var("datasource"):
-        if not html.var('view_name'):
-            mode = 'create'
-        datasourcename = html.var("datasource")
-    else:
-        raise MKInternalError(_("No view name and no datasource defined."))
+    load_view_into_html_vars(view)
 
-    if mode == 'clone':
-        title = _('Clone View')
-    elif mode == 'create':
-        title = _('Create View')
-    else:
-        title = _('Edit View')
-
-    vs = {
-        #               edit      attribute
-        #               optional  valuespec
-        'title'       : (True,    TextUnicode(size = 50, allow_empty = False)),
-        'linktitle'   : (True,    TextUnicode(size = 26)),
-        'topic'       : (True,    TextUnicode(size = 50)),
-        'description' : (True,    TextAreaUnicode(rows = 4, cols = 50)),
-        'icon'        : (False,   IconSelector()),
-    }
-
-    if mode != 'create':
-        for key, (edit_opt, valuespec) in vs.items():
-            if edit_opt:
-                vs[key] = (edit_opt, OptionalEdit(valuespec))
-
-    # handle case of save or try or press on search button
-    if html.var("save") or html.var("try") or html.var("search"):
-        try:
-            view = create_view(vs)
-            if html.var("save"):
-                if html.check_transaction():
-                    load_views()
-                    multisite_views[(config.user_id, view["name"])] = view
-                    oldname = html.var("old_name")
-                    # Handle renaming of views
-                    if oldname and oldname != view["name"]:
-                        # -> delete old entry
-                        if (config.user_id, oldname) in multisite_views:
-                            del multisite_views[(config.user_id, oldname)]
-                        # -> change view_name in back parameter
-                        if html.has_var('back'):
-                            html.set_var('back', html.var('back', '').replace('view_name=' + oldname,
-                                                                              'view_name=' + view["name"]))
-                    save_views(config.user_id)
-                return page_message_and_forward(_("Your view has been saved."), "edit_views.py",
-                        "<script type='text/javascript'>if(top.frames[0]) top.frames[0].location.reload();</script>\n")
-
-        except MKUserError, e:
-            html.write("<div class=error>%s</div>\n" % e.message)
-            html.add_user_error(e.varname, e.message)
-
-    html.header(title, stylesheets=["pages", "views", "status", "bi"])
-    html.begin_context_buttons()
-    back_url = html.var("back", "")
-    if back_url:
-        html.context_button(_("Back"), back_url, "back")
-    html.context_button(_("All Views"), "edit_views.py")
-    html.end_context_buttons()
-
-    html.begin_form("view")
-    html.hidden_field("back", back_url)
-    html.hidden_field("mode", mode)
-    html.hidden_field("clonefrom", html.var("clonefrom", "")) # safe old name in case user changes it
-    html.hidden_field("old_name", oldname) # safe old name in case user changes it
-
-    forms.header(_("Basic Settings"))
-
-    forms.section(_("View Name"))
-    html.text_input("view_name", size=24)
-    html.help(_("The view name will be used in URLs that point to a view, e.g. "
-                "<tt>view.py?view_name=<b>myview</b></tt>. It will also be used "
-                "internally for identifying a view. You can create several views "
-                "with the same title but only one per view name. If you create a "
-                "view that has the same view name as a builtin view, then your "
-                "view will override that (shadowing it)."))
+    forms.header(_('View Properties'))
 
     forms.section(_("Datasource"), simple=True)
     datasource_title = multisite_datasources[datasourcename]["title"]
@@ -443,41 +280,14 @@ def page_edit_view():
     html.hidden_field("datasource", datasourcename)
     html.help(_("The datasource of a view cannot be changed."))
 
-    forms.space()
-
-    forms.section(_("Title"))
-    vs['title'][1].render_input('view_title', view.get('title'))
-
-    forms.section(_("Topic"))
-    vs['topic'][1].render_input('view_topic', view.get('topic'))
-    html.help(_("The view will be sorted under this topic in the Views snapin. "))
-
-    forms.section(_("Description"))
-    vs['description'][1].render_input('view_description', view.get('description'))
-
-    forms.section(_("Button Text"))
-    vs['linktitle'][1].render_input('view_linktitle', view.get('linktitle'))
-    html.help(_("If you define a text here, then it will be used in "
-                "buttons to the view instead of of view title."))
-
-    forms.section(_("Button Icon"))
-    vs['icon'][1].render_input('view_icon', view.get('icon'))
-
-    forms.space()
-
-    forms.section(_("Visibility"))
-    if config.may("general.publish_views"):
-        html.checkbox("public", label=_('make this view available for all users'))
-        html.write("<br />\n")
-    html.checkbox("hidden", label=_('hide this view from the sidebar'))
+    forms.section(_('Options'), simple = True)
+    html.checkbox("mobile", label=_('Show this view in the Mobile GUI'))
     html.write("<br />\n")
-    html.checkbox("mobile", label=_('show this view in the Mobile GUI'))
+    html.checkbox("mustsearch", label=_('Show data only on search'))
     html.write("<br />\n")
-    html.checkbox("mustsearch", label=_('show data only on search'))
+    html.checkbox("force_checkboxes", label = _('Always show the checkboxes'))
     html.write("<br />\n")
-    html.checkbox("hidebutton", label=_('do not show a context button to this view'))
-    html.write("<br />\n")
-    html.checkbox("force_checkboxes", label = _('always show the checkboxes'))
+    html.checkbox('user_sortable', True, label = _('Make view sortable by user'))
 
     forms.section(_("Automatic page reload"))
     html.write(_("Reload page every "))
@@ -619,28 +429,6 @@ def page_edit_view():
         ("pergroup", _("once per group")),
         ("repeat",   _("repeat every 20'th row")) ])
 
-    forms.section(_('Sortable by user'), simple=True)
-    html.checkbox('user_sortable', True, label=_("Make view sortable by user"))
-
-    forms.end()
-
-    html.button("save", _("Save"))
-    html.write(" ")
-    html.button("try", _("Try out"))
-    html.end_form()
-
-    # html.write("</div></td></tr></table>\n")
-
-    if html.has_var("try") or html.has_var("search"):
-        html.set_var("search", "on")
-        if view:
-            bi.reset_cache_status()
-            show_view(view, False, False)
-            return # avoid second html footer
-
-
-    html.footer()
-
 def view_edit_column(n, var_prefix, maxnum, allowed, joined = []):
 
     collist = [ ("", "") ] + collist_of_collection(allowed)
@@ -701,26 +489,18 @@ def ajax_get_edit_column():
     view_edit_column(num, html.var('pre'), num + 1, allowed, joined)
 
 # Called by edit function in order to prefill HTML form
+# FIXME: Old hack. Remove this when recoding the editor.
 def load_view_into_html_vars(view):
     # view is well formed, not checks neccessary
-    html.set_var("view_title",       view["title"])
-    html.set_var("view_topic",       view.get("topic", _("Other")))
-    html.set_var("view_linktitle",   view.get("linktitle", view["title"]))
-    html.set_var("view_icon",        view.get("icon")),
-    html.set_var("view_description", view.get("description", ""))
-    html.set_var("view_name",        view["name"])
     html.set_var("datasource",       view["datasource"])
     html.set_var("column_headers",   view.get("column_headers", "off"))
     html.set_var("layout",           view["layout"])
     html.set_var("num_columns",      view.get("num_columns", 1))
     html.set_var("browser_reload",   view.get("browser_reload", 0))
     html.set_var("play_sounds",      view.get("play_sounds", False) and "on" or "")
-    html.set_var("public",           view["public"] and "on" or "")
-    html.set_var("hidden",           view["hidden"] and "on" or "")
     html.set_var("mobile",           view.get("mobile") and "on" or "")
     html.set_var("mustsearch",       view["mustsearch"] and "on" or "")
     html.set_var("force_checkboxes", view.get("force_checkboxes", False) and "on" or "")
-    html.set_var("hidebutton",       view.get("hidebutton",  False) and "on" or "")
     html.set_var("user_sortable",    view.get("user_sortable", True) and "on" or "")
 
     # [3] Filters
@@ -786,45 +566,7 @@ def load_view_into_html_vars(view):
 
 # Extract properties of view from HTML variables and construct
 # view object, to be used for saving or displaying
-def create_view(vs):
-    name = html.var("view_name").strip()
-    if name == "":
-        raise MKUserError("view_name", _("Please supply a unique name for the view, this will be used to specify that view in HTTP links."))
-    if not re.match("^[a-zA-Z0-9_]+$", name):
-        raise MKUserError("view_name", _("The name of the view may only contain letters, digits and underscores."))
-
-    mode = html.var("mode")
-    oldname = html.var("old_name")
-    override = False
-    if mode in 'clone':
-        if oldname == name:
-            override = True # means overriding another view with same name
-
-        cloneuser = html.var("clonefrom")
-        if cloneuser:
-            base_view = multisite_views.get((cloneuser, oldname), None)
-        else:
-            base_view = multisite_views.get((config.user_id, oldname))
-            if not base_view:
-                base_view = multisite_views.get(('', oldname)) # load builtin view
-    elif mode == 'edit' and ('', oldname) in multisite_views:
-        base_view = multisite_views.get(('', oldname)) # load builtin view
-        if oldname == name:
-            override = True
-
-    view = {}
-    for key, (opt_edit, valuespec) in vs.items():
-        val = valuespec.from_html_vars('view_' + key)
-        valuespec.validate_value(val, 'view_' + key)
-        if not override or val != base_view.get(key):
-            view[key] = val
-
-    if not override:
-        if not view['linktitle']:
-            view['linktitle'] = view['title']
-        if not view['topic']:
-            view['topic'] = _("Other")
-
+def create_view(old_view, view):
     datasourcename = html.var("datasource")
     datasource = multisite_datasources[datasourcename]
     tablename = datasource["table"]
@@ -843,12 +585,9 @@ def create_view(vs):
         browser_reload = 0
 
     play_sounds      = html.var("play_sounds", "") != ""
-    public           = html.var("public", "") != "" and config.may("general.publish_views")
-    hidden           = html.var("hidden", "") != ""
     mobile           = html.var("mobile", "") != ""
     mustsearch       = html.var("mustsearch", "") != ""
     force_checkboxes = html.var("force_checkboxes", "") != ""
-    hidebutton       = html.var("hidebutton", "") != ""
     column_headers   = html.var("column_headers")
     user_sortable    = html.var("user_sortable")
 
@@ -923,15 +662,11 @@ def create_view(vs):
         raise MKUserError("col_1", _("Please add at least one column to your view."))
 
     view.update({
-        "name"            : name,
         "owner"           : config.user_id,
         "datasource"      : datasourcename,
-        "public"          : public,
-        "hidden"          : hidden,
         "mobile"          : mobile,
         "mustsearch"      : mustsearch,
         "force_checkboxes" : force_checkboxes,
-        "hidebutton"      : hidebutton,
         "layout"          : layoutname,
         "num_columns"     : num_columns,
         "browser_reload"  : browser_reload,
@@ -948,16 +683,83 @@ def create_view(vs):
     })
     return view
 
+#.
+#   .--Display View--------------------------------------------------------.
+#   |      ____  _           _              __     ___                     |
+#   |     |  _ \(_)___ _ __ | | __ _ _   _  \ \   / (_) _____      __      |
+#   |     | | | | / __| '_ \| |/ _` | | | |  \ \ / /| |/ _ \ \ /\ / /      |
+#   |     | |_| | \__ \ |_) | | (_| | |_| |   \ V / | |  __/\ V  V /       |
+#   |     |____/|_|___/ .__/|_|\__,_|\__, |    \_/  |_|\___| \_/\_/        |
+#   |                 |_|            |___/                                 |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
-# ---------------------------------------------------------------------
-#  __     ___                       _
-#  \ \   / (_) _____      __ __   _(_) _____      __
-#   \ \ / /| |/ _ \ \ /\ / / \ \ / / |/ _ \ \ /\ / /
-#    \ V / | |  __/\ V  V /   \ V /| |  __/\ V  V /
-#     \_/  |_|\___| \_/\_/     \_/ |_|\___| \_/\_/
-#
-# ---------------------------------------------------------------------
-# Show one view filled with data
+def show_filter(f):
+    if not f.visible():
+        html.write('<div style="display:none">')
+        f.display()
+        html.write('</div>')
+    else:
+        html.write('<div class="floatfilter %s">' % (f.double_height() and "double" or "single"))
+        html.write('<div class=legend>%s</div>' % f.title)
+        html.write('<div class=content>')
+        f.display()
+        html.write("</div>")
+        html.write("</div>")
+
+
+def show_filter_form(is_open, filters):
+    # Table muss einen anderen Namen, als das Formular
+    html.write('<div class="view_form" id="filters" %s>'
+            % (not is_open and 'style="display: none"' or '') )
+
+    html.begin_form("filter")
+    html.write("<table border=0 cellspacing=0 cellpadding=0 class=filterform><tr><td>")
+
+    # sort filters according to title
+    s = [(f.sort_index, f.title, f) for f in filters if f.available()]
+    s.sort()
+    col = 0
+
+    # First show filters with double height (due to better floating
+    # layout)
+    for sort_index, title, f in s:
+        if f.double_height():
+            show_filter(f)
+
+    # Now single height filters
+    for sort_index, title, f in s:
+        if not f.double_height():
+            show_filter(f)
+
+    html.write("</td></tr><tr><td>")
+    html.button("search", _("Search"), "submit")
+    html.write("</td></tr></table>")
+
+    html.hidden_fields()
+    html.end_form()
+
+    html.write("</div>")
+
+
+def show_painter_options(painter_options):
+    html.write('<div class="view_form" id="painteroptions" style="display: none">')
+    html.begin_form("painteroptions")
+    forms.header(_("Display Options"))
+    for on in painter_options:
+        vs = multisite_painter_options[on]['valuespec']
+        forms.section(vs.title())
+        vs.render_input('po_' + on, get_painter_option(on))
+    forms.end()
+
+    html.button("painter_options", _("Submit"), "submit")
+
+    html.hidden_fields()
+    html.end_form()
+    html.write('</div>')
+
+
 def page_view():
     bi.reset_cache_status() # needed for status icon
 
@@ -1545,7 +1347,7 @@ def view_title(view):
         if heading:
             extra_titles.append(heading)
 
-    title = view["title"] + " " + ", ".join(extra_titles)
+    title = _u(view["title"]) + " " + ", ".join(extra_titles)
 
     for fn in ubiquitary_filters:
         # Disable 'wato_folder' filter, if WATO is disabled or there is a single host view
@@ -1557,14 +1359,6 @@ def view_title(view):
             title = heading + " - " + title
 
     return title
-
-# Return title for context link buttons
-def view_linktitle(view):
-    t = view.get("linktitle")
-    if not t:
-        return view_title(view)
-    else:
-        return t
 
 def view_optiondial(view, option, choices, help):
     vo = view_options(view["name"])
@@ -1707,9 +1501,9 @@ def show_context_links(thisview, active_filters, show_filters, display_options,
     if 'E' in display_options and config.may("general.edit_views"):
         backurl = html.urlencode(html.makeuri([]))
         if thisview["owner"] == config.user_id:
-            url = "edit_view.py?load_view=%s&back=%s" % (thisview["name"], backurl)
+            url = "edit_view.py?load_name=%s&back=%s" % (thisview["name"], backurl)
         else:
-            url = "edit_view.py?clonefrom=%s&load_view=%s&back=%s" % \
+            url = "edit_view.py?load_user=%s&load_name=%s&back=%s" % \
                   (thisview["owner"], thisview["name"], backurl)
         html.context_button(_("Edit View"), url, "edit", id="edit", bestof=config.context_buttons_to_show)
 
@@ -1775,7 +1569,7 @@ def collect_context_links(thisview, active_filters):
             uri = html.makeuri_contextless(vars_values + [("view_name", name)])
             icon = view.get("icon")
             buttonid = "cb_" + name
-            context_links.append((view, linktitle, uri, icon, buttonid))
+            context_links.append((view, _u(linktitle), uri, icon, buttonid))
     return context_links
 
 
@@ -2001,7 +1795,8 @@ def collist_of_collection(collection, join_target = []):
     else:
         return sort_list([ (name, _('SERVICE:') + ' ' + p["title"]) for name, p in collection.items() if (name, p["title"]) not in join_target ])
 
-#   .----------------------------------------------------------------------.
+#.
+#   .--Commands------------------------------------------------------------.
 #   |         ____                                          _              |
 #   |        / ___|___  _ __ ___  _ __ ___   __ _ _ __   __| |___          |
 #   |       | |   / _ \| '_ ` _ \| '_ ` _ \ / _` | '_ \ / _` / __|         |
@@ -2213,23 +2008,17 @@ def ajax_export():
     html.write(pprint.pformat(available_views))
 
 
-def page_message_and_forward(message, default_url, addhtml=""):
-    url = html.var("back")
-    if not url:
-        url = default_url
-
-    html.set_browser_redirect(1, url)
-    html.header("Multisite")
-    html.message(message)
-    html.write(addhtml)
-    html.footer()
-
-#   ____  _             _             _   _      _
-#  |  _ \| |_   _  __ _(_)_ __       | | | | ___| |_ __   ___ _ __ ___
-#  | |_) | | | | |/ _` | | '_ \ _____| |_| |/ _ \ | '_ \ / _ \ '__/ __|
-#  |  __/| | |_| | (_| | | | | |_____|  _  |  __/ | |_) |  __/ |  \__ \
-#  |_|   |_|\__,_|\__, |_|_| |_|     |_| |_|\___|_| .__/ \___|_|  |___/
-#                 |___/                           |_|
+#.
+#   .--Plugin Helpers------------------------------------------------------.
+#   |   ____  _             _         _   _      _                         |
+#   |  |  _ \| |_   _  __ _(_)_ __   | | | | ___| |_ __   ___ _ __ ___     |
+#   |  | |_) | | | | |/ _` | | '_ \  | |_| |/ _ \ | '_ \ / _ \ '__/ __|    |
+#   |  |  __/| | |_| | (_| | | | | | |  _  |  __/ | |_) |  __/ |  \__ \    |
+#   |  |_|   |_|\__,_|\__, |_|_| |_| |_| |_|\___|_| .__/ \___|_|  |___/    |
+#   |                 |___/                       |_|                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
 
 def register_hook(hook, func):
     if not hook in view_hooks:

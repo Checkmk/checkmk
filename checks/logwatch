@@ -497,7 +497,7 @@ def check_logwatch_ec(item, params, info):
                     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 sock.connect((method[1], method[2]))
                 for message in messages:
-                    sock.send(message)
+                    sock.send(message + "\n")
                 sock.close()
 
             elif not method.startswith('spool:'):

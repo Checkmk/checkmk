@@ -1,0 +1,10 @@
+Title: if.include: fixed incorrect traffic percentage values in the check output of if checks
+Level: 2
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i4p1
+Date: 1403702453
+
+There was a display bug in the traffic percentages. The value was off by factor 8.<br>
+This bug didn't cause wrong check results or performance data values, just a visual glitch.

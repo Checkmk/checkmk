@@ -940,7 +940,7 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration,
                 break
         else:
             table.cell(_("State"), "(%s/%s)" % (sid,sname))
-        table.cell(_("Additional information"), row["log_output"])
+        table.cell(_("Last Known Plugin Output"), row["log_output"])
 
     table.end()
 

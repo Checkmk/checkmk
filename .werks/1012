@@ -1,4 +1,4 @@
-Title: Fix quoting of \ in custom checks with nagios core
+Title: Fix quoting of backslashes in custom checks with nagios core
 Level: 2
 Component: core
 Version: 1.2.5i5

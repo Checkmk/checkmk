@@ -839,7 +839,7 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration,
     def render_date(ts):
         if avoptions["dateformat"] == "epoch":
             return str(int(ts))
-        else: 
+        else:
             return time.strftime(format, time.localtime(ts))
 
     if type(timeline) == tuple:

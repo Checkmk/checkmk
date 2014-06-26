@@ -66,11 +66,14 @@ div.dashlet iframe {
 
 div.dashlet div.title {
     position: absolute;
-    left: 9px;
+    background-color: rgba(0, 0, 0, 0.3);
+    left: 0;
     width: 150px; /* will be changed by javascript later */
     color: #fff;
     padding: 0px;
     margin: 0px;
+    border-radius: 5px 5px 0 0;
+    padding-left: 9px;
     padding-top: 4px;
     font-weight: normal;
     overflow: hidden;
@@ -83,58 +86,6 @@ div.dashlet div.title a {
 }
 div.dashlet div.title a:hover {
     text-decoration: underline;
-}
-
-div.dashlet img.shadow {
-    position: absolute;
-}
-div.dashlet img.shadow.n {
-    top: -2px;
-    left: 11px;
-    width: 1px;
-    height: 23px;
-}
-div.dashlet img.shadow.s {
-    bottom: -2px;
-    left: 11px;
-    width: 1px;
-    height: 12px;
-}
-div.dashlet img.shadow.w {
-    left: -2px;
-    top: 21px;
-    width: 13px;
-    height: 1px;
-}
-div.dashlet img.shadow.e {
-    right: -2px;
-    top: 21px;
-    width: 13px;
-    height: 1px;
-}
-div.dashlet img.shadow.nw {
-    top: -2px;
-    left: -2px;
-    width: 13px;
-    height: 23px;
-}
-div.dashlet img.shadow.sw {
-    bottom: -2px;
-    left: -2px;
-    width: 13px;
-    height: 12px;
-}
-div.dashlet img.shadow.ne {
-    top: -2px;
-    right: 3px;
-    width: 13px;
-    height: 23px;
-}
-div.dashlet img.shadow.se {
-    bottom: -2px;
-    right: -2px;
-    width: 13px;
-    height: 12px;
 }
 
 table.dashlet_overview h2 {

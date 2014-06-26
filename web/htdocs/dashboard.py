@@ -263,15 +263,9 @@ def render_dashlet_content(the_dashlet):
 # Create the HTML code for one dashlet. Each dashlet has an id "dashlet_%d",
 # where %d is its index (in board["dashlets"]). Javascript uses that id
 # for the resizing. Within that div there is an inner div containing the
-# actual dashlet content. The margin between the inner and outer div is
-# used for stylish layout stuff (shadows, etc.)
+# actual dashlet content.
 def render_dashlet(nr, dashlet, wato_folder):
     html.write('<div class=dashlet id="dashlet_%d">' % nr)
-    # render shadow
-    if dashlet.get("shadow", True):
-        for p in [ "nw", "ne", "sw", "se", "n", "s", "w", "e" ]:
-            html.write('<img id="dashadow_%s_%d" class="shadow %s" src="images/dashadow-%s.png">' %
-                (p, nr, p, p))
 
     if dashlet.get("title"):
         url = dashlet.get("title_url", None)

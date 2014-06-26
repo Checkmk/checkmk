@@ -48,9 +48,7 @@ function size_dashlets() {
             if(d_width <= 20){
                 d_width = 21;
             }
-            oDash.style.width  = d_width - 20 + "px";
-            /* oDash.style.top    = "-" + title_height + "px";
-            oDash.style.height = title_height + "px"; */
+            oDash.style.width  = (d_width - 14) + "px";
             oDash.style.display = disstyle;
         }
 
@@ -65,30 +63,8 @@ function size_dashlets() {
             oDash.style.height   = d_height + "px";
         }
 
-        // resize shadow images
         var netto_height = d_height - dashlet_padding[0] - dashlet_padding[2];
         var netto_width  = d_width  - dashlet_padding[1] - dashlet_padding[3];
-
-        var oShadow;
-        oShadow = document.getElementById("dashadow_w_" + d_number);
-        if (oShadow) oShadow.style.display  = disstyle;
-        if (oShadow && d_height - 32 > 0)
-            oShadow.style.height = netto_height + "px";
-
-        oShadow = document.getElementById("dashadow_e_" + d_number);
-        if (oShadow) oShadow.style.display  = disstyle;
-        if (oShadow && d_height - 32 > 0)
-            oShadow.style.height = netto_height + "px";
-
-        oShadow = document.getElementById("dashadow_n_" + d_number);
-        if (oShadow) oShadow.style.display  = disstyle;
-        if (oShadow && d_width - 32 > 0)
-            oShadow.style.width = netto_width - corner_overlap + "px";
-
-        oShadow = document.getElementById("dashadow_s_" + d_number);
-        if (oShadow) oShadow.style.display  = disstyle;
-        if (oShadow && d_width - 32 > 0)
-            oShadow.style.width = netto_width - corner_overlap + "px";
 
         // resize content div
         oDash = document.getElementById("dashlet_inner_" + d_number);

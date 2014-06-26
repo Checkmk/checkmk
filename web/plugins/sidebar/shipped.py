@@ -192,7 +192,6 @@ def render_hosts(mode):
     else:
         query += "Filter: custom_variable_names < _REALNAME\n"
 
-    problem_hosts = []
     if mode == "problems":
         view = "problemsofhost"
         # Exclude hosts and services in downtime

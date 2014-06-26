@@ -1,0 +1,8 @@
+Title: f5_bigip_pool: Added Wato configuration
+Level: 1
+Component: wato
+Version: 1.2.5i5
+Date: 1403790534
+Class: feature
+
+Thresholds for the minimum number of left pool members can now be definied using WATO.

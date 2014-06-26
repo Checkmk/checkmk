@@ -3053,6 +3053,21 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "f5_pools",
+    _("F5 Loadbalancer Pools"),
+    Tuple(
+       title = _("Minimum number of pool members"),
+       elements = [
+           Integer( title = _("Warning if below"), unit=_("Members ")),
+           Integer( title = _("Critical if below"), unit=_("Members")),
+       ],
+    ),
+    TextAscii(title = _("Name of pool")),
+    "first"
+)
+
+register_check_parameters(
+    subgroup_applications,
     "dbsize",
     _("Size of MySQL/PostgresQL databases"),
     Optional(

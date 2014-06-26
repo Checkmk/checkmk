@@ -2,6 +2,9 @@
     Checks & Agents:
     * 0994 FIX: agent plugin smart: fixed syntax error
 
+    WATO:
+    * 0168 f5_bigip_pool: Added Wato configuration...
+
     HW/SW-Inventory:
     * 0167 FIX: mk_inventory.linux: Changed field separator from pipe to tab...
 

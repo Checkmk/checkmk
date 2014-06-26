@@ -1,6 +1,6 @@
 1.2.5i4p1:
     Core & Setup:
-    * 1012 Fix quoting of \ in custom checks with nagios core...
+    * 1012 Fix quoting of backslashes in custom checks with nagios core...
             NOTE: Please refer to the migration notes!
 
     Checks & Agents:

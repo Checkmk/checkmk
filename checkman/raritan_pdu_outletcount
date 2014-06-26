@@ -1,0 +1,17 @@
+title: Raritan PX-2000 family PDU outlet count
+agents: snmp
+catalog: hw/other
+license: GPL
+distribution: check_mk
+description:
+ This check displays the current outlet count of the Raritan PX-2000
+ family of intelligent rack power distribution units (iPDUs).
+
+ It is for reporting only and returns always {OK}.
+
+perfdata:
+ Exactly one number: The outlet count.
+
+inventory:
+ Creates exactly one check per host called Outlet Count.
+

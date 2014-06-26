@@ -4798,6 +4798,7 @@ register_check_parameters(subgroup_applications,
         help = _("Instead of using the regular logwatch check all lines received by logwatch can "
                  "be forwarded to a Check_MK event console daemon to be processed. The target event "
                  "console can be configured for each host in a separate rule."),
+        style = "dropdown",
         elements = [
             FixedValue(
                 "",

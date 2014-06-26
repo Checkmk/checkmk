@@ -1,0 +1,32 @@
+Draft for a command line tool (Linux and Windows) for adding a host to the
+monitoring configuration by calling the tool right on the target machine.
+
+The idea is:
+
+1. Setup a new Linux/Windows box, install the Check_MK Agent on it
+2. Right on that box call a command line tool:
+
+Example 1: Add this host to the Check_MK Server cmkserver.my.net with the OMD
+site mysite.
+
+> cmk-register-host cmkserver.my.net/mysite
+
+Example 2: Specify host tags and a target folder, also activate the changes immediately
+
+> cmk-register-host --tags windows,prod,muc --folder foo/bar --activate cmkserver.my.net/mysite
+
+
+Commandline options:
+  --tags A,B,C      Comma separated list of host tags to add to the host (default: inherit from folder)
+  --folder F        Put the host into that WATO folder (default: main folder). You have to
+                    specify the physical folder path, not the WATO display name
+  --no-inventory    do *not* automatically inventorize the host after adding it
+  --activate        automatically activate the changes after adding it
+  --user U          WATO username to log in with (otherwise: prompted)
+  --password P      Password for logging into WATO (otherwise: prompted)
+  --secret S        Secret for logging into WATO (for automation users)
+
+  --hostname H      Force hostname H (otherwise: read from system hostname)
+  --ipaddress I     Force IP address I (otherwise: let Check_MK use DNS lookup)
+  --site S          Make Check_MK monitor this by site S (otherwise: inherit from folder)
+

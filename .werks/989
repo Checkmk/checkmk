@@ -1,0 +1,13 @@
+Title: logwatch.ec: Fix forwarding multiple messages via syslog/TCP
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i5
+Date: 1403682696
+
+If you setup forwarding to the Event Console in the {logwatch.ec} check to
+be done via TCP and more than one new message per check interval arrived,
+then several messages could have be joined together into one single message.
+The reason was a missing newline character. This has been fixed. Forwarding
+via UDP was not affected by this bug.

@@ -1232,7 +1232,7 @@ def call_notification_script(plugin, plugin_context):
     # Existing vars are replaced, some already existing might remain
     for key in plugin_context:
         if type(plugin_context[key]) == bool:
-            notify_log("MIST: %s=%s ist bool" % (key, plugin_context[key]))
+            notify_log("INTERNAL ERROR: %s=%s is of type bool" % (key, plugin_context[key]))
         os.putenv('NOTIFY_' + key, plugin_context[key].encode('utf-8'))
 
     notify_log("     executing %s" % path)

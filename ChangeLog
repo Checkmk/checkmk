@@ -1,6 +1,26 @@
 1.2.5i5:
+    Core & Setup:
+    * 1012 Fix quoting of backslashes in custom checks with nagios core...
+            NOTE: Please refer to the migration notes!
+
     Checks & Agents:
+    * 0995 raritan_pdu_outletcount: new check for outlet count of Raritan PX-2000 family PDUs
     * 0994 FIX: agent plugin smart: fixed syntax error
+    * 0989 FIX: logwatch.ec: Fix forwarding multiple messages via syslog/TCP...
+    * 0943 FIX: if.include: fixed incorrect traffic percentage values in the check output of if checks...
+    * 0944 FIX: oracle_tablespaces: fixed calculation of space left and number of remaining increments...
+
+    Multisite:
+    * 0945 FIX: Sidebar snapin "Problem hosts": Now excludes hosts and services in downtime
+
+    WATO:
+    * 0990 FIX: Fix HTTP error handling in bulk inventory...
+
+    Reporting & Availability:
+    * 0991 FIX: Availability: optionally show time stamps as UNIX epoch time...
+
+    Livestatus:
+    * 0988 FIX: livedump: Fix exception in case no contact groups are defined for a service
 
     WATO:
     * 0168 f5_bigip_pool: Added Wato configuration...

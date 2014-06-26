@@ -1,0 +1,8 @@
+Title: Sidebar snapin "Problem hosts": Now excludes hosts and services in downtime
+Level: 2
+Component: multisite
+Version: 1.2.5i5
+Date: 1403792470
+Class: fix
+
+

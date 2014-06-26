@@ -1,0 +1,26 @@
+Title: oracle_tablespaces: fixed calculation of space left and number of remaining increments
+Level: 2
+Component: checks
+Version: 1.2.5i5
+Date: 1403784236
+Class: fix
+
+The remaining increments and space left was not correctly calculated when the
+remaining memory space was not a multiple of the increment size.<br>
+For example:<br>
+
+C+:
+Tablespace
+900 MB used
+100 MB free space for autoincrement
+
+200 MB increment size
+C-:
+
+The previous version calculated 900 MB as maximum size, because the increment size was greater
+than the remaining autoincrement space. This was wrong. The last increment also uses the remaining
+space, even if the remaining size is smaller than the increment size.<br><br>
+
+As a result, this fix actually increases the amount of available free space,
+so it should not have any negative side effects for already configured limits.
+

@@ -839,7 +839,7 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration,
     def render_date(ts):
         if avoptions["dateformat"] == "epoch":
             return str(int(ts))
-        else: 
+        else:
             return time.strftime(format, time.localtime(ts))
 
     if type(timeline) == tuple:
@@ -903,6 +903,8 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration,
                 html.write('<td onmouseover="timeline_hover(%d, 1);" onmouseout="timeline_hover(%d, 0);" '
                            'style="width: %.3f%%" title="%s" class="%s"></td>' % (
                            row_nr, row_nr, width, html.attrencode(title), css))
+    if chaos_count > 1:
+        output_chaos_period(chaos_begin, chaos_end, chaos_count, chaos_width)
     html.write('</tr></table>')
 
     if style == "inline":
@@ -940,7 +942,7 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration,
                 break
         else:
             table.cell(_("State"), "(%s/%s)" % (sid,sname))
-        table.cell(_("Additional information"), row["log_output"])
+        table.cell(_("Last Known Plugin Output"), row["log_output"])
 
     table.end()
 

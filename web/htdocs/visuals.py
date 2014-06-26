@@ -355,7 +355,6 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None, create_hand
     html.context_button(_("All %s") % what.title(), "edit_%s.py" % what)
     html.end_context_buttons()
 
-
     vs_general = Dictionary(
         title = _("General Properties"),
         render = 'form',

@@ -27,6 +27,10 @@ Boston, MA 02110-1301 USA.
 
 /* Styles used by the dashboard only */
 
+body.main {
+    padding: 0;
+}
+
 div#dashboard {
     padding: 0px;
     margin: 0px;
@@ -223,3 +227,239 @@ div.dashlet div.nograph div.msg {
     padding: 10px;
 }
 
+/**
+ * Dashboard editing
+ */
+
+div#dashboard #controls_toggle {
+    z-index: 150;
+    position: absolute;
+    right: 0px;
+    bottom: 5px;
+    padding: 6px 3px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-radius: 5px;
+}
+
+div#dashboard #controls_toggle .iconbutton {
+    width: 33px;
+    height: 31px;
+}
+
+div#dashboard #controls {
+    z-index: 180;
+    display: block;
+    position: absolute;
+    bottom: 40px;
+    right: 20px;
+    padding: 5px;
+    width: 200px;
+    list-style: none;
+
+    background-color: #508AA1;
+    border: 1px solid #fff;
+    -moz-box-shadow:    1px 1px 1px 1px #000;
+    -webkit-box-shadow: 1px 1px 1px 1px #000;
+    box-shadow:         1px 1px 1px 1px #000;
+}
+
+div#dashboard #controls a {
+    display: block;
+    padding: 5px 10px;
+    text-align: left;
+    text-decoration: none;
+}
+
+div#dashboard #controls a:hover {
+    text-decoration: underline;
+}
+
+div.dashlet.edit .controls {
+    z-index: 100;
+    cursor: auto;
+}
+
+div.dashlet.edit .controls:hover {
+    cursor: move;
+}
+
+div#dashboard.grid {
+    background-image: url(images/dashboard_grid.png);
+}
+
+div.dashlet.edit .controls {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(255, 255, 255, 0.5);
+}
+
+div.dashlet.edit .anchor {
+    cursor: pointer;
+    position: absolute;
+    width: 20px;
+    height: 20px;
+
+    background-color: rgba(0, 0, 0, 0.7);
+    border-radius: 5px;
+
+    background-image: url(images/dashlet_anchor_lo.png);
+}
+
+div.dashlet.edit .anchor:hover {
+    background-image: url(images/dashlet_anchor_hi.png);
+}
+
+div.dashlet.edit .anchor.off {
+    background-image: url(images/dashlet_anchor_off.png);
+}
+
+div.dashlet.edit .anchor.anchor0 {
+    top: 5px;
+    left: 5px;
+}
+
+div.dashlet.edit .anchor.anchor1 {
+    top: 5px;
+    right: 10px;
+}
+
+div.dashlet.edit .anchor.anchor2 {
+    bottom: 10px;
+    right: 10px;
+}
+
+div.dashlet.edit .anchor.anchor3 {
+    bottom: 10px;
+    left: 5px;
+}
+
+.sizer {
+    position: absolute;
+    border: 1px solid #666;
+}
+
+.sizer0 {
+    width: 50%;
+    height: 17px;
+}
+
+.sizer1 {
+    height: 50%;
+    width: 17px;
+}
+
+.sizer.max {
+    background-color: #f00;
+}
+
+.sizer.grow {
+    background-color: #ff0;
+}
+
+.sizer.abs {
+    background-color: #eee;
+}
+
+/* left side */
+.sizer1.anchor0,
+.sizer1.anchor3 {
+    left: 5px;
+    top: 25%;
+}
+
+/* right side */
+.sizer1.anchor1,
+.sizer1.anchor2 {
+    right: 10px;
+    top: 25%;
+}
+
+/* top side */
+.sizer0.anchor0,
+.sizer0.anchor1 {
+    left: 25%;
+    top: 5px;
+}
+
+/* bottom side */
+.sizer0.anchor2,
+.sizer0.anchor3 {
+    left: 25%;
+    bottom: 10px;
+}
+
+/* general arrow */
+.sizer0:before,
+.sizer1:before {
+    position: absolute;
+    content: " ";
+}
+
+/* arrow on left */
+.sizer0.anchor1:before, .sizer0.anchor2:before {
+    top: -1px;
+    right: 100%;
+    background-repeat: no-repeat;
+    width: 10px;
+    height: 19px;
+}
+
+.sizer0.anchor1.max:before, .sizer0.anchor2.max:before {
+    background-image: url(images/dashlet_arrow_l_max.png);
+}
+
+.sizer0.anchor1.grow:before, .sizer0.anchor2.grow:before {
+    background-image: url(images/dashlet_arrow_l_grow.png);
+}
+
+/* arrow on right */
+.sizer0.anchor0:before, .sizer0.anchor3:before {
+    top: -1px;
+    left: 100%;
+    background-repeat: no-repeat;
+    width: 10px;
+    height: 19px;
+}
+
+.sizer0.anchor0.max:before, .sizer0.anchor3.max:before {
+    background-image: url(images/dashlet_arrow_r_max.png);
+}
+
+.sizer0.anchor0.grow:before, .sizer0.anchor3.grow:before {
+    background-image: url(images/dashlet_arrow_r_grow.png);
+}
+
+/* arrow at top */
+.sizer1.anchor2:before, .sizer1.anchor3:before {
+    bottom: 100%;
+    left: -1px;
+    background-repeat: no-repeat;
+    height: 10px;
+    width: 19px;
+}
+
+.sizer1.anchor2.max:before, .sizer1.anchor3.max:before {
+    background-image: url(images/dashlet_arrow_t_max.png);
+}
+
+.sizer1.anchor2.grow:before, .sizer1.anchor3.grow:before {
+    background-image: url(images/dashlet_arrow_t_grow.png);
+}
+
+/* arrow at bottom */
+.sizer1.anchor0:before, .sizer1.anchor1:before {
+    top: 100%;
+    left: -1px;
+    background-repeat: no-repeat;
+    height: 10px;
+    width: 19px;
+}
+
+.sizer1.anchor0.max:before, .sizer1.anchor1.max:before {
+    background-image: url(images/dashlet_arrow_b_max.png);
+}
+
+.sizer1.anchor0.grow:before, .sizer1.anchor1.grow:before {
+    background-image: url(images/dashlet_arrow_b_grow.png);
+}

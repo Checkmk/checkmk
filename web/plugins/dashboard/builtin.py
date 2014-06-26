@@ -26,6 +26,7 @@
 
 builtin_dashboards["main"] = {
     "title"       : _("Main Overview"),
+    "topic"       : _("Overview"),
     "description" : _("This dashboard gives you a general overview on the state of your "
                       "monitored devices."),
     "dashlets" : [
@@ -80,6 +81,7 @@ builtin_dashboards["main"] = {
 if defaults.omd_site:
     builtin_dashboards["topology"] = {
         "title"       : _("Network Topology"),
+        "topic"       : _("Overview"),
         "description" : _("This dashboard uses the parent relationships of your hosts to display a "
                           "hierarchical map."),
         "dashlets" : [
@@ -99,6 +101,7 @@ if defaults.omd_site:
 
 builtin_dashboards["simple_problems"] = {
     "title"       : _("Host &amp; Services Problems"),
+    "topic"       : _("Overview"),
     "description" : _("A compact dashboard which lists your unhandled host and service problems."),
     "dashlets" : [
         {

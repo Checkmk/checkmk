@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import config, defaults, visuals, pprint, time
+from valuespec import *
 from lib import *
 import wato
 
@@ -84,6 +85,11 @@ def load_plugins():
 
         # add the modification time to make reload of dashboards work
         dashboard['mtime'] = int(time.time())
+
+        dashboard.setdefault('show_title', True)
+        if dashboard['title'] == None:
+            dashboard['title'] = _('No title')
+            dashboard['show_title'] = False
 
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
@@ -151,20 +157,14 @@ def render_dashboard(name):
 
     wato_folder = html.var("wato_folder")
 
-    # When an empty wato_folder attribute is given a user really wants
-    # to see only the hosts contained in the root folder. So don't ignore
-    # the root folder anymore.
-    #if not wato_folder: # ignore wato folder in case of root folder
-    #    wato_folder = None
-
     # The title of the dashboard needs to be prefixed with the WATO path,
     # in order to make it clear to the user, that he is seeing only partial
     # data.
     title = _u(board["title"])
 
     global header_height
-    if title is None:
-        # If the title is none, hide the header line
+    if not board['show_title']:
+        # Remove the whole header line
         html.set_render_headfoot(False)
         header_height = 0
         title = ''
@@ -177,6 +177,7 @@ def render_dashboard(name):
     html.write("<div id=dashboard class=\"dashboard_%s\">\n" % name) # Container of all dashlets
 
     refresh_dashlets = [] # Dashlets with automatic refresh, for Javascript
+    dashlets_js = []
     for nr, dashlet in enumerate(board["dashlets"]):
         # dashlets using the 'urlfunc' method will dynamically compute
         # an url (using HTML context variables at their wish).
@@ -198,6 +199,33 @@ def render_dashboard(name):
         # Paint the dashlet's HTML code
         render_dashlet(nr, dashlet, wato_folder)
 
+        dashlets_js.append({
+            'x' : dashlet['position'][0],
+            'y' : dashlet['position'][1],
+            'w' : dashlet['size'][0],
+            'h' : dashlet['size'][1],
+        })
+
+    if board['owner'] == config.user_id:
+        html.write('<ul id="controls" style="display:none">\n')
+
+        html.write('<li><a href="edit_dashboard.py?load_name=%s&back=%s">%s</a></li>\n' %
+            (name, html.urlencode(html.makeuri([])), _('Properties')))
+
+        display = html.var('edit') == '1' and 'block' or 'none'
+        html.write('<li id="control_view" style="display:%s"><a href="javascript:void(0)" '
+                   'onclick="toggle_dashboard_edit(false)">%s</a></li>\n' %
+                        (display, _('View Dashboard')))
+
+        display = html.var('edit') != '1' and 'block' or 'none'
+        html.write('<li id="control_edit" style="display:%s"><a href="javascript:void(0)" '
+                   'onclick="toggle_dashboard_edit(true)">%s</a></li>\n' %
+                        (display, _('Edit Dashboard')))
+        html.write("</ul>\n")
+
+        html.icon_button(None, _('Edit the Dashboard'), 'dashboard_controls', 'controls_toggle',
+                        onclick = 'toggle_dashboard_controls()')
+
     html.write("</div>\n")
 
     # Put list of all autorefresh-dashlets into Javascript and also make sure,
@@ -205,6 +233,9 @@ def render_dashboard(name):
     # that every time the user resizes the browser window the layout will be re-computed
     # and all dashlets resized to their new positions and sizes.
     html.javascript("""
+var MAX = %d;
+var GROW = %d;
+var grid_size = new vec%s;
 var header_height = %d;
 var screen_margin = %d;
 var title_height = %d;
@@ -213,11 +244,16 @@ var corner_overlap = %d;
 var refresh_dashlets = %r;
 var dashboard_name = '%s';
 var dashboard_mtime = %d;
-set_dashboard_size();
-window.onresize = function () { set_dashboard_size(); }
+var dashlets = %s;
+
+calculate_dashboard();
+window.onresize = function () { calculate_dashboard(); }
 dashboard_scheduler(1);
-    """ % (header_height, screen_margin, title_height, dashlet_padding,
-           corner_overlap, refresh_dashlets, name, board['mtime']))
+    """ % (MAX, GROW, raster, header_height, screen_margin, title_height, dashlet_padding,
+           corner_overlap, refresh_dashlets, name, board['mtime'], repr(dashlets_js)))
+
+    if html.var('edit') == '1':
+        html.javascript('toggle_dashboard_edit(true)')
 
     html.body_end() # omit regular footer with status icons, etc.
 
@@ -250,7 +286,6 @@ def render_dashlet(nr, dashlet, wato_folder):
         bg = ""
     html.write('<div class="dashlet_inner%s" id="dashlet_inner_%d">' % (bg, nr))
 
-    html.log(repr(dashlet.keys()))
     dashlet_type = dashlets[dashlet['type']]
 
     # Optional way to render a dynamic iframe URL
@@ -286,196 +321,6 @@ def render_dashlet(nr, dashlet, wato_folder):
             html.javascript('reload_on_resize["%d"] = "%s"' %
                             (nr, add_wato_folder_to_url(dashlet["iframe"], wato_folder)))
     html.write("</div></div>\n")
-
-# Here comes the brain stuff: An intelligent liquid layout algorithm.
-# It is called via ajax, mainly because I was not eager to code this
-# directly in Javascript (though this would be possible and probably
-# more lean.)
-# Compute position and size of all dashlets
-def ajax_resize():
-    # computation with vectors
-    class vec:
-        def __init__(self, xy):
-            self._data = xy
-
-        def __div__(self, xy):
-            return vec((self._data[0] / xy[0], self._data[1] / xy[1]))
-
-        def __repr__(self):
-            return repr(self._data)
-
-        def __getitem__(self, i):
-            return self._data[i]
-
-        def make_absolute(self, size):
-            n = []
-            for i in [0, 1]:
-                if self._data[i] < 0:
-                    n.append(size[i] + self._data[i] + 1) # Here was a bug fixed by Markus Lengler
-                else:
-                    n.append(self._data[i] - 1) # make begin from 0
-            return vec(n)
-
-        # Compute the initial size of the dashlet. If MAX is used,
-        # then the dashlet consumes all space in its growing direction,
-        # regardless of any other dashlets.
-        def initial_size(self, position, rastersize):
-            n = []
-            for i in [0, 1]:
-                if self._data[i] == MAX:
-                    n.append(rastersize[i] - abs(position[i]) + 1)
-                elif self._data[i] == GROW:
-                    n.append(1)
-                else:
-                    n.append(self._data[i])
-            return n
-
-        def compute_grow_by(self, size):
-            n = []
-            for i in [0, 1]:
-                if size[i] != GROW: # absolute size, no growth
-                    n.append(0)
-                elif self._data[i] < 0:
-                    n.append(-1) # grow direction left, up
-                else:
-                    n.append(1) # grow direction right, down
-            return n
-
-        def __add__(self, b):
-            return vec((self[0] + b[0], self[1] + b[1]))
-
-    load_dashboards()
-    board = available_dashboards[html.var("name")]
-
-    screensize = vec((int(html.var("width")), int(html.var("height"))))
-    rastersize = screensize / raster
-    used_matrix = {} # keep track of used raster elements
-
-    # first place all dashlets at their absolute positions
-    positions = []
-    for nr, dashlet in enumerate(board["dashlets"]):
-        # Relative position is as noted in the declaration. 1,1 => top left origin,
-        # -1,-1 => bottom right origin, 0 is not allowed here
-        rel_position = vec(dashlet["position"]) # starting from 1, negative means: from right/bottom
-
-        # Compute the absolute position, this time from 0 to rastersize-1
-        abs_position = rel_position.make_absolute(rastersize)
-
-        # The size in raster-elements. A 0 for a dimension means growth. No negative values here.
-        size = vec(dashlet["size"])
-
-        # Compute the minimum used size for the dashlet. For growth-dimensions we start with 1
-        used_size = size.initial_size(rel_position, rastersize)
-
-        # Now compute the rectangle that is currently occupied. The choords
-        # of bottomright are *not* included.
-        if rel_position[0] > 0:
-            left = abs_position[0]
-            right = left + used_size[0]
-        else:
-            right = abs_position[0]
-            left = right - used_size[0]
-
-        if rel_position[1] > 0:
-            top = abs_position[1]
-            bottom = top + used_size[1]
-        else:
-            bottom = abs_position[1]
-            top = bottom - used_size[1]
-
-        # Allocate used squares in matrix. If not all squares we need are free,
-        # then the dashboard is too small for all dashlets (as it seems).
-        # TEST: Dashlet auf 0/0 setzen, wenn kein Platz dafür da ist.
-        try:
-            for x in range(left, right):
-                for y in range(top, bottom):
-                    if (x,y) in used_matrix:
-                        raise Exception()
-                    used_matrix[(x,y)] = True
-            # Helper variable for how to grow, both x and y in [-1, 0, 1]
-            grow_by = rel_position.compute_grow_by(size)
-
-            positions.append((nr, True, left, top, right, bottom, grow_by))
-        except:
-            positions.append((nr, False, left, top, right, bottom, (0,0)))
-
-
-    # now resize all elastic dashlets to the max, but only
-    # by one raster at a time, in order to be fair
-    def try_resize(x, y, width, height):
-        return False
-        if x + width >= xmax or y + height >= ymax:
-            return False
-        for xx in range(x, x + width):
-            for yy in range(y, y + height):
-                if used_matrix[xx][yy]:
-                    return False
-        for xx in range(x, x + width):
-            for yy in range(y, y + height):
-                used_matrix[xx][yy] = True
-        return True
-
-        # Das hier ist FALSCH! In Wirklichkeit muss ich nur prüfen,
-        # ob der *Zuwachs* nicht in der Matrix belegt ist. Das jetzige
-        # Rechteck muss ich ausklammern. Es ist ja schon belegt.
-
-    def try_allocate(left, top, right, bottom):
-        # Try if all needed squares are free
-        for x in range(left, right):
-            for y in range(top, bottom):
-                if (x,y) in used_matrix:
-                    return False
-
-        # Allocate all needed squares
-        for x in range(left, right):
-            for y in range(top, bottom):
-                used_matrix[(x,y)] = True
-        return True
-
-
-    # Now try to expand all elastic rectangles as far as possible
-    at_least_one_expanded = True
-    while at_least_one_expanded:
-        at_least_one_expanded = False
-        new_positions = []
-        for (nr, visible, left, top, right, bottom, grow_by) in positions:
-            if visible:
-                # html.write(repr((nr, left, top, right, bottom, grow_by)))
-                # try to grow in X direction by one
-                if grow_by[0] > 0 and right < rastersize[0] and try_allocate(right, top, right+1, bottom):
-                    at_least_one_expanded = True
-                    right += 1
-                elif grow_by[0] < 0 and left > 0 and try_allocate(left-1, top, left, bottom):
-                    at_least_one_expanded = True
-                    left -= 1
-
-                # try to grow in Y direction by one
-                if grow_by[1] > 0 and bottom < rastersize[1] and try_allocate(left, bottom, right, bottom+1):
-                    at_least_one_expanded = True
-                    bottom += 1
-                elif grow_by[1] < 0 and top > 0 and try_allocate(left, top-1, right, top):
-                    at_least_one_expanded = True
-                    top -= 1
-            new_positions.append((nr, visible, left, top, right, bottom, grow_by))
-        positions = new_positions
-
-    resize_info = []
-    for nr, visible, left, top, right, bottom, grow_by in positions:
-        # html.write(repr((nr, left, top, right, bottom, grow_by)))
-        # html.write("<br>")
-        title = board["dashlets"][nr].get("title")
-        if title:
-            th = title_height
-        else:
-            th = 0
-        resize_info.append([nr,
-                            visible and 1 or 0,
-                            left * raster[0],
-                            top * raster[1] + th,
-                            (right - left) * raster[0],
-                            (bottom - top) * raster[1] - th])
-
-    html.write(repr(resize_info))
 
 #.
 #   .--Draw Dashlet--------------------------------------------------------.
@@ -556,12 +401,39 @@ def page_edit_dashboards():
 #   | Configures the global settings of a dashboard.                       |
 #   '----------------------------------------------------------------------'
 
+global vs_dashboard
+
 def page_edit_dashboard():
     load_dashboards()
-    visuals.page_edit_visual('dashboards', dashboards, create_handler = create_dashboard)
+
+    global vs_dashboard
+    vs_dashboard = Dictionary(
+        title = _('Dashboard Properties'),
+        render = 'form',
+        optional_keys = None,
+        elements = [
+            ('show_title', Checkbox(
+                title = _('Display dashboard title'),
+                label = _('Show the header of the dashboard with the configured title.'),
+                default_value = True,
+            )),
+        ],
+    )
+    visuals.page_edit_visual('dashboards', dashboards,
+        create_handler = create_dashboard,
+        custom_field_handler = custom_field_handler
+    )
+
+def custom_field_handler(dashboard):
+    vs_dashboard.render_input('dashboard', dashboard and dashboard or None)
 
 def create_dashboard(old_dashboard, dashboard):
+    board_properties = vs_dashboard.from_html_vars('dashboard')
+    vs_dashboard.validate_value(board_properties, 'dashboard')
+    dashboard.update(board_properties)
+
     # Do not remove the dashlet configuration during general property editing
     dashboard['dashlets'] = old_dashboard.get('dashlets', [])
     dashboard['mtime'] = int(time.time())
+
     return dashboard

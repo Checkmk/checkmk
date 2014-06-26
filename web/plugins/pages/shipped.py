@@ -81,7 +81,6 @@ pagehandlers.update({
    "edit_dashboards"          : dashboard.page_edit_dashboards,
    "edit_dashboard"           : dashboard.page_edit_dashboard,
    "dashboard"                : dashboard.page_dashboard,
-   "dashboard_resize"         : dashboard.ajax_resize,
    "dashboard_dashlet"        : dashboard.ajax_dashlet,
    "ajax_userdb_sync"         : userdb.ajax_sync,
    "notify"                   : notify.page_notify,

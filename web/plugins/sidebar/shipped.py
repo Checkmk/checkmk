@@ -66,31 +66,22 @@ sidebar_snapins["about"] = {
 #      \_/  |_|\___| \_/\_/ |___/
 #
 # --------------------------------------------------------------
-visible_views = [ "allhosts", "searchsvc" ]
 
-def views_by_topic():
-    s = [ (view.get("topic") or _("Other"), view.get("title"), name)
-          for name, view
-          in views.permitted_views().items()
-          if not view["hidden"] and not view.get("mobile")]
-
-    # Add all the dashboards to the views list
-    s += [ (_('Dashboards'), d['title'] and d['title'] or d_name, d_name)
-           for d_name, d
-           in dashboard.permitted_dashboards().items()
-    ]
+def visuals_by_topic(permitted_visuals,
+        default_order = [ _("Hosts"), _("Hostgroups"), _("Services"), _("Servicegroups"),
+                         _("Business Intelligence"), _("Problems"), _("Addons") ]):
+    s = [ (visual.get("topic") or _("Other"), visual.get("title"), name)
+          for name, visual
+          in permitted_visuals.items()
+          if not visual["hidden"] and not visual.get("mobile")]
 
     s.sort()
 
-    # Enforce a certain order on the topics
-    known_topics = [ _('Dashboards'), _("Hosts"), _("Hostgroups"), _("Services"), _("Servicegroups"),
-                     _("Business Intelligence"), _("Problems"), _("Addons") ]
-
     result = []
-    for topic in known_topics:
+    for topic in default_order:
         result.append((topic, s))
 
-    rest = list(set([ t for (t, _t, _v) in s if t not in known_topics ]))
+    rest = list(set([ t for (t, _t, _v) in s if t not in default_order ]))
     rest.sort()
     for topic in rest:
         if topic:
@@ -100,7 +91,6 @@ def views_by_topic():
 
 def render_views():
     views.load_views()
-    dashboard.load_dashboards()
 
     def render_topic(topic, s):
         first = True
@@ -113,14 +103,11 @@ def render_views():
                 if first:
                     html.begin_foldable_container("views", topic, False, topic, indent=True)
                     first = False
-                if topic == _('Dashboards'):
-                    bulletlink(title, 'dashboard.py?name=%s' % name, onclick = "return wato_views_clicked(this)")
-                else:
-                    bulletlink(title, "view.py?view_name=%s" % name, onclick = "return wato_views_clicked(this)")
+                bulletlink(title, "view.py?view_name=%s" % name, onclick = "return wato_views_clicked(this)")
         if not first: # at least one item rendered
             html.end_foldable_container()
 
-    for topic, s in views_by_topic():
+    for topic, s in visuals_by_topic(views.permitted_views()):
         render_topic(topic, s)
 
     links = []
@@ -135,6 +122,49 @@ sidebar_snapins["views"] = {
     "description" : _("Links to all views"),
     "render" : render_views,
     "allowed" : [ "user", "admin", "guest" ],
+}
+
+#   .--Dashboards----------------------------------------------------------.
+#   |        ____            _     _                         _             |
+#   |       |  _ \  __ _ ___| |__ | |__   ___   __ _ _ __ __| |___         |
+#   |       | | | |/ _` / __| '_ \| '_ \ / _ \ / _` | '__/ _` / __|        |
+#   |       | |_| | (_| \__ \ | | | |_) | (_) | (_| | | | (_| \__ \        |
+#   |       |____/ \__,_|___/_| |_|_.__/ \___/ \__,_|_|  \__,_|___/        |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def render_dashboards():
+    dashboard.load_dashboards()
+
+    def render_topic(topic, s):
+        first = True
+        for t, title, name in s:
+            if t == topic:
+                if first:
+                    html.begin_foldable_container("dashboards", topic, False, topic, indent=True)
+                    first = False
+                bulletlink(title, 'dashboard.py?name=%s' % name, onclick = "return wato_views_clicked(this)")
+        if not first: # at least one item rendered
+            html.end_foldable_container()
+
+    for topic, s in visuals_by_topic(dashboard.permitted_dashboards(),
+            default_order = [_('Overview')]):
+        render_topic(topic, s)
+
+    links = []
+    if config.may("general.edit_dashboards"):
+        if config.debug:
+            links.append((_("EXPORT"), "export_dashboards.py"))
+        links.append((_("EDIT"), "edit_dashboards.py"))
+        footnotelinks(links)
+
+sidebar_snapins["dashboards"] = {
+    "title"       : _("Dashboards"),
+    "description" : _("Links to all dashboards"),
+    "render"      : render_dashboards,
+    "allowed"     : [ "user", "admin", "guest" ],
 }
 
 # --------------------------------------------------------------

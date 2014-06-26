@@ -132,6 +132,15 @@ function getTarget(event) {
   return event.target ? event.target : event.srcElement;
 }
 
+function getButton(event) {
+  if (event.which == null)
+    /* IE case */
+    return (event.button < 2) ? "LEFT" : ((event.button == 4) ? "MIDDLE" : "RIGHT");
+  else
+    /* All others */
+    return (event.which < 2) ? "LEFT" : ((event.which == 2) ? "MIDDLE" : "RIGHT");
+}
+
 function hilite_icon(oImg, onoff) {
     src = oImg.src;
     if (onoff == 0)

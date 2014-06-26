@@ -192,9 +192,19 @@ def render_hosts(mode):
     else:
         query += "Filter: custom_variable_names < _REALNAME\n"
 
+    problem_hosts = []
     if mode == "problems":
-        query += "Filter: state > 0\nFilter: worst_service_state > 0\nOr: 2\n"
         view = "problemsofhost"
+        # Exclude hosts and services in downtime
+        svc_query = "GET services\nColumns: host_name\n"\
+                    "Filter: state > 0\nFilter: scheduled_downtime_depth = 0\n"\
+                    "Filter: host_scheduled_downtime_depth = 0\nAnd: 3"
+        problem_hosts = set(map(lambda x: x[1], html.live.query(svc_query)))
+
+        query += "Filter: state > 0\nFilter: scheduled_downtime_depth = 0\nAnd: 2\n"
+        for host in problem_hosts:
+            query += "Filter: name = %s\n" % host
+        query += "Or: %d\n" % (len(problem_hosts) + 1)
 
     hosts = html.live.query(query)
     html.live.set_prepend_site(False)

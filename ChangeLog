@@ -4,6 +4,7 @@
             NOTE: Please refer to the migration notes!
 
     Checks & Agents:
+    * 0995 raritan_pdu_outletcount: new check for outlet count of Raritan PX-2000 family PDUs
     * 0994 FIX: agent plugin smart: fixed syntax error
     * 0989 FIX: logwatch.ec: Fix forwarding multiple messages via syslog/TCP...
     * 0943 FIX: if.include: fixed incorrect traffic percentage values in the check output of if checks...

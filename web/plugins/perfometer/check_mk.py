@@ -1065,3 +1065,8 @@ def perfometer_raritan_pdu_inlet(row, check_command, perf_data):
 perfometers["check_mk-raritan_pdu_inlet"] = perfometer_raritan_pdu_inlet
 
 
+def perfometer_raritan_pdu_outletcount(row, check_command, perf_data):
+    outletcount = float(perf_data[0][1])
+    return "%d" % outletcount, perfometer_logarithmic(outletcount, 20, 2, "#da6")
+
+perfometers["check_mk-raritan_pdu_outletcount"] = perfometer_raritan_pdu_outletcount

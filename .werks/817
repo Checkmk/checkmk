@@ -1,0 +1,8 @@
+Title: Fixed error during creating new sites in WATO
+Level: 2
+Component: wato
+Version: 1.2.4p4
+Date: 1402384422
+Class: fix
+
+The error prevented to create new sites for distributed setups.

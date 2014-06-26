@@ -1,0 +1,8 @@
+Title: json export: fixed bug not stripping html tags from output
+Level: 2
+Component: multisite
+Version: 1.2.4p3
+Date: 1400855385
+Class: fix
+
+

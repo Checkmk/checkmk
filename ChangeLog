@@ -1,3 +1,36 @@
+1.2.4p5:
+    Checks & Agents:
+    * 0994 FIX: agent plugin smart: fixed syntax error
+    * 0989 FIX: logwatch.ec: Fix forwarding multiple messages via syslog/TCP...
+    * 0943 FIX: if.include: fixed incorrect traffic percentage values in the check output of if checks...
+
+    WATO:
+    * 0990 FIX: Fix HTTP error handling in bulk inventory...
+
+    Livestatus:
+    * 0988 FIX: livedump: Fix exception in case no contact groups are defined for a service
+
+
+1.2.4p4:
+    Core & Setup:
+    * 0940 SEC: Fixed various core SIGSEGV when using malformed livestatus queries...
+
+    Checks & Agents:
+    * 0932 FIX: prediction: fixed bug where predicted levels were not recalculated
+
+    Multisite:
+    * 0982 SEC: Fix two XSS weaknesses according to CVSS 8.5 AV:N/AC:M/Au:S/C:C/I:C/A:C...
+    * 0983 SEC: Fix security issue in code of row selections (checkboxes) (CVSS 4.9 AV:N/AC:M/Au:S/C:N/I:P/A:P)...
+    * 0166 FIX: mobile gui: Fixed colors of command list...
+    * 0820 FIX: Fixed wrong NagVis links in "custom links" snapin
+    * 0939 FIX: Fixed multisite exception caused by missing explanation text for a AUTODELETE event action
+
+    WATO:
+    * 0984 Fix code injection for logged in users via automation url...
+            NOTE: Please refer to the migration notes!
+    * 0817 FIX: Fixed error during creating new sites in WATO...
+
+
 1.2.4p3:
     Core & Setup:
     * 0888 FIX: Fix SNMP inventory check in simulation mode
@@ -11,6 +44,7 @@
 
     Multisite:
     * 0912 FIX: Multisite Views: Fixed bug where custom views could not get deleted
+    * 0923 FIX: json export: fixed bug not stripping html tags from output
 
     WATO:
     * 0971 FIX: Fix missing authentication of PHP addons in D-WATO when activation mode is reload...
@@ -55,6 +89,7 @@
     * 0136 FIX: cisco_fru_power: Prevent inventory of not exsisting devices
     * 0673 FIX: zfsget: Fixed broken check - was not compatible to current agent output of "df"
     * 0719 FIX: postfix_mailq: fix Linux agent in case of ssmtp being installed
+    * 0622 FIX: cisco_temp_sensor: fix to also work with newer IOS versions
     * 0137 FIX: Fixed printer_pages...
     * 0563 FIX: windows agent: now able to process perl scripts...
     * 0142 FIX: winperf_if: treat unknown packets no longer as error packets

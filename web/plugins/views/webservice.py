@@ -99,7 +99,7 @@ def render_json(rows, view, group_painters, painters, num_columns, show_checkbox
                 content = str(content)
             content = content.replace("<br>","\n")
             stripped = html.strip_tags(content)
-            html.write(encode_string_json(content))
+            html.write(encode_string_json(stripped))
         html.write("]")
 
     html.write("\n]\n")

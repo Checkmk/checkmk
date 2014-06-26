@@ -26,6 +26,7 @@
 
 import config
 import lib
+import re
 
 def ajax_tree_openclose():
     html.load_tree_states()
@@ -78,7 +79,13 @@ def selection_id():
     if not html.has_var('selection'):
         sel_id = lib.gen_id()
         html.add_var('selection', sel_id)
-    return html.var('selection')
+    else:
+        sel_id = html.var('selection')
+        # Avoid illegal file access by introducing .. or /
+        if not re.match("^[-0-9a-zA-Z]+$", sel_id):
+            return lib.gen_id()
+        else:
+            return sel_id
 
 def get_rowselection(ident):
     vo = config.load_user_file("rowselection/%s" % selection_id(), {})

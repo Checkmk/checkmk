@@ -414,6 +414,20 @@ register_configvar(group,
     domain = "multisite"
     )
 
+register_configvar(group,
+    "wato_legacy_eval",
+    Checkbox(
+        title = _("Use unsafe legacy encoding for distributed WATO"),
+        help = _("The current implementation of WATO uses a Python module called <tt>ast</tt> for the "
+                 "communication between sites. Previous versions of Check_MK used an insecure encoding "
+                 "named <tt>pickle</tt>. Even in the current version WATO falls back to <tt>pickle</tt> "
+                 "if your Python version is not recent enough. This is at least the case for RedHat/CentOS 5.X "
+                 "and Debian 5.0. In a mixed environment you can force using the legacy <tt>pickle</tt> format "
+                 "in order to create compatibility."),
+    ),
+    domain = "multisite"
+)
+
 
 register_configvar(group,
     "wato_hide_filenames",

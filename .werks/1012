@@ -1,0 +1,23 @@
+Title: Fix quoting of \ in custom checks with nagios core
+Level: 2
+Component: core
+Class: incomp
+State: unknown
+Version: 1.2.5i4p1
+Date: 1403786142
+
+When you are using Nagios as montitoring core then backslashes contained
+in <tt>custom_checks</tt> (Classical active and passive Nagios checks) would
+be interpreted by Nagios. That way single backslashes would usually vanish
+und you would have to duplicate them.
+
+The Check_MK Micro Core never interpreted these backslashes so it was
+transparent for the user.
+
+This fix changes the behaviour of Check_MK in a way that also with the
+Nagios core you need only one backslash. Backslashes are transparent
+now.
+
+<b>NOTE</b>: If you have custom checks that contain backslashes (for
+example as part of names or passwords) then you need to remove
+duplicate backslashes after this update!

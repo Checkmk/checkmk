@@ -1,4 +1,8 @@
 1.2.5i4p1:
+    Core & Setup:
+    * 1012 Fix quoting of \ in custom checks with nagios core...
+            NOTE: Please refer to the migration notes!
+
     Checks & Agents:
     * 0994 FIX: agent plugin smart: fixed syntax error
     * 0989 FIX: logwatch.ec: Fix forwarding multiple messages via syslog/TCP...

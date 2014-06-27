@@ -22,9 +22,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-SHELL   = /bin/bash
-VERSION = 1.2.5i5
-WINDRES = i586-mingw32msvc-windres
+SHELL         = /bin/bash
+VERSION       = 1.2.5i5
+VERSION_DUMMY = @@@@@CHECK_MK_VERSION@@@@@
+WINDRES       = i586-mingw32msvc-windres
+COPTIONS      = -s -O2 -Wall -Werror -static -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"'
 
 ifeq ($(shell uname),Linux)
   CXX        = echo -e "\n\nWARNING: MinGW under Linux is broken! Use at your own risk!\n\n" ; i586-mingw32msvc-g++
@@ -34,11 +36,49 @@ else
   CXX = mingw32-g++
 endif
 
-all: install_agent.exe
+all: install_agent.exe install_agent-64.exe
 
-test.exe: test.cc
-	$(CXX) -s -O2 -o $@ $< -static -lwsock32
+# -----------------------------------------------------------------------------
+# 1. Create ressource files with version and product information. Note: That file
+# contains a dummy version number, which is later being replaced with the
+# actual version number, during 'make version'
+# -----------------------------------------------------------------------------
+check_mk_agent.rc: check_mk_agent.rc.in
+	BUILD_VERSION=$$(cat build_version ; echo $$(( $$(cat build_version) + 1 )) > build_version.new && mv build_version.new build_version) ; \
+	   sed -e "s/%VERSION%/$(VERSION_DUMMY)/g" \
+	       -e "s/%YEAR%/$$(date +%Y)/g" \
+	       -e "s/%BUILD_VERSION%/$$BUILD_VERSION/g" $< > $@
 
+check_mk_agent.res: check_mk_agent.rc
+	$(WINDRES) $< -O coff -o $@
+
+check_mk_agent-64.res: check_mk_agent.rc
+	$(WINDRES_64) $< -O coff -o $@
+
+
+# -----------------------------------------------------------------------------
+# 2. Compile the Windows agent from the sources, without a specific version
+# number. Instead a placeholder is being used as version.
+# -----------------------------------------------------------------------------
+check_mk_agent.unversioned.exe: check_mk_agent.cc check_mk_agent.res
+	$(CXX) $(COPTIONS) -o $@ $< check_mk_agent.res -lwsock32
+
+check_mk_agent-64.unversioned.exe: check_mk_agent.cc check_mk_agent-64.res
+	$(CXX_64) $(COPTIONS) -o $@ $< check_mk_agent-64.res -lwsock32
+
+
+
+# -----------------------------------------------------------------------------
+# 3. Create final executable files by inserting actual version number. No
+# recompilation is thus needed during 'make version'
+# -----------------------------------------------------------------------------
+%.exe: %.unversioned.exe
+	./bin_replace $(VERSION_DUMMY) "$(VERSION)" < $< > $@
+	chmod 755 $@
+
+# -----------------------------------------------------------------------------
+# NSIS installer will be removed and replaced by multiarch MSI installer
+# -----------------------------------------------------------------------------
 install_agent.exe: check_mk_agent.exe crash.exe nowin.exe
 	if ! which makensis; then \
 	    echo "ERROR: makensis missing. Please install the nsis package." ; \
@@ -55,29 +95,7 @@ install_agent-64.exe: check_mk_agent-64.exe crash.exe nowin.exe
 	makensis installer-64.nsi
 	chmod +x install_agent-64.exe
 
-check_mk_agent.exe: check_mk_agent.cc Makefile check_mk_agent.res
-	$(CXX) -s -O2 -Wall -Werror -o $@ $< -static -lwsock32 check_mk_agent.res
 
-check_mk_agent-64.exe: check_mk_agent.cc Makefile check_mk_agent-64.res
-	$(CXX_64) -s -O2 -Wall -Werror -o $@ $< -static -lwsock32 check_mk_agent-64.res
-
-check_mk_agent.res: check_mk_agent.rc
-	$(WINDRES) $< -O coff -o $@
-
-check_mk_agent-64.res: check_mk_agent.rc
-	$(WINDRES_64) $< -O coff -o $@
-
-check_mk_agent.rc: check_mk_agent.rc.in
-	# length checks are needed to add missing parts to version.
-	# 6: e.g. 1.2.4
-	# 12: nightly builds
-	# 11: i1 releases
-	V=$(VERSION) ; V=$${V//./, } ; V=$${V//i/, 1} ; V=$${V//b/, 2} ; V=$${V//p/0} ; \
-	if [ $${#V} -eq 6 ]; then V+=", 0"; fi ; \
-	if [ $${#V} -eq 12 ]; then V+=", 0"; fi ; \
-	if [ $${#V} -eq 11 ]; then V+="00"; fi ; \
-	sed "s/%VERSION%/$(VERSION)/g;s/%YEAR%/$$(date +%Y)/g" check_mk_agent.rc.in > check_mk_agent.rc ; \
-	sed -i "s/%PVERSION%/$$V/g" check_mk_agent.rc
 
 crash.exe: crash.cc Makefile
 	$(CXX) -o $@ $<

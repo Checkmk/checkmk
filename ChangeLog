@@ -9,10 +9,15 @@
     * 0943 FIX: if.include: fixed incorrect traffic percentage values in the check output of if checks...
 
     WATO:
+    * 0168 f5_bigip_pool: Added Wato configuration...
     * 0990 FIX: Fix HTTP error handling in bulk inventory...
+    * 1004 FIX: Fix exception when saving rules, caused by empty item
 
     Livestatus:
     * 0988 FIX: livedump: Fix exception in case no contact groups are defined for a service
+
+    HW/SW-Inventory:
+    * 0167 FIX: mk_inventory.linux: Changed field separator from pipe to tab...
 
 
 1.2.5i4:

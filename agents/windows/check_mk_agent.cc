@@ -78,7 +78,8 @@
 //  | Declarations of macrosk, structs and function prototypes             |
 //  '----------------------------------------------------------------------'
 
-#define CHECK_MK_VERSION "1.2.5i5"
+const char *check_mk_version = CHECK_MK_VERSION;
+
 #define CHECK_MK_AGENT_PORT 6556
 #define SERVICE_NAME "Check_MK_Agent"
 #define KiloByte 1024
@@ -3158,7 +3159,7 @@ void section_check_mk(SOCKET &out)
 {
     crash_log("<<<check_mk>>>");
     output(out, "<<<check_mk>>>\n");
-    output(out, "Version: %s\n", CHECK_MK_VERSION);
+    output(out, "Version: %s\n", check_mk_version);
     output(out, "BuildDate: %s\n", __DATE__);
 #ifdef ENVIRONMENT32
     output(out, "Architecture: 32bit\n");
@@ -4310,12 +4311,13 @@ void output(SOCKET &out, const char *format, ...)
 void usage()
 {
     fprintf(stderr, "Usage: \n"
-            "check_mk_agent version -- show version " CHECK_MK_VERSION " and exit\n"
+            "check_mk_agent version -- show version %s and exit\n"
             "check_mk_agent install -- install as Windows NT service Check_Mk_Agent\n"
             "check_mk_agent remove  -- remove Windows NT service\n"
             "check_mk_agent adhoc   -- open TCP port %d and answer request until killed\n"
             "check_mk_agent test    -- test output of plugin, do not open TCP port\n"
-            "check_mk_agent debug   -- similar to test, but with lots of debug output\n", g_port);
+            "check_mk_agent debug   -- similar to test, but with lots of debug output\n", 
+            check_mk_version, g_port);
     exit(1);
 }
 
@@ -4556,7 +4558,7 @@ void cleanup()
 
 void show_version()
 {
-    printf("Check_MK_Agent version %s\n", CHECK_MK_VERSION);
+    printf("Check_MK_Agent version %s\n", check_mk_version);
 }
 
 void get_agent_dir(char *buffer, int size)

@@ -154,7 +154,6 @@ setversion:
 	    fi ; \
 	done ; \
         sed -i 's/say "Version: .*"/say "Version: $(NEW_VERSION)"/' agents/check_mk_agent.openvms
-	sed -i 's/#define CHECK_MK_VERSION .*/#define CHECK_MK_VERSION "'$(NEW_VERSION)'"/' agents/windows/check_mk_agent.cc ; \
 	sed -i 's/!define CHECK_MK_VERSION .*/!define CHECK_MK_VERSION "'$(NEW_VERSION)'"/' agents/windows/installer.nsi ; \
 	sed -ri 's/^(VERSION[[:space:]]*= *).*/\1'"$(NEW_VERSION)/" agents/windows/Makefile ; \
 	sed -i 's/^AC_INIT.*/AC_INIT([MK Livestatus], ['"$(NEW_VERSION)"'], [mk@mathias-kettner.de])/' livestatus/configure.ac ; \
@@ -162,7 +161,7 @@ setversion:
 	sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' doc/treasures/mknotifyd ; \
 	sed -i 's/^VERSION=.*/VERSION='"$(NEW_VERSION)"'/' scripts/setup.sh ; \
 	echo 'check-mk_$(NEW_VERSION)-1_all.deb net optional' > debian/files ; \
-	cd agents/windows ; rm *.exe ; make ; cd ../.. ; \
+	cd agents/windows ; rm check_mk_agent.exe check_mk_agent-64.exe ; make ; cd ../.. ; \
 	cp agents/windows/install_agent.exe check-mk-agent-$(NEW_VERSION).exe
 
 headers:

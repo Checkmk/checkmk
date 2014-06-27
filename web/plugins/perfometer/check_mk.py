@@ -885,6 +885,8 @@ def perfometer_mq_queues(row, command, perf):
     return "%s Messages" % size, perfometer_logarithmic(size, 1, 2, "#701141")
 
 perfometers['check_mk-mq_queues'] = perfometer_mq_queues
+perfometers['check_mk-websphere_mq_channels'] = perfometer_mq_queues
+perfometers['check_mk-websphere_mq_queues'] = perfometer_mq_queues
 
 def perfometer_apc_mod_pdu_modules(row, check_command, perf_data):
     value = int(savefloat(perf_data[0][1]) * 100)

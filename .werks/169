@@ -1,0 +1,8 @@
+Title: websphere_mq_channels,ebsphere_mq_queues: New Checks to monitor IBM Websphere MQ Queues and Channels
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1403866324
+Class: feature
+
+This new checks are plugin based and can be used to monitor the Queue Status and Message Counts of Channels and Queues.

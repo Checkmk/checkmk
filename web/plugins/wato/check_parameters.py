@@ -523,6 +523,20 @@ register_check_parameters(
     "first",
 )
 
+register_check_parameters(
+    subgroup_applications,
+    "websphere_mq",
+    _("Maximum number of messages in Websphere Message Queues"),
+    Tuple(
+      title = _('Maximum number of messages'),
+          elements = [
+             Integer(title = _("Warning if above") ),
+             Integer(title = _("Critical if above") ),
+          ]
+    ),
+    TextAscii(title = _("Name of Channel or Queue")),
+    None,
+) 
 
 register_check_parameters(
     subgroup_applications,

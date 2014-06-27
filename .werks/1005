@@ -1,0 +1,8 @@
+Title: Fix exception when using pretty-print output format
+Level: 1
+Component: inv
+Version: 1.2.5i5
+Date: 1403851360
+Class: fix
+
+

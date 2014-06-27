@@ -18,6 +18,7 @@
 
     HW/SW-Inventory:
     * 0167 FIX: mk_inventory.linux: Changed field separator from pipe to tab...
+    * 1005 FIX: Fix exception when using pretty-print output format
 
 
 1.2.5i4:

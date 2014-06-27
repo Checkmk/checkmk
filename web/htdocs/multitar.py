@@ -105,6 +105,7 @@ def get_file_content(the_tarfile, filename):
         tar = tarfile.open(the_tarfile, "r")
     return tar.extractfile(filename).read()
 
+
 def extract_domains(tar, domains):
     import subprocess
     tar_domains = {}
@@ -180,7 +181,14 @@ def extract_domains(tar, domains):
             full_path = "%s/%s" % (domain["prefix"], path)
             if os.path.exists(full_path):
                 if what == "dir":
-                    wipe_directory(full_path)
+                    exclude_files = []
+                    for pattern in domain.get("exclude", []):
+                        if "*" in pattern:
+                            import glob
+                            exclude_files.extend(glob.glob("%s/%s/%s" % (domain["prefix"], path, pattern)))
+                        else:
+                            exclude_files.append("%s/%s/%s" % (domain["prefix"], path, pattern))
+                    cleanup_dir(full_path, exclude_files)
                 else:
                     os.remove(full_path)
         return []
@@ -218,6 +226,7 @@ def extract_domains(tar, domains):
             if "post_restore" in domain:
                 return domain["post_restore"]()
         return []
+
 
     total_errors = []
     for what, abort_on_error, handler in [
@@ -275,6 +284,35 @@ def extract(tar, components):
         # Extract without use of temporary files
         subtar = tarfile.open(fileobj = subtarstream)
         subtar.extractall(target_dir)
+
+# Try to cleanup everything starting from the root_path
+# except the specific exclude files
+def cleanup_dir(root_path, exclude_files = []):
+    paths_to_remove = []
+    files_to_remove = []
+    for path, dirnames, filenames in os.walk(root_path):
+        for dirname in dirnames:
+            pathname = "%s/%s" % (path, dirname)
+            for entry in exclude_files:
+                if entry.startswith(pathname):
+                    break
+            else:
+                paths_to_remove.append(pathname)
+        for filename in filenames:
+            filepath = "%s/%s" % (path, filename)
+            if filepath not in exclude_files:
+                files_to_remove.append(filepath)
+
+    paths_to_remove.sort()
+    files_to_remove.sort()
+
+    for path in paths_to_remove:
+        if os.path.exists(path) and os.path.isdir(path):
+            shutil.rmtree(path)
+
+    for filename in files_to_remove:
+        if os.path.dirname(filename) not in paths_to_remove:
+            os.remove(filename)
 
 def wipe_directory(path):
     for entry in os.listdir(path):

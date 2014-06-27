@@ -1,0 +1,8 @@
+Title: hp_blade_psu: Fixed pnp template
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1403880223
+Class: fix
+
+Fixed pnp template in order to work with rrd storage type multipe

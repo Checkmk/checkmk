@@ -38,16 +38,20 @@ endif
 
 all: install_agent.exe install_agent-64.exe
 
+.PHONY: inc_build_version
+
+
 # -----------------------------------------------------------------------------
 # 1. Create ressource files with version and product information. Note: That file
 # contains a dummy version number, which is later being replaced with the
 # actual version number, during 'make version'
 # -----------------------------------------------------------------------------
-check_mk_agent.rc: check_mk_agent.rc.in
-	BUILD_VERSION=$$(cat build_version ; echo $$(( $$(cat build_version) + 1 )) > build_version.new && mv build_version.new build_version) ; \
+inc_build_version:
+	echo $$(( $$(cat build_version) + 1 )) > build_version.new && mv build_version.new build_version
+	BUILD_VERSION=$$(cat build_version) ; \
 	   sed -e "s/%VERSION%/$(VERSION_DUMMY)/g" \
 	       -e "s/%YEAR%/$$(date +%Y)/g" \
-	       -e "s/%BUILD_VERSION%/$$BUILD_VERSION/g" $< > $@
+	       -e "s/%BUILD_VERSION%/$$BUILD_VERSION/g" check_mk_agent.rc.in > check_mk_agent.rc
 
 check_mk_agent.res: check_mk_agent.rc
 	$(WINDRES) $< -O coff -o $@
@@ -60,10 +64,14 @@ check_mk_agent-64.res: check_mk_agent.rc
 # 2. Compile the Windows agent from the sources, without a specific version
 # number. Instead a placeholder is being used as version.
 # -----------------------------------------------------------------------------
-check_mk_agent.unversioned.exe: check_mk_agent.cc check_mk_agent.res
+check_mk_agent.unversioned.exe: check_mk_agent.cc
+	$(MAKE) inc_build_version
+	$(MAKE) check_mk_agent.res
 	$(CXX) $(COPTIONS) -o $@ $< check_mk_agent.res -lwsock32
 
-check_mk_agent-64.unversioned.exe: check_mk_agent.cc check_mk_agent-64.res
+check_mk_agent-64.unversioned.exe: check_mk_agent.cc
+	$(MAKE) inc_build_version
+	$(MAKE) check_mk_agent-64.res
 	$(CXX_64) $(COPTIONS) -o $@ $< check_mk_agent-64.res -lwsock32
 
 

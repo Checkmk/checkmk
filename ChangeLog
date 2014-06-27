@@ -15,6 +15,9 @@
     Livestatus:
     * 0988 FIX: livedump: Fix exception in case no contact groups are defined for a service
 
+    HW/SW-Inventory:
+    * 0946 FIX: hw/sw inventory: fixed display bug for byte fields with the value 0...
+
 
 1.2.5i4:
     Core & Setup:

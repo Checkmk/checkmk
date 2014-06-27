@@ -4,6 +4,7 @@
             NOTE: Please refer to the migration notes!
 
     Checks & Agents:
+    * 0168 f5_bigip_pool: Added Wato configuration...
     * 0995 raritan_pdu_outletcount: new check for outlet count of Raritan PX-2000 family PDUs
     * 0994 FIX: agent plugin smart: fixed syntax error
     * 0989 FIX: logwatch.ec: Fix forwarding multiple messages via syslog/TCP...
@@ -14,7 +15,6 @@
     * 0945 FIX: Sidebar snapin "Problem hosts": Now excludes hosts and services in downtime
 
     WATO:
-    * 0168 f5_bigip_pool: Added Wato configuration...
     * 0990 FIX: Fix HTTP error handling in bulk inventory...
     * 1004 FIX: Fix exception when saving rules, caused by empty item
 

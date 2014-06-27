@@ -1,6 +1,6 @@
 Title: f5_bigip_pool: Added Wato configuration
 Level: 1
-Component: wato
+Component: checks
 Version: 1.2.5i5
 Date: 1403790534
 Class: feature

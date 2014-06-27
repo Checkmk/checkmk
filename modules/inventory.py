@@ -152,8 +152,6 @@ def inv_cleanup_tree(tree):
 
 
 def do_inv(hostnames):
-    if inventory_pprint_output:
-        import pprint
 
     if not os.path.exists(inventory_output_dir):
         os.makedirs(inventory_output_dir)
@@ -244,6 +242,7 @@ def do_inv_for(hostname, ipaddress):
     inv_cleanup_tree(g_inv_tree)
 
     if inventory_pprint_output:
+        import pprint
         r = pprint.pformat(g_inv_tree)
     else:
         r = repr(g_inv_tree)

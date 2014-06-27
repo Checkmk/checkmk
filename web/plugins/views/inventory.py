@@ -501,7 +501,7 @@ def inv_paint_bytes(b):
     if b == None:
         return "", _("unknown")
     elif b == 0:
-        return "0"
+        return "number", "0"
 
     units = [ 'B', 'kB', 'MB', 'GB', 'TB' ]
     i = 0

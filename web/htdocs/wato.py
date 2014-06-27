@@ -11556,7 +11556,10 @@ def mode_edit_ruleset(phase):
     hostname = html.var("host", "")
     if not item:
         if html.has_var("item"):
-            item = mk_eval(html.var("item"))
+            try:
+                item = mk_eval(html.var("item"))
+            except:
+                item = NO_ITEM
         else:
             item = NO_ITEM
 

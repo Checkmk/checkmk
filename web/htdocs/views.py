@@ -2780,6 +2780,9 @@ def cmp_simple_string(column, r1, r2):
     v1, v2 = r1.get(column, ''), r2.get(column, '')
     return cmp_insensitive_string(v1, v2)
 
+def cmp_num_split(column, r1, r2):
+    return cmp(num_split(r1[column]), num_split(r2[column]))
+
 def cmp_string_list(column, r1, r2):
     v1 = ''.join(r1.get(column, []))
     v2 = ''.join(r2.get(column, []))

@@ -1310,7 +1310,7 @@ def show_hosts(folder):
 
     html.write("<h3>" + _("Hosts") + "</h3>")
     hostnames = folder[".hosts"].keys()
-    hostnames.sort()
+    hostnames.sort(cmp = lambda a, b: cmp(num_split(a), num_split(b)))
     search_text = html.var("search")
 
     # Helper function for showing bulk actions. This is needed at the bottom
@@ -3493,7 +3493,7 @@ def search_hosts_in_folder(folder, crit):
 
     if found:
         render_folder_path(folder, True)
-        found.sort()
+        found.sort(cmp = lambda a,b: cmp(num_split(a[0]), num_split(b[0])))
 
         table.begin("search_hosts", "");
         for hostname, host, effective in found:

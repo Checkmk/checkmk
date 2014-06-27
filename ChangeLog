@@ -12,6 +12,7 @@
     * 0944 FIX: oracle_tablespaces: fixed calculation of space left and number of remaining increments...
 
     Multisite:
+    * 1013 Sort host names naturally, e.g. foobar11 comes after foobar2...
     * 0945 FIX: Sidebar snapin "Problem hosts": Now excludes hosts and services in downtime
 
     WATO:

@@ -96,11 +96,8 @@ multisite_sorters["hoststate"] = {
 }
 
 def cmp_site_host(r1, r2):
-    c = cmp(r1["site"], r2["site"])
-    if c != 0:
-        return c
-    else:
-        return cmp_simple_string("host_name", r1, r2)
+    return cmp(r1["site"], r2["site"]) or \
+           cmp_num_split("host_name", r1, r2)
 
 multisite_sorters["site_host"] = {
     "title"   : _("Host"),
@@ -221,7 +218,7 @@ multisite_sorters['svc_perf_val10'] = {
 
 
 # Host
-declare_1to1_sorter("alias",                  cmp_simple_string)
+declare_1to1_sorter("alias",                  cmp_num_split)
 declare_1to1_sorter("host_address",           cmp_ip_address)
 declare_1to1_sorter("host_plugin_output",     cmp_simple_string)
 declare_1to1_sorter("host_perf_data",         cmp_simple_string)

@@ -1,0 +1,12 @@
+Title: Sort host names naturally, e.g. foobar11 comes after foobar2
+Level: 2
+Component: multisite
+Version: 1.2.5i5
+Date: 1403855030
+Class: feature
+
+Hostnames are now sorted naturally. That means that sequences of numbers
+are being interpreted as numbers. This also works for host names that
+have the form of an IPv4 address, e.g. <tt>10.1.1.5</tt> is now correctly
+sorted before <tt>10.1.1.11</tt> and <tt>srv17_3</tt> comes before <tt>src17_108</tt>.
+This new sorting is implemented in the status GUI and also in WATO.

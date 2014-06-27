@@ -1,0 +1,8 @@
+Title: check_traceroute: Fix option Use DNS, worked vice versa
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1403860140
+Class: fix
+
+

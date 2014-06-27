@@ -1154,6 +1154,7 @@ multisite_builtin_views.update({
                     'host_tags',
                     'hostalias',
                     'host_favorites',
+                    'host_num_services',
                 ],
                 'sorters': [],
                 'title': _('Host search'),

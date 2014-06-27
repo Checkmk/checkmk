@@ -14,6 +14,7 @@
 
     Multisite:
     * 1013 Sort host names naturally, e.g. foobar11 comes after foobar2...
+    * 1033 New Mutisite filter for the number of services a host has...
     * 0945 FIX: Sidebar snapin "Problem hosts": Now excludes hosts and services in downtime
 
     WATO:

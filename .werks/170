@@ -1,0 +1,8 @@
+Title: hp_proliant_power: New check to monitor the Power Meter on Prolaint Servers and iLO Boards
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1403871902
+Class: feature
+
+

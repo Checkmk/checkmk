@@ -375,6 +375,7 @@ def perfometer_power(row, check_command, perf_data):
 perfometers["check_mk-dell_poweredge_amperage.power"] = perfometer_power
 perfometers["check_mk-dell_chassis_power"] = perfometer_power
 perfometers["check_mk-dell_chassis_powersupplies"] = perfometer_power
+perfometers["check_mk-hp-proliant_power"] = perfometer_power
 
 def perfometer_users(row, check_command, perf_data):
     state = row["service_state"]

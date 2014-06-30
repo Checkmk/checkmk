@@ -31,24 +31,29 @@ body.main {
     padding: 0;
 }
 
+body.main table.header {
+    padding: 5px 5px 10px 5px;
+}
+
 div#dashboard {
-    padding: 0px;
-    margin: 0px;
+    position: absolute;
+    padding: 0;
+    margin: 0;
 }
 
 
 div.dashlet {
     position: absolute;
-    padding: 0px;
-    margin: 0px;
+    padding: 0;
+    margin: 0;
     display: none;
 }
 
 /* content area of dashlet, if no iframes are used */
 div.dashlet div.dashlet_inner {
     position: absolute;
-    padding: 0px;
-    margin: 0px;
+    padding: 0;
+    margin: 0;
     top: 21px;
     left: 11px;
 }
@@ -288,6 +293,11 @@ div.dashlet.edit .anchor.anchor3 {
 .sizer {
     position: absolute;
     border: 1px solid #666;
+    cursor: auto;
+}
+
+.sizer:hover {
+    cursor: pointer;
 }
 
 .sizer0 {
@@ -413,4 +423,51 @@ div.dashlet.edit .anchor.anchor3 {
 
 .sizer1.anchor0.grow:before, .sizer1.anchor1.grow:before {
     background-image: url(images/dashlet_arrow_b_grow.png);
+}
+
+.sizer_lbl {
+    position: absolute;
+    border: 1px solid #666;
+    background-color: #fff;
+    color: #000;
+    padding: 2px;
+    cursor: auto;
+}
+
+.sizer_lbl0 {
+    width: auto;
+    height: 17px;
+}
+
+.sizer_lbl1 {
+    height: auto;
+    width: 17px;
+}
+
+/* left side */
+.sizer_lbl1.anchor0,
+.sizer_lbl1.anchor3 {
+    left: 5px;
+    top: 50%;
+}
+
+/* right side */
+.sizer_lbl1.anchor1,
+.sizer_lbl1.anchor2 {
+    right: 15px;
+    top: 50%;
+}
+
+/* top side */
+.sizer_lbl0.anchor0,
+.sizer_lbl0.anchor1 {
+    left: 50%;
+    top: 5px;
+}
+
+/* bottom side */
+.sizer_lbl0.anchor2,
+.sizer_lbl0.anchor3 {
+    left: 50%;
+    bottom: 10px;
 }

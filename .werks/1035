@@ -1,0 +1,18 @@
+Title: Do not fail on errors in *.mk files anymore - except in interactive mode
+Level: 2
+Component: core
+State: unknown
+Version: 1.2.5i4p1
+Date: 1404121324
+Class: fix
+
+If a syntax error in <tt>main.mk</tt> or other <tt>*.mk</tt> files occurs,
+Check_MK used to abort any operation. This is nasty when for example a new
+variable that has been introduced in a new version is not known in an older
+version of Check_MK and thus after a version downgrade the configuration
+cannot be activated any more.
+
+The behaviour has now changed so that in case of such an error Check_MK will only
+abort in <i>interactive</i> mode, i.e. if the standard output is a terminal.
+That means that WATO will always try to activate Changes. You can force the
+old behaviour by adding the new option <tt>--interactive</tt>.

@@ -34,7 +34,7 @@ function getAllPsuFiles($path) {
   $files = array();
   if($h = opendir($path)) {
 		while(($file = readdir($h)) !== false) {
-      if(preg_match('/^PSU_[0-9]+\.rrd$/', $file, $aRet))
+      if(preg_match('/^PSU_[0-9]+_output\.rrd$/', $file, $aRet))
         $files[] = $aRet[0];
     }
 		natcasesort($files);

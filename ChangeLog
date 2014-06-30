@@ -1,4 +1,7 @@
 1.2.4p5:
+    Core & Setup:
+    * 1035 FIX: Do not fail on errors in *.mk files anymore - except in interactive mode...
+
     Checks & Agents:
     * 0994 FIX: agent plugin smart: fixed syntax error
     * 0989 FIX: logwatch.ec: Fix forwarding multiple messages via syslog/TCP...

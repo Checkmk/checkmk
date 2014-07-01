@@ -51,13 +51,15 @@ def dashlet_overview(params):
 
     html.write('</tr></table>')
 
-dashlets["overview"] = {
-    "title"       : _("Overiew / Introduction"),
+dashlet_types["overview"] = {
+    "title"       : _("Overview / Introduction"),
     "description" : _("Displays an introduction and Check_MK logo."),
     "render"      : dashlet_overview,
     "allowed"     : config.builtin_role_ids,
+    "selectable"  : False, # can not be selected using the dashboard editor
 }
 
+#.
 #   .--MK-Logo-------------------------------------------------------------.
 #   |               __  __ _  __     _                                     |
 #   |              |  \/  | |/ /    | |    ___   __ _  ___                 |
@@ -73,13 +75,15 @@ def dashlet_mk_logo(params):
     html.write('<a href="http://mathias-kettner.de/check_mk.html">'
      '<img style="margin-right: 30px;" src="images/check_mk.trans.120.png"></a>')
 
-dashlets["mk_logo"] = {
+dashlet_types["mk_logo"] = {
     "title"       : _("Check_MK Logo"),
     "description" : _("Shows the Check_MK logo."),
     "render"      : dashlet_mk_logo,
     "allowed"     : config.builtin_role_ids,
+    "selectable"  : False, # can not be selected using the dashboard editor
 }
 
+#.
 #   .--Globes/Stats--------------------------------------------------------.
 #   |       ____ _       _                  ______  _        _             |
 #   |      / ___| | ___ | |__   ___  ___   / / ___|| |_ __ _| |_ ___       |
@@ -120,12 +124,14 @@ def dashlet_hoststats(params):
 
     render_statistics(html.var('id', "hoststats"), "hosts", table, filter)
 
-dashlets["hoststats"] = {
+dashlet_types["hoststats"] = {
     "title"       : _("Host Statistics"),
     "description" : _("Displays statistics about host states as globe and a table."),
     "render"      : dashlet_hoststats,
     "refresh"     : 60,
     "allowed"     : config.builtin_role_ids,
+    "size"        : (30, 18),
+    "resizable"   : False,
 }
 
 def dashlet_servicestats(params):
@@ -184,12 +190,14 @@ def dashlet_servicestats(params):
     render_statistics(html.var('id', "servicestats"), "services", table, filter)
 
 
-dashlets["servicestats"] = {
+dashlet_types["servicestats"] = {
     "title"       : _("Service Statistics"),
     "description" : _("Displays statistics about service states as globe and a table."),
     "render"      : dashlet_servicestats,
     "refresh"     : 60,
     "allowed"     : config.builtin_role_ids,
+    "size"        : (30, 18),
+    "resizable"   : False,
 }
 
 def render_statistics(pie_id, what, table, filter):
@@ -314,6 +322,7 @@ if (has_canvas_support()) {
 }
 """ % { "x" : pie_diameter / 2, "y": pie_diameter/2, "d" : pie_diameter, 'p': '\n'.join(pie_parts) })
 
+#.
 #   .--PNP-Graph-----------------------------------------------------------.
 #   |         ____  _   _ ____        ____                 _               |
 #   |        |  _ \| \ | |  _ \      / ___|_ __ __ _ _ __ | |__            |
@@ -325,39 +334,61 @@ if (has_canvas_support()) {
 #   | Renders a single performance graph                                   |
 #   '----------------------------------------------------------------------'
 
-def render_pnpgraph(site, host, service = None, source = 0, view = 0):
-    if not host:
-        html.message("Invalid URL to this dashlet. Missing <tt>host</tt>")
-        return;
+def dashlet_pnpgraph(params):
+    service = params.get('service')
     if not service:
         service = "_HOST_"
 
+    site = params.get('site')
     if not site:
         base_url = defaults.url_prefix
     else:
         base_url = html.site_status[site]["site"]["url_prefix"]
     base_url += "pnp4nagios/index.php/"
-    var_part = "?host=%s&srv=%s&view=0&source=%d&view=%d&theme=multisite&_t=%d" % \
-            (pnp_cleanup(host), pnp_cleanup(service), source, view, int(time.time()))
+    var_part = "?host=%s&srv=%s&source=0&view=%s&theme=multisite&_t=%d" % \
+            (pnp_cleanup(params['host']), pnp_cleanup(service), params['timerange'], int(time.time()))
 
     pnp_url = base_url + "graph" + var_part
     img_url = base_url + "image" + var_part
     html.write('<a href="%s"><img border=0 src="%s"></a>' % (pnp_url, img_url))
 
-def dashlet_pnpgraph(params):
-    render_pnpgraph(
-        html.var("site"), html.var("host"), html.var("service"),
-        int(html.var("source", 0)), int(html.var("view", 0)),
-    )
-
-dashlets["pnpgraph"] = {
+dashlet_types["pnpgraph"] = {
     "title"       : _("Performance Graph"),
     "description" : _("Displays a performance graph of a host or service."),
     "render"      : dashlet_pnpgraph,
     "refresh"     : 60,
+    "size"        : (60, 21),
     "allowed"     : config.builtin_role_ids,
+    "opt_params"  : [ "service" ],
+    "parameters"  : [
+        ("site", DropdownChoice(
+            title = _('Site'),
+            choices = config.sorted_sites,
+        )),
+        ("host", TextAscii(
+            title = _('Hostname'),
+        )),
+        ("service", TextAscii(
+            title = _('Service Description'),
+        )),
+        ("timerange", DropdownChoice(
+            default_value = '1',
+            choices= [
+                ("0", _("4 Hours")),  ("1", _("25 Hours")),
+                ("2", _("One Week")), ("3", _("One Month")),
+                ("4", _("One Year")),
+            ],
+        )),
+    ],
+    "styles": """
+.dashlet.pnpgraph .dashlet_inner {
+    background-color: #fff;
+    text-align: center;
+}
+""",
 }
 
+#.
 #   .--nodata--------------------------------------------------------------.
 #   |                                  _       _                           |
 #   |                  _ __   ___   __| | __ _| |_ __ _                    |
@@ -374,20 +405,64 @@ def dashlet_nodata(params):
     html.write(html.var("message", _("No data available.")))
     html.write("</div></div>")
 
-dashlets["nodata"] = {
-    "title"       : _("Display a static text"),
+dashlet_types["nodata"] = {
+    "title"       : _("Static text"),
     "description" : _("Displays a static text to the user."),
     "render"      : dashlet_nodata,
     "allowed"     : config.builtin_role_ids,
 }
 
+#.
+#   .--View----------------------------------------------------------------.
+#   |                      __     ___                                      |
+#   |                      \ \   / (_) _____      __                       |
+#   |                       \ \ / /| |/ _ \ \ /\ / /                       |
+#   |                        \ V / | |  __/\ V  V /                        |
+#   |                         \_/  |_|\___| \_/\_/                         |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
 def dashlet_view_url(params):
     return "view.py?view_name=%s&display_options=HRSIXL&_display_options=HRSIXL&_body_class=dashlet" % \
             (params['view_name'])
 
-dashlets["view"] = {
-    "title"          : _("Display a Multisite View"),
+dashlet_types["view"] = {
+    "title"          : _("View"),
     "description"    : _("Displays a the content of a Multisite view."),
     "iframe_urlfunc" : dashlet_view_url,
     "allowed"        : config.builtin_role_ids,
+}
+
+#.
+#   .--Custom URL----------------------------------------------------------.
+#   |         ____          _                    _   _ ____  _             |
+#   |        / ___|   _ ___| |_ ___  _ __ ___   | | | |  _ \| |            |
+#   |       | |  | | | / __| __/ _ \| '_ ` _ \  | | | | |_) | |            |
+#   |       | |__| |_| \__ \ || (_) | | | | | | | |_| |  _ <| |___         |
+#   |        \____\__,_|___/\__\___/|_| |_| |_|  \___/|_| \_\_____|        |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def dashlet_url(params):
+    return params['url']
+
+dashlet_types["url"] = {
+    "title"          : _("Custom URL"),
+    "description"    : _("Displays the content of a custom website."),
+    "iframe_urlfunc" : dashlet_url,
+    "allowed"        : config.builtin_role_ids,
+    "parameters"  : [
+        ("title", TextUnicode(
+            title = _('Title'),
+            size = 50,
+        )),
+        ("url", TextAscii(
+            title = _('URL'),
+            size = 50,
+        )),
+    ],
 }

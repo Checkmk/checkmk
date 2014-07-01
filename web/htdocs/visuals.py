@@ -472,6 +472,8 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None, create_hand
           "language. You can configure the localizations <a href=\"%s\">in the global settings</a>.") % url)
 
     html.button("save", _("Save"))
+    html.hidden_fields()
+    html.end_form()
 
     if try_handler:
         html.write(" ")

@@ -54,14 +54,10 @@ div.dashlet div.dashlet_inner {
     position: absolute;
     padding: 0;
     margin: 0;
-    top: 21px;
-    left: 11px;
 }
 
 /* Dashlets with "background" set to True */
-div.dashlet div.dashlet_inner.background {
-    /* background-image: url("images/form_background.png"); */
-    /* background-repeat: repeat; */
+.dashlet .dashlet_inner.background {
     background-color: #cbd6da;
 }
 
@@ -187,7 +183,7 @@ div.dashlet div.nograph div.msg {
  * Dashboard editing
  */
 
-div#dashboard #controls_toggle {
+#controls_toggle {
     z-index: 150;
     position: absolute;
     right: 0px;
@@ -197,12 +193,12 @@ div#dashboard #controls_toggle {
     border-radius: 5px;
 }
 
-div#dashboard #controls_toggle .iconbutton {
+#controls_toggle .iconbutton {
     width: 33px;
     height: 31px;
 }
 
-div#dashboard #controls {
+#controls, ul.sub {
     z-index: 180;
     display: block;
     position: absolute;
@@ -219,16 +215,36 @@ div#dashboard #controls {
     box-shadow:         1px 1px 1px 1px #000;
 }
 
-div#dashboard #controls a {
+#controls a {
     display: block;
-    padding: 5px 10px;
+    padding: 5px 15px;
     text-align: left;
     text-decoration: none;
 }
 
-div#dashboard #controls a:hover {
+#controls a:hover {
     text-decoration: underline;
 }
+
+#controls li.sublink > a:before {
+    position: absolute;
+    left: 7px;
+    width: 6px;
+    height: 10px;
+    margin-top: 3px;
+    background-image: url(images/dashboard_menuarrow.png);
+    background-repeat: no-repeat;
+    content: " ";
+}
+
+/* submenu */
+
+#controls ul.sub {
+    bottom: 5px;
+    right: 210px;
+}
+
+/* dashlet controls */
 
 div.dashlet.edit .controls {
     z-index: 100;

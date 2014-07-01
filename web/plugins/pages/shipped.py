@@ -80,6 +80,8 @@ pagehandlers.update({
    "nagios_action"            : actions.ajax_action,
    "edit_dashboards"          : dashboard.page_edit_dashboards,
    "edit_dashboard"           : dashboard.page_edit_dashboard,
+   "edit_dashlet"             : dashboard.page_edit_dashlet,
+   "ajax_dashlet_pos"         : dashboard.page_ajax_dashlet_pos,
    "dashboard"                : dashboard.page_dashboard,
    "dashboard_dashlet"        : dashboard.ajax_dashlet,
    "ajax_userdb_sync"         : userdb.ajax_sync,

@@ -417,6 +417,14 @@ def allsites():
                   if not site(name).get("disabled", False)
                      and site(name)['socket'] != 'disabled' ] )
 
+def sorted_sites():
+    sitenames = []
+    for sitename, site in allsites().iteritems():
+        sitenames.append((sitename, site['alias']))
+    sitenames = sorted(sitenames, key=lambda k: k[1], cmp = lambda a,b: cmp(a.lower(), b.lower()))
+
+    return sitenames
+
 def site(name):
     s = sites.get(name, {})
     # Now make sure that all important keys are available.

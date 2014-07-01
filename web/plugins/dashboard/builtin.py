@@ -34,9 +34,7 @@ builtin_dashboards["main"] = {
             "title"      : _("Host Statistics"),
             "type"       : 'hoststats',
             "position"   : (1, 1),
-            "size"       : (30, 18),
             "shadow"     : True,
-            "background" : True,
             "refresh"    : 60,
             "parameters" : {},
         },
@@ -44,9 +42,7 @@ builtin_dashboards["main"] = {
             "title"      : _("Service Statistics"),
             "url"        : "dashlet_servicestats.py",
             "position"   : (31, 1),
-            "size"       : (30, 18),
             "shadow"     : True,
-            "background" : True,
             "refresh"    : 60,
             "parameters" : {},
         },
@@ -86,6 +82,7 @@ if defaults.omd_site:
                           "hierarchical map."),
         "dashlets" : [
             {
+                "type"             : "url",
                 "title"            : "Topology of Site " + defaults.omd_site,
                 "iframe"           : defaults.url_prefix + 'nagvis/frontend/nagvis-js/index.php?' + \
                                      'mod=Map&header_template=on-demand-filter&header_menu=1&label_show=1' + \

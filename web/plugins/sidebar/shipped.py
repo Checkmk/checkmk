@@ -406,13 +406,7 @@ def render_sitestatus():
     if config.is_multisite():
         html.write("<table cellspacing=0 class=sitestate>")
 
-        # Sort the list of sitenames by sitealias
-        sitenames = []
-        for sitename, site in config.allsites().iteritems():
-            sitenames.append((sitename, site['alias']))
-        sitenames = sorted(sitenames, key=lambda k: k[1], cmp = lambda a,b: cmp(a.lower(), b.lower()))
-
-        for sitename, sitealias in sitenames:
+        for sitename, sitealias in config.sorted_sites():
             site = config.site(sitename)
             if sitename not in html.site_status or "state" not in html.site_status[sitename]:
                 state = "missing"

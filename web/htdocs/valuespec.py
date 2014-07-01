@@ -1970,14 +1970,19 @@ class Timerange(CascadingDropdown):
 
 class PNPTimerange(Timerange):
     def __init__(self, **kwargs):
+        choosable = [
+            ("0", _("4 Hours")),  ("1", _("25 Hours")),
+            ("2", _("One Week")), ("3", _("One Month")),
+            ("4", _("One Year")),
+        ]
+
+        if kwargs.get('allow_all', True):
+            choosable.append(("", _("All")))
+
         kwargs['choices'] = [
             ('pnp_view', _("PNP View"), DropdownChoice(
                 default_value = '1',
-                choices = [
-                    ("0", _("4 Hours")),  ("1", _("25 Hours")),
-                    ("2", _("One Week")), ("3", _("One Month")),
-                    ("4", _("One Year")), ("", _("All"))
-                ],
+                choices = choosable,
             )),
         ]
         Timerange.__init__(self, **kwargs)

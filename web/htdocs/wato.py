@@ -11267,12 +11267,14 @@ def mode_users(phase):
 
         # Online/Offline
         if config.save_user_access_times:
-            if user.get('last_seen', 0) >= online_threshold:
+            last_seen = user.get('last_seen', 0)
+            if last_seen >= online_threshold:
                 title = _('Online')
                 img_txt = 'on'
             else:
                 title = _('Offline')
                 img_txt = 'off'
+            title += ' (%s %s)' % (fmt_date(last_seen), fmt_time(last_seen))
             table.cell(_("Act."), '<img class=icon title="%s" src="images/icon_%sline.png" />' % (title, img_txt))
 
         # Connector

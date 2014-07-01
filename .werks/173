@@ -1,0 +1,8 @@
+Title: hitachi_hnas_volume: Fixed bug when snmp outputs empty lines
+Level: 1
+Component: checks
+Version: 1.2.5i4p1
+Date: 1404217488
+Class: fix
+
+

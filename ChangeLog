@@ -9,6 +9,7 @@
     * 0989 FIX: logwatch.ec: Fix forwarding multiple messages via syslog/TCP...
     * 0943 FIX: if.include: fixed incorrect traffic percentage values in the check output of if checks...
     * 1032 FIX: check_traceroute: Fix option Use DNS, worked vice versa
+    * 0173 FIX: hitachi_hnas_volume: Fixed bug when snmp outputs empty lines
 
     Multisite:
     * 1036 FIX: doc/treasures/downtime: fix --url option, better error output

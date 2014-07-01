@@ -859,8 +859,6 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration,
                 html.write('<td onmouseover="timeline_hover(%d, 1);" onmouseout="timeline_hover(%d, 0);" '
                            'style="width: %.1f%%" title="%s" class="%s"></td>' % (
                            row_nr, row_nr, width, html.attrencode(title), css))
-    if chaos_count > 1:
-        output_chaos_period(chaos_begin, chaos_end, chaos_count, chaos_width)
     html.write('</tr></table>')
 
     if style == "inline":

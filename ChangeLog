@@ -6,6 +6,7 @@
     * 0994 FIX: agent plugin smart: fixed syntax error
     * 0989 FIX: logwatch.ec: Fix forwarding multiple messages via syslog/TCP...
     * 0943 FIX: if.include: fixed incorrect traffic percentage values in the check output of if checks...
+    * 1037 FIX: bintec_info: support bintec RXL12500
 
     Multisite:
     * 1036 FIX: doc/treasures/downtime: fix --url option, better error output

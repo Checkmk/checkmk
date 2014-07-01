@@ -10,6 +10,7 @@
     * 0943 FIX: if.include: fixed incorrect traffic percentage values in the check output of if checks...
     * 1032 FIX: check_traceroute: Fix option Use DNS, worked vice versa
     * 0173 FIX: hitachi_hnas_volume: Fixed bug when snmp outputs empty lines
+    * 1037 FIX: bintec_info: support bintec RXL12500
 
     Multisite:
     * 1036 FIX: doc/treasures/downtime: fix --url option, better error output

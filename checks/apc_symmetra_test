@@ -64,8 +64,8 @@ def check_apc_test(item, params, info):
     DiagnosticsResults = saveint(line[0])
     LastDiagnosticsDate = line[1]
 
-    if LastDiagnosticsDate == 'Unkown':
-        return 3, "Date of last self test is unkown"
+    if LastDiagnosticsDate == 'Unknown':
+        return 3, "Date of last self test is unknown"
 
     month, day, year = map(saveint, LastDiagnosticsDate.split('/'))
     last_diag_date = datetime.date( year, month, day)

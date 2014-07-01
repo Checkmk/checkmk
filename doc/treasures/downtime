@@ -41,40 +41,40 @@ the script only supports cookie based login - no HTTP basic
 authentication.
 
 Before you use this script, please read:
-http://mathias-kettner.de/checkmk_multisite_automation.html 
-You need to create an automation user - best with the name 'automation' 
-- and make sure that this user either has the admin role or is contact 
+http://mathias-kettner.de/checkmk_multisite_automation.html
+You need to create an automation user - best with the name 'automation'
+- and make sure that this user either has the admin role or is contact
 for all relevant objects.
 
 Options:
-  -v, --verbose    Show what's going on
+  -v, --verbose    Show what's going on (specify twice for more verbose output)
   -s, --set        Set downtime (this is the default and thus optional)
   -r, --remove     Remove all downtimes from that host/service
   -c, --comment    Comment for the downtime (otherwise "Automatic downtime")
   -d, --duration   Duration of the downtime in minutes (default: 120)
   -h, --help       Show this help and exit
   -u, --user       Name of automation user (default: "automation")
-  -S, --secret     Automation secret (default: read from user settings) 
+  -S, --secret     Automation secret (default: read from user settings)
   -U, --url        Base-URL of Multisite (default: guess local OMD site)
   -a, --all        Include all services when setting/removing host downtime
 """)
 
 
-short_options = 'vhrsc:d:u:S:a'
-long_options = [ "help", "set", "remove", "comment=", 
+short_options = 'vhrsc:d:u:S:aU:'
+long_options = [ "help", "set", "remove", "comment=", "url=",
                  "duration=", "user=", "secret=", "all" ]
 
-opt_all = False
-opt_verbose = False
-opt_mode = 'set'
-opt_command = "Automatic downtime"
-opt_user = "automation"
-opt_secret = None
-opt_url = None
+opt_all      = False
+opt_verbose  = 0
+opt_mode     = 'set'
+opt_comment  = "Automatic downtime"
+opt_user     = "automation"
+opt_secret   = None
+opt_url      = None
 opt_duration = 120
-if omd_site:
-    opt_url = "http://localhost/" + omd_site + "/check_mk/"
 
+if omd_site:
+    opt_url = "http://localhost/" + omd_site + "/check_mk/" 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
 except getopt.GetoptError, err:
@@ -90,7 +90,7 @@ for o,a in opts:
 
     # Modifiers
     elif o in [ '-v', '--verbose']:
-        opt_verbose = True
+        opt_verbose += 1
     elif o in [ '-a', '--all']:
         opt_all = True
     elif o in [ '-s', '--set']:
@@ -116,6 +116,10 @@ if omd_site and not opt_secret:
         bail_out("Cannot read automation secret from user %s: %s" % 
             (opt_user, e))
 
+elif not omd_site and not opt_secret:
+    bail_out("Please specify the automation secret for the user '%s'!" % opt_user)
+
+
 if not opt_url:
     bail_out("Please specify the URL to Check_MK Multisite with -U.")
 
@@ -138,7 +142,7 @@ if arg_services:
     verbose("Services:      " + " ".join(arg_services))
 verbose("Multisite-URL: " + opt_url)
 verbose("User:          " + opt_user)
-verbose("Secret:        " + opt_secret)
+verbose("Secret:        " + (opt_secret or "(none specified)"))
 
 def make_url(base, variables):
     vartext = "&".join([ "%s=%s" % e for e in variables ])
@@ -174,8 +178,14 @@ def set_downtime(variables, add_vars):
     verbose("URL:           " + url)
     try:
         pipe = urllib.urlopen(url)
-        l = len(pipe.readlines())
-        verbose(" --> Got %d lines of response" % l)
+        lines = pipe.readlines()
+        verbose(" --> Got %d lines of response" % len(lines))
+        if opt_verbose > 1:
+            for line in lines:
+                verbose("OUTPUT: %s" % line.rstrip())
+        for line in lines:
+            if line.startswith('<div class=error>'):
+                bail_out(line[17:].split('<')[0])
     except Exception, e:
         bail_out("Cannot call Multisite URL: %s" % e)
 

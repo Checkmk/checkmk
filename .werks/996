@@ -1,0 +1,9 @@
+Title: apc_symmetra_test: Handle unknown date of last self test as intended
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1404126301
+Class: fix
+
+If the date of last self test is reported to be unknown, up to now
+the check broke. Now unknow status is handled as intended.

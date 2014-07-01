@@ -346,7 +346,7 @@ def ajax_openclose():
 
 def ajax_snapin():
     # Update online state of the user (if enabled)
-    userdb.update_user_access_time()
+    userdb.update_user_access_time(config.user_id)
 
     snapname = html.var("name")
     if snapname:

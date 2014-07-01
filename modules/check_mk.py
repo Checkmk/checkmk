@@ -4376,9 +4376,6 @@ def do_snmptranslate(walk):
             for idx, line in enumerate(result):
                 result_lines.append((line, lines[idx]))
 
-            # Add missing fields one by one
-            for line in lines[len(result_lines):]:
-                result_lines.extend(translate([line]))
         except Exception, e:
             print e
 
@@ -4386,17 +4383,21 @@ def do_snmptranslate(walk):
 
 
     # Translate n-oid's per cycle
-    entries_per_cycle = 50
+    entries_per_cycle = 500
     translated_lines = []
 
     walk_lines = file(path_walk).readlines()
-    sys.stderr.write("Processing %d lines (%d per dot)\n" %  (len(walk_lines), entries_per_cycle))
-    for i in range(0, len(walk_lines), entries_per_cycle):
-        sys.stderr.write(".")
+    sys.stderr.write("Processing %d lines.\n" %  len(walk_lines))
+
+    i = 0
+    while i < len(walk_lines):
+        sys.stderr.write("\r%d to go...    " % (len(walk_lines) - i))
         sys.stderr.flush()
         process_lines = walk_lines[i:i+entries_per_cycle]
-        translated_lines.extend(translate(process_lines))
-    sys.stderr.write("\n")
+        translated = translate(process_lines)
+        i += len(translated)
+        translated_lines += translated
+    sys.stderr.write("\rfinished.                \n")
 
     # Output formatted
     longest_translation = 40

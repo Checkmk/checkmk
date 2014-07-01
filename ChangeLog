@@ -2,6 +2,7 @@
     Core & Setup:
     * 1012 Fix quoting of backslashes in custom checks with nagios core...
             NOTE: Please refer to the migration notes!
+    * 1038 Massive speedup of cmk --snmptranslate
     * 1035 FIX: Do not fail on errors in *.mk files anymore - except in interactive mode...
 
     Checks & Agents:

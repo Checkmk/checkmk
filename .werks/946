@@ -1,0 +1,9 @@
+Title: hw/sw inventory: fixed display bug for byte fields with the value 0
+Level: 2
+Component: inv
+Class: fix
+State: unknown
+Version: 1.2.5i5
+Date: 1403862812
+
+There was an exception for fields represented in bytes when the value was set to 0.

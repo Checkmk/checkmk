@@ -202,10 +202,15 @@ def check_oracle_tablespaces(item, params, info):
                         incsize = int(line[8]) # size of next increment in blocks
                         if incsize == 1:
                             uses_default_increment = True
-                        incs = free_bl / incsize
+
+                        incs, rest = divmod(free_bl, incsize)
+                        if rest:
+                            incs += 1
+
                         num_increments += incs
-                        increment_size += blocksize * incsize * incs
-                        free_space += blocksize * (incsize * incs + (int(line[12])))
+                        increment_size += blocksize * incsize * incs - rest * blocksize
+                        free_space += blocksize * (incsize * incs + (int(line[12]))) - rest * blocksize
+
                     # not autoextensible: take current size as maximum
                     else:
                         my_max_size = blocksize * int(line[5])

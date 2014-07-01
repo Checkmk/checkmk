@@ -3,7 +3,7 @@ Level: 2
 Component: wato
 Version: 1.2.5i3
 Date: 1401449745
-Class: feature
+Class: security
 
 The upload of insecure snapshots has been disabled per default, because those
 snapshots represent a security risk if their content were modified willingly or unwillingly.

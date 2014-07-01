@@ -1,0 +1,28 @@
+Title: Fix code injection for logged in users via automation url
+Level: 2
+Component: wato
+Class: incomp
+State: unknown
+Version: 1.2.5i4
+Date: 1401195677
+
+This fixes CVSS 9.3 AV:N/AC:M/Au:N/C:C/I:C/A:C. The description:
+
+<i>The check_mk applications uses insecure API calls, which allow an attacker
+to execute arbitrary code on the server by issuing just a single URL. The
+reason for this is the usage of the insecure "pickle" API call. Apparently
+this was modified as a security means from a former version, which used
+"eval"-like structures with untrusted input data. Anyhow, as the python API
+documentation clearly state, "pickle" should be considered unsafe as well,
+see: <tt>https://docs.python.org/2/library/pickle.html</tt>.</i>
+
+The fix replaces <tt>pickle<tt> with a module called <tt>ast</tt>. Unfortunately
+this module is not available on Centos/RedHat 5.X and Debian 5. On these
+systems WATO still uses <tt>pickle</tt>, even with this fix.
+
+<b>Note:</b> This change makes the current Check_MK versions incompatible
+to older versions.  In a mixed environment with old and new Check_MK versions or with old
+and newer Python versions you have to force WATO to use the old
+unsafe method by setting <tt>wato_legacy_eval = True<tt> in <tt>multisite.mk</tt>.
+This can also be done with the new global WATO setting <i>Use unsafe legacy
+encoding for distributed WATO</i>.

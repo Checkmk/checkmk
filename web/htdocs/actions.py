@@ -34,7 +34,7 @@ def ajax_action():
         if action == "reschedule":
             action_reschedule()
         else:
-            raise MKGeneralException("Invalid action '%s'" % action)
+            raise MKGeneralException("Invalid action.")
     except Exception, e:
         html.write("['ERROR', %r]\n" % str(e))
 

@@ -40,6 +40,7 @@ wato_write_nagvis_auth         = False
 wato_use_git                   = False
 wato_hidden_users              = []
 wato_user_attrs                = []
+wato_legacy_eval               = False
 
 def tag_alias(tag):
     for entry in wato_host_tags:

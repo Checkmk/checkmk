@@ -20,8 +20,8 @@ then
     
     # List of RPM packages in same format
     if type rpm >/dev/null; then
-        echo "<<<lnx_packages:sep(124):persist($UNTIL)>>>"
-        rpm -qa --qf '%{NAME}|%{VERSION}|%{ARCH}|rpm|%{SUMMARY}|\n'
+        echo "<<<lnx_packages:sep(9):persist($UNTIL)>>>"
+        rpm -qa --qf '%{NAME}\t%{VERSION}\t%{ARCH}\trpm\t%{SUMMARY}\t-\n'
     fi
     
     # Information about distribution

@@ -1,6 +1,6 @@
 #!/bin/bash
-SITE=${SITE:-$(cat ../.site)}
-SITE=${SITE:-$(omd sites --bare | sort | head -n 1)}
+SITE=${SITE:-$(cat ../.site 2>/dev/null || true)}
+SITE=${SITE:-$(omd sites --bare | head -n 1)}
 OMD_ROOT=/omd/sites/${SITE}
 
 for dir in web checks pnp-templates

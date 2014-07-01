@@ -365,6 +365,19 @@ def regex(r):
     return rx
 
 
+# Splits a word into sequences of numbers and non-numbers.
+# Creates a tuple from these where the number are converted
+# into int datatype. That way a naturual sort can be
+# implemented.
+def num_split(s):
+    if not s:
+        return ()
+    elif s[0].isdigit():
+        first_num = regex("[^0-9]").split(s)[0]
+        return ( int(first_num), ) + num_split(s[len(first_num):])
+    else:
+        first_word = regex("[0-9]").split(s)[0]
+        return ( first_word, ) + num_split(s[len(first_word):])
 
 
 __builtin__.default_user_localizations = {

@@ -64,7 +64,8 @@ int main(int argc, char** argv)
             remote_host = argv[i+1];
             i++;
             argc_count -= 2;
-        } else if (!strcmp("-a", argv[i])) {
+        }
+        else if (!strcmp("-a", argv[i])) {
             ignore_acknowledged = true;
             argc_count--;
         }
@@ -72,7 +73,8 @@ int main(int argc, char** argv)
             host        = argv[i];
             application = argv[i+1];
             break;
-        } else if (argc_count > 1) {
+        }
+        else if (argc_count > 1) {
             host        = argv[i];
             break;
         }
@@ -104,9 +106,9 @@ int main(int argc, char** argv)
     int sock;
     struct timeval tv;
     if (remote_host) {
-        sock = socket(AF_INET ,SOCK_STREAM ,0);
+        sock = socket(AF_INET, SOCK_STREAM, 0);
         tv.tv_sec = 10;
-        setsockopt(sock, SOL_SOCKET,SO_RCVTIMEO, (struct timeval *)&tv, sizeof(struct timeval));
+        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (struct timeval *)&tv, sizeof(struct timeval));
 
         struct sockaddr_in addr;
         memset(&addr, 0, sizeof(addr));
@@ -114,12 +116,14 @@ int main(int argc, char** argv)
         inet_aton(remote_hostaddress, &addr.sin_addr);
         addr.sin_port = htons(remote_port);
 
-        if(0 > connect(sock, (struct sockaddr*) &addr, sizeof(struct sockaddr_in))){
+        if (0 > connect(sock, (struct sockaddr*) &addr, sizeof(struct sockaddr_in)))
+        {
             printf("UNKNOWN - Cannot connect to event daemon via TCP %s:%d (%s)\n",
                    remote_hostaddress, remote_port, strerror(errno));
             exit(3);
         }
-    } else {
+    }
+    else {
         sock = socket(PF_LOCAL, SOCK_STREAM , 0);
         if (sock < 0) {
             printf("UNKNOWN - Cannot create client socket: %s\n", strerror(errno));

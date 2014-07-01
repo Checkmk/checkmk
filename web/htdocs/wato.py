@@ -1060,12 +1060,20 @@ def get_folder_permissions_of_users(users):
 
     users = userdb.load_users()
     for username in users.iterkeys():
-        permissions[username] = {}
+        perms = {}
         for folder_path, folder in folders.iteritems():
-            permissions[username][folder_path] = {
-                'read':  check_folder_permissions(folder, 'read', False, username, users) == True,
-                'write': check_folder_permissions(folder, 'write', False, username, users) == True,
-            }
+            readable = check_folder_permissions(folder, 'read', False, username, users) == True
+            writable = check_folder_permissions(folder, 'write', False, username, users) == True
+
+            if readable or writable:
+                perms[folder_path] = {}
+                if readable:
+                    perms[folder_path]['read'] = True
+                if writable:
+                    perms[folder_path]['write'] = True
+
+        if perms:
+            permissions[username] = perms
     return permissions
 
 def check_folder_permissions(folder, how, exception=True, user = None, users = None):
@@ -1302,7 +1310,7 @@ def show_hosts(folder):
 
     html.write("<h3>" + _("Hosts") + "</h3>")
     hostnames = folder[".hosts"].keys()
-    hostnames.sort()
+    hostnames.sort(cmp = lambda a, b: cmp(num_split(a), num_split(b)))
     search_text = html.var("search")
 
     # Helper function for showing bulk actions. This is needed at the bottom
@@ -3485,7 +3493,7 @@ def search_hosts_in_folder(folder, crit):
 
     if found:
         render_folder_path(folder, True)
-        found.sort()
+        found.sort(cmp = lambda a,b: cmp(num_split(a[0]), num_split(b[0])))
 
         table.begin("search_hosts", "");
         for hostname, host, effective in found:
@@ -11259,12 +11267,14 @@ def mode_users(phase):
 
         # Online/Offline
         if config.save_user_access_times:
-            if user.get('last_seen', 0) >= online_threshold:
+            last_seen = user.get('last_seen', 0)
+            if last_seen >= online_threshold:
                 title = _('Online')
                 img_txt = 'on'
             else:
                 title = _('Offline')
                 img_txt = 'off'
+            title += ' (%s %s)' % (fmt_date(last_seen), fmt_time(last_seen))
             table.cell(_("Act."), '<img class=icon title="%s" src="images/icon_%sline.png" />' % (title, img_txt))
 
         # Connector
@@ -13464,7 +13474,10 @@ def mode_edit_ruleset(phase):
     hostname = html.var("host", "")
     if not item:
         if html.has_var("item"):
-            item = mk_eval(html.var("item"))
+            try:
+                item = mk_eval(html.var("item"))
+            except:
+                item = NO_ITEM
         else:
             item = NO_ITEM
 
@@ -16956,12 +16969,22 @@ def validate_all_hosts(hostnames, force_all = False):
 #   '----------------------------------------------------------------------'
 
 import base64
+try:
+    import ast
+except:
+    ast = None
 
 def mk_eval(s):
-    return pickle.loads(base64.b64decode(s))
+    if ast and not config.wato_legacy_eval:
+        return ast.literal_eval(base64.b64decode(s))
+    else:
+        return pickle.loads(base64.b64decode(s))
 
 def mk_repr(s):
-    return base64.b64encode(pickle.dumps(s))
+    if ast and not config.wato_legacy_eval:
+        return base64.b64encode(repr(s))
+    else:
+        return base64.b64encode(pickle.dumps(s))
 
 # Returns true when at least one folder is defined in WATO
 def have_folders():

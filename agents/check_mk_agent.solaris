@@ -92,7 +92,7 @@ function run_cached () {
 
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.5i4
+echo Version: 1.2.5i5
 echo AgentOS: solaris
 
 
@@ -124,6 +124,7 @@ done
 if type zfs &>/dev/null
 then
     echo '<<<zfsget>>>'
+    echo '[zfs]'
     zfs get -Hp name,quota,used,avail,mountpoint,type
     echo '[df]'
     df -l -k -F zfs 2>/dev/null | sed 1d

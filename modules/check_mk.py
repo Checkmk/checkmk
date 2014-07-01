@@ -37,6 +37,7 @@ g_profile_path = 'profile.out'
 
 if __name__ == "__main__":
     opt_debug        = '--debug' in sys.argv[1:]
+    opt_interactive  = '--interactive' in sys.argv[1:]
     opt_verbose      = '-v' in sys.argv[1:] or '--verbose' in sys.argv[1:]
     if '--profile' in sys.argv[1:]:
         import cProfile
@@ -48,6 +49,7 @@ if __name__ == "__main__":
 else:
     opt_verbose = False
     opt_debug = False
+    opt_interactive = False
 
 #.
 #   .--Pathnames-----------------------------------------------------------.
@@ -121,6 +123,12 @@ def verbose(t):
     if opt_verbose:
         sys.stderr.write(t)
         sys.stderr.flush()
+
+# Abort after an error, but only in interactive mode.
+def interactive_abort(error):
+    if sys.stdout.isatty() or opt_interactive:
+        sys.stderr.write(error + "\n")
+        sys.exit(1)
 
 
 # During setup a file called defaults is created in the modules
@@ -2411,7 +2419,7 @@ define service {
                 continue
 
             if command_line:
-                command_line = autodetect_plugin(command_line)
+                command_line = autodetect_plugin(command_line).replace("\\", "\\\\")
 
             if "freshness" in entry:
                 freshness = "  check_freshness\t\t1\n" + \
@@ -4368,9 +4376,6 @@ def do_snmptranslate(walk):
             for idx, line in enumerate(result):
                 result_lines.append((line, lines[idx]))
 
-            # Add missing fields one by one
-            for line in lines[len(result_lines):]:
-                result_lines.extend(translate([line]))
         except Exception, e:
             print e
 
@@ -4378,17 +4383,21 @@ def do_snmptranslate(walk):
 
 
     # Translate n-oid's per cycle
-    entries_per_cycle = 50
+    entries_per_cycle = 500
     translated_lines = []
 
     walk_lines = file(path_walk).readlines()
-    sys.stderr.write("Processing %d lines (%d per dot)\n" %  (len(walk_lines), entries_per_cycle))
-    for i in range(0, len(walk_lines), entries_per_cycle):
-        sys.stderr.write(".")
+    sys.stderr.write("Processing %d lines.\n" %  len(walk_lines))
+
+    i = 0
+    while i < len(walk_lines):
+        sys.stderr.write("\r%d to go...    " % (len(walk_lines) - i))
         sys.stderr.flush()
         process_lines = walk_lines[i:i+entries_per_cycle]
-        translated_lines.extend(translate(process_lines))
-    sys.stderr.write("\n")
+        translated = translate(process_lines)
+        i += len(translated)
+        translated_lines += translated
+    sys.stderr.write("\rfinished.                \n")
 
     # Output formatted
     longest_translation = 40
@@ -4741,6 +4750,9 @@ OPTIONS:
                  prevents DNS lookups.
   --usewalk      use snmpwalk stored with --snmpwalk
   --debug        never catch Python exceptions
+  --interactive  Some errors are only reported in interactive mode, i.e. if stdout
+                 is a TTY. This option forces interactive mode even if the output
+                 is directed into a pipe or file.
   --procs N      start up to N processes in parallel during --scan-parents
   --checks A,..  restrict checks/inventory to specified checks (tcp/snmp/check type)
   --keepalive    used by Check_MK Mirco Core: run check and --notify in continous
@@ -5615,11 +5627,10 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
             marks_hosts_with_path(_old_all_hosts, all_hosts, _f)
             marks_hosts_with_path(_old_clusters, clusters.keys(), _f)
         except Exception, e:
-            sys.stderr.write("Cannot read in configuration file %s:\n%s\n" % (_f, e))
-            if __name__ == "__main__":
-                sys.exit(3)
-            else:
+            if opt_debug:
                 raise
+            else:
+                interactive_abort("Cannot read in configuration file %s: %s" % (_f, e))
 
     # Strip off host tags from the list of all_hosts.  Host tags can be
     # appended to the hostnames in all_hosts, separated by pipe symbols,
@@ -5878,7 +5889,7 @@ def output_profile():
 # if check_mk is not called as module
 if __name__ == "__main__":
     short_options = 'ASHVLCURODMmd:Ic:nhvpXPNBil'
-    long_options = [ "help", "version", "verbose", "compile", "debug",
+    long_options = [ "help", "version", "verbose", "compile", "debug", "interactive",
                      "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
                      "flush", "package", "localize", "donate", "snmpwalk", "oid=", "extraoid=",
                      "snmptranslate", "bake-agents",
@@ -5944,6 +5955,8 @@ if __name__ == "__main__":
             opt_nowiki = True
         elif o == '--debug':
             opt_debug = True
+        elif o == '--interactive':
+            opt_interactive = True
         elif o == '-I':
             seen_I += 1
         elif o == "--checks":

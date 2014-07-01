@@ -9,7 +9,7 @@ description:
 
  State information is collected from the SNMP IF-MIB parameters {ifAdminStatus} and
  {ifOperStatus}. Laser information is collected from the FspR7-MIB parameters
- {currentPmSnapshotOutputPower} and {currentPmSnapshotInputPower}. 
+ {currentPmSnapshotOutputPower} and {currentPmSnapshotInputPower}.
 
  Lower warning and critical limits can be configured for the input (received)
  and output (transmit) power of the laser. Per default, not limits are imposed,

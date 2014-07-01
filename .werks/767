@@ -1,7 +1,7 @@
 Title: Signing and verification of WATO snapshot (addresses CVE-2014-2330)
 Level: 2
 Component: wato
-Class: fix
+Class: security
 State: unknown
 Version: 1.2.5i2
 Date: 1396346149

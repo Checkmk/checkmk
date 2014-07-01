@@ -519,6 +519,8 @@ class FilterNumberRange(Filter): # type is int
 declare_filter(232, FilterNumberRange("host_notif_number", _("Current Host Notification Number"), "host", "current_notification_number"))
 declare_filter(232, FilterNumberRange("svc_notif_number", _("Current Service Notification Number"), "service", "current_notification_number"))
 
+declare_filter(234, FilterNumberRange("host_num_services", _("Number of Services of the Host"), "host", "num_services"))
+
 
 
 # Filter for setting time ranges, e.g. on last_state_change and last_check

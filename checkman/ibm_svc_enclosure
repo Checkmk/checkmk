@@ -8,11 +8,12 @@ description:
  V7000 device.
 
  Returns {OK} if the Enclousure report status {online} and all Canisters and PSUs
- are online and {CRIT} otherwise.
+ are online and {CRIT} otherwise. If the firmware supports it then also fan modules
+ are being checked.
 
- Please note: You need the Special Agent agent_ibmsvc to retrieve the monitoring
+ Please note: You need the special agent {agent_ibmsvc} for retrieving the monitoring
  data from the device. Your monitoring user must be able to SSH to the device
- with SSH Key Authentification. Please exchange SSH key. The Special Agent itself
+ with SSH Key Authentification. Please exchange SSH key. The special agent itself
  can be configured by WATO.
 
 item:

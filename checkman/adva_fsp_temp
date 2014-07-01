@@ -48,7 +48,7 @@ examples:
  adva_fsp_temp_default_levels = {
      # range in minutes, default is no trend computation
      'trend_range': None,
-     'trend_c': (1, 5), 
+     'trend_c': (1, 5),
      'trend_timeleft': (240, 120),
  }
 

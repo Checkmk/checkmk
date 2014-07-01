@@ -1,0 +1,9 @@
+Title: Fix exception when saving rules, caused by empty item
+Level: 1
+Component: wato
+Class: fix
+State: unknown
+Version: 1.2.5i5
+Date: 1403850784
+
+

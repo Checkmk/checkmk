@@ -27,6 +27,7 @@
 $RRD = array();
 foreach ($NAME as $i => $n) {
     $RRD[$n] = "$RRDFILE[$i]:$DS[$i]:MAX";
+    $RRD_AVG[$n] = "$RRDFILE[$i]:$DS[$i]:AVERAGE";
     $WARN[$n] = $WARN[$i];
     $CRIT[$n] = $CRIT[$i];
     $MIN[$n]  = $MIN[$i];
@@ -40,7 +41,7 @@ $rightscale = 100.0 / $num_threads;
 
 $opt[1] = "--vertical-label 'Used CPU threads' --right-axis $rightscale:0 --right-axis-format '%4.1lf%%' --right-axis-label 'Utilization %' -l0  -ru $num_threads --title \"CPU Utilization for $hostname ($num_threads CPU threads)\" ";
 
-$def[1] =  "DEF:perc=$RRD[util] "
+$def[1] =  "DEF:perc=$RRD_AVG[util] "
          . "CDEF:util=perc,$num_threads,*,100,/ "
          ;
 
@@ -58,8 +59,8 @@ $def[1] .= "AREA:util#60f020:\"Utilization\:\" "
          ;
 
 
-if (isset($RRD["avg"])) {
-    $def[1] .= "DEF:aperc=$RRD[avg] ".
+if (isset($RRD_AVG["avg"])) {
+    $def[1] .= "DEF:aperc=$RRD_AVG[avg] ".
                "CDEF:avg=aperc,$num_threads,*,100,/ ".
                "LINE:avg#004000:\"Averaged\:   \" ".
                "GPRINT:aperc:LAST:\"%.1lf%%,\" ".

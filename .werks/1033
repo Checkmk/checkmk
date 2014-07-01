@@ -1,0 +1,12 @@
+Title: New Mutisite filter for the number of services a host has
+Level: 1
+Component: multisite
+Version: 1.2.5i5
+Date: 1403860884
+Class: feature
+
+This filter is available for all views but currently added only in
+the <i>Host search</i> view. It allows you to find hosts based on the
+number of services they have. That way you can find e.g. hosts where
+no service inventory has been done or your hosts that produce most
+of your services.

@@ -1,0 +1,9 @@
+Title: zfsget: Check is now usable in cluster_mode
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1404216186
+Class: feature
+
+Until now, it was not possible to move zfs filesystems to a check_mk defined cluster host. This is now possible. It was nescessary to rewrite
+the hole check logic, so it's possible that we introduced new bugs, so please double-check the output of the plugin. 

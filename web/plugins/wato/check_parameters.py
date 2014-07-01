@@ -523,6 +523,20 @@ register_check_parameters(
     "first",
 )
 
+register_check_parameters(
+    subgroup_applications,
+    "websphere_mq",
+    _("Maximum number of messages in Websphere Message Queues"),
+    Tuple(
+      title = _('Maximum number of messages'),
+          elements = [
+             Integer(title = _("Warning if above") ),
+             Integer(title = _("Critical if above") ),
+          ]
+    ),
+    TextAscii(title = _("Name of Channel or Queue")),
+    None,
+) 
 
 register_check_parameters(
     subgroup_applications,
@@ -3053,6 +3067,21 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "f5_pools",
+    _("F5 Loadbalancer Pools"),
+    Tuple(
+       title = _("Minimum number of pool members"),
+       elements = [
+           Integer( title = _("Warning if below"), unit=_("Members ")),
+           Integer( title = _("Critical if below"), unit=_("Members")),
+       ],
+    ),
+    TextAscii(title = _("Name of pool")),
+    "first"
+)
+
+register_check_parameters(
+    subgroup_applications,
     "dbsize",
     _("Size of MySQL/PostgresQL databases"),
     Optional(
@@ -4783,6 +4812,7 @@ register_check_parameters(subgroup_applications,
         help = _("Instead of using the regular logwatch check all lines received by logwatch can "
                  "be forwarded to a Check_MK event console daemon to be processed. The target event "
                  "console can be configured for each host in a separate rule."),
+        style = "dropdown",
         elements = [
             FixedValue(
                 "",

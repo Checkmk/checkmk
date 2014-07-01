@@ -1,0 +1,12 @@
+Title: Fix security issue in code of row selections (checkboxes) (CVSS 4.9 AV:N/AC:M/Au:S/C:N/I:P/A:P)
+Level: 2
+Component: multisite
+Class: security
+State: unknown
+Version: 1.2.5i4
+Date: 1401184643
+
+The fixed weakness was:
+
+The check_mk application does allow an attacker to write check_mk config files
+(.mk files) on arbitrary locations on the server filesystem.

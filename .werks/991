@@ -1,0 +1,8 @@
+Title: Availability: optionally show time stamps as UNIX epoch time
+Level: 1
+Component: reporting
+Version: 1.2.5i5
+Date: 1403699249
+Class: fix
+
+This makes it easier to compare availability timeline with actual log files.

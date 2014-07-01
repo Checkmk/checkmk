@@ -1,0 +1,8 @@
+Title: Fixed problem where user access times were not updated correctly
+Level: 1
+Component: wato
+Version: 1.2.5i5
+Date: 1404215789
+Class: fix
+
+

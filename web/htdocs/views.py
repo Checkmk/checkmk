@@ -1286,8 +1286,6 @@ def prepare_display_options():
         display_options = html.var("_display_options", "")
         display_options = apply_display_option_defaults(display_options)
         html.display_options = display_options
-        # Dont do this!! This garbles up the title links after a reload.
-        #html.title_display_options = display_options
 
     # But there is one special case: The sorter links! These links need to know
     # about the provided display_option parameter. The links could use
@@ -2781,6 +2779,9 @@ def cmp_ip_address(column, r1, r2):
 def cmp_simple_string(column, r1, r2):
     v1, v2 = r1.get(column, ''), r2.get(column, '')
     return cmp_insensitive_string(v1, v2)
+
+def cmp_num_split(column, r1, r2):
+    return cmp(num_split(r1[column]), num_split(r2[column]))
 
 def cmp_string_list(column, r1, r2):
     v1 = ''.join(r1.get(column, []))

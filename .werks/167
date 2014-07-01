@@ -1,0 +1,9 @@
+Title: mk_inventory.linux: Changed field separator from pipe to tab
+Level: 1
+Component: inv
+Version: 1.2.5i5
+Date: 1403774134
+Class: fix
+
+Some rpm packages using the pipe symbol as part of her description. Cause of this reason we need another internal separator.
+

@@ -1,0 +1,69 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<aix_diskiod>>>
+# hdisk3 0.9 237.0 9.1 1337054478 1628926522
+# hdisk5 0.9 237.1 8.8 1333731705 1633897629
+# hdisk7 0.9 256.2 10.1 1537047014 1669194644
+# hdisk6 0.9 236.6 9.1 1334163361 1626627852
+# hdisk2 0.9 237.6 9.1 1334458233 1639383130
+# hdisk9 0.8 239.4 9.3 1337740029 1658392394
+# hdisk8 0.9 238.3 8.9 1332262996 1649741796
+# hdisk4 0.9 237.4 8.8 1332426157 1638419364
+# hdisk13 0.5 238.1 8.3 394246756 2585031872
+# hdisk11 0.5 238.3 8.3 397601918 2584807275
+
+# Columns means:
+# 1. device
+# 2. % tm_act
+# 3. Kbps
+# 4. tps
+# 5. Kb_read    -> Kilobytes read since system boot
+# 6. Kb_wrtn    -> Kilobytes written since system boot
+
+def aix_diskiod_convert(info):
+    converted = []
+    for device, tm_act, kbps, tps, kb_read, kb_written in info:
+        converted.append((device, int(kb_read) * 1024, int(kb_written) * 1024))
+    return converted
+
+
+def inventory_aix_diskiod(info):
+    return inventory_diskstat_generic(aix_diskiod_convert(info))
+
+
+def check_aix_diskiod(item, params, info):
+    return check_diskstat_generic(item, params, time.time(), aix_diskiod_convert(info))
+
+check_info["aix_diskiod"] = {
+    'check_function':          check_aix_diskiod,
+    'inventory_function':      inventory_aix_diskiod,
+    'service_description':     'Disk IO %s',
+    'has_perfdata':            True,
+    'group':                   'disk_io',
+    'includes':                [ "diskstat.include" ],
+}
+

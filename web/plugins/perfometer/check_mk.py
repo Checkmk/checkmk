@@ -583,6 +583,7 @@ def perfometer_check_mk_diskstat(row, check_command, perf_data):
 perfometers["check_mk-diskstat"] = perfometer_check_mk_diskstat
 perfometers["check_mk-winperf_phydisk"] = perfometer_check_mk_diskstat
 perfometers["check_mk-hpux_lunstats"] = perfometer_check_mk_diskstat
+perfometers["check_mk-aix_diskiod"] = perfometer_check_mk_diskstat
 perfometers["check_mk-mysql.innodb_io"] = perfometer_check_mk_diskstat
 perfometers["check_mk-esx_vsphere_counters.diskio"] = perfometer_check_mk_diskstat
 perfometers["check_mk-emcvnx_disks"] = perfometer_check_mk_diskstat

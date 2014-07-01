@@ -1,0 +1,8 @@
+Title: fc_port: new check for fibre channel devices supporting the FCMGMT MIB
+Level: 2
+Component: checks
+Version: 1.2.5i4
+Date: 1404219274
+Class: feature
+
+

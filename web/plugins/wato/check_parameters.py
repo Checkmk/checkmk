@@ -5154,4 +5154,151 @@ register_check_parameters(
        allow_empty = False,
     ),
     "dict"
+),
+register_check_parameters(
+    subgroup_storage,
+    "fc_port",
+    _("FibreChannel Ports (FCMGMT MIB)"),
+    Dictionary(
+        elements = [
+            ("bw",
+              Alternative(
+                  title = _("Throughput levels"),
+                  help = _("Please note: in a few cases the automatic detection of the link speed "
+                           "does not work. In these cases you have to set the link speed manually "
+                           "below if you want to monitor percentage values"),
+                  elements = [
+                      Tuple(
+                        title = _("Used bandwidth of port relative to the link speed"),
+                        elements = [
+                            Percentage(title = _("Warning if above"), unit = _("percent")),
+                            Percentage(title = _("Critical if above"), unit = _("percent")),
+                        ]
+                    ),
+                    Tuple(
+                        title = _("Used Bandwidth of port in megabyte/s"),
+                        elements = [
+                            Integer(title = _("Warning if above"), unit = _("MByte/s")),
+                            Integer(title = _("Critical if above"), unit = _("MByte/s")),
+                        ]
+                    )
+                  ])
+            ),
+            ("assumed_speed",
+                Float(
+                    title = _("Assumed link speed"),
+                    help = _("If the automatic detection of the link speed does "
+                             "not work you can set the link speed here."),
+                    unit = _("GByte/s")
+                )
+            ),
+            ("rxcrcs",
+                Tuple (
+                    title = _("CRC errors rate"),
+                    elements = [
+                        Percentage( title = _("Warning if above"), unit = _("percent")),
+                        Percentage( title = _("Critical if above"), unit = _("percent")),
+                    ]
+               )
+            ),
+            ("rxencoutframes",
+                Tuple (
+                    title = _("Enc-Out frames rate"),
+                    elements = [
+                        Percentage( title = _("Warning if above"), unit = _("percent")),
+                        Percentage( title = _("Critical if above"), unit = _("percent")),
+                    ]
+                )
+            ),
+            ("notxcredits",
+                Tuple (
+                    title = _("No-TxCredits errors"),
+                    elements = [
+                        Percentage( title = _("Warning if above"), unit = _("percent")),
+                        Percentage( title = _("Critical if above"), unit = _("percent")),
+                    ]
+                )
+            ),
+            ("c3discards",
+                Tuple (
+                    title = _("C3 discards"),
+                    elements = [
+                        Percentage( title = _("Warning if above"), unit = _("percent")),
+                        Percentage( title = _("Critical if above"), unit = _("percent")),
+                    ]
+                )
+            ),
+            ("average",
+                Integer (
+                    title = _("Averaging"),
+                    help = _("If this parameter is set, all throughputs will be averaged "
+                           "over the specified time interval before levels are being applied. Per "
+                           "default, averaging is turned off. "),
+                   unit = _("minutes"),
+                   minvalue = 1,
+                   default_value = 5,
+                )
+            ),
+#            ("phystate",
+#                Optional(
+#                    ListChoice(
+#                        title = _("Allowed states (otherwise check will be critical)"),
+#                        choices = [ (1, _("unknown") ),
+#                                    (2, _("failed") ),
+#                                    (3, _("bypassed") ),
+#                                    (4, _("active") ),
+#                                    (5, _("loopback") ),
+#                                    (6, _("txfault") ),
+#                                    (7, _("nomedia") ),
+#                                    (8, _("linkdown") ),
+#                                  ]
+#                    ),
+#                    title = _("Physical state of port") ,
+#                    negate = True,
+#                    label = _("ignore physical state"),
+#                )
+#            ),
+#            ("opstate",
+#                Optional(
+#                    ListChoice(
+#                        title = _("Allowed states (otherwise check will be critical)"),
+#                        choices = [ (1, _("unknown") ),
+#                                    (2, _("unused") ),
+#                                    (3, _("ready") ),
+#                                    (4, _("warning") ),
+#                                    (5, _("failure") ),
+#                                    (6, _("not participating") ),
+#                                    (7, _("initializing") ),
+#                                    (8, _("bypass") ),
+#                                    (9, _("ols") ),
+#                                  ]
+#                    ),
+#                    title = _("Operational state") ,
+#                    negate = True,
+#                    label = _("ignore operational state"),
+#                )
+#            ),
+#            ("admstate",
+#                Optional(
+#                    ListChoice(
+#                        title = _("Allowed states (otherwise check will be critical)"),
+#                        choices = [ (1, _("unknown") ),
+#                                    (2, _("online") ),
+#                                    (3, _("offline") ),
+#                                    (4, _("bypassed") ),
+#                                    (5, _("diagnostics") ),
+#                                  ]
+#                    ),
+#                    title = _("Administrative state") ,
+#                    negate = True,
+#                    label = _("ignore administrative state"),
+#                )
+#            )
+        ]
+      ),
+    TextAscii(
+        title = _("port name"),
+        help = _("The name of the FC port"),
+    ),
+    "first"
 )

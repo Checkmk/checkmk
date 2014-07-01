@@ -7,6 +7,9 @@
     * 0989 FIX: logwatch.ec: Fix forwarding multiple messages via syslog/TCP...
     * 0943 FIX: if.include: fixed incorrect traffic percentage values in the check output of if checks...
 
+    Multisite:
+    * 1036 FIX: doc/treasures/downtime: fix --url option, better error output
+
     WATO:
     * 0990 FIX: Fix HTTP error handling in bulk inventory...
     * 1004 FIX: Fix exception when saving rules, caused by empty item

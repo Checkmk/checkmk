@@ -22,6 +22,7 @@
     * 0996 FIX: apc_symmetra_test: Handle unknown date of last self test as intended...
     * 0173 FIX: hitachi_hnas_volume: Fixed bug when snmp outputs empty lines
     * 1037 FIX: bintec_info: support bintec RXL12500
+    * 0948 FIX: mk_inventory.ps1: increased caching time to 14400, fixed incorrect default cachefile path
 
     Multisite:
     * 1013 Sort host names naturally, e.g. foobar11 comes after foobar2...

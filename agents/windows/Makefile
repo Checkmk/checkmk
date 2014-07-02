@@ -105,10 +105,10 @@ install_agent-64.exe: check_mk_agent-64.exe crash.exe nowin.exe
 
 
 
-crash.exe: crash.cc Makefile
+crash.exe: crash.cc
 	$(CXX) -o $@ $<
 
-nowin.exe: nowin.cc Makefile
+nowin.exe: nowin.cc
 	$(CXX) -o $@ $<
 
 clean:

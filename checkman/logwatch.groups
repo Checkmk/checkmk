@@ -4,8 +4,8 @@ catalog: os/files
 license: GPL
 distribution: check_mk
 description:
- This check is used to group multiple logfiles together. This is for example usefall in cases
- when a logrotation mechanism is in use, but there is no permanent name for the current logfile.
+ This check is used to group multiple logfiles together. This is usefull in cases when a logrotation mechanism is used,
+ with no permanent name for the current logfile.
 
  Please refer to to manpage of {{logwatch}} for more details about logfile monitoring.
 

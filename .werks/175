@@ -5,4 +5,6 @@ Version: 1.2.5i5
 Date: 1404305698
 Class: feature
 
+This check is used to group multiple logfiles together. This is usefull in cases when a logrotation mechanism is used,                 
+with no permanent name for the current logfile.
 

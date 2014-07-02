@@ -54,6 +54,7 @@ div.dashlet div.dashlet_inner {
     position: absolute;
     padding: 0;
     margin: 0;
+    overflow: hidden;
 }
 
 /* Dashlets with "background" set to True */

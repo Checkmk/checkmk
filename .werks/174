@@ -1,0 +1,8 @@
+Title: FIX: Fixed appending of --keepalive-fd parameters to checkhelps
+Level: 1
+Component: core
+Version: 1.2.5i5
+Date: 1404290005
+Class: fix
+
+through a bug in check_mk.py, every reload another dublicate --keepalive-fd parameters was added to the commandline.

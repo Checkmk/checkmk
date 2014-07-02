@@ -1,0 +1,44 @@
+title: ALLNET IP Sensoric: Temperature Sensors
+agents: allnet_ip_sensoric
+catalog: hw/environment/allnet
+license: GPL
+distribution: check_mk
+description:
+ Checks Temperature Sensors in ALLNET IP Sensoric devices.
+
+ The check returns {WARN} or {CRIT} if the temperature in degree celsius is higher
+ then given levels and {OK} otherwise.
+
+item:
+ If a name is reported for the sensor by the device: The name and the
+ sensor ID. Otherwise the sensor ID only.
+
+perfdata:
+ One value: The temperature in degree celsius, together with it's minimum and 
+ maximum and levels for warn and crit.
+
+inventory:
+ Creates one check for every Temperature Sensor (function = 1).
+
+examples:
+ # set default levels to 30 and 45 °C:
+ allnet_ip_sensoric_temp_default_levels = (30, 45)
+
+ # Check temperature of named sensor on a ALLNET IP Sensoric called sen01
+ # with default levels
+ checks += [
+   ("sen01", "allnet_ip_sensoric.temp", 'Temperatur Rack Sensor 11', allnet_ip_sensoric_temp_default_levels)
+ ]
+
+ # or use individual levels for warn and crit
+ checks += [
+   ("sen01", "allnet_ip_sensoric.temp", 'Temperatur Rack Sensor 11', (40, 50))
+ ]
+
+[parameters]
+parameters (int, int): temperature levels in degree celsius for {WARN} and {CRIT}
+
+[configuration]
+allnet_ip_sensoric_temp_default_levels (int, int): The standard levels
+    for {WARN} and {CRIT}, preset to (35, 40)
+

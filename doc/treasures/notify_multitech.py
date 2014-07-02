@@ -42,6 +42,9 @@
 # * Under
 #     SMS Services > Send SMS Users
 #   create a user for Check_MK. This one needs to be entered below.
+#   Make sure you choose a password, which is not longer than 8 characters.
+#   On the device it is possible to set a longer password, but authentication
+#   with it is impossible!! :-(
 #
 # * Do not forget to go to the "Save & Restart" tab and click "save" there.
 #   This writes your changes into the flash memory of the device. Otherwise

@@ -351,3 +351,30 @@ register_rule(group,
     factory_default = FACTORY_DEFAULT_UNUSED,
     match = "first")
 
+
+register_rule(group,
+    "special_agents:allnet_ip_sensoric",
+     Dictionary(
+        title = _("Check state of ALLNET IP Sensoric Devices"),
+        help = _("This rule selects the ALLNET IP Sensoric agent, which fetches "
+                 "/xml/sensordata.xml from the device by HTTP and extracts the "
+                 "needed monitoring information from this file."),
+        elements = [
+            ( "timeout",
+              Integer(
+                  title = _("Connection timeout"),
+                  help = _("The network timeout in seconds when communicating via HTTP. "
+                           "The default is 10 seconds."),
+                  default_value = 10,
+                  minvalue = 1,
+                  unit = _("seconds"),
+              )
+            ),
+        ],
+        optional_keys = [ "timeout" ],
+    ),
+    factory_default = FACTORY_DEFAULT_UNUSED, # No default, do not use setting if no rule matches
+    match = 'first')
+
+
+

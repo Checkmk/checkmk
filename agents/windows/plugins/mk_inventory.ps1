@@ -2,9 +2,9 @@ $name = (Get-Item env:\Computername).Value
 $separator = "|"
 # filename for timestamp
 $remote_host = $env:REMOTE_HOST
-$timestamp = "c:\Program Files (x86)\Check_mk\timestamp.$remote_host"
+$timestamp = "c:\Program Files (x86)\check_mk\timestamp.$remote_host"
 # execute agent only every $delay seconds
-$delay = 1
+$delay = 14400
 
 # does $timestamp exist?
 If (Test-Path $timestamp){

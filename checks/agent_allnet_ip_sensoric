@@ -1,3 +1,5 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -22,10 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-all: check_mkevents
+def agent_allnet_ip_sensoric_arguments(params, hostname, ipaddress):
+    args = ''
 
-check_mkevents: check_mkevents.cc
-	g++ -O2 -s -o check_mkevents check_mkevents.cc
+    if "timeout" in params:
+        args += ' --timeout %d' % params["timeout"]
 
-clean:
-	rm -f check_mkevents
+    args += " " + quote_shell_string(ipaddress)
+    return args
+
+special_agent_info['allnet_ip_sensoric'] = agent_allnet_ip_sensoric_arguments

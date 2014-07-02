@@ -487,3 +487,39 @@ div.dashlet.edit .anchor.anchor3 {
     left: 50%;
     bottom: 10px;
 }
+
+/* transparent resize areas for absolute sized */
+
+.resize {
+    position: absolute;
+}
+
+.resize0 {
+    height: 100%;
+    width: 5px;
+}
+
+.resize1 {
+    width: 100%;
+    height: 5px;
+}
+
+.resize0_0 {
+    left: 0;
+    cursor:w-resize;
+}
+
+.resize0_1 {
+    right: 0;
+    cursor:e-resize;
+}
+
+.resize1_0 {
+    top: 0;
+    cursor:n-resize;
+}
+
+.resize1_1 {
+    bottom: 0;
+    cursor:s-resize;
+}

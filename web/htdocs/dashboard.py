@@ -639,5 +639,6 @@ def check_ajax_update():
 def page_ajax_dashlet_pos():
     dashlet = check_ajax_update()
     dashlet['position'] = saveint(html.var('x')), saveint(html.var('y'))
+    dashlet['size']     = saveint(html.var('w')), saveint(html.var('h'))
     visuals.save('dashboards', dashboards)
     html.write('OK')

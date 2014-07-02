@@ -141,6 +141,29 @@ function getButton(event) {
     return (event.which < 2) ? "LEFT" : ((event.which == 2) ? "MIDDLE" : "RIGHT");
 }
 
+// Adds document/window global event handlers
+function add_event_handler(type, func) {
+    if (window.addEventListener) {
+        // W3 standard browsers
+        window.addEventListener(type, func, false);
+    }
+    else if (window.attachEvent) {
+        // IE<9
+        window.attachEvent("on" + type, func);
+    }
+    else {
+        window["on" + type] = func;
+    }
+}
+
+function prevent_default_events(event) {
+    if (event.preventDefault)
+        event.preventDefault();
+    if (event.stopPropagation)
+        event.stopPropagation();
+    event.returnValue = false;
+}
+
 function hilite_icon(oImg, onoff) {
     src = oImg.src;
     if (onoff == 0)

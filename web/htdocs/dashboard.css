@@ -266,6 +266,28 @@ div.dashlet.edit .controls {
     background-color: rgba(255, 255, 255, 0.5);
 }
 
+/* dashlet edit button */
+
+div.dashlet.edit .edit {
+    cursor: pointer;
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 5px;
+    left: 30px;
+
+    background-color: rgba(0, 0, 0, 0.7);
+    border-radius: 5px;
+
+    background-image: url(images/dashlet_edit_lo.png);
+}
+
+div.dashlet.edit .edit:hover {
+    background-image: url(images/dashlet_edit_hi.png);
+}
+
+/* position anchors */
+
 div.dashlet.edit .anchor {
     cursor: pointer;
     position: absolute;

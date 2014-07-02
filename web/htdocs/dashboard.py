@@ -231,7 +231,7 @@ def render_dashboard(name):
                         (display, _('Add dashlet')))
 
         html.write('<ul id="control_add_sub" class="menu sub" style="display:none">\n')
-        for ty, dashlet_type in dashlet_types.items():
+        for ty, dashlet_type in sorted(dashlet_types.items(), key = lambda x: x[1].get('sort_index', 0)):
             if dashlet_type.get('selectable', True):
                 html.write('<li><a href="%s">%s</a></li>\n' %
                     (html.makeuri([('type', ty), ('back', html.makeuri([]))], filename = 'edit_dashlet.py'),
@@ -316,7 +316,7 @@ def render_dashlet(nr, dashlet, wato_folder):
 
     # Optional way to render a dynamic iframe URL
     if "iframe_urlfunc" in dashlet_type:
-        dashlet["iframe"] = dashlet_type["iframe_urlfunc"](dashlet['parameters'])
+        dashlet["iframe"] = dashlet_type["iframe_urlfunc"](dashlet)
 
     # FIXME:
     if dashlet.get("reload_on_resize"):
@@ -484,10 +484,17 @@ def page_edit_dashlet():
     if not board:
         raise MKGeneralException(_('The name of the dashboard is missing.'))
 
-    ty    = html.var('type')
-    ident = html.var('id')
+    ty = html.var('type')
 
-    if not ident and not ty:
+    if html.has_var('id'):
+        try:
+            ident = int(html.var('id'))
+        except ValueError:
+            raise MKGeneralException(_('Invalid dashlet id'))
+    else:
+        ident = None
+
+    if ident == None and not ty:
         raise MKGeneralException(_('The ident of the dashlet is missing.'))
 
     load_dashboards()
@@ -496,7 +503,7 @@ def page_edit_dashlet():
         raise MKGeneralException(_('The requested dashboard does not exist.'))
     dashboard = available_dashboards[board]
 
-    if not ident:
+    if ident == None:
         mode    = 'add'
         title   = _('Add Dashlet')
         # Initial configuration
@@ -531,11 +538,17 @@ def page_edit_dashlet():
     vs_general = Dictionary(
         title = _('General'),
         render = 'form',
-        optional_keys = None,
+        optional_keys = ['title'],
         elements = [
             ('type', FixedValue(ty,
                 totext = dashlet_type['title'],
                 title = _('Dashlet Type'),
+            )),
+            ('background', Checkbox(
+                title = _('Colored Background'),
+                label = _('Render background'),
+                help = _('Render gray background color behind the dashlets content.'),
+                default_value = True,
             )),
             ('show_title', Checkbox(
                 title = _('Show Title'),
@@ -543,11 +556,12 @@ def page_edit_dashlet():
                 help = _('Render the titlebar including title and link above the dashlet.'),
                 default_value = True,
             )),
-            ('background', Checkbox(
-                title = _('Colored Background'),
-                label = _('Render background'),
-                help = _('Render gray background color behind the dashlets content.'),
-                default_value = True,
+            ('title', TextUnicode(
+                title = _('Custom Title'),
+                help = _('Most dashlets have a hard coded default title. For example the view snapin '
+                         'has even a dynamic title which defaults to the real title of the view. If you '
+                         'like to use another title, set it here.'),
+                size = 50,
             )),
         ],
     )
@@ -567,6 +581,9 @@ def page_edit_dashlet():
             general_properties = vs_general.from_html_vars('general')
             vs_general.validate_value(general_properties, 'general')
             dashlet.update(general_properties)
+            # Remove unset optional attributes
+            if 'title' not in general_properties and 'title' in dashlet:
+                del dashlet['title']
 
             if vs_type:
                 type_properties = vs_type.from_html_vars('type')

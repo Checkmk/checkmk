@@ -126,6 +126,7 @@ def dashlet_hoststats(params):
 
 dashlet_types["hoststats"] = {
     "title"       : _("Host Statistics"),
+    "sort_index"  : 45,
     "description" : _("Displays statistics about host states as globe and a table."),
     "render"      : dashlet_hoststats,
     "refresh"     : 60,
@@ -192,6 +193,7 @@ def dashlet_servicestats(params):
 
 dashlet_types["servicestats"] = {
     "title"       : _("Service Statistics"),
+    "sort_index"  : 50,
     "description" : _("Displays statistics about service states as globe and a table."),
     "render"      : dashlet_servicestats,
     "refresh"     : 60,
@@ -354,6 +356,7 @@ def dashlet_pnpgraph(params):
 
 dashlet_types["pnpgraph"] = {
     "title"       : _("Performance Graph"),
+    "sort_index"  : 20,
     "description" : _("Displays a performance graph of a host or service."),
     "render"      : dashlet_pnpgraph,
     "refresh"     : 60,
@@ -402,14 +405,21 @@ dashlet_types["pnpgraph"] = {
 
 def dashlet_nodata(params):
     html.write("<div class=nograph><div class=msg>")
-    html.write(html.var("message", _("No data available.")))
+    html.write(params.get("text"))
     html.write("</div></div>")
 
 dashlet_types["nodata"] = {
     "title"       : _("Static text"),
+    "sort_index"     : 100,
     "description" : _("Displays a static text to the user."),
     "render"      : dashlet_nodata,
     "allowed"     : config.builtin_role_ids,
+    "parameters"  : [
+        ("text", TextAscii(
+            title = _('Text'),
+            size = 50,
+        )),
+    ],
 }
 
 #.
@@ -430,6 +440,7 @@ def dashlet_view_url(params):
 
 dashlet_types["view"] = {
     "title"          : _("View"),
+    "sort_index"     : 10,
     "description"    : _("Displays a the content of a Multisite view."),
     "iframe_urlfunc" : dashlet_view_url,
     "allowed"        : config.builtin_role_ids,
@@ -452,14 +463,12 @@ def dashlet_url(params):
 
 dashlet_types["url"] = {
     "title"          : _("Custom URL"),
+    "sort_index"     : 80,
     "description"    : _("Displays the content of a custom website."),
     "iframe_urlfunc" : dashlet_url,
     "allowed"        : config.builtin_role_ids,
+    "size"           : (30, 10),
     "parameters"  : [
-        ("title", TextUnicode(
-            title = _('Title'),
-            size = 50,
-        )),
         ("url", TextAscii(
             title = _('URL'),
             size = 50,

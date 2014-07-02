@@ -505,6 +505,18 @@ function dashlet_toggle_edit(dashlet, edit) {
 
             controls.appendChild(anchor);
         }
+
+        // Add edit dashlet button
+        var edit = document.createElement('a');
+        edit.className = 'edit';
+        edit.onclick = function(dashlet_id, board_name) {
+            return function() {
+                location.href = 'edit_dashlet.py?name=' + board_name + '&id=' + dashlet_id;
+            };
+        }(id, dashboard_name);
+        controls.appendChild(edit);
+
+
     } else {
         // make the inner parts visible again
         remove_class(dashlet, 'edit');

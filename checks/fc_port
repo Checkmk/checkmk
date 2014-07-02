@@ -126,7 +126,6 @@ def inventory_fc_port(info):
 
 
 def check_fc_port(item, params, info):
-    print params
     # Accept item, even if port name has changed
     item_index = int(item.split()[0])
     portinfo = [ line for line in info if int(line[0]) == item_index + 1 ]

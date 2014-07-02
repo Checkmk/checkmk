@@ -1,0 +1,21 @@
+Title: quicksearch: now able to search for multiple hosts at once
+Level: 1
+Component: multisite
+Version: 1.2.5i5
+Date: 1404308868
+Class: feature
+
+In the quicksearch snapin you can now enter the following syntax
+C+:
+h:firsthost h:otherhost h:testhost
+C-:
+
+The quicksearch dropdown will show the matches for the given names (case insensitive, no exact match).
+If you want an exact hostname match you need to finish the name with $.<br>
+
+When you press enter a host search formular will show up with the hosts given in the quicksearch field.<br>
+The feature also works with host ip addresses<br>
+
+In the quicksearch dropdown you can mix hostnames and ipaddresses - they will both show up in the dropdown.
+However, the search formular is only able to display either one or the other.
+

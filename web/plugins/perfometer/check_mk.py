@@ -456,6 +456,7 @@ perfometers["check_mk-hpux_if"] = perfometer_check_mk_if
 perfometers["check_mk-mcdata_fcport"] = perfometer_check_mk_if
 perfometers["check_mk-esx_vsphere_counters.if"] = perfometer_check_mk_if
 perfometers["check_mk-hitachi_hnas_fc_if"] = perfometer_check_mk_if
+perfometers["check_mk-fc_port"] = perfometer_check_mk_if
 
 
 def perfometer_check_mk_brocade_fcport(row, check_command, perf_data):
@@ -583,6 +584,7 @@ def perfometer_check_mk_diskstat(row, check_command, perf_data):
 perfometers["check_mk-diskstat"] = perfometer_check_mk_diskstat
 perfometers["check_mk-winperf_phydisk"] = perfometer_check_mk_diskstat
 perfometers["check_mk-hpux_lunstats"] = perfometer_check_mk_diskstat
+perfometers["check_mk-aix_diskiod"] = perfometer_check_mk_diskstat
 perfometers["check_mk-mysql.innodb_io"] = perfometer_check_mk_diskstat
 perfometers["check_mk-esx_vsphere_counters.diskio"] = perfometer_check_mk_diskstat
 perfometers["check_mk-emcvnx_disks"] = perfometer_check_mk_diskstat

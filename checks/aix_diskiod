@@ -24,29 +24,46 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def inventory_bintec_info(info):
-    if len(info[0]) >= 1:
-        return [ (None, None) ]
+# <<<aix_diskiod>>>
+# hdisk3 0.9 237.0 9.1 1337054478 1628926522
+# hdisk5 0.9 237.1 8.8 1333731705 1633897629
+# hdisk7 0.9 256.2 10.1 1537047014 1669194644
+# hdisk6 0.9 236.6 9.1 1334163361 1626627852
+# hdisk2 0.9 237.6 9.1 1334458233 1639383130
+# hdisk9 0.8 239.4 9.3 1337740029 1658392394
+# hdisk8 0.9 238.3 8.9 1332262996 1649741796
+# hdisk4 0.9 237.4 8.8 1332426157 1638419364
+# hdisk13 0.5 238.1 8.3 394246756 2585031872
+# hdisk11 0.5 238.3 8.3 397601918 2584807275
 
-def check_bintec_info(checktype, params, info):
-    if len(info[0]) < 2:
-        return (3, "No data retrieved")
-    sw_version, serial = info[0]
-    return (0, "Serial: %s, Software: %s" % (serial, sw_version))
+# Columns means:
+# 1. device
+# 2. % tm_act
+# 3. Kbps
+# 4. tps
+# 5. Kb_read    -> Kilobytes read since system boot
+# 6. Kb_wrtn    -> Kilobytes written since system boot
 
-# 1.3.6.1.4.1.272.4.1.26.0 SW Version
-# 1.3.6.1.4.1.272.4.1.31.0 S/N
+def aix_diskiod_convert(info):
+    converted = []
+    for device, tm_act, kbps, tps, kb_read, kb_written in info:
+        converted.append((device, int(kb_read) * 1024, int(kb_written) * 1024))
+    return converted
 
-# This check works on all SNMP hosts
 
-check_info["bintec_info"] = {
-    'check_function':          check_bintec_info,
-    'inventory_function':      inventory_bintec_info,
-    'service_description':     'Bintec Info',
-    # 1.3.6.1.4.1.272.4.1.31.0 S/N
-    # 1.3.6.1.4.1.272.4.1.26.0 SW Version
-    'snmp_info':               ('.1.3.6.1.4.1.272.4.1', ['26.0', '31.0']),
-    'snmp_scan_function':      lambda oid: oid(".1.3.6.1.2.1.1.2.0") in  [
-                                        ".1.3.6.1.4.1.272.4.200.83.88.67.66.0.0",
-                                        ".1.3.6.1.4.1.272.4.158.82.78.66.48.0.0", ]
+def inventory_aix_diskiod(info):
+    return inventory_diskstat_generic(aix_diskiod_convert(info))
+
+
+def check_aix_diskiod(item, params, info):
+    return check_diskstat_generic(item, params, time.time(), aix_diskiod_convert(info))
+
+check_info["aix_diskiod"] = {
+    'check_function':          check_aix_diskiod,
+    'inventory_function':      inventory_aix_diskiod,
+    'service_description':     'Disk IO %s',
+    'has_perfdata':            True,
+    'group':                   'disk_io',
+    'includes':                [ "diskstat.include" ],
 }
+

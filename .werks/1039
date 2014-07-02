@@ -1,0 +1,8 @@
+Title: aix_diskiod: new check for disk IO on AIX
+Level: 2
+Component: checks
+Version: 1.2.5i5
+Date: 1404222142
+Class: feature
+
+

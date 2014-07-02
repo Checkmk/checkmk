@@ -1,0 +1,149 @@
+title: Fibre channel devices monitored with the FCMGMT MIB
+catalog: hw/storagehw
+agents: snmp
+license: GPL
+distribution: check_mk
+description:
+ This checks monitors fibre channel ports of devices supporting the fibre
+ channel management (FCMGMT) MIB, notably Dell fibre channel switches.
+ Monitored are the physical, operational, or adminstrative state of the ports,
+ the number of received and transmitted objects (RxObjects, TxObjects),
+ the incoming and outgoing throughput derived from the number of received
+ and transmitted elements (RxElements, TxElements), and the following
+ error counters: CRC errors, Enc-OUT frames, no Tx credits, C3 discards.
+
+ The check has a non-OK state in the following situations:
+
+ {[1]} The physical, operational, or adminstrative state of the port is not
+ as expected.
+
+ {[2]} The current or averaged throughput exceeds the configured absolute or
+ relative levels.
+
+ {[3]} One of the error counters exceeds its configured levels.
+
+ Averaging: This check supports averaging on all counters. Averaging is
+ turned on but setting the check parameter {"average"} to a number of minutes.
+ In this case the check produces additional performance data for each parameter
+ and all warning/error levels are only applied on the averaged value, not on
+ the current one. This is especially helpful when using levels on the throughput.
+
+ Note: The counters CRC errors and Enc-OUT are represented as percentages in
+ relation to the number of received frames. C3 discards and no Tx credits are
+ in relation to the number of sent frames.
+
+item:
+ The item is the port-number as two-digit or three-digit string (on switches
+ with 100 or more ports) as printed on the switch (note: the SNMP index of
+ port {00} is {1}!). If configured, port names of the device will be part
+ of the check item (and thus the service description).
+
+examples:
+ # Turn on averaging with 15 Minutes on all ports:
+ fc_port_default_levels["average"] = 15
+
+ # Alternative: set all default parameters at once:
+ fc_port_default_levels = {
+    "rxcrcs":           (3.0, 20.0),   # allowed percentage of CRC errors
+    "rxencoutframes":   (3.0, 20.0),   # allowed percentage of Enc-OUT Frames
+    "notxcredits":      (3.0, 20.0),   # allowed percentage of No Tx Credits
+    "c3discards":       (3.0, 20.0),   # allowed percentage of C3 discards
+    "assumed_speed":    2.0,           # used, if speed not available in SNMP data
+    "bw":               (80.0, 90.0),  # percentual levels for throughput
+    "average":          30,            # apply all levels on 30 minute average
+ }
+
+ # modify the default monitoring states for the various states of the device
+ fc_port_admstates = {
+                1: ('unknown', 1),
+                2: ('online', 0),
+                3: ('offline', 1),
+                4: ('bypassed', 1),
+                5: ('diagnostics', 0),
+ }
+ fc_port_opstates  = {
+                1: ('unknown', 1),
+                2: ('unused', 1),
+                3: ('ready', 0),
+                4: ('warning', 1),
+                5: ('failure', 2),
+                6: ('not participating', 1),
+                7: ('initializing', 1),
+                8: ('bypass',1),
+                9: ('ols', 0),
+ }
+ fc_port_phystates = {
+                1: ('unknown', 1),
+                2: ('failed', 2),
+                3: ('bypassed', 1),
+                4: ('active', 0),
+                5: ('loopback', 1),
+                6: ('txfault', 1),
+                7: ('noMedia', 1),
+                8: ('linkDown',2),
+ }
+
+perfdata:
+  For each port the following performance data are collected: {in}, {out},
+  {rxobjects}, {txobjects}, {rxcrcs}, {rxencoutframes}, {c3discards}
+  and {notxcredits}. If averaging is turned on, for each of these
+  values the average is also gathered and plotted. {_avg} is appended to
+  the averages. All rates are in Bytes/s or Objects/s. If you are using
+  PNP4Nagios, you are strongly encouraged to set {RRD_STORAGE_TYPE = MULTIPLE}
+  in {process_perfdata.cfg}. You need to re-create or convert existing RRD
+  database if you change this setting.
+
+inventory:
+  The inventory creates checks for all operational ports. It can be configured
+  (see CONFIGURATION VARIABLES) how operational ports are defined.
+
+[parameters]
+parameters (dict): This check works with dictionary based parameters. The
+ following keys are allowed:
+
+  {"bw"}: A pair of warn / crit levels on the throughput. Floating point
+  numbers are interpreted as percentages of the maximum bandwidth of
+  the port, e.g. {(80.0, 90.0)}. Integer numbers are interpreted as megabytes,
+  e.g. {(100, 150)}.
+
+  {"assumed_speed"}: On some older devices the automatic detection of the
+  link speed does not work. You can set the assumed link speed (in GBit/s)
+  here (example: {2.0})
+
+  {"rxcrcs"}: A pair of percentages of the maximum allowed CRC errors on
+  received frames. The default is set to {(3.0, 20.0)}, which will warn
+  at 3% and be critical at 20% of errors.
+
+  {"rxencoutframes"}: A pair of percentages for the Enc-Out frames rate. The
+  default is {(3.0, 20.0)}.
+
+  {"notxcredits"}: A pair of percentages for no-TxCredits errors. The default
+  is {(3.0, 20.0)}.
+
+  {"c3discards"}: A pair of percentages for the C3 discards. The default is
+  {(3.0, 20.0)}.
+
+  {"average"}: A number in minutes. If this parameter is set, then averaging
+  is turned on and all levels will be applied to the averaged values, not
+  the the current ones. Per default, averaging is turned off.
+
+[configuration]
+fc_port_no_inventory_types(list): List of port types not to be inventorized.
+ The default is not to inventorize port type 3: "not-present".
+
+fc_port_no_inventory_phystates(list): List of physical states for which ports
+ will not be inventorized. The default is an empty list.
+
+fc_port_inventory_opstates(list): List of operational states for which ports
+ will not be inventorized. The default is an empty list.
+
+fc_port_inventory_admstates(list): List of administrative states for which ports
+ will not be inventorized. The default is an empty list.
+
+fc_port_inventory_use_portname(boolean): If you set this to {True},
+ configured names of the ports appear in the service descripion (and thus can
+ also be used for check parameter rules). This uses the SNMP OID {connUnitPortName}.
+ The default is {False}.
+
+fc_port_default_levels(dict): The default check parameters for all ports.
+ These can be overridden (also partially) by {check_parameters}.

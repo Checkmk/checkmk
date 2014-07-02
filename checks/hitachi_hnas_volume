@@ -35,8 +35,10 @@ def inventory_hitachi_hnas_volume(info):
 def check_hitachi_hnas_volume(item, params, info):
     # use checks from df.include
     fslist = []
-    for id, label, volume_status, total, free, evs in info:
-        if id + " " + label == item:
+    for volid, label, volume_status, total, free, evs in info:
+        if volid == '':
+            continue
+        if volid + " " + label == item:
             size_mb = int(total) / 1048576.0
             avail_mb = int(free) / 1048576.0
             fslist.append((item, size_mb, avail_mb))
@@ -52,7 +54,7 @@ def check_hitachi_hnas_volume(item, params, info):
                         )
 
             error_string = ( "", " (!)", " (!!)", "" )
-            volume_status=int(volume_status)
+            volume_status = int(volume_status)
 
             if volume_status == 0 or volume_status >= len(statusmap):
                 message += ", Volume reports unidentified status %s" % volume_status

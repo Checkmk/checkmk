@@ -80,9 +80,9 @@ def check_adva_fsp_if(item, params, info):
         if line[0] == index:
             state = 0
             admintxt, adminstate = adva_fsp_if_adminstates[line[3]]
-            state = max(adminstate,state)
+            state = max(adminstate, state)
             opertxt, operstate = adva_fsp_if_operstates[line[4]]
-            state = max(operstate,state)
+            state = max(operstate, state)
             if state == 2:
                 statesym = "(!!)"
             elif state == 1:
@@ -100,15 +100,16 @@ def check_adva_fsp_if(item, params, info):
                     state = 2
                     osym = "(!!)"
                 elif owarn and output_power < owarn:
-                    state = max(1,state)
+                    state = max(1, state)
                     osym = "(!)"
                 else:
                     osym = ""
                 infotext += ", Output Power: %.1f%s" % ( output_power, osym )
                 perfdata.append( ("output_power", str(output_power)+"dBm", str(owarn)+":", str(ocrit)+":") )
             except:
-                infotext += ", Output Power: n.a. (!)"
-                state = max(1,state)
+                if not re.match("S", item): # service interface does not have power parameter
+                    infotext += ", Output Power: n.a. (!)"
+                    state = max(1,state)
 
 
             try:
@@ -118,15 +119,16 @@ def check_adva_fsp_if(item, params, info):
                     state = 2
                     isym = "(!!)"
                 elif iwarn and input_power < iwarn:
-                    state = max(1,state)
+                    state = max(1, state)
                     isym = "(!)"
                 else:
                     isym = ""
                 infotext += ", Input Power: %.1f%s" % ( input_power, isym )
                 perfdata.append( ("input_power", str(input_power)+"dBm", str(iwarn)+":", str(icrit)+":") )
             except:
-                infotext += ", Input Power: n.a. (!)"
-                state = max(1,state)
+                if not re.match("S", item): # service interface does not have power parameter
+                    infotext += ", Input Power: n.a. (!)"
+                    state = max(1,state)
 
             return(state, infotext, perfdata)
 

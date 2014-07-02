@@ -15,6 +15,10 @@ description:
  and output (transmit) power of the laser. Per default, not limits are imposed,
  since meaningful values depend on the type of interface.
 
+ A {WARN} state is triggered if no laser power information can be found.
+ Service interfaces (item name beginning with "S") do not have laser power
+ information, so that non-existent laser power information is ignored for these
+ interfaces.
 
 item:
  There are three allowed ways to specify an interface: {1}: the last component

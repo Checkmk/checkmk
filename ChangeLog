@@ -40,6 +40,9 @@
     Reporting & Availability:
     * 0991 FIX: Availability: optionally show time stamps as UNIX epoch time...
 
+    Event Console:
+    * 1040 FIX: Avoid sporadic errors when checking event state in Event Console...
+
     Livestatus:
     * 0988 FIX: livedump: Fix exception in case no contact groups are defined for a service
 

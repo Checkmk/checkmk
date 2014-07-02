@@ -1,0 +1,8 @@
+Title: New checks and an special agent for ALLNET IP Sensoric devices
+Level: 2
+Component: checks
+Version: 1.2.5i5
+Date: 1404289817
+Class: feature
+
+Included Checks are for temperature, humidity and electric tension sensors.

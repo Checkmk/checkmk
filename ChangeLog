@@ -15,6 +15,9 @@
     * 0990 FIX: Fix HTTP error handling in bulk inventory...
     * 1004 FIX: Fix exception when saving rules, caused by empty item
 
+    Event Console:
+    * 1040 FIX: Avoid sporadic errors when checking event state in Event Console...
+
     Livestatus:
     * 0988 FIX: livedump: Fix exception in case no contact groups are defined for a service
 

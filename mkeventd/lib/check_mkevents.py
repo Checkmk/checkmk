@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+# Old, outdated Python version of check_mkevents. Do not use
+# anymore...
+
 import os, socket, sys
 
 try:

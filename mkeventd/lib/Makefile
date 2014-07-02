@@ -22,10 +22,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-all: check_mkevents_c
+all: check_mkevents
 
-check_mkevents_c: check_mkevents.cc
-	g++ -O2 -o check_mkevents_c check_mkevents.cc
+check_mkevents: check_mkevents.cc
+	g++ -O2 -s -o check_mkevents check_mkevents.cc
 
 clean:
-	rm -f check_mkevents_c
+	rm -f check_mkevents

@@ -1,0 +1,13 @@
+Title: Avoid sporadic errors when checking event state in Event Console
+Level: 2
+Component: ec
+Version: 1.2.4p5
+Date: 1404288443
+Class: fix
+
+When you add the check for checking the current event state of a host
+in the Event Console than under heavy load it could sometimes happen
+that the check would run into an error (<tt>Ressource temporarily unavailable</tt>).
+This has been fixed by switching from the Python version of <tt>check_mkevents</tt>
+to the C version. This also saves CPU ressources if you have a larger
+number of hosts.

@@ -64,7 +64,8 @@ int main(int argc, char** argv)
             remote_host = argv[i+1];
             i++;
             argc_count -= 2;
-        } else if (!strcmp("-a", argv[i])) {
+        }
+        else if (!strcmp("-a", argv[i])) {
             ignore_acknowledged = true;
             argc_count--;
         }
@@ -72,7 +73,8 @@ int main(int argc, char** argv)
             host        = argv[i];
             application = argv[i+1];
             break;
-        } else if (argc_count > 1) {
+        }
+        else if (argc_count > 1) {
             host        = argv[i];
             break;
         }
@@ -119,7 +121,8 @@ int main(int argc, char** argv)
                    remote_hostaddress, remote_port, strerror(errno));
             exit(3);
         }
-    } else {
+    }
+    else {
         sock = socket(PF_LOCAL, SOCK_STREAM , 0);
         if (sock < 0) {
             printf("UNKNOWN - Cannot create client socket: %s\n", strerror(errno));

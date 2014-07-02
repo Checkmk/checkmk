@@ -5034,6 +5034,10 @@ def do_donation():
             for f in cache_files:
                 if f == host or f.startswith("%s." % host):
                     donate.append(f)
+    if not donate:
+        sys.stderr.write("No hosts specified. You need to set donation_hosts in main.mk.\n")
+        sys.exit(1)
+
     if opt_verbose:
         print "Donating files %s" % " ".join(cache_files)
     import base64

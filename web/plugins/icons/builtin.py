@@ -304,7 +304,7 @@ def logwatch_url(sitename, hostname, item):
 def paint_logwatch(what, row, tags, custom_vars):
     if what != "service":
         return
-    if row[what + "_check_command"] == 'check_mk-logwatch':
+    if row[what + "_check_command"] in [ 'check_mk-logwatch', 'check_mk-logwatch.groups' ]:
         return '<a href="%s"><img class=icon ' \
                'src="images/icon_logwatch.png\"></a>' % \
                    logwatch_url(row["site"], row['host_name'], row['service_description'][4:])

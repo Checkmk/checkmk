@@ -1,0 +1,8 @@
+Title: aix_memory: new check for RAM and SWAP on AIX
+Level: 2
+Component: checks
+Version: 1.2.5i5
+Date: 1404309861
+Class: feature
+
+

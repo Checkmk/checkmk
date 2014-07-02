@@ -206,6 +206,7 @@ def perfometer_check_mk_mem_used(row, check_command, perf_data):
     return "%d%%" % (100 * (virt_used / ram_total)), h
 
 perfometers["check_mk-mem.used"] = perfometer_check_mk_mem_used
+perfometers["check_mk-aix_memory"] = perfometer_check_mk_mem_used
 perfometers["check_mk-hr_mem"] = perfometer_check_mk_mem_used
 
 def perfometer_check_mk_mem_win(row, check_command, perf_data):

@@ -74,7 +74,8 @@ echo '<<<aix_diskiod>>>'
 iostat -d | tr -s ' ' | grep hdisk
 
 echo '<<<aix_memory>>>'
-vmstat -v  | tr -s ' ' | cut -d " " -f 2
+vmstat -v  | tr -s ' '
+swap -s
 
 echo '<<<mpstat_aix>>>'
 mpstat -a | tail -n1

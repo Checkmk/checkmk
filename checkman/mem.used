@@ -71,7 +71,7 @@ perfdata:
  If averaging is turned on, then a value {memusedavg} is added.
 
 [parameters]
-parameters (dict): The check previous used a pair of
+parameters (dict): The check previously used a pair of
   two numbers as a parameter. While this is internally still
   supported, the new format is a dictionary with the following
   keys:

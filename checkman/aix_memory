@@ -1,0 +1,39 @@
+title: Usage of physical and virtual RAM
+agents: aix
+catalog: os/kernel
+license: GPL
+distribution: check_mk
+description:
+ This check measures the current usage of physical RAM and
+ virtual memory used by processes on AIX. You can define a warning
+ and critical level for the usage of virtual memory,
+ {not} for the usage of RAM.
+
+ This check uses the same logic as {mem.used} - the memory check
+ for Linux. Please see details there.
+
+inventory:
+  One check is created if a non-empty {<<<aix_memory>>>} section is
+  present in the agent output.
+
+perfdata:
+ Three variables are stored: the physical RAM,
+ the used swap space and the sum of both. Maximum
+ values for both variables are also transmitted, so that
+ they can be visualized. All values are in Megabytes (1024 * 1024 bytes).
+
+ The template for PNP4Nagios that is shipped with Check_MK
+ stacks swap usage on top of RAM usage und thus shows
+ the amount of virtual RAM that is used by processes.
+
+[parameters]
+parameters (dict): 
+  {"levels"}: A pair of two int or float values: if these are
+  float it means the the percentage of virtual memory used
+  by processes at which WARNING/CRIT state is triggered. If the
+  two numbers are defined as an integer value then they are interpreted
+  as an absolute value in megabytes.
+
+  {"average"}: This key is optional. If set (integer), it means
+  a number of minutes. The levels are then applied to the
+  averaged value over that time horizon.

@@ -336,6 +336,7 @@ perfometers["check_mk-ibm_svc_enclosurestats.temp"] = perfometer_temperature
 perfometers["check_mk-wagner_titanus_topsense.temp"] = perfometer_temperature
 perfometers["check_mk-enterasys_temp"] = perfometer_temperature
 perfometers["check_mk-adva_fsp_temp"] = perfometer_temperature
+perfometers["check_mk-allnet_ip_sensoric.temp"] = perfometer_temperature
 
 def perfometer_temperature_multi(row, check_command, perf_data):
     display_value = -1
@@ -455,6 +456,7 @@ perfometers["check_mk-hpux_if"] = perfometer_check_mk_if
 perfometers["check_mk-mcdata_fcport"] = perfometer_check_mk_if
 perfometers["check_mk-esx_vsphere_counters.if"] = perfometer_check_mk_if
 perfometers["check_mk-hitachi_hnas_fc_if"] = perfometer_check_mk_if
+perfometers["check_mk-fc_port"] = perfometer_check_mk_if
 
 
 def perfometer_check_mk_brocade_fcport(row, check_command, perf_data):
@@ -582,6 +584,7 @@ def perfometer_check_mk_diskstat(row, check_command, perf_data):
 perfometers["check_mk-diskstat"] = perfometer_check_mk_diskstat
 perfometers["check_mk-winperf_phydisk"] = perfometer_check_mk_diskstat
 perfometers["check_mk-hpux_lunstats"] = perfometer_check_mk_diskstat
+perfometers["check_mk-aix_diskiod"] = perfometer_check_mk_diskstat
 perfometers["check_mk-mysql.innodb_io"] = perfometer_check_mk_diskstat
 perfometers["check_mk-esx_vsphere_counters.diskio"] = perfometer_check_mk_diskstat
 perfometers["check_mk-emcvnx_disks"] = perfometer_check_mk_diskstat
@@ -836,6 +839,7 @@ def perfometer_humidity(row, check_command, perf_data):
 
 perfometers['check_mk-carel_uniflair_cooling'] = perfometer_humidity
 perfometers['check_mk-cmciii.humidity'] = perfometer_humidity
+perfometers['check_mk-allnet_ip_sensoric.humidity'] = perfometer_humidity
 
 def perfometer_eaton(row, command, perf):
     return u"%s°C" % str(perf[0][1]), perfometer_linear(float(perf[0][1]), 'silver')
@@ -1073,3 +1077,10 @@ def perfometer_raritan_pdu_outletcount(row, check_command, perf_data):
     return "%d" % outletcount, perfometer_logarithmic(outletcount, 20, 2, "#da6")
 
 perfometers["check_mk-raritan_pdu_outletcount"] = perfometer_raritan_pdu_outletcount
+
+def perfometer_allnet_ip_sensoric_tension(row, check_command, perf_data):
+    display_color = "#50f020"
+    value = float(perf_data[0][1])
+    return value, perfometer_linear(value, display_color)
+
+perfometers["check_mk-allnet_ip_sensoric.tension"] = perfometer_allnet_ip_sensoric_tension

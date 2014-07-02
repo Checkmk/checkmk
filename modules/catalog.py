@@ -2,6 +2,7 @@ manpage_catalog_titles = {
     "hw"       : "Appliances, other dedicated Hardware",
         "environment" : "Environmental sensors",
             "akcp"       : "AKCP",
+            "allnet"     : "ALLNET",
             "betternet"  : "better networks",
             "carel"      : "CAREL",
             "eaton"      : "Eaton",

@@ -1,0 +1,19 @@
+title: ALLNET IP Sensoric: Electric Tension Sensors
+agents: allnet_ip_sensoric
+catalog: hw/environment/allnet
+license: GPL
+distribution: check_mk
+description:
+ Checks Electric Tension Sensors in ALLNET IP Sensoric devices.
+
+ Returns {CRIT} if the reported value is 0 and {OK} otherwise.
+
+item:
+ If a name is reported for the sensor by the device: The name and the 
+ sensor ID. Otherwise the sensor ID only.
+
+perfdata:
+ Exactly one number: The value as reported by the device.
+
+inventory:
+ Creates one check for every Electric Tension Sensor (function = 12).

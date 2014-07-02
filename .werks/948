@@ -1,0 +1,9 @@
+Title: mk_inventory.ps1: increased caching time to 14400, fixed incorrect default cachefile path
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i5
+Date: 1404287307
+
+

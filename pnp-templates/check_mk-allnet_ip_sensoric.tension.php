@@ -1,3 +1,4 @@
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -22,10 +23,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-all: check_mkevents
+$opt[1] = "--vertical-label \" \"  -l 0 -u 100 --title \"$hostname / $servicedesc\" ";
 
-check_mkevents: check_mkevents.cc
-	g++ -O2 -s -o check_mkevents check_mkevents.cc
-
-clean:
-	rm -f check_mkevents
+$def[1] = "DEF:var1=$RRDFILE[1]:$DS[1]:MAX ";
+$def[1] .= "AREA:var1#2080ff:\"Last value\:\" ";
+$def[1] .= "GPRINT:var1:LAST:\"%2.0lf \" ";
+$def[1] .= "LINE1:var1#000080:\"\" ";
+$def[1] .= "GPRINT:var1:MAX:\"(Max\: %2.0lf,\" ";
+$def[1] .= "GPRINT:var1:AVERAGE:\"Avg\: %2.0lf)\" ";
+?>

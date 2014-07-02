@@ -1,0 +1,358 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Taken from connUnitPortState
+# user selected state of the port hardware
+fc_port_admstates = {
+                1: ('unknown', 1),
+                2: ('online', 0),
+                3: ('offline', 0),
+                4: ('bypassed', 1),
+                5: ('diagnostics', 1),
+}
+# Taken from connUnitPortStatus
+# operational status for the port
+fc_port_opstates  = {
+                1: ('unknown', 1),
+                2: ('unused', 1),
+                3: ('ready', 0),
+                4: ('warning', 1),
+                5: ('failure', 2),
+                6: ('not participating', 1),
+                7: ('initializing', 1),
+                8: ('bypass',1),
+                9: ('ols', 0),
+}
+# Taken from connUnitPortHWState
+# hardware detected state of the port
+fc_port_phystates = {
+                1: ('unknown', 1),
+                2: ('failed', 2),
+                3: ('bypassed', 1),
+                4: ('active', 0),
+                5: ('loopback', 1),
+                6: ('txfault', 1),
+                7: ('noMedia', 1),
+                8: ('linkDown',2),
+}
+
+# taken from connUnitPortType
+porttype_list = ( 'unknown', 'unknown', 'other', 'not-present', 'hub-port', 'n-port',
+            'l-port', 'fl-port', 'f-port', 'e-port', 'g-port', 'domain-ctl',
+            'hub-controller', 'scsi', 'escon', 'lan', 'wan', 'ac', 'dc', 'ssa')
+
+# settings for inventory: which ports should not be inventorized
+fc_port_no_inventory_types = [ 3 ]
+fc_port_no_inventory_admstates  = [ ]
+fc_port_no_inventory_opstates  = [ ]
+fc_port_no_inventory_phystates  = [ ]
+fc_port_inventory_use_portname = False # use connUnitPortName as service description
+
+factory_settings["fc_port_default_levels"] = {
+    "rxcrcs":           (3.0, 20.0),   # allowed percentage of CRC errors
+    "rxencoutframes":   (3.0, 20.0),   # allowed percentage of Enc-OUT Frames
+    "notxcredits":      (3.0, 20.0),   # allowed percentage of No Tx Credits
+    "c3discards":       (3.0, 20.0),   # allowed percentage of C3 discards
+}
+
+# Helper function for computing item from port number
+def fc_port_getitem(num_ports, index, portname):
+    int_len  = str(len(str(num_ports))) # number of digits for index
+    itemname = ("%0" + int_len + "d") % (index - 1) # leading zeros
+    if portname.strip() and fc_port_inventory_use_portname:
+        itemname += portname.strip()
+    return itemname
+
+def fc_parse_counter(value):
+    if type(value) == str: # unsigned 64bit counter
+        num = 64
+        result = 0
+        for c in value:
+            num = num - 8
+            result += ord(c) * 2 ** num
+        return result
+    else:
+        return value
+
+def inventory_fc_port(info):
+    if not info:
+        return
+
+    inventory = []
+    for line in info:
+        if len(line) == 15:
+            try:
+                index    = int(line[0])
+                porttype = int(line[1])
+                admstate = int(line[2])
+                opstate  = int(line[3])
+                phystate = int(line[6])
+            except: # missing vital data. Skipping this port
+                continue
+            portname = line[5]
+
+            if porttype not in fc_port_no_inventory_types and \
+                    admstate not in fc_port_no_inventory_admstates and \
+                    opstate not in fc_port_no_inventory_opstates and \
+                    phystate not in fc_port_no_inventory_phystates:
+
+                inventory.append( (fc_port_getitem(len(info), index, portname),
+                   '{ "admstate": [%d], "opstate": [%d], "phystate": [%d] }'
+                    % (admstate, opstate, phystate) ))
+    return inventory
+
+
+def check_fc_port(item, params, info):
+    print params
+    # Accept item, even if port name has changed
+    item_index = int(item.split()[0])
+    portinfo = [ line for line in info if int(line[0]) == item_index + 1 ]
+    index    = int(portinfo[0][0])
+    porttype = int(portinfo[0][1])
+    admstate = int(portinfo[0][2])
+    opstate  = int(portinfo[0][3])
+    phystate = int(portinfo[0][6])
+    counter_list = map(fc_parse_counter,portinfo[0][7:] )
+    txobjects, rxobjects, txelements, rxelements, notxcredits, c3discards, \
+                rxcrcs, rxencoutframes = counter_list
+
+    summarystate = 0
+    output = []
+    perfdata = []
+
+    wirespeed = savefloat(portinfo[0][4]) * 1000.0 # speed in Bytes/sec, 0 if unknown
+    if wirespeed == 0:
+        # let user specify assumed speed via check parameter, default is 16.0 GBit/sec
+        gbit = params.get("assumed_speed", 16.0)
+        wirespeed = gbit * 1000.0 * 1000.0 * 1000.0 / 8.0 # in Bytes/sec
+        speedmsg  = "assuming %g GBit/s" % gbit
+    else:
+        gbit = wirespeed * 8.0 / ( 1000.0 * 1000.0 * 1000.0 ) # in GBit/sec
+        speedmsg = "%.1f GBit/s" % gbit
+    output.append(speedmsg)
+
+    # Now check rates of various counters
+    this_time = time.time()
+    try:
+        timedif, in_bytes = get_counter("fc_port.rxelements.%s" \
+                        % index, this_time, rxelements)
+        timedif, out_bytes = get_counter("fc_port.txelements.%s" \
+                        % index, this_time, txelements)
+
+        average = params.get("average") # range in minutes
+
+        # B A N D W I D T H
+        # convert thresholds in percentage into MB/s
+        bw_thresh = params.get("bw")
+        if bw_thresh == None: # no levels
+            warn_bytes, crit_bytes = None, None
+        else:
+            warn, crit = bw_thresh
+            if type(warn) == float:
+                warn_bytes = wirespeed * warn / 100.0
+            else: # in MB
+                warn_bytes = warn * 1048576.0
+            if type(crit) == float:
+                crit_bytes = wirespeed * crit / 100.0
+            else: # in MB
+                crit_bytes = crit * 1048576.0
+
+        for what, value in [("In", in_bytes), ("Out", out_bytes)]:
+            output.append("%s: %s/s" % (what, get_bytes_human_readable(value)))
+            perfdata.append((what.lower(), value, warn_bytes, crit_bytes, 0, wirespeed))
+
+            # average turned on: use averaged traffic values instead of current ones
+            if average:
+                timedif, value = get_average("fc_port.%s.%s.avg" % (what, item), this_time, value, average)
+                output.append("Avg(%dmin): %s/s" % (average, get_bytes_human_readable(value)))
+                perfdata.append( ("%s_avg" % what.lower(), value, warn_bytes, crit_bytes, 0, wirespeed))
+
+            # handle levels for in/out
+            if crit_bytes != None and value >= crit_bytes:
+                summarystate = 2
+                output.append(" >= %s/s(!!)" % (get_bytes_human_readable(crit_bytes)))
+            elif warn_bytes != None and value >= warn_bytes:
+                summarystate = max(1, summarystate)
+                output.append(" >= %s/s(!!)" % (get_bytes_human_readable(warn_bytes)))
+
+        # R X O B J E C T S & T X O B J E C T S
+        # Put number of objects into performance data (honor averaging)
+        timedif, rxobjects_rate  = get_counter("fc_port.rxobjects.%s"  \
+                        % index, this_time, rxobjects)
+        timedif, txobjects_rate  = get_counter("fc_port.txobjects.%s"  \
+                        % index, this_time, txobjects)
+        for what, value in [ ("rxobjects", rxobjects_rate), ("txobjects", txobjects_rate) ]:
+            perfdata.append((what, value))
+            if average:
+                timedif, value = get_average("fc_port.%s.%s.avg" % (what, item), this_time, value, average)
+                perfdata.append( ("%s_avg" % what, value) )
+
+        # E R R O R C O U N T E R S
+        # handle levels on error counters
+
+        for descr, counter, value, ref in [
+               ("CRC errors",           "rxcrcs",              rxcrcs,          rxobjects_rate, ),
+               ("ENC-Out",              "rxencoutframes",      rxencoutframes,  rxobjects_rate, ),
+               ("C3 discards",          "c3discards",          c3discards,      txobjects_rate, ),
+               ("no TX buffer credits", "notxcredits",         notxcredits,     txobjects_rate, ),]:
+            timedif, per_sec = get_counter("fc_port.%s.%s" % (counter, index), this_time, value)
+
+            perfdata.append((counter, per_sec))
+
+            # if averaging is on, compute average and apply levels to average
+            if average:
+                timedif, per_sec_avg = get_average("fc_port.%s.%s.avg" % \
+                        (counter, item), this_time, per_sec, average)
+                perfdata.append( ("%s_avg" % counter, per_sec_avg ) )
+
+            # compute error rate (errors in relation to number of frames) (from 0.0 to 1.0)
+            if ref > 0 or per_sec > 0:
+                rate = per_sec / (ref + per_sec)
+            else:
+                rate = 0
+            text = "%s: %.2f%%" % (descr, rate * 100.0)
+
+            # Honor averaging of error rate
+            if average:
+                timedif, rate = get_average("fc_port.%s.%s.avgrate" %
+                        (counter, item), this_time, rate, average)
+                text += ", Avg: %.2f%%" % (rate * 100.0)
+
+            error_percentage = rate * 100.0
+            warn, crit = params[counter]
+            if crit != None and error_percentage >= crit:
+                summarystate = 2
+                text += "(!!)"
+                output.append(text)
+            elif warn != None and error_percentage >= warn:
+                summarystate = max(1, summarystate)
+                text += "(!)"
+                output.append(text)
+
+
+    except MKCounterWrapped, e:
+        # Assume that this is the first check of this port. Make sure, all counters
+        # are initialized. If a counter is updated twice, get_counter will handle
+        # that correctly.
+        for counter, value in [ ( "rxelements", rxelements),
+                                ( "txelements", txelements),
+                                ( "txobjects", txobjects),
+                                ( "rxobjects", rxobjects),
+                                ( "notxcredits", notxcredits),
+                                ( "rxcrcs", rxcrcs),
+                                ( "rxencoutframes", rxencoutframes),
+                                ( "c3discards", c3discards)]:
+            try:
+                get_counter("fc_port.%s.%s" % (counter, index), this_time, value)
+            except MKCounterWrapped, e:
+                pass
+        perfdata = [] # perfdata might not be valid
+
+    def get_sym(state):
+        if state == 0:
+            return ""
+        else:
+            sym = state_markers[state]
+        return sym
+
+    statetxt, state = fc_port_admstates.get(int(admstate), ( "unknown", 3 ))
+    sym = get_sym(state)
+    output.append(statetxt+sym)
+    summarystate = max(state, summarystate)
+
+    statetxt, state = fc_port_opstates.get(int(opstate), ("unknown", 3))
+    sym = get_sym(state)
+    output.append(statetxt+sym)
+    summarystate = max(state, summarystate)
+
+    statetxt, state = fc_port_phystates.get(int(phystate), ("unknown", 3))
+    sym = get_sym(state)
+    output.append(statetxt+sym)
+    summarystate = max(state, summarystate)
+
+    output.append(porttype_list[int(porttype)])
+
+
+    return (summarystate, ', '.join(output), perfdata)
+
+check_info["fc_port"] = {
+    'check_function'         : check_fc_port,
+    'inventory_function'     : inventory_fc_port,
+    'service_description'    : 'FC Interface %s',
+    'has_perfdata'           : True,
+    'group'                  : 'fc_port',
+    'default_levels_variable': 'fc_port_default_levels',
+    'snmp_scan_function'     : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1588.2.1.1"),
+    'snmp_info'              :  ( ".1.3.6.1.3.94", [
+            "1.10.1.2",         # connUnitPortIndex                             # 0
+            "1.10.1.3",         # connUnitPortType                              # 1
+            "1.10.1.6",         # connUnitPortState:                            # 2
+                                # user selected state of the port hardware
+            "1.10.1.7",         # connUnitPortStatus:                           # 3
+                                # operational status for the port
+            "1.10.1.15",        # connUnitPortSpeed:                            # 4
+                                # The speed of the port in kilobytes per second.
+            "1.10.1.17",        # connUnitPortName                              # 5
+            "1.10.1.23",        # connUnitPortHWSTate:                          # 6
+                                # hardware detected state of the port
+            "4.5.1.4",          # connUnitPortStatTxObjects:                    # 7
+                                # The number of frames/packets/IOs/etc that have been transmitted
+                                # by this port. Note: A Fibre Channel frame starts with SOF and
+                                # ends with EOF. FC loop devices should not count frames passed
+                                # through. This value represents the sum total for all other Tx
+            "4.5.1.5",          # connUnitPortStatRxObjects:                    # 8
+                                # The number of frames/packets/IOs/etc that have been received
+                                # by this port. Note: A Fibre Channel frame starts with SOF and
+                                # ends with EOF. FC loop devices should not count frames passed
+                                # through. This value represents the sum total for all other Rx
+            "4.5.1.6",          # connUnitPortStatTxElements:                   # 9
+                                # The number of octets or bytes that have been transmitted
+                                # by this port. One second periodic polling of the port. This
+                                # value is saved and compared with the next polled value to
+                                # compute net throughput. Note, for Fibre Channel, ordered
+                                # sets are not included in the count.
+            "4.5.1.7",          # connUnitPortStatRxElements:                   # 10
+                                # The number of octets or bytes that have been received.
+                                # by this port. One second periodic polling of the port. This
+                                # value is saved and compared with the next polled value to
+                                # compute net throughput. Note, for Fibre Channel, ordered
+                                # sets are not included in the count.
+            "4.5.1.8",          # connUnitPortStatCountBBCreditZero:            # 11
+                                # Count of transitions in/out of BBcredit zero state.
+                                # The other side is not providing any credit.
+            "4.5.1.28",         # connUnitPortStatCountClass3Discards:          # 12
+                                # Count of Class 3 Frames that were discarded upon reception
+                                # at this port.  There is no FBSY or FRJT generated for Class 3
+                                # Frames.  They are simply discarded if they cannot be delivered.
+            "4.5.1.40",         # connUnitPortStatCountInvalidCRC:              # 13
+                                # Count of frames received with invalid CRC. This count is
+                                # part of the Link Error Status Block (LESB). (FC-PH 29.8). Loop
+                                # ports should not count CRC errors passing through when
+                                # monitoring.
+            "4.5.1.50",         # connUnitPortStatCountEncodingDisparityErrors: # 14
+                                # Count of disparity errors received at this port.
+    ]),
+}

@@ -1,0 +1,46 @@
+title: ALLNET IP Sensoric: Humidity Sensors
+agents: allnet_ip_sensoric
+catalog: hw/environment/allnet
+license: GPL
+distribution: check_mk
+description:
+ Checks Humidity Sensors in ALLNET IP Sensoric devices.
+
+ The check returns {WARN} or {CRIT} if the humidity in percent is higher
+ then given upper levels or lower than the given lower levels.
+ Otherwise it returns {OK}.
+
+item:
+ If a name is reported for the sensor by the device: The name and the
+ sensor ID. Otherwise the sensor ID only.
+
+perfdata:
+ One value: The humidity in percent, together with it's lower and upper
+ levels.
+
+inventory:
+ Creates one check for every Humidity Sensor (function = 2).
+
+examples:
+ # set default levels lower levels to 30 and 40 % and
+ # the default levels upper levels to 70 and 75 %
+ allnet_ip_sensoric_humidity_default_levels = ( 30, 40, 70, 75 )
+
+ # Check humidity of named sensor on a ALLNET IP Sensoric called sen01
+ # with default levels
+ checks += [
+   ("sen01", "allnet_ip_sensoric.humidity", 'Luftfeuchte Rack Sensor 12', allnet_ip_sensoric_humidity_default_levels)
+ ]
+
+ # or use individual levels for warn and crit
+ checks += [
+   ("sen01", "allnet_ip_sensoric.humidity", 'Luftfeuchte Rack Sensor 12', (10, 20, 80, 90))
+ ]
+
+[parameters]
+parameters (int, int, int, int): lower CRIT, lower WARN, upper WARN and 
+    upper CRIT levels for humidity in percent
+
+[configuration]
+allnet_ip_sensoric_humidity_default_levels (int, int, int, int): The standard levels
+    preset to ( 35, 40, 60, 65 )

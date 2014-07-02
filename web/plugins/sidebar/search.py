@@ -164,6 +164,19 @@ search_plugins.append({
     'match_url_tmpl'  : 'view.py?view_name=searchhost&hostalias=%(search)s&filled_in=filter'
 })
 
+def search_hosts_filter(filters, host_is_ip = False):
+    lq_filter = ""
+    filter_template = host_is_ip and "Filter: host_address ~~ %s\n" or "Filter: host_name ~~ %s\n"
+    for name, value in filters:
+        lq_filter += filter_template % value
+    if len(filters) > 1:
+        lq_filter += 'Or: %d\n' % len(filters)
+
+    return lq_filter
+
+def search_hosts_url_tmpl(used_filters, data, host_is_ip = False):
+    filter_field = host_is_ip and "host_address=(%s)" or "host=(%s)" % "|".join(map(lambda x: x[1], used_filters))
+    return 'view.py?view_name=searchhost&filled_in=filter&' + filter_field
 
 def search_host_service_filter(filters, host_is_ip = False):
     def get_filters(filter_type):
@@ -261,4 +274,26 @@ search_plugins.append({
     "filter_func"           : lambda x: search_host_service_filter(x, host_is_ip = True),
     "match_url_tmpl_func"   : lambda x,y: match_host_service_url_tmpl(x, y, host_is_ip = True),
     "search_url_tmpl_func"  : lambda x,y: search_host_service_url_tmpl(x, y, host_is_ip = True),
+})
+
+search_plugins.append({
+    "id"                    : "host_multi",
+    "qs_show"               : "host_name",
+    "required_types"        : ["hosts"],
+    "lq_table"              : "hosts",
+    "lq_columns"            : ["host_name", "host_address"],
+    "filter_func"           : lambda x: search_hosts_filter(x),
+    "match_url_tmpl_func"   : lambda x,y: "view.py?view_name=host&host=%(host_name)s&site=%(site)s" % y,
+    "search_url_tmpl_func"  : lambda x,y: search_hosts_url_tmpl(x, y),
+})
+
+search_plugins.append({
+    "id"                    : "host_multi_address",
+    "qs_show"               : "host_address",
+    "required_types"        : ["hosts"],
+    "lq_table"              : "hosts",
+    "lq_columns"            : ["host_address", "host_name"],
+    "filter_func"           : lambda x: search_hosts_filter(x, True),
+    "match_url_tmpl_func"   : lambda x,y: "view.py?view_name=host&host_address=%(host_address)s&site=%(site)s" % y,
+    "search_url_tmpl_func"  : lambda x,y: search_hosts_url_tmpl(x, y, True),
 })

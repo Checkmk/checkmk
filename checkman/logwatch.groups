@@ -1,0 +1,19 @@
+title: Grouping of logfiles
+agents: linux, windows, aix, solaris
+catalog: os/files
+license: GPL
+distribution: check_mk
+description:
+ This check is used to group multiple logfiles together. This is usefull in cases when a logrotation mechanism is used,
+ with no permanent name for the current logfile.
+
+ Please refer to to manpage of {{logwatch}} for more details about logfile monitoring.
+
+inventory:
+ One service for each group will be created
+
+examples:
+ logwatch_groups = [
+     ([("Debug Group", ("/var/log/*.err","/var/log/*.debug"))], ALL_HOSTS),
+     ([("Message_group", ("/var/log/messages*",""))], ['test2'], ALL_HOSTS),
+ ]

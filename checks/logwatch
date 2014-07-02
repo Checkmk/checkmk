@@ -30,6 +30,7 @@ logwatch_patterns = { }
 logwatch_rules = []
 logwatch_max_filesize = 500000 # do not save more than 500k of message (configurable)
 logwatch_service_output = "default"
+logwatch_groups = []
 
 # Variables embedded in precompiled checks
 check_config_variables += [ "logwatch_dir", "logwatch_max_filesize", "logwatch_service_output" ]
@@ -73,9 +74,18 @@ def logwatch_select_forwarded(info):
 
     return forwarded_logs, not_forwarded_logs
 
+
 def inventory_logwatch(info):
     forwarded_logs, not_forwarded_logs = logwatch_select_forwarded(info)
-    return [ (n, None) for n in not_forwarded_logs ]
+    inventory = []
+    for logfile in not_forwarded_logs:
+        groups = logwatch_groups_of_logfile(logfile)
+        if groups:
+            continue
+        else:
+            inventory.append((logfile, None))
+    return inventory
+
 
 #logwatch_patterns = {
 #    'System': [
@@ -223,7 +233,87 @@ def check_logwatch(item, params, info):
             found = False
         elif found:
             loglines.append(line)
+    return check_logwatch_generic(item, params, loglines, found)
 
+
+check_info['logwatch'] = {
+    'check_function':      check_logwatch,
+    'inventory_function':  inventory_logwatch,
+    'service_description': "LOG %s",
+    'group':               'logwatch',
+}
+
+precompile_params['logwatch'] = logwatch_precompile
+
+#   .--lw.groups-----------------------------------------------------------.
+#   |              _                                                       |
+#   |             | |_      ____ _ _ __ ___  _   _ _ __  ___               |
+#   |             | \ \ /\ / / _` | '__/ _ \| | | | '_ \/ __|              |
+#   |             | |\ V  V / (_| | | | (_) | |_| | |_) \__ \              |
+#   |             |_| \_/\_(_)__, |_|  \___/ \__,_| .__/|___/              |
+#   |                        |___/                |_|                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def logwatch_groups_of_logfile(filename):
+    import fnmatch
+    groups = []
+    for line in host_extra_conf(g_hostname, logwatch_groups):
+        for group_name, pattern in line:
+            inclusion, exclusion = pattern
+            if fnmatch.fnmatch(filename, inclusion) \
+                    and not fnmatch.fnmatch(filename, exclusion):
+                groups.append(group_name)
+    return groups
+
+def inventory_logwatch_groups(info):
+    forwarded_logs, not_forwarded_logs = logwatch_select_forwarded(info)
+    added_groups = []
+    inventory = []
+    for logfile in not_forwarded_logs:
+        groups = logwatch_groups_of_logfile(logfile)
+        if groups:
+            for group in groups:
+                if group not in added_groups:
+                    added_groups.append(group)
+                    inventory.append((group, None ))
+    return inventory
+
+def check_logwatch_groups(item, params, info):
+    if len(info) == 1:
+        line = " ".join(info[0])
+        if line.startswith("CANNOT READ CONFIG FILE"):
+            return 3, "Error in agent configuration: %s" % " ".join(info[0][4:])
+
+    found = False
+    logfile_found = False
+    loglines = []
+    for l in info:
+        line = " ".join(l)
+        if logfile_found == True and not line.startswith('[[['):
+            loglines.append(line)
+        if line.startswith('[[['):
+            logfile = line[3:-3]
+            if item in logwatch_groups_of_logfile(logfile):
+                found = True
+                logfile_found = True
+            else:
+                logfile_found = False
+            continue
+    return check_logwatch_generic(item, params, loglines, found)
+
+
+check_info['logwatch.groups'] = {
+    'check_function':      check_logwatch_groups,
+    'inventory_function':  inventory_logwatch_groups,
+    'service_description': "LOG %s",
+    'group':               'logwatch',
+}
+precompile_params['logwatch.groups'] = logwatch_precompile
+#.
+
+def check_logwatch_generic(item, params, loglines, found):
     # Create directories, if neccessary
     try:
         logdir = logwatch_dir + "/" + g_hostname
@@ -393,16 +483,6 @@ def check_logwatch(item, params, info):
                                            (', '.join(count_txt), last_worst_line))
         else:
             return (worst, "%s messages" % ', '.join(count_txt))
-
-
-check_info['logwatch'] = {
-    'check_function':      check_logwatch,
-    'inventory_function':  inventory_logwatch,
-    'service_description': "LOG %s",
-    'group':               'logwatch',
-}
-
-precompile_params['logwatch'] = logwatch_precompile
 
 #   .----------------------------------------------------------------------.
 #   |      _____ ____   _____ ___  ______        ___    ____  ____         |

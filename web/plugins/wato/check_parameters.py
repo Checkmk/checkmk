@@ -967,6 +967,7 @@ register_rule(group + '/' + subgroup_storage,
     match = 'all',
 )
 
+
 register_check_parameters(
     subgroup_storage,
     "fileinfo-groups",
@@ -4912,6 +4913,38 @@ register_check_parameters(subgroup_applications,
     ),
     None,
     'first',
+)
+
+register_rule(group + '/' + subgroup_applications,
+    varname   = "logwatch_groups",
+    title     = _('Logfile Grouping Patterns'),
+    help      = _('The check <tt>logwatch</tt> normaly creates one service for each logfile '
+                  'By defining grouping patterns you can switch to the check <tt>logwatch.groups</tt>. '
+                  'That check monitors a list of logfiles at once. This is usefull if you have '
+                  'e.g. a folder with rotated logfiles where the name of the current logfile'
+                  'also changes with each rotation'),
+    valuespec = ListOf(
+        Tuple(
+            help = _("This defines one logfile grouping pattern"),
+            show_titles = True,
+            orientation = "horizontal",
+            elements = [
+                TextAscii(
+                     title = _("Name of group"),
+                ),
+                Tuple(
+                    show_titles = True,
+                    orientation = "vertical",
+                    elements = [
+                        TextAscii(title = _("Include Pattern")),
+                        TextAscii(title = _("Exclude Pattern"))
+                    ],
+                ),
+            ],
+        ),
+        add_label = _("Add pattern group"),
+    ),
+    match = 'all',
 )
 
 register_rule(

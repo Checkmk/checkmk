@@ -5229,6 +5229,7 @@ def do_check_keepalive():
             break
         hostname = hostname.strip()
         if hostname == "*":
+            sys.argv = [ x for x in sys.argv if not x.startswith('--keepalive-fd=') ]
             os.execvp("cmk", sys.argv + [ "--keepalive-fd=%d" % keepalive_fd ])
         elif not hostname:
             break

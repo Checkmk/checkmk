@@ -1,0 +1,243 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# <<<check_mk>>>
+# AgentOS: ALL5000
+# <<<allnet_ip_sensoric>>>
+# sensor0.alarm0 0
+# sensor0.all4000_typ 0
+# sensor0.function 1
+# sensor0.limit_high 50.00
+# sensor0.limit_low 10.00
+# sensor0.maximum 28.56
+# sensor0.minimum 27.50
+# sensor0.name Temperatur intern
+# sensor0.value_float 27.50
+# sensor0.value_int 2750
+# sensor0.value_string 27.50
+# sensor1.alarm1 0
+# sensor1.all4000_typ 0
+# sensor1.function 3
+# sensor1.limit_high 50.00
+# sensor1.limit_low -0.50
+# sensor1.maximum 0.00
+# sensor1.minimum 2048000.00
+# sensor1.name ADC 0
+# sensor1.value_float 0.00
+# sensor1.value_int 0
+# sensor1.value_string 0.00
+# [...]
+# sensor9.alarm9 1
+# sensor9.all4000_typ 101
+# sensor9.function 12
+# sensor9.limit_high 85.00
+# sensor9.limit_low 10.00
+# sensor9.maximum 100.00
+# sensor9.minimum 2048000.02
+# sensor9.name USV Spannung
+# sensor9.value_float 100.00
+# sensor9.value_int 100
+# sensor9.value_string 100
+# system.alarmcount 4
+# system.date 30.06.2014
+# system.devicename all5000
+# system.devicetype ALL5000
+# system.sys 114854
+# system.time 16:08:48
+
+# parses agent output in a structure like:
+# {'sensor0': {'alarm0': '0',
+#              'all4000_typ': '0',
+#              'function': '1',
+#              'limit_high': '50.00',
+#              'limit_low': '10.00',
+#              'maximum': '28.56',
+#              'minimum': '27.43',
+#              'name': 'Temperatur intern',
+#              'value_float': '27.50',
+#              'value_int': '2750',
+#              'value_string': '27.50'},
+# [...]
+#  'system': {'alarmcount': '4',
+#             'date': '30.06.2014',
+#             'devicename': 'all5000',
+#             'devicetype': 'ALL5000',
+#             'sys': '116240',
+#             'time': '16:57:50'}}
+
+
+def allnet_ip_sensoric_parse(info):
+    parsed = {}
+    for key, value in info:
+        match = re.search('(\w+)\.(\w+)', key)
+        if match:
+            #print "g1: %s, g2: %s, value: %s" % (match.group(1), match.group(2), value)
+            if match.group(1) not in parsed.keys():
+                parsed[match.group(1)] = {}
+            parsed[match.group(1)][match.group(2)] = value
+
+    return parsed
+
+def allnet_ip_sensoric_compose_item(sensor_id, sensor):
+    sensor_id = re.sub("sensor", "", sensor_id)
+    if "name" in sensor.keys():
+        item = "%s Sensor %s" % (sensor["name"], sensor_id)
+    else:
+        item = "Sensor %s" % (sensor_id)
+    return item
+
+#   .--el. tension---------------------------------------------------------.
+#   |                  _     _                 _                           |
+#   |              ___| |   | |_ ___ _ __  ___(_) ___  _ __                |
+#   |             / _ \ |   | __/ _ \ '_ \/ __| |/ _ \| '_ \               |
+#   |            |  __/ |_  | ||  __/ | | \__ \ | (_) | | | |              |
+#   |             \___|_(_)  \__\___|_| |_|___/_|\___/|_| |_|              |
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def inventory_allnet_ip_sensoric_tension(info):
+    parsed = allnet_ip_sensoric_parse(info)
+    inventory = []
+    for sensor in parsed.keys():
+        if "function" in parsed[sensor].keys() and parsed[sensor]["function"] == "12":
+            item = allnet_ip_sensoric_compose_item(sensor, parsed[sensor])
+            #print "sensor: %s, item: %s" % (sensor, item)
+            inventory.append( (item, None) )
+    return inventory
+
+def check_allnet_ip_sensoric_tension(item, _no_params, info):
+    parsed = allnet_ip_sensoric_parse(info)
+    sensor_id = "sensor" + re.sub(".+Sensor ", "", item)
+    value = float(parsed[sensor_id]["value_float"])
+
+    perfdata = [ ("tension", "%0.2f" % value, '', '', 0, 100) ]
+
+    status = 0
+    if value == 0:
+        status = 2
+
+    return status, "%s is at %0.2f" % (item, value), perfdata
+
+check_info["allnet_ip_sensoric.tension"] = {
+    "check_function"        : check_allnet_ip_sensoric_tension,
+    "inventory_function"    : inventory_allnet_ip_sensoric_tension,
+    "service_description"   : "Electric Tension %s",
+    "has_perfdata"          : True,
+}
+
+#.
+#   .--temp----------------------------------------------------------------.
+#   |                       _                                              |
+#   |                      | |_ ___ _ __ ___  _ __                         |
+#   |                      | __/ _ \ '_ ` _ \| '_ \                        |
+#   |                      | ||  __/ | | | | | |_) |                       |
+#   |                       \__\___|_| |_| |_| .__/                        |
+#   |                                        |_|                           |
+#   '----------------------------------------------------------------------'
+
+allnet_ip_sensoric_temp_default_levels = (35, 40)
+
+def inventory_allnet_ip_sensoric_temp(info):
+    parsed = allnet_ip_sensoric_parse(info)
+    inventory = []
+    for sensor in parsed.keys():
+        if "function" in parsed[sensor].keys() and parsed[sensor]["function"] == "1":
+            item = allnet_ip_sensoric_compose_item(sensor, parsed[sensor])
+            inventory.append( (item, "allnet_ip_sensoric_temp_default_levels") )
+    return inventory
+
+def check_allnet_ip_sensoric_temp(item, params, info):
+    warn, crit = params
+    parsed = allnet_ip_sensoric_parse(info)
+    sensor_id = "sensor" + re.sub(".+Sensor ", "", item)
+    value = float(parsed[sensor_id]["value_float"])
+
+    perfdata = [ ("temp", "%0.2fC" % value, warn, crit, -40, 85) ]
+
+    status = 0
+    if value > crit:
+        status = 2
+    elif value > warn:
+        status = 1
+
+    return status, "%s is %0.2f °C" % (item, value), perfdata
+
+check_info["allnet_ip_sensoric.temp"] = {
+    "check_function"        : check_allnet_ip_sensoric_temp,
+    "inventory_function"    : inventory_allnet_ip_sensoric_temp,
+    "service_description"   : "Temperature %s",
+    "has_perfdata"          : True,
+    "group"                 : "hw_temperature",
+}
+
+#.
+#   .--humidity------------------------------------------------------------.
+#   |              _                     _     _ _ _                       |
+#   |             | |__  _   _ _ __ ___ (_) __| (_) |_ _   _               |
+#   |             | '_ \| | | | '_ ` _ \| |/ _` | | __| | | |              |
+#   |             | | | | |_| | | | | | | | (_| | | |_| |_| |              |
+#   |             |_| |_|\__,_|_| |_| |_|_|\__,_|_|\__|\__, |              |
+#   |                                                  |___/               |
+#   '----------------------------------------------------------------------'
+
+allnet_ip_sensoric_humidity_default_levels = ( 35, 40, 60, 65 )
+
+def inventory_allnet_ip_sensoric_humidity(info):
+    parsed = allnet_ip_sensoric_parse(info)
+    inventory = []
+    for sensor in parsed.keys():
+        if "function" in parsed[sensor].keys() and parsed[sensor]["function"] == "2":
+            item = allnet_ip_sensoric_compose_item(sensor, parsed[sensor])
+            inventory.append( (item, "allnet_ip_sensoric_humidity_default_levels") )
+    return inventory
+
+def check_allnet_ip_sensoric_humidity(item, params, info):
+    critlow, warnlow, warnhigh, crithigh = params
+    parsed = allnet_ip_sensoric_parse(info)
+    sensor_id = "sensor" + re.sub(".+Sensor ", "", item)
+    humidity = float(parsed[sensor_id]["value_float"])
+
+    perfdata = [ ("humidity", humidity, critlow, warnlow, warnhigh, crithigh) ]
+
+    if humidity <= critlow or humidity >= crithigh:
+        status = 2
+    elif humidity <= warnlow or humidity >= warnhigh:
+        status = 1
+    else:
+        status = 0
+
+    return status, "%s is %0.2f %%" % (item, humidity), perfdata
+
+check_info["allnet_ip_sensoric.humidity"] = {
+    "check_function"        : check_allnet_ip_sensoric_humidity,
+    "inventory_function"    : inventory_allnet_ip_sensoric_humidity,
+    "service_description"   : "Humidity %s",
+    "has_perfdata"          : True,
+    "group"                 : "humidity",
+}
+
+#.

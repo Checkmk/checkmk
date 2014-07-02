@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 
+deprecated = _("Deprecated")
 #   .--Global Settings-----------------------------------------------------.
 #   |  ____ _       _           _   ____       _   _   _                   |
 #   | / ___| | ___ | |__   __ _| | / ___|  ___| |_| |_(_)_ __   __ _ ___   |
@@ -1304,7 +1305,7 @@ register_configvar(group,
                       "option. This will retain the old service descriptions and the old "
                       "performance data.")))
 
-register_configvar(group,
+register_configvar(deprecated,
     "if_inventory_uses_description",
     Checkbox(title = _("Use description as service name for network interface checks"),
              label = _("use description"),
@@ -1312,7 +1313,7 @@ register_configvar(group,
                       "of the port number. If no description is available then the port number is "
                       "used anyway.")))
 
-register_configvar(group,
+register_configvar(deprecated,
     "if_inventory_uses_alias",
     Checkbox(title = _("Use alias as service name for network interface checks"),
              label = _("use alias"),
@@ -1320,14 +1321,14 @@ register_configvar(group,
                       "of the port number. If no alias is available then the port number is used "
                       "anyway.")))
 
-register_configvar(group,
+register_configvar(deprecated,
    "if_inventory_portstates",
    ListChoice(title = _("Network interface port states to inventorize"),
               help = _("When doing inventory on switches or other devices with network interfaces "
                        "then only ports found in one of the configured port states will be added to the monitoring."),
               choices = _if_portstate_choices))
 
-register_configvar(group,
+register_configvar(deprecated,
    "if_inventory_porttypes",
    ListChoice(title = _("Network interface port types to inventorize"),
               help = _("When doing inventory on switches or other devices with network interfaces "
@@ -1335,7 +1336,7 @@ register_configvar(group,
               choices = _if_porttype_choices,
               columns = 3))
 
-register_configvar(group,
+register_configvar(deprecated,
     "diskstat_inventory_mode",
     DropdownChoice(
         title = _("Inventory mode for disk IO checks"),
@@ -1365,7 +1366,7 @@ register_configvar(group,
 group = _("Check configuration")
 
 
-register_configvar(group,
+register_configvar(deprecated,
     "if_inventory_monitor_state",
     Checkbox(title = _("Monitor port state of network interfaces"),
              label = _("monitor port state"),
@@ -1376,7 +1377,7 @@ register_configvar(group,
                       "by overridden on a per-host and per-port base by defining special check "
                       "parameters via a rule.")))
 
-register_configvar(group,
+register_configvar(deprecated,
     "if_inventory_monitor_speed",
     Checkbox(title = _("Monitor port speed of network interfaces"),
              label = _("monitor port speed"),
@@ -1420,7 +1421,7 @@ register_configvar(group,
         ),
     )
 
-register_configvar(group,
+register_configvar(deprecated,
     "printer_supply_default_levels",
     Tuple(
         title = _("Printer supply default levels"),

@@ -617,6 +617,7 @@ def rbn_match_rule(rule, context):
     return \
         rbn_match_folder(rule, context)                or \
         rbn_match_hosttags(rule, context)              or \
+        rbn_match_hostgroups(rule, context)            or \
         rbn_match_hosts(rule, context)                 or \
         rbn_match_exclude_hosts(rule, context)         or \
         rbn_match_services(rule, context)              or \
@@ -660,6 +661,27 @@ def rbn_match_hosttags(rule, context):
         if not hosttags_match_taglist(tags, required):
             return "The host's tags %s do not match the required tags %s" % (
                 "|".join(tags), "|".join(required))
+
+
+def rbn_match_hostgroups(rule, context):
+    required_groups = rule.get("match_hostgroups")
+    if required_groups != None:
+        hgn = context.get("HOSTGROUPNAMES")
+        if hgn == None:
+            return "No information about host groups is in the context, but host " \
+                   "must be in group %s" % ( " or ".join(required_groups))
+        if hgn:
+            hostgroups = hgn.split(",")
+        else:
+            return "The host is in no group, but %s is required" % (
+                 " or ".join(required_groups))
+
+        for group in required_groups:
+            if group in hostgroups:
+                return
+
+        return "The host only is the groups %s, but %s is required" % (
+              hgn, " or ".join(required_groups))
 
 
 def rbn_match_hosts(rule, context):

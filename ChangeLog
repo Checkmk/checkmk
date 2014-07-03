@@ -43,6 +43,9 @@
     * 0947 FIX: WATO snapshots: fixed missing files on restoring nagvis backup domains
     * 0826 FIX: Fixed problem where user access times were not updated correctly
 
+    Notifications:
+    * 1042 Rule based notifications: allow matching on host groups...
+
     Reporting & Availability:
     * 0991 FIX: Availability: optionally show time stamps as UNIX epoch time...
 

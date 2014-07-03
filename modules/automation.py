@@ -637,7 +637,7 @@ def automation_analyse_service(args):
                     "item"             : item,
                     "inv_parameters"   : params,
                     "factory_settings" : fs,
-                    "parameters"      : compute_check_parameters(hostname, ct, item, params),
+                    "parameters"       : compute_check_parameters(hostname, ct, item, params),
                 }
     except:
         if opt_debug:

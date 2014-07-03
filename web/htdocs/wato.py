@@ -3343,12 +3343,13 @@ def show_service_table(host, firsttime):
                     #  #html.write('<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' %
                     #  #   (url, title))
 
-            # Icon for Service parameters
+            # Icon for Service parameters. Not for missing services!
             table.cell("", "")
-            params_url = make_link([("mode", "object_parameters"),
-                                    ("host", hostname),
-                                    ("service", descr)])
-            html.icon_button(params_url, _("View and modify the parameters for this service"), "rulesets")
+            if state_type != "new":
+                params_url = make_link([("mode", "object_parameters"),
+                                        ("host", hostname),
+                                        ("service", descr)])
+                html.icon_button(params_url, _("View and modify the parameters for this service"), "rulesets")
 
 
             # Permanently disable icon

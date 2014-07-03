@@ -1,0 +1,9 @@
+Title: lnx_thermal: Not checking active trip points (e.g. cooling device triggers) anymore
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.4p5
+Date: 1404369399
+
+

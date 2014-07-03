@@ -1,13 +1,13 @@
 1.2.4p5:
     Core & Setup:
     * 1035 FIX: Do not fail on errors in *.mk files anymore - except in interactive mode...
-    * 0174 FIX: FIX: Fixed appending of --keepalive-fd parameters to checkhelps...
 
     Checks & Agents:
     * 0994 FIX: agent plugin smart: fixed syntax error
     * 0989 FIX: logwatch.ec: Fix forwarding multiple messages via syslog/TCP...
     * 0943 FIX: if.include: fixed incorrect traffic percentage values in the check output of if checks...
     * 1037 FIX: bintec_info: support bintec RXL12500
+    * 0827 FIX: lnx_thermal: Not checking active trip points (e.g. cooling device triggers) anymore
 
     Multisite:
     * 1036 FIX: doc/treasures/downtime: fix --url option, better error output

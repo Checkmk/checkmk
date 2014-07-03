@@ -28,6 +28,7 @@
     * 1037 FIX: bintec_info: support bintec RXL12500
     * 0948 FIX: mk_inventory.ps1: increased caching time to 14400, fixed incorrect default cachefile path
     * 0827 FIX: lnx_thermal: Not checking active trip points (e.g. cooling device triggers) anymore
+    * 1043 FIX: printer_supply: fix value error in default parameters...
 
     Multisite:
     * 1013 Sort host names naturally, e.g. foobar11 comes after foobar2...
@@ -42,6 +43,7 @@
     * 1004 FIX: Fix exception when saving rules, caused by empty item
     * 0947 FIX: WATO snapshots: fixed missing files on restoring nagvis backup domains
     * 0826 FIX: Fixed problem where user access times were not updated correctly
+    * 1044 FIX: Remove icon for service parameters in WATO service list for missing services...
 
     Notifications:
     * 1042 Rule based notifications: allow matching on host groups...

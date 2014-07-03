@@ -27,6 +27,7 @@
     * 0173 FIX: hitachi_hnas_volume: Fixed bug when snmp outputs empty lines
     * 1037 FIX: bintec_info: support bintec RXL12500
     * 0948 FIX: mk_inventory.ps1: increased caching time to 14400, fixed incorrect default cachefile path
+    * 0827 FIX: lnx_thermal: Not checking active trip points (e.g. cooling device triggers) anymore
     * 1043 FIX: printer_supply: fix value error in default parameters...
 
     Multisite:

@@ -27,6 +27,7 @@
     * 0173 FIX: hitachi_hnas_volume: Fixed bug when snmp outputs empty lines
     * 1037 FIX: bintec_info: support bintec RXL12500
     * 0948 FIX: mk_inventory.ps1: increased caching time to 14400, fixed incorrect default cachefile path
+    * 1043 FIX: printer_supply: fix value error in default parameters...
 
     Multisite:
     * 1013 Sort host names naturally, e.g. foobar11 comes after foobar2...

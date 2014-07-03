@@ -1372,6 +1372,10 @@ class DualListChoice(ListChoice):
 
     def render_input(self, varprefix, value):
         self.load_elements()
+        if not self._elements:
+            html.write(_("There are no elements for selection."))
+            return
+
         selected   = []
         unselected = []
         if self._custom_order:

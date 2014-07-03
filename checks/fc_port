@@ -144,13 +144,13 @@ def check_fc_port(item, params, info):
 
     wirespeed = savefloat(portinfo[0][4]) * 1000.0 # speed in Bytes/sec, 0 if unknown
     if wirespeed == 0:
-        # let user specify assumed speed via check parameter, default is 16.0 GBit/sec
-        gbit = params.get("assumed_speed", 16.0)
-        wirespeed = gbit * 1000.0 * 1000.0 * 1000.0 / 8.0 # in Bytes/sec
-        speedmsg  = "assuming %g GBit/s" % gbit
+        # let user specify assumed speed via check parameter, default is 2.0 GByte/sec
+        gb = params.get("assumed_speed", 2.0)
+        wirespeed = gb * 1000.0 * 1000.0 * 1000.0 # in Bytes/sec
+        speedmsg  = "assuming %g GB/s" % gb
     else:
-        gbit = wirespeed * 8.0 / ( 1000.0 * 1000.0 * 1000.0 ) # in GBit/sec
-        speedmsg = "%.1f GBit/s" % gbit
+        gb = wirespeed / ( 1000.0 * 1000.0 * 1000.0 ) # in GByte/sec
+        speedmsg = "%.1f GB/s" % gb
     output.append(speedmsg)
 
     # Now check rates of various counters

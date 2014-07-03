@@ -1,0 +1,94 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA
+
+# Example output from agent:
+# <<<aix_memory>>>
+# 32702464 memory pages
+# 31736528 lruable pages
+# 858141 free pages
+# 4 memory pools
+# 6821312 pinned pages
+# 80.0 maxpin percentage
+# 3.0 minperm percentage
+# 90.0 maxperm percentage
+# 8.8 numperm percentage
+# 2808524 file pages
+# 0.0 compressed percentage
+# 0 compressed pages
+# 8.8 numclient percentage
+# 90.0 maxclient percentage
+# 2808524 client pages
+# 0 remote pageouts scheduled
+# 354 pending disk I/Os blocked with no pbuf
+# 860832 paging space I/Os blocked with no psbuf
+# 2228 filesystem I/Os blocked with no fsbuf
+# 508 client filesystem I/Os blocked with no fsbuf
+# 1372 external pager filesystem I/Os blocked with no fsbuf
+# 88.8 percentage of memory used for computational pages
+# allocated = 8257536 blocks used = 1820821 blocks free = 6436715 blocks
+# 
+# The first part is the output of vmstat -v, the last line is the output
+# of swap -s and show the swap space usage
+
+# Parse AIX vmstat output into something compatible with the Linux
+# output from /proc/meminfo. AIX speaks of 4k pages while Linux of kilobytes.
+def parse_aix_memory(info):
+    parsed = {}
+    for line in info:
+        if line[0] == "allocated": # Swap space
+            parsed["SwapTotal"] = int(line[2]) * 4
+            parsed["SwapFree"] = int(line[10]) * 4
+        else:
+            varname = " ".join(line[1:])
+            if varname == "memory pages":
+                parsed["MemTotal"] = int(line[0]) * 4
+            elif varname == "free pages":
+                parsed["MemFree"] = int(line[0]) * 4
+            elif varname == "file pages":
+                parsed["Cached"] = int(line[0]) * 4
+    return parsed
+
+
+def check_aix_memory(_no_item, params, info):
+    meminfo = parse_aix_memory(info)
+    return check_memory(params, meminfo)
+
+
+def inventory_aix_memory(info):
+    meminfo = parse_aix_memory(info)
+    if "MemFree" in meminfo:
+        return [(None, {})]
+
+
+check_info['aix_memory'] = {
+    "check_function"          : check_aix_memory,
+    "inventory_function"      : inventory_aix_memory,
+    "service_description"     : "Memory used",
+    "has_perfdata"            : True,
+    "group"                   : "memory",
+    "default_levels_variable" : "memory_default_levels",
+    "includes"                : [ "mem.include" ],
+}

@@ -8057,6 +8057,17 @@ def FolderChoice(**kwargs):
     return DropdownChoice(**kwargs)
 
 
+class HostgroupChoice(DualListChoice):
+    def __init__(self, **kwargs):
+        DualListChoice.__init__(self, **kwargs)
+        self._choices = lambda: self.load_groups()
+
+    def load_groups(self):
+        all_groups = userdb.load_group_information()
+        this_group = all_groups.get("host", {})
+        return [ (k, t and t or k) for (k, t) in this_group.items() ]
+
+
 def vs_notification_bulkby():
     return ListChoice(
       title = _("Create separate notification bulks based on"),
@@ -8192,6 +8203,13 @@ def vs_notification_rule(userid = None):
             ( "match_hosttags",
               HostTagCondition(
                   title = _("Match Host Tags"))
+            ),
+            ( "match_hostgroups",
+              HostgroupChoice(
+                  title = _("Match Host Groups"),
+                  help = _("The host must be in one of the selected host groups"),
+                  allow_empty = False,
+              )
             ),
             ( "match_hosts",
               ListOfStrings(
@@ -8423,7 +8441,7 @@ def vs_notification_rule(userid = None):
           ),
 
         ],
-        optional_keys = [ "match_folder", "match_hosttags", "match_hosts", "match_exclude_hosts",
+        optional_keys = [ "match_folder", "match_hosttags", "match_hostgroups", "match_hosts", "match_exclude_hosts",
                           "match_services", "match_exclude_services", "match_plugin_output",
                           "match_timeperiod", "match_escalation", "match_escalation_throttle",
                           "match_sl", "match_host_event", "match_service_event",
@@ -8433,7 +8451,7 @@ def vs_notification_rule(userid = None):
             ( _("Notification Method"), [ "notify_plugin", "notify_method", "bulk" ] ),]
             + contact_headers
             + [
-            ( _("Conditions"),         [ "match_folder", "match_hosttags", "match_hosts", "match_exclude_hosts",
+            ( _("Conditions"),         [ "match_folder", "match_hosttags", "match_hostgroups", "match_hosts", "match_exclude_hosts",
                                          "match_services", "match_exclude_services", "match_plugin_output",
                                          "match_checktype", "match_timeperiod",
                                          "match_escalation", "match_escalation_throttle",
@@ -15791,11 +15809,8 @@ class HostTagCondition(ValueSpec):
                 raise MKUserError(varprefix, _("The list of host tags must only contain strings "
                                            "but also contains %r") % x)
 
-
-
     def validate_value(self, value, varprefix):
         pass
-
 
 
 

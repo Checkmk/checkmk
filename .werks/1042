@@ -1,0 +1,10 @@
+Title: Rule based notifications: allow matching on host groups
+Level: 2
+Component: notifications
+Version: 1.2.5i5
+Date: 1404378080
+Class: feature
+
+In the rule based notifications you can now use host group membership
+for matching. It is allowed to select severel groups at once, one of
+which the host must be member of.

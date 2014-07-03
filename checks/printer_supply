@@ -43,7 +43,7 @@
 #['Waste Toner box OKI DATA CORP', '1', '-2', '']
 
 # Warn/Crit/upturn current
-printer_supply_default_levels = (20, 10, False)
+printer_supply_default_levels = (20.0, 10.0, False)
 
 # When the printer reports -3 as fill threshold the toner
 # might be empty or might have some small remaining capacities

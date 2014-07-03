@@ -3,7 +3,6 @@
     * 1012 Fix quoting of backslashes in custom checks with nagios core...
             NOTE: Please refer to the migration notes!
     * 1035 FIX: Do not fail on errors in *.mk files anymore - except in interactive mode...
-    * 0174 FIX: FIX: Fixed appending of --keepalive-fd parameters to checkhelps...
 
     Checks & Agents:
     * 0994 FIX: agent plugin smart: fixed syntax error
@@ -13,6 +12,7 @@
     * 0173 FIX: hitachi_hnas_volume: Fixed bug when snmp outputs empty lines
     * 1037 FIX: bintec_info: support bintec RXL12500
     * 0948 FIX: mk_inventory.ps1: increased caching time to 14400, fixed incorrect default cachefile path
+    * 1043 FIX: printer_supply: fix value error in default parameters...
 
     Multisite:
     * 1036 FIX: doc/treasures/downtime: fix --url option, better error output

@@ -5365,3 +5365,21 @@ register_check_parameters(
     ),
     "first"
 )
+
+register_check_parameters(
+    subgroup_environment,
+    "plug_count",
+    _("Number of active Plugs"),
+    Tuple(
+        help = _("Levels for the number of active plugs in a devices."),
+        elements = [
+            Integer(title = _("critical if below or equal"), default_value = 30),
+            Integer(title = _("warning if below or equal"), default_value = 32),
+            Integer(title = _("warning if above or equal"), default_value = 38),
+            Integer(title = _("critical if above or equal"), default_value = 40),
+        ]),
+    None,
+    "first"
+)
+
+

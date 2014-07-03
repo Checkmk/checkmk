@@ -3345,7 +3345,7 @@ def show_service_table(host, firsttime):
 
             # Icon for Service parameters. Not for missing services!
             table.cell("", "")
-            if state_type != "new":
+            if state_type not in [ "new", "ignored" ]:
                 params_url = make_link([("mode", "object_parameters"),
                                         ("host", hostname),
                                         ("service", descr)])

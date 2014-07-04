@@ -1,0 +1,11 @@
+Title: Remove icon for service parameters in WATO service list for missing services
+Level: 1
+Component: wato
+Version: 1.2.5i5
+Date: 1404398390
+Class: fix
+
+In the services list of a host in WATO in the section <i>Available (missing) services</i>
+the icon for the service parameters has been removed. It didn't work properly because
+Check_MK cannot safely analyse non-existent services. It is dangerous anyway if the user
+thinks he could do configuration for those services.

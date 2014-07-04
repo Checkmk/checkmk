@@ -926,7 +926,7 @@ class Float(Integer):
 
 class Percentage(Float):
     def __init__(self, **kwargs):
-        Integer.__init__(self, **kwargs)
+        Float.__init__(self, **kwargs)
         if "minvalue" not in kwargs:
             self._minvalue = 0.0
         if "maxvalue" not in kwargs:

@@ -1,0 +1,10 @@
+Title: printer_supply: fix value error in default parameters
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1404397710
+Class: fix
+
+In WATO newly created checks of type <tt>printer_supply</tt> where displayed as
+<i>Invalid check parameters</i>. The reason was a confusion between float and
+integer values. This has been fixed.

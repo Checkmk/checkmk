@@ -35,7 +35,7 @@ from mod_python import apache
 import sys, os, pprint
 from lib import *
 import livestatus
-import defaults, config, login, userdb, hooks, default_permissions
+import defaults, config, login, userdb, hooks, visuals, default_permissions
 from html_mod_python import *
 
 # Load page handlers
@@ -60,7 +60,7 @@ if defaults.omd_root:
 
 # Call the load_plugins() function in all modules
 def load_all_plugins():
-    for module in [ hooks, userdb, views, sidebar, dashboard, wato, bi, mobile, notify ]:
+    for module in [ hooks, userdb, visuals, views, sidebar, dashboard, wato, bi, mobile, notify ]:
         try:
             module.load_plugins # just check if this function exists
             module.load_plugins()

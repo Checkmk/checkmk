@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 builtin_dashboards["main"] = {
+    "context_type": "global",
     "title"       : _("Main Overview"),
     "topic"       : _("Overview"),
     "description" : _("This dashboard gives you a general overview on the state of your "
@@ -76,6 +77,7 @@ builtin_dashboards["main"] = {
 #Only work in OMD installations
 if defaults.omd_site:
     builtin_dashboards["topology"] = {
+        "context_type": "global",
         "title"       : _("Network Topology"),
         "topic"       : _("Overview"),
         "description" : _("This dashboard uses the parent relationships of your hosts to display a "
@@ -97,6 +99,7 @@ if defaults.omd_site:
     }
 
 builtin_dashboards["simple_problems"] = {
+    "context_type": "global",
     "title"       : _("Host &amp; Services Problems"),
     "topic"       : _("Overview"),
     "description" : _("A compact dashboard which lists your unhandled host and service problems."),

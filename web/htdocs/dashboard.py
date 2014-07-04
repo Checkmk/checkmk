@@ -409,11 +409,8 @@ def ajax_dashlet():
 #   '----------------------------------------------------------------------'
 
 def page_edit_dashboards():
-    def render_buttons():
-        html.context_button(_("Create Dashboard"), "edit_dashboard.py", 'new')
-
     load_dashboards()
-    visuals.page_list('dashboards', dashboards, render_context_buttons = render_buttons)
+    visuals.page_list('dashboards', dashboards)
 
 #.
 #   .--Dashb. Config-------------------------------------------------------.

@@ -30,6 +30,31 @@ from lib import *
 from valuespec import *
 import config, table
 
+#   .--Plugins-------------------------------------------------------------.
+#   |                   ____  _             _                              |
+#   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
+#   |                  | |_) | | | | |/ _` | | '_ \/ __|                   |
+#   |                  |  __/| | |_| | (_| | | | | \__ \                   |
+#   |                  |_|   |_|\__,_|\__, |_|_| |_|___/                   |
+#   |                                 |___/                                |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+loaded_with_language = False
+
+def load_plugins():
+    global loaded_with_language
+    if loaded_with_language == current_language:
+        return
+
+    global context_types
+    context_types = {}
+
+    load_web_plugins('visuals', globals())
+    loaded_with_language = current_language
+
+#.
 #   .--Save/Load-----------------------------------------------------------.
 #   |          ____                     ___                    _           |
 #   |         / ___|  __ ___   _____   / / |    ___   __ _  __| |          |
@@ -220,7 +245,28 @@ def page_list(what, visuals, render_create_form = None, custom_columns = [], ren
             return
 
     if render_create_form:
+        # FIXME: Deprecate this once the visual types are implemented for the view editor
         render_create_form()
+    else:
+        # Show the default creation form
+        if html.var('mode') == 'create':
+            context_type = html.var('context_type')
+            if not context_type:
+                html.show_error(_('Please select a context type. The context type specifies '
+                                  'which kind of objects are rendered.'))
+            else:
+                html.immediate_browser_redirect(1,
+                    "edit_%s.py?mode=create&context_type=%s" % (what_s, context_type))
+                return
+
+        html.begin_form("create_visual")
+        html.hidden_field('mode', 'create')
+        html.button("create", _("Create %s") % what_s)
+        html.write(_(" with context type: "))
+        html.sorted_select("context_type", [('', _('--- Select a Context type ---'))]
+                  + [ (k, v["title"]) for k, v in context_types.items() ])
+        html.end_form()
+
 
     html.write('<h3>' + (_("Existing %s") % what.title()) + '</h3>')
 
@@ -337,8 +383,14 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None, create_hand
             if not view:
                 view = all_visuals.get(('', viewname)) # load builtin view
 
+        context_type = view['context_type']
     else:
         mode = 'create'
+        context_type = html.var('context_type')
+        if not context_type:
+            raise MKUserError('context_type', _('The context type is missing.'))
+        if context_type not in context_types:
+            raise MKUserError('context_type', _('The context type does not exist.'))
 
     if mode == 'clone':
         title = _('Clone %s') % what_s.title()
@@ -360,6 +412,10 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None, create_hand
         render = 'form',
         optional_keys = None,
         elements = [
+            ('context_type', FixedValue(context_type,
+                title = _('Context Type'),
+                totext = context_types[context_type]['title'],
+            )),
             ('name', TextAscii(
                 title = _('Name'),
                 help = _("The name will be used in URLs that point to a view, e.g. "
@@ -413,6 +469,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None, create_hand
 
             old_view = view
             view = {
+                'context_type': general_properties['context_type'],
                 'name'        : general_properties['name'],
                 'title'       : general_properties['title'],
                 'topic'       : general_properties['topic'],

@@ -1,3 +1,5 @@
+1.2.4p6:
+
 1.2.4p5:
     Core & Setup:
     * 1035 FIX: Do not fail on errors in *.mk files anymore - except in interactive mode...

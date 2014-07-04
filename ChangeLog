@@ -52,6 +52,7 @@
     * 0988 FIX: livedump: Fix exception in case no contact groups are defined for a service
 
     HW/SW-Inventory:
+    * 0625 inventory now read the kernel version and architecture for linux and windows
     * 0167 FIX: mk_inventory.linux: Changed field separator from pipe to tab...
     * 1005 FIX: Fix exception when using pretty-print output format
     * 0946 FIX: hw/sw inventory: fixed display bug for byte fields with the value 0...

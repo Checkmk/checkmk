@@ -1,0 +1,8 @@
+Title: inventory now read the kernel version and architecture for linux and windows
+Level: 1
+Component: inv
+Version: 1.2.5i5
+Date: 1404470499
+Class: feature
+
+

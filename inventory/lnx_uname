@@ -30,11 +30,10 @@
 
 def inv_lnx_uname(info):
     node = inv_tree("software.os.")
-    line = info[0]
-    if len(line) >= 6:
-        node["kernel"] = line[1:6]
-    if len(line) >= 13:
-        node["arch"] = line[-2]
+    if len(info) >= 1:
+        node["arch"] = info[0][0]
+    if len(info) >= 2:
+        node["kernel_version"] = info[1][0]
 
 inv_info['lnx_uname'] = {
    "inv_function"           : inv_lnx_uname,

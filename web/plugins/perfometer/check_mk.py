@@ -459,7 +459,7 @@ perfometers["check_mk-esx_vsphere_counters.if"] = perfometer_check_mk_if
 perfometers["check_mk-hitachi_hnas_fc_if"] = perfometer_check_mk_if
 
 def perfometer_check_mk_fc_port(row, check_command, perf_data):
-    unit =  "Byte/s"
+    unit =  "B"
     return perfometer_bandwidth(
         in_traffic  = savefloat(perf_data[0][1]),
         out_traffic = savefloat(perf_data[5][1]),

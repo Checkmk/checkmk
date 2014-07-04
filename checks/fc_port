@@ -150,7 +150,7 @@ def check_fc_port(item, params, info):
         speedmsg  = "assuming %g GBit/s" % gbit
     else:
         gbit = wirespeed * 8.0 / ( 1000.0 * 1000.0 * 1000.0 ) # in GBit/sec
-        speedmsg = "%.1f GBit/s" % gb
+        speedmsg = "%.1f GBit/s" % gbit
     output.append(speedmsg)
 
     # Now check rates of various counters

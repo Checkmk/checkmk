@@ -115,7 +115,9 @@ foreach ($myJob in $myBackupJobs)
 }
 
 # Final output
-"$myJobsText" + "$myTaskText"
+write-host $myJobsText
+write-host $myTaskText
+# "$myJobsText" + "$myTaskText"
 
 
 # END OF TRY

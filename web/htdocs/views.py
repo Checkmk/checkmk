@@ -269,6 +269,7 @@ def custom_field_handler(view):
     datasourcename = view.get("datasource", html.var("datasource"))
     if not datasourcename:
         raise MKInternalError(_("No datasource defined."))
+    view['datasource'] = datasourcename
 
     load_view_into_html_vars(view)
 
@@ -494,32 +495,32 @@ def load_view_into_html_vars(view):
     # view is well formed, not checks neccessary
     html.set_var("datasource",       view["datasource"])
     html.set_var("column_headers",   view.get("column_headers", "off"))
-    html.set_var("layout",           view["layout"])
+    html.set_var("layout",           view.get("layout", "boxed"))
     html.set_var("num_columns",      view.get("num_columns", 1))
     html.set_var("browser_reload",   view.get("browser_reload", 0))
     html.set_var("play_sounds",      view.get("play_sounds", False) and "on" or "")
     html.set_var("mobile",           view.get("mobile") and "on" or "")
-    html.set_var("mustsearch",       view["mustsearch"] and "on" or "")
+    html.set_var("mustsearch",       view.get("mustsearch", False) and "on" or "")
     html.set_var("force_checkboxes", view.get("force_checkboxes", False) and "on" or "")
     html.set_var("user_sortable",    view.get("user_sortable", True) and "on" or "")
 
     # [3] Filters
     for name, filt in multisite_filters.items():
         if name not in ubiquitary_filters:
-            if name in view["show_filters"]:
+            if name in view.get("show_filters", []):
                 html.set_var("filter_%s" % name, "show")
-            elif name in view["hard_filters"]:
+            elif name in view.get("hard_filters", []):
                 html.set_var("filter_%s" % name, "hard")
-            elif name in view["hide_filters"]:
+            elif name in view.get("hide_filters", []):
                 html.set_var("filter_%s" % name, "hide")
 
-    for varname, value in view["hard_filtervars"]:
+    for varname, value in view.get("hard_filtervars", []):
         if not html.has_var(varname):
             html.set_var(varname, value)
 
     # [4] Sorting
     n = 1
-    for name, desc in view["sorters"]:
+    for name, desc in view.get("sorters", []):
         html.set_var("sort_%d" % n, name)
         if desc:
             value = "dsc"
@@ -530,7 +531,7 @@ def load_view_into_html_vars(view):
 
     # [5] Grouping
     n = 1
-    for entry in view["group_painters"]:
+    for entry in view.get("group_painters", []):
         name = entry[0]
         viewname = entry[1]
         tooltip = len(entry) > 2 and entry[2] or None
@@ -543,7 +544,7 @@ def load_view_into_html_vars(view):
 
     # [6] Columns
     n = 1
-    for entry in view["painters"]:
+    for entry in view.get("painters", []):
         name       = entry[0]
         viewname   = entry[1]
         tooltip    = len(entry) > 2 and entry[2] or None

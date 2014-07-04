@@ -500,7 +500,9 @@ def construct_content(context):
                 '<tr class="even0"><td colspan=2 class=graphs>%s</td></tr>' % graph_code
             )
 
-    content_html = tmpl_head_html + content_html + tmpl_foot_html
+    content_html = substitute_context(tmpl_head_html, context) + \
+                   content_html + \
+                   substitute_context(tmpl_foot_html, context)
 
     return content_txt, content_html, attachments
 

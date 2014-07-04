@@ -1,0 +1,11 @@
+Title: quicksearch: streamline single/multi pattern search plugin
+Component: multisite
+State: open
+Date: 2014-07-03 14:44:05
+Targetversion: future
+Class: nastiness
+
+The configurable quicksearch search filters use two different url generating concepts.
+Single filters use predefined default templated - specified in sidebar.py.
+Multi filters create the url out of functions or given url templates - specified in the filter defintion.
+

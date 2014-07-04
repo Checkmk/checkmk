@@ -1,0 +1,11 @@
+Title: WATO context button on quicksearch result page broken
+Component: multisite
+State: open
+Date: 2014-07-04 09:30:24
+Targetversion: 1.2.5i1
+Class: bug
+
+When searching for a host substring, for example "node", results in a page listing
+all services of the hosts node1 and node2. When clicking on the context button
+WATO, it displays a red error message that the host "node" (the substring) is not
+managed by WATO.

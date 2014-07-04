@@ -302,8 +302,11 @@ def multipart_mail(target, subject, from_address, reply_to, content_txt, content
 
     return m
 
-def send_mail(m, target):
-    p = subprocess.Popen(["/usr/sbin/sendmail", "-i", target ], stdin = subprocess.PIPE)
+def send_mail(m, target, from_address):
+    cmd = ["/usr/sbin/sendmail", "-i", target ]
+    if from_address:
+        cmd += ['-f', from_address]
+    p = subprocess.Popen(cmd, stdin = subprocess.PIPE)
     p.communicate(m.as_string())
     return True
 
@@ -500,7 +503,9 @@ def construct_content(context):
                 '<tr class="even0"><td colspan=2 class=graphs>%s</td></tr>' % graph_code
             )
 
-    content_html = tmpl_head_html + content_html + tmpl_foot_html
+    content_html = substitute_context(tmpl_head_html, context) + \
+                   content_html + \
+                   substitute_context(tmpl_foot_html, context)
 
     return content_txt, content_html, attachments
 
@@ -590,6 +595,6 @@ def main():
     from_address = context.get("PARAMETER_FROM")
     reply_to = context.get("PARAMETER_REPLY_TO")
     m = multipart_mail(mailto, subject, from_address, reply_to, content_txt, content_html, attachments)
-    send_mail(m, mailto)
+    send_mail(m, mailto, from_address)
 
 main()

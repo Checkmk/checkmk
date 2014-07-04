@@ -926,7 +926,7 @@ class Float(Integer):
 
 class Percentage(Float):
     def __init__(self, **kwargs):
-        Integer.__init__(self, **kwargs)
+        Float.__init__(self, **kwargs)
         if "minvalue" not in kwargs:
             self._minvalue = 0.0
         if "maxvalue" not in kwargs:
@@ -1372,6 +1372,10 @@ class DualListChoice(ListChoice):
 
     def render_input(self, varprefix, value):
         self.load_elements()
+        if not self._elements:
+            html.write(_("There are no elements for selection."))
+            return
+
         selected   = []
         unselected = []
         if self._custom_order:

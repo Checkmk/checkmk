@@ -2493,16 +2493,17 @@ def transform_printer_supply(l):
 register_check_parameters(
     subgroup_printing,
     "printer_supply",
-    _("Printer cardridge levels"),
+    _("Printer cartridge levels"),
     Transform(
         Tuple(
-              kelp = _("Levels for printer cardridges."),
+              kelp = _("Levels for printer cartridges."),
               elements = [
-                  Float(title = _("Warning remaining")),
-                  Float(title = _("Critical remaining")),
+                  Percentage(title = _("Warning remaining"), allow_int = True, default_value = 20.0),
+                  Percentage(title = _("Critical remaining"), allow_int = True, default_value = 10.0),
                   Checkbox(
-                        title = _("Upturn toner levels" ),
-                        help = _ ("Some Printers (eg. Konica for Drum Cartdiges) returning the available"
+                        title = _("Upturn toner levels"),
+                        label = _("Printer sends <i>used</i> material instead of <i>remaining</i>"),
+                        help =  _("Some Printers (eg. Konica for Drum Cartdiges) returning the available"
                                   " fuel instead of what is left. In this case it's possible"
                                   " to upturn the levels to handle this behavior"
                                  )
@@ -2511,7 +2512,7 @@ register_check_parameters(
              forth = transform_printer_supply,
     ),
     TextAscii(
-        title = _("cardridge specification"),
+        title = _("cartridge specification"),
         allow_empty = True
     ),
     None,
@@ -5365,3 +5366,21 @@ register_check_parameters(
     ),
     "first"
 )
+
+register_check_parameters(
+    subgroup_environment,
+    "plug_count",
+    _("Number of active Plugs"),
+    Tuple(
+        help = _("Levels for the number of active plugs in a devices."),
+        elements = [
+            Integer(title = _("critical if below or equal"), default_value = 30),
+            Integer(title = _("warning if below or equal"), default_value = 32),
+            Integer(title = _("warning if above or equal"), default_value = 38),
+            Integer(title = _("critical if above or equal"), default_value = 40),
+        ]),
+    None,
+    "first"
+)
+
+

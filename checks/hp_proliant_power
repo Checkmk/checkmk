@@ -27,7 +27,7 @@
 hp_prolaint_power_default_levels = ( 300, 400 ) 
 
 def inventory_hp_proliant_power(info):
-    if len(info) > 0:
+    if len(info) > 0 and info[0][0] != '0':
         return [ ( None, 'hp_prolaint_power_default_levels') ]
 
 def check_hp_proliant_power(item, params, info):
@@ -35,7 +35,7 @@ def check_hp_proliant_power(item, params, info):
         1 : "other",
         3 : "absent",
     }
-    status, reading = map(saveint, info[0])
+    status, reading = map(int, info[0])
     if status != 2:
         return 2, "Power Meter state: %s" % ( status_table[status] )
     warn, crit = params

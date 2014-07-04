@@ -48,6 +48,9 @@ def check_lnx_thermal(item, params, info):
             if len(line) > 4:
                 trip_points = dict(zip(line[5::2], map(lambda x: saveint(x) / 1000, line[4::2])))
                 for tp_num, (tp_name, level) in enumerate(trip_points.items()):
+                    # ignore active cooling device trip points (means enabling a fan or similar)
+                    if tp_name == 'active':
+                        continue
                     if cur > level:
                         if tp_name in [ 'hot', 'critical' ]:
                             state = max(state, 2)

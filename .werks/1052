@@ -1,0 +1,10 @@
+Title: index start URL can not be used to redirect to absolute URLs anymore
+Level: 1
+Component: multisite
+Class: security
+State: unknown
+Version: 1.2.5i4p2
+Date: 1404480323
+
+An attacker could make a user open up an URL to a compromised website which the
+does not want to open index.py?start_url=http://(url to compromised URL).

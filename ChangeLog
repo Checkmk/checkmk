@@ -1,4 +1,7 @@
 1.2.5i4p2:
+    Multisite:
+    * 1052 SEC: index start URL can not be used to redirect to absolute URLs anymore...
+
 
 1.2.5i4p1:
     Core & Setup:

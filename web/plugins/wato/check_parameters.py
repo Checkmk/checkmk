@@ -5253,7 +5253,7 @@ register_check_parameters(
                     title = _("Assumed link speed"),
                     help = _("If the automatic detection of the link speed does "
                              "not work you can set the link speed here."),
-                    unit = _("GByte/s")
+                    unit = _("GBit/s")
                 )
             ),
             ("rxcrcs",

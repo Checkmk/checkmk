@@ -1,0 +1,8 @@
+Title: Mails sent with mail/asciimail plugin now really set the from address
+Level: 1
+Component: notifications
+Version: 1.2.5i5
+Date: 1404461025
+Class: fix
+
+

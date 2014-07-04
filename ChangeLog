@@ -30,11 +30,13 @@
     * 0948 FIX: mk_inventory.ps1: increased caching time to 14400, fixed incorrect default cachefile path
     * 0827 FIX: lnx_thermal: Not checking active trip points (e.g. cooling device triggers) anymore
     * 1043 FIX: printer_supply: fix value error in default parameters...
+    * 0626 FIX: veeam_jobs: agent now supports output lines longer than 80 chars
 
     Multisite:
     * 1013 Sort host names naturally, e.g. foobar11 comes after foobar2...
     * 1033 New Mutisite filter for the number of services a host has...
     * 0949 quicksearch: now able to search for multiple hosts at once...
+    * 1052 SEC: index start URL can not be used to redirect to absolute URLs anymore...
     * 0945 FIX: Sidebar snapin "Problem hosts": Now excludes hosts and services in downtime
     * 1036 FIX: doc/treasures/downtime: fix --url option, better error output
 
@@ -48,6 +50,7 @@
 
     Notifications:
     * 1042 Rule based notifications: allow matching on host groups...
+    * 0828 FIX: Mails sent with mail/asciimail plugin now really set the from address
 
     Reporting & Availability:
     * 0991 FIX: Availability: optionally show time stamps as UNIX epoch time...
@@ -59,6 +62,7 @@
     * 0988 FIX: livedump: Fix exception in case no contact groups are defined for a service
 
     HW/SW-Inventory:
+    * 0625 hw/sw inventory now reads the kernel version and architecture for linux and windows
     * 0167 FIX: mk_inventory.linux: Changed field separator from pipe to tab...
     * 1005 FIX: Fix exception when using pretty-print output format
     * 0946 FIX: hw/sw inventory: fixed display bug for byte fields with the value 0...

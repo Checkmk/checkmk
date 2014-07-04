@@ -31,17 +31,25 @@ then
             echo -n "$f|" ; tr \\n \| < $f | sed 's/|$//' ; echo
         fi
     done
-    
+
     # CPU Information. We need just the first one
     if [ -e /proc/cpuinfo ] ; then
         echo "<<<lnx_cpuinfo:sep(58):persist($UNTIL)>>>"
-        sed 's/[[:space:]]*:[[:space:]]*/:/' < /proc/cpuinfo | grep -v '^flags'
+        sed 's/[[:space:]]*:[[:space:]]*/:/' < /proc/cpuinfo
     fi
-    
+
     # Information about main board, memory, etc.
     if type dmidecode >/dev/null ; then
         echo "<<<dmidecode:sep(58):persist($UNTIL)>>>"
         dmidecode -q | sed 's/\t/:/g'
     fi
+
+    # Information about kernel architecture
+    if type uname >/dev/null ; then
+        echo "<<<lnx_uname:persist($UNTIL)>>>"
+        uname -m
+        uname -r
+    fi
+
 fi
 

@@ -213,7 +213,7 @@ def notify_notify(raw_context, analyse=False):
 
     if notification_logging >= 2:
         notify_log("Computed variables:\n"
-                   + "\n".join(sorted(["                    %s=%s" % (k, raw_context[k]) for k in raw_context if k not in raw_keys]))) 
+                   + "\n".join(sorted(["                    %s=%s" % (k, raw_context[k]) for k in raw_context if k not in raw_keys])))
 
     # Spool notification to remote host, if this is enabled
     if notification_spool_to:

@@ -36,7 +36,7 @@ def check_hitachi_hnas_volume(item, params, info):
     # use checks from df.include
     fslist = []
     for id, label, volume_status, total, free, evs in info:
-        if id = '':
+        if id == '':
             continue
         if id + " " + label == item:
             size_mb = int(total) / 1048576.0

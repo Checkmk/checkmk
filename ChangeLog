@@ -47,6 +47,7 @@
 
     Notifications:
     * 1042 Rule based notifications: allow matching on host groups...
+    * 0828 FIX: Mails sent with mail/asciimail plugin now really set the from address
 
     Reporting & Availability:
     * 0991 FIX: Availability: optionally show time stamps as UNIX epoch time...

@@ -1,0 +1,8 @@
+Title: lnx_video, win_video: added inventory function and agent for linux video cards, modified windows inventory function
+Level: 1
+Component: inv
+Version: 1.2.5i5
+Date: 1404670606
+Class: feature
+
+

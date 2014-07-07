@@ -1,0 +1,14 @@
+Title: Fixed events check always being reporting OK state
+Level: 2
+Component: core
+Class: fix
+State: unknown
+Version: 1.2.4p6
+Date: 1404714657
+
+The "Events .*" checks were always displayed as OK.
+
+Had been introduced here:
+
+commit 6dfcbb60e3be64dcd701aa6abbc1378d4f4a1f3e
+Date:   Wed Jul 2 10:09:02 2014 +0200

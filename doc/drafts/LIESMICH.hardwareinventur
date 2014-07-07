@@ -206,3 +206,153 @@ RPM-Paket X", dann ist das X ja variabel. Dies könnten wir evtl. lösen,
 in dem wir den bestehenden Mechanismus zum Anzeigen von Service-Daten in
 Hosttabellen verwenden.
 
+
+----------------------------------------------------------------------
+Storage
+----------------------------------------------------------------------
+
+Storage (EMC, ...), 500 physikalische Platten, daraus dann X logische LUNs.
+
+PCI->Bus, Adapter, Device...
+
+SCSI-Devices (vom FibreChannel-Adapter), z.B. /dev/sdaz, /dev/sdaab
+ - Evtl. Partitionen
+Multipath-Devices (z.B. Kombination aus sda, sdb, sdc und sdd) --> /dev/dm0
+Linux-Software-RAID (z.. /dev/dm0 und /dev/dm1 -> /dev/md0)
+ - Spiegelung von Platten
+ - Spiegelung von Filern
+Das Ding dann z.B. mit kpartx wieder partitioniert!
+
+LVM-PVs z.B. /dev/dm0, kein eigenes Devices
+LVM-VGs, bestehen aus mehreren PVs
+LVM-LVs, wohnen in einer VG
+
+In den LVs können Dateisysteme wohnen. Oder Swap. Oder ORACLE ASM.
+
+- DR:BD
+- Verschlüsselungen
+- NFS, SMB, etc.
+
+
+hardware.storage
+    .filesystems (-> Direkt die df-Tabelle)
+        :0
+            .fsnode     "/dev/vg-01/lv-backup"
+            .size       9823749827349823
+            .used       2943847238947
+            .type       "ext3"
+            .mountpoint /srv/backup
+            .local      True
+            .disk       inv_reference(... zu Platte)
+            .partition  inv_reference(... zu Partition)
+        :1
+            .fsnode     "/dev/vg-01/lv-unused"
+            .size       9823749827349823
+            .used       2943847238947
+            .type       "swap"
+            .mountpoint None
+            .local      True
+        :2
+            .server     "rablfals.local"
+            .volume     "/wefoijweofijw"
+            .size       9823749827349823
+            .used       2943847238947
+            .type       "nfs"
+            .mountpoint "/sapdata"
+            .local      False
+
+    .swapareas
+        :0
+            .device     "/dev/vg-01/lv-swap"
+            .size       9823749827349823
+            .used       2943847238947
+
+    .devices (LUNs, Harddisks, letztlich alle Blockdevices, außer Partitionen??)
+        :1
+            .fsnode  "/dev/drbd0"
+            .bus     "drbd"  (alternativ: "fibrechannel", "iscsi", "ata")
+            .local   False
+            .size    24392734983427497
+            .vendor  "drbd"
+            .partitions
+               :0
+                    .number 1
+                    .size 293847298347
+                    .fsnode "/dev/dm5"
+
+    .disks # Jedes Blockdevice, dass faktisch Speicher hinzufügt. LUNs, Platten, DR:BD. Vor RAID
+    # Bus-Typen: "ata", "scsi", "fc", "iscsi", "drbd", ???
+    # Bei HW-RAID-Platten gibt es (wahrscheinlich) keine fsnode, dafür aber ein
+    # .raid -> ID von dem RAID, wo sie verwendet wird
+        :0
+            .fsnode  "/dev/dm5"
+            .alias   "Hirnibaldi"
+            .uuid    "3600508b4001073510002c00002820000",
+            .bus     "fc"
+            .paths   [ "/dev/sda", "/dev/sdb", "/dev/sdc", "/dev/sdd" ],
+            .size    24392734983427497
+            .wwn    "9239487-23497823-479o-234-982734"
+            .local  False
+        :1
+            .fsnode  "/dev/sda"
+            .bus     "ata" (oder "scsi")
+            .size    24392734983427497
+            .serial  "MK-28348-IF"
+            .product "WDC-500cw"
+            .vendor  "wdc"
+            .type    "disk" ("ssd"??")
+            .local   True
+            .partitions
+               :0
+                    .number 2
+                    .size 293847298347
+                    .fsnode "/dev/sda2"
+                    .filesystem inv_reference("hardware.filesystems:2")
+               :0
+                    .number 5
+                    .size 2947298347
+                    .swaparea inv_reference("hardware.swapareas:1")
+        :2
+            .bus     "ata" (oder "scsi")
+            .fsnode  "/dev/sdb"
+            .size    24392734983427497
+            .serial  "MK-28348-IF"
+            .product "WDC-500cw"
+            .vendor  "wdc"
+            .type    "disk" ("ssd"??")
+            .raid    0 # Referenz zu hardware.raid:0
+
+    .raid
+    # Hardware- oder Software-RAID
+        :0
+            .size    24392734983427497
+            .type    "hw"
+            .fsnode  "/dev/cciss/c0d0"
+            .harddisks
+               # Hier einfach den gleichen Datensatz von .disks nochmal reinhängen
+               :0 (symlink: @hardware.disks:17)
+               :1
+
+            .partitions
+               :0
+                    .number 1
+                    .size 293847298347
+                    .fsnode "/dev/cciss/c0d0p1"
+
+
+        :1
+            .size    24392734983427497
+            .type    "sw"
+            .fsnode  "/dev/md0"
+            .harddisks
+               :0
+                   .size 9928347923478
+                   .fsnode "/dev/sda"
+                   .serial "WD-WCAP01993992"
+                   .state "online"
+               :2
+                   .size 9928347923478
+                   .fsnode "/dev/sdb"
+                   .serial "WD-WCAP01993992"
+                   .state "online"
+

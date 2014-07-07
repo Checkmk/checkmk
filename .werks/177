@@ -1,0 +1,8 @@
+Title: esx_vsphere_hostsystem.multipath: Fixed return state in case of paths in standby
+Level: 1
+Component: checks
+Version: 1.2.4p6
+Date: 1404743995
+Class: fix
+
+Thru a typo, the check used the count of paths in standby as status code. This is fixed now.

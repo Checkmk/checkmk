@@ -255,7 +255,7 @@ def check_esx_vsphere_hostsystem_multipath(item, params, info):
                 if state_infos["standby"][1] > 0 and \
                    state_infos["standby"][1] != state_infos["active"][1]:
                     standby_label = "(!)"
-                    state = max(state_infos["standby"][1], state)
+                    state = max(state_infos["standby"][0], state)
             else:
                 state = 0
                 for state_name, state_values in state_infos.items():

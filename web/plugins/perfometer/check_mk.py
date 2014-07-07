@@ -1061,21 +1061,21 @@ def perfometer_raritan_pdu_inlet(row, check_command, perf_data):
     unit = perf_data[0][2]
     display_str = perf_data[0][1] + " " + unit
 
-    if cap == "rmsCurrent":
+    if cap.startswith("rmsCurrent"):
         return display_str, perfometer_logarithmic(value, 1, 2, display_color)
-    elif cap == "unbalancedCurrent":
+    elif cap.startswith("unbalancedCurrent"):
         return display_str, perfometer_linear(value, display_color)
-    elif cap == "rmsVoltage":
+    elif cap.startswith("rmsVoltage"):
         return display_str, perfometer_logarithmic(value, 500, 2, display_color)
-    elif cap == "activePower":
+    elif cap.startswith("activePower"):
         return display_str, perfometer_logarithmic(value, 20, 2, display_color)
-    elif cap == "apparentPower":
+    elif cap.startswith("apparentPower"):
         return display_str, perfometer_logarithmic(value, 20, 2, display_color)
-    elif cap == "powerFactor":
+    elif cap.startswith("powerFactor"):
         return display_str, perfometer_linear(value * 100, display_color)
-    elif cap == "activeEnergy":
+    elif cap.startswith("activeEnergy"):
         return display_str, perfometer_logarithmic(value, 100000, 2, display_color)
-    elif cap == "apparentEnergy":
+    elif cap.startswith("apparentEnergy"):
         return display_str, perfometer_logarithmic(value, 100000, 2, display_color)
 
     return "unimplemented" , perfometer_linear(0, "#ffffff")

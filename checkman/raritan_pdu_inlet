@@ -14,7 +14,7 @@ description:
  The state of the check reflects the state of the device.
 
 item:
- The ID Number of the inlet and the sensor type.
+ The ID Number of the inlet and the sensor type, plus the phase.
 
 perfdata:
  Exactly one number: The measured value together with it's unit.

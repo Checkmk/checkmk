@@ -27,7 +27,6 @@
 # Author: Michael Nieporte <micha.nieporte@gmail.com> - Based on rsa_health by Mathias Kettner
 
 def ibm_imm_health_scan(oid):
-    print "running"
     if oid('.1.3.6.1.2.1.1.1.0').lower().endswith(" mips") or \
        oid('.1.3.6.1.2.1.1.1.0').lower().endswith(" sh4a"):
         return True

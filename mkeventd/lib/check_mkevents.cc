@@ -255,5 +255,5 @@ int main(int argc, char** argv)
             printf(", worst state is %s (Last line: %s)", state_text, worst_row_event_text.c_str());
         printf("\n");
     }
-    return 0;
+    return worst_state;
 }

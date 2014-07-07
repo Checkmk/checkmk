@@ -7,7 +7,7 @@ Class: feature
 
 The new Event Console global option <i>Syslog-like message logging</i> will enable
 logging of <b>all</b> incoming events into logfiles that have syslog format.
-These files will be stored below <tt>var/check_mk/mkeventd/messages</tt> and will
+These files will be stored below <tt>var/mkeventd/messages</tt> and will
 be named with the same scheme as the history logfiles. They will adopt the same
 rotation principle as the history files.
 

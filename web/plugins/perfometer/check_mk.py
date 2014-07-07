@@ -668,18 +668,18 @@ def perfometer_check_mk_printer_supply(row, check_command, perf_data):
     s = row['service_description'].lower()
 
     fg_color = '#000000'
-    if 'black' in s or s[-1] == 'k':
+    if 'black' in s or ("ink" not in s and s[-1] == 'k'):
         colors   = [ '#000000', '#6E6F00', '#6F0000' ]
         if left >= 60:
-            fg_color = '#ffffff'
+            fg_color = '#FFFFFF'
     elif 'magenta' in s or s[-1] == 'm':
-        colors = [ '#fc00ff', '#FC7FFF', '#FEDFFF' ]
+        colors = [ '#FC00FF', '#FC7FFF', '#FEDFFF' ]
     elif 'yellow' in s or s[-1] == 'y':
-        colors = [ '#ffff00', '#FEFF7F', '#FFFFCF' ]
+        colors = [ '#FFFF00', '#FEFF7F', '#FFFFCF' ]
     elif 'cyan' in s or s[-1] == 'c':
-        colors = [ '#00ffff', '#7FFFFF', '#DFFFFF' ]
+        colors = [ '#00FFFF', '#7FFFFF', '#DFFFFF' ]
     else:
-        colors = [ '#cccccc', '#ffff00', '#ff0000' ]
+        colors = [ '#CCCCCC', '#ffff00', '#ff0000' ]
 
     st = min(2, row['service_state'])
     color = colors[st]
@@ -1061,21 +1061,21 @@ def perfometer_raritan_pdu_inlet(row, check_command, perf_data):
     unit = perf_data[0][2]
     display_str = perf_data[0][1] + " " + unit
 
-    if cap == "rmsCurrent":
+    if cap.startswith("rmsCurrent"):
         return display_str, perfometer_logarithmic(value, 1, 2, display_color)
-    elif cap == "unbalancedCurrent":
+    elif cap.startswith("unbalancedCurrent"):
         return display_str, perfometer_linear(value, display_color)
-    elif cap == "rmsVoltage":
+    elif cap.startswith("rmsVoltage"):
         return display_str, perfometer_logarithmic(value, 500, 2, display_color)
-    elif cap == "activePower":
+    elif cap.startswith("activePower"):
         return display_str, perfometer_logarithmic(value, 20, 2, display_color)
-    elif cap == "apparentPower":
+    elif cap.startswith("apparentPower"):
         return display_str, perfometer_logarithmic(value, 20, 2, display_color)
-    elif cap == "powerFactor":
+    elif cap.startswith("powerFactor"):
         return display_str, perfometer_linear(value * 100, display_color)
-    elif cap == "activeEnergy":
+    elif cap.startswith("activeEnergy"):
         return display_str, perfometer_logarithmic(value, 100000, 2, display_color)
-    elif cap == "apparentEnergy":
+    elif cap.startswith("apparentEnergy"):
         return display_str, perfometer_logarithmic(value, 100000, 2, display_color)
 
     return "unimplemented" , perfometer_linear(0, "#ffffff")

@@ -1,0 +1,8 @@
+Title: raritan_pdu_inlet: now also monitors the three phases of the inlet
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1404731026
+Class: feature
+
+

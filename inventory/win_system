@@ -40,6 +40,7 @@ def inv_win_system(info):
     for varname, value in info:
         varname = re.sub(" *","", varname)
         value = re.sub("^ ", "", value)
+        value = value.decode("cp437")
         if varname == "SerialNumber":
             node["serial"] = value
         elif varname == "Manufacturer":

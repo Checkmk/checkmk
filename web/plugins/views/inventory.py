@@ -593,9 +593,11 @@ inventory_displayhints.update({
     ".software.packages:*.package_type"                : { "title" : _("Type"), },
     ".software.packages:*.summary"                     : { "title" : _("Description"), },
     ".software.packages:*.version"                     : { "title" : _("Version"), },
+    ".software.packages:*.vendor"                      : { "title" : _("Publisher"), },
     ".software.packages:*.package_version"             : { "title" : _("Package Version"), },
     ".software.packages:*.install_date"                : { "title" : _("Install Date"), },
     ".software.packages:*.size"                        : { "title" : _("Size"), "paint" : "count" },
+    ".software.packages:*.path"                        : { "title" : _("Path"), },
 })
 
 # TEST: create painters for node with a display hint

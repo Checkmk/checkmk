@@ -35,19 +35,19 @@ Get-WmiObject Win32_OperatingSystem -ComputerName $name -Recurse | foreach-objec
 #Get-WmiObject Win32_PhysicalMemory -ComputerName $name  | select BankLabel,DeviceLocator,Capacity,Manufacturer,PartNumber,SerialNumber,Speed
 
 # BIOS
-write-host "<<<win_bios:sep(58)>>>"
-Get-WmiObject win32_bios -ComputerName $name  | Select Manufacturer,Name,SerialNumber,InstallDate,BIOSVersion,ListOfLanguages,PrimaryBIOS,ReleaseDate,SMBIOSBIOSVersion,SMBIOSMajorVersion,SMBIOSMinorVersion
+write-host "<<<win_bios:sep(58):persist($until)>>>"
+Get-WmiObject win32_bios -ComputerName $name | Select Manufacturer,Name,SerialNumber,InstallDate,BIOSVersion,ListOfLanguages,PrimaryBIOS,ReleaseDate,SMBIOSBIOSVersion,SMBIOSMajorVersion,SMBIOSMinorVersion
 
 # System
-write-host "<<<win_system:sep(58)>>>"
-Get-WmiObject Win32_SystemEnclosure -ComputerName $name  | Select Manufacturer,Name,Model,HotSwappable,InstallDate,PartNumber,SerialNumber
+write-host "<<<win_system:sep(58):persist($until)>>>"
+Get-WmiObject Win32_SystemEnclosure -ComputerName $name | Select Manufacturer,Name,Model,HotSwappable,InstallDate,PartNumber,SerialNumber
 
 # Hard-Disk
-write-host "<<<win_disk:sep(58)>>>"
-Get-WmiObject win32_diskDrive -ComputerName $name  | select Manufacturer,Model,Name,SerialNumber,InterfaceType,Size,Partitions
+write-host "<<<win_disk:sep(58):persist($until)>>>"
+Get-WmiObject win32_diskDrive -ComputerName $name | select Manufacturer,Model,Name,SerialNumber,InterfaceType,Size,Partitions
 
 # Graphics Adapter
-write-host "<<<win_video:sep(58)>>>"
+write-host "<<<win_video:sep(58):persist($until)>>>"
 Get-WmiObject Win32_VideoController -ComputerName $name | Select Name, Description, Caption, AdapterCompatibility, VideoModeDescription, VideoProcessor, DriverVersion, DriverDate, MaxMemorySupported
 
 
@@ -56,9 +56,13 @@ write-host "<<<win_wmi_software:sep(124):persist($until)>>>"
 Get-WmiObject -Class Win32_Product  -ComputerName $name | foreach-object { write-host -separator $separator $_.Name, $_.Vendor, $_.Version, $_.InstallDate }
 Get-WmiObject Win32_Product  -ComputerName $name | foreach-object { write-host -separator $separator $_.Name, $_.Vendor, $_.Version, $_.InstallDate }
 
-## Search Registry
+# Search Registry
 write-host "<<<win_reg_uninstall:sep(124):persist($until)>>>"
-Get-ChildItem "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall" -Recurse | foreach-object { write-host -separator $separator $_.PSChildName }
+$paths = @("HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall")
+foreach ($path in $paths) {
+    Get-ChildItem $path -Recurse | foreach-object { $path2 = $path+"\"+$_.PSChildName; get-ItemProperty -path $path2 | 
+        foreach-object { write-host -separator $separator $_.DisplayName, $_.Publisher, $_.PSParentPath, $_.PSChildName, $_.DisplayVersion, $_.EstimatedSize, $_.InstallDate }}
+}
 
 ## Search exes
 write-host "<<<win_exefiles:sep(124):persist($until)>>>"
@@ -67,7 +71,7 @@ foreach ($item in $paths)
 {
     if ((Test-Path $item -pathType container))
     {
-        Get-ChildItem -Path $item -include *.exe -Recurse | foreach-object { write-host -separator $separator $_.Fullname, $_.Length }
+        Get-ChildItem -Path $item -include *.exe -Recurse | foreach-object { write-host -separator $separator $_.Fullname, $_.LastWriteTime, $_.Length }
     }
 }
 

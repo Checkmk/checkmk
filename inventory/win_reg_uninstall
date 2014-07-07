@@ -24,24 +24,28 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Example output
+# agent output
 # <<<win_reg_uninstall:sep(124)>>>
-# AddressBook
-# AFPL Ghostscript 8.54
-# AFPL Ghostscript Fonts
-# Connection Manager
-# DirectDrawEx
-# F-Secure Anti-Spyware
+# ...
 
 def inv_win_reg_uninstall(info):
     paclist = inv_tree("software.packages:")
     for line in info:
+        display_name, publisher, path, pacname, version, estimated_size, date  = line
+        install_date = ""
+        if len(date) == 8 and re.match("^20", date):
+            install_date = int(time.mktime(time.strptime(date, "%Y%m%d")))
+
         entry = {
-            "name"            : line[0],
+            "name"            : pacname.decode("cp437"),
+            "version"         : version.decode("cp437"),
+            "vendor"          : publisher.decode("cp437"),
+            "summary"         : display_name.decode("cp437"),
+            "install_date"    : install_date,
+            "size"            : estimated_size,
             "package_type"    : "reg_uninstall",
         }
         paclist.append(entry)
-
 
 inv_info['win_reg_uninstall'] = {
    "inv_function"           : inv_win_reg_uninstall,

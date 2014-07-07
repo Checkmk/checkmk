@@ -42,6 +42,7 @@ def inv_win_video(info):
     for varname, value in info:
         varname = re.sub(" *","", varname)
         value = re.sub("^ ", "", value)
+        value = value.decode("cp437")
         if varname == "Name":
             array["name"] = value
         elif varname == "DriverVersion":

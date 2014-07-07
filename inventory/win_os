@@ -32,7 +32,7 @@ def inv_win_os(info):
     node = inv_tree("software.os.")
     line = info[0]
     if len(line) == 6:
-        node["name"] = line[1]
+        node["name"] = line[1].decode("cp437")
         node["kernel_version"] = line[2]
         if line[3] == "64-Bit":
             node["arch"] = "x86_64"

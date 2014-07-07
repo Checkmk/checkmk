@@ -653,18 +653,18 @@ def perfometer_check_mk_printer_supply(row, check_command, perf_data):
     s = row['service_description'].lower()
 
     fg_color = '#000000'
-    if 'black' in s or s[-1] == 'k':
+    if 'black' in s or ("ink" not in s and s[-1] == 'k'):
         colors   = [ '#000000', '#6E6F00', '#6F0000' ]
         if left >= 60:
-            fg_color = '#ffffff'
+            fg_color = '#FFFFFF'
     elif 'magenta' in s or s[-1] == 'm':
-        colors = [ '#fc00ff', '#FC7FFF', '#FEDFFF' ]
+        colors = [ '#FC00FF', '#FC7FFF', '#FEDFFF' ]
     elif 'yellow' in s or s[-1] == 'y':
-        colors = [ '#ffff00', '#FEFF7F', '#FFFFCF' ]
+        colors = [ '#FFFF00', '#FEFF7F', '#FFFFCF' ]
     elif 'cyan' in s or s[-1] == 'c':
-        colors = [ '#00ffff', '#7FFFFF', '#DFFFFF' ]
+        colors = [ '#00FFFF', '#7FFFFF', '#DFFFFF' ]
     else:
-        colors = [ '#cccccc', '#ffff00', '#ff0000' ]
+        colors = [ '#CCCCCC', '#ffff00', '#ff0000' ]
 
     st = min(2, row['service_state'])
     color = colors[st]

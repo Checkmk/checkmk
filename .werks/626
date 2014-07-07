@@ -1,0 +1,8 @@
+Title: veeam_jobs: agent now supports output lines longer than 80 chars
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1404478421
+Class: fix
+
+

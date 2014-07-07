@@ -83,8 +83,11 @@ def build_mail(target, subject, from_address, reply_to, content_txt):
 
     return m
 
-def send_mail(m, target):
-    p = subprocess.Popen(["/usr/sbin/sendmail", "-i", target ], stdin = subprocess.PIPE)
+def send_mail(m, target, from_address):
+    cmd = ["/usr/sbin/sendmail", "-i", target ]
+    if from_address:
+        cmd += ['-f', from_address]
+    p = subprocess.Popen(cmd, stdin = subprocess.PIPE)
     p.communicate(m.as_string())
 
 def construct_content(context):
@@ -232,6 +235,6 @@ def main():
     from_address = context.get("PARAMETER_FROM")
     reply_to = context.get("PARAMETER_REPLY_TO")
     m = build_mail(mailto, subject, from_address, reply_to, content_txt)
-    send_mail(m, mailto)
+    send_mail(m, mailto, from_address)
 
 main()

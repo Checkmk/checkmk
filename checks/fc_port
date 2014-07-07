@@ -144,13 +144,13 @@ def check_fc_port(item, params, info):
 
     wirespeed = savefloat(portinfo[0][4]) * 1000.0 # speed in Bytes/sec, 0 if unknown
     if wirespeed == 0:
-        # let user specify assumed speed via check parameter, default is 2.0 GByte/sec
-        gb = params.get("assumed_speed", 2.0)
-        wirespeed = gb * 1000.0 * 1000.0 * 1000.0 # in Bytes/sec
-        speedmsg  = "assuming %g GB/s" % gb
+        # let user specify assumed speed via check parameter, default is 16.0 GBit/sec
+        gbit = params.get("assumed_speed", 16.0)
+        wirespeed = gb * 1000.0 * 1000.0 * 1000.0 / 8.0 # in Bytes/sec
+        speedmsg  = "assuming %g GBit/s" % gbit
     else:
-        gb = wirespeed / ( 1000.0 * 1000.0 * 1000.0 ) # in GByte/sec
-        speedmsg = "%.1f GB/s" % gb
+        gbit = wirespeed * 8.0 / ( 1000.0 * 1000.0 * 1000.0 ) # in GBit/sec
+        speedmsg = "%.1f GBit/s" % gbit
     output.append(speedmsg)
 
     # Now check rates of various counters
@@ -296,6 +296,15 @@ def check_fc_port(item, params, info):
 
 
     return (summarystate, ', '.join(output), perfdata)
+
+check_config_variables.append("fc_port_admstates")
+check_config_variables.append("fc_port_opstates")
+check_config_variables.append("fc_port_phystates")
+check_config_variables.append("fc_port_no_inventory_types")
+check_config_variables.append("fc_port_no_inventory_admstates")
+check_config_variables.append("fc_port_no_inventory_opstates")
+check_config_variables.append("fc_port_no_inventory_phystates")
+check_config_variables.append("fc_port_inventory_use_portname")
 
 check_info["fc_port"] = {
     'check_function'         : check_fc_port,

@@ -25,21 +25,38 @@
 # Boston, MA 02110-1301 USA.
 
 # Example output
-# <<<win_os>>>
-# WIN7|Microsoft Windows 7 Home Premium |6.1.7601|64-Bit|1|0
+# <<<lnx_video>>>
+# 05:00.0 VGA compatible controller: Advanced Micro Devices [AMD] nee ATI Cape Verde PRO [Radeon HD 7700 Series] (prog-if 00 [VGA controller])
+#        Subsystem: Hightech Information System Ltd. Device 200b
+#        Flags: bus master, fast devsel, latency 0, IRQ 58
+#        Memory at d0000000 (64-bit, prefetchable) [size=256M]
+#        Memory at fe8c0000 (64-bit, non-prefetchable) [size=256K]
+#        I/O ports at c000 [size=256]
+#        Expansion ROM at fe8a0000 [disabled] [size=128K]
+#        Capabilities: [48] Vendor Specific Information: Len=08 <?>
+#        Capabilities: [50] Power Management version 3
+#        Capabilities: [58] Express Legacy Endpoint, MSI 00
+#        Capabilities: [a0] MSI: Enable+ Count=1/1 Maskable- 64bit+
+#        Capabilities: [100] Vendor Specific Information: ID=0001 Rev=1 Len=010 <?>
+#        Capabilities: [150] Advanced Error Reporting
+#        Capabilities: [270] #19
+#        Kernel driver in use: fglrx_pci
 
-def inv_win_os(info):
-    node = inv_tree("software.os.")
-    line = info[0]
-    if len(line) == 6:
-        node["name"] = line[1]
-        node["kernel_version"] = line[2]
-        if line[3] == "64-Bit":
-            node["arch"] = "x86_64"
-        else:
-            node["arch"] = "i386"
-        node["service_pack"] = line[4]+"."+line[5]
 
-inv_info['win_os'] = {
-   "inv_function"           : inv_win_os,
+def inv_lnx_video(info):
+    node = inv_tree("hardware.video:")
+    array = {}
+    for line in info:
+        if len(line) > 1:
+            if re.search("VGA compatible controller", line[1]):
+                array["name"] = line[2]
+            elif line[0] == "Subsystem":
+                array["subsystem"] = line[1]
+            elif line[0] == "Kernel driver in use":
+                array["driver"] = line[1]
+    node.append(array)
+
+
+inv_info['lnx_video'] = {
+   "inv_function"           : inv_lnx_video,
 }

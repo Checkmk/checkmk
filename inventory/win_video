@@ -37,20 +37,19 @@
 
 
 def inv_win_video(info):
-    node = inv_tree("hardware.video.")
+    node = inv_tree("hardware.video:")
+    array = {}
     for varname, value in info:
         varname = re.sub(" *","", varname)
         value = re.sub("^ ", "", value)
-        if varname == "Description":
-            node["description"] = value
-        elif varname == "Name":
-            node["product"] = value
-        elif varname == "VideoModeDescription":
-            node["video_mode"] = value
+        if varname == "Name":
+            array["name"] = value
         elif varname == "DriverVersion":
-            node["driver_version"] = value
+            array["driver_version"] = value
         elif varname == "DriverDate":
-            node["driver_date"] = int(time.mktime(time.strptime(value.split(".")[0], "%Y%m%d%H%M%S")))
+            array["driver_date"] = int(time.mktime(time.strptime(value.split(".")[0], "%Y%m%d%H%M%S")))
+    node.append(array)
+
 
 inv_info['win_video'] = {
    "inv_function"           : inv_win_video,

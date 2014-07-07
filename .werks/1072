@@ -1,0 +1,9 @@
+Title: printer_supply: fix colors of Perf-O-Meter on HP OfficeJet
+Level: 1
+Component: checks
+Version: 1.2.4p6
+Date: 1404726833
+Class: fix
+
+All Perf-O-Meters were black, because the description ended with <tt>k</tt>,
+because of the word <tt>ink</tt>. This has been fixed.

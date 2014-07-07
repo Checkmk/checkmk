@@ -844,6 +844,12 @@ function resize_dashlet(event) {
         }
     }
 
+    // Apply minimum size limits
+    if (dashlet_obj.clientWidth < 150)
+        dashlet_obj.style.width = '150px';
+    if (dashlet_obj.clientHeight < 70)
+        dashlet_obj.style.height = '70px';
+
     // Set the size in coord structure
     dashlets[nr].w = dashlet_obj.clientWidth / 10;
     dashlets[nr].h = dashlet_obj.clientHeight / 10;

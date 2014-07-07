@@ -1,0 +1,9 @@
+Title: check_mkevents: now able to resolve the hostname of the remote hosts
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i4p2
+Date: 1404742285
+
+The check_mkevents plugin was not able to resolve remote hosts, which were specified with the FQDN.

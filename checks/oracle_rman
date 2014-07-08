@@ -24,40 +24,48 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# <<<oracle_sessions>>>
-# pengt  15
-# hirni  22
+# <<<oracle_rman>>>
+# TUX2 COMPLETED 2014-07-08_17:27:59 2014-07-08_17:29:35 DB_INCR 32
+# TUX2 COMPLETED 2014-07-08_17:30:02 2014-07-08_17:30:06 ARCHIVELOG 121
 
-oracle_sessions_default_levels = (50, 100)
+# Columns: SID STATUS START END BACKUPTYPE BACKUAGE
 
-def inventory_oracle_sessions(info):
-    return [ (line[0], "oracle_sessions_default_levels") for line in info if len(line) >= 2 ]
+def inventory_oracle_rman(info):
+    return [ (line[0] + "." + line[4], {}) for line in info 
+            # only check full, incremental and archivelog-Backups
+            if line[4] in ('ARCHIVELOG', 'DB_FULL', 'DB_INCR')]
 
-def check_oracle_sessions(item, params, info):
-    for line in info:
-        if line[0] == item:
 
-            warn, crit = params
-            sessions = int(line[1])
-            infotext = "%d active sessions (levels at %d/%d)" % (sessions, warn, crit)
-            perfdata = [("sessions", sessions, warn, crit)]
-            if sessions >= crit:
-                return (2, infotext, perfdata)
-            elif sessions >= warn:
-                return (1, infotext, perfdata)
-            else:
-                return (0, infotext, perfdata)
+def check_oracle_rman(item, params, info):
+    for sid, status, start, end, backuptype, backupage in info:
+        if item == sid + "." + backuptype:
+            backupage = int(backupage)
+            infotext = "Last backup %s ago" % get_age_human_readable(backupage * 60)
+
+            state = 0
+            if "levels" in params:
+                warn, crit = params.get("levels")
+                if backupage >= crit:
+                    state = 2
+                elif backupage >= warn:
+                    state = 1
+                infotext += " (levels at %s/%s)" % (
+                    get_age_human_readable(warn),
+                    get_age_human_readable(crit))
+
+            perfdata = [ ("age", backupage, ) ]
+
+            return state, infotext, perfdata
 
     # In case of missing information we assume that the login into
     # the database has failed and we simply skip this check. It won't
     # switch to UNKNOWN, but will get stale.
     raise MKCounterWrapped(None, "Login into database failed")
 
-
-check_info["oracle_sessions"] = {
-    'check_function':          check_oracle_sessions,
-    'inventory_function':      inventory_oracle_sessions,
-    'service_description':     'ORA %s Sessions',
-    'has_perfdata':            True,
-    'group':                   'oracle_sessions',
+check_info['oracle_rman'] = {
+    "check_function"          : check_oracle_rman,
+    "inventory_function"      : inventory_oracle_rman,
+    "service_description"     : "ORA %s RMAN Backup",
+    "has_perfdata"            : True,
+    "group"                   : "oracle_rman",
 }

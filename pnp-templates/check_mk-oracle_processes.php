@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,40 +23,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# <<<oracle_sessions>>>
-# pengt  15
-# hirni  22
+$title = str_replace("_", " ", $servicedesc);
+$opt[1] = "--vertical-label 'processes' -l0 -u $CRIT[1] --title \"$title\" ";
 
-oracle_sessions_default_levels = (50, 100)
+$def[1] = "DEF:processes=$RRDFILE[1]:$DS[1]:MAX ";
+$def[1] .= "AREA:processes#00ff48: ";
+$def[1] .= "LINE:processes#008f38: ";
+$def[1] .= "GPRINT:processes:LAST:\"last\: %3.0lf\" ";
+$def[1] .= "GPRINT:processes:AVERAGE:\"avg\: %3.0lf\" ";
+$def[1] .= "GPRINT:processes:MAX:\"max\: %3.0lf\" ";
+$def[1] .= "HRULE:$WARN[1]#ffcf00:\"Warning at $WARN[1]\" ";
+$def[1] .= "HRULE:$CRIT[1]#ff0000:\"Critical at $CRIT[1]\" ";
 
-def inventory_oracle_sessions(info):
-    return [ (line[0], "oracle_sessions_default_levels") for line in info if len(line) >= 2 ]
-
-def check_oracle_sessions(item, params, info):
-    for line in info:
-        if line[0] == item:
-
-            warn, crit = params
-            sessions = int(line[1])
-            infotext = "%d active sessions (levels at %d/%d)" % (sessions, warn, crit)
-            perfdata = [("sessions", sessions, warn, crit)]
-            if sessions >= crit:
-                return (2, infotext, perfdata)
-            elif sessions >= warn:
-                return (1, infotext, perfdata)
-            else:
-                return (0, infotext, perfdata)
-
-    # In case of missing information we assume that the login into
-    # the database has failed and we simply skip this check. It won't
-    # switch to UNKNOWN, but will get stale.
-    raise MKCounterWrapped(None, "Login into database failed")
-
-
-check_info["oracle_sessions"] = {
-    'check_function':          check_oracle_sessions,
-    'inventory_function':      inventory_oracle_sessions,
-    'service_description':     'ORA %s Sessions',
-    'has_perfdata':            True,
-    'group':                   'oracle_sessions',
-}
+?>

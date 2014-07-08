@@ -24,29 +24,43 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# <<<oracle_sessions>>>
-# pengt  15
-# hirni  22
+# In cooperation with Thorsten Bruhns from OPITZ Consulting
 
-oracle_sessions_default_levels = (50, 100)
+# <<<oracle_processes>>>
+# TUX2 51 300
+# FOOBAR 11 4780
 
-def inventory_oracle_sessions(info):
-    return [ (line[0], "oracle_sessions_default_levels") for line in info if len(line) >= 2 ]
+# Columns: SID PROCESSES_COUNT PROCESSES_LIMIT
 
-def check_oracle_sessions(item, params, info):
+factory_settings["oracle_processes_defaults"] = {
+    "levels" : (70.0, 90.0),
+}
+
+def inventory_oracle_processes(info):
+    return [ ( line[0], {} ) for line in info ]
+
+def check_oracle_processes(item, params, info):
     for line in info:
         if line[0] == item:
 
-            warn, crit = params
-            sessions = int(line[1])
-            infotext = "%d active sessions (levels at %d/%d)" % (sessions, warn, crit)
-            perfdata = [("sessions", sessions, warn, crit)]
-            if sessions >= crit:
-                return (2, infotext, perfdata)
-            elif sessions >= warn:
-                return (1, infotext, perfdata)
+            processes_num = int(line[1])
+            processes_max = int(line[2])
+            processes_pct = float(processes_num) / float(processes_max) * 100
+
+            warn, crit = params["levels"]
+            processes_warn = processes_max * warn / 100
+            processes_crit = processes_max * crit / 100
+
+            if processes_pct >= crit:
+                state = 2
+            elif processes_pct >= warn:
+                state = 1
             else:
-                return (0, infotext, perfdata)
+                state = 0
+
+            return state, "%d of %d processes are used (%d%%, levels at %d%%/%d%%)" \
+                % (processes_num, processes_max, processes_pct, warn, crit), \
+                 [("processes", processes_num, processes_warn, processes_crit)]
 
     # In case of missing information we assume that the login into
     # the database has failed and we simply skip this check. It won't
@@ -54,10 +68,11 @@ def check_oracle_sessions(item, params, info):
     raise MKCounterWrapped(None, "Login into database failed")
 
 
-check_info["oracle_sessions"] = {
-    'check_function':          check_oracle_sessions,
-    'inventory_function':      inventory_oracle_sessions,
-    'service_description':     'ORA %s Sessions',
-    'has_perfdata':            True,
-    'group':                   'oracle_sessions',
+check_info['oracle_processes'] = {
+    "check_function"          : check_oracle_processes,
+    "inventory_function"      : inventory_oracle_processes,
+    "service_description"     : "ORA %s Processes",
+    "has_perfdata"            : True,
+    "default_levels_variable" : "oracle_processes_defaults",
+    "group"                   : "oracle_processes",
 }

@@ -43,8 +43,8 @@ write-host "<<<win_system:sep(58):persist($until)>>>"
 Get-WmiObject Win32_SystemEnclosure -ComputerName $name | Select Manufacturer,Name,Model,HotSwappable,InstallDate,PartNumber,SerialNumber
 
 # Hard-Disk
-write-host "<<<win_disk:sep(58):persist($until)>>>"
-Get-WmiObject win32_diskDrive -ComputerName $name | select Manufacturer,Model,Name,SerialNumber,InterfaceType,Size,Partitions
+write-host "<<<win_disks:sep(58):persist($until)>>>"
+Get-WmiObject win32_diskDrive -ComputerName $name | select Manufacturer,InterfaceType,Model,Name,SerialNumber,Size,MediaType
 
 # Graphics Adapter
 write-host "<<<win_video:sep(58):persist($until)>>>"
@@ -64,7 +64,7 @@ foreach ($path in $paths) {
         foreach-object { write-host -separator $separator $_.DisplayName, $_.Publisher, $_.PSParentPath, $_.PSChildName, $_.DisplayVersion, $_.EstimatedSize, $_.InstallDate }}
 }
 
-## Search exes
+# Search exes
 write-host "<<<win_exefiles:sep(124):persist($until)>>>"
 $paths = @("d:\", "c:\Program Files", "c:\Program Files (x86)", "c:\Progs")
 foreach ($item in $paths)

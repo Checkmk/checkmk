@@ -70,6 +70,7 @@
     * 0625 hw/sw inventory now reads the kernel version and architecture for linux and windows
     * 0627 lnx_video, win_video: added inventory function and agent for linux video cards, modified windows inventory function
     * 0629 improvements to windows sw/hw inventory (encoding, more details for sw inventory)
+    * 0630 win_disks: hardware inventory for physical disks in windows
     * 0167 FIX: mk_inventory.linux: Changed field separator from pipe to tab...
     * 1005 FIX: Fix exception when using pretty-print output format
     * 0946 FIX: hw/sw inventory: fixed display bug for byte fields with the value 0...

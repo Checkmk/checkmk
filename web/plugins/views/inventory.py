@@ -574,6 +574,7 @@ inventory_displayhints.update({
     ".hardware.storage."                               : { "title" : _("Storage") },
     ".hardware.storage.disks:"                         : { "title" : _("Block Devices") },
     ".hardware.storage.disks:*."                       : { "title" : _("Block Device %d") },
+    ".hardware.storage.disks:*.signature"              : { "title" : _("Disk ID") },
     ".hardware.storage.disks:*.vendor"                 : { "title" : _("Vendor") },
     ".hardware.storage.disks:*.local"                  : { "title" : _("Local") },
     ".hardware.storage.disks:*.bus"                    : { "title" : _("Bus") },

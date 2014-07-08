@@ -58,7 +58,6 @@
 # SCSITargetId                : 0
 
 def inv_win_disks(info):
-    print info
     node = inv_tree("hardware.storage.disks:")
     array = {}
     for varname, value in info:
@@ -79,6 +78,8 @@ def inv_win_disks(info):
             array["size"] = int(value)
         elif varname == "MediaType":
             array["type"] = value
+        elif varname == "Signature":
+            array["signature"] = int(value)
         array["local"] = True
     node.append(array)
 

@@ -2904,6 +2904,69 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "mssql_tablespaces",
+    _("MSSQL Size of Tablespace"),
+    Dictionary(
+        elements = [
+            ("size",
+            Tuple(
+                title = _("Size"),
+                elements = [
+                  Filesize(title = _("Warning if above")),
+                  Filesize(title = _("Critical if above"))
+                ]
+            )),
+            ("unallocated",
+            Tuple(
+                title = _("Unallocated Space"),
+                elements = [
+                  Filesize(title = _("Warning if above")),
+                  Filesize(title = _("Critical if above"))
+                ]
+            )),
+            ("reserved",
+            Tuple(
+                title = _("Reserved Space"),
+                elements = [
+                  Filesize(title = _("Warning if above")),
+                  Filesize(title = _("Critical if above"))
+                ]
+            )),
+            ("data",
+            Tuple(
+                title = _("Data"),
+                elements = [
+                  Filesize(title = _("Warning if above")),
+                  Filesize(title = _("Critical if above"))
+                ]
+            )),
+            ("indexes",
+            Tuple(
+                title = _("Indexes"),
+                elements = [
+                  Filesize(title = _("Warning if above")),
+                  Filesize(title = _("Critical if above"))
+                ]
+            )),
+            ("unused",
+            Tuple(
+                title = _("Unused"),
+                elements = [
+                  Filesize(title = _("Warning if above")),
+                  Filesize(title = _("Critical if above"))
+                ]
+            )),
+
+        ],
+    ),
+    TextAscii(
+        title = _("Tablespace name"),
+        allow_empty = False),
+     None
+)
+
+register_check_parameters(
+    subgroup_applications,
     "veeam_backup",
     _("Veeam: Time since last Backup"),
     Dictionary(

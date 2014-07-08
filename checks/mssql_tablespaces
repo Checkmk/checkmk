@@ -45,15 +45,21 @@
 # 11: uom
 # 12: Total amount of space reserved for objects in the database, but not yet used.
 # 13: uom
-
+mssql_tablespace_default_levels = {}
 def inventory_mssql_tablespaces(info):
     inventory = []
     for line in info:
         if len(line) > 1:
-	    inventory.append((line[0] + ' ' + line[1], None))
+	    inventory.append((line[0] + ' ' + line[1], 'mssql_tablespace_default_levels'))
     return inventory
 
 def check_mssql_tablespaces(item, params, info):
+    # First version of this check was without levels,
+    # so it is possible that params are None
+    if not params:
+        params = {}
+
+    state = 0
     for line in info:
         if len(line) < 2 or item != line[0] + ' ' + line[1]:
             continue
@@ -77,10 +83,22 @@ def check_mssql_tablespaces(item, params, info):
             elif uom == 'TB':
                 val_bytes = value * 1024 * 1024 * 1024 * 1024
 
-            output.append('%s: %s' % (label, get_bytes_human_readable(val_bytes)))
+            warn, crit = params.get(key, (None, None))
+            error_label = ""
+            if warn and crit:
+                levels = "(Warn/Crit at %s/%s)" % \
+                (get_bytes_human_readable(warn), get_bytes_human_readable(crit))
+                if val_bytes > crit:
+                    state = 2
+                    error_label += levels + "(!!)"
+                elif val_bytes > warn:
+                    state = max(state, 1)
+                    error_label += levels +"(!)"
+
+            output.append('%s: %s %s' % (label, get_bytes_human_readable(val_bytes), error_label))
             perfdata.append((key, val_bytes))
 
-        return (0, '%s' % ', '.join(output), perfdata)
+        return state, '%s' % ', '.join(output), perfdata
 
     return (3, 'Tablespace %s could not be found' % item)
 
@@ -88,5 +106,6 @@ check_info['mssql_tablespaces'] = {
     'check_function':      check_mssql_tablespaces,
     'inventory_function':  inventory_mssql_tablespaces,
     'service_description': '%s Sizes',
+    'group'                 : "mssql_tablespaces",
     'has_perfdata':        True,
 }

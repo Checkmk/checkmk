@@ -1763,6 +1763,53 @@ function vs_iconselector_select(event, varprefix, value) {
     toggle_popup(event, varprefix);
 }
 
+function vs_listofmultiple_add(varprefix) {
+    var choice = document.getElementById(varprefix + '_choice');
+    var ident = choice.value;
+
+    if (ident == '')
+        return;
+
+    choice.options[choice.selectedIndex].disabled = true; // disable this choice
+
+    // make the filter visible
+    var row = document.getElementById(varprefix + '_' + ident + '_row');
+    row.style.display = '';
+
+    // Set value emtpy after adding one element
+    choice.value = '';
+
+    // Add it to the list of active elements
+    var active = document.getElementById(varprefix + '_active');
+    if (active.value != '')
+        active.value += ';'+ident;
+    else
+        active.value = ident;
+}
+
+function vs_listofmultiple_del(varprefix, ident) {
+    // make the filter visible
+    var row = document.getElementById(varprefix + '_' + ident + '_row');
+    row.style.display = 'none';
+
+    // Make it choosable again
+    var choice = document.getElementById(varprefix + '_choice');
+    for (var i = 0; i < choice.childNodes.length; i++)
+        if (choice.childNodes[i].value == ident)
+            choice.childNodes[i].disabled = false;
+
+    // Remove it from the list of active elements
+    var active = document.getElementById(varprefix + '_active');
+    var l = active.value.split(';');
+    for (var i in l) {
+        if (l[i] == ident) {
+            l.splice(i, 1);
+            break;
+        }
+    }
+    active.value = l.join(';');
+}
+
 function help_enable() {
     var aHelp = document.getElementById('helpbutton');
     aHelp.style.display = "inline-block";

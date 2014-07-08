@@ -171,6 +171,22 @@ class Filter:
     def heading_info(self, infoname):
         return None
 
+    # Returns the current representation of the filter settings from the HTML
+    # var context. This can be used to persist the filter settings.
+    def value(self):
+        val = {}
+        for varname in self.htmlvars:
+            val[varname] = html.var(varname)
+        return val
+
+    # Is used to populate a value, for example loaded from persistance, into
+    # the HTML context where it can be used by e.g. the display() method.
+    def set_value(self, value):
+        val = {}
+        for varname in self.htmlvars:
+            html.set_var(varname, value.get(varname))
+
+
 def unset_all_filtervars():
     for f in multisite_filters.values():
         for varname in f.htmlvars:
@@ -333,11 +349,11 @@ def view_editor_specs(ds_name):
                 ('options', ListChoice(
                     title = _('Options'),
                     choices = [
-                        ('mobile', _('Show this view in the Mobile GUI')),
-                        ('mustsearch', _('Show data only on search')),
+                        ('mobile',           _('Show this view in the Mobile GUI')),
+                        ('mustsearch',       _('Show data only on search')),
                         ('force_checkboxes', _('Always show the checkboxes')),
-                        ('user_sortable', _('Make view sortable by user')),
-                        ('play_sounds', _('Play alarm sounds')),
+                        ('user_sortable',    _('Make view sortable by user')),
+                        ('play_sounds',      _('Play alarm sounds')),
     # FIXME
     #html.help(_("If enabled and the view shows at least one host or service problem "
     #            "the a sound will be played by the browser. Please consult the %s for details.")
@@ -361,6 +377,7 @@ def view_editor_specs(ds_name):
                     title = _('Number of Columns'),
                     default_value = 1,
                     minvalue = 1,
+                    maxvalue = 50,
                 )),
                 ('column_headers', DropdownChoice(
                     title = _('Column Headers'),
@@ -378,11 +395,11 @@ def view_editor_specs(ds_name):
     allowed = allowed_for_datasource(multisite_sorters, ds_name)
     specs.append(
         ('sorting', Dictionary(
-            title = _('Sort Properties'),
+            title = _('Sorting'),
             render = 'form',
             optional_keys = None,
             elements = [
-                ('sorting', ListOf(
+                ('sorters', ListOf(
                     Tuple(
                         elements = [
                             DropdownChoice(
@@ -411,6 +428,8 @@ def view_editor_specs(ds_name):
         joined = []
         join_index = []
         join_title = []
+        allow_empty = True
+        empty_text = None
         if ident == 'columns':
             joined  = allowed_for_joined_datasource(multisite_painters, ds_name)
             collist += [ ("-", "---") ] + collist_of_collection(joined, collist)
@@ -425,6 +444,9 @@ def view_editor_specs(ds_name):
                     title = _('Title'),
                 )
             ]
+
+            allow_empty = False
+            empty_text = _("Please add at least one column to your view.")
 
         # FIXME: show/hide join related columns
         #display = 'none'
@@ -458,12 +480,26 @@ def view_editor_specs(ds_name):
                     ),
                     title = title,
                     add_label = _('Add column'),
+                    allow_empty = allow_empty,
+                    empty_text = empty_text,
                 )),
             ],
         ))
 
     specs.append(column_spec('grouping', _('Grouping'), ds_name))
     specs.append(column_spec('columns', _('Columns'), ds_name))
+
+    multisite_datasources[ds_name]['infos']
+    specs.append(
+        ('filters', Dictionary(
+            title = _('Filters'),
+            render = 'form',
+            optional_keys = None,
+            elements = [
+                ('filters', VisualFilterList(multisite_datasources[ds_name]['infos'])),
+            ]
+        ))
+    )
 
     return specs
 
@@ -473,158 +509,59 @@ def custom_field_handler(view):
         raise MKInternalError(_("No datasource defined."))
     view['datasource'] = ds_name
 
-    load_view_into_html_vars(view)
-
     for ident, vs in view_editor_specs(ds_name):
         vs.render_input(ident, view)
 
-    forms.header(_("Filters"), isopen=False)
-    allowed_filters = filters_allowed_for_datasource(ds_name)
-
-    # sort filters according to title
-    s = [(filt.sort_index, filt.title, fname, filt)
-          for fname, filt in allowed_filters.items()
-          if fname not in ubiquitary_filters ]
-    s.sort()
-
-    # Construct a list of other filters which conflict with this filter. A filter uses one or
-    # several http variables for transporting the filter data. There are several filters which
-    # have overlaping vars which must not be used at the same time. Those filters must exclude
-    # eachother. This is done in the JS code. When activating one filter it checks which other
-    # filters to disable and makes the "mode" dropdowns unchangable.
-    filter_htmlvars = {}
-    for sortindex, title, fname, filt in s:
-        for htmlvar in filt.htmlvars:
-            if htmlvar not in filter_htmlvars:
-                filter_htmlvars[htmlvar] = []
-            filter_htmlvars[htmlvar].append(fname)
-
-    filter_groups = {}
-    for sortindex, title, fname, filt in s:
-        filter_groups[fname] = set([])
-        for htmlvar in filt.htmlvars:
-            filter_groups[fname].update(filter_htmlvars[htmlvar])
-        filter_groups[fname].remove(fname)
-        filter_groups[fname] = list(filter_groups[fname])
-
-    shown_help = False
-    for sortindex, title, fname, filt in s:
-        forms.section(title, hide = not filt.visible())
-        if not shown_help:
-            html.help(_("Please configure, which of the available filters will be used in this "
-                  "view. <br><br><b>Show to user</b>: the user will be able to see and modify these "
-                  "filters. You can define default values. <br><br><b>Hardcode</b>: these filters "
-                  "will be in effect but not visible to the user. <br><br><b>Use for linking</b>: "
-                  "These filters (usually site, host name and service) are needed for views "
-                  "that have a context (such as a host or a service). Such views can be used "
-                  "as targets for columns. Whenever the context is available, a button to that "
-                  "view will be displayed in related views."))
-            shown_help = True
-
-        html.write('<div class="filtersetting %s">' % html.var("filter_%s" % fname, "off"))
-        html.sorted_select("filter_%s" % fname,
-                [("off", _("Don't use")),
-                ("show", _("Show to user")),
-                ("hide", _("Use for linking")),
-                ("hard", _("Hardcode"))],
-                "off", "filter_activation(this)")
-        show_filter(filt)
-        html.write('</div>')
-        html.write('<div class=clear></div>')
-        html.help(filt.comment)
-
-    html.write("<script language=\"javascript\">\n")
-
-    html.write("g_filter_groups = %r;\n" % filter_groups)
-
-    # Set all filters into the proper display state
-    for fname, filt in allowed_filters.items():
-        if fname not in ubiquitary_filters:
-            html.write("filter_activation(document.getElementById(\"filter_%s\"));\n" % fname)
-
-    html.write("</script>\n")
-
-# Called by edit function in order to prefill HTML form
-# FIXME: Old hack. Remove this when recoding the editor.
-def load_view_into_html_vars(view):
-    # view is well formed, not checks neccessary
-    html.set_var("datasource",       view["datasource"])
-    html.set_var("column_headers",   view.get("column_headers", "off"))
-    html.set_var("layout",           view.get("layout", "boxed"))
-    html.set_var("num_columns",      view.get("num_columns", 1))
-    html.set_var("browser_reload",   view.get("browser_reload", 0))
-    html.set_var("play_sounds",      view.get("play_sounds", False) and "on" or "")
-    html.set_var("mobile",           view.get("mobile") and "on" or "")
-    html.set_var("mustsearch",       view.get("mustsearch", False) and "on" or "")
-    html.set_var("force_checkboxes", view.get("force_checkboxes", False) and "on" or "")
-    html.set_var("user_sortable",    view.get("user_sortable", True) and "on" or "")
-
-    # [3] Filters
-    for name, filt in multisite_filters.items():
-        if name not in ubiquitary_filters:
-            if name in view.get("show_filters", []):
-                html.set_var("filter_%s" % name, "show")
-            elif name in view.get("hard_filters", []):
-                html.set_var("filter_%s" % name, "hard")
-            elif name in view.get("hide_filters", []):
-                html.set_var("filter_%s" % name, "hide")
-
-    for varname, value in view.get("hard_filtervars", []):
-        if not html.has_var(varname):
-            html.set_var(varname, value)
-
-    # [4] Sorting
-    n = 1
-    for name, desc in view.get("sorters", []):
-        html.set_var("sort_%d" % n, name)
-        if desc:
-            value = "dsc"
-        else:
-            value = "asc"
-        html.set_var("sort_order_%d" % n, value)
-        n +=1
-
-    # [5] Grouping
-    n = 1
-    for entry in view.get("group_painters", []):
-        name = entry[0]
-        viewname = entry[1]
-        tooltip = len(entry) > 2 and entry[2] or None
-        html.set_var("group_%d" % n, name)
-        if viewname:
-            html.set_var("group_link_%d" % n, viewname)
-        if tooltip:
-            html.set_var("group_tooltip_%d" % n, tooltip)
-        n += 1
-
-    # [6] Columns
-    n = 1
-    for entry in view.get("painters", []):
-        name       = entry[0]
-        viewname   = entry[1]
-        tooltip    = len(entry) > 2 and entry[2] or None
-        join_index = len(entry) > 3 and entry[3] or None
-        col_title  = len(entry) > 4 and entry[4] or None
-        html.set_var("col_%d" % n, name)
-        if viewname:
-            html.set_var("col_link_%d" % n, viewname)
-        if tooltip:
-            html.set_var("col_tooltip_%d" % n, tooltip)
-        if join_index:
-            html.set_var("col_join_index_%d" % n, join_index)
-        if col_title:
-            html.set_var("col_title_%d" % n, col_title)
-        n += 1
-
-    # Make sure, checkboxes with default "on" do no set "on". Otherwise they
-    # would always be on
-    html.set_var("filled_in", "create_view")
-
 # Extract properties of view from HTML variables and construct
 # view object, to be used for saving or displaying
+#
+# old_view is the old view dict which might be loaded from storage.
+# view is the new dict object to be updated.
 def create_view(old_view, view):
-    datasourcename = html.var("datasource")
-    datasource = multisite_datasources[datasourcename]
+    ds_name = html.var("datasource")
+    datasource = multisite_datasources[ds_name]
+
+    for ident, vs in view_editor_specs(ds_name):
+        attrs = vs.from_html_vars(ident)
+        vs.validate_value(attrs, ident)
+
+        # Transform some valuespec specific options to legacy view
+        # format. We do not want to change the view data structure
+        # at the moment.
+        if ident == 'view':
+            for option in attrs['options']:
+                view[option] = True
+            del attrs['options']
+
+            view.update(attrs)
+
+        elif ident == 'sorting':
+            view.update(attrs)
+
+        elif ident == 'grouping':
+            view['group_painters'] = attrs['grouping']
+
+        elif ident == 'columns':
+            painters = []
+            for pname, join_index, viewname, tooltip, col_title in attrs['columns']:
+                viewname = viewname and viewname or None
+                if join_index and col_title:
+                    painters.append((pname, viewname, tooltip, join_index, col_title))
+                elif join_index:
+                    painters.append((pname, viewname, tooltip, join_index))
+                else:
+                    painters.append((pname, viewname, tooltip))
+            view['painters'] = painters
+
+        elif ident == 'filters':
+            view['show_filters'] = attrs['filters'].keys()
+            # FIXME: Preset values
+
+    html.debug(view)
+
+    raise MKUserError(None, 'xxx')
+    return view
+
     tablename = datasource["table"]
     layoutname = html.var("layout")
     try:
@@ -1814,6 +1751,12 @@ def filters_allowed_for_datasource(datasourcename):
             allowed[fname] = filt
     return allowed
 
+def filters_allowed_for_info(info):
+    allowed = {}
+    for fname, filt in multisite_filters.items():
+        if filt.info == None or info == filt.info:
+            allowed[fname] = filt
+    return allowed
 
 # Filters a list of sorters or painters and decides which of
 # those are available for a certain data source

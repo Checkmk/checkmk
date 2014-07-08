@@ -550,7 +550,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None, create_hand
             html.write("<div class=error>%s</div>\n" % e.message)
             html.add_user_error(e.varname, e.message)
 
-    html.begin_form("view")
+    html.begin_form("view", method = "POST")
     html.hidden_field("back", back_url)
     html.hidden_field("mode", mode)
     html.hidden_field("load_user", html.var("load_user", "")) # safe old name in case user changes it

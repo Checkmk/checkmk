@@ -24,29 +24,42 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# <<<oracle_sessions>>>
-# pengt  15
-# hirni  22
+# <<<oracle_recovery_area>>>
+# TUX12C 0 4800 19 0
 
-oracle_sessions_default_levels = (50, 100)
+# Columns:
+# ORACLE_SID used_pct size used reclaimable
 
-def inventory_oracle_sessions(info):
-    return [ (line[0], "oracle_sessions_default_levels") for line in info if len(line) >= 2 ]
+factory_settings["oracle_recovery_area_defaults"] = {
+    "levels"         : (70.0, 90.0),
+}
 
-def check_oracle_sessions(item, params, info):
+
+def inventory_oracle_recovery_area(info):
+    return [ (line[0], {}) for line in info ]
+
+
+def check_oracle_recovery_area(item, params, info):
     for line in info:
         if line[0] == item:
+            size_mb, used_mb, reclaimable_mb = map(int, line[2:5])
+            perc_used = float(used_mb - reclaimable_mb) / size_mb * 100
+            warn, crit = params["levels"]
+            warn_mb = size_mb * warn / 100
+            crit_mb = size_mb * crit / 100
 
-            warn, crit = params
-            sessions = int(line[1])
-            infotext = "%d active sessions (levels at %d/%d)" % (sessions, warn, crit)
-            perfdata = [("sessions", sessions, warn, crit)]
-            if sessions >= crit:
-                return (2, infotext, perfdata)
-            elif sessions >= warn:
-                return (1, infotext, perfdata)
+            if perc_used >= crit:
+                state = 2
+            elif perc_used >= warn:
+                state = 1
             else:
-                return (0, infotext, perfdata)
+                state = 0
+
+            mb = 1024*1024
+            return state, "%s out of %s used (%.1f%%, levels at %s%%/%s%%), %s reclaimable" \
+                % (get_bytes_human_readable(used_mb*mb), get_bytes_human_readable(size_mb*mb), \
+                   perc_used, warn, crit, get_bytes_human_readable(reclaimable_mb*mb)), \
+                   [('used', used_mb, warn_mb, crit_mb, 0, size_mb), ('reclaimable', reclaimable_mb)]
 
     # In case of missing information we assume that the login into
     # the database has failed and we simply skip this check. It won't
@@ -54,10 +67,12 @@ def check_oracle_sessions(item, params, info):
     raise MKCounterWrapped(None, "Login into database failed")
 
 
-check_info["oracle_sessions"] = {
-    'check_function':          check_oracle_sessions,
-    'inventory_function':      inventory_oracle_sessions,
-    'service_description':     'ORA %s Sessions',
-    'has_perfdata':            True,
-    'group':                   'oracle_sessions',
+check_info['oracle_recovery_area'] = {
+    "check_function"          : check_oracle_recovery_area,
+    "inventory_function"      : inventory_oracle_recovery_area,
+    "service_description"     : "ORA %s Recovery Area",
+    "has_perfdata"            : True,
+    "default_levels_variable" : "oracle_recovery_area_defaults",
+    "group"                   : "oracle_recovery_area",
 }
+

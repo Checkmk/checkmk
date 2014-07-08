@@ -509,8 +509,8 @@ def perfometer_oracle_tablespaces(row, check_command, perf_data):
 perfometers["check_mk-oracle_tablespaces"] = perfometer_oracle_tablespaces
 
 def perfometer_oracle_sessions(row, check_command, perf_data):
-    if check_command == "check_mk-oracle_sessions":
-	color = "#00ff48";
+    if check_command != "check_mk-oracle_sessions":
+	color = "#008f48";
         unit = "";
     else:
 	color = "#4800ff";
@@ -520,6 +520,7 @@ def perfometer_oracle_sessions(row, check_command, perf_data):
 
 perfometers["check_mk-oracle_sessions"] = perfometer_oracle_sessions
 perfometers["check_mk-oracle_logswitches"] = perfometer_oracle_sessions
+perfometers["check_mk-oracle_processes"] = perfometer_oracle_sessions
 
 def perfometer_cpu_utilization(row, check_command, perf_data):
     util = float(perf_data[0][1]) # is already percentage
@@ -577,6 +578,7 @@ def perfometer_check_mk_uptime(row, check_command, perf_data):
 perfometers["check_mk-uptime"]      = perfometer_check_mk_uptime
 perfometers["check_mk-snmp_uptime"] = perfometer_check_mk_uptime
 perfometers["check_mk-esx_vsphere_counters.uptime"] = perfometer_check_mk_uptime
+perfometers["check_mk-oracle_instance"] = perfometer_check_mk_uptime
 
 
 def perfometer_check_mk_diskstat(row, check_command, perf_data):

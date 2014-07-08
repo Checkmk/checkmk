@@ -1,0 +1,75 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# In cooperation with Thorsten Bruhns from OPITZ Consulting
+
+# <<<oracle_instance:sep(124)>>>
+# TUX2|12.1.0.1.0|OPEN|ALLOWED|STARTED|6735|1297771692|ARCHIVELOG|PRIMARY|NO|TUX2
+# TUX5|12.1.0.1.1|MOUNTED|ALLOWED|STARTED|82883|1297771692|NOARCHIVELOG|PRIMARY|NO|0|TUX5
+
+def inventory_oracle_instance(info):
+    return [ (line[0], None) for line in info ]
+
+def check_oracle_instance(item, _no_params, info):
+    for line in info:
+        if line[0] == item:
+
+            # In case of a general error (e.g. authentication failed), the second
+            # column contains the word "FAILURE"
+            if line[1] == 'FAILURE':
+                return 2, " ".join(line[2:])
+
+            sid, version, openmode, logins, archiver, up_seconds, dbid, \
+                log_mode, database_role, force_logging, name = line
+
+            state = 0
+            infotext = "Database Name %s, Status %s" % (name, openmode)
+
+            # Make sure that primary databases are always open
+            if database_role == 'PRIMARY' and openmode != 'OPEN':
+                state = 2
+                infotext += "(!!)"
+
+            # ORACLE is sick and cannot handle timezone changes >:-P
+            up_seconds = max(0, int(up_seconds))
+            infotext += ", Logins %s, Version %s, Role %s, " \
+                       "%s, Force-Logging %s, Up since %s (%s)" % (
+                       logins.lower(), version, database_role, \
+                       archiver, force_logging, time.strftime("%F %T", time.localtime(time.time() - up_seconds)), \
+                       get_age_human_readable(up_seconds))
+
+            perfdata = [('uptime', up_seconds)]
+            return state, infotext, perfdata
+
+    return 2, "Database not running or login failed"
+
+
+check_info['oracle_instance'] = {
+    "check_function"          : check_oracle_instance,
+    "inventory_function"      : inventory_oracle_instance,
+    "service_description"     : "ORA %s Instance",
+    "has_perfdata"            : True,
+}

@@ -24,6 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# no used space check for Tablsspaces with CONTENTS in ('TEMPORARY','UNDO')
+# It is impossible to check the used space in UNDO and TEMPORARY Tablespaces
+# These Types of Tablespaces are ignored in this plugin.
+# This restriction is only working with newer agents, because we need an 
+# additional parameter at end if each datafile
+
 # <<<oracle_tablespaces>>>
 # pengt /database/pengt/daten155/dbf/system_01.dbf SYSTEM AVAILABLE YES 38400 4194302 38392 1280 SYSTEM 8192 ONLINE
 # pengt /database/pengt/daten155/dbf/undotbs_01.dbf UNDOTBS1 AVAILABLE YES 128000 4194302 127992 640 ONLINE 8192 ONLINE
@@ -46,7 +52,7 @@
 # 10. block size in bytes
 # 11. status of the table space
 # 12. free space in the datafile
-
+# 13. Tablespace-Type (PERMANENT, UNDO, TEMPORARY)
 
 # This definition needs to be removed at a later stage
 # A previous version of this check didn't write the parameter
@@ -71,7 +77,7 @@ def inventory_oracle_tablespaces(info):
     tablespaces = set([])
     autoextensible = set([])
     for line in info:
-        if len(line) != 13:
+        if len(line) not in (13,14):
             continue
         ts = (line[0], line[2])
         if line[11] in [ "ONLINE", "READONLY" ]:
@@ -169,6 +175,7 @@ def check_oracle_tablespaces(item, params, info):
     num_increments = 0
     increment_size = 0
     free_space = 0
+    ts_type = None
 
     # Conversion of old autochecks params
     if type(params) == tuple:
@@ -185,7 +192,13 @@ def check_oracle_tablespaces(item, params, info):
             elif isinstance(err, tuple):
                 return err
 
-            if line[2] == tbsname and len(line) == 13:
+            if line[2] == tbsname and len(line) in (13,14):
+                # the ts_type is a new value on agent.
+                if len(line) == 14:
+                    ts_type = line[13]
+                else:
+                    # old behaivor is all Tablespaces are treated as PERMANENT
+                    ts_type = 'PERMANENT'
                 ts_status = line[11]
                 blocksize = int(line[10])
                 num_files += 1
@@ -219,11 +232,15 @@ def check_oracle_tablespaces(item, params, info):
 
 
     if ts_status == None:
-        return (3, "Tablespace not found")
+        # In case of missing information we assume that the login into
+        # the database has failed and we simply skip this check. It won't
+        # switch to UNKNOWN, but will get stale.
+        raise MKCounterWrapped(None, "Login into database failed")
 
 
-    infotext = "%s, size %s, used %s" % \
+    infotext = "%s (%s), size %s, used %s" % \
        (ts_status,
+        ts_type,
         get_bytes_human_readable(current_size),
         get_bytes_human_readable(used))
 
@@ -257,7 +274,8 @@ def check_oracle_tablespaces(item, params, info):
     warn, crit, levels_text = get_tablespace_levels_in_bytes(max_size, params)
 
     # Check free space, but only if status is not READONLY
-    if ts_status != "READONLY":
+    # and Tablespace-Type must be PERMANENT
+    if ts_status != "READONLY" and ts_type == 'PERMANENT':
         if (crit is not None and free_space <= crit) \
            or (warn is not None and free_space <= warn):
             infotext += ", only %s left" % get_bytes_human_readable(free_space)
@@ -274,7 +292,7 @@ def check_oracle_tablespaces(item, params, info):
     if num_files != 1 or num_avail != 1 or num_extensible != 1:
         infotext += ", %d data files (%d avail, %d autoext)" % (num_files, num_avail, num_extensible)
 
-    return (status, infotext, perfdata)
+    return status, infotext, perfdata
 
 check_info['oracle_tablespaces'] = {
     "service_description"     : "ORA %s Tablespace",

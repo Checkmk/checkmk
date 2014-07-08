@@ -20,6 +20,7 @@
     * 1041 aix_memory: new check for RAM and SWAP on AIX
     * 0998 ibm_imm_health: Trying to recognice newer versions of IBM IMM now too
     * 0628 raritan_pdu_inlet: now also monitors the three phases of the inlet
+    * 1073 sni_octopuse_cpu: added PNP graph definition and Perf-O-Meter
     * 0994 FIX: agent plugin smart: fixed syntax error
     * 0989 FIX: logwatch.ec: Fix forwarding multiple messages via syslog/TCP...
     * 0943 FIX: if.include: fixed incorrect traffic percentage values in the check output of if checks...
@@ -70,6 +71,7 @@
     * 0625 hw/sw inventory now reads the kernel version and architecture for linux and windows
     * 0627 lnx_video, win_video: added inventory function and agent for linux video cards, modified windows inventory function
     * 0629 improvements to windows sw/hw inventory (encoding, more details for sw inventory)
+    * 0630 win_disks: hardware inventory for physical disks in windows
     * 0167 FIX: mk_inventory.linux: Changed field separator from pipe to tab...
     * 1005 FIX: Fix exception when using pretty-print output format
     * 0946 FIX: hw/sw inventory: fixed display bug for byte fields with the value 0...

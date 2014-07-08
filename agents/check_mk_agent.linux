@@ -65,6 +65,7 @@ fi
 
 # Runs a command asynchronous by use of a cache file
 function run_cached () {
+    local section=
     if [ "$1" = -s ] ; then local section="echo '<<<$2>>>' ; " ; shift ; fi
     local NAME=$1
     local MAXAGE=$2
@@ -98,6 +99,9 @@ function run_cached () {
         echo "set -o noclobber ; exec > \"$CACHEFILE.new\" || exit 1 ; $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | nohup bash 2>/dev/null &
     fi
 }
+
+# Make run_cached available for subshells (plugins, local checks, etc.)
+export -f run_cached
 
 echo '<<<check_mk>>>'
 echo Version: 1.2.5i5

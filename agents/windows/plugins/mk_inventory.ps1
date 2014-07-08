@@ -44,7 +44,7 @@ Get-WmiObject Win32_SystemEnclosure -ComputerName $name | Select Manufacturer,Na
 
 # Hard-Disk
 write-host "<<<win_disks:sep(58):persist($until)>>>"
-Get-WmiObject win32_diskDrive -ComputerName $name | select Manufacturer,InterfaceType,Model,Name,SerialNumber,Size,MediaType
+Get-WmiObject win32_diskDrive -ComputerName $name | select Manufacturer,InterfaceType,Model,Name,SerialNumber,Size,MediaType,Signature
 
 # Graphics Adapter
 write-host "<<<win_video:sep(58):persist($until)>>>"

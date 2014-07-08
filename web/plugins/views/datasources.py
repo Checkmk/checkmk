@@ -79,6 +79,7 @@ multisite_datasources["hosts"] = {
     "keys"    : [ "host_name", "host_downtimes" ],
     "join"    : ( "services", "host_name" ),
     "idkeys"  : [ "site", "host_name" ],
+    "description" : _("Displays a list of hosts."),
 }
 
 multisite_datasources["hostsbygroup"] = {
@@ -88,6 +89,8 @@ multisite_datasources["hostsbygroup"] = {
     "keys"    : [ "host_name", "host_downtimes" ],
     "join"    : ( "services", "host_name" ),
     "idkeys"  : [ "site", "hostgroup_name", "host_name" ],
+    "description" : _("Using this datasources host rows might appear multiple times depending "
+                      "on their membership in hostgroups."),
 }
 
 multisite_datasources["services"] = {

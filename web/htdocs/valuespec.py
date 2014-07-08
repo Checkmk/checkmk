@@ -990,6 +990,7 @@ class DropdownChoice(ValueSpec):
         self._help_separator = kwargs.get("help_separator")
         self._label = kwargs.get("label")
         self._prefix_values = kwargs.get("prefix_values", False)
+        self._sorted = kwargs.get("sorted", True)
 
     def choices(self):
         if type(self._choices) == list:
@@ -1021,7 +1022,10 @@ class DropdownChoice(ValueSpec):
         elif len(options[0]) == 3:
             html.icon_select(varprefix, options, defval)
         else:
-            html.select(varprefix, options, defval)
+            if self._sorted:
+                html.select(varprefix, options, defval)
+            else:
+                html.sorted_select(varprefix, options, defval)
 
     def value_to_text(self, value):
         for entry in self.choices():
@@ -1232,15 +1236,17 @@ class RadioChoice(DropdownChoice):
         for n, entry in enumerate(self._choices):
             if self._columns != None:
                 html.write("<td>")
-            if len(entry) > 2: # icon!
+            if len(entry) > 2 and entry[2] != None: # icon!
                 label = '<img class=icon align=absmiddle src="images/icon_%s.png" title="%s">' % \
                         ( entry[2], entry[1].encode("utf-8"))
             else:
                 label = entry[1]
             html.radiobutton(varprefix, str(n), value == entry[0], label)
+            if len(entry) > 3 and entry[3]:
+                html.write('<p>%s</p>' % entry[3])
             if self._columns != None:
                 html.write("</td>")
-                if (n+1) % self._columns == 0 and (n+1) < len(self._choices)-1:
+                if (n+1) % self._columns == 0 and (n+1) < len(self._choices):
                     html.write("<tr></tr>")
             else:
                 html.write("&nbsp;")
@@ -2946,3 +2952,8 @@ class IconSelector(ValueSpec):
     def validate_value(self, value, varprefix):
         if value and value not in self.available_icons():
             raise MKUserError(varprefix, _("The selected icon image does not exist."))
+
+class VisualFilter(ValueSpec):
+    def __init__(self, info, **kwargs):
+        self.info = info
+        ValueSpec.__init__(self, **kwargs)

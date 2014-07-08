@@ -30,17 +30,37 @@ context_types['global'] = {
     'parameters' : None,
 }
 
-#
-#context_types['host'] = {
-#    'title'      : _('Single Host'),
-#    'single'     : True,
-#    'parameters' : TextUnicode(
-#        title = _('Hostname'),
-#    ),
-#}
-#
-#context_types['hosts'] = {
-#    'title'      : _('Multiple Hosts'),
-#    'single'     : False,
-#    'parameters' : VisualFilter('hosts'),
-#}
+context_types['host'] = {
+    'title'      : _('Single Host'),
+    'single'     : True,
+    'parameters' : TextUnicode(
+        title = _('Hostname'),
+    ),
+}
+
+context_types['hosts'] = {
+    'title'      : _('Multiple Hosts'),
+    'single'     : False,
+    'parameters' : VisualFilter('host'),
+}
+
+context_types['service'] = {
+    'title'      : _('Single Service'),
+    'single'     : True,
+    'parameters' : Tuple(
+        elements = [
+            TextUnicode(
+                title = _('Hostname'),
+            ),
+            TextUnicode(
+                title = _('Service Description'),
+            ),
+        ],
+    ),
+}
+
+context_types['services'] = {
+    'title'      : _('Multiple Services'),
+    'single'     : False,
+    'parameters' : VisualFilter('service'),
+}

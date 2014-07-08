@@ -214,7 +214,7 @@ def available(what, all_visuals):
 #   | Show a list of all visuals with actions to delete/clone/edit         |
 #   '----------------------------------------------------------------------'
 
-def page_list(what, visuals, render_create_form = None, custom_columns = [], render_context_buttons = None):
+def page_list(what, visuals, custom_columns = []):
     what_s = what[:-1]
     if not config.may("general.edit_" + what):
         raise MKAuthException(_("You are not allowed to edit %s.") % what)
@@ -225,10 +225,9 @@ def page_list(what, visuals, render_create_form = None, custom_columns = [], ren
             "groupings and other aspects."))
 
     html.begin_context_buttons()
+    html.context_button(_('Create %s') % what_s.title(), 'create_%s.py' % what_s, what_s)
     html.context_button(_('Views'), 'edit_views.py', 'view')
     html.context_button(_('Dashboards'), 'edit_dashboards.py', 'dashboard')
-    if render_context_buttons:
-        render_context_buttons()
     html.end_context_buttons()
 
     # Deletion of views
@@ -243,30 +242,6 @@ def page_list(what, visuals, render_create_form = None, custom_columns = [], ren
         elif c == False:
             html.footer()
             return
-
-    if render_create_form:
-        # FIXME: Deprecate this once the visual types are implemented for the view editor
-        render_create_form()
-    else:
-        # Show the default creation form
-        if html.var('mode') == 'create':
-            context_type = html.var('context_type')
-            if not context_type:
-                html.show_error(_('Please select a context type. The context type specifies '
-                                  'which kind of objects are rendered.'))
-            else:
-                html.immediate_browser_redirect(1,
-                    "edit_%s.py?mode=create&context_type=%s" % (what_s, context_type))
-                return
-
-        html.begin_form("create_visual")
-        html.hidden_field('mode', 'create')
-        html.button("create", _("Create %s") % what_s)
-        html.write(_(" with context type: "))
-        html.sorted_select("context_type", [('', _('--- Select a Context type ---'))]
-                  + [ (k, v["title"]) for k, v in context_types.items() ])
-        html.end_form()
-
 
     html.write('<h3>' + (_("Existing %s") % what.title()) + '</h3>')
 
@@ -330,6 +305,69 @@ def page_list(what, visuals, render_create_form = None, custom_columns = [], ren
             table.cell(_('Hidden'), view["hidden"] and _("yes") or _("no"))
 
     table.end()
+    html.footer()
+
+#.
+#   .--Create Visual-------------------------------------------------------.
+#   |      ____                _        __     ___                 _       |
+#   |     / ___|_ __ ___  __ _| |_ ___  \ \   / (_)___ _   _  __ _| |      |
+#   |    | |   | '__/ _ \/ _` | __/ _ \  \ \ / /| / __| | | |/ _` | |      |
+#   |    | |___| | |  __/ (_| | ||  __/   \ V / | \__ \ |_| | (_| | |      |
+#   |     \____|_|  \___|\__,_|\__\___|    \_/  |_|___/\__,_|\__,_|_|      |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Realizes the steps before getting to the editor (context type)       |
+#   '----------------------------------------------------------------------'
+
+def page_create_visual(what, allow_global = False, next_url = None):
+    what_s = what[:-1]
+
+    vs_type = DropdownChoice(
+        title = _('Context Type'),
+        choices = [(None, _('--- Select a Context type ---'))]
+                  + [ (k, v['title']) for k, v in context_types.items() if allow_global or k != 'global' ],
+        help = _('The context of a %s controls the type of objects to be shown. It '
+                 'also sets wether single or multiple objects are displayed. The context '
+                 'type of a %s can not be changed anymore.') % (what_s, what_s),
+    )
+
+    html.header(_('Create %s') % what_s.title(), stylesheets=["pages"])
+    html.begin_context_buttons()
+    back_url = html.var("back", "")
+    if back_url:
+        html.context_button(_("Back"), back_url, "back")
+    html.context_button(_("All %s") % what.title(), "edit_%s.py" % what, what_s)
+    html.end_context_buttons()
+
+    if html.var('save') and html.check_transaction():
+        try:
+            context_type = vs_type.from_html_vars('context_type')
+            vs_type.validate_value(context_type, 'context_type')
+            if context_type == None:
+                raise MKUserError('context_type', _('Please select a context type'))
+
+            if not next_url:
+                next_url = 'edit_'+what_s+'.py?mode=create&context_type=%s'
+            html.http_redirect(next_url % context_type)
+            return
+
+        except MKUserError, e:
+            html.write("<div class=error>%s</div>\n" % e.message)
+            html.add_user_error(e.varname, e.message)
+
+    html.begin_form('create_visual')
+    html.hidden_field('mode', 'create')
+
+    forms.header(_('Select Context Type'))
+    forms.section(vs_type.title())
+    vs_type.render_input('context_type', '')
+    html.help(vs_type.help())
+    forms.end()
+
+    html.button('save', _('Continue'), 'submit')
+
+    html.hidden_fields()
+    html.end_form()
     html.footer()
 
 #.
@@ -404,7 +442,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None, create_hand
     back_url = html.var("back", "")
     if back_url:
         html.context_button(_("Back"), back_url, "back")
-    html.context_button(_("All %s") % what.title(), "edit_%s.py" % what)
+    html.context_button(_("All %s") % what.title(), "edit_%s.py" % what, what_s)
     html.end_context_buttons()
 
     vs_general = Dictionary(

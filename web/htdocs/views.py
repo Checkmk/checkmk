@@ -210,39 +210,80 @@ def permitted_views():
 #   '----------------------------------------------------------------------'
 
 def page_edit_views():
-    def render_create_form():
-        if html.var('mode') == 'create':
-            datasource = html.var('datasource')
-            if not datasource:
-                html.show_error(_('Please select a datasource. The datasource specifies which kind of objects '
-                                  'can be rendered within the view.'))
-            else:
-                html.immediate_browser_redirect(1, "edit_view.py?mode=create&datasource=%s" % datasource)
-                return
-
-        html.begin_form("create_view")
-        html.hidden_field('mode', 'create')
-        html.button("create", _("Create New View"))
-        html.write(_(" for datasource: "))
-        html.sorted_select("datasource", [('', _('--- Select a Datasource ---'))]
-                  + [ (k, v["title"]) for k, v in multisite_datasources.items() ])
-        html.end_form()
-
-    cols = [ (_('Datasource'), lambda v: multisite_datasources[v["datasource"]]['title']) ]
-
     load_views()
-    visuals.page_list('views', multisite_views, render_create_form, cols)
+    cols = [ (_('Datasource'), lambda v: multisite_datasources[v["datasource"]]['title']) ]
+    visuals.page_list('views', multisite_views, cols)
 
-def select_view(varname, only_with_hidden = False):
-    choices = [("", "")]
-    for name, view in available_views.items():
-        if not only_with_hidden or len(view["hide_filters"]) > 0:
-            if view.get('mobile', False):
-                title = _('Mobile: ') + _u(view["title"])
-            else:
-                title = _u(view["title"])
-            choices.append(("%s" % name, title))
-    html.sorted_select(varname, choices, "")
+#.
+#   .--Create View---------------------------------------------------------.
+#   |        ____                _        __     ___                       |
+#   |       / ___|_ __ ___  __ _| |_ ___  \ \   / (_) _____      __        |
+#   |      | |   | '__/ _ \/ _` | __/ _ \  \ \ / /| |/ _ \ \ /\ / /        |
+#   |      | |___| | |  __/ (_| | ||  __/   \ V / | |  __/\ V  V /         |
+#   |       \____|_|  \___|\__,_|\__\___|    \_/  |_|\___| \_/\_/          |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Select the view type of the new view                                 |
+#   '----------------------------------------------------------------------'
+
+def page_create_view():
+    visuals.page_create_visual('views', allow_global = False,
+        next_url = 'create_view_ds.py?mode=create&context_type=%s')
+
+# Seconds step: Select the data source
+def page_create_view_ds():
+    context_type = html.var('context_type')
+
+    available = visuals.context_types.keys()
+    available.remove('global')
+    if context_type not in available:
+        raise MKGeneralException(_('The context type is missing'))
+
+    # Filter out datasources which are available for this context type. The
+    # matching is done based on the "info" available for each datasource
+    datasources = []
+    for ds_name, ds in multisite_datasources.items():
+        datasources.append((ds_name, ds['title'], None, ds.get('description')))
+
+    vs_ds = RadioChoice(
+        title = _('Datasource'),
+        choices = datasources,
+        help = _('The datasources defines which type of objects should be displayed with this view.'),
+        columns = 1,
+    )
+
+    html.header(_('Create View'), stylesheets=["pages"])
+    html.begin_context_buttons()
+    html.context_button(_("Back"), html.makeuri([], filename = "create_view.py"), "back")
+    html.context_button(_("All Views"), "edit_views.py", "view")
+    html.end_context_buttons()
+
+    if html.var('save') and html.check_transaction():
+        try:
+            ds = vs_ds.from_html_vars('ds')
+            vs_ds.validate_value(ds, 'ds')
+
+            html.http_redirect('edit_view.py?context_type=%s&datasource=%s' % (context_type, ds))
+            return
+
+        except MKUserError, e:
+            html.write("<div class=error>%s</div>\n" % e.message)
+            html.add_user_error(e.varname, e.message)
+
+    html.begin_form('create_view')
+    html.hidden_field('mode', 'create')
+
+    forms.header(_('Select Datasource'))
+    forms.section(vs_ds.title())
+    vs_ds.render_input('ds', '')
+    html.help(vs_ds.help())
+    forms.end()
+
+    html.button('save', _('Continue'), 'submit')
+
+    html.hidden_fields()
+    html.end_form()
+    html.footer()
 
 #.
 #   .--Edit View-----------------------------------------------------------.
@@ -265,45 +306,180 @@ def page_edit_view():
         try_handler = lambda view: show_view(view, False, False)
     )
 
+def view_choices(only_with_hidden = False):
+    choices = [("", "")]
+    for name, view in available_views.items():
+        if not only_with_hidden or len(view["hide_filters"]) > 0:
+            if view.get('mobile', False):
+                title = _('Mobile: ') + _u(view["title"])
+            else:
+                title = _u(view["title"])
+            choices.append(("%s" % name, title))
+    return choices
+
+def view_editor_specs(ds_name):
+    specs = []
+    specs.append(
+        ('view', Dictionary(
+            title = _('View Properties'),
+            render = 'form',
+            optional_keys = None,
+            elements = [
+                ('datasource', FixedValue(ds_name,
+                    title = _('Datasource'),
+                    totext = multisite_datasources[ds_name]['title'],
+                    help = _('The datasource of a view cannot be changed.'),
+                )),
+                ('options', ListChoice(
+                    title = _('Options'),
+                    choices = [
+                        ('mobile', _('Show this view in the Mobile GUI')),
+                        ('mustsearch', _('Show data only on search')),
+                        ('force_checkboxes', _('Always show the checkboxes')),
+                        ('user_sortable', _('Make view sortable by user')),
+                        ('play_sounds', _('Play alarm sounds')),
+    # FIXME
+    #html.help(_("If enabled and the view shows at least one host or service problem "
+    #            "the a sound will be played by the browser. Please consult the %s for details.")
+    #            % docu_link("multisite_sounds", _("documentation")))
+                    ],
+                    default_value = ['user_sortable'],
+                )),
+                ('browser_reload', Integer(
+                    title = _('Automatic page reload'),
+                    unit = _('seconds'),
+                    minvalue = 0,
+                    help = _('Leave this empty or at 0 for no automatic reload.'),
+                )),
+                ('layout', DropdownChoice(
+                    title = _('Basic Layout'),
+                    choices = [ (k, v["title"]) for k,v in multisite_layouts.items() if not v.get("hide")],
+                    default_value = 'boxed',
+                    sorted = True,
+                )),
+                ('num_columns', Integer(
+                    title = _('Number of Columns'),
+                    default_value = 1,
+                    minvalue = 1,
+                )),
+                ('column_headers', DropdownChoice(
+                    title = _('Column Headers'),
+                    choices = [
+                        ("off",      _("off")),
+                        ("pergroup", _("once per group")),
+                        ("repeat",   _("repeat every 20'th row")),
+                    ],
+                )),
+            ],
+        ))
+    )
+
+    # [4] Sorting
+    allowed = allowed_for_datasource(multisite_sorters, ds_name)
+    specs.append(
+        ('sorting', Dictionary(
+            title = _('Sort Properties'),
+            render = 'form',
+            optional_keys = None,
+            elements = [
+                ('sorting', ListOf(
+                    Tuple(
+                        elements = [
+                            DropdownChoice(
+                                title = _('Column'),
+                                choices = [ ("", "") ] + [ (name, p["title"]) for name, p in allowed.items() ],
+                                sorted = True,
+                            ),
+                            DropdownChoice(
+                                title = _('Order'),
+                                choices = [("asc", _("Ascending")), ("dsc", _("Descending"))],
+                            ),
+                        ],
+                        orientation = 'horizontal',
+                    ),
+                    title = _('Sorting'),
+                    add_label = _('Add column'),
+                )),
+            ],
+        )),
+    )
+
+    def column_spec(ident, title, ds_name):
+        allowed = allowed_for_datasource(multisite_painters, ds_name)
+        collist = [ ("", "") ] + collist_of_collection(allowed)
+
+        joined = []
+        join_index = []
+        join_title = []
+        if ident == 'columns':
+            joined  = allowed_for_joined_datasource(multisite_painters, ds_name)
+            collist += [ ("-", "---") ] + collist_of_collection(joined, collist)
+
+            join_index = [
+                TextUnicode(
+                    title = _('of Service'),
+                )
+            ]
+            join_title = [
+                TextUnicode(
+                    title = _('Title'),
+                )
+            ]
+
+        # FIXME: show/hide join related columns
+        #display = 'none'
+        #if joined and is_joined_value(collist, "%s%d" % (var_prefix, n)):
+        #    display = ''
+
+        return (ident, Dictionary(
+            title = title,
+            render = 'form',
+            optional_keys = None,
+            elements = [
+                (ident, ListOf(
+                    Tuple(
+                        elements = [
+                            DropdownChoice(
+                                title = _('Column'),
+                                choices = collist,
+                                sorted = True,
+                            ),
+                        ] + join_index + [
+                            DropdownChoice(
+                                title = _('Link'),
+                                choices = view_choices,
+                                sorted = True,
+                            ),
+                            DropdownChoice(
+                                title = _('Tooltip'),
+                                choices = collist,
+                            ),
+                        ] + join_title,
+                    ),
+                    title = title,
+                    add_label = _('Add column'),
+                )),
+            ],
+        ))
+
+    specs.append(column_spec('grouping', _('Grouping'), ds_name))
+    specs.append(column_spec('columns', _('Columns'), ds_name))
+
+    return specs
+
 def custom_field_handler(view):
-    datasourcename = view.get("datasource", html.var("datasource"))
-    if not datasourcename:
+    ds_name = view.get("datasource", html.var("datasource"))
+    if not ds_name:
         raise MKInternalError(_("No datasource defined."))
-    view['datasource'] = datasourcename
+    view['datasource'] = ds_name
 
     load_view_into_html_vars(view)
 
-    forms.header(_('View Properties'))
-
-    forms.section(_("Datasource"), simple=True)
-    datasource_title = multisite_datasources[datasourcename]["title"]
-    html.write("%s: <b>%s</b><br />\n" % (_('Datasource'), datasource_title))
-    html.hidden_field("datasource", datasourcename)
-    html.help(_("The datasource of a view cannot be changed."))
-
-    forms.section(_('Options'), simple = True)
-    html.checkbox("mobile", label=_('Show this view in the Mobile GUI'))
-    html.write("<br />\n")
-    html.checkbox("mustsearch", label=_('Show data only on search'))
-    html.write("<br />\n")
-    html.checkbox("force_checkboxes", label = _('Always show the checkboxes'))
-    html.write("<br />\n")
-    html.checkbox('user_sortable', True, label = _('Make view sortable by user'))
-
-    forms.section(_("Automatic page reload"))
-    html.write(_("Reload page every "))
-    html.number_input("browser_reload", 0)
-    html.write(_(" seconds"))
-    html.help(_("Leave this empty or at 0 for no automatic reload."))
-
-    forms.section(_("Audible alarm sounds"), simple=True)
-    html.checkbox("play_sounds", False, label=_("Play alarm sounds"))
-    html.help(_("If enabled and the view shows at least one host or service problem "
-                "the a sound will be played by the browser. Please consult the %s for details.")
-                % docu_link("multisite_sounds", _("documentation")))
+    for ident, vs in view_editor_specs(ds_name):
+        vs.render_input(ident, view)
 
     forms.header(_("Filters"), isopen=False)
-    allowed_filters = filters_allowed_for_datasource(datasourcename)
+    allowed_filters = filters_allowed_for_datasource(ds_name)
 
     # sort filters according to title
     s = [(filt.sort_index, filt.title, fname, filt)
@@ -367,127 +543,6 @@ def custom_field_handler(view):
             html.write("filter_activation(document.getElementById(\"filter_%s\"));\n" % fname)
 
     html.write("</script>\n")
-
-
-    def sorter_selection(title, var_prefix, maxnum, data):
-        allowed = allowed_for_datasource(data, datasourcename)
-        forms.header(title, isopen=False)
-        # make sure, at least 3 selection boxes are free for new columns
-        while html.var("%s%d" % (var_prefix, maxnum - 2)):
-            maxnum += 1
-        for n in range(1, maxnum + 1):
-            forms.section(_("%d. Column") % n)
-            collist = [ ("", "") ] + [ (name, p["title"]) for name, p in allowed.items() ]
-            html.sorted_select("%s%d" % (var_prefix, n), collist)
-            html.write(" ")
-            html.select("%sorder_%d" % (var_prefix, n), [("asc", _("Ascending")), ("dsc", _("Descending"))])
-
-    def column_selection(title, var_prefix, data):
-        allowed = allowed_for_datasource(data, datasourcename)
-
-        joined = []
-        if var_prefix == 'col_':
-            joined  = allowed_for_joined_datasource(data, datasourcename)
-
-        forms.header(title, isopen=False)
-        forms.section(_('Columns'))
-        # make sure, at least 3 selection boxes are free for new columns
-        maxnum = 1
-        while html.has_var("%s%d" % (var_prefix, maxnum)):
-            maxnum += 1
-        html.write('<div>')
-        for n in range(1, maxnum):
-            view_edit_column(n, var_prefix, maxnum, allowed, joined)
-        html.write('</div>')
-        html.jsbutton('add_column', _("Add Column"), "add_view_column(this, '%s', '%s')" % (datasourcename, var_prefix))
-
-    # [4] Sorting
-    sorter_selection(_("Sorting"), "sort_", max_sort_columns, multisite_sorters)
-
-    # [5] Grouping
-    column_selection(_("Grouping"), "group_", multisite_painters)
-
-    # [6] Columns (painters)
-    column_selection(_("Columns"), "col_", multisite_painters)
-
-    # [7] Layout
-    forms.header(_("Layout"), isopen=False)
-    forms.section(_("Basic Layout"))
-    html.sorted_select("layout", [ (k, v["title"]) for k,v in multisite_layouts.items() if not v.get("hide")])
-
-    forms.section(_("Number of Columns"))
-    html.number_input("num_columns", 1)
-
-    forms.section(_('Column headers'))
-
-    # 1.1.11i3: Fix deprecated column_header option: perpage -> pergroup
-    # This should be cleaned up someday
-    if html.var("column_headers") == 'perpage':
-        html.set_var("column_headers", 'pergroup')
-
-    html.select("column_headers", [
-        ("off",      _("off")),
-        ("pergroup", _("once per group")),
-        ("repeat",   _("repeat every 20'th row")) ])
-
-def view_edit_column(n, var_prefix, maxnum, allowed, joined = []):
-
-    collist = [ ("", "") ] + collist_of_collection(allowed)
-    if joined:
-        collist += [ ("-", "---") ] + collist_of_collection(joined, collist)
-
-    html.write("<div class=columneditor id=%seditor_%d><table><tr>" % (var_prefix, n))
-
-    # Buttons for deleting and moving around
-    html.write('<td class="cebuttons" rowspan=5>')
-    html.icon_button("javascript:void(0)", _("Delete this column"), "delete", onclick="delete_view_column(this);")
-    display = n == 1 and 'display:none;' or ''
-    html.icon_button("javascript:void(0)", _("Move this column up"), "up", onclick="move_column_up(this);",
-                     id="%sup_%d" % (var_prefix, n), style=display)
-
-    display = n == maxnum - 1 and 'display:none;' or ''
-    html.icon_button("javascript:void(0)", _("Move this column down"), "down", onclick="move_column_down(this);",
-                     id="%sdown_%d" % (var_prefix, n), style=display)
-    html.write('</td>')
-
-    # Actual column editor
-    html.write('<td id="%slabel_%d" class=celeft>%s:</td><td>' % (var_prefix, n, _('Column')))
-    html.select("%s%d" % (var_prefix, n), collist, "", "toggle_join_fields('%s', %d, this)" % (var_prefix, n))
-    display = 'none'
-    if joined and is_joined_value(collist, "%s%d" % (var_prefix, n)):
-        display = ''
-    html.write("</td></tr><tr id='%sjoin_index_row%d' style='display:%s'><td class=celeft>%s:</td><td>" %
-                                                                    (var_prefix, n, display, _('of Service')))
-    html.text_input("%sjoin_index_%d" % (var_prefix, n), id = var_prefix + "join_index_%d" % n)
-    html.write("</td></tr><tr><td class=celeft>%s:</td><td>" % _('Link'))
-    select_view("%slink_%d" % (var_prefix, n))
-    html.write("</td></tr><tr><td class=celeft>%s:</td><td>" % _('Tooltip'))
-    html.select("%stooltip_%d" % (var_prefix, n), collist)
-    html.write("</td></tr><tr id='%stitle_row%d' style='display:%s'><td class=celeft>%s:</td><td>" %
-                                                                       (var_prefix, n, display, _('Title')))
-    html.text_input("%stitle_%d" % (var_prefix, n), id = var_prefix + "title_%d" % n)
-    html.write("</td></tr></table>")
-    html.write("</div>")
-
-def ajax_get_edit_column():
-    if not config.may("general.edit_views"):
-        raise MKAuthException(_("You are not allowed to edit views."))
-
-    if not html.has_var('ds') or not html.has_var('num') or not html.has_var('pre'):
-        raise MKInternalError(_("Missing attributes"))
-
-    load_views()
-
-    allowed = allowed_for_datasource(multisite_painters, html.var('ds'))
-
-    joined = []
-    if html.var('pre') == 'col_':
-        joined  = allowed_for_joined_datasource(multisite_painters, html.var('ds'))
-
-    num = int(html.var('num', 0))
-
-    html.form_vars = []
-    view_edit_column(num, html.var('pre'), num + 1, allowed, joined)
 
 # Called by edit function in order to prefill HTML form
 # FIXME: Old hack. Remove this when recoding the editor.

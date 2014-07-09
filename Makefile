@@ -102,7 +102,22 @@ dist: mk-livestatus mk-eventd
 	cp multisite.mk multisite.mk-$(VERSION)
 	tar  czf $(DISTNAME)/conf.tar.gz $(TAROPTS) main.mk-$(VERSION) multisite.mk-$(VERSION)
 	rm -f main.mk-$(VERSION) multisite.mk-$(VERSION)
-	tar  czf $(DISTNAME)/agents.tar.gz $(TAROPTS) -C agents --exclude "*~" --exclude .f12 $$(cd agents ; ls)
+	tar  czf $(DISTNAME)/agents.tar.gz $(TAROPTS) -C agents \
+		--exclude "build_version" \
+		--exclude "*.rc" \
+		--exclude "*.rc.in" \
+		--exclude "bin_replace" \
+		--exclude "*.nsi" \
+		--exclude "*.ico" \
+		--exclude "endless.bat" \
+		--exclude "logstate.txt" \
+		--exclude "*.unversioned.exe" \
+		--exclude "*.cc" \
+		--exclude "*.res" \
+		--exclude "*~" \
+		--exclude "Makefile" \
+		--exclude "crash.exe" \
+		--exclude .f12 $$(cd agents ; ls)
 	cd $(DISTNAME) ; ../make_package_info $(VERSION) > package_info
 	install -m 755 scripts/*.{sh,py} $(DISTNAME)
 	install -m 644 COPYING AUTHORS ChangeLog $(DISTNAME)
@@ -154,15 +169,14 @@ setversion:
 	    fi ; \
 	done ; \
         sed -i 's/say "Version: .*"/say "Version: $(NEW_VERSION)"/' agents/check_mk_agent.openvms
-	sed -i 's/#define CHECK_MK_VERSION .*/#define CHECK_MK_VERSION "'$(NEW_VERSION)'"/' agents/windows/check_mk_agent.cc ; \
-	sed -i 's/!define CHECK_MK_VERSION .*/!define CHECK_MK_VERSION "'$(NEW_VERSION)'"/' agents/windows/installer.nsi ; \
+	sed -i 's/!define CHECK_MK_VERSION .*/!define CHECK_MK_VERSION "'$(NEW_VERSION)'"/' agents/windows/installer*.nsi ; \
 	sed -ri 's/^(VERSION[[:space:]]*= *).*/\1'"$(NEW_VERSION)/" agents/windows/Makefile ; \
 	sed -i 's/^AC_INIT.*/AC_INIT([MK Livestatus], ['"$(NEW_VERSION)"'], [mk@mathias-kettner.de])/' livestatus/configure.ac ; \
 	sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' mkeventd/bin/mkeventd ; \
 	sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' doc/treasures/mknotifyd ; \
 	sed -i 's/^VERSION=.*/VERSION='"$(NEW_VERSION)"'/' scripts/setup.sh ; \
 	echo 'check-mk_$(NEW_VERSION)-1_all.deb net optional' > debian/files ; \
-	cd agents/windows ; rm *.exe ; make ; cd ../.. ; \
+	cd agents/windows ; rm check_mk_agent.exe check_mk_agent-64.exe ; make ; cd ../.. ; \
 	cp agents/windows/install_agent.exe check-mk-agent-$(NEW_VERSION).exe
 
 headers:

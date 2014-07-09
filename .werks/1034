@@ -1,0 +1,8 @@
+Title: Always provide also 64 bit version of Windows agent
+Level: 2
+Component: checks
+Version: 1.2.5i4p2
+Date: 1403871810
+Class: feature
+
+

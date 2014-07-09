@@ -22,6 +22,7 @@
     * 0628 raritan_pdu_inlet: now also monitors the three phases of the inlet
     * 1073 sni_octopuse_cpu: added PNP graph definition and Perf-O-Meter
     * 0178 mssql_tablespaces: It is now possible to define thresholds
+    * 0999 allnet_ip_sensoric.pressure: New Check for Pressure Sensors in ALLNET IP Sensoric devices
     * 0994 FIX: agent plugin smart: fixed syntax error
     * 0989 FIX: logwatch.ec: Fix forwarding multiple messages via syslog/TCP...
     * 0943 FIX: if.include: fixed incorrect traffic percentage values in the check output of if checks...

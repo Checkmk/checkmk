@@ -253,3 +253,42 @@ check_info["allnet_ip_sensoric.humidity"] = {
 }
 
 #.
+#   .--pressure------------------------------------------------------------.
+#   |                                                                      |
+#   |               _ __  _ __ ___  ___ ___ _   _ _ __ ___                 |
+#   |              | '_ \| '__/ _ \/ __/ __| | | | '__/ _ \                |
+#   |              | |_) | | |  __/\__ \__ \ |_| | | |  __/                |
+#   |              | .__/|_|  \___||___/___/\__,_|_|  \___|                |
+#   |              |_|                                                     |
+#   '----------------------------------------------------------------------'
+
+def inventory_allnet_ip_sensoric_pressure(info):
+    parsed = allnet_ip_sensoric_parse(info)
+    inventory = []
+    for sensor in parsed.keys():
+        if "function" in parsed[sensor].keys() and parsed[sensor]["function"] == "16":
+            item = allnet_ip_sensoric_compose_item(sensor, parsed[sensor])
+            inventory.append( (item, None) )
+    return inventory
+
+def check_allnet_ip_sensoric_pressure(item, _no_params, info):
+    parsed = allnet_ip_sensoric_parse(info)
+    sensor_id = "sensor" + re.sub(".+Sensor ", "", item)
+
+    if sensor_id not in parsed.keys():
+        return 3, "%s not found in agent output" % item
+
+    pressure = float(parsed[sensor_id]["value_float"]) / 1000
+
+    perfdata = [ ("pressure", str(pressure) + "bars", None, None, 0 ) ]
+
+    return 0, "%s is %0.5f bars" % (item, pressure), perfdata
+
+check_info["allnet_ip_sensoric.pressure"] = {
+    "check_function"        : check_allnet_ip_sensoric_pressure,
+    "inventory_function"    : inventory_allnet_ip_sensoric_pressure,
+    "service_description"   : "Pressure %s",
+    "has_perfdata"          : True,
+}
+
+#.

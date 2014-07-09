@@ -1,0 +1,8 @@
+Title: allnet_ip_sensoric.pressure: New Check for Pressure Sensors in ALLNET IP Sensoric devices
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1404923145
+Class: feature
+
+

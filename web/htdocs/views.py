@@ -203,9 +203,18 @@ def get_all_filtervars():
 # Load all views - users or builtins
 def load_views():
     global multisite_views, available_views
+    # Skip views which do not belong to known datasources
     multisite_views = visuals.load('views', multisite_builtin_views,
-                    lambda v: v['datasource'] not in multisite_datasources)
+                    skip_func = lambda v: v['datasource'] not in multisite_datasources)
     available_views = visuals.available('views', multisite_views)
+
+    # Add the context_type. This tries to map the datasource and additional settings of the
+    # views to get the correct context type
+    for view in multisite_views.values():
+        if 'context_type' not in view:
+            pass # FIXME
+    # FIXME: Convert from show_filters, hide_filters, hard_filters and hard_filtervars
+    # to show_filters and context construct
 
 def save_views(us):
     visuals.save('views', multisite_views)
@@ -318,6 +327,7 @@ def page_edit_view():
 
     visuals.page_edit_visual('views', multisite_views,
         custom_field_handler = custom_field_handler,
+        load_handler = transform_view_to_valuespec,
         create_handler = create_view,
         try_handler = lambda view: show_view(view, False, False)
     )
@@ -333,7 +343,20 @@ def view_choices(only_with_hidden = False):
             choices.append(("%s" % name, title))
     return choices
 
-def view_editor_specs(ds_name):
+def view_editor_options():
+    return [
+        ('mobile',           _('Show this view in the Mobile GUI')),
+        ('mustsearch',       _('Show data only on search')),
+        ('force_checkboxes', _('Always show the checkboxes')),
+        ('user_sortable',    _('Make view sortable by user')),
+        ('play_sounds',      _('Play alarm sounds')),
+    # FIXME
+    #html.help(_("If enabled and the view shows at least one host or service problem "
+    #            "the a sound will be played by the browser. Please consult the %s for details.")
+    #            % docu_link("multisite_sounds", _("documentation")))
+    ]
+
+def view_editor_specs(context_type, ds_name):
     specs = []
     specs.append(
         ('view', Dictionary(
@@ -348,17 +371,7 @@ def view_editor_specs(ds_name):
                 )),
                 ('options', ListChoice(
                     title = _('Options'),
-                    choices = [
-                        ('mobile',           _('Show this view in the Mobile GUI')),
-                        ('mustsearch',       _('Show data only on search')),
-                        ('force_checkboxes', _('Always show the checkboxes')),
-                        ('user_sortable',    _('Make view sortable by user')),
-                        ('play_sounds',      _('Play alarm sounds')),
-    # FIXME
-    #html.help(_("If enabled and the view shows at least one host or service problem "
-    #            "the a sound will be played by the browser. Please consult the %s for details.")
-    #            % docu_link("multisite_sounds", _("documentation")))
-                    ],
+                    choices = view_editor_options(),
                     default_value = ['user_sortable'],
                 )),
                 ('browser_reload', Integer(
@@ -404,8 +417,9 @@ def view_editor_specs(ds_name):
                         elements = [
                             DropdownChoice(
                                 title = _('Column'),
-                                choices = [ ("", "") ] + [ (name, p["title"]) for name, p in allowed.items() ],
+                                choices = [ (name, p["title"]) for name, p in allowed.items() ],
                                 sorted = True,
+                                no_preselect = True,
                             ),
                             DropdownChoice(
                                 title = _('Order'),
@@ -423,50 +437,56 @@ def view_editor_specs(ds_name):
 
     def column_spec(ident, title, ds_name):
         allowed = allowed_for_datasource(multisite_painters, ds_name)
-        collist = [ ("", "") ] + collist_of_collection(allowed)
+        collist = collist_of_collection(allowed)
 
-        joined = []
-        join_index = []
-        join_title = []
         allow_empty = True
         empty_text = None
         if ident == 'columns':
-            joined  = allowed_for_joined_datasource(multisite_painters, ds_name)
-            collist += [ ("-", "---") ] + collist_of_collection(joined, collist)
-
-            join_index = [
-                TextUnicode(
-                    title = _('of Service'),
-                )
-            ]
-            join_title = [
-                TextUnicode(
-                    title = _('Title'),
-                )
-            ]
-
             allow_empty = False
             empty_text = _("Please add at least one column to your view.")
 
-        # FIXME: show/hide join related columns
-        #display = 'none'
-        #if joined and is_joined_value(collist, "%s%d" % (var_prefix, n)):
-        #    display = ''
-
-        return (ident, Dictionary(
-            title = title,
-            render = 'form',
-            optional_keys = None,
+        vs_column = Tuple(
+            title = _('Column'),
             elements = [
-                (ident, ListOf(
+                DropdownChoice(
+                    title = _('Column'),
+                    choices = collist,
+                    sorted = True,
+                    no_preselect = True,
+                ),
+                DropdownChoice(
+                    title = _('Link'),
+                    choices = view_choices,
+                    sorted = True,
+                ),
+                DropdownChoice(
+                    title = _('Tooltip'),
+                    choices = [(None, "")] + collist,
+                ),
+            ]
+        )
+
+        joined = allowed_for_joined_datasource(multisite_painters, ds_name)
+        if ident == 'columns' and joined:
+            joined_cols = collist_of_collection(joined, collist)
+
+            vs_column = Alternative(
+                elements = [
+                    vs_column,
+
                     Tuple(
+                        title = _('Joined column'),
                         elements = [
                             DropdownChoice(
                                 title = _('Column'),
-                                choices = collist,
+                                choices = joined_cols,
                                 sorted = True,
+                                no_preselect = True,
                             ),
-                        ] + join_index + [
+                            TextUnicode(
+                                title = _('of Service'),
+                                allow_empty = False,
+                            ),
                             DropdownChoice(
                                 title = _('Link'),
                                 choices = view_choices,
@@ -474,10 +494,24 @@ def view_editor_specs(ds_name):
                             ),
                             DropdownChoice(
                                 title = _('Tooltip'),
-                                choices = collist,
+                                choices = [(None, "")] + joined_cols,
                             ),
-                        ] + join_title,
+                            TextUnicode(
+                                title = _('Title'),
+                            ),
+                        ],
                     ),
+                ],
+                style = 'dropdown',
+                match = lambda x: x != None and len(x) == 5 and 1 or 0,
+            )
+
+        return (ident, Dictionary(
+            title = title,
+            render = 'form',
+            optional_keys = None,
+            elements = [
+                (ident, ListOf(vs_column,
                     title = title,
                     add_label = _('Add column'),
                     allow_empty = allow_empty,
@@ -489,14 +523,15 @@ def view_editor_specs(ds_name):
     specs.append(column_spec('grouping', _('Grouping'), ds_name))
     specs.append(column_spec('columns', _('Columns'), ds_name))
 
-    multisite_datasources[ds_name]['infos']
+    ty = context_types[context_type]
+
     specs.append(
         ('filters', Dictionary(
             title = _('Filters'),
             render = 'form',
             optional_keys = None,
             elements = [
-                ('filters', VisualFilterList(multisite_datasources[ds_name]['infos'])),
+                ('filters', ty['parameters']),
             ]
         ))
     )
@@ -509,8 +544,39 @@ def custom_field_handler(view):
         raise MKInternalError(_("No datasource defined."))
     view['datasource'] = ds_name
 
-    for ident, vs in view_editor_specs(ds_name):
+    for ident, vs in view_editor_specs(view['context_type'], ds_name):
         vs.render_input(ident, view)
+
+# Is used to change the view structure to be compatible to the valuespec
+# This needs to perform the inverted steps of the create_view() function
+# FIXME: One day we should rewrite this to make no transform needed anymore
+def transform_view_to_valuespec(view):
+    view['options'] = []
+    for key, title in view_editor_options():
+        if view.get(key):
+            view['options'].append(key)
+
+    view['visibility'] = []
+    for key in [ 'hidden', 'hidebutton', 'public' ]:
+        if view.get(key):
+            view['visibility'].append(key)
+
+    view['grouping'] = view['group_painters']
+    view['filters']  = view['context']
+
+    view['columns'] = []
+    for entry in view['painters']:
+        if len(entry) == 5:
+            pname, viewname, tooltip, join_index, col_title = entry
+            view['columns'].append((pname, join_index, viewname, tooltip, col_title))
+
+        elif len(entry) == 4:
+            pname, viewname, tooltip, join_index = entry
+            view['columns'].append((pname, join_index, viewname, tooltip, ''))
+
+        else:
+            pname, viewname, tooltip = entry
+            view['columns'].append((pname, viewname, tooltip))
 
 # Extract properties of view from HTML variables and construct
 # view object, to be used for saving or displaying
@@ -518,10 +584,10 @@ def custom_field_handler(view):
 # old_view is the old view dict which might be loaded from storage.
 # view is the new dict object to be updated.
 def create_view(old_view, view):
-    ds_name = html.var("datasource")
+    ds_name = old_view.get('datasource', html.var('datasource'))
     datasource = multisite_datasources[ds_name]
 
-    for ident, vs in view_editor_specs(ds_name):
+    for ident, vs in view_editor_specs(view['context_type'], ds_name):
         attrs = vs.from_html_vars(ident)
         vs.validate_value(attrs, ident)
 
@@ -543,8 +609,15 @@ def create_view(old_view, view):
 
         elif ident == 'columns':
             painters = []
-            for pname, join_index, viewname, tooltip, col_title in attrs['columns']:
+            for column in attrs['columns']:
+                if len(column) == 5:
+                    pname, join_index, viewname, tooltip, col_title = column
+                else:
+                    pname, viewname, tooltip = column
+                    join_index, col_title = None, None
+
                 viewname = viewname and viewname or None
+
                 if join_index and col_title:
                     painters.append((pname, viewname, tooltip, join_index, col_title))
                 elif join_index:
@@ -555,125 +628,8 @@ def create_view(old_view, view):
 
         elif ident == 'filters':
             view['show_filters'] = attrs['filters'].keys()
-            # FIXME: Preset values
+            view['context'] = attrs['filters']
 
-    html.debug(view)
-
-    raise MKUserError(None, 'xxx')
-    return view
-
-    tablename = datasource["table"]
-    layoutname = html.var("layout")
-    try:
-        num_columns = int(html.var("num_columns", 1))
-        if num_columns < 1: num_columns = 1
-        if num_columns > 50: num_columns = 50
-    except:
-        num_columns = 1
-
-    try:
-        browser_reload = int(html.var("browser_reload", 0))
-        if browser_reload < 0: browser_reload = 0
-    except:
-        browser_reload = 0
-
-    play_sounds      = html.var("play_sounds", "") != ""
-    mobile           = html.var("mobile", "") != ""
-    mustsearch       = html.var("mustsearch", "") != ""
-    force_checkboxes = html.var("force_checkboxes", "") != ""
-    column_headers   = html.var("column_headers")
-    user_sortable    = html.var("user_sortable")
-
-    show_filternames = []
-    hide_filternames = []
-    hard_filternames = []
-    hard_filtervars  = []
-
-    for fname, filt in multisite_filters.items():
-        usage = html.var("filter_%s" % fname)
-        if usage == "show":
-            show_filternames.append(fname)
-        elif usage == "hide":
-            hide_filternames.append(fname)
-        elif usage == "hard":
-            hard_filternames.append(fname)
-        if usage in [ "show", "hard" ]:
-            for varname in filt.htmlvars:
-                hard_filtervars.append((varname, html.var(varname, "")))
-
-    sorternames = []
-    for n in range(1, max_sort_columns+1):
-        sname = html.var("sort_%d" % n)
-        if sname:
-            reverse = html.var("sort_order_%d" % n) == "dsc"
-            sorternames.append((sname, reverse))
-
-    group_painternames = []
-    # User can set more than max_display_columns. We cannot easily know
-    # how many variables he has set since holes are allowed. Let's silently
-    # assume that 500 columns are enough. This surely is a hack, but if you
-    # have read this comment you might want to mail me a (simple) patch for
-    # doing this more cleanly...
-    for n in range(1, 500):
-        pname = html.var("group_%d" % n)
-        viewname = html.var("group_link_%d" % n)
-        tooltip = html.var("group_tooltip_%d" % n)
-        if pname:
-            if viewname not in available_views:
-                viewname = None
-            group_painternames.append((pname, viewname, tooltip))
-
-    painternames = []
-    # User can set more than max_display_columns. We cannot easily know
-    # how many variables he has set since holes are allowed. Let's silently
-    # assume that 500 columns are enough. This surely is a hack, but if you
-    # have read this comment you might want to mail me a (simple) patch for
-    # doing this more cleanly...
-    for n in range(1, 500):
-        pname      = html.var("col_%d" % n)
-        viewname   = html.var("col_link_%d" % n)
-        tooltip    = html.var("col_tooltip_%d" % n)
-        join_index = html.var('col_join_index_%d' % n)
-        col_title  = html.var('col_title_%d' % n)
-        if pname and pname != '-':
-            if viewname not in available_views:
-                viewname = None
-
-            allowed_cols = collist_of_collection(allowed_for_datasource(multisite_painters, datasourcename))
-            joined_cols  = collist_of_collection(allowed_for_joined_datasource(multisite_painters, datasourcename), allowed_cols)
-            if is_joined_value(joined_cols, "col_%d" % n) and not join_index:
-                raise MKUserError('col_join_index_%d' % n, _("Please specify the service to show the data for"))
-
-            if join_index and col_title:
-                painternames.append((pname, viewname, tooltip, join_index, col_title))
-            elif join_index:
-                painternames.append((pname, viewname, tooltip, join_index))
-            else:
-                painternames.append((pname, viewname, tooltip))
-
-    if len(painternames) == 0:
-        raise MKUserError("col_1", _("Please add at least one column to your view."))
-
-    view.update({
-        "owner"           : config.user_id,
-        "datasource"      : datasourcename,
-        "mobile"          : mobile,
-        "mustsearch"      : mustsearch,
-        "force_checkboxes" : force_checkboxes,
-        "layout"          : layoutname,
-        "num_columns"     : num_columns,
-        "browser_reload"  : browser_reload,
-        "play_sounds"     : play_sounds,
-        "column_headers"  : column_headers,
-        "user_sortable"   : user_sortable,
-        "show_filters"    : show_filternames,
-        "hide_filters"    : hide_filternames,
-        "hard_filters"    : hard_filternames,
-        "hard_filtervars" : hard_filtervars,
-        "sorters"         : sorternames,
-        "group_painters"  : group_painternames,
-        "painters"        : painternames,
-    })
     return view
 
 #.
@@ -1022,7 +978,7 @@ def show_view(view, show_heading = False, show_buttons = True,
     painter_options.sort()
 
     # Fetch data. Some views show data only after pressing [Search]
-    if (only_count or (not view["mustsearch"]) or html.var("filled_in") in ["filter", 'actions', 'confirm']):
+    if (only_count or (not view.get("mustsearch")) or html.var("filled_in") in ["filter", 'actions', 'confirm']):
         # names for additional columns (through Stats: headers)
         add_columns = datasource.get("add_columns", [])
 
@@ -1135,7 +1091,7 @@ def render_view(view, rows, datasource, group_painters, painters,
     html.show_user_errors()
 
     # Filter form
-    filter_isopen = html.var("filled_in") != "filter" and view["mustsearch"]
+    filter_isopen = html.var("filled_in") != "filter" and view.get("mustsearch")
     if 'F' in display_options and len(show_filters) > 0:
         show_filter_form(filter_isopen, show_filters)
 
@@ -1424,7 +1380,7 @@ def show_context_links(thisview, active_filters, show_filters, display_options,
     if 'B' in display_options:
         execute_hooks('buttons-begin')
 
-    filter_isopen = html.var("filled_in") != "filter" and thisview["mustsearch"]
+    filter_isopen = html.var("filled_in") != "filter" and thisview.get("mustsearch")
     if 'F' in display_options:
         if len(show_filters) > 0:
             if html.var("filled_in") == "filter":
@@ -1778,10 +1734,6 @@ def allowed_for_joined_datasource(collection, datasourcename):
         return {}
     return allowed_for_datasource(collection, multisite_datasources[datasourcename]['join'][0])
 
-def is_joined_value(collection, varname):
-    selected_label = [ label for name, label in collection if name == html.var(varname, '') ]
-    return selected_label and selected_label[0].startswith(_('SERVICE:'))
-
 def collist_of_collection(collection, join_target = []):
     def sort_list(l):
         # Sort the lists but don't mix them up
@@ -1792,7 +1744,7 @@ def collist_of_collection(collection, join_target = []):
     if not join_target:
         return sort_list([ (name, p["title"]) for name, p in collection.items() ])
     else:
-        return sort_list([ (name, _('SERVICE:') + ' ' + p["title"]) for name, p in collection.items() if (name, p["title"]) not in join_target ])
+        return sort_list([ (name, p["title"]) for name, p in collection.items() if (name, p["title"]) not in join_target ])
 
 #.
 #   .--Commands------------------------------------------------------------.

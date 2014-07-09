@@ -41,7 +41,7 @@ context_types['host'] = {
 context_types['hosts'] = {
     'title'      : _('Multiple Hosts'),
     'single'     : False,
-    'parameters' : VisualFilter('host'),
+    'parameters' : VisualFilterList(['host']),
 }
 
 context_types['service'] = {
@@ -62,5 +62,5 @@ context_types['service'] = {
 context_types['services'] = {
     'title'      : _('Multiple Services'),
     'single'     : False,
-    'parameters' : VisualFilter('service'),
+    'parameters' : VisualFilterList(['service', 'host']),
 }

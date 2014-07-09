@@ -382,7 +382,8 @@ def page_create_visual(what, allow_global = False, next_url = None):
 #   | Edit global settings of the visual                                   |
 #   '----------------------------------------------------------------------'
 
-def page_edit_visual(what, all_visuals, custom_field_handler = None, create_handler = None, try_handler = None):
+def page_edit_visual(what, all_visuals, custom_field_handler = None, create_handler = None, try_handler = None,
+                     load_handler = None):
     what_s = what[:-1]
     if not config.may("general.edit_" + what):
         raise MKAuthException(_("You are not allowed to edit %s.") % what)
@@ -422,6 +423,9 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None, create_hand
                 view = all_visuals.get(('', viewname)) # load builtin view
 
         context_type = view['context_type']
+
+        if load_handler:
+            load_handler(view)
     else:
         mode = 'create'
         context_type = html.var('context_type')

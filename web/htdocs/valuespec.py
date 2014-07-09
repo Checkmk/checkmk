@@ -916,18 +916,19 @@ class ListOfMultiple(ValueSpec):
         # In the 'complain' phase, where the user already saved the
         # form but the validation failed, we must not display the
         # original 'value' but take the value from the HTML variables.
-        if html.has_var("%s_active" % varprefix):
+        if html.var("%s_active" % varprefix):
             value = self.from_html_vars(varprefix)
 
         # Save all selected items
-        html.hidden_field('%s_active' % varprefix, ';'.join(value.keys()), id = '%s_active' % varprefix)
+        html.hidden_field('%s_active' % varprefix, ';'.join(value.keys()),
+            id = '%s_active' % varprefix, add_var = True)
 
         # Actual table of currently existing entries
         html.write('<table class="valuespec_listof" id="%s_table">' % varprefix)
         for ident, vs in self._choices:
+            cls = ident not in value and 'unused' or ''
             prefix = varprefix + '_' + ident
-            display = ident not in value and 'none' or ''
-            html.write('<tr id="%s_row" style="display:%s"><td class=vlof_buttons>' % (prefix, display))
+            html.write('<tr id="%s_row" class="%s"><td class=vlof_buttons>' % (prefix, cls))
             self.del_button(varprefix, ident)
             html.write("</td><td class=vlof_content>")
             vs.render_input(prefix, value.get(ident))
@@ -937,7 +938,7 @@ class ListOfMultiple(ValueSpec):
 
         choosable = [('', '')] + [ (ident, vs.title()) for ident, vs in self._choices if ident not in value ]
         html.select(varprefix + '_choice', choosable)
-        html.javascript('document.getElementById(\'%s_choice\').value = \'\';' % varprefix)
+        html.javascript('vs_listofmultiple_init(\'%s\');' % varprefix)
         html.jsbutton(varprefix + '_add', self._add_label, "vs_listofmultiple_add('%s')" % varprefix)
 
     def canonical_value(self):
@@ -952,7 +953,11 @@ class ListOfMultiple(ValueSpec):
 
     def from_html_vars(self, varprefix):
         value = {}
-        for ident in html.var('%s_active' % varprefix).split(';'):
+        active = html.var('%s_active' % varprefix).strip()
+        if not active:
+            return value
+
+        for ident in active.split(';'):
             vs = self._choice_dict[ident]
             value[ident] = vs.from_html_vars(varprefix + '_' + ident)
         return value
@@ -1072,11 +1077,22 @@ class DropdownChoice(ValueSpec):
         self._prefix_values = kwargs.get("prefix_values", False)
         self._sorted = kwargs.get("sorted", True)
 
+        self._no_preselect       = kwargs.get("no_preselect",       False)
+        self._no_preselect_value = kwargs.get("no_preselect_value", None)
+        self._no_preselect_title = kwargs.get("no_preselect_title", "") # if not preselected
+        self._no_preselect_error = kwargs.get("no_preselect_error", _("Please make a selection"))
+
     def choices(self):
+        result = []
         if type(self._choices) == list:
-            return self._choices
+            result = self._choices
         else:
-            return self._choices()
+            result = self._choices()
+
+        if self._no_preselect:
+            return [(self._no_preselect_value, self._no_preselect_title)] + result
+        else:
+            return result
 
     def canonical_value(self):
         choices = self.choices()
@@ -1124,6 +1140,12 @@ class DropdownChoice(ValueSpec):
             if sel == str(n):
                 return val
         return self.default_value() # can only happen if user garbled URL or len(choices) == 0
+
+    def validate_value(self, value, varprefix):
+        if self._no_preselect and value == self._no_preselect_value:
+            raise MKUserError(varprefix, self._no_preselect_error)
+
+        ValueSpec.custom_validate(self, value, varprefix)
 
     def validate_datatype(self, value, varprefix):
         for val, title in self.choices():
@@ -2990,7 +3012,7 @@ class IconSelector(ValueSpec):
             value = self._empty_img
 
         html.write('<div class="popup_container">')
-        html.hidden_field(varprefix + "_value", value or '', varprefix + "_value")
+        html.hidden_field(varprefix + "_value", value or '', varprefix + "_value", add_var = True)
         self.render_icon(value, 'toggle_popup(event, \'%s\')' % varprefix,
                         _('Choose another Icon'), id = varprefix + '_img')
         if not value:

@@ -1774,7 +1774,10 @@ function vs_listofmultiple_add(varprefix) {
 
     // make the filter visible
     var row = document.getElementById(varprefix + '_' + ident + '_row');
-    row.style.display = '';
+    remove_class(row, 'unused');
+
+    // Change the field names to used ones
+    vs_listofmultiple_toggle_fields(row, varprefix, true);
 
     // Set value emtpy after adding one element
     choice.value = '';
@@ -1788,11 +1791,14 @@ function vs_listofmultiple_add(varprefix) {
 }
 
 function vs_listofmultiple_del(varprefix, ident) {
-    // make the filter visible
+    // make the filter invisible
     var row = document.getElementById(varprefix + '_' + ident + '_row');
-    row.style.display = 'none';
+    add_class(row, 'unused');
 
-    // Make it choosable again
+    // Change the field names to unused ones
+    vs_listofmultiple_toggle_fields(row, varprefix, false);
+
+    // Make it choosable from the dropdown field again
     var choice = document.getElementById(varprefix + '_choice');
     for (var i = 0; i < choice.childNodes.length; i++)
         if (choice.childNodes[i].value == ident)
@@ -1808,6 +1814,27 @@ function vs_listofmultiple_del(varprefix, ident) {
         }
     }
     active.value = l.join(';');
+}
+
+function vs_listofmultiple_toggle_fields(root, varprefix, enable) {
+    var types = ['input', 'select', 'textarea'];
+    for (var t in types) {
+        var fields = root.getElementsByTagName(types[t]);
+        for (var i in fields) {
+            fields[i].disabled = !enable;
+        }
+    }
+}
+
+function vs_listofmultiple_init(varprefix) {
+    document.getElementById(varprefix + '_choice').value = '';
+
+    // Mark fields of unused elements as disabled
+    var container = document.getElementById(varprefix + '_table');
+    var unused = document.getElementsByClassName('unused', container);
+    for (var i in unused) {
+        vs_listofmultiple_toggle_fields(unused[i], varprefix, false);
+    }
 }
 
 function help_enable() {

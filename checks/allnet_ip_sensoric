@@ -132,6 +132,10 @@ def inventory_allnet_ip_sensoric_tension(info):
 def check_allnet_ip_sensoric_tension(item, _no_params, info):
     parsed = allnet_ip_sensoric_parse(info)
     sensor_id = "sensor" + re.sub(".+Sensor ", "", item)
+
+    if sensor_id not in parsed.keys():
+        return 3, "%s not found in agent output" % item
+
     value = float(parsed[sensor_id]["value_float"])
 
     perfdata = [ ("tension", "%0.2f" % value, '', '', 0, 100) ]
@@ -174,6 +178,10 @@ def check_allnet_ip_sensoric_temp(item, params, info):
     warn, crit = params
     parsed = allnet_ip_sensoric_parse(info)
     sensor_id = "sensor" + re.sub(".+Sensor ", "", item)
+
+    if sensor_id not in parsed.keys():
+        return 3, "%s not found in agent output" % item
+
     value = float(parsed[sensor_id]["value_float"])
 
     perfdata = [ ("temp", "%0.2fC" % value, warn, crit, -40, 85) ]
@@ -219,6 +227,10 @@ def check_allnet_ip_sensoric_humidity(item, params, info):
     critlow, warnlow, warnhigh, crithigh = params
     parsed = allnet_ip_sensoric_parse(info)
     sensor_id = "sensor" + re.sub(".+Sensor ", "", item)
+
+    if sensor_id not in parsed.keys():
+        return 3, "%s not found in agent output" % item
+
     humidity = float(parsed[sensor_id]["value_float"])
 
     perfdata = [ ("humidity", humidity, critlow, warnlow, warnhigh, crithigh) ]

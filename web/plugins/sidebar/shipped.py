@@ -1344,7 +1344,7 @@ def render_tag_tree_level(taggroups, path, cwd, title, tree):
     items.sort()
 
     for nr, ((title, tag), subtree) in enumerate(items):
-        subpath = path + [tag]
+        subpath = path + [tag or ""]
         url = tag_tree_url(taggroups, subpath, "allhosts")
         if "_num_hosts" in subtree:
             title += " (%d)" % subtree["_num_hosts"]

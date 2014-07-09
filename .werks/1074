@@ -1,0 +1,9 @@
+Title: Fix Virtual Host Tree snapin
+Level: 2
+Component: multisite
+Version: 1.2.5i4p2
+Date: 1404911209
+Class: fix
+
+The Virtual Host Tree snapin would not filter correctly for host tags
+that are empty (i.e. <tt>None</tt>). This has been fixed.

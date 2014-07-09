@@ -10,6 +10,7 @@
 
     Multisite:
     * 1052 SEC: index start URL can not be used to redirect to absolute URLs anymore...
+    * 1074 FIX: Fix Virtual Host Tree snapin...
 
 
 1.2.5i4p1:

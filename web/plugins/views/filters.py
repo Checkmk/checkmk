@@ -842,10 +842,10 @@ class FilterHostTags(Filter):
             if op:
                 if tag:  # positive host tag
                     headers.append(self.hosttag_filter(op != "is", tag))
-                else:    
+                else:
                     # empty host tag. Darn. We need to create a filter that excludes all other host tags
                     # of the group
-                    group = html.var(prefix + '_grp')  
+                    group = html.var(prefix + '_grp')
                     grouptags = None
                     for entry in config.wato_host_tags:
                         if entry[0] == group:  # found our group
@@ -855,7 +855,7 @@ class FilterHostTags(Filter):
                         for tag in grouptags:
                             headers.append(self.hosttag_filter(False, tag))
                         if len(grouptags) > 1:
-                            headers.append("Or: %d" % len(grouptags)) 
+                            headers.append("Or: %d" % len(grouptags))
                         if op == "is":
                             headers.append("Negate:")
 

@@ -64,3 +64,73 @@ context_types['services'] = {
     'single'     : False,
     'parameters' : VisualFilterList(['service', 'host']),
 }
+
+context_types['hostgroups'] = {
+    'title'      : _('Multiple Hostgroups'),
+    'single'     : False,
+    'parameters' : VisualFilterList(['hostgroup']),
+}
+
+context_types['servicegroups'] = {
+    'title'      : _('Multiple Servicegroups'),
+    'single'     : False,
+    'parameters' : VisualFilterList(['servicegroup']),
+}
+
+context_types['comments'] = {
+    'title'      : _('Multiple Comments'),
+    'single'     : False,
+    'parameters' : VisualFilterList(['comment', 'host', 'service']),
+}
+
+context_types['downtimes'] = {
+    'title'      : _('Multiple Downtimes'),
+    'single'     : False,
+    'parameters' : VisualFilterList(['downtime', 'host', 'service']),
+}
+
+context_types['logs'] = {
+    'title'      : _('Multiple Log Entries'),
+    'single'     : False,
+    'parameters' : VisualFilterList(['log', 'host', 'service', 'contact', 'command']),
+}
+
+context_types['bi_aggregation'] = {
+    'title'      : _('Single BI Aggregation'),
+    'single'     : False,
+    'parameters' : TextAscii(
+        title = _('Aggregation Name'),
+    ),
+}
+
+context_types['bi_aggregations'] = {
+    'title'      : _('Multiple BI Aggregation'),
+    'single'     : False,
+    'parameters' : VisualFilterList(['aggr']),
+}
+
+context_types['bi_host_aggregation'] = {
+    'title'      : _('Single BI Aggregation affected by one host'),
+    'single'     : False,
+    'parameters' : TextAscii(
+        title = _('Hostname'),
+    ),
+}
+
+context_types['bi_host_aggregations'] = {
+    'title'      : _('Multiple Single Host BI Aggregations'),
+    'single'     : False,
+    'parameters' : VisualFilterList(['aggr', 'host']),
+}
+
+context_types['bi_hostname_aggregations'] = {
+    'title'      : _('Multiple Single Host BI Aggregations (Aggregation name joined)'),
+    'single'     : False,
+    'parameters' : VisualFilterList(['aggr', 'host']),
+}
+
+context_types['invswpacs'] = {
+    'title'      : _('Multiple Software Packages'),
+    'single'     : False,
+    'parameters' : VisualFilterList(['invswpac', 'host']),
+}

@@ -71,6 +71,21 @@
 #
 # ignore_limit: Ignore the soft/hard query limits in view.py/query_data(). This
 #               fixes stats queries on e.g. the log table.
+#
+# single_filters: All views using this filter as hide_filters are treated as a
+#                 single object view. All other views might have multiple objects.
+#                 Is used during view loading to gather the context_type of a view
+#                 when it has none set. This can be removed one day when all views
+#                 have a context set.
+#
+# context_type:   This is the context_type prefix views based on this datasource will
+#                 get during loading of a view which has no context_type defined.
+#                  when all single_filters are set as hide_filters for a view it will
+#                 be used as context_type directly, when this will be a multiple
+#                 view an "s" is appended and used as context_type.
+#                 Is used during view loading to gather the context_type of a view
+#                 when it has none set. This can be removed one day when all views
+#                 have a context set.
 
 multisite_datasources["hosts"] = {
     "title"   : _("All hosts"),
@@ -79,7 +94,9 @@ multisite_datasources["hosts"] = {
     "keys"    : [ "host_name", "host_downtimes" ],
     "join"    : ( "services", "host_name" ),
     "idkeys"  : [ "site", "host_name" ],
-    "description" : _("Displays a list of hosts."),
+    "description"    : _("Displays a list of hosts."),
+    "single_filters" : [ 'host' ],
+    "context_type"   : 'host',
 }
 
 multisite_datasources["hostsbygroup"] = {
@@ -91,6 +108,7 @@ multisite_datasources["hostsbygroup"] = {
     "idkeys"  : [ "site", "hostgroup_name", "host_name" ],
     "description" : _("Using this datasources host rows might appear multiple times depending "
                       "on their membership in hostgroups."),
+    "context_type"   : 'host',
 }
 
 multisite_datasources["services"] = {
@@ -100,6 +118,8 @@ multisite_datasources["services"] = {
     "keys"    : [ "host_name", "service_description", "service_downtimes" ],
     "joinkey" : "service_description",
     "idkeys"  : [ "site", "host_name", "service_description" ],
+    "single_filters": [ 'host', 'service' ],
+    "context_type"   : 'service',
 }
 
 multisite_datasources["servicesbygroup"] = {
@@ -108,6 +128,7 @@ multisite_datasources["servicesbygroup"] = {
     "infos"   : [ "service", "host", "servicegroup" ],
     "keys"    : [ "host_name", "service_description", "service_downtimes" ],
     "idkeys"  : [ "site", "servicegroup_name", "host_name", "service_description" ],
+    "context_type"   : 'service',
 }
 
 multisite_datasources["servicesbyhostgroup"] = {
@@ -116,6 +137,7 @@ multisite_datasources["servicesbyhostgroup"] = {
     "infos"   : [ "service", "host", "hostgroup" ],
     "keys"    : [ "host_name", "service_description", "service_downtimes" ],
     "idkeys"  : [ "site", "hostgroup_name", "host_name", "service_description" ],
+    "context_type"   : 'service',
 }
 
 multisite_datasources["hostgroups"] = {
@@ -124,6 +146,7 @@ multisite_datasources["hostgroups"] = {
     "infos"   : [ "hostgroup", "hostgroups" ],
     "keys"    : [ "hostgroup_name" ],
     "idkeys"  : [ "site", "hostgroup_name" ],
+    "context_type"   : 'hostgroup',
 }
 
 multisite_datasources["merged_hostgroups"] = {
@@ -133,6 +156,7 @@ multisite_datasources["merged_hostgroups"] = {
     "infos"    : [ "hostgroup" ],
     "keys"     : [ "hostgroup_name" ],
     "idkeys"   : [ "hostgroup_name" ],
+    "context_type"   : 'hostgroup',
 }
 
 multisite_datasources["servicegroups"] = {
@@ -141,6 +165,7 @@ multisite_datasources["servicegroups"] = {
     "infos"    : [ "servicegroup" ],
     "keys"     : [ "servicegroup_name" ],
     "idkeys"   : [ "site", "servicegroup_name" ],
+    "context_type"   : 'servicegroup',
 }
 
 multisite_datasources["merged_servicegroups"] = {
@@ -150,6 +175,7 @@ multisite_datasources["merged_servicegroups"] = {
     "infos"    : [ "servicegroup" ],
     "keys"     : [ "servicegroup_name" ],
     "idkeys"   : [ "servicegroup_name" ],
+    "context_type"   : 'servicegroup',
 }
 
 multisite_datasources["comments"] = {
@@ -158,6 +184,7 @@ multisite_datasources["comments"] = {
     "infos"    : [ "comment", "host", "service" ],
     "keys"     : [ "comment_id", "comment_type" ],
     "idkeys"   : [ "comment_id" ],
+    "context_type"   : 'comment',
 }
 
 multisite_datasources["downtimes"] = {
@@ -166,6 +193,7 @@ multisite_datasources["downtimes"] = {
     "infos"    : [ "downtime", "host", "service" ],
     "keys"     : [ "downtime_id", "service_description" ],
     "idkeys"   : [ "downtime_id" ],
+    "context_type"   : 'downtime',
 }
 
 multisite_datasources["log"] = {
@@ -174,6 +202,7 @@ multisite_datasources["log"] = {
     "infos"    : [ "log", "host", "service", "contact", "command" ],
     "keys"     : [],
     "idkeys"   : [ "log_lineno" ],
+    "context_type"   : 'log',
 }
 
 multisite_datasources["log_events"] = {
@@ -183,6 +212,7 @@ multisite_datasources["log_events"] = {
     "infos"       : [ "log", "host", "service" ],
     "keys"        : [],
     "idkeys"      : [ "log_lineno" ],
+    "context_type"   : 'log',
 }
 
 multisite_datasources["log_host_events"] = {
@@ -192,6 +222,7 @@ multisite_datasources["log_host_events"] = {
     "infos"       : [ "log", "host" ],
     "keys"        : [],
     "idkeys"      : [ "log_lineno" ],
+    "context_type"   : 'log',
 }
 
 multisite_datasources["alert_stats"] = {
@@ -203,4 +234,5 @@ multisite_datasources["alert_stats"] = {
     "keys"         : [],
     "idkeys"       : [ 'host_name', 'service_description' ],
     "ignore_limit" : True,
+    "context_type"   : 'log',
 }

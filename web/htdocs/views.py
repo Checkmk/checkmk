@@ -29,9 +29,6 @@ import weblib, traceback, forms, valuespec, inventory, visuals
 from lib import *
 from pagefunctions import *
 
-max_display_columns   = 12
-max_sort_columns      = 5
-
 # Python 2.3 does not have 'set' in normal namespace.
 # But it can be imported from 'sets'
 try:
@@ -208,13 +205,48 @@ def load_views():
                     skip_func = lambda v: v['datasource'] not in multisite_datasources)
     available_views = visuals.available('views', multisite_views)
 
-    # Add the context_type. This tries to map the datasource and additional settings of the
-    # views to get the correct context type
     for view in multisite_views.values():
+        # Add the context_type. This tries to map the datasource and additional settings of the
+        # views to get the correct context type
         if 'context_type' not in view:
-            pass # FIXME
-    # FIXME: Convert from show_filters, hide_filters, hard_filters and hard_filtervars
-    # to show_filters and context construct
+            ds_name = view['datasource']
+            datasource = multisite_datasources[ds_name]
+            hide_filters = view.get('hide_filters')
+
+            if not datasource.get('single_filters', []):
+                is_single = False
+            else:
+                is_single = True
+                for fname in datasource.get('single_filters', []):
+                    if fname not in hide_filters:
+                        is_single = False
+                        break
+
+            if is_single and 'context_type' in datasource:
+                view['context_type'] = datasource['context_type']
+            else:
+                view['context_type'] = datasource['context_type'] + 's'
+
+        # Convert from show_filters, hide_filters, hard_filters and hard_filtervars
+        # to show_filters and context construct
+        if 'context' not in view:
+            view['show_filters'] = view['hide_filters'] + view['hard_filters'] + view['show_filters']
+            context = {}
+            filtervars = dict(view['hard_filtervars'])
+            for fname in view['show_filters']:
+                vars = {}
+                for var in multisite_filters[fname].htmlvars:
+                    if var in filtervars:
+                        vars[var] = filtervars[var]
+                context[fname] = vars
+            view['context'] = context
+
+        # Cleanup unused attributes
+        for k in [ 'hide_filters', 'hard_filters' ]:
+            try:
+                del view[k]
+            except KeyError:
+                pass
 
 def save_views(us):
     visuals.save('views', multisite_views)
@@ -423,7 +455,8 @@ def view_editor_specs(context_type, ds_name):
                             ),
                             DropdownChoice(
                                 title = _('Order'),
-                                choices = [("asc", _("Ascending")), ("dsc", _("Descending"))],
+                                choices = [(False, _("Ascending")),
+                                           (True, _("Descending"))],
                             ),
                         ],
                         orientation = 'horizontal',
@@ -523,7 +556,7 @@ def view_editor_specs(context_type, ds_name):
     specs.append(column_spec('grouping', _('Grouping'), ds_name))
     specs.append(column_spec('columns', _('Columns'), ds_name))
 
-    ty = context_types[context_type]
+    ty = visuals.context_types[context_type]
 
     specs.append(
         ('filters', Dictionary(
@@ -574,9 +607,13 @@ def transform_view_to_valuespec(view):
             pname, viewname, tooltip, join_index = entry
             view['columns'].append((pname, join_index, viewname, tooltip, ''))
 
-        else:
+        elif len(entry) == 3:
             pname, viewname, tooltip = entry
             view['columns'].append((pname, viewname, tooltip))
+
+        else:
+            pname, viewname = entry
+            view['columns'].append((pname, viewname, ''))
 
 # Extract properties of view from HTML variables and construct
 # view object, to be used for saving or displaying

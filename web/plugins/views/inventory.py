@@ -832,11 +832,12 @@ for name, title, sortfunc in [
 
 
 multisite_datasources["invswpacs"] = {
-    "title"       : _("Inventory: Software Packages"),
-    "table"       : inv_software_table,
-    "infos"       : [ "host", "invswpac" ],
-    "keys"        : [],
-    "idkeys"      : [],
+    "title"        : _("Inventory: Software Packages"),
+    "table"        : inv_software_table,
+    "infos"        : [ "host", "invswpac" ],
+    "keys"         : [],
+    "idkeys"       : [],
+    "context_type" : "invswpac",
 }
 
 

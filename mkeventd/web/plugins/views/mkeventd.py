@@ -284,6 +284,8 @@ if mkeventd_enabled:
         "infos"       : [ "event", "host" ],
         "keys"        : [],
         "idkeys"      : [ 'site', 'host_name', 'event_id' ],
+        "single_filters" : [ 'event_id' ],
+        "context_type"   : 'mkeventd_event',
     }
 
     multisite_datasources["mkeventd_history"] = {
@@ -292,6 +294,8 @@ if mkeventd_enabled:
         "infos"       : [ "history", "event", "host" ],
         "keys"        : [],
         "idkeys"      : [ 'site', 'host_name', 'event_id', 'history_line' ],
+        "single_filters" : [ 'event_id', 'history_line' ],
+        "context_type"   : 'mkeventd_history_event',
     }
 
     #.

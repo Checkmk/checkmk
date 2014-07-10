@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,40 +23,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# <<<oracle_sessions>>>
-# pengt  15
-# hirni  22
+$opt[1] = "--vertical-label \"bars\" --title \"$hostname / $servicedesc\" ";
 
-oracle_sessions_default_levels = (50, 100)
-
-def inventory_oracle_sessions(info):
-    return [ (line[0], "oracle_sessions_default_levels") for line in info if len(line) >= 2 ]
-
-def check_oracle_sessions(item, params, info):
-    for line in info:
-        if line[0] == item:
-
-            warn, crit = params
-            sessions = int(line[1])
-            infotext = "%d active sessions (levels at %d/%d)" % (sessions, warn, crit)
-            perfdata = [("sessions", sessions, warn, crit)]
-            if sessions >= crit:
-                return (2, infotext, perfdata)
-            elif sessions >= warn:
-                return (1, infotext, perfdata)
-            else:
-                return (0, infotext, perfdata)
-
-    # In case of missing information we assume that the login into
-    # the database has failed and we simply skip this check. It won't
-    # switch to UNKNOWN, but will get stale.
-    raise MKCounterWrapped(None, "Login into database failed")
-
-
-check_info["oracle_sessions"] = {
-    'check_function':          check_oracle_sessions,
-    'inventory_function':      inventory_oracle_sessions,
-    'service_description':     'ORA %s Sessions',
-    'has_perfdata':            True,
-    'group':                   'oracle_sessions',
-}
+$def[1] = "DEF:var1=$RRDFILE[1]:$DS[1]:MAX ";
+$def[1] .= "LINE2:var1#2080ff:\"Pressure\:\" ";
+$def[1] .= "GPRINT:var1:LAST:\"%0.5lf bars\\n\" ";
+$def[1] .= "GPRINT:var1:AVERAGE:\"(Avg\: %0.5lf bars,\" ";
+$def[1] .= "GPRINT:var1:MIN:\"Min\: %0.5lf bars,\" ";
+$def[1] .= "GPRINT:var1:MAX:\"Max\: %0.5lf bars)\" ";
+?>

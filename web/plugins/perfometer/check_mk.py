@@ -509,8 +509,8 @@ def perfometer_oracle_tablespaces(row, check_command, perf_data):
 perfometers["check_mk-oracle_tablespaces"] = perfometer_oracle_tablespaces
 
 def perfometer_oracle_sessions(row, check_command, perf_data):
-    if check_command == "check_mk-oracle_sessions":
-	color = "#00ff48";
+    if check_command != "check_mk-oracle_sessions":
+	color = "#008f48";
         unit = "";
     else:
 	color = "#4800ff";
@@ -520,6 +520,7 @@ def perfometer_oracle_sessions(row, check_command, perf_data):
 
 perfometers["check_mk-oracle_sessions"] = perfometer_oracle_sessions
 perfometers["check_mk-oracle_logswitches"] = perfometer_oracle_sessions
+perfometers["check_mk-oracle_processes"] = perfometer_oracle_sessions
 
 def perfometer_cpu_utilization(row, check_command, perf_data):
     util = float(perf_data[0][1]) # is already percentage
@@ -577,6 +578,7 @@ def perfometer_check_mk_uptime(row, check_command, perf_data):
 perfometers["check_mk-uptime"]      = perfometer_check_mk_uptime
 perfometers["check_mk-snmp_uptime"] = perfometer_check_mk_uptime
 perfometers["check_mk-esx_vsphere_counters.uptime"] = perfometer_check_mk_uptime
+perfometers["check_mk-oracle_instance"] = perfometer_check_mk_uptime
 
 
 def perfometer_check_mk_diskstat(row, check_command, perf_data):
@@ -847,7 +849,7 @@ perfometers["check_mk-cmc_lcp"] = perfometer_cmc_lcp
 
 def perfometer_humidity(row, check_command, perf_data):
     humidity = float(perf_data[0][1])
-    return "%3.1f%%" % humidity, perfometer_linear(humidity, '#6f2')
+    return "%3.1f% %" % humidity, perfometer_linear(humidity, '#6f2')
 
 perfometers['check_mk-carel_uniflair_cooling'] = perfometer_humidity
 perfometers['check_mk-cmciii.humidity'] = perfometer_humidity
@@ -1096,3 +1098,10 @@ def perfometer_allnet_ip_sensoric_tension(row, check_command, perf_data):
     return value, perfometer_linear(value, display_color)
 
 perfometers["check_mk-allnet_ip_sensoric.tension"] = perfometer_allnet_ip_sensoric_tension
+
+def perfometer_pressure(row, check_command, perf_data):
+    pressure = float(perf_data[0][1])
+    return "%0.5f bars" % pressure, perfometer_logarithmic(pressure, 1, 2, "#da6")
+
+perfometers['check_mk-allnet_ip_sensoric.pressure'] = perfometer_pressure
+

@@ -5416,10 +5416,44 @@ def copy_globals():
         if varname not in [ "g_service_description", "g_multihost_checks",
                             "g_check_table_cache", "g_singlehost_checks",
                             "total_check_outout", "g_nodesof_cache",
-                            "g_initial_times" ] \
+                            "g_initial_times", "g_keepalive_initial_memusage", 
+                            "g_dns_cache", "g_ip_lookup_cache" ] \
             and type(value).__name__ not in [ "function", "module", "SRE_Pattern" ]:
             global_saved[varname] = copy.copy(value)
     return global_saved
+
+
+# Determine currently (VmSize, VmRSS) in Bytes
+def current_memory_usage():
+    parts = file('/proc/self/stat').read().split()
+    vsize = int(parts[22])        # in Bytes
+    rss   = int(parts[23]) * 4096 # in Pages
+    return (vsize, rss)
+
+keepalive_memcheck_cycle = 20
+g_keepalive_initial_memusage = None
+def keepalive_check_memory(num_checks, keepalive_fd):
+    if num_checks % keepalive_memcheck_cycle != 0: # Only do this after every 10 checks
+        return
+
+    global g_keepalive_initial_memusage
+    if not g_keepalive_initial_memusage:
+        g_keepalive_initial_memusage = current_memory_usage()
+    else:
+        usage = current_memory_usage()
+        # Allow VM size to grow by at most 50%
+        if usage[0] > 1.5 * g_keepalive_initial_memusage[0]:
+            file(log_dir + "/cmc-helper.log", "a") \
+                .write("%s [4] check helper[%d]: memory usage increased from %s to %s after %d check cycles. Restarting.\n" % 
+                    (time.strftime("%F %T", time.localtime()), os.getpid(),
+                    get_bytes_human_readable(g_keepalive_initial_memusage[0]), 
+                    get_bytes_human_readable(usage[0]), num_checks))
+            restart_myself(keepalive_fd)
+
+
+def restart_myself(keepalive_fd):
+    sys.argv = [ x for x in sys.argv if not x.startswith('--keepalive-fd=') ]
+    os.execvp("cmk", sys.argv + [ "--keepalive-fd=%d" % keepalive_fd ])
 
 
 def do_check_keepalive():
@@ -5445,6 +5479,8 @@ def do_check_keepalive():
         os.dup2(devnull, 1)
         os.close(devnull)
 
+    num_checks = 0 # count total number of check cycles
+
     global total_check_output
     total_check_output = ""
     if opt_debug:
@@ -5456,14 +5492,14 @@ def do_check_keepalive():
         cleanup_globals()
         hostname = keepalive_read_line()
         g_initial_times = os.times()
-        if not hostname:
-            break
+
         hostname = hostname.strip()
         if hostname == "*":
-            sys.argv = [ x for x in sys.argv if not x.startswith('--keepalive-fd=') ]
-            os.execvp("cmk", sys.argv + [ "--keepalive-fd=%d" % keepalive_fd ])
+            restart_myself(keepalive_fd)
         elif not hostname:
             break
+
+        num_checks += 1
 
         timeout = int(keepalive_read_line())
         try: # catch non-timeout exceptions
@@ -5516,6 +5552,8 @@ def do_check_keepalive():
             total_check_output = "UNKNOWN - %s\n" % e
             os.write(keepalive_fd, "%03d\n%08d\n%s" %
                  (3, len(total_check_output), total_check_output))
+
+        keepalive_check_memory(num_checks, keepalive_fd)
 
 
 # Just one lines from stdin. But: make sure that

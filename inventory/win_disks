@@ -1,0 +1,89 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output:
+# <<<win_disks:sep(58)>>>
+# DeviceID                    : \\.\PHYSICALDRIVE0
+# Partitions                  : 2
+# InterfaceType               : IDE
+# Size                        : 32210196480
+# Caption                     : VBOX HARDDISK ATA Device
+# Description                 : Laufwerk
+# Manufacturer                : (Standardlaufwerke)
+# MediaType                   : Fixed hard disk media
+# Model                       : VBOX HARDDISK ATA Device
+# Name                        : \\.\PHYSICALDRIVE0
+# SerialNumber                : 42566539323537333930652d3836636263352065
+
+# CapabilityDescriptions      : {Random Access, Supports Writing}
+# BytesPerSector              : 512
+# Index                       : 0
+# FirmwareRevision            : 1.0
+# MediaLoaded                 : True
+# Status                      : OK
+# SectorsPerTrack             : 63
+# TotalCylinders              : 3916
+# TotalHeads                  : 255
+# TotalSectors                : 62910540
+# TotalTracks                 : 998580
+# TracksPerCylinder           : 255
+# Capabilities                : {3, 4}
+# Signature                   : 645875120
+# SCSIBus                     : 0
+# SCSILogicalUnit             : 0
+# SCSIPort                    : 2
+# SCSITargetId                : 0
+
+def inv_win_disks(info):
+    node = inv_tree("hardware.storage.disks:")
+    array = {}
+    for varname, value in info:
+        varname = re.sub(" *","", varname)
+        value = re.sub("^ ", "", value)
+        value = value.decode("cp437")
+        if varname == "Manufacturer":
+            array["vendor"] = value
+        elif varname == "InterfaceType":
+            array["bus"] = value
+        elif varname == "Model":
+            array["product"] = value
+        elif varname == "Name":
+            array["fsnode"] = value
+        elif varname == "SerialNumber":
+            array["serial"] = value
+        elif varname == "Size":
+            array["size"] = int(value)
+        elif varname == "MediaType":
+            array["type"] = value
+        elif varname == "Signature":
+            array["signature"] = int(value)
+        array["local"] = True
+    node.append(array)
+
+
+inv_info['win_disks'] = {
+   "inv_function"           : inv_win_disks,
+}

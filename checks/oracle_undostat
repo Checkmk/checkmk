@@ -1,0 +1,86 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# In cooperation with Thorsten Bruhns from OPITZ Consulting
+
+# <<<oracle_undostat>>>
+# TUX2 160 0 1081 300 0
+
+factory_settings["oracle_undostat_defaults"] = {
+    "levels"  : (600, 300),
+}
+
+
+def inventory_oracle_undostat(info):
+    return [ (line[0], {}) for line in info ]
+
+
+def check_oracle_undostat(item, params, info):
+    for line in info:
+        if line[0] == item:
+
+            activeblks, maxconcurrency, tuned_undoretention, maxquerylen, nospaceerrcnt = map(int, line[1:])
+            warn, crit = params["levels"]
+
+            if tuned_undoretention <= crit:
+                state = 2
+            elif tuned_undoretention <= warn:
+                state = 1
+            else:
+                state = 0
+
+            infotext = "%s Undoretention (levels at %s/%s), %d active undoblocks, " \
+                       "%d max concurrent transactions, %s max querylen, %d space errorcount" \
+                % (get_age_human_readable(tuned_undoretention),
+                   get_age_human_readable(warn),
+                   get_age_human_readable(crit),
+                   activeblks, maxconcurrency,
+                   get_age_human_readable(maxquerylen),
+                   nospaceerrcnt)
+            perfdata =  [('activeblk',        activeblks),
+                         ('transconcurrent',  maxconcurrency),
+                         ('tunedretention',   tuned_undoretention, warn, crit),
+                         ('querylen',         maxquerylen),
+                         ('nonspaceerrcount', nospaceerrcnt),
+                        ]
+
+            return state, infotext, perfdata
+
+    # In case of missing information we assume that the login into
+    # the database has failed and we simply skip this check. It won't
+    # switch to UNKNOWN, but will get stale.
+    raise MKCounterWrapped(None, "Login into database failed")
+
+
+check_info['oracle_undostat'] = {
+    "check_function"          : check_oracle_undostat,
+    "inventory_function"      : inventory_oracle_undostat,
+    "service_description"     : "ORA %s Undo Retention",
+    "has_perfdata"            : True,
+    "default_levels_variable" : "oracle_undostat_defaults",
+    "group"                   : "oracle_undostat",
+}
+

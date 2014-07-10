@@ -42,7 +42,6 @@ def inv_win_exefiles(info):
             "install_date"    : write_time,
             "size"            : int(size),
         }
-        print entry
         paclist.append(entry)
 
 

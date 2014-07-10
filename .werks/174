@@ -1,7 +1,7 @@
 Title: Fixed appending of --keepalive-fd parameters to checkhelpers
 Level: 1
 Component: core
-Version: 1.2.5i5
+Version: 1.2.4p5
 Date: 1404290005
 Class: fix
 

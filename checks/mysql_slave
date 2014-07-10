@@ -62,19 +62,20 @@ def check_mysql_slave(_unused, params, info):
 
     if data['Slave_SQL_Running']:
         output.append('Slave-SQL: running')
+
+        # Makes only sense to monitor the age when the SQL slave is running
+        out = 'Time behind Master: %s' % get_age_human_readable(data['Seconds_Behind_Master'])
+        warn, crit = params.get('seconds_behind_master', (None, None))
+        if crit != None and data['Seconds_Behind_Master'] > crit:
+            state = 2
+            out += '(!!)'
+        elif warn != None and data['Seconds_Behind_Master'] > warn:
+            state = 1
+            out += '(!)'
+        output.append(out)
+        perfdata.append(('seconds_behind_master', data['Seconds_Behind_Master'], warn, crit))
     else:
         output.append('Slave-SQL: not running(!!)')
-
-    out = 'Time behind Master: %s' % get_age_human_readable(data['Seconds_Behind_Master'])
-    warn, crit = params.get('seconds_behind_master', (None, None))
-    if crit != None and data['Seconds_Behind_Master'] > crit:
-        state = 2
-        out += '(!!)'
-    elif warn != None and data['Seconds_Behind_Master'] > warn:
-        state = 1
-        out += '(!)'
-    output.append(out)
-    perfdata.append(('seconds_behind_master', data['Seconds_Behind_Master'], warn, crit))
 
     return state, ', '.join(output), perfdata
 

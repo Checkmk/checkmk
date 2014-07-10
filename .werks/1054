@@ -1,0 +1,8 @@
+Title: mysql_slave: Only monitor the age of the slave when it is running
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1404993134
+Class: fix
+
+

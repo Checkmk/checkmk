@@ -30,7 +30,7 @@ from pwd import getpwnam
 from grp import getgrnam
 
 
-VERSION="1.2.5i4p2"
+VERSION="1.2.5i4p3"
 #   .--Helper functions----------------------------------------------------.
 #   |                  _   _      _                                        |
 #   |                 | | | | ___| |_ __   ___ _ __ ___                    |

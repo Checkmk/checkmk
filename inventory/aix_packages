@@ -1,0 +1,72 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent:
+# <<<aix_packages:sep(58):persist(1404743142)>>>
+# #Package Name:Fileset:Level:State:PTF Id:Fix State:Type:Description:Destination Dir.:Uninstaller:Message Catalog:Message Set:Message Number:Parent:Automatic:EFIX Locked:Install Path:Build Date
+# EMC:EMC.CLARiiON.aix.rte:6.0.0.3: : :C: :EMC CLARiiON AIX Support Software: : : : : : :0:0:/:
+# EMC:EMC.CLARiiON.fcp.rte:6.0.0.3: : :C: :EMC CLARiiON FCP Support Software: : : : : : :0:0:/:
+# ICU4C.rte:ICU4C.rte:7.1.2.0: : :C: :International Components for Unicode : : : : : : :0:0:/:1241
+# Java5.sdk:Java5.sdk:5.0.0.500: : :C:F:Java SDK 32-bit: : : : : : :0:0:/:
+# Java5_64.sdk:Java5_64.sdk:5.0.0.500: : :C:F:Java SDK 64-bit: : : : : : :0:0:/:
+# Java6.sdk:Java6.sdk:6.0.0.375: : :C:F:Java SDK 32-bit: : : : : : :0:0:/:
+
+
+def inv_aix_packages(info):
+    paclist = inv_tree("software.packages:")
+    headers = info[0]
+    headers[0] = headers[0].lstrip("#")
+    for line in info[1:]:
+        row = dict(zip(headers, map(lambda x: x.strip(), line)))
+
+        # AIX Type codes
+        # Type codes:
+        # F -- Installp Fileset
+        # P -- Product
+        # C -- Component
+        # T -- Feature
+        # R -- RPM Package
+        # E -- Interim Fix
+
+        if row["Type"] == "R":
+            package_type = "rpm"
+        elif row["Type"]:
+            package_type = "aix_" + row["Type"].lower()
+        else:
+            package_type = "aix"
+
+        entry = {
+            "name"         : row["Package Name"],
+            "summary"      : row["Description"],
+            "version"      : row["Level"],
+            "package_type" : package_type,
+        }
+        paclist.append(entry)
+
+
+inv_info['aix_packages'] = {
+   "inv_function"           : inv_aix_packages,
+}

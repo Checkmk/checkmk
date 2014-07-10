@@ -71,6 +71,7 @@
 
     Livestatus:
     * 0988 FIX: livedump: Fix exception in case no contact groups are defined for a service
+    * 0951 FIX: table servicegroups: fixed service visibility when using AUTH_STRICT...
 
     HW/SW-Inventory:
     * 0625 hw/sw inventory now reads the kernel version and architecture for linux and windows

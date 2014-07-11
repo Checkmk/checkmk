@@ -238,5 +238,6 @@ def check_diskstat_old(item, params, this_time, info):
 
     timedif, per_sec = get_counter("diskstat." + item, this_time, this_val)
     mb_per_s = per_sec / 2048.0    # Diskstat output is in sectors a 512 Byte
-    perfdata = [ (item, "%dc" % this_val ) ]
+    kb_per_s = per_sec / 2.0
+    perfdata = [ (item, "%f" % kb_per_s ) ]
     return (0, "%.1fMB/s (in last %d secs)" % (mb_per_s, timedif), perfdata)

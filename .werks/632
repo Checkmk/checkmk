@@ -1,0 +1,8 @@
+Title: brocade_fcport: fix perfometer output of out bandwidth when averaging is switched on
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1405079618
+Class: fix
+
+

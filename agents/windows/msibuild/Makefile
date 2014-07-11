@@ -1,5 +1,3 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,27 +22,26 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Example output
-# <<<win_exefiles:sep(124)>>>
-# C:\Program Files\Common Files\Microsoft Shared\MSInfo\msinfo32.exe|378880
-# C:\Program Files\Common Files\Microsoft Shared\OFFICE15\CMigrate.exe|6847704
-# C:\Program Files\Common Files\Microsoft Shared\OFFICE15\MSOXMLED.EXE|217200
-# C:\Program Files\Common Files\Microsoft Shared\OfficeSoftwareProtectionPlatform\OSPPSVC.EXE|5132888
+MSITOOLS      = msitools-0.93
+MSITOOLS_FILE = msitools-0.93.tar.xz
 
-def inv_win_exefiles(info):
-    paclist = inv_tree("software.packages:")
-    for full_name, write_time, size in info:
-        parts = full_name.split('\\')
-        entry = {
-            "name"            : parts[-1],
-            "path"            : "\\".join(parts[:-1]),
-            "package_type"    : "exe",
-            "install_date"    : write_time,
-            "size"            : int(size),
-        }
-        paclist.append(entry)
+BUILD_VERSION    = 1.0.1
+CHECK_MK_VERSION = TESTVERSION
 
+all: exchange_msi_files
 
-inv_info['win_exefiles'] = {
-   "inv_function"           : inv_win_exefiles,
-}
+msibuild:
+	tar -Jxf $(MSITOOLS_FILE)
+	set -e ; for p in patches/*.dif ; do \
+    echo "applying $$p..." ; \
+        patch -p0 -b < $$p ; \
+    done
+	cd $(MSITOOLS) && ./configure && make
+	rm msibuild msiinfo
+	ln -s $(MSITOOLS)/msibuild $(MSITOOLS)/msiinfo .
+
+exchange_msi_files: msibuild
+	mkdir -p work sources
+	cp ../check_mk_agent.exe ../check_mk_agent-64.exe ../check_mk.example.ini sources
+	./update_msi_file.py msi_container.msi $(BUILD_VERSION) $(CHECK_MK_VERSION)
+	rm -rf work sources

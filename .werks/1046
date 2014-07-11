@@ -1,0 +1,10 @@
+Title: Added AIX support for HW/SW-Inventory
+Level: 2
+Component: inv
+Version: 1.2.5i5
+Date: 1405004126
+Class: feature
+
+Check_MK now ships the new agent plugin <tt>mk_inventory.aix</tt>, which retrieves
+inventory data on AIX hosts. This includes the list of software packages and
+service packs, information about the system and cpu.

@@ -1,0 +1,8 @@
+Title: if, if64: Fixed PNP template in order to correctly scale Y axis
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1405067034
+Class: fix
+
+

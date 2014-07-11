@@ -1,0 +1,11 @@
+--- msitools-0.93/tools/msibuild.c	2013-02-08 01:48:42.000000000 +0100
++++ msitools-0.93/tools/msibuild.c.new	2014-07-10 16:10:33.123205564 +0200
+@@ -299,7 +299,7 @@
+                                   n > 3 ? argv[3] : NULL,
+                                   n > 4 ? argv[4] : NULL, &error))
+                 goto end;
+-            argc -= 3, argv += 3;
++            argc -= 5, argv += 5;
+             break;
+         case 'i':
+             do {

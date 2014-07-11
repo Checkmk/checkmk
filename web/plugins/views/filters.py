@@ -65,7 +65,7 @@ class FilterHostgroupVisibility(Filter):
         if html.var("hostgroupshowempty"):
             return ""
         else:
-            return "Filter: num_hosts > 0"
+            return "Filter: num_hosts > 0\n"
 
 #                               filter          title              info       column           htmlvar
 declare_filter(100, FilterText("hostregex",    _("Hostname"),        "host",    "host_name",      "host",    "~~"),

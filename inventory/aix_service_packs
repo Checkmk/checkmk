@@ -24,27 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Example output
-# <<<win_exefiles:sep(124)>>>
-# C:\Program Files\Common Files\Microsoft Shared\MSInfo\msinfo32.exe|378880
-# C:\Program Files\Common Files\Microsoft Shared\OFFICE15\CMigrate.exe|6847704
-# C:\Program Files\Common Files\Microsoft Shared\OFFICE15\MSOXMLED.EXE|217200
-# C:\Program Files\Common Files\Microsoft Shared\OfficeSoftwareProtectionPlatform\OSPPSVC.EXE|5132888
+def inv_aix_service_packs(info):
+    node = inv_tree("software.os.service_packs:")
+    for line in info:
+        node.append({ "name" : line[0]})
 
-def inv_win_exefiles(info):
-    paclist = inv_tree("software.packages:")
-    for full_name, write_time, size in info:
-        parts = full_name.split('\\')
-        entry = {
-            "name"            : parts[-1],
-            "path"            : "\\".join(parts[:-1]),
-            "package_type"    : "exe",
-            "install_date"    : write_time,
-            "size"            : int(size),
-        }
-        paclist.append(entry)
-
-
-inv_info['win_exefiles'] = {
-   "inv_function"           : inv_win_exefiles,
+inv_info['aix_service_packs'] = {
+   "inv_function"           : inv_aix_service_packs,
 }

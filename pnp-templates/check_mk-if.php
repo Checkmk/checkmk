@@ -40,74 +40,77 @@ setlocale(LC_ALL, 'C');
 
 # Graph 1: used bandwidth
 
-# Determine if Bit or Byte.
-# Change multiplier and labels
-$unit = "B";
-$unit_multiplier = 1;
-$vertical_label_name = "MByte/sec";
-if (strcmp($MIN[11], "0.0") == 0) {
+# Determine if Bit or Byte. Bit is signalled via a min value of 0.0
+# in the 11th performance value.
+if (!strcmp($MIN[11], "0.0")) {
     $unit = "Bit";
     $unit_multiplier = 8;
-    $vertical_label_name = "MBit/sec";
+    $base = 1000; // Megabit is 1000 * 1000
 }
+else {
+    $unit = "B"; 
+    $unit_multiplier = 1;
+    $base = 1024; // Megabyte is 1024 * 1024
+}
+
+# Convert bytes to bits if neccessary
 $bandwidth = $MAX[1]  * $unit_multiplier;
 $warn      = $WARN[1] * $unit_multiplier;
 $crit      = $CRIT[1] * $unit_multiplier;
 
-# Horizontal lines
-$mega        = 1024.0 * 1024.0;
-$mBandwidthH = $bandwidth / $mega;
-$mWarnH      = $warn      / $mega;
-$mCritH      = $crit      / $mega;
-
-# Break down bandwidth, warn and crit
+# Now choose a conveniant scale, based on the known bandwith of
+# the interface, and break down bandwidth, warn and crit by that
+# scale.
 $bwuom = ' ';
-$base = 1000;
-if($bandwidth > $base * $base * $base) {
-	$warn /= $base * $base * $base;
-	$crit /= $base * $base * $base;
-	$bandwidth /= $base * $base * $base;
-	$bwuom = 'G';
-} elseif ($bandwidth > $base * $base) {
-	$warn /= $base * $base;
-	$crit /= $base * $base;
-	$bandwidth /= $base * $base;
-	$bwuom = 'M';
-} elseif ($bandwidth > $base) {
-	$warn /= $base;
-	$crit /= $base;
-	$bandwidth /= $base;
-	$bwuom = 'k';
+if ($bandwidth > $base * $base * $base) {
+    $scale = $base * $base * $base;
+    $bwuom = 'G';
+} 
+elseif ($bandwidth > $base * $base) {
+    $scale = $base * $base;
+    $bwuom = 'M';
+} 
+elseif ($bandwidth > $base) {
+    $scale = $base;
+    $bwuom = 'k';
+}
+else {
+    $scale = 1;
+    $bwuom = ' ';
 }
 
-if ($mBandwidthH < 10)
-   $range = $mBandwidthH;
-else
-   $range = 10.0;
+$warn      /= $scale;
+$crit      /= $scale;
+$bandwidth /= $scale;
+
+$vertical_label_name = $bwuom . $unit . "/sec";
+
+$range = min(10, $bandwidth);
+
 
 $bandwidthInfo = "";
 if ($bandwidth > 0){
-    $bandwidthInfo = " at bandwidth ${bwuom}${unit}/s";
+    $bandwidthInfo = " at " . sprintf("%.1f", $bandwidth) . " ${bwuom}${unit}/s";
 }
 $ds_name[1] = 'Used bandwidth';
-$opt[1] = "--vertical-label \"$vertical_label_name\" -l -$range -u $range -X0 -b 1024 --title \"Used bandwidth $hostname / $servicedesc $bandwidthInfo\" ";
+$opt[1] = "--vertical-label \"$vertical_label_name\" -l -$range -u $range -X0 -b 1024 --title \"Used bandwidth $hostname / $servicedesc$bandwidthInfo\" ";
 $def[1] =
   "HRULE:0#c0c0c0 ";
-  if ($mBandwidthH)
-      $def[1] .= "HRULE:$mBandwidthH#808080:\"Port speed\:  " . sprintf("%.1f", $bandwidth) . " ".$bwuom."$unit/s\\n\" ".
-                 "HRULE:-$mBandwidthH#808080: ";
-   if ($warn)
-      $def[1] .= "HRULE:$mWarnH#ffff00:\"Warning\:                " . sprintf("%6.1f", $warn) . " ".$bwuom."$unit/s\\n\" ".
-                 "HRULE:-$mWarnH#ffff00: ";
-   if ($crit)
-      $def[1] .= "HRULE:$mCritH#ff0000:\"Critical\:               " . sprintf("%6.1f", $crit) . " ".$bwuom."$unit/s\\n\" ".
-                 "HRULE:-$mCritH#ff0000: ";
+if ($bandwidth)
+      $def[1] .= "HRULE:$bandwidth#808080:\"Port speed\:  " . sprintf("%10.1f", $bandwidth) . " ".$bwuom."$unit/s\\n\" ".
+                 "HRULE:-$bandwidth#808080: ";
+if ($warn)
+   $def[1] .= "HRULE:$warn#ffff00:\"Warning\:  " . sprintf("%13.1f", $warn) . " ".$bwuom."$unit/s\\n\" ".
+              "HRULE:-$warn#ffff00: ";
+if ($crit)
+   $def[1] .= "HRULE:$crit#ff0000:\"Critical\: " . sprintf("%13.1f", $crit) . " ".$bwuom."$unit/s\\n\" ".
+              "HRULE:-$crit#ff0000: ";
 
   $def[1] .= "".
   # incoming
   "DEF:inbytes=$RRDFILE[1]:$DS[1]:MAX ".
   "CDEF:intraffic=inbytes,$unit_multiplier,* ".
-  "CDEF:inmb=intraffic,1048576,/ ".
+  "CDEF:inmb=intraffic,$scale,/ ".
   "AREA:inmb#00e060:\"in            \" ".
   "GPRINT:intraffic:LAST:\"%7.1lf %s$unit/s last\" ".
   "GPRINT:intraffic:AVERAGE:\"%7.1lf %s$unit/s avg\" ".
@@ -121,7 +124,7 @@ $def[1] =
   "DEF:outbytes=$RRDFILE[6]:$DS[6]:MAX ".
   "CDEF:outtraffic=outbytes,$unit_multiplier,* ".
   "CDEF:minusouttraffic=outtraffic,-1,* ".
-  "CDEF:outmb=outtraffic,1048576,/ ".
+  "CDEF:outmb=outtraffic,$scale,/ ".
   "CDEF:minusoutmb=0,outmb,- ".
   "AREA:minusoutmb#0080e0:\"out           \" ".
   "GPRINT:outtraffic:LAST:\"%7.1lf %s$unit/s last\" ".

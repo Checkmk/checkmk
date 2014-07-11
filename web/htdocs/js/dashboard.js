@@ -568,6 +568,7 @@ function toggle_sizer(nr, sizer_id) {
 
     rerender_dashlet_controls(dashlet_obj);
     size_dashlets();
+    persist_dashlet_pos(nr);
 }
 
 function toggle_anchor(nr, anchor_id) {

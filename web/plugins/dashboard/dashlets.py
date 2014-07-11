@@ -434,16 +434,46 @@ dashlet_types["nodata"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def dashlet_view_url(params):
-    return "view.py?view_name=%s&display_options=HRSIXL&_display_options=HRSIXL&_body_class=dashlet" % \
-            (params['view_name'])
+def dashlet_view(params):
+    import bi # FIXME: Cleanup?
+    bi.reset_cache_status() # needed for status icon
+
+    html.set_var('display_options', 'HRSIXL')
+    html.set_var('_display_options', 'HRSIXL')
+    html.set_var('_body_class', 'dashlet')
+
+    import views # FIXME: HACK, clean this up somehow
+    views.show_view(params, True, True, True)
+
+def dashlet_view_add_url():
+    return 'create_view_dashlet.py?name=%s' % html.urlencode(html.var('name'))
+
+def dashlet_view_parameters():
+    return dashlet_view_render_input, dashlet_view_handle_input
+
+def dashlet_view_render_input(dashlet):
+    import views # FIXME: HACK, clean this up somehow
+    views.load_views()
+    if 'group_painters' in dashlet: # only needed in cas of loading
+        views.transform_view_to_valuespec(dashlet)
+    return views.render_view_config(dashlet)
+
+def dashlet_view_handle_input(ident, dashlet):
+    dashlet['name'] = 'dashlet_%d' % ident
+    dashlet.setdefault('title', _('View'))
+    import views # FIXME: HACK, clean this up somehow
+    views.load_views()
+    return views.create_view_config(dashlet, dashlet)
 
 dashlet_types["view"] = {
     "title"          : _("View"),
     "sort_index"     : 10,
     "description"    : _("Displays a the content of a Multisite view."),
-    "iframe_urlfunc" : dashlet_view_url,
+    "size"           : (40, 20),
+    "iframe_render"  : dashlet_view,
     "allowed"        : config.builtin_role_ids,
+    "add_urlfunc"    : dashlet_view_add_url,
+    "parameters"     : dashlet_view_parameters,
 }
 
 #.

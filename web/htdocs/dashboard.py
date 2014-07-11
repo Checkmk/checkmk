@@ -198,7 +198,7 @@ def render_dashboard(name):
               str(add_wato_folder_to_url(url, wato_folder))])
 
         # Paint the dashlet's HTML code
-        render_dashlet(nr, dashlet, wato_folder)
+        render_dashlet(name, board, nr, dashlet, wato_folder)
 
         dimensions = {
             'x' : dashlet['position'][0],
@@ -230,13 +230,16 @@ def render_dashboard(name):
                    'onmouseover="show_submenu(\'control_add\')"><a href="javascript:void(0)">%s</a>\n' %
                         (display, _('Add dashlet')))
 
+        # The dashlet types which can be added to the view
         html.write('<ul id="control_add_sub" class="menu sub" style="display:none">\n')
         for ty, dashlet_type in sorted(dashlet_types.items(), key = lambda x: x[1].get('sort_index', 0)):
             if dashlet_type.get('selectable', True):
-                html.write('<li><a href="%s">%s</a></li>\n' %
-                    (html.makeuri([('type', ty), ('back', html.makeuri([]))], filename = 'edit_dashlet.py'),
-                     dashlet_type['title']))
+                url = html.makeuri([('type', ty), ('back', html.makeuri([]))], filename = 'edit_dashlet.py')
+                if 'add_urlfunc' in dashlet_type:
+                    url = dashlet_type['add_urlfunc']()
+                html.write('<li><a href="%s">%s</a></li>\n' % (url, dashlet_type['title']))
         html.write('</ul>\n')
+
         html.write('</li>\n')
 
         # Enable editing link
@@ -287,13 +290,17 @@ dashboard_scheduler(1);
     html.body_end() # omit regular footer with status icons, etc.
 
 def render_dashlet_content(the_dashlet):
-    dashlet_types[the_dashlet['type']]['render'](the_dashlet)
+    dashlet_type = dashlet_types[the_dashlet['type']]
+    if 'iframe_render' in dashlet_type:
+        dashlet_type['iframe_render'](the_dashlet)
+    else:
+        dashlet_type['render'](the_dashlet)
 
 # Create the HTML code for one dashlet. Each dashlet has an id "dashlet_%d",
 # where %d is its index (in board["dashlets"]). Javascript uses that id
 # for the resizing. Within that div there is an inner div containing the
 # actual dashlet content.
-def render_dashlet(nr, dashlet, wato_folder):
+def render_dashlet(name, board, nr, dashlet, wato_folder):
     dashlet_type = dashlet_types[dashlet['type']]
 
     classes = ['dashlet', dashlet['type']]
@@ -317,6 +324,10 @@ def render_dashlet(nr, dashlet, wato_folder):
     # Optional way to render a dynamic iframe URL
     if "iframe_urlfunc" in dashlet_type:
         dashlet["iframe"] = dashlet_type["iframe_urlfunc"](dashlet)
+
+    elif "iframe_render" in dashlet_type:
+        dashlet["iframe"] = "dashboard_dashlet.py?name="+name+"&id="+ \
+                                     str(nr)+"&mtime="+str(board['mtime']);
 
     # FIXME:
     if dashlet.get("reload_on_resize"):
@@ -489,6 +500,17 @@ def create_dashboard(old_dashboard, dashboard):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+def page_create_view_dashlet():
+    visuals.page_create_visual('views', allow_global = False,
+        next_url = 'create_view_dashlet_ds.py?mode=create&context_type=%s'
+                   + '&name=%s' % html.urlencode(html.var('name')))
+
+def page_create_view_dashlet_ds():
+    import views
+    url = 'edit_dashlet.py?name=%s&type=view' % html.urlencode(html.var('name'))
+    url += '&context_type=%s&datasource=%s'
+    views.page_create_view_ds(url)
+
 def page_edit_dashlet():
     if not config.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
@@ -521,6 +543,7 @@ def page_edit_dashlet():
         title   = _('Add Dashlet')
         # Initial configuration
         dashlet = {}
+        ident   =  len(dashboard['dashlets'])
         dashboard['dashlets'].append(dashlet)
     else:
         mode    = 'edit'
@@ -540,6 +563,9 @@ def page_edit_dashlet():
             'position': (1, 1),
             'size':     dashlet_type.get('size', (10, 10))
         })
+
+        if html.has_var('context_type'):
+            dashlet['context_type'] = html.var('context_type')
 
     html.header(title, stylesheets=["pages","views"])
 
@@ -581,13 +607,18 @@ def page_edit_dashlet():
 
     vs_type = None
     params = dashlet_type.get('parameters')
-    if params:
+    render_input_func = None
+    handle_input_func = None
+    if type(params) == list:
         vs_type = Dictionary(
             title = _('Properties'),
             render = 'form',
             optional_keys = dashlet_type.get('opt_params'),
             elements = params,
         )
+    elif type(params) == type(lambda x: x):
+        # It's a tuple of functions which should be used to render and parse the params
+        render_input_func, handle_input_func = params()
 
     if html.var('save') and html.transaction_valid():
         try:
@@ -602,6 +633,9 @@ def page_edit_dashlet():
                 type_properties = vs_type.from_html_vars('type')
                 vs_type.validate_value(type_properties, 'type')
                 dashlet.update(type_properties)
+
+            elif handle_input_func:
+                dashlet = handle_input_func(ident, dashlet)
 
             visuals.save('dashboards', dashboards)
 
@@ -623,6 +657,8 @@ def page_edit_dashlet():
 
     if vs_type:
         vs_type.render_input("type", dashlet)
+    elif render_input_func:
+        render_input_func(dashlet)
 
     forms.end()
     html.button("save", _("Save"))

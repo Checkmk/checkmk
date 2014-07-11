@@ -83,6 +83,8 @@ pagehandlers.update({
    "create_dashboard"         : dashboard.page_create_dashboard,
    "edit_dashboard"           : dashboard.page_edit_dashboard,
    "edit_dashlet"             : dashboard.page_edit_dashlet,
+   "create_view_dashlet"      : dashboard.page_create_view_dashlet,
+   "create_view_dashlet_ds"   : dashboard.page_create_view_dashlet_ds,
    "ajax_dashlet_pos"         : dashboard.page_ajax_dashlet_pos,
    "dashboard"                : dashboard.page_dashboard,
    "dashboard_dashlet"        : dashboard.ajax_dashlet,

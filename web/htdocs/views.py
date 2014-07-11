@@ -311,7 +311,7 @@ def page_create_view():
         next_url = 'create_view_ds.py?mode=create&context_type=%s')
 
 # Seconds step: Select the data source
-def page_create_view_ds():
+def page_create_view_ds(next_url = 'edit_view.py?context_type=%s&datasource=%s'):
     context_type = html.var('context_type')
 
     available = visuals.context_types.keys()
@@ -343,7 +343,7 @@ def page_create_view_ds():
             ds = vs_ds.from_html_vars('ds')
             vs_ds.validate_value(ds, 'ds')
 
-            html.http_redirect('edit_view.py?context_type=%s&datasource=%s' % (context_type, ds))
+            html.http_redirect(next_url % (context_type, ds))
             return
 
         except MKUserError, e:
@@ -381,9 +381,9 @@ def page_edit_view():
     load_views()
 
     visuals.page_edit_visual('views', multisite_views,
-        custom_field_handler = custom_field_handler,
+        custom_field_handler = render_view_config,
         load_handler = transform_view_to_valuespec,
-        create_handler = create_view,
+        create_handler = create_view_config,
         try_handler = lambda view: show_view(view, False, False)
     )
 
@@ -602,7 +602,7 @@ def view_editor_specs(context_type, ds_name):
 
     return specs
 
-def custom_field_handler(view):
+def render_view_config(view):
     ds_name = view.get("datasource", html.var("datasource"))
     if not ds_name:
         raise MKInternalError(_("No datasource defined."))
@@ -651,7 +651,7 @@ def transform_view_to_valuespec(view):
 #
 # old_view is the old view dict which might be loaded from storage.
 # view is the new dict object to be updated.
-def create_view(old_view, view):
+def create_view_config(old_view, view):
     ds_name = old_view.get('datasource', html.var('datasource'))
     datasource = multisite_datasources[ds_name]
 

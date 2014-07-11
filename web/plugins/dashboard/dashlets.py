@@ -337,43 +337,33 @@ if (has_canvas_support()) {
 #   '----------------------------------------------------------------------'
 
 def dashlet_pnpgraph(params):
-    service = params.get('service')
+    service = params['context'].get('service')
     if not service:
         service = "_HOST_"
 
-    site = params.get('site')
+    site = html.var('site')
     if not site:
         base_url = defaults.url_prefix
     else:
         base_url = html.site_status[site]["site"]["url_prefix"]
     base_url += "pnp4nagios/index.php/"
     var_part = "?host=%s&srv=%s&source=0&view=%s&theme=multisite&_t=%d" % \
-            (pnp_cleanup(params['host']), pnp_cleanup(service), params['timerange'], int(time.time()))
+            (pnp_cleanup(params['context']['host']), pnp_cleanup(service), params['timerange'], int(time.time()))
 
     pnp_url = base_url + "graph" + var_part
     img_url = base_url + "image" + var_part
     html.write('<a href="%s"><img border=0 src="%s"></a>' % (pnp_url, img_url))
 
 dashlet_types["pnpgraph"] = {
-    "title"       : _("Performance Graph"),
-    "sort_index"  : 20,
-    "description" : _("Displays a performance graph of a host or service."),
-    "render"      : dashlet_pnpgraph,
-    "refresh"     : 60,
-    "size"        : (60, 21),
-    "allowed"     : config.builtin_role_ids,
-    "opt_params"  : [ "service" ],
+    "title"        : _("Performance Graph"),
+    "sort_index"   : 20,
+    "description"  : _("Displays a performance graph of a host or service."),
+    "render"       : dashlet_pnpgraph,
+    "refresh"      : 60,
+    "size"         : (60, 21),
+    "allowed"      : config.builtin_role_ids,
+    "context_type" : "service",
     "parameters"  : [
-        ("site", DropdownChoice(
-            title = _('Site'),
-            choices = config.sorted_sites,
-        )),
-        ("host", TextAscii(
-            title = _('Hostname'),
-        )),
-        ("service", TextAscii(
-            title = _('Service Description'),
-        )),
         ("timerange", DropdownChoice(
             default_value = '1',
             choices= [
@@ -386,6 +376,7 @@ dashlet_types["pnpgraph"] = {
     "styles": """
 .dashlet.pnpgraph .dashlet_inner {
     background-color: #fff;
+    color: #000;
     text-align: center;
 }
 """,

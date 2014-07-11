@@ -175,6 +175,9 @@ def render_dashboard(name):
 
     html.write("<div id=dashboard class=\"dashboard_%s\">\n" % name) # Container of all dashlets
 
+    # FIXME: Get all context types of all dashlets and check whether or not the
+    # needed vars are present. When something is missing, show an error!
+
     refresh_dashlets = [] # Dashlets with automatic refresh, for Javascript
     dashlets_js = []
     used_types = set([])
@@ -196,6 +199,23 @@ def render_dashboard(name):
             # FIXME: remove add_wato_folder_to_url
             refresh_dashlets.append([nr, dashlet.get("refresh", 0),
               str(add_wato_folder_to_url(url, wato_folder))])
+
+        # Update the dashlets context with the dashboard global context when there are
+        # useful information
+        context_type = None
+        if 'context_type' in dashlet:
+            context_type = dashlet['context_type']
+        elif 'context_type' in dashlet_type:
+            context_type = dashlet_type['context_type']
+
+        if context_type:
+            ty = visuals.context_types[context_type]
+            if ty['single']:
+                needed_params = [ p for p, vs in visuals.context_types[context_type]['parameters'] ]
+                for param in needed_params:
+                    if param not in dashlet['context']:
+                        # Get the vars from the global context or html vars
+                        dashlet['context'][param] = board.get('context', {}).get(param, html.var(param))
 
         # Paint the dashlet's HTML code
         render_dashlet(name, board, nr, dashlet, wato_folder)
@@ -336,7 +356,14 @@ def render_dashlet(name, board, nr, dashlet, wato_folder):
     # The content is rendered only if it is fixed. In the
     # other cases the initial (re)-size will paint the content.
     if "render" in dashlet_type:
-        render_dashlet_content(dashlet)
+        try:
+            render_dashlet_content(dashlet)
+        except Exception, e:
+            if config.debug:
+                import traceback
+                html.write(traceback.format_exc().replace('\n', '<br>\n'))
+            else:
+                html.write('Problem while rendering the dashlet: %s' % html.attrencode(e))
 
     elif "content" in dashlet: # fixed content
         html.write(dashlet["content"])
@@ -605,6 +632,15 @@ def page_edit_dashlet():
         ],
     )
 
+    vs_context = None
+    if 'context_type' in dashlet_type:
+        vs_context = Dictionary(
+            title = _('Context'),
+            render = 'form',
+            optional_keys = True,
+            elements = visuals.context_types[dashlet_type['context_type']]['parameters'],
+        )
+
     vs_type = None
     params = dashlet_type.get('parameters')
     render_input_func = None
@@ -637,6 +673,11 @@ def page_edit_dashlet():
             elif handle_input_func:
                 dashlet = handle_input_func(ident, dashlet)
 
+            if vs_context:
+                context = vs_context.from_html_vars('context')
+                vs_context.validate_value(context, 'context')
+                dashlet['context'] = context
+
             visuals.save('dashboards', dashboards)
 
             html.immediate_browser_redirect(1, back_url)
@@ -659,6 +700,9 @@ def page_edit_dashlet():
         vs_type.render_input("type", dashlet)
     elif render_input_func:
         render_input_func(dashlet)
+
+    if vs_context:
+        vs_context.render_input("context", dashlet.get('context', {}))
 
     forms.end()
     html.button("save", _("Save"))

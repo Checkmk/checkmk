@@ -439,7 +439,7 @@ def view_editor_specs(context_type, ds_name):
                 ('layout', DropdownChoice(
                     title = _('Basic Layout'),
                     choices = [ (k, v["title"]) for k,v in multisite_layouts.items() if not v.get("hide")],
-                    default_value = 'boxed',
+                    default_value = 'table',
                     sorted = True,
                 )),
                 ('num_columns', Integer(
@@ -455,6 +455,7 @@ def view_editor_specs(context_type, ds_name):
                         ("pergroup", _("once per group")),
                         ("repeat",   _("repeat every 20'th row")),
                     ],
+                    default_value = 'pergroup',
                 )),
             ],
         ))

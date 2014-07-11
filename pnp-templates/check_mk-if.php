@@ -90,7 +90,7 @@ $range = min(10, $bandwidth);
 
 $bandwidthInfo = "";
 if ($bandwidth > 0){
-    $bandwidthInfo = " at $bandwidth ${bwuom}${unit}/s $range";
+    $bandwidthInfo = " at " . sprintf("%.1f", $bandwidth) . "${bwuom}${unit}/s $range";
 }
 $ds_name[1] = 'Used bandwidth';
 $opt[1] = "--vertical-label \"$vertical_label_name\" -l -$range -u $range -X0 -b 1024 --title \"Used bandwidth $hostname / $servicedesc $bandwidthInfo\" ";

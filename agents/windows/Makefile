@@ -36,7 +36,7 @@ else
   CXX = mingw32-g++
 endif
 
-all: install_agent.exe install_agent-64.exe msi_installer
+all: install_agent.exe install_agent-64.exe
 
 .PHONY: inc_build_version
 
@@ -115,6 +115,7 @@ nowin.exe: nowin.cc
 
 clean:
 	rm -f *.o *~ svn-*.tmp *.rc *.res
+	cd msibuild ; make clean
 
 mrproper: clean
 	rm -f *.exe

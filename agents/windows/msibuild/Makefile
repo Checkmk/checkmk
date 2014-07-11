@@ -30,6 +30,10 @@ CHECK_MK_VERSION = TESTVERSION
 
 all: exchange_msi_files
 
+clean:
+	rm -rf $(MSITOOLS)
+	rm check_mk_agent.msi
+	rm -rf work sources
 msibuild:
 	tar -Jxf $(MSITOOLS_FILE)
 	set -e ; for p in patches/*.dif ; do \

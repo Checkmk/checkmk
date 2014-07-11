@@ -36,7 +36,7 @@ else
   CXX = mingw32-g++
 endif
 
-all: install_agent.exe install_agent-64.exe
+all: install_agent.exe install_agent-64.exe msi_installer
 
 .PHONY: inc_build_version
 
@@ -103,7 +103,9 @@ install_agent-64.exe: check_mk_agent-64.exe crash.exe nowin.exe
 	makensis installer-64.nsi
 	chmod +x install_agent-64.exe
 
-
+msi_installer:
+	cd msibuild ; make BUILD_VERSION=$$(cat ../build_version) CHECK_MK_VERSION=$(VERSION)
+	cp msibuild/check_mk_agent.msi .
 
 crash.exe: crash.cc
 	$(CXX) -o $@ $<

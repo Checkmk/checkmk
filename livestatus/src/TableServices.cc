@@ -68,14 +68,34 @@ void TableServices::answerQuery(Query *query)
     if (_by_group) {
         servicegroup *sgroup = servicegroup_list;
         servicebygroup sg;
+        bool show_sgroup;
+
+        // When g_group_authorization is set to AUTH_STRICT we need to pre-check
+        // if every service of this group is visible to the _auth_user
+        bool requires_precheck = query->authUser() && g_group_authorization == AUTH_STRICT;
+
         while (sgroup) {
+            show_sgroup = true;
             sg._servicegroup = sgroup;
             servicesmember *mem = sgroup->members;
-            while (mem) {
-                memcpy(&sg._service, mem->service_ptr, sizeof(service));
-                if (!query->processDataset(&sg))
-                    break;
-                mem = mem->next;
+            if (requires_precheck) {
+                while (mem) {
+                    if (!is_authorized_for(query->authUser(), mem->service_ptr->host_ptr, mem->service_ptr)) {
+                        show_sgroup = false;
+                        break;
+                    }
+                    mem = mem->next;
+                }
+            }
+
+            if (show_sgroup) {
+                mem = sgroup->members;
+                while (mem) {
+                    memcpy(&sg._service, mem->service_ptr, sizeof(service));
+                    if (!query->processDataset(&sg))
+                        break;
+                    mem = mem->next;
+                }
             }
             sgroup = sgroup->next;
         }

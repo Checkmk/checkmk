@@ -1,0 +1,16 @@
+Title: Gracefully restart check_mk helpers in case of memory leak
+Level: 2
+Component: core
+Version: 1.2.5i5
+Date: 1404985261
+Class: fix
+
+When using the Check_MK Micro Core in combination with inline SNMP then
+in certain rare situations the check_mk helper processes leak memory. We
+suspect the leak to be in the SNMP libs but this is just an assumption.
+
+This fix now watches the size of each check_mk helper. If the memory usage
+(VM size) of the process grows by more then 50% compared to the size after
+the first 20 hosts being checked, then the helper silently restarts itself
+and leaves a message in <tt>var/log/check_mk/cmc-helper.log</tt>.
+

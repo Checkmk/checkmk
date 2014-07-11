@@ -849,7 +849,7 @@ perfometers["check_mk-cmc_lcp"] = perfometer_cmc_lcp
 
 def perfometer_humidity(row, check_command, perf_data):
     humidity = float(perf_data[0][1])
-    return "%3.1f%%" % humidity, perfometer_linear(humidity, '#6f2')
+    return "%3.1f% %" % humidity, perfometer_linear(humidity, '#6f2')
 
 perfometers['check_mk-carel_uniflair_cooling'] = perfometer_humidity
 perfometers['check_mk-cmciii.humidity'] = perfometer_humidity
@@ -1098,3 +1098,10 @@ def perfometer_allnet_ip_sensoric_tension(row, check_command, perf_data):
     return value, perfometer_linear(value, display_color)
 
 perfometers["check_mk-allnet_ip_sensoric.tension"] = perfometer_allnet_ip_sensoric_tension
+
+def perfometer_pressure(row, check_command, perf_data):
+    pressure = float(perf_data[0][1])
+    return "%0.5f bars" % pressure, perfometer_logarithmic(pressure, 1, 2, "#da6")
+
+perfometers['check_mk-allnet_ip_sensoric.pressure'] = perfometer_pressure
+

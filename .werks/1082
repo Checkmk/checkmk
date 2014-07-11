@@ -1,0 +1,12 @@
+Title: windows agent: now also available as msi installer
+Level: 2
+Component: checks
+Version: 1.2.5i5
+Date: 1405075357
+Class: feature
+
+The new msi install check_mk_agent.msi packages contains the 32 and 64 bit version of the check_mk_agent.exe.
+Upon install the msi package will determine the os architecture and install the matching agent accordingly.
+The installed 32/64 Bit Agent is always named check_mk_agent.exe.
+
+Note: The msi installer always installs into the 32 bit program files folder. This is by design.

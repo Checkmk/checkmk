@@ -65,7 +65,7 @@ class FilterHostgroupVisibility(Filter):
         if html.var("hostgroupshowempty"):
             return ""
         else:
-            return "Filter: num_hosts > 0"
+            return "Filter: num_hosts > 0\n"
 
 #                               filter          title              info       column           htmlvar
 declare_filter(100, FilterText("hostregex",    _("Hostname"),        "host",    "host_name",      "host",    "~~"),
@@ -786,7 +786,7 @@ class FilterHostTags(Filter):
         )
 
     def display(self):
-        groups = [ (e[0], e[1]) for e in config.wato_host_tags ]
+        groups = [ (e[0], e[1].lstrip("/") ) for e in config.wato_host_tags ]
         operators = [
             ("is", _("=")),
             ("isnot", _("&ne;")),
@@ -827,17 +827,41 @@ class FilterHostTags(Filter):
             html.write('</td></tr>')
         html.write('</table>')
 
+    def hosttag_filter(self, negate, tag):
+        return  'Filter: host_custom_variables %s TAGS (^|[ ])%s($|[ ])' % (negate and '!~' or '~', tag)
+
     def filter(self, infoname):
         headers = []
 
-        for num in range(self.count):
+        # Do not restrict to a certain number, because we'd like to link to this
+        # via an URL, e.g. from the virtual host tree snapin
+        num = 0
+        while html.has_var('host_tag_%d_op' % num):
             prefix = 'host_tag_%d' % num
             op  = html.var(prefix + '_op')
-            val = html.var(prefix + '_val')
+            tag = html.var(prefix + '_val')
 
-            if op and val:
-                operator = op != 'is' and '!~' or '~'
-                headers.append('Filter: host_custom_variables %s TAGS (^|[ ])%s($|[ ])' % (operator, val))
+            if op:
+                if tag:  # positive host tag
+                    headers.append(self.hosttag_filter(op != "is", tag))
+                else:    
+                    # empty host tag. Darn. We need to create a filter that excludes all other host tags
+                    # of the group
+                    group = html.var(prefix + '_grp')  
+                    grouptags = None
+                    for entry in config.wato_host_tags:
+                        if entry[0] == group:  # found our group
+                            grouptags = [ x[0] for x in entry[2] if x[0] ]
+                            break
+                    if grouptags: # should never be empty, but maybe faked URL
+                        for tag in grouptags:
+                            headers.append(self.hosttag_filter(False, tag))
+                        if len(grouptags) > 1:
+                            headers.append("Or: %d" % len(grouptags)) 
+                        if op == "is":
+                            headers.append("Negate:")
+
+            num += 1
 
         if headers:
             return '\n'.join(headers) + '\n'

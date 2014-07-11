@@ -46,15 +46,14 @@
 
 
 def inventory_netapp_cluster(info):
-
     inventory = []
-
-    # only inventorizes clusters that dont have takeover disabled.
-    cfSettings, cfState, cfCannotTakeoverCause, cfPartnerStatus, cfPartnerName, cfInterconnectStatus = info[0]
-    if int(cfSettings) not in [1, 3]:
-        # Include the cluster partner name in inventory (value added data)
-        inventory.append ((cfPartnerName, None))
-    return inventory
+    if info:
+        cfSettings, cfState, cfCannotTakeoverCause, cfPartnerStatus, cfPartnerName, cfInterconnectStatus = info[0]
+        # only inventorizes clusters that dont have takeover disabled.
+        if int(cfSettings) not in [1, 3]:
+            # Include the cluster partner name in inventory (value added data)
+            inventory.append ((cfPartnerName, None))
+        return inventory
 
 def check_netapp_cluster(item, _no_params, info):
 

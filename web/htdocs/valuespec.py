@@ -3068,23 +3068,32 @@ class VisualFilterList(ListOfMultiple):
 
         # First get all filters useful for the infos, then create VisualFilter
         # valuespecs from them and then sort them
-        filters = {}
+        fspecs = {}
+        self._filters = {}
         for info in self._infos:
             for fname, filter in views.filters_allowed_for_info(info).items():
-                if fname not in filters and fname not in views.ubiquitary_filters:
-                    filters[fname] = VisualFilter(fname,
+                if fname not in fspecs and fname not in views.ubiquitary_filters:
+                    fspecs[fname] = VisualFilter(fname,
                         title = filter.title,
                     )
+                    self._filters[fname] = fspecs[fname]._filter
 
         # Convert to list and sort them!
-        filters = filters.items()
-        filters.sort(key = lambda x: (x[1]._filter.sort_index, x[1].title()))
+        fspecs = fspecs.items()
+        fspecs.sort(key = lambda x: (x[1]._filter.sort_index, x[1].title()))
 
         kwargs.setdefault('title', _('Filters'))
         kwargs.setdefault('add_label', _('Add filter'))
 
-        ListOfMultiple.__init__(self, filters, **kwargs)
+        ListOfMultiple.__init__(self, fspecs, **kwargs)
 
+    # get the filters to be used from the value and the data from the filter
+    # objects using the row data
+    def filter_variable_settings(self, value, row):
+        vars = []
+        for fname in value.keys():
+            vars += self._filters[fname].variable_settings(row)
+        return vars
 
 # Realizes a Multisite/visual filter in a valuespec. It can render the filter form, get
 # the filled in values and provide the filled in information for persistance.

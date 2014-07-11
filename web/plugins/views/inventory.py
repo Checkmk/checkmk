@@ -683,7 +683,7 @@ multisite_builtin_views["inv_hosts_cpu"] = {
     'hard_filtervars'              : [
         ('is_has_inv', '1' ),
     ],
-    'hide_filters'                 : ['host', 'site'],
+    'hide_filters'                 : [],
     'show_filters'                 : [
          'inv_hardware_cpu_cpus',
          'inv_hardware_cpu_cores',

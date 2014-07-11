@@ -40,7 +40,6 @@ multisite_datasources["bi_aggregations"] = {
     "infos"       : [ "aggr" ],
     "keys"        : [],
     "idkeys"      : [ 'aggr_name' ],
-    "single_filters" : [ 'aggr_name' ],
     "context_type"   : 'bi_aggregation',
 }
 
@@ -50,7 +49,6 @@ multisite_datasources["bi_host_aggregations"] = {
     "infos"       : [ "host", "aggr" ],
     "keys"        : [],
     "idkeys"      : [ 'aggr_name' ],
-    "single_filters" : [ 'host' ],
     "context_type" : 'bi_host_aggregation',
 }
 

@@ -72,12 +72,6 @@
 # ignore_limit: Ignore the soft/hard query limits in view.py/query_data(). This
 #               fixes stats queries on e.g. the log table.
 #
-# single_filters: All views using this filter as hide_filters are treated as a
-#                 single object view. All other views might have multiple objects.
-#                 Is used during view loading to gather the context_type of a view
-#                 when it has none set. This can be removed one day when all views
-#                 have a context set.
-#
 # context_type:   This is the context_type prefix views based on this datasource will
 #                 get during loading of a view which has no context_type defined.
 #                  when all single_filters are set as hide_filters for a view it will
@@ -95,7 +89,6 @@ multisite_datasources["hosts"] = {
     "join"    : ( "services", "host_name" ),
     "idkeys"  : [ "site", "host_name" ],
     "description"    : _("Displays a list of hosts."),
-    "single_filters" : [ 'host' ],
     "context_type"   : 'host',
 }
 
@@ -118,7 +111,6 @@ multisite_datasources["services"] = {
     "keys"    : [ "host_name", "service_description", "service_downtimes" ],
     "joinkey" : "service_description",
     "idkeys"  : [ "site", "host_name", "service_description" ],
-    "single_filters": [ 'host', 'service' ],
     "context_type"   : 'service',
 }
 

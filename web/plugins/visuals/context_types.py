@@ -33,9 +33,11 @@ context_types['global'] = {
 context_types['host'] = {
     'title'      : _('Single Host'),
     'single'     : True,
-    'parameters' : TextUnicode(
-        title = _('Hostname'),
-    ),
+    'parameters' : [
+        ('host', TextUnicode(
+            title = _('Hostname'),
+        )),
+    ],
 }
 
 context_types['hosts'] = {
@@ -47,16 +49,14 @@ context_types['hosts'] = {
 context_types['service'] = {
     'title'      : _('Single Service'),
     'single'     : True,
-    'parameters' : Tuple(
-        elements = [
-            TextUnicode(
+    'parameters' : [
+        ('host', TextUnicode(
                 title = _('Hostname'),
-            ),
-            TextUnicode(
+        )),
+        ('service', TextUnicode(
                 title = _('Service Description'),
-            ),
-        ],
-    ),
+        )),
+    ],
 }
 
 context_types['services'] = {
@@ -65,10 +65,30 @@ context_types['services'] = {
     'parameters' : VisualFilterList(['service', 'host']),
 }
 
+context_types['hostgroup'] = {
+    'title'      : _('Single Hostgroups'),
+    'single'     : True,
+    'parameters' : [
+        ('hostgroup', TextUnicode(
+            title = _('Hostgroup Name'),
+        )),
+    ],
+}
+
 context_types['hostgroups'] = {
     'title'      : _('Multiple Hostgroups'),
     'single'     : False,
     'parameters' : VisualFilterList(['hostgroup']),
+}
+
+context_types['servicegroup'] = {
+    'title'      : _('Single Servicegroups'),
+    'single'     : True,
+    'parameters' : [
+        ('servicegroup', TextUnicode(
+            title = _('Servicegroup Name'),
+        )),
+    ],
 }
 
 context_types['servicegroups'] = {
@@ -95,12 +115,24 @@ context_types['logs'] = {
     'parameters' : VisualFilterList(['log', 'host', 'service', 'contact', 'command']),
 }
 
+context_types['logs_contact'] = {
+    'title'      : _('Single Contact Log Entries'),
+    'single'     : False,
+    'parameters' : [
+        ('log_contact_name', TextAscii(
+            title = _('Contact Name'),
+        )),
+    ],
+}
+
 context_types['bi_aggregation'] = {
     'title'      : _('Single BI Aggregation'),
-    'single'     : False,
-    'parameters' : TextAscii(
-        title = _('Aggregation Name'),
-    ),
+    'single'     : True,
+    'parameters' : [
+        ('aggr_name', TextAscii(
+            title = _('Aggregation Name'),
+        )),
+    ],
 }
 
 context_types['bi_aggregations'] = {
@@ -111,10 +143,12 @@ context_types['bi_aggregations'] = {
 
 context_types['bi_host_aggregation'] = {
     'title'      : _('Single BI Aggregation affected by one host'),
-    'single'     : False,
-    'parameters' : TextAscii(
-        title = _('Hostname'),
-    ),
+    'single'     : True,
+    'parameters' : [
+        ('aggr_host', TextAscii(
+            title = _('Hostname'),
+        )),
+    ],
 }
 
 context_types['bi_host_aggregations'] = {
@@ -127,6 +161,16 @@ context_types['bi_hostname_aggregations'] = {
     'title'      : _('Multiple Single Host BI Aggregations (Aggregation name joined)'),
     'single'     : False,
     'parameters' : VisualFilterList(['aggr', 'host']),
+}
+
+context_types['bi_aggregation_group'] = {
+    'title'      : _('Single BI Aggregation group'),
+    'single'     : True,
+    'parameters' : [
+        ('aggr_group', TextAscii(
+            title = _('Hostname'),
+        )),
+    ],
 }
 
 context_types['invswpacs'] = {

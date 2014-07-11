@@ -204,6 +204,11 @@ def load_views():
     multisite_views = visuals.load('views', multisite_builtin_views,
                     skip_func = lambda v: v['datasource'] not in multisite_datasources)
     available_views = visuals.available('views', multisite_views)
+    transform_old_views()
+
+def transform_old_views():
+    single_context_types = [ c for c in visuals.context_types.items() if c[1]['single'] ]
+    single_context_types.sort(cmp = lambda a, b: len(a[1]['parameters']) - len(b[1]['parameters']))
 
     for view in multisite_views.values():
         # Add the context_type. This tries to map the datasource and additional settings of the
@@ -213,22 +218,40 @@ def load_views():
             datasource = multisite_datasources[ds_name]
             hide_filters = view.get('hide_filters')
 
-            if not datasource.get('single_filters', []):
-                is_single = False
-            else:
-                is_single = True
-                for fname in datasource.get('single_filters', []):
-                    if fname not in hide_filters:
-                        is_single = False
-                        break
+            if 'service' in hide_filters and 'host' in hide_filters:
+                view['context_type'] = 'service'
+            elif 'service' in hide_filters and 'host' not in hide_filters:
+                view['context_type'] = 'service'
+            elif 'host' in hide_filters:
+                view['context_type'] = 'host'
+            elif 'hostgroup' in hide_filters:
+                view['context_type'] = 'hostgroup'
+            elif 'servicegroup' in hide_filters:
+                view['context_type'] = 'servicegroup'
+            elif 'aggr_group' in hide_filters:
+                view['context_type'] = 'bi_aggregation_group'
+            elif 'aggr_hosts' in hide_filters:
+                view['context_type'] = 'host'
+            elif 'aggr_service' in hide_filters:
+                view['context_type'] = 'service'
+            elif 'aggr_name' in hide_filters:
+                view['context_type'] = 'bi_aggregation'
+            elif 'log_contact_name' in hide_filters:
+                view['context_type'] = 'logs_contact'
+            elif 'event_host' in hide_filters:
+                view['context_type'] = 'host'
+            elif hide_filters == ['event_id', 'history_line']:
+                view['context_type'] = 'mkeventd_history_event'
+            elif 'event_id' in hide_filters:
+                view['context_type'] = 'mkeventd_event'
 
-            if is_single and 'context_type' in datasource:
-                view['context_type'] = datasource['context_type']
-            else:
+            # For all other context types assume the view is showing multiple objects
+            # and the datasource can simply be gathered from the datasource
+            if 'context_type' not in view:
                 view['context_type'] = datasource['context_type'] + 's'
 
         # Convert from show_filters, hide_filters, hard_filters and hard_filtervars
-        # to show_filters and context construct
+        # to context construct
         if 'context' not in view:
             view['show_filters'] = view['hide_filters'] + view['hard_filters'] + view['show_filters']
             context = {}
@@ -242,7 +265,7 @@ def load_views():
             view['context'] = context
 
         # Cleanup unused attributes
-        for k in [ 'hide_filters', 'hard_filters' ]:
+        for k in [ 'hide_filters', 'hard_filters', 'show_filters', 'hard_filtervars' ]:
             try:
                 del view[k]
             except KeyError:
@@ -367,7 +390,8 @@ def page_edit_view():
 def view_choices(only_with_hidden = False):
     choices = [("", "")]
     for name, view in available_views.items():
-        if not only_with_hidden or len(view["hide_filters"]) > 0:
+        context_type = visuals.context_types[view['context_type']]
+        if not only_with_hidden or context_type['single'] == True:
             if view.get('mobile', False):
                 title = _('Mobile: ') + _u(view["title"])
             else:
@@ -558,14 +582,19 @@ def view_editor_specs(context_type, ds_name):
 
     ty = visuals.context_types[context_type]
 
+    if type(ty['parameters']) == list:
+        params = ty['parameters']
+    else:
+        params = [
+            ('filters', ty['parameters']),
+        ]
+
     specs.append(
         ('filters', Dictionary(
             title = _('Filters'),
             render = 'form',
             optional_keys = None,
-            elements = [
-                ('filters', ty['parameters']),
-            ]
+            elements = params,
         ))
     )
 
@@ -664,8 +693,10 @@ def create_view(old_view, view):
             view['painters'] = painters
 
         elif ident == 'filters':
-            view['show_filters'] = attrs['filters'].keys()
-            view['context'] = attrs['filters']
+            if 'filters' in attrs: # multi object context
+                view['context'] = attrs['filters']
+            else: # single object context
+                view['context'] = attrs
 
     return view
 
@@ -774,7 +805,7 @@ def page_view():
 # columns that need to fetch information from another table
 # (e.g. from the services table while we are in a hosts view)
 # If join_columns is False, we only return the "normal" columns.
-def get_needed_columns(painters):
+def get_needed_columns(view, painters):
     columns = []
     for entry in painters:
         p = entry[0]
@@ -783,9 +814,7 @@ def get_needed_columns(painters):
         if v:
             linkview = available_views.get(v)
             if linkview:
-                for ef in linkview["hide_filters"]:
-                    f = multisite_filters[ef]
-                    columns += f.link_columns
+                columns += multisite_datasources[view['datasource']]['idkeys']
         if len(entry) > 2 and entry[2]:
             tt = entry[2]
             columns += multisite_painters[tt]["columns"]
@@ -898,24 +927,23 @@ def show_view(view, show_heading = False, show_buttons = True,
     tablename = datasource["table"]
 
     # Filters to show in the view
-    show_filters = [ multisite_filters[fn] for fn in view["show_filters"] ]
+    show_filters = [ multisite_filters[fn] for fn in view["context"].keys() ]
 
     # add ubiquitary_filters that are possible for this datasource
     for fn in ubiquitary_filters:
         # Disable 'wato_folder' filter, if WATO is disabled or there is a single host view
-        if fn == "wato_folder" and (not config.wato_enabled or "host" in view["hide_filters"]):
+        if fn == "wato_folder" and (not config.wato_enabled or view['context_type'] == 'host'):
             continue
         filter = multisite_filters[fn]
         if not filter.info or filter.info in datasource["infos"]:
             show_filters.append(filter)
 
-    hide_filters = [ multisite_filters[fn] for fn in view["hide_filters"] ]
-    hard_filters = [ multisite_filters[fn] for fn in view["hard_filters"] ]
-
-    for varname, value in view["hard_filtervars"]:
-        # shown filters are set, if form is fresh and variable not supplied in URL
-        if only_count or (html.var("filled_in") != "filter" and not html.has_var(varname)):
-            html.set_var(varname, value)
+    # FIXME: Still needed?
+    for fname, filter_vars in view["context"].items():
+        for varname, value in filter_vars.items():
+            # shown filters are set, if form is fresh and variable not supplied in URL
+            if only_count or (html.var("filled_in") != "filter" and not html.has_var(varname)):
+                html.set_var(varname, value)
 
     # Af any painter, sorter or filter needs the information about the host's
     # inventory, then we load it and attach it as column "host_inventory"
@@ -924,7 +952,7 @@ def show_view(view, show_heading = False, show_buttons = True,
     # Prepare Filter headers for Livestatus
     filterheaders = ""
     only_sites = None
-    all_active_filters = [ f for f in show_filters + hide_filters + hard_filters if f.available() ]
+    all_active_filters = [ f for f in show_filters if f.available() ]
     for filt in all_active_filters:
         header = filt.filter(tablename)
         if header.startswith("Sites:"):
@@ -974,8 +1002,8 @@ def show_view(view, show_heading = False, show_buttons = True,
     all_painters = group_painters + painters
     join_painters = [ p for p in all_painters if len(p) >= 4 ]
     master_painters = [ p for p in all_painters if len(p) < 4 ]
-    columns      = get_needed_columns(master_painters)
-    join_columns = get_needed_columns(join_painters)
+    columns      = get_needed_columns(view, master_painters)
+    join_columns = get_needed_columns(view, join_painters)
 
     # Columns needed for sorters
     for s in sorters:
@@ -1050,8 +1078,9 @@ def show_view(view, show_heading = False, show_buttons = True,
 
     # TODO: Use livestatus Stats: instead of fetching rows!
     if only_count:
-        for varname, value in view["hard_filtervars"]:
-            html.del_var(varname)
+        for fname, filter_vars in view["context"].items():
+            for varname, value in filter_vars.items():
+                html.del_var(varname)
         return len(rows)
 
     # Set browser reload
@@ -1075,7 +1104,7 @@ def show_view(view, show_heading = False, show_buttons = True,
 
     render_function(view, rows, datasource, group_painters, painters,
                 display_options, painter_options, show_heading, show_buttons,
-                show_checkboxes, layout, num_columns, show_filters, show_footer, hide_filters,
+                show_checkboxes, layout, num_columns, show_filters, show_footer,
                 browser_reload)
 
 
@@ -1083,7 +1112,7 @@ def show_view(view, show_heading = False, show_buttons = True,
 # then please also do this in htdocs/mobile.py!
 def render_view(view, rows, datasource, group_painters, painters,
                 display_options, painter_options, show_heading, show_buttons,
-                show_checkboxes, layout, num_columns, show_filters, show_footer, hide_filters,
+                show_checkboxes, layout, num_columns, show_filters, show_footer,
                 browser_reload):
 
     if html.transaction_valid() and html.do_actions():
@@ -1113,7 +1142,7 @@ def render_view(view, rows, datasource, group_painters, painters,
     can_display_checkboxes = layout.get('checkboxes', False)
 
     if show_buttons:
-        show_context_links(view, hide_filters, show_filters, display_options,
+        show_context_links(view, show_filters, display_options,
                        painter_options,
                        # Take into account: permissions, display_options
                        row_count > 0 and command_form,
@@ -1327,8 +1356,9 @@ def view_title(view):
     extra_titles = [ ]
     datasource = multisite_datasources[view["datasource"]]
     tablename = datasource["table"]
-    hide_filters = [ multisite_filters[fn] for fn in view["hide_filters"] ]
-    for filt in hide_filters:
+    # FIXME: What about single object context_types contextes?
+    used_filters = [ multisite_filters[fn] for fn in view["context"].keys() ]
+    for filt in used_filters:
         heading = filt.heading_info(tablename)
         if heading:
             extra_titles.append(heading)
@@ -1337,7 +1367,7 @@ def view_title(view):
 
     for fn in ubiquitary_filters:
         # Disable 'wato_folder' filter, if WATO is disabled or there is a single host view
-        if fn == "wato_folder" and (not config.wato_enabled or "host" in view["hide_filters"]):
+        if fn == "wato_folder" and (not config.wato_enabled or view['context_type'] == 'host'):
             continue
         filt = multisite_filters[fn]
         heading = filt.heading_info(tablename)
@@ -1409,7 +1439,7 @@ def togglebutton(id, isopen, icon, help, hidden = False):
     html.write('<div id="%s_on" class="togglebutton %s %s" title="%s" '
                'onclick="view_toggle_form(this, \'%s\');"%s></div>' % (id, icon, cssclass, help, id, hide))
 
-def show_context_links(thisview, active_filters, show_filters, display_options,
+def show_context_links(thisview, show_filters, display_options,
                        painter_options, enable_commands, enable_checkboxes, show_checkboxes,
                        show_availability):
     # html.begin_context_buttons() called automatically by html.context_button()
@@ -1478,7 +1508,7 @@ def show_context_links(thisview, active_filters, show_filters, display_options,
             html.context_button(_("WATO"), url, "wato", id="wato",
                 bestof = config.context_buttons_to_show)
 
-        links = collect_context_links(thisview, active_filters)
+        links = collect_context_links(thisview)
         for view, linktitle, uri, icon, buttonid in links:
             if not view.get("mobile"):
                 html.context_button(linktitle, url=uri, icon=icon, id=buttonid, bestof=config.context_buttons_to_show)
@@ -1508,14 +1538,13 @@ def update_context_links(enable_command_toggle, enable_checkbox_toggle):
 # Collect all views that share a context with thisview. For example
 # if a view has an active filter variable specifying a host, then
 # all host-related views are relevant.
-def collect_context_links(thisview, active_filters):
+def collect_context_links(thisview):
     # compute list of html variables used actively by hidden or shown
     # filters.
     active_filter_vars = set([])
-    for filt in active_filters:
-        for var in filt.htmlvars:
-            if html.has_var(var):
-                active_filter_vars.add(var)
+    for var, val in get_context_html_vars(thisview):
+        if html.has_var(var):
+            active_filter_vars.add(var)
 
     context_links = []
     # sort view buttons somehow
@@ -1531,27 +1560,22 @@ def collect_context_links(thisview, active_filters):
             continue
         if view.get("hidebutton", False):
             continue # this view does not want a button to be displayed
-        hidden_filternames = view["hide_filters"]
-        used_contextvars = []
-        skip = False
-        for fn in hidden_filternames:
-            filt = multisite_filters[fn]
-            contextvars = filt.htmlvars
-            # now extract those variables which are honored by this
-            # view, regardless if used by hardcoded, shown or hidden filters.
-            for var in contextvars:
-                if var not in active_filter_vars:
-                    skip = var
-                    break
-            used_contextvars += contextvars
-            if skip:
-                break
-        if skip:
+
+        if not visuals.context_types[view['context_type']]['single']:
             continue
 
-        # add context link to this view
-        if len(used_contextvars):
-            vars_values = [ (var, html.var(var)) for var in set(used_contextvars) ]
+        needed_vars = get_context_html_vars(view)
+        skip = False
+        vars_values = []
+        for var, val in needed_vars:
+            if var not in active_filter_vars:
+                skip = True
+                break
+
+            vars_values.append((var, val))
+
+        if not skip:
+            # add context link to this view
             uri = html.makeuri_contextless(vars_values + [("view_name", name)])
             icon = view.get("icon")
             buttonid = "cb_" + name
@@ -2063,10 +2087,20 @@ def link_to_view(content, row, linkview):
 
     view = available_views.get(linkview)
     if view:
-        filters = [ multisite_filters[fn] for fn in view["hide_filters"] ]
-        vars = []
-        for filt in filters:
-            vars += filt.variable_settings(row)
+        # Get the context type of the view to link to, then get the parameters of this
+        # context type and try to construct the context from the data of the row
+        params = visuals.context_types[view['context_type']]['parameters']
+        if type(params) == list:
+            # Get the multisite filters matching the names of the params and
+            # use them to get the filter variable settings
+            filters = [ multisite_filters[fn] for fn, vs in params ]
+
+            vars = []
+            for filt in filters:
+                vars += filt.variable_settings(row)
+        else:
+            vars = params.filter_variable_settings(view['context'], row)
+
         do = html.var("display_options")
         if do:
             vars.append(("display_options", do))
@@ -2074,9 +2108,31 @@ def link_to_view(content, row, linkview):
         filename = html.mobile and "mobile_view.py" or "view.py"
         uri = filename + "?" + html.urlencode_vars([("view_name", linkview)] + vars)
         content = "<a href=\"%s\">%s</a>" % (uri, content)
-#        rel = 'view.py?view_name=hoststatus&site=local&host=erdb-lit&display_options=htbfcoezrsix'
-#        content = '<a class=tips rel="%s" href="%s">%s</a>' % (rel, uri, content)
     return content
+
+# Returns the context of the current visual in a HTML var compatible format
+def get_context_html_vars(visual):
+    visuals.load_plugins()
+    context_type = visuals.context_types[visual['context_type']]
+    if context_type['single']:
+        return [ (p[0], html.var(p[0], visual['context'].get(p[0]))) for p in context_type['parameters'] ]
+    else:
+        # context types of type multiple have a the parameters valuespec
+        # and the context which can be combined to get the HTML vars
+
+        # First load the defaults from the context of the visual
+        html_vars = {}
+        for fname, filter_vars in visual["context"].items():
+            for varname, value in filter_vars.items():
+                html_vars[varname] = value
+
+        # Now load the html vars related to the available filters
+        for fname in visual['context'].keys():
+            for varname in multisite_filters[fname].htmlvars:
+                if html.has_var(varname):
+                    html_vars[varname] = html.var(varname)
+
+        return html_vars.items()
 
 def docu_link(topic, text):
     return '<a href="%s" target="_blank">%s</a>' % (config.doculink_urlformat % topic, text)

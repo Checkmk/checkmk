@@ -221,7 +221,7 @@ def transform_old_views():
             if 'service' in hide_filters and 'host' in hide_filters:
                 view['context_type'] = 'service'
             elif 'service' in hide_filters and 'host' not in hide_filters:
-                view['context_type'] = 'service'
+                view['context_type'] = 'service_on_hosts'
             elif 'host' in hide_filters:
                 view['context_type'] = 'host'
             elif 'hostgroup' in hide_filters:
@@ -584,16 +584,18 @@ def view_editor_specs(context_type, ds_name):
 
     if type(ty['parameters']) == list:
         params = ty['parameters']
+        optional = True
     else:
         params = [
             ('filters', ty['parameters']),
         ]
+        optional = None
 
     specs.append(
         ('filters', Dictionary(
             title = _('Filters'),
             render = 'form',
-            optional_keys = None,
+            optional_keys = optional,
             elements = params,
         ))
     )
@@ -925,9 +927,15 @@ def show_view(view, show_heading = False, show_buttons = True,
     # Get the datasource (i.e. the logical table)
     datasource = multisite_datasources[view["datasource"]]
     tablename = datasource["table"]
+    context_type = visuals.context_types[view['context_type']]
 
     # Filters to show in the view
-    show_filters = [ multisite_filters[fn] for fn in view["context"].keys() ]
+    # In case of single object views, the needed filters are fixed, but not always present
+    # in context. In this case, take them from the context type definition.
+    if context_type['single']:
+        show_filters = [ multisite_filters[fn] for fn, vs in context_type['parameters'] ]
+    else:
+        show_filters = [ multisite_filters[fn] for fn in view["context"].keys() ]
 
     # add ubiquitary_filters that are possible for this datasource
     for fn in ubiquitary_filters:

@@ -65,6 +65,16 @@ context_types['services'] = {
     'parameters' : VisualFilterList(['service', 'host']),
 }
 
+context_types['service_on_hosts'] = {
+    'title'      : _('Single Service on multiple hosts'),
+    'single'     : True,
+    'parameters' : [
+        ('service', TextUnicode(
+            title = _('Service Description'),
+        )),
+    ],
+}
+
 context_types['hostgroup'] = {
     'title'      : _('Single Hostgroups'),
     'single'     : True,

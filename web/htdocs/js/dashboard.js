@@ -475,6 +475,11 @@ function dashlet_toggle_edit(dashlet, edit) {
         controls.className = 'controls';
         dashlet.appendChild(controls);
 
+        // IE < 9: Without this fix the controls container is not working
+        if (is_ie_below_9()) {
+            controls.style.background = 'url(about:blank)';
+        }
+
         // Which is the anchor corner?
         // 0: topleft, 1: topright, 2: bottomright, 3: bottomleft
         var active = active_anchor(coords);

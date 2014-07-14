@@ -149,7 +149,7 @@ function add_event_handler(type, func) {
     }
     else if (window.attachEvent) {
         // IE<9
-        window.attachEvent("on" + type, func);
+        document.documentElement.attachEvent("on" + type, func);
     }
     else {
         window["on" + type] = func;
@@ -338,6 +338,10 @@ function isFirefox() {
 
 function isWebkit() {
   return navigator.userAgent.indexOf("WebKit") > -1;
+}
+
+function is_ie_below_9() {
+    return document.all && !document.addEventListener;
 }
 
 function pageHeight() {

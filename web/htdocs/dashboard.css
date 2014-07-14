@@ -69,6 +69,8 @@ div.dashlet iframe {
 div.dashlet div.title {
     position: absolute;
     background-color: rgba(0, 0, 0, 0.3);
+    /* IE < 9 */
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#4c000000', endColorstr='#4c000000');
     left: 0;
     width: 150px; /* will be changed by javascript later */
     color: #fff;
@@ -191,6 +193,8 @@ div.dashlet div.nograph div.msg {
     bottom: 5px;
     padding: 6px 3px;
     background-color: rgba(0, 0, 0, 0.5);
+    /* IE < 9 */
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#7f000000', endColorstr='#7f000000');
     border-radius: 5px;
 }
 
@@ -214,6 +218,11 @@ div.dashlet div.nograph div.msg {
     -moz-box-shadow:    1px 1px 1px 1px #000;
     -webkit-box-shadow: 1px 1px 1px 1px #000;
     box-shadow:         1px 1px 1px 1px #000;
+
+    /* ie <8 */
+    zoom: 1;
+    filter: progid:DXImageTransform.Microsoft.DropShadow(OffX=2, OffY=2, Color=#000000),
+           progid:DXImageTransform.Microsoft.Chroma(Color='#ffffff');
 }
 
 #controls a {
@@ -247,6 +256,10 @@ div.dashlet div.nograph div.msg {
 
 /* dashlet controls */
 
+div.dashlet.edit {
+    z-index: 90;
+}
+
 div.dashlet.edit .controls {
     z-index: 100;
     cursor: auto;
@@ -265,6 +278,8 @@ div.dashlet.edit .controls {
     width: 100%;
     height: 100%;
     background-color: rgba(255, 255, 255, 0.5);
+    /* IE < 9 */
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#fffffff', endColorstr='#7fffffff');
 }
 
 /* dashlet edit button */
@@ -279,6 +294,8 @@ div.dashlet.edit .edit {
 
     background-color: rgba(0, 0, 0, 0.7);
     border-radius: 5px;
+    /* IE < 9 */
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
 
     background-image: url(images/dashlet_edit_lo.png);
 }
@@ -297,6 +314,8 @@ div.dashlet.edit .anchor {
 
     background-color: rgba(0, 0, 0, 0.7);
     border-radius: 5px;
+    /* IE < 9 */
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
 
     background-image: url(images/dashlet_anchor_lo.png);
 }

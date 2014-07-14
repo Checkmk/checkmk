@@ -415,7 +415,7 @@ def ajax_dashlet():
     if not board:
         raise MKGeneralException(_('The name of the dashboard is missing.'))
 
-    ident = html.var('id')
+    ident = int(html.var('id'))
     if not ident:
         raise MKGeneralException(_('The ident of the dashlet is missing.'))
 
@@ -436,7 +436,7 @@ def ajax_dashlet():
 
     the_dashlet = None
     for nr, dashlet in enumerate(dashboard['dashlets']):
-        if nr == int(ident):
+        if nr == ident:
             the_dashlet = dashlet
             break
 

@@ -206,11 +206,11 @@ def render_dashboard(name):
         # dashlets using static content (such as an iframe) will not be
         # refreshed by us but need to do that themselves.
         if "url" in dashlet or ('render' in dashlet_type and dashlet_type.get('refresh')):
-            url = dashlet.get("url", "dashboard_dashlet.py?name="+name+"&id="+ \
-                                     str(nr)+"&mtime="+str(board['mtime']));
-            # FIXME: remove add_wato_folder_to_url
-            refresh_dashlets.append([nr, dashlet.get("refresh", 0),
-              str(add_wato_folder_to_url(url, wato_folder))])
+            url = dashlet.get("url", "dashboard_dashlet.py?name="+name+"&id="+ str(nr));
+            refresh = dashlet.get("refresh")
+            if refresh:
+                # FIXME: remove add_wato_folder_to_url
+                refresh_dashlets.append([nr, refresh, str(add_wato_folder_to_url(url, wato_folder))])
 
         # Update the dashlets context with the dashboard global context when there are
         # useful information
@@ -321,12 +321,12 @@ dashboard_scheduler(1);
 
     html.body_end() # omit regular footer with status icons, etc.
 
-def render_dashlet_content(the_dashlet):
+def render_dashlet_content(nr, the_dashlet):
     dashlet_type = dashlet_types[the_dashlet['type']]
     if 'iframe_render' in dashlet_type:
-        dashlet_type['iframe_render'](the_dashlet)
+        dashlet_type['iframe_render'](nr, the_dashlet)
     else:
-        dashlet_type['render'](the_dashlet)
+        dashlet_type['render'](nr, the_dashlet)
 
 # Create the HTML code for one dashlet. Each dashlet has an id "dashlet_%d",
 # where %d is its index (in board["dashlets"]). Javascript uses that id
@@ -369,7 +369,7 @@ def render_dashlet(name, board, nr, dashlet, wato_folder):
     # other cases the initial (re)-size will paint the content.
     if "render" in dashlet_type:
         try:
-            render_dashlet_content(dashlet)
+            render_dashlet_content(nr, dashlet)
         except Exception, e:
             if config.debug:
                 import traceback
@@ -425,12 +425,17 @@ def ajax_dashlet():
         raise MKGeneralException(_('The requested dashboard does not exist.'))
     dashboard = available_dashboards[board]
 
-    mtime = html.var('mtime')
+    mtime = saveint(html.var('mtime'))
     if not mtime:
         raise MKGeneralException(_('The dashboard modification time is missing.'))
 
     if mtime < dashboard['mtime']:
-        raise MKGeneralException('RELOAD') # FIXME
+        # prevent reloading on the dashboard which already has the current mtime,
+        # this is normally the user editing this dashboard. All others: reload
+        # the whole dashboard once.
+        html.javascript('if (parent.dashboard_mtime < %d) {\n'
+                        '    parent.location.reload();\n'
+                        '}' % dashboard['mtime'])
 
     the_dashlet = None
     for nr, dashlet in enumerate(dashboard['dashlets']):
@@ -444,7 +449,7 @@ def ajax_dashlet():
     if the_dashlet['type'] not in dashlet_types:
         raise MKGeneralException(_('The requested dashlet type does not exist.'))
 
-    render_dashlet_content(the_dashlet)
+    render_dashlet_content(ident, the_dashlet)
 
 #.
 #   .--Dashboard List------------------------------------------------------.
@@ -785,11 +790,14 @@ def check_ajax_update():
     except IndexError:
         raise MKGeneralException(_('The dashlet does not exist.'))
 
-    return dashlet
+    return dashlet, dashboard
 
 def page_ajax_dashlet_pos():
-    dashlet = check_ajax_update()
+    dashlet, board = check_ajax_update()
+
+    board['mtime'] = int(time.time())
+
     dashlet['position'] = saveint(html.var('x')), saveint(html.var('y'))
     dashlet['size']     = saveint(html.var('w')), saveint(html.var('h'))
     visuals.save('dashboards', dashboards)
-    html.write('OK')
+    html.write('OK %d' % board['mtime'])

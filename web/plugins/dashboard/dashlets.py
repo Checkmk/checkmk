@@ -35,7 +35,7 @@
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def dashlet_overview(params):
+def dashlet_overview(nr, params):
     html.write(
         '<table class=dashlet_overview>'
         '<tr><td valign=top>'
@@ -71,7 +71,7 @@ dashlet_types["overview"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def dashlet_mk_logo(params):
+def dashlet_mk_logo(nr, params):
     html.write('<a href="http://mathias-kettner.de/check_mk.html">'
      '<img style="margin-right: 30px;" src="images/check_mk.trans.120.png"></a>')
 
@@ -95,7 +95,7 @@ dashlet_types["mk_logo"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def dashlet_hoststats(params):
+def dashlet_hoststats(nr, params):
     table = [
        ( _("Up"), "#0b3",
         "searchhost&is_host_scheduled_downtime_depth=0&hst0=on",
@@ -122,7 +122,7 @@ def dashlet_hoststats(params):
     ]
     filter = "Filter: custom_variable_names < _REALNAME\n"
 
-    render_statistics(html.var('id', "hoststats"), "hosts", table, filter)
+    render_statistics('dashlet_%d' % nr, "hosts", table, filter)
 
 dashlet_types["hoststats"] = {
     "title"       : _("Host Statistics"),
@@ -135,7 +135,7 @@ dashlet_types["hoststats"] = {
     "resizable"   : False,
 }
 
-def dashlet_servicestats(params):
+def dashlet_servicestats(nr, params):
     table = [
        ( _("OK"), "#0b3",
         "searchsvc&hst0=on&st0=on&is_in_downtime=0",
@@ -188,7 +188,7 @@ def dashlet_servicestats(params):
     ]
     filter = "Filter: host_custom_variable_names < _REALNAME\n"
 
-    render_statistics(html.var('id', "servicestats"), "services", table, filter)
+    render_statistics('dashlet_%d' % nr, "services", table, filter)
 
 
 dashlet_types["servicestats"] = {
@@ -336,7 +336,7 @@ if (has_canvas_support()) {
 #   | Renders a single performance graph                                   |
 #   '----------------------------------------------------------------------'
 
-def dashlet_pnpgraph(params):
+def dashlet_pnpgraph(nr, params):
     if not params['context'].get('host'):
         raise MKUserError('host', _('Missing needed host parameter.'))
     service = params['context'].get('service')
@@ -396,7 +396,7 @@ dashlet_types["pnpgraph"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def dashlet_nodata(params):
+def dashlet_nodata(nr, params):
     html.write("<div class=nograph><div class=msg>")
     html.write(params.get("text"))
     html.write("</div></div>")
@@ -427,7 +427,7 @@ dashlet_types["nodata"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def dashlet_view(params):
+def dashlet_view(nr, params):
     import bi # FIXME: Cleanup?
     bi.reset_cache_status() # needed for status icon
 

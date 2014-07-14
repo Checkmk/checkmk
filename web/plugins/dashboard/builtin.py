@@ -37,13 +37,15 @@ builtin_dashboards["main"] = {
             "type"       : 'hoststats',
             "position"   : (1, 1),
             "refresh"    : 60,
+            "show_title" : True,
             "context"    : {},
         },
         {
             "title"      : _("Service Statistics"),
-            "url"        : "dashlet_servicestats.py",
+            "type"       : 'servicestats',
             "position"   : (31, 1),
             "refresh"    : 60,
+            "show_title" : True,
             "context"    : {},
         },
         {
@@ -52,6 +54,7 @@ builtin_dashboards["main"] = {
             "title_url"  : "view.py?view_name=hostproblems&is_host_acknowledged=0",
             "position"   : (-1, 1),
             "size"       : (GROW, 18),
+            "show_title" : True,
             "context"    : {},
 
             'browser_reload': 30,
@@ -98,6 +101,7 @@ builtin_dashboards["main"] = {
             "title_url"  : "view.py?view_name=svcproblems&is_service_acknowledged=0",
             "position"   : (1, 19),
             "size"       : (GROW, MAX),
+            "show_title" : True,
             "context"    : {},
 
             'browser_reload': 30,
@@ -150,6 +154,7 @@ builtin_dashboards["main"] = {
             "title_url"  : "view.py?view_name=events_dash",
             "position"   : (-1, -1),
             "size"       : (GROW, GROW),
+            "show_title" : True,
             "context"    : {},
 
             'browser_reload': 90,

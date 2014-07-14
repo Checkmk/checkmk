@@ -313,23 +313,25 @@ function dashboard_scheduler(initial) {
 
         if ((initial && document.getElementById("dashlet_inner_" + nr).innerHTML == '')
                 || (refresh > 0 && timestamp % refresh == 0)) {
-            get_url(url, dashboard_update_contents, "dashlet_inner_" + nr);
+            get_url(url + "&mtime=" + dashboard_mtime, dashboard_update_contents, "dashlet_inner_" + nr);
         }
     }
-    setTimeout(function() { dashboard_scheduler(0); }, 1000);
+
     // Update timestamp every minute
     // Required if there are no refresh_dashlets present or all refresh times are > 60sec
     if (timestamp % 60 == 0) {
         updateHeaderTime();
     }
+
+    setTimeout(function() { dashboard_scheduler(0); }, 1000);
 }
 
-function dashboard_update_contents(id, code) {
+function dashboard_update_contents(id, response_text) {
     // Update the header time
     updateHeaderTime();
 
     // Call the generic function to replace the dashlet inner code
-    updateContents(id, code);
+    updateContents(id, response_text);
 }
 
 function update_dashlet(id, code) {
@@ -739,7 +741,17 @@ function drag_dashlet_stop(event) {
 function persist_dashlet_pos(nr) {
     get_url('ajax_dashlet_pos.py?name=' + dashboard_name + '&id=' + nr
             + '&x=' + dashlets[nr].x + '&y=' + dashlets[nr].y
-            + '&w=' + dashlets[nr].w + '&h=' + dashlets[nr].h);
+            + '&w=' + dashlets[nr].w + '&h=' + dashlets[nr].h,
+            handle_dashlet_post_response, undefined, null, false);
+}
+
+function handle_dashlet_post_response(_unused, response_text) {
+    var parts = response_text.split(' ');
+    if (parts[0] != 'OK') {
+        alert('Error: ' + response_text);
+    } else {
+        dashboard_mtime = parseInt(parts[1]);
+    }
 }
 
 function drag_visualize(show) {

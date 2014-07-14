@@ -26,7 +26,7 @@
 
 import re
 from lib import *
-import views, config
+import views, config, visuals
 
 # These regexes are taken from the public domain code of Matt Sullivan
 # http://sullerton.com/2011/03/django-mobile-browser-detection-middleware/
@@ -232,7 +232,7 @@ def page_view():
 
 def render_view(view, rows, datasource, group_painters, painters,
                 display_options, painter_options, show_heading, show_buttons,
-                show_checkboxes, layout, num_columns, show_filters, show_footer, hide_filters,
+                show_checkboxes, layout, num_columns, show_filters, show_footer,
                 browser_reload):
 
     home=("mobile.py", "Home", "home")
@@ -251,7 +251,7 @@ def render_view(view, rows, datasource, group_painters, painters,
         navbar.append(( "commands", _("Commands"), "gear", False ))
 
     # Should we show a page with context links?
-    context_links = views.collect_context_links(view, hide_filters, mobile = True)
+    context_links = visuals.collect_context_links(view, mobile = True, only_types = ['views'])
 
     if context_links:
         navbar.append(( "context", _("Context"), "arrow-r", False))

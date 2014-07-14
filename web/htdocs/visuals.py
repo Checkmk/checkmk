@@ -442,6 +442,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None, create_hand
             raise MKUserError('context_type', _('The context type is missing.'))
         if context_type not in context_types:
             raise MKUserError('context_type', _('The context type does not exist.'))
+        view['context_type'] = context_type
 
     if mode == 'clone':
         title = _('Clone %s') % what_s.title()
@@ -619,7 +620,7 @@ def get_context_html_vars(visual):
 
 # Collect all visuals that share a context with visual. For example
 # if a visual has a host context, get all relevant visuals.
-def collect_context_links(this_visual, mobile = False):
+def collect_context_links(this_visual, mobile = False, only_types = []):
     # compute list of html variables needed for this visual
     active_filter_vars = set([])
     for var, val in get_context_html_vars(this_visual):
@@ -628,7 +629,8 @@ def collect_context_links(this_visual, mobile = False):
 
     context_links = []
     for what in visual_types.keys():
-        context_links += collect_context_links_of(what, this_visual, active_filter_vars, mobile)
+        if not only_types or what in only_types:
+            context_links += collect_context_links_of(what, this_visual, active_filter_vars, mobile)
     return context_links
 
 def collect_context_links_of(what, this_visual, active_filter_vars, mobile):

@@ -119,8 +119,9 @@ def transform_builtin_dashboards():
                 dashlet['name'] = 'dashlet_%d' % nr
                 del dashlet['view']
 
-        # add the modification time to make reload of dashboards work
-        dashboard['mtime'] = int(time.time())
+        # the modification time of builtin dashboards can not be checked as on user specific
+        # dashboards. Set it to 0 to disable the modification chech.
+        dashboard.setdefault('mtime', 0)
 
         dashboard.setdefault('show_title', True)
         if dashboard['title'] == None:
@@ -425,9 +426,6 @@ def ajax_dashlet():
     dashboard = available_dashboards[board]
 
     mtime = saveint(html.var('mtime'))
-    if not mtime:
-        raise MKGeneralException(_('The dashboard modification time is missing.'))
-
     if mtime < dashboard['mtime']:
         # prevent reloading on the dashboard which already has the current mtime,
         # this is normally the user editing this dashboard. All others: reload

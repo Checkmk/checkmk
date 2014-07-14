@@ -178,7 +178,6 @@ def render_dashboard(name):
         # Remove the whole header line
         html.set_render_headfoot(False)
         header_height = 0
-        title = ''
 
     elif wato_folder is not None:
         title = wato.api.get_folder_title(wato_folder) + " - " + title

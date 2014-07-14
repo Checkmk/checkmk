@@ -640,7 +640,7 @@ def page_edit_dashlet():
     vs_general = Dictionary(
         title = _('General'),
         render = 'form',
-        optional_keys = ['title'],
+        optional_keys = ['title', 'title_url'],
         elements = [
             ('type', FixedValue(ty,
                 totext = dashlet_type['title'],

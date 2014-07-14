@@ -1817,6 +1817,8 @@ function vs_listofmultiple_del(varprefix, ident) {
 }
 
 function vs_listofmultiple_toggle_fields(root, varprefix, enable) {
+    if (root.tagName != 'TR')
+        return; // only handle rows here
     var types = ['input', 'select', 'textarea'];
     for (var t in types) {
         var fields = root.getElementsByTagName(types[t]);

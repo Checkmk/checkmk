@@ -251,9 +251,7 @@ def render_view(view, rows, datasource, group_painters, painters,
         navbar.append(( "commands", _("Commands"), "gear", False ))
 
     # Should we show a page with context links?
-    context_links = [
-        e for e in views.collect_context_links(view, hide_filters)
-        if e[0].get("mobile") ]
+    context_links = views.collect_context_links(view, hide_filters, mobile = True)
 
     if context_links:
         navbar.append(( "context", _("Context"), "arrow-r", False))
@@ -380,7 +378,7 @@ def do_commands(view, what, rows):
 
 def show_context_links(context_links):
     items = []
-    for view, title, uri, icon, buttonid in context_links:
+    for title, uri, icon, buttonid in context_links:
         items.append(('Context', uri, title))
     jqm_page_index(_("Related Views"), items)
 

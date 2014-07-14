@@ -30,6 +30,15 @@ from lib import *
 from valuespec import *
 import config, table
 
+visual_types = {
+    'views': {
+        'ident_attr': 'view_name',
+    },
+    'dashboards': {
+        'ident_attr': 'name',
+    },
+}
+
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
 #   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
@@ -600,4 +609,75 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None, create_hand
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
+def get_context_html_vars(visual):
+    context_type = context_types[visual['context_type']]
+    if context_type['single']:
+        return [ (p[0], html.var(p[0], visual['context'].get(p[0]))) for p in context_type['parameters'] ]
+    else:
+        return []
+
+# Collect all visuals that share a context with visual. For example
+# if a visual has a host context, get all relevant visuals.
+def collect_context_links(this_visual, mobile = False):
+    # compute list of html variables needed for this visual
+    active_filter_vars = set([])
+    for var, val in get_context_html_vars(this_visual):
+        if html.has_var(var):
+            active_filter_vars.add(var)
+
+    context_links = []
+    for what in visual_types.keys():
+        context_links += collect_context_links_of(what, this_visual, active_filter_vars, mobile)
+    return context_links
+
+def collect_context_links_of(what, this_visual, active_filter_vars, mobile):
+    context_links = []
+
+    # FIXME: Make this cross module access cleaner
+    module_name = what == 'views' and what or what[:-1]
+    thing_module = __import__(module_name)
+    thing_module.__dict__['load_%s'% what]()
+    available = thing_module.__dict__['permitted_%s' % what]()
+
+    # sort buttons somehow
+    visuals = available.values()
+    visuals.sort(cmp = lambda b,a: cmp(a.get('icon'), b.get('icon')))
+
+    for visual in visuals:
+        name = visual["name"]
+        linktitle = visual.get("linktitle")
+        if not linktitle:
+            linktitle = visual["title"]
+        if visual == this_visual:
+            continue
+        if visual.get("hidebutton", False):
+            continue # this visual does not want a button to be displayed
+
+        if not mobile and visual.get('mobile') \
+           or mobile and not visual.get('mobile'):
+            continue
+
+        if not context_types[visual['context_type']]['single']:
+            continue
+
+        needed_vars = get_context_html_vars(visual)
+        skip = False
+        vars_values = []
+        for var, val in needed_vars:
+            if var not in active_filter_vars:
+                skip = True
+                break
+
+            vars_values.append((var, val))
+
+        if not skip:
+            # add context link to this visual
+            uri = html.makeuri_contextless(vars_values + [(visual_types[what]['ident_attr'], name)],
+                                           filename = what[:-1] + '.py')
+            icon = visual.get("icon")
+            buttonid = "cb_" + name
+            context_links.append((_u(linktitle), uri, icon, buttonid))
+
+    return context_links
 

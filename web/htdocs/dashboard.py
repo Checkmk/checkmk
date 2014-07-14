@@ -67,29 +67,6 @@ def load_plugins():
     # just may add custom dashboards by adding to builtin_dashboards.
     load_web_plugins("dashboard", globals())
 
-    # be compatible to old definitions, where even internal dashlets were
-    # referenced by url, e.g. dashboard['url'] = 'hoststats.py'
-    # FIXME: can be removed one day. Mark as incompatible change or similar.
-    for name, dashboard in builtin_dashboards.items():
-        for dashlet in dashboard['dashlets']:
-            if dashlet.get('url', '').startswith('dashlet_') and dashlet['url'].endswith('.py'):
-                dashlet['type'] = dashlet['url'][8:-3]
-                del dashlet['url']
-            elif dashlet.get('url', '') != '':
-                dashlet['type'] = 'url'
-            elif dashlet.get('view', '') != '':
-                dashlet['type'] = 'view'
-                dashlet['view_name'] = dashlet['view']
-                del dashlet['view']
-
-        # add the modification time to make reload of dashboards work
-        dashboard['mtime'] = int(time.time())
-
-        dashboard.setdefault('show_title', True)
-        if dashboard['title'] == None:
-            dashboard['title'] = _('No title')
-            dashboard['show_title'] = False
-
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
     # are loaded).
@@ -112,8 +89,43 @@ def load_plugins():
 
 def load_dashboards():
     global dashboards, available_dashboards
+    transform_builtin_dashboards()
     dashboards = visuals.load('dashboards', builtin_dashboards)
     available_dashboards = visuals.available('dashboards', dashboards)
+
+# be compatible to old definitions, where even internal dashlets were
+# referenced by url, e.g. dashboard['url'] = 'hoststats.py'
+# FIXME: can be removed one day. Mark as incompatible change or similar.
+def transform_builtin_dashboards():
+    for name, dashboard in builtin_dashboards.items():
+        for nr, dashlet in enumerate(dashboard['dashlets']):
+            if dashlet.get('url', '').startswith('dashlet_') and dashlet['url'].endswith('.py'):
+                dashlet['type'] = dashlet['url'][8:-3]
+                del dashlet['url']
+            elif dashlet.get('url', '') != '':
+                dashlet['type'] = 'url'
+            elif dashlet.get('view', '') != '':
+                # There might be more than the name in the view definition
+                view_name = dashlet['view'].split('&')[0]
+
+                # Copy the view definition into the dashlet
+                import views
+                views.load_views()
+                views = views.permitted_views()
+                if view_name in views:
+                    dashlet.update(views[view_name])
+
+                dashlet['type'] = 'view'
+                dashlet['name'] = 'dashlet_%d' % nr
+                del dashlet['view']
+
+        # add the modification time to make reload of dashboards work
+        dashboard['mtime'] = int(time.time())
+
+        dashboard.setdefault('show_title', True)
+        if dashboard['title'] == None:
+            dashboard['title'] = _('No title')
+            dashboard['show_title'] = False
 
 def save_dashboards(us):
     visuals.save('dashboards', dashboards)
@@ -162,7 +174,7 @@ def render_dashboard(name):
     title = _u(board["title"])
 
     global header_height
-    if not board['show_title']:
+    if not board.get('show_title'):
         # Remove the whole header line
         html.set_render_headfoot(False)
         header_height = 0
@@ -330,7 +342,7 @@ def render_dashlet(name, board, nr, dashlet, wato_folder):
     html.write('<div class="%s" id="dashlet_%d">' % (' '.join(classes), nr))
 
     title = dashlet.get('title', dashlet_type.get('title'))
-    if title and dashlet['show_title']:
+    if title and dashlet.get('show_title'):
         url = dashlet.get("title_url", None)
         if url:
             title = '<a href="%s">%s</a>' % (url, title)
@@ -464,7 +476,7 @@ def page_edit_dashboards():
 #   '----------------------------------------------------------------------'
 
 def page_create_dashboard():
-    visuals.page_create_visual('dashboards')
+    visuals.page_create_visual('dashboards', allow_global = True)
 
 #.
 #   .--Dashb. Config-------------------------------------------------------.
@@ -477,6 +489,19 @@ def page_create_dashboard():
 #   +----------------------------------------------------------------------+
 #   | Configures the global settings of a dashboard.                       |
 #   '----------------------------------------------------------------------'
+
+def context_spec(dashboard):
+    if 'context_type' in dashboard:
+        context_type = visuals.context_types[dashboard['context_type']]
+
+        if context_type['single']:
+            return Dictionary(
+                title = _('Context'),
+                render = 'form',
+                optional_keys = True,
+                elements = context_type['parameters'],
+            )
+    return None
 
 global vs_dashboard
 
@@ -496,6 +521,7 @@ def page_edit_dashboard():
             )),
         ],
     )
+
     visuals.page_edit_visual('dashboards', dashboards,
         create_handler = create_dashboard,
         custom_field_handler = custom_field_handler
@@ -504,10 +530,20 @@ def page_edit_dashboard():
 def custom_field_handler(dashboard):
     vs_dashboard.render_input('dashboard', dashboard and dashboard or None)
 
+    vs_context = context_spec(dashboard)
+    if vs_context:
+        vs_context.render_input('context', dashboard and dashboard or None)
+
 def create_dashboard(old_dashboard, dashboard):
     board_properties = vs_dashboard.from_html_vars('dashboard')
     vs_dashboard.validate_value(board_properties, 'dashboard')
     dashboard.update(board_properties)
+
+    vs_context = context_spec(dashboard)
+    if vs_context:
+        context = vs_context.from_html_vars('context')
+        vs_context.validate_value(context, 'context')
+        dashboard['context'] = context
 
     # Do not remove the dashlet configuration during general property editing
     dashboard['dashlets'] = old_dashboard.get('dashlets', [])
@@ -627,6 +663,11 @@ def page_edit_dashlet():
                 help = _('Most dashlets have a hard coded default title. For example the view snapin '
                          'has even a dynamic title which defaults to the real title of the view. If you '
                          'like to use another title, set it here.'),
+                size = 50,
+            )),
+            ('title_url', TextUnicode(
+                title = _('Link of Title'),
+                help = _('The URL of the target page the link of the dashlet should link to.'),
                 size = 50,
             )),
         ],

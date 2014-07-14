@@ -24,6 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# FIXME: Can be removed once all dashboards have been converted
+# to have the view definitions right inside the dashboards
+
 multisite_builtin_views.update({
 
 # A similar view, used in the dashboard

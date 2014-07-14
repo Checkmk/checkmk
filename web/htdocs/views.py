@@ -206,6 +206,9 @@ def load_views():
     available_views = visuals.available('views', multisite_views)
     transform_old_views()
 
+def permitted_views():
+    return available_views
+
 def transform_old_views():
     single_context_types = [ c for c in visuals.context_types.items() if c[1]['single'] ]
     single_context_types.sort(cmp = lambda a, b: len(a[1]['parameters']) - len(b[1]['parameters']))
@@ -273,9 +276,6 @@ def transform_old_views():
 
 def save_views(us):
     visuals.save('views', multisite_views)
-
-def permitted_views():
-    return available_views
 
 #.
 #   .--Table of views------------------------------------------------------.
@@ -1517,10 +1517,9 @@ def show_context_links(thisview, show_filters, display_options,
             html.context_button(_("WATO"), url, "wato", id="wato",
                 bestof = config.context_buttons_to_show)
 
-        links = collect_context_links(thisview)
-        for view, linktitle, uri, icon, buttonid in links:
-            if not view.get("mobile"):
-                html.context_button(linktitle, url=uri, icon=icon, id=buttonid, bestof=config.context_buttons_to_show)
+        links = visuals.collect_context_links(thisview)
+        for linktitle, uri, icon, buttonid in links:
+            html.context_button(linktitle, url=uri, icon=icon, id=buttonid, bestof=config.context_buttons_to_show)
 
     # Customize/Edit view button
     if 'E' in display_options and config.may("general.edit_views"):
@@ -1543,53 +1542,6 @@ def show_context_links(thisview, show_filters, display_options,
 def update_context_links(enable_command_toggle, enable_checkbox_toggle):
     html.javascript("update_togglebutton('commands', %d);" % (enable_command_toggle and 1 or 0))
     html.javascript("update_togglebutton('checkbox', %d);" % (enable_command_toggle and enable_checkbox_toggle and 1 or 0, ))
-
-# Collect all views that share a context with thisview. For example
-# if a view has an active filter variable specifying a host, then
-# all host-related views are relevant.
-def collect_context_links(thisview):
-    # compute list of html variables used actively by hidden or shown
-    # filters.
-    active_filter_vars = set([])
-    for var, val in get_context_html_vars(thisview):
-        if html.has_var(var):
-            active_filter_vars.add(var)
-
-    context_links = []
-    # sort view buttons somehow
-    sorted_views = available_views.values()
-    sorted_views.sort(cmp = lambda b,a: cmp(a.get('icon'), b.get('icon')))
-
-    for view in sorted_views:
-        name = view["name"]
-        linktitle = view.get("linktitle")
-        if not linktitle:
-            linktitle = view["title"]
-        if view == thisview:
-            continue
-        if view.get("hidebutton", False):
-            continue # this view does not want a button to be displayed
-
-        if not visuals.context_types[view['context_type']]['single']:
-            continue
-
-        needed_vars = get_context_html_vars(view)
-        skip = False
-        vars_values = []
-        for var, val in needed_vars:
-            if var not in active_filter_vars:
-                skip = True
-                break
-
-            vars_values.append((var, val))
-
-        if not skip:
-            # add context link to this view
-            uri = html.makeuri_contextless(vars_values + [("view_name", name)])
-            icon = view.get("icon")
-            buttonid = "cb_" + name
-            context_links.append((view, _u(linktitle), uri, icon, buttonid))
-    return context_links
 
 
 def ajax_count_button():
@@ -2120,28 +2072,29 @@ def link_to_view(content, row, linkview):
     return content
 
 # Returns the context of the current visual in a HTML var compatible format
+# First try to get the context html vars from the visuals module. When this is
+# not possible, try the view specific things.
 def get_context_html_vars(visual):
-    visuals.load_plugins()
-    context_type = visuals.context_types[visual['context_type']]
-    if context_type['single']:
-        return [ (p[0], html.var(p[0], visual['context'].get(p[0]))) for p in context_type['parameters'] ]
-    else:
-        # context types of type multiple have a the parameters valuespec
-        # and the context which can be combined to get the HTML vars
+    vars = visuals.get_context_html_vars(visual)
+    if vars:
+        return vars
 
-        # First load the defaults from the context of the visual
-        html_vars = {}
-        for fname, filter_vars in visual["context"].items():
-            for varname, value in filter_vars.items():
-                html_vars[varname] = value
+    # context types of type multiple have a the parameters valuespec
+    # and the context which can be combined to get the HTML vars
 
-        # Now load the html vars related to the available filters
-        for fname in visual['context'].keys():
-            for varname in multisite_filters[fname].htmlvars:
-                if html.has_var(varname):
-                    html_vars[varname] = html.var(varname)
+    # First load the defaults from the context of the visual
+    html_vars = {}
+    for fname, filter_vars in visual["context"].items():
+        for varname, value in filter_vars.items():
+            html_vars[varname] = value
 
-        return html_vars.items()
+    # Now load the html vars related to the available filters
+    for fname in visual['context'].keys():
+        for varname in multisite_filters[fname].htmlvars:
+            if html.has_var(varname):
+                html_vars[varname] = html.var(varname)
+
+    return html_vars.items()
 
 def docu_link(topic, text):
     return '<a href="%s" target="_blank">%s</a>' % (config.doculink_urlformat % topic, text)

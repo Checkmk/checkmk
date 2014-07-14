@@ -337,6 +337,8 @@ if (has_canvas_support()) {
 #   '----------------------------------------------------------------------'
 
 def dashlet_pnpgraph(params):
+    if not params['context'].get('host'):
+        raise MKUserError('host', _('Missing needed host parameter.'))
     service = params['context'].get('service')
     if not service:
         service = "_HOST_"
@@ -434,6 +436,7 @@ def dashlet_view(params):
     html.set_var('_body_class', 'dashlet')
 
     import views # FIXME: HACK, clean this up somehow
+    views.load_views()
     views.show_view(params, True, True, True)
 
 def dashlet_view_add_url():

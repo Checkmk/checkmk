@@ -415,9 +415,10 @@ def ajax_dashlet():
     if not board:
         raise MKGeneralException(_('The name of the dashboard is missing.'))
 
-    ident = int(html.var('id'))
-    if not ident:
-        raise MKGeneralException(_('The ident of the dashlet is missing.'))
+    try:
+        ident = int(html.var('id'))
+    except ValueError:
+        raise MKGeneralException(_('Invalid dashlet ident provided.'))
 
     load_dashboards()
 

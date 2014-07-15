@@ -304,6 +304,28 @@ div.dashlet.edit .edit:hover {
     background-image: url(images/dashlet_edit_hi.png);
 }
 
+/* dashlet delete button */
+
+div.dashlet.edit .del {
+    cursor: pointer;
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    top: 5px;
+    left: 55px;
+
+    background-color: rgba(0, 0, 0, 0.7);
+    border-radius: 5px;
+    /* IE < 9 */
+    filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#32000000', endColorstr='#32000000');
+
+    background-image: url(images/dashlet_del_lo.png);
+}
+
+div.dashlet.edit .del:hover {
+    background-image: url(images/dashlet_del_hi.png);
+}
+
 /* position anchors */
 
 div.dashlet.edit .anchor {

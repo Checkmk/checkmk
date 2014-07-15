@@ -525,6 +525,15 @@ function dashlet_toggle_edit(dashlet, edit) {
         }(id, dashboard_name);
         controls.appendChild(edit);
 
+        // Add delete dashlet button
+        var del = document.createElement('a');
+        del.className = 'del';
+        del.onclick = function(dashlet_id, board_name) {
+            return function() {
+                location.href = 'delete_dashlet.py?name=' + board_name + '&id=' + dashlet_id;
+            };
+        }(id, dashboard_name);
+        controls.appendChild(del);
 
     } else {
         // make the inner parts visible again

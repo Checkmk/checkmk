@@ -766,6 +766,56 @@ def page_edit_dashlet():
 
     html.footer()
 
+def page_delete_dashlet():
+    if not config.may("general.edit_dashboards"):
+        raise MKAuthException(_("You are not allowed to edit dashboards."))
+
+    board = html.var('name')
+    if not board:
+        raise MKGeneralException(_('The name of the dashboard is missing.'))
+
+    try:
+        ident = int(html.var('id'))
+    except ValueError:
+        raise MKGeneralException(_('Invalid dashlet id'))
+
+    load_dashboards()
+
+    if board not in available_dashboards:
+        raise MKGeneralException(_('The requested dashboard does not exist.'))
+    dashboard = available_dashboards[board]
+
+    try:
+        dashlet = dashboard['dashlets'][ident]
+    except IndexError:
+        raise MKGeneralException(_('The dashlet does not exist.'))
+
+    html.header(_('Confirm Dashlet Deletion'), stylesheets=["pages","views"])
+
+    html.begin_context_buttons()
+    back_url = html.var('back', 'dashboard.py?name=%s&edit=1' % board)
+    html.context_button(_('Back'), back_url, 'back')
+    html.end_context_buttons()
+
+    result = html.confirm(_('Do you really want to delete this dashlet?'), method = 'GET')
+    if result == False:
+        html.footer()
+        return # confirm dialog shown
+    elif result == True: # do it!
+        try:
+            dashboard['dashlets'].pop(ident)
+            dashboard['mtime'] = int(time.time())
+            visuals.save('dashboards', dashboards)
+
+            html.message(_('The dashlet has deleted.'))
+        except MKUserError, e:
+            html.write("<div class=error>%s</div>\n" % e.message)
+            return
+
+    html.immediate_browser_redirect(1, back_url)
+    html.reload_sidebar()
+    html.footer()
+
 #.
 #   .--Ajax Updater--------------------------------------------------------.
 #   |       _     _              _   _           _       _                 |

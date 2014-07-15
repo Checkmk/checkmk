@@ -50,7 +50,7 @@ if (!strcmp($MIN[11], "0.0")) {
 else {
     $unit = "B"; 
     $unit_multiplier = 1;
-    $base = 1024; // Megabyte is 1024 * 1024
+    $base = 1000; // Megabyte is 1000 * 1000
 }
 
 # Convert bytes to bits if neccessary
@@ -58,7 +58,7 @@ $bandwidth = $MAX[1]  * $unit_multiplier;
 $warn      = $WARN[1] * $unit_multiplier;
 $crit      = $CRIT[1] * $unit_multiplier;
 
-# Now choose a conveniant scale, based on the known bandwith of
+# Now choose a convenient scale, based on the known bandwith of
 # the interface, and break down bandwidth, warn and crit by that
 # scale.
 $bwuom = ' ';

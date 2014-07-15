@@ -336,7 +336,7 @@ if (has_canvas_support()) {
 #   | Renders a single performance graph                                   |
 #   '----------------------------------------------------------------------'
 
-def dashlet_pnpgraph(nr, params):
+def make_pnp_url(params, what):
     if not params['context'].get('host'):
         raise MKUserError('host', _('Missing needed host parameter.'))
     service = params['context'].get('service')
@@ -351,10 +351,10 @@ def dashlet_pnpgraph(nr, params):
     base_url += "pnp4nagios/index.php/"
     var_part = "?host=%s&srv=%s&source=0&view=%s&theme=multisite&_t=%d" % \
             (pnp_cleanup(params['context']['host']), pnp_cleanup(service), params['timerange'], int(time.time()))
+    return base_url + what + var_part
 
-    pnp_url = base_url + "graph" + var_part
-    img_url = base_url + "image" + var_part
-    html.write('<a href="%s"><img border=0 src="%s"></a>' % (pnp_url, img_url))
+def dashlet_pnpgraph(nr, params):
+    html.write('<a href="%s" id="dashlet_graph_%d"></a>' % (make_pnp_url(params, 'graph'), nr))
 
 dashlet_types["pnpgraph"] = {
     "title"        : _("Performance Graph"),
@@ -365,7 +365,7 @@ dashlet_types["pnpgraph"] = {
     "size"         : (60, 21),
     "allowed"      : config.builtin_role_ids,
     "context_type" : "service",
-    "parameters"  : [
+    "parameters"   : [
         ("timerange", DropdownChoice(
             default_value = '1',
             choices= [
@@ -382,6 +382,60 @@ dashlet_types["pnpgraph"] = {
     text-align: center;
 }
 """,
+    "on_resize"    : lambda nr, params: 'dashboard_render_pnpgraph(%d, \'%s\');' %
+                                                 (nr, make_pnp_url(params, 'image')),
+    "script": """
+var dashlet_offsets = {};
+function dashboard_render_pnpgraph(nr, img_url)
+{
+    var inner = document.getElementById('dashlet_inner_' + nr);
+    var c_w = inner.clientWidth;
+    var c_h = inner.clientHeight;
+
+    var container = document.getElementById('dashlet_graph_' + nr);
+    var img = document.getElementById('dashlet_img_' + nr);
+    if (!img) {
+        var img = document.createElement('img');
+        img.setAttribute('id', 'dashlet_img_' + nr);
+        container.appendChild(img);
+    }
+
+    img.onload = function(nr, url, w, h) {
+        return function() {
+            var i_w = this.clientWidth;
+            var i_h = this.clientHeight;
+
+            var x_diff = i_w - w;
+            var y_diff = i_h - h;
+
+            if (Math.abs(x_diff) < 10 && Math.abs(y_diff) < 10) {
+                return;
+            }
+
+            var req_w, req_h;
+            if (typeof dashlet_offsets[nr] != 'undefined') {
+                req_w = w - dashlet_offsets[nr][0];
+                req_h = h - dashlet_offsets[nr][1];
+            }
+            else {
+                req_w = w - x_diff;
+                req_h = h - y_diff
+                dashlet_offsets[nr] = [x_diff, y_diff];
+            }
+
+            this.src = url + '&graph_width=' + req_w + '&graph_height=' + req_h;
+        };
+    }(nr, img_url, c_w, c_h);
+
+    var req_w = c_w,
+        req_h = c_h;
+    if (typeof dashlet_offsets[nr] != 'undefined') {
+        req_w -= dashlet_offsets[nr][0];
+        req_h -= dashlet_offsets[nr][1];
+    }
+    img.src = img_url + '&graph_width='+req_w+'&graph_height='+req_h;
+}
+"""
 }
 
 #.

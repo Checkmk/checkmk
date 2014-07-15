@@ -76,20 +76,22 @@ function size_dashlets() {
         oDash = document.getElementById("dashlet_inner_" + d_number);
         if(oDash) {
             oDash.style.display  = disstyle;
+
+            var old_width  = oDash.clientWidth;
+            var old_height = oDash.clientHeight;
+
             oDash.style.left   = dashlet_padding[3] + "px";
             oDash.style.top    = top_padding + "px";
             if (netto_width > 0)
                 oDash.style.width  = netto_width + "px";
             if (netto_height > 0)
                 oDash.style.height = netto_height + "px";
-        }
 
-        if (typeof reload_on_resize[d_number] != 'undefined') {
-            var base_url = reload_on_resize[d_number];
-            var iframe = document.getElementById("dashlet_iframe_" + d_number);
-            iframe.src = base_url + '&width=' + oDash.clientWidth
-                         + '&height=' + oDash.clientHeight;
-            iframe = null;
+            if (old_width != oDash.clientWidth || old_height != oDash.clientHeight) {
+                if (!g_resizing
+                    || parseInt(g_resizing.parentNode.parentNode.id.replace('dashlet_', '')) != d_number)  
+                dashlet_resized(d_number, oDash);
+            }
         }
     }
     oDash = null;
@@ -886,11 +888,27 @@ function resize_dashlet_stop(event) {
     if (!g_resizing)
         return true;
 
-    var nr = parseInt(g_resizing.parentNode.parentNode.id.replace('dashlet_', ''));
+    var dashlet_obj = g_resizing.parentNode.parentNode;
+    var nr = parseInt(dashlet_obj.id.replace('dashlet_', ''));
     g_resizing = false;
 
+    dashlet_resized(nr, dashlet_obj);
     persist_dashlet_pos(nr);
     return false;
+}
+
+function dashlet_resized(nr, dashlet_obj) {
+    if (typeof reload_on_resize[nr] != 'undefined') {
+        var base_url = reload_on_resize[nr];
+        var iframe = document.getElementById("dashlet_iframe_" + nr);
+        iframe.src = base_url + '&width=' + dashlet_obj.clientWidth
+                              + '&height=' + dashlet_obj.clientHeight;
+        iframe = null;
+    }
+
+    if (typeof on_resize_dashlets[nr] != 'undefined') {
+        on_resize_dashlets[nr]();
+    }
 }
 
 /*

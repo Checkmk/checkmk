@@ -187,19 +187,30 @@ def render_dashboard(name):
 
     html.write("<div id=dashboard class=\"dashboard_%s\">\n" % name) # Container of all dashlets
 
+    used_types = list(set([ d['type'] for d in board['dashlets'] ]))
+
+    # Render dashlet custom scripts
+    scripts = '\n'.join([ dashlet_types[ty]['script'] for ty in used_types if dashlet_types[ty].get('script') ])
+    if scripts:
+        html.javascript(scripts)
+
+    # Render dashlet custom styles
+    styles = '\n'.join([ dashlet_types[ty]['styles'] for ty in used_types if dashlet_types[ty].get('styles') ])
+    if styles:
+        html.write("<style>\n%s\n</style>\n" % styles)
+
     # FIXME: Get all context types of all dashlets and check whether or not the
     # needed vars are present. When something is missing, show an error!
 
     refresh_dashlets = [] # Dashlets with automatic refresh, for Javascript
-    dashlets_js = []
-    used_types = set([])
+    dashlets_js      = []
+    on_resize        = [] # javascript function to execute after ressizing the dashlet
     for nr, dashlet in enumerate(board["dashlets"]):
         # dashlets using the 'urlfunc' method will dynamically compute
         # an url (using HTML context variables at their wish).
         if "urlfunc" in dashlet:
             dashlet["url"] = dashlet["urlfunc"]()
 
-        used_types.add(dashlet['type'])
         dashlet_type = dashlet_types[dashlet['type']]
 
         # dashlets using the 'url' method will be refreshed by us. Those
@@ -231,6 +242,9 @@ def render_dashboard(name):
 
         # Paint the dashlet's HTML code
         render_dashlet(name, board, nr, dashlet, wato_folder)
+
+        if 'on_resize' in dashlet_type:
+            on_resize.append('%d: function() {%s}' % (nr, dashlet_type['on_resize'](nr, dashlet)))
 
         dimensions = {
             'x' : dashlet['position'][0],
@@ -287,11 +301,6 @@ def render_dashboard(name):
 
     html.write("</div>\n")
 
-    # Render dashlet custom styles
-    styles = '\n'.join([ dashlet_types[ty]['styles'] for ty in used_types if dashlet_types[ty].get('styles') ])
-    if styles:
-        html.write("<style>\n%s\n</style>\n" % styles)
-
     # Put list of all autorefresh-dashlets into Javascript and also make sure,
     # that the dashbaord is painted initially. The resize handler will make sure
     # that every time the user resizes the browser window the layout will be re-computed
@@ -306,6 +315,7 @@ var title_height = %d;
 var dashlet_padding = Array%s;
 var corner_overlap = %d;
 var refresh_dashlets = %r;
+var on_resize_dashlets = {%s};
 var dashboard_name = '%s';
 var dashboard_mtime = %d;
 var dashlets = %s;
@@ -314,7 +324,7 @@ calculate_dashboard();
 window.onresize = function () { calculate_dashboard(); }
 dashboard_scheduler(1);
     """ % (MAX, GROW, raster, header_height, screen_margin, title_height, dashlet_padding,
-           corner_overlap, refresh_dashlets, name, board['mtime'], repr(dashlets_js)))
+           corner_overlap, refresh_dashlets, ','.join(on_resize), name, board['mtime'], repr(dashlets_js)))
 
     if html.var('edit') == '1':
         html.javascript('toggle_dashboard_edit(true)')
@@ -396,6 +406,7 @@ def render_dashlet(name, board, nr, dashlet, wato_folder):
         if dashlet.get("reload_on_resize"):
             html.javascript('reload_on_resize["%d"] = "%s"' %
                             (nr, add_wato_folder_to_url(dashlet["iframe"], wato_folder)))
+
     html.write("</div></div>\n")
 
 #.

@@ -59,6 +59,7 @@ def check_mysql_slave(_unused, params, info):
         output.append('Slave-IO: running')
     else:
         output.append('Slave-IO: not running(!!)')
+        state = 2
 
     if data['Slave_SQL_Running']:
         output.append('Slave-SQL: running')
@@ -70,12 +71,13 @@ def check_mysql_slave(_unused, params, info):
             state = 2
             out += '(!!)'
         elif warn != None and data['Seconds_Behind_Master'] > warn:
-            state = 1
+            state = max(state, 1)
             out += '(!)'
         output.append(out)
         perfdata.append(('seconds_behind_master', data['Seconds_Behind_Master'], warn, crit))
     else:
         output.append('Slave-SQL: not running(!!)')
+        state = 2
 
     return state, ', '.join(output), perfdata
 

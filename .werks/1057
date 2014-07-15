@@ -1,0 +1,13 @@
+Title: WATO folder permissions are only exported to NagVis when configured
+Level: 1
+Component: wato
+Version: 1.2.5i5
+Date: 1405412830
+Class: feature
+
+WATO exports the configured users, roles and permissions to NagVis to make
+it possible to restrict access by using the permissions configured within
+Multisite. In most cases the folder related permissions are not needed and
+might take a lot of time to compute / process. So disabled the export
+of the folder related permissions by default and made configurable using
+the option {export_folder_permissions}.

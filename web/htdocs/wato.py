@@ -1386,6 +1386,8 @@ def show_hosts(folder):
             colspan += 1
     if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
         colspan += 1
+    if show_checkboxes:
+        colspan += 1
 
     # Add the bulk action buttons also to the top of the table when this
     # list shows more than 10 rows

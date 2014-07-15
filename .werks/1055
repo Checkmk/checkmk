@@ -1,0 +1,8 @@
+Title: mysql_slave: Fixed detecting CRIT states when IO/SQL slaves are not running
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1405328815
+Class: fix
+
+

@@ -451,7 +451,7 @@ function dashboard_render_pnpgraph(nr, img_url)
 #   '----------------------------------------------------------------------'
 
 def dashlet_nodata(nr, params):
-    html.write("<div class=nograph><div class=msg>")
+    html.write("<div class=nodata><div class=msg>")
     html.write(params.get("text"))
     html.write("</div></div>")
 
@@ -467,6 +467,21 @@ dashlet_types["nodata"] = {
             size = 50,
         )),
     ],
+    "styles"      : """
+div.dashlet_inner div.nodata {
+    width: 100%;
+    height: 100%;
+}
+
+div.dashlet_inner.background div.nodata div.msg {
+    color: #000;
+}
+
+div.dashlet_inner div.nodata div.msg {
+    padding: 10px;
+}
+
+}""",
 }
 
 #.

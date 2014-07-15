@@ -172,16 +172,6 @@ div.dashlet_inner div.stats {
     margin: 0px;
 }
 
-div.dashlet div.nograph {
-    background-color: #fff;
-    width: 100%;
-    height: 100%;
-}
-
-div.dashlet div.nograph div.msg {
-    padding: 10px;
-}
-
 /**
  * Dashboard editing
  */

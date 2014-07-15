@@ -377,10 +377,12 @@ function pageWidth() {
 /**
  * Function gets the value of the given url parameter
  */
-function getUrlParam(name) {
+function getUrlParam(name, url) {
+    var url = (typeof url === 'undefined') ? window.location : url;
+
     var name = name.replace('[', '\\[').replace(']', '\\]');
     var regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
-    var results = regex.exec(window.location);
+    var results = regex.exec(url);
     if(results === null)
         return '';
     else
@@ -485,23 +487,6 @@ function toggle_other_filters(fname, disable_others) {
     }
 }
 
-function filter_activation(oSelect)
-{
-    var usage = oSelect.value;
-    var fname = oSelect.id.replace('filter_', '');
-
-    // Disable/Enable other filters which conflict with this filter
-    toggle_other_filters(fname, usage != 'off');
-
-    // Make the current filter visible/invisible
-    var oDiv = oSelect.parentNode;
-    oDiv.setAttribute("className", "filtersetting " + usage);
-    oDiv.setAttribute("class", "filtersetting " + usage);
-
-    oDiv = null;
-    oSelect = null;
-}
-
 // ----------------------------------------------------------------------------
 // PNP graph handling
 // ----------------------------------------------------------------------------
@@ -564,10 +549,34 @@ function create_graph(data, params) {
     img.src = data['pnp_url'] + 'index.php/image?view=' + data['view'] + urlvars;
 
     if (data.with_link) {
+        var graph_container = document.createElement('div');
+        graph_container.setAttribute('class', 'graph')
+
+        var view   = data['view'] == '' ? 0 : data['view'];
+        // needs to be extracted from "params", hack!
+        var source = parseInt(getUrlParam('source', params));
+
+        // Add the control for adding the graph to a dashboard
+        var dashadd = document.createElement('a');
+        dashadd.title = 'Add to dashboard';
+        dashadd.setAttribute('class', 'dashadd');
+        dashadd.onclick = function(host, service, view, source) {
+            return function() {
+                toggle_add_to_dashboard(this, 'pnpgraph',
+                    { 'host': host, 'service': service },
+                    { 'timerange': view, 'source': source }
+                );
+            }
+        }(data['host'], data['service'], view, source);
+
+        graph_container.appendChild(dashadd);
+
         var link = document.createElement('a');
         link.href = data['pnp_url'] + 'index.php/graph?' + urlvars;
         link.appendChild(img);
-        container.appendChild(link);
+        graph_container.appendChild(link);
+
+        container.appendChild(graph_container);
     }
     else {
         container.appendChild(img);
@@ -2182,4 +2191,97 @@ function toggle_popup(event, id)
     else
         event.returnValue = false;
     return false;
+}
+
+//   .--Add to Dashb.-------------------------------------------------------.
+//   |       _       _     _   _          ____            _     _           |
+//   |      / \   __| | __| | | |_ ___   |  _ \  __ _ ___| |__ | |__        |
+//   |     / _ \ / _` |/ _` | | __/ _ \  | | | |/ _` / __| '_ \| '_ \       |
+//   |    / ___ \ (_| | (_| | | || (_) | | |_| | (_| \__ \ | | | |_) |      |
+//   |   /_/   \_\__,_|\__,_|  \__\___/  |____/ \__,_|___/_| |_|_.__(_)     |
+//   |                                                                      |
+//   +----------------------------------------------------------------------+
+
+var add_dashboard_data    = null;
+var dashadd_popup_id      = null;
+var dashadd_popup_content = null;
+
+function close_dashadd_popup()
+{
+    var menu = document.getElementById('dashadd_popup');
+    if (menu) {
+        // hide the open menu
+        menu.parentNode.removeChild(menu);
+        menu = null;
+    }
+}
+
+function toggle_add_to_dashboard(trigger_obj, dashlet_type, context, params)
+{
+    var container = trigger_obj.parentNode;
+    var ident;
+    for (var i in container.parentNode.childNodes) {
+        if (container.parentNode.childNodes[i] == container) {
+            ident = i;
+            break;
+        }
+    }
+
+    close_dashadd_popup();
+
+    if (dashadd_popup_id === ident) {
+        dashadd_popup_id = null;
+        return; // same icon clicked: just close the menu
+    }
+    dashadd_popup_id = ident;
+
+    menu = document.createElement('div');
+    menu.setAttribute('id', 'dashadd_popup');
+
+    // populate the menu using a webservice, because the list of dashboards
+    // is not known in the javascript code. But it might have been cached
+    // before. In this case do not perform a second request.
+    if (dashadd_popup_content !== null)
+        menu.innerHTML = dashadd_popup_content;
+    else
+        get_url('ajax_popup_add_dashlet.py', add_dashboard_response_handler);
+
+    add_dashboard_data = [ dashlet_type, context, params ];
+
+    container.appendChild(menu);
+}
+
+function add_dashboard_response_handler(data, response_text)
+{
+    dashadd_popup_content = response_text;
+    var popup = document.getElementById('dashadd_popup');
+    if (popup) {
+        popup.innerHTML = response_text;
+    }
+}
+
+function add_to_dashboard(name)
+{
+    close_dashadd_popup();
+
+    var context_txt = [];
+    for (var key in add_dashboard_data[1]) {
+        var ty = typeof(add_dashboard_data[1][key]);
+        context_txt.push(key+':'+ty+':'+add_dashboard_data[1][key]);
+    }
+
+    var params_txt = [];
+    for (var key in add_dashboard_data[2]) {
+        var ty = typeof(add_dashboard_data[2][key]);
+        params_txt.push(key+':'+ty+':'+add_dashboard_data[2][key]);
+    }
+
+    get_url_sync('ajax_add_dashlet.py?name=' + name
+                                  + '&type=' + add_dashboard_data[0]
+                                  + '&context=' + encodeURIComponent(context_txt.join('|'))
+                                  + '&params=' + encodeURIComponent(params_txt.join('|')));
+    add_dashboard_data = null;
+
+    // After adding a dashlet, go to the choosen dashboard
+    window.location.href = 'dashboard.py?name=' + name + '&edit=1';
 }

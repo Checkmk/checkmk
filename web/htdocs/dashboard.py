@@ -851,7 +851,7 @@ def check_ajax_update():
 
     return dashlet, dashboard
 
-def page_ajax_dashlet_pos():
+def ajax_dashlet_pos():
     dashlet, board = check_ajax_update()
 
     board['mtime'] = int(time.time())
@@ -860,3 +860,77 @@ def page_ajax_dashlet_pos():
     dashlet['size']     = saveint(html.var('w')), saveint(html.var('h'))
     visuals.save('dashboards', dashboards)
     html.write('OK %d' % board['mtime'])
+
+#.
+#   .--Dashlet Popup-------------------------------------------------------.
+#   |   ____            _     _      _     ____                            |
+#   |  |  _ \  __ _ ___| |__ | | ___| |_  |  _ \ ___  _ __  _   _ _ __     |
+#   |  | | | |/ _` / __| '_ \| |/ _ \ __| | |_) / _ \| '_ \| | | | '_ \    |
+#   |  | |_| | (_| \__ \ | | | |  __/ |_  |  __/ (_) | |_) | |_| | |_) |   |
+#   |  |____/ \__,_|___/_| |_|_|\___|\__| |_|   \___/| .__/ \__,_| .__/    |
+#   |                                                |_|         |_|       |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def ajax_popup_add_dashlet():
+    if not config.may("general.edit_dashboards"):
+        raise MKAuthException(_("You are not allowed to edit dashboards."))
+
+    load_dashboards()
+    html.write('<ul>\n')
+    for dname, board in available_dashboards.items():
+        html.write('<li>')
+        html.write('<a href="javascript:void(0)" onclick="add_to_dashboard(\'%s\')">%s</a>' %
+                                                               (dname, board['title']))
+        html.write('</li>')
+    html.write('</ul>\n')
+
+def ajax_add_dashlet():
+    if not config.may("general.edit_dashboards"):
+        raise MKAuthException(_("You are not allowed to edit dashboards."))
+
+    board = html.var('name')
+    if not board:
+        raise MKGeneralException(_('The name of the dashboard is missing.'))
+
+    load_dashboards()
+
+    if board not in available_dashboards:
+        raise MKGeneralException(_('The requested dashboard does not exist.'))
+    dashboard = available_dashboards[board]
+
+    ty = html.var('type')
+    if not ty:
+        raise MKGeneralException(_('The type of the dashlet is missing.'))
+
+    dashlet_type = dashlet_types[ty]
+
+    dashlet = {
+        'type'     : ty,
+        'position' : (1, 1),
+        'size'     : dashlet_type.get('size', (10, 10)),
+    }
+
+    # Parse context and params
+    for what in [ 'context', 'params' ]:
+        val = html.var(what)
+        data = {}
+        if not val:
+            raise MKGeneralException(_('Unable to parse the dashlet parameter "%s".') % what)
+
+        for entry in val.split('|'):
+            key, vartype, val = entry.split(':', 2)
+            if vartype == 'number':
+                val = int(val)
+            data[key] = val
+
+        if what == 'context':
+            dashlet[what] = data
+        else:
+            dashlet.update(data)
+
+    dashboard['dashlets'].append(dashlet)
+    dashboard['mtime'] = int(time.time())
+
+    visuals.save('dashboards', dashboards)

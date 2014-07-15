@@ -349,8 +349,9 @@ def make_pnp_url(params, what):
     else:
         base_url = html.site_status[site]["site"]["url_prefix"]
     base_url += "pnp4nagios/index.php/"
-    var_part = "?host=%s&srv=%s&source=0&view=%s&theme=multisite&_t=%d" % \
-            (pnp_cleanup(params['context']['host']), pnp_cleanup(service), params['timerange'], int(time.time()))
+    var_part = "?host=%s&srv=%s&source=%d&view=%s&theme=multisite&_t=%d" % \
+            (pnp_cleanup(params['context']['host']), pnp_cleanup(service),
+             params['source'], params['timerange'], int(time.time()))
     return base_url + what + var_part
 
 def dashlet_pnpgraph(nr, params):
@@ -367,12 +368,17 @@ dashlet_types["pnpgraph"] = {
     "context_type" : "service",
     "parameters"   : [
         ("timerange", DropdownChoice(
+            title = _('Timerange'),
             default_value = '1',
             choices= [
                 ("0", _("4 Hours")),  ("1", _("25 Hours")),
                 ("2", _("One Week")), ("3", _("One Month")),
                 ("4", _("One Year")),
             ],
+        )),
+        ("source", Integer(
+            title = _('Source (n\'th Graph)'),
+            default_value = 0,
         )),
     ],
     "styles": """

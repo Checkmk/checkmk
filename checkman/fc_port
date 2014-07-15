@@ -96,6 +96,8 @@ perfdata:
 inventory:
   The inventory creates checks for all operational ports. It can be configured
   (see CONFIGURATION VARIABLES) how operational ports are defined.
+  Ports with the admininstrative state of 1 (unkown) or 3 (offline) are not
+  inventorized.
 
 [parameters]
 parameters (dict): This check works with dictionary based parameters. The
@@ -134,11 +136,11 @@ fc_port_no_inventory_types(list): List of port types not to be inventorized.
 fc_port_no_inventory_phystates(list): List of physical states for which ports
  will not be inventorized. The default is an empty list.
 
-fc_port_inventory_opstates(list): List of operational states for which ports
+fc_port_no_inventory_opstates(list): List of operational states for which ports
  will not be inventorized. The default is an empty list.
 
-fc_port_inventory_admstates(list): List of administrative states for which ports
- will not be inventorized. The default is an empty list.
+fc_port_no_inventory_admstates(list): List of administrative states for which ports
+ will not be inventorized. The default is [ 1, 3 ]
 
 fc_port_inventory_use_portname(boolean): If you set this to {True},
  configured names of the ports appear in the service descripion (and thus can

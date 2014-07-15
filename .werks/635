@@ -1,0 +1,8 @@
+Title: fc_port: the check no longer inventorizes ports with administrative state of 'unknown' or 'offline'
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1405431040
+Class: fix
+
+

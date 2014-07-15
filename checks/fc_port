@@ -66,7 +66,7 @@ porttype_list = ( 'unknown', 'unknown', 'other', 'not-present', 'hub-port', 'n-p
 
 # settings for inventory: which ports should not be inventorized
 fc_port_no_inventory_types = [ 3 ]
-fc_port_no_inventory_admstates  = [ ]
+fc_port_no_inventory_admstates  = [ 1, 3 ]
 fc_port_no_inventory_opstates  = [ ]
 fc_port_no_inventory_phystates  = [ ]
 fc_port_inventory_use_portname = False # use connUnitPortName as service description

@@ -374,10 +374,6 @@ def render_dashlet(name, board, nr, dashlet, wato_folder):
         dashlet["iframe"] = "dashboard_dashlet.py?name="+name+"&id="+ \
                                      str(nr)+"&mtime="+str(board['mtime']);
 
-    # FIXME:
-    if dashlet.get("reload_on_resize"):
-        dashlet["onload"] = "dashlet_add_dimensions('dashlet_%d', this)" % nr
-
     # The content is rendered only if it is fixed. In the
     # other cases the initial (re)-size will paint the content.
     if "render" in dashlet_type:
@@ -394,7 +390,6 @@ def render_dashlet(name, board, nr, dashlet, wato_folder):
         html.write(dashlet["content"])
 
     elif "iframe" in dashlet: # fixed content containing iframe
-        # FIXME:
         if not dashlet.get("reload_on_resize"):
             url = add_wato_folder_to_url(dashlet["iframe"], wato_folder)
         else:
@@ -405,7 +400,6 @@ def render_dashlet(name, board, nr, dashlet, wato_folder):
         html.write('<iframe id="dashlet_iframe_%d" allowTransparency="true" frameborder="0" width="100%%" '
                    'height="100%%" src="%s"> </iframe>' % (nr, url))
         html.write('</div>')
-        # FIXME:
         if dashlet.get("reload_on_resize"):
             html.javascript('reload_on_resize["%d"] = "%s"' %
                             (nr, add_wato_folder_to_url(dashlet["iframe"], wato_folder)))

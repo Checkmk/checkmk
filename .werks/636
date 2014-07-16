@@ -1,0 +1,11 @@
+Title: fc_port: do not inventorize if brocade fibre channel mib is also supported on the device
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1405496969
+Class: fix
+
+Some devices on the market have shown to support both the brocade fibre channel mib, and
+the FCMGMT mib. In these cases two services were created for each fibre channel port, one for
+the brocade_fcport check and one for the fc_port check.
+With this fix, the fc_port does not inventorize if the brocade fibre channel mib is supported.

@@ -1,0 +1,10 @@
+Title: check_dns: It is now possible to use the local dns server in wato configuration
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1405453916
+Class: feature
+
+Befor this change, it was only possible to define the ip of a dns server or use the the ip addres of the host as dns server. Now it's to omit this confiuration and the check is done against the dns servers configured on the monitoring servers.
+
+This is usefull if you e.g. want check web domain names.

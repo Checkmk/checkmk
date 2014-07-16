@@ -77,7 +77,7 @@ check_mk_agent.rc: check_mk_agent.rc.in
 	if [ $${#V} -eq 6 ]; then V+=", 0"; fi ; \
 	if [ $${#V} -eq 12 ]; then V+=", 0"; fi ; \
 	if [ $${#V} -eq 11 ]; then V+="00"; fi ; \
-	if [ $${#V} -eq 20 ]; then V=$${V//-/, } ; V="${V::9}${V:9:4}${V:15:2}${V:19:2}"; fi ; \
+	if [ $${#V} -eq 20 ]; then V=$${V//-/, } ; V="$${V::9}$${V:9:4}$${V:15:2}$${V:19:2}"; fi ; \
 	sed "s/%VERSION%/$(VERSION)/g;s/%YEAR%/$$(date +%Y)/g" check_mk_agent.rc.in > check_mk_agent.rc ; \
 	sed -i "s/%PVERSION%/$$V/g" check_mk_agent.rc
 

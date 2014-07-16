@@ -1,0 +1,13 @@
+Title: livedump-mail-fetch: Now supporting either quoted-printable or non encoded mails
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1405498288
+Class: feature
+
+The tool livedump-mail-fetch which can be used to receive livedump results by fetching
+them from a mailbox e.g. via POP3 always assumed incoming mails to be encoded as
+quoted-printable.
+
+This change makes the mail parsing configurable. The default is still quoted printable,
+but can be set to "None" to assume plain text mails.

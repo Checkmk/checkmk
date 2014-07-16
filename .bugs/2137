@@ -1,0 +1,13 @@
+Title: Foldable containers with Umlauts in titles are not expanded on load
+Component: multisite
+State: open
+Date: 2014-07-16 10:13:33
+Targetversion: 1.2.5i1
+Class: bug
+
+When unicode strings with umlauts are used as titles for foldable containers,
+the states are saved, but can not be read/parsed/compared correctly. This seems
+to be related to the pprint.pformat() function which writes the unicode string
+as key of a dict, but does not re-reads the value correctly as unicode string.
+
+It has happened here with the titles of the views snapin.

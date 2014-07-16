@@ -24,6 +24,9 @@ omd_root = os.environ.get('OMD_ROOT')
 pop_server = "pop.yourmailserver.com"
 pop_user   = "your-username@domain.com"
 pop_pass   = "secretpassword"
+# By default the mail body is treated to be encoded as "quoted-printable".
+# In the other case no decoding is not performed.
+encoding   = "quoted-printable"
 
 M = poplib.POP3_SSL(pop_server)
 M.user(pop_user)
@@ -56,16 +59,22 @@ if config_mails:
     mail_index, ident = config_mails[-1]
     code, mail, num = M.retr(mail_index)
     body_start_index = mail.index('')
-    body = quopri.decodestring('\n'.join(mail[body_start_index:]))
+    if encoding == 'quoted-printable':
+        body = quopri.decodestring('\n'.join(mail[body_start_index:]))
+    else:
+        body = '\n'.join(mail[body_start_index:])
 
-    file("%s/etc/nagios/conf.d/remote-%s.cfg" % 
+    file("%s/etc/nagios/conf.d/remote-%s.cfg" %
          (omd_root, ident), "w").write(body)
 
 if status_mails:
     for index in status_mails:
         code, mail, code = M.retr(index)
         body_start_index = mail.index('')
-        body = quopri.decodestring('\n'.join(mail[body_start_index:]))
+        if encoding == 'quoted-printable':
+            body = quopri.decodestring('\n'.join(mail[body_start_index:]))
+        else:
+            body = '\n'.join(mail[body_start_index:])
 
         fd, path = tempfile.mkstemp('', 'c', "%s/tmp/nagios/checkresults" % omd_root)
         os.write(fd, body)

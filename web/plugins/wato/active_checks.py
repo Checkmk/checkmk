@@ -180,7 +180,7 @@ register_rule(group,
                         Alternative(
                             title = _("DNS Server"),
                             elements = [ 
-                                FixedValue( value="use local configuration", 
+                                FixedValue( value=None, totext=_("use local configuration"), 
                                             title = _("Use local DNS configuration of monitoring site")),
                                 TextAscii(
                                     title = _("Specify DNS Server"),

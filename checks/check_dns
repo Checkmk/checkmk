@@ -29,7 +29,7 @@ def check_dns_arguments(params):
     args = '-H %s' % quote_shell_string(description)
 
     if "server" in settings:
-        if settings["server"] != "use local configuration":
+        if settings["server"] != None:
             args += ' -s %s' % quote_shell_string(settings["server"])
     else:
         args += " -s '$HOSTADDRESS$'"

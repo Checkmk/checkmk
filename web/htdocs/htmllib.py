@@ -77,6 +77,7 @@ class html:
         self.new_transids = []
         self.ignore_transids = False
         self.current_transid = None
+        self.page_context = {}
 
     RETURN = 13
     SHIFT = 16
@@ -84,6 +85,9 @@ class html:
     ALT = 18
     BACKSPACE = 8
     F1 = 112
+
+    def set_page_context(self, c):
+        self.page_context = c
 
     def set_buffering(self, b):
         self.buffering = b
@@ -832,6 +836,11 @@ class html:
             h += '<a target="_top" href="%s">' \
                  '<img class=statusicon src="images/status_download_csv.png" title="%s"></a>\n' % \
                  (self.makeuri([("output_format", "csv_export")]), _("Export as CSV"))
+
+            h += '<div class="dashadd"><a class="dashadd" href="javascript:void(0)" ' \
+                 'onclick="toggle_add_to_dashboard(this, \'view\', %s, {\'name\': \'%s\'})">' \
+                 '<img class=statusicon src="images/status_add_dashlet.png" title="%s"></a></div>\n' % \
+                 (self.page_context, self.attrencode(self.var('view_name')), _("Add to dashboard"))
 
         for img, tooltip in self.status_icons.items():
             if type(tooltip) == tuple:

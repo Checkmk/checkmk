@@ -791,6 +791,8 @@ def page_view():
     if not view:
         raise MKGeneralException(_("No view defined with the name '%s'.") % html.attrencode(view_name))
 
+    html.set_page_context(dict(visuals.get_context_html_vars(view)))
+
     if config.may("reporting.instant"):
         if html.var("instant_report"):
             import reporting
@@ -947,12 +949,18 @@ def show_view(view, show_heading = False, show_buttons = True,
         if not filter.info or filter.info in datasource["infos"]:
             show_filters.append(filter)
 
-    # FIXME: Still needed?
-    for fname, filter_vars in view["context"].items():
-        for varname, value in filter_vars.items():
-            # shown filters are set, if form is fresh and variable not supplied in URL
-            if only_count or (html.var("filled_in") != "filter" and not html.has_var(varname)):
-                html.set_var(varname, value)
+    # Populate the HTML vars with missing context vars
+    if context_type['single']:
+        set_vars = view["context"].items()
+    else:
+        set_vars = []
+        for fname, filter_vars in view["context"].items():
+            set_vars += filter_vars.items()
+
+    for varname, value in set_vars:
+        # shown filters are set, if form is fresh and variable not supplied in URL
+        if only_count or (html.var("filled_in") != "filter" and not html.has_var(varname)):
+            html.set_var(varname, value)
 
     # Af any painter, sorter or filter needs the information about the host's
     # inventory, then we load it and attach it as column "host_inventory"

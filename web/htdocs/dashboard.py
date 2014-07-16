@@ -109,14 +109,7 @@ def transform_builtin_dashboards():
                 view_name = dashlet['view'].split('&')[0]
 
                 # Copy the view definition into the dashlet
-                import views
-                views.load_views()
-                views = views.permitted_views()
-                if view_name in views:
-                    dashlet.update(views[view_name])
-
-                dashlet['type'] = 'view'
-                dashlet['name'] = 'dashlet_%d' % nr
+                load_view_into_dashlet(dashlet, nr, view_name)
                 del dashlet['view']
 
         # the modification time of builtin dashboards can not be checked as on user specific
@@ -127,6 +120,16 @@ def transform_builtin_dashboards():
         if dashboard['title'] == None:
             dashboard['title'] = _('No title')
             dashboard['show_title'] = False
+
+def load_view_into_dashlet(dashlet, nr, view_name):
+    import views
+    views.load_views()
+    views = views.permitted_views()
+    if view_name in views:
+        dashlet.update(views[view_name])
+
+    dashlet['type'] = 'view'
+    dashlet['name'] = 'dashlet_%d' % nr
 
 def save_dashboards(us):
     visuals.save('dashboards', dashboards)
@@ -913,11 +916,15 @@ def ajax_add_dashlet():
     }
 
     # Parse context and params
+    view_name = None
     for what in [ 'context', 'params' ]:
         val = html.var(what)
         data = {}
-        if not val:
+        if val == None:
             raise MKGeneralException(_('Unable to parse the dashlet parameter "%s".') % what)
+        elif val == '':
+            dashlet[what] = {}
+            continue # silently skip empty vars
 
         for entry in val.split('|'):
             key, vartype, val = entry.split(':', 2)
@@ -928,7 +935,16 @@ def ajax_add_dashlet():
         if what == 'context':
             dashlet[what] = data
         else:
+            if ty == 'view':
+                view_name = data['name']
             dashlet.update(data)
+
+    # When a view shal be added to the dashboard, load the view and put it into the dashlet
+    if ty == 'view':
+        # save the original context and override the context provided by the view
+        context = dashlet['context']
+        load_view_into_dashlet(dashlet, len(dashboard['dashlets']), view_name)
+        dashlet['context'] = context
 
     dashboard['dashlets'].append(dashlet)
     dashboard['mtime'] = int(time.time())

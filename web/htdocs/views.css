@@ -690,8 +690,12 @@ td.invtree table td {
 |                                                |_|         |_|       |
 +---------------------------------------------------------------------*/
 
-div.graph {
+div.graph, div.dashadd {
     position: relative;
+}
+
+div.dashadd {
+    display: inline-block;
 }
 
 div.graph a.dashadd {
@@ -718,6 +722,7 @@ div.graph a.dashadd:hover {
     padding: 0;
     width: 200px;
 
+    color: #fff;
     background-color: #508AA1;
     border: 1px solid #fff;
     -moz-box-shadow:    1px 1px 1px 1px #000;
@@ -740,6 +745,7 @@ div.graph a.dashadd:hover {
     padding: 5px 15px;
     text-align: left;
     text-decoration: none;
+    color: #fff;
 }
 
 #dashadd_popup a:hover {

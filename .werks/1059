@@ -1,0 +1,16 @@
+Title: LDAP: Using configured user filter during login to prevent temporary created users
+Level: 1
+Component: multisite
+Version: 1.2.5i5
+Date: 1405600906
+Class: fix
+
+When a LDAP user that is not allowed to log in to multisite according to the
+"LDAP User Settings" OU and filtering options tries to login with valid credentials
+Multisite created a temporary user entry just to remove it later during the login
+process. The user can not access Multisite, but an error message is shown and a
+log entry in the WATO audit log is being created.
+
+This has been changed that the initial credentials check takes the filters from
+"LDAP User Settings" into account. Leaving all not permitted users with the message
+"invalid credentials".

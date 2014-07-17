@@ -62,6 +62,7 @@
     * 0945 FIX: Sidebar snapin "Problem hosts": Now excludes hosts and services in downtime
     * 1036 FIX: doc/treasures/downtime: fix --url option, better error output
     * 1074 FIX: Fix Virtual Host Tree snapin...
+    * 1059 FIX: LDAP: Using configured user filter during login to prevent temporary created users...
 
     WATO:
     * 0825 WATO: Hover menu of user online state shows the last seen date/time now

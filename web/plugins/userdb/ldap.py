@@ -468,12 +468,14 @@ def ldap_get_user(username, no_escape = False):
     if username in g_ldap_user_cache:
         return g_ldap_user_cache[username]
 
-    # Check wether or not the user exists in the directory
-    # It's only ok when exactly one entry is found.
-    # Returns the DN and user_id as tuple in this case.
+    # Check wether or not the user exists in the directory matching the username AND
+    # the user search filter configured in the "LDAP User Settings".
+    # It's only ok when exactly one entry is found. Returns the DN and user_id
+    # as tuple in this case.
     result = ldap_search(
         ldap_replace_macros(config.ldap_userspec['dn']),
-        '(%s=%s)' % (ldap_user_id_attr(), ldap.filter.escape_filter_chars(username)),
+        '(&(%s=%s)%s)' % (ldap_user_id_attr(), ldap.filter.escape_filter_chars(username),
+                          config.ldap_userspec['filter']),
         [ldap_user_id_attr()],
     )
 

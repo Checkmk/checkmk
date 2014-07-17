@@ -5331,6 +5331,54 @@ register_check_parameters(
 )
 
 register_check_parameters(
+    subgroup_applications,
+    "citrix_load",
+    _("Load of Citrix Server"),
+    Tuple(
+        title = _("Citrix Server load"),
+        elements = [
+            Integer(title = _("warning if above"), default_value = 8500),
+            Integer(title = _("critical if above"), default_value = 9500),
+        ]),
+    None, None
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "citrix_sessions",
+    _("Citrix Terminal Server Sessions"),
+    Dictionary(
+        elements = [
+            ( "total",
+              Tuple(
+                  title = _("Total number of Sessions"),
+                  elements = [
+                      Integer(title = _("warning if above"), unit = "Sessions" ),
+                      Integer(title = _("critical if above"), unit = "Session" ),
+                  ])
+            ),
+            ( "active",
+              Tuple(
+                  title = _("Number of Active Sessions"),
+                  elements = [
+                      Integer(title = _("warning if above"), unit = "Sessions" ),
+                      Integer(title = _("critical if above"), unit = "Session" ),
+                  ])
+            ),
+            ( "inactive",
+              Tuple(
+                  title = _("Number of Inactive Sessions"),
+                  elements = [
+                      Integer(title = _("warning if above"), unit = "Sessions" ),
+                      Integer(title = _("critical if above"), unit = "Session" ),
+                  ])
+            ),
+        ]
+    ),
+    None, "dict"
+),
+
+register_check_parameters(
     subgroup_networking,
     "adva_ifs",
     _("Adva Optical Transport Laser Power"),
@@ -5360,6 +5408,7 @@ register_check_parameters(
     ),
     "dict"
 ),
+
 register_check_parameters(
     subgroup_storage,
     "fc_port",

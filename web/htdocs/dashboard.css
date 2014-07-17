@@ -497,8 +497,6 @@ div.dashlet.edit .anchor.anchor3 {
 
 .sizer_lbl {
     position: absolute;
-    border: 1px solid #666;
-    background-color: #fff;
     color: #000;
     padding: 2px;
     cursor: auto;
@@ -506,12 +504,21 @@ div.dashlet.edit .anchor.anchor3 {
 
 .sizer_lbl0 {
     width: auto;
-    height: 17px;
+    height: 15px;
 }
 
 .sizer_lbl1 {
     height: auto;
-    width: 17px;
+    width: 15px;
+
+    -webkit-transform: rotate(-90deg);
+    -moz-transform: rotate(-90deg);
+    -ms-transform: rotate(-90deg);
+    -o-transform: rotate(-90deg);
+    transform: rotate(-90deg);
+
+    /* Should be unset in IE9+ I think. */
+    filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
 }
 
 /* left side */
@@ -524,7 +531,7 @@ div.dashlet.edit .anchor.anchor3 {
 /* right side */
 .sizer_lbl1.anchor1,
 .sizer_lbl1.anchor2 {
-    right: 15px;
+    right: 10px;
     top: 50%;
 }
 

@@ -307,7 +307,7 @@ def check_logwatch_groups(item, params, info):
             else:
                 logfile_found = False
             continue
-    return check_logwatch_generic(item, params, loglines, found)
+    return check_logwatch_generic(item, params, loglines, found, True)
 
 
 check_info['logwatch.groups'] = {

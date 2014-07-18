@@ -1555,8 +1555,8 @@ register_check_parameters(
                Tuple(
                    title = _("Minimum number of connections or listeners"),
                    elements = [
-                       Integer(title = _("Warning if above")),
-                       Integer(title = _("Critical if above")),
+                       Integer(title = _("Warning if below")),
+                       Integer(title = _("Critical if below")),
                     ],
                ),
             ),
@@ -5522,6 +5522,96 @@ register_check_parameters(
         ]),
     None,
     "first"
+)
+
+register_check_parameters(
+     subgroup_applications,
+    "jvm_gc",
+    _("JVM garbage collection levels"),
+    Dictionary(
+        elements = [
+            ( "CollectionTime",
+               Alternative(
+                   title = _("Collection time levels"),
+                   elements = [
+                       Tuple(
+                           title = _("Time of garbage gollection in ms per minute"),
+                           elements = [
+                               Integer(title = _("Warning at"), 
+                                       unit = _("ms"), 
+                                       allow_empty = False),
+                               Integer(title = _("Critical at"), 
+                                       unit = _("ms"), 
+                                       allow_empty = False),
+                           ]
+                       )
+                   ])),
+            ( "CollectionCount",
+               Alternative(
+                   title = _("Collection count levels"),
+                   elements = [
+                       Tuple(
+                           title = _("Count of garbage collection per minute"),
+                           elements = [
+                               Integer(title = _("Warning at"), allow_empty = False),
+                               Integer(title = _("Critical at"), allow_empty = False),
+                           ]
+                       )
+                   ])),
+        ]),
+    TextAscii(
+        title = _("Name of the virtual machine and/or<br>garbage collection type"),
+        help = _("The name of the application server"),
+        allow_empty = False,
+    ),
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "jvm_tp",
+    _("JVM tomcat threadpool levels"),
+    Dictionary(
+        elements = [
+            ( "currentThreadCount",
+               Alternative(
+                   title = _("Current thread count levels"),
+                   elements = [
+                       Tuple(
+                           title = _("Percentage levels of current thread count in threadpool"),
+                           elements = [
+                               Integer(title = _("Warning at"),
+                                       unit = _(u"%"),
+                                       allow_empty = False),
+                               Integer(title = _("Critical at"),
+                                       unit = _(u"%"),
+                                       allow_empty = False),
+                           ]
+                       )
+                   ])),
+            ( "currentThreadsBusy",
+               Alternative(
+                   title = _("Current threads busy levels"),
+                   elements = [
+                       Tuple(
+                           title = _("Percentage of current threads busy in threadpool"),
+                           elements = [
+                               Integer(title = _("Warning at"), 
+                                       unit = _(u"%"),
+                                       allow_empty = False),
+                               Integer(title = _("Critical at"), 
+                                       unit = _(u"%"),
+                                       allow_empty = False),
+                           ]
+                       )
+                   ])),
+        ]),
+    TextAscii(
+        title = _("Name of the virtual machine and/or<br>threadpool"),
+        help = _("The name of the application server"),
+        allow_empty = False,
+    ),
+    "dict"
 )
 
 

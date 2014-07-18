@@ -53,6 +53,7 @@ manpage_catalog_titles = {
             "netapp"     : "NetApp",
             "hitachi"    : "Hitachi",
             "emc"        : "EMC",
+            "qlogic"     : "QLogic",
         "phone"       : "Telephony",
 
     "app"      : "Applications",

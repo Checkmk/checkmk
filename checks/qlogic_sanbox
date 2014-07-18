@@ -1,0 +1,86 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+qlogic_sanbox_temp_status_map = [ "undefined", # 0
+                                  "unknown",   # 1
+                                  "other",     # 2
+                                  "ok",        # 3
+                                  "warning",   # 4
+                                  "failed", ]  # 5
+
+def inventory_qlogic_sanbox_temp(info):
+    inventory = []
+    for sensor_name, sensor_status, sensor_message, sensor_type, \
+        sensor_characteristic, sensor_id in info:
+        sensor_id = sensor_id.replace("16.0.0.192.221.48.", "").replace(".0.0.0.0.0.0.0.0", "")
+        if sensor_type == "8" and sensor_characteristic == "3" and \
+            sensor_name != "Temperature Status":
+            inventory.append( (sensor_id, None) )
+    return inventory
+
+def check_qlogic_sanbox_temp(item, _no_params, info):
+    for sensor_name, sensor_status, sensor_message, sensor_type, \
+        sensor_characteristic, sensor_id in info:
+        sensor_id = sensor_id.replace("16.0.0.192.221.48.", "").replace(".0.0.0.0.0.0.0.0", "")
+        if sensor_id == item:
+            sensor_status = int(sensor_status)
+            if sensor_status < 0 or sensor_status >= len(qlogic_sanbox_temp_status_map):
+                sensor_status_descr = sensor_status
+            else:
+                sensor_status_descr = qlogic_sanbox_temp_status_map[int(sensor_status)]
+
+            if sensor_status == 3:
+                status = 0
+            elif sensor_status == 4:
+                status = 1
+            elif sensor_status == 5:
+                status = 2
+            else:
+                status = 3
+
+            if sensor_message.endswith(" degrees C"):
+                temp = int(sensor_message.replace(" degrees C", ""))
+                perfdata = [ ('temp', str(temp) + 'C') ]
+            else:
+                perfdata = []
+
+            return status, "Sensor %s is at %s and reports status %s" % \
+            (sensor_id, sensor_message, sensor_status_descr), perfdata
+    return 3, "No sensor %s found" % item
+
+check_info["qlogic_sanbox.temp"] = {
+    "check_function"        : check_qlogic_sanbox_temp,
+    "inventory_function"    : inventory_qlogic_sanbox_temp,
+    "service_description"   : "Temperature Sensor %s",
+    "has_perfdata"          : True,
+    "snmp_info"             : (".1.3.6.1.3.94.1.8.1", [3, # connUnitSensorName
+                                                       4, # connUnitSensorStatus
+                                                       6, # connUnitSensorMessage
+                                                       7, # connUnitSensorType
+                                                       8, # connUnitSensorCharacteristic
+                                                       OID_END]),
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3873.1.14"),
+}

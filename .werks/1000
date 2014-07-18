@@ -1,0 +1,8 @@
+Title: qlogic_sanbox.temp: New Check for temperature sensors in QLogic SANbox Fibre Channel Switches
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1405686184
+Class: feature
+
+

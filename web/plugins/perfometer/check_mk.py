@@ -338,6 +338,7 @@ perfometers["check_mk-wagner_titanus_topsense.temp"] = perfometer_temperature
 perfometers["check_mk-enterasys_temp"] = perfometer_temperature
 perfometers["check_mk-adva_fsp_temp"] = perfometer_temperature
 perfometers["check_mk-allnet_ip_sensoric.temp"] = perfometer_temperature
+perfometers["check_mk-qlogic_sanbox.temp"] = perfometer_temperature
 
 def perfometer_temperature_multi(row, check_command, perf_data):
     display_value = -1

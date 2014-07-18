@@ -1,0 +1,8 @@
+Title: qlogic_sanbox.psu: New Check for power supplies in QLogic SANbox Fibre Channel Switches
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1405687585
+Class: feature
+
+

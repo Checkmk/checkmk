@@ -1,0 +1,8 @@
+Title: citrix_sessions, citrix_serverload: New checks for Citrix Load (a Score calculated by citrix) and the number of sessions
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1405518123
+Class: feature
+
+

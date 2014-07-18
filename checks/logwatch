@@ -256,10 +256,15 @@ precompile_params['logwatch'] = logwatch_precompile
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def logwatch_groups_of_logfile(filename):
+def logwatch_group_precompile( hostname, item, _unused):
+    return logwatch_precompile( hostname, item, None ), host_extra_conf( hostname, logwatch_groups )
+
+def logwatch_groups_of_logfile(filename, params=False):
     import fnmatch
     groups = []
-    for line in host_extra_conf(g_hostname, logwatch_groups):
+    if not params:
+        params = host_extra_conf(g_hostname, logwatch_groups)
+    for line in params: 
         for group_name, pattern in line:
             inclusion, exclusion = pattern
             if fnmatch.fnmatch(filename, inclusion) \
@@ -273,11 +278,10 @@ def inventory_logwatch_groups(info):
     inventory = []
     for logfile in not_forwarded_logs:
         groups = logwatch_groups_of_logfile(logfile)
-        if groups:
-            for group in groups:
-                if group not in added_groups:
-                    added_groups.append(group)
-                    inventory.append((group, None ))
+        for group in groups:
+            if group not in added_groups:
+                added_groups.append(group)
+                inventory.append((group, None ))
     return inventory
 
 def check_logwatch_groups(item, params, info):
@@ -295,7 +299,7 @@ def check_logwatch_groups(item, params, info):
             loglines.append(line)
         if line.startswith('[[['):
             logfile = line[3:-3]
-            if item in logwatch_groups_of_logfile(logfile):
+            if item in logwatch_groups_of_logfile(logfile, params[1]):
                 found = True
                 logfile_found = True
             else:
@@ -310,10 +314,10 @@ check_info['logwatch.groups'] = {
     'service_description': "LOG %s",
     'group':               'logwatch',
 }
-precompile_params['logwatch.groups'] = logwatch_precompile
+precompile_params['logwatch.groups'] = logwatch_group_precompile
 #.
 
-def check_logwatch_generic(item, params, loglines, found):
+def check_logwatch_generic(item, params, loglines, found, groups=False):
     # Create directories, if neccessary
     try:
         logdir = logwatch_dir + "/" + g_hostname
@@ -375,9 +379,14 @@ def check_logwatch_generic(item, params, loglines, found):
     # Get the patterns (either compile or reuse the precompiled ones)
     # Check_MK creates an empty string if the precompile function has
     # not been exectued yet. The precomile function creates an empty
-    # list when no rules/patterns are defined.
+    # list when no rules/patterns are defined. In case of the logwatch.groups 
+    # checks, params are a tuple with the normal logwatch parameters on the first
+    # and the grouping patterns on the second position
     if params not in ('', None):
-        patterns = params # patterns already precompiled
+        if groups:
+            patterns = params[0]
+        else:
+            patterns = params # patterns already precompiled
     else:
         patterns = logwatch_precompile(g_hostname, item, None)
 

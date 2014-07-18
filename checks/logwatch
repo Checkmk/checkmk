@@ -264,6 +264,8 @@ def logwatch_groups_of_logfile(filename, params=False):
     groups = []
     if not params:
         params = host_extra_conf(g_hostname, logwatch_groups)
+    else:
+        params = params[1]
     for line in params: 
         for group_name, pattern in line:
             inclusion, exclusion = pattern
@@ -299,7 +301,7 @@ def check_logwatch_groups(item, params, info):
             loglines.append(line)
         if line.startswith('[[['):
             logfile = line[3:-3]
-            if item in logwatch_groups_of_logfile(logfile, params[1]):
+            if item in logwatch_groups_of_logfile(logfile, params):
                 found = True
                 logfile_found = True
             else:

@@ -9335,12 +9335,9 @@ def mode_edit_timeperiod(phase):
     html.write("</table>")
 
     # Exceptions
-    nagurl = "../nagios/docs/objectdefinitions.html#timeperiod"
     forms.section(_("Exceptions"))
     html.help(_("Here you can specify exceptional time ranges for certain "
-                 "relative or absolute dates. Please consult the "
-                 "<a target='_blank' href='%s'>Nagios documentation about "
-                 "timeperiods</a> for examples." % nagurl))
+                 "dates in the form YYYY-MM-DD."))
 
     exceptions = []
     for k in timeperiod:

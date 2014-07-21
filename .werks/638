@@ -1,0 +1,9 @@
+Title: windows_updates: agent plugin now always sends section header, even if no update information provided
+Level: 2
+Component: checks
+Version: 1.2.5i5
+Date: 1405932135
+Class: fix
+
+This helps to get more meaningful error information when auto update is deactivated for a host previously
+inventorized with the windows updates check.

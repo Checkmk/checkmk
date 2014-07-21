@@ -480,6 +480,7 @@ def perfometer_check_mk_brocade_fcport(row, check_command, perf_data):
     )
 
 perfometers["check_mk-brocade_fcport"] = perfometer_check_mk_brocade_fcport
+perfometers["check_mk-qlogic_fcport"] = perfometer_check_mk_brocade_fcport
 
 def perfometer_check_mk_cisco_qos(row, check_command, perf_data):
     unit =  "Bit/s" in row["service_plugin_output"] and "Bit" or "B"

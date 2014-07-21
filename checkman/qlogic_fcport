@@ -1,0 +1,45 @@
+title: QLogic SANbox Fibre Channel Switches: Fibre Channel Ports
+agents: snmp
+catalog: hw/storagehw/qlogic
+license: GPL
+distribution: check_mk
+description:
+ Checks the Fibre Channel Ports in QLogic SANbox Fibre Channel Switches.
+
+ AdminStatus online is evaluated to be {OK}, offline is evaluated to be {CRIT}
+ and testing to be {WARN}.
+
+ Operational Status online is evaluated to be {OK}, offline or linkFaillure
+ are evaluated to be {CRIT} and testing to be {WARN}.
+
+ The worst of the both states is returned by the check.
+
+ Bytes per second, Frames per second and the error rates are just graphed.
+ At the moment they do not trigger any status change.
+
+ If OperMode can be detected, it is also displayed.
+
+item:
+ The Port ID taken from SNMP. It contains 2 numbers separated by a dot,
+ e. g. 1.1
+
+perfdata:
+ Values for in and out in Bytes per second. rxframes (in) and txframes (out)
+ in frames per second and the following error counters (errors per second):
+ link_failures, sync_losses, prim_seq_proto_errors, invalid_tx_words,
+ invalid_crcs, address_id_errors, link_reset_ins, link_reset_outs, ols_ins,
+ ols_outs, discards, c2_fbsy_frames, c2_frjt_frames
+
+inventory:
+ Creates one check for every FC Port found by SNMP in AdminStatus "online" or
+ "testing" and Operational Status "online" or "testing".
+
+ To change this behavior, please edit the configuration variables, see section
+ "configuration".
+
+[configuration]
+qlogic_fcport_inventory_opstates (list): List of operational states the port needs
+ to be in to be inventorized, defaults to [ "1", "3" ]
+
+qlogic_fcport_inventory_admstates (list): List of admin states the port needs
+ to be in to be inventorized, defaults to [ "1", "3" ]

@@ -2966,9 +2966,12 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
                 else:
                     # New preferred style since 1.1.11i3: only one argument: info
                     inventory = inventory_function(info)
-
                 if inventory == None: # tolerate if function does no explicit return
                     inventory = []
+
+                # New yield based api style
+                if type(inventory) != list:
+                    inventory = list(inventory)
             except Exception, e:
                 if opt_debug:
                     sys.stderr.write("Exception in inventory function of check type %s\n" % checkname)

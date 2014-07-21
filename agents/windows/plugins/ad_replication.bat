@@ -9,11 +9,13 @@ REM * credentials which are not enough for this check.
 REM *
 REM * To solve this problem you can do e.g. the following:
 REM *
-REM * - Change the account the service is being started with to a 
+REM * - Change the account the service is being started with to a
 REM *   domain user account with enough permissions on the DC.
-REM * 
+REM *
 REM ***
 
 echo ^<^<^<ad_replication^>^>^>
 dsquery server | find /I "CN=%COMPUTERNAME%," > nul
-if ERRORLEVEL 0 repadmin /showrepl /csv
+if ERRORLEVEL 1 goto SERVER_NOT_IN_DC_LIST
+repadmin /showrepl /csv
+:SERVER_NOT_IN_DC_LIST

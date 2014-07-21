@@ -317,19 +317,27 @@ fi
 # http://www.lsi.com/downloads/Public/MegaRAID%20Common%20Files/8.02.16_MegaCLI.zip
 
 if type MegaCli >/dev/null ; then
+    MegaCli_bin="MegaCli"
+elif type MegaCli64 >/dev/null ; then
+    MegaCli_bin="MegaCli64"
+else
+    MegaCli_bin="unknown"
+fi
+
+if [ "$MegaCli_bin" != "unknown" ]; then
     echo '<<<megaraid_pdisks>>>'
-    for part in $(MegaCli -EncInfo -aALL -NoLog < /dev/null \
+    for part in $($MegaCli_bin -EncInfo -aALL -NoLog < /dev/null \
         | sed -rn 's/:/ /g; s/[[:space:]]+/ /g; s/^ //; s/ $//; s/Number of enclosures on adapter ([0-9]+).*/adapter \1/g; /^(Enclosure|Device ID|adapter) [0-9]+$/ p'); do
         [ $part = adapter ] && echo ""
         [ $part = 'Enclosure' ] && echo -ne "\ndev2enc"
         echo -n " $part"
     done
     echo
-    MegaCli -PDList -aALL -NoLog < /dev/null | egrep 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Adapter'
+    $MegaCli_bin -PDList -aALL -NoLog < /dev/null | egrep 'Enclosure|Raw Size|Slot Number|Device Id|Firmware state|Inquiry|Adapter'
     echo '<<<megaraid_ldisks>>>'
-    MegaCli -LDInfo -Lall -aALL -NoLog < /dev/null | egrep 'Size|State|Number|Adapter|Virtual'
+    $MegaCli_bin -LDInfo -Lall -aALL -NoLog < /dev/null | egrep 'Size|State|Number|Adapter|Virtual'
     echo '<<<megaraid_bbu>>>'
-    MegaCli -AdpBbuCmd -GetBbuStatus -aALL -NoLog < /dev/null | grep -v Exit
+    $MegaCli_bin -AdpBbuCmd -GetBbuStatus -aALL -NoLog < /dev/null | grep -v Exit
 fi
 
 # 3WARE disk controller (by Radoslaw Bak)

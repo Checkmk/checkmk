@@ -836,6 +836,21 @@ def load_counters(hostname):
         except:
             g_counters = {}
 
+
+# Deletes counters from g_counters matching the given pattern and are older_than x seconds
+def clear_counters(pattern, older_than):
+    global g_counters
+    counters_to_delete = []
+    now = time.time()
+
+    for name, (timestamp, value) in g_counters.items():
+        if name.startswith(pattern):
+            if now > timestamp + older_than:
+                counters_to_delete.append(name)
+
+    for name in counters_to_delete:
+        del g_counters[name]
+
 def get_counter(countername, this_time, this_val, allow_negative=False):
     global g_counters
 

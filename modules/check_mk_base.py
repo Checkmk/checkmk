@@ -1221,7 +1221,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
                                 status = max(return_states) - 1
                         else:
                             status = max(return_states)
-                        result = status, ", ".join( x[1]+state_markers[x[0]] for x in messages )
+                        result = status, ", ".join( x[1]+state_markers[x[0]] for x in messages ), perf
 
             # handle check implementations that do not yet support the
             # handling of wrapped counters via exception. Do not submit

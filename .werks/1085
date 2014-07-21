@@ -1,0 +1,19 @@
+Title: quicksearch: multiple hostname matches now lead to the searchhost view instead of the hosts view
+Level: 1
+Component: multisite
+Version: 1.2.5i5
+Date: 1405937822
+Class: feature
+
+When a quicksearch pattern matched multiple hosts the view hosts was shown.
+This view also displayed all services for these hosts, which could lead
+to plenty of (unwanted) output in the view.
+<br>
+The quicksearch feature has been changed in the following way<br>
+
+<ul>
+<li>If there are multiple host matches the searchhost view is displayed</li>
+<li>If there is a single match the hosts view is displayed (this view also contains the services)</li>
+</ul>
+
+Note: This also applies to special search patterns like <tt>h:localhost h:otherhost</tt>

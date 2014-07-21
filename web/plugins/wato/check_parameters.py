@@ -1555,8 +1555,8 @@ register_check_parameters(
                Tuple(
                    title = _("Minimum number of connections or listeners"),
                    elements = [
-                       Integer(title = _("Warning if above")),
-                       Integer(title = _("Critical if above")),
+                       Integer(title = _("Warning if below")),
+                       Integer(title = _("Critical if below")),
                     ],
                ),
             ),
@@ -5331,6 +5331,54 @@ register_check_parameters(
 )
 
 register_check_parameters(
+    subgroup_applications,
+    "citrix_load",
+    _("Load of Citrix Server"),
+    Tuple(
+        title = _("Citrix Server load"),
+        elements = [
+            Integer(title = _("warning if above"), default_value = 8500),
+            Integer(title = _("critical if above"), default_value = 9500),
+        ]),
+    None, None
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "citrix_sessions",
+    _("Citrix Terminal Server Sessions"),
+    Dictionary(
+        elements = [
+            ( "total",
+              Tuple(
+                  title = _("Total number of Sessions"),
+                  elements = [
+                      Integer(title = _("warning if above"), unit = "Sessions" ),
+                      Integer(title = _("critical if above"), unit = "Session" ),
+                  ])
+            ),
+            ( "active",
+              Tuple(
+                  title = _("Number of Active Sessions"),
+                  elements = [
+                      Integer(title = _("warning if above"), unit = "Sessions" ),
+                      Integer(title = _("critical if above"), unit = "Session" ),
+                  ])
+            ),
+            ( "inactive",
+              Tuple(
+                  title = _("Number of Inactive Sessions"),
+                  elements = [
+                      Integer(title = _("warning if above"), unit = "Sessions" ),
+                      Integer(title = _("critical if above"), unit = "Session" ),
+                  ])
+            ),
+        ]
+    ),
+    None, "dict"
+),
+
+register_check_parameters(
     subgroup_networking,
     "adva_ifs",
     _("Adva Optical Transport Laser Power"),
@@ -5360,6 +5408,7 @@ register_check_parameters(
     ),
     "dict"
 ),
+
 register_check_parameters(
     subgroup_storage,
     "fc_port",
@@ -5522,6 +5571,96 @@ register_check_parameters(
         ]),
     None,
     "first"
+)
+
+register_check_parameters(
+     subgroup_applications,
+    "jvm_gc",
+    _("JVM garbage collection levels"),
+    Dictionary(
+        elements = [
+            ( "CollectionTime",
+               Alternative(
+                   title = _("Collection time levels"),
+                   elements = [
+                       Tuple(
+                           title = _("Time of garbage gollection in ms per minute"),
+                           elements = [
+                               Integer(title = _("Warning at"), 
+                                       unit = _("ms"), 
+                                       allow_empty = False),
+                               Integer(title = _("Critical at"), 
+                                       unit = _("ms"), 
+                                       allow_empty = False),
+                           ]
+                       )
+                   ])),
+            ( "CollectionCount",
+               Alternative(
+                   title = _("Collection count levels"),
+                   elements = [
+                       Tuple(
+                           title = _("Count of garbage collection per minute"),
+                           elements = [
+                               Integer(title = _("Warning at"), allow_empty = False),
+                               Integer(title = _("Critical at"), allow_empty = False),
+                           ]
+                       )
+                   ])),
+        ]),
+    TextAscii(
+        title = _("Name of the virtual machine and/or<br>garbage collection type"),
+        help = _("The name of the application server"),
+        allow_empty = False,
+    ),
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "jvm_tp",
+    _("JVM tomcat threadpool levels"),
+    Dictionary(
+        elements = [
+            ( "currentThreadCount",
+               Alternative(
+                   title = _("Current thread count levels"),
+                   elements = [
+                       Tuple(
+                           title = _("Percentage levels of current thread count in threadpool"),
+                           elements = [
+                               Integer(title = _("Warning at"),
+                                       unit = _(u"%"),
+                                       allow_empty = False),
+                               Integer(title = _("Critical at"),
+                                       unit = _(u"%"),
+                                       allow_empty = False),
+                           ]
+                       )
+                   ])),
+            ( "currentThreadsBusy",
+               Alternative(
+                   title = _("Current threads busy levels"),
+                   elements = [
+                       Tuple(
+                           title = _("Percentage of current threads busy in threadpool"),
+                           elements = [
+                               Integer(title = _("Warning at"), 
+                                       unit = _(u"%"),
+                                       allow_empty = False),
+                               Integer(title = _("Critical at"), 
+                                       unit = _(u"%"),
+                                       allow_empty = False),
+                           ]
+                       )
+                   ])),
+        ]),
+    TextAscii(
+        title = _("Name of the virtual machine and/or<br>threadpool"),
+        help = _("The name of the application server"),
+        allow_empty = False,
+    ),
+    "dict"
 )
 
 

@@ -63,11 +63,10 @@ def load_all_plugins():
     for module in [ hooks, userdb, views, sidebar, dashboard, wato, bi, mobile, notify ]:
         try:
             module.load_plugins # just check if this function exists
-            module.load_plugins()
         except AttributeError:
             pass
-        except Exception:
-            raise
+        else:
+            module.load_plugins()
 
     # Load reporting plugins (only available in subscription version)
     try:

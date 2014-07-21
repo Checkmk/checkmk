@@ -1,0 +1,12 @@
+Title: ps: now able to handle bigger process groups without constant MKCounterWrapped Exceptions
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1405935795
+Class: fix
+
+When a monitored process group got to many volatile processes (processes spawn/despawn)<br>
+the ps check had troubles to run through because there were multiple MKCounterWrapped Exceptions
+for each new process.<br>
+
+This has been fixed. A newly detected process starts with usertime and kerneltime delta-values of 0.

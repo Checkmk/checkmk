@@ -1,0 +1,45 @@
+title: Java virtual machine garbage collection
+agents: linux
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the count and assumed time of the garbage collection. It
+ helps to recognize any deviation from the regular behaviour of the garbage
+ collection.  Such deviations could be more garbage collection runs per
+ minute or an increase in the time the garbage collection is using per minute.
+
+ Since every tomcat instance has a different behaviour there are no default
+ values set to avoid false alarms.
+
+ To use this plugin, Jolokia and the agent plugin need to be installed
+ on the monitored server.
+
+item:
+ The name of the application server instance and name of the garbage collection
+ as sent by the agent.
+
+perfdata:
+ The following values are returned in the perfdata:
+    Garbage collection count per Minute
+    Garbage collection time per Minute
+
+inventory:
+ One check is created per garbage collector sent by the Jolokia agent.
+
+[parameters]
+Collection count
+    warn (int): a WARN state is triggered by to many collections per minute
+    crit (int): a CRITICAL state is triggered by to many collections per minute
+Collection time
+    warn (int): a WARN state is triggered by assuming to many time for
+                collections per minute
+    crit (int): a CRITICAL state is triggered by assuming to many time for
+                collections per minute
+
+[configuration]
+jolokia_metrics_gc_default_levels = {
+        'CollectionTime': (None, None),
+        'CollectionCount': (None, None)
+    }
+ By default no levels are set because each virtual machine requieres its own
+ individual parameters.

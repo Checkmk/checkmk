@@ -323,7 +323,7 @@ def process_matches(ps, procname, l_user):
 #    "okmax"   : 1,
 #    "warnmax" : 1,
 # }
-def check_procs(item, params, info, with_perfdata):
+def check_ps(item, params, info, with_perfdata):
     now = time.time()
 
     cpu_cores, info = ps_parse_info(info) # parse windows wmic information
@@ -351,6 +351,11 @@ def check_procs(item, params, info, with_perfdata):
     percent_cpu    = 0.0
     extended_perfdata = False
 
+    # The counter names for the ps check are quite volatile, because there is
+    # dynamic part (the pid) in the name. Therefore we clear any counters
+    # older than one day. Affected are ps_wmic.user, ps_wmic.kernel, ps_stat.pcpu
+    clear_counters("ps_", 86400)
+
     running_on = set([]) # collect information about nodes the processes run on
     for line in info:
         node_name = line[0]
@@ -366,8 +371,21 @@ def check_procs(item, params, info, with_perfdata):
                     resident_size += int(addinfo[2]) # kB
                     if len(addinfo) >= 10: # even more data: processId, pagefile_usage, usermodetime, kernelmodetime, threadCount, openHandles
                         pid, pagefile_usage, user_c, kernel_c, handle_c = map(int, addinfo[4:9])
-                        timedif, user_per_sec   = get_counter("ps_wmic.user.%d" % pid, now, user_c)
-                        timedif, kernel_per_sec = get_counter("ps_wmic.kernel.%d" % pid, now, kernel_c)
+                        counter_wrapped = False
+                        try:
+                            timedif, user_per_sec   = get_counter("ps_wmic.user.%d" % pid, now, user_c)
+                        except MKCounterWrapped, e:
+                            counter_wrapped = True
+
+                        try:
+                            timedif, kernel_per_sec = get_counter("ps_wmic.kernel.%d" % pid, now, kernel_c)
+                        except MKCounterWrapped, e:
+                            counter_wrapped = True
+
+                        if counter_wrapped:
+                            user_per_sec   = 0
+                            kernel_per_sec = 0
+
                         user_perc = user_per_sec / 100000.0 / cpu_cores
                         kernel_perc = kernel_per_sec / 100000.0 / cpu_cores
                         percent_cpu += user_perc + kernel_perc
@@ -383,7 +401,11 @@ def check_procs(item, params, info, with_perfdata):
                             pid = addinfo[4]
                             hours, minutes, seconds = map(int, addinfo[3].split(":"))
                             total_seconds = 86400 * days + 3600 * hours + 60 * minutes + seconds
-                            timedif, cputime = get_counter("ps_stat.pcpu.%s" % pid, now, total_seconds)
+                            try:
+                                timedif, cputime = get_counter("ps_stat.pcpu.%s" % pid, now, total_seconds)
+                            except MKCounterWrapped, e:
+                                cputime = 0
+
                             pcpu = cputime * 100
                         else:
                             pcpu = savefloat(addinfo[3])
@@ -471,7 +493,7 @@ def check_procs(item, params, info, with_perfdata):
     return state, infotext, perfdata
 
 check_info['ps'] = {
-    "check_function"          : lambda i,p,n: check_procs(i,p,n,False),
+    "check_function"          : lambda i,p,n: check_ps(i,p,n,False),
     "inventory_function"      : inventory_ps,
     "service_description"     : "proc_%s",
     "has_perfdata"            : False,
@@ -480,7 +502,7 @@ check_info['ps'] = {
 }
 
 check_info['ps.perf'] = {
-    "check_function"          : lambda i,p,n: check_procs(i,p,n,True),
+    "check_function"          : lambda i,p,n: check_ps(i,p,n,True),
     "inventory_function"      : inventory_ps_perf,
     "service_description"     : "proc_%s",
     "has_perfdata"            : True,

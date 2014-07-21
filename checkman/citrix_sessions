@@ -1,0 +1,20 @@
+title: Citrix Sessions
+agents: windows
+catalog: app/citrix
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the number of active, inactive an total Sessions on a citrix server. In Order to work the plugin {{citrix_sessions.ps1}} is needed.
+
+inventory:
+ One service will be created.
+
+perfdata:
+ Three graphs will be created, for total, active and inactive. Each with it's warn and crit levels
+
+examples:
+ citrix_sessions_default_levels = {
+    "total"     : ( 60, 65 ),
+    "active"     : ( 60, 65 ),
+    "inactive"   : ( 10, 15 ),
+ }

@@ -338,6 +338,7 @@ perfometers["check_mk-wagner_titanus_topsense.temp"] = perfometer_temperature
 perfometers["check_mk-enterasys_temp"] = perfometer_temperature
 perfometers["check_mk-adva_fsp_temp"] = perfometer_temperature
 perfometers["check_mk-allnet_ip_sensoric.temp"] = perfometer_temperature
+perfometers["check_mk-qlogic_sanbox.temp"] = perfometer_temperature
 
 def perfometer_temperature_multi(row, check_command, perf_data):
     display_value = -1
@@ -459,12 +460,12 @@ perfometers["check_mk-esx_vsphere_counters.if"] = perfometer_check_mk_if
 perfometers["check_mk-hitachi_hnas_fc_if"] = perfometer_check_mk_if
 
 def perfometer_check_mk_fc_port(row, check_command, perf_data):
-    unit =  "B"
+    unit = "B"
     return perfometer_bandwidth(
         in_traffic  = savefloat(perf_data[0][1]),
-        out_traffic = savefloat(perf_data[5][1]),
+        out_traffic = savefloat(perf_data[1][1]),
         in_bw     = savefloat(perf_data[0][6]),
-        out_bw    = savefloat(perf_data[5][6]),
+        out_bw    = savefloat(perf_data[1][6]),
         unit      = unit
     )
 perfometers["check_mk-fc_port"] = perfometer_check_mk_fc_port

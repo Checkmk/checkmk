@@ -1,0 +1,10 @@
+Title: diskstat: fixed performance data of old legacy disk IO read/write data
+Level: 1
+Component: core
+Version: 1.2.5i5
+Date: 1405086851
+Class: fix
+
+When diskstat is configured to have seperate checks for read and write IO,
+counter values instead of rates were taken as performance data. This
+is fixed now.

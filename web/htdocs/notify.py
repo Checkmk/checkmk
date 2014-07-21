@@ -71,9 +71,6 @@ def load_plugins():
     if loaded_with_language == current_language:
         return
 
-    global g_message_path
-    g_message_path = config.user_confdir + '/messages.mk'
-
     global notify_methods
     notify_methods = {
         'gui_popup': {

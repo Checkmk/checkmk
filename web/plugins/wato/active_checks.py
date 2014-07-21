@@ -177,10 +177,17 @@ register_rule(group,
                title = _("Optional parameters"),
                elements = [
                    ( "server",
-                     TextAscii(
-                         title = _("DNS Server"),
-                         allow_empty = False,
-                         help = _("Optional DNS server you want to use for the lookup"))),
+                        Alternative(
+                            title = _("DNS Server"),
+                            elements = [ 
+                                FixedValue( value=None, totext=_("use local configuration"), 
+                                            title = _("Use local DNS configuration of monitoring site")),
+                                TextAscii(
+                                    title = _("Specify DNS Server"),
+                                    allow_empty = False,
+                                    help = _("Optional DNS server you want to use for the lookup")),
+                             ])
+                   ),
                    ( "expected_address",
                      Transform(
                          ListOfStrings(

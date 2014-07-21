@@ -41,7 +41,9 @@
 # OVERALL 2
 
 def inventory_omd_status(info):
-    return [ ( line[0][1:-1], None ) for line in info if line[0][0] == '[' ]
+    for line in info:
+        if line[0][0] == '[':
+            yield line[0][1:-1], None
 
 def check_omd_status(item, _no_params, info):
     active = False

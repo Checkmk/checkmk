@@ -1,0 +1,8 @@
+Title: jolokia_metrics.gc, jolokia_metrics.tp, jolokia_info: two new subchecks for the jolokia_metrics checks and better error handling for jolokia_info
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1405668469
+Class: feature
+
+many thanks to Rene Stolle for the contribution

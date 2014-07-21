@@ -1,0 +1,17 @@
+title: Citrix Server load (Score)
+agents: windows
+catalog: app/citrix
+license: GPL
+distribution: check_mk
+description:
+ The Citrix Server load is score calculated by citrix (See: http://www.virtualizationadmin.com/articles-tutorials/terminal-services/general/citrix-presentation-server-load-management-part1.html)
+ With this check it's possible to set thresholds for this value. In order to work the {{citrix_serverload.ps1}} plugin is needed.
+
+inventory:
+ One service will be created.
+
+perfdata:
+ One graph will be created, with it's warn and crit levels
+
+examples:
+ citrix_serverload_default_levels = ( 8500, 9500 )

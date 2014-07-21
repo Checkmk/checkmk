@@ -303,9 +303,10 @@ def multipart_mail(target, subject, from_address, reply_to, content_txt, content
     return m
 
 def send_mail(m, target, from_address):
-    cmd = ["/usr/sbin/sendmail", "-i", target ]
+    cmd = ["/usr/sbin/sendmail"]
     if from_address:
         cmd += ['-f', from_address]
+    cmd += [ "-i", target]
     p = subprocess.Popen(cmd, stdin = subprocess.PIPE)
     p.communicate(m.as_string())
     return True

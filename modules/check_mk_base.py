@@ -836,6 +836,21 @@ def load_counters(hostname):
         except:
             g_counters = {}
 
+
+# Deletes counters from g_counters matching the given pattern and are older_than x seconds
+def clear_counters(pattern, older_than):
+    global g_counters
+    counters_to_delete = []
+    now = time.time()
+
+    for name, (timestamp, value) in g_counters.items():
+        if name.startswith(pattern):
+            if now > timestamp + older_than:
+                counters_to_delete.append(name)
+
+    for name in counters_to_delete:
+        del g_counters[name]
+
 def get_counter(countername, this_time, this_val, allow_negative=False):
     global g_counters
 
@@ -1179,6 +1194,35 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
             try:
                 dont_submit = False
                 result = check_function(item, params, info)
+                # the new api doesen't return a tuple,
+                # it's yield based instead.
+                if type(result) != tuple:
+                    messages = []
+                    perf = []
+                    for line in result:
+                        messages.append(( line[0], line[1] ))
+                        if len(line) == 3:
+                            # there can be a single perf value (tuple)
+                            # or a list of multiple perf values
+                            if type(line[2]) == tuple:
+                                perf.append(line[2])
+                            elif type(line[2]) == list:
+                                perf += list
+                    # Check funktion returns only a single line
+                    if len(messages) == 1:
+                        result = messages[0][0], messages[0][1], perf 
+                    else:
+                        # Get the overall status
+                        return_states = [ x[0] for x in messages ]
+                        if 3 in return_states:
+                            if not 2 in return_states and not 1 in return_states:
+                                status = 3
+                            else:
+                                status = max(return_states) - 1
+                        else:
+                            status = max(return_states)
+                        result = status, ", ".join( x[1]+state_markers[x[0]] for x in messages ), perf
+
             # handle check implementations that do not yet support the
             # handling of wrapped counters via exception. Do not submit
             # any check result in that case:
@@ -1618,8 +1662,8 @@ def get_regex(pattern):
 # Names of texts usually output by checks
 nagios_state_names = ["OK", "WARN", "CRIT", "UNKNOWN"]
 
-# Symbolic representations of states
-state_markers = ["(.)", "(!)", "(!!)", "(?)"]
+# Symbolic representations of states (Needed for new 2.0 check api)
+state_markers = ["", "(!)", "(!!)", "(?)"]
 
 # int() function that return 0 for strings the
 # cannot be converted to a number

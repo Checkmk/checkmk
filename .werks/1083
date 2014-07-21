@@ -1,0 +1,8 @@
+Title: ad_replication.bat: does not return data if the server is no DC
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1405931445
+Class: fix
+
+

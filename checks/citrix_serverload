@@ -1,0 +1,56 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+#<<<citrix_serverload>>>
+#100
+
+citrix_serverload_default_levels = ( 8500, 9500 )
+
+def inventory_citrix_serverload(info):
+    return [ ( None, 'citrix_serverload_default_levels' )]
+
+def check_citrix_serverload(_no_item, params, info):
+    try:
+        load = int(info[0][0])
+    except:
+        return 3, "Load information not found"
+
+    warn, crit = params
+    state = 0
+    if load > crit:
+        state = 2
+    elif load > warn:
+        state = 1
+    return state, "Current Citrix Load is: " + str(load), [ ('perf', load, warn, crit ) ]
+
+check_info["citrix_serverload"] = {
+    "group"                 : "citrix_load",
+    "check_function"        : check_citrix_serverload,
+    "inventory_function"    : inventory_citrix_serverload,
+    "service_description"   : "Citrix Serverload",
+    "has_perfdata"          : True,
+}
+

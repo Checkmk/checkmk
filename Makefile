@@ -103,6 +103,7 @@ dist: mk-livestatus mk-eventd
 	tar  czf $(DISTNAME)/conf.tar.gz $(TAROPTS) main.mk-$(VERSION) multisite.mk-$(VERSION)
 	rm -f main.mk-$(VERSION) multisite.mk-$(VERSION)
 	tar  czf $(DISTNAME)/agents.tar.gz $(TAROPTS) -C agents \
+		--exclude "msibuild" \
 		--exclude "build_version" \
 		--exclude "*.rc" \
 		--exclude "*.rc.in" \

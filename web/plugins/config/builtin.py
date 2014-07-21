@@ -237,3 +237,6 @@ default_user_profile  = {
 lock_on_logon_failures = False
 
 user_localizations = default_user_localizations
+
+# Write WATO folder permissions to auth.php file
+export_folder_permissions = False

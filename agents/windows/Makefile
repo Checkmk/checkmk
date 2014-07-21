@@ -103,7 +103,9 @@ install_agent-64.exe: check_mk_agent-64.exe crash.exe nowin.exe
 	makensis installer-64.nsi
 	chmod +x install_agent-64.exe
 
-
+msi_installer:
+	cd msibuild ; make BUILD_VERSION=$$(cat ../build_version) CHECK_MK_VERSION=$(VERSION)
+	cp msibuild/check_mk_agent.msi .
 
 crash.exe: crash.cc
 	$(CXX) -o $@ $<
@@ -113,6 +115,7 @@ nowin.exe: nowin.cc
 
 clean:
 	rm -f *.o *~ svn-*.tmp *.rc *.res
+	cd msibuild ; make clean
 
 mrproper: clean
 	rm -f *.exe

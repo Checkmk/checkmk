@@ -1,0 +1,9 @@
+Title: sap: It is now possible to add multiple sap instances to the sap.cfg file
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1405504491
+Class: feature
+
+The cfg format has changed from dict to a list of dicts. See the sap.cfg for a example. The old config format is still working.
+

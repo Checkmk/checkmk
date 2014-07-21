@@ -38,7 +38,8 @@ def check_pdu_gude(item, params, info):
         try:
             values = info[item - 1]
         except ValueError:
-            return (3, "Item not found")
+            yield 3, "Item not found"
+            return
 
         units = {
             0 : ("kWh", 1000),
@@ -48,32 +49,27 @@ def check_pdu_gude(item, params, info):
             4 : ("VA",False),
         }
 
-        message = []
-        perf = []
-        state = 0
         for pos, data in units.items():
             value = savefloat(values[pos])
             unit, div = data
             if div:
                 value = value / div
             warn, crit = params.get(unit, (None, None))
-            perf.append((unit, value, warn, crit))
-            label = ""
+            perf = unit, value, warn, crit
+            message = "%.2f%s" % (value, unit)
             if warn > crit:
                 if value < crit:
-                    state = 2
-                    label = "(!!)"
+                    yield 2, message, perf
                 elif value < warn:
-                    state = max(state, 1)
-                    label = "(!)"
+                    yield 1, message, perf
+                else:
+                    yield 0, message, perf
             else:
                 if crit != None and value > crit:
-                    state = 2
-                    label = "(!!)"
+                    yield 2, message, perf
                 elif warn != None and value > warn:
-                    state = max(state, 1)
-                    label = "(!)"
-            message.append("%.2f%s%s" % (value, unit, label))
+                    yield 1, message, perf
+                else:
+                    yield 0, message, perf
 
-        return(state, ", ".join(message), perf)
 

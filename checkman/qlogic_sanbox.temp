@@ -1,0 +1,22 @@
+title: QLogic SANbox Fibre Channel Switches: Temperatur Sensors
+agents: snmp
+catalog: hw/storagehw/qlogic
+license: GPL
+distribution: check_mk
+description:
+ Checks the temperature sensors in QLogic SANbox Fibre Channel Switches.
+
+ The current temperature in degree celsius is displayed.
+
+ The check returns {OK} if connUnitSensorStatus reports "ok", {WARN} on
+ "warning", {CRIT} on status "failed" and {UNKN} on every other.
+
+item:
+ The ID of the sensor taken from SNMP. It contains 3 numbers separated by
+ dots, e. g. 129.45.3
+
+perfdata:
+ Exactly one value: The temperature in degree celsius.
+
+inventory:
+ Creates one check for every temperature sensor found by SNMP.

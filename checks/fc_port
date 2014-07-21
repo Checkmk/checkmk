@@ -66,7 +66,7 @@ porttype_list = ( 'unknown', 'unknown', 'other', 'not-present', 'hub-port', 'n-p
 
 # settings for inventory: which ports should not be inventorized
 fc_port_no_inventory_types = [ 3 ]
-fc_port_no_inventory_admstates  = [ ]
+fc_port_no_inventory_admstates  = [ 1, 3 ]
 fc_port_no_inventory_opstates  = [ ]
 fc_port_no_inventory_phystates  = [ ]
 fc_port_inventory_use_portname = False # use connUnitPortName as service description
@@ -141,6 +141,7 @@ def check_fc_port(item, params, info):
     summarystate = 0
     output = []
     perfdata = []
+    perfaverages = []
 
     wirespeed = savefloat(portinfo[0][4]) * 1000.0 # speed in Bytes/sec, 0 if unknown
     if wirespeed == 0:
@@ -187,7 +188,7 @@ def check_fc_port(item, params, info):
             if average:
                 timedif, value = get_average("fc_port.%s.%s.avg" % (what, item), this_time, value, average)
                 output.append("Avg(%dmin): %s/s" % (average, get_bytes_human_readable(value)))
-                perfdata.append( ("%s_avg" % what.lower(), value, warn_bytes, crit_bytes, 0, wirespeed))
+                perfaverages.append( ("%s_avg" % what.lower(), value, warn_bytes, crit_bytes, 0, wirespeed))
 
             # handle levels for in/out
             if crit_bytes != None and value >= crit_bytes:
@@ -196,6 +197,9 @@ def check_fc_port(item, params, info):
             elif warn_bytes != None and value >= warn_bytes:
                 summarystate = max(1, summarystate)
                 output.append(" >= %s/s(!!)" % (get_bytes_human_readable(warn_bytes)))
+
+        # put perfdata of averages after perfdata for in and out in order not to confuse the perfometer
+        perfdata.extend(perfaverages)
 
         # R X O B J E C T S & T X O B J E C T S
         # Put number of objects into performance data (honor averaging)
@@ -313,7 +317,8 @@ check_info["fc_port"] = {
     'has_perfdata'           : True,
     'group'                  : 'fc_port',
     'default_levels_variable': 'fc_port_default_levels',
-    'snmp_scan_function'     : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1588.2.1.1"),
+    'snmp_scan_function'     : lambda oid: oid(".1.3.6.1.2.1.1.1.0") == "Fibre Channel Switch." \
+                                and not oid(".1.3.6.1.4.1.1588.2.1.1.1.6.2.1.1"),
     'snmp_info'              :  ( ".1.3.6.1.3.94", [
             "1.10.1.2",         # connUnitPortIndex                             # 0
             "1.10.1.3",         # connUnitPortType                              # 1

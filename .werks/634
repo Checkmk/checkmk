@@ -1,0 +1,10 @@
+Title: Max Bandwidth for PNP-Graphs of Interface checks corrected
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1405429992
+Class: fix
+
+The maximum bandwith of a network interfaces was falsely converted
+to the unit MiByte/sec, instead of MByte/sec. Example: 1 GBit/sec was
+converted to 119.2 (MiByte/sec), it now is 125 MByte/sec.

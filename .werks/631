@@ -1,0 +1,10 @@
+Title: fc_port: several fixes for the perfometer to display the right values
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1405078401
+Class: fix
+
+The perfometer for this check did not display the out traffic, did not use the
+maximum bandwith to display throuput in percent, and did not work when
+averaging was switched on. These problems have been fixed in this werk.

@@ -1595,15 +1595,15 @@ def pnp_cleanup(s):
 #          case the factor is 1.0 / 1048576.
 def check_levels(value, dsname, params, unit = "", factor = 1.0, statemarkers=False):
 
+    perfdata = []
+    infotext = ""
+
     # None or (None, None) -> do not check any levels
     if params == None or params == (None, None):
         return 0, "", []
 
-    perfdata = []
-    infotext = ""
-
     # Pair of numbers -> static levels
-    if type(params) == tuple:
+    elif type(params) == tuple:
         warn_upper, crit_upper = params[0] * factor, params[1] * factor,
         warn_lower, crit_lower = None, None
         ref_value = None

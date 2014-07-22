@@ -95,35 +95,31 @@ def inventory_ups_test(info):
     if info:
         return [ (None, "ups_test_default") ]
 
-def check_ups_test(item, params, info):
+def check_ups_test(_no_item, params, info):
     warn, crit = params
-    if not info:
-        return 3, "Data Missing"
+
     line = info[0]
     ResultsSummary,  StartTime, ElapsedTime = map(saveint, line[:-1])
-    ElapsedTime = ElapsedTime/100
-    etime = get_age_human_readable(ElapsedTime)
+    message = line[3]
 
+    # State of test
     state = 0
-    state_label = ""
     if ResultsSummary in [ 3, 4 ]:
         state = 2
-        state_label = "(!!)"
     elif ResultsSummary in [ 2, 6 ]:
         state = 1
-        state_label = "(!)"
+    if message or state:
+        yield state, message
 
-    time_label = ""
-    if crit and ElapsedTime >= crit*86400:
+    # Elapsed time
+    ElapsedTime = ElapsedTime/100
+    state = 0
+    if crit and ElapsedTime >= crit * 86400:
         state = 2
-        time_label = "(!!)"
-    elif warn and ElapsedTime >= warn*86400:
-        state = max(state, 1)
-        time_label = "(!)"
+    elif warn and ElapsedTime >= warn * 86400:
+        state = 1
+    yield state, "time elapsed since test: %s" % get_age_human_readable(ElapsedTime)
 
-    ResultsDetail = "%s%s Time elapsed since test: %s%s" % (line[-1], state_label, etime, time_label)
-
-    return state, ResultsDetail
 
 check_info['ups_test'] = {
   "inventory_function"  : inventory_ups_test,
@@ -131,7 +127,7 @@ check_info['ups_test'] = {
   "service_description" : "Self Test",
   "has_perfdata"        : False,
   "group"               : "ups_test",
-  "snmp_info"           : ( ".1.3.6.1.2.1.33.1.7", [3,5,6,4 ] ),
+  "snmp_info"           : ( ".1.3.6.1.2.1.33.1.7", [ 3, 5, 6, 4 ] ),
   "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in [ ".1.3.6.1.4.1.534.1", ".1.3.6.1.4.1.818.1.100.1.2" ]
 
 }

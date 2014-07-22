@@ -38,6 +38,7 @@
     * 1133 qlogic_sanbox_fabric_element: New Check for Fabric Elements in QLogic SANbox Fibre Channel Switches
     * 1134 bintec_sensors.fan: New Check for Fan Speed of Bintec Routers
     * 1135 bintec_sensors.voltage, bintec_sensors.temp: New Checks for Voltage and Temperature Sensors of Bintec Routers
+    * 1136 bintec_brrp_status: New Check for BRRP States on Bintec Routers
     * 0994 FIX: agent plugin smart: fixed syntax error
     * 0989 FIX: logwatch.ec: Fix forwarding multiple messages via syslog/TCP...
     * 0943 FIX: if.include: fixed incorrect traffic percentage values in the check output of if checks...

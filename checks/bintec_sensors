@@ -55,9 +55,8 @@ def inventory_bintec_sensors_fan(info):
 
 def check_bintec_sensors_fan(item, params, info):
     for sensor_id, sensor_descr, sensor_type, sensor_value, sensor_unit in info:
-        status = 0
-        perfdata = []
         if sensor_descr == item:
+            status = 0
             sensor_value = int(sensor_value)
             if sensor_value <= params["lower"][1] or sensor_value >= params["upper"][0]:
                 status = 1
@@ -77,6 +76,91 @@ check_info["bintec_sensors.fan"] = {
     "inventory_function"    : inventory_bintec_sensors_fan,
     "service_description"   : "%s",
     "group"                 : "hw_fans",
+    "has_perfdata"          : True,
+    "snmp_info"             : bintec_sensors_info,
+    "snmp_scan_function"    : bintec_sensors_scan,
+}
+
+#.
+#   .--temp----------------------------------------------------------------.
+#   |                       _                                              |
+#   |                      | |_ ___ _ __ ___  _ __                         |
+#   |                      | __/ _ \ '_ ` _ \| '_ \                        |
+#   |                      | ||  __/ | | | | | |_) |                       |
+#   |                       \__\___|_| |_| |_| .__/                        |
+#   |                                        |_|                           |
+#   '----------------------------------------------------------------------'
+
+bintec_sensors_temp_default_levels = (35, 40)
+
+def inventory_bintec_sensors_temp(info):
+    inventory = []
+    for sensor_id, sensor_descr, sensor_type, sensor_value, sensor_unit in info:
+        if sensor_type == "1":
+            inventory.append( (sensor_descr, "bintec_sensors_temp_default_levels" ) )
+    return inventory
+
+def check_bintec_sensors_temp(item, params, info):
+    for sensor_id, sensor_descr, sensor_type, sensor_value, sensor_unit in info:
+        if sensor_descr == item:
+            status = 0
+            sensor_value = int(sensor_value)
+            warn, crit = params
+            if sensor_value >= warn:
+                status = 1
+            if sensor_value >= crit:
+                status = 2
+
+            message = "%s is at %s %s" % (sensor_descr, sensor_value, sensor_unit)
+            perfdata = [ ("temp", str(sensor_value)+"C", warn, crit) ]
+
+            return status, message, perfdata
+
+    return 3, "Sensor %s not found" % item
+
+check_info["bintec_sensors.temp"] = {
+    "check_function"        : check_bintec_sensors_temp,
+    "inventory_function"    : inventory_bintec_sensors_temp,
+    "service_description"   : "Temperature %s",
+    "group"                 : "hw_temperature",
+    "has_perfdata"          : True,
+    "snmp_info"             : bintec_sensors_info,
+    "snmp_scan_function"    : bintec_sensors_scan,
+}
+
+#.
+#   .--voltage-------------------------------------------------------------.
+#   |                             _ _                                      |
+#   |                 __   _____ | | |_ __ _  __ _  ___                    |
+#   |                 \ \ / / _ \| | __/ _` |/ _` |/ _ \                   |
+#   |                  \ V / (_) | | || (_| | (_| |  __/                   |
+#   |                   \_/ \___/|_|\__\__,_|\__, |\___|                   |
+#   |                                        |___/                         |
+#   '----------------------------------------------------------------------'
+
+def inventory_bintec_sensors_voltage(info):
+    inventory = []
+    for sensor_id, sensor_descr, sensor_type, sensor_value, sensor_unit in info:
+        if sensor_type == "3":
+            inventory.append( (sensor_descr, None ) )
+    return inventory
+
+def check_bintec_sensors_voltage(item, _no_params, info):
+    for sensor_id, sensor_descr, sensor_type, sensor_value, sensor_unit in info:
+        if sensor_descr == item:
+            sensor_value = int(sensor_value) / 1000.0
+
+            message = "%s is at %s V" % (sensor_descr, sensor_value)
+            perfdata = [ ("voltage", str(sensor_value)+"V") ]
+
+            return 0, message, perfdata
+
+    return 3, "Sensor %s not found" % item
+
+check_info["bintec_sensors.voltage"] = {
+    "check_function"        : check_bintec_sensors_voltage,
+    "inventory_function"    : inventory_bintec_sensors_voltage,
+    "service_description"   : "Voltage %s",
     "has_perfdata"          : True,
     "snmp_info"             : bintec_sensors_info,
     "snmp_scan_function"    : bintec_sensors_scan,

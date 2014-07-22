@@ -339,6 +339,7 @@ perfometers["check_mk-enterasys_temp"] = perfometer_temperature
 perfometers["check_mk-adva_fsp_temp"] = perfometer_temperature
 perfometers["check_mk-allnet_ip_sensoric.temp"] = perfometer_temperature
 perfometers["check_mk-qlogic_sanbox.temp"] = perfometer_temperature
+perfometers["check_mk-bintec_sensors.temp"] = perfometer_temperature
 
 def perfometer_temperature_multi(row, check_command, perf_data):
     display_value = -1
@@ -1108,3 +1109,9 @@ def perfometer_pressure(row, check_command, perf_data):
 
 perfometers['check_mk-allnet_ip_sensoric.pressure'] = perfometer_pressure
 
+def perfometer_voltage(row, check_command, perf_data):
+    color = "#808000"
+    value = float(perf_data[0][1])
+    return "%0.3f V" % value, perfometer_logarithmic(value, 12, 2, color)
+
+perfometers["check_mk-bintec_sensors.voltage"] = perfometer_voltage

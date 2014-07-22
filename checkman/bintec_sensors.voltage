@@ -1,0 +1,18 @@
+title: Bintec Routers: Voltage Sensors
+agents: snmp
+catalog: hw/network/bintec
+license: GPL
+distribution: check_mk
+description:
+ Displays the Voltage measured at different Voltage Sensors of Bintec Routers.
+
+ The check is for display only and always returns {OK}.
+
+item:
+ The sensorDescr from SNMP.
+
+perfdata:
+ One value: The voltage.
+
+inventory:
+ Creates one check per voltage sensor (sensorType 3).

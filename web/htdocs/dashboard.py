@@ -327,7 +327,7 @@ def render_dashboard(name):
         html.write("</ul>\n")
 
         html.icon_button(None, _('Edit the Dashboard'), 'dashboard_controls', 'controls_toggle',
-                        onclick = 'toggle_dashboard_controls()')
+                        onclick = 'void(0)')
 
     html.write("</div>\n")
 
@@ -903,6 +903,7 @@ def ajax_popup_add_dashlet():
 
     load_dashboards()
     html.write('<ul>\n')
+    html.write('<li><span>%s</span></li>' % _('Add to dashboard:'))
     for dname, board in available_dashboards.items():
         html.write('<li>')
         html.write('<a href="javascript:void(0)" onclick="add_to_dashboard(\'%s\')">%s</a>' %

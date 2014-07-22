@@ -716,8 +716,9 @@ div.graph a.dashadd:hover {
 
 #dashadd_popup {
     position: absolute;
-    top: 15px;
-    left: 30px;
+    bottom: 15px;
+    left: 15px;
+    z-index: 10;
 
     padding: 0;
     width: 200px;
@@ -740,12 +741,16 @@ div.graph a.dashadd:hover {
     padding: 5px;
 }
 
-#dashadd_popup a {
+#dashadd_popup a, #dashadd_popup span {
     display: block;
     padding: 5px 15px;
     text-align: left;
     text-decoration: none;
     color: #fff;
+}
+
+#dashadd_popup span {
+    padding-left: 5px;
 }
 
 #dashadd_popup a:hover {

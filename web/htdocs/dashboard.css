@@ -194,11 +194,10 @@ div.dashlet_inner div.stats {
 }
 
 #controls, ul.sub {
+    margin: 0;
     z-index: 180;
     display: block;
     position: absolute;
-    bottom: 40px;
-    right: 20px;
     padding: 5px;
     width: 200px;
     list-style: none;

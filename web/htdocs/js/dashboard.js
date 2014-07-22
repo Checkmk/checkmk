@@ -349,17 +349,39 @@ function update_dashlet(id, code) {
 // DASHBOARD EDITING
 //
 
-function toggle_dashboard_controls(show) {
+function toggle_dashboard_controls(show, event) {
     var controls = document.getElementById('controls');
     if (!controls)
         return; // maybe not permitted -> skip
 
-    if (show === undefined)
-        var show = controls.style.display != 'block';
+    if (typeof show === 'undefined')
+        var show = controls.style.display == 'none';
 
     if (show) {
         controls.style.display = 'block';
         hide_submenus();
+
+        // Gather and update the position of the menu
+        if (event) {
+            var target = getTarget(event);
+            controls.style.left = (event.clientX - target.offsetLeft + 5) + 'px';
+            controls.style.top  = (event.clientY - target.offsetTop + 5) + 'px';
+
+            var dashboard = document.getElementById('dashboard');
+
+            // When menu is out of screen on the right, move to left
+            if (controls.offsetLeft + controls.clientWidth > dashboard.clientWidth)
+                controls.style.left = (controls.offsetLeft - controls.clientWidth - 15) + 'px';
+
+            // When menu is out of screen on the bottom, move to top
+            if (controls.offsetTop + controls.clientHeight > dashboard.clientHeight) {
+                var new_top = controls.offsetTop - controls.clientHeight - 5;
+                if (target != dashboard)
+                    new_top -= dashboard.offsetTop;
+
+                controls.style.top = new_top + 'px';
+            }
+        }
     }
     else {
         controls.style.display = 'none';
@@ -664,6 +686,37 @@ function rerender_dashlet_controls(dashlet_obj) {
     dashlet_toggle_edit(dashlet_obj, true);
 }
 
+// Handle misc events when in editing mode and clicks have made on general elements
+function body_click_handler(event) {
+    if (!event)
+        event = window.event;
+
+    if (!g_editing)
+        return true;
+
+    var target = getTarget(event);
+    var button = getButton(event);
+
+    if (target.id == 'dashboard' && button == 'RIGHT') {
+        // right click on the empty dashboard area
+        toggle_dashboard_controls(undefined, event);
+        prevent_default_events(event);
+        return false;
+    }
+    else if (target.parentNode.id == 'controls_toggle' && button == 'LEFT') {
+        // left click on the controls menu
+        toggle_dashboard_controls(undefined, event);
+        prevent_default_events(event);
+        return false;
+    }
+    else if (target.parentNode.id != 'controls_toggle'
+             && (!target.parentNode.parentNode || !has_class(target.parentNode.parentNode, 'menu'))) {
+        // Hide the controls menu when clicked somewhere else
+        toggle_dashboard_controls(false);
+    }
+
+    return true;
+}
 /**
  * Dragging of dashlets
  */
@@ -681,10 +734,6 @@ function drag_dashlet_start(event) {
 
     var target = getTarget(event);
     var button = getButton(event);
-
-    // Hide the controls menu when clicked somewhere else
-    if (target.id != 'controls_toggle' && !has_class(target.parentNode.parentNode, 'menu'))
-        toggle_dashboard_controls(false);
 
     if (g_dragging === false && button == 'LEFT' && has_class(target, 'controls')) {
         g_dragging = target.parentNode;
@@ -933,4 +982,18 @@ add_event_handler('mousedown', function(e) {
 });
 add_event_handler('mouseup', function(e) {
     return drag_dashlet_stop(e) && resize_dashlet_stop(e);
+});
+add_event_handler('click', function(e) {
+    return body_click_handler(e);
+});
+
+// Totally disable the context menu for the dashboards in edit mode
+add_event_handler('contextmenu', function(e) {
+    if (g_editing) {
+        prevent_default_events(e);
+        return false;
+    }
+    else {
+        return true;
+    }
 });

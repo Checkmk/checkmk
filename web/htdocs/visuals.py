@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import os
+import os, copy
 
 from lib import *
 from valuespec import *
@@ -289,7 +289,7 @@ def page_list(what, visuals, custom_columns = []):
                     _("Delete this %s!") % what_s, "delete")
 
             # visual Name
-            table.cell(_('Name'), visualname)
+            table.cell(_('ID'), visualname)
 
             # Title
             table.cell(_('Title'))
@@ -470,8 +470,8 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None, create_hand
                 totext = context_types[context_type]['title'],
             )),
             ('name', TextAscii(
-                title = _('Name'),
-                help = _("The name will be used in URLs that point to a view, e.g. "
+                title = _('Unique ID'),
+                help = _("The ID will be used in URLs that point to a view, e.g. "
                          "<tt>view.py?view_name=<b>myview</b></tt>. It will also be used "
                          "internally for identifying a view. You can create several views "
                          "with the same title but only one per view name. If you create a "

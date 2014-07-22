@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config, defaults, visuals, pprint, time
+import config, defaults, visuals, pprint, time, copy
 from valuespec import *
 from lib import *
 import wato
@@ -162,7 +162,25 @@ def add_wato_folder_to_url(url, wato_folder):
 
 # Actual rendering function
 def render_dashboard(name):
+    mode = 'display'
+    if html.var('edit') == '1':
+        mode = 'edit'
+
+    if mode == 'edit' and not config.may("general.edit_dashboards"):
+        raise MKAuthException(_("You are not allowed to edit dashboards."))
+
     board = available_dashboards[name]
+
+    if mode == 'edit' and board['owner'] != config.user_id:
+        # This dashboard which does not belong to the current user is about to
+        # be edited. In order to make this possible, the dashboard is being
+        # cloned now!
+        board = copy.deepcopy(board)
+        board['owner'] = config.user_id
+
+        dashboards[(config.user_id, name)] = board
+        available_dashboards[name] = board
+        visuals.save('dashboards', dashboards)
 
     # The dashboard may be called with "wato_folder" set. In that case
     # the dashboard is assumed to restrict the shown data to a specific
@@ -261,41 +279,50 @@ def render_dashboard(name):
             dimensions['h'] = dashlet_type['size'][1]
         dashlets_js.append(dimensions)
 
-    if board['owner'] == config.user_id:
+    # Show the edit menu to all users which are allowed to edit dashboards
+    if config.may("general.edit_dashboards"):
         html.write('<ul id="controls" class="menu" style="display:none">\n')
 
-        html.write('<li><a href="edit_dashboard.py?load_name=%s&back=%s" '
-                   'onmouseover="hide_submenus();" >%s</a></li>\n' %
-            (name, html.urlencode(html.makeuri([])), _('Properties')))
+        if board['owner'] != config.user_id:
+            # Not owned dashboards must be cloned before being able to edit. Do not switch to
+            # edit mode using javascript, use the URL with edit=1. When this URL is opened,
+            # the dashboard will be cloned for this user
+            html.write('<li><a href="%s">%s</a></li>\n' % (html.makeuri([('edit', 1)]), _('Edit Dashboard')))
 
-        # Links visible during editing
-        display = html.var('edit') == '1' and 'block' or 'none'
-        html.write('<li id="control_view" style="display:%s"><a href="javascript:void(0)" '
-                   'onmouseover="hide_submenus();" '
-                   'onclick="toggle_dashboard_edit(false)">%s</a>\n' %
-                        (display, _('View Dashboard')))
+        else:
+            # Show these options only to the owner of the dashboard
+            html.write('<li><a href="edit_dashboard.py?load_name=%s&back=%s" '
+                       'onmouseover="hide_submenus();" >%s</a></li>\n' %
+                (name, html.urlencode(html.makeuri([])), _('Properties')))
 
-        html.write('<li id="control_add" class="sublink" style="display:%s" '
-                   'onmouseover="show_submenu(\'control_add\')"><a href="javascript:void(0)">%s</a>\n' %
-                        (display, _('Add dashlet')))
+            # Links visible during editing
+            display = html.var('edit') == '1' and 'block' or 'none'
+            html.write('<li id="control_view" style="display:%s"><a href="javascript:void(0)" '
+                       'onmouseover="hide_submenus();" '
+                       'onclick="toggle_dashboard_edit(false)">%s</a>\n' %
+                            (display, _('Stop Editing')))
 
-        # The dashlet types which can be added to the view
-        html.write('<ul id="control_add_sub" class="menu sub" style="display:none">\n')
-        for ty, dashlet_type in sorted(dashlet_types.items(), key = lambda x: x[1].get('sort_index', 0)):
-            if dashlet_type.get('selectable', True):
-                url = html.makeuri([('type', ty), ('back', html.makeuri([]))], filename = 'edit_dashlet.py')
-                if 'add_urlfunc' in dashlet_type:
-                    url = dashlet_type['add_urlfunc']()
-                html.write('<li><a href="%s">%s</a></li>\n' % (url, dashlet_type['title']))
-        html.write('</ul>\n')
+            html.write('<li id="control_add" class="sublink" style="display:%s" '
+                       'onmouseover="show_submenu(\'control_add\')"><a href="javascript:void(0)">%s</a>\n' %
+                            (display, _('Add dashlet')))
 
-        html.write('</li>\n')
+            # The dashlet types which can be added to the view
+            html.write('<ul id="control_add_sub" class="menu sub" style="display:none">\n')
+            for ty, dashlet_type in sorted(dashlet_types.items(), key = lambda x: x[1].get('sort_index', 0)):
+                if dashlet_type.get('selectable', True):
+                    url = html.makeuri([('type', ty), ('back', html.makeuri([('edit', '1')]))], filename = 'edit_dashlet.py')
+                    if 'add_urlfunc' in dashlet_type:
+                        url = dashlet_type['add_urlfunc']()
+                    html.write('<li><a href="%s">%s</a></li>\n' % (url, dashlet_type['title']))
+            html.write('</ul>\n')
 
-        # Enable editing link
-        display = html.var('edit') != '1' and 'block' or 'none'
-        html.write('<li id="control_edit" style="display:%s"><a href="javascript:void(0)" '
-                   'onclick="toggle_dashboard_edit(true)">%s</a></li>\n' %
-                        (display, _('Edit Dashboard')))
+            html.write('</li>\n')
+
+            # Enable editing link
+            display = html.var('edit') != '1' and 'block' or 'none'
+            html.write('<li id="control_edit" style="display:%s"><a href="javascript:void(0)" '
+                       'onclick="toggle_dashboard_edit(true)">%s</a></li>\n' %
+                            (display, _('Edit Dashboard')))
 
         html.write("</ul>\n")
 
@@ -329,7 +356,7 @@ dashboard_scheduler(1);
     """ % (MAX, GROW, raster, header_height, screen_margin, title_height, dashlet_padding,
            corner_overlap, refresh_dashlets, ','.join(on_resize), name, board['mtime'], repr(dashlets_js)))
 
-    if html.var('edit') == '1':
+    if mode == 'edit':
         html.javascript('toggle_dashboard_edit(true)')
 
     html.body_end() # omit regular footer with status icons, etc.

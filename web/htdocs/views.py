@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config, defaults, livestatus, time, os, re, pprint, time, copy
+import config, defaults, livestatus, time, os, re, pprint, time
 import weblib, traceback, forms, valuespec, inventory, visuals
 from lib import *
 from pagefunctions import *

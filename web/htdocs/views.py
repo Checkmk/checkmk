@@ -209,9 +209,9 @@ def load_views():
 def permitted_views():
     return available_views
 
+
+# Convert views that are saved in the pre 1.2.6-style
 def transform_old_views():
-    single_context_types = [ c for c in visuals.context_types.items() if c[1]['single'] ]
-    single_context_types.sort(cmp = lambda a, b: len(a[1]['parameters']) - len(b[1]['parameters']))
 
     for view in multisite_views.values():
         # Add the context_type. This tries to map the datasource and additional settings of the
@@ -256,15 +256,27 @@ def transform_old_views():
         # Convert from show_filters, hide_filters, hard_filters and hard_filtervars
         # to context construct
         if 'context' not in view:
+
             view['show_filters'] = view['hide_filters'] + view['hard_filters'] + view['show_filters']
             context = {}
+            context_type = visuals.context_types[view['context_type']]
             filtervars = dict(view['hard_filtervars'])
             for fname in view['show_filters']:
                 vars = {}
                 for var in multisite_filters[fname].htmlvars:
                     if var in filtervars:
                         vars[var] = filtervars[var]
-                context[fname] = vars
+
+                # contexts of type single use the form { varname: value }
+                # contexts of type multiple use the form { filterid: { varname: value } }
+                if context_type['single']:
+                    # only set those variable that are specified by the context type
+                    allowed_vars = dict(context_type["parameters"]).keys()
+                    for varname, value in vars.items():
+                        if varname in allowed_vars:
+                            context[varname] = value
+                else:
+                    context[fname] = vars
             view['context'] = context
 
         # Cleanup unused attributes

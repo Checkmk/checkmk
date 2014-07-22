@@ -85,18 +85,12 @@ factory_settings["memory_win_default_levels"] = {
 
 def inventory_mem_win(info):
     meminfo = parse_proc_meminfo(info)
-    if "PageTotal" in meminfo:
+    if "MemTotal" in meminfo and "PageTotal" in meminfo:
         return [(None, {})]
 
 def check_mem_windows(item, params, info):
     meminfo = parse_proc_meminfo(info)
-    if "MemTotal" not in meminfo or \
-        "PageTotal" not in meminfo:
-        return 3, "Got no information from agent"
-    perfdata = []
-    infotxts = []
     MB = 1024.0 * 1024
-    worststate = 0
     now = time.time()
 
     for title, what, paramname in [
@@ -109,8 +103,8 @@ def check_mem_windows(item, params, info):
         free_mb  = free_kb / 1024.0
         perc     = 100.0 * used_kb / total_kb
 
-        infotxts.append("%s usage: %.1f%% (%.1f/%.1f GB)" %
-                (title, perc, used_kb / MB, total_kb / MB))
+        infotext = "%s usage: %.1f%% (%.1f/%.1f GB)" % \
+                (title, perc, used_kb / MB, total_kb / MB)
 
         warn, crit = params[paramname]
 
@@ -125,7 +119,7 @@ def check_mem_windows(item, params, info):
         else:
             crit_kb = crit * 1024
 
-        perfdata.append((paramname, used_kb / 1024.0, warn_kb, crit_kb, 0, total_kb / 1024.0))
+        perfdata = [(paramname, used_kb / 1024.0, warn_kb, crit_kb, 0, total_kb / 1024.0)]
 
         # Do averaging, if configured, just for matching the levels
         if "average" in params:
@@ -141,19 +135,15 @@ def check_mem_windows(item, params, info):
         # Now check the levels
         if (type(crit) == int and free_mb <= crit) or \
             (type(crit) == float and perc >= crit):
-            worststate = 2
-            state_code = '(!!)'
+            state = 2
         elif (type(warn) == int and free_mb <= warn) or \
             (type(warn) == float and perc >= warn):
-            worststate = max(worststate, 1)
-            state_code = '(!)'
+            state = 1
         else:
-            state_code = ""
+            state = 0
 
-        infotxts[-1] += state_code
+        yield state, infotext, perfdata
 
-
-    return (worststate, ", ".join(infotxts), perfdata)
 
 check_info["mem.win"] = {
     'check_function':          check_mem_windows,

@@ -1127,6 +1127,40 @@ def convert_check_info():
         if info["snmp_scan_function"] and basename not in snmp_scan_functions:
             snmp_scan_functions[basename] = info["snmp_scan_function"]
 
+
+def convert_check_result(result):
+    if type(result) == tuple:
+        return result
+
+    # The check function may either return a tuple (pair or triple) or an iterator
+    # (using yield). The latter one is new since version 1.2.5i5.
+    else: # We assume an iterator, convert to tuple
+        subresults = list(result)
+
+        # Simple check with no separate subchecks (yield wouldn't have been neccessary here!)
+        if len(subresults) == 1:
+            return subresults[0]
+
+        # Several sub results issued with multiple yields. Make that worst sub check
+        # decide the total state, join the texts and performance data
+        else:
+            perfdata = []
+            infotexts = []
+            status = 0
+
+            for subresult in subresults:
+                st, text = subresult[:2]
+                infotexts.append(text + ["", "(!)", "(!!)", "(?)"][st])
+                if st == 2 or status == 2:
+                    status = 2
+                else:
+                    status = max(status, st)
+                if len(subresult) == 3:
+                    perfdata += subresult[2]
+
+            return status, ", ".join(infotexts),  perfdata
+
+
 # Loops over all checks for a host, gets the data, calls the check
 # function that examines that data and sends the result to Nagios
 def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
@@ -1193,35 +1227,10 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
 
             try:
                 dont_submit = False
-                result = check_function(item, params, info)
-                # the new api doesen't return a tuple,
-                # it's yield based instead.
-                if type(result) != tuple:
-                    messages = []
-                    perf = []
-                    for line in result:
-                        messages.append(( line[0], line[1] ))
-                        if len(line) == 3:
-                            # there can be a single perf value (tuple)
-                            # or a list of multiple perf values
-                            if type(line[2]) == tuple:
-                                perf.append(line[2])
-                            elif type(line[2]) == list:
-                                perf += list
-                    # Check funktion returns only a single line
-                    if len(messages) == 1:
-                        result = messages[0][0], messages[0][1], perf 
-                    else:
-                        # Get the overall status
-                        return_states = [ x[0] for x in messages ]
-                        if 3 in return_states:
-                            if not 2 in return_states and not 1 in return_states:
-                                status = 3
-                            else:
-                                status = max(return_states) - 1
-                        else:
-                            status = max(return_states)
-                        result = status, ", ".join( x[1]+state_markers[x[0]] for x in messages ), perf
+
+                # Call the actual check function
+                result = convert_check_result(check_function(item, params, info))
+
 
             # handle check implementations that do not yet support the
             # handling of wrapped counters via exception. Do not submit

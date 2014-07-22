@@ -138,20 +138,33 @@ sidebar_snapins["views"] = {
 def render_dashboards():
     dashboard.load_dashboards()
 
-    def render_topic(topic, s):
+    def render_topic(topic, s, foldable = True):
         first = True
         for t, title, name in s:
             if t == topic:
                 if first:
-                    html.begin_foldable_container("dashboards", topic, False, topic, indent=True)
+                    if foldable:
+                        html.begin_foldable_container("dashboards", topic, False, topic, indent=True)
+                    else:
+                        html.write('<ul>')
                     first = False
                 bulletlink(title, 'dashboard.py?name=%s' % name, onclick = "return wato_views_clicked(this)")
-        if not first: # at least one item rendered
-            html.end_foldable_container()
 
-    for topic, s in visuals_by_topic(dashboard.permitted_dashboards(),
-            default_order = [_('Overview')]):
-        render_topic(topic, s)
+        if not first: # at least one item rendered
+            if foldable:
+                html.end_foldable_container()
+            else:
+                html.write('<ul>')
+
+    by_topic = visuals_by_topic(dashboard.permitted_dashboards(), default_order = [ _('Overview') ])
+    topics = [ topic for topic, entry in by_topic ]
+
+    if len(topics) < 2:
+        render_topic(by_topic[0][0], by_topic[0][1], foldable = False)
+
+    else:
+        for topic, s in by_topic:
+            render_topic(topic, s)
 
     links = []
     if config.may("general.edit_dashboards"):

@@ -10,6 +10,7 @@
 
     Multisite:
     * 1052 SEC: index start URL can not be used to redirect to absolute URLs anymore...
+    * 1060 FIX: Fixed exception during first login of a user when saving of access times is enabled...
 
 
 1.2.4p5:

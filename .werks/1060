@@ -1,0 +1,9 @@
+Title: Fixed exception during first login of a user when saving of access times is enabled
+Level: 1
+Component: multisite
+Version: 1.2.4p6
+Date: 1406023447
+Class: fix
+
+When a user logged in for the first time an exception could occur when the
+tracking of user access times is enabled.

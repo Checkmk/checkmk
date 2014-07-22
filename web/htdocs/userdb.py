@@ -127,17 +127,17 @@ def user_locked(username):
     users = load_users()
     return users[username].get('locked', False)
 
-def update_user_access_time():
+def update_user_access_time(username):
     if not config.save_user_access_times:
         return
-    save_custom_attr(html.user, 'last_seen', repr(time.time()))
+    save_custom_attr(username, 'last_seen', repr(time.time()))
 
 def on_succeeded_login(username):
     num_failed = load_custom_attr(username, 'num_failed', saveint)
     if num_failed != None and num_failed != 0:
         save_custom_attr(username, 'num_failed', '0')
 
-    update_user_access_time()
+    update_user_access_time(username)
 
 def on_failed_login(username):
     users = load_users(lock = True)
@@ -339,6 +339,7 @@ def load_custom_attr(userid, key, conv_func, default = None):
 
 def save_custom_attr(userid, key, val):
     basedir = defaults.var_dir + "/web/" + userid
+    make_nagios_directory(basedir)
     create_user_file('%s/%s.mk' % (basedir, key), 'w').write('%s\n' % val)
 
 def get_online_user_ids():

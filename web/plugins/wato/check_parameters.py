@@ -1136,6 +1136,7 @@ register_check_parameters(
             ( "memory",
                Alternative(
                    title = _("Memory Levels"),
+                   style = "dropdown",
                    elements = [
                        Tuple(
                            title = _("Memory usage in percent"),
@@ -1156,12 +1157,18 @@ register_check_parameters(
                             # -> need hide option in filesize valuespec
                             back  = lambda x: (x[0] / 1024 / 1024, x[1] / 1024 / 1024),
                             forth = lambda x: (x[0] * 1024 * 1024, x[1] * 1024 * 1024)
-                        )
+                       ),
+                       PredictiveLevels(
+                           title = _("Predictive levels"),
+                           unit = _("GB"),
+                           default_difference = (0.5, 1.0)
+                       )
                    ],
                    default_value = (80.0, 90.0))),
             ( "pagefile",
                Alternative(
                    title = _("Pagefile Levels"),
+                   style = "dropdown",
                    elements = [
                        Tuple(
                            title = _("Pagefile usage in percent"),
@@ -1182,7 +1189,12 @@ register_check_parameters(
                             # -> need hide option in filesize valuespec
                             back  = lambda x: (x[0] / 1024 / 1024, x[1] / 1024 / 1024),
                             forth = lambda x: (x[0] * 1024 * 1024, x[1] * 1024 * 1024)
-                        )
+                       ),
+                       PredictiveLevels(
+                           title = _("Predictive levels"),
+                           unit = _("GB"),
+                           default_difference = (0.5, 1.0)
+                       )
                    ],
                    default_value = (50.0, 70.0))
             ),

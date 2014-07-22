@@ -1595,6 +1595,7 @@ def pnp_cleanup(s):
 #          case the factor is 1.0 / 1048576.
 def check_levels(value, dsname, params, unit = "", factor = 1.0, statemarkers=False):
 
+    # None or (None, None) -> do not check any levels
     if params == None or params == (None, None):
         return 0, "", []
 

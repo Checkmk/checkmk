@@ -1,0 +1,8 @@
+Title: bintec_sensors.fan: New Check for Fan Speed of Bintec Routers
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1406028294
+Class: feature
+
+

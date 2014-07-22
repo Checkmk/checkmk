@@ -940,6 +940,7 @@ def perfometer_fanspeed_logarithmic(row, check_command, perf_data):
     return "%d rpm" % value, perfometer_logarithmic(value, 5000, 2, "silver")
 
 perfometers["check_mk-hitachi_hnas_fan"]  = perfometer_fanspeed_logarithmic
+perfometers["check_mk-bintec_sensors.fan"]  = perfometer_fanspeed_logarithmic
 
 def perfometer_check_mk_arcserve_backup(row, check_command, perf_data):
     bytes = int(perf_data[2][1])

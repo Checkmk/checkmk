@@ -345,6 +345,7 @@ def load_custom_attr(userid, key, conv_func, default = None):
 
 def save_custom_attr(userid, key, val):
     basedir = defaults.var_dir + "/web/" + userid
+    make_nagios_directory(basedir)
     create_user_file('%s/%s.mk' % (basedir, key), 'w').write('%s\n' % val)
 
 def get_online_user_ids():

@@ -245,11 +245,29 @@ register_configvar(group,
 
 
 def wato_host_tag_group_choices():
+    # We add to the choices:
+    # 1. All host tag groups with their id
+    # 2. All *topics* that:
+    #  - consist only of checkbox tags
+    #  - contain at least two entries
     choices = []
+    by_topic = {}
     for entry in config.wato_host_tags:
         tgid = entry[0]
         topic, tit = parse_hosttag_title(entry[1])
         choices.append((tgid, tit))
+        by_topic.setdefault(topic, []).append(entry)
+
+    # Now search for checkbox-only-topics
+    for topic, entries in by_topic.items():
+        for entry in entries:
+            tgid, title, tags = entry
+            if len(tags) != 1:
+                break
+        else:
+            if len(entries) > 1:
+                choices.append(("topic:" + topic, _("Topic") + ": " + topic))
+
     return choices
 
 

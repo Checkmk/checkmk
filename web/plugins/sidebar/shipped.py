@@ -1214,6 +1214,11 @@ if defaults.omd_root:
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+def parse_hosttag_title(title):
+    if '/' in title:
+        return title.split('/', 1)
+    else:
+        return None, title
 
 def compute_tag_tree(taglist):
     html.live.set_prepend_site(True)
@@ -1235,11 +1240,17 @@ def compute_tag_tree(taglist):
         # No empty entry found -> get default (i.e. first entry)
         return groupentries[0][:2]
 
+    # Prepare list of host tag groups and topics
     taggroups = {}
+    topics = {}
     for entry in config.wato_host_tags:
-        groupname = entry[0]
-        grouptitle = entry[1]
-        group = entry[2]
+        grouptitle           = entry[1]
+        if '/' in grouptitle:
+            topic, grouptitle = grouptitle.split("/", 1)
+            topics.setdefault(topic, []).append(entry)
+
+        groupname            = entry[0]
+        group                = entry[2]
         taggroups[groupname] = group
 
     tree = {}
@@ -1261,24 +1272,53 @@ def compute_tag_tree(taglist):
             have_svc_problems = True
 
         tags = custom_variables.get("TAGS", []).split()
-        tree_entry = tree
-        for tag in taglist:
-            if tag not in taggroups:
-                continue # Configuration error. User deleted tag group after configuring his tree
-            tag_value, tag_title = get_tag_group_value(taggroups[tag], tags)
-            tree_entry = tree_entry.setdefault((tag_title, tag_value), {})
 
-        if not tree_entry:
-            tree_entry.update({
-                "_num_hosts" : 0,
-                "_state"     : 0,
-            })
-        tree_entry["_num_hosts"] += 1
-        tree_entry["_svc_problems"] = tree_entry.get("_svc_problems", False) or have_svc_problems
-        if state == 2 or tree_entry["_state"] == 2:
-            tree_entry["_state"] = 2
-        else:
-            tree_entry["_state"] = max(state, tree_entry["_state"])
+        tree_entry = tree # Start at top node
+
+        # Now go through the levels of the tree. Each level may either be
+        # - a tag group id, or
+        # - "topic:" plus the name of a tag topic. That topic should only contain
+        #   checkbox tags.
+        # The problem with the "topic" entries is, that a host may appear several
+        # times!
+
+        current_branches = [ tree ]
+
+        for tag in taglist:
+            new_current_branches = []
+            for tree_entry in current_branches:
+                if tag.startswith("topic:"):
+                    topic = tag[6:]
+                    if topic in topics: # Could have vanished
+                        # Iterate over all host tag groups with that topic
+                        for entry in topics[topic]:
+                            grouptitle  = entry[1].split("/", 1)[1]
+                            group       = entry[2]
+                            for tagentry in group:
+                                tag_value, tag_title = tagentry[:2]
+                                if tag_value in tags:
+                                    new_current_branches.append(tree_entry.setdefault((tag_title, tag_value), {}))
+
+                else:
+                    if tag not in taggroups:
+                        continue # Configuration error. User deleted tag group after configuring his tree
+                    tag_value, tag_title = get_tag_group_value(taggroups[tag], tags)
+                    new_current_branches.append(tree_entry.setdefault((tag_title, tag_value), {}))
+
+            current_branches = new_current_branches
+
+        for tree_entry in new_current_branches:
+            if not tree_entry:
+                tree_entry.update({
+                    "_num_hosts" : 0,
+                    "_state"     : 0,
+                })
+            tree_entry["_num_hosts"] += 1
+            tree_entry["_svc_problems"] = tree_entry.get("_svc_problems", False) or have_svc_problems
+            if state == 2 or tree_entry["_state"] == 2:
+                tree_entry["_state"] = 2
+            else:
+                tree_entry["_state"] = max(state, tree_entry["_state"])
 
     return tree
 
@@ -1305,10 +1345,22 @@ def tag_tree_url(taggroups, taglist, viewname):
     urlvars = [("view_name", viewname), ("filled_in", "filter")]
     if viewname == "svcproblems":
         urlvars += [ ("st1", "on"), ("st2", "on"), ("st3", "on") ]
+
     for nr, (group, tag) in enumerate(zip(taggroups, taglist)):
-        urlvars.append(("host_tag_%d_grp" % nr, group))
-        urlvars.append(("host_tag_%d_op" % nr, "is"))
-        urlvars.append(("host_tag_%d_val" % nr, tag or ""))
+        if group.startswith("topic:"):
+            # Find correct tag group for this tag
+            for entry in config.wato_host_tags:
+                for tagentry in entry[2]:
+                    if tagentry[0] == tag: # Found our tag
+                        taggroup = entry[0]
+                        urlvars.append(("host_tag_%d_grp" % nr, taggroup))
+                        urlvars.append(("host_tag_%d_op" % nr, "is"))
+                        urlvars.append(("host_tag_%d_val" % nr, tag))
+                        break
+        else:
+            urlvars.append(("host_tag_%d_grp" % nr, group))
+            urlvars.append(("host_tag_%d_op" % nr, "is"))
+            urlvars.append(("host_tag_%d_val" % nr, tag or ""))
     return html.makeuri_contextless(urlvars, "view.py")
 
 def tag_tree_bullet(state, path, leaf):
@@ -1419,8 +1471,6 @@ def render_tag_tree():
     title, taggroups = config.virtual_host_trees[tree_conf["tree"]]
 
     tree = compute_tag_tree(taggroups)
-
-
     render_tag_tree_level(taggroups, [], cwd, _("Virtual Host Tree"), tree)
 
 sidebar_snapins["tag_tree"] = {

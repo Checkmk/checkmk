@@ -1,0 +1,16 @@
+title: Bintec Routers: BRRP Status
+agents: snmp
+catalog: hw/network/bintec
+license: GPL
+distribution: check_mk
+description:
+ Checks the Status of BRRP Connections of Bintec Routers.
+
+ If biboBrrpOperState is master or backup the check returns {OK}.
+ On status initialize it returns {WARN}.
+
+item:
+ The ID of the BRRP connection from SNMP.
+
+inventory:
+ Creates one check for every BRRP connection.

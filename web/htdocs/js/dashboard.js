@@ -691,13 +691,10 @@ function body_click_handler(event) {
     if (!event)
         event = window.event;
 
-    if (!g_editing)
-        return true;
-
     var target = getTarget(event);
     var button = getButton(event);
 
-    if (target.id == 'dashboard' && button == 'RIGHT') {
+    if (g_editing && target.id == 'dashboard' && button == 'RIGHT') {
         // right click on the empty dashboard area
         toggle_dashboard_controls(undefined, event);
         prevent_default_events(event);

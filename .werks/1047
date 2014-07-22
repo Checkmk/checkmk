@@ -1,0 +1,19 @@
+Title: Virtual Host Tree: Allow to use topic as tree level
+Level: 2
+Component: multisite
+Version: 1.2.5i5
+Date: 1406032104
+Class: feature
+
+The <i>Virtual Host Tree</i> snapin now allows not only to use tag groups but also <b>topics</b>
+as tree levels. A topic can only be used if:
+
+<ul>
+<li>It contains just <i>Checkbox</i>-tags (tags with only once choicee)</li>
+<li>It contains at least two entries.</li>
+</ul>
+
+The idea is to make the typical <i>Applications</i> topic usable as a tree level. The
+tree then shows all the different applications. Note: this usually leads to hosts being
+contained in several branches of the tree (if they have several applications) and other
+hosts not being contained at all (if the do not have at least one application).

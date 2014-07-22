@@ -1,0 +1,8 @@
+Title: bintec_sensors.voltage, bintec_sensors.temp: New Checks for Voltage and Temperature Sensors of Bintec Routers
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1406032653
+Class: feature
+
+

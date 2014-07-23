@@ -308,7 +308,15 @@ def render_dashboard(name):
 
             # The dashlet types which can be added to the view
             html.write('<ul id="control_add_sub" class="menu sub" style="display:none">\n')
-            for ty, dashlet_type in sorted(dashlet_types.items(), key = lambda x: x[1].get('sort_index', 0)):
+
+            add_existing_view_type = dashlet_types['view'].copy()
+            add_existing_view_type['title'] = _('Existing View')
+            add_existing_view_type['add_urlfunc'] = lambda: 'create_view_dashlet.py?name=%s&create=0' % html.urlencode(name)
+
+            choices = [ ('view', add_existing_view_type) ]
+            choices += sorted(dashlet_types.items(), key = lambda x: x[1].get('sort_index', 0))
+
+            for ty, dashlet_type in choices:
                 if dashlet_type.get('selectable', True):
                     url = html.makeuri([('type', ty), ('back', html.makeuri([('edit', '1')]))], filename = 'edit_dashlet.py')
                     if 'add_urlfunc' in dashlet_type:
@@ -602,9 +610,72 @@ def create_dashboard(old_dashboard, dashboard):
 #   '----------------------------------------------------------------------'
 
 def page_create_view_dashlet():
-    visuals.page_create_visual('views', allow_global = False,
-        next_url = 'create_view_dashlet_ds.py?mode=create&context_type=%s'
-                   + '&name=%s' % html.urlencode(html.var('name')))
+    create = html.var('create', '1') == '1'
+    name = html.var('name')
+
+    if create:
+        # Create a new view by choosing the context type and then the datasource
+        visuals.page_create_visual('views', allow_global = False,
+            next_url = 'create_view_dashlet_ds.py?mode=create&context_type=%s'
+                       + '&name=%s' % html.urlencode(name))
+
+    else:
+        # Choose an existing view from the list of available views
+        choose_view(name)
+
+def choose_view(name):
+    import views
+    views.load_views()
+    vs_view = DropdownChoice(
+        title = _('View Name'),
+        choices = views.view_choices,
+        sorted = True,
+    )
+
+    html.header(_('Create Dashlet from existing View'), stylesheets=["pages"])
+    html.begin_context_buttons()
+    html.context_button(_("Back"), html.makeuri([('edit', 1)], filename = "dashboard.py"), "back")
+    html.end_context_buttons()
+
+    if html.var('save') and html.check_transaction():
+        try:
+            view_name = vs_view.from_html_vars('view')
+            vs_view.validate_value(view_name, 'view')
+
+            load_dashboards()
+            dashboard = available_dashboards[name]
+
+            # Add the dashlet!
+            dashlet = {
+                'type'     : 'view',
+                'position' : (1, 1),
+                'size'     : dashlet_types['view'].get('size', (10, 10)),
+            }
+
+            # save the original context and override the context provided by the view
+            dashlet_id = len(dashboard['dashlets'])
+            load_view_into_dashlet(dashlet, dashlet_id, view_name)
+            add_dashlet(dashlet, dashboard)
+
+            html.http_redirect('edit_dashlet.py?name=%s&id=%d' % (name, dashlet_id))
+            return
+
+        except MKUserError, e:
+            html.write("<div class=error>%s</div>\n" % e.message)
+            html.add_user_error(e.varname, e.message)
+
+    html.begin_form('choose_view')
+    forms.header(_('Select View'))
+    forms.section(vs_view.title())
+    vs_view.render_input('view', '')
+    html.help(vs_view.help())
+    forms.end()
+
+    html.button('save', _('Continue'), 'submit')
+
+    html.hidden_fields()
+    html.end_form()
+    html.footer()
 
 def page_create_view_dashlet_ds():
     import views
@@ -911,6 +982,11 @@ def ajax_popup_add_dashlet():
         html.write('</li>')
     html.write('</ul>\n')
 
+def add_dashlet(dashlet, dashboard):
+    dashboard['dashlets'].append(dashlet)
+    dashboard['mtime'] = int(time.time())
+    visuals.save('dashboards', dashboards)
+
 def ajax_add_dashlet():
     if not config.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
@@ -968,7 +1044,4 @@ def ajax_add_dashlet():
         load_view_into_dashlet(dashlet, len(dashboard['dashlets']), view_name)
         dashlet['context'] = context
 
-    dashboard['dashlets'].append(dashlet)
-    dashboard['mtime'] = int(time.time())
-
-    visuals.save('dashboards', dashboards)
+    add_dashlet(dashlet, dashboard)

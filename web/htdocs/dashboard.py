@@ -266,7 +266,10 @@ def render_dashboard(name):
         render_dashlet(name, board, nr, dashlet, wato_folder)
 
         if 'on_resize' in dashlet_type:
-            on_resize.append('%d: function() {%s}' % (nr, dashlet_type['on_resize'](nr, dashlet)))
+            try:
+                on_resize.append('%d: function() {%s}' % (nr, dashlet_type['on_resize'](nr, dashlet)))
+            except Exception, e:
+                html.write('Error in "on_resize handler": %s' % html.attrencode(e))
 
         dimensions = {
             'x' : dashlet['position'][0],
@@ -415,6 +418,8 @@ def render_dashlet(name, board, nr, dashlet, wato_folder):
     if "render" in dashlet_type:
         try:
             render_dashlet_content(nr, dashlet)
+        except MKUserError, e:
+            html.write('Problem while rendering the dashlet: %s' % html.attrencode(e))
         except Exception, e:
             if config.debug:
                 import traceback

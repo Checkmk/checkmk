@@ -1,0 +1,9 @@
+Title: ups_capacity: Fix exception when running on battery
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1406125592
+Class: fix
+
+The check went to UNKNOWN when the UPS was running on battery. This has been fixed.
+The correct plugin output is now being displayed.

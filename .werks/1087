@@ -1,0 +1,12 @@
+Title: Active checks: Non-ascii check commands now converted into utf-8
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1406117438
+Class: fix
+
+There were some instances where the arguments for an active check
+did contain non-ASCII characters, for example python unicode.
+This caused an exception during the configuration generation.<br>
+
+Check commands for active checks are now always converted into utf-8.

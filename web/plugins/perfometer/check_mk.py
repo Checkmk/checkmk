@@ -339,6 +339,7 @@ perfometers["check_mk-enterasys_temp"] = perfometer_temperature
 perfometers["check_mk-adva_fsp_temp"] = perfometer_temperature
 perfometers["check_mk-allnet_ip_sensoric.temp"] = perfometer_temperature
 perfometers["check_mk-qlogic_sanbox.temp"] = perfometer_temperature
+perfometers["check_mk-bintec_sensors.temp"] = perfometer_temperature
 
 def perfometer_temperature_multi(row, check_command, perf_data):
     display_value = -1
@@ -480,6 +481,7 @@ def perfometer_check_mk_brocade_fcport(row, check_command, perf_data):
     )
 
 perfometers["check_mk-brocade_fcport"] = perfometer_check_mk_brocade_fcport
+perfometers["check_mk-qlogic_fcport"] = perfometer_check_mk_brocade_fcport
 
 def perfometer_check_mk_cisco_qos(row, check_command, perf_data):
     unit =  "Bit/s" in row["service_plugin_output"] and "Bit" or "B"
@@ -939,6 +941,7 @@ def perfometer_fanspeed_logarithmic(row, check_command, perf_data):
     return "%d rpm" % value, perfometer_logarithmic(value, 5000, 2, "silver")
 
 perfometers["check_mk-hitachi_hnas_fan"]  = perfometer_fanspeed_logarithmic
+perfometers["check_mk-bintec_sensors.fan"]  = perfometer_fanspeed_logarithmic
 
 def perfometer_check_mk_arcserve_backup(row, check_command, perf_data):
     bytes = int(perf_data[2][1])
@@ -1106,3 +1109,9 @@ def perfometer_pressure(row, check_command, perf_data):
 
 perfometers['check_mk-allnet_ip_sensoric.pressure'] = perfometer_pressure
 
+def perfometer_voltage(row, check_command, perf_data):
+    color = "#808000"
+    value = float(perf_data[0][1])
+    return "%0.3f V" % value, perfometer_logarithmic(value, 12, 2, color)
+
+perfometers["check_mk-bintec_sensors.voltage"] = perfometer_voltage

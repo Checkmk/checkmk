@@ -1,0 +1,9 @@
+Title: mem.win: support predictive levels
+Level: 2
+Component: checks
+Version: 1.2.5i5
+Date: 1406038485
+Class: feature
+
+The check for Windows memory and pagefile now supports preditive monitoring in
+addition to percentual and absolute levels.

@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,50 +23,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# <<<omd_status>>>
-# [kaputt]
-# apache 1
-# rrdcached 1
-# npcd 1
-# nagios 1
-# crontab 1
-# OVERALL 1
-# [test]
-# apache 1
-# rrdcached 1
-# npcd 0
-# nagios 1
-# crontab 1
-# OVERALL 2
+$opt[1] = "--vertical-label \"Volt\"  -l 0 --title \"$hostname / $servicedesc\" ";
 
-def inventory_omd_status(info):
-    for line in info:
-        if line[0][0] == '[':
-            yield line[0][1:-1], None
-
-def check_omd_status(item, _no_params, info):
-    active = False
-    for line in info:
-        if line[0] == '[' + item + ']':
-            active = True
-            stopped = []
-        elif active:
-            if line[0] == 'OVERALL':
-                if line[1] == '0':
-                    return (0, 'all services are running')
-                elif line[1] == '1':
-                    return (2, 'site is stopped')
-                else:
-                    return (2, 'partially running! stopped services: %s' % ", ".join(stopped))
-            elif line[1] != '0':
-                stopped.append(line[0])
-    return (3, "site not existing or AUTOSTART off")
-
-
-
-check_info["omd_status"] = {
-    'check_function':          check_omd_status,
-    'inventory_function':      inventory_omd_status,
-    'service_description':     'OMD %s status',
-    'group':                   'omd_status',
+$def[1] = "DEF:var1=$RRDFILE[1]:$DS[1]:MAX ";
+$def[1] .= "AREA:var1#808000:\"Voltage\:\" ";
+$def[1] .= "GPRINT:var1:LAST:\"%2.3lf V\" ";
+$def[1] .= "LINE1:var1#000080:\"\" ";
+$def[1] .= "GPRINT:var1:MAX:\"(Max\: %2.3lf V,\" ";
+$def[1] .= "GPRINT:var1:AVERAGE:\"Avg\: %2.3lf V)\\n\" ";
+if ($WARN[1] != "") {
+    $def[1] .= "HRULE:$WARN[1]#FFFF00:\"Warning\: $WARN[1] °C\" ";
+    $def[1] .= "HRULE:$CRIT[1]#FF0000:\"Critical\: $CRIT[1] °C\" ";
 }
+?>

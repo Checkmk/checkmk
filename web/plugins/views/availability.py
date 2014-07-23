@@ -885,6 +885,9 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration,
                 if row["log_output"]:
                     title += " - " + row["log_output"]
                 width = rest_percentage * row["duration"] / considered_duration
+
+                # If the width is very small then we group several phases into
+                # one single "chaos period".
                 if style == "inline" and width < 0.05:
                     if not chaos_begin:
                         chaos_begin = row["from"]
@@ -892,12 +895,16 @@ def render_timeline(timeline_rows, from_time, until_time, considered_duration,
                     chaos_count += 1
                     chaos_end = row["until"]
                     continue
-                elif chaos_begin and chaos_count > 1:
-                    output_chaos_period(chaos_begin, chaos_end, chaos_count, chaos_width)
+
+                # Chaos period has ended? One not-small phase:
+                elif chaos_begin:
+                    # Only output chaos phases with a certain length
+                    if chaos_count >= 4:
+                        output_chaos_period(chaos_begin, chaos_end, chaos_count, chaos_width)
+
                     chaos_begin = None
                     chaos_count = 0
                     chaos_width = 0
-                    continue
 
                 width += min_percentage
                 html.write('<td onmouseover="timeline_hover(%d, 1);" onmouseout="timeline_hover(%d, 0);" '

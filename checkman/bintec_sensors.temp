@@ -1,0 +1,35 @@
+title: Bintec Routers: Temperature Sensors
+agents: snmp
+catalog: hw/network/bintec
+license: GPL
+distribution: check_mk
+description:
+ Checks the Temperature Sensors of Bintec Routers.
+
+ Returns {WARN} or {CRIT} if the temperature is above or equal given levels.
+
+item:
+ The sensorDescr from SNMP.
+
+examples:
+ # set new default levels
+ bintec_sensors_temp_default_levels = (50, 60)
+
+ # check temperature sensor "Left 1" of router1 with default levels
+ checks += [
+    ("router1", "bintec_sensors.temp", 'Left 1', bintec_sensors_temp_default_levels),
+ ]
+
+perfdata:
+ One value: The temperature in degree celsius, together with it's levels for {WARN}
+ and {CRIT}.
+
+inventory:
+ Creates one check per temperature sensor (sensorType 1).
+
+[parameters]
+tuple (int, int): The two values are the levels for {WARN} and {CRIT}. 
+
+[configuration]
+bintec_sensors_temp_default_levels (int, int): The default levels for {WARN}
+ and {CRIT}, defaults to (35, 40).

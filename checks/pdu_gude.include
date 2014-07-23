@@ -25,55 +25,53 @@
 # Boston, MA 02110-1301 USA.
 
 pdu_gude_default_levels = {
-        "V"    : ( 220, 210 ),
-        "A"    : ( 15, 16 ),
-        "W"    : ( 3500, 3600 ),
-    }
+    "V"    : (  220,  210 ), # Volt
+    "A"    : (   15,   16 ), # Ampere
+    "W"    : ( 3500, 3600 ), # Watt
+}
+
 
 def inventory_pdu_gude(info):
     if len(info) > 0:
-        return [(x + 1, "pdu_gude_default_levels") for x in xrange(len(info))]
+        return [(x + 1, "pdu_gude_default_levels") for x in range(len(info))]
+
 
 def check_pdu_gude(item, params, info):
         try:
             values = info[item - 1]
         except ValueError:
-            return (3, "Item not found")
+            yield 3, "No phase %d found in agent output" % item
+            return
 
         units = {
             0 : ("kWh", 1000),
-            1 : ("W", False ),
-            2 : ("A", 1000),
-            3 : ("V", False),
-            4 : ("VA",False),
+            1 : ("W",   False),
+            2 : ("A",   1000),
+            3 : ("V",   False),
+            4 : ("VA",  False),
         }
 
-        message = []
-        perf = []
-        state = 0
-        for pos, data in units.items():
-            value = savefloat(values[pos])
-            unit, div = data
+        for pos, (unit, div) in units.items():
+            value = float(values[pos])
             if div:
                 value = value / div
+            infotext = "%.2f %s" % (value, unit)
+
             warn, crit = params.get(unit, (None, None))
-            perf.append((unit, value, warn, crit))
-            label = ""
+            perfdata = [ (unit, value, warn, crit) ]
+            status = 0
+
             if warn > crit:
                 if value < crit:
-                    state = 2
-                    label = "(!!)"
+                    status = 2
                 elif value < warn:
-                    state = max(state, 1)
-                    label = "(!)"
+                    status = 1
+
             else:
                 if crit != None and value > crit:
-                    state = 2
-                    label = "(!!)"
+                    status = 2
                 elif warn != None and value > warn:
-                    state = max(state, 1)
-                    label = "(!)"
-            message.append("%.2f%s%s" % (value, unit, label))
+                    status = 1
 
-        return(state, ", ".join(message), perf)
+            yield status, infotext, perfdata
 

@@ -1,0 +1,8 @@
+Title: bintec_brrp_status: New Check for BRRP States on Bintec Routers
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1406040116
+Class: feature
+
+

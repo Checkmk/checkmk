@@ -9337,12 +9337,9 @@ def mode_edit_timeperiod(phase):
     html.write("</table>")
 
     # Exceptions
-    nagurl = "../nagios/docs/objectdefinitions.html#timeperiod"
     forms.section(_("Exceptions"))
     html.help(_("Here you can specify exceptional time ranges for certain "
-                 "relative or absolute dates. Please consult the "
-                 "<a target='_blank' href='%s'>Nagios documentation about "
-                 "timeperiods</a> for examples." % nagurl))
+                 "dates in the form YYYY-MM-DD."))
 
     exceptions = []
     for k in timeperiod:
@@ -14763,6 +14760,10 @@ def register_notification_parameters(scriptname, valuespec):
 # can be used like one (but take no parameters)
 def PredictiveLevels(**args):
     dif = args.get("default_difference", (2.0, 4.0))
+    unitname = args.get("unit", "")
+    if unitname:
+        unitname += " "
+
     return Dictionary(
         title = _("Predictive Levels"),
         optional_keys = [ "weight", "levels_upper", "levels_upper_min", "levels_lower", "levels_lower_max" ],
@@ -14801,8 +14802,10 @@ def PredictiveLevels(**args):
                          _("Absolute difference from prediction"),
                          Tuple(
                              elements = [
-                                 Float(title = _("Warning at"), unit = _("above predicted value"), default_value = dif[0]),
-                                 Float(title = _("Critical at"), unit = _("above predicted value"), default_value = dif[1]),
+                                 Float(title = _("Warning at"),
+                                       unit = unitname + _("above predicted value"), default_value = dif[0]),
+                                 Float(title = _("Critical at"),
+                                       unit = unitname + _("above predicted value"), default_value = dif[1]),
                              ]
                       )),
                       ( "relative",
@@ -14830,8 +14833,8 @@ def PredictiveLevels(**args):
                              "the will never be set below the following limits. This avoids false alarms "
                              "during times where the predicted levels would be very low."),
                     elements = [
-                        Float(title = _("Warning level is at least")),
-                        Float(title = _("Critical level is at least")),
+                        Float(title = _("Warning level is at least"), unit = unitname),
+                        Float(title = _("Critical level is at least"), unit = unitname),
                     ]
               )),
              ( "levels_lower",
@@ -14842,8 +14845,10 @@ def PredictiveLevels(**args):
                          _("Absolute difference from prediction"),
                          Tuple(
                              elements = [
-                                 Float(title = _("Warning at"), unit = _("below predicted value"), default_value = 2.0),
-                                 Float(title = _("Critical at"), unit = _("below predicted value"), default_value = 4.0),
+                                 Float(title = _("Warning at"),
+                                       unit = unitname + _("below predicted value"), default_value = 2.0),
+                                 Float(title = _("Critical at"),
+                                       unit = unitname + _("below predicted value"), default_value = 4.0),
                              ]
                       )),
                       ( "relative",

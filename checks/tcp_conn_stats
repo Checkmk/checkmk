@@ -47,31 +47,24 @@ def inventory_tcp_conn_stats(info):
 
 def check_tcp_conn_stats(item, params, info):
     stats = dict(info)
-    worst_state = 0
-    info = []
-    perfdata = []
-    for state, hex in tcp_conn_stats_states:
-        num = int(stats.get(state, stats.get(hex, 0)))
-        if num > 0:
-            infotext = "%s: %d" % (state, num)
-        else:
-            infotext = None
-        levels = params.get(state)
-        perf = [state, num]
-        if levels:
-            warn, crit = levels
-            perf.append(warn)
-            perf.append(crit)
-            if num >= crit:
-                worst_state = 2
-                infotext += "(!!) (critical at %d)" % crit
-            elif num >= warn:
-                worst_state = max(1, worst_state)
-                infotext += "(!) (warning at %d)" % warn
-        perfdata.append(perf)
-        if infotext:
-            info.append(infotext)
-    return (worst_state, ", ".join(info), perfdata)
+    for stat_state, hex in tcp_conn_stats_states:
+        num = int(stats.get(stat_state, stats.get(hex, 0)))
+        if num > 0: # Only check positive counts
+            infotext = "%s: %d" % (stat_state, num)
+            state = 0
+            perf = [state, num]
+            levels = params.get(stat_state)
+            if levels:
+                warn, crit = levels
+                perf.append(warn)
+                perf.append(crit)
+                if num >= crit:
+                    state = 2
+                    infotext += " (critical at %d)" % crit
+                elif num >= warn:
+                    state = 1
+                    infotext += " (warning at %d)" % warn
+            yield state, infotext, [perf]
 
 
 check_info["tcp_conn_stats"] = {

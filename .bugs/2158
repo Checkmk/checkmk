@@ -1,0 +1,8 @@
+Title: Change all levels of all checks and use always value >= crit, not value > crit
+Component: checks
+State: open
+Date: 2014-07-21 15:38:03
+Targetversion: future
+Class: nastiness
+
+The behaviour of all checks needs to be consistent!

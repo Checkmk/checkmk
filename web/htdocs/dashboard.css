@@ -29,6 +29,7 @@ Boston, MA 02110-1301 USA.
 
 body.main {
     padding: 0;
+    overflow: hidden;
 }
 
 body.main table.header {
@@ -180,12 +181,16 @@ div.dashlet_inner div.stats {
     z-index: 150;
     position: absolute;
     right: 0px;
-    bottom: 5px;
+    bottom: -41px;
     padding: 6px 3px;
     background-color: rgba(0, 0, 0, 0.5);
     /* IE < 9 */
     filter: progid:DXImageTransform.Microsoft.gradient(GradientType=0, startColorstr='#7f000000', endColorstr='#7f000000');
     border-radius: 5px;
+}
+
+#controls_toggle:hover {
+    bottom: -10px;
 }
 
 #controls_toggle .iconbutton {

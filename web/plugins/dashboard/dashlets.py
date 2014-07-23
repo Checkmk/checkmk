@@ -387,6 +387,10 @@ dashlet_types["pnpgraph"] = {
     color: #000;
     text-align: center;
 }
+.dashlet.pnpgraph .dashlet_inner img {
+    width: 100%;
+    height: 100%;
+}
 """,
     "on_resize"    : lambda nr, params: 'dashboard_render_pnpgraph(%d, \'%s\');' %
                                                  (nr, make_pnp_url(params, 'image')),
@@ -411,35 +415,39 @@ function dashboard_render_pnpgraph(nr, img_url)
             var i_w = this.clientWidth;
             var i_h = this.clientHeight;
 
+            // difference between the requested size and the real size of the image
             var x_diff = i_w - w;
             var y_diff = i_h - h;
 
             if (Math.abs(x_diff) < 10 && Math.abs(y_diff) < 10) {
-                return;
+                return; // Finished resizing
             }
 
-            var req_w, req_h;
-            if (typeof dashlet_offsets[nr] != 'undefined') {
-                req_w = w - dashlet_offsets[nr][0];
-                req_h = h - dashlet_offsets[nr][1];
-            }
-            else {
-                req_w = w - x_diff;
-                req_h = h - y_diff
+            if (h <= 81 || h - y_diff <= 81)
+                return;
+
+            if (typeof dashlet_offsets[nr] == 'undefined') {
                 dashlet_offsets[nr] = [x_diff, y_diff];
             }
 
-            this.src = url + '&graph_width=' + req_w + '&graph_height=' + req_h;
+            load_graph_img(nr, this, url, w, h);
         };
     }(nr, img_url, c_w, c_h);
 
-    var req_w = c_w,
-        req_h = c_h;
-    if (typeof dashlet_offsets[nr] != 'undefined') {
-        req_w -= dashlet_offsets[nr][0];
-        req_h -= dashlet_offsets[nr][1];
+    load_graph_img(nr, img, img_url, c_w, c_h);
+}
+
+function load_graph_img(nr, img, img_url, c_w, c_h)
+{
+    if (typeof dashlet_offsets[nr] == 'undefined'
+        || (c_h > 1 && c_h - dashlet_offsets[nr][1] < 81)) {
+        // use this on first load and later when the graph is less high than 81px
+        img_url += '&graph_width='+c_w+'&graph_height='+c_h;
+    } else {
+        img_url += '&graph_width='+(c_w - dashlet_offsets[nr][0])
+                  +'&graph_height='+(c_h - dashlet_offsets[nr][1]);
     }
-    img.src = img_url + '&graph_width='+req_w+'&graph_height='+req_h;
+    img.src = img_url;
 }
 """
 }

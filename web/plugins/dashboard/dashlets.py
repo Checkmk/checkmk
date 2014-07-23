@@ -387,10 +387,6 @@ dashlet_types["pnpgraph"] = {
     color: #000;
     text-align: center;
 }
-.dashlet.pnpgraph .dashlet_inner img {
-    width: 100%;
-    height: 100%;
-}
 """,
     "on_resize"    : lambda nr, params: 'dashboard_render_pnpgraph(%d, \'%s\');' %
                                                  (nr, make_pnp_url(params, 'image')),
@@ -423,8 +419,11 @@ function dashboard_render_pnpgraph(nr, img_url)
                 return; // Finished resizing
             }
 
-            if (h <= 81 || h - y_diff <= 81)
+            if (h <= 81 || h - y_diff <= 81) {
+                this.style.width = '100%';
+                this.style.height = '100%';
                 return;
+            }
 
             if (typeof dashlet_offsets[nr] == 'undefined') {
                 dashlet_offsets[nr] = [x_diff, y_diff];
@@ -434,6 +433,8 @@ function dashboard_render_pnpgraph(nr, img_url)
         };
     }(nr, img_url, c_w, c_h);
 
+    img.style.width = 'auto';
+    img.style.height = 'auto';
     load_graph_img(nr, img, img_url, c_w, c_h);
 }
 

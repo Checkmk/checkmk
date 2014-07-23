@@ -1,0 +1,9 @@
+Title: check_http: now able to enter non-ascii signs in "Send HTTP POST data" rule
+Level: 1
+Component: wato
+Version: 1.2.5i5
+Date: 1406117033
+Class: feature
+
+You are now able to enter öäß.. characters into the POST field.
+When calling check_http, the entered text (unicode) will be converted into utf-8.

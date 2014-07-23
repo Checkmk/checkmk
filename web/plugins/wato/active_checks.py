@@ -667,7 +667,7 @@ register_rule(group,
                               Tuple(
                                   title = _("Send HTTP POST data"),
                                   elements = [
-                                      TextAscii(
+                                      TextUnicode(
                                           title = _("HTTP POST data"),
                                           help = _("Data to send via HTTP POST method. "
                                                    "Please make sure, that the data is URL-encoded."),

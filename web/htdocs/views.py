@@ -622,7 +622,12 @@ def render_view_config(view):
     view['datasource'] = ds_name
 
     for ident, vs in view_editor_specs(view['context_type'], ds_name):
-        vs.render_input(ident, view)
+        ty = visuals.context_types[view['context_type']]
+        if ident == 'filters' and type(ty['parameters']) == list:
+            value = view[ident]
+        else:
+            value = view
+        vs.render_input(ident, value)
 
 # Is used to change the view structure to be compatible to the valuespec
 # This needs to perform the inverted steps of the create_view() function

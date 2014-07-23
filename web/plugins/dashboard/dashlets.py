@@ -532,7 +532,7 @@ def dashlet_view_parameters():
 def dashlet_view_render_input(dashlet):
     import views # FIXME: HACK, clean this up somehow
     views.load_views()
-    if 'group_painters' in dashlet: # only needed in cas of loading
+    if 'group_painters' in dashlet: # only needed in case of loading
         views.transform_view_to_valuespec(dashlet)
     return views.render_view_config(dashlet)
 

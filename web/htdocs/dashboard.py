@@ -128,8 +128,9 @@ def load_view_into_dashlet(dashlet, nr, view_name):
     if view_name in views:
         dashlet.update(views[view_name])
 
-    dashlet['type'] = 'view'
-    dashlet['name'] = 'dashlet_%d' % nr
+    dashlet['type']       = 'view'
+    dashlet['name']       = 'dashlet_%d' % nr
+    dashlet['show_title'] = True
 
 def save_dashboards(us):
     visuals.save('dashboards', dashboards)
@@ -646,11 +647,7 @@ def choose_view(name):
             dashboard = available_dashboards[name]
 
             # Add the dashlet!
-            dashlet = {
-                'type'     : 'view',
-                'position' : (1, 1),
-                'size'     : dashlet_types['view'].get('size', (10, 10)),
-            }
+            dashlet = default_dashlet_definition('view')
 
             # save the original context and override the context provided by the view
             dashlet_id = len(dashboard['dashlets'])
@@ -982,6 +979,14 @@ def ajax_popup_add_dashlet():
         html.write('</li>')
     html.write('</ul>\n')
 
+def default_dashlet_definition(ty):
+    return {
+        'type'       : ty,
+        'position'   : (1, 1),
+        'size'       : dashlet_types[ty].get('size', (10, 10)),
+        'show_title' : True,
+    }
+
 def add_dashlet(dashlet, dashboard):
     dashboard['dashlets'].append(dashlet)
     dashboard['mtime'] = int(time.time())
@@ -1007,11 +1012,7 @@ def ajax_add_dashlet():
 
     dashlet_type = dashlet_types[ty]
 
-    dashlet = {
-        'type'     : ty,
-        'position' : (1, 1),
-        'size'     : dashlet_type.get('size', (10, 10)),
-    }
+    dashlet = default_dashlet_definition(ty)
 
     # Parse context and params
     view_name = None

@@ -9,7 +9,7 @@ if type vxdmpadm >/dev/null 2>&1 ; then
     echo '<<<vxvm_multipath>>>'
     ENCS=$( vxdmpadm listenclosure all | grep -v -w -e ^[dD]isk -e ENCLR_NAME -e \^= | awk '{print $1}')
 
-    echo "$ENCS" | while read enc ; do 
-      vxdmpadm getdmpnode enclosure=$enc | grep -v -e \^= -e NAME 
+    echo "$ENCS" | while read enc ; do
+      vxdmpadm getdmpnode enclosure=$enc | grep -v -e \^= -e NAME
     done
 fi

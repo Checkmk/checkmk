@@ -1,7 +1,7 @@
 # plugin for websphere_mq_* checks
 
 if [ "$1" = "" ]
-then 
+then
     su - mqm -c "/usr/lib/check_mk_agent/plugins/websphere_mq.sh run"
 else
     # Loop over all local mq instances
@@ -18,17 +18,17 @@ else
            s=`echo " display chstatus($l)" | /usr/bin/runmqsc $QM | grep STATUS | tail -1 | sed '1,$s/(/ /g' | sed '1,$s/)/ /g'| awk '{print $NF }'`
 
            if [ "$s" = "" ]
-           then 
+           then
              s="Unknown"
            fi
-           echo "$a  $i $c $s" 
+           echo "$a  $i $c $s"
          done
          echo '<<<websphere_mq_queues>>>'
          for t in `echo " display queue (*) where (USAGE EQ NORMAL) " | /usr/bin/runmqsc $QM | grep QLOCAL | grep -v SYSTEM | grep -v _T0 |  grep -v _T1 |  grep -v _T2 | grep -v _T3 | grep -v mqtest | grep QUEUE | awk '{ print $1 }' | sed '1,$s/(/ /g' | sed '1,$s/)/ /g'| awk '{print $2 }'`
          do
            a=`echo " display queue ($t) CURDEPTH " | /usr/bin/runmqsc $QM | grep CURDEPTH | tail -1 | sed '1,$s/(/ /g' | sed '1,$s/)/ /g'| awk '{print $2 }'`
            b=`echo " display qlocal ($t) MAXDEPTH  " | /usr/bin/runmqsc $QM | grep MAXDEPTH | tr " " "\n" | grep MAXDEPTH | sed '1,$s/(/ /g' | sed '1,$s/)/ /g'| awk '{print $2 }' | tr "\n" " "`
-  
+
           # Muster: Anzahl eingehender Messages $a auf $t Max-Queues $b
 
            echo "$a $t $b"

@@ -118,7 +118,7 @@ def parse_cont_pattern(pattern):
         except:
             if debug:
                 raise
-            raise Exception("Invalid regular expression in line '%s'" % pattern) 
+            raise Exception("Invalid regular expression in line '%s'" % pattern)
 
 # structure of statusfile
 # # LOGFILE         OFFSET    INODE
@@ -190,7 +190,7 @@ def process_logfile(logfile, patterns):
     # Seek to the current end in order to determine file size
     current_end = os.lseek(fl, 0, 2) # os.SEEK_END not available in Python 2.4
     status[logfile] = current_end, inode
-        
+
     # If we have never seen this file before, we just set the
     # current pointer to the file end. We do not want to make
     # a fuss about ancient log messages...
@@ -199,7 +199,7 @@ def process_logfile(logfile, patterns):
             return
     	else:
 	    offset = 0
-   
+
 
     # If the inode of the logfile has changed it has appearently
     # been started from new (logfile rotation). At least we must
@@ -267,7 +267,7 @@ def process_logfile(logfile, patterns):
                             cont_line = next_line(f)
                             if cont_line == None: # end of file
                                 break
-                            line = line[:-1] + "\1" + cont_line 
+                            line = line[:-1] + "\1" + cont_line
 
                     else: # pattern is regex
                         while True:
@@ -275,7 +275,7 @@ def process_logfile(logfile, patterns):
                             if cont_line == None: # end of file
                                 break
                             elif cont_pattern.search(cont_line[:-1]):
-                                line = line[:-1] + "\1" + cont_line 
+                                line = line[:-1] + "\1" + cont_line
                             else:
                                 pushed_back_line = cont_line # sorry for stealing this line
                                 break

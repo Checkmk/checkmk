@@ -65,7 +65,7 @@ echo AgentOS: openbsd
 osver="$(uname -r)"
 
 echo '<<<df>>>'
-df -kPt ffs | sed -e 's/^\([^ ][^ ]*\) \(.*\)$/\1 ffs \2/' | sed 1d 
+df -kPt ffs | sed -e 's/^\([^ ][^ ]*\) \(.*\)$/\1 ffs \2/' | sed 1d
 
 # processes including username, without kernel processes
 echo '<<<ps>>>'
@@ -99,7 +99,7 @@ while [ $Z1 -lt $NI ]
   do
   BI=$( netstat -inb | egrep -v Name | grep Link | awk '{print $1" "$5}' | sed -ne $Z1$Z2 )
   PI=$( netstat -in | egrep -v Name | grep Link | awk '{print $5}' | sed -ne $Z1$Z2 )
-  EI=$( netstat -in | egrep -v Name | grep Link | awk '{print $6}' | sed -ne $Z1$Z2 )	
+  EI=$( netstat -in | egrep -v Name | grep Link | awk '{print $6}' | sed -ne $Z1$Z2 )
   FF1="0 0 0 0 0"
   BO=$( netstat -inb | egrep -v Name | grep Link | awk '{print $6}' | sed -ne $Z1$Z2 )
   PO=$( netstat -in | egrep -v Name | grep Link | awk '{print $7}' | sed -ne $Z1$Z2 )

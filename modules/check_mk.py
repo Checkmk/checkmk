@@ -5419,7 +5419,7 @@ def copy_globals():
         if varname not in [ "g_service_description", "g_multihost_checks",
                             "g_check_table_cache", "g_singlehost_checks",
                             "total_check_outout", "g_nodesof_cache",
-                            "g_initial_times", "g_keepalive_initial_memusage", 
+                            "g_initial_times", "g_keepalive_initial_memusage",
                             "g_dns_cache", "g_ip_lookup_cache" ] \
             and type(value).__name__ not in [ "function", "module", "SRE_Pattern" ]:
             global_saved[varname] = copy.copy(value)
@@ -5447,9 +5447,9 @@ def keepalive_check_memory(num_checks, keepalive_fd):
         # Allow VM size to grow by at most 50%
         if usage[0] > 1.5 * g_keepalive_initial_memusage[0]:
             file(log_dir + "/cmc-helper.log", "a") \
-                .write("%s [4] check helper[%d]: memory usage increased from %s to %s after %d check cycles. Restarting.\n" % 
+                .write("%s [4] check helper[%d]: memory usage increased from %s to %s after %d check cycles. Restarting.\n" %
                     (time.strftime("%F %T", time.localtime()), os.getpid(),
-                    get_bytes_human_readable(g_keepalive_initial_memusage[0]), 
+                    get_bytes_human_readable(g_keepalive_initial_memusage[0]),
                     get_bytes_human_readable(usage[0]), num_checks))
             restart_myself(keepalive_fd)
 

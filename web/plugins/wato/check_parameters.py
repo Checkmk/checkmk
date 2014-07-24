@@ -536,7 +536,7 @@ register_check_parameters(
     ),
     TextAscii(title = _("Name of Channel or Queue")),
     None,
-) 
+)
 
 register_check_parameters(
     subgroup_applications,
@@ -5599,11 +5599,11 @@ register_check_parameters(
                        Tuple(
                            title = _("Time of garbage gollection in ms per minute"),
                            elements = [
-                               Integer(title = _("Warning at"), 
-                                       unit = _("ms"), 
+                               Integer(title = _("Warning at"),
+                                       unit = _("ms"),
                                        allow_empty = False),
-                               Integer(title = _("Critical at"), 
-                                       unit = _("ms"), 
+                               Integer(title = _("Critical at"),
+                                       unit = _("ms"),
                                        allow_empty = False),
                            ]
                        )
@@ -5658,10 +5658,10 @@ register_check_parameters(
                        Tuple(
                            title = _("Percentage of current threads busy in threadpool"),
                            elements = [
-                               Integer(title = _("Warning at"), 
+                               Integer(title = _("Warning at"),
                                        unit = _(u"%"),
                                        allow_empty = False),
-                               Integer(title = _("Critical at"), 
+                               Integer(title = _("Critical at"),
                                        unit = _(u"%"),
                                        allow_empty = False),
                            ]

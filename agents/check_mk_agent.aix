@@ -105,16 +105,16 @@ do
 done
 
 
-if which ntpq > /dev/null 2>&1 ; then 
-    if [ $(lssrc -s xntpd|grep -c active) -gt 0 ] ; then 
-        echo '<<<ntp>>>' 
-        ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/' 
-    fi 
-fi 
+if which ntpq > /dev/null 2>&1 ; then
+    if [ $(lssrc -s xntpd|grep -c active) -gt 0 ] ; then
+        echo '<<<ntp>>>'
+        ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'
+    fi
+fi
 
 
 echo '<<<aix_multipath>>>'
-    lspath -F"name parent status" 
+    lspath -F"name parent status"
 
 echo '<<<aix_lvm>>>'
     # -L disables LVM lock for the query. Avoids blocking while LVM is

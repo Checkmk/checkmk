@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-hp_prolaint_power_default_levels = ( 300, 400 ) 
+hp_prolaint_power_default_levels = ( 300, 400 )
 
 def inventory_hp_proliant_power(info):
     if len(info) > 0 and info[0][0] != '0':

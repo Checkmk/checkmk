@@ -9,7 +9,7 @@ if which smartctl > /dev/null 2>&1 ; then
     if which tw_cli > /dev/null 2>&1 ; then
 	# support for only one controller at the moment
 	TWAC=$(tw_cli show | awk 'NR < 4 { next } { print $1 }' | head -n 1)
-	
+
        # - add a trailing zero to handle case of unused slot
        #   trailing zeros are part of the device links in /dev/disk/by-id/... anyway
        # - only the last 9 chars seem to be relevant
@@ -80,7 +80,7 @@ if which smartctl > /dev/null 2>&1 ; then
 	else
 	    CMD="smartctl -d ata -v 9,raw48 -A $D"
 	fi
-	
+
         [ -n "$CMD" ] && $CMD | grep Always | egrep -v '^190(.*)Temperature(.*)' | sed "s|^|$DNAME $VEND $MODEL |"
     done 2>/dev/null
 fi

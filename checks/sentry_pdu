@@ -27,7 +27,7 @@
 
 def inventory_sentry_pdu(info):
     for line in info:
-        yield line[0], int(line[1]) 
+        yield line[0], int(line[1])
 
 def check_sentry_pdu(item, params, info):
     states = {
@@ -52,14 +52,14 @@ def check_sentry_pdu(item, params, info):
             infotext = "State is %s" % states[state]
             if state  != required_state:
                 yield 2, infotext
-            else: 
+            else:
                 yield 0, infotext
 
             infotext = "Current consumption %s Watt" % power
             perfdata = [ ('power', power )]
             yield 0, infotext, perfdata
             return
-    
+
     yield 3, 'Phase information not found'
     return
 

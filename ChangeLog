@@ -74,6 +74,7 @@
     * 1049 FIX: ups_capacity: Fix exception when running on battery...
     * 0639 FIX: jolokia_metrics: fix for problem when catalina uses the standalone engine
     * 1050 FIX: websphere_mq_queues: make compatible with old agent, fix not-found case
+    * 0642 FIX: fc_port: scan function of check modified ... again
 
     Multisite:
     * 1013 Sort host names naturally, e.g. foobar11 comes after foobar2...

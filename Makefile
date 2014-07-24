@@ -177,8 +177,10 @@ setversion:
 	sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' doc/treasures/mknotifyd ; \
 	sed -i 's/^VERSION=.*/VERSION='"$(NEW_VERSION)"'/' scripts/setup.sh ; \
 	echo 'check-mk_$(NEW_VERSION)-1_all.deb net optional' > debian/files ; \
-	cd agents/windows ; rm check_mk_agent.exe check_mk_agent-64.exe ; make ; cd ../.. ; \
-	cp agents/windows/install_agent.exe check-mk-agent-$(NEW_VERSION).exe
+	cd agents/windows ; rm check_mk_agent.exe check_mk_agent-64.exe check_mk_agent.msi ; make ; cd ../.. ; \
+	cp agents/windows/install_agent.exe check-mk-agent-$(NEW_VERSION).exe ; \
+	cp agents/windows/install_agent-64.exe check-mk-agent-$(NEW_VERSION)-64.exe ; \
+	cp agents/windows/check_mk_agent.msi check-mk-agent-$(NEW_VERSION).msi
 
 headers:
 	doc/helpers/headrify

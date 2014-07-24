@@ -1,0 +1,8 @@
+Title: jolokia_metrics: fix for problem when catalina uses the standalone engine
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1406147156
+Class: fix
+
+

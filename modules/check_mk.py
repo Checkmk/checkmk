@@ -2393,7 +2393,7 @@ define service {
   check_command\t\t\t%s
   active_checks_enabled\t\t1
 %s}
-""" % (template, hostname, make_utf8(description), simulate_command(command), extraconf))
+""" % (template, hostname, make_utf8(description), make_utf8(simulate_command(command)), extraconf))
 
             # write service dependencies for active checks
             outfile.write(get_dependencies(hostname,description))

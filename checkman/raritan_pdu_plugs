@@ -7,10 +7,10 @@ description:
  This check monitors the state of the plugs of the Raritan PX-2000
  family of intelligent rack power distribution units (iPDUs).
  It has been tested with the model PX2-2180CR.
- As default plugs which are switched {on} are in the state {OK},
+ As default the state of the time from inventory will result in the state {OK},
  other states are in the state {CRIT}.
- The required state can be configured to {off}. Then these plugs are in
- the state {OK} when they are switched off, and {CRIT} otherwise.
+ The required state can be configured to {on} or {off}. Then these plugs are in
+ the state {OK} when they are in the configured state, and {CRIT} otherwise.
 
 item:
  The ID Number of the plug as given by the device

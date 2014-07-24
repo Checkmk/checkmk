@@ -542,7 +542,8 @@ function dashlet_toggle_edit(dashlet, edit) {
         edit.className = 'edit';
         edit.onclick = function(dashlet_id, board_name) {
             return function() {
-                location.href = 'edit_dashlet.py?name=' + board_name + '&id=' + dashlet_id;
+                location.href = 'edit_dashlet.py?name=' + board_name + '&id=' + dashlet_id
+                                + '&back=' + encodeURIComponent(dashboard_url);
             };
         }(id, dashboard_name);
         controls.appendChild(edit);
@@ -552,7 +553,8 @@ function dashlet_toggle_edit(dashlet, edit) {
         del.className = 'del';
         del.onclick = function(dashlet_id, board_name) {
             return function() {
-                location.href = 'delete_dashlet.py?name=' + board_name + '&id=' + dashlet_id;
+                location.href = 'delete_dashlet.py?name=' + board_name + '&id=' + dashlet_id
+                                + '&back=' + encodeURIComponent(dashboard_url);
             };
         }(id, dashboard_name);
         controls.appendChild(del);
@@ -740,7 +742,7 @@ function drag_dashlet_start(event) {
             event.clientY - target.parentNode.offsetTop
         ];
 
-        drag_visualize(true);
+        edit_visualize(g_dragging, true);
 
         prevent_default_events(event);
         return false;
@@ -786,7 +788,7 @@ function drag_dashlet_stop(event) {
     if (!g_dragging)
         return true;
 
-    drag_visualize(false);
+    edit_visualize(g_dragging, false);
     var nr = parseInt(g_dragging.id.replace('dashlet_', ''));
     g_dragging = false;
 
@@ -811,11 +813,11 @@ function handle_dashlet_post_response(_unused, response_text) {
     }
 }
 
-function drag_visualize(show) {
+function edit_visualize(obj, show) {
     if (show)
-        g_dragging.style.zIndex = 80;
+        obj.style.zIndex = 80;
     else
-        g_dragging.style.zIndex = 1;
+        obj.style.zIndex = 1;
 }
 
 /**
@@ -846,6 +848,8 @@ function resize_dashlet_start(event) {
             dashlet_obj.offsetLeft, dashlet_obj.offsetTop, // initial pos
             dashlet_obj.clientWidth, dashlet_obj.clientHeight // initial size
         ];
+
+        edit_visualize(dashlet_obj, true);
 
         prevent_default_events(event);
         return false;
@@ -945,6 +949,7 @@ function resize_dashlet_stop(event) {
 
     var dashlet_obj = g_resizing.parentNode.parentNode;
     var nr = parseInt(dashlet_obj.id.replace('dashlet_', ''));
+    edit_visualize(dashlet_obj, false);
     g_resizing = false;
 
     dashlet_resized(nr, dashlet_obj);

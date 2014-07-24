@@ -372,13 +372,15 @@ var refresh_dashlets = %r;
 var on_resize_dashlets = {%s};
 var dashboard_name = '%s';
 var dashboard_mtime = %d;
+var dashboard_url = '%s';
 var dashlets = %s;
 
 calculate_dashboard();
 window.onresize = function () { calculate_dashboard(); }
 dashboard_scheduler(1);
     """ % (MAX, GROW, raster, header_height, screen_margin, title_height, dashlet_padding,
-           corner_overlap, refresh_dashlets, ','.join(on_resize), name, board['mtime'], repr(dashlets_js)))
+           corner_overlap, refresh_dashlets, ','.join(on_resize), name, board['mtime'],
+           html.makeuri([]), repr(dashlets_js)))
 
     if mode == 'edit':
         html.javascript('toggle_dashboard_edit(true)')

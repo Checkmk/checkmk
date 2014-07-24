@@ -48,6 +48,7 @@ div.dashlet {
     padding: 0;
     margin: 0;
     display: none;
+    z-index: 1;
 }
 
 /* content area of dashlet, if no iframes are used */
@@ -249,10 +250,6 @@ div.dashlet_inner div.stats {
 }
 
 /* dashlet controls */
-
-div.dashlet.edit {
-    z-index: 90;
-}
 
 div.dashlet.edit .controls {
     z-index: 100;

@@ -583,7 +583,6 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None, create_hand
 
     html.button("save", _("Save"))
     html.hidden_fields()
-    html.end_form()
 
     if try_handler:
         html.write(" ")
@@ -597,6 +596,8 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None, create_hand
                 bi.reset_cache_status()
                 try_handler(visual)
             return # avoid second html footer
+    else:
+        html.end_form()
 
     html.footer()
 

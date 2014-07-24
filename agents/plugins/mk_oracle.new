@@ -179,13 +179,13 @@ sql_recovery_status()
 
 sql_rman()
 {
-    echo 'PROMPT <<<oracle_rman>>>'
+    echo 'PROMPT <<<oracle_rman:sep(124)>>>'
     echo "SELECT upper(d.NAME)
-                 ||' '|| a.STATUS
-                 ||' '|| to_char(a.START_TIME, 'YYYY-mm-dd_HH24:MI:SS')
-                 ||' '|| to_char(a.END_TIME, 'YYYY-mm-dd_HH24:MI:SS')
-                 ||' '|| replace(b.INPUT_TYPE, ' ', '_')
-                 ||' '|| round(((sysdate - END_TIME) * 24 * 60),0)
+                 ||'|'|| a.STATUS
+                 ||'|'|| to_char(a.START_TIME, 'YYYY-mm-dd_HH24:MI:SS')
+                 ||'|'|| to_char(a.END_TIME, 'YYYY-mm-dd_HH24:MI:SS')
+                 ||'|'|| replace(b.INPUT_TYPE, ' ', '_')
+                 ||'|'|| round(((sysdate - END_TIME) * 24 * 60),0)
                  FROM V\$RMAN_BACKUP_JOB_DETAILS a, v\$database d,
                       (SELECT input_type, max(command_id) as command_id
                        FROM V\$RMAN_BACKUP_JOB_DETAILS

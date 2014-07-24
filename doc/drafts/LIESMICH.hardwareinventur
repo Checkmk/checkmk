@@ -240,26 +240,26 @@ hardware.storage
             .fsnode     "/dev/vg-01/lv-backup"
             .size       9823749827349823
             .used       2943847238947
-            .type       "ext3"
+            .fstype     "ext3"
             .mountpoint /srv/backup
-            .local      True
+            .drive_type localdisk
             .disk       inv_reference(... zu Platte)
             .partition  inv_reference(... zu Partition)
         :1
             .fsnode     "/dev/vg-01/lv-unused"
             .size       9823749827349823
             .used       2943847238947
-            .type       "swap"
+            .fstype     "swap"
             .mountpoint None
-            .local      True
+            .drive_type local disk 
         :2
             .server     "rablfals.local"
             .volume     "/wefoijweofijw"
             .size       9823749827349823
             .used       2943847238947
-            .type       "nfs"
+            .fstype     "nfs"
             .mountpoint "/sapdata"
-            .local      False
+            .drive_type network drive
 
     .swapareas
         :0

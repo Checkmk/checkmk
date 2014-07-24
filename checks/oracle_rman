@@ -31,7 +31,7 @@
 # Columns: SID STATUS START END BACKUPTYPE BACKUAGE
 
 def inventory_oracle_rman(info):
-    return [ (line[0] + "." + line[4], {}) for line in info 
+    return [ (line[0] + "." + line[4], {}) for line in info
             # only check full, incremental and archivelog-Backups
             if line[4] in ('ARCHIVELOG', 'DB_FULL', 'DB_INCR')]
 

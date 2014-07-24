@@ -1,0 +1,103 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# In cooperation with Thorsten Bruhns from OPITZ Consulting
+
+# <<<oracle_recovery_state:sep(124)>>>
+# TUX2|tux2|PRIMARY|MOUNTED|1|1405456155|ONLINE||NO|2719061
+# TUX2|tux2|PRIMARY|MOUNTED|2|1405456155|ONLINE||NO|2719061
+
+factory_settings["oracle_recovery_status_defaults"] = {
+    "levels"  : (3600, 1800),
+}
+
+def inventory_oracle_recovery_status(info):
+    return [ ( line[0], {} ) for line in info ]
+
+def check_oracle_recovery_status(item, params, info):
+    state = 3
+    notonlinecount = 0
+    oldest_checkpoint_age = -1
+
+    state = 0
+    perfdata = ""
+
+    itemfound = False
+    for line in info:
+        if line[0] == item:
+            itemfound = True
+            db_name, db_unique_name, database_role, open_mode, filenr, \
+            checkpoint_time, checkpoint_age, datafilestatus, recovery, fuzzy, checkpoint_change = line
+            warn, crit = params["levels"]
+
+            if oldest_checkpoint_age == -1 or oldest_checkpoint_age > checkpoint_age:
+                oldest_checkpoint_age = checkpoint_age
+
+            if datafilestatus <> 'ONLINE':
+                notonlinecount += 1
+
+    if itemfound == True:
+        infotext = "%s database, oldest Checkpoint %s ago" \
+                   % (database_role.lower(), get_age_human_readable(int(oldest_checkpoint_age)))
+
+        if database_role == 'PRIMARY':
+            # checkpoint age should not higher on primary as well
+            # otherwise the standby will produca a warning or crit as well
+            if oldest_checkpoint_age >= warn:
+                infotext += '(!)'
+                state = 1
+        else:
+            # check the checkpoint age on a non primary database!
+            if oldest_checkpoint_age >= crit:
+                infotext += '(!!)'
+                state = 2
+            elif oldest_checkpoint_age >= warn:
+                infotext += '(!)'
+                state = 1
+
+        if notonlinecount > 0:
+            infotext += " %i datafiles not online (!!)" \
+                        % (notonlinecount)
+            state = 2
+
+        perfdata = [('checkpoint_age', checkpoint_age, warn, crit)]
+
+        return state, infotext, perfdata
+
+    # In case of missing information we assume that the login into
+    # the database has failed and we simply skip this check. It won't
+    # switch to UNKNOWN, but will get stale.
+    raise MKCounterWrapped(None, "Login into database failed")
+
+
+check_info['oracle_recovery_status'] = {
+    "check_function"          : check_oracle_recovery_status,
+    "inventory_function"      : inventory_oracle_recovery_status,
+    "service_description"     : "ORA %s Recovery Status",
+    "has_perfdata"            : True,
+    "default_levels_variable" : "oracle_recovery_status_defaults",
+    "group"                   : "oracle_recovery_status",
+}

@@ -41,25 +41,40 @@ def inventory_oracle_undostat(info):
 def check_oracle_undostat(item, params, info):
     for line in info:
         if line[0] == item:
+            infotext = ''
 
             activeblks, maxconcurrency, tuned_undoretention, maxquerylen, nospaceerrcnt = map(int, line[1:])
             warn, crit = params["levels"]
 
-            if tuned_undoretention <= crit:
+            if tuned_undoretention == -1:
+                state = 0
+            elif tuned_undoretention <= crit:
                 state = 2
             elif tuned_undoretention <= warn:
                 state = 1
             else:
                 state = 0
 
-            infotext = "%s Undoretention (levels at %s/%s), %d active undoblocks, " \
-                       "%d max concurrent transactions, %s max querylen, %d space errorcount" \
-                % (get_age_human_readable(tuned_undoretention),
+            if nospaceerrcnt == 0:
+                nospaceerrcntpic = ""
+            else:
+                state = 2
+                nospaceerrcntpic = "(!!)"
+
+            if tuned_undoretention >= 0:
+                infotext = "%s Undoretention (levels at %s/%s), %d active undoblocks, " \
+                    % (get_age_human_readable(tuned_undoretention),
                    get_age_human_readable(warn),
                    get_age_human_readable(crit),
-                   activeblks, maxconcurrency,
+                   activeblks)
+
+            infotext += "%d max concurrent transactions, %s max querylen, %d space errors%s" \
+                % (maxconcurrency,
                    get_age_human_readable(maxquerylen),
-                   nospaceerrcnt)
+                   nospaceerrcnt, nospaceerrcntpic)
+
+
+
             perfdata =  [('activeblk',        activeblks),
                          ('transconcurrent',  maxconcurrency),
                          ('tunedretention',   tuned_undoretention, warn, crit),

@@ -42,8 +42,8 @@ def check_oracle_instance(item, _no_params, info):
             if line[1] == 'FAILURE':
                 return 2, " ".join(line[2:])
 
-            sid, version, openmode, logins, archiver, up_seconds, dbid, \
-                log_mode, database_role, force_logging, name = line
+            sid, version, openmode, logins, archiver, dummy, dbid, \
+                log_mode, database_role, force_logging, up_seconds, name = line
 
             state = 0
             infotext = "Database Name %s, Status %s" % (name, openmode)

@@ -37,10 +37,10 @@ def inv_win_reg_uninstall(info):
             install_date = int(time.mktime(time.strptime(date, "%Y%m%d")))
 
         entry = {
-            "name"            : pacname.decode("cp437"),
-            "version"         : version.decode("cp437"),
-            "vendor"          : publisher.decode("cp437"),
-            "summary"         : display_name.decode("cp437"),
+            "name"            : pacname,
+            "version"         : version,
+            "vendor"          : publisher,
+            "summary"         : display_name,
             "install_date"    : install_date,
             "size"            : estimated_size,
             "package_type"    : "reg_uninstall",

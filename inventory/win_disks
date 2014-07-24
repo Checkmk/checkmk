@@ -63,7 +63,6 @@ def inv_win_disks(info):
     for varname, value in info:
         varname = re.sub(" *","", varname)
         value = re.sub("^ ", "", value)
-        value = value.decode("cp437")
         if varname == "Manufacturer":
             array["vendor"] = value
         elif varname == "InterfaceType":

@@ -1,0 +1,8 @@
+Title: windows inventory: moved encoding from checks to windows agent plugin
+Level: 1
+Component: inv
+Version: 1.2.5i5
+Date: 1406210953
+Class: fix
+
+

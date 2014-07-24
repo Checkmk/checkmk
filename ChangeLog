@@ -125,6 +125,7 @@
     * 0167 FIX: mk_inventory.linux: Changed field separator from pipe to tab...
     * 1005 FIX: Fix exception when using pretty-print output format
     * 0946 FIX: hw/sw inventory: fixed display bug for byte fields with the value 0...
+    * 0641 FIX: windows inventory: moved encoding from checks to windows agent plugin
 
 
 1.2.5i4:

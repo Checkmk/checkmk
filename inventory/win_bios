@@ -44,7 +44,6 @@ def inv_win_bios(info):
     for varname, value in info:
         varname = re.sub(" *","", varname)
         value = re.sub("^ ", "", value)
-        value = value.decode("cp437")
         if varname == "BIOSVersion":
             bios_version = value
         elif varname == "SMBIOSBIOSVersion":

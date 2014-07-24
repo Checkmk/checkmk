@@ -44,9 +44,9 @@ def inv_win_wmi_software(info):
             install_date = int(time.mktime(time.strptime(dat, "%Y%m%d")))
 
         entry = {
-            "name"            : pacname.decode("cp437"),
-            "version"         : version.decode("cp437"),
-            "vendor"          : vendor.decode("cp437"),
+            "name"            : pacname,
+            "version"         : version,
+            "vendor"          : vendor,
             "install_date"    : install_date,
             "package_type"    : "wmi",
         }

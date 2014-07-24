@@ -24,13 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-raritan_pdu_plugs_default = '"on"'
+raritan_pdu_plugs_default = '"on"' # only to be downwards compatible and can be removed later.
 
 def inventory_raritan_pdu_plugs(info):
     inventory = []
     for line in info:
         if saveint(line[0]) != 0:
-            inventory.append((line[0], raritan_pdu_plugs_default) )
+            inventory.append((line[0], int(line[2])) )
     return inventory
 
 def check_raritan_pdu_plugs(item, params, info):
@@ -58,10 +58,11 @@ def check_raritan_pdu_plugs(item, params, info):
             outletLabel = line[0] # Outlet-Label (Index) (PDU identifier of the outlet)
             outletName = line[1] # OutletName (vergebene Bezeichnung für den Ausgang)
             outletState = int(line[2]) # The Outlet state at present (sh. outlet_state_info)
-
-            if states[outletState] == required_state:
-                state = 0
-            else:
+            state = 0
+            if type(required_state) == int:
+                if outletState != required_state:
+                    state = 2
+            elif states[outletState] != required_state:
                 state = 2
 
             message = outletName + ": " + states[outletState]

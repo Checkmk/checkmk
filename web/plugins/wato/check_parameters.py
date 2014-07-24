@@ -3982,7 +3982,8 @@ register_check_parameters(
         default_value = "on"
     ),
     TextAscii(
-        title = _("Plug Item ID number"),
+        title = _("Plug Item number or name"),
+        help = _("If you need the number or the name depends on the check. Just take a look to the service description. "),
         allow_empty = True),
      None
 )

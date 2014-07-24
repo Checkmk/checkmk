@@ -381,6 +381,14 @@ perfometers["check_mk-dell_chassis_power"] = perfometer_power
 perfometers["check_mk-dell_chassis_powersupplies"] = perfometer_power
 perfometers["check_mk-hp-proliant_power"] = perfometer_power
 
+def perfometer_power_simple(row, check_command, perf_data):
+    watt = int(perf_data[0][1])
+    text = "%s Watt" % watt
+    return text, perfometer_logarithmic(watt, 150, 2, "#60f020")
+
+perfometers["check_mk-ibm_svc_enclosurestats.power"] = perfometer_power_simple
+perfometers["check_mk-sentry_pdu"] = perfometer_power_simple
+
 def perfometer_users(row, check_command, perf_data):
     state = row["service_state"]
     color = "#39f"
@@ -1008,11 +1016,6 @@ def perfometer_check_mk_ibm_svc_cache(row, check_command, perf_data):
 perfometers["check_mk-ibm_svc_nodestats.cache"] = perfometer_check_mk_ibm_svc_cache
 perfometers["check_mk-ibm_svc_systemstats.cache"] = perfometer_check_mk_ibm_svc_cache
 
-def perfometer_check_mk_ibm_svc_power(row, check_command, perf_data):
-    watt = int(perf_data[0][1])
-    text = "%s Watt" % watt
-    return text, perfometer_logarithmic(watt, 150, 2, "#60f020")
-perfometers["check_mk-ibm_svc_enclosurestats.power"] = perfometer_check_mk_ibm_svc_power
 
 def perfometer_licenses_percent(row, check_command, perf_data):
     licenses = float(perf_data[0][1])

@@ -173,7 +173,7 @@ class Filter:
     def value(self):
         val = {}
         for varname in self.htmlvars:
-            val[varname] = html.var(varname)
+            val[varname] = html.var(varname, '')
         return val
 
     # Is used to populate a value, for example loaded from persistance, into

@@ -30,16 +30,11 @@ function size_dashlets() {
     var oDash = null;
     for (var d_number = 0; d_number < size_info.length; d_number++) {
         var dashlet = size_info[d_number];
-        var d_visible = dashlet[0];
-        var d_left    = dashlet[1];
-        var d_top     = dashlet[2];
-        var d_width   = dashlet[3];
-        var d_height  = dashlet[4];
-
+        var d_left    = dashlet[0];
+        var d_top     = dashlet[1];
+        var d_width   = dashlet[2];
+        var d_height  = dashlet[3];
         var disstyle = "block";
-        if (!d_visible) {
-            disstyle = "none";
-        }
 
         // check if dashlet has title and resize its width
         oDash = document.getElementById("dashlet_title_" + d_number);
@@ -184,26 +179,15 @@ function calculate_dashlets() {
 
         // Allocate used squares in matrix. If not all squares we need are free,
         // then the dashboard is too small for all dashlets (as it seems).
-        // TEST: Dashlet auf 0/0 setzen, wenn kein Platz dafür da ist.
-        try {
-            for (var x = left; x < right; x++) {
-                for (var y = top; y < bottom; y++) {
-                    if (x+' '+y in used_matrix) {
-                        throw 'used';
-                    }
-                    used_matrix[x+' '+y] = true;
-                }
+        for (var x = left; x < right; x++) {
+            for (var y = top; y < bottom; y++) {
+                used_matrix[x+' '+y] = true;
             }
-            // Helper variable for how to grow, both x and y in [-1, 0, 1]
-            var grow_by = rel_position.compute_grow_by(size);
-
-            positions.push([true, left, top, right, bottom, grow_by]);
-        } catch (e) {
-            if (e == 'used')
-                positions.push([true, left, top, right, bottom, new vec(0, 0)]);
-            else
-                throw e;
         }
+        // Helper variable for how to grow, both x and y in [-1, 0, 1]
+        var grow_by = rel_position.compute_grow_by(size);
+
+        positions.push([left, top, right, bottom, grow_by]);
     }
 
     var try_allocate = function(left, top, right, bottom) {
@@ -228,48 +212,43 @@ function calculate_dashlets() {
         at_least_one_expanded = false;
         var new_positions = []
         for (var nr = 0; nr < positions.length; nr++) {
-            var visible = positions[nr][0],
-                left    = positions[nr][1],
-                top     = positions[nr][2],
-                right   = positions[nr][3],
-                bottom  = positions[nr][4],
-                grow_by = positions[nr][5];
+            var left    = positions[nr][0],
+                top     = positions[nr][1],
+                right   = positions[nr][2],
+                bottom  = positions[nr][3],
+                grow_by = positions[nr][4];
 
-            if (visible) {
-                // try to grow in X direction by one
-                if (grow_by.x > 0 && right < raster_size.x && try_allocate(right, top, right+1, bottom)) {
-                    at_least_one_expanded = true;
-                    right += 1;
-                }
-                else if (grow_by.x < 0 && left > 0 && try_allocate(left-1, top, left, bottom)) {
-                    at_least_one_expanded = true;
-                    left -= 1;
-                }
-
-                // try to grow in Y direction by one
-                if (grow_by.y > 0 && bottom < raster_size.y && try_allocate(left, bottom, right, bottom+1)) {
-                    at_least_one_expanded = true;
-                    bottom += 1;
-                }
-                else if (grow_by.y < 0 && top > 0 && try_allocate(left, top-1, right, top)) {
-                    at_least_one_expanded = true;
-                    top -= 1;
-                }
+            // try to grow in X direction by one
+            if (grow_by.x > 0 && right < raster_size.x && try_allocate(right, top, right+1, bottom)) {
+                at_least_one_expanded = true;
+                right += 1;
             }
-            new_positions.push([visible, left, top, right, bottom, grow_by]);
+            else if (grow_by.x < 0 && left > 0 && try_allocate(left-1, top, left, bottom)) {
+                at_least_one_expanded = true;
+                left -= 1;
+            }
+
+            // try to grow in Y direction by one
+            if (grow_by.y > 0 && bottom < raster_size.y && try_allocate(left, bottom, right, bottom+1)) {
+                at_least_one_expanded = true;
+                bottom += 1;
+            }
+            else if (grow_by.y < 0 && top > 0 && try_allocate(left, top-1, right, top)) {
+                at_least_one_expanded = true;
+                top -= 1;
+            }
+            new_positions.push([left, top, right, bottom, grow_by]);
         }
         positions = new_positions;
     }
 
     var size_info = [];
     for (var nr = 0; nr < positions.length; nr++) {
-        var visible = positions[nr][0],
-            left    = positions[nr][1],
-            top     = positions[nr][2],
-            right   = positions[nr][3],
-            bottom  = positions[nr][4];
+        var left    = positions[nr][0],
+            top     = positions[nr][1],
+            right   = positions[nr][2],
+            bottom  = positions[nr][3];
         size_info.push([
-            visible,
             left * grid_size.x,
             top * grid_size.y,
             (right - left) * grid_size.x,

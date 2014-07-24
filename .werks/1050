@@ -1,0 +1,8 @@
+Title: websphere_mq_queues: make compatible with old agent, fix not-found case
+Level: 1
+Component: checks
+Version: 1.2.5i5
+Date: 1406209719
+Class: fix
+
+

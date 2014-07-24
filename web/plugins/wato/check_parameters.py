@@ -530,8 +530,8 @@ register_check_parameters(
     Tuple(
       title = _('Maximum number of messages'),
           elements = [
-             Integer(title = _("Warning if above") ),
-             Integer(title = _("Critical if above") ),
+             Integer(title = _("Warning if above"), default_value = 1000 ),
+             Integer(title = _("Critical if above"), default_value = 1200 ),
           ]
     ),
     TextAscii(title = _("Name of Channel or Queue")),

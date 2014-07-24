@@ -24,12 +24,20 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-#<<<websphere_mq_queues>>>
-#0 CD.ISS.CATSOS.REPLY.C000052 5000
-#0 CD.ISS.COBA.REPLY.C000052 5000
-#0 CD.ISS.DEUBA.REPLY.C000052 5000
-#0 CD.ISS.TIQS.REPLY.C000052 5000
-#0 CD.ISS.VWD.REPLY.C000052 5000
+# <<<websphere_mq_queues>>>
+# 0 CD.ISS.CATSOS.REPLY.C000052 5000
+# 0 CD.ISS.COBA.REPLY.C000052 5000
+# 0 CD.ISS.DEUBA.REPLY.C000052 5000
+# 0 CD.ISS.TIQS.REPLY.C000052 5000
+# 0 CD.ISS.VWD.REPLY.C000052 5000
+
+# Old output
+# <<<websphere_mq_queues>>>
+# 0 CD.ISS.CATSOS.REPLY.C000052
+# 0 CD.ISS.COBA.REPLY.C000052
+# 0 CD.ISS.DEUBA.REPLY.C000052
+# 0 CD.ISS.TIQS.REPLY.C000052
+# 0 CD.ISS.VWD.REPLY.C000052
 
 websphere_mq_queues_default_levels = ( 1000, 1200 )
 
@@ -37,17 +45,26 @@ def inventory_websphere_mq_queues(info):
     return [ ( x[1], 'websphere_mq_queues_default_levels' ) for x in info  ]
 
 def check_websphere_mq_queues(item, params, info):
-    for messages, queue, queue_length in info:
+    for line in info:
+        queue = line[1]
         if queue == item:
+            messages = int(line[0])
+            if len(line) >= 3:
+                queue_length = int(line[2])
+                length_info = "/%d" % queue_length
+            else:
+                length_info = ""
+            message = "%d%s messages in queue" % ( messages, length_info )
+
             warn, crit = params
-            messages = saveint(messages)
-            message = "%d/%s Messages in Queue" % ( messages, queue_length )
             perf = [ ( "queue", messages, warn, crit ) ]
             if messages >= crit:
                 return 2, message, perf
             if messages >= warn:
                 return 1, message, perf
             return 0, message, perf
+
+    return 3, "No message queue named %s in agent output" % item
 
 check_info["websphere_mq_queues"] = {
     "group"                 : "websphere_mq",

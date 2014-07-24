@@ -235,8 +235,10 @@ def page_list(what, visuals, custom_columns = []):
 
     html.begin_context_buttons()
     html.context_button(_('Create %s') % what_s.title(), 'create_%s.py' % what_s, what_s)
-    html.context_button(_('Views'), 'edit_views.py', 'view')
-    html.context_button(_('Dashboards'), 'edit_dashboards.py', 'dashboard')
+    if what != 'views':
+        html.context_button(_('Views'), 'edit_views.py', 'view')
+    if what != 'dashboards':
+        html.context_button(_('Dashboards'), 'edit_dashboards.py', 'dashboard')
     html.end_context_buttons()
 
     # Deletion of visuals

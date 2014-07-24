@@ -68,11 +68,11 @@ sidebar_snapins["about"] = {
 # --------------------------------------------------------------
 
 def visuals_by_topic(permitted_visuals,
-        default_order = [ _("Hosts"), _("Hostgroups"), _("Services"), _("Servicegroups"),
+        default_order = [ _("Overview"), _("Hosts"), _("Hostgroups"), _("Services"), _("Servicegroups"),
                          _("Business Intelligence"), _("Problems"), _("Addons") ]):
-    s = [ (visual.get("topic") or _("Other"), visual.get("title"), name)
+    s = [ (visual.get("topic") or _("Other"), visual.get("title"), name, 'painters' in visual)
           for name, visual
-          in permitted_visuals.items()
+          in permitted_visuals
           if not visual["hidden"] and not visual.get("mobile")]
 
     s.sort()
@@ -81,7 +81,7 @@ def visuals_by_topic(permitted_visuals,
     for topic in default_order:
         result.append((topic, s))
 
-    rest = list(set([ t for (t, _t, _v) in s if t not in default_order ]))
+    rest = list(set([ t for (t, _t, _v, _i) in s if t not in default_order ]))
     rest.sort()
     for topic in rest:
         if topic:
@@ -91,23 +91,27 @@ def visuals_by_topic(permitted_visuals,
 
 def render_views():
     views.load_views()
+    dashboard.load_dashboards()
 
     def render_topic(topic, s):
         first = True
-        for t, title, name in s:
-            if config.visible_views and name not in config.visible_views:
+        for t, title, name, is_view in s:
+            if is_view and config.visible_views and name not in config.visible_views:
                 continue
-            if config.hidden_views and name in config.hidden_views:
+            if is_view and config.hidden_views and name in config.hidden_views:
                 continue
             if t == topic:
                 if first:
                     html.begin_foldable_container("views", topic, False, topic, indent=True)
                     first = False
-                bulletlink(title, "view.py?view_name=%s" % name, onclick = "return wato_views_clicked(this)")
+                if is_view:
+                    bulletlink(title, "view.py?view_name=%s" % name, onclick = "return wato_views_clicked(this)")
+                else:
+                    bulletlink(title, 'dashboard.py?name=%s' % name, onclick = "return wato_views_clicked(this)")
         if not first: # at least one item rendered
             html.end_foldable_container()
 
-    for topic, s in visuals_by_topic(views.permitted_views()):
+    for topic, s in visuals_by_topic(views.permitted_views().items() + dashboard.permitted_dashboards().items()):
         render_topic(topic, s)
 
     links = []
@@ -119,7 +123,7 @@ def render_views():
 
 sidebar_snapins["views"] = {
     "title" : _("Views"),
-    "description" : _("Links to all views"),
+    "description" : _("Links to global views and dashboards"),
     "render" : render_views,
     "allowed" : [ "user", "admin", "guest" ],
 }
@@ -140,7 +144,7 @@ def render_dashboards():
 
     def render_topic(topic, s, foldable = True):
         first = True
-        for t, title, name in s:
+        for t, title, name, is_view in s:
             if t == topic:
                 if first:
                     if foldable:
@@ -156,7 +160,7 @@ def render_dashboards():
             else:
                 html.write('<ul>')
 
-    by_topic = visuals_by_topic(dashboard.permitted_dashboards(), default_order = [ _('Overview') ])
+    by_topic = visuals_by_topic(dashboard.permitted_dashboards().items(), default_order = [ _('Overview') ])
     topics = [ topic for topic, entry in by_topic ]
 
     if len(topics) < 2:

@@ -55,7 +55,6 @@ multisite_users = {}
 sidebar = [
     ('tactical_overview', 'open'),
     ('search',            'open'),
-    ('dashboards',        'open'),
     ('views',             'open'),
     ('bookmarks',         'open'),
     ('admin',             'open'),

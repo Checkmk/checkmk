@@ -47,12 +47,13 @@ MAX = -1
 # These settings might go into the config module, sometime in future,
 # in order to allow the user to customize this.
 
-header_height   = 60             # Distance from top of the screen to the lower border of the heading
-screen_margin   = 5              # Distance from the left border of the main-frame to the dashboard area
-dashlet_padding = 21, 5, 5, 0, 4 # Margin (N, E, S, W, N w/o title) between outer border of dashlet and its content
-corner_overlap  = 22
-title_height    = 0             # Height of dashlet title-box
-raster          = 10, 10        # Raster the dashlet choords are measured in
+header_height    = 60             # Distance from top of the screen to the lower border of the heading
+screen_margin    = 5              # Distance from the left border of the main-frame to the dashboard area
+dashlet_padding  = 21, 5, 5, 0, 4 # Margin (N, E, S, W, N w/o title) between outer border of dashlet and its content
+corner_overlap   = 22
+title_height     = 0             # Height of dashlet title-box
+raster           = 10, 10        # Raster the dashlet choords are measured in
+dashlet_min_size = 10, 10        # Minimum width and height of dashlets
 
 # Load plugins in web/plugins/dashboard and declare permissions,
 # note: these operations produce language-specific results and
@@ -367,6 +368,7 @@ var header_height = %d;
 var screen_margin = %d;
 var title_height = %d;
 var dashlet_padding = Array%s;
+var dashlet_min_size = Array%s;
 var corner_overlap = %d;
 var refresh_dashlets = %r;
 var on_resize_dashlets = {%s};
@@ -378,7 +380,7 @@ var dashlets = %s;
 calculate_dashboard();
 window.onresize = function () { calculate_dashboard(); }
 dashboard_scheduler(1);
-    """ % (MAX, GROW, raster, header_height, screen_margin, title_height, dashlet_padding,
+    """ % (MAX, GROW, raster, header_height, screen_margin, title_height, dashlet_padding, dashlet_min_size,
            corner_overlap, refresh_dashlets, ','.join(on_resize), name, board['mtime'],
            html.makeuri([]), repr(dashlets_js)))
 
@@ -751,7 +753,7 @@ def page_edit_dashlet():
     if not dashlet: # Initial configuration
         dashlet.update({
             'position': (1, 1),
-            'size':     dashlet_type.get('size', (10, 10))
+            'size':     dashlet_type.get('size', dashlet_min_size)
         })
 
         if html.has_var('context_type'):
@@ -1004,7 +1006,7 @@ def default_dashlet_definition(ty):
     return {
         'type'       : ty,
         'position'   : (1, 1),
-        'size'       : dashlet_types[ty].get('size', (10, 10)),
+        'size'       : dashlet_types[ty].get('size', dashlet_min_size),
         'show_title' : True,
     }
 

@@ -280,8 +280,8 @@ div.dashlet.edit .edit {
     position: absolute;
     width: 20px;
     height: 20px;
-    top: 5px;
-    left: 30px;
+    top: 25px;
+    left: 25px;
 
     background-color: rgba(0, 0, 0, 0.7);
     border-radius: 5px;
@@ -302,8 +302,8 @@ div.dashlet.edit .del {
     position: absolute;
     width: 20px;
     height: 20px;
-    top: 5px;
-    left: 55px;
+    top: 25px;
+    left: 48px;
 
     background-color: rgba(0, 0, 0, 0.7);
     border-radius: 5px;
@@ -364,10 +364,13 @@ div.dashlet.edit .anchor.anchor3 {
 .sizer {
     position: absolute;
     border: 1px solid #666;
+}
+
+.sizer, .sizer_lbl {
     cursor: auto;
 }
 
-.sizer:hover {
+.sizer:hover, .sizer_lbl:hover {
     cursor: pointer;
 }
 

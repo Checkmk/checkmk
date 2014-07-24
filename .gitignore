@@ -18,6 +18,8 @@ var/
 .werks/.my_ids
 .werks/.last
 check-mk-agent-*.exe
+check-mk-agent-*.exe
+check-mk-agent-*.msi
 .metadata
 RemoteSystemsTempFiles
 .directory

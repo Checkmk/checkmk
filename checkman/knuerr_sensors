@@ -1,0 +1,15 @@
+title: Knürr RMS Sensors
+agents: snmp
+catalog: hw/environment/knuerr
+license: GPL
+distribution:
+description:
+ This check monitors the sensor contacts on a Knürr RMS Monitoring System. For each Sensor who is not in a ok state, a {CRITICAL} will be 
+ triggered. 
+
+item:
+ The Sesorname as configured in the device
+
+inventory:
+ All available sensors are automatically inventorized.
+

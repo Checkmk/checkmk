@@ -23,7 +23,7 @@
 # Boston, MA 02110-1301 USA.
 
 MSITOOLS      = msitools-0.93
-MSITOOLS_FILE = msitools-0.93.tar.xz
+MSITOOLS_FILE = $(MSITOOLS).tar.xz
 
 BUILD_VERSION    = 1.0.1
 CHECK_MK_VERSION = TESTVERSION
@@ -32,17 +32,21 @@ all: exchange_msi_files
 
 clean:
 	rm -rf $(MSITOOLS)
-	rm check_mk_agent.msi
+	rm -f check_mk_agent.msi
 	rm -rf work sources
+
 msibuild:
 	tar -Jxf $(MSITOOLS_FILE)
 	set -e ; for p in patches/*.dif ; do \
-    echo "applying $$p..." ; \
-        patch -p0 -b < $$p ; \
-    done
-	cd $(MSITOOLS) && ./configure && make
+	echo "applying $$p..." ; \
+	    patch -p0 -b < $$p ; \
+	done
+	cd $(MSITOOLS) && ./configure
+	make -C $(MSITOOLS)/libmsi
+	make -C $(MSITOOLS) msibuild msiinfo
 	rm msibuild msiinfo
 	ln -s $(MSITOOLS)/msibuild $(MSITOOLS)/msiinfo .
+
 
 exchange_msi_files: msibuild
 	mkdir -p work sources

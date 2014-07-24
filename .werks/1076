@@ -1,0 +1,11 @@
+Title: Fix wrong percentual host availability > 100% when excluding downtimes
+Level: 2
+Component: reporting
+Version: 1.2.4p6
+Date: 1406215992
+Class: fix
+
+When you chose to exclude scheduled downtimes from the "100%" then hosts with
+actual downtime periods could get an availability for more then 100%. This has
+been fixed. The Settings <i>ignore</i> and <i>honor</i> were not affected. Also
+not the display of absolute time values.

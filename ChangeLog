@@ -15,6 +15,9 @@
     WATO:
     * 1056 FIX: Fixed selection of hosts for bulk actions
 
+    Reporting & Availability:
+    * 1076 FIX: Fix wrong percentual host availability > 100% when excluding downtimes...
+
 
 1.2.4p5:
     Core & Setup:

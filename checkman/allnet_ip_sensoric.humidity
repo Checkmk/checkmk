@@ -38,7 +38,7 @@ examples:
  ]
 
 [parameters]
-parameters (int, int, int, int): lower CRIT, lower WARN, upper WARN and 
+parameters (int, int, int, int): lower CRIT, lower WARN, upper WARN and
     upper CRIT levels for humidity in percent
 
 [configuration]

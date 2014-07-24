@@ -266,7 +266,7 @@ def logwatch_groups_of_logfile(filename, params=False):
         params = host_extra_conf(g_hostname, logwatch_groups)
     else:
         params = params[1]
-    for line in params: 
+    for line in params:
         for group_name, pattern in line:
             inclusion, exclusion = pattern
             if fnmatch.fnmatch(filename, inclusion) \
@@ -381,7 +381,7 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
     # Get the patterns (either compile or reuse the precompiled ones)
     # Check_MK creates an empty string if the precompile function has
     # not been exectued yet. The precomile function creates an empty
-    # list when no rules/patterns are defined. In case of the logwatch.groups 
+    # list when no rules/patterns are defined. In case of the logwatch.groups
     # checks, params are a tuple with the normal logwatch parameters on the first
     # and the grouping patterns on the second position
     if params not in ('', None):

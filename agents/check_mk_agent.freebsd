@@ -118,8 +118,8 @@ fi
 #  done
 #fi
 
-# Check mount options. 
-# FreeBSD doesn't do remount-ro on errors, but the users might consider 
+# Check mount options.
+# FreeBSD doesn't do remount-ro on errors, but the users might consider
 # security related mount options more important.
 echo '<<<mounts>>>'
 mount -p -t ufs
@@ -197,7 +197,7 @@ echo '<<<netctr>>>'
 date +%s
 if [ "$(echo $osver | cut -f1 -d\. )" -gt "8" ]; then
     netstat -inb | egrep -v '(^Name|lo|plip)' | grep Link | awk '{print $1" "$8" "$5" "$6" "$7" 0 0 0 0 "$11" "$9" "$10" 0 0 0 0 0"}'
-else 
+else
     # pad output for freebsd 7 and before
     netstat -inb | egrep -v '(^Name|lo|plip)' | grep Link | awk '{print $1" "$7" "$5" "$6" 0 0 0 0 0 "$10" "$8" "$9" 0 0 "$11" 0 0"}'
 fi
@@ -259,7 +259,7 @@ fi
 #  for NODE in $(cl_status listnodes); do
 #    if [ $NODE != $HOSTNAME ]; then
 #      STATUS=$(cl_status nodestatus $NODE)
-#      echo -n "$NODE $STATUS" 
+#      echo -n "$NODE $STATUS"
 #      for LINK in $(cl_status listhblinks $NODE 2>/dev/null); do
 #        echo -n " $LINK $(cl_status hblinkstatus $NODE $LINK)"
 #      done

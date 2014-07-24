@@ -247,8 +247,8 @@ then
         /usr/bin/perl -e '
            while(my $file = <>) {
                $file =~ s/\n$//;
-               ($device, $inode, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat($file); 
-               print("$file|$size|$mtime\n"); 
+               ($device, $inode, $mode, $nlink, $uid, $gid, $rdev, $size, $atime, $mtime, $ctime, $blksize, $blocks) = stat($file);
+               print("$file|$size|$mtime\n");
            }'
 fi
 

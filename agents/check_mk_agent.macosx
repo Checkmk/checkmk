@@ -52,7 +52,7 @@ echo '<<<df>>>';
 df -kPt hfs | sed -e 's/^\([^ ][^ ]*\) \(.*\)$/\1 hfs \2/' | sed 1d
 
 echo '<<<cpu>>>';
-echo `sysctl -n vm.loadavg | tr -d '{}'` `top -l 1 -n 1 | egrep ^Processes: | 
+echo `sysctl -n vm.loadavg | tr -d '{}'` `top -l 1 -n 1 | egrep ^Processes: |
 awk '{print $4"/"$2;}'` `echo 'echo $$' | bash` `sysctl -n hw.ncpu`
 
 echo '<<<mem>>>'
@@ -62,11 +62,11 @@ echo "SwapTotal: 0 kB"
 echo "SwapFree: 0 kB"
 
 echo '<<<uptime>>>';
-echo `date +%s` - `sysctl -n kern.boottime | cut -d' ' -f 4,7 | tr ',' '.' | 
+echo `date +%s` - `sysctl -n kern.boottime | cut -d' ' -f 4,7 | tr ',' '.' |
 tr -d ' '` | bc
 
 echo '<<<netctr>>>';
-date +'%s'; netstat -inb | egrep -v '(^Name|lo|plip)' | grep Link | awk '{ 
+date +'%s'; netstat -inb | egrep -v '(^Name|lo|plip)' | grep Link | awk '{
 print $1,$7,$5,$6,"0","0","0","0","0",$10,$8,$9,"0","0",$11,"0","0"; }'
 
 echo '<<<ps>>>'

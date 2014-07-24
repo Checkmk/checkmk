@@ -4,7 +4,7 @@
 # not tested for nfs3
 
 # verify if there are exports defined in your local /etc/exports
-if [ -r /etc/exports ]; then 
+if [ -r /etc/exports ]; then
     EXPORTS=$(grep -v -e ^# -e ^$ /etc/exports)
 fi
 pgrep '(portmap|rpcbind)' >/dev/null && pgrep rpc.mountd >/dev/null && DAEMONS="ok"

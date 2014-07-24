@@ -9,7 +9,7 @@ description:
  Returns {CRIT} if the reported value is 0 and {OK} otherwise.
 
 item:
- If a name is reported for the sensor by the device: The name and the 
+ If a name is reported for the sensor by the device: The name and the
  sensor ID. Otherwise the sensor ID only.
 
 perfdata:

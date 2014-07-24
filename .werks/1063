@@ -1,0 +1,9 @@
+Title: Fixed several XSS issues on different pages
+Level: 2
+Component: multisite
+Version: 1.2.5i5
+Date: 1406199218
+Class: security
+
+Several pages like views and prediction pages missed to escape user
+provided values before writing them back on the pages.

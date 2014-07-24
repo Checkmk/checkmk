@@ -28,7 +28,7 @@ inventory:
  Creates one check per temperature sensor (sensorType 1).
 
 [parameters]
-tuple (int, int): The two values are the levels for {WARN} and {CRIT}. 
+tuple (int, int): The two values are the levels for {WARN} and {CRIT}.
 
 [configuration]
 bintec_sensors_temp_default_levels (int, int): The default levels for {WARN}

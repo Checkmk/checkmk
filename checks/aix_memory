@@ -49,7 +49,7 @@
 # 1372 external pager filesystem I/Os blocked with no fsbuf
 # 88.8 percentage of memory used for computational pages
 # allocated = 8257536 blocks used = 1820821 blocks free = 6436715 blocks
-# 
+#
 # The first part is the output of vmstat -v, the last line is the output
 # of swap -s and show the swap space usage
 

@@ -26,7 +26,7 @@
 # This agent uses the program "jarsigner" to read ssl certificate
 # information of jar files and outputs the information to stdout
 # for the Check_MK check.
-# We assume that all files in the jar archive are signed with the 
+# We assume that all files in the jar archive are signed with the
 # same certificate. So we only deal with the last signed file here.
 
 JAVA_HOME=/home/oracle/bin/jdk_latest_version
@@ -41,7 +41,7 @@ for JAR in $JAR_PATH; do
         OUTPUT=$(jarsigner -verify -verbose -certs "$JAR")
         LINE=$(echo "$OUTPUT" | grep -n ^s | tail -n1 | cut -d: -f1)
         echo "$(echo "$OUTPUT" | tail -n +$LINE)"
-        echo 
+        echo
     fi
 done
 

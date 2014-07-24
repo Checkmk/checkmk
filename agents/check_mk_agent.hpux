@@ -86,8 +86,8 @@ netstat -f inet -n | awk ' /^tcp/ { c[$6]++; } END { for (x in c) { print x, c[x
 
 # Network interfaces
 echo '<<<hpux_if>>>'
-for nic in `nwmgr -g | sed -n '/^lan/s/\(^[^ ]* \).*/\1/p'` 
-do 
+for nic in `nwmgr -g | sed -n '/^lan/s/\(^[^ ]* \).*/\1/p'`
+do
     nwmgr -g --st mib -c $nic
 done
 

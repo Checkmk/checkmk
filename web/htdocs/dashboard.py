@@ -160,6 +160,34 @@ def add_wato_folder_to_url(url, wato_folder):
     else:
         return url + "?wato_folder=" + html.urlencode(wato_folder)
 
+# Updates the current dashlet with the current context vars maybe loaded from
+# the dashboards global configuration or HTTP vars, but also returns a list
+# of all HTTP vars which have been used
+def apply_global_context(board, dashlet):
+    dashlet_type = dashlet_types[dashlet['type']]
+
+    context_type = None
+    if 'context_type' in dashlet:
+        context_type = dashlet['context_type']
+    elif 'context_type' in dashlet_type:
+        context_type = dashlet_type['context_type']
+
+    global_context = board.get('context', {})
+
+    url_vars = []
+    if context_type:
+        ty = visuals.context_types[context_type]
+        if ty['single']:
+            needed_params = [ p for p, vs in visuals.context_types[context_type]['parameters'] ]
+            for param in needed_params:
+                if param not in dashlet['context']:
+                    # Get the vars from the global context or http vars
+                    if param in global_context:
+                        dashlet['context'][param] = global_context[param]
+                    else:
+                        dashlet['context'][param] = html.var(param)
+                        url_vars.append((param, html.var(param)))
+    return url_vars
 
 # Actual rendering function
 def render_dashboard(name):
@@ -221,9 +249,6 @@ def render_dashboard(name):
     if styles:
         html.write("<style>\n%s\n</style>\n" % styles)
 
-    # FIXME: Get all context types of all dashlets and check whether or not the
-    # needed vars are present. When something is missing, show an error!
-
     refresh_dashlets = [] # Dashlets with automatic refresh, for Javascript
     dashlets_js      = []
     on_resize        = [] # javascript function to execute after ressizing the dashlet
@@ -247,23 +272,10 @@ def render_dashboard(name):
 
         # Update the dashlets context with the dashboard global context when there are
         # useful information
-        context_type = None
-        if 'context_type' in dashlet:
-            context_type = dashlet['context_type']
-        elif 'context_type' in dashlet_type:
-            context_type = dashlet_type['context_type']
-
-        if context_type:
-            ty = visuals.context_types[context_type]
-            if ty['single']:
-                needed_params = [ p for p, vs in visuals.context_types[context_type]['parameters'] ]
-                for param in needed_params:
-                    if param not in dashlet['context']:
-                        # Get the vars from the global context or html vars
-                        dashlet['context'][param] = board.get('context', {}).get(param, html.var(param))
+        add_url_vars = apply_global_context(board, dashlet)
 
         # Paint the dashlet's HTML code
-        render_dashlet(name, board, nr, dashlet, wato_folder)
+        render_dashlet(name, board, nr, dashlet, wato_folder, add_url_vars)
 
         if 'on_resize' in dashlet_type:
             try:
@@ -384,7 +396,7 @@ def render_dashlet_content(nr, the_dashlet):
 # where %d is its index (in board["dashlets"]). Javascript uses that id
 # for the resizing. Within that div there is an inner div containing the
 # actual dashlet content.
-def render_dashlet(name, board, nr, dashlet, wato_folder):
+def render_dashlet(name, board, nr, dashlet, wato_folder, add_url_vars):
     dashlet_type = dashlet_types[dashlet['type']]
 
     classes = ['dashlet', dashlet['type']]
@@ -410,8 +422,10 @@ def render_dashlet(name, board, nr, dashlet, wato_folder):
         dashlet["iframe"] = dashlet_type["iframe_urlfunc"](dashlet)
 
     elif "iframe_render" in dashlet_type:
-        dashlet["iframe"] = "dashboard_dashlet.py?name="+name+"&id="+ \
-                                     str(nr)+"&mtime="+str(board['mtime']);
+        dashlet["iframe"] = html.makeuri_contextless([
+            ('name', name),
+            ('id', nr),
+            ('mtime', board['mtime'])] + add_url_vars, filename = "dashboard_dashlet.py")
 
     # The content is rendered only if it is fixed. In the
     # other cases the initial (re)-size will paint the content.

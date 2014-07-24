@@ -157,7 +157,7 @@ def command_fake_checks(cmdtag, spec, row):
     for s in [0,1,2,3]:
         statename = html.var("_fake_%d" % s)
         if statename:
-            pluginoutput = _("Manually set to %s by %s") % (statename, config.user_id)
+            pluginoutput = _("Manually set to %s by %s") % (html.attrencode(statename), config.user_id)
             if cmdtag == "SVC":
                 cmdtag = "SERVICE"
             command = "PROCESS_%s_CHECK_RESULT;%s;%s;%s" % (cmdtag, spec, s, pluginoutput)

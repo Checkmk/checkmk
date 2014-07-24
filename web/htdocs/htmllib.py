@@ -746,7 +746,7 @@ class html:
         self.write('<table class=header><tr><td width="*" class=heading>')
         self.write('<a href="#" onfocus="if (this.blur) this.blur();" '
                    'onclick="this.innerHTML=\'%s\'; document.location.reload();">%s</a></td>' %
-                   (_("Reloading..."), title))
+                   (_("Reloading..."), self.attrencode(title)))
 
     def top_heading_right(self):
         cssclass = self.help_visible and "active" or "passive"

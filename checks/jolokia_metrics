@@ -62,7 +62,12 @@ def jolokia_metrics_parse(info):
                 part2 = part1[1].split(',type=')
                 gc = part2[0]
             elif "ThreadPool" in inst:
-                part1 = inst.split(',Catalina:name=')
+                if "Catalina" in inst:
+                    part1 = inst.split(',Catalina:name=')
+                elif "Standalone" in inst:
+                    part1 = inst.split(',Standalone:name=')
+                else:
+                    continue
                 inst = part1[0]
                 part2 = part1[1].split(',type=')
                 tp = part2[0]

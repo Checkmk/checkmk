@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,42 +23,41 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def check_ups_capacity(item, params, info):
-    # To support inventories with the old version
-    if type(params) is tuple:  # old format with 2 params in tuple
-        warn, crit = params
-        cap_warn, cap_crit =  (95, 90)
-    elif type(params) is dict:  # new dict format
-        warn,crit = params.get('battime',(0,0))
-        cap_warn,cap_crit = params.get('capacity',(95,90))
-    else:
-        warn, crit = (0, 0)
-        cap_warn, cap_crit =  (95, 90)
 
-    time_on_bat, minutes_left, percent_fuel = map(int, info[0])
-    perf = [
-      ('capacity', minutes_left, warn, crit),
-      ('percent', percent_fuel),
-    ]
+$opt[1] = "--vertical-label \"ThreadPool busy/count\"  --title \" $servicedesc for $hostname\" ";
 
-    state = 0
-    time_label = ""
-    cap_label = ""
-    if time_on_bat > crit:
-        state = 2
-        time_label = "On battery since %ds (levels at %ds/%ds)(!!), " % (time_on_bat, warn, crit)
-    elif time_on_bat > warn:
-        state = 1
-        time_label = "On battery since %ds (levels at %ds/%ds)(!)" % (time_on_bat, warn, crit)
-    if percent_fuel < cap_crit:
-        state = 2
-        cap_label = "(!!)"
-    elif percent_fuel < cap_warn:
-        state = 1
-        cap_label = "(!)"
-
-    info_text = "%sremaining capacity %dmin, percentage %d%% (%d/%d) %s" \
-        % (time_label, minutes_left, percent_fuel, cap_warn, cap_crit, cap_label )
-    return(state, info_text, perf)
+$def[1] =  "DEF:b=$RRDFILE[1]:$DS[1]:AVERAGE ";
+$def[1] .= "DEF:c=$RRDFILE[2]:$DS[2]:AVERAGE " ;
 
 
+# BUSY
+$def[1] .= rrd::comment("$NAME[2]\: ");
+$def[1] .= "AREA:c#00ff77:\"\" " ;
+$def[1] .= "LINE1:c#00b454:\"busy\" " ;
+$def[1] .= "GPRINT:c:LAST:\"%3.4lg LAST \" ";
+$def[1] .= "GPRINT:c:AVERAGE:\"%3.4lg AVERAGE \" ";
+$def[1] .= "GPRINT:c:MAX:\"%3.4lg MAX \\n\" ";
+if ($WARN[2] != "") {
+   $def[1] .= "HRULE:$WARN[2]#FFFF00:\"   Warning at $WARN[2]$UNIT[2] \" ";
+}
+if ($CRIT[2] != "") {
+   $def[1] .= "HRULE:$CRIT[2]#FF0000:\"   Critical at $CRIT[2]$UNIT[2]  \" ";
+}
+# MAX
+$def[1] .= "HRULE:$MAX[1]#000000:\"   Max at $MAX[1] \\n\" ";
+
+
+# COUNT
+$def[1] .= rrd::comment("$NAME[1]\: ");
+$def[1] .= "LINE1:b#00aae8:\"count\" " ;
+$def[1] .= "GPRINT:b:LAST:\"%3.4lg LAST \" ";
+$def[1] .= "GPRINT:b:AVERAGE:\"%3.4lg AVERAGE \" ";
+$def[1] .= "GPRINT:b:MAX:\"%3.4lg MAX \\n\" ";
+if ($WARN[1] != "") {
+   $def[1] .= "HRULE:$WARN[1]#E5B200:\"   Warning at $WARN[1]$UNIT[1] \" ";
+}
+if ($CRIT[1] != "") {
+   $def[1] .= "HRULE:$CRIT[1]#E50066:\"   Critical at $CRIT[1]$UNIT[1]  \\n\" ";
+}
+
+?>

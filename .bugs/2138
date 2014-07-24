@@ -1,0 +1,12 @@
+Title: Multisite does handle state, has_been_checked and initial_state wrong
+Component: multisite
+State: open
+Date: 2014-07-24 13:10:32
+Targetversion: future
+Class: bug
+
+When a host/service has an initial_state configured and the host/service has
+never been checked, it is always shown as pending host/service. The initial
+state is not handled by multisite.
+
+Livestatus provides the correct information.

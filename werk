@@ -249,6 +249,8 @@ def git_commit(werk, custom_files):
             if prefix:
                 title = "%s %s" % (prefix, title)
 
+    title = "%d %s" % (werk['id'], title)
+
     if custom_files:
         files_to_commit = custom_files
         default_files   = [ ".werks", "ChangeLog" ]

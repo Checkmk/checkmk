@@ -1,12 +1,10 @@
-title: Raritan PX-2000 family PDU plug state
+title: Sentry PDU Devices
 agents: snmp
 catalog: hw/other
 license: GPL
 distribution: check_mk
 description:
- This check monitors the state of the plugs of the Raritan PX-2000
- family of intelligent rack power distribution units (iPDUs).
- It has been tested with the model PX2-2180CR.
+ This check monitors the state of the plugs of Sentry PDUs.
  As default the state of the time from inventory will result in the state {OK},
  other states are in the state {CRIT}.
  The required state can be configured to {on} or {off}. Then these plugs are in

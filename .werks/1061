@@ -1,0 +1,10 @@
+Title: SMS notifications: correctly handling spaces in phone numbers
+Level: 1
+Component: notifications
+Version: 1.2.5i5
+Date: 1406194717
+Class: fix
+
+A user might add a phone number with spaces, because the input is
+not validated (formalized). This is a quick fix to prevent sendsms
+to send messages to wrong numbers.

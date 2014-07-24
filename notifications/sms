@@ -54,7 +54,7 @@ if os.environ['NOTIFY_WHAT'] == 'SERVICE':
 else:
     message += "is " + os.environ['NOTIFY_HOSTSTATE']
 
-empf = os.environ['NOTIFY_CONTACTPAGER']
+empf = os.environ['NOTIFY_CONTACTPAGER'].replace( " ", "")
 if 0 == os.system("%s %s '%s'" % (send_path, empf, message[:160])):
     sys.exit(0)
 else:

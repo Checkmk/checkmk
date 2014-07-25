@@ -1,3 +1,4 @@
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $name = (Get-Item env:\Computername).Value
 $separator = "|"
 # filename for timestamp
@@ -14,7 +15,7 @@ If (Test-Path $timestamp){
     # exit if timestamp to young
     if ( $filedate -gt $earlier ) { exit }
 }
-# create new timestamp file
+# create new timestamp file
 New-Item $timestamp -type file -force | Out-Null
 
 # calculate unix timestamp

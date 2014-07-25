@@ -54,15 +54,6 @@ help:
 	@echo "make headers                   --> create/update fileheades"
 	@echo "make healspaces                --> remove trailing spaces in code"
 
-check-spaces:
-	@echo -n "Checking for trailing spaces..."
-	@if grep -q '[[:space:]]$$' $(SOURCE_FILES) ; then echo $$? ; figlet "Space error" \
-          ; echo "Aborting due to trailing spaces. Please use 'make healspaces' to repair." \
-          ; echo "Affected files: " \
-          ; grep -l '[[:space:]]$$' $(SOURCE_FILES) \
-          ; exit 1 ; fi
-	@echo OK
-
 check-permissions:
 	@echo -n "Checking permissions... with find -not -perm -444..." && [ -z "$$(find -not -perm -444)" ] && echo OK
 
@@ -251,7 +242,17 @@ SOURCE_FILES = checkman/* modules/* checks/* notifications/* inventory/* $$(find
           livestatus/src/*{cc,c,h} web/htdocs/*.{py,css} web/htdocs/js/*.js web/plugins/*/*.py \
           doc/helpers/* scripts/setup.sh scripts/autodetect.py $$(find pnp-templates -type f -name "*.php") \
           mkeventd/bin/mkeventd mkeventd/web/htdocs/*.py mkeventd/web/plugins/*/*.py mkeventd/src/*.c \
-          mkeventd/checks/* check_mk_templates.cfg doc/treasures/mknotifyd
+          mkeventd/checks/* check_mk_templates.cfg doc/treasures/mknotifyd agents/check_mk_agent* \
+	  $$(find agents/plugins -type f)
+
+check-spaces:
+	@echo -n "Checking for trailing spaces..."
+	@if grep -q '[[:space:]]$$' $(SOURCE_FILES) ; then echo $$? ; figlet "Space error" \
+          ; echo "Aborting due to trailing spaces. Please use 'make healspaces' to repair." \
+          ; echo "Affected files: " \
+          ; grep -l '[[:space:]]$$' $(SOURCE_FILES) \
+          ; exit 1 ; fi
+	@echo OK
 
 healspaces:
 	@echo "Removing trailing spaces from code lines..."

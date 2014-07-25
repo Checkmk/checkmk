@@ -14,7 +14,7 @@ item:
  sensor ID. Otherwise the sensor ID only.
 
 perfdata:
- One value: The temperature in degree celsius, together with it's minimum and 
+ One value: The temperature in degree celsius, together with it's minimum and
  maximum and levels for warn and crit.
 
 inventory:

@@ -31,7 +31,7 @@ def fetch_var(server, port, path, suburi, itemspec):
     # Only take the value of the object. If the value is an object
     # take the first items first value.
     # {'Catalina:host=localhost,path=\\/test,type=Manager': {'activeSessions': 0}}
-    if 'value' not in obj: 
+    if 'value' not in obj:
         if opt_debug:
             sys.stderr.write("ERROR: not found: %s\n" % path)
         return []

@@ -46,7 +46,7 @@ def get_domains():
                         'WHERE id = %d AND type = \'domain\'' % domain_id)
         params = dict(cursor2.fetchall())
         domains[domain] = params
-    
+
     cursor2.close()
     cursor.close()
     return domains
@@ -126,9 +126,9 @@ for domain, p in domains.iteritems():
                 size += int(l.split()[-5])
             return size
         total_size = get_size('')
-        
+
         output.append('%s 0 %s %d %d' % (domain, last_backup[1].strftime('%s'), last_backup[2], total_size))
-        
+
     except Exception, e:
         output.append('%s 2 %s' % (domain, e))
 

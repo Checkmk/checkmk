@@ -34,5 +34,5 @@ dict: key "lower" references a tuple with lower crit level and lower warn level.
  key "upper" references a tuple with upper warn level and upper crit level.
 
 [configuration]
-bintec_sensors_fan_default_levels (dict): 
+bintec_sensors_fan_default_levels (dict):
  defaults to { "lower": ( 1000, 2000), "upper": (8000, 8400)

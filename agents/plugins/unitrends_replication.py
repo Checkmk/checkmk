@@ -3,7 +3,7 @@
 import sys, time, urllib
 from xml.dom import minidom
 now = int(time.time())
-start = now - 24 * 60 * 60 
+start = now - 24 * 60 * 60
 end =  now
 dpu =  1
 

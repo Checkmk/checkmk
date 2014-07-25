@@ -1092,7 +1092,7 @@ register_configvar(group,
         ),
         title = _("Log exceptions in check plugins"),
         help = _("If this option is enabled Check_MK will create a debug logfile at "
-                 "<tt>%s/chrashed-checks.log</tt>"
+                 "<tt>%s/chrashed-checks.log</tt> "
                  "containing details about failed checks (those which have the state <i>UNKNOWN "
                  "and the output UNKNOWN - invalid output from plugin</i>...) Per default no "
                  "logfile is written.") % defaults.log_dir,

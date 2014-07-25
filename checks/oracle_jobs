@@ -75,7 +75,8 @@ def check_oracle_jobs(item, params, info):
         state = max(state, 1)
     output.append(txt)
 
-    last_duration = int(line[4])
+    # bugfix for an error in mk_oracle agent with missing round over last_duration
+    last_duration = int(line[4].replace('.',',').split(',',1)[0])
     output.append("Last Duration: %s" % get_age_human_readable(last_duration))
     perfdata.append(("duration", last_duration))
 

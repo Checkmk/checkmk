@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,29 +23,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# agent output
-# <<<win_reg_uninstall:sep(124)>>>
-# ...
+$opt[1] = "--vertical-label 'Checkpoint age (s)' -l0 --title \"Checkpoint (time since last Checkpoint)\" ";
 
-def inv_win_reg_uninstall(info):
-    paclist = inv_tree("software.packages:")
-    for line in info:
-        display_name, publisher, path, pacname, version, estimated_size, date  = line
-        install_date = ""
-        if len(date) == 8 and re.match("^20", date):
-            install_date = int(time.mktime(time.strptime(date, "%Y%m%d")))
-
-        entry = {
-            "name"            : pacname,
-            "version"         : version,
-            "vendor"          : publisher,
-            "summary"         : display_name,
-            "install_date"    : install_date,
-            "size"            : estimated_size,
-            "package_type"    : "reg_uninstall",
-        }
-        paclist.append(entry)
-
-inv_info['win_reg_uninstall'] = {
-   "inv_function"           : inv_win_reg_uninstall,
-}
+$def[1] = "DEF:sec=$RRDFILE[1]:$DS[1]:MAX ";
+$def[1] .= "CDEF:checkpoint_age=sec,1,/ ";
+$def[1] .= "AREA:checkpoint_age#80f000:\"Checkpoint (s)\" ";
+$def[1] .= "LINE:checkpoint_age#408000 ";
+$def[1] .= "GPRINT:checkpoint_age:LAST:\"%7.2lf %s LAST\" ";
+$def[1] .= "GPRINT:checkpoint_age:MAX:\"%7.2lf %s MAX\" ";
+?>

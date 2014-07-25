@@ -48,7 +48,7 @@ if (!strcmp($MIN[11], "0.0")) {
     $base = 1000; // Megabit is 1000 * 1000
 }
 else {
-    $unit = "B"; 
+    $unit = "B";
     $unit_multiplier = 1;
     $base = 1000; // Megabyte is 1000 * 1000
 }
@@ -65,11 +65,11 @@ $bwuom = ' ';
 if ($bandwidth > $base * $base * $base) {
     $scale = $base * $base * $base;
     $bwuom = 'G';
-} 
+}
 elseif ($bandwidth > $base * $base) {
     $scale = $base * $base;
     $bwuom = 'M';
-} 
+}
 elseif ($bandwidth > $base) {
     $scale = $base;
     $bwuom = 'k';

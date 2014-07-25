@@ -754,9 +754,9 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
                     elif s == "host_down":
                         s = avoptions["state_grouping"]["host_down"]
 
-                timeline_rows.append((span, s))
                 total_duration += span["duration"]
                 if consider:
+                    timeline_rows.append((span, s))
                     considered_duration += span["duration"]
 
             # Now merge consecutive rows with identical state

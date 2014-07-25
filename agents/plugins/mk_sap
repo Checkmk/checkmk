@@ -288,7 +288,7 @@ def parse_dt(d, t):
     if not d or not t:
         return None
     else:
-        return datetime.datetime(*time.strptime(d + t, '%Y%m%d%H%M%S')[:6]) 
+        return datetime.datetime(*time.strptime(d + t, '%Y%m%d%H%M%S')[:6])
 
 def mon_alerts(node):
     f = query('BAPI_SYSTEM_MTE_GETALERTS', {

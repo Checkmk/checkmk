@@ -1,0 +1,9 @@
+Title: winperf_ts_sessions: fix computation, check has never really worked
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i6
+Date: 1406555200
+
+

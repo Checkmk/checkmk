@@ -2523,7 +2523,7 @@ bool handle_script_config_variable(char *var, char *value, script_type type)
             user = lstrip(var + 7);
 
         runas_include* tmp = new runas_include();
-        memset(tmp, 0, sizeof(tmp));
+        memset(tmp, 0, sizeof(*tmp));
 
         if (user)
             snprintf(tmp->user, sizeof(tmp->user), user);
@@ -3931,7 +3931,7 @@ bool handle_mrpe_config_variable(char *var, char *value)
             user = lstrip(var + 7);
 
         runas_include* tmp = new runas_include();
-        memset(tmp, 0, sizeof(tmp));
+        memset(tmp, 0, sizeof(*tmp));
 
         if (user)
             snprintf(tmp->user, sizeof(tmp->user), user);

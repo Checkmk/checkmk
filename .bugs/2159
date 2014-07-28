@@ -1,0 +1,10 @@
+Title: Make NTP check more tolerant
+Component: checks
+State: open
+Date: 2014-07-28 09:28:06
+Targetversion: future
+Class: nastiness
+
+The message "CRIT - found 1 peers, but none is suitable" should be tolerated for
+at least some time. Maybe the check could itself measure how long that state
+is active and raise a MKCounterWrapped for an intermediate time...

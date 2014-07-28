@@ -200,7 +200,7 @@ if defaults.omd_site:
                                      '&sources=automap&act=view&backend_id=' + defaults.omd_site + \
                                      '&render_mode=undirected&url_target=main',
                 "reload_on_resize" : True,
-                "position"         : (1, 0),
+                "position"         : (1, 1),
                 "size"             : (GROW, GROW),
                 "context"          : {},
             },

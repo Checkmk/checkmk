@@ -1,5 +1,6 @@
 title: Java virtual machine garbage collection
 agents: linux
+catalog: app/java
 license: GPL
 distribution: check_mk
 description:

@@ -1,6 +1,7 @@
 title: Tomcat number of threads in thread pool
 agents: linux
 license: GPL
+catalog: app/java
 distribution: check_mk
 description:
  This check monitors the number of threads in a tomcat thread pool.

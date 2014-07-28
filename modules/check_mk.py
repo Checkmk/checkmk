@@ -3622,7 +3622,12 @@ def read_manpage_catalog():
         if filename.startswith("."):
             continue
         parsed = parse_man_header(checkname, path)
-        cat = parsed["catalog"]
+        try:
+            cat = parsed["catalog"]
+        except KeyError:
+            sys.stderr.write('ERROR: Invalid manpage: %s (Catalog info missing)\n' % checkname)
+            continue
+
         if not cat:
             cat = [ "unsorted" ]
 

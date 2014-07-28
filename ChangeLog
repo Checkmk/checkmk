@@ -2,6 +2,9 @@
     Checks & Agents:
     * 1051 FIX: tcp_conn_stats: fix missing performance data...
 
+    WATO:
+    * 1064 FIX: Fixed rare issue with WATO communication in distributed setups (different OS versions)...
+
 
 1.2.5i5:
     Core & Setup:

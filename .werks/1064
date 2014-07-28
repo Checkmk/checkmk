@@ -1,0 +1,14 @@
+Title: Fixed rare issue with WATO communication in distributed setups (different OS versions)
+Level: 1
+Component: wato
+Class: fix
+State: unknown
+Version: 1.2.5i5p1
+Date: 1406557188
+
+In distributed setups where the python versions differ, especially the remote site is older
+than Python 2.5 and the central site is newer than this, it might happen that the communication
+between these both sites is not possible anymore since werk #0984 (2014-06-23 / 1.2.5i4).
+
+This commit makes the communication work again with older python versions. This has been tested
+with Python 2.4. It might also work with python 2.3 - but is untested yet.

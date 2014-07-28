@@ -16994,17 +16994,53 @@ def validate_all_hosts(hostnames, force_all = False):
 import base64
 try:
     import ast
-except:
-    ast = None
+    literal_eval = ast.literal_eval
+except ImportError:
+    # Python <2.5 compatibility
+    try:
+        from compiler import parse
+        import compiler.ast
+        def literal_eval(node_or_string):
+            _safe_names = {'None': None, 'True': True, 'False': False}
+
+            if isinstance(node_or_string, basestring):
+                node_or_string = parse(node_or_string, mode='eval')
+            if isinstance(node_or_string, compiler.ast.Expression):
+                node_or_string = node_or_string.node
+
+            def _convert(node):
+                if isinstance(node, compiler.ast.Const) and isinstance(node.value,
+                        (basestring, int, float, long, complex)):
+                     return node.value
+                elif isinstance(node, compiler.ast.Tuple):
+                    return tuple(map(_convert, node.nodes))
+                elif isinstance(node, compiler.ast.List):
+                    return list(map(_convert, node.nodes))
+                elif isinstance(node, compiler.ast.Dict):
+                    return dict((_convert(k), _convert(v)) for k, v
+                                in node.items)
+                elif isinstance(node, compiler.ast.Name):
+                    if node.name in _safe_names:
+                        return _safe_names[node.name]
+                elif isinstance(node, compiler.ast.UnarySub):
+                    return -_convert(node.expr)
+                raise ValueError('malformed string')
+
+            return _convert(node_or_string)
+    except:
+        literal_eval = None
 
 def mk_eval(s):
-    if ast and not config.wato_legacy_eval:
-        return ast.literal_eval(base64.b64decode(s))
-    else:
-        return pickle.loads(base64.b64decode(s))
+    try:
+        if literal_eval and not config.wato_legacy_eval:
+            return literal_eval(base64.b64decode(s))
+        else:
+            return pickle.loads(base64.b64decode(s))
+    except:
+        raise MKGeneralException(_('Unable to parse provided data: %s') % html.attrencode(repr(s)))
 
 def mk_repr(s):
-    if ast and not config.wato_legacy_eval:
+    if literal_eval and not config.wato_legacy_eval:
         return base64.b64encode(repr(s))
     else:
         return base64.b64encode(pickle.dumps(s))

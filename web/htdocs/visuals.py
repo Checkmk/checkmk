@@ -254,20 +254,28 @@ def page_list(what, visuals, custom_columns = []):
             html.footer()
             return
 
-    html.write('<h3>' + (_("Existing %s") % what.title()) + '</h3>')
-
-    table.begin(css = 'data', limit = None)
-
     keys_sorted = visuals.keys()
     keys_sorted.sort(cmp = lambda a,b: -cmp(a[0],b[0]) or cmp(a[1], b[1]))
 
+    custom  = []
+    builtin = []
     for (owner, visualname) in keys_sorted:
         if owner == "" and not config.may("%s.%s" % (what_s, visualname)):
-            continue
-        visual = visuals[(owner, visualname)]
-        if owner == config.user_id or (visual["public"] \
-            and (owner == "" or config.user_may(owner, "general.publish_" + what))):
+            continue # not allowed to see this view
 
+        visual = visuals[(owner, visualname)]
+        if owner == config.user_id or \
+           (visual["public"] and owner != '' and config.user_may(owner, "general.publish_" + what)):
+            custom.append((owner, visualname, visual))
+        elif visual["public"] and owner == "":
+            builtin.append((owner, visualname, visual))
+
+    for title, items in [ (_('Custom'), custom), (_('Builtin'), builtin) ]:
+        html.write('<h3>' + title + ' ' + what.title() + '</h3>')
+
+        table.begin(css = 'data', limit = None)
+
+        for owner, visualname, visual in items:
             table.row(css = 'data')
 
             # Actions
@@ -316,7 +324,8 @@ def page_list(what, visuals, custom_columns = []):
             table.cell(_('Public'), visual["public"] and _("yes") or _("no"))
             table.cell(_('Hidden'), visual["hidden"] and _("yes") or _("no"))
 
-    table.end()
+        table.end()
+
     html.footer()
 
 #.

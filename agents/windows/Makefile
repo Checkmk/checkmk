@@ -23,7 +23,7 @@
 # Boston, MA 02110-1301 USA.
 
 SHELL         = /bin/bash
-VERSION       = 1.2.5i5
+VERSION       = 1.2.5i5p1
 VERSION_DUMMY = @@@@@CHECK_MK_VERSION@@@@@
 WINDRES       = i586-mingw32msvc-windres
 COPTIONS      = -s -O2 -Wall -Werror -static -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"'

@@ -1,3 +1,5 @@
+1.2.5i6:
+
 1.2.5i5:
     Core & Setup:
     * 1012 Fix quoting of backslashes in custom checks with nagios core...

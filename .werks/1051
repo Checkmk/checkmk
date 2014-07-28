@@ -1,0 +1,10 @@
+Title: tcp_conn_stats: fix missing performance data
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i5
+Date: 1406542655
+
+Due to a recent code rework the TCP Connections check had output invalid
+performance data. This has been fixed.

@@ -1,3 +1,8 @@
+1.2.5i5p1:
+    Checks & Agents:
+    * 1051 FIX: tcp_conn_stats: fix missing performance data...
+
+
 1.2.5i5:
     Core & Setup:
     * 1012 Fix quoting of backslashes in custom checks with nagios core...

@@ -3,7 +3,7 @@ Level: 1
 Component: checks
 Class: fix
 State: unknown
-Version: 1.2.5i5
+Version: 1.2.5i5p1
 Date: 1406542655
 
 Due to a recent code rework the TCP Connections check had output invalid

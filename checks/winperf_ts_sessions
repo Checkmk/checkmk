@@ -31,7 +31,7 @@
 # 4 1 rawcount
 # 6 0 rawcount
 
-# Counters, relative to the base ID (2102)
+# Counters, relative to the base ID (e.g. 2102)
 # 2 Total number of Terminal Services sessions.
 # 4 Number of active Terminal Services sessions.
 # 6 Number of inactive Terminal Services sessions.
@@ -43,7 +43,7 @@ def inventory_winperf_ts_sessions(info):
 def check_winperf_ts_sessions(_unused, params, info):
     if not info or len(info) == 1:
         return 3, "Performance counters not available"
-    total, active, inactive = [ int(l[0]) for l in info[1:4] ]
+    total, active, inactive = [ int(l[1]) for l in info[1:4] ]
 
     state = 0
     state_txt = []
@@ -52,11 +52,11 @@ def check_winperf_ts_sessions(_unused, params, info):
         txt = '%d %s' % (val, title)
         if key in params:
             if val > params[key][0]:
-                state = max(state, 2)
-                txt += ' (!!)'
+                state = 2
+                txt += '(!!)'
             elif val > params[key][1]:
                 state = max(state, 1)
-                txt += ' (!)'
+                txt += '(!)'
         state_txt.append(txt)
 
     perfdata = [ ('active', active, ), ('inactive', inactive) ]

@@ -1,4 +1,7 @@
 1.2.5i6:
+    Checks & Agents:
+    * 1051 FIX: tcp_conn_stats: fix missing performance data...
+
 
 1.2.5i5:
     Core & Setup:

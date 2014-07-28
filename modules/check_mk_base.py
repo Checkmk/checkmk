@@ -1142,7 +1142,8 @@ def convert_check_result(result):
             return subresults[0]
 
         # Several sub results issued with multiple yields. Make that worst sub check
-        # decide the total state, join the texts and performance data
+        # decide the total state, join the texts and performance data. Subresults with
+        # an infotext of None are used for adding performance data.
         else:
             perfdata = []
             infotexts = []
@@ -1150,11 +1151,12 @@ def convert_check_result(result):
 
             for subresult in subresults:
                 st, text = subresult[:2]
-                infotexts.append(text + ["", "(!)", "(!!)", "(?)"][st])
-                if st == 2 or status == 2:
-                    status = 2
-                else:
-                    status = max(status, st)
+                if text != None:
+                    infotexts.append(text + ["", "(!)", "(!!)", "(?)"][st])
+                    if st == 2 or status == 2:
+                        status = 2
+                    else:
+                        status = max(status, st)
                 if len(subresult) == 3:
                     perfdata += subresult[2]
 

@@ -80,7 +80,7 @@ def save(what, visuals):
     for (user_id, name), visual in visuals.items():
         if config.user_id == user_id:
             uservisuals[name] = visual
-    config.save_user_file(what, uservisuals)
+    config.save_user_file('user_' + what, uservisuals)
 
 
 def load(what, builtin_visuals, skip_func = None):
@@ -107,7 +107,13 @@ def load(what, builtin_visuals, skip_func = None):
             if not os.path.isdir(dirpath):
                 continue
 
-            path = "%s/%s.mk" % (dirpath, what)
+            # Be compatible to old views.mk. The views.mk contains customized views
+            # in an old format which will be loaded, transformed and when saved stored
+            # in users_views.mk. When this file exists only this file is used.
+            path = "%s/user_%s.mk" % (dirpath, what)
+            if what == 'views' and not os.path.exists(path):
+                path = "%s/%s.mk" % (dirpath, what)
+
             if not os.path.exists(path):
                 continue
 

@@ -190,18 +190,9 @@ def apply_global_context(board, dashlet):
                         url_vars.append((param, html.var(param)))
     return url_vars
 
-# Actual rendering function
-def render_dashboard(name):
-    mode = 'display'
-    if html.var('edit') == '1':
-        mode = 'edit'
-
-    if mode == 'edit' and not config.may("general.edit_dashboards"):
-        raise MKAuthException(_("You are not allowed to edit dashboards."))
-
+def load_dashboard_with_cloning(name, edit = True):
     board = available_dashboards[name]
-
-    if mode == 'edit' and board['owner'] != config.user_id:
+    if edit and board['owner'] != config.user_id:
         # This dashboard which does not belong to the current user is about to
         # be edited. In order to make this possible, the dashboard is being
         # cloned now!
@@ -211,6 +202,19 @@ def render_dashboard(name):
         dashboards[(config.user_id, name)] = board
         available_dashboards[name] = board
         visuals.save('dashboards', dashboards)
+
+    return board
+
+# Actual rendering function
+def render_dashboard(name):
+    mode = 'display'
+    if html.var('edit') == '1':
+        mode = 'edit'
+
+    if mode == 'edit' and not config.may("general.edit_dashboards"):
+        raise MKAuthException(_("You are not allowed to edit dashboards."))
+
+    board = load_dashboard_with_cloning(name, edit = mode == 'edit')
 
     # The dashboard may be called with "wato_folder" set. In that case
     # the dashboard is assumed to restrict the shown data to a specific
@@ -1027,7 +1031,8 @@ def ajax_add_dashlet():
 
     if board not in available_dashboards:
         raise MKGeneralException(_('The requested dashboard does not exist.'))
-    dashboard = available_dashboards[board]
+
+    dashboard = load_dashboard_with_cloning(board)
 
     ty = html.var('type')
     if not ty:

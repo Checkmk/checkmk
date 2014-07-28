@@ -606,7 +606,7 @@ def view_editor_specs(context_type, ds_name):
 
     specs.append(
         ('filters', Dictionary(
-            title = _('Filters'),
+            title = _('Context'),
             render = 'form',
             optional_keys = optional,
             elements = params,
@@ -966,17 +966,21 @@ def show_view(view, show_heading = False, show_buttons = True,
         if not filter.info or filter.info in datasource["infos"]:
             show_filters.append(filter)
 
-    # Populate the HTML vars with missing context vars
+    # Populate the HTML vars with missing context vars. The context vars set
+    # in single context are enforced (can not be overwritten by URL). The normal
+    # filter vars in "multiple" context are not enforced.
     if context_type['single']:
         set_vars = view["context"].items()
+        enforce_context = True
     else:
+        enforce_context = False
         set_vars = []
         for fname, filter_vars in view["context"].items():
             set_vars += filter_vars.items()
 
     for varname, value in set_vars:
         # shown filters are set, if form is fresh and variable not supplied in URL
-        if only_count or (html.var("filled_in") != "filter" and not html.has_var(varname)):
+        if only_count or (enforce_context or (html.var("filled_in") != "filter" and not html.has_var(varname))):
             html.set_var(varname, value)
 
     # Af any painter, sorter or filter needs the information about the host's

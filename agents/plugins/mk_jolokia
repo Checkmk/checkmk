@@ -239,12 +239,12 @@ socket.setdefaulttimeout(1.0)
 # of dicts).
 for inst in instances:
     for varname, value in [
-        ( "server", server ),
-        ( "port", port ),
-        ( "user", user ),
+        ( "server",   server ),
+        ( "port",     port ),
+        ( "user",     user ),
         ( "password", password ),
-        ( "mode", mode ),
-        ( "suburi", suburi ),
+        ( "mode",     mode ),
+        ( "suburi",   suburi ),
         ( "instance", instance )]:
         if varname not in inst:
             inst[varname] = value
@@ -253,6 +253,3 @@ for inst in instances:
     inst["instance"] = inst["instance"].replace(" ", "_")
 
     query_instance(inst)
-
-
-

@@ -1317,6 +1317,39 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_networking,
+    'fec',
+    _("Forward error correction"),
+    Dictionary(
+        elements = [
+            ( 'good', Tuple(
+                title = _("Levels for good Packages"),
+                elements = [
+                    Integer( title = _("Warning at"), default_value="250000000000"),
+                    Integer( title = _("Critical at"), default_value="260000000000"),
+                ]
+            )),
+            ( 'corrected', Tuple(
+                title = _("Levels for corrected Packages"),
+                elements = [
+                    Integer( title = _("Warning at"), default_value="250000000000"),
+                    Integer( title = _("Critical at"), default_value="260000000000"),
+                ]
+            )),
+            ( 'uncorrected', Tuple(
+                title = _("Levels for uncorrected Packages"),
+                elements = [
+                    Integer( title = _("Warning at"), default_value="250000000000"),
+                    Integer( title = _("Critical at"), default_value="260000000000"),
+                ]
+            )),
+        ]
+    ),
+    None,
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_networking,
     "vpn_tunnel",
     _("VPN Tunnel"),
     Dictionary(

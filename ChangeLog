@@ -1,5 +1,6 @@
 1.2.5i6:
     Checks & Agents:
+    * 0185 knuerr_rms_humidity, knuerr_rms_temp: Two new Checks to Monitor the Temperature and the Humidity on Knürr RMS Devices
     * 1051 FIX: tcp_conn_stats: fix missing performance data...
     * 1142 FIX: winperf_ts_sessions: fix computation, check has never really worked
 

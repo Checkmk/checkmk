@@ -340,6 +340,7 @@ perfometers["check_mk-adva_fsp_temp"] = perfometer_temperature
 perfometers["check_mk-allnet_ip_sensoric.temp"] = perfometer_temperature
 perfometers["check_mk-qlogic_sanbox.temp"] = perfometer_temperature
 perfometers["check_mk-bintec_sensors.temp"] = perfometer_temperature
+perfometers["check_mk-knuerr_rms_temp"] = perfometer_temperature
 
 def perfometer_temperature_multi(row, check_command, perf_data):
     display_value = -1
@@ -865,6 +866,7 @@ def perfometer_humidity(row, check_command, perf_data):
 perfometers['check_mk-carel_uniflair_cooling'] = perfometer_humidity
 perfometers['check_mk-cmciii.humidity'] = perfometer_humidity
 perfometers['check_mk-allnet_ip_sensoric.humidity'] = perfometer_humidity
+perfometers['check_mk-knuerr_rms_humidity'] = perfometer_humidity
 
 def perfometer_eaton(row, command, perf):
     return u"%s°C" % str(perf[0][1]), perfometer_linear(float(perf[0][1]), 'silver')

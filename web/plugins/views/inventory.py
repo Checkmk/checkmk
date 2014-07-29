@@ -708,7 +708,7 @@ multisite_builtin_views["inv_hosts_cpu"] = {
     'hard_filtervars'              : [
         ('is_has_inv', '1' ),
     ],
-    'hide_filters'                 : ['host', 'site'],
+    'hide_filters'                 : [],
     'show_filters'                 : [
          'inv_hardware_cpu_cpus',
          'inv_hardware_cpu_cores',
@@ -857,11 +857,12 @@ for name, title, sortfunc in [
 
 
 multisite_datasources["invswpacs"] = {
-    "title"       : _("Inventory: Software Packages"),
-    "table"       : inv_software_table,
-    "infos"       : [ "host", "invswpac" ],
-    "keys"        : [],
-    "idkeys"      : [],
+    "title"        : _("Inventory: Software Packages"),
+    "table"        : inv_software_table,
+    "infos"        : [ "host", "invswpac" ],
+    "keys"         : [],
+    "idkeys"       : [],
+    "context_type" : "invswpac",
 }
 
 

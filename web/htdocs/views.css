@@ -374,52 +374,6 @@ table.data.single td.perfometer div.title {
 div.clear {
     clear: left;
 }
-div.filtersetting > select {
-    float: left;
-    margin-right: 10px;
-    height: 26px;
-}
-div.filtersetting.show > select { border: 3px solid #ff4; }
-div.filtersetting.hide > select { border: 3px solid #f8f; }
-div.filtersetting.off > select { border: 3px solid #444; }
-div.filtersetting.hard > select { border: 3px solid #45f; }
-
-div.filtersetting.off > div, div.filtersetting.hide > div {
-    display: none;
-}
-
-
-/* The column editor is part of the view editor */
-div.columneditor {
-    margin-bottom: 6px;
-}
-
-div.columneditor table {
-    padding: 0;
-    margin: 0;
-    background-image: url("images/form_background.png");
-    background-repeat: repeat;
-    width: 100%;
-}
-
-div.columneditor td.cebuttons {
-    width: 33px;
-}
-div.columneditor td.celeft {
-    width: 60px;
-}
-
-div.columneditor td {
-    padding: 0 4px;
-}
-
-div.columneditor select {
-    width: 100%;
-}
-
-/*div.columneditor td, div.columneditor select {
-    font-size: 0.9em;
-}*/
 
 input#try{
     float:left;
@@ -725,4 +679,80 @@ td.invtree table th {
 }
 td.invtree table td {
     background-color: #fff;
+}
+
+/*-Dashlet Popup-------------------------------------------------------.
+|   ____            _     _      _     ____                            |
+|  |  _ \  __ _ ___| |__ | | ___| |_  |  _ \ ___  _ __  _   _ _ __     |
+|  | | | |/ _` / __| '_ \| |/ _ \ __| | |_) / _ \| '_ \| | | | '_ \    |
+|  | |_| | (_| \__ \ | | | |  __/ |_  |  __/ (_) | |_) | |_| | |_) |   |
+|  |____/ \__,_|___/_| |_|_|\___|\__| |_|   \___/| .__/ \__,_| .__/    |
+|                                                |_|         |_|       |
++---------------------------------------------------------------------*/
+
+div.graph, div.dashadd {
+    position: relative;
+}
+
+div.dashadd {
+    display: inline-block;
+}
+
+div.graph a.dashadd {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+
+    display: block;
+    width: 20px;
+    height: 20px;
+    background-image: url(images/button_add_dashlet_lo.png);
+}
+
+div.graph a.dashadd:hover {
+    background-image: url(images/button_add_dashlet_hi.png);
+    cursor: pointer;
+}
+
+#dashadd_popup {
+    position: absolute;
+    bottom: 15px;
+    left: 15px;
+    z-index: 10;
+
+    padding: 0;
+    width: 200px;
+
+    color: #fff;
+    background-color: #508AA1;
+    border: 1px solid #fff;
+    -moz-box-shadow:    1px 1px 1px 1px #000;
+    -webkit-box-shadow: 1px 1px 1px 1px #000;
+    box-shadow:         1px 1px 1px 1px #000;
+    /* ie <8 */
+    zoom: 1;
+    filter: progid:DXImageTransform.Microsoft.DropShadow(OffX=2, OffY=2, Color=#000000),
+            progid:DXImageTransform.Microsoft.Chroma(Color='#ffffff');
+}
+
+#dashadd_popup ul {
+    list-style: none;
+    margin: 0;
+    padding: 5px;
+}
+
+#dashadd_popup a, #dashadd_popup span {
+    display: block;
+    padding: 5px 15px;
+    text-align: left;
+    text-decoration: none;
+    color: #fff;
+}
+
+#dashadd_popup span {
+    padding-left: 5px;
+}
+
+#dashadd_popup a:hover {
+    text-decoration: underline;
 }

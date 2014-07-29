@@ -1,0 +1,8 @@
+Title: Dashlet-Snapin: Only show topic when there are multiple
+Component: multisite
+State: open
+Date: 2014-07-15 11:57:42
+Targetversion: 1.2.5i1
+Class: feature
+
+Would be save some space in the sidebar.

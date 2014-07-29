@@ -26,7 +26,7 @@
 
 import re
 from lib import *
-import views, config
+import views, config, visuals
 
 # These regexes are taken from the public domain code of Matt Sullivan
 # http://sullerton.com/2011/03/django-mobile-browser-detection-middleware/
@@ -184,7 +184,7 @@ def page_index():
     jqm_page_header(title, right_button=("javascript:document.location.reload();", _("Reload"), "refresh"),id="data")
     views.load_views()
     items = []
-    for view_name, view in html.available_views.items():
+    for view_name, view in views.permitted_views().items():
         if view.get("mobile") and not view.get("hidden"):
             url = "mobile_view.py?view_name=%s" % view_name
             count = ""
@@ -211,7 +211,7 @@ def page_view():
     if not view_name:
         return page_index()
 
-    view = html.available_views.get(view_name)
+    view = views.permitted_views().get(view_name)
     if not view:
         raise MKGeneralException("No view defined with the name '%s'." % view_name)
 
@@ -232,7 +232,7 @@ def page_view():
 
 def render_view(view, rows, datasource, group_painters, painters,
                 display_options, painter_options, show_heading, show_buttons,
-                show_checkboxes, layout, num_columns, show_filters, show_footer, hide_filters,
+                show_checkboxes, layout, num_columns, show_filters, show_footer,
                 browser_reload):
 
     home=("mobile.py", "Home", "home")
@@ -251,9 +251,7 @@ def render_view(view, rows, datasource, group_painters, painters,
         navbar.append(( "commands", _("Commands"), "gear", False ))
 
     # Should we show a page with context links?
-    context_links = [
-        e for e in views.collect_context_links(view, hide_filters)
-        if e[0].get("mobile") ]
+    context_links = visuals.collect_context_links(view, mobile = True, only_types = ['views'])
 
     if context_links:
         navbar.append(( "context", _("Context"), "arrow-r", False))
@@ -380,7 +378,7 @@ def do_commands(view, what, rows):
 
 def show_context_links(context_links):
     items = []
-    for view, title, uri, icon, buttonid in context_links:
+    for title, uri, icon, buttonid in context_links:
         items.append(('Context', uri, title))
     jqm_page_index(_("Related Views"), items)
 

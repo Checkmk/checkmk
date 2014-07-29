@@ -57,25 +57,8 @@ def load():
            "If combined with 'perform commands' then commands may be done on all objects."),
          [ "admin", "guest" ])
 
-    config.declare_permission("general.edit_views",
-         _("Customize views and use them"),
-         _("Allows to create own views, customize builtin views and use them."),
-         [ "admin", "user" ])
-
-    config.declare_permission("general.publish_views",
-         _("Publish views"),
-         _("Make views visible and usable for other users"),
-         [ "admin", "user" ])
-
-    config.declare_permission("general.see_user_views",
-         _("See user views"),
-         _("Is needed for seeing views that other users have created."),
-         [ "admin", "user", "guest" ])
-
-    config.declare_permission("general.force_views",
-         _("Modify builtin views"),
-         _("Make own published views override builtin views for all users"),
-         [ "admin" ])
+    declare_visual_permissions('views')
+    declare_visual_permissions('dashboards')
 
     config.declare_permission("general.view_option_columns",
          _("Change view display columns"),
@@ -160,3 +143,24 @@ def load():
          [ "admin" ])
 
     loaded_with_language = current_language
+
+def declare_visual_permissions(what):
+    config.declare_permission("general.edit_" + what,
+         _("Customize %s and use them") % what,
+         _("Allows to create own %s, customize builtin %s and use them.") % (what, what),
+         [ "admin", "user" ])
+
+    config.declare_permission("general.publish_" + what,
+         _("Publish %s") % what,
+         _("Make %s visible and usable for other users") % what,
+         [ "admin", "user" ])
+
+    config.declare_permission("general.see_user_" + what,
+         _("See user %s") % what,
+         _("Is needed for seeing %s that other users have created.") % what,
+         [ "admin", "user", "guest" ])
+
+    config.declare_permission("general.force_" + what,
+         _("Modify builtin %s") % what,
+         _("Make own published %s override builtin %s for all users.") % (what, what),
+         [ "admin" ])

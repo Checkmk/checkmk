@@ -451,6 +451,10 @@ table.valuespec_listof option[selected] {
     font-weight: bold;
 }
 
+table.valuespec_listof .unused {
+    display: none;
+}
+
 textarea.tt {
     font-family: monospace;
 }

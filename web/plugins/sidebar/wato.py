@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import config, wato
+import config, wato, views
 
 #   +----------------------------------------------------------------------+
 #   |                     __        ___  _____ ___                         |
@@ -214,14 +214,15 @@ def render_wato_foldertree():
     #
     selected_topic, selected_target = config.load_user_file("foldertree", (_('Hosts'), 'allhosts'))
 
-    topic_views  = views_by_topic()
+    views.load_views()
+    topic_views  = visuals_by_topic(views.permitted_views())
     topics = [ (t, t) for t, s in topic_views ]
     html.select("topic", topics, selected_topic, onchange = 'wato_tree_topic_changed(this)')
     html.write('<span class=left>%s</span>' % _('Topic:'))
 
-    for topic, views in topic_views:
+    for topic, view_list in topic_views:
         targets = []
-        for t, title, name in views:
+        for t, title, name in view_list:
             if config.visible_views and name not in config.visible_views:
                 continue
             if config.hidden_views and name in config.hidden_views:

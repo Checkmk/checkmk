@@ -132,6 +132,38 @@ function getTarget(event) {
   return event.target ? event.target : event.srcElement;
 }
 
+function getButton(event) {
+  if (event.which == null)
+    /* IE case */
+    return (event.button < 2) ? "LEFT" : ((event.button == 4) ? "MIDDLE" : "RIGHT");
+  else
+    /* All others */
+    return (event.which < 2) ? "LEFT" : ((event.which == 2) ? "MIDDLE" : "RIGHT");
+}
+
+// Adds document/window global event handlers
+function add_event_handler(type, func) {
+    if (window.addEventListener) {
+        // W3 standard browsers
+        window.addEventListener(type, func, false);
+    }
+    else if (window.attachEvent) {
+        // IE<9
+        document.documentElement.attachEvent("on" + type, func);
+    }
+    else {
+        window["on" + type] = func;
+    }
+}
+
+function prevent_default_events(event) {
+    if (event.preventDefault)
+        event.preventDefault();
+    if (event.stopPropagation)
+        event.stopPropagation();
+    event.returnValue = false;
+}
+
 function hilite_icon(oImg, onoff) {
     src = oImg.src;
     if (onoff == 0)
@@ -308,6 +340,10 @@ function isWebkit() {
   return navigator.userAgent.indexOf("WebKit") > -1;
 }
 
+function is_ie_below_9() {
+    return document.all && !document.addEventListener;
+}
+
 function pageHeight() {
   var h;
 
@@ -341,10 +377,12 @@ function pageWidth() {
 /**
  * Function gets the value of the given url parameter
  */
-function getUrlParam(name) {
+function getUrlParam(name, url) {
+    var url = (typeof url === 'undefined') ? window.location : url;
+
     var name = name.replace('[', '\\[').replace(']', '\\]');
     var regex = new RegExp("[\\?&]" + name + "=([^&#]*)");
-    var results = regex.exec(window.location);
+    var results = regex.exec(url);
     if(results === null)
         return '';
     else
@@ -449,23 +487,6 @@ function toggle_other_filters(fname, disable_others) {
     }
 }
 
-function filter_activation(oSelect)
-{
-    var usage = oSelect.value;
-    var fname = oSelect.id.replace('filter_', '');
-
-    // Disable/Enable other filters which conflict with this filter
-    toggle_other_filters(fname, usage != 'off');
-
-    // Make the current filter visible/invisible
-    var oDiv = oSelect.parentNode;
-    oDiv.setAttribute("className", "filtersetting " + usage);
-    oDiv.setAttribute("class", "filtersetting " + usage);
-
-    oDiv = null;
-    oSelect = null;
-}
-
 // ----------------------------------------------------------------------------
 // PNP graph handling
 // ----------------------------------------------------------------------------
@@ -528,10 +549,34 @@ function create_graph(data, params) {
     img.src = data['pnp_url'] + 'index.php/image?view=' + data['view'] + urlvars;
 
     if (data.with_link) {
+        var graph_container = document.createElement('div');
+        graph_container.setAttribute('class', 'graph')
+
+        var view   = data['view'] == '' ? 0 : data['view'];
+        // needs to be extracted from "params", hack!
+        var source = parseInt(getUrlParam('source', params));
+
+        // Add the control for adding the graph to a dashboard
+        var dashadd = document.createElement('a');
+        dashadd.title = 'Add to dashboard';
+        dashadd.setAttribute('class', 'dashadd');
+        dashadd.onclick = function(host, service, view, source) {
+            return function() {
+                toggle_add_to_dashboard(this, 'pnpgraph',
+                    { 'host': host, 'service': service },
+                    { 'timerange': view, 'source': source }
+                );
+            }
+        }(data['host'], data['service'], view, source);
+
+        graph_container.appendChild(dashadd);
+
         var link = document.createElement('a');
         link.href = data['pnp_url'] + 'index.php/graph?' + urlvars;
         link.appendChild(img);
-        container.appendChild(link);
+        graph_container.appendChild(link);
+
+        container.appendChild(graph_container);
     }
     else {
         container.appendChild(img);
@@ -656,158 +701,6 @@ function performAction(oLink, action, site, host, service, wait_svc) {
             '&service='  + service + // Already URL-encoded!
             '&wait_svc=' + wait_svc,
             actionResponseHandler, oImg);
-    oImg = null;
-}
-
-/* -----------------------------------------------------
-   view editor
-   -------------------------------------------------- */
-
-function get_column_container(oImg) {
-    var oNode = oImg;
-    while (oNode.tagName != "DIV")
-        oNode = oNode.parentNode;
-    return oNode;
-}
-
-function toggle_button(oDiv, name, display) {
-    var parts = oDiv.id.split('_');
-    var type  = parts[0];
-    var num   = parts[2];
-    var o     = document.getElementById(type+'_'+name+'_'+num);
-    if (o)
-        if (display)
-            o.style.display = '';
-        else
-            o.style.display = 'none';
-    o = null;
-}
-
-function column_swap_ids(o1, o2) {
-    var parts = o1.id.split('_');
-    var type  = parts[0];
-    var num1  = parts[2];
-    var num2  = o2.id.split('_')[2];
-
-    var o1 = null, o2 = null;
-    var objects = [ '', '_editor', '_up', '_down', '_link', '_tooltip', '_label', '_title', '_join_index' ];
-    for(var i = 0,len = objects.length; key = type+objects[i]+'_', i < len; i++) {
-        o1 = document.getElementById(key + num1);
-        o2 = document.getElementById(key + num2);
-        if(o1 && o2) {
-            if(o1.id && o2.id) {
-                o1.id = key + num2;
-                o2.id = key + num1;
-            }
-            if(o1.name && o2.name) {
-                o1.name = key + num2;
-                o2.name = key + num1;
-            }
-        }
-    }
-    objects = null;
-    o1 = null;
-    o2 = null;
-}
-
-function add_view_column_handler(oContainer, code) {
-    // Can not simply add the new code to the innerHTML code of the target
-    // container. So first creating a temporary container and fetch the
-    // just created DOM node of the editor fields to add it to the real
-    // container afterwards.
-    var tmpContainer = document.createElement('div');
-    tmpContainer.innerHTML = code;
-    var oNewEditor = tmpContainer.lastChild;
-
-    oContainer.appendChild(oNewEditor);
-    tmpContainer = null;
-
-    if (oContainer.lastChild.previousSibling)
-        fix_buttons(oContainer, oContainer.lastChild.previousSibling);
-    oContainer = null;
-}
-
-function add_view_column(oButton, datasourcename, prefix) {
-    oTd = oButton.parentNode;
-    oContainer = oTd.firstChild;
-    get_url('get_edit_column.py?ds=' + datasourcename + '&pre=' + prefix
-          + '&num=' + (oContainer.childNodes.length + 1),
-            add_view_column_handler, oContainer);
-}
-
-function delete_view_column(oImg) {
-    var oNode = get_column_container(oImg);
-    var oContainer = oNode.parentNode;
-
-    var prev = oNode.previousSibling;
-    var next = oNode.nextSibling;
-
-    oContainer.removeChild(oNode);
-
-    if (prev)
-        fix_buttons(oContainer, prev);
-    if (next)
-        fix_buttons(oContainer, next);
-
-    oContainer = null;
-    oNode = null;
-}
-
-function fix_buttons(oContainer, oNode) {
-    var num = oContainer.childNodes.length;
-    if (num === 0)
-        return;
-
-    if (oContainer.firstChild == oNode)
-        toggle_button(oNode, 'up', false);
-    else
-        toggle_button(oNode, 'up', true);
-    if (oContainer.lastChild == oNode)
-        toggle_button(oNode, 'down', false);
-    else
-        toggle_button(oNode, 'down', true);
-}
-
-function move_column_up(oImg) {
-    var oNode = get_column_container(oImg);
-    var oContainer = oNode.parentNode;
-
-    // The column is the first one - skip moving
-    if (oNode.previousSibling === null)
-        return;
-
-    oContainer.insertBefore(oNode, oNode.previousSibling);
-
-    fix_buttons(oContainer, oNode);
-    fix_buttons(oContainer, oNode.nextSibling);
-
-    column_swap_ids(oNode, oNode.nextSibling);
-
-    oContainer = null;
-    oNode = null;
-    oImg = null;
-}
-
-function move_column_down(oImg) {
-    var oNode = get_column_container(oImg);
-    var oContainer = oNode.parentNode;
-
-    // The column is the last one - skip moving
-    if (oNode.nextSibling === null)
-        return;
-
-    if (oContainer.lastChild == oNode.nextSibling)
-        oContainer.appendChild(oNode);
-    else
-        oContainer.insertBefore(oNode, oNode.nextSibling.nextSibling);
-
-    fix_buttons(oContainer, oNode);
-    fix_buttons(oContainer, oNode.previousSibling);
-
-    column_swap_ids(oNode, oNode.previousSibling);
-
-    oContainer = null;
-    oNode = null;
     oImg = null;
 }
 
@@ -1882,6 +1775,82 @@ function vs_iconselector_select(event, varprefix, value) {
     toggle_popup(event, varprefix);
 }
 
+function vs_listofmultiple_add(varprefix) {
+    var choice = document.getElementById(varprefix + '_choice');
+    var ident = choice.value;
+
+    if (ident == '')
+        return;
+
+    choice.options[choice.selectedIndex].disabled = true; // disable this choice
+
+    // make the filter visible
+    var row = document.getElementById(varprefix + '_' + ident + '_row');
+    remove_class(row, 'unused');
+
+    // Change the field names to used ones
+    vs_listofmultiple_toggle_fields(row, varprefix, true);
+
+    // Set value emtpy after adding one element
+    choice.value = '';
+
+    // Add it to the list of active elements
+    var active = document.getElementById(varprefix + '_active');
+    if (active.value != '')
+        active.value += ';'+ident;
+    else
+        active.value = ident;
+}
+
+function vs_listofmultiple_del(varprefix, ident) {
+    // make the filter invisible
+    var row = document.getElementById(varprefix + '_' + ident + '_row');
+    add_class(row, 'unused');
+
+    // Change the field names to unused ones
+    vs_listofmultiple_toggle_fields(row, varprefix, false);
+
+    // Make it choosable from the dropdown field again
+    var choice = document.getElementById(varprefix + '_choice');
+    for (var i = 0; i < choice.childNodes.length; i++)
+        if (choice.childNodes[i].value == ident)
+            choice.childNodes[i].disabled = false;
+
+    // Remove it from the list of active elements
+    var active = document.getElementById(varprefix + '_active');
+    var l = active.value.split(';');
+    for (var i in l) {
+        if (l[i] == ident) {
+            l.splice(i, 1);
+            break;
+        }
+    }
+    active.value = l.join(';');
+}
+
+function vs_listofmultiple_toggle_fields(root, varprefix, enable) {
+    if (root.tagName != 'TR')
+        return; // only handle rows here
+    var types = ['input', 'select', 'textarea'];
+    for (var t in types) {
+        var fields = root.getElementsByTagName(types[t]);
+        for (var i in fields) {
+            fields[i].disabled = !enable;
+        }
+    }
+}
+
+function vs_listofmultiple_init(varprefix) {
+    document.getElementById(varprefix + '_choice').value = '';
+
+    // Mark fields of unused elements as disabled
+    var container = document.getElementById(varprefix + '_table');
+    var unused = document.getElementsByClassName('unused', container);
+    for (var i in unused) {
+        vs_listofmultiple_toggle_fields(unused[i], varprefix, false);
+    }
+}
+
 function help_enable() {
     var aHelp = document.getElementById('helpbutton');
     aHelp.style.display = "inline-block";
@@ -2221,4 +2190,97 @@ function toggle_popup(event, id)
     else
         event.returnValue = false;
     return false;
+}
+
+//   .--Add to Dashb.-------------------------------------------------------.
+//   |       _       _     _   _          ____            _     _           |
+//   |      / \   __| | __| | | |_ ___   |  _ \  __ _ ___| |__ | |__        |
+//   |     / _ \ / _` |/ _` | | __/ _ \  | | | |/ _` / __| '_ \| '_ \       |
+//   |    / ___ \ (_| | (_| | | || (_) | | |_| | (_| \__ \ | | | |_) |      |
+//   |   /_/   \_\__,_|\__,_|  \__\___/  |____/ \__,_|___/_| |_|_.__(_)     |
+//   |                                                                      |
+//   +----------------------------------------------------------------------+
+
+var add_dashboard_data    = null;
+var dashadd_popup_id      = null;
+var dashadd_popup_content = null;
+
+function close_dashadd_popup()
+{
+    var menu = document.getElementById('dashadd_popup');
+    if (menu) {
+        // hide the open menu
+        menu.parentNode.removeChild(menu);
+        menu = null;
+    }
+}
+
+function toggle_add_to_dashboard(trigger_obj, dashlet_type, context, params)
+{
+    var container = trigger_obj.parentNode;
+    var ident;
+    for (var i in container.parentNode.childNodes) {
+        if (container.parentNode.childNodes[i] == container) {
+            ident = i;
+            break;
+        }
+    }
+
+    close_dashadd_popup();
+
+    if (dashadd_popup_id === ident) {
+        dashadd_popup_id = null;
+        return; // same icon clicked: just close the menu
+    }
+    dashadd_popup_id = ident;
+
+    menu = document.createElement('div');
+    menu.setAttribute('id', 'dashadd_popup');
+
+    // populate the menu using a webservice, because the list of dashboards
+    // is not known in the javascript code. But it might have been cached
+    // before. In this case do not perform a second request.
+    if (dashadd_popup_content !== null)
+        menu.innerHTML = dashadd_popup_content;
+    else
+        get_url('ajax_popup_add_dashlet.py', add_dashboard_response_handler);
+
+    add_dashboard_data = [ dashlet_type, context, params ];
+
+    container.appendChild(menu);
+}
+
+function add_dashboard_response_handler(data, response_text)
+{
+    dashadd_popup_content = response_text;
+    var popup = document.getElementById('dashadd_popup');
+    if (popup) {
+        popup.innerHTML = response_text;
+    }
+}
+
+function add_to_dashboard(name)
+{
+    close_dashadd_popup();
+
+    var context_txt = [];
+    for (var key in add_dashboard_data[1]) {
+        var ty = typeof(add_dashboard_data[1][key]);
+        context_txt.push(key+':'+ty+':'+add_dashboard_data[1][key]);
+    }
+
+    var params_txt = [];
+    for (var key in add_dashboard_data[2]) {
+        var ty = typeof(add_dashboard_data[2][key]);
+        params_txt.push(key+':'+ty+':'+add_dashboard_data[2][key]);
+    }
+
+    get_url_sync('ajax_add_dashlet.py?name=' + name
+                                  + '&type=' + add_dashboard_data[0]
+                                  + '&context=' + encodeURIComponent(context_txt.join('|'))
+                                  + '&params=' + encodeURIComponent(params_txt.join('|')));
+    add_dashboard_data = null;
+
+    // After adding a dashlet, go to the choosen dashboard
+    window.location.href = 'dashboard.py?name=' + name + '&edit=1';
 }

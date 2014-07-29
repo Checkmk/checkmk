@@ -764,6 +764,9 @@ class ListOf(ValueSpec):
         self._movable = kwargs.get("movable", True)
         self._totext = kwargs.get("totext")
         self._allow_empty = kwargs.get("allow_empty", True)
+        self._empty_text  = kwargs.get("empty_text")
+        if not self._empty_text:
+            self._empty_text = _("Please specify at least on entry")
 
     def del_button(self, vp, nr):
         js = "valuespec_listof_delete(this, '%s', '%s')" % (vp, nr)
@@ -886,11 +889,93 @@ class ListOf(ValueSpec):
 
     def validate_value(self, value, varprefix):
         if not self._allow_empty and len(value) == 0:
-            raise MKUserError(varprefix, _("Please specify at least on entry"))
+            raise MKUserError(varprefix, self._empty_text)
         for n, v in enumerate(value):
             self._valuespec.validate_value(v, varprefix + "_%d" % (n+1))
         ValueSpec.custom_validate(self, value, varprefix)
 
+
+# A generic valuespec where the user can choose from a list of sub-valuespecs.
+# Each sub-valuespec can be added only once
+class ListOfMultiple(ValueSpec):
+    def __init__(self, choices, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
+        self._choices     = choices
+        self._choice_dict = dict(choices)
+
+        self._add_label = kwargs.get("add_label", _("Add element"))
+
+    def del_button(self, varprefix, ident):
+        js = "vs_listofmultiple_del('%s', '%s')" % (varprefix, ident)
+        html.icon_button("#", _("Delete this entry"), "delete", onclick=js)
+
+    def render_input(self, varprefix, value):
+        # Beware: the 'value' is only the default value in case the form
+        # has not yet been filled in. In the complain phase we must
+        # ignore 'value' but reuse the input from the HTML variables -
+        # even if they are not syntactically correct. Calling from_html_vars
+        # here is *not* an option since this might not work in case of
+        # a wrong user input.
+
+        # In the 'complain' phase, where the user already saved the
+        # form but the validation failed, we must not display the
+        # original 'value' but take the value from the HTML variables.
+        if html.var("%s_active" % varprefix):
+            value = self.from_html_vars(varprefix)
+
+        # Save all selected items
+        html.hidden_field('%s_active' % varprefix, ';'.join(value.keys()),
+            id = '%s_active' % varprefix, add_var = True)
+
+        # Actual table of currently existing entries
+        html.write('<table class="valuespec_listof" id="%s_table">' % varprefix)
+        for ident, vs in self._choices:
+            cls = ident not in value and 'unused' or ''
+            prefix = varprefix + '_' + ident
+            html.write('<tr id="%s_row" class="%s"><td class=vlof_buttons>' % (prefix, cls))
+            self.del_button(varprefix, ident)
+            html.write("</td><td class=vlof_content>")
+            vs.render_input(prefix, value.get(ident))
+            html.write("</td></tr>")
+        html.write("</table>")
+        html.write("<br>")
+
+        choosable = [('', '')] + [ (ident, vs.title()) for ident, vs in self._choices if ident not in value ]
+        html.select(varprefix + '_choice', choosable)
+        html.javascript('vs_listofmultiple_init(\'%s\');' % varprefix)
+        html.jsbutton(varprefix + '_add', self._add_label, "vs_listofmultiple_add('%s')" % varprefix)
+
+    def canonical_value(self):
+        return {}
+
+    def value_to_text(self, value):
+        s = '<table>'
+        for ident, val in value:
+            vs = self._choice_dict[ident]
+            s += '<tr><td>%s</td><td>%s</td></tr>' % (vs.title(), vs.value_to_text(val))
+        return s + '</table>'
+
+    def from_html_vars(self, varprefix):
+        value = {}
+        active = html.var('%s_active' % varprefix).strip()
+        if not active:
+            return value
+
+        for ident in active.split(';'):
+            vs = self._choice_dict[ident]
+            value[ident] = vs.from_html_vars(varprefix + '_' + ident)
+        return value
+
+    def validate_datatype(self, value, varprefix):
+        if type(value) != dict:
+            raise MKUserError(varprefix, _("The type must be dict, but is %s") % type_name(value))
+        for ident, val in value.items():
+            self._choice_dict[ident].validate_datatype(val, varprefix + '_' + ident)
+
+    def validate_value(self, value, varprefix):
+        for ident, val in value.items():
+            self._choice_dict[ident].validate_value(val, varprefix + '_' + ident)
+        ValueSpec.custom_validate(self, value, varprefix)
 
 
 # Same but for floating point values
@@ -994,12 +1079,24 @@ class DropdownChoice(ValueSpec):
         self._help_separator = kwargs.get("help_separator")
         self._label = kwargs.get("label")
         self._prefix_values = kwargs.get("prefix_values", False)
+        self._sorted = kwargs.get("sorted", True)
+
+        self._no_preselect       = kwargs.get("no_preselect",       False)
+        self._no_preselect_value = kwargs.get("no_preselect_value", None)
+        self._no_preselect_title = kwargs.get("no_preselect_title", "") # if not preselected
+        self._no_preselect_error = kwargs.get("no_preselect_error", _("Please make a selection"))
 
     def choices(self):
+        result = []
         if type(self._choices) == list:
-            return self._choices
+            result = self._choices
         else:
-            return self._choices()
+            result = self._choices()
+
+        if self._no_preselect:
+            return [(self._no_preselect_value, self._no_preselect_title)] + result
+        else:
+            return result
 
     def canonical_value(self):
         choices = self.choices()
@@ -1025,7 +1122,10 @@ class DropdownChoice(ValueSpec):
         elif len(options[0]) == 3:
             html.icon_select(varprefix, options, defval)
         else:
-            html.select(varprefix, options, defval)
+            if not self._sorted:
+                html.select(varprefix, options, defval)
+            else:
+                html.sorted_select(varprefix, options, defval)
 
     def value_to_text(self, value):
         for entry in self.choices():
@@ -1044,6 +1144,12 @@ class DropdownChoice(ValueSpec):
             if sel == str(n):
                 return val
         return self.default_value() # can only happen if user garbled URL or len(choices) == 0
+
+    def validate_value(self, value, varprefix):
+        if self._no_preselect and value == self._no_preselect_value:
+            raise MKUserError(varprefix, self._no_preselect_error)
+
+        ValueSpec.custom_validate(self, value, varprefix)
 
     def validate_datatype(self, value, varprefix):
         for val, title in self.choices():
@@ -1236,15 +1342,17 @@ class RadioChoice(DropdownChoice):
         for n, entry in enumerate(self._choices):
             if self._columns != None:
                 html.write("<td>")
-            if len(entry) > 2: # icon!
+            if len(entry) > 2 and entry[2] != None: # icon!
                 label = '<img class=icon align=absmiddle src="images/icon_%s.png" title="%s">' % \
                         ( entry[2], entry[1].encode("utf-8"))
             else:
                 label = entry[1]
             html.radiobutton(varprefix, str(n), value == entry[0], label)
+            if len(entry) > 3 and entry[3]:
+                html.write('<p>%s</p>' % entry[3])
             if self._columns != None:
                 html.write("</td>")
-                if (n+1) % self._columns == 0 and (n+1) < len(self._choices)-1:
+                if (n+1) % self._columns == 0 and (n+1) < len(self._choices):
                     html.write("<tr></tr>")
             else:
                 html.write("&nbsp;")
@@ -1978,14 +2086,19 @@ class Timerange(CascadingDropdown):
 
 class PNPTimerange(Timerange):
     def __init__(self, **kwargs):
+        choosable = [
+            ("0", _("4 Hours")),  ("1", _("25 Hours")),
+            ("2", _("One Week")), ("3", _("One Month")),
+            ("4", _("One Year")),
+        ]
+
+        if kwargs.get('allow_all', True):
+            choosable.append(("", _("All")))
+
         kwargs['choices'] = [
             ('pnp_view', _("PNP View"), DropdownChoice(
                 default_value = '1',
-                choices = [
-                    ("0", _("4 Hours")),  ("1", _("25 Hours")),
-                    ("2", _("One Week")), ("3", _("One Month")),
-                    ("4", _("One Year")), ("", _("All"))
-                ],
+                choices = choosable,
             )),
         ]
         Timerange.__init__(self, **kwargs)
@@ -2851,6 +2964,7 @@ class FileUpload(ValueSpec):
 
 class IconSelector(ValueSpec):
     def __init__(self, **kwargs):
+        ValueSpec.__init__(self, **kwargs)
         self._prefix      = kwargs.get('prefix', 'icon_')
         self._subdir      = kwargs.get('subdir', '')
         self._num_cols    = kwargs.get('num_cols', 12)
@@ -2906,7 +3020,7 @@ class IconSelector(ValueSpec):
             value = self._empty_img
 
         html.write('<div class="popup_container">')
-        html.hidden_field(varprefix + "_value", value or '', varprefix + "_value")
+        html.hidden_field(varprefix + "_value", value or '', varprefix + "_value", add_var = True)
         self.render_icon(value, 'toggle_popup(event, \'%s\')' % varprefix,
                         _('Choose another Icon'), id = varprefix + '_img')
         if not value:
@@ -2948,3 +3062,90 @@ class IconSelector(ValueSpec):
     def validate_value(self, value, varprefix):
         if value and value not in self.available_icons():
             raise MKUserError(varprefix, _("The selected icon image does not exist."))
+
+
+# Implements a list of available filters for the given infos. By default no
+# filter is selected. The user may select a filter to be activated, then the
+# filter is rendered and the user can provide a default value.
+class VisualFilterList(ListOfMultiple):
+    def __init__(self, infos, **kwargs):
+        self._infos = infos
+
+        # FIXME: Hack! Maybe move the multisite_filters to a common module
+        import views
+
+        # First get all filters useful for the infos, then create VisualFilter
+        # valuespecs from them and then sort them
+        fspecs = {}
+        self._filters = {}
+        for info in self._infos:
+            for fname, filter in views.filters_allowed_for_info(info).items():
+                if fname not in fspecs and fname not in views.ubiquitary_filters:
+                    fspecs[fname] = VisualFilter(fname,
+                        title = filter.title,
+                    )
+                    self._filters[fname] = fspecs[fname]._filter
+
+        # Convert to list and sort them!
+        fspecs = fspecs.items()
+        fspecs.sort(key = lambda x: (x[1]._filter.sort_index, x[1].title()))
+
+        kwargs.setdefault('title', _('Filters'))
+        kwargs.setdefault('add_label', _('Add filter'))
+
+        ListOfMultiple.__init__(self, fspecs, **kwargs)
+
+    # get the filters to be used from the value and the data from the filter
+    # objects using the row data
+    def filter_variable_settings(self, value, row):
+        vars = []
+        for fname in value.keys():
+            vars += self._filters[fname].variable_settings(row)
+        return vars
+
+# Realizes a Multisite/visual filter in a valuespec. It can render the filter form, get
+# the filled in values and provide the filled in information for persistance.
+class VisualFilter(ValueSpec):
+    def __init__(self, name, **kwargs):
+        self._name   = name
+        # FIXME: Hack! Maybe move the multisite_filters to a common module
+        import views
+        self._filter = views.multisite_filters[name]
+
+        ValueSpec.__init__(self, **kwargs)
+
+    def title(self):
+        return self._filter.title
+
+    def canonical_value(self):
+        return {}
+
+    def render_input(self, varprefix, value):
+        # kind of a hack to make the current/old filter API work. This should
+        # be cleaned up some day
+        if value != None:
+            self._filter.set_value(value)
+
+        # A filter can not be used twice on a page, because the varprefix is not used
+        html.write('<div class="floatfilter %s">' % (self._filter.double_height() and "double" or "single"))
+        html.write('<div class=legend>%s</div>' % self._filter.title)
+        html.write('<div class=content>')
+        self._filter.display()
+        html.write("</div>")
+        html.write("</div>")
+
+    def value_to_text(self, value):
+        # FIXME: optimize. Needed?
+        return repr(value)
+
+    def from_html_vars(self, varprefix):
+        # A filter can not be used twice on a page, because the varprefix is not used
+        return self._filter.value()
+
+    def validate_datatype(self, value, varprefix):
+        if type(value) != dict:
+            raise MKUserError(varprefix, _("The value must be of type dict, but it has type %s") %
+                                                                    type_name(value))
+
+    def validate_value(self, value, varprefix):
+        ValueSpec.custom_validate(self, value, varprefix)

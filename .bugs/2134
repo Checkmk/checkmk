@@ -1,0 +1,12 @@
+Title: Implement display options for all visuals (-> PNP timeranges)
+Component: multisite
+State: open
+Date: 2014-07-15 11:59:08
+Targetversion: 1.2.5i1
+Class: feature
+
+At the moment the pnp timerange is configured e.g. for the dashlet within the dashlet
+itselfs. It would be better to generalize this to use the generic PNP timerange display
+option which is used within the views.
+
+To make this possible the visuals code needs to implement the display options.

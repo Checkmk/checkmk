@@ -1,0 +1,9 @@
+Title: Snapshot restore: fixed exception during exception handling...
+Level: 1
+Component: wato
+Version: 1.2.5i6
+Date: 1406626339
+Class: fix
+
+If there were an error during the extracting of a backup domain, the backup process
+crashed entirely instead of continueing with the next backup domain.

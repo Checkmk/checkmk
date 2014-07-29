@@ -1,0 +1,11 @@
+Title: Fixed login problem in LDAP connector when no user filter specified
+Level: 2
+Component: multisite
+Version: 1.2.5i5p2
+Date: 1406640020
+Class: fix
+
+The 1.2.5i5 released introduced a bug which prevents user logins when the
+LDAP configured does not has a LDAP user filter set. If you encounter this
+problem either update to this release or set a user filter to prevent the
+exception.

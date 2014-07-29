@@ -2,6 +2,9 @@
     Checks & Agents:
     * 1142 FIX: winperf_ts_sessions: fix computation, check has never really worked
 
+    Multisite:
+    * 1067 FIX: Fixed login problem in LDAP connector when no user filter specified...
+
 
 1.2.5i5p1:
     Checks & Agents:

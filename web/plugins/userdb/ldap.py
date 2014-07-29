@@ -475,7 +475,7 @@ def ldap_get_user(username, no_escape = False):
     result = ldap_search(
         ldap_replace_macros(config.ldap_userspec['dn']),
         '(&(%s=%s)%s)' % (ldap_user_id_attr(), ldap.filter.escape_filter_chars(username),
-                          config.ldap_userspec['filter']),
+                          config.ldap_userspec.get('filter', '')),
         [ldap_user_id_attr()],
     )
 

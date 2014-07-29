@@ -5,6 +5,9 @@
     Multisite:
     * 1067 FIX: Fixed login problem in LDAP connector when no user filter specified...
 
+    WATO:
+    * 1089 FIX: Snapshot restore: fixed exception during exception handling......
+
 
 1.2.5i5p1:
     Checks & Agents:

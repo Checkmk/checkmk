@@ -213,9 +213,9 @@ def extract_domains(tar, domains):
             stdout, stderr = p.communicate()
             exit_code = p.wait()
             if exit_code:
-                return [ "%s - %s" % (domains["title"], stderr) ]
+                return [ "%s - %s" % (domain["title"], stderr) ]
         except Exception, e:
-            return [ "%s - %s" % (domains["title"], str(e)) ]
+            return [ "%s - %s" % (domain["title"], str(e)) ]
 
 
     def execute_restore(domain, is_pre_restore = True):

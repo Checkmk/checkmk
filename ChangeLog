@@ -2,6 +2,9 @@
     Checks & Agents:
     * 1142 FIX: winperf_ts_sessions: fix computation, check has never really worked
 
+    WATO:
+    * 1089 FIX: Snapshot restore: fixed exception during exception handling......
+
 
 1.2.5i5p1:
     Checks & Agents:

@@ -24,8 +24,6 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Author: Lars Michelsen <lm@mathias-kettner.de>
-
 # Example outputs from agent:
 # <<<heartbeat_crm>>>
 # ============
@@ -49,26 +47,42 @@ import time, datetime
 # Nails down the DC to the node which is the DC during inventory. The check
 # will report CRITICAL when another node becomes the DC during later checks.
 # If set to "False" the check will be passed.
+#
+# Leave this option to be compatible with inventorized pre 1.2.5i6
 heartbeat_crm_naildown = True
 
 # Max age of "last updated"
+#
+# Leave this option to be compatible with inventorized pre 1.2.5i6
 heartbeat_crm_default_max_age = 60
 
 # Naildown the resources to the nodes which care about the resources during
 # the inventory run
+#
+# Leave this option to be compatible with inventorized pre 1.2.5i6
 heartbeat_crm_resources_naildown = True
 
-def heartbeat_crm_parse_general(info, dc = '', numNodes = -1, numResources = -1):
+# Holds a dict of settings which tell the inventory functions whether or not
+# some options like the resources and DC role shal be nailed down to the
+# node which holds these resources during inventory.
+inventory_heartbeat_crm_rules = []
+
+factory_settings["heartbeat_crm_default_levels"] = {
+    "max_age" : heartbeat_crm_default_max_age,
+}
+
+def heartbeat_crm_parse_general(info):
+    dc, numNodes, numResources = None, None, None
     for line in info:
         if ' '.join(line[0:2]) == 'Last updated:':
-            lastUpdated = ' '.join(line[2:])
-        elif dc == '' and ' '.join(line[0:2]) == 'Current DC:' and heartbeat_crm_naildown:
+            last_updated = ' '.join(line[2:])
+        elif ' '.join(line[0:2]) == 'Current DC:':
             dc = line[2]
-        elif numNodes == -1 and ' '.join(line[1:3])[:-1] == 'Nodes configured':
-            numNodes = int(line[0])
-        elif numResources == -1 and ' '.join(line[1:3]) == 'Resources configured.':
-            numResources = int(line[0])
-    return (lastUpdated, dc, numNodes, numResources)
+        elif ' '.join(line[1:3])[:-1] == 'Nodes configured':
+            num_nodes = int(line[0])
+        elif ' '.join(line[1:3]) == 'Resources configured.':
+            num_resources = int(line[0])
+    return (last_updated, dc, num_nodes, num_resources)
 
 def inventory_heartbeat_crm(info):
     # Use these lines to gather the inventory and perform this check:
@@ -82,58 +96,75 @@ def inventory_heartbeat_crm(info):
     # - Naildown the DC or not.
     # - Check the number of nodes/resources
     # - Check the age of "last updated"
-    if len(info) > 0:
-        try:
-            lastUpdated, dc, numNodes, numResources = heartbeat_crm_parse_general(info)
-            if not heartbeat_crm_naildown:
-                dc = None # Ignore DC on check
-            return [(None, '(heartbeat_crm_default_max_age, %r, %d, %d)' % (dc, numNodes, numResources))]
-        except:
-            return # No useful information found
+    settings = host_extra_conf_merged(g_hostname, inventory_heartbeat_crm_rules)
+    try:
+        last_updated, dc, num_nodes, num_resources = heartbeat_crm_parse_general(info)
+        params = {
+            'num_nodes'     : num_nodes,
+            'num_resources' : num_resources,
+        }
+        if settings.get('naildown_dc', False):
+            params['dc'] = dc
+        return [(None, params)]
+    except:
+        return # No useful information found
 
 def check_heartbeat_crm(item, params, info):
     if len(info) > 0:
-        lastUpdated, dc, numNodes, numResources = heartbeat_crm_parse_general(info)
-        param_max_age, param_dc, param_nodes, param_ressources = params
+        last_updated, dc, numNodes, numResources = heartbeat_crm_parse_general(info)
+
+        # Convert old tuple params (pre 1.2.5i6)
+        if type(params) == tuple:
+            params = {
+                'max_age'       : params[0],
+                'dc'            : params[1] != "" and params[1] or None,
+                'num_nodes'     : params[2] != -1 and params[2] or None,
+                'num_resources' : params[3] != -1 and params[3] or None,
+            }
 
         # Check the freshness of the crm_mon output and terminate with CRITICAL
         # when too old information are found
-        dt = int(datetime.datetime(*time.strptime(lastUpdated, '%a %b %d %H:%M:%S %Y')[:6]).strftime("%s"))
+        dt = int(datetime.datetime(*time.strptime(last_updated, '%a %b %d %H:%M:%S %Y')[:6]).strftime("%s"))
         now = time.time()
         delta = now - dt
-        if delta > param_max_age:
-            return (2, 'Status output too old: %d secs' % delta)
+        if delta > params['max_age']:
+            return 3, 'Ignoring reported data (Status output too old: %d secs)' % delta
 
         output = ''
         status = 0
 
         # Check for correct DC when enabled
-        if param_dc:
-            if dc == param_dc:
-                output += 'DC: %s, ' % dc
-            else:
-                output += 'DC: %s (Expected %s), ' % (dc, param_dc)
-                status = 2
+        if params.get('dc') == None or dc == params['dc']:
+            output += 'DC: %s, ' % dc
+        else:
+            output += 'DC: %s (Expected %s (!!)), ' % (dc, params['dc'])
+            status = 2
 
         # Check for number of nodes when enabled
-        if param_nodes != -1:
-            if numNodes == param_nodes:
+        if params['num_nodes'] != None:
+            if numNodes == params['num_nodes']:
                 output += 'Nodes: %d, ' % numNodes
             else:
-                output += 'Nodes: %d (Expected %d), ' % (numNodes, param_nodes)
+                output += 'Nodes: %d (Expected %d (!!)), ' % (numNodes, params['num_nodes'])
                 status = 2
 
         # Check for number of resources when enabled
-        if param_ressources != -1:
-            if numResources == param_ressources:
+        if params['num_resources'] != None:
+            if numResources == params['num_resources']:
                 output += 'Resources: %d, ' % numResources
             else:
-                output += 'Resources: %d (Expected %d), ' % (numResources, param_ressources)
+                output += 'Resources: %d (Expected %d (!!)), ' % (numResources, params['num_ressources'])
                 status = 2
 
         return (status, output.rstrip(', '))
 
-    return (3, "Empty output from agent")
+check_info["heartbeat_crm"] = {
+    'check_function'          : check_heartbeat_crm,
+    'inventory_function'      : inventory_heartbeat_crm,
+    'service_description'     : 'Heartbeat CRM General',
+    'group'                   : 'heartbeat_crm',
+    'default_levels_variable' : 'heartbeat_crm_default_levels',
+}
 
 def heartbeat_crm_parse_resources(info):
     blockStart = False
@@ -188,15 +219,14 @@ def inventory_heartbeat_crm_resources(info):
     #     resource_slapmaster (ocf::heartbeat:OpenLDAP):  Started mwp
     # resource_slapslave  (ocf::heartbeat:OpenLDAP):  Started smwp
     inventory = []
-    if len(info) > 0:
-        for name, resources in heartbeat_crm_parse_resources(info).iteritems():
-            # In naildown mode only resources which are started somewhere can be
-            # inventorized
-            if heartbeat_crm_resources_naildown and resources[0][2] != 'Stopped':
-
-                inventory.append((name, '"%s"' % resources[0][3]))
-            else:
-                inventory.append((name, None))
+    settings = host_extra_conf_merged(g_hostname, inventory_heartbeat_crm_rules)
+    for name, resources in heartbeat_crm_parse_resources(info).iteritems():
+        # In naildown mode only resources which are started somewhere can be
+        # inventorized
+        if settings.get('naildown_resources', False) and resources[0][2] != 'Stopped':
+            inventory.append((name, '"%s"' % resources[0][3]))
+        else:
+            inventory.append((name, None))
     return inventory
 
 def check_heartbeat_crm_resources(item, target_node, info):
@@ -214,18 +244,9 @@ def check_heartbeat_crm_resources(item, target_node, info):
 
     return (status, output.rstrip(', '))
 
-
-check_config_variables.append("heartbeat_crm_naildown")
-check_config_variables.append("heartbeat_crm_resources_naildown")
-
 check_info["heartbeat_crm.resources"] = {
-    'check_function':          check_heartbeat_crm_resources,
-    'inventory_function':      inventory_heartbeat_crm_resources,
-    'service_description':     'Heartbeat CRM %s',
-}
-
-check_info["heartbeat_crm"] = {
-    'check_function':          check_heartbeat_crm,
-    'inventory_function':      inventory_heartbeat_crm,
-    'service_description':     'Heartbeat CRM General',
+    'check_function'      : check_heartbeat_crm_resources,
+    'inventory_function'  : inventory_heartbeat_crm_resources,
+    'service_description' : 'Heartbeat CRM %s',
+    'group'               : 'heartbeat_crm_resources',
 }

@@ -271,6 +271,7 @@ register_rule(group + '/' + subgroup_inventory,
     ),
     match = 'dict',
 )
+
 register_rule(group + '/' + subgroup_inventory,
     varname   = "inventory_processes_rules",
     title     = _('Process Inventory'),
@@ -472,6 +473,30 @@ register_rule(group + '/' + subgroup_inventory,
         optional_keys = ['limit_item_levels'],
     ),
     match = 'list',
+)
+
+register_rule(group + '/' + subgroup_inventory,
+    varname   = "inventory_heartbeat_crm_rules",
+    title     = _("Heartbeat CRM Inventory"),
+    valuespec = Dictionary(
+        elements = [
+            ("naildown_dc", Checkbox(
+                   title = _("Naildown the DC"),
+                   label = _("Mark the current distinguished controller as preferred one"),
+                   help = _("Nails down the DC to the node which is the DC during inventory. The check "
+                            "will report CRITICAL when another node becomes the DC during later checks.")
+            )),
+            ("naildown_resources", Checkbox(
+                   title = _("Naildown the resources"),
+                   label = _("Mark the nodes of the resources as preferred one"),
+                   help = _("Nails down the resources to the node which is holding them during inventory. "
+                            "The check will report CRITICAL when another holds the resource during later checks.")
+            )),
+        ],
+        help = _('This rule can be used to control the inventory for Heartbeat CRM checks.'),
+        optional_keys = [],
+    ),
+    match = 'dict',
 )
 
 register_check_parameters(
@@ -5677,3 +5702,61 @@ register_check_parameters(
 )
 
 
+register_check_parameters(
+    subgroup_storage,
+    "heartbeat_crm",
+    _("Heartbeat CRM general status"),
+    Tuple(
+        elements = [
+            Integer(
+                title = _("Maximum age"),
+                help = _("Maximum accepted age of the reported data in seconds."),
+                unit = _("seconds"),
+                default_value = 60,
+            ),
+            Optional(
+                TextAscii(
+                    allow_empty = False
+                ),
+                title = _("Expected DC"),
+                help = _("The hostname of the expected distinguished controller of the cluster."),
+            ),
+            Optional(
+                Integer(
+                    min_value = 2,
+                    default_value = 2
+                ),
+                title = _("Number of Nodes"),
+                help = _("The expected number of nodes in the cluster."),
+            ),
+            Optional(
+                Integer(
+                    min_value = 0,
+                ),
+                title = _("Number of Resources"),
+                help = _("The expected number of resources in the cluster."),
+            ),
+        ]
+    ),
+    None, None
+)
+
+register_check_parameters(
+    subgroup_storage,
+    "heartbeat_crm_resources",
+    _("Heartbeat CRM resource status"),
+    Optional(
+        TextAscii(
+            allow_empty = False
+        ),
+        title = _("Expected node"),
+        help = _("The hostname of the expected node to hold this resource."),
+        none_label = _("Do not enforce the resource to be hold by a specific node."),
+    ),
+    TextAscii(
+        title = _("Resource Name"),
+        help = _("The name of the cluster resource as shown in the service description."),
+        allow_empty = False,
+    ),
+    "first"
+)

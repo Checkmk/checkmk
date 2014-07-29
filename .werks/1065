@@ -1,0 +1,21 @@
+Title: heartbeat_crm / heartbeat_crm.resources: Rewrote checks / formalized parameters
+Level: 1
+Component: checks
+Version: 1.2.5i6
+Date: 1406626271
+Class: feature
+
+Both checks heartbeat_crm and heartbeat_crm.resources nailed down the resources / DC to
+the node which held the resources / DC during inventory. This was not fitting most users
+requirements and has been changed. By default the node currently holding the resources / DC
+does not matter anymore as long as they are held by at least one node.
+
+If you like to change this behaviour back to the old default, you need to configure the
+inventory rule <tt>Heartbeat CRM Inventory</tt> and re-run an inventory on the affected
+hosts.
+
+Already inventorized checks should continue working as they did before. The change only
+affects newly inventorized services.
+
+Two new WATO rules <tt>Heartbeat CRM general status</tt> and <tt>Heartbeat CRM resource status</tt>
+have been added to make the parameters of these checks configurable.

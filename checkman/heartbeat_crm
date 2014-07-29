@@ -13,26 +13,20 @@ description:
  time is larger than the threshold (normally {60} seconds), when the number
  of nodes or resources change or - optionally - when the expected DC of the cluster changes.
 
+ Till version 1.2.5i6 the check nailed down the DC to the node which was DC during
+ inventory. This has been changed to not nailing down the node. You can change this back
+ to the old default by changing your configuration.
+
 inventory:
- One service will be created on each node of the cluster. If {heartbeat_crm_naildown}
- is set to {True}, then the node which is currently DC will be required to stay
- DC in future.
+ One service will be created on each node of the cluster. If {naildown_dc} is
+ set to {True} in {inventory_heartbeat_crm_rules}, then the node which is currently
+ DC will be required to stay DC in future.
 
 [parameters]
 max_age (int): Maximum age of the reported "last status" in seconds.
-dc (string): The expected DC of the cluster. The check is disabled when the
- value is set to an empty string.
-dc (string): The node which is expected to the the DC. If this is set to {None} then
+dc (string): The name of the node which is expected to be the DC. If this is set to {None} then
  the DC is not checked.
 num_nodes (int): Expected number of nodes in the cluster. The check is disabled
- when the value is set to -1.
+ when the value is set to {None}.
 num_resources (int): Expected number of resources in the cluster. The check is
- disabled when the value is set to -1.
-
-[configuration]
-heartbeat_crm_naildown (bool): Nails down the DC to the node which is the DC
- during inventory. The check will report CRITICAL when another node becomes the
- DC during later checks. If set to "False" the check will be passed.
-
-heartbeat_crm_default_max_age (int): Default value of maximum age of "last updated"
- in seconds, used by inventorized checks.
+ disabled when the value is set to {None}.

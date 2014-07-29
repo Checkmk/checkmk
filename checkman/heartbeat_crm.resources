@@ -12,17 +12,19 @@ description:
  In addition the check can report a problem if a ressource is not handled
  by a specified node.
 
+ Till version 1.2.5i6 the check nailed down the DC to the node which was DC during
+ inventory. This has been changed to not nailing down the node. You can change this back
+ to the old default by changing your configuration.
+
 inventory:
  On each node one service for each resource group or resource will be created.
  If {heartbeat_crm_resources_naildown} is set to {True}, then for each resource
  the current node of that resource is hardcoded as target parameter and will
  be checked in future.
+ One service will be created for reach resource group or resource. If {naildown_resources} is
+ set to {True} in {inventory_heartbeat_crm_rules}, then the node which is currently
+ holding the resource will be required to also hold it in future.
 
 [parameters]
 node (string): The expected node to handle this resource. When set to {None},
  then the node will not be checked, only the resource state.
-
-[configuration]
-heartbeat_crm_resources_naildown (bool): Naildown the resources to the nodes
- which care about the resources during the inventory run.
-

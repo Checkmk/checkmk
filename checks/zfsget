@@ -99,7 +99,7 @@ def parse_zfsget(info):
                 if zfs_agent_data:
                     new_entry = parse_zfs_entry(zfs_agent_data)
                     if new_entry:
-                        zfs_converted.append()
+                        zfs_converted.append(new_entry)
                     zfs_agent_data = []
             zfs_agent_data.append(line[:3])
 

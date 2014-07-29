@@ -1,0 +1,25 @@
+Title: Implemented Dashboard Designer
+Level: 3
+Component: multisite
+Version: 1.2.5i6
+Date: 1406631300
+Class: feature
+
+This change implements the long awaited Dashboard Designer. With this feature users
+can edit existing dashboards, create new ones and provide their dashboards to other
+users just like it can be done with the views.
+
+Another nice feature is the formalized context we introduced for views and dashboards.
+With this concept it is possible to create a host specific dashboard once and open
+it for several different hosts. You can create a "Oracle Database dashboard" once
+which can show you the state of a single database server. The name of the database
+server (context: hostname) of your choice can be provided when accessing the dashboard
+to "instanciate" such a dashboard.
+
+Dashboards edited by users are saved in <tt>var/check_mk/web/USER/user_dashboards.mk</tt>
+just like edited views are now saved in <tt>var/check_mk/web/USER/user_views.mk</tt>. The
+views saved by a user before this release which are stored in <tt>var/check_mk/web/USER/views.mk</tt>
+will be migrated automatically once the user edits it's first view. From this time the
+new edited views will be read/written from/to the new file.
+
+For details take a look at the <a href="/checkmk_multisite_dashboards.html">dashboard documentation</a>.

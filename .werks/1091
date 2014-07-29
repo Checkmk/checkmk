@@ -1,0 +1,8 @@
+Title: logwatch patterns: allow unicode text in pattern comment
+Level: 1
+Component: wato
+Version: 1.2.5i5p2
+Date: 1406647953
+Class: fix
+
+

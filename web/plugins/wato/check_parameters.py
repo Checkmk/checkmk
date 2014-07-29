@@ -76,7 +76,7 @@ register_rule(group + '/' + subgroup_applications,
                  title = _("Pattern (Regex)"),
                  size  = 40,
              ),
-             TextAscii(
+             TextUnicode(
                  title = _("Comment"),
                  size  = 40,
              ),

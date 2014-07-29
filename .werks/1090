@@ -1,0 +1,8 @@
+Title: zfsget: fixed exception which happened on incomplete zfs entries
+Level: 1
+Component: checks
+Version: 1.2.5i5p2
+Date: 1406641044
+Class: fix
+
+

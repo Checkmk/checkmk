@@ -14,6 +14,7 @@
     WATO:
     * 1064 FIX: Fixed rare issue with WATO communication in distributed setups (different OS versions)...
     * 1089 FIX: Snapshot restore: fixed exception during exception handling......
+    * 1091 FIX: logwatch patterns: allow unicode text in pattern comment
 
 
 1.2.5i5:

@@ -2731,6 +2731,21 @@ register_check_parameters(
 )
 
 register_check_parameters(
+    subgroup_environment,
+    "single_humidity",
+    _("Humidity Levels for devices with a single sensor"),
+    Tuple(
+          help = _("This Rulset sets the threshold limits for humidity sensors"),
+          elements = [
+              Integer(title = _("Critical if below"), unit="%" ),
+              Integer(title = _("Warning if below"), unit="%" ),
+              Integer(title = _("Warning if above"), unit="%" ),
+              Integer(title = _("Critical if above"), unit="%" ),
+              ]),
+     None, 
+     None
+)
+register_check_parameters(
     subgroup_applications,
     "oracle_tablespaces",
     _("Oracle Tablespaces"),

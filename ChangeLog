@@ -1,11 +1,13 @@
 1.2.5i6:
     Checks & Agents:
+    * 0185 knuerr_rms_humidity, knuerr_rms_temp: Two new Checks to Monitor the Temperature and the Humidity on Knürr RMS Devices
     * 1065 heartbeat_crm / heartbeat_crm.resources: Rewrote checks / formalized parameters...
     * 1051 FIX: tcp_conn_stats: fix missing performance data...
     * 1142 FIX: winperf_ts_sessions: fix computation, check has never really worked
 
     WATO:
     * 1064 FIX: Fixed rare issue with WATO communication in distributed setups (different OS versions)...
+    * 1089 FIX: Snapshot restore: fixed exception during exception handling......
 
 
 1.2.5i5:

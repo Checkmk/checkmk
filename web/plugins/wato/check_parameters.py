@@ -5503,6 +5503,20 @@ register_check_parameters(
 ),
 
 register_check_parameters(
+    subgroup_networking,
+    "network_freq_single",
+    _("Modem Frequencies"), # Name can be changed if the rule is used for another check
+    Tuple(
+        help = _("Levels for the frequencies of network devices like modems." ),
+        elements = [
+            Integer(title = _("warning if at"), unit = "Mhz", default_value = 155 ),
+            Integer(title = _("critical if at"), unit = "Mhz", default_value = 163 ),
+        ]),
+    None,
+    "first"
+)
+
+register_check_parameters(
     subgroup_storage,
     "fc_port",
     _("FibreChannel Ports (FCMGMT MIB)"),

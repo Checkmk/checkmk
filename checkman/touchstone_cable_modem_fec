@@ -5,7 +5,7 @@ license: GPL
 distribution:
 description:
  This check monitors the Forward Error correction rate on Touchestone Cable Modems.
- It is possible to set levels in percent fir uncorrected and corrected packages. 
+ It is possible to set levels in percent for uncorrected and corrected packages. 
 
 item:
  None

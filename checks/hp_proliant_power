@@ -41,10 +41,10 @@ def check_hp_proliant_power(item, params, info):
     warn, crit = params
     state = 0
     levels = ''
-    if reading > crit:
+    if reading => crit:
         state = 2
         levels = '( Warning/Critical %s/%s )' % ( warn, crit )
-    elif reading > warn:
+    elif reading => warn:
         state = 1
         levels = '( Warning/Critical %s/%s )' % ( warn, crit )
 
@@ -52,7 +52,7 @@ def check_hp_proliant_power(item, params, info):
     return state, "Current reading: %d Watt" % reading + levels, perf
 
 check_info["hp_proliant_power"] = {
-    'group'                 : 'epower',
+    'group'                 : 'epower_single',
     'check_function'        : check_hp_proliant_power,
     'inventory_function'    : inventory_hp_proliant_power,
     'service_description'   : 'HW Power Meter',

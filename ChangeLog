@@ -6,6 +6,7 @@
     * 1051 FIX: tcp_conn_stats: fix missing performance data...
     * 1142 FIX: winperf_ts_sessions: fix computation, check has never really worked
     * 1090 FIX: zfsget: fixed exception which happened on incomplete zfs entries
+    * 0187 FIX: hp_proliant_power: Fixed Wato configuration
 
     Multisite:
     * 1066 Implemented Dashboard Designer...

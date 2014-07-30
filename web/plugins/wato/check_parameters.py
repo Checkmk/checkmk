@@ -4147,6 +4147,20 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_environment,
+    "epower_single",
+    _("Electrical Power for Devices with only one phase"),
+    Tuple(
+        help = _("Levels for the electrical power consumption of a device "),
+        elements = [
+            Integer(title = _("warning if at"), unit = "Watt", default_value = 300),
+            Integer(title = _("critical if at"), unit = "Watt", default_value = 400),
+        ]),
+    None,
+    "first"
+)
+
+register_check_parameters(
+    subgroup_environment,
     "hw_temperature",
     _("Hardware temperature (e.g. switches)"),
     Tuple(

@@ -1,4 +1,7 @@
 1.2.5i5p3:
+    Checks & Agents:
+    * 0187 FIX: hp_proliant_power: Fixed Wato configuration
+
 
 1.2.5i5p2:
     Checks & Agents:

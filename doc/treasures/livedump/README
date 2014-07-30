@@ -67,3 +67,32 @@ Make sure that all columns are prefixed with host_ in these.
 If you are using this is in conjunction with NSCA transport and do not
 wish to transfer the templated configuration, you can use the filter 
 to only export services that have "obsess_over_service = 1" set.
+
+Encrypted Transport (E-Mail)
+----------------------------
+When you use mail to transport the output of livedump. For example with this
+command:
+
+livedump | mail -s "status" lm@mathias-kettner.de
+
+You can extend this mechanism to make the contents (not the whole message)
+be encrypted. This can be reached by different ways, we use an AES encryption
+with a preshared key here.
+
+First you need openssl on the sending site. Then you need a file which first line
+contains the preshared key which will be used to encrypt the data. Then you need
+to first send the livedump data to openssl to let it encrypt it and forward it to
+the mail command afterwards.
+
+livedump | openssl aes-256-cbc -a -kfile /path/to/my/preshared-key-file | mail -s "status" lm@mathias-kettner.de
+
+Please ensure that the permissions to the preshared key file are as limited as
+possible. Everyone who has access to an email and the key can decrypt it.
+
+This command should turn the mail contents in a block of cryptic characters when
+you take a look at the generated mail in your mail client.
+
+Now you need to configure the receiving side. We use the script "livedump-mail-fetch"
+here. To make it able to handle the encrypted message, you need to set the variable
+encrypt to hold your preshared key as string. All incoming mails will then be decrypted
+beforce being processed.

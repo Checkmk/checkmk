@@ -30,6 +30,10 @@ import os, sys, getopt, livestatus, tempfile, time
 check_mk_version  = '(inofficial)'
 
 def dump_templates():
+    check_interval = ""
+    if opt_check_interval != None:
+        check_interval = "check_interval          %d" % opt_check_interval
+
     sys.stdout.write("""
 define host {
     name                    livedump-host
@@ -37,7 +41,7 @@ define host {
     register                0
     active_checks_enabled   0
     passive_checks_enabled  1
-
+    %s
 }
 
 define service {
@@ -46,6 +50,7 @@ define service {
     active_checks_enabled   0
     passive_checks_enabled  1
     check_period            0x0
+    %s
 }
 
 define command {
@@ -57,7 +62,7 @@ define timeperiod {
     timeperiod_name 0x0
     alias           Never ever
 }
-""")
+""" % (check_interval, check_interval))
 
 def encode_row(row):
     for key, val in row.items():
@@ -257,6 +262,12 @@ def usage():
                             This header is also used in service queries.
   -S, --service-header H    add header H to service queries (usually Filter: ...)
 
+  -i, --interval            assume this check interval for hosts/services. This is
+                            used in nagios config definition "check_interval".
+                            Will be used for staleness checks on the server. This
+                            option is only used when dumping the config together
+                            with templates (-C -T).
+
   -v, --verbose             output debug information an stderr
   --debug                   do not catch Python exceptions
 
@@ -277,11 +288,11 @@ def print_version():
 #   | Main entry point, getopt, etc.                                       |
 #   '----------------------------------------------------------------------'
 
-short_options = 'hVvc:H:S:O:TCMG'
-long_options = [ "help", "version", "verbose", "debug", "socket=", 
+short_options = 'hVvc:H:S:O:TCMGi:s:'
+long_options = [ "help", "version", "verbose", "debug", "socket=",
                  "host-header=", "host-only-header=", "service-header=",
                  "dump-templates", "config", "state", "mark-mode",
-                 "include-groups" ]  
+                 "include-groups", "interval" ]
 
 opt_verbose = False
 opt_debug = False
@@ -292,6 +303,7 @@ opt_host_only_headers = ""
 opt_service_headers = ""
 opt_dump_templates = False
 opt_groups = False
+opt_check_interval = None
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -328,6 +340,8 @@ for o,a in opts:
         opt_mark_mode = True
     elif o in [ '-G', '--include-groups' ]:
         opt_groups = True
+    elif o in [ '-i', '--interval' ]:
+        opt_check_interval = int(a)
 
 # Main modes
 try:

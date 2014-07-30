@@ -25,9 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 factory_settings["touchstone_cable_modem_fec_default_levels"] = {
-        "good"          : ( 250000000000, 260000000000 ),
-        "corrected"     : ( 250000000000, 260000000000 ),
-        "uncorrected"   : ( 250000000000, 260000000000 ),
+        "corrected"     : ( 25.0 , 30.0 ),
+        "uncorrected"   : ( 25.0 , 30.0 ),
 }
 
 def inventory_touchstone_cable_modem_fec(info):
@@ -35,15 +34,19 @@ def inventory_touchstone_cable_modem_fec(info):
 
 def check_touchstone_cable_modem_fec(_no_item, params, info):
     fec = {}
-    fec['good'], fec['corrected'], fec['uncorrected'] = map(int, info[0])
-    for what in ['good', 'corrected', 'uncorrected']:
+    good, fec['corrected'], fec['uncorrected'] = map(float, info[0])
+    fec['corrected_perc']   = ( fec['corrected'] / good ) * 100
+    fec['uncorrected_perc'] = ( fec['uncorrected'] / good ) * 100
+
+    for what in [ 'corrected', 'uncorrected' ]:
         warn, crit = params[what]
         state = 0
-        if fec[what] >= crit:
+        if fec[what+"_perc"] >= crit:
             state = 2
-        elif fec[what] >= warn:
+        elif fec[what+"_perc"] >= warn:
             state = 1
-        yield state, "FEC %s at %s" % ( what, fec[what] ), [ ( what, fec[what], warn, crit ) ]
+        yield state, "FEC %s at %.2f%%" % ( what, fec[what+"_perc"] ), [ ( what, fec[what], warn, crit ) ]
+    yield 0, "Total: %d codewords" % good, [('total', good )]
 
 check_info["touchstone_cable_modem_fec"] = {
     "check_function"          : check_touchstone_cable_modem_fec,

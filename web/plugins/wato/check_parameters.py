@@ -1321,25 +1321,18 @@ register_check_parameters(
     _("Forward error correction"),
     Dictionary(
         elements = [
-            ( 'good', Tuple(
-                title = _("Levels for good Packages"),
-                elements = [
-                    Integer( title = _("Warning at"), default_value="250000000000"),
-                    Integer( title = _("Critical at"), default_value="260000000000"),
-                ]
-            )),
             ( 'corrected', Tuple(
                 title = _("Levels for corrected Packages"),
                 elements = [
-                    Integer( title = _("Warning at"), default_value="250000000000"),
-                    Integer( title = _("Critical at"), default_value="260000000000"),
+                    Percentage( title = _("Warning at"), default_value = 25.0),
+                    Percentage( title = _("Critical at"), default_value = 30.0 ),
                 ]
             )),
             ( 'uncorrected', Tuple(
                 title = _("Levels for uncorrected Packages"),
                 elements = [
-                    Integer( title = _("Warning at"), default_value="250000000000"),
-                    Integer( title = _("Critical at"), default_value="260000000000"),
+                    Percentage( title = _("Warning at"), default_value = 25.0 ),
+                    Percentage( title = _("Critical at"), default_value = 30.0 ),
                 ]
             )),
         ]

@@ -41,10 +41,10 @@ def check_hp_proliant_power(item, params, info):
     warn, crit = params
     state = 0
     levels = ''
-    if reading => crit:
+    if reading >= crit:
         state = 2
         levels = '( Warning/Critical %s/%s )' % ( warn, crit )
-    elif reading => warn:
+    elif reading >= warn:
         state = 1
         levels = '( Warning/Critical %s/%s )' % ( warn, crit )
 

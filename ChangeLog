@@ -2,6 +2,9 @@
     Checks & Agents:
     * 0187 FIX: hp_proliant_power: Fixed Wato configuration
 
+    WATO:
+    * 1092 FIX: logwatch: now able to enter unicode text into the "Pattern (Regex)" field
+
 
 1.2.5i5p2:
     Checks & Agents:

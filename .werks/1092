@@ -1,0 +1,8 @@
+Title: logwatch: now able to enter unicode text into the "Pattern (Regex)" field
+Level: 1
+Component: wato
+Version: 1.2.5i5p3
+Date: 1406720689
+Class: fix
+
+

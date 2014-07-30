@@ -72,7 +72,7 @@ register_rule(group + '/' + subgroup_applications,
                    ('I', _('IGNORE')),
                ],
              ),
-             RegExp(
+             RegExpUnicode(
                  title = _("Pattern (Regex)"),
                  size  = 40,
              ),

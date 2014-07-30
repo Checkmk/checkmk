@@ -59,7 +59,7 @@
 # tsrdb10exp           5128704      21 4982717     1%    /tsrdb10exp
 # tsrdb10dat           30707712 19914358 10789464    65%    /u01
 
-def parse_zfs_entrie(info):
+def parse_zfs_entry(info):
     def mb(x):
         return saveint(x) / (1024.0 * 1024)
     entry = {}
@@ -71,8 +71,8 @@ def parse_zfs_entrie(info):
                 entry[what] = mb(value)
         elif what in [ 'mountpoint', 'type', 'name' ]:
             entry[what] = value
-    if entry:
-        return entry
+
+    return entry
 
 def parse_zfsget(info):
     run_zfs = True
@@ -97,7 +97,9 @@ def parse_zfsget(info):
             if last_name != name:
                 last_name = name
                 if zfs_agent_data:
-                    zfs_converted.append(parse_zfs_entrie(zfs_agent_data))
+                    new_entry = parse_zfs_entry(zfs_agent_data)
+                    if new_entry:
+                        zfs_converted.append(new_entry)
                     zfs_agent_data = []
             zfs_agent_data.append(line[:3])
 

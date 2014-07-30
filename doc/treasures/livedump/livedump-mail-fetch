@@ -27,6 +27,15 @@ pop_pass   = "secretpassword"
 # By default the mail body is treated to be encoded as "quoted-printable".
 # In the other case no decoding is not performed.
 encoding   = "quoted-printable"
+# By default the mails are not decrypted. If you configure a string here
+# it is assumed to be the preshared key to decrypt the AES encrypted mails.
+encrypt    = None
+
+if encrypt:
+    from base64 import b64decode
+    from Crypto import Random
+    from Crypto.Hash import MD5
+    from Crypto.Cipher import AES
 
 M = poplib.POP3_SSL(pop_server)
 M.user(pop_user)
@@ -38,6 +47,27 @@ numMessages = len(M.list()[1])
 
 status_mails = []
 config_mails = []
+
+# This decrypts mail bodies generated with openssl. e.g. with this command:
+# openssl aes-256-cbc -a -kfile /path/to/my/preshared-key-file
+def decrypt(body):
+    encrypted = b64decode(body)
+    salt      = encrypted[8:16]
+    data      = encrypted[16:]
+
+    # Need 32 bytes for the key and 16 bytes for the IV
+    def openssl_kdf(req):
+        prev = ''
+        while req>0:
+            prev = MD5.new(prev+encrypt+salt).digest()
+            req -= 16
+            yield prev
+    mat = ''.join([ x for x in openssl_kdf(32+16) ])
+    key = mat[0:32]
+    iv  = mat[32:48]
+
+    dec = AES.new(key, AES.MODE_CBC, iv)
+    return dec.decrypt(data)
 
 pattern = re.compile(r"^Subject: (.*)")
 for i in range(numMessages):
@@ -59,10 +89,13 @@ if config_mails:
     mail_index, ident = config_mails[-1]
     code, mail, num = M.retr(mail_index)
     body_start_index = mail.index('')
+    body = '\n'.join(mail[body_start_index:])
+
+    if encrypt:
+        body = decrypt(body)
+
     if encoding == 'quoted-printable':
-        body = quopri.decodestring('\n'.join(mail[body_start_index:]))
-    else:
-        body = '\n'.join(mail[body_start_index:])
+        body = quopri.decodestring(body)
 
     file("%s/etc/nagios/conf.d/remote-%s.cfg" %
          (omd_root, ident), "w").write(body)
@@ -71,10 +104,13 @@ if status_mails:
     for index in status_mails:
         code, mail, code = M.retr(index)
         body_start_index = mail.index('')
+        body = '\n'.join(mail[body_start_index:])
+
+        if encrypt:
+            body = decrypt(body)
+
         if encoding == 'quoted-printable':
-            body = quopri.decodestring('\n'.join(mail[body_start_index:]))
-        else:
-            body = '\n'.join(mail[body_start_index:])
+            body = quopri.decodestring(body)
 
         fd, path = tempfile.mkstemp('', 'c', "%s/tmp/nagios/checkresults" % omd_root)
         os.write(fd, body)

@@ -1,0 +1,12 @@
+Title: livedump: Added optional check interval (detect staleness) / option to encrypt mails
+Level: 1
+Component: checks
+Version: 1.2.5i6
+Date: 1406706675
+Class: feature
+
+Added a new option "-i" to livedump to make the check_interval of the hosts / services
+configurable. When this is set the staleness detection on the destination system works.
+
+Added option to use AES encrypted messages with livedump-mail-fetch. Added a short
+documentation to the livedump README for details.

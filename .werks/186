@@ -1,0 +1,8 @@
+Title: touchstone_cable_modem_fec: New Check to monitor the Forward error correction on touchstone cable modems
+Level: 1
+Component: checks
+Version: 1.2.5i6
+Date: 1406643907
+Class: feature
+
+

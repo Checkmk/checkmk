@@ -76,7 +76,7 @@ register_rule(group + '/' + subgroup_applications,
                  title = _("Pattern (Regex)"),
                  size  = 40,
              ),
-             TextAscii(
+             TextUnicode(
                  title = _("Comment"),
                  size  = 40,
              ),
@@ -1313,6 +1313,39 @@ register_check_parameters(
     ),
     None,
     None
+)
+
+register_check_parameters(
+    subgroup_networking,
+    'fec',
+    _("Forward error correction"),
+    Dictionary(
+        elements = [
+            ( 'good', Tuple(
+                title = _("Levels for good Packages"),
+                elements = [
+                    Integer( title = _("Warning at"), default_value="250000000000"),
+                    Integer( title = _("Critical at"), default_value="260000000000"),
+                ]
+            )),
+            ( 'corrected', Tuple(
+                title = _("Levels for corrected Packages"),
+                elements = [
+                    Integer( title = _("Warning at"), default_value="250000000000"),
+                    Integer( title = _("Critical at"), default_value="260000000000"),
+                ]
+            )),
+            ( 'uncorrected', Tuple(
+                title = _("Levels for uncorrected Packages"),
+                elements = [
+                    Integer( title = _("Warning at"), default_value="250000000000"),
+                    Integer( title = _("Critical at"), default_value="260000000000"),
+                ]
+            )),
+        ]
+    ),
+    None,
+    "dict"
 )
 
 register_check_parameters(

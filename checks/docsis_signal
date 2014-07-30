@@ -24,32 +24,37 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-touchstone_cable_modem_frequency_default_levels = ( 155, 163 )
+factory_settings["docsis_signal_default_levels"] = {
+        "corrected"     : ( 25.0 , 30.0 ),
+        "uncorrected"   : ( 25.0 , 30.0 ),
+}
 
-def inventory_touchstone_cable_modem_frequency(info):
-    return [ (None, "touchstone_cable_modem_frequency_default_levels") ]
+def inventory_docsis_signal(info):
+    return [ (None, {}) ]
 
-def check_touchstone_cable_modem_frequency(_no_item, params, info):
-    mhz = int(info[0][0]) / 1000000
-    infotext = "Current Frequence is %d Mhz" % mhz
-    warn, crit = params
-    perfdata = [("frequence" , mhz, warn, crit )]
-    levels = " (Levels Warn/Crit at %d Mhz/ %d Mhz)" % ( warn, crit )
-    state = 0
-    if mhz >= crit:
-        state = 2
-        infotext += levels
-    elif mhz >= warn:
-        state  = 1
-        infotext += levels
-    return state, infotext, perfdata
+def check_docsis_signal(_no_item, params, info):
+    fec = {}
+    good, fec['corrected'], fec['uncorrected'] = map(float, info[0])
+    fec['corrected_perc']   = ( fec['corrected'] / good ) * 100
+    fec['uncorrected_perc'] = ( fec['uncorrected'] / good ) * 100
 
-check_info["touchstone_cable_modem_frequency"] = {
-    "check_function"          : check_touchstone_cable_modem_frequency,
-    "inventory_function"      : inventory_touchstone_cable_modem_frequency,
-    "service_description"     : "Frequency",
+    for what in [ 'corrected', 'uncorrected' ]:
+        warn, crit = params[what]
+        state = 0
+        if fec[what+"_perc"] >= crit:
+            state = 2
+        elif fec[what+"_perc"] >= warn:
+            state = 1
+        yield state, "FEC %s at %.2f%%" % ( what, fec[what+"_perc"] ), [ ( what, fec[what], warn, crit ) ]
+    yield 0, "Total: %d codewords" % good, [('total', good )]
+
+check_info["docsis_signal"] = {
+    "check_function"          : check_docsis_signal,
+    "inventory_function"      : inventory_docsis_signal,
+    "service_description"     : "FEC",
     "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.4115.820.1.0.0.0.0.0",
-    "snmp_info"               : ( ".1.3.6.1.2.1.10.127.1.1.1.1.2", [ 3 ]),
-    "group"                   : "network_freq_single",
+    "snmp_info"               : ( ".1.3.6.1.2.1.10.127.1.1.4.1", [ 2, 3, 4 ]),
+    "default_levels_variable" : "docsis_signal_default_levels",
+    "group"                   : "docsis_signal",
 }
 

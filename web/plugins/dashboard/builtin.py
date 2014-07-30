@@ -153,7 +153,7 @@ builtin_dashboards["main"] = {
             'browser_reload': 90,
             'column_headers': 'pergroup',
             'datasource': 'log_events',
-            'context_type': 'mkeventd_events',
+            'context_type': 'logs',
             'group_painters': [],
             'context': {
                 'logtime': {

@@ -1,0 +1,11 @@
+Title: new oracle do inventorize wrong check "YOU HAVE NEW MAIL"
+Component: checks
+State: open
+Date: 2014-07-31 11:08:24
+Targetversion: 1.2.5i1
+Class: bug
+
+When there are pending mails for the user which sqlplus.sh does perform
+a su - to, the user gets a message "[YOU HAVE NEW MAIL]". This has been
+seen on an AIX host.
+This should be filtered somewhere.

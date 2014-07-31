@@ -1133,5 +1133,12 @@ def perfometer_fec( row, check_command, perf_data ):
     h += "</tr></table>"
     return "Total", h
 
-perfometers["check_mk-touchstone_cable_modem_fec"] = perfometer_fec
+perfometers["check_mk-docsis_signal_quality"] = perfometer_fec
+
+def perfometer_mhz( row, check_command, perf_data ):
+    mhz_current = int(perf_data[0][1])
+    return str(mhz_current) + " Mhz", perfometer_logarithmic(mhz_current, 50, 2, "#da6")
+
+perfometers["check_mk-docsis_channels.downstream"] = perfometer_mhz
+
 

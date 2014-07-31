@@ -20,6 +20,7 @@
     * 1089 FIX: Snapshot restore: fixed exception during exception handling......
     * 1091 FIX: logwatch patterns: allow unicode text in pattern comment
     * 1092 FIX: logwatch: now able to enter unicode text into the "Pattern (Regex)" field
+    * 0191 FIX: Added swp files to the ignore list for the WATO git feature...
 
 
 1.2.5i5:

@@ -1,0 +1,10 @@
+Title: Added swp files to the ignore list for the WATO git feature
+Level: 1
+Component: wato
+Class: fix
+State: unknown
+Version: 1.2.5i5p3
+Date: 1406799966
+
+Wato does not longer try to add swap files created by vim when editing the config manual and activate
+changes in the same time.

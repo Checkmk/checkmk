@@ -53,7 +53,7 @@ def check_docsis_channels_downstream( item, params, info):
             return state, infotext, perfdata
 
 # This Check is a subcheck because there is also a upstream version possible 
-check_info["docsis_channels.downstream"] = {
+check_info["docsis_channels_downstream"] = {
     "check_function"          : check_docsis_channels_downstream,
     "inventory_function"      : inventory_docsis_channels_downstream,
     "service_description"     : "Channel Downstream %s",

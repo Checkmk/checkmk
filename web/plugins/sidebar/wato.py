@@ -215,20 +215,20 @@ def render_wato_foldertree():
     selected_topic, selected_target = config.load_user_file("foldertree", (_('Hosts'), 'allhosts'))
 
     views.load_views()
-    topic_views  = visuals_by_topic(views.permitted_views())
+    topic_views  = visuals_by_topic(views.permitted_views().items() + dashboard.permitted_dashboards().items())
     topics = [ (t, t) for t, s in topic_views ]
     html.select("topic", topics, selected_topic, onchange = 'wato_tree_topic_changed(this)')
     html.write('<span class=left>%s</span>' % _('Topic:'))
 
     for topic, view_list in topic_views:
         targets = []
-        for t, title, name in view_list:
+        for t, title, name, is_view in view_list:
             if config.visible_views and name not in config.visible_views:
                 continue
             if config.hidden_views and name in config.hidden_views:
                 continue
             if t == topic:
-                if topic == _('Dashboards'):
+                if not is_view:
                     name = 'dashboard|' + name
                 targets.append((name, title))
 

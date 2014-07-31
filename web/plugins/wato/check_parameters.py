@@ -1343,17 +1343,23 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_networking,
-    "docsis_channels",
-    _("Modem Frequencies for Docsis"), # Name can be changed if the rule is used for another check
-    Tuple(
-        help = _("Levels for the frequencies of network devices like modems." ),
+    "docsis_channels_downstream",
+    _("Docsis Downstream Channels"), 
+    Dictionary(
         elements = [
-            Integer(title = _("warning if at"), unit = "Mhz", default_value = 155 ),
-            Integer(title = _("critical if at"), unit = "Mhz", default_value = 163 ),
-        ]),
-    None,
+            ( "frequency", Tuple(
+                title = _("Frequency"),
+                help = _("Levels for the frequencies of Downstram Channels of Docsis Devices" ),
+                elements = [
+                    Integer(title = _("warning if at"), unit = "Mhz", default_value = 155 ),
+                    Integer(title = _("critical if at"), unit = "Mhz", default_value = 163 ),
+                ])),
+        ]
+    ),
+    TextAscii( title = _("ID of the Channel")),
     "first"
 )
+
 register_check_parameters(
     subgroup_networking,
     "vpn_tunnel",

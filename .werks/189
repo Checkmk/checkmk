@@ -1,0 +1,8 @@
+Title: docsis_channels: Support for Frequency of Downstream Channels for Devices with DOCSIS MIB
+Level: 1
+Component: checks
+Version: 1.2.5i6
+Date: 1406795521
+Class: feature
+
+

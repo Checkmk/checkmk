@@ -1317,29 +1317,22 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_networking,
-    'fec',
-    _("Forward error correction"),
+    'docsis_signal',
+    _("Forward error correction for Docsis Systems"),
     Dictionary(
         elements = [
-            ( 'good', Tuple(
-                title = _("Levels for good Packages"),
-                elements = [
-                    Integer( title = _("Warning at"), default_value="250000000000"),
-                    Integer( title = _("Critical at"), default_value="260000000000"),
-                ]
-            )),
             ( 'corrected', Tuple(
                 title = _("Levels for corrected Packages"),
                 elements = [
-                    Integer( title = _("Warning at"), default_value="250000000000"),
-                    Integer( title = _("Critical at"), default_value="260000000000"),
+                    Percentage( title = _("Warning at"), default_value = 25.0),
+                    Percentage( title = _("Critical at"), default_value = 30.0 ),
                 ]
             )),
             ( 'uncorrected', Tuple(
                 title = _("Levels for uncorrected Packages"),
                 elements = [
-                    Integer( title = _("Warning at"), default_value="250000000000"),
-                    Integer( title = _("Critical at"), default_value="260000000000"),
+                    Percentage( title = _("Warning at"), default_value = 25.0 ),
+                    Percentage( title = _("Critical at"), default_value = 30.0 ),
                 ]
             )),
         ]
@@ -1348,6 +1341,19 @@ register_check_parameters(
     "dict"
 )
 
+register_check_parameters(
+    subgroup_networking,
+    "docsis_channels",
+    _("Modem Frequencies for Docsis"), # Name can be changed if the rule is used for another check
+    Tuple(
+        help = _("Levels for the frequencies of network devices like modems." ),
+        elements = [
+            Integer(title = _("warning if at"), unit = "Mhz", default_value = 155 ),
+            Integer(title = _("critical if at"), unit = "Mhz", default_value = 163 ),
+        ]),
+    None,
+    "first"
+)
 register_check_parameters(
     subgroup_networking,
     "vpn_tunnel",
@@ -5508,6 +5514,7 @@ register_check_parameters(
     ),
     "dict"
 ),
+
 
 register_check_parameters(
     subgroup_storage,

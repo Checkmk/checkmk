@@ -24,45 +24,37 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-hp_prolaint_power_default_levels = ( 300, 400 )
-
-def inventory_hp_proliant_power(info):
-    if len(info) > 0 and info[0][0] != '0':
-        return [ ( None, 'hp_prolaint_power_default_levels') ]
-
-def check_hp_proliant_power(item, params, info):
-    status_table = {
-        1 : "other",
-        3 : "absent",
-    }
-    status, reading = map(int, info[0])
-    if status != 2:
-        return 2, "Power Meter state: %s" % ( status_table[status] )
-    warn, crit = params
-    state = 0
-    levels = ''
-    if reading >= crit:
-        state = 2
-        levels = '( Warning/Critical %s/%s )' % ( warn, crit )
-    elif reading >= warn:
-        state = 1
-        levels = '( Warning/Critical %s/%s )' % ( warn, crit )
-
-    perf = [ ('watt', reading, warn, crit ) ]
-    return state, "Current reading: %d Watt" % reading + levels, perf
-
-check_info["hp_proliant_power"] = {
-    'group'                 : 'epower_single',
-    'check_function'        : check_hp_proliant_power,
-    'inventory_function'    : inventory_hp_proliant_power,
-    'service_description'   : 'HW Power Meter',
-    'snmp_info':               (
-        ".1.3.6.1.4.1.232.6.2.15", [
-            "2", # cpqHePowerMeterStatus
-            "3", # cpqHePowerMeterCurrReading
-        ]
-    ),
-    'snmp_scan_function'    :      \
-         lambda oid: "proliant" in oid(".1.3.6.1.4.1.232.2.2.4.2.0").lower(),
-    'has_perfdata'          : True
+factory_settings["docsis_signal_default_levels"] = {
+        "corrected"     : ( 25.0 , 30.0 ),
+        "uncorrected"   : ( 25.0 , 30.0 ),
 }
+
+def inventory_docsis_signal(info):
+    return [ (None, {}) ]
+
+def check_docsis_signal(_no_item, params, info):
+    fec = {}
+    good, fec['corrected'], fec['uncorrected'] = map(float, info[0])
+    fec['corrected_perc']   = ( fec['corrected'] / good ) * 100
+    fec['uncorrected_perc'] = ( fec['uncorrected'] / good ) * 100
+
+    for what in [ 'corrected', 'uncorrected' ]:
+        warn, crit = params[what]
+        state = 0
+        if fec[what+"_perc"] >= crit:
+            state = 2
+        elif fec[what+"_perc"] >= warn:
+            state = 1
+        yield state, "FEC %s at %.2f%%" % ( what, fec[what+"_perc"] ), [ ( what, fec[what], warn, crit ) ]
+    yield 0, "Total: %d codewords" % good, [('total', good )]
+
+check_info["docsis_signal"] = {
+    "check_function"          : check_docsis_signal,
+    "inventory_function"      : inventory_docsis_signal,
+    "service_description"     : "FEC",
+    "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.4115.820.1.0.0.0.0.0",
+    "snmp_info"               : ( ".1.3.6.1.2.1.10.127.1.1.4.1", [ 2, 3, 4 ]),
+    "default_levels_variable" : "docsis_signal_default_levels",
+    "group"                   : "docsis_signal",
+}
+

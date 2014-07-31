@@ -36,7 +36,7 @@ capabilities = {
 }
 
 units = {
-    '-1'  : "",
+    '-1'  : "kVA",
     '0'   : "",
     '1'   : "V",
     '2'   : "A",
@@ -89,7 +89,7 @@ def check_raritan_pdu_inlet_summary(item, _no_params, info):
 
             digits = int(digits)
             sensor_value = float(sensor_value) / 10**digits
-            yield 0, "Value: %.2f %s" % ( sensor_value, units[unit] )
+            yield 0, "Value: %.2f %s" % ( sensor_value, units[unit] ), [ (units[unit], sensor_value ) ]
 
             sensor_state = int(sensor_state)
             sensor_text = "Sensor State: " + sensor_states[sensor_state]

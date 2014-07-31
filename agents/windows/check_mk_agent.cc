@@ -264,6 +264,7 @@ void close_crash_log();
 void crash_log(const char *format, ...);
 void lowercase(char* value);
 char* next_word(char** line);
+int get_perf_counter_id(const char* counter_name);
 
 //  .----------------------------------------------------------------------.
 //  |                    ____ _       _           _                        |
@@ -3784,19 +3785,31 @@ bool handle_global_config_variable(char *var, char *value)
 bool handle_winperf_config_variable(char *var, char *value)
 {
     if (!strcmp(var, "counters")) {
-        char *word;
-        while (0 != (word = next_word(&value))) {
-            char *colon = strchr(word, ':');
-            if (!colon) {
-                fprintf(stderr, "Invalid counter '%s' in section [winperf]: need number and colon, e.g. 238:processor.\n", word);
-                exit(1);
-            }
-            *colon = 0;
-            winperf_counter *tmp_counter = new winperf_counter();
-            tmp_counter->name = strdup(colon + 1);
-            tmp_counter->id = atoi(word);
-            g_winperf_counters.push_back(tmp_counter);
+        char *colon = strchr(value, ':');
+        if (!colon) {
+            fprintf(stderr, "Invalid counter '%s' in section [winperf]: need number(or text) and colon, e.g. 238:processor.\n", value);
+            exit(1);
         }
+        *colon = 0;
+        winperf_counter *tmp_counter = new winperf_counter();
+        tmp_counter->name = strdup(colon + 1);
+
+        bool is_digit = true;
+        for (unsigned int i = 0; i < strlen(value); i++)
+            if (!isdigit(value[i])) {
+                is_digit = false;
+                int id = get_perf_counter_id(value);
+                if (id == -1) {
+                    fprintf(stderr, "No matching performance counter id found for %s.\n", value);
+                    return false;
+                }
+                tmp_counter->id = id;
+                break;
+            }
+
+        if(is_digit)
+            tmp_counter->id = atoi(value);
+        g_winperf_counters.push_back(tmp_counter);
         return true;
     }
     return false;
@@ -4608,6 +4621,74 @@ void determine_directories()
     snprintf(g_local_dir, sizeof(g_local_dir), "%s\\local", g_agent_directory);
     snprintf(g_spool_dir, sizeof(g_spool_dir), "%s\\spool", g_agent_directory);
     snprintf(g_logwatch_statefile, sizeof(g_logwatch_statefile), "%s\\logstate.txt", g_agent_directory);
+}
+
+int get_perf_counter_id(const char *counter_name) {
+
+    HKEY hKey;
+    LONG result;
+    TCHAR szValueName[300000];
+    DWORD dwcbData = sizeof(szValueName);
+
+    // Determine the correct perflib key..
+    // CurrentLanguage first
+    result = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+    "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib\\CurrentLanguage", REG_MULTI_SZ, KEY_READ, &hKey);
+    RegQueryValueEx(
+        hKey,
+        "Counter",
+        NULL,
+        NULL,
+        (LPBYTE) szValueName,
+        &dwcbData
+    );
+    RegCloseKey (hKey);
+
+    if (result != ERROR_SUCCESS) // nothing found, try english (009) as fallback
+    {
+        result = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+        "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib\\009", REG_MULTI_SZ, KEY_READ, &hKey);
+        RegQueryValueEx(
+            hKey,
+            "Counter",
+            NULL,
+            NULL,
+            (LPBYTE) szValueName,
+            &dwcbData
+        );
+        RegCloseKey (hKey);
+        if (result != ERROR_SUCCESS)
+        {
+            // Unable to open any perflib registry
+            return -1;
+        }
+    }
+
+
+    int   length      = 0;
+    int   last_ctr_id = 0;
+    bool  is_name     = false;
+    DWORD offset      = 0;
+
+    TCHAR* ptr_perf = szValueName;
+    for(;;) {
+        if (offset > dwcbData)
+            break;
+
+        length = strlen(ptr_perf);
+        if (length == 0)
+            break;
+
+        if (is_name && !strcmp(counter_name, ptr_perf))
+            return last_ctr_id;
+        else
+            last_ctr_id = atoi(ptr_perf);
+
+        offset   = offset + length + 1;
+        ptr_perf = szValueName + offset;
+        is_name = !is_name;
+    }
+    return -1;
 }
 
 int main(int argc, char **argv)

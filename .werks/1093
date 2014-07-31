@@ -1,0 +1,28 @@
+Title: windows agent: performance counter can now be specified by name
+Level: 1
+Component: checks
+Version: 1.2.5i6
+Date: 1406794406
+Class: feature
+
+It is no longer required to set a performance counter id in the <tt>check_mk.ini</tt> file
+
+F+:check_mk.ini
+[winperf]
+    counters = 10332:msx_queues
+F-:
+
+You can now use the counter name instead
+
+F+:check_mk.ini
+[winperf]
+    counters = MSExchangeTransport Queues:msx_queues
+F-:
+
+<b>Note:</b> Keep in mind that this name depends on you system language.<br>
+If available, the windows agent tries to find the counter name in the registry key.<br>
+<tt>SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib\\CurrentLanguage</tt><br>
+<br>
+If this key is missing, the english language key is used as fallback<br>
+<tt>SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib\\009</tt>
+

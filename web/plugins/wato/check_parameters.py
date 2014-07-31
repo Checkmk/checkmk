@@ -1317,8 +1317,8 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_networking,
-    'docsis_signal',
-    _("Forward error correction for Docsis Systems"),
+    'docsis_signal_quality',
+    _("Docsis Forward error correction"),
     Dictionary(
         elements = [
             ( 'corrected', Tuple(
@@ -1337,7 +1337,7 @@ register_check_parameters(
             )),
         ]
     ),
-    None,
+    TextAscii( title = _("ID of the Entry")),
     "dict"
 )
 
@@ -1357,7 +1357,7 @@ register_check_parameters(
         ]
     ),
     TextAscii( title = _("ID of the Channel")),
-    "first"
+    "dict"
 )
 
 register_check_parameters(

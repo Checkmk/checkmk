@@ -169,7 +169,7 @@ def write_changelog_line(chn, werk):
     else:
         omit = ""
     chn.write("    * %04d%s %s%s\n" % (werk["id"], prefix, werk["title"], omit))
-    if werk["class"].startswith("incomp"):
+    if werk["compatible"] == "incomp":
         chn.write("            NOTE: Please refer to the migration notes!\n")
 
 def component_sort_key(comp):
@@ -197,13 +197,14 @@ def werk_is_modified(werkid):
 
 
 def load_werk(werkid):
-    werk = { 
+    werk = {
         "id"             : werkid,
         "state"          : "unknown",
         "title"          : "unknown",
         "component"      : "general",
+        "compatible"     : "compat",
     }
-    
+
     f = file(str(werkid))
     for line in f:
         line = line.strip()
@@ -321,17 +322,21 @@ def list_werk(werk):
         bold = ""
     lines, cols = get_tty_size()
     title = werk["title"][:cols - 45]
-    sys.stdout.write("#%04d %-9s %s %-13s %s%s%s %-8s %s%s%s\n" %
+    sys.stdout.write("#%04d %-9s %s %-13s %-6s %s%s%s %-8s %s%s%s\n" %
             (int(werk["id"]),
-            time.strftime("%F", time.localtime(int(werk["date"]))),
-             colored_class(werk["class"], 7), werk["component"], tty_bold, werk["level"], tty_normal, 
-             werk["version"], bold, title, tty_normal))
+             time.strftime("%F", time.localtime(int(werk["date"]))),
+             colored_class(werk["class"], 8),
+             werk["component"],
+             werk["compatible"],
+             tty_bold, werk["level"], tty_normal,
+             werk["version"],
+             bold, title, tty_normal))
 
 def colored_class(classname, digits):
     if classname == "fix":
         return tty_bold + tty_red + ("%-" + str(digits) + "s") % classname + tty_normal
     else:
-        return classname
+        return ("%-" + str(digits) + "s") % classname
 
 def show_werk(werk):
     list_werk(werk)
@@ -354,10 +359,11 @@ def main_list(args, format):
 
         hit = False
         for tp, values in [
-          ( "component",      components ), 
-          ( "level",          levels ), 
+          ( "component",      components ),
+          ( "level",          levels ),
           ( "class",          classes ),
           ( "version",        versions ),
+          ( "compatible",     compatible ),
           ]:
             for v in values:
                 if type(v) == tuple:
@@ -520,9 +526,10 @@ def main_new(args):
     if  werk["title"] == "":
         sys.stderr.write("Cancelled.\n")
         sys.exit(0)
-    werk["class"]         = input_choice("Class",     classes)
-    werk["component"]     = input_choice("Component", components)
-    werk["level"]         = input_choice("Level",     levels)
+    werk["class"]         = input_choice("Class",        classes)
+    werk["component"]     = input_choice("Component",    components)
+    werk["level"]         = input_choice("Level",        levels)
+    werk["compatible"]    = input_choice("Compatible",   compatible)
     werk["description"]   = u"\n"
 
     g_werks[werk["id"]] = werk

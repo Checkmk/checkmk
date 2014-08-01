@@ -3,7 +3,8 @@ Level: 2
 Component: checks
 Version: 1.2.5i3
 Date: 1400499450
-Class: incomp
+Class: feature
+Compatible: incomp
 
 This check does the same like the normal if64 check. The only difference is that ifName is used instead of ifDescription.
 You may want to do a reinventory on broace switches, because otherwise the "Check_MK Inventory" check  (if used) will trigger warning state  

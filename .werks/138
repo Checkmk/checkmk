@@ -3,7 +3,8 @@ Level: 1
 Component: checks
 Version: 1.2.5i1
 Date: 1393858396
-Class: incomp
+Class: feature
+Compatible: incomp
 
 The current Windows Agent Versions has a build in caching mechanism. Cause of this the buildin caching features from windows_update.vbs are now removed. Please make shure that caching is activated in the check_mk.ini file.
 

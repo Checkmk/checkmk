@@ -16,11 +16,15 @@ classes = [
   ( "feature",      "New Feature",          "" ),
   ( "fix",          "Bug Fix",              "FIX" ),
   ( "security",     "Security Fix",         "SEC" ),
-  ( "incomp",       "Incompatible Change",  "" ),
 ]
 
 levels = [
   ( '1',              "Trivial Change" ),
   ( '2',              "Non-Trivial Change" ),
   ( '3',              "Major New Feature" ),
+]
+
+compatible = [
+    ("compat", "Compatible"),
+    ("incomp", "Incompatible"),
 ]

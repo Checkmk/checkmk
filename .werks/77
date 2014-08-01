@@ -1,7 +1,8 @@
 Title: cmciii.psm_current, cmciii_psm_plugs, cmciii_io, cmciii.access, cmciii.temp, cmciii.can_current, cmciii.sensor, cmciii.state: new sub checks included in one new check cmcmiii superseding and improving several previous checks of the Rittal CMCIII device
 Level: 1
 Component: checks
-Class: incomp
+Class: feature
+Compatible: incomp
 State: unknown
 Version: 1.2.5i1
 Date: 1389357115

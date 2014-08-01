@@ -3,7 +3,8 @@ Level: 1
 Component: wato
 Version: 1.2.5i1
 Date: 1387190668
-Class: incomp
+Class: fix
+Compatible: incomp
 
 This mode did not really work and was not used by any known installation. This
 confused users and hand no relevance. Dropped that feature.

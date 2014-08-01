@@ -3,7 +3,8 @@ Level: 1
 Component: checks
 Version: 1.2.5i3
 Date: 1396856292
-Class: incomp
+Class: feature
+Compatible: incomp
 
 The check now not longer summarize the utilizations from the modules. Now each module becomes a owne check.
 If you have allrady used this check before, please to a reinventory.

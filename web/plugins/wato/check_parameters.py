@@ -1318,9 +1318,16 @@ register_check_parameters(
 register_check_parameters(
     subgroup_networking,
     'docsis_signal_quality',
-    _("Docsis Forward error correction"),
+    _("Docsis Singal Quality"),
     Dictionary(
         elements = [
+            ( 'signal_noise', Tuple(
+                title = _("Levels for Signal Noise"),
+                elements = [
+                    Integer( title = _("Warning at"), unit = "dB", default_value = 50),
+                    Integer( title = _("Critical at"), unit = "dB",  default_value = 60 ),
+                ]
+            )),
             ( 'corrected', Tuple(
                 title = _("Levels for corrected Packages"),
                 elements = [
@@ -1347,16 +1354,62 @@ register_check_parameters(
     _("Docsis Downstream Channels"), 
     Dictionary(
         elements = [
+            ( "power", Tuple(
+                title = _("Power"),
+                help = _(" The operational transmit power"),
+                elements = [
+                    Integer(title = _("warning at"), unit = "dBmV", default_value = 250 ),
+                    Integer(title = _("critical at"), unit = "dBmV", default_value = 260 ),
+                ])),
             ( "frequency", Tuple(
                 title = _("Frequency"),
-                help = _("Levels for the frequencies of Downstram Channels of Docsis Devices" ),
+                help = _("The current tuner frequency"),
                 elements = [
-                    Integer(title = _("warning if at"), unit = "Mhz", default_value = 155 ),
-                    Integer(title = _("critical if at"), unit = "Mhz", default_value = 163 ),
+                    Integer(title = _("warning at"), unit = "Mhz", default_value = 155 ),
+                    Integer(title = _("critical at"), unit = "Mhz", default_value = 163 ),
                 ])),
         ]
     ),
     TextAscii( title = _("ID of the Channel")),
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_networking,
+    "docsis_cm_status",
+    _("Docsis Cable Modem Status"),
+    Dictionary(
+        elements = [
+            ( "error_states", ListChoice(
+                title = _("Modem States whats lead to critical state"),
+                help = _("If one of the selected state occur, the check will repsond with a Critical state "),
+                choices = [
+                  ( 1 , "other" ),
+                  ( 2 , "notReady" ),
+                  ( 3 , "notSynchronized" ),
+                  ( 4 , "phySynchronized" ),
+                  ( 5 , "usParametersAcquired" ),
+                  ( 6 , "rangingComplete" ),
+                  ( 7 , "ipComplete" ),
+                  ( 8 , "todEstablished" ),
+                  ( 9 , "securityEstablished" ),
+                  ( 10 ,  "paramTransferComplete"),
+                  ( 11 ,  "registrationComplete"),
+                  ( 12 ,  "operational"),
+                  ( 13 ,  "accessDenied"),
+                ],
+                default_value = [ 1, 2, 13 ],
+                )),
+            ( "tx_power", Tuple(
+                title = _("Power"),
+                help = _(" The operational transmit power"),
+                elements = [
+                    Integer(title = _("warning at"), unit = "dBmV", default_value = 250 ),
+                    Integer(title = _("critical at"), unit = "dBmV", default_value = 260 ),
+                ])),
+        ]
+    ),
+    TextAscii( title = _("ID of the Entry")),
     "dict"
 )
 

@@ -4,11 +4,12 @@ catalog: hw/network/arris
 license: GPL
 distribution:
 description:
- This check monitors currently only montiors the frequency for each channel in Mhz. Additional information are available but not yet implemented.
+ This check monitors the frequency for each channel in Mhz and the the current operational transmit power. Levels for each value can be set.
+ Additional information are available but not implemented yet.
 
 item:
- None
+ Channel ID
 
 inventory:
- One service will be created
+ One service will be created for each channel
 

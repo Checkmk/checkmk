@@ -1354,12 +1354,19 @@ register_check_parameters(
     _("Docsis Downstream Channels"), 
     Dictionary(
         elements = [
+            ( "power", Tuple(
+                title = _("Power"),
+                help = _(" The operational transmit power"),
+                elements = [
+                    Integer(title = _("warning at"), unit = "dBmV", default_value = 250 ),
+                    Integer(title = _("critical at"), unit = "dBmV", default_value = 260 ),
+                ])),
             ( "frequency", Tuple(
                 title = _("Frequency"),
-                help = _("Levels for the frequencies of Downstram Channels of Docsis Devices" ),
+                help = _("The current tuner frequency"),
                 elements = [
-                    Integer(title = _("warning if at"), unit = "Mhz", default_value = 155 ),
-                    Integer(title = _("critical if at"), unit = "Mhz", default_value = 163 ),
+                    Integer(title = _("warning at"), unit = "Mhz", default_value = 155 ),
+                    Integer(title = _("critical at"), unit = "Mhz", default_value = 163 ),
                 ])),
         ]
     ),

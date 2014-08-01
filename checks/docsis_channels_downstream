@@ -25,7 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 factory_settings["docsis_channels_downstream"] = {
-    "frequency":           ( 155 , 163 ), 
+    "frequency" :           ( 155 , 163 ), 
+    "power"     :           ( 250 , 260 ), 
 }
 
 def inventory_docsis_channels_downstream(info):
@@ -34,11 +35,25 @@ def inventory_docsis_channels_downstream(info):
             yield line[0], {}
 
 def check_docsis_channels_downstream( item, params, info):
-    for channel_id, frequency in info:
+    for channel_id, frequency, power in info:
         if channel_id == item:
-            frequency_mhz = int(frequency) / 1000000
+            # Power
+            warn, crit = params["power"]
+            power_dbmv = int(power)
+            infotext = "Power is %d dBmV" % power_dbmv
+            levels = " (Levels Warn/Crit at %d dBmV/ %d dBmV)" % ( warn, crit )
+            state = 0
+            if power_dbmv >= crit:
+                state = 2
+                infotext += power
+            elif power_dbmv >= warn:
+                state = 1
+                infotext += power
+            yield state, infotext, [ ('power', power_dbmv, warn, crit ) ]
+
             # Check Frequency
-            infotext = "Current Frequence is %d Mhz" % frequency_mhz
+            frequency_mhz = int(frequency) / 1000000
+            infotext = "Frequence is %d Mhz" % frequency_mhz
             warn, crit = params["frequency"]
             perfdata = [("frequence" , frequency_mhz, warn, crit )]
             levels = " (Levels Warn/Crit at %d Mhz/ %d Mhz)" % ( warn, crit )
@@ -50,7 +65,10 @@ def check_docsis_channels_downstream( item, params, info):
                 state  = 1
                 infotext += levels
             # Change this to yield in case of future extension of the check
-            return state, infotext, perfdata
+            yield state, infotext, perfdata
+            return
+    yield 3, "Channel information not found in output"
+
 
 # This Check is a subcheck because there is also a upstream version possible 
 check_info["docsis_channels_downstream"] = {
@@ -60,6 +78,7 @@ check_info["docsis_channels_downstream"] = {
     "snmp_scan_function"      : docsis_scan_function, 
     "snmp_info"               : ( ".1.3.6.1.2.1.10.127.1.1.1.1", [  1, # Channel ID
                                                                     2, # Frequency 
+                                                                    5, # Power
                                                                     ]),
     "group"                   : "docsis_channels_downstream",
     "default_levels_variable" : "docsis_channels_downstream",

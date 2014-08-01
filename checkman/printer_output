@@ -1,0 +1,27 @@
+title: Generic Printer: Output Unit State
+agents: snmp
+catalog: hw/printer
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state of output units withing printers. It monitors
+ the state provided and also outputs the filling state information provided
+ by the printer.
+
+ The printer has to support the generic PRINTER-MIB.
+
+ By default the check outputs {CRITICAL} when either the printer reports 100%
+ units filled or reports a critical error state. A {WARNING} state is
+ raised when a non-critical error is provided.
+
+ According the PRINTER-MIB it's possible that a printer couldn't determine
+ how much is remaining in a supply, so the printer says "at least one remaining".
+
+inventory:
+ One check is being created for each unit with a unique name.
+
+[parameters]
+parameters (dict):
+
+ {"capacity_levels"}: A tuple containing the percentage thresholds for 
+ {WARNING} and {CRITICAL} states.

@@ -1,0 +1,10 @@
+Title: oracle_rman_backups: Not longer try to make a inventory for broken plugin outputs
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.5i6
+Date: 1406894132
+
+

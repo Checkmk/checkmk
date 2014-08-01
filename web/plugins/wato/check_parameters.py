@@ -1376,6 +1376,45 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_networking,
+    "docsis_cm_status",
+    _("Docsis Cable Modem Status"),
+    Dictionary(
+        elements = [
+            ( "error_states", ListChoice(
+                title = _("Modem States whats lead to critical state"),
+                help = _("If one of the selected state occur, the check will repsond with a Critical state "),
+                choices = [
+                  ( 1 , "other" ),
+                  ( 2 , "notReady" ),
+                  ( 3 , "notSynchronized" ),
+                  ( 4 , "phySynchronized" ),
+                  ( 5 , "usParametersAcquired" ),
+                  ( 6 , "rangingComplete" ),
+                  ( 7 , "ipComplete" ),
+                  ( 8 , "todEstablished" ),
+                  ( 9 , "securityEstablished" ),
+                  ( 10 ,  "paramTransferComplete"),
+                  ( 11 ,  "registrationComplete"),
+                  ( 12 ,  "operational"),
+                  ( 13 ,  "accessDenied"),
+                ],
+                default_value = [ 1, 2, 13 ],
+                )),
+            ( "tx_power", Tuple(
+                title = _("Power"),
+                help = _(" The operational transmit power"),
+                elements = [
+                    Integer(title = _("warning at"), unit = "dBmV", default_value = 250 ),
+                    Integer(title = _("critical at"), unit = "dBmV", default_value = 260 ),
+                ])),
+        ]
+    ),
+    TextAscii( title = _("ID of the Entry")),
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_networking,
     "vpn_tunnel",
     _("VPN Tunnel"),
     Dictionary(

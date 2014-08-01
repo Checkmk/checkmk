@@ -45,10 +45,10 @@ def check_docsis_channels_downstream( item, params, info):
             state = 0
             if power_dbmv >= crit:
                 state = 2
-                infotext += power
+                infotext += levels
             elif power_dbmv >= warn:
                 state = 1
-                infotext += power
+                infotext += levels
             yield state, infotext, [ ('power', power_dbmv, warn, crit ) ]
 
             # Check Frequency

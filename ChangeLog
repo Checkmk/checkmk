@@ -6,6 +6,7 @@
     * 1093 windows agent: performance counter can now be specified by name...
     * 0189 docsis_channels: Support for Frequency of Downstream Channels for Devices with DOCSIS MIB
     * 0190 docsis_signal_quality: New Check to monitor Signal Qualtiy on Devices with DOCSIS MIB
+    * 0193 docsis_cm_status: New Check Status Check for Cable Modems with Docsis MIB.
     * 1051 FIX: tcp_conn_stats: fix missing performance data...
     * 1142 FIX: winperf_ts_sessions: fix computation, check has never really worked
     * 1090 FIX: zfsget: fixed exception which happened on incomplete zfs entries

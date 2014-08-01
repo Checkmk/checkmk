@@ -36,6 +36,7 @@
 factory_settings["docsis_signal_quality_default_levels"] = {
         "corrected"     : ( 25.0 , 30.0 ),
         "uncorrected"   : ( 25.0 , 30.0 ),
+        "signal_noise"  : ( 50, 60 ), #dB
 }
 
 def inventory_docsis_signal_quality(info):
@@ -44,8 +45,23 @@ def inventory_docsis_signal_quality(info):
             yield line[0], {}
 
 def check_docsis_signal_quality( item, params, info):
-    for entry, good, corrected, uncorrected in info:
+    for entry, good, corrected, uncorrected, signal_noise in info:
         if entry == item:
+            # Signal Noise
+            noise_db = float(signal_noise) / 10
+            infotext = "Noise: %.2f dB" % noise_db
+            warn, crit = params['signal_noise']
+            levels = " (Warn/Crit at %s dB/ %s dB)" % ( warn, crit )
+            state = 0
+            if noise_db >= crit:
+                state = 2
+                infotext += levels
+            elif noise_db >= warn:
+                state = 2
+                infotext += levels
+            yield state, infotext, [ ('signal_noise', noise_db, warn, crit ) ]
+
+            # FEC
             fec = {}
             good, fec['corrected'], fec['uncorrected'] = map(float, [ good, corrected, uncorrected ])
             fec['corrected_perc']   = ( fec['corrected'] / good ) * 100
@@ -73,6 +89,7 @@ check_info["docsis_signal_quality"] = {
                                                                     2, #docsIfSigQUnerroreds
                                                                     3, #docsIfSigQCorrecteds
                                                                     4, #docsIfSigQUnerroreds
+                                                                    5, #docsIfSigQSignalNoise
                                                                 ]),
     "default_levels_variable" : "docsis_signal_quality_default_levels",
     "group"                   : "docsis_signal_quality",

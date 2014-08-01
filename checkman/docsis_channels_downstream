@@ -7,8 +7,8 @@ description:
  This check monitors currently only montiors the frequency for each channel in Mhz. Additional information are available but not yet implemented.
 
 item:
- None
+ Channel ID
 
 inventory:
- One service will be created
+ One service will be created for each channel
 

@@ -1318,9 +1318,16 @@ register_check_parameters(
 register_check_parameters(
     subgroup_networking,
     'docsis_signal_quality',
-    _("Docsis Forward error correction"),
+    _("Docsis Singal Quality"),
     Dictionary(
         elements = [
+            ( 'signal_noise', Tuple(
+                title = _("Levels for Signal Noise"),
+                elements = [
+                    Integer( title = _("Warning at"), unit = "dB", default_value = 50),
+                    Integer( title = _("Critical at"), unit = "dB",  default_value = 60 ),
+                ]
+            )),
             ( 'corrected', Tuple(
                 title = _("Levels for corrected Packages"),
                 elements = [

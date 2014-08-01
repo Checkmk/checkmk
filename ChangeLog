@@ -1,7 +1,4 @@
 1.2.5i6:
-    Core & Setup:
-    * 1070 asd
-
     Checks & Agents:
     * 0185 knuerr_rms_humidity, knuerr_rms_temp: Two new Checks to Monitor the Temperature and the Humidity on Knürr RMS Devices
     * 1065 heartbeat_crm / heartbeat_crm.resources: Rewrote checks / formalized parameters...

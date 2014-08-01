@@ -12,6 +12,8 @@
     * 1090 FIX: zfsget: fixed exception which happened on incomplete zfs entries
     * 0187 FIX: hp_proliant_power: Fixed Wato configuration
     * 0192 FIX: oracle_rman_backups: Not longer try to make a inventory for broken plugin outputs
+    * 0194 FIX: raritan_pdu_inlet: Check now outputs the correct values...
+            NOTE: Please refer to the migration notes!
 
     Multisite:
     * 1066 Implemented Dashboard Designer...

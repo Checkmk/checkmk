@@ -1,0 +1,11 @@
+Title: raritan_pdu_inlet: Check now outputs the correct values
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.5i6
+Date: 1406900223
+Class: fix
+
+The complete checks has been rewritten cause of a few problems with the old version. 
+A re-inventory of all raritan pdu devices is needed after update.
+

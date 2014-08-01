@@ -1,0 +1,104 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+capabilities = {
+    '1'  : "rmsVoltage",
+    '2'  : "rmsCurrent",
+    '3'  : "activePower",
+    '4'  : "apparentPower",
+    '5'  : "activeEnergy",
+    '9'  : "unbalancedCurrent",
+    '-1'  : "powerFactor",
+    #''  : "apparentEnergy"
+    '0' : "Not known yet",
+}
+
+units = {
+    '-1'  : "",
+    '0'   : "",
+    '1'   : "V",
+    '2'   : "A",
+    '3'   : "W",
+    '4'   : "VA",
+    '5'   : "Wh",
+    '6'   : "VAh",
+    '7'   : "C",
+    '8'   : "Hz",
+    '9'   : "%",
+    '10'  : "m/s",
+    '11'  : "Pascal",
+    '12'  : "psi",
+    '13'  : "g",
+    '14'  : "F",
+    '15'  : "ft",
+    '16'  : "in",
+    '17'  : "cm",
+    '18'  : "m",
+    '19'  : "rpm",
+    }
+
+
+sensor_states = {
+    -1 :  "unavailable",
+     0 :  "open",
+     1 :  "closed",
+     2 :  "belowLowerCritical",
+     3 :  "belowLowerWarning",
+     4 :  "normal",
+     5 :  "aboveUpperWarning",
+     6 :  "aboveUpperCritical",
+     7 :  "on",
+     8 :  "off",
+     9 :  "detected",
+     10:  "notDetected",
+     11:  "alarmed",
+    }
+
+def inventory_raritan_pdu_inlet_generic(info):
+    for line in info:
+        yield line[0], None
+
+def check_raritan_pdu_inlet_generic(item, _no_params, info):
+    for line in info:
+        c_item, unit, digits, availability, sensor_state, sensor_value = line
+
+        if c_item == item:
+            if availability != '1':
+                yield 2, "Sensor not available"
+                return
+
+            digits = int(digits)
+            sensor_value = float(sensor_value) / 10**digits
+            yield 0, "Value: %.2f %s" % ( sensor_value, units[unit] ), [ (item, sensor_value ) ]
+
+            sensor_state = int(sensor_state)
+            sensor_text = "Sensor State: " + sensor_states[sensor_state]
+            if sensor_state in [ 2, 6 ]:
+                 yield 2, sensor_text 
+            elif sensor_state != 4:
+                yield 1, sensor_text
+
+

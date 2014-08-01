@@ -1,0 +1,9 @@
+Title: hp_proliant_power: Fixed Wato configuration
+Level: 1
+Component: checks
+Class: fix
+State: unknown
+Version: 1.2.5i6
+Date: 1406707206
+
+

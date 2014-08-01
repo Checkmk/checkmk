@@ -1,0 +1,14 @@
+title: DOCSIS: Downstream Channels
+agents: snmp
+catalog: hw/network/arris
+license: GPL
+distribution:
+description:
+ This check monitors currently only montiors the frequency for each channel in Mhz. Additional information are available but not yet implemented.
+
+item:
+ None
+
+inventory:
+ One service will be created
+

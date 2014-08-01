@@ -72,7 +72,7 @@ register_rule(group + '/' + subgroup_applications,
                    ('I', _('IGNORE')),
                ],
              ),
-             RegExp(
+             RegExpUnicode(
                  title = _("Pattern (Regex)"),
                  size  = 40,
              ),
@@ -1317,34 +1317,46 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_networking,
-    'fec',
-    _("Forward error correction"),
+    'docsis_signal_quality',
+    _("Docsis Forward error correction"),
     Dictionary(
         elements = [
-            ( 'good', Tuple(
-                title = _("Levels for good Packages"),
-                elements = [
-                    Integer( title = _("Warning at"), default_value="250000000000"),
-                    Integer( title = _("Critical at"), default_value="260000000000"),
-                ]
-            )),
             ( 'corrected', Tuple(
                 title = _("Levels for corrected Packages"),
                 elements = [
-                    Integer( title = _("Warning at"), default_value="250000000000"),
-                    Integer( title = _("Critical at"), default_value="260000000000"),
+                    Percentage( title = _("Warning at"), default_value = 25.0),
+                    Percentage( title = _("Critical at"), default_value = 30.0 ),
                 ]
             )),
             ( 'uncorrected', Tuple(
                 title = _("Levels for uncorrected Packages"),
                 elements = [
-                    Integer( title = _("Warning at"), default_value="250000000000"),
-                    Integer( title = _("Critical at"), default_value="260000000000"),
+                    Percentage( title = _("Warning at"), default_value = 25.0 ),
+                    Percentage( title = _("Critical at"), default_value = 30.0 ),
                 ]
             )),
         ]
     ),
-    None,
+    TextAscii( title = _("ID of the Entry")),
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_networking,
+    "docsis_channels_downstream",
+    _("Docsis Downstream Channels"), 
+    Dictionary(
+        elements = [
+            ( "frequency", Tuple(
+                title = _("Frequency"),
+                help = _("Levels for the frequencies of Downstram Channels of Docsis Devices" ),
+                elements = [
+                    Integer(title = _("warning if at"), unit = "Mhz", default_value = 155 ),
+                    Integer(title = _("critical if at"), unit = "Mhz", default_value = 163 ),
+                ])),
+        ]
+    ),
+    TextAscii( title = _("ID of the Channel")),
     "dict"
 )
 
@@ -4147,6 +4159,20 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_environment,
+    "epower_single",
+    _("Electrical Power for Devices with only one phase"),
+    Tuple(
+        help = _("Levels for the electrical power consumption of a device "),
+        elements = [
+            Integer(title = _("warning if at"), unit = "Watt", default_value = 300),
+            Integer(title = _("critical if at"), unit = "Watt", default_value = 400),
+        ]),
+    None,
+    "first"
+)
+
+register_check_parameters(
+    subgroup_environment,
     "hw_temperature",
     _("Hardware temperature (e.g. switches)"),
     Tuple(
@@ -5494,6 +5520,7 @@ register_check_parameters(
     ),
     "dict"
 ),
+
 
 register_check_parameters(
     subgroup_storage,

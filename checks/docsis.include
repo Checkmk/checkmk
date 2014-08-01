@@ -24,34 +24,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-factory_settings["touchstone_cable_modem_fec_default_levels"] = {
-        "good"          : ( 250000000000, 260000000000 ),
-        "corrected"     : ( 250000000000, 260000000000 ),
-        "uncorrected"   : ( 250000000000, 260000000000 ),
-}
 
-def inventory_touchstone_cable_modem_fec(info):
-    return [ (None, {}) ]
-
-def check_touchstone_cable_modem_fec(_no_item, params, info):
-    fec = {}
-    fec['good'], fec['corrected'], fec['uncorrected'] = map(int, info[0])
-    for what in ['good', 'corrected', 'uncorrected']:
-        warn, crit = params[what]
-        state = 0
-        if fec[what] >= crit:
-            state = 2
-        elif fec[what] >= warn:
-            state = 1
-        yield state, "FEC %s at %s" % ( what, fec[what] ), [ ( what, fec[what], warn, crit ) ]
-
-check_info["touchstone_cable_modem_fec"] = {
-    "check_function"          : check_touchstone_cable_modem_fec,
-    "inventory_function"      : inventory_touchstone_cable_modem_fec,
-    "service_description"     : "FEC",
-    "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.4115.820.1.0.0.0.0.0",
-    "snmp_info"               : ( ".1.3.6.1.2.1.10.127.1.1.4.1", [ 2, 3, 4 ]),
-    "default_levels_variable" : "touchstone_cable_modem_fec_default_levels",
-    "group"                   : "fec",
-}
+def docsis_scan_function(oid):
+    if oid(".1.3.6.1.2.1.1.2.0") in [ ".1.3.6.1.4.1.4115.820.1.0.0.0.0.0",
+                                      ".1.3.6.1.4.1.9.1.827",
+                                    ]:
+        return True
 

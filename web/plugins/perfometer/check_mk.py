@@ -1120,3 +1120,25 @@ def perfometer_voltage(row, check_command, perf_data):
     return "%0.3f V" % value, perfometer_logarithmic(value, 12, 2, color)
 
 perfometers["check_mk-bintec_sensors.voltage"] = perfometer_voltage
+
+def perfometer_fec( row, check_command, perf_data ):
+    total           = float(perf_data[2][1])
+    corrected       = ( int(perf_data[0][1]) / total ) * 100
+    uncorrected     = ( int(perf_data[1][1]) / total ) * 100
+    left = 100 - corrected - uncorrected
+    h = "<table><tr>"
+    h += perfometer_td( corrected, "yellow") 
+    h += perfometer_td( uncorrected, "red") 
+    h += perfometer_td( left, "green") 
+    h += "</tr></table>"
+    return "Total", h
+
+perfometers["check_mk-docsis_signal_quality"] = perfometer_fec
+
+def perfometer_mhz( row, check_command, perf_data ):
+    mhz_current = int(perf_data[0][1])
+    return str(mhz_current) + " Mhz", perfometer_logarithmic(mhz_current, 50, 2, "#da6")
+
+perfometers["check_mk-docsis_channels_downstream"] = perfometer_mhz
+
+

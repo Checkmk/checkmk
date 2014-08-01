@@ -1,0 +1,15 @@
+title: DOCSIS Signal Quality: Forward error correction
+agents: snmp
+catalog: hw/network/docsis
+license: GPL
+distribution:
+description:
+ This check monitors the Forward Error correction rate on the docsis MIB. 
+ It is possible to set levels in percent for uncorrected and corrected packages. 
+
+item:
+ None
+
+inventory:
+ One service will be created
+

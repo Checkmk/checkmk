@@ -561,7 +561,6 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None, create_hand
 
                 if html.check_transaction():
                     all_visuals[(config.user_id, visual["name"])] = visual
-                    oldname = html.var("load_name")
                     # Handle renaming of visuals
                     if oldname and oldname != visual["name"]:
                         # -> delete old entry

@@ -28,11 +28,12 @@ def raritan_pdu_inlet_convert(info):
     # List of tuples, sorting like the snmp output,
     # each tuple contains: capabilities, Unit, digits
     translation = (
-      ( '1',    '1',    0 ),
-      ( '2',    '2',    1 ),
-      ( '-1',   '0',     2 ),
-      ( '0',  '0',     0 ),
-      ( '5',    '5',    0),
+      ( '1',  0 ),
+      ( '2',  0 ),
+      ( '3',  0 ),
+      ( '4',  0 ),
+      ( '-1', 2 ),
+      ( '5',  0 ),
     )
     phases = [ 'L1', 'L2', 'L3' ]
     i = 0
@@ -41,7 +42,7 @@ def raritan_pdu_inlet_convert(info):
         state = line[1]
         for value in line[2:]:
             item = phases[i] + '-' + capabilities[translation[y][0]]
-            unit = translation[y][1]
+            unit = translation[y][0]
             digits = translation[y][2]
             yield item, unit, digits, '1', state, value
             y += 1

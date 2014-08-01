@@ -4,6 +4,7 @@ Component: multisite
 Version: 1.2.5i2
 Date: 1396259365
 Class: security
+Compatible: incomp
 
 This change fixes possible attacks against Check_MK Multisite users. In previous
 versions a possible attacker could try to make the browsers of authenticated users

@@ -1,11 +1,12 @@
-Title: apc_symmetra: Changed naming of Batterie Temperature to System Temerature
+Title: apc_symmetra: Changed naming of Battery Temperature to System Temerature
 Level: 1
 Component: checks
 Version: 1.2.5i1
 Date: 1395408589
-Class: incomp
+Class: feature
+Compatible: incomp
 
-Corse of a wrong naming in the APC MIB, the value AdvBatteryTemperature shows not the Battery Temperature but the System Temperature.
+Cause of a wrong naming in the APC MIB, the value AdvBatteryTemperature shows not the Battery Temperature but the System Temperature.
 Cause of the renaming also the name of the Performance value changed from battemp to systemp. If you don't want to loose that graph, you have to migrate
 the file to ne new name.
 

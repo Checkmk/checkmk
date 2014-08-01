@@ -3,7 +3,8 @@ Level: 1
 Component: checks
 Version: 1.2.5i3
 Date: 1400660997
-Class: incomp
+Class: fix
+Compatible: incomp
 
 Due to a inconstent naming we had to rename the check {esx_vsphere_vm.guestTools} into {esx_vsphere_vm.guest_tools}.
 Please reinventorize the affected hosts in order to switch over to the new plugin.

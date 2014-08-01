@@ -3,7 +3,8 @@ Level: 2
 Component: core
 Version: 1.2.5i5
 Date: 1403786142
-Class: incomp
+Class: fix
+Compatible: incomp
 
 When you are using Nagios as montitoring core then backslashes contained
 in <tt>custom_checks</tt> (Classical active and passive Nagios checks) would

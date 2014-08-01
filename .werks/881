@@ -3,7 +3,8 @@ Level: 2
 Component: checks
 Version: 1.2.5i3
 Date: 1397117799
-Class: incomp
+Class: feature
+Compatible: incomp
 
 The relatively new <tt>rmon_stats</tt> check creates one new service per network
 interface (if RMON is enabled on your switch). In order to keep low the number

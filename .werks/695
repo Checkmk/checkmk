@@ -3,7 +3,8 @@ Level: 1
 Component: core
 Version: 1.2.5i1
 Date: 1390491224
-Class: incomp
+Class: fix
+Compatible: incomp
 
 The option <tt>-u</tt> / <tt>--cleanup-autochecks</tt> has been removed.
 Autocheck files in <tt>var/check_mk/autochecks</tt> are now always 

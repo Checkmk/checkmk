@@ -3,7 +3,8 @@ Level: 1
 Component: checks
 Version: 1.2.5i3
 Date: 1396542862
-Class: incomp
+Class: feature
+Compatible: incomp
 
 If a description of the the alert group state is not available from the device, the check
 now displays a textual representation of the alert code instead of the alert code itself.

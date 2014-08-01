@@ -3,7 +3,8 @@ Level: 2
 Component: checks
 Version: 1.2.5i3
 Date: 1401093260
-Class: incomp
+Class: security
+Compatible: incomp
 
 By use of symlinks or hardlinks normal users could inject files to be read
 with root permissions. This was due to the fact that <tt>/var/lib/check_mk_agent/job</tt>

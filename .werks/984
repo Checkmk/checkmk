@@ -1,7 +1,8 @@
 Title: Fix code injection for logged in users via automation url
 Level: 2
 Component: wato
-Class: incomp
+Class: security
+Compatible: incomp
 State: unknown
 Version: 1.2.5i4
 Date: 1401195677

@@ -1,0 +1,10 @@
+Title: printer_input/printer_output: New checks to monitor input/output sub-units of printers
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1406899196
+Class: feature
+
+These checks are meant to check whether or not there is enough paper in the input slots
+and/or enough space in the output slots.

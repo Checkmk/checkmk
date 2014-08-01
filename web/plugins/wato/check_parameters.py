@@ -2578,7 +2578,7 @@ register_check_parameters(
     _("Printer cartridge levels"),
     Transform(
         Tuple(
-              kelp = _("Levels for printer cartridges."),
+              help = _("Levels for printer cartridges."),
               elements = [
                   Percentage(title = _("Warning remaining"), allow_int = True, default_value = 20.0),
                   Percentage(title = _("Critical remaining"), allow_int = True, default_value = 10.0),
@@ -2616,6 +2616,52 @@ register_check_parameters(
         allow_empty = True
     ),
     None
+)
+
+register_check_parameters(
+    subgroup_printing,
+    "printer_input",
+    _("Printer Input Units"),
+    Dictionary(
+        elements =  [
+            ('capacity_levels', Tuple(
+                title = _('Capacity remaining'),
+                elements = [
+                    Percentage(title = _("Warning at"), default_value = 0.0),
+                    Percentage(title = _("Critical at"), default_value = 0.0),
+                ],
+            )),
+        ],
+        default_keys = ['capacity_levels'],
+    ),
+    TextAscii(
+        title = _('Unit Name'),
+        allow_empty = True
+    ),
+    None,
+)
+
+register_check_parameters(
+    subgroup_printing,
+    "printer_output",
+    _("Printer Output Units"),
+    Dictionary(
+        elements =  [
+            ('capacity_levels', Tuple(
+                title = _('Capacity filled'),
+                elements = [
+                    Percentage(title = _("Warning at"), default_value = 0.0),
+                    Percentage(title = _("Critical at"), default_value = 0.0),
+                ],
+            )),
+        ],
+        default_keys = ['capacity_levels'],
+    ),
+    TextAscii(
+        title = _('Unit Name'),
+        allow_empty = True
+    ),
+    None,
 )
 
 register_check_parameters(

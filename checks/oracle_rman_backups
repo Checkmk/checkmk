@@ -31,7 +31,8 @@
 def inventory_oracle_rman_backups(info):
     inventory = []
     for line in info:
-        inventory.append(("%s.%s" % (line[0], " ".join(line[5:])), {}))
+        if line[1] != "FAILURE":
+            inventory.append(("%s.%s" % (line[0], " ".join(line[5:])), {}))
     return inventory
 
 def check_oracle_rman_backups(item, params, info):

@@ -1,0 +1,10 @@
+Title: oracle_rman_backups: Only inventorize ARCHIVELOG / DB FULL / DB INCR entries
+Level: 1
+Component: checks
+Compatible: comp
+Version: 1.2.5i6
+Date: 1407139283
+Class: fix
+
+Previous versions of the check did also inventorize the entry "BACKUPSET" which
+is useless to monitor.

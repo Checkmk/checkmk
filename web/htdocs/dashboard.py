@@ -60,13 +60,14 @@ dashlet_min_size = 10, 10        # Minimum width and height of dashlets
 # thus must be reinitialized everytime a language-change has
 # been detected.
 def load_plugins():
-    global loaded_with_language, dashboards
+    global loaded_with_language, dashboards, builtin_dashboards_transformed
     if loaded_with_language == current_language:
         return
 
     # Load plugins for dashboards. Currently these files
     # just may add custom dashboards by adding to builtin_dashboards.
     load_web_plugins("dashboard", globals())
+    builtin_dashboards_transformed = False
 
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins
@@ -82,7 +83,7 @@ def load_plugins():
     for name, board in builtin_dashboards.items():
         config.declare_permission("dashboard.%s" % name,
                 board["title"],
-                board["description"],
+                board.get("description", ""),
                 config.builtin_role_ids)
 
     # Make sure that custom views also have permissions
@@ -98,20 +99,38 @@ def load_dashboards():
 # referenced by url, e.g. dashboard['url'] = 'hoststats.py'
 # FIXME: can be removed one day. Mark as incompatible change or similar.
 def transform_builtin_dashboards():
+    global builtin_dashboards_transformed
+    if builtin_dashboards_transformed:
+        return # Only do this once
     for name, dashboard in builtin_dashboards.items():
+        # Do not transform dashboards which are already in the new format
+        if 'context' in dashboard:
+            continue
+
+        # Transform the dashlets
         for nr, dashlet in enumerate(dashboard['dashlets']):
             if dashlet.get('url', '').startswith('dashlet_') and dashlet['url'].endswith('.py'):
+                # hoststats and servicestats
                 dashlet['type'] = dashlet['url'][8:-3]
                 del dashlet['url']
-            elif dashlet.get('url', '') != '':
+
+            elif dashlet.get('url', '') != '' or dashlet.get('urlfunc'):
+                # Normal URL based dashlet
                 dashlet['type'] = 'url'
+
             elif dashlet.get('view', '') != '':
+                # Transform views
                 # There might be more than the name in the view definition
                 view_name = dashlet['view'].split('&')[0]
 
                 # Copy the view definition into the dashlet
                 load_view_into_dashlet(dashlet, nr, view_name)
                 del dashlet['view']
+
+            else:
+                raise MKGeneralException(_('Unable to transform dashlet %d of dashboard %s. '
+                                           'You will need to migrate it on your own. Definition: %r' %
+                                                            (nr, name, html.attrencode(dashlet))))
 
         # the modification time of builtin dashboards can not be checked as on user specific
         # dashboards. Set it to 0 to disable the modification chech.
@@ -121,6 +140,12 @@ def transform_builtin_dashboards():
         if dashboard['title'] == None:
             dashboard['title'] = _('No title')
             dashboard['show_title'] = False
+
+        dashboard.setdefault('context_type', 'global')
+        dashboard.setdefault('context', {})
+        dashboard.setdefault('topic', _('Overview'))
+        dashboard.setdefault('description', dashboard.get('title', ''))
+    builtin_dashboards_transformed = True
 
 def load_view_into_dashlet(dashlet, nr, view_name):
     import views

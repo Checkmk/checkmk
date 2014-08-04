@@ -79,7 +79,9 @@ sensor_states = {
 
 def inventory_raritan_pdu_inlet_generic(info):
     for line in info:
-        yield line[0], None
+        # Ignore closed sensor state
+        if line[4] != '1':
+            yield line[0], None
 
 def check_raritan_pdu_inlet_generic(item, _no_params, info):
     for line in info:

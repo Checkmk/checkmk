@@ -101,8 +101,8 @@ register_rule(group,
                    DropdownChoice(
                        title = _("Spaces in hostnames"),
                        choices = [
-                           ( "underscore", _("Replace with underscores") ),
                            ( "cut",        _("Cut everything after first space") ),
+                           ( "underscore", _("Replace with underscores") ),
                        ],
                        default = "underscore",
                    )

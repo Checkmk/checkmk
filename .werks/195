@@ -1,0 +1,11 @@
+Title: fc_port: Check temporary disabled cause of problems with automatic detection
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.5i6
+Date: 1407158053
+Class: fix
+
+There are currently a problem with the scan function who lead to a positive result on not supported devices. 
+The Check will be renabled asap the problems are fixed.
+

@@ -145,10 +145,6 @@ def check_cisco_temp_sensor(item, _no_params, info):
     for id, descr, sensortype, value, sensorstate, levels in sensors:
         if item == descr:
             warn, crit = levels[0:2]
-            if len(levels) == 4:
-                value = value/10.0
-                warn = warn/10.0
-                crit = crit/10.0
 	    if sensorstate == "2":
 	       return (3, "data from sensor currently not available")
             elif sensorstate == "3":

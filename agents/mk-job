@@ -59,9 +59,9 @@ if ! type $1 >/dev/null 2>&1; then
     exit 1
 fi
 
-date +"start_time %s" > "$OUTPUT_PATH/.$IDENT.running"
-/usr/bin/time -o "$OUTPUT_PATH/.$IDENT.running" --append \
+date +"start_time %s" > "$OUTPUT_PATH/$IDENT.running"
+/usr/bin/time -o "$OUTPUT_PATH/$IDENT.running" --append \
               -f "exit_code %x\nreal_time %E\nuser_time %U\nsystem_time %S\nreads %I\nwrites %O\nmax_res_kbytes %M\navg_mem_kbytes %K\ninvol_context_switches %c\nvol_context_switches %w" $@
 RC=$?
-mv "$OUTPUT_PATH/.$IDENT.running" "$OUTPUT_PATH/$IDENT"
+mv "$OUTPUT_PATH/$IDENT.running" "$OUTPUT_PATH/$IDENT"
 exit $RC

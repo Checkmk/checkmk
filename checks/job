@@ -57,7 +57,8 @@ def inventory_job(info):
     for line in info:
         if line[0] == '==>':
             item = ' '.join(line[1:-1])
-            inventory.append( (item, {} ) )
+            if not item.endswith('.running'):
+                inventory.append( (item, {} ) )
     return inventory
 
 def job_parse_real_time(s):
@@ -71,10 +72,25 @@ def job_parse_real_time(s):
 
 def job_parse(item, info):
     found = False
+    found_running = False
     data = {}
     for line in info:
         if ' '.join(line[1:-1]) == item:
             found = True
+
+        elif ' '.join(line[1:-1]) == item + '.running':
+            # There might be a second section per job, the contents of the
+            # <ident>.running file which exists during execution of the job.
+            # We use the start_time from this file.
+            found_running = True
+
+        elif found_running and line[0] == '==>':
+            continue # simply skip over this line
+
+        elif found_running and len(line) == 2:
+            key, val = line
+            if key == 'start_time':
+                data['running_start_time'] = int(val)
 
         elif found and line[0] == '==>':
             break # Stop at next section
@@ -101,9 +117,27 @@ def check_job(item, params, info):
     if not job:
         return 3, 'Got no information for this job'
 
+    def process_start_time(value, state, warn, crit):
+        display_value = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(value) )
+        job_age = time.time() - value
+        if crit > 0 and job_age >= crit:
+            state = max(state, 2)
+            display_value += "(!!) (more than %s ago)" % get_age_human_readable(crit)
+        elif warn > 0 and job_age >= warn:
+            state = max(state, 1)
+            display_value += "(!!) (more than %s ago)" % get_age_human_readable(warn)
+        return state, display_value
+
     state = 0
     output = []
     perfdata = []
+
+    if 'running_start_time' in job:
+        output.append('Currently running')
+        state, display_value = process_start_time(job['running_start_time'], state, warn, crit)
+        output.append('(Started: %s)' % display_value)
+        return state, ' '.join(output)
+
 
     txt = 'Exit-Code: %d' % job['exit_code']
     if job['exit_code'] != 0:
@@ -128,14 +162,7 @@ def check_job(item, params, info):
         elif key in [ 'real_time', 'user_time', 'system_time' ]:
             display_value = get_age_human_readable(value)
         elif key == 'start_time':
-            display_value = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(value) )
-            job_age = time.time() - value
-            if crit > 0 and job_age >= crit:
-                state = max(state, 2)
-                display_value += "(!!) (more than %s ago)" % get_age_human_readable(crit)
-            elif warn > 0 and job_age >= warn:
-                state = max(state, 1)
-                display_value += "(!!) (more than %s ago)" % get_age_human_readable(warn)
+            state, display_value = process_start_time(value, state, warn, crit)
         else:
             display_value = value
 

@@ -1,0 +1,13 @@
+Title: mk-job: The check now captures currently running jobs and their start time
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1407220584
+Class: fix
+
+Previously the check did only get data of jobs which already had finished. This
+was a bit weird, because the start time and duration of the jobs could be configured
+to be monitored and checked, but was not applied during runtime.
+
+You need to update the agent plugin mk-job to make this work correctly.

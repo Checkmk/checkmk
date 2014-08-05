@@ -211,7 +211,6 @@ def inventory_esx_vsphere_hostsystem_maintenance(info):
     data = esx_vsphere_hostsystem_convert(info)
     if 'runtime.inMaintenanceMode' in data:
         current_state = str(data['runtime.inMaintenanceMode'][0]).lower()
-        print current_state
         return [(None, { 'target_state' : current_state })]
 
 def check_esx_vsphere_hostsystem_maintenance(_no_item, params, info):

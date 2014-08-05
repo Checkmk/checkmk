@@ -1,10 +1,13 @@
 Title: mk-job: Start time is only available after job finished
 Component: checks
-State: open
+Class: bug
+State: done
 Date: 2014-04-22 08:32:35
 Targetversion: 1.2.5i1
-Class: bug
 
 This should really be changed. The start time should be available once the job has been
 started. The check needs to deal with the old job info and the start time of the just
 started and currently running job while the job is running.
+
+2014-08-05 08:27:09: changed state open -> done
+Has been fixed. The check does process the currently running commands start_time.

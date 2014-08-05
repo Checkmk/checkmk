@@ -1,9 +1,9 @@
 Title: Online-Status of users not correct
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2014-05-07 11:52:58
 Targetversion: 1.2.5i1
-Class: bug
 
 In the WATO users page there is a gray or green ball that indicates
 wether a user is currently online. This is assumed to work as follows:
@@ -18,3 +18,6 @@ At least 50 users where active, but just a couple being displayed as online. It 
 the case that some cache prohibits the correct update of the last_seen information in
 WATO, so that the last_seen.mk files are not being loaded and an old state of them being
 used.
+
+2014-08-05 07:59:37: changed state open -> done
+Has been solved in 1.2.5i1.

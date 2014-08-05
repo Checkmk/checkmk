@@ -1,10 +1,13 @@
 Title: Resorting of embedded views in dashboard drop display_options
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2014-04-15 10:49:41
 Targetversion: future
-Class: bug
 
 If you resort a view by clicking on a column header (of a view that is
 contained in the dashboard) then the display options get lost and the
 title and context buttons appear.
+
+2014-08-05 07:56:17: changed state open -> done
+Has been solved with new dashboard editor

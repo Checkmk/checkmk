@@ -145,6 +145,13 @@ def check_cisco_temp_sensor(item, _no_params, info):
     for id, descr, sensortype, value, sensorstate, levels in sensors:
         if item == descr:
             warn, crit = levels[0:2]
+            # poor try to find temperature values
+            # who are given in tens of degress.
+            # Seems that some new firmware show this behavier.
+            # A normal Temperature Sensor has only a range up to
+            # 60 degree, so i choiced 70. 
+            if value > 70:
+                value = value / 10
 	    if sensorstate == "2":
 	       return (3, "data from sensor currently not available")
             elif sensorstate == "3":

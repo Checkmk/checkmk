@@ -1,9 +1,12 @@
 Title: cisco_temp_sensor: Removed dicey detection for temperature value.
 Level: 1
 Component: checks
-Compatible: incomp
+Compatible: compa
 Version: 1.2.5i6
 Date: 1407250309
 Class: fix
+
+Cause of a dicey detection, also values who are not given in tens of degrees became divided by ten.
+This werk tryes to fix this
 
 

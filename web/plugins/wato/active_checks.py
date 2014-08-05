@@ -475,6 +475,44 @@ register_rule(group,
     match = 'all'
 )
 
+register_rule(group,
+    "active_checks:uniserv", Dictionary(
+        title = _("Check uniserv service"), optional_keys = False, elements = [
+            ("port",
+                Integer( title = _("Port") )),
+            ("service",
+                TextAscii( title = _("Service String"),
+                           help = _("Enter here the uniserve service name. (Has nothting to do with service description)")
+            )),
+            ("job", 
+                CascadingDropdown(
+                    title = _("Mode of the Check"), 
+                    help = _("Choose if you just want to query the version number,"
+                             " or if you want to check the response to a address querie"),
+                    choices = [
+                        ("version", _("Check for Version")),
+                        ("address", _("Check for a Address"),
+                            Dictionary(
+                                title = _("Address Check mode"), 
+                                optional_keys = False,
+                                elements = [
+                                    ( "street",
+                                        TextAscii( title = _("Street name"))),
+                                    ( "street_no",
+                                        Integer( title = _("Street number"))),
+                                    ( "city",
+                                        TextAscii( title = _("City name"))),
+                                    ( "search_regex",
+                                        TextAscii( title = _("Check City against Regex"),
+                                        help = _( "The City name from the response will be checked against "
+                                                  "the regular expression specified here"),
+                                        )),
+                                ]
+                        )),
+                    ]
+                )),
+
+        ]))
 
 register_rule(group,
     "active_checks:http",

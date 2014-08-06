@@ -91,7 +91,7 @@ def check_veeam_client(item, params, info):
 
     TotalSizeByte = int(data['TotalSizeByte'])
     perfdata.append(('totalsize', TotalSizeByte))
-    infotexts.append(("Total Size: %s" % get_bytes_human_readable(AvgSpeedBps)))
+    infotexts.append(("Total Size: %s" % get_bytes_human_readable(TotalSizeByte)))
 
     return state, ", ".join(infotexts), perfdata
 

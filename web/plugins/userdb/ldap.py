@@ -833,6 +833,11 @@ ldap_attribute_plugins['pager'] = {
 
 # Register sync plugins for all custom user attributes (assuming simple data types)
 def register_user_attribute_sync_plugins():
+    # Remove old user attribute plugins
+    for attr_name in ldap_attribute_plugins.keys():
+        if attr_name not in ldap_builtin_attribute_plugin_names:
+            del ldap_attribute_plugins[attr_name]
+
     for attr, val in get_user_attributes():
         ldap_attribute_plugins[attr] = {
             'title': val['valuespec'].title(),
@@ -850,8 +855,6 @@ def register_user_attribute_sync_plugins():
                 )),
             ],
         }
-
-register_user_attribute_sync_plugins()
 
 def ldap_convert_groups_to_contactgroups(plugin, params, user_id, ldap_user, user):
     # 1. Fetch all existing group names in WATO
@@ -1107,12 +1110,21 @@ def ldap_non_contact_attributes():
         attrs.update(ldap_attribute_plugins.get(key, {}).get('non_contact_attributes', []))
     return list(attrs)
 
+ldap_builtin_attribute_plugin_names = []
+
 # Is called on every multisite http request
 def ldap_page():
     try:
         last_sync_time = float(file(g_ldap_sync_time_file).read().strip())
     except:
         last_sync_time = 0
+
+    # Save the builtin attribute names (to be able to delete removed user attributes)
+    global ldap_builtin_attribute_plugin_names
+    if not ldap_builtin_attribute_plugin_names:
+        ldap_builtin_attribute_plugin_names = ldap_attribute_plugins.keys()
+
+    register_user_attribute_sync_plugins()
 
     # in case of sync problems, synchronize all 20 seconds, instead of the configured
     # regular cache livetime

@@ -1,10 +1,13 @@
 Title: New user custom attribute needs apache restart to work
 Component: wato
-State: open
+Class: bug
+State: done
 Date: 2014-01-30 15:14:42
 Targetversion: 1.2.5i1
-Class: bug
 
 If you create a new custom attribute for users then you
 need to restart Apache in order to make that attribute visible
 in the WATO pages.
+
+2014-08-06 20:05:19: changed state open -> done
+Changed custom attributes are now instantly visible on user profile page and ldap sync plugin configuration

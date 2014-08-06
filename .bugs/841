@@ -1,8 +1,11 @@
 Title: View Editor: It's not possible to delete a view
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2014-04-16 09:34:07
 Targetversion: 1.2.5i1
-Class: bug
 
 Currently it is not possible to delete a view in Multisite. I think this has to do with the new security features regarding to the CVE's
+
+2014-08-06 19:22:15: changed state open -> done
+Has already been fixed.

@@ -34,9 +34,19 @@ loaded_with_language = False
 
 # Custom user attributes
 user_attributes = {}
+builtin_user_attribute_names = []
 
-# Load all login plugins
+# Load all userdb plugins
 def load_plugins():
+    # Do not cache the custom user attributes. They can be created by the user
+    # during runtime, means they need to be loaded during each page request.
+    # But delete the old definitions before to also apply removals of attributes
+    if user_attributes:
+        for attr_name in user_attributes.keys():
+            if attr_name not in builtin_user_attribute_names:
+                del user_attributes[attr_name]
+        declare_custom_user_attrs()
+
     global loaded_with_language
     if loaded_with_language == current_language:
         return
@@ -45,9 +55,11 @@ def load_plugins():
     global user_attributes ; user_attributes = {}
     global multisite_user_connectors ; multisite_user_connectors = []
 
-    declare_custom_user_attrs()
-
     load_web_plugins("userdb", globals())
+
+    global builtin_user_attribute_names
+    builtin_user_attribute_names = user_attributes.keys()
+    declare_custom_user_attrs()
 
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins

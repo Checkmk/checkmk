@@ -65,7 +65,7 @@ def check_raritan_pdu_plugs(item, params, info):
             elif states[outletState] != required_state:
                 state = 2
 
-            message = outletName + ": " + states[outletState]
+            message = outletName + "Status is: " + states[outletState]
 
     return (state, message)
 

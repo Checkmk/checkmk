@@ -3100,7 +3100,11 @@ class VisualFilterList(ListOfMultiple):
     def filter_variable_settings(self, value, row):
         vars = []
         for fname in value.keys():
-            vars += self._filters[fname].variable_settings(row)
+            try:
+                vars += self._filters[fname].variable_settings(row)
+            except KeyError:
+                # When the row misses at least one var for a filter ignore this filter completely
+                pass
         return vars
 
 # Realizes a Multisite/visual filter in a valuespec. It can render the filter form, get

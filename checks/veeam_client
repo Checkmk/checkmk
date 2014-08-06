@@ -24,82 +24,83 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import datetime, time
-
-veeam_client_default_levels = { "age": ( 108000, 172800 ) } # 30h/2d
-
-state = { "Success": 0, "Failed": 2, "Warning":1, "InProgress":0, "Pending":0 }
+factory_settings["veeam_client"] = {
+    "age": ( 108000, 172800 ), # 30h/2d 
+}
 
 def inventory_veeam_client(info):
     if info[0][0] == "Status":
-        return [ (None, veeam_client_default_levels) ]
+        return [ (None, {} ) ]
 
 def check_veeam_client(item, params, info):
-    if params.get("age"):
-        warn, crit = params['age']
-    else:
-        warn, crit = veeam_default_levels.get("age")
-
     if not info[0][0] == "Status":
         return 3, "No status data found in first line of agent data"
-    result = ""
-    starttime = ""
-    stoptime = ""
-    duration_string = ""
-    infotxt = ""
-    for line in info:
-        if line[0] == "Status":
-            result = line[1]
-            stopstate = 0
-            perfdata = []
-            infotxt = line[0] + ":" + line[1] + " "
-        elif line[0] == "DurationDDHHMMSS" and result != "InProgress" and result != "Pending":
-            duration_string = line[1]
-            spur = map(saveint, duration_string.split(":") )
-            if len(spur) == 4:
-                duration = str(spur[0]*86400 + spur[1] * 3600 + spur[2] * 60 + spur[3])
-            else:
-                duration = "0"
-            perfdata.append(("duration", duration+"s", 0, 0, 0))
-        elif line[0] == "AvgSpeedBps":
-            avgspeed = saveint(line[1])
-            perfdata.append(("avgspeed", avgspeed, 0, 0, 0))
-        elif line[0] == "TotalSizeByte":
-            totalsize = saveint(line[1])
-            perfdata.append(("totalsize", totalsize, 0, 0, 0))
-        elif line[0] == "StopTime":
-            if (result == "InProgress" or result == "Pending"):
-                infotxt += line[0] + ": - "
-            else:
-                now = datetime.datetime.now()
-                date, time = line[1].split(" ")
-                day, month, year = map(int, date.split("."))
-                hour, minute, second = map(int, time.split(":"))
-                stoptime = datetime.datetime( year, month, day, hour, minute, second)
-                warndiff = datetime.timedelta(seconds=warn)
-                critdiff = datetime.timedelta(seconds=crit)
+    data = dict(info[:-1])
 
-                if critdiff < now - stoptime:
-                    stopstate = 2
-                    stopsym = "( >%s ago)(!!)" % get_age_human_readable(crit)
-                elif warndiff < now - stoptime:
-                    stopstate = 1
-                    stopsym = "( >%s ago)(!)" % get_age_human_readable(warn)
-                else:
-                    stopstate = 0
-                    stopsym = ""
-                infotxt += line[0] + ":" + line[1] + stopsym + " "
-        elif len(line) == 2:
-            infotxt += line[0] + ":" + line[1] + " "
+    perfdata = []
+    infotexts = []
 
-    status = max(state[result], stopstate)
-    return (status, infotxt, perfdata)
+    state = 0
+    # Append current Status to Output
+    if data['Status'] == 'Warning':
+        state = 1
+    if data['Status'] == 'Failed':
+        state = 2
+    infotexts.append("Status: %s" % data['Status'] )
+
+    # Only output the Job name
+    infotexts.append("Job: %s" % data['JobName'] )
+
+    # Check Stop time in any case, that we can catch hanging backups
+    if "StopTime" not in data:
+        state = 2
+        infotexts.append("No complete Backup(!!)")
+    else:
+        stop_time = time.mktime(time.strptime( data['StopTime'], "%d.%m.%Y %H:%M:%S"))
+        now = time.time()
+        age =  now - stop_time
+        warn, crit = params['age']
+        levels = ""
+        label = ""
+        if age >= crit:
+            state = 2
+            label = "(!!)"
+            levels = " (Warn/Crit: %s/%s)" % ( get_age_human_readable(warn), get_age_human_readable(crit))
+        elif age >= warn:
+            state = max(state, 1)
+            label = "(!)"
+            levels = " (Warn/Crit: %s/%s)" % ( get_age_human_readable(warn), get_age_human_readable(crit))
+        infotexts.append("Last backup: %s ago%s%s" % ( get_age_human_readable(age), label, levels ))
+
+    # Check duration only if currently not running
+    if data['Status'] not in [ 'InProgress', 'Pending' ]:
+        # Information may missing
+        if data.get('DurationDDHHMMSS'):
+            duration = 0
+            days, hours, minutes, seconds = map(int, data['DurationDDHHMMSS'].split(':'))
+            duration += seconds
+            duration += minutes * 60
+            duration += hours * 60 * 60
+            duration += days * 60 * 60 * 24
+            infotexts.append("Duration: %s" % get_age_human_readable(duration))
+            perfdata.append(('duration', duration ))
+
+    AvgSpeedBps = int(data['AvgSpeedBps'])
+    perfdata.append(('avgspeed', AvgSpeedBps))
+    infotexts.append(("Average Speed: %s/s" % get_bytes_human_readable(AvgSpeedBps)))
+
+    TotalSizeByte = int(data['TotalSizeByte'])
+    perfdata.append(('totalsize', TotalSizeByte))
+    infotexts.append(("Total Size: %s" % get_bytes_human_readable(AvgSpeedBps)))
+
+    return state, ", ".join(infotexts), perfdata
 
 check_info["veeam_client"] = {
     'check_function':          check_veeam_client,
     'inventory_function':      inventory_veeam_client,
     'service_description':     'VEEAM Client',
     'group':                   'veeam_backup',
+    "default_levels_variable" : "veeam_client",
     'has_perfdata':            True,
 }
 

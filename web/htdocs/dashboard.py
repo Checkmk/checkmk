@@ -109,6 +109,8 @@ def transform_builtin_dashboards():
 
         # Transform the dashlets
         for nr, dashlet in enumerate(dashboard['dashlets']):
+            dashlet.setdefault('show_title', True)
+
             if dashlet.get('url', '').startswith('dashlet_') and dashlet['url'].endswith('.py'):
                 # hoststats and servicestats
                 dashlet['type'] = dashlet['url'][8:-3]

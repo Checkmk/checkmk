@@ -1,0 +1,7 @@
+Title: Single Host aggregations shows multiple aggregations per definition
+Component: multisite
+State: open
+Date: 2014-08-05 14:19:51
+Targetversion: 1.2.5i1
+Class: bug
+

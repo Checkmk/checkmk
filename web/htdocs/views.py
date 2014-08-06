@@ -233,8 +233,6 @@ def transform_old_views():
                 view['context_type'] = 'servicegroup'
             elif 'aggr_group' in hide_filters:
                 view['context_type'] = 'bi_aggregation_group'
-            elif 'aggr_hosts' in hide_filters:
-                view['context_type'] = 'host'
             elif 'aggr_service' in hide_filters:
                 view['context_type'] = 'service'
             elif 'aggr_name' in hide_filters:

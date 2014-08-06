@@ -45,14 +45,14 @@ def check_uniserv_arguments(params):
     return args
 
 def check_uniserv_desc(params):
-    if type(params['job']) == tuple:
-        job = params['job'][0]
-    else:
-        job = params['job']
+    job = params['job']
+    if type(job) == tuple:
+        job = job[0]
+
     if job == "version":
-        return "Version"
+        return "Uniserv %s Version" % params['service']
     else:
-        return "Address " + params['job'][1]['city']
+        return "Uniserv %s Address %s " % (params['service'], params['job'][1]['city'])
 
 
 active_check_info['uniserv'] = {

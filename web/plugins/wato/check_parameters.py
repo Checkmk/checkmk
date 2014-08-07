@@ -3565,6 +3565,54 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "oracle_locks",
+    _("Oracle Locks"),
+    Dictionary(
+         elements = [
+             ("levels",
+                 Tuple(
+                     title = _("Levels for minimum wait time for a lock"),
+                     elements = [
+                          Age(title = _("warning if higher then"), default_value = 1800),
+                          Age(title = _("critical if higher then"), default_value = 3600),
+                     ]
+                 )
+             )
+         ]
+    ),
+    TextAscii(
+        title = _("Database SID"),
+        size = 12,
+        allow_empty = False),
+    "dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "oracle_longactivesessions",
+    _("Oracle Long Active Sessions"),
+    Dictionary(
+         elements = [
+             ("levels",
+                 Tuple(
+                     title = _("Levels of active sessions"),
+                     elements = [
+                          Integer(title = _("Warning if more than"), unit=_("sessions")),
+                          Integer(title = _("Critical if more than"), unit=_("sessions")),
+                     ]
+                 )
+             )
+         ]
+    ),
+    TextAscii(
+        title = _("Database SID"),
+        size = 12,
+        allow_empty = False),
+    "dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
     "postgres_stat_database",
     _("PostgreSQL Database Statistics"),
     Dictionary(

@@ -1,0 +1,90 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<oracle_locks>>>
+# TUX12C|273|2985|ora12c.local|sqlplus@ora12c.local (TNS V1-V3)|46148|oracle|633|NULL|NULL
+
+# oracle_sid, sid#, serial#, machine, program, process, osuser, ctime object_owner object_name
+
+factory_settings["oracle_locks_defaults"] = {
+    "levels"  : (1800, 3600),
+}
+
+def inventory_oracle_locks(info):
+    return [ (line[0], {}) for line in info ]
+
+def check_oracle_locks(item, params, info):
+    lockcount = 0
+    state = -1
+    infotext = ''
+
+    for line in info:
+        warn, crit = params["levels"]
+
+        if line[0] == item and line[1] <> '':
+
+            sid, sidnr, serial, machine, program, process, osuser, ctime, \
+            object_owner, object_name = line
+
+            ctime = int(ctime)
+
+            if ctime >= crit:
+                state = 2
+                lockcount += 1
+                infotext += 'locktime %s (!!) Session (sid,serial, proc) %s,%s,%s machine %s osuser %s object: %s.%s ; ' \
+                            % (get_age_human_readable(ctime), sidnr, serial, process, machine, osuser, object_owner, object_name)
+
+            elif ctime >= warn:
+                state = max(1,state)
+                lockcount += 1
+                infotext += 'locktime %s (!) Session (sid,serial, proc) %s,%s,%s machine %s osuser %s object: %s.%s ; ' \
+                            % (get_age_human_readable(ctime), sidnr, serial, process, machine, osuser, object_owner, object_name)
+
+        if line[0] == item and line[1] == '':
+            state = max(0, state)
+
+    if infotext == '':
+        infotext = 'No locks existing'
+    elif lockcount > 10:
+        infotext = 'more then 10 locks existing!'
+
+    if state <> -1:
+        return (state, infotext)
+
+    # In case of missing information we assume that the login into
+    # the database has failed and we simply skip this check. It won't
+    # switch to UNKNOWN, but will get stale.
+    raise MKCounterWrapped(None, "Login into database failed")
+
+
+check_info["oracle_locks"] = {
+    'check_function':          check_oracle_locks,
+    'inventory_function':      inventory_oracle_locks,
+    'service_description':     'ORA %s Locks',
+    'has_perfdata':            False,
+    "default_levels_variable" : "oracle_locks_defaults",
+    'group':                   'oracle_locks',
+}

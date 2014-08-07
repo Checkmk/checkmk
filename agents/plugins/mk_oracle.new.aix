@@ -40,12 +40,12 @@
 #   '----------------------------------------------------------------------'
 
 # Sections that run fast and do no caching
-SYNC_SECTIONS="instance sessions logswitches undostat recovery_area processes recovery_status"
+SYNC_SECTIONS="instance sessions logswitches undostat recovery_area processes recovery_status longactivesessions"
 
 # Sections that are run in the background and at a larger interval.
 # Note: sections not listed in SYNC_SECTIONS or ASYNC_SECTIONS will not be
 # executed at all!
-ASYNC_SECTIONS="tablespaces rman jobs ts_quotas resumable"
+ASYNC_SECTIONS="tablespaces rman jobs ts_quotas resumable locks"
 
 # Sections that are run in the background and at a larger interval.
 # Note: _ASM_ sections are only executed when SID starts with '+'
@@ -373,6 +373,78 @@ sql_logswitches()
          "
 }
 
+sql_locks()
+{
+    echo 'prompt <<<oracle_locks:sep(124)>>>'
+    echo "SET SERVEROUTPUT ON feedback off
+DECLARE
+    type x is table of varchar2(20000) index by pls_integer;
+    xx x;
+begin
+    begin
+        execute immediate 'select upper(i.instance_name)
+           || ''|'' || a.sid
+           || ''|'' || b.serial#
+           || ''|'' || b.machine
+           || ''|'' || b.program
+           || ''|'' || b.process
+           || ''|'' || b.osuser
+           || ''|'' || a.ctime
+           || ''|'' || decode(c.owner,NULL,''NULL'',c.owner)
+           || ''|'' || decode(c.object_name,NULL,''NULL'',c.object_name)
+            from V\$LOCK a, v\$session b, dba_objects c, v\$instance i
+            where (a.id1, a.id2, a.type)
+                       IN (SELECT id1, id2, type
+                           FROM GV\$LOCK
+                           WHERE request>0
+                          )
+            and request=0
+            and a.sid = b.sid
+            and a.id1 = c.object_id (+)
+            union all
+            select upper(i.instance_name) || ''|||||||||''
+            from  v\$instance i'
+        bulk collect into xx;
+        if xx.count >= 1 then
+            for i in 1 .. xx.count loop
+                dbms_output.put_line(xx(i));
+            end loop;
+        end if;
+    exception
+        when others then
+            for cur1 in (select upper(i.instance_name) instance_name from  v\$instance i) loop
+                dbms_output.put_line(cur1.instance_name || '|||||||||'||sqlerrm);
+            end loop;
+    end;
+END;
+/
+set serverout off
+"
+}
+
+sql_longactivesessions()
+{
+    echo 'prompt <<<oracle_longactivesessions:sep(124)>>>'
+    echo "select upper(i.instance_name)
+                 || '|' || s.sid
+                 || '|' || s.serial#
+                 || '|' || s.machine
+                 || '|' || s.process
+                 || '|' || s.osuser
+                 || '|' || s.program
+                 || '|' || s.last_call_et
+                 || '|' || s.sql_id
+          from v\$session s, v\$instance i
+          where s.status = 'ACTIVE'
+          and type != 'BACKGROUND'
+          and s.last_call_et > 60*60
+          union all
+          select upper(i.instance_name)
+                 || '||||||||'
+          from v\$instance i;
+         "
+}
+
 sql_112_asm_diskgroup()
 {
     echo 'prompt <<<oracle_asm_diskgroup>>>'
@@ -431,7 +503,7 @@ function run_cached () {
     fi
 }
 
-#.
+#
 #   .--Functions-----------------------------------------------------------.
 #   |             _____                 _   _                              |
 #   |            |  ___|   _ _ __   ___| |_(_) ___  _ __  ___              |

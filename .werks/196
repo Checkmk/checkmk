@@ -1,0 +1,10 @@
+Title: esx_vsphere_hostsystem: New subcheck for maintenance mode
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1407229557
+Class: feature
+
+It is no possible to monitor if a hostsystem is in maintenance mode or not
+

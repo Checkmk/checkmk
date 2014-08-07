@@ -133,11 +133,12 @@ local_cfg = {
 # The * matches the whole following string and does not end on next "/".
 # For examples, take a look at the default config file (/etc/check_mk/sap.cfg).
 monitor_paths = [
-    'SAP CCMS Monitor Templates/Dialog Overview/*',
+#    'SAP CCMS Monitor Templates/Dialog Overview/*',
 ]
 monitor_types = []
-
+# henri
 config_file = os.getenv('MK_CONFDIR', '/etc/check_mk') + '/sap.cfg'
+
 cfg = {}
 if os.path.exists(config_file):
     execfile(config_file)
@@ -290,7 +291,7 @@ def parse_dt(d, t):
     else:
         return datetime.datetime(*time.strptime(d + t, '%Y%m%d%H%M%S')[:6])
 
-def mon_alerts(node):
+def mon_alerts(cfg, node):
     f = query('BAPI_SYSTEM_MTE_GETALERTS', {
         'EXTERNAL_USER_NAME': cfg['user'],
         'TID': tid(node),
@@ -307,7 +308,7 @@ def aid(alert):
         "ALERTTIME": alert["ALERTTIME"],
     }
 
-def alert_details(alert):
+def alert_details(cfg, alert):
     f = query('BAPI_SYSTEM_ALERT_GETDETAILS', {
         'EXTERNAL_USER_NAME': cfg['user'],
         'AID': aid(alert),
@@ -317,8 +318,7 @@ def alert_details(alert):
     msg   =  f.XMI_EXT_MSG.value['MSG'].strip()
     return state, msg
 
-def process_alerts(ms_name, mon_name, node, alerts):
-    global logs
+def process_alerts(cfg, logs, ms_name, mon_name, node, alerts):
     sid     = node["MTSYSID"].strip() or 'Other'
     context = node["MTMCNAME"].strip() or 'Other'
     path    = node["PATH"]
@@ -339,7 +339,7 @@ def process_alerts(ms_name, mon_name, node, alerts):
         if not newest_log_dt or dt > newest_log_dt:
             newest_log_dt = dt # store the newest log of this run
 
-        alert_state, alert_msg = alert_details(alert)
+        alert_state, alert_msg = alert_details(cfg, alert)
         # Format lines to "logwatch" format
         logs[hostname][logfile].append('%s %s %s' % (STATE_LOGWATCH_MAP[alert_state['VALUE']],
                                                 dt.strftime("%Y-%m-%d %H:%M:%S"), alert_msg))
@@ -348,6 +348,8 @@ def process_alerts(ms_name, mon_name, node, alerts):
         # Write newest log age to cache to prevent double processing of logs
         states[(hostname, logfile)] = newest_log_dt
         file(STATE_FILE, 'w').write(repr(states))
+    return logs
+
 
 
 def connect(cfg):
@@ -405,12 +407,13 @@ def connect(cfg):
                 status_details = "%s: %s" % mon_msg(cfg, node)
 
             elif node['MTCLASS'] == MTE_MSG_CONTAINER:
-                alerts = mon_alerts(node)
-                process_alerts(ms_name, mon_name, node, alerts)
+
+                alerts = mon_alerts(cfg, node)
+                logs = process_alerts(cfg, logs, ms_name, mon_name, node, alerts)
                 if len(alerts) > 0:
                     last_alert = alerts[-1]
                     dt = parse_dt(last_alert["ALERTDATE"], last_alert["ALERTTIME"])
-                    alert_state, alert_msg = alert_details(last_alert)
+                    alert_state, alert_msg = alert_details(cfg, last_alert)
                     last_msg = '%s: %s - %s' % (dt, STATE_VALUE_MAP[alert_state['VALUE']][1], alert_msg)
 
                     status_details = '%d Messages, Last: %s' % (len(alerts), last_msg)

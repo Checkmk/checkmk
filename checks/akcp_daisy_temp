@@ -42,12 +42,12 @@ def check_akcp_daisy_temp(item, params, info):
         if name == item:
             warn, crit = params
             temp = savefloat(temp) / 10
-            infotext = "%.1f °C " % temp
+            infotext = "Temperature is: %.1f °C " % temp
             levels = " (warn/crit at %.1f/%.1f °C)" % (warn, crit)
             perfdata = [ ( "temperature", temp, warn, crit ) ]
-            if temp > crit:
+            if temp >= crit:
                 return 2, infotext + levels, perfdata
-            if temp > warn:
+            if temp >= warn:
                 return 1, infotext + levels, perfdata
             return 0, infotext, perfdata
     return 3, "Sensor not found"

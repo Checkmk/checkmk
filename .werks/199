@@ -1,0 +1,9 @@
+Title: veeam_client: Check rewritten to get a nicer output
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1407318452
+Class: feature
+
+

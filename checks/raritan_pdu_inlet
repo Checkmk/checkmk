@@ -26,7 +26,7 @@
 
 def raritan_pdu_inlet_convert(info):
     # List of tuples, sorting like the snmp output,
-    # each tuple contains: capabilities, Unit, digits
+    # each tuple contains: capabilities, digits
     translation = (
       ( '2',  1 ),
       ( '1',  0 ),
@@ -37,9 +37,11 @@ def raritan_pdu_inlet_convert(info):
     )
     phases = [ 'L1', 'L2', 'L3' ]
     i = 0
+    state = 4 # We dont know the senosr state, so we assume normal 
     for line in info:
         y = 0
-        state = line[1]
+        # loop over the current Sensor values.
+        # We know the units cause of the translation list
         for value in line[1:]:
             item = phases[i] + '-' + capabilities[translation[y][0]]
             unit = translation[y][0]

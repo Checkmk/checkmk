@@ -1,0 +1,13 @@
+Title: check_uniserv: New Check for Uniserv Data Management Services
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1407239445
+Class: feature
+
+This check uses a tcp connect to monitor the Uniserv Service.
+Uniserv ( http://www.uniserv.com/ ) is a Data Management Service who offers
+diffrent services like Address Checks, Banking Data Checks etc.
+
+

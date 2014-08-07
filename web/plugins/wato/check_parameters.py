@@ -1382,7 +1382,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_networking,
     "docsis_channels_downstream",
-    _("Docsis Downstream Channels"), 
+    _("Docsis Downstream Channels"),
     Dictionary(
         elements = [
             ( "power", Tuple(
@@ -2937,7 +2937,7 @@ register_check_parameters(
               Integer(title = _("Warning if above"), unit="%" ),
               Integer(title = _("Critical if above"), unit="%" ),
               ]),
-     None, 
+     None,
      None
 )
 register_check_parameters(
@@ -3152,7 +3152,29 @@ register_check_parameters(
     "dict",
 )
 
-
+register_check_parameters(
+    subgroup_applications,
+    "oracle_recovery_status",
+    _("Oracle Recovery Status"),
+    Dictionary(
+         elements = [
+             ("levels",
+                 Tuple(
+                     title = _("Levels for checkpoint time"),
+                     elements = [
+                          Age(title = _("warning if higher then"), default_value = 1800),
+                          Age(title = _("critical if higher then"), default_value = 3600),
+                     ]
+                 )
+             )
+         ]
+    ),
+    TextAscii(
+        title = _("Database SID"),
+        size = 12,
+        allow_empty = False),
+    "dict",
+)
 
 register_check_parameters(
     subgroup_applications,

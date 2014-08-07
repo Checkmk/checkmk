@@ -55,7 +55,10 @@ def check_oracle_jobs(item, params, info):
             data = line
             break
     if not data:
-        return (3, 'Unable to find the job')
+        # In case of missing information we assume that the login into
+        # the database has failed and we simply skip this check. It won't
+        # switch to UNKNOWN, but will get stale.
+        raise MKCounterWrapped(None, "Login into database failed or job not existing")
 
     state = 0
     output = []
@@ -70,7 +73,7 @@ def check_oracle_jobs(item, params, info):
     output.append(txt)
 
     txt = "Enabled: %s" % (line[6] == "TRUE" and "Yes" or "No")
-    if line[6] != "TRUE":
+    if line[6] != "TRUE" and job_state != 'RUNNING':
         txt += " (!)"
         state = max(state, 1)
     output.append(txt)

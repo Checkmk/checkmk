@@ -94,11 +94,11 @@ def render_availability(view, datasource, filterheaders, display_options,
         return
 
     # We need the availability options now, but cannot display the
-    # form code for that yet.
+    # form code for that yet. Ignore the HTML code.
     html.plug()
     avoptions = render_availability_options()
     range, range_title = avoptions["range"]
-    avoptions_html = html.drain()
+    html.drain()
     html.unplug()
 
     timeline = not not html.var("timeline")
@@ -154,7 +154,9 @@ def render_availability(view, datasource, filterheaders, display_options,
         html.end_context_buttons()
 
     if not do_csv:
-        html.write(avoptions_html)
+        # Render the avoptions again to get the HTML code, because the HTML vars have changed
+        # above (anno_ and editanno_ has been removed, which must not be part of the form
+        avoptions = render_availability_options()
 
     if not html.has_user_errors():
         if timeline and tl_aggr:

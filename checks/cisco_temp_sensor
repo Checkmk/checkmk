@@ -141,10 +141,12 @@ def parse_cisco_temp_sensor(info):
 
 def inventory_cisco_temp_sensor(info):
     sensors = parse_cisco_temp_sensor(info)
+    inventory = []
     for id, descr, sensortype, value, sensorstate, levels in sensors:
         # Use all temperature sensors with a non-empty description and valid threshold
         if descr != None and sensortype == '8' and len(levels) in [ 2, 4 ]:
-            yield descr, levels[0:2]
+            inventory.append(( descr, levels[0:2] ))
+    return inventory
 
 def check_cisco_temp_sensor(item, params, info):
     sensors = parse_cisco_temp_sensor(info)

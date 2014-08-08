@@ -1,0 +1,11 @@
+Title: cisco_temp_sensor: It is now possible to configure this check in WATO.
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1407501717
+Class: feature
+
+If you want to configure existing services ( created by this check), please do a reinventory first. 
+Otherwhise no action is required. 
+

@@ -10,7 +10,7 @@ description:
  sensors MIB and vendor specific information.
 
  Upper warning and critical levels are retrieved from the device
- via SNMP and thus need not to be configured.
+ via SNMP or can be set in WATO.
 
 item:
  The name of the sensors as found in the OID tree below.

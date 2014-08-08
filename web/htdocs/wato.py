@@ -8565,6 +8565,10 @@ def render_notification_rules(rules, userid="", show_title=False, show_buttons=T
                 html.empty_icon_button()
 
             notify_method = rule["notify_plugin"]
+            # catch rules with empty notify_plugin key
+            # TODO Mayby this should be avoided somewhere else ( e.g. rule editor)
+            if not notify_method:
+                notify_method = ( None, [] )
             notify_plugin = notify_method[0]
 
             table.cell(_("Type"), css="narrow")

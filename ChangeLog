@@ -6,6 +6,7 @@
     WATO:
     * 1092 FIX: logwatch: now able to enter unicode text into the "Pattern (Regex)" field
     * 0191 FIX: Added swp files to the ignore list for the WATO git feature...
+    * 0201 FIX: Fixed error message in Rulelist of RBN...
 
 
 1.2.5i5p2:

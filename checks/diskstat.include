@@ -89,7 +89,7 @@ def inventory_diskstat_generic(info):
 
 
 
-def check_diskstat_line(this_time, item, params, line):
+def check_diskstat_line(this_time, item, params, line, mode):
     average_range = params.get("average")
     perfdata = []
     infos = []
@@ -105,9 +105,13 @@ def check_diskstat_line(this_time, item, params, line):
         else:
             warn, crit = None, None
 
-        # compute IO rate in bytes/sec
-        timedif, sectors_per_sec = get_counter(countername, this_time, int(ctr))
-        bytes_per_sec = sectors_per_sec * 512
+        timedif, per_sec = get_counter(countername, this_time, int(ctr))
+        if mode == 'sectors':
+            # compute IO rate in bytes/sec
+            bytes_per_sec = per_sec * 512
+        elif mode == 'bytes':
+            bytes_per_sec = per_sec
+
         infos.append("%s/sec %s" % (get_bytes_human_readable(bytes_per_sec), what))
         perfdata.append( (what, bytes_per_sec, warn, crit) )
         dsname = what
@@ -197,7 +201,7 @@ def check_diskstat_line(this_time, item, params, line):
     return (status, ", ".join(infos) , perfdata)
 
 
-def check_diskstat_generic(item, params, this_time, info):
+def check_diskstat_generic(item, params, this_time, info, mode='sectors'):
     # legacy version if item is "read" or "write"
     if item in [ 'read', 'write' ]:
         return check_diskstat_old(item, params, this_time, info)
@@ -212,12 +216,12 @@ def check_diskstat_generic(item, params, this_time, info):
             if ' ' in devname:
                 continue
             summary_line = map(lambda e: e[0] + int(e[1]), zip(summary_line, line[1:]))
-        return check_diskstat_line(this_time, "SUMMARY", params, [''] + summary_line)
+        return check_diskstat_line(this_time, "SUMMARY", params, [''] + summary_line, mode)
 
     # single mode
     for line in info:
         if line[0] == item:
-            return check_diskstat_line(this_time, item, params, line)
+            return check_diskstat_line(this_time, item, params, line, mode)
 
     return (3, "device missing")
 

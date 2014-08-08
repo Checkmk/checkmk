@@ -56,7 +56,7 @@ def inventory_aix_diskiod(info):
 
 
 def check_aix_diskiod(item, params, info):
-    return check_diskstat_generic(item, params, time.time(), aix_diskiod_convert(info))
+    return check_diskstat_generic(item, params, time.time(), aix_diskiod_convert(info), mode='bytes')
 
 check_info["aix_diskiod"] = {
     'check_function':          check_aix_diskiod,

@@ -1,0 +1,11 @@
+Title: Fixed error message in Rulelist of RBN
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.5i6
+Date: 1407497923
+
+There was an error with an incomple rule entrie who leads to an exception the
+WATO Notification configuration.

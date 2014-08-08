@@ -1,0 +1,15 @@
+title: Arris CMTS CPU utilization
+agents: snmp
+catalog: hw/network/arris
+license: GPL
+distribution:
+description:
+ This check monitors the CPU utilization for ech CPU Slot on a arrais cmts devices.
+ Please note that the reported utilization alrady is a average value computed by the device.
+
+item:
+ The Slot Number
+
+inventory:
+ One service will be created for each Slot
+

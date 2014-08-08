@@ -341,6 +341,7 @@ perfometers["check_mk-allnet_ip_sensoric.temp"] = perfometer_temperature
 perfometers["check_mk-qlogic_sanbox.temp"] = perfometer_temperature
 perfometers["check_mk-bintec_sensors.temp"] = perfometer_temperature
 perfometers["check_mk-knuerr_rms_temp"] = perfometer_temperature
+perfometers["check_mk-arris_cmts_temp"] = perfometer_temperature
 
 def perfometer_temperature_multi(row, check_command, perf_data):
     display_value = -1
@@ -1122,9 +1123,9 @@ def perfometer_voltage(row, check_command, perf_data):
 perfometers["check_mk-bintec_sensors.voltage"] = perfometer_voltage
 
 def perfometer_fec( row, check_command, perf_data ):
-    total           = float(perf_data[2][1])
-    corrected       = ( int(perf_data[0][1]) / total ) * 100
-    uncorrected     = ( int(perf_data[1][1]) / total ) * 100
+    total           = float(perf_data[3][1])
+    corrected       = ( int(perf_data[1][1]) / total ) * 100
+    uncorrected     = ( int(perf_data[2][1]) / total ) * 100
     left = 100 - corrected - uncorrected
     h = "<table><tr>"
     h += perfometer_td( corrected, "yellow") 

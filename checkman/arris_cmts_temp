@@ -1,0 +1,14 @@
+title: Arris CMTS Card Temperature
+agents: snmp
+catalog: hw/network/arris
+license: GPL
+distribution:
+description:
+ This check monitors the Temperature information for serval equipment parts in the arris device.
+
+item:
+ The Cardname 
+
+inventory:
+ One service will be created for each card.
+

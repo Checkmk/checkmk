@@ -1,0 +1,9 @@
+Title: rms200_temp: New Temperature check for RMS200 Devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1407772519
+Class: feature
+
+

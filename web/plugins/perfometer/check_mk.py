@@ -342,6 +342,7 @@ perfometers["check_mk-qlogic_sanbox.temp"] = perfometer_temperature
 perfometers["check_mk-bintec_sensors.temp"] = perfometer_temperature
 perfometers["check_mk-knuerr_rms_temp"] = perfometer_temperature
 perfometers["check_mk-arris_cmts_temp"] = perfometer_temperature
+perfometers["check_mk-rms200_temp"] = perfometer_temperature
 
 def perfometer_temperature_multi(row, check_command, perf_data):
     display_value = -1

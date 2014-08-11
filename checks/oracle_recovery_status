@@ -53,6 +53,8 @@ def check_oracle_recovery_status(item, params, info):
             checkpoint_time, checkpoint_age, datafilestatus, recovery, fuzzy, checkpoint_change = line
             warn, crit = params["levels"]
 
+            checkpoint_age = int(checkpoint_age)
+
             if oldest_checkpoint_age == -1 or oldest_checkpoint_age > checkpoint_age:
                 oldest_checkpoint_age = checkpoint_age
 

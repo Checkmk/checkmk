@@ -31,7 +31,7 @@
 # TUX2|tux2|PRIMARY|MOUNTED|2|1405456155|ONLINE||NO|2719061
 
 factory_settings["oracle_recovery_status_defaults"] = {
-    "levels"  : (3600, 1800),
+    "levels"  : (1800, 3600),
 }
 
 def inventory_oracle_recovery_status(info):

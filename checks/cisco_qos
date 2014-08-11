@@ -217,22 +217,20 @@ def check_cisco_qos(item, params, info):
     drop_b      = drop_bytes.get(policy_id+'.'+objects_id, 0)
     speed       = saveint(if_speeds[if_id])
 
-    # might not have a specific speed. Skip these.
-    # FIXME: Maybe ignore speed checking on them or similar - does it make sense?
-    speed_found = False
+    parent_value_cache = {}
     for a_key, a_value in config.items():
-        if speed_found:
-            break
-        if a_value == class_id:
-            parent_value = a_key.split(".")[1]
-            for b_key, b_value in parents.items():
-                if parent_value == b_value:
-                    if object_types[b_key] == "4":
-                        try:
-                            speed = saveint(if_qos_bandwidth[config[b_key]]) * 1000
-                            speed_found = True
-                        except KeyError:
-                            pass
+        parent_value_cache.update({ a_value :  a_key.split(".")[1] })
+
+       # if a_value == class_id:
+       #     parent_value = a_key.split(".")[1]
+    for b_key, b_value in parents.items():
+        if parent_value_cache[class_id] == b_value:
+            if object_types[b_key] == "4":
+                 try:
+                     speed = saveint(if_qos_bandwidth[config[b_key]]) * 1000
+                     break
+                 except KeyError:
+                     pass
 
     # Bandwidth needs to be in bytes for later calculations
     bw = speed / 8.0
@@ -313,6 +311,7 @@ def check_cisco_qos(item, params, info):
             elif warn is not None and rate >= warn:
                 state = max(1, state)
                 infotext += '(!)'
+
 
     if policy_name:
         infotext += ', Policy-Name: %s, Int-Bandwidth: %s' % (policy_name, format_value(bw))

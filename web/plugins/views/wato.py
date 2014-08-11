@@ -36,7 +36,7 @@ class FilterWatoFile(Filter):
         return config.wato_enabled and wato.have_folders()
 
     def load_wato_data(self):
-        self.tree = wato.api.get_folder_tree()
+        self.tree = wato.get_folder_tree()
         self.path_to_tree = {} # will be filled by self.folder_selection
         self.selection = self.folder_selection(self.tree, "", 0)
         self.last_wato_data_update = time.time()
@@ -108,7 +108,7 @@ def get_wato_folder(row, how, with_links = True):
     if not filename.startswith("/wato/") or not filename.endswith("/hosts.mk"):
         return ""
     wato_path = filename[6:-9]
-    title_path = wato.api.get_folder_title_path(wato_path, with_links)
+    title_path = wato.get_folder_title_path(wato_path, with_links)
     if how == "plain":
         return title_path[-1]
     elif how == "abs":

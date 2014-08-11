@@ -36,4 +36,4 @@ def sync_pre_activate_changes(_unused):
     if do_sync:
         userdb.hook_sync()
 
-api.register_hook('pre-activate-changes', sync_pre_activate_changes)
+register_hook('pre-activate-changes', sync_pre_activate_changes)

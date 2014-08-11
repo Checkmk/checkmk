@@ -56,7 +56,7 @@ def render_wato(mini):
             else:
                 iconlink(title, url, icon)
 
-    num_pending = wato.api.num_pending_changes()
+    num_pending = wato.num_pending_changes()
     if num_pending:
         footnotelinks([(_("%d changes") % num_pending, "wato.py?mode=changelog")])
 
@@ -197,7 +197,7 @@ def render_tree_folder(f, js_func):
 
     if not is_leaf:
         html.begin_foldable_container('wato-hosts', "/" + f[".path"], False, title)
-        for sf in wato.api.sort_by_title(subfolders.values()):
+        for sf in wato.sort_by_title(subfolders.values()):
             render_tree_folder(sf, js_func)
         html.end_foldable_container()
     else:

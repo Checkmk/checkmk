@@ -400,3 +400,40 @@ __builtin__.default_user_localizations = {
      u'SNMP (Networking device, Appliance)': { "de": u"SNMP (Netzwerkgerät, Appliance)", },
 }
 
+try:
+    import ast
+    literal_eval = ast.literal_eval
+except ImportError:
+    # python <2.5 compatibility
+    try:
+        from compiler import parse
+        import compiler.ast
+        def literal_eval(node_or_string):
+            _safe_names = {'none': none, 'true': true, 'false': false}
+
+            if isinstance(node_or_string, basestring):
+                node_or_string = parse(node_or_string, mode='eval')
+            if isinstance(node_or_string, compiler.ast.expression):
+                node_or_string = node_or_string.node
+
+            def _convert(node):
+                if isinstance(node, compiler.ast.const) and isinstance(node.value,
+                        (basestring, int, float, long, complex)):
+                     return node.value
+                elif isinstance(node, compiler.ast.tuple):
+                    return tuple(map(_convert, node.nodes))
+                elif isinstance(node, compiler.ast.list):
+                    return list(map(_convert, node.nodes))
+                elif isinstance(node, compiler.ast.dict):
+                    return dict((_convert(k), _convert(v)) for k, v
+                                in node.items)
+                elif isinstance(node, compiler.ast.name):
+                    if node.name in _safe_names:
+                        return _safe_names[node.name]
+                elif isinstance(node, compiler.ast.unarysub):
+                    return -_convert(node.expr)
+                raise valueerror('malformed string')
+
+            return _convert(node_or_string)
+    except:
+        literal_eval = none

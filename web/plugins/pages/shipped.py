@@ -40,6 +40,7 @@ import help
 import bi
 import userdb
 import notify
+import webapi
 
 # map URLs to page rendering functions
 
@@ -96,5 +97,7 @@ pagehandlers.update({
    "ajax_userdb_sync"         : userdb.ajax_sync,
    "notify"                   : notify.page_notify,
    "ajax_inv_render_tree"     : views.ajax_inv_render_tree,
+
+   "webapi"                   : webapi.page_api,
 })
 

@@ -267,7 +267,7 @@ def render_dashboard(name):
         header_height = 0
 
     elif wato_folder is not None:
-        title = wato.api.get_folder_title(wato_folder) + " - " + title
+        title = wato.get_folder_title(wato_folder) + " - " + title
 
     html.header(title, javascripts=["dashboard"], stylesheets=["pages", "dashboard", "status", "views"])
 

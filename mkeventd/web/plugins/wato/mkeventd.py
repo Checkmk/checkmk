@@ -2165,9 +2165,9 @@ define command {
 }
 """ % { "group" : contactgroup, "facility" : config.mkeventd_notify_facility, "remote" : remote_console })
 
-api.register_hook("pre-activate-changes", mkeventd_update_notifiation_configuration)
+register_hook("pre-activate-changes", mkeventd_update_notifiation_configuration)
 
 # Only register the reload hook when mkeventd is enabled
 if mkeventd_enabled:
-    api.register_hook("activate-changes", lambda hosts: mkeventd_reload())
+    register_hook("activate-changes", lambda hosts: mkeventd_reload())
 

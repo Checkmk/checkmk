@@ -1,0 +1,26 @@
+Title: New WATO webservices: manage hosts via webinterface
+Level: 3
+Component: wato
+Compatible: compat
+Version: 1.2.5i6
+Date: 1407773391
+Class: feature
+
+It is now possible to manage hosts via web requests<br>
+This includes the following operations
+
+<ul>
+<li>Add host</li>
+<li>Edit host</li>
+<li>Delete host</li>
+<li>Get host attributes</li>
+<li>Host service discovery</li>
+<li>Activate changes</li>
+</ul>
+
+These operations also work in a distributed environment. You can find more information
+regarding these web request in the <tt>Roles & Permissions</tt> page under a roles settings.
+There is a new permission topic <tt>Web API</tt> where you can configure the permission
+of all available API requests. The help texts for these permissions provide some useful examples.
+
+In the near future, there will be a "Howto Web-API" article in our online documentation, too.

@@ -111,5 +111,5 @@ def validate_host_parents(effective_host):
                   "relation is used to describe the reachability of hosts by one monitoring daemon.") %
                     (parentname, parent["site"], effective_host["site"]))
 
-api.register_hook('validate-host', validate_host_parents)
+register_hook('validate-host', validate_host_parents)
 

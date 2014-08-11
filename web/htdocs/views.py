@@ -1538,9 +1538,9 @@ def show_context_links(thisview, show_filters, display_options,
            and wato.using_wato_hosts():
             host = html.var("host")
             if host:
-                url = wato.api.link_to_host(host)
+                url = wato.link_to_host(host)
             else:
-                url = wato.api.link_to_path(html.var("wato_folder", ""))
+                url = wato.link_to_path(html.var("wato_folder", ""))
             html.context_button(_("WATO"), url, "wato", id="wato",
                 bestof = config.context_buttons_to_show)
 

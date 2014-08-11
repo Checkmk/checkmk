@@ -1,0 +1,146 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Developed by Thorsten Bruhns from OPITZ CONSULTING Deutschland GmbH
+
+# <<<oracle_crs_res>>>
+# parsing of output from agent is done in this check
+
+def inventory_oracle_crs_res(info):
+    inventory = []
+    for line in info:
+        if line[2][0:5] == 'NAME=':
+
+            inventory.append((line[2][5:], None))
+    return inventory
+
+def parse_oracle_crs_data(info):
+    """ parse output from agent and generate a list with dictionary
+    Each section starts with NAME=
+    Key/Value is splitted by '='
+    """
+    data = []
+    datadict = {}
+
+    for line in info:
+
+        if line[2] == '\n' or line[1] == 'nodename':
+            continue
+        if line[2][0:5] == 'NAME=':
+#            print line[2].split('=', 1)
+
+            if len(datadict) > 0:
+                data.append([datadict.copy(), line[1]])
+                datadict.clear()
+
+        datasplit = line[2].split('=', 1)
+        datadict[datasplit[0]] = datasplit[1]
+
+    # add last entry
+    if len(datadict) > 0:
+        data.append([datadict.copy(), line[1]])
+    return data
+
+def get_oracle_crs_runninginfo(item, data):
+    infotext = ''
+    for line in data:
+        resname = line[0]['NAME']
+        resstate = line[0]['STATE'].split(' ', 1)[0]
+        resstatelong = line[0]['STATE']
+        nodename = line[1]
+
+        if item == resname  and nodename not in ('nodename', 'csslocal', 'crslocal') \
+        and resstate == 'ONLINE':
+
+            # sometime there is only 'ONLINE' instead 'ONLINE on <nodename>'
+            # prevent duplicate entries
+            infotextshort = ' [online on %s]' % (nodename)
+            if infotextshort not in infotext:
+                infotext += infotextshort
+
+    return infotext
+
+def get_oracle_crs_nodename(info):
+    for line in info:
+        if line[1] == 'nodename':
+            return line[2]
+    return ''
+
+def check_oracle_crs_res(item, params, info):
+    # state = -1 => no data for Service
+    state = -1
+    infotext = ''
+    data = []
+
+    data = parse_oracle_crs_data(info)
+
+    for line in data:
+
+        nodename = line[1]
+        crsnodename = get_oracle_crs_nodename(info)
+        resname = line[0]['NAME']
+        restype = line[0]['TYPE']
+        resstate = line[0]['STATE'].split(' ', 1)[0]
+        restarget = line[0]['TARGET']
+
+        if resname == item and nodename in ('csslocal', crsnodename):
+            if nodename == 'csslocal':
+                runningtext = '[local resource]'
+            else:
+                runningtext = get_oracle_crs_runninginfo(resname, data)
+
+            if resstate <> restarget:
+                state = 2
+                infotext = 'state %s (!!), target state %s %s' \
+                         % (resstate, restarget, runningtext)
+            else:
+                state = 0
+                infotext = 'state %s, target state %s %s' \
+                            % (resstate.lower(), restarget.lower(), runningtext)
+
+    # we found no agent data for cssd. => Clusterware not running
+    if item == 'ora.cssd' and state == -1:
+        state = 2
+        infotext = 'Clusterware not running!'
+
+    if item == 'ora.crsd' and state == -1:
+        state = 2
+        infotext = 'Cluster Resource Service Daemon not running!'
+
+    if state <> -1:
+        return (state, infotext)
+
+    # In case of missing information we assume that the clusterware
+    # is not running and we simple skip the result
+    raise MKCounterWrapped(None, "No resource details found for %s. Maybe the cssd/crsd is not running" % item)
+
+check_info['oracle_crs_res'] = {
+    "check_function"          : check_oracle_crs_res,
+    "inventory_function"      : inventory_oracle_crs_res,
+    "service_description"     : "ORA-GI %s Resource",
+    "node_info"               : True,
+    "group"                   : "oracle_crs_res",
+}

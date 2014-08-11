@@ -1,0 +1,111 @@
+#!/bin/bash
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Developed by Thorsten Bruhns from OPITZ CONSULTING Deutschland GmbH
+
+ocrcfgfile=/etc/oracle/ocr.loc
+olrcfgfile=/etc/oracle/olr.loc
+resourcefilter="^NAME=|^TYPE=|^STATE=|^TARGET=|^ENABLED="
+
+#   .--Functions-----------------------------------------------------------.
+#   |             _____                 _   _                              |
+#   |            |  ___|   _ _ __   ___| |_(_) ___  _ __  ___              |
+#   |            | |_ | | | | '_ \ / __| __| |/ _ \| '_ \/ __|             |
+#   |            |  _|| |_| | | | | (__| |_| | (_) | | | \__ \             |
+#   |            |_|   \__,_|_| |_|\___|\__|_|\___/|_| |_|___/             |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+function set_has_env(){
+    test -f ${ocrcfgfile} || exit 0
+
+    local_has_type=$(cat $ocrcfgfile | grep "^local_only=" | cut -d"=" -f2)
+    has_ORACLE_HOME=$(cat $olrcfgfile | grep "^crs_home=" | cut -d"=" -f2)
+    CRSCTL=${has_ORACLE_HOME}/bin/crsctl
+    OLSNODES=${has_ORACLE_HOME}/bin/olsnodes
+    CRS_STAT=${has_ORACLE_HOME}/bin/crs_stat
+}
+
+function printhasdata() {
+    ps -e | grep cssd.bin > /dev/null || exit 0
+
+    echo "<<<oracle_crs_version:sep(124)>>>"
+    $CRSCTL query has releaseversion
+
+    echo "<<<oracle_crs_res>>>"
+    $CRSCTL stat res -f | grep -E $resourcefilter
+}
+
+function printcrsdata() {
+    ps -e | grep ohasd.bin > /dev/null || exit 0
+
+    echo "<<<oracle_crs_version:sep(124)>>>"
+    crs_version=$($CRSCTL query crs releaseversion)
+    crs_version_short=$(echo $crs_version | cut -d"[" -f2- | cut -d"." -f-2)
+    echo $crs_version
+
+    echo "<<<oracle_crs_voting>>>"
+    $CRSCTL query css votedisk | grep "^ [1-9]"
+
+    ps -e | grep crsd.bin > /dev/null || exit 0
+    echo "<<<oracle_crs_res:sep(124)>>>"
+    OLS_NODENAME=$($OLSNODES -l)
+
+    echo "nodename|"$OLS_NODENAME
+
+    if [ $crs_version_short = '11.2' ] ; then
+        $CRSCTL stat res -v -n $OLS_NODENAME -init | grep -E $resourcefilter | sed "s/^/csslocal\|/"
+        for nodelist in $($OLSNODES)
+        do
+            $CRSCTL stat res -v -n $nodelist | grep -E $resourcefilter | sed "s/^/$nodelist\|/"
+        done
+    else
+        $CRS_STAT -f | grep -E $resourcefilter
+    fi
+}
+
+#   .--Main----------------------------------------------------------------.
+#   |                        __  __       _                                |
+#   |                       |  \/  | __ _(_)_ __                           |
+#   |                       | |\/| |/ _` | | '_ \                          |
+#   |                       | |  | | (_| | | | | |                         |
+#   |                       |_|  |_|\__,_|_|_| |_|                         |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+set_has_env
+echo "<<<oracle_crs_res>>>"
+echo "<<<oracle_crs_version>>>"
+echo "<<<oracle_crs_votedisk>>>"
+if [ $local_has_type = 'FALSE' ] ; then
+    printcrsdata
+else
+    printhasdata
+fi
+

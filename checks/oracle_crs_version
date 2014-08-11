@@ -1,0 +1,21 @@
+"""
+$Id: oracle_gi_version 1037 2013-10-13 10:20:02Z tbr $
+"""
+
+def inventory_oracle_crs_version(info):
+    return [ ('', None) for line in info ]
+
+def check_oracle_crs_version(item, params, info):
+    for line in info:
+        return (0, line[0])
+
+    # In case of missing information we assume that the clusterware
+    # is not running and we simple skip the result
+    raise MKCounterWrapped(None, "No version details found. Maybe the cssd is not running")
+
+check_info['oracle_crs_version'] = {
+    "check_function"          : check_oracle_crs_version,
+    "inventory_function"      : inventory_oracle_crs_version,
+    "service_description"     : "ORA-GI Version",
+    "group"                   : "oracle_crs_version",
+}

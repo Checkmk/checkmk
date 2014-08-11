@@ -1,0 +1,33 @@
+title: Oracle Clusterware: Cluster Resources
+agents: linux, aix, solaris, hpux
+catalog: app/oracle
+license: GPL
+distribution: check_mk
+description:
+ This check needs the agent pluing mk_oracle_crs from our plugin directory.
+ After copying to the agent plugin directory, Check_MK will find all resources
+ of a running Oracle Clusterware/Grid-Infrastructure or Restart.
+
+ All resources are stale when RA-GI ora.cssd Resource is CRIT to reduced
+ notifications.
+
+ A resource is CRIT when STATE <> TARGET_STATE.
+
+ This checks needs a lot of clusterrules in WATO, because every resource
+ from Oracle Clusterware/Grid-Infrastructure is found when inventory is
+ started.
+ A failover resource is stale on the failover nodes and only checked on
+ the active node. Don't forget rules for these resources.
+
+ Every Service with [local resource] are only checked on the node where
+ the agent result came from. These resources are no cluster resource and
+ they don't need any clusterrule in WATO!
+
+ This plugin is tested against Oracle Grid-Infrastructure, Oracle Restart
+ 11.2 and 12.1.
+
+item:
+ ORA-GI <Name of Resource> Resource
+
+inventory:
+ One service will be created for each resource.

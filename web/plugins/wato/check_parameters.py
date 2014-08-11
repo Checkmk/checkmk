@@ -476,6 +476,37 @@ register_rule(group + '/' + subgroup_inventory,
 )
 
 register_rule(group + '/' + subgroup_inventory,
+    varname   = "sap_value_groups",
+    title     = _('SAP Value Grouping Patterns'),
+    help      = _('The check <tt>sap.value</tt> normaly creates one service for each sap value '
+                  'By defining grouping patterns you can switch to the check <tt>sap.value-groups</tt>. '
+                  'That check monitors a list of SAP values at once. This is usefull if you have '
+                  'a very big list of values which do you want to monitor'),
+    valuespec = ListOf(
+        Tuple(
+            help = _("This defines one value grouping pattern"),
+            show_titles = True,
+            orientation = "horizontal",
+            elements = [
+                TextAscii(
+                     title = _("Name of group"),
+                ),
+                Tuple(
+                    show_titles = True,
+                    orientation = "vertical",
+                    elements = [
+                        RegExpUnicode(title = _("Include Pattern")),
+                        RegExpUnicode(title = _("Exclude Pattern"))
+                    ],
+                ),
+            ],
+        ),
+        add_label = _("Add pattern group"),
+    ),
+    match = 'all',
+)
+
+register_rule(group + '/' + subgroup_inventory,
     varname   = "inventory_heartbeat_crm_rules",
     title     = _("Heartbeat CRM Inventory"),
     valuespec = Dictionary(

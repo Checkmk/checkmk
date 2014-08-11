@@ -78,7 +78,7 @@ check_info['sap.dialog'] = {
 # at the moment the following parameters are supported:
 # 1. match: the sap-path matching definition
 inventory_sap_values = []
-
+sap_value_groups = []
 def inventory_sap_value(info):
     inv = []
 
@@ -157,3 +157,79 @@ check_info['sap.value'] = {
     "service_description" : "%s",
     "has_perfdata"        : True,
 }
+
+def sap_value_groups_precompile(hostname, item, _unused):
+    return host_extra_conf(hostname, sap_value_groups)
+
+def sap_groups_of_value( value_name, patterns=False ):
+    groups = []
+    if not patterns:
+        patterns = host_extra_conf(g_hostname, sap_value_groups)
+
+    for line in patterns:
+        for group_name, pattern in line:
+            no_match = False
+            inclusion, exclusion = pattern
+            # Exclude:
+            if exclusion:
+                reg = compiled_regexes.get(exclusion)
+                if not reg:
+                    reg = re.compile(exclusion)
+                    compiled_regexes[exclusion] = reg
+                if reg.match(value_name):
+                    no_match = True
+                    break
+            #no match for this group, go on with the next group
+            if no_match:
+                break
+
+            # Include
+            reg = compiled_regexes.get(inclusion)
+            if not reg:
+                reg = re.compile(inclusion)
+                compiled_regexes[inclusion] = reg
+            if reg.match(value_name):
+                groups.append(group_name)
+    return groups
+
+def inventory_sap_value_groups( info ):
+    inventory = []
+    found_groups = []
+    for line in info:
+        path = line[3]
+        for group in sap_groups_of_value( path ):
+            if group not in found_groups:
+                inventory.append(( group, None ))
+                found_groups.append(group)
+    return inventory
+
+def check_sap_value_groups( item, params, info ):
+    frontend = []
+    backend = []
+    count_ok = 0
+    count_crit = 0
+    state = 0
+    for line in info:
+        path = line[3]
+        if item in sap_groups_of_value( path, params ):
+            status = sap_nagios_state_map[int(line[1])]
+            output = ''
+            if line[4] == '-':
+                output  = ' '.join(line[6:])
+            backend.append( path + output + " "  + nagios_state_names[status] )
+            state = max(state, status)
+            if status > 0:
+                count_crit += 1
+                frontend.append( path + output + " "  + nagios_state_names[status] )
+            else:
+                count_ok += 1
+
+    return state, "%s OK, %s Crit %s\n%s" % ( count_ok, count_crit, ", ".join(frontend), "\n".join(backend) )
+
+
+check_info['sap.value-groups'] = {
+    'check_function':      check_sap_value_groups,
+    'inventory_function':  inventory_sap_value_groups,
+    'service_description': "%s",
+}
+precompile_params['sap.value-groups'] = sap_value_groups_precompile

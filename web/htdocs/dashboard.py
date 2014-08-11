@@ -116,9 +116,13 @@ def transform_builtin_dashboards():
                 dashlet['type'] = dashlet['url'][8:-3]
                 del dashlet['url']
 
-            elif dashlet.get('url', '') != '' or dashlet.get('urlfunc'):
+            elif dashlet.get('url', '') != '' or dashlet.get('urlfunc') or dashlet.get('iframe'):
                 # Normal URL based dashlet
                 dashlet['type'] = 'url'
+
+                if dashlet.get('iframe'):
+                    dashlet['url'] = dashlet['iframe']
+                    del dashlet['iframe']
 
             elif dashlet.get('view', '') != '':
                 # Transform views

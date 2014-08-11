@@ -1,0 +1,12 @@
+Title: cisco_secure: Check creates now a summary instead one service by port
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.5i6
+Date: 1407771069
+Class: feature
+
+With this new behavier it's much easyer to handle fussy enviroments whith many portstate changes. 
+
+A re-service detection for the switch's with port security is necessary after Update.
+

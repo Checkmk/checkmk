@@ -6,12 +6,11 @@ distribution: check_mk
 description:
  This check monitors the port Security feature of cisco_switches. It returns a {CRITICAL} state for
  each port which is locked due a security isse. If is port security configured but cant be enabled
- the check returns {WARNING}. If a port goes down, the check ignores that and only shows a information in the
- check output.
+ the check returns {WARNING}. 
 
 item:
- The description of the Port
+ None
 
 inventory:
- One check for each port with enabled port security which is also up will be created
+ One summary check will be created
 

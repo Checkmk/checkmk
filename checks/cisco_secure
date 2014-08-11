@@ -35,12 +35,12 @@ def cisco_secure_convert(info):
 
 def inventory_cisco_secure(info):
     info = cisco_secure_convert(info)
-    inventory = []
+    # search for at least one port with security
     for name, op_state, enabled, status, violationCount, lastmac in info:
         #if portsecurity enabled and port up OR currently there is sercurity issue`
         if ( enabled == 1 and op_state == 1) or status == 3:
-            inventory.append( (name, None) )
-    return inventory
+            return [ (None, None) ]
+    return []
 
 def check_cisco_secure(item, params, info):
     secure_states = {
@@ -50,21 +50,17 @@ def check_cisco_secure(item, params, info):
         }
 
     info = cisco_secure_convert(info)
+    failed = []
     for name, op_state, enabled, status, violationCount, lastmac in info:
-        if name == item:
-            message = "Port Security %s (Violation Count: %s, Last Mac: %s)" % \
-            ( secure_states[status], violationCount, lastmac )
+        message = "Port %s: %s (Violation Count: %s, Last Mac: %s)" % \
+        ( name, secure_states[status], violationCount, lastmac )
 
-            # If port cant be enabled and is up
-            if status == 2 and op_state == 1:
-                return 1, message
-            # Port cant be enabled but is down, so no error state
-            elif status == 2:
-                return 0, "Port is down"
-            # Security issue
-            elif status == 3:
-                return 2, message
-            return 0, message
+        # If port cant be enabled and is up
+        if status == 2 and op_state == 1:
+            yield 1, message
+        # Security issue
+        elif status == 3:
+            yield 2, message
 
 check_info["cisco_secure"] = {
     "check_function"        : check_cisco_secure,

@@ -20,7 +20,7 @@ This includes the following operations
 
 These operations also work in a distributed environment. You can find more information
 regarding these web request in the <tt>Roles & Permissions</tt> page under a roles settings.
-There is a new permission topic <tt>Web API</tt> where you can configure the permission
+There is a new permission topic <tt>Web API</tt> where you can configure the permissions
 of all available API requests. The help texts for these permissions provide some useful examples.
 
 In the near future, there will be a "Howto Web-API" article in our online documentation, too.

@@ -89,7 +89,7 @@ def inventory_diskstat_generic(info):
 
 
 
-def check_diskstat_line(this_time, item, params, line, mode):
+def check_diskstat_line(this_time, item, params, line, mode='sectors'):
     average_range = params.get("average")
     perfdata = []
     infos = []

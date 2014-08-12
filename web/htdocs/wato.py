@@ -16681,6 +16681,18 @@ def get_folder_tree():
     num_hosts_in(g_root_folder) # sets ".total_hosts"
     return g_root_folder
 
+# Find a folder by its path. Raise an exception if it does
+# not exist.
+def get_folder(path):
+    prepare_folder_info()
+
+    folder = g_folders.get(path)
+    if folder:
+        load_hosts(folder)
+        return folder
+    else:
+        raise MKGeneralException("No WATO folder %s." % path)
+
 # Return the title of a folder - which is given as a string path
 def get_folder_title(path):
     load_all_folders() # TODO: use in-memory-cache
@@ -16702,12 +16714,12 @@ def sort_by_title(folders):
     folders.sort(cmp = folder_cmp)
     return folders
 
-def get_all_hosts(self, folder=None):
+def get_all_hosts(folder=None):
     if not folder:
-        self.prepare_folder_info()
+        prepare_folder_info()
     return collect_hosts(folder or g_root_folder)
 
-def get_host(self, folder, hostname):
+def get_host(folder, hostname):
     host = folder[".hosts"][hostname]
     eff = effective_attributes(host, folder)
     eff["name"] = hostname

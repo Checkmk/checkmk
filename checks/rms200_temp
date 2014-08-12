@@ -33,14 +33,14 @@ def check_rms200_temp(item, params, info):
     for line in info:
         if line[0] == item:
             warn, crit = params
-            temp = saveint(line[2])/100
+            temp = float(line[2])/100
             name = line[1]
             state = 0
             if temp >= crit:
                 state = 2
             elif temp >= warn:
                 state = 1
-            message = "Current Temperature: %d °C (%s)" % (temp, name)
+            message = "Current Temperature: %.2f °C (%s)" % (temp, name)
             perf = [ ('temp', temp, warn, crit ) ]
             return state, message, perf
     return 3, "No information found about the device"
@@ -55,7 +55,7 @@ check_info["rms200_temp"] = {
     "snmp_info"             : ( ".1.3.6.1.4.1.1909.13.1.1.1", [
                                                                 1, # ID,
                                                                 2, # Name,
-                                                                3, # Temp
+                                                                5, # Temp
                                                               ] ),
 }
 

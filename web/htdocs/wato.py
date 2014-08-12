@@ -16834,17 +16834,16 @@ def add_host_to_folder(folder, hostname, attributes):
     call_hook_hosts_changed(folder)
 
 # Updates attributes of one host
-# This function is quite special (tag deletion) and only used by the Web-API so far
-def update_host_attributes(host, attributes):
+def update_host_attributes(host, attr = {}, unset_attr = []):
     cleaned_attr = dict([(k, v) for (k, v) in host.iteritems() if not k.startswith('.') ])
 
-    for key, value in attributes.items():
-        # If a host tag (e.g. tag_agent) is set to False, delete this key
-        if key.startswith("tag_") and value == False:
-            if key in cleaned_attr:
-                del cleaned_attr[key]
-        else:
-            cleaned_attr[key] = value
+    # unset keys
+    for key in unset_attr:
+        if key in cleaned_attr:
+            del cleaned_attr[key]
+
+    # set new keys
+    cleaned_attr.update(attr)
 
     set_host_attributes(host, cleaned_attr)
 
@@ -17011,18 +17010,18 @@ class API:
         # Update the all_hosts reference. Saves quite some time on followup calls
         all_hosts[hostname] = folder[".hosts"][hostname]
 
-    def edit_host(self, hostname, host_attr, dry_run = False):
+    def edit_host(self, hostname, attr = {}, unset_attr = []):
         self.__prepare_folder_info()
         all_hosts = self.__get_all_hosts()
 
-        attributes = self.__get_valid_api_host_attributes(host_attr)
+        attributes = self.__get_valid_api_host_attributes(attr)
         self.__validate_host_data(hostname, attributes = attributes,
                                             all_hosts = all_hosts,
                                             validate = ["host_missing", "tags", "site", "permissions_edit"])
 
         ### Update Host
         host = all_hosts[hostname]
-        update_host_attributes(host, attributes)
+        update_host_attributes(host, attr = attributes, unset_attr = unset_attr)
 
         # Update all_hosts reference. Saves quite some time on followup calls
         folder_path = all_hosts[hostname][".folder"][".path"]

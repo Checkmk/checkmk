@@ -63,13 +63,14 @@ api_actions["add_host"] = {
 ###############
 
 def action_edit_host(request):
-    hostname   = request.get("hostname")
-    attributes = request.get("attributes", {})
+    hostname         = request.get("hostname")
+    attributes       = request.get("attributes", {})
+    unset_attributes = request.get("unset_attributes", [])
 
     if not hostname:
         raise MKUserError(None, "Hostname is missing")
 
-    return g_api.edit_host(hostname, attributes)
+    return g_api.edit_host(hostname, attr = attributes, unset_attr = unset_attributes)
 
 api_actions["edit_host"] = {
     "handler"     : action_edit_host,
@@ -81,6 +82,7 @@ api_actions["edit_host"] = {
                                     "tag_agent": "snmp-only",
                                     "site": "slave"
                                 },
+                           "unset_attributes": ["tag_criticality"],
                            "hostname": "testhost"
                          }),
     "locking"     : True,

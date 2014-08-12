@@ -1,0 +1,17 @@
+title: Dell iDrac: Disks
+agents: snmp
+catalog: hw/server/dell
+license: GPL
+distribution: check_mk
+description:
+ This checks connects to a Dell iDrac and monitors the health and current 
+ Status of Hardisks attached to server. Currently tested with iDrac V7.
+ The check returns a {CRIT} in case of an error state reported
+ by the device. The check also reports Size, SMART Errors and Spare state for each disk.
+
+item:
+ The compination of EnclosureID, Channel and TargetID seperated by colums
+
+inventory:
+ One check is created for each Disk
+

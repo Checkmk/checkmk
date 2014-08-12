@@ -121,8 +121,11 @@ def parse_cisco_temp_sensor(info):
 
     for endoid, level in levels_info:
        # endoid is e.g. 21549.9 or 21459.10
+       level = saveint(levels)
+       if level > 70:
+           level = level / 10
        id, subid = endoid.split('.')
-       thresholds.setdefault(id, []).append(saveint(level))
+       thresholds.setdefault(id, []).append(level)
 
     # Create main dictionary (only of temperature sensors)
     sensors = []

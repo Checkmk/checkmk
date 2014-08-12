@@ -1,0 +1,10 @@
+Title: WATO new cluster: Can only add one cluster node in the formular
+Component: wato
+State: open
+Date: 2014-08-12 14:30:05
+Targetversion: future
+Class: bug
+
+- Create a new cluster within WATO, but omit the nodes field
+- Save formular. A warning appears, the nodes field is highlighted
+- The list of nodes does not auto-enlarge, so you can only add one node

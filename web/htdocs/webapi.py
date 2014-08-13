@@ -137,11 +137,11 @@ def page_api():
                 request_object = example_request[1]
 
         action_response = api_actions[action]["handler"](request_object)
-        response = { "result_code": 0, "result_text": action_response }
+        response = { "result_code": 0, "result": action_response }
     except Exception, e:
         #import traceback
         #html.debug(traceback.format_exc().replace("\n","<br>"))
-        response = { "result_code": 1, "result_text": str(e) }
+        response = { "result_code": 1, "result": str(e) }
 
     output_format = html.var("output_format", "json")
     if output_format == "json":

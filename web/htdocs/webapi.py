@@ -106,7 +106,7 @@ def page_api():
         request_object = {}
         if html.var("request"):
             if api_actions[action].get("dont_eval_request"):
-                request_object = request
+                request_object = html.var("request")
             else:
                 eval_function = None
                 request = html.var("request")

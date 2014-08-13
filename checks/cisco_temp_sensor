@@ -130,11 +130,10 @@ def parse_cisco_temp_sensor(info):
     # Create main dictionary (only of temperature sensors)
     sensors = []
     for id, sensortype, value, sensorstate in state_info:
-        # poor try to find temperature values
-        # who are given in tens of degress.
-        # Seems that some new firmware show this behavier.
-        # A normal Temperature Sensor has only a range up to
-        # 60 degree, so i choiced 70.
+        # Poor try to find temperature values, which are given in tenths of degrees.
+        # Seems that some new firmware shows this behaviour.
+        # A normal temperature sensor has only a range up to
+        # 60 degree, so we've chosen 70.
         value = saveint(value)
         if value > 70:
             value = value / 10
@@ -165,18 +164,20 @@ def check_cisco_temp_sensor(item, params, info):
             levels = " (warn/crit at %.1f/%.1f °C)" % (warn, crit)
             perfdata = [ ( "temperature", temp, warn, crit ) ]
             state = 0
-	    if sensorstate == "2":
-	       return (3, "data from sensor currently not available")
-            elif sensorstate == "3":
-	       return (3, "sensor is broken")
-            if temp >= crit:
-	       state = 2
-               infotext += levels
-            elif temp >= warn:
-	       state = 1
-               infotext += levels
-	    return state, infotext, perfdata
-    return (3, "sensor not found in SNMP data")
+
+        if sensorstate == "2":
+           return (3, "Data from sensor currently not available")
+        elif sensorstate == "3":
+           return (3, "Sensor is broken")
+
+        if temp >= crit:
+            state = 2
+            infotext += levels
+        elif temp >= warn:
+            state = 1
+            infotext += levels
+        return state, infotext, perfdata
+    return (3, "Sensor not found in SNMP data")
 
 
 check_info['cisco_temp_sensor'] = {

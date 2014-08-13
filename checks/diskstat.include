@@ -125,7 +125,7 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
 
         # check levels
         state, text, extraperf = check_levels(bytes_per_sec, dsname, levels,
-                                              unit = "MB/s", factor = 1048576, statemarkers=True)
+                                              unit = "MB/s", scale = 1048576, statemarkers=True)
         if text:
             infos.append(text)
         status = max(state, status)

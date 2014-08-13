@@ -155,7 +155,7 @@ def check_mem_windows(item, params, info):
                 "average" in params and paramname + "_avg" or paramname,     # Name of RRD variable
                 params[paramname],
                 unit = "GB",                                                 # Levels are specified in GB...
-                factor = 1024 * 1024 * 1024.0,                               # ... in WATO ValueSpec
+                scale = 1024 * 1024,                                         # ... in WATO ValueSpec
             )
             if infoadd:
                 infotext += ", " + infoadd

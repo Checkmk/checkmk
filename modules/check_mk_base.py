@@ -1592,10 +1592,15 @@ def pnp_cleanup(s):
 # dsname:  name of the datasource in the RRD that corresponds to this value
 # unit:    unit to be displayed in the plugin output, e.g. "MB/s"
 # factor:  the levels are multiplied with this factor before applying
-#          them to the value. For example the disk-IO check uses B/s
-#          as the unit for the value. But the levels are in MB/s. In that
-#          case the factor is 1.0 / 1048576.
-def check_levels(value, dsname, params, unit = "", factor = 1.0, statemarkers=False):
+#          them to the value. This is being used for the CPU load check
+#          currently. The levels here are "per CPU", so the number of
+#          CPUs is used as factor.
+# scale:   Scale of the levels in relation to "value" and the value in the RRDs.
+#          For example if the levels are specified in GB and the RRD store KB, then
+#          the scale is 1024*1024.
+def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemarkers=False):
+    if unit:
+        unit = " " + unit # Insert space before MB, GB, etc.
 
     perfdata = []
     infotext = ""
@@ -1606,7 +1611,7 @@ def check_levels(value, dsname, params, unit = "", factor = 1.0, statemarkers=Fa
 
     # Pair of numbers -> static levels
     elif type(params) == tuple:
-        warn_upper, crit_upper = params[0] * factor, params[1] * factor,
+        warn_upper, crit_upper = params[0] * factor * scale, params[1] * factor * scale,
         warn_lower, crit_lower = None, None
         ref_value = None
 
@@ -1614,9 +1619,9 @@ def check_levels(value, dsname, params, unit = "", factor = 1.0, statemarkers=Fa
     else:
         try:
             ref_value, ((warn_upper, crit_upper), (warn_lower, crit_lower)) = \
-                get_predictive_levels(dsname, params, "MAX", levels_factor=factor)
+                get_predictive_levels(dsname, params, "MAX", levels_factor=factor * scale)
             if ref_value:
-                infotext += "predicted reference: %.2f%s" % (ref_value * factor, unit)
+                infotext += "predicted reference: %.2f%s" % (ref_value * factor / scale, unit)
             else:
                 infotext += "no reference for prediction yet"
         except Exception, e:
@@ -1630,18 +1635,18 @@ def check_levels(value, dsname, params, unit = "", factor = 1.0, statemarkers=Fa
     # Critical cases
     if crit_upper != None and value >= crit_upper:
         state = 2
-        infotext += " (critical level at %.2f%s)" % (crit_upper / factor, unit)
+        infotext += " (critical level at %.2f%s)" % (crit_upper / factor / scale, unit)
     elif crit_lower != None and value <= crit_lower:
         state = 2
-        infotext += " (too low: critical level at %.2f%s)" % (crit_lower / factor, unit)
+        infotext += " (too low: critical level at %.2f%s)" % (crit_lower / factor / scale, unit)
 
     # Warning cases
     elif warn_upper != None and value >= warn_upper:
         state = 1
-        infotext += " (warning level at %.2f%s)" % (warn_upper / factor, unit)
+        infotext += " (warning level at %.2f%s)" % (warn_upper / factor / scale, unit)
     elif warn_lower != None and value <= warn_lower:
         state = 1
-        infotext += " (too low: warning level at %.2f%s)" % (warn_lower / factor, unit)
+        infotext += " (too low: warning level at %.2f%s)" % (warn_lower / factor / scale, unit)
 
     # OK
     else:

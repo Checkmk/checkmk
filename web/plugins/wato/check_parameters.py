@@ -3106,6 +3106,37 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "oracle_dataguard_stats",
+    _("Oracle Data-Guard Stats"),
+    Dictionary(
+        help = _("The Data-Guard are availible in Oracle Enterprise Edition with enabled Data-Guard. "
+                 "The init.ora Parameter dg_broker_start must be TRUE for this check. The apply and "
+                 "transport lag could be configured with this rule."),
+        elements = [
+            ( "apply_lag",
+              Tuple(
+                  title = _("Apply Lag"),
+                  help = _( "The limit for the apply lag in v$dataguard_stats."),
+                  elements = [
+                      Age(title = _("Warning if above"),  unit = _(""), default_value = 10800),
+                      Age(title = _("Critical if above"), unit = _(""), default_value = 21600)])),
+            ( "transport_lag",
+              Tuple(
+                  title = _("Transport Lag"),
+                  help = _( "The limit for the transport lag in v$dataguard_stats."),
+                  elements = [
+                      Age(title = _("Warning if above"),  unit = _(""), default_value = 10800),
+                      Age(title = _("Critical if above"), unit = _(""), default_value = 21600)])),
+                   ]),
+    TextAscii(
+        title = _("Database SID"),
+        size = 12,
+        allow_empty = False),
+    "dict",
+)
+
+register_check_parameters(
+    subgroup_applications,
     "oracle_undostat",
     _("Oracle Undo Retention"),
     Dictionary(

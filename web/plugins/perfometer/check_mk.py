@@ -522,6 +522,31 @@ def perfometer_oracle_tablespaces(row, check_command, perf_data):
 
 perfometers["check_mk-oracle_tablespaces"] = perfometer_oracle_tablespaces
 
+def perfometer_check_oracle_dataguard_stats(row, check_command, perf_data):
+    perfdata_found = False
+    perfdata1 = ''
+
+    for data in perf_data:
+        if data[0] == "apply_lag":
+            color = '#80F000'
+
+            perfdata_found = True
+            days,    rest    = divmod(int(data[1]), 60*60*24)
+            hours,   rest    = divmod(rest,   60*60)
+            minutes, seconds = divmod(rest,      60)
+            perfdata1 = data[1]
+
+
+    if perfdata_found == False:
+        days = 0
+        hours = 0
+        minutes = 0
+        color = "#008f48";
+
+    return "%02dd %02dh %02dm" % (days, hours, minutes), perfometer_logarithmic(perfdata1, 2592000, 2, color)
+
+perfometers["check_mk-oracle_dataguard_stats"]      = perfometer_check_oracle_dataguard_stats
+
 def perfometer_oracle_sessions(row, check_command, perf_data):
     if check_command != "check_mk-oracle_sessions":
 	color = "#008f48";
@@ -1129,9 +1154,9 @@ def perfometer_fec( row, check_command, perf_data ):
     uncorrected     = ( int(perf_data[2][1]) / total ) * 100
     left = 100 - corrected - uncorrected
     h = "<table><tr>"
-    h += perfometer_td( corrected, "yellow") 
-    h += perfometer_td( uncorrected, "red") 
-    h += perfometer_td( left, "green") 
+    h += perfometer_td( corrected, "yellow")
+    h += perfometer_td( uncorrected, "red")
+    h += perfometer_td( left, "green")
     h += "</tr></table>"
     return "Total", h
 
@@ -1142,5 +1167,3 @@ def perfometer_mhz( row, check_command, perf_data ):
     return str(mhz_current) + " Mhz", perfometer_logarithmic(mhz_current, 50, 2, "#da6")
 
 perfometers["check_mk-docsis_channels_downstream"] = perfometer_mhz
-
-

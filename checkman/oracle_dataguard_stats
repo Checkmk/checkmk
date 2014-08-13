@@ -1,0 +1,32 @@
+title: Check apply and transport lag of Oracle Data-Guard
+agents: linux, aix
+author: Thorsten Bruhns <thorsten.bruhns@opitz-consulting.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the apply and transport lag time 
+ on an ORACLE database. You can set warn/crit levels in seconds
+ for apply lag and transport lag.
+
+ The init.ora-Parameter log_archive_config must be configured.
+ Oracle Enterprise Edition is required for Oracle Data-Guard.
+
+ This check needs the Check_MK {mk_oracle}-plugin installed in
+ the agent. Please refer to the online documentation
+ for how to install that plugin.
+
+item:
+ The SID of the database in uppercase (as appearing in the process
+ name of the pmon_... process).
+
+perfdata:
+ One value: the current apply lag in seconds
+
+inventory:
+ One separate check for each database found running will
+ be created.
+
+ checkgroup_parameters['oracle_dataguard_stats'] = [
+  ( {'apply_lag': (10800, 21600)
+   , 'transport_lag': (10800, 21600)}
+   , [], ALL_HOSTS, ALL_SERVICES ),

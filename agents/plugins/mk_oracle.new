@@ -40,7 +40,7 @@
 #   '----------------------------------------------------------------------'
 
 # Sections that run fast and do no caching
-SYNC_SECTIONS="instance sessions logswitches undostat recovery_area processes recovery_status longactivesessions"
+SYNC_SECTIONS="instance sessions logswitches undostat recovery_area processes recovery_status longactivesessions dataguard_stats"
 
 # Sections that are run in the background and at a larger interval.
 # Note: sections not listed in SYNC_SECTIONS or ASYNC_SECTIONS will not be
@@ -156,6 +156,23 @@ sql_92_tablespaces()
                 f.autoextensible, f.blocks, f.maxblocks, f.user_blocks, f.increment_by,
                 'TEMP', t.block_size, t.status);
           "
+}
+
+sql_dataguard_stats()
+{
+    echo 'PROMPT <<<oracle_dataguard_stats:sep(124)>>>'
+    echo "SELECT upper(d.NAME)
+                 ||'|'|| upper(d.DB_UNIQUE_NAME)
+                 ||'|'|| d.DATABASE_ROLE
+                 ||'|'|| ds.name
+                 ||'|'|| ds.value
+          FROM  v\$database d
+          JOIN  v\$parameter vp on 1=1
+          left outer join V\$dataguard_stats ds on 1=1
+          WHERE vp.name = 'log_archive_config'
+          AND   vp.value is not null
+          ORDER BY 1;
+         "
 }
 
 sql_recovery_status()
@@ -665,5 +682,3 @@ do
         SYNC_SECTIONS=${SYNC_SECTIONS_OLD}
     fi
 done
-
-

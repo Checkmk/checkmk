@@ -6162,11 +6162,9 @@ if __name__ == "__main__":
 
 
     except MKGeneralException, e:
-        print "hioer:"
         sys.stderr.write("%s\n" % e)
         if opt_debug:
             raise
-        print "nein"
         sys.exit(3)
 
     # handle -I / -II

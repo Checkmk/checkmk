@@ -119,13 +119,13 @@ def parse_cisco_temp_sensor(info):
     for id, sensortype, value, sensorstate in state_info:
        thresholds.setdefault(id, [])
 
-    for endoid, level in levels_info:
+    for endoid, levels in levels_info:
        # endoid is e.g. 21549.9 or 21459.10
        level = saveint(levels)
        if level > 70:
            level = level / 10
        id, subid = endoid.split('.')
-       thresholds.setdefault(id, []).append(level)
+       thresholds.setdefault(id, []).append(levels)
 
     # Create main dictionary (only of temperature sensors)
     sensors = []
@@ -134,7 +134,7 @@ def parse_cisco_temp_sensor(info):
         # who are given in tens of degress.
         # Seems that some new firmware show this behavier.
         # A normal Temperature Sensor has only a range up to
-        # 60 degree, so i choiced 70. 
+        # 60 degree, so i choiced 70.
         value = saveint(value)
         if value > 70:
             value = value / 10

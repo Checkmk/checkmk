@@ -87,7 +87,6 @@ def check_adva_fsp_if(item, params, info):
             infotext = "Admin/Operational State: %s/%s %s" % ( admintxt, opertxt, statesym )
 
             perfdata = []
-            print line[6], line[7]
             for power, name in [ (line[6], "output"),
                                  (line[7], "input" )
                                  ]:

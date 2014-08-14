@@ -35,7 +35,7 @@ def check_knuerr_rms_temp(_no_item, params, info):
     infotext = "Current Temperature: %.1f°C on Sensor %s" % ( reading, name )
     levels = ' (Warn/Crit at %s/%s)' % ( warn, crit )
     perfdata = [ ('temp', reading, warn, crit ) ]
-    state = 0 
+    state = 0
     if reading >= crit:
         state = 2
         infotext += levels

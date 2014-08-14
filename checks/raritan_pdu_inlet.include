@@ -99,7 +99,7 @@ def check_raritan_pdu_inlet_generic(item, _no_params, info):
             sensor_state = int(sensor_state)
             sensor_text = "Sensor State: " + sensor_states[sensor_state]
             if sensor_state in [ 2, 6 ]:
-                 yield 2, sensor_text 
+                 yield 2, sensor_text
             elif sensor_state != 4:
                 yield 1, sensor_text
 

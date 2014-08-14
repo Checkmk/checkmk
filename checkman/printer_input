@@ -23,5 +23,5 @@ inventory:
 [parameters]
 parameters (dict):
 
- {"capacity_levels"}: A tuple containing the percentage thresholds for 
+ {"capacity_levels"}: A tuple containing the percentage thresholds for
  {WARNING} and {CRITICAL} states.

@@ -484,16 +484,16 @@ register_rule(group,
                 TextAscii( title = _("Service String"),
                            help = _("Enter here the uniserve service name. (Has nothting to do with service description)")
             )),
-            ("job", 
+            ("job",
                 CascadingDropdown(
-                    title = _("Mode of the Check"), 
+                    title = _("Mode of the Check"),
                     help = _("Choose if you just want to query the version number,"
                              " or if you want to check the response to a address querie"),
                     choices = [
                         ("version", _("Check for Version")),
                         ("address", _("Check for a Address"),
                             Dictionary(
-                                title = _("Address Check mode"), 
+                                title = _("Address Check mode"),
                                 optional_keys = False,
                                 elements = [
                                     ( "street",

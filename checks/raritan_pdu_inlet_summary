@@ -26,7 +26,7 @@
 
 def raritan_pdu_inlet_summary_convert(info):
     for line in info:
-        yield capabilities[line[0]], line[0], line[1], line[2], line[3], line[4] 
+        yield capabilities[line[0]], line[0], line[1], line[2], line[3], line[4]
 
 def inventory_raritan_pdu_inlet_summary(info):
     return inventory_raritan_pdu_inlet_generic( raritan_pdu_inlet_summary_convert(info) )

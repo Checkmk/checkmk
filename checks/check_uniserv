@@ -33,10 +33,10 @@ def check_uniserv_arguments(params):
     else:
         job = params['job']
     if job == "version":
-        args += " VERSION" 
+        args += " VERSION"
     else:
         address = params['job'][1]
-        args += " ADDRESS" 
+        args += " ADDRESS"
         args += " " + quote_shell_string(address['street'])
         args += " " + str(address['street_no'])
         args += " " + quote_shell_string(address['city'])

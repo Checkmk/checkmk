@@ -7,7 +7,7 @@ description:
  This check monitors the Singal Quality. This includes
  the Forward Error correction, and the Signal Noise.
  It is possible to set levels in percent for uncorrected and corrected packages (FEC) and
- levels for the Signal Quality in dB. 
+ levels for the Signal Quality in dB.
 
 item:
  Channel ID like reported in SNMP Output

@@ -1,4 +1,4 @@
-title: VMWare ESX Host System: Maintenance State 
+title: VMWare ESX Host System: Maintenance State
 agents: vsphere
 catalog: os/misc
 license: GPL

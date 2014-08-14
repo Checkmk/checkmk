@@ -71,7 +71,7 @@ def check_dell_idrac_disks(item, _no_params, info):
             elif componentState in [ 1, 2, 4 ]:
                 state = max(state, 1)
                 infotexts.append(infotext+"(!)")
-            
+
             # Smart Alert
             if smartAlert != '0':
                 infotexts.append("Smart Alert on Disk(!!)")
@@ -98,7 +98,7 @@ def check_dell_idrac_disks(item, _no_params, info):
 
             # Capacity
             infotexts.append("Size: " + get_bytes_human_readable(int(capacityMB) * 1024 * 1024 ))
-            
+
             # Display Name
             infotexts.append(displayName)
 

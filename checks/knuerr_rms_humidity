@@ -35,7 +35,7 @@ def check_knuerr_rms_humidity(_no_item, params, info):
     infotext = "Humidity is: %.1f %% on Sensor %s" % ( reading, name )
     levels = ' (Warn/Crit at %s/%s or below %s/%s)' % ( warn_high, crit_high, warn_low, crit_low )
     perfdata = [ ('humidity', reading, crit_low, warn_low, warn_high, crit_high ) ]
-    state = 0 
+    state = 0
     if reading >= crit_high or reading <= crit_low:
         state = 2
         infotext += levels

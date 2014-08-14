@@ -64,7 +64,7 @@ def check_akcp_sensor_temp(item, params, info):
                     elif temp >= warn:
                         return 1, infotext+levels, perfdata
                     else:
-                        return 0, infotext, perfdata 
+                        return 0, infotext, perfdata
                 return 3, "Sensor is offline"
     return 3, "Sensor not found"
 

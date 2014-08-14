@@ -59,7 +59,7 @@ def check_oracle_crs_voting(item, params, info):
         state = 2
         infotext = 'missing Voting Disks (!!). %d Votes found %s' % (votecount, votedisk)
         return state, infotext
-    
+
     # In case of missing information we assume that the clusterware
     # is not running and we simple skip the result
     raise MKCounterWrapped(None, "No Voting Disk(s) found. Maybe the cssd/crsd is not running!")

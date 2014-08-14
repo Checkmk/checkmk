@@ -84,7 +84,7 @@ function size_dashlets() {
 
             if (old_width != oDash.clientWidth || old_height != oDash.clientHeight) {
                 if (!g_resizing
-                    || parseInt(g_resizing.parentNode.parentNode.id.replace('dashlet_', '')) != d_number)  
+                    || parseInt(g_resizing.parentNode.parentNode.id.replace('dashlet_', '')) != d_number)
                 dashlet_resized(d_number, oDash);
             }
         }
@@ -141,7 +141,7 @@ function calculate_dashlets() {
     // first place all dashlets at their absolute positions
     for (var nr = 0; nr < dashlets.length; nr++) {
         var dashlet = dashlets[nr];
-        
+
         // Relative position is as noted in the declaration. 1,1 => top left origin,
         // -1,-1 => bottom right origin, 0 is not allowed here
         // starting from 1, negative means: from right/bottom
@@ -252,7 +252,7 @@ function calculate_dashlets() {
             left * grid_size.x,
             top * grid_size.y,
             (right - left) * grid_size.x,
-            (bottom - top) * grid_size.y 
+            (bottom - top) * grid_size.y
         ]);
     }
     return size_info;
@@ -632,8 +632,8 @@ function compute_dashlet_coords(nr, anchor_id, topleft_pos) {
     }
 
     var dashlet_obj = document.getElementById('dashlet_' + nr);
-    var width  = dashlet_obj.clientWidth / grid_size.x; 
-    var height = dashlet_obj.clientHeight / grid_size.y; 
+    var width  = dashlet_obj.clientWidth / grid_size.x;
+    var height = dashlet_obj.clientHeight / grid_size.y;
     var size         = new vec(width, height);
     var screen_size  = new vec(g_dashboard_width, g_dashboard_height);
     var raster_size  = screen_size.divide(grid_size);
@@ -735,7 +735,7 @@ function drag_dashlet_start(event) {
 function drag_dashlet(event) {
     if (!event)
         event = window.event;
-    
+
     if (!g_dragging)
         return true;
 
@@ -843,7 +843,7 @@ function resize_dashlet_start(event) {
 function resize_dashlet(event) {
     if (!event)
         event = window.event;
-    
+
     if (!g_resizing)
         return true;
 

@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 factory_settings["veeam_client"] = {
-    "age": ( 108000, 172800 ), # 30h/2d 
+    "age": ( 108000, 172800 ), # 30h/2d
 }
 
 def inventory_veeam_client(info):

@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,41 +23,10 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# [['301', '28495']], [['112', '24']], [['113', '14880']], [['122', '146']], [['123', '15870']], [['501', '3761']], [['101', '30920']]
-
-canon_pages_map = {
-    'total'       :  '101',
-    'b/w A3'      :  '112',
-    'b/w A4'      :  '113',
-    'color A3'    :  '122',
-    'color A4'    :  '123',
-    'print total' :  '301',
-    'scan'        :  '501',
-}
-
-def inventory_canon_pages(info):
-    inventory = []
-    for endoid, value in info:
-        for name, eo in canon_pages_map.items():
-            if eo == endoid:
-                inventory.append((name, None))
-    return inventory
-
-def check_canon_pages(item, _no_params, info):
-    if item not in canon_pages_map:
-        return (3, "unknown counter type %s" % item)
-    for endoid, value in info:
-        if endoid == canon_pages_map[item]:
-            return (0, '%s pages printed' % value, [('count', int(value))])
-
-    return (3, 'Item not found in SNMP data')
-
-check_info["canon_pages"] = {
-    'check_function':          check_canon_pages,
-    'inventory_function':      inventory_canon_pages,
-    'service_description':     'Pages %s',
-    'has_perfdata':            True,
-    'snmp_info':               ( ".1.3.6.1.4.1.1602.1.11.1.3.1.4", [ OID_END, "" ]),
-    'snmp_scan_function':      lambda oid: oid(".1.3.6.1.4.1.1602.1.1.1.1.0") != None
-}
-
+$opt[1] = "--vertical-label 'Pages printed' -X0 -l0 --title \"$servicedesc\" "; 
+$def[1] = "DEF:pages=$RRDFILE[1]:$DS[1]:MAX ";
+$def[1] .= "AREA:pages#808080:\"Pages printed\" ";
+$def[1] .= "LINE:pages#404040 ";
+$def[1] .= "GPRINT:pages:MIN:\"%7.3lf %s first\" ";
+$def[1] .= "GPRINT:pages:LAST:\"%7.3lf %s last\" ";
+?>

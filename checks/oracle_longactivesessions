@@ -40,12 +40,16 @@ def inventory_oracle_longactivesessions(info):
 
 
 def check_oracle_longactivesessions(item, params, info):
+    sessioncount = 0
+    state = 3
+    itemfound = False
+
     for line in info:
 
-        sessioncount = 0
-        state = 3
-
         warn, crit = params["levels"]
+
+        if line[0] == item:
+            itemfound = True
 
         if line[0] == item and line[1] != '':
 
@@ -53,34 +57,34 @@ def check_oracle_longactivesessions(item, params, info):
             sid, sidnr, serial, machine, process, osuser, program, \
             last_call_el, sql_id = line
 
-            longoutput = 'sid,serial,process %s,%s,%s active for %s from %s osuser %s program %s sql_id %s ' \
+            longoutput = 'Session (sid,serial,proc) %s %s %s active for %s from %s osuser %s program %s sql_id %s ' \
                         % (sidnr, serial, process, get_age_human_readable(int(last_call_el)), machine, osuser, program, sql_id)
+
+    if itemfound:
+        if sessioncount >= crit:
+            state = 2
+        elif sessioncount >= warn:
+            state = 1
+        else:
+            state = 0
 
         if sessioncount == 0:
             return 0, "%d long active sessions (%d, levels at %d/%d)" \
                 % (sessioncount, sessioncount, warn, crit), \
                 [("count", sessioncount, warn, crit)]
-        else:
-            if sessioncount >= crit:
-                state = 2
-            elif sessioncount >= warn:
-                state = 1
-            else:
-                state = 0
-
-            if sessioncount > 10:
-                return state, "%d long active sessions (%d, levels at %d/%d)" \
-                    % (sessioncount, sessioncount, warn, crit), \
-                    [("count", sessioncount, warn, crit)]
-            else:
-                return state, "%d long active sessions (%d, levels at %d/%d) %s" \
-                    % (sessioncount, sessioncount, warn, crit, longoutput), \
-                    [("count", sessioncount, warn, crit)]
+        elif sessioncount <= 10:
+            return state, "%d long active sessions (%d, levels at %d/%d) %s" \
+                % (sessioncount, sessioncount, warn, crit, longoutput), \
+                [("count", sessioncount, warn, crit)]
+        elif sessioncount > 10:
+            return state, "%d long active sessions (%d, levels at %d/%d)" \
+                % (sessioncount, sessioncount, warn, crit), \
+                [("count", sessioncount, warn, crit)]
 
     # In case of missing information we assume that the login into
     # the database has failed and we simply skip this check. It won't
     # switch to UNKNOWN, but will get stale.
-    raise MKCounterWrapped(None, "Login into database failed")
+    raise MKCounterWrapped(None, "no info from database. Check ORA %s Instance" % item)
 
 
 check_info['oracle_longactivesessions'] = {
@@ -91,4 +95,3 @@ check_info['oracle_longactivesessions'] = {
     "default_levels_variable" : "oracle_longactivesessions_defaults",
     "group"                   : "oracle_longactivesessions",
 }
-

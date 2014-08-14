@@ -244,6 +244,7 @@ inv_filter_info = {
     "bytes_rounded" : { "unit" : _("MB"),    "scale" : 1024*1024 },
     "hz"            : { "unit" : _("MHz"),   "scale" : 1000000 },
     "volt"          : { "unit" : _("Volt") },
+    "timestamp"     : { "unit" : _("secs") },
 }
 
 
@@ -540,6 +541,12 @@ def inv_paint_volt(volt):
     else:
         return "", ""
 
+def inv_paint_timestamp(stamp):
+    if stamp:
+        return "Unix time", "%i" % stamp
+    else:
+        return "", ""
+
 inventory_displayhints.update({
     "."                                                : { "title" : _("Inventory") },
     ".hardware."                                       : { "title" : _("Hardware"), "icon" : "hardware", },
@@ -598,6 +605,7 @@ inventory_displayhints.update({
     ".software.os.version"                             : { "title" : _("Version"), },
     ".software.os.vendor"                              : { "title" : _("Vendor"), },
     ".software.os.type"                                : { "title" : _("Type"), }, # e.g. "linux"
+    ".software.os,install_date"                        : { "title" : _("Install Date"),                 "paint" : "timestamp" },
     ".software.os.kernel_version"                      : { "title" : _("Kernel Version"), "short" : _("Kernel") },
     ".software.os.arch"                                : { "title" : _("Kernel Architecture"), "short" : _("Architecture") },
     ".software.os.service_pack"                        : { "title" : _("Service Pack"), "short" : _("Service Pack") },

@@ -5747,20 +5747,20 @@ register_check_parameters(
     _("Adva Optical Transport Laser Power"),
     Dictionary(
         elements = [
-            ( "min_output_power",
+            ( "limits_output_power",
               Tuple(
                   title = _("Sending Power"),
                   elements = [
-                      Float(title = _("warning if below"), unit = "dBm", default_value = None),
-                      Float(title = _("critical if below"), unit = "dBm", default_value = None),
+                      Float(title = _("lower limit"), unit = "dBm"),
+                      Float(title = _("upper limit"), unit = "dBm"),
                   ])
             ),
-            ( "min_input_power",
+            ( "limits_input_power",
               Tuple(
                   title = _("Received Power"),
                   elements = [
-                      Float(title = _("warning if below"), unit = "dBm", default_value = None),
-                      Float(title = _("critical if below"), unit = "dBm", default_value = None),
+                      Float(title = _("lower limit"), unit = "dBm"),
+                      Float(title = _("upper limit"), unit = "dBm"),
                   ])
             ),
         ]

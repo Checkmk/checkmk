@@ -31,7 +31,7 @@
 def inv_win_reg_uninstall(info):
     paclist = inv_tree("software.packages:")
     for line in info:
-        display_name, publisher, path, pacname, version, estimated_size, date  = line
+        display_name, publisher, path, pacname, version, estimated_size, date = line
         install_date = ""
         if len(date) == 8 and re.match("^20", date):
             install_date = int(time.mktime(time.strptime(date, "%Y%m%d")))
@@ -43,6 +43,7 @@ def inv_win_reg_uninstall(info):
             "summary"         : display_name,
             "install_date"    : install_date,
             "size"            : estimated_size,
+            "path"            : path,
             "package_type"    : "reg_uninstall",
         }
         paclist.append(entry)

@@ -1,0 +1,9 @@
+Title: windows inventory: OS now contains the install date, reg_uninstall now contains the path
+Level: 1
+Component: inv
+Compatible: incomp
+Version: 1.2.5i6
+Date: 1408009410
+Class: feature
+
+You have to replace the inventory plugin for windows as well as the checks 

@@ -1,0 +1,9 @@
+Title: adva_fsp_if: instead of lower warning and critical levels check now supports lower and upper levels
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.5i6
+Date: 1408009839
+Class: feature
+
+

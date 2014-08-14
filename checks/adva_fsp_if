@@ -29,11 +29,6 @@ adva_fsp_if_inventory_portstates = [ '1' ]
 adva_fsp_if_inventory_uses_description = True
 adva_fsp_if_inventory_uses_alias = False
 
-factory_settings["adva_fsp_if_default_levels"] = {
-        "min_output_power" : (None, None),
-        "min_input_power" : (None, None),
-}
-
 adva_fsp_if_operstates = {
                 "1": ("up", 0 ),
                 "2": ("down", 2 ),
@@ -60,7 +55,7 @@ def inventory_adva_fsp_if(info):
                 item = line[5]
             else:
                 item = line[0]
-            inventory.append( (item, "adva_fsp_if_default_levels") )
+            inventory.append( (item, {}) )
     return inventory
 
 def adva_fsp_if_getindex(item,info):
@@ -91,44 +86,28 @@ def check_adva_fsp_if(item, params, info):
                 statesym = ""
             infotext = "Admin/Operational State: %s/%s %s" % ( admintxt, opertxt, statesym )
 
-            perfdata    = []
+            perfdata = []
+            print line[6], line[7]
+            for power, name in [ (line[6], "output"),
+                                 (line[7], "input" )
+                                 ]:
+                try:
+                    sym = ""
+                    climits = ""
+                    fpower = float(power)/10.0
+                    if params.get("limits_%s_power" % name):
+                        lower, upper = params.get("limits_%s_power" % name)
+                        climits = "%s:%s" % params.get("limits_%s_power" % name)
+                        if fpower < lower or fpower > upper:
+                            state = 2
+                            sym = "(!!)"
+                    infotext += ", %s Power: %.1f%s" % (name.title(), fpower, sym )
+                    perfdata.append( ("%s_power" % name, "%.1fdBm" % fpower, "", climits ) )
 
-            try:
-                output_power = float(line[6])/10.0
-                owarn, ocrit = params.get("min_output_power")
-                if ocrit and output_power < ocrit:
-                    state = 2
-                    osym = "(!!)"
-                elif owarn and output_power < owarn:
-                    state = max(1, state)
-                    osym = "(!)"
-                else:
-                    osym = ""
-                infotext += ", Output Power: %.1f%s" % ( output_power, osym )
-                perfdata.append( ("output_power", str(output_power)+"dBm", str(owarn)+":", str(ocrit)+":") )
-            except:
-                if not re.match("S", item): # service interface does not have power parameter
-                    infotext += ", Output Power: n.a. (!)"
-                    state = max(1,state)
-
-
-            try:
-                input_power = float(line[7])/10.0
-                iwarn, icrit = params.get("min_input_power")
-                if icrit and input_power < icrit:
-                    state = 2
-                    isym = "(!!)"
-                elif iwarn and input_power < iwarn:
-                    state = max(1, state)
-                    isym = "(!)"
-                else:
-                    isym = ""
-                infotext += ", Input Power: %.1f%s" % ( input_power, isym )
-                perfdata.append( ("input_power", str(input_power)+"dBm", str(iwarn)+":", str(icrit)+":") )
-            except:
-                if not re.match("S", item): # service interface does not have power parameter
-                    infotext += ", Input Power: n.a. (!)"
-                    state = max(1,state)
+                except:
+                    if not re.match("S", item): # if no service interface and no power parameter
+                        infotext += ", %s Power: n.a. (!)" % name.title()
+                        state = max(1,state)
 
             return(state, infotext, perfdata)
 
@@ -141,7 +120,6 @@ check_info['adva_fsp_if'] = {
     "service_description"     : "Interface %s",
     "has_perfdata"            : True,
     "group"                   : "adva_ifs",
-    "default_levels_variable" : "adva_fsp_if_default_levels",
     "snmp_info"               : ( ".1.3.6.1",
                                     [   "2.1.2.2.1.1", # ifIndex
                                         "2.1.2.2.1.2", # ifDescr

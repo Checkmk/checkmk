@@ -31,7 +31,7 @@
 def inv_win_os(info):
     node = inv_tree("software.os.")
     line = info[0]
-    if len(line) == 6:
+    if len(line) == 7:
         node["name"] = line[1]
         node["kernel_version"] = line[2]
         if line[3] == "64-Bit":
@@ -39,6 +39,10 @@ def inv_win_os(info):
         else:
             node["arch"] = "i386"
         node["service_pack"] = line[4]+"."+line[5]
+        dat = re.sub("\+\d+","",line[6])
+        tz = int(re.sub("\d{14}.\d{6}","",line[6]))
+        node["install_date"] = int(time.mktime(time.strptime(dat, "%Y%m%d%H%M%S.%f"))) - tz*60
+
 
 inv_info['win_os'] = {
    "inv_function"           : inv_win_os,

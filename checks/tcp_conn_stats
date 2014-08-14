@@ -47,10 +47,12 @@ def inventory_tcp_conn_stats(info):
 
 def check_tcp_conn_stats(item, params, info):
     stats = dict(info)
+    hit = False
     for stat_state, hex in tcp_conn_stats_states:
         num = int(stats.get(stat_state, stats.get(hex, 0)))
         state = 0
         if num > 0: # Only check positive counts
+            hit = True
             infotext = "%s: %d" % (stat_state, num)
             perf = [stat_state, num]
             levels = params.get(stat_state)
@@ -64,9 +66,9 @@ def check_tcp_conn_stats(item, params, info):
                 elif num >= warn:
                     state = 1
                     infotext += " (warning at %d)" % warn
-        else:
-            infotext = None
-        yield state, infotext, [perf]
+            yield state, infotext, [perf]
+    if not hit:
+        yield 0, "Currently no tcp connection stats"
 
 
 check_info["tcp_conn_stats"] = {

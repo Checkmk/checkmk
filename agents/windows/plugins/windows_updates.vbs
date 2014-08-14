@@ -48,8 +48,8 @@ Set WSHShell = CreateObject("WScript.Shell")
 Dim RebootTime
 Dim RegPath
 
-WScript.Echo "<<<windows_updates>>>"
 If CreateObject("Microsoft.Update.AutoUpdate").DetectNow <> 0 Then
+    WScript.Echo "<<<windows_updates>>>"
     WScript.Quit()
 End If
 

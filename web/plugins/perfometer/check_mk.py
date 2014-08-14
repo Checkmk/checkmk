@@ -731,6 +731,13 @@ def perfometer_check_mk_printer_supply(row, check_command, perf_data):
 perfometers["check_mk-printer_supply"] = perfometer_check_mk_printer_supply
 perfometers["check_mk-printer_supply_ricon"] = perfometer_check_mk_printer_supply
 
+def perfometer_printer_pages(row, check_command, perf_data):
+    color = "#909090"
+    return "%d" % int(perf_data[0][1]), perfometer_logarithmic(perf_data[0][1], 50000, 6, color)
+
+perfometers["check_mk-printer_pages"] = perfometer_printer_pages
+perfometers["check_mk-canon_pages"] = perfometer_printer_pages
+
 def perfometer_msx_queues(row, check_command, perf_data):
     length = int(perf_data[0][1])
     state = row["service_state"]

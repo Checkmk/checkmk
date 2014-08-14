@@ -18,6 +18,7 @@
             NOTE: Please refer to the migration notes!
     * 1174 rms200_temp: New Temperature check for RMS200 Devices
     * 1175 dell_idrac_disks: New Check for Harddisks using Dell iDrac
+    * 1006 printer_pages: add Perf-O-Meter and PNP template
     * 1051 FIX: tcp_conn_stats: fix missing performance data...
     * 1142 FIX: winperf_ts_sessions: fix computation, check has never really worked
     * 1090 FIX: zfsget: fixed exception which happened on incomplete zfs entries

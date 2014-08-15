@@ -1,0 +1,12 @@
+Title: Overall check timeout for Check_MK checks now defaults to CRIT state
+Level: 2
+Component: core
+Compatible: compat
+Version: 1.2.5i6
+Date: 1408096113
+Class: feature
+
+When using the Check_MK Micro Core as the core then the service status for Check_MK
+services that ran into an overal timeout (default is 60 seconds) was UNKNOWN. This
+has changed to CRIT. Furthermore this is configurable via a new <i>Timeout</i>
+option in the ruleset <i>Status of the Check_MK service</i>.

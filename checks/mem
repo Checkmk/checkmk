@@ -151,11 +151,11 @@ def check_mem_windows(item, params, info):
         # Predictive levels
         else:
             state, infoadd, perfadd = check_levels(
-                used_kb,                                                     # Current value
+                used_kb / 1024.0,                                            # Current value stored in MB in RRDs
                 "average" in params and paramname + "_avg" or paramname,     # Name of RRD variable
                 params[paramname],
                 unit = "GB",                                                 # Levels are specified in GB...
-                scale = 1024 * 1024,                                         # ... in WATO ValueSpec
+                scale = 1024,                                                # ... in WATO ValueSpec
             )
             if infoadd:
                 infotext += ", " + infoadd

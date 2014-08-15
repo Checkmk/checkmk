@@ -56,8 +56,12 @@ printer_io_states = {
     64: (0, 'Transitioning to intended state'),
 }
 
-factory_settings['printer_io_default_levels'] = {
+factory_settings['printer_default_levels'] = {
     'capacity_levels': (0.0, 0.0),
+}
+
+factory_settings['printer_output_default_levels'] = {
+    'capacity_levels': (100.0, 100.0),
 }
 
 def inventory_printer_io(info):
@@ -125,44 +129,3 @@ def check_printer_io(item, params, info, what):
                 yield state, 'Capacity: %s of %s %s %s%s' % \
                     (level_txt, capacity_max, capacity_unit, how, levels_txt)
 
-check_info["printer_input"] = {
-    'inventory_function':      inventory_printer_io,
-    'check_function':          lambda item, params, info: check_printer_io(item, params, info, 'input'),
-    'service_description':     'Input %s',
-    'has_perfdata':            False,
-    'snmp_info':               (
-        '.1.3.6.1.2.1.43.8.2.1', [
-            '13', # Printer-MIB::prtInputName
-            '18', # Printer-MIB::prtInputDescription
-            '11', # Printer-MIB::prtInputStatus
-             '8', # Printer-MIB::prtInputCapacityUnit
-             '9', # Printer-MIB::prtInputMaxCapacity
-            '10', # Printer-MIB::prtInputCurrentLevel
-        ]
-    ),
-    'snmp_scan_function':      \
-        lambda oid: oid(".1.3.6.1.2.1.43.11.1.1.6.1.1") != None,
-    'group':                   'printer_input',
-    'default_levels_variable': 'printer_io_default_levels',
-}
-
-check_info["printer_output"] = {
-    'inventory_function':      inventory_printer_io,
-    'check_function':          lambda item, params, info: check_printer_io(item, params, info, 'output'),
-    'service_description':     'Output %s',
-    'has_perfdata':            False,
-    'snmp_info':               (
-        '.1.3.6.1.2.1.43.9.2.1', [
-             '7', # Printer-MIB::prtOutputName
-            '12', # Printer-MIB::prtOutputDescription
-             '6', # Printer-MIB::prtOutputStatus
-             '3', # Printer-MIB::prtOutputCapacityUnit
-             '4', # Printer-MIB::prtOutputMaxCapacity
-             '5', # Printer-MIB::prtOutputRemainingCapacity
-        ]
-    ),
-    'snmp_scan_function':      \
-        lambda oid: oid(".1.3.6.1.2.1.43.11.1.1.6.1.1") != None,
-    'group':                   'printer_output',
-    'default_levels_variable': 'printer_io_default_levels',
-}

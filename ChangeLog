@@ -8,6 +8,9 @@
     * 0191 FIX: Added swp files to the ignore list for the WATO git feature...
     * 0201 FIX: Fixed error message in Rulelist of RBN...
 
+    Event Console:
+    * 1007 FIX: check_mkevents: fix case where events contain binary zeroes
+
 
 1.2.5i5p2:
     Checks & Agents:

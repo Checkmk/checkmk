@@ -1,0 +1,10 @@
+Title: check_mkevents: fix case where events contain binary zeroes
+Level: 1
+Component: ec
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.5i5p3
+Date: 1408094945
+
+

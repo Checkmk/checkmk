@@ -22,7 +22,6 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-
 #include <stdlib.h>
 #include <errno.h>
 #include <stdio.h>
@@ -182,11 +181,18 @@ int main(int argc, char** argv)
     int length = write(sock, query_message.c_str(), query_message.length());
 
     // Get response
-    char response_chunk[2048];
+    char response_chunk[4096];
     memset(response_chunk, 0, sizeof(response_chunk));
     stringstream response_stream;
-    while (read(sock, response_chunk, sizeof(response_chunk))){
-        response_stream << response_chunk;
+    int read_length;
+    while (0 < (read_length = read(sock, response_chunk, sizeof(response_chunk))))
+    {
+        // replace binary 0 in response with space
+        for (int i=0; i<read_length; i++) {
+            if (response_chunk[i] == 0)
+                response_chunk[i] = ' ';
+        }
+        response_stream << string(response_chunk, read_length);
         memset(response_chunk, 0, sizeof(response_chunk));
     }
     close(sock);
@@ -226,6 +232,8 @@ int main(int argc, char** argv)
     // Get data
     vector< vector<string> > data;
     while (getline(response_stream, line)) {
+        if (line.size() < headers.size())
+            break; // broken / empty line
         linestream.str("");
         linestream.clear();
         linestream << line;

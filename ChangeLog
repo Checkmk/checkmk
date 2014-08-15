@@ -50,6 +50,9 @@
     * 1153 FIX: Changed custom user attributes can now be used immediately...
     * 0201 FIX: Fixed error message in Rulelist of RBN...
 
+    Event Console:
+    * 1007 FIX: check_mkevents: fix case where events contain binary zeroes
+
     HW/SW-Inventory:
     * 0643 windows inventory: OS now contains the install date, reg_uninstall now contains the path...
             NOTE: Please refer to the migration notes!

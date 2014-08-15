@@ -16764,10 +16764,10 @@ def activate_changes():
 # Checks if the given host_tags are all in known host tag groups and have a valid value
 def check_host_tags(host_tags):
     for key, value in host_tags.items():
-        for group_name, group_descr, group_tags in configured_host_tags:
-            if key == group_name:
-                for name, descr, aux in group_tags:
-                    if name == value:
+        for group_entry in configured_host_tags:
+            if group_entry[0] == key:
+                for value_entry in group_entry[2]:
+                    if value_entry[0] == value:
                         break
                 else:
                     raise MKUserError(None, _("Unknown host tag %s") % html.attrencode(value))

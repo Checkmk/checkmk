@@ -28,6 +28,39 @@
 # and Mathias Kettner. Thorsten is responsible for the ORACLE
 # stuff, Mathias for the shell hacking...
 
+DEBUG=0
+DEBUGCONNECT=0
+if [ $# -ne 0 ] ; then
+    ARGS=$(getopt -s bash --options "dt"--name $PROGNAME -- "$@" )
+    eval set -- "$ARGS"
+
+    if [ ${?} -eq 0 ]
+    then
+        while true;
+        do
+            case "$1" in
+                -d)
+                    set -xv
+                    DEBUG=1
+                    shift;;
+
+                -t)
+                    DEBUGCONNECT=1
+                    shift;;
+
+                --)
+                    shift
+                    break;;
+            esac
+        done
+    fi
+fi
+
+if [ ! "$MK_CONFDIR" ] ; then
+    echo "MK_CONFDIR not set!" >&2
+    exit 1
+fi
+
 #   .--Config--------------------------------------------------------------.
 #   |                     ____             __ _                            |
 #   |                    / ___|___  _ __  / _(_) __ _                      |
@@ -484,6 +517,37 @@ sql_112_asm_diskgroup()
          "
 }
 
+function set_oraenv () {
+    ORACLE_SID=${1}
+    ORACLE_USERCONF=${MK_CONFDIR}/mk_oracle_dbuser.conf
+
+    if [ -f /etc/oratab ] ; then
+        ORATAB=/etc/oratab
+    elif [ -f /var/opt/oracle/oratab ] ; then
+        ORATAB=/var/opt/oracle//oratab
+    fi
+
+    ORACLE_HOME=$(cat ${ORATAB} | grep "^"${ORACLE_SID}":" | cut -d":" -f2)
+    if [ -z $ORACLE_HOME ] ; then
+        # cut last number from SID for Oracle RAC to find entry in oratab
+        ORACLE_SID_SHORT=$(echo $ORACLE_SID | sed "s/[0-9]$//")
+        ORACLE_HOME=$(cat ${ORATAB} | grep "^"${ORACLE_SID_SHORT}":" | cut -d":" -f2)
+    fi
+
+    if [ ! -d ${ORACLE_HOME:-"not_found"} ] ; then
+        echo "ORA-99999 ORACLE_HOME for ORACLE_SID="$ORACLE_SID" not found or not existing!"
+        exit 1
+    fi
+
+    SQLPLUS=${ORACLE_HOME}/bin/sqlplus
+    export ORACLE_HOME
+}
+
+function get_oraversion () {
+    set_oraenv ${1}
+    ORACLE_VERSION=$($SQLPLUS -V | grep ^SQL | cut -d" " -f3 | cut -d"." -f-2)
+}
+
 # Runs a command asynchronous by use of a cache file
 function run_cached () {
     local section=
@@ -671,13 +735,27 @@ do
     # Do sync checks
     EXCLUDED=$(eval 'echo $EXCLUDE'"_$SID")
     SECTIONS=$(remove_excluded_sections "$SYNC_SECTIONS" "$EXCLUDED")
-    do_sync_checks $SID "$SECTIONS"
+
+    if [ $DEBUGCONNECT = 0 ] ; then
+        do_sync_checks $SID "$SECTIONS"
+    else
+        get_oraversion $SID
+        echo "-----------------------------------------------"
+        echo "Logincheck to Instance: "$SID"  Version: "$ORACLE_VERSION
+        echo "select 'Login ok User: ' || user from dual;" | sqlplus $SID
+        echo "SYNC_SECTIONS=$SECTIONS"
+    fi
 
     # Do async checks
     SECTIONS=$(remove_excluded_sections "$ASYNC_SECTIONS" "$EXCLUDED")
     ASYNC_SQL=$(for section in $SECTIONS ; do eval "sql_$section" ; done)
     export ASYNC_SQL
-    run_cached oracle_$SID $CACHE_MAXAGE do_async_checks $SID
+
+    if [ $DEBUGCONNECT = 0 ] ; then
+        run_cached oracle_$SID $CACHE_MAXAGE do_async_checks $SID
+    else
+        echo "ASYNC_SECTIONS=$SECTIONS"
+    fi
 
     if [ ${SID:0:1} = '+' ] ; then
         ASYNC_SECTIONS=${ASYNC_SECTIONS_OLD}

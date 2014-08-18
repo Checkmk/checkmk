@@ -17039,9 +17039,8 @@ class API:
             the_host = effective_attributes(the_host, the_host[".folder"])
 
         cleaned_host = dict([(k, v) for (k, v) in the_host.iteritems() if not k.startswith('.') ])
-        cleaned_host["folder"] = the_host[".folder"][".path"]
 
-        return cleaned_host
+        return { "attributes": cleaned_host, "path": the_host[".folder"][".path"], "hostname": hostname }
 
     def delete_host(self, hostname):
         self.__prepare_folder_info()

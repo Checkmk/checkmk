@@ -2301,6 +2301,11 @@ register_rule(group,
                 default_value = 2,
                 title = _("State in case of connection problems")),
             ),
+            ( "timeout",
+              MonitoringState(
+                default_value = 2,
+                title = _("State in case of a overall timeout")),
+            ),
             ( "missing_sections",
               MonitoringState(
                 default_value = 1,
@@ -2328,7 +2333,8 @@ register_rule(group,
     help = _("This ruleset specifies the total status of the Check_MK service in "
              "case of various error situations. One use case is the monitoring "
              "of hosts that are not always up. You can have Check_MK an OK status "
-             "here if the host is not reachable."),
+             "here if the host is not reachable. Note: the <i>Timeout</i> setting only works "
+             "when using the Check_MK Micro Core."),
     match = "dict",
 )
 

@@ -16764,10 +16764,10 @@ def activate_changes():
 # Checks if the given host_tags are all in known host tag groups and have a valid value
 def check_host_tags(host_tags):
     for key, value in host_tags.items():
-        for group_name, group_descr, group_tags in configured_host_tags:
-            if key == group_name:
-                for name, descr, aux in group_tags:
-                    if name == value:
+        for group_entry in configured_host_tags:
+            if group_entry[0] == key:
+                for value_entry in group_entry[2]:
+                    if value_entry[0] == value:
                         break
                 else:
                     raise MKUserError(None, _("Unknown host tag %s") % html.attrencode(value))
@@ -17039,6 +17039,8 @@ class API:
             the_host = effective_attributes(the_host, the_host[".folder"])
 
         cleaned_host = dict([(k, v) for (k, v) in the_host.iteritems() if not k.startswith('.') ])
+        cleaned_host["folder"] = the_host[".folder"][".path"]
+
         return cleaned_host
 
     def delete_host(self, hostname):

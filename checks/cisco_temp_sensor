@@ -122,10 +122,10 @@ def parse_cisco_temp_sensor(info):
     for endoid, levels in levels_info:
        # endoid is e.g. 21549.9 or 21459.10
        level = saveint(levels)
-       if level > 70:
+       if level > 150:
            level = level / 10
        id, subid = endoid.split('.')
-       thresholds.setdefault(id, []).append(levels)
+       thresholds.setdefault(id, []).append(level)
 
     # Create main dictionary (only of temperature sensors)
     sensors = []
@@ -133,9 +133,9 @@ def parse_cisco_temp_sensor(info):
         # Poor try to find temperature values, which are given in tenths of degrees.
         # Seems that some new firmware shows this behaviour.
         # A normal temperature sensor has only a range up to
-        # 60 degree, so we've chosen 70.
+        # 60 degree, so we've chosen 150.
         value = saveint(value)
-        if value > 70:
+        if value > 150:
             value = value / 10
         sensors.append( ( id, descriptions.get(id), sensortype,
                         value, sensorstate, thresholds[id] ) )
@@ -147,7 +147,8 @@ def inventory_cisco_temp_sensor(info):
     for id, descr, sensortype, value, sensorstate, levels in sensors:
         # Use all temperature sensors with a non-empty description and valid threshold
         if descr != None and sensortype == '8' and len(levels) in [ 2, 4 ]:
-            inventory.append(( descr, levels[0:2] ))
+            warn, crit = saveint(levels[0]), saveint(levels[1])
+            inventory.append(( descr, (warn, crit) ))
     return inventory
 
 def check_cisco_temp_sensor(item, params, info):
@@ -165,18 +166,19 @@ def check_cisco_temp_sensor(item, params, info):
             perfdata = [ ( "temperature", temp, warn, crit ) ]
             state = 0
 
-        if sensorstate == "2":
-           return (3, "Data from sensor currently not available")
-        elif sensorstate == "3":
-           return (3, "Sensor is broken")
+            if sensorstate == "2":
+                return (3, "Data from sensor currently not available")
+            elif sensorstate == "3":
+                return (3, "Sensor is broken")
 
-        if temp >= crit:
-            state = 2
-            infotext += levels
-        elif temp >= warn:
-            state = 1
-            infotext += levels
-        return state, infotext, perfdata
+            if temp >= crit:
+                state = 2
+                infotext += levels
+            elif temp >= warn:
+                state = 1
+                infotext += levels
+            return state, infotext, perfdata
+
     return (3, "Sensor not found in SNMP data")
 
 

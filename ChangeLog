@@ -1,4 +1,7 @@
 1.2.5i6:
+    Core & Setup:
+    * 1008 Overall check timeout for Check_MK checks now defaults to CRIT state...
+
     Checks & Agents:
     * 0185 knuerr_rms_humidity, knuerr_rms_temp: Two new Checks to Monitor the Temperature and the Humidity on Knürr RMS Devices
     * 1065 heartbeat_crm / heartbeat_crm.resources: Rewrote checks / formalized parameters...
@@ -20,6 +23,7 @@
     * 1175 dell_idrac_disks: New Check for Harddisks using Dell iDrac
     * 0644 adva_fsp_if: instead of lower warning and critical levels check now supports lower and upper levels
             NOTE: Please refer to the migration notes!
+    * 1006 printer_pages: add Perf-O-Meter and PNP template
     * 1051 FIX: tcp_conn_stats: fix missing performance data...
     * 1142 FIX: winperf_ts_sessions: fix computation, check has never really worked
     * 1090 FIX: zfsget: fixed exception which happened on incomplete zfs entries
@@ -49,6 +53,9 @@
     * 0191 FIX: Added swp files to the ignore list for the WATO git feature...
     * 1153 FIX: Changed custom user attributes can now be used immediately...
     * 0201 FIX: Fixed error message in Rulelist of RBN...
+
+    Event Console:
+    * 1007 FIX: check_mkevents: fix case where events contain binary zeroes
 
     HW/SW-Inventory:
     * 0643 windows inventory: OS now contains the install date, reg_uninstall now contains the path...

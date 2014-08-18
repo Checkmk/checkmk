@@ -5533,8 +5533,10 @@ def do_check_keepalive():
                 signal.alarm(0)
             except MKCheckTimeout:
                 signal.signal(signal.SIGALRM, signal.SIG_IGN) # Prevent ALRM from CheckHelper.cc
-                status = 3
-                total_check_output = "UNKNOWN - Check_MK timed out after %d seconds\n" % timeout
+                spec = exit_code_spec(hostname)
+                status = spec.get("timeout", 2)
+                total_check_output = "%s - Check_MK timed out after %d seconds\n" % (
+                    nagios_state_names[status], timeout)
 
             os.write(keepalive_fd, "%03d\n%08d\n%s" %
                  (status, len(total_check_output), total_check_output))

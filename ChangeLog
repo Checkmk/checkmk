@@ -24,6 +24,7 @@
     * 0644 adva_fsp_if: instead of lower warning and critical levels check now supports lower and upper levels
             NOTE: Please refer to the migration notes!
     * 1006 printer_pages: add Perf-O-Meter and PNP template
+    * 0646 brocade_fcport: the administrative states for which ports are inventorized can now be configured in WATO
     * 1051 FIX: tcp_conn_stats: fix missing performance data...
     * 1142 FIX: winperf_ts_sessions: fix computation, check has never really worked
     * 1090 FIX: zfsget: fixed exception which happened on incomplete zfs entries

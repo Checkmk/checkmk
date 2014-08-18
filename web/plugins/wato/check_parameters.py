@@ -141,7 +141,7 @@ register_rule(group + '/' + subgroup_inventory,
     match = 'all',
 )
 
-#dublicate: check_mk_configuration.py
+#duplicate: check_mk_configuration.py
 _if_portstate_choices = [
                         ( '1', 'up(1)'),
                         ( '2', 'down(2)'),
@@ -152,7 +152,7 @@ _if_portstate_choices = [
                         ( '7', 'lowerLayerDown(7)'),
                         ]
 
-#dublicate: check_mk_configuration.py
+#duplicate: check_mk_configuration.py
 _if_porttype_choices = [
   ("1", "other(1)" ), ("2", "regular1822(2)" ), ("3", "hdh1822(3)" ), ("4", "ddnX25(4)" ),
   ("5", "rfc877x25(5)" ), ("6", "ethernetCsmacd(6)" ), ("7", "iso88023Csmacd(7)" ), ("8",
@@ -268,6 +268,40 @@ register_rule(group + '/' + subgroup_inventory,
         help = _('This rule can be used to control the inventory for network ports. '
                  'You can configure the port types and port states for inventory'
                  'and the use of alias or description as service name.'),
+    ),
+    match = 'dict',
+)
+
+register_rule(group + '/' + subgroup_inventory,
+    varname   = "brocade_fcport_inventory",
+    title     = _("Brocade Port Inventory"),
+    valuespec = Dictionary(
+        elements = [
+         ("use_portname", Checkbox(
+                title = _("Use port name as service name"),
+                label = _("use port name"),
+                default_value = True,
+                help = _("This option lets Check_MK use the port name as item instead of the "
+                         "port number. If no description is available then the port number is "
+                         "used anyway."))),
+        ("show_isl", Checkbox(
+                title = _("add \"ISL\" to service description for interswitch links"),
+                label = _("add ISL"),
+                default_value = True,
+                help = _("This option lets Check_MK add the string \"ISL\" to the service "
+                         "description for interswitch links."))),
+        ("admstates", ListChoice(title = _("Administrative port states to inventorize"),
+                help = _("When doing inventory on brocade switches only ports with the given administrative "
+                         "states will be added to the monitoring system."),
+                choices = _brocade_fcport_adm_choices,
+                columns = 1,
+                toggle_all = True,
+                default_value = ['1', '3', '4' ],
+        )),
+        ],
+        help = _('This mule can be used to control the inventory for brocade ports. '
+                 'You can configure the port states for inventory '
+                 'and the use of the description as service name.'),
     ),
     match = 'dict',
 )

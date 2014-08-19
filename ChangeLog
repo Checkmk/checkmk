@@ -24,6 +24,7 @@
     * 0644 adva_fsp_if: instead of lower warning and critical levels check now supports lower and upper levels
             NOTE: Please refer to the migration notes!
     * 1006 printer_pages: add Perf-O-Meter and PNP template
+    * 0646 brocade_fcport: the administrative states for which ports are inventorized can now be configured in WATO
     * 1051 FIX: tcp_conn_stats: fix missing performance data...
     * 1142 FIX: winperf_ts_sessions: fix computation, check has never really worked
     * 1090 FIX: zfsget: fixed exception which happened on incomplete zfs entries
@@ -36,6 +37,7 @@
             NOTE: Please refer to the migration notes!
     * 1152 FIX: mk-job: The check now captures currently running jobs and their start time...
     * 0198 FIX: cisco_temp_sensor: Removed dicey detection for temperature value....
+    * 0645 FIX: brocade_fcport: since in newer firmware (7.*) swFCPortSpeed is deprecated, we then calculate port speed from IF-MIB::ifHighSpeed
 
     Multisite:
     * 1066 Implemented Dashboard Designer...

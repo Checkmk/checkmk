@@ -1247,7 +1247,6 @@ register_configvar(group,
 
 
 
-
 _if_portstate_choices = [
                         ( '1', 'up(1)'),
                         ( '2', 'down(2)'),
@@ -1256,6 +1255,13 @@ _if_portstate_choices = [
                         ( '5', 'dormant(5)') ,
                         ( '6', 'notPresent(6)'),
                         ( '7', 'lowerLayerDown(7)'),
+                        ]
+
+_brocade_fcport_adm_choices = [
+                        ( 1, 'online(1)'),
+                        ( 2, 'offline(2)'),
+                        ( 3, 'testing(3)'),
+                        ( 4, 'faulty(4)'),
                         ]
 
 _if_porttype_choices = [

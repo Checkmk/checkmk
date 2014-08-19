@@ -42,7 +42,7 @@ brocade_fcport_inventory_opstates  = [ 1, 2, 3, 4, ]
 brocade_fcport_inventory_admstates = [ 1, 3, 4, ]
 brocade_fcport_inventory_use_portname = True # use swFCPortName as part of service description
 brocade_fcport_inventory_show_isl = True     # add "ISL" to service description for interswitch links
-
+brocade_fcport_inventory = []
 
 
 factory_settings["brocade_fcport_default_levels"] = {
@@ -50,25 +50,30 @@ factory_settings["brocade_fcport_default_levels"] = {
     "rxencoutframes":   (3.0, 20.0),   # allowed percentage of Enc-OUT Frames
     "notxcredits":      (3.0, 20.0),   # allowed percentage of No Tx Credits
     "c3discards":       (3.0, 20.0),   # allowed percentage of C3 discards
-    "assumed_speed":    2.0,           # used, if speed not available in SNMP data
+    "assumed_speed":    2.0,           # used if speed not available in SNMP data
 }
 
 
 # Helper function for computing item from port number
-def brocade_fcport_getitem(ports, index, portname, is_isl):
+def brocade_fcport_getitem(ports, index, portname, is_isl, uses_portname, shows_isl):
     int_len  = str(len(str(len(ports))))
     itemname = ("%0" + int_len + "d") % (index - 1)
-    if is_isl and brocade_fcport_inventory_show_isl:
+    if is_isl and shows_isl:
         itemname += " ISL"
-    if portname.strip() and brocade_fcport_inventory_use_portname:
+    if portname.strip() and uses_portname:
         itemname += " " + portname.strip()
     return itemname
 
 
 def inventory_brocade_fcport(info):
     # info[0] is port table, info[1] is ISL table
-    if len(info) != 2:
+    if len(info) < 2:
         return
+
+    settings = host_extra_conf_merged(g_hostname, brocade_fcport_inventory)
+    uses_portname       = settings.get('use_portname', brocade_fcport_inventory_use_portname)
+    shows_isl           = settings.get('show_isl', brocade_fcport_inventory_show_isl)
+    admstates           = settings.get('admstates', brocade_fcport_inventory_admstates)
 
     inventory = []
     isl_ports = {}
@@ -87,11 +92,11 @@ def inventory_brocade_fcport(info):
             portname = line[13]
             is_isl = line[0] in isl_ports
 
-            if admstate in brocade_fcport_inventory_admstates and \
+            if admstate in admstates and \
                 opstate in brocade_fcport_inventory_opstates  and \
                 phystate in brocade_fcport_inventory_phystates:
 
-                inventory.append(( brocade_fcport_getitem(info[0], index, portname, is_isl),
+                inventory.append(( brocade_fcport_getitem(info[0], index, portname, is_isl, uses_portname, shows_isl),
                    '{ "phystate": [%d], "opstate": [%d], "admstate": [%d] }'
                     % (phystate, opstate, admstate) ))
 
@@ -119,9 +124,18 @@ def check_brocade_fcport(item, params, info):
         speedmsg = ("ISL at %.0fGbit/s"  % gbit)
     else: # no ISL port
         if brocade_fcport_speed[speed] in [ "auto-Neg", "unknown" ]:
-            # let user specify assumed speed via check parameter, default is 2.0
-            gbit  = params.get("assumed_speed")
-            speedmsg  = "assuming %gGbit/s" % gbit
+            try:
+                actual_speed = saveint(info[2][item_index][0])
+            except:
+                actual_speed = 0
+            if actual_speed > 0:
+                # use actual speed of port if available
+                gbit = actual_speed / 1000
+                speedmsg  = "actual speed %gGbit/s" % gbit
+            else:
+                # let user specify assumed speed via check parameter, default is 2.0
+                gbit  = params.get("assumed_speed")
+                speedmsg  = "assumed speed %gGbit/s" % gbit
         else:
             gbit = float(brocade_fcport_speed[speed].replace("Gbit", ""))
             speedmsg  = "%.0fGbit/s" % gbit
@@ -311,7 +325,7 @@ check_info["brocade_fcport"] = {
             22, # swFCPortRxCrcs
             26, # swFCPortRxEncOutFrs
             28, # swFCPortC3Discards
-            35, # swFCPortSpeed
+            35, # swFCPortSpeed, deprecated from at least firmware version 7.2.1
             36, # swFCPortName  (not supported by all devices)
         ]),
 
@@ -319,6 +333,11 @@ check_info["brocade_fcport"] = {
         ( ".1.3.6.1.4.1.1588.2.1.1.1.2.9.1", [
             2, # swNbMyPort
             5, # swNbBaudRate
+        ]),
+
+        # new way to get port speed supported by Brocade
+        ( ".1.3.6.1.2.1.31.1.1.1", [
+            15, # IF-MIB::ifHighSpeed
         ]),
     ],
     'snmp_scan_function'        : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1588.2.1.1"),

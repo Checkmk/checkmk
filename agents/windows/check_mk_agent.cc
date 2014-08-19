@@ -3785,7 +3785,7 @@ bool handle_global_config_variable(char *var, char *value)
 bool handle_winperf_config_variable(char *var, char *value)
 {
     if (!strcmp(var, "counters")) {
-        char *colon = strchr(value, ':');
+        char *colon = strrchr(value, ':');
         if (!colon) {
             fprintf(stderr, "Invalid counter '%s' in section [winperf]: need number(or text) and colon, e.g. 238:processor.\n", value);
             exit(1);

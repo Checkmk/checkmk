@@ -1,0 +1,9 @@
+Title: problems with run_cached when agent is not running for a while and $CACHEFILE.new is left over
+Component: core
+State: open
+Date: 2014-08-18 11:56:44
+Targetversion: future
+Class: bug
+
+If it happens for some reason, that a $CACHEFILE.new is left over and the agent does not run for a while,
+the leftover $CACHEFILE.new blocks the execution of the agent section

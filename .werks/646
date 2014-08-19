@@ -1,0 +1,7 @@
+Title: brocade_fcport: the administrative states for which ports are inventorized can now be configured in WATO
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1408364635
+Class: feature

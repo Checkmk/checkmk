@@ -3785,7 +3785,7 @@ bool handle_global_config_variable(char *var, char *value)
 bool handle_winperf_config_variable(char *var, char *value)
 {
     if (!strcmp(var, "counters")) {
-        char *colon = strchr(value, ':');
+        char *colon = strrchr(value, ':');
         if (!colon) {
             fprintf(stderr, "Invalid counter '%s' in section [winperf]: need number(or text) and colon, e.g. 238:processor.\n", value);
             exit(1);
@@ -3909,7 +3909,6 @@ bool handle_mrpe_config_variable(char *var, char *value)
     if (!strcmp(var, "check")) {
         // First word: service description
         // Rest: command line
-        fprintf(stderr, "VALUE: [%s]\r\n", value);
         char *service_description = next_word(&value);
         char *command_line = value;
         if (!command_line || !command_line[0]) {
@@ -3938,7 +3937,8 @@ bool handle_mrpe_config_variable(char *var, char *value)
                 sizeof(tmp_entry->plugin_name));
         g_mrpe_entries.push_back(tmp_entry);
         return true;
-    } else if (!strncmp(var, "include", 7)) {
+    }
+    else if (!strncmp(var, "include", 7)) {
         char *user = NULL;
         if (strlen(var) > 7)
             user = lstrip(var + 7);

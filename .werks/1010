@@ -1,0 +1,12 @@
+Title: chrony: new check for NTP synchronization via chrony on Linux
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1408471050
+Class: feature
+
+This check does the same as the existing {ntp.time} check, but is for
+cases when {chrony} is being used instead of the {ntpd}. It does not
+support measuring jitter, however.
+

@@ -103,13 +103,13 @@ def check_ntp_server_state(line, params):
     if when > 0:
         infotext += ", last reached %d secs ago" % when
 
-    maxstratum, warn, crit = params
+    crit_stratum, warn, crit = params
     if abs(offset) >= crit:
         return (2, "critical offset" + " " + infotext, offset, jitter)
     elif state in [ "falsetick" ]:
         return (2, infotext, offset, jitter)
-    elif stratum >= maxstratum:
-        return (2, infotext + (", stratum is too high (max allowed is %d)" % (maxstratum - 1)))
+    elif stratum >= crit_stratum:
+        return (2, infotext + (", stratum is too high (max allowed is %d)(!!)" % (crit_stratum - 1)))
 
     # The following check in some cases produces false alarms. The poll interval can
     # switch back to a low value while 'when' still being at a high value. While
@@ -129,7 +129,7 @@ def check_ntp(item, params, info):
             state = check_ntp_server_state(line, params)
             if len(state) == 4:
                 state, text, offset, jitter = state
-                maxstratum, warn, crit = params
+                crit_stratum, warn, crit = params
                 perfdata = [ ( "offset",  offset, warn, crit, 0, None ),
                              ( "jitter",  jitter, warn, crit, 0, None ) ]
             else:

@@ -368,9 +368,16 @@ if [ -e /etc/openvpn/openvpn-status.log ] ; then
     sed -n -e '/CLIENT LIST/,/ROUTING TABLE/p' < /etc/openvpn/openvpn-status.log  | sed -e 1,3d -e '$d'
 fi
 
+# Time synchronization with NTP
 if type ntpq > /dev/null 2>&1 ; then
    # remove heading, make first column space separated
    run_cached -s ntp 30 "waitmax 5 ntpq -np | sed -e 1,2d -e 's/^\(.\)/\1 /' -e 's/^ /%/'"
+fi
+
+# Time synchronization with Chrony
+if type chronyc > /dev/null 2>&1 ; then
+    # Force successful exit code. Otherwise section will be missing if daemon not running
+    run_cached -s chrony 30 "waitmax 5 chronyc tracking || true"
 fi
 
 if type nvidia-settings >/dev/null && [ -S /tmp/.X11-unix/X0 ]

@@ -1,0 +1,96 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+ntp_default_levels = (10, 200.0, 500.0) # stratum, ms offset
+
+# Example output from agent:
+# <<<chrony>>>
+# Reference ID    : 212.18.3.18 (ntp1.m-online.net)
+# Stratum         : 3
+# Ref time (UTC)  : Tue Aug 19 16:56:21 2014
+# System time     : 0.000000353 seconds fast of NTP time
+# Frequency       : 10.725 ppm slow
+# Residual freq   : 195.475 ppm
+# Skew            : 10.639 ppm
+# Root delay      : 0.027455 seconds
+# Root dispersion : 0.024512 seconds
+
+def parse_chrony(info):
+    parsed = {}
+    for line in info:
+        varname, value = " ".join(line).split(":", 1)
+        parsed[varname.strip()] = value.strip()
+    return parsed
+
+# We monitor all servers we have reached at least once
+def inventory_chrony(info):
+    parsed = parse_chrony(info)
+    if parsed:
+        return [(None, "ntp_default_levels")]
+
+
+def check_chrony(_no_item, params, info):
+    parsed = parse_chrony(info)
+    if not parsed:
+        yield 2, "No status information, chronyd probably not running"
+        return
+
+    # Prepare parameters
+    crit_stratum, warn, crit = params
+
+    # Check offset and stratum, output a few info texsts
+    offset = float(parsed["System time"].split()[0]) * 1000 # converted to ms
+    stratum = int(parsed["Stratum"])
+
+    # Check stratum
+    infotext = "stratum %d" % stratum
+    if stratum >= crit_stratum:
+        yield 2, infotext + " (maximum allowed is %d)" % (crit_stratum - 1)
+    else:
+        yield 0, infotext
+
+    # Check offset
+    status = 0
+    infotext = "offset %.4f ms" % offset
+    if abs(offset) >= crit:
+        status = 2
+    elif abs(offset) >= warn:
+        status = 1
+    if status:
+        infotext += " (levels at %.4f/%.4f ms)" % (warn, crit)
+    yield status, infotext, [ ("offset", offset, warn, crit, 0, None) ]
+
+    # Show additional information
+    yield 0, "reference: %s" % parsed["Reference ID"]
+
+
+check_info["chrony"] = {
+    'check_function':          check_chrony,
+    'inventory_function':      inventory_chrony,
+    'service_description':     'NTP Time',
+    'has_perfdata':            True,
+    'group':                   'ntp_time',
+}

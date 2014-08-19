@@ -1,0 +1,36 @@
+title: NTP time synchronization using chrony
+agents: linux
+catalog: os/services
+license: GPL
+distribution: check_mk
+description:
+ This check uses the output of {chronyc tracking} in order to
+ check the time synchronization when using {chrony}. The check
+ is very similar to {ntp}, which monitors the {ntpd}, but it
+ does not support jitter.
+
+ You can set levels for the maximum stratum and for the time offset
+ in milliseconds. The configuration is compatible with {ntp}.
+
+ When {chrony} is not found running, the check goes to {CRIT}.
+
+examples:
+ # At stratum of 3 or more it gets critical
+ # Warn/Crit levels for offset is 5 ms / 10 ms
+ ntp_default_levels = (3, 5.0, 10.0)
+
+perfdata:
+ One variable: the time {offset} in ms
+
+inventory:
+ If chrony is running, then one service is being created.
+
+[parameters]
+max_stratum (int): The stratum at which the check gets critical
+warning (float): the offset in ms at which a warning is triggered
+critical (float): the critical offset in ms
+
+[configuration]
+ntp_default_levels (int, float, float): The global default levels for all checks
+ of this type. This is preset to {(10, 200.0, 500.0)} (which means that the check
+ gets critical if the stratum is {10} or higher).

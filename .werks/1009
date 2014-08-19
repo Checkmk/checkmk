@@ -1,0 +1,13 @@
+Title: df: deal with space in file system type for PlayStation file system
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.5i5p3
+Date: 1408465511
+
+This inventory function of the check crashed when there was a filesystem
+with a space in the filesystem type. We have seen one filesystem with
+the type <tt>PlayStation(R)3 File System</tt>. This has been fixed now.
+

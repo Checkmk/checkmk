@@ -2,6 +2,7 @@
     Checks & Agents:
     * 0187 FIX: hp_proliant_power: Fixed Wato configuration
     * 0192 FIX: oracle_rman_backups: Not longer try to make a inventory for broken plugin outputs
+    * 1009 FIX: df: deal with space in file system type for PlayStation file system...
 
     WATO:
     * 1092 FIX: logwatch: now able to enter unicode text into the "Pattern (Regex)" field

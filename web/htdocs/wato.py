@@ -16913,9 +16913,11 @@ class API:
         if "foldername" in validate:
             if not os.path.exists(host_foldername) and not create_folders:
                 raise MKUserError(None, _("Folder does not exist and no permission to create folders"))
-            host_folder_tokens = host_foldername.split("/")
-            for dir_token in host_folder_tokens:
-                check_wato_foldername(None, dir_token, just_name = True)
+
+            if host_foldername != "":
+                host_folder_tokens = host_foldername.split("/")
+                for dir_token in host_folder_tokens:
+                    check_wato_foldername(None, dir_token, just_name = True)
 
         if "host_exists" in validate:
             if hostname in all_hosts:

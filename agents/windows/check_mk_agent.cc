@@ -3822,19 +3822,23 @@ bool handle_logfiles_config_variable(char *var, char *value)
         if (value != 0)
             add_globline(value);
         return true;
-    }else if (!strcmp(var, "warn")) {
+    }
+    else if (!strcmp(var, "warn")) {
         if (value != 0)
             add_condition_pattern('W', value);
         return true;
-    }else if (!strcmp(var, "crit")) {
+    }
+    else if (!strcmp(var, "crit")) {
         if (value != 0)
             add_condition_pattern('C', value);
         return true;
-    }else if (!strcmp(var, "ignore")) {
+    }
+    else if (!strcmp(var, "ignore")) {
         if (value != 0)
             add_condition_pattern('I', value);
         return true;
-    }else if (!strcmp(var, "ok")) {
+    }
+    else if (!strcmp(var, "ok")) {
         if (value != 0)
             add_condition_pattern('O', value);
         return true;

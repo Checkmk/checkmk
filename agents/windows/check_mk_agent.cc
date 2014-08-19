@@ -265,6 +265,8 @@ void crash_log(const char *format, ...);
 void lowercase(char* value);
 char* next_word(char** line);
 int get_perf_counter_id(const char* counter_name);
+void collect_script_data(script_execution_mode mode);
+void find_scripts();
 
 //  .----------------------------------------------------------------------.
 //  |                    ____ _       _           _                        |
@@ -4201,6 +4203,24 @@ void listen_tcp_loop()
     // and receive a terminate when the agent ends
     g_workers_job_object = CreateJobObject(NULL, "workers_job");
 
+    // Run all ASYNC scripts on startup, so that their data is available on
+    // the first query of a client. Obviously, this slows down the agent startup...
+    // This procedure is mandatory, since we want to prevent missing agent sections
+    find_scripts();
+    collect_script_data(ASYNC);
+    DWORD dwExitCode = 0;
+    while (true)
+    {
+        if (GetExitCodeThread(g_collection_thread, &dwExitCode))
+        {
+            if (dwExitCode != STILL_ACTIVE)
+                break;
+            Sleep(200);
+        }
+        else
+            break;
+    }
+
     SOCKET connection;
     // Loop for ever.
     debug("Starting main loop.");
@@ -4485,6 +4505,18 @@ void do_adhoc()
     listen_tcp_loop(); // runs for ever or until Ctrl-C
 }
 
+void find_scripts()
+{
+    // Check if there are new scripts available
+    // Scripts in default paths
+    determine_available_scripts(g_plugins_dir, PLUGIN, NULL);
+    determine_available_scripts(g_local_dir,   LOCAL,  NULL);
+    // Scripts included with user permissions
+    for (script_include_t::iterator it_include = g_script_includes.begin();
+         it_include != g_script_includes.end(); it_include++)
+        determine_available_scripts((*it_include)->path, (*it_include)->type, (*it_include)->user);
+}
+
 void output_data(SOCKET &out)
 {
     // make sure, output of numbers is not localized
@@ -4495,15 +4527,7 @@ void output_data(SOCKET &out)
 
     update_script_statistics();
 
-
-    // Check if there are new scripts available
-    // Scripts in default paths
-    determine_available_scripts(g_plugins_dir, PLUGIN, NULL);
-    determine_available_scripts(g_local_dir,   LOCAL,  NULL);
-    // Scripts included with user permissions
-    for (script_include_t::iterator it_include = g_script_includes.begin();
-         it_include != g_script_includes.end(); it_include++)
-        determine_available_scripts((*it_include)->path, (*it_include)->type, (*it_include)->user);
+    find_scripts();
 
     if (enabled_sections & SECTION_CHECK_MK)
         section_check_mk(out);

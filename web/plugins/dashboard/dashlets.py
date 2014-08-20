@@ -581,5 +581,10 @@ dashlet_types["url"] = {
             title = _('URL'),
             size = 50,
         )),
+        ("urlfunc", TextAscii(
+            title = _('Dynamic URL rendering function'),
+            size = 50,
+        )),
     ],
+    "opt_params": ['url', 'urlfunc'],
 }

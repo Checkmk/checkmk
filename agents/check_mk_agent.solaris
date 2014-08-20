@@ -188,8 +188,7 @@ echo $load 1/$ps $$ $procs
 
 # zpool status
 if [ -x /sbin/zpool ]; then
-    echo "<<<zpool_status>>>"
-    /sbin/zpool status -x
+    run_cached -s zpool_status 120 "/sbin/zpool status -x"
 fi
 
 

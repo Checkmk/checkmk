@@ -1,0 +1,12 @@
+Title: windows_tasks: handle case correctly where task is currently running
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.4p6
+Date: 1408549221
+
+In some cases a Windows task reports state 267009. That was reported as {CRIT} but
+in fact means that the task is currently running. It is reported as {OK} now.
+

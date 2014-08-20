@@ -60,7 +60,7 @@ def check_emerson_temp(item, params, info):
 check_info['emerson_temp'] = {
   "inventory_function"  : inventory_emerson_temp,
   "check_function"      : check_emerson_temp,
-  "service_description" : "Temperature",
+  "service_description" : "Temperature %s",
   "has_perfdata"        : True,
   "group"               : "hw_temperature",
   "snmp_info"           : ( ".1.3.6.1.4.1.6302.2.1.2", ["7"] ),

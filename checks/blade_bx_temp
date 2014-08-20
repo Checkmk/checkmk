@@ -63,7 +63,7 @@ def check_blade_bx_temp(item, params, info):
 check_info['blade_bx_temp'] = {
     "check_function" : check_blade_bx_temp,
     "inventory_function" : lambda info: [ (line[2], None) for line in info if int(line[1]) != 7] ,
-    "service_description" : "Blade Temp %s",
+    "service_description" : "Temperature Blade %s",
     "has_perfdata" : True,
     "snmp_info" : (".1.3.6.1.4.1.7244.1.1.1.3.4.1.1", [
                                                       1, # index

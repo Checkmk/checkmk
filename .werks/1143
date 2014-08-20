@@ -1,0 +1,13 @@
+Title: dell_powerconnect_temp: fix configuration via WATO
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1408548253
+Class: fix
+
+When configuring levels via the rule <i>Hardware temperature</i> the levels would not
+work for this check type. The reason is that - unless most of the other check plugins
+for hardware temperature - this check only supports a single sensor. Therefor a new
+ruleset has been created named <i>Hardware temperature, single sensor</i>. Please use
+that for configuration.

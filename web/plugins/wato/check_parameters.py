@@ -4459,7 +4459,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_environment,
     "hw_temperature",
-    _("Hardware temperature (e.g. switches)"),
+    _("Hardware temperature, multiple sensors"),
     Tuple(
         help = _("Temperature levels for hardware devices like "
                  "Brocade switches with (potentially) several "
@@ -4472,6 +4472,21 @@ register_check_parameters(
     TextAscii(
         title = _("Sensor ID"),
         help = _("The identifier of the thermal sensor.")),
+    "first"
+)
+
+register_check_parameters(
+    subgroup_environment,
+    "hw_temperature_single",
+    _("Hardware temperature, single sensor"),
+    Tuple(
+        help = _("Temperature levels for hardware devices like "
+                 "DELL Powerconnect that have just one temperature sensor. "),
+        elements = [
+            Integer(title = _("warning if above"), unit = u"°C", default_value = 35),
+            Integer(title = _("critical if above"), unit = u"°C", default_value = 40),
+        ]),
+    None,
     "first"
 )
 

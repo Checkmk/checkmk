@@ -31,6 +31,12 @@
 # /dev/sda1     reiserfs  256666     16052    227362       7% /boot
 # /dev/mapper/mirrored-database ext3  20642428   1027112  19405604       6% /mirrored/database
 
+# Another example from a Windows 7 system:
+# <<<df>>>
+# SYSTEM NTFS 312569172 180648472 131920700  58% C:\
+# Data NTFS 976506816 528665344 447841472  55% D:\
+# PS3 PlayStation(R)3 File System 0 0 0   0% P:\
+
 def df_parse_info(info):
     df_blocks = []
     df_inodes = []
@@ -46,6 +52,9 @@ def df_parse_info(info):
                 is_inode = False
                 continue
             if not is_inode:
+                # Handle known cases, where the file system contains spaces
+                if line[2] == "File" and line[3] == "System":
+                    line =  [ line[0], " ".join(line[1:4]) ] + line[4:]
                 df_blocks.append(line)
             else:
                 df_inodes.append(line)

@@ -4722,19 +4722,19 @@ register_check_parameters(
     Tuple(
         elements = [
             Integer(
-                title = _("Max. allowed stratum"),
+                title = _("Critical at stratum"),
                 default_value = 10,
                 help = _("The stratum (\"distance\" to the reference clock) at which the check gets critical."),
             ),
             Float(
-                title = _("Warning if above"),
-                unit = _("Milliseconds"),
+                title = _("Warning at"),
+                unit = _("ms"),
                 default_value = 200.0,
                 help = _("The offset in ms at which a warning state is triggered."),
             ),
             Float(
-                title = _("Critical if above"),
-                unit = _("Milliseconds"),
+                title = _("Critical at"),
+                unit = _("ms"),
                 default_value = 500.0,
                 help = _("The offset in ms at which a critical state is triggered."),
             ),

@@ -1,0 +1,14 @@
+Title: windows_agent: preventing missing agent sections on first query
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1408460515
+Class: fix
+
+The windows agent did not report all sections on the first request(s) after
+its startup, if some plugins were configured to run asynchronous.
+
+This has been fixed. During startup, the agent now always executes the ASYNC scripts first
+and waits for them to finish. After the scripts are finished, it starts listening to
+the tcp port.

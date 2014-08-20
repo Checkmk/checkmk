@@ -269,10 +269,11 @@ def perfometer_check_mk_ntp(row, check_command, perf_data, unit = "ms"):
         h += perfometer_td(50, "#fff")
     h += '</tr></table>'
 
-    return "%.1f %s" % (offset, unit), h
+    return "%.2f %s" % (offset, unit), h
 
 perfometers["check_mk-ntp"]        = perfometer_check_mk_ntp
 perfometers["check_mk-ntp.time"]   = perfometer_check_mk_ntp
+perfometers["check_mk-chrony"]     = perfometer_check_mk_ntp
 perfometers["check_mk-systemtime"] = lambda r, c, p: perfometer_check_mk_ntp(r, c, p, "s")
 
 def perfometer_ipmi_sensors(row, check_command, perf_data):

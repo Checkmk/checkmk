@@ -75,9 +75,14 @@ def inventory_esx_vsphere_counters_diskio(info):
             return [(None, None)]
 
 def check_esx_vsphere_counters_diskio(_no_item, _no_params, info):
-    reads = 0
-    writes = 0
-    latency = 0
+    if not info:
+        return 3, "Counter data is missing"
+
+    read_bytes  = 0
+    write_bytes = 0
+    reads       = 0
+    writes      = 0
+    latency     = 0
     for counter, item, value, unit in info:
         if item == '':
             if counter == 'disk.read':

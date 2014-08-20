@@ -125,7 +125,20 @@ def check_brocade_fcport(item, params, info):
     else: # no ISL port
         if brocade_fcport_speed[speed] in [ "auto-Neg", "unknown" ]:
             try:
-                actual_speed = saveint(info[2][item_index][0])
+                # extract the speed from IF-MIB::ifHighSpeed.
+                # unfortunately ports in the IF-MIB and the brocade MIB
+                # dont have a common index. We hope that at least
+                # the FC ports have the same sequence in both lists.
+                # here we go through ports of the IF-NIB, but consider only FC ports (type 56)
+                # and assume that the sequence number of the FC port here is the same
+                # as the sequence number in the borcade MIB (pindex = item_index)
+                pindex = -1
+                for vals in info[2]:
+                    port_type, actual_speed = map(saveint, vals)
+                    if port_type == 56:
+                        pindex += 1
+                        if pindex == item_index:
+                            break # we found it
             except:
                 actual_speed = 0
             if actual_speed > 0:
@@ -336,8 +349,9 @@ check_info["brocade_fcport"] = {
         ]),
 
         # new way to get port speed supported by Brocade
-        ( ".1.3.6.1.2.1.31.1.1.1", [
-            15, # IF-MIB::ifHighSpeed
+        ( ".1.3.6.1.2.1", [
+            "2.2.1.3",      # ifType, needed to extract fibre channel ifs only (type 56)
+            "31.1.1.1.15",  # IF-MIB::ifHighSpeed
         ]),
     ],
     'snmp_scan_function'        : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1588.2.1.1"),

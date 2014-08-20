@@ -1,0 +1,9 @@
+Title: esx_vsphere_counters.diskio: Now reports unknown when counter data is missing
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1408527115
+Class: fix
+
+

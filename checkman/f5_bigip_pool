@@ -4,13 +4,17 @@ catalog: hw/network/f5
 license: GPL
 distribution: check_mk
 description:
- The check queries the MIB tables of F5 BIG-IP loadbalancers (local traffic managers) for the
- status of any load balancing pools. It gathers the number of loadbalancers backing the pool
- and how many of those are working. It doesn't currently honor the 'MinUpMembers' parameter
- that can be set to trigger actions for the pool if too many members fail.
+ The check queries the MIB tables of F5 BIG-IP loadbalancers (local traffic
+ managers) for the status of any load balancing pools. It gathers the number
+ of loadbalancers backing the pool and how many of those are working. It
+ doesn't currently honor the 'MinUpMembers' parameter that can be set to
+ trigger actions for the pool if too many members fail.
 
- It supports devices running the 9.0 and above releases of the F5 OS. It's tested against 9.3
- devices.
+ It supports devices running the 9.0 and above releases of the F5 OS. It's
+ tested against 9.3 devices.
+
+ If the number of down nodes is warn or crit, the names of the nodes are
+ also printed in the service output.
 
 examples:
  # Let the Pool named ABC on your first F5 be in WARNING state when it reaches 5 active members or in CRITICAL for anything between 3 and 0.

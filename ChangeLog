@@ -1,6 +1,7 @@
 1.2.5i6:
     Core & Setup:
     * 1008 Overall check timeout for Check_MK checks now defaults to CRIT state...
+    * 1373 SEC: Do not ouput complete command line when datasource programs fail...
 
     Checks & Agents:
     * 0185 knuerr_rms_humidity, knuerr_rms_temp: Two new Checks to Monitor the Temperature and the Humidity on Knürr RMS Devices

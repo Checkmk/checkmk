@@ -1,4 +1,7 @@
 1.2.5i5p3:
+    Core & Setup:
+    * 1373 SEC: Do not ouput complete command line when datasource programs fail...
+
     Checks & Agents:
     * 0187 FIX: hp_proliant_power: Fixed Wato configuration
     * 0192 FIX: oracle_rman_backups: Not longer try to make a inventory for broken plugin outputs

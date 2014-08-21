@@ -656,6 +656,8 @@ def get_agent_info(hostname, ipaddress, max_cache_age):
 
 # Get data in case of external program
 def get_agent_info_program(commandline):
+    exepath = commandline.split()[0] # for error message, hide options!
+
     import subprocess
     if opt_verbose:
         sys.stderr.write("Calling external program %s\n" % commandline)
@@ -664,11 +666,11 @@ def get_agent_info_program(commandline):
         stdout, stderr = p.communicate()
         exitstatus = p.returncode
     except Exception, e:
-        raise MKAgentError("Could not execute '%s': %s" % (commandline, e))
+        raise MKAgentError("Could not execute '%s': %s" % (exepath, e))
 
     if exitstatus:
         if exitstatus == 127:
-            raise MKAgentError("Program '%s' not found (exit code 127)" % (commandline,))
+            raise MKAgentError("Program '%s' not found (exit code 127)" % exepath)
         else:
             raise MKAgentError("Agent exited with code %d: %s" % (exitstatus, stderr))
     return stdout

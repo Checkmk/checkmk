@@ -1,0 +1,15 @@
+Title: Do not ouput complete command line when datasource programs fail
+Level: 2
+Component: core
+Compatible: compat
+State: unknown
+Version: 1.2.5i5p3
+Date: 1408619422
+Class: security
+
+When executing a datasource program like <tt>agent_vsphere</tt>
+fails, then Check_MK used to output the complete command line
+as plugin output of the Check_MK active check as part of an error
+message. The commandline could contain passwords - however.  So this
+has now been changed into just outputting the path to the executable
+(e.g. <tt>/omd/sites/mysite/share/check_mk/agents/special/agent_vsphere</tt>).

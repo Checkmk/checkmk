@@ -24,6 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Note: This file is almost identical with ibm_svc_nodestats. We should
+# create an include file for sharing common code!
+
 # Example output from agent:
 # <<<ibm_svc_nodestats:sep(58)>>>
 # 1:BLUBBSVC01:compression_cpu_pc:0:0:140325134931

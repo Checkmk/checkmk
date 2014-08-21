@@ -3814,6 +3814,37 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_storage,
+    "ibm_svc_total_latency",
+    _("IBM SVC: Levels for total disk latency"),
+    Dictionary(
+        elements = [
+            ( "read",
+              Levels(
+                  title = _("Read throughput"),
+                  unit = _("MB/s"),
+                  default_value = None,
+                  default_levels = (50.0, 100.0))),
+            ( "write",
+              Levels(
+                  title = _("Write throughput"),
+                  unit = _("MB/s"),
+                  default_value = None,
+                  default_levels = (50.0, 100.0))),
+        ]
+    ),
+    DropdownChoice(
+        choices = [ ( "Drives",  _("Total latency for all drives") ),
+                    ( "MDisks",  _("Total latency for all MDisks") ),
+                    ( "VDisks",  _("Total latency for all VDisks") ),
+                  ],
+        title = _("Disk/Drive type"),
+        help = _("Please enter <tt>Drives</tt>, <tt>Mdisks</tt> or <tt>VDisks</tt> here.")),
+    "first"
+)
+
+
+register_check_parameters(
+    subgroup_storage,
     "disk_io",
     _("Levels on disk IO (throughput)"),
     Dictionary(

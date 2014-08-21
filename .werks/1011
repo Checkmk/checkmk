@@ -1,0 +1,11 @@
+Title: ibm_svc_systemstats.disk_latency: introduce levels for alerting
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1408609145
+Class: feature
+
+This check was currently always OK. Now you can optionally set fixed
+or predictive levels.
+

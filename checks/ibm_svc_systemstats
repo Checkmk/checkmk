@@ -24,6 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Note: This file is almost identical with ibm_svc_systemstats. We should
+# create an include file for sharing common code!
+
 # Example output from agent:
 # <<<ibm_svc_systemstats:sep(58)>>>
 # compression_cpu_pc:0:0:140325134929
@@ -176,26 +179,35 @@ def inventory_ibm_svc_systemstats_disk_latency(info):
     inventory = []
     parsed = ibm_svc_systemstats_parse(info)
     for key in parsed.keys():
-        inventory.append( (key, None) )
+        inventory.append( (key, {}) )
     return inventory
 
-def check_ibm_svc_systemstats_disk_latency(item, _no_params, info):
+def check_ibm_svc_systemstats_disk_latency(item, params, info):
     parsed = ibm_svc_systemstats_parse(info)
 
+
     if item not in parsed.keys():
-        return 3, "%s not found in agent output" % item
+        yield 3, "%s not found in agent output" % item
+        return
 
-    read_latency  = parsed[item]['r_ms']
-    write_latency = parsed[item]['w_ms']
-    perfdata = [ ("read_latency", read_latency), ("write_latency", write_latency) ]
+    if not params:
+        params = {} # Convert from previous None
 
-    return 0, "Latency is %s ms for read, %s ms for write" % (read_latency, write_latency), perfdata
+    for what, latency in [
+        ('read',  parsed[item]['r_ms'] ),
+        ('write', parsed[item]['w_ms'] )]:
+
+        state, text, extraperf = check_levels(latency, what + "_latency", params.get(what), unit = "ms")
+        yield state, ("Latency is %.1f ms for %s" % (latency, what)) + text, \
+          [ ( what + "_latency", latency) ] + extraperf
+
 
 check_info["ibm_svc_systemstats.disk_latency"] = {
     "check_function"        : check_ibm_svc_systemstats_disk_latency,
     "inventory_function"    : inventory_ibm_svc_systemstats_disk_latency,
     "service_description"   : "IBM SVC Latency %s Total",
     "has_perfdata"          : True,
+    "group"                 : "ibm_svc_total_latency",
 }
 
 #.

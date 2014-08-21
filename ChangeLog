@@ -69,6 +69,9 @@
     * 1153 FIX: Changed custom user attributes can now be used immediately...
     * 0201 FIX: Fixed error message in Rulelist of RBN...
 
+    Notifications:
+    * 1156 FIX: Graphs in HTML mails are now sent again where they where missing...
+
     Event Console:
     * 1007 FIX: check_mkevents: fix case where events contain binary zeroes
 

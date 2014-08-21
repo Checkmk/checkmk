@@ -35,6 +35,19 @@ brocade_fcport_admstates = [ '', 'online', 'offline', 'testing', 'faulty' ]
 # Taken from swFCPortSpeed
 brocade_fcport_speed     = [ 'unknown', '1Gbit', '2Gbit', 'auto-Neg', '4Gbit', '8Gbit', '10Gbit', 'unknown', '16Gbit' ]
 
+# Taken from swNbBaudRate
+isl_speed = {
+        "1": 0, # other (1) - None of the following.
+        "2": 0.155, # oneEighth (2) - 155 Mbaud.
+        "4": 0.266, #•quarter (4) - 266 Mbaud.
+        "8": 0.532, # half (8) - 532 Mbaud.
+        "16": 1, #•full (16) - 1 Gbaud.
+        "32": 2, # double (32) - 2 Gbaud.
+        "64": 4, # quadruple (64) - 4 Gbaud.
+        "128": 8, # octuple (128) - 8 Gbaud.
+        "256": 10, # decuple (256) - 10 Gbaud.
+        "512": 16, # sexdecuple (512) - 16 Gbaud
+}
 
 # settings for inventory: which ports should be inventorized
 brocade_fcport_inventory_phystates = [ 3, 4, 5, 6, 7, 8, 9, ]
@@ -120,7 +133,7 @@ def check_brocade_fcport(item, params, info):
     # information in the normal table)
     isl_ports = dict(info[1])
     if str(index) in isl_ports:
-        gbit = float(int(isl_ports.get(str(index))) / 16)
+        gbit = isl_speed.get( isl_ports.get( str(index) ) )
         speedmsg = ("ISL at %.0fGbit/s"  % gbit)
     else: # no ISL port
         if brocade_fcport_speed[speed] in [ "auto-Neg", "unknown" ]:

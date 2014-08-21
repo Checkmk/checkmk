@@ -1,0 +1,11 @@
+Title: brocade_fcport: new speed calculation of isl_ports
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1408625154
+Class: feature
+
+Since Brocade firmware 7, the possible baud rate parameters of isl ports given in swNbBaudRate have been
+extended. To account for this the calculation of the real baud rates from swNbBaudRate has been updated.
+

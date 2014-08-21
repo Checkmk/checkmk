@@ -1,0 +1,9 @@
+Title: f5_bigip_pool: check now also prints the node names of down nodes
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1408634689
+Class: feature
+
+

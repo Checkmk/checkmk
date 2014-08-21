@@ -1,0 +1,11 @@
+Title: Graphs in HTML mails are now sent again where they where missing
+Level: 1
+Component: notifications
+Compatible: compat
+Version: 1.2.5i6
+Date: 1408630645
+Class: fix
+
+A change from Tue Mar 4 prevented inclusion of PNP graphs in HTML mails
+in installations where the user "omdadmin" is not existant. This change
+fixes the problem and makes the graphs available again.

@@ -78,7 +78,7 @@ def check_ibm_svc_enclosurestats_temp(item, params, info):
 check_info["ibm_svc_enclosurestats.temp"] = {
     "check_function"        : check_ibm_svc_enclosurestats_temp,
     "inventory_function"    : inventory_ibm_svc_enclosurestats_temp,
-    "service_description"   : "IBM SVC Temperature Enclosure %s",
+    "service_description"   : "Temperature Enclosure %s",
     "has_perfdata"          : True,
     "group"                 : "hw_temperature",
 }

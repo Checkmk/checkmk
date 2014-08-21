@@ -1,0 +1,12 @@
+Title: blade_bx_temp, dell_chassis_temp, emerson_temp, ibm_svc_enclosurestats, ups_bat_temp: rename service description
+Level: 2
+Component: checks
+Compatible: incomp
+Version: 1.2.5i6
+Date: 1408548365
+Class: fix
+
+Rename service description of these checks. They now all begin with <tt>Temperature</tt>, such as
+is custom for all Check_MK checks. Beware: new graphs will be created. If these services are target
+of WATO or BI rules you might need to adjust them. Your WATO configuration for levels should work
+without change.

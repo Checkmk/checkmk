@@ -656,6 +656,8 @@ def get_agent_info(hostname, ipaddress, max_cache_age):
 
 # Get data in case of external program
 def get_agent_info_program(commandline):
+    exepath = commandline.split()[0] # for error message, hide options!
+
     import subprocess
     if opt_verbose:
         sys.stderr.write("Calling external program %s\n" % commandline)
@@ -664,11 +666,11 @@ def get_agent_info_program(commandline):
         stdout, stderr = p.communicate()
         exitstatus = p.returncode
     except Exception, e:
-        raise MKAgentError("Could not execute '%s': %s" % (commandline, e))
+        raise MKAgentError("Could not execute '%s': %s" % (exepath, e))
 
     if exitstatus:
         if exitstatus == 127:
-            raise MKAgentError("Program '%s' not found (exit code 127)" % (commandline,))
+            raise MKAgentError("Program '%s' not found (exit code 127)" % exepath)
         else:
             raise MKAgentError("Agent exited with code %d: %s" % (exitstatus, stderr))
     return stdout
@@ -1603,7 +1605,7 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
         unit = " " + unit # Insert space before MB, GB, etc.
 
     perfdata = []
-    infotext = ""
+    infotexts = []
 
     # None or (None, None) -> do not check any levels
     if params == None or params == (None, None):
@@ -1621,9 +1623,9 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
             ref_value, ((warn_upper, crit_upper), (warn_lower, crit_lower)) = \
                 get_predictive_levels(dsname, params, "MAX", levels_factor=factor * scale)
             if ref_value:
-                infotext += "predicted reference: %.2f%s" % (ref_value * factor / scale, unit)
+                infotexts.append("predicted reference: %.2f%s" % (ref_value * factor / scale, unit))
             else:
-                infotext += "no reference for prediction yet"
+                infotexts.append("no reference for prediction yet")
         except Exception, e:
             if opt_debug:
                 raise
@@ -1635,22 +1637,27 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
     # Critical cases
     if crit_upper != None and value >= crit_upper:
         state = 2
-        infotext += " (critical level at %.2f%s)" % (crit_upper / factor / scale, unit)
+        infotexts.append("critical level at %.2f%s" % (crit_upper / factor / scale, unit))
     elif crit_lower != None and value <= crit_lower:
         state = 2
-        infotext += " (too low: critical level at %.2f%s)" % (crit_lower / factor / scale, unit)
+        infotexts.append("too low: critical level at %.2f%s" % (crit_lower / factor / scale, unit))
 
     # Warning cases
     elif warn_upper != None and value >= warn_upper:
         state = 1
-        infotext += " (warning level at %.2f%s)" % (warn_upper / factor / scale, unit)
+        infotexts.append("warning level at %.2f%s" % (warn_upper / factor / scale, unit))
     elif warn_lower != None and value <= warn_lower:
         state = 1
-        infotext += " (too low: warning level at %.2f%s)" % (warn_lower / factor / scale, unit)
+        infotexts.append("too low: warning level at %.2f%s" % (warn_lower / factor / scale, unit))
 
     # OK
     else:
         state = 0
+
+    if infotexts:
+        infotext = " (" + ", ".join(infotexts) + ")"
+    else:
+        infotext = ""
 
     if state and statemarkers:
         if state == 1:

@@ -116,6 +116,11 @@ def transform_builtin_dashboards():
                 dashlet['type'] = dashlet['url'][8:-3]
                 del dashlet['url']
 
+            elif dashlet.get('urlfunc') and type(dashlet['urlfunc']) != str:
+                raise MKGeneralException(_('Unable to transform dashlet %d of dashboard %s: '
+                                           'the dashlet is using "urlfunc" which can not be '
+                                           'converted automatically.') % (nr, name))
+
             elif dashlet.get('url', '') != '' or dashlet.get('urlfunc') or dashlet.get('iframe'):
                 # Normal URL based dashlet
                 dashlet['type'] = 'url'
@@ -292,7 +297,26 @@ def render_dashboard(name):
         # dashlets using the 'urlfunc' method will dynamically compute
         # an url (using HTML context variables at their wish).
         if "urlfunc" in dashlet:
-            dashlet["url"] = dashlet["urlfunc"]()
+            urlfunc = dashlet['urlfunc']
+            # We need to support function pointers to be compatible to old dashboard plugin
+            # based definitions. The new dashboards use strings to reference functions within
+            # the global context or functions of a module. An example would be:
+            #
+            # urlfunc: "my_custom_url_rendering_function"
+            #
+            # or within a module:
+            #
+            # urlfunc: "my_module.render_my_url"
+            if type(urlfunc) == type(lambda x: x):
+                dashlet["url"] = urlfunc()
+            else:
+                if '.' in urlfunc:
+                    module_name, func_name = urlfunc.split('.', 1)
+                    module = __import__(module_name)
+                    fp = module.__dict__[func_name]
+                else:
+                    fp = globals()[urlfunc]
+                dashlet["url"] = fp()
 
         dashlet_type = dashlet_types[dashlet['type']]
 

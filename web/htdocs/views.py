@@ -835,6 +835,10 @@ def get_needed_columns(view, painters):
             linkview = available_views.get(v)
             if linkview:
                 columns += multisite_datasources[view['datasource']]['idkeys']
+                # The site attribute is no column. Filter it out here
+                if 'site' in columns:
+                    columns.remove('site')
+
         if len(entry) > 2 and entry[2]:
             tt = entry[2]
             columns += multisite_painters[tt]["columns"]

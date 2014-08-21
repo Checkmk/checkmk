@@ -1,5 +1,6 @@
 1.2.4p6:
     Core & Setup:
+    * 1373 SEC: Do not ouput complete command line when datasource programs fail...
     * 1053 FIX: Fixed events check always being reporting OK state...
 
     Checks & Agents:

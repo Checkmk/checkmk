@@ -355,6 +355,7 @@ def process_alerts(cfg, logs, ms_name, mon_name, node, alerts):
 def connect(cfg):
     global conn
     try:
+        conn = None # make sure that conn is defined, even on an exception
         conn = sapnwrfc.base.rfc_connect(cfg)
     except sapnwrfc.RFCCommunicationError, e:
         sys.stderr.write('ERROR: Unable to connect (%s)\n' % e)

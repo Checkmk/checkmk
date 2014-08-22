@@ -1,3 +1,6 @@
 #!/bin/bash
-sudo mkdir -p /usr/lib/check_mk_agent/plugins
-sudo install -m 755 * /usr/lib/check_mk_agent/plugins
+SITE=${SITE:-$(cat ../../.site 2>/dev/null || true)}
+SITE=${SITE:-$(omd sites --bare | head -n 1)}
+# sudo mkdir -p /usr/lib/check_mk_agent/plugins
+sudo install -m 755 * /usr/lib/check_mk_agent/plugins || true
+sudo install -m 755 * /omd/sites/$SITE/share/check_mk/agents/plugins

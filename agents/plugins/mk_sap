@@ -56,6 +56,9 @@ except ImportError, e:
             '"/usr/sap/nwrfcsdk/lib" and run "ldconfig" afterwards.\n'
         )
         sys.exit(1)
+    elif 'No module named sapnwrfc' in str(e):
+        sys.stderr.write("Missing the Python module sapnwfrc.\n")
+        sys.exit(1)
     else:
         raise
 
@@ -358,7 +361,7 @@ def connect(cfg):
         conn = sapnwrfc.base.rfc_connect(cfg)
     except sapnwrfc.RFCCommunicationError, e:
         sys.stderr.write('ERROR: Unable to connect (%s)\n' % e)
-
+        return
 
     login()
 
@@ -451,7 +454,11 @@ def connect(cfg):
 
     logout()
     conn.close()
-for entrie in cfg:
-    connect( entrie )
+
+for entry in cfg:
+    try:
+        connect(entry)
+    except:
+        pass # Make sure that other entries are executed anyway
 
 sys.exit(0)

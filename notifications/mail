@@ -324,8 +324,7 @@ def fetch_pnp_data(context, params):
     if not os.path.exists(path):
         raise GraphException('Unable to locate pnp4nagios index.php (%s)' % path)
 
-    #return os.popen('REMOTE_USER="%s" php %s %s "%s"' % (context['CONTACTNAME'], php_save_path, path, params)).read()
-    return os.popen('REMOTE_USER="%s" php %s %s "%s"' % ('omdadmin', php_save_path, path, params)).read()
+    return os.popen('REMOTE_USER="%s" php %s %s "%s"' % (context['CONTACTNAME'], php_save_path, path, params)).read()
 
 def fetch_num_sources(context):
     svc_desc = context['WHAT'] == 'HOST' and '_HOST_' or context['SERVICEDESC']

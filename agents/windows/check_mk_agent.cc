@@ -4651,17 +4651,15 @@ void determine_directories()
     snprintf(g_logwatch_statefile, sizeof(g_logwatch_statefile), "%s\\logstate.txt", g_agent_directory);
 }
 
-int get_perf_counter_id(const char *counter_name) {
-
+int get_counter_id_from_lang(const char *language, const char *counter_name)
+{
     HKEY hKey;
     LONG result;
     TCHAR szValueName[300000];
     DWORD dwcbData = sizeof(szValueName);
-
-    // Determine the correct perflib key..
-    // CurrentLanguage first
-    result = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-    "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib\\CurrentLanguage", REG_MULTI_SZ, KEY_READ, &hKey);
+    char regkey[512];
+    snprintf(regkey, sizeof(regkey), "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib\\%s", language);
+    result = RegOpenKeyEx(HKEY_LOCAL_MACHINE, regkey, REG_MULTI_SZ, KEY_READ, &hKey);
     RegQueryValueEx(
         hKey,
         "Counter",
@@ -4672,26 +4670,9 @@ int get_perf_counter_id(const char *counter_name) {
     );
     RegCloseKey (hKey);
 
-    if (result != ERROR_SUCCESS) // nothing found, try english (009) as fallback
-    {
-        result = RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-        "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Perflib\\009", REG_MULTI_SZ, KEY_READ, &hKey);
-        RegQueryValueEx(
-            hKey,
-            "Counter",
-            NULL,
-            NULL,
-            (LPBYTE) szValueName,
-            &dwcbData
-        );
-        RegCloseKey (hKey);
-        if (result != ERROR_SUCCESS)
-        {
-            // Unable to open any perflib registry
-            return -1;
-        }
+    if (result != ERROR_SUCCESS) {
+        return -1;
     }
-
 
     int   length      = 0;
     int   last_ctr_id = 0;
@@ -4716,6 +4697,21 @@ int get_perf_counter_id(const char *counter_name) {
         ptr_perf = szValueName + offset;
         is_name = !is_name;
     }
+
+    return -1;
+}
+
+int get_perf_counter_id(const char *counter_name)
+{
+    int counter_id;
+    // Try to find it in current language
+    if ((counter_id = get_counter_id_from_lang("CurrentLanguage", counter_name)) != -1)
+        return counter_id;
+
+    // Try to find it in english
+    if ((counter_id = get_counter_id_from_lang("009", counter_name)) != -1)
+        return counter_id;
+
     return -1;
 }
 

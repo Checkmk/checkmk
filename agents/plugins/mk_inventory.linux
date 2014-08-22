@@ -1,7 +1,10 @@
 #!/bin/bash
 
-# Run and *send* only once every 4 hours
-INTERVAL=14400
+# Run and *send* only once every __ seconds
+. $MK_CONFDIR/mk_inventory.cfg 2>/dev/null || true
+
+# Default to four hours
+INTERVAL=${INVENTORY_INTERVAL:-14400}
 
 FLAGFILE=$MK_CONFDIR/mk_inventory.last.$REMOTE
 LAST_RUN=$(stat -c %Y $FLAGFILE)

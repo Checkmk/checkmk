@@ -80,7 +80,6 @@ cisco_vss_operstatus_names = {
 }
 
 def inventory_cisco_vss(info):
-    import pprint ; pprint.pprint(info)
     for switch_id, chassis_role in info[0]:
         if chassis_role in [ '2', '3' ]: # active, standby
             return [ (None, None) ]
@@ -92,16 +91,22 @@ def check_cisco_vss(item, params, info):
             state = 2
         else:
             state = 0
-        yield state, "switch %s: %s" % (switch_id, cisco_vss_role_names[chassis_role])
-        
+        yield state, "chassis %s: %s" % (switch_id, cisco_vss_role_names[chassis_role])
+
     yield 0, "%d VLS connections configured" % len(ports)
 
-    for core_switch_id, operstatus in ports:
+    for core_switch_id, operstatus, conf_portcount, op_portcount in ports:
         if operstatus == '1':
             state = 0
         else:
             state = 2
-        yield state, "port %s: %s" % (core_switch_id, cisco_vss_operstatus_names[operstatus])
+        yield state, "core switch %s: VSL %s" % (core_switch_id, cisco_vss_operstatus_names[operstatus])
+
+        if conf_portcount == op_portcount:
+            state = 0
+        else:
+            state = 2
+        yield state, "%s/%s ports operational" % (op_portcount, conf_portcount)
 
 
 check_info["cisco_vss"]  = {
@@ -123,6 +128,8 @@ check_info["cisco_vss"]  = {
               [
                  2,       # cvsVSLCoreSwitchID
                  3,       # cvsVSLConnectOperStatus: up(1), down(2)
+                 5,       # cvsVSLConfiguredPortCount
+                 6,       # cvsVSLOperationalPortCount
               ]
         ),
       ],

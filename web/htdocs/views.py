@@ -1396,12 +1396,16 @@ def view_title(view):
     extra_titles = [ ]
     datasource = multisite_datasources[view["datasource"]]
     tablename = datasource["table"]
-    # FIXME: What about single object context_types contextes?
-    used_filters = [ multisite_filters[fn] for fn in view["context"].keys() ]
-    for filt in used_filters:
-        heading = filt.heading_info(tablename)
-        if heading:
-            extra_titles.append(heading)
+
+    context_type = visuals.context_types[view['context_type']]
+    if context_type['single']:
+        extra_titles = [ v for k, v in visuals.get_context_html_vars(view) ]
+    else:
+        used_filters = [ multisite_filters[fn] for fn in view["context"].keys() ]
+        for filt in used_filters:
+            heading = filt.heading_info(tablename)
+            if heading:
+                extra_titles.append(heading)
 
     title = _u(view["title"]) + " " + ", ".join(extra_titles)
 

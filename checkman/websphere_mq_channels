@@ -4,18 +4,21 @@ catalog: app/WebsphereMQ
 license: GPL
 distribution: check_mk
 description:
- This check monitors the count of Messages in a Websphere MQ Channel.
- In order to work it is necesarry to install the websphere_mq.sh plugin to the server.
- It's maybe needed to change this plugin to fit your need's.
+ This check monitors the number of messages in a Websphere MQ Channel.
+ In order to work it is necesarry to install the <tt>websphere_mq</tt> plugin
+ to the server.  You might need to edit this plugin to fit your needs.
 
- Once installed, the inventory will create one service for each Queue and each Channel (see also websphere_message_queues). This service will trigger a {Warning} or a {Critical} state, if the configured threshold are reached.
+ Once installed the inventory will create one service for each queue and
+ each channel (see also the check <tt>websphere_message_queues</tt>).
+ This service will trigger a {WARN} or a {CRIT} state if the configured
+ thresholds are reached.
 
 item:
  The name of the channel
 
 perfdata:
-  One Grpah for the Message count will be created
+ One variable: the message count
 
 inventory:
- One service will be created for each channel
+ One service will be created for each channel.
 

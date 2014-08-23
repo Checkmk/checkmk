@@ -24,52 +24,52 @@
 # Boston, MA 02110-1301 USA.
 
 # Example output from agent:
-#<<<emcvnx_hba>>>
-#Information about each SPPORT:
+# <<<emcvnx_hba>>>
+# Information about each SPPORT:
 #
-#SP Name:             SP A
-#SP Port ID:          0
-#SP UID:              50:06:01:60:BE:A0:5D:E5:50:06:01:60:3E:A0:5D:E5
-#Link Status:         Up
-#Port Status:         Online
-#Switch Present:      YES
-#Switch UID:          10:00:00:27:F8:28:52:5B:20:02:00:27:F8:28:52:5B
-#SP Source ID:        66048
-#ALPA Value:         0
-#Speed Value :         8Gbps
-#Auto Negotiable :     NO
-#Available Speeds:
-#2Gbps
-#4Gbps
-#8Gbps
-#Auto
-#Requested Value:      Auto
-#MAC Address:         Not Applicable
-#SFP State:           Online
-#Reads:               426729
-#Writes:              8683578
-#Blocks Read:         4917783
-#Blocks Written:      12008476
-#Queue Full/Busy:     0
-#I/O Module Slot:     Onboard
-#Physical Port ID:    2
-#Usage:     Mirrorview
-#SFP/Connector EMC Part Number: 019-078-042
-#SFP/Connector EMC Serial Number: 00000000000
-#SFP/Connector Vendor Part Number: AFBR-57D7APZ-E2
-#SFP/Connector Vendor Serial Number: AGL1213A3188822
-#SFP/Connector Supported Speeds:
-#2Gbps
-#4Gbps
-#8Gbps
+# SP Name:             SP A
+# SP Port ID:          0
+# SP UID:              50:06:01:60:BE:A0:5D:E5:50:06:01:60:3E:A0:5D:E5
+# Link Status:         Up
+# Port Status:         Online
+# Switch Present:      YES
+# Switch UID:          10:00:00:27:F8:28:52:5B:20:02:00:27:F8:28:52:5B
+# SP Source ID:        66048
+# ALPA Value:         0
+# Speed Value :         8Gbps
+# Auto Negotiable :     NO
+# Available Speeds:
+# 2Gbps
+# 4Gbps
+# 8Gbps
+# Auto
+# Requested Value:      Auto
+# MAC Address:         Not Applicable
+# SFP State:           Online
+# Reads:               426729
+# Writes:              8683578
+# Blocks Read:         4917783
+# Blocks Written:      12008476
+# Queue Full/Busy:     0
+# I/O Module Slot:     Onboard
+# Physical Port ID:    2
+# Usage:     Mirrorview
+# SFP/Connector EMC Part Number: 019-078-042
+# SFP/Connector EMC Serial Number: 00000000000
+# SFP/Connector Vendor Part Number: AFBR-57D7APZ-E2
+# SFP/Connector Vendor Serial Number: AGL1213A3188822
+# SFP/Connector Supported Speeds:
+# 2Gbps
+# 4Gbps
+# 8Gbps
 #
-#SP Name:             SP A
-#SP Port ID:          1
-#SP UID:              50:06:01:60:BE:A0:5D:E5:50:06:01:61:3E:A0:5D:E5
-#Link Status:         Up
-#Port Status:         Online
-#Switch Present:      YES
-#[...]
+# SP Name:             SP A
+# SP Port ID:          1
+# SP UID:              50:06:01:60:BE:A0:5D:E5:50:06:01:61:3E:A0:5D:E5
+# Link Status:         Up
+# Port Status:         Online
+# Switch Present:      YES
+# [...]
 
 # Parse agent output into a dict of the form:
 # parsed = {

@@ -24,79 +24,79 @@
 # Boston, MA 02110-1301 USA.
 
 # Example output from agent:
-#<<<emcvnx_disks>>>
+# <<<emcvnx_disks>>>
 #
-#All Disks Information
-#---------------------
+# All Disks Information
+# ---------------------
 #
-#
-#Bus 0 Enclosure 0  Disk 0
-#Vendor Id:               SEAGATE
-#Product Id:              STE60005 CLAR600
-#Product Revision:        ES0F
-#Lun:                     Unbound
-#Type:                    N/A
-#State:                   Unbound
-#Hot Spare:               NO
-#Prct Rebuilt:            Unbound
-#Prct Bound:              Unbound
-#Serial Number:           6SL342E6
-#Sectors:                 0 (0)
-#Capacity:                549691
-#Private:                 Unbound
-#Bind Signature:          0x0, 0, 0
-#Hard Read Errors:        0
-#Hard Write Errors:       0
-#Soft Read Errors:        0
-#Soft Write Errors:       0
-#Read Retries:     N/A
-#Write Retries:    N/A
-#Remapped Sectors:        N/A
-#Number of Reads:         15922079
-#Number of Writes:        14841793
-#Number of Luns:          0
-#Raid Group ID:           This disk does not belong to a RAIDGroup
-#Clariion Part Number:    DG118032656
-#Request Service Time:    N/A
-#Read Requests:           15922079
-#Write Requests:          14841793
-#Kbytes Read:             998099223
-#Kbytes Written:          1661571498
-#Stripe Boundary Crossing: None
-#Drive Type:              SAS
-#Clariion TLA Part Number:005049274
-#User Capacity:           0
-#Idle Ticks:              162808947
-#Busy Ticks:              1220056
-#Current Speed: 6Gbps
-#Maximum Speed: 6Gbps
-#Queue Max:        N/A
-#Queue Avg:        N/A
-#Prct Idle:        0
-#Prct Busy:        0
-#Hardware Power Savings Qualified: NO
-#Hardware Power Savings Eligible: NO
-#Power Savings State: Full Power
-#Current Power Savings Log Timestamp: N/A
-#Spinning Ticks: N/A
-#Standby Ticks: N/A
-#Number of Spin Ups: N/A
-#Arrivals with Nonzero Queue: 8982980
-#High Sum of Seeks:       315504963402436
-#Idle Ticks SPA:          81201290
-#Idle Ticks SPB:          81607657
-#Busy Ticks SPA:          812651
-#Busy Ticks SPB:          407405
-#Queue Length:            83023848
-#
-#Bus 1 Enclosure 0  Disk 7
-#State:                   Removed
-#
-#Bus 1 Enclosure 0  Disk 8
-#Vendor Id:               SEAGATE
-#Product Id:              STE60005 CLAR600
-#Product Revision:        ES0F
-#[...]
+ 
+# Bus 0 Enclosure 0  Disk 0
+# Vendor Id:               SEAGATE
+# Product Id:              STE60005 CLAR600
+# Product Revision:        ES0F
+# Lun:                     Unbound
+# Type:                    N/A
+# State:                   Unbound
+# Hot Spare:               NO
+# Prct Rebuilt:            Unbound
+# Prct Bound:              Unbound
+# Serial Number:           6SL342E6
+# Sectors:                 0 (0)
+# Capacity:                549691
+# Private:                 Unbound
+# Bind Signature:          0x0, 0, 0
+# Hard Read Errors:        0
+# Hard Write Errors:       0
+# Soft Read Errors:        0
+# Soft Write Errors:       0
+# Read Retries:     N/A
+# Write Retries:    N/A
+# Remapped Sectors:        N/A
+# Number of Reads:         15922079
+# Number of Writes:        14841793
+# Number of Luns:          0
+# Raid Group ID:           This disk does not belong to a RAIDGroup
+# Clariion Part Number:    DG118032656
+# Request Service Time:    N/A
+# Read Requests:           15922079
+# Write Requests:          14841793
+# Kbytes Read:             998099223
+# Kbytes Written:          1661571498
+# Stripe Boundary Crossing: None
+# Drive Type:              SAS
+# Clariion TLA Part Number:005049274
+# User Capacity:           0
+# Idle Ticks:              162808947
+# Busy Ticks:              1220056
+# Current Speed: 6Gbps
+# Maximum Speed: 6Gbps
+# Queue Max:        N/A
+# Queue Avg:        N/A
+# Prct Idle:        0
+# Prct Busy:        0
+# Hardware Power Savings Qualified: NO
+# Hardware Power Savings Eligible: NO
+# Power Savings State: Full Power
+# Current Power Savings Log Timestamp: N/A
+# Spinning Ticks: N/A
+# Standby Ticks: N/A
+# Number of Spin Ups: N/A
+# Arrivals with Nonzero Queue: 8982980
+# High Sum of Seeks:       315504963402436
+# Idle Ticks SPA:          81201290
+# Idle Ticks SPB:          81607657
+# Busy Ticks SPA:          812651
+# Busy Ticks SPB:          407405
+# Queue Length:            83023848
+# 
+# Bus 1 Enclosure 0  Disk 7
+# State:                   Removed
+# 
+# Bus 1 Enclosure 0  Disk 8
+# Vendor Id:               SEAGATE
+# Product Id:              STE60005 CLAR600
+# Product Revision:        ES0F
+# [...]
 
 
 # Parse agent output into a dict of the form:

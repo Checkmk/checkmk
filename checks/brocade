@@ -23,15 +23,16 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+
 # Example output from agent:
-#[['1', '24', 'SLOT #0: TEMP #1'],
-#['2', '12', 'SLOT #0: TEMP #2'],
-#['3', '12', 'SLOT #0: TEMP #3'],
-#['4', '4687', 'FAN #1'],
-#['5', '4560', 'FAN #2'],
-#['6', '4821', 'FAN #3'],
-#['7', '1', 'Power Supply #1'],
-#['8', '1', 'Power Supply #2']]
+# [['1', '24', 'SLOT #0: TEMP #1'],
+# ['2', '12', 'SLOT #0: TEMP #2'],
+# ['3', '12', 'SLOT #0: TEMP #3'],
+# ['4', '4687', 'FAN #1'],
+# ['5', '4560', 'FAN #2'],
+# ['6', '4821', 'FAN #3'],
+# ['7', '1', 'Power Supply #1'],
+# ['8', '1', 'Power Supply #2']]
 
 
 def brocade_sensor_convert(info, what):

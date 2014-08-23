@@ -23,6 +23,7 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
+
 apc_ats_output_default_levels = {
     "output_voltage_max" : ( 240, 250 ),
     "load_perc_max"      : ( 85, 95 )

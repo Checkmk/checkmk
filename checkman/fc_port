@@ -1,5 +1,5 @@
 title: Fibre channel devices monitored with the FCMGMT MIB
-catalog: hw/storagehw
+catalog: hw/storagehw/dell
 agents: snmp
 license: GPL
 distribution: check_mk

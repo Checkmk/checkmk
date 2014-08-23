@@ -43,6 +43,12 @@ headrify ()
       echo "Skipping $file. It's not a file."
       return
   fi
+
+  if [ "${file##*/}" = README ] ; then
+      echo "skipping README file."
+      return
+  fi
+
   echo "$file..."
   PERMISSIONS=$(stat -c %a "$file")
   TMP=$(mktemp .headrify.new.XXXXXX)

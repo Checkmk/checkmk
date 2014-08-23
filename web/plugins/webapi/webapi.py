@@ -3,7 +3,7 @@
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
-# |           | |   | "_ \ / _ \/ __| |/ /   | |\/| | " /            |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
@@ -23,8 +23,6 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-
-###############
 
 def action_add_host(request):
     if html.var("create_folders"):

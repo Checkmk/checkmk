@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -26,7 +26,7 @@
 
 # Developed by Thorsten Bruhns from OPITZ CONSULTING Deutschland GmbH
 
-#<<<oracle_crs_voting>>>
+# <<<oracle_crs_voting>>>
 # 1. ONLINE   0a6884c063904f50bf7ef4516b728a2d (/dev/oracleasm/disks/DATA1) [DATA1]
 
 def inventory_oracle_crs_voting(info):

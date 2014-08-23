@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# encoding: utf-8
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -23,7 +23,7 @@
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
-#
+
 # This agent plugin has been built to collect information from SAP R/3 systems
 # using RFC calls. It needs the python module sapnwrfc (available in Check_MK
 # git at agents/sap/sapnwrfc) and the nwrfcsdk (can be downloaded from SAP

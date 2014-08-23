@@ -352,6 +352,14 @@ if type tw_cli > /dev/null ; then
     done
 fi
 
+# RAID controllers from areca (Taiwan)
+# cli64 can be found at ftp://ftp.areca.com.tw/RaidCards/AP_Drivers/Linux/CLI/
+if type cli64
+then
+    echo "<<<arc_raid_status>>>"
+    cli64 rsf info | tail -n +3 | head -n -2
+fi
+
 # VirtualBox Guests. Section must always been output. Otherwise the
 # check would not be executed in case no guest additions are installed.
 # And that is something the check wants to detect

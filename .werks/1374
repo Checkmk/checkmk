@@ -1,0 +1,17 @@
+Title: arc_raid_status: moved plugin into main Linux agent
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.5i6
+Date: 1408805484
+Class: feature
+
+The functionality of the agent plugin <tt>arc_raid_status.sh</tt> has
+been moved into the normal <tt>check_mk_agent</tt> for Linux. If you
+have deployed the plugin, please remove it. Not doing this does not
+do great harm but will result in <tt>cli64 rsf info</tt> called twice
+per agent execution.
+
+Note: you still have to manually install <tt>cli64</tt> from
+<a href="ftp://ftp.areca.com.tw/RaidCards/AP_Drivers/Linux/CLI/">ftp://ftp.areca.com.tw/RaidCards/AP_Drivers/Linux/CLI/</a> into <tt>/usr/local/bin/</tt>
+in order to use this check.

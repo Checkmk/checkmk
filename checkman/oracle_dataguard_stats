@@ -1,6 +1,6 @@
 title: Check apply and transport lag of Oracle Data-Guard
 agents: linux, aix
-author: Thorsten Bruhns <thorsten.bruhns@opitz-consulting.de>
+catalog: app/oracle
 license: GPL
 distribution: check_mk
 description:

@@ -349,8 +349,12 @@ class TextAscii(ValueSpec):
             html.write(self._label)
             html.write("&nbsp;")
 
+        if self._prefix_buttons:
+            html.write('<div style="white-space: nowrap;">')
         html.text_input(varprefix, value, size = self._size, read_only = self._read_only, cssclass = self._cssclass)
         self.render_buttons()
+        if self._prefix_buttons:
+            html.write('</div>')
 
     def render_buttons(self):
         if self._prefix_buttons:

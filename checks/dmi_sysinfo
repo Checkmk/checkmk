@@ -24,6 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Note: this check is deprecated. It is superseeded by the new
+# Check_MK HW/SW-Inventory.
 
 def inventory_dmi_sysinfo(checkname, info):
     if len(info) > 0 and info[0] == ['System', 'Information']:

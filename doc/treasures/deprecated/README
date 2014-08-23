@@ -1,0 +1,4 @@
+Here you find parts of Check_MK that might still work, but are
+deprecated. In most cases the reason is that something newer,
+better, cleaner, more elegant, less buggy exists that makes the
+thing obsolete.

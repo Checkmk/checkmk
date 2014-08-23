@@ -30,7 +30,7 @@
 # All Disks Information
 # ---------------------
 #
- 
+
 # Bus 0 Enclosure 0  Disk 0
 # Vendor Id:               SEAGATE
 # Product Id:              STE60005 CLAR600
@@ -89,10 +89,10 @@
 # Busy Ticks SPA:          812651
 # Busy Ticks SPB:          407405
 # Queue Length:            83023848
-# 
+#
 # Bus 1 Enclosure 0  Disk 7
 # State:                   Removed
-# 
+#
 # Bus 1 Enclosure 0  Disk 8
 # Vendor Id:               SEAGATE
 # Product Id:              STE60005 CLAR600

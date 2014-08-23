@@ -23,7 +23,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-$opt[1] = "--vertical-label 'Pages printed' -X0 -l0 --title \"$servicedesc\" "; 
+$opt[1] = "--vertical-label 'Pages printed' -X0 -l0 --title \"$servicedesc\" ";
 $def[1] = "DEF:pages=$RRDFILE[1]:$DS[1]:MAX ";
 $def[1] .= "AREA:pages#808080:\"Pages printed\" ";
 $def[1] .= "LINE:pages#404040 ";

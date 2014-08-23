@@ -27,14 +27,13 @@
 
 # Author: Markus Lengler <ml@lengler-it.de>
 
-
 # Example outputs from agent:
 #
-#<<<dmraid>>>
-#name   : isw_ebdabbedfh_system
-#status : ok
-#/dev/sda: isw, "isw_ebdabbedfh", GROUP, ok, 976773166 sectors, data@ 0 Model: WDC WD5002ABYS-5
-#/dev/sdb: isw, "isw_ebdabbedfh", GROUP, ok, 976773166 sectors, data@ 0 Model: WDC WD5002ABYS-5
+# <<<dmraid>>>
+# name   : isw_ebdabbedfh_system
+# status : ok
+# /dev/sda: isw, "isw_ebdabbedfh", GROUP, ok, 976773166 sectors, data@ 0 Model: WDC WD5002ABYS-5
+# /dev/sdb: isw, "isw_ebdabbedfh", GROUP, ok, 976773166 sectors, data@ 0 Model: WDC WD5002ABYS-5
 
 
 def inventory_dmraid(checkname, info):

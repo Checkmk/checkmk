@@ -226,21 +226,11 @@ echo '<<<tcp_conn_stats>>>'
 # New implementation: netstat is very slow for large TCP tables
 cat /proc/net/tcp /proc/net/tcp6 2>/dev/null | awk ' /:/ { c[$4]++; } END { for (x in c) { print x, c[x]; } }'
 
-# Platten- und RAID-Status von LSI-Controlleren, falls vorhanden
-if type cfggen > /dev/null ; then
-   echo '<<<lsi>>>'
-   cfggen 0 DISPLAY | egrep '(Target ID|State|Volume ID|Status of volume)[[:space:]]*:' | sed -e 's/ *//g' -e 's/:/ /'
-fi
-
-# Multipathgeraete
+# Linux Multipathing
 if type multipath >/dev/null ; then
     echo '<<<multipath>>>'
     multipath -l
 fi
-
-# Soft-RAID
-echo '<<<md>>>'
-cat /proc/mdstat
 
 # Performancecounter Platten
 echo '<<<diskstat>>>'
@@ -313,9 +303,36 @@ then
     ) 200>>"$sdrcache"
 fi
 
-# State of LSI MegaRAID controller via MegaCli. You can download that tool from:
-# http://www.lsi.com/downloads/Public/MegaRAID%20Common%20Files/8.02.16_MegaCLI.zip
+# RAID status of Linux software RAID
+echo '<<<md>>>'
+cat /proc/mdstat
 
+# RAID status of Linux RAID via device mapper
+if type dmraid >/dev/null && DMSTATUS=$(dmraid -r)
+then
+    echo '<<<dmraid>>>'
+
+    # Output name and status
+    dmraid -s | grep -e ^name -e ^status
+
+    # Output disk names of the RAID disks
+    DISKS=$(echo "$DMSTATUS" | cut -f1 -d\:)
+
+    for disk in $DISKS ; do
+        device=$(cat /sys/block/$(basename $disk)/device/model )
+        status=$(echo "$DMSTATUS" | grep ^${disk})
+        echo "$status Model: $device"
+    done
+fi
+
+# RAID status of LSI controllers via cfggen
+if type cfggen > /dev/null ; then
+   echo '<<<lsi>>>'
+   cfggen 0 DISPLAY | egrep '(Target ID|State|Volume ID|Status of volume)[[:space:]]*:' | sed -e 's/ *//g' -e 's/:/ /'
+fi
+
+# RAID status of LSI MegaRAID controller via MegaCli. You can download that tool from:
+# http://www.lsi.com/downloads/Public/MegaRAID%20Common%20Files/8.02.16_MegaCLI.zip
 if type MegaCli >/dev/null ; then
     MegaCli_bin="MegaCli"
 elif type MegaCli64 >/dev/null ; then
@@ -340,7 +357,7 @@ if [ "$MegaCli_bin" != "unknown" ]; then
     $MegaCli_bin -AdpBbuCmd -GetBbuStatus -aALL -NoLog < /dev/null | grep -v Exit
 fi
 
-# 3WARE disk controller (by Radoslaw Bak)
+# RAID status of 3WARE disk controller (by Radoslaw Bak)
 if type tw_cli > /dev/null ; then
     for C in $(tw_cli show | awk 'NR < 4 { next } { print $1 }'); do
         echo '<<<3ware_info>>>'

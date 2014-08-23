@@ -1,0 +1,11 @@
+Title: dmraid: moved plugin code into normal Linux agent
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1408814499
+Class: feature
+
+The agent plugin <tt>dmraid</tt> for monitoring Linux software RAID via
+device mapper has been moved into the main Linux agent. This is done
+for simplification and for consitancy with the other RAID monitoring.

@@ -354,8 +354,7 @@ fi
 
 # RAID controllers from areca (Taiwan)
 # cli64 can be found at ftp://ftp.areca.com.tw/RaidCards/AP_Drivers/Linux/CLI/
-if type cli64
-then
+if type cli64 >/dev/null ; then
     echo "<<<arc_raid_status>>>"
     cli64 rsf info | tail -n +3 | head -n -2
 fi
@@ -364,7 +363,7 @@ fi
 # check would not be executed in case no guest additions are installed.
 # And that is something the check wants to detect
 echo '<<<vbox_guest>>>'
-if type VBoxControl > /dev/null 2>&1 ; then
+if type VBoxControl >/dev/null 2>&1 ; then
     VBoxControl -nologo guestproperty enumerate | cut -d, -f1,2
     [ ${PIPESTATUS[0]} = 0 ] || echo "ERROR"
 fi

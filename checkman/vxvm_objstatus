@@ -16,6 +16,7 @@ description:
 
   The check should be extensible for tracking status in multiple layers.
 
+  You need to install the agent plugin {vxvm}.
 
 inventory:
   One item is generated per volume in the volume manager.

@@ -12,6 +12,8 @@ description:
   {WARN} status, or a {CRIT} if less than 50% - or none - paths are
   still working.
 
+  You need to install the agent plugin {vxvm}.
+
 
 inventory:
   One item is generated per multipathed LUN. It is named after the

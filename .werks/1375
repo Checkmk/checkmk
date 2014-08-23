@@ -1,0 +1,10 @@
+Title: vxvm_enclosures, vxvm_multipath, vxvm_objstatus: joined into one agent plugin called vxvm
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1408807656
+Class: feature
+
+All of the three agent plugins have been joined into one single plugin.
+There is no need to update your agent now.

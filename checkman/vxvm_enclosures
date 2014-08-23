@@ -15,6 +15,8 @@ description:
   the local disks under Veritas control, you can add these to
   {ignored_services}.
 
+  You need to install the agent plugin {vxvm}.
+
 inventory:
   One item is generated per VxVM disk enclosure, the naming is
   inherited from VxVM. See the man page for {vxdmpadm} about

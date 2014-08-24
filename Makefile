@@ -34,10 +34,24 @@ LIBDIR	       	= $(PREFIX)/lib/$(NAME)
 DISTNAME       	= $(NAME)-$(VERSION)
 TAROPTS        	= --owner=root --group=root --exclude=.svn --exclude=*~ \
 		  --exclude=.gitignore --exclude=.*.swp --exclude=.f12
+
+# File to pack into livestatus-$(VERSION).tar.gz
 LIVESTATUS_SOURCES = configure aclocal.m4 config.guess config.h.in config.sub \
 		     configure.ac ltmain.sh Makefile.am Makefile.in missing \
-		     nagios/README nagios/*.h nagios4/README nagios4/*.h src/*.{h,c,cc} src/Makefile.{in,am} \
+		     nagios/README nagios/*.h nagios4/README nagios4/*.h \
+		     src/*.{h,c,cc} src/Makefile.{in,am} \
 		     depcomp install-sh api/python/{*.py,README} api/perl/*
+
+# Files that are checked for trailing spaces
+HEAL_SPACES_IN = checkman/* modules/* checks/* notifications/* inventory/* \
+               $$(find -name Makefile) livestatus/src/*{cc,c,h} \
+	       web/htdocs/*.{py,css} web/htdocs/js/*.js web/plugins/*/*.py \
+               doc/helpers/* scripts/setup.sh scripts/autodetect.py \
+	       $$(find pnp-templates -type f -name "*.php") \
+               mkeventd/bin/mkeventd mkeventd/web/htdocs/*.py mkeventd/web/plugins/*/*.py \
+	       mkeventd/src/*.c mkeventd/checks/* check_mk_templates.cfg \
+	       doc/treasures/mknotifyd agents/check_mk_agent* \
+	       $$(find agents/plugins -type f)
 
 
 .PHONY: help install clean
@@ -61,11 +75,6 @@ check-binaries:
 	@if [ -z "$(SKIP_SANITY_CHECKS)" ]; then \
 	    echo -n "Checking precompiled binaries..." && file agents/waitmax | grep 32-bit >/dev/null && echo OK ; \
 	fi
-
-check-version:
-	@sed -n 1p ChangeLog | fgrep -qx '$(VERSION):' || { \
-	    echo "Version $(VERSION) not listed at top of ChangeLog!" ; \
-	    false ; }
 
 
 check: check-spaces check-permissions check-binaries check-version
@@ -139,6 +148,11 @@ mk-livestatus:
 	tar czf mk-livestatus-$(VERSION).tar.gz $(TAROPTS) mk-livestatus-$(VERSION)
 	rm -rf mk-livestatus-$(VERSION)
 
+
+check-version:
+	@sed -n 1p ChangeLog | fgrep -qx '$(VERSION):' || { \
+	    echo "Version $(VERSION) not listed at top of ChangeLog!" ; \
+	    false ; }
 
 version:
 	[ "$$(head -c 12 /etc/issue)" = "Ubuntu 10.10" \
@@ -227,37 +241,6 @@ deb-agent: $(NAME)-agent-$(VERSION)-1.noarch.rpm $(NAME)-agent-logwatch-$(VERSIO
 	done
 
 
-clean:
-	rm -rf dist.tmp rpm.topdir *.rpm *.deb *.exe \
-	       mkeventd-*.tar.gz mk-livestatus-*.tar.gz \
-	       $(NAME)-*.tar.gz *~ counters autochecks \
-	       precompiled cache
-	find -name "*~" | xargs rm -f
-
-mrproper:
-	git clean -xfd -e .bugs 2>/dev/null || git clean -xfd
-
-
-SOURCE_FILES = checkman/* modules/* checks/* notifications/* inventory/* $$(find -name Makefile) \
-          livestatus/src/*{cc,c,h} web/htdocs/*.{py,css} web/htdocs/js/*.js web/plugins/*/*.py \
-          doc/helpers/* scripts/setup.sh scripts/autodetect.py $$(find pnp-templates -type f -name "*.php") \
-          mkeventd/bin/mkeventd mkeventd/web/htdocs/*.py mkeventd/web/plugins/*/*.py mkeventd/src/*.c \
-          mkeventd/checks/* check_mk_templates.cfg doc/treasures/mknotifyd agents/check_mk_agent* \
-	  $$(find agents/plugins -type f)
-
-check-spaces:
-	@echo -n "Checking for trailing spaces..."
-	@if grep -q '[[:space:]]$$' $(SOURCE_FILES) ; then echo $$? ; figlet "Space error" \
-          ; echo "Aborting due to trailing spaces. Please use 'make healspaces' to repair." \
-          ; echo "Affected files: " \
-          ; grep -l '[[:space:]]$$' $(SOURCE_FILES) \
-          ; exit 1 ; fi
-	@echo OK
-
-healspaces:
-	@echo "Removing trailing spaces from code lines..."
-	@sed -ri 's/[[:space:]]+$$//g' $(SOURCE_FILES)
-
 setup:
 
 	$(MAKE) dist
@@ -267,3 +250,29 @@ setup:
 	rm -rf $(DISTNAME)
 	check_mk -R
 	/etc/init.d/apache2 reload
+
+
+check-spaces:
+	@echo -n "Checking for trailing spaces..."
+	@if grep -q '[[:space:]]$$' $(HEAL_SPACES_IN) ; then echo $$? ; figlet "Space error" \
+          ; echo "Aborting due to trailing spaces. Please use 'make healspaces' to repair." \
+          ; echo "Affected files: " \
+          ; grep -l '[[:space:]]$$' $(HEAL_SPACES_IN) \
+          ; exit 1 ; fi
+	@echo OK
+
+
+healspaces:
+	@echo "Removing trailing spaces from code lines..."
+	@sed -ri 's/[[:space:]]+$$//g' $(HEAL_SPACES_IN)
+
+
+clean:
+	rm -rf dist.tmp rpm.topdir *.rpm *.deb *.exe \
+	       mkeventd-*.tar.gz mk-livestatus-*.tar.gz \
+	       $(NAME)-*.tar.gz *~ counters autochecks \
+	       precompiled cache
+	find -name "*~" | xargs rm -f
+
+mrproper:
+	git clean -xfd -e .bugs 2>/dev/null || git clean -xfd

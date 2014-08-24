@@ -38,10 +38,11 @@
 if [ -e "$MK_CONFDIR/psperf.cfg" ] ; then
     echo '<<<ps>>>'
     echo '[proc_stat]'
+    egrep -v '^[[:space:]]*(#|$)' "$MK_CONFDIR/psperf.cfg" | \
     while read LINE
     do
         for pid in $(pgrep $LINE) ; do
             cat /proc/$pid/stat
         done
-    done < "$MK_CONFDIR/psperf.cfg"
+    done
 fi

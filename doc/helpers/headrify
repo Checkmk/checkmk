@@ -122,6 +122,7 @@ else
       -not -name "*.rc" \
       -not -name "*.rc.in" \
       -not -name "ltmain.sh" \
+      -not -name "*.exe" \
       -and \( \
       -name "Makefile" -or \
       -name "*.cfg" -or \
@@ -136,8 +137,8 @@ else
       -name "*.php" -or \
       -name "*.sh" -or \
       -name "*.spec" \) ; \
-    rm -f checks/*~ ; ls checks/* ; echo agents/plugins/* agents/* | tr ' ' \\n | grep -vx agents/waitmax | grep -v /ltmain.sh | grep -vx agents/mk-job | fgrep -v agents/hpux | fgrep -v windows | fgrep -v .exe | fgrep -v /plugins | fgrep -v .hpux ; ls agents/windows/*.cc ; echo agents/windows/Makefile ; } \
-	| grep -v /Privat/ | egrep -v 'livestatus/nagios4?/' | grep -vx '' | \
+    rm -f checks/*~ ; ls checks/* ; echo agents/{plugins,special}/* agents/* | tr ' ' \\n | grep -vx agents/waitmax | fgrep -v windows | fgrep -v .exe | fgrep -v /plugins ; ls agents/windows/*.cc ; echo agents/windows/Makefile ; } \
+	| egrep -v 'livestatus/nagios4?/' | grep -vx '' | \
   while read file
   do
     headrify "$file" &

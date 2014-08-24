@@ -1,11 +1,11 @@
-title: Kaspersky Anti Virus Quarantine
+title: Kaspersky Anti-Virus Quarantine
 agents: linux
 catalog: app/kaspersky
 license: GPL
 distribution: check_mk
 description:
- This check checks for file in quarantine reportet from kaspersku anti virus.
- A Critical State will be triggert if the quarantine queue isn'd empty.
+ This check checks for file in quarantine reportet from Kaspersky Anti-Virus.
+ A Critical state will be triggered if the quarantine queue is not empty.
  You need to install the plugin {kaspersky_av} into the {plugins} directory of your agent.
 
 inventory:

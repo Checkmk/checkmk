@@ -4740,7 +4740,7 @@ def usage():
  cmk --create-rrd [--keepalive|SPEC]  create round robin database
  cmk -i, --inventory [HOST1 HOST2...] Do a HW/SW-Inventory of some ar all hosts
  cmk --inventory-as-check HOST        Do HW/SW-Inventory, behave like check plugin
- cmk -A, --bake-agents [H1 H2 ..]     Bake agents for hosts (no in all versions)
+ cmk -A, --bake-agents [-f] [H1 H2..] Bake agents for hosts (not in all versions)
  cmk -V, --version                    print version
  cmk -h, --help                       print this help
 
@@ -4852,7 +4852,9 @@ NOTES:
   defines gateway hosts and parent declarations.
 
   -A, --bake-agents creates RPM/DEB/MSI packages with host-specific
-  monitoring agents. Note: this feature is only contained in the
+  monitoring agents. If you add the option -f, --force then all
+  agents are renewed, even if an uptodate version for a configuration
+  already exists. Note: baking agents is only contained in the
   subscription version of Check_MK.
 
 
@@ -5941,11 +5943,11 @@ def output_profile():
 # Do option parsing and execute main function -
 # if check_mk is not called as module
 if __name__ == "__main__":
-    short_options = 'ASHVLCURODMmd:Ic:nhvpXPNBil'
+    short_options = 'ASHVLCURODMmd:Ic:nhvpXPNBilf'
     long_options = [ "help", "version", "verbose", "compile", "debug", "interactive",
                      "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
                      "flush", "package", "localize", "donate", "snmpwalk", "oid=", "extraoid=",
-                     "snmptranslate", "bake-agents",
+                     "snmptranslate", "bake-agents", "force",
                      "usewalk", "scan-parents", "procs=", "automation=", "notify",
                      "snmpget=", "profile", "keepalive", "keepalive-fd=", "create-rrd",
                      "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
@@ -5976,6 +5978,8 @@ if __name__ == "__main__":
     for o,a in opts:
         if o in [ '-v', '--verbose' ]:
             opt_verbose = True
+        elif o in [ '-f', '--force' ]:
+            opt_force = True
         elif o == '-c':
             check_mk_configfile = a
         elif o == '--cache':

@@ -108,6 +108,7 @@ opt_cmc_relfilename          = "config"
 opt_keepalive_fd             = None
 opt_oids                     = []
 opt_extra_oids               = []
+opt_force                    = False
 
 # register SIGINT handler for consistenct CTRL+C handling
 def interrupt_handler(signum, frame):

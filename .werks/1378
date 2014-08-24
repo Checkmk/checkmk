@@ -1,0 +1,11 @@
+Title: mk_logwatch: remove exceeding \n when rewriting message and using \0
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1408910658
+Class: fix
+
+When using <tt>R</tt> for rewriting message and then using <tt>\0</tt> for
+inserting the complete original message there was only exceeding linefeed.
+This has been removed and thus the format being fixed.

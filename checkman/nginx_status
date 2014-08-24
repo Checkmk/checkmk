@@ -43,22 +43,7 @@ description:
  The plugin tries to autodetect all running nginx servers. If that fails
  for some reason you need to create the configuration file
  {/etc/check_mk/nginx_status.cfg} and configure your servers in that file.
- Take a look at the example section for the content of that file.
-
-examples:
- servers = [
- {
-  'protocol' : 'http',
-  'address'  : 'localhost',
-  'port'     : 80 ,
- },
- {
-  'protocol' : 'https',
-  'address'  : 'localhost',
-  'port'     : 443 ,
-  'page'     : 'my-server-status',
- },
- ]
+ You find an example of that file in your agent directory ({share/check_mk/agents}).
 
 inventory:
  One service per web server will be created.

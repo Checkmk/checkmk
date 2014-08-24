@@ -372,8 +372,7 @@ fi
 # RAID controllers from areca (Taiwan)
 # cli64 can be found at ftp://ftp.areca.com.tw/RaidCards/AP_Drivers/Linux/CLI/
 if type cli64 >/dev/null ; then
-    echo "<<<arc_raid_status>>>"
-    cli64 rsf info | tail -n +3 | head -n -2
+    run_cached -s arc_raid_status 300 "cli64 rsf info | tail -n +3 | head -n -2"
 fi
 
 # VirtualBox Guests. Section must always been output. Otherwise the

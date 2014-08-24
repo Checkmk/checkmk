@@ -27,7 +27,7 @@
 
 if [ "$1" = "" ]
 then
-    su - mqm -c "/usr/lib/check_mk_agent/plugins/websphere_mq.sh run"
+    su - mqm -c "/usr/lib/check_mk_agent/plugins/websphere_mq run"
 else
     # Loop over all local mq instances
     for QM in $( ps -ef  | grep -i '[/]usr/mqm/bin/runmqchl -c' | awk '{ print $NF }' | uniq)

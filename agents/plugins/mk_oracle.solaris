@@ -30,7 +30,7 @@
 
 # Get list of all running databases
 SIDS=$(UNIX95=true ps -ef -o args | sed -n '/^ora_pmon_/p;/^xe_pmon_/p' | sed -n '/^[a-z]*_pmon_\([^ ]*\)/s//\1/p')
-if [ -z "$SIDS" ] ; then 
+if [ -z "$SIDS" ] ; then
     # If on this system we've already found a database
     if [ -e "$MK_CONFDIR/mk_oracle.found" ] ; then
         echo '<<<oracle_version>>>'
@@ -56,7 +56,7 @@ then
 fi
 
 # You can specify a list of SIDs to monitor. Those databases will
-# only be handled, if they are found running, though! 
+# only be handled, if they are found running, though!
 #
 #   ONLY_SIDS="XE HIRN SEPP"
 #
@@ -103,11 +103,11 @@ for SID in $SIDS; do
 	    if  [ "$S" = "$SID" ] ; then
 	        SKIP=
 		break
-            fi 
+            fi
         done
 	if [ "$SKIP" ] ; then continue ; fi
     fi
-        
+
     EXCLUDE=EXCLUDE_$SID
     EXCLUDE=${!EXCLUDE}
     # SID filtered totally?
@@ -135,11 +135,11 @@ for SID in $SIDS; do
     fi
 
     # If the cache file exists, output it, regardless of its age. If it's outdated
-    # then it will be recreated *asynchronously*. It's new contents will not 
+    # then it will be recreated *asynchronously*. It's new contents will not
     # be available here anyway.
     if [ -s "$CACHE_FILE" ] ; then cat "$CACHE_FILE" ; fi
 
-    # When the cache file is not valid, we recreated it, but only if there is not    
+    # When the cache file is not valid, we recreated it, but only if there is not
     # yet a background process from a previous check still doing this! We see this
     # because of the existance of the .new file
     # When the cache is old and there is no *new file present, then start a query
@@ -193,7 +193,7 @@ for SID in $SIDS; do
                 f.autoextensible, f.blocks, f.maxblocks, f.user_blocks, f.increment_by,
                 'TEMP', t.block_size, t.status;
 EOF
-            fi 
+            fi
             } > $CACHE_FILE.new && mv $CACHE_FILE.new $CACHE_FILE || rm -f $CACHE_FILE*
         "
     fi

@@ -5,7 +5,7 @@ license: GPL
 distribution: check_mk
 description:
  Unitrends is a enterprise class backup solution.
- This check needs the <tt>unitrends_backup</tt> plugin installed on the unitrends server
+ This check needs the {unitrends_backup} plugin installed on the unitrends server
  in order to work. The plugin will deliver a complete list of all schedules including
  a sublist of a jobs in this schdule from the last 24 hours.
 

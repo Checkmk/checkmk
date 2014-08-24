@@ -30,19 +30,8 @@
 # <<<plesk_backups>>>
 # <domain> <age-of-newest-file> <size-of-newest-file> <total-size>
 
-# Cache the result for 1 hour by default
-cache_seconds = 60 * 60
-# The cache file to use
-cache_file = '/tmp/plesk_backups.cache'
-
 import MySQLdb, sys, datetime, time, os
 from ftplib import FTP
-
-# use the cache?
-if os.path.exists(cache_file) \
-   and os.stat(cache_file).st_mtime > time.time() - cache_seconds:
-    print file(cache_file).read()
-    sys.exit(0)
 
 def connect():
     try:
@@ -156,5 +145,4 @@ for domain, p in domains.iteritems():
         output.append('%s 2 %s' % (domain, e))
 
 # Write cache and output
-file(cache_file, 'w').write('\n'.join(output))
 print '\n'.join(output)

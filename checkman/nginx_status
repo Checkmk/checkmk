@@ -21,7 +21,7 @@ description:
  {nginx -V 2>&1 | grep -o with-http_stub_status_module} to check this. You should see a single
  line of output when you have this module available.
 
- Now you need to add the following configuration to a nginx site, inside the {server {..}} block.
+ Now you need to add the following configuration to a nginx site, inside the {server} block.
  On a debian system, this is located in the file {/etc/nginx/sites-enabled/default}. Now add the
  following block:
 

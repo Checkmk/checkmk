@@ -1,0 +1,13 @@
+Title: Renamed agent plugin resolve_hostname into dnsclient, make portable to all Unices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1408896816
+Class: feature
+
+The small agent plugin <tt>dnsclient</tt> simply uses <tt>nslookup</tt> in order
+to try the local resolver. It now should work on Linux, AIX, HP-UX and Solaris,
+provided the tool <tt>nslookup</tt> is installed and in the search path. It
+now also supports resolving several addresses.
+

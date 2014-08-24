@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -27,18 +27,22 @@
 # address using the local resolver of the system this script is
 # running on.
 
-HOSTADDRESS=mathias-kettner.de
+HOSTADDRESSES=mathias-kettner.de
 
-OUTPUT=$(nslookup $HOSTADDRESS 2>&1)
-RC=$?
-if [ $RC -ne 0 ]; then
-    STATE=2
-    OUTPUT="CRIT - $HOSTADDRESS could not be resolved"
-else
-    STATE=0
-    ADDRESSES=$(echo "$OUTPUT" | tail -n+3 | grep Address: | cut -d" " -f2)
-    OUTPUT="OK - $HOSTADDRESS resolved to ${ADDRESSES//$'\n'/, }"
+if [ -e $MK_CONFDIR/dnsclient.cfg ] ; then
+    . $MK_CONFDIR/dnsclient.cfg
 fi
 
 echo "<<<mrpe>>>"
-echo "Resolve_$HOSTADDRESS $STATE $OUTPUT"
+for HOSTADDRESS in $HOSTADDRESSES
+do
+    ADDRESSES=`nslookup $HOSTADDRESS | sed -n -e 1,3d -e '/^Address: *\(.*\)$/s//\1/p'`
+    if [ ! "$ADDRESSES" ] ; then
+        STATE=2
+        OUTPUT="CRIT - $HOSTADDRESS could not be resolved"
+    else
+        STATE=0
+        OUTPUT="OK - $HOSTADDRESS resolved into $ADDRESSES"
+    fi
+    echo Resolve_$HOSTADDRESS $STATE $OUTPUT
+done

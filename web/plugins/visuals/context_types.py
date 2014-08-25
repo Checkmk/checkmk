@@ -88,7 +88,7 @@ context_types['hostgroup'] = {
 context_types['hostgroups'] = {
     'title'      : _('Multiple Hostgroups'),
     'single'     : False,
-    'parameters' : VisualFilterList(['hostgroup']),
+    'parameters' : VisualFilterList(['hostgroup', 'hostgroups']),
 }
 
 context_types['servicegroup'] = {

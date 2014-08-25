@@ -482,7 +482,9 @@ def render_dashlet(name, board, nr, dashlet, wato_folder, add_url_vars):
 
     # Optional way to render a dynamic iframe URL
     if "iframe_urlfunc" in dashlet_type:
-        dashlet["iframe"] = dashlet_type["iframe_urlfunc"](dashlet)
+        url = dashlet_type["iframe_urlfunc"](dashlet)
+        if url != None:
+            dashlet["iframe"] = url
 
     elif "iframe_render" in dashlet_type:
         dashlet["iframe"] = html.makeuri_contextless([

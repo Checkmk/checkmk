@@ -46,10 +46,10 @@ def get_input(valuespec, varprefix):
 def edit_dictionary(entries, value, focus=None, hover_help=True,
                     validate=None, buttontext=None, title=None,
                     buttons = None, method="GET", preview=False,
-                    varprefix="", formname="form"):
+                    varprefix="", formname="form", consume_transid = True):
     new_value = value.copy()
     if html.var("filled_in") == formname and html.transaction_valid():
-        if not preview:
+        if not preview and consume_transid:
             html.check_transaction()
 
         messages = []

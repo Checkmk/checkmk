@@ -3152,15 +3152,15 @@ register_check_parameters(
                   title = _("Apply Lag"),
                   help = _( "The limit for the apply lag in v$dataguard_stats."),
                   elements = [
-                      Age(title = _("Warning if above"),  unit = _(""), default_value = 10800),
-                      Age(title = _("Critical if above"), unit = _(""), default_value = 21600)])),
+                      Age(title = _("Warning if above"), default_value = 10800),
+                      Age(title = _("Critical if above"), default_value = 21600)])),
             ( "transport_lag",
               Tuple(
                   title = _("Transport Lag"),
                   help = _( "The limit for the transport lag in v$dataguard_stats."),
                   elements = [
-                      Age(title = _("Warning if above"),  unit = _(""), default_value = 10800),
-                      Age(title = _("Critical if above"), unit = _(""), default_value = 21600)])),
+                      Age(title = _("Warning if above"), default_value = 10800),
+                      Age(title = _("Critical if above"), default_value = 21600)])),
                    ]),
     TextAscii(
         title = _("Database SID"),

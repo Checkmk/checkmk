@@ -51,12 +51,53 @@ else
     exec <&- 2>/dev/null
 fi
 
+# Shell version of the waitmax utility, that limits the runtime of
+# commands. This version does not conserve the original exit code
+# of the command. It is successfull if the command terminated
+# in time.
+function waitmax
+{
+   TIMEOUT=${1}0
+   SIGNAL=9
+   shift
+
+   # Run command in background
+   ksh -c "$*" &
+   PID=$!
+
+   # Wait for termination within TIMOUT seconds
+   while [ $TIMEOUT -gt 0 ]
+   do
+       TIMEOUT=$((TIMEOUT - 1))
+       if [ ! -e /proc/$PID ] ; then
+           return 0
+       fi
+       perl -e "select(undef, undef, undef, 0.1);"
+   done
+
+   # Process did not terminate in time. Kill and
+   # return with an error
+   kill -9 $PID
+   return 255
+}
+
 echo '<<<check_mk>>>'
 echo Version: 1.2.5i6
 echo AgentOS: aix
 
 echo '<<<df>>>'
 df -kP | sed 's/ / - /' | grep -v ^/proc | grep -v ^Filesystem | grep -v :
+
+# Check for hanging NFS mounts. This needs a GNU stat installed in the PATH
+if type stat >/dev/null 2>&1 ; then
+    echo '<<<nfsmounts>>>'
+     mount | grep ' nfs' | awk '{print $3;}' | \
+        while read MP
+	do
+	    waitmax 2 stat -f -c '"'$MP' ok - - - -"' "$MP" || \
+		echo "$MP hanging 0 0 0 0"
+	done
+fi
 
 echo '<<<ps>>>'
 ps -ef -F user,vszsize,rssize,pcpu,args | sed -e 1d -e 's/ *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) *\([^ ]*\) */(\1,\2,\3,\4) /'

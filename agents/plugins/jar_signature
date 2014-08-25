@@ -32,6 +32,11 @@
 JAVA_HOME=/home/oracle/bin/jdk_latest_version
 JAR_PATH=/home/oracle/fmw/11gR2/as_1/forms/java/*.jar
 
+# Let user override these defaults in a configuration file
+if [ -e $MK_CONFDIR/jar_signature.cfg ] ; then
+    . $MK_CONFDIR/jar_signature.cfg
+fi
+
 PATH=$JAVA_HOME/bin:$PATH
 
 echo "<<<jar_signature>>>"

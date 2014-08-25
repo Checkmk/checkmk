@@ -1,0 +1,11 @@
+Title: nfsmounts: supported by AIX agent now
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1408966023
+Class: feature
+
+In order to make this work you need the GNU version of <tt>stat</tt> installed
+on AIX and make have it precedence over the AIX version of <tt>stat</tt>. GNU
+<tt>stat</tt> is contained in the GNU <tt>coreutils</tt> package.

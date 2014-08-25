@@ -36,6 +36,15 @@ def check_nfsmounts(item, _no_params, info):
     for line in info:
         mountpoint = " ".join(line[:-5])
         if mountpoint == item:
+            # On some operating systems there is no information about
+            # used and free space, but just dahshes (e.g. AIX)
+            if line[-4] == '-':
+                if line[-5] == 'ok':
+                   return 0, "NFS mount seems OK"
+                else:
+                   return 2, "Server not responding"
+
+
             size_blocks = int(line[-4])
             free_blocks = int(line[-2]) # for non-root user
             blocksize = int(line[-1])

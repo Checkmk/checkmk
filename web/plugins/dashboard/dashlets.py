@@ -567,7 +567,8 @@ dashlet_types["view"] = {
 #   '----------------------------------------------------------------------'
 
 def dashlet_url(params):
-    return params['url']
+    if params.get('show_in_iframe', True):
+        return params['url']
 
 dashlet_types["url"] = {
     "title"          : _("Custom URL"),
@@ -584,6 +585,11 @@ dashlet_types["url"] = {
         ("urlfunc", TextAscii(
             title = _('Dynamic URL rendering function'),
             size = 50,
+        )),
+        ("show_in_iframe", Checkbox(
+            title = _('Render in iframe'),
+            label = _('Render URL contents in own frame'),
+            default_value = True,
         )),
     ],
     "opt_params": ['url', 'urlfunc'],

@@ -185,9 +185,9 @@ def extract_domains(tar, domains):
                     for pattern in domain.get("exclude", []):
                         if "*" in pattern:
                             import glob
-                            exclude_files.extend(glob.glob("%s/%s/%s" % (domain["prefix"], path, pattern)))
+                            exclude_files.extend(glob.glob("%s/%s" % (domain["prefix"], pattern)))
                         else:
-                            exclude_files.append("%s/%s/%s" % (domain["prefix"], path, pattern))
+                            exclude_files.append("%s/%s" % (domain["prefix"], pattern))
                     cleanup_dir(full_path, exclude_files)
                 else:
                     os.remove(full_path)

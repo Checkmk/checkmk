@@ -16851,18 +16851,34 @@ def update_host_attributes(host, attr = {}, unset_attr = []):
 def set_host_attributes(host, attributes):
     hostname = host[".name"]
 
+    folder_path = host[".folder"][".path"]
+
+    the_folder = g_folders[folder_path]
+    load_hosts(the_folder)
+
     # The site attribute might change. In that case also
     # the old site of the host must be marked dirty.
-    mark_affected_sites_dirty(host[".folder"], hostname)
+    mark_affected_sites_dirty(the_folder, hostname)
 
-    host[".folder"][".hosts"][hostname] = attributes
-    save_hosts(host[".folder"])
+    the_folder[".hosts"][hostname] = attributes
+    save_hosts(the_folder)
+
+    the_folder = reload_folder(the_folder)
+    reload_hosts(the_folder)
+
+    if g_folder:
+        set_current_folder(g_folders[g_folder[".path"]])
 
     log_pending(AFFECTED, hostname, "edit-host", _("edited properties of host [%s]") % hostname)
+    mark_affected_sites_dirty(the_folder, hostname)
 
-    reload_hosts(host[".folder"])
-    mark_affected_sites_dirty(host[".folder"], hostname)
-    call_hook_hosts_changed(host[".folder"])
+    call_hook_hosts_changed(the_folder)
+
+    # TODO: find a better solution
+    # Some hooks kill our reloaded folder... do it again...
+    the_folder = g_folders[folder_path]
+    the_folder = reload_folder(the_folder)
+    reload_hosts(the_folder)
 
 # Deletes host from given folder
 def delete_host(host):
@@ -16976,7 +16992,7 @@ class API:
     def __get_valid_api_host_attributes(self, attributes):
         result = {}
 
-        host_attribute_names = map(lambda (x, y): x.name(), host_attributes)
+        host_attribute_names = map(lambda (x, y): x.name(), host_attributes) + ["inventory_failed"]
 
         for key, value in attributes.items():
             if key in host_attribute_names:

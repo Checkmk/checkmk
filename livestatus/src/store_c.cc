@@ -31,7 +31,7 @@
 #include <set>
 
 #include "nagios.h"
-#include "store.h"
+#include "store_c.h"
 #include "Store.h"
 #include "Query.h"
 #include "ClientQueue.h"

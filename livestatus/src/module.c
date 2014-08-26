@@ -42,7 +42,7 @@
 #include "nagios.h"
 #include "livestatus.h"
 #include "downtime.h"
-#include "store.h"
+#include "store_c.h"
 #include "logger.h"
 #include "config.h"
 #include "global_counters.h"

@@ -1,0 +1,13 @@
+Title: f5_bigip_pool: limits to the number of active nodes are now correctly applied
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.5i6
+Date: 1409045579
+Class: fix
+
+limits to the number of active nodes are now applied more intuitively and consistent
+with the WATO rule. This will also lead to a more reasonable behaviour of the check
+in case of a cluster of two nodes with the default limits of (1,2): a warning level will
+be set in there is one node, and a critical level if there are no nodes left.
+

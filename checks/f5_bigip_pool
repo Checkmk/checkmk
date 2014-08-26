@@ -65,12 +65,12 @@ def check_f5_bigip_pool(item, params, info):
             pool_def_members = int(line[2])
             message = "%d of %d members are up" % ( pool_act_members, pool_def_members )
             state = 0
-            if pool_act_members == pool_def_members or pool_act_members > warn:
+            if pool_act_members == pool_def_members or pool_act_members >= warn:
                 state = 0
-            elif pool_act_members <= crit:
+            elif pool_act_members < crit:
                 state = 2
                 message += " (warn/crit: %s/%s)" % ( warn, crit )
-            elif pool_act_members <= warn:
+            elif pool_act_members < warn:
                 state = 1
                 message += " (warn/crit: %s/%s)" % ( warn, crit )
 

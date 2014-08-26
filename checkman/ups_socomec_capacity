@@ -9,9 +9,9 @@ description:
  the battery capacity (in percent),
  and the remaining runtime (in minutes).
  Warning and critical levels can
- be given for the time on battery and the capacity.
+ be given for the remaining runtime.
 
- Please refer to the manpage of ups_capacity for configuration examples.
+ Please refer to the manpage of {ups_capacity} for configuration examples.
 
 perfdata:
  The remaining runtime in minutes and the capacity in percent

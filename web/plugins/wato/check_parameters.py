@@ -4968,16 +4968,16 @@ register_check_parameters(
         elements = [
         ("capacity",
             Tuple(
-                title = _("Battery Capacity"),
+                title = _("Battery capacity"),
                 elements = [
                     Integer(
-                        title = _("Warning Level"),
+                        title = _("Warning at"),
                         help = _("The battery capacity in percent at and below which a warning state is triggered"),
                         unit = "%",
                         default_value = 95,
                     ),
                     Integer(
-                        title = _("Critical Level"),
+                        title = _("Critical at"),
                         help = _("The battery capacity in percent at and below which a critical state is triggered"),
                         unit = "%",
                         default_value = 90,
@@ -4987,16 +4987,16 @@ register_check_parameters(
         ),
         ("battime",
             Tuple(
-                title = _("Time Left on Battery"),
+                title = _("Time left on battery"),
                 elements = [
                     Integer(
-                        title = _("Warning Level"),
+                        title = _("Warning at"),
                         help = _("Time left on Battery at and below which a warning state is triggered"),
                         unit = _("min"),
                         default_value = 0,
                     ),
                     Integer(
-                        title = _("Critical Level"),
+                        title = _("Critical at"),
                         help = _("Time Left on Battery at and below which a critical state is triggered"),
                         unit = _("min"),
                         default_value = 0,

@@ -30,36 +30,40 @@ def check_ups_capacity(item, params, info):
         warn, crit = params
         cap_warn, cap_crit =  (95, 90)
     elif type(params) is dict:  # new dict format
-        warn,crit = params.get('battime',(0,0))
-        cap_warn,cap_crit = params.get('capacity',(95,90))
+        warn, crit = params.get('battime', (0, 0))
+        cap_warn, cap_crit = params.get('capacity', (95, 90))
     else:
         warn, crit = (0, 0)
         cap_warn, cap_crit =  (95, 90)
 
     time_on_bat, minutes_left, percent_fuel = map(int, info[0])
-    perf = [
-      ('capacity', minutes_left, warn, crit),
-      ('percent', percent_fuel),
-    ]
 
-    state = 0
-    time_label = ""
-    cap_label = ""
-    if time_on_bat > crit:
+    # Check time left on battery
+    levelsinfo = ""
+    if minutes_left <= crit:
         state = 2
-        time_label = "On battery since %ds (levels at %ds/%ds)(!!), " % (time_on_bat, warn, crit)
-    elif time_on_bat > warn:
+        levelsinfo = " (crit at %d min)" % cap_crit
+    elif minutes_left < warn:
         state = 1
-        time_label = "On battery since %ds (levels at %ds/%ds)(!)" % (time_on_bat, warn, crit)
-    if percent_fuel < cap_crit:
+        levelsinfo = " (warn at %d min)" % cap_warn
+    else:
+        state = 0
+    yield state, "%d min left on battery" % minutes_left + levelsinfo, [ ('capacity', minutes_left, warn, crit) ]
+
+    # Check percentual capacity
+    levelsinfo = ""
+    if percent_fuel <= cap_crit:
         state = 2
-        cap_label = "(!!)"
+        levelsinfo = " (crit at %d%%)" % cap_crit
     elif percent_fuel < cap_warn:
         state = 1
-        cap_label = "(!)"
+        levelsinfo = " (warn at %d%%)" % cap_warn
+    else:
+        state = 0
+    yield state, "capacity: %d%%" % percent_fuel + levelsinfo, [ ('percent', percent_fuel, cap_warn, cap_crit) ]
 
-    info_text = "%sremaining capacity %dmin, percentage %d%% (%d/%d) %s" \
-        % (time_label, minutes_left, percent_fuel, cap_warn, cap_crit, cap_label )
-    return(state, info_text, perf)
+    # Output time on battery
+    if time_on_bat > 0:
+        yield 0, "On battery for %d min" % time_on_bat
 
 

@@ -11,36 +11,32 @@ description:
  the battery capacity (in percent),
  and the remaining runtime (in minutes).
  Warning and critical levels can
- be given for the time on battery and the capacity.
+ be given for the remaining run time for the capacity.
 
 perfdata:
  The remaining runtime in minutes and the capacity in percent
 
 inventory:
- Supported.
+ One service per UPS will be created.
 
 examples:
  ups_capacity_default_levels = {
-     'battime': (0, 0),
+     'battime': (20, 40),
      'capacity': (90, 80)
  }
 
- checkgroup_parameters.setdefault('ups_capacity', [])
-
- checkgroup_parameters['ups_capacity'] = [
-     ( {'capacity': ( 90, 80 ) }, ["prod"], ALL_HOSTS, ["ups_capacity"]' ),
-      ] + checkgroup_parameters['ups_capacity']
 
 [configuration]
 ups_capacity_default_levels(dict): This variable is preset to {{ 'battime': (0, 0), 'capacity': (95, 90) }}
 
 
 [parameters]
-parameters(dict): with the keys "battime" and "capacity"
+parameters(dict): A dictionary with with the keys {battime} and {capacity}?
 
-    'battime' is a tuple containing warning and critical levels for the
-    time in seconds the USV is on battery. Default levels are (0, 0)
+    {battime} is a tuple containing warning and critical levels for the
+    time in minutes that the USV is estimated to have remaining runtime.
+    Default levels are {(0, 0)}.
 
-    'capacity' is a tuple containing the warning and critical levels for
-    the battery capacity in percent. Default levels are (95, 90)
+    {capacity} is a tuple containing the warning and critical levels for
+    the battery capacity in percent. Default levels are {(95, 90)}
 

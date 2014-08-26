@@ -197,7 +197,7 @@ def open_url(url, method = 'GET', data = None):
             debug('GET %s' % url)
             fd = g_opener.open(url, timeout = timeout) # GET
     except urllib2.HTTPError, e:
-        new_state(2, 'Unable to open %s: [%d] %s' % (url, e.code, e.reason))
+        new_state(2, 'Unable to open %s: [%d] %s' % (url, e.code, e))
     except urllib2.URLError, e:
         new_state(2, 'Unable to open %s: %s' % (url, e.reason))
     except socket.timeout, e:

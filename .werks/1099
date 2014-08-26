@@ -1,0 +1,9 @@
+Title: tsm_scratch: now returns the variable name instead the values during inventory
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1409042591
+Class: fix
+
+In the previous version the parameter values got hardcoded up to the next inventory of this host

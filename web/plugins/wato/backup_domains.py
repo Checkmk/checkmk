@@ -220,6 +220,7 @@ else:
           "prefix"      : defaults.omd_root,
           "exclude"     : [
                             "etc/nagvis/apache.conf",
+                            "etc/nagvis/conf.d/authorisation.ini.php",
                             "etc/nagvis/conf.d/omd.ini.php",
                             "etc/nagvis/conf.d/cookie_auth.ini.php",
                             "etc/nagvis/conf.d/urls.ini.php"

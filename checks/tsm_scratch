@@ -36,7 +36,7 @@ def inventory_tsm_scratch(info):
             item = "%s / %s" % ( inst, library )
         else:
             item = library
-        inventory.append((item, tsm_scratch_default_levels))
+        inventory.append((item, "tsm_scratch_default_levels"))
 
     return inventory
 

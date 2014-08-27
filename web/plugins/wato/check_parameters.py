@@ -3820,14 +3820,14 @@ register_check_parameters(
         elements = [
             ( "read",
               Levels(
-                  title = _("Read throughput"),
-                  unit = _("MB/s"),
+                  title = _("Read latency"),
+                  unit = _("ms"),
                   default_value = None,
                   default_levels = (50.0, 100.0))),
             ( "write",
               Levels(
-                  title = _("Write throughput"),
-                  unit = _("MB/s"),
+                  title = _("Write latency"),
+                  unit = _("ms"),
                   default_value = None,
                   default_levels = (50.0, 100.0))),
         ]

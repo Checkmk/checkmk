@@ -1,0 +1,13 @@
+Title: Fixed SMS plugin on at least debian (distrs which have no sendsms/smssend)
+Level: 1
+Component: notifications
+Compatible: compat
+Version: 1.2.5i6
+Date: 1409130157
+Class: fix
+
+Some distros do not provide the sendsms/smssend script with the smstools package.
+In this cases the script for sending SMS did not work. This commit adds a dedection
+when smssend/sendsms are not available whether the spool directory at 
+/var/spool/sms/outgoing is available or not. When it is available, the SMS notification
+plugin drops a file to this directory which should then be processed by smsd.

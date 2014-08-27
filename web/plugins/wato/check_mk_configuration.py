@@ -954,7 +954,7 @@ def list_roles():
 
 def list_contactgroups():
     contact_groups = userdb.load_group_information().get("contact", {})
-    entries = [ (c, contact_groups[c]) for c in contact_groups ]
+    entries = [ (c, g['alias']) for c, g in contact_groups.items() ]
     entries.sort()
     return entries
 

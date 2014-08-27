@@ -16851,9 +16851,7 @@ def update_host_attributes(host, attr = {}, unset_attr = []):
 def set_host_attributes(host, attributes):
     hostname = host[".name"]
 
-    folder_path = host[".folder"][".path"]
-
-    the_folder = g_folders[folder_path]
+    the_folder = host[".folder"]
     load_hosts(the_folder)
 
     # The site attribute might change. In that case also
@@ -16861,24 +16859,13 @@ def set_host_attributes(host, attributes):
     mark_affected_sites_dirty(the_folder, hostname)
 
     the_folder[".hosts"][hostname] = attributes
-    save_hosts(the_folder)
 
-    the_folder = reload_folder(the_folder)
-    reload_hosts(the_folder)
-
-    if g_folder:
-        set_current_folder(g_folders[g_folder[".path"]])
-
-    log_pending(AFFECTED, hostname, "edit-host", _("edited properties of host [%s]") % hostname)
     mark_affected_sites_dirty(the_folder, hostname)
+    log_pending(AFFECTED, hostname, "edit-host", _("edited properties of host [%s]") % hostname)
 
-    call_hook_hosts_changed(the_folder)
-
-    # TODO: find a better solution
-    # Some hooks kill our reloaded folder... do it again...
-    the_folder = g_folders[folder_path]
-    the_folder = reload_folder(the_folder)
+    save_folder_and_hosts(the_folder)
     reload_hosts(the_folder)
+    call_hook_hosts_changed(the_folder)
 
 # Deletes host from given folder
 def delete_host(host):
@@ -17026,7 +17013,8 @@ class API:
         add_host_to_folder(folder, hostname, attributes)
 
         # Update the all_hosts reference. Saves quite some time on followup calls
-        all_hosts[hostname] = folder[".hosts"][hostname]
+        reload_hosts(g_folders[host_foldername])
+        all_hosts[hostname] = g_folders[host_foldername][".hosts"][hostname]
 
     def edit_host(self, hostname, attr = {}, unset_attr = []):
         self.__prepare_folder_info()
@@ -17042,8 +17030,9 @@ class API:
         update_host_attributes(host, attr = attributes, unset_attr = unset_attr)
 
         # Update all_hosts reference. Saves quite some time on followup calls
-        folder_path = all_hosts[hostname][".folder"][".path"]
-        all_hosts[hostname] = g_folders[folder_path][".hosts"][hostname]
+        host_foldername = all_hosts[hostname][".folder"][".path"]
+        reload_hosts(g_folders[host_foldername])
+        all_hosts[hostname] = g_folders[host_foldername][".hosts"][hostname]
 
     def get_host(self, hostname, effective_attr = False):
         self.__prepare_folder_info()

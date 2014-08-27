@@ -1418,7 +1418,7 @@ def view_title(view):
         if heading:
             title = heading + " - " + title
 
-    return title
+    return visuals.visual_title('view', view, title)
 
 def view_optiondial(view, option, choices, help):
     vo = view_options(view["name"])

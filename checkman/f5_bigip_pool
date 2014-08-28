@@ -13,8 +13,10 @@ description:
  It supports devices running the 9.0 and above releases of the F5 OS. It's
  tested against 9.3 devices.
 
- If there are down nodes, the names of the nodes are also printed in the
- service output.
+ If there are down or disabled nodes, the names of the nodes are
+ also printed in the service output. They are identified using the
+ following oids: ltmPoolMemberMonitorState, ltmPoolMemberMonitorStatus,
+ ltmPoolMemberSessionStatus
 
 examples:
  # Let the Pool named ABC on your first F5 be in WARNING state when it reaches 5 active members or in CRITICAL for anything between 3 and 0.
@@ -28,12 +30,9 @@ inventory:
  non-enabled ones, as this is considered a temporary state.
 
 [parameters]
-warning (int): issue a warning if there are less than warn members left in
-a load balancing pool
+warning (int): issue a warning if there are less than warn members left in a load balancing pool
 
-crit (int): go to critical state if there are less than crit members left
-in a load balancing pool. Note: 0 active members will always result in a
-critical state.
+crit (int): go to critical state if there are less than crit members left in a load balancing pool. Note: 0 active members will always result in a critical state.
 
 [configuration]
 f5_bigip_pool_default_levels = (int, int): The default levels for all F5 BIG-IP pool checks. This is preset to {(2, 1)}.

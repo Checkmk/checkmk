@@ -66,8 +66,9 @@ factory_settings['printer_output_default_levels'] = {
 
 def inventory_printer_io(info):
     for line in info:
+        index, name, descr, status = line[:4]
         ignore = False
-        snmp_status = saveint(line[2])
+        snmp_status = saveint(status)
         for state_val in sorted(printer_io_states,reverse=True):
             if state_val > 0 and snmp_status - state_val >= 0:
                 snmp_status -= state_val
@@ -76,19 +77,24 @@ def inventory_printer_io(info):
                     ignore = True
         if ignore == True:
             continue
-        if line[0]:
-            name = line[0]
+
+        # When no name is set
+        # a) try to use the description
+        # b) try to use the type otherwise use the index
+        if not name and descr:
+            name = descr
         else:
-            name = line[1]
+            name = index.split('.')[-1]
+
         yield (name, {})
 
 def check_printer_io(item, params, info, what):
     for line in info:
-        name, descr, snmp_status, capacity_unit, capacity_max, level = line
+        index, name, descr, snmp_status, capacity_unit, capacity_max, level = line
         snmp_status, level, capacity_max = saveint(snmp_status), saveint(level), saveint(capacity_max)
         capacity_unit = printer_io_units[capacity_unit]
 
-        if descr == item or name == item:
+        if name == item or descr == item or index.split('.')[-1] == item:
             state_txt = []
             state_state = 0
             if snmp_status == 0:
@@ -103,7 +109,7 @@ def check_printer_io(item, params, info, what):
 
             yield state_state, 'Status: %s' % ', '.join(state_txt)
 
-            if level in [-1, -2]:
+            if level in [-1, -2] or level < -3:
                 pass # totally skip this info when level is unknown or not limited
 
             elif capacity_max in [ -1, -2 ]:

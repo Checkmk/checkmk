@@ -81,6 +81,7 @@ phase_names = {
     'delayed'  : _("delayed"),
     'open'     : _("open"),
     'ack'      : _("acknowledged"),
+    'closed'   : _("closed"),
 }
 
 action_whats = {

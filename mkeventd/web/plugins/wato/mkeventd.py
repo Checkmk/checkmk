@@ -68,7 +68,7 @@ The following placeholdes will be substituted by value from the actual event:
 <tr><td class=tt>$FACILITY$</td><td>Syslog Facility</td></tr>
 <tr><td class=tt>$RULE_ID$</td><td>ID of the rule</td></tr>
 <tr><td class=tt>$STATE$</td><td>State of the event (0/1/2/3)</td></tr>
-<tr><td class=tt>$PHASE$</td><td>Phase of the event (always open)</td></tr>
+<tr><td class=tt>$PHASE$</td><td>Phase of the event (open in normal situations, closed when cancelling)</td></tr>
 <tr><td class=tt>$OWNER$</td><td>Owner of the event</td></tr>
 <tr><td class=tt>$MATCH_GROUPS$</td><td>Text groups from regular expression match, separated by spaces</td></tr>
 <tr><td class=tt>$MATCH_GROUP_1$</td><td>Text of the first match group from expression match</td></tr>
@@ -304,6 +304,13 @@ vs_mkeventd_rule = Dictionary(
           ListChoice(
             title = _("Actions"),
             help = _("Actions to automatically perform when this event occurs"),
+            choices = mkeventd.action_choices,
+          )
+        ),
+        ( "cancel_actions",
+          ListChoice(
+            title = _("Actions when cancelling"),
+            help = _("Actions to automatically perform when an event is being cancelled."),
             choices = mkeventd.action_choices,
           )
         ),
@@ -687,7 +694,7 @@ vs_mkeventd_rule = Dictionary(
         ( _("General Properties"), [ "id", "description", "disabled" ] ),
         ( _("Matching Criteria"), [ "match", "match_host", "match_application", "match_priority", "match_facility",
                                     "match_sl", "match_ok", "cancel_priority", "match_timeperiod" ]),
-        ( _("Outcome &amp; Action"), [ "state", "sl", "contact_groups", "actions", "drop", "autodelete" ]),
+        ( _("Outcome &amp; Action"), [ "state", "sl", "contact_groups", "actions", "cancel_actions", "drop", "autodelete" ]),
         ( _("Counting &amp; Timing"), [ "count", "expect", "delay", "livetime", ]),
         ( _("Rewriting"), [ "set_text", "set_host", "set_application", "set_comment", "set_contact" ]),
     ],

@@ -1,0 +1,31 @@
+Title: Allow execution of actions when cancelling events
+Level: 2
+Component: ec
+Compatible: compat
+Version: 1.2.5i6
+Date: 1409229087
+Class: feature
+
+The Event Console now allows to attach actions to the cancelling of
+events. This can for example be helpful if you have an action that opens a
+trouble ticket in an external system. When a cancelling event arrives you
+can have executed an action that also cancels the according trouble ticket.
+
+When events are cancelled then several data fields of the event are being
+replaced with data from the new event before the action is being executed. That
+way relevant data from the new event is available in the action script. Also
+the event phase is being set to <tt>closed</tt> and the state is set to
+0 (OK).  That way your action script can distinguish between a normal
+and a cancelling situation.
+
+The following fields are taken from the new (i.e. cancelling) event:
+
+<ul>
+<li>The text</li>
+<li>The time</li>
+<li>The time of the last occurance</li>
+<li>The syslog priority</li>
+</ul>
+
+All other fields are unchanged - including the original ID of the cancelled
+event.

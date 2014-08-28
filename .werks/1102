@@ -1,0 +1,21 @@
+Title: esx_vsphere_counters: no longer raise false alarms because of invalid data from ESX Host
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1409212163
+Class: fix
+
+Sometimes the ESX Host does not report valid counter ids.<br>
+It may look like <br>
+
+<pre>
+<id>
+  <counterId>-2147483645</counterId>
+  <instance>84</instance>
+</id>
+<pre>
+
+If this happens the <tt><<<esx_vsphere_counters>>></tt> section in the agent is empty.
+Any checks which relied on this section are now able to handle this scenario by raising a MKCounterWrappedException.
+Therefore these checks will no longer go UNKNOWN, but stale...

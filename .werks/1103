@@ -7,7 +7,7 @@ Date: 1409224883
 Class: feature
 
 You can now configure whether the context of the logfiles should be
-sent too, if a ok/warn/crit logline was detected within the logfile.<br>
+sent too, if a ok/warn/crit logline was detected within the logfile.
 
 The context includes lines starting with '.' (default context) or 'I' (ignored lines).
 

@@ -1,4 +1,4 @@
-Title: esx_vsphere_counters: now raise a MKCounterWrapped exception if counter data is missing
+Title: esx_vsphere_counters: no longer raise false alarms because of invalid data from ESX Host
 Level: 1
 Component: checks
 Compatible: compat

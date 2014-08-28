@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 # .1.3.6.1.4.1.3375.2.1.2.4.4.3.1.1. index for ifname
-# .1.3.6.1.4.1.3375.2.1.2.4.4.3.1.13. index for ifstate
+# .1.3.6.1.4.1.3375.2.1.2.4.1.2.1.17. index for ifstate
 # .1.3.6.1.4.1.3375.2.1.2.4.4.3.1.3. index for OUT bytes
 # .1.3.6.1.4.1.3375.2.1.2.4.4.3.1.5. index for IN bytes
 
@@ -34,25 +34,26 @@ def check_f5_bigip_interfaces(item, params, info):
         if item == port:
             if int(ifstate) != 0:
                 states = {
-                 2 : "down (has no link and is initialized)",
-                 3 : "disabled has been forced down)",
-                 4 : "uninitialized (has not been initialized)",
-                 5 : "loopback (in loopback mode)",
-                 6 : "unpopulated (interface not physically populated)",
+                 1 : "down (has no link and is initialized)",
+                 2 : "disabled has been forced down)",
+                 3 : "uninitialized (has not been initialized)",
+                 4 : "loopback (in loopback mode)",
+                 5 : "unpopulated (interface not physically populated)",
                 }
-                return(2, "State of %s is %s" % (states[ifstate], port))
-        this_time = int(time.time())
-        in_timedif,  in_per_sec  = get_counter("f5.interface.in.%s" % item,  this_time, saveint(inbytes))
-        out_timedif,  out_per_sec  = get_counter("f5_interface.out.%s" % item,  this_time, saveint(outbytes))
+                return(2, "State of %s is %s" % (states.get(ifstate,"unkown"), port))
+            this_time = int(time.time())
+            in_timedif,  in_per_sec  = get_counter("f5.interface.in.%s" % item,  this_time, saveint(inbytes))
+            out_timedif,  out_per_sec  = get_counter("f5_interface.out.%s" % item,  this_time, saveint(outbytes))
 
 
-        inbytes_h = get_bytes_human_readable(in_per_sec)
-        outbytes_h = get_bytes_human_readable(out_per_sec)
-        perf = [
-            ("bytes_in", in_per_sec),
-            ("bytes_out", out_per_sec),
-        ]
-        return (0, "in bytes: %s/s, out bytes: %s/s" % (inbytes_h, outbytes_h), perf)
+            inbytes_h = get_bytes_human_readable(in_per_sec)
+            outbytes_h = get_bytes_human_readable(out_per_sec)
+            perf = [
+                ("bytes_in", in_per_sec),
+                ("bytes_out", out_per_sec),
+            ]
+            return (0, "in bytes: %s/s, out bytes: %s/s" % (inbytes_h, outbytes_h), perf)
+    return 3, "no such interface found in snmp data"
 
 
 check_info["f5_bigip_interfaces"] = {
@@ -60,6 +61,7 @@ check_info["f5_bigip_interfaces"] = {
     "inventory_function"    : lambda info: [ (x[0], {'state': 0 } ) for x in info if int(x[1]) == 0],
     "service_description"   : "f5 Interface %s",
     "has_perfdata"          : True,
-    "snmp_scan_function"    : lambda oid: ".1.3.6.1.4.1.3375.2.1.3.4.20" in oid(".1.3.6.1.2.1.1.2.0"),
-    "snmp_info"             : ( ".1.3.6.1.4.1.3375.2.1.2.4.4.3.1", [1, 13, 3, 5]),
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") in \
+                                [ ".1.3.6.1.4.1.3375.2.1.3.4.10", ".1.3.6.1.4.1.3375.2.1.3.4.20" ],
+    "snmp_info"             : ( ".1.3.6.1.4.1.3375.2.1.2.4", ["4.3.1.1", "1.2.1.17", "4.3.1.3", "4.3.1.5"]),
 }

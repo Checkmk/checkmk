@@ -1,0 +1,9 @@
+Title: WATO check parameter: renamed 'Nominal Voltages' to 'Voltage Levels..'
+Level: 1
+Component: wato 
+Compatible: compat
+Version: 1.2.5i6
+Date: 1409142625
+Class: fix
+
+

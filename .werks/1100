@@ -1,0 +1,11 @@
+Title: WATO backup domains: fixed bug were excluded files still got deleted on snapshot restore
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.5i6
+Date: 1409062516
+Class: fix
+
+It is possible to configure a backup domain so that certain files are not packed into the snapshot.<br>
+As a result, upon restore these file should not get deleted..<br>
+This mechanism did not work correctly.

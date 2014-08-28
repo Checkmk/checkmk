@@ -37,8 +37,13 @@ for binary in [ 'sendsms', 'smssend' ]:
     if os.system('which %s >/dev/null' % binary) == 0:
         send_path = binary
 
-if not send_path:
-    sys.stderr.write('Error: SMS Tools binaries (sendsms or smssend) not found\n')
+smsd_user = 'smsd'
+spool_dir = '/var/spool/sms/outgoing'
+if not os.path.exists(spool_dir):
+    spool_dir = None
+
+if not send_path and not spool_dir:
+    sys.stderr.write('Error: SMS Tools binaries (sendsms or smssend) not found and spool dir does not exists.\n')
     sys.exit(2) # Fatal error, no retry
 
 max_len = 160
@@ -54,8 +59,18 @@ if os.environ['NOTIFY_WHAT'] == 'SERVICE':
 else:
     message += "is " + os.environ['NOTIFY_HOSTSTATE']
 
-empf = os.environ['NOTIFY_CONTACTPAGER'].replace( " ", "")
-if 0 == os.system("%s %s '%s'" % (send_path, empf, message[:160])):
-    sys.exit(0)
-else:
-    sys.exit(1)
+recipient = os.environ['NOTIFY_CONTACTPAGER'].replace( " ", "")
+
+if send_path:
+    if os.system("%s %s '%s'" % (send_path, recipient, message[:160])) >> 8 != 0:
+        sys.exit(1)
+elif spool_dir:
+    # On some distros, like debian, smstools does not ship with the sendsms/smssend helper
+    # script. On this distro, simply drop the SMS in the outgoing spool directory.
+    import tempfile, shutil
+    fd, path = tempfile.mkstemp(prefix = 'cmk_sms_')
+    os.write(fd, 'To: %s\n\n%s' % (recipient, message))
+    os.close(fd)
+    os.chmod(path, 0660)
+    filename = path.split('/')[-1]
+    shutil.move(path, spool_dir + '/' + filename)

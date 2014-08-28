@@ -646,9 +646,9 @@ perfometers["check_mk-ibm_svc_nodestats.diskio"] = perfometer_check_mk_diskstat
 perfometers["check_mk-ibm_svc_systemstats.diskio"] = perfometer_check_mk_diskstat
 
 def perfometer_check_mk_iops_r_w(row, check_command, perf_data):
-    iops_r = int(perf_data[0][1])
-    iops_w = int(perf_data[1][1])
-    text = "%d IO/s %s IO/s" % (iops_r, iops_w)
+    iops_r = float(perf_data[0][1])
+    iops_w = float(perf_data[1][1])
+    text = "%.0f IO/s %.0f IO/s" % (iops_r, iops_w)
 
     return text, perfometer_logarithmic_dual(
             iops_r, "#60e0a0", iops_w, "#60a0e0", 100000, 10)
@@ -656,9 +656,9 @@ perfometers["check_mk-ibm_svc_nodestats.iops"] = perfometer_check_mk_iops_r_w
 perfometers["check_mk-ibm_svc_systemstats.iops"] = perfometer_check_mk_iops_r_w
 
 def perfometer_check_mk_disk_latency_r_w(row, check_command, perf_data):
-    latency_r = int(perf_data[0][1])
-    latency_w = int(perf_data[1][1])
-    text = "%d ms %s ms" % (latency_r, latency_w)
+    latency_r = float(perf_data[0][1])
+    latency_w = float(perf_data[1][1])
+    text = "%.1f ms %.1f ms" % (latency_r, latency_w)
 
     return text, perfometer_logarithmic_dual(
             latency_r, "#60e0a0", latency_w, "#60a0e0", 20, 10)

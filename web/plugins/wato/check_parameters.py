@@ -3820,14 +3820,14 @@ register_check_parameters(
         elements = [
             ( "read",
               Levels(
-                  title = _("Read throughput"),
-                  unit = _("MB/s"),
+                  title = _("Read latency"),
+                  unit = _("ms"),
                   default_value = None,
                   default_levels = (50.0, 100.0))),
             ( "write",
               Levels(
-                  title = _("Write throughput"),
-                  unit = _("MB/s"),
+                  title = _("Write latency"),
+                  unit = _("ms"),
                   default_value = None,
                   default_levels = (50.0, 100.0))),
         ]
@@ -4425,9 +4425,9 @@ register_check_parameters(
 register_check_parameters(
     subgroup_environment,
     "evolt",
-    _("Nominal Voltages"),
+    _("Voltage levels (UPS / PDU / Other Devices)"),
     Tuple(
-        help = _("Voltage Levels for devices like UPS oder PDUs. "
+        help = _("Voltage Levels for devices like UPS or PDUs. "
                  "Several phases may be addressed independently."),
         elements = [
             Integer(title = _("warning if below"), unit = "V", default_value = 210),

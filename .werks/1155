@@ -1,4 +1,4 @@
-Title: NagVis map edit/view permissions can now be set using roles
+Title: NagVis map edit/view permissions can now be set using roles/groups
 Level: 1
 Component: wato
 Compatible: compat
@@ -7,8 +7,12 @@ Date: 1408609367
 Class: feature
 
 The view and edit permissions of specific NagVis maps of the local
-NagVis installation can now be managed using multisite roles. Each
-role can get individual read / modify permissions assigned for each
-NagVis map.
+NagVis installation can now be managed using multisite contactgroups and roles.
+
+Each contactgroup can have several NagVis maps assigned which permitts
+all users which are members of the groups to the assigned maps.
+
+Using the roles you can configure whether or not users are only allowed to view,
+edit and/or delete their permitted maps.
 
 This feature is only available in OMD environments.

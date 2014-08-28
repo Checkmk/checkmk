@@ -273,6 +273,7 @@ def render_dashboard(name):
 
     elif wato_folder is not None:
         title = wato.get_folder_title(wato_folder) + " - " + title
+    title = visuals.visual_title('dashboard', board, title)
 
     html.header(title, javascripts=["dashboard"], stylesheets=["pages", "dashboard", "status", "views"])
 

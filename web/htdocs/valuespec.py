@@ -1083,7 +1083,7 @@ class DropdownChoice(ValueSpec):
         self._help_separator = kwargs.get("help_separator")
         self._label = kwargs.get("label")
         self._prefix_values = kwargs.get("prefix_values", False)
-        self._sorted = kwargs.get("sorted", True)
+        self._sorted = kwargs.get("sorted", False)
 
         self._no_preselect       = kwargs.get("no_preselect",       False)
         self._no_preselect_value = kwargs.get("no_preselect_value", None)

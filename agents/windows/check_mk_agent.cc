@@ -1710,6 +1710,7 @@ typedef vector<condition_pattern*> condition_patterns_t;
 // C:/tmp/Testfile*.log
 struct glob_token {
     char *pattern;
+    bool  nocontext;
     bool  found_match;
 };
 typedef vector<glob_token*> glob_tokens_t;
@@ -1736,6 +1737,7 @@ struct logwatch_textfile {
     unsigned long long    file_size; // size of the file
     unsigned long long    offset;    // current fseek offset in the file
     bool                  missing;   // file no longer exists
+    bool                  nocontext; // do not report ignored lines
     file_encoding         encoding;
     condition_patterns_t *patterns;  // glob patterns applying for this file
 };
@@ -1873,7 +1875,7 @@ logwatch_textfile* get_logwatch_textfile(const char *filename)
 
 // Add a new textfile and to the global textfile list
 // and determine some initial values
-bool add_new_logwatch_textfile(const char *full_filename, condition_patterns_t *patterns)
+bool add_new_logwatch_textfile(const char *full_filename, glob_token* token, condition_patterns_t *patterns)
 {
     logwatch_textfile *new_textfile = new logwatch_textfile();
 
@@ -1889,9 +1891,10 @@ bool add_new_logwatch_textfile(const char *full_filename, condition_patterns_t *
     GetFileInformationByHandle(hFile, &fileinfo);
     CloseHandle(hFile);
 
-    new_textfile->path         = strdup(full_filename);
-    new_textfile->missing      = false;
-    new_textfile->patterns     = patterns;
+    new_textfile->path      = strdup(full_filename);
+    new_textfile->missing   = false;
+    new_textfile->patterns  = patterns;
+    new_textfile->nocontext = token->nocontext;
 
     // Hier aus den gespeicherten Hints was holen....
     bool found_hint = false;
@@ -1922,7 +1925,7 @@ bool add_new_logwatch_textfile(const char *full_filename, condition_patterns_t *
 
 // Check if the given full_filename already exists. If so, do some basic file integrity checks
 // Otherwise create a new textfile instance
-void update_or_create_logwatch_textfile(const char *full_filename, condition_patterns_t *patterns)
+void update_or_create_logwatch_textfile(const char *full_filename, glob_token* token, condition_patterns_t *patterns)
 {
     logwatch_textfile *textfile;
     if ((textfile = get_logwatch_textfile(full_filename)) != NULL)
@@ -1966,7 +1969,7 @@ void update_or_create_logwatch_textfile(const char *full_filename, condition_pat
         }
     }
     else
-        add_new_logwatch_textfile(full_filename, patterns); // Add new file
+        add_new_logwatch_textfile(full_filename, token, patterns); // Add new file
 }
 
 // Process a single expression (token) of a globline and try to find matching files
@@ -1985,11 +1988,11 @@ void process_glob_expression(glob_token *glob_token, condition_patterns_t *patte
             basename = glob_token->pattern;
         }
         snprintf(full_filename,sizeof(full_filename), "%s\\%s", basename, data.cFileName);
-        update_or_create_logwatch_textfile(full_filename, patterns);
+        update_or_create_logwatch_textfile(full_filename, glob_token, patterns);
 
         while (FindNextFile(h, &data)){
             snprintf(full_filename,sizeof(full_filename), "%s\\%s", basename, data.cFileName);
-            update_or_create_logwatch_textfile(full_filename, patterns);
+            update_or_create_logwatch_textfile(full_filename, glob_token, patterns);
         }
 
         if (end)
@@ -1999,7 +2002,7 @@ void process_glob_expression(glob_token *glob_token, condition_patterns_t *patte
 }
 
 // Add a new globline from the config file:
-// C:/Testfile D:/var/log/data.log D:/tmp/art*.log
+// C:/Testfile | D:/var/log/data.log D:/tmp/art*.log
 // This globline is split into tokens which are processed by process_glob_expression
 void add_globline(char *value)
 {
@@ -2020,6 +2023,16 @@ void add_globline(char *value)
         while (token) {
             token = lstrip(token);
             glob_token *new_token = new glob_token();
+
+            if (!strncmp(token, "nocontext", 9))
+            {
+                new_token->nocontext = true;
+                token += 9;
+                token = lstrip(token);
+            }
+            else
+                new_token->nocontext = false;
+
             new_token->pattern = strdup(token);
             new_globline->tokens->push_back(new_token);
             process_glob_expression(new_token, new_globline->patterns);
@@ -2221,7 +2234,7 @@ bool process_textfile(FILE *file, logwatch_textfile* textfile, SOCKET &out, bool
             }
         }
 
-        if (write_output && strlen(line) > 0)
+        if (write_output && strlen(line) > 0 && !(textfile->nocontext && (state == 'I' || state == '.')))
             output(out, "%c %s\n", state, line);
     }
 

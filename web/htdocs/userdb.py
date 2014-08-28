@@ -578,6 +578,7 @@ def load_roles():
 
 def load_group_information():
     try:
+        # Load group information from Check_MK world
         vars = {}
         for what in ["host", "service", "contact" ]:
             vars["define_%sgroups" % what] = {}
@@ -588,9 +589,28 @@ def load_group_information():
         except IOError:
             return {} # skip on not existing file
 
+        # Now load information from the Web world
+        multisite_vars = {}
+        for what in ["host", "service", "contact" ]:
+            multisite_vars["multisite_%sgroups" % what] = {}
+
+        filename = multisite_dir + "groups.mk"
+        try:
+            execfile(filename, multisite_vars, multisite_vars)
+        except IOError:
+            pass
+
+        # Merge information from Check_MK and Multisite worlds together
         groups = {}
         for what in ["host", "service", "contact" ]:
-            groups[what] = vars.get("define_%sgroups" % what, {})
+            groups[what] = {}
+            for id, alias in vars['define_%sgroups' % what].items():
+                groups[what][id] = {
+                    'alias': alias
+                }
+                if id in multisite_vars['multisite_%sgroups' % what]:
+                    groups[what][id].update(multisite_vars['multisite_%sgroups' % what][id])
+
         return groups
 
     except Exception, e:

@@ -40,6 +40,9 @@
 # user_roles(<USER_NAME>)
 # Returns an array of rolenames of the user
 #
+# user_groups(<USER_NAME>)
+# Returns an array of names of contactgroups of the user
+#
 # user_permissions(<USER_NAME>)
 # Returns an array of all permissions of the user
 #
@@ -85,7 +88,7 @@ def format_php(data, lvl = 1):
     return s
 
 
-def create_php_file(callee, users, role_permissions, folder_permissions):
+def create_php_file(callee, users, role_permissions, groups, folder_permissions):
     # Set a language for all users
     for username in users:
         users[username].setdefault('language', config.default_language)
@@ -102,9 +105,10 @@ def create_php_file(callee, users, role_permissions, folder_permissions):
     # when reading half written files during creating that new file
     file(tempfile, 'w').write('''<?php
 // Created by Multisite UserDB Hook (%s)
-global $mk_users, $mk_roles, $mk_folders;
+global $mk_users, $mk_roles, $mk_groups, $mk_folders;
 $mk_users   = %s;
 $mk_roles   = %s;
+$mk_groups  = %s;
 $mk_folders = %s;
 
 function get_folder_permissions($username) {
@@ -134,6 +138,14 @@ function user_roles($username) {
         return array();
     else
         return $mk_users[$username]['roles'];
+}
+
+function user_groups($username) {
+    global $mk_users;
+    if(!isset($mk_users[$username]))
+        return array();
+    else
+        return $mk_users[$username]['contactgroups'];
 }
 
 function user_permissions($username) {
@@ -198,8 +210,21 @@ function may($username, $need_permission) {
     return false;
 }
 
+function permitted_maps($username) {
+    global $mk_groups;
+    $maps = array();
+    foreach (user_groups($username) AS $groupname) {
+        if (isset($mk_groups[$groupname])) {
+            foreach ($mk_groups[$groupname] AS $mapname) {
+                $maps[$mapname] = null;
+            }
+        }
+    }
+    return array_keys($maps);
+}
+
 ?>
-''' % (callee, format_php(users), format_php(role_permissions), format_php(folder_permissions)))
+''' % (callee, format_php(users), format_php(role_permissions), format_php(groups), format_php(folder_permissions)))
     # Now really replace the file
     os.rename(tempfile, g_auth_base_dir + '/auth.php')
 
@@ -214,8 +239,15 @@ def create_auth_file(callee, users):
     else:
         folder_permissions = {}
 
-    create_php_file(callee, users, config.get_role_permissions(), folder_permissions)
+    contactgroups = load_group_information().get('contact', {})
+    groups = {}
+    for gid, group in contactgroups.items():
+        if 'nagvis_maps' in group and group['nagvis_maps']:
+            groups[gid] = group['nagvis_maps']
 
-hooks.register('users-saved',      lambda users: create_auth_file("users-saved", users))
-hooks.register('roles-saved',      lambda x: create_auth_file("roles-saved", load_users()))
-hooks.register('activate-changes', lambda x: create_auth_file("activate-changes", load_users()))
+    create_php_file(callee, users, config.get_role_permissions(), groups, folder_permissions)
+
+hooks.register('users-saved',         lambda users: create_auth_file("users-saved", users))
+hooks.register('roles-saved',         lambda x: create_auth_file("roles-saved", load_users()))
+hooks.register('contactgroups-saved', lambda x: create_auth_file("contactgroups-saved", load_users()))
+hooks.register('activate-changes',    lambda x: create_auth_file("activate-changes", load_users()))

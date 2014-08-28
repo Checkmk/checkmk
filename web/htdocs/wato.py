@@ -1264,10 +1264,10 @@ def show_subfolders(folder):
             html.write('</div>')
 
         html.write('<div class=infos>')
-        group_info = userdb.load_group_information().get("contact", {})
+        groups = userdb.load_group_information().get("contact", {})
         perm_groups, contact_groups = collect_folder_groups(entry)
         for num, pg in enumerate(perm_groups):
-            cgalias = group_info.get(pg, pg)
+            cgalias = groups.get(pg, {'alias': pg})['alias']
             html.icon(_("Contactgroups that have permission on this folder"), "contactgroups")
             html.write(' %s<br>' % cgalias)
             if num > 1 and len(perm_groups) > 4:
@@ -1425,7 +1425,7 @@ def show_hosts(folder):
 
     contact_group_names = userdb.load_group_information().get("contact", {})
     def render_contact_group(c):
-        display_name = contact_group_names.get(c, c)
+        display_name = contact_group_names.get(c, {'alias': c})['alias']
         return '<a href="wato.py?mode=edit_contact_group&edit=%s">%s</a>' % (c, display_name)
 
     host_errors = validate_all_hosts(hostnames)
@@ -5903,7 +5903,7 @@ class ContactGroupsAttribute(Attribute):
         texts = []
         self.load_data()
         items = self._contactgroups.items()
-        items.sort(cmp = lambda a,b: cmp(a[1], b[1]))
+        items.sort(cmp = lambda a,b: cmp(a[1]['alias'], b[1]['alias']))
         for name, alias in items:
             if name in value["groups"]:
                 display_name = alias and alias or name
@@ -5927,9 +5927,9 @@ class ContactGroupsAttribute(Attribute):
         self.load_data()
         items = self._contactgroups.items()
         items.sort(cmp = lambda a,b: cmp(a[1], b[1]))
-        for name, alias in items:
+        for name, group in items:
             html.checkbox(self._name + "_n_" + name, name in value["groups"])
-            html.write(' <a href="%s">%s</a><br>' % (make_link([("mode", "edit_contact_group"), ("edit", name)]), alias and alias or name))
+            html.write(' <a href="%s">%s</a><br>' % (make_link([("mode", "edit_contact_group"), ("edit", name)]), group['alias'] and group['alias'] or name))
         html.write("<hr>")
         if is_host:
             html.checkbox(self._name + "_use", value["use"], label = _("Add these contact groups the host"))
@@ -7757,6 +7757,18 @@ def find_usages_of_host_group(name):
 def find_usages_of_service_group(name):
     return find_usages_of_group_in_rules(name, [ 'service_groups' ])
 
+def get_nagvis_maps():
+    # Find all NagVis maps in the local installation to register permissions
+    # for each map. When no maps can be found skip this problem silently.
+    # This only works in OMD environments.
+    maps = []
+    if defaults.omd_root:
+        nagvis_maps_path = defaults.omd_root + '/etc/nagvis/maps'
+        for f in os.listdir(nagvis_maps_path):
+            if f[0] != '.' and f.endswith('.cfg'):
+                maps.append((f[:-4], f[:-4]))
+    return maps
+
 def mode_groups(phase, what):
     if what == "host":
         what_name = _("host groups")
@@ -7808,6 +7820,8 @@ def mode_groups(phase, what):
             if c:
                 del groups[delname]
                 save_group_information(all_groups)
+                if what == 'contact':
+                    hooks.call('contactgroups-saved', all_groups)
                 log_pending(SYNCRESTART, None, "edit-%sgroups", _("Deleted %s group %s" % (what, delname)))
             elif c == False:
                 return ""
@@ -7815,7 +7829,7 @@ def mode_groups(phase, what):
         return None
 
     sorted = groups.items()
-    sorted.sort()
+    sorted.sort(cmp = lambda a,b: cmp(a[1]['alias'], b[1]['alias']))
     if len(sorted) == 0:
         if what == "contact":
             render_main_menu([
@@ -7836,7 +7850,7 @@ def mode_groups(phase, what):
                 members.setdefault(cg, []).append((userid, user.get('alias', userid)))
 
     table.begin(what + "groups")
-    for name, alias in sorted:
+    for name, group in sorted:
         table.row()
 
         table.cell(_("Actions"), css="buttons")
@@ -7848,7 +7862,7 @@ def mode_groups(phase, what):
         html.icon_button(delete_url, _("Delete"), "delete")
 
         table.cell(_("Name"), name)
-        table.cell(_("Alias"), alias)
+        table.cell(_("Alias"), group['alias'])
 
         if what == "contact":
             table.cell(_("Members"))
@@ -7886,6 +7900,19 @@ def mode_edit_group(phase, what):
     all_groups = userdb.load_group_information()
     groups = all_groups.setdefault(what, {})
 
+    edit_nagvis_map_permissions = what == 'contact' and defaults.omd_root
+    if edit_nagvis_map_permissions:
+        vs_nagvis_maps = ListChoice(
+            title = _('NagVis Maps'),
+            choices = get_nagvis_maps,
+            toggle_all = True,
+        )
+
+        if not new:
+            permitted_maps = groups[name]['nagvis_maps']
+        else:
+            permitted_maps = []
+
     if phase == "action":
         if html.check_transaction():
             alias = html.var_utf8("alias").strip()
@@ -7906,12 +7933,25 @@ def mode_edit_group(phase, what):
                     raise MKUserError("name", _("Invalid group name. Only the characters a-z, A-Z, 0-9, _ and - are allowed."))
                 if name in groups:
                     raise MKUserError("name", _("Sorry, there is already a group with that name"))
-                groups[name] = alias
+                groups[name] = {
+                    'alias': alias,
+                }
                 log_pending(SYNCRESTART, None, "edit-%sgroups" % what, _("Create new %s group %s") % (what, name))
             else:
-                groups[name] = alias
-                log_pending(SYNCRESTART, None, "edit-%sgroups" % what, _("Changed alias of %s group %s") % (what, name))
+                groups[name] = {
+                    'alias': alias,
+                }
+                log_pending(SYNCRESTART, None, "edit-%sgroups" % what, _("Updated properties of %s group %s") % (what, name))
+
+            if edit_nagvis_map_permissions:
+                permitted_maps = vs_nagvis_maps.from_html_vars('nagvis_maps')
+                vs_nagvis_maps.validate_value(permitted_maps, 'nagvis_maps')
+                if permitted_maps:
+                    groups[name]['nagvis_maps'] = permitted_maps
+
             save_group_information(all_groups)
+            if what == 'contact':
+                hooks.call('contactgroups-saved', all_groups)
 
         return what + "_groups"
 
@@ -7932,27 +7972,60 @@ def mode_edit_group(phase, what):
 
     forms.section(_("Alias"))
     html.help(_("An Alias or description of this group."))
-    alias = groups.get(name, "")
+    alias = groups.get(name, {}).get('alias', '')
     if not alias:
         if clone_group:
             alias = groups.get(clone_group, "")
         else:
             alias = name
     html.text_input("alias", alias)
+
+    if edit_nagvis_map_permissions:
+        forms.header(_("Permissions"))
+        forms.section(_("Access to NagVis Maps"))
+        html.help(_("Configure access permissions to NagVis maps."))
+        vs_nagvis_maps.render_input('nagvis_maps', permitted_maps)
+
     forms.end()
     html.button("save", _("Save"))
     html.hidden_fields()
     html.end_form()
 
-def save_group_information(groups):
+def save_group_information(all_groups):
+    # Split groups data into Check_MK/Multisite parts
+    check_mk_groups  = {}
+    multisite_groups = {}
+
+    for what, groups in all_groups.items():
+        check_mk_groups[what] = {}
+        for gid, group in groups.items():
+            check_mk_groups[what][gid] = group['alias']
+
+            for attr, value in group.items():
+                if attr != 'alias':
+                    multisite_groups.setdefault(what, {})
+                    multisite_groups[what].setdefault(gid, {})
+                    multisite_groups[what][gid][attr] = value
+
+    # Save Check_MK world related parts
     make_nagios_directory(root_dir)
     out = create_user_file(root_dir + "groups.mk", "w")
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     for what in [ "host", "service", "contact" ]:
-        if what in groups and len(groups[what]) > 0:
+        if what in check_mk_groups and len(check_mk_groups[what]) > 0:
             out.write("if type(define_%sgroups) != dict:\n    define_%sgroups = {}\n" % (what, what))
-            out.write("define_%sgroups.update(%s)\n\n" % (what, pprint.pformat(groups[what])))
+            out.write("define_%sgroups.update(%s)\n\n" % (what, pprint.pformat(check_mk_groups[what])))
 
+    # Users with passwords for Multisite
+    filename = multisite_dir + "groups.mk.new"
+    make_nagios_directory(multisite_dir)
+    out = create_user_file(filename, "w")
+    out.write("# Written by WATO\n# encoding: utf-8\n\n")
+    for what in [ "host", "service", "contact" ]:
+        if what in multisite_groups and len(multisite_groups[what]) > 0:
+            out.write("multisite_%sgroups = \\\n%s\n\n" % (what, pprint.pformat(multisite_groups[what])))
+    out.close()
+    os.rename(filename, filename[:-4])
 
 class GroupSelection(ElementSelection):
     def __init__(self, what, **kwargs):
@@ -7965,7 +8038,7 @@ class GroupSelection(ElementSelection):
         all_groups = userdb.load_group_information()
         this_group = all_groups.get(self._what, {})
         # replace the title with the key if the title is empty
-        elements = [ (k, t and t or k) for (k, t) in this_group.items() ]
+        elements = [ (k, t['alias'] and t['alias'] or k) for (k, t) in this_group.items() ]
         if self._no_selection:
             # Beware: ElementSelection currently can only handle string
             # keys, so we cannot take 'None' as a value.
@@ -8041,7 +8114,7 @@ class HostgroupChoice(DualListChoice):
     def load_groups(self):
         all_groups = userdb.load_group_information()
         this_group = all_groups.get("host", {})
-        return [ (k, t and t or k) for (k, t) in this_group.items() ]
+        return [ (k, t['alias'] and t['alias'] or k) for (k, t) in this_group.items() ]
 
 
 def vs_notification_bulkby():
@@ -11300,7 +11373,7 @@ def mode_users(phase):
         if cgs:
             html.write(", ".join(
                [ '<a href="%s">%s</a>' % (make_link([("mode", "edit_contact_group"), ("edit", c)]),
-                                          c in contact_groups and contact_groups[c] or c) for c in cgs]))
+                                          c in contact_groups and contact_groups[c]['alias'] or c) for c in cgs]))
         else:
             html.write("<i>" + _("none") + "</i>")
 
@@ -11673,7 +11746,7 @@ def mode_edit_user(phase):
         html.write(_("Please first create some <a href='%s'>contact groups</a>") %
                 url1)
     else:
-        entries = [ (contact_groups[c], c) for c in contact_groups ]
+        entries = [ (group['alias'], c) for c, group in contact_groups.items() ]
         entries.sort()
         is_member_of_at_least_one = False
         for alias, gid in entries:
@@ -15247,7 +15320,7 @@ def create_sample_config():
 
     # A contact group where everyone is member of
     groups = {
-        "contact" : { 'all' : u'Everybody' },
+        "contact" : { 'all' : {'alias': u'Everybody'} },
     }
     save_group_information(groups)
 
@@ -16851,9 +16924,7 @@ def update_host_attributes(host, attr = {}, unset_attr = []):
 def set_host_attributes(host, attributes):
     hostname = host[".name"]
 
-    folder_path = host[".folder"][".path"]
-
-    the_folder = g_folders[folder_path]
+    the_folder = host[".folder"]
     load_hosts(the_folder)
 
     # The site attribute might change. In that case also
@@ -16861,24 +16932,13 @@ def set_host_attributes(host, attributes):
     mark_affected_sites_dirty(the_folder, hostname)
 
     the_folder[".hosts"][hostname] = attributes
-    save_hosts(the_folder)
 
-    the_folder = reload_folder(the_folder)
-    reload_hosts(the_folder)
-
-    if g_folder:
-        set_current_folder(g_folders[g_folder[".path"]])
-
-    log_pending(AFFECTED, hostname, "edit-host", _("edited properties of host [%s]") % hostname)
     mark_affected_sites_dirty(the_folder, hostname)
+    log_pending(AFFECTED, hostname, "edit-host", _("edited properties of host [%s]") % hostname)
 
-    call_hook_hosts_changed(the_folder)
-
-    # TODO: find a better solution
-    # Some hooks kill our reloaded folder... do it again...
-    the_folder = g_folders[folder_path]
-    the_folder = reload_folder(the_folder)
+    save_folder_and_hosts(the_folder)
     reload_hosts(the_folder)
+    call_hook_hosts_changed(the_folder)
 
 # Deletes host from given folder
 def delete_host(host):
@@ -17026,7 +17086,8 @@ class API:
         add_host_to_folder(folder, hostname, attributes)
 
         # Update the all_hosts reference. Saves quite some time on followup calls
-        all_hosts[hostname] = folder[".hosts"][hostname]
+        reload_hosts(g_folders[host_foldername])
+        all_hosts[hostname] = g_folders[host_foldername][".hosts"][hostname]
 
     def edit_host(self, hostname, attr = {}, unset_attr = []):
         self.__prepare_folder_info()
@@ -17042,8 +17103,9 @@ class API:
         update_host_attributes(host, attr = attributes, unset_attr = unset_attr)
 
         # Update all_hosts reference. Saves quite some time on followup calls
-        folder_path = all_hosts[hostname][".folder"][".path"]
-        all_hosts[hostname] = g_folders[folder_path][".hosts"][hostname]
+        host_foldername = all_hosts[hostname][".folder"][".path"]
+        reload_hosts(g_folders[host_foldername])
+        all_hosts[hostname] = g_folders[host_foldername][".hosts"][hostname]
 
     def get_host(self, hostname, effective_attr = False):
         self.__prepare_folder_info()
@@ -17502,24 +17564,24 @@ def may_see_hosts():
     return config.may("wato.use") and \
        (config.may("wato.seeall") or config.may("wato.hosts"))
 
-def is_alias_used(my_group, my_name, aliasname):
+def is_alias_used(my_what, my_name, my_alias):
     # Host / Service / Contact groups
     all_groups = userdb.load_group_information()
-    for groupname, group in all_groups.items():
-        for key, value in group.items():
-            if value == aliasname and (my_group != groupname or my_name != key):
-                return False, _("This alias is already used in the %s group %s.") % (groupname, key)
+    for what, groups in all_groups.items():
+        for gid, group in groups.items():
+            if group['alias'] == my_alias and (my_what != what or my_name != gid):
+                return False, _("This alias is already used in the %s group %s.") % (what, gid)
 
     # Timeperiods
     timeperiods = load_timeperiods()
     for key, value in timeperiods.items():
-        if value.get("alias") == aliasname and (my_group != "timeperiods" or my_name != key):
+        if value.get("alias") == my_alias and (my_what != "timeperiods" or my_name != key):
             return False, _("This alias is already used in timeperiod %s.") % key
 
     # Roles
     roles = userdb.load_roles()
     for key, value in roles.items():
-        if value.get("alias") == aliasname and (my_group != "roles" or my_name != key):
+        if value.get("alias") == my_alias and (my_what != "roles" or my_name != key):
             return False, _("This alias is already used in the role %s.") % key
 
     return True, None

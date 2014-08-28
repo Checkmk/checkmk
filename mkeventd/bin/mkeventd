@@ -1167,12 +1167,14 @@ class EventServer:
                 if not rule:
                     log("Deleting orphaned event %d created by obsolete rule %s" %
                             (event["id"], event["rule_id"]))
-                    events_to_delete.append(nr)
+                    event["phase"] = "closed"
                     log_event_history(event, "ORPHANED")
+                    events_to_delete.append(nr)
 
                 elif not "count" in rule and not "expect" in rule:
                     log("Count-based event %d belonging to rule %s: rule does not "
                         "count/expect anymore. Deleting event." % (event["id"], event["rule_id"]))
+                    event["phase"] = "closed"
                     log_event_history(event, "NOCOUNT")
                     events_to_delete.append(nr)
 
@@ -1197,6 +1199,7 @@ class EventServer:
                             if event["count"] == 0:
                                 log("Rule %s, event %d: again without allowed rate, dropping event" %
                                     (rule["id"], event["id"]))
+                                event["phase"] = "closed"
                                 log_event_history(event, "COUNTFAILED")
                                 events_to_delete.append(nr)
 
@@ -1204,6 +1207,7 @@ class EventServer:
                         if event["first"] + count["period"] <= now: # End of period reached
                             log("Rule %s: reached only %d out of %d events within %d seconds. "
                                 "Resetting to zero." % (rule["id"], event["count"], count["count"], count["period"]))
+                            event["phase"] = closed
                             log_event_history(event, "COUNTFAILED")
                             events_to_delete.append(nr)
 
@@ -1215,10 +1219,11 @@ class EventServer:
                     event["phase"] = "open"
                     log_event_history(event, "DELAYOVER")
                     if rule:
-                        do_rule_actions(rule, event)
+                        event_has_opened(rule, event)
                         if rule.get("autodelete"):
-                            events_to_delete.append(nr)
+                            event["phase"] = "closed"
                             log_event_history(event, "AUTODELETE")
+                            events_to_delete.append(nr)
 
                     else:
                         log("Cannot do rule action: rule %s not present anymore." % event["rule_id"])
@@ -1229,6 +1234,7 @@ class EventServer:
                 if now >= event["live_until"]:
                     allowed_phases = event.get("live_until_phases", ["open"])
                     if event["phase"] in allowed_phases:
+                        event["phase"] = "closed"
                         events_to_delete.append(nr)
                         log("Livetime of event %d (rule %s) exceeded. Deleting event." % (
                                 event["id"], event["rule_id"]))
@@ -1353,8 +1359,9 @@ class EventServer:
             self.rewrite_event(rule, event, ())
             g_event_status.new_event(event)
             log_event_history(event, "COUNTFAILED")
-            do_rule_actions(rule, event)
+            event_has_opened(rule, event)
             if rule.get("autodelete"):
+                event["phase"] = "closed"
                 log_event_history(event, "AUTODELETE")
                 g_event_status.remove_event(event)
 
@@ -1566,11 +1573,12 @@ class EventServer:
                                 existing_event["delay_until"] = time.time() + rule["delay"]
                                 existing_event["phase"] = "delayed"
                             else:
-                                do_rule_actions(rule, existing_event)
+                                event_has_opened(rule, existing_event)
 
                             log_event_history(existing_event, "COUNTREACHED")
 
                             if "delay" not in rule and rule.get("autodelete"):
+                                existing_event["phase"] = "closed"
                                 log_event_history(existing_event, "AUTODELETE")
                                 with lock_eventstatus:
                                     g_event_status.remove_event(existing_event)
@@ -1590,8 +1598,9 @@ class EventServer:
                         with lock_eventstatus:
                             g_event_status.new_event(event)
                         if event["phase"] == "open":
-                            do_rule_actions(rule, event)
+                            event_has_opened(rule, event)
                             if rule.get("autodelete"):
+                                event["phase"] = "closed"
                                 log_event_history(event, "AUTODELETE")
                                 with lock_eventstatus:
                                     g_event_status.remove_event(event)
@@ -2241,7 +2250,7 @@ class StatusServer:
                 raise MKClientError("The action '%s' is not defined. After adding new commands please "
                    "make sure that you activate the changes in the Event Console." % action_id)
             action = g_config["action"][action_id]
-        do_rule_action(action, event, user)
+        do_event_action(action, event, user)
 
     def handle_command_switchmode(self, arguments):
         new_mode = arguments[0]
@@ -2571,6 +2580,7 @@ class EventStatus():
         g_perfcounters.count("events")
         event["id"] = self._next_event_id
         self._next_event_id += 1
+        event["phase"] = "closed"
         log_event_history(event, "ARCHIVED")
 
 
@@ -2589,7 +2599,19 @@ class EventStatus():
             for nr, event in enumerate(self._events):
                 if event["rule_id"] == rule["id"]:
                     if self.cancelling_match(match_groups, new_event, event, rule):
+                        # Fill a few fields of the cancelled event with data from
+                        # the cancelling event so that action scripts have useful
+                        # values and the logfile entry if more relevant.
+                        event["phase"]    = "closed"
+                        event["state"]    = 0 # OK
+                        event["text"]     = new_event["text"]
+                        event["time"]     = new_event["time"]
+                        event["last"]     = new_event["time"]
+                        event["priority"] = new_event["priority"]
                         log_event_history(event, "CANCELLED")
+                        actions = rule.get("cancel_actions", [])
+                        do_event_actions(actions, event)
+
                         to_delete.append(nr)
             for nr in to_delete[::-1]:
                 del self._events[nr]
@@ -2715,6 +2737,7 @@ class EventStatus():
     def delete_event(self, event_id, user):
         for nr, event in enumerate(self._events):
             if event["id"] == event_id:
+                event["phase"] = "closed"
                 log_event_history(event, "DELETE", user)
                 del self._events[nr]
                 return
@@ -2746,7 +2769,7 @@ class EventStatus():
 #   | executing scripts.                                                   |
 #   '----------------------------------------------------------------------'
 
-def do_rule_actions(rule, event):
+def event_has_opened(rule, event):
     # Prepare for events with a limited livetime. This time starts
     # when the event enters the open state or acked state
     if "livetime" in rule:
@@ -2754,18 +2777,25 @@ def do_rule_actions(rule, event):
         event["live_until"] = time.time() + livetime
         event["live_until_phases"] = phases
 
-    for aname in rule.get("actions", []):
+    do_event_actions(rule.get("actions", []), event)
+
+
+# Execute a list of actions on an event that has just been
+# opened or cancelled.
+def do_event_actions(actions, event):
+    for aname in actions:
         action = g_config["action"].get(aname)
         if not action:
             log("Cannot execute undefined action '%s'" % aname)
             log("We have to following actions: %s" % ", ".join(g_config["action"].keys()))
         else:
             log("Going to execute action '%s' on event %d" % (action["title"], event["id"]))
-            do_rule_action(action, event)
+            do_event_action(action, event)
+
 
 # Rule actions are currently done synchronously. Actions should
 # not hang for more than a couple of ms.
-def do_rule_action(action, event, user=""):
+def do_event_action(action, event, user=""):
     if action["disabled"]:
         return
 

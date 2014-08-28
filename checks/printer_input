@@ -31,6 +31,7 @@ check_info["printer_input"] = {
     'has_perfdata':            False,
     'snmp_info':               (
         '.1.3.6.1.2.1.43.8.2.1', [
+            OID_END,
             '13', # Printer-MIB::prtInputName
             '18', # Printer-MIB::prtInputDescription
             '11', # Printer-MIB::prtInputStatus

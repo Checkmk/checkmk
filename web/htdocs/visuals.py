@@ -57,8 +57,8 @@ def load_plugins():
     if loaded_with_language == current_language:
         return
 
-    global context_types
-    context_types = {}
+    global context_types ; context_types = {}
+    global title_functions ; title_functions = []
 
     load_web_plugins('visuals', globals())
     loaded_with_language = current_language
@@ -628,6 +628,13 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None, create_hand
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
+def visual_title(what, visual, title):
+    for func in title_functions:
+        result = func(what, visual, title)
+        if result != None:
+            return result
+    return title
 
 def get_context_html_vars(visual):
     context_type = context_types[visual['context_type']]

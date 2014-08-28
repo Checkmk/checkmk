@@ -63,26 +63,23 @@ config.declare_permission(
     []
 )
 
-# Find all NagVis maps in the local installation to register permissions
-# for each map. When no maps can be found skip this problem silently.
-# This only works in OMD environments.
+config.declare_permission(
+    'nagvis.Map_view',
+    _('View permitted maps'),
+    _('Grants read access to all maps the user is a contact for.'),
+    ['user']
+)
 
-if defaults.omd_root:
-    nagvis_maps_path = defaults.omd_root + '/etc/nagvis/maps'
-    for f in os.listdir(nagvis_maps_path):
-        if f[0] != '.' and f.endswith('.cfg'):
-            map_name = f[:-4]
+config.declare_permission(
+    'nagvis.Map_edit',
+    _('Edit permitted maps'),
+    _('Grants modify access to all maps the user is contact for.'),
+    ['user']
+)
 
-            config.declare_permission(
-                'nagvis.Map_view_%s' % map_name,
-                _('Map %s: view') % map_name,
-                _('Grants read access to the NagVis map %s.') % map_name,
-                [ 'guest' ]
-            )
-
-            config.declare_permission(
-                'nagvis.Map_edit_%s' % map_name,
-                _('Map %s: edit') % map_name,
-                _('Grants modify access to the NagVis map %s.') % map_name,
-                [ ]
-            )
+config.declare_permission(
+    'nagvis.Map_delete',
+    _('Delete permitted maps'),
+    _('Permits to delete all maps the user is contact for.'),
+    ['user']
+)

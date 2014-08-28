@@ -402,7 +402,7 @@ def construct_content(context):
     #   NOTIFICATIONTYPE is "FLAPPINGSTART" or "FLAPPINGSTOP"
 
     # - Downtimes             Started, Ended, Cancelled
-    #   NOTIFICATIONTYPE is "DOWNTIMESTART", "DOWNTIMECANCELLED", or "DOWNTIMESTOPPED"
+    #   NOTIFICATIONTYPE is "DOWNTIMESTART", "DOWNTIMECANCELLED", or "DOWNTIMEEND"
 
     # - Acknowledgements
     #   NOTIFICATIONTYPE is "ACKNOWLEDGEMENT"

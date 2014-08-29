@@ -420,7 +420,7 @@ class html:
                 add_style = "width: 100%; "
             else:
                 addprops += " size=\"%d\"" % (args["size"] + 1)
-                if "width:" not in args.get("style", "") and not self.mobile:
+                if not args.get('omit_css_width', False) and "width:" not in args.get("style", "") and not self.mobile:
                     add_style = "width: %d.8ex; " % args["size"]
 
         if "type" in args:
@@ -634,11 +634,11 @@ class html:
 
     def time_input(self, varname, hours, mins, submit=None):
         self.text_input(varname, "%02d:%02d" % (hours, mins), cssclass="time", size=5,
-                        submit=submit)
+                        submit=submit, omit_css_width = True)
 
     def date_input(self, varname, year, month, day, submit=None):
         self.text_input(varname, "%04d-%02d-%02d" % (year, month, day),
-                        cssclass="date", size=11, submit=submit)
+                        cssclass="date", size=10, submit=submit, omit_css_width = True)
 
     def get_datetime_input(self, varname):
         t = self.var(varname + "_time")

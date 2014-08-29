@@ -1,4 +1,4 @@
-Title: docsis_signal_quality: New Check to monitor Signal Qualtiy on Devices with DOCSIS MIB
+Title: docsis_channels_upstream: New check for monitoring upstream channels on cable modems with DOCSIS MIB
 Level: 1
 Component: checks
 Version: 1.2.5i6

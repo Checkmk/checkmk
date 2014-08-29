@@ -76,65 +76,15 @@ def parse_win_netstat(info):
                              win_netstat_states.get(connstate, connstate)) )
     return connections
 
-# Item is a user defined identifier of the connection.
-# Example for params:
-# {
-#    "proto"       : "UDP",
-#    "local_ip"    : "10.1.1.99",
-#    "remote_port" : 5665,
-#    "state"       : "ESTABLISHED",
-# }
-# Other keys: local_port, remote_ip. Missing entries do not care.
-
 
 def check_win_netstat(item, params, info):
     connections = parse_win_netstat(info)
-    found = 0
-    for proto, (local_ip, local_port), (remote_ip, remote_port), connstate in connections:
-        # Beware: port numbers are strings here.
-        match = True
-        for k, v in [
-            ( "local_ip",    local_ip ),
-            ( "local_port",  local_port ),
-            ( "remote_ip",   remote_ip ),
-            ( "remote_port", remote_port ),
-            ( "proto",       proto ),
-            ( "state",       connstate )]:
-            if k in params and str(params[k]) != v:
-                match = False
-                break
-        if match:
-            found += 1
+    return check_netstat_generic(item, params, connections)
 
-    # Check if found connections are within limits
-    state = 0
-    extra_info = ""
-
-    if params.get("min_states"):
-        min_warn, min_crit = params["min_states"]
-        if found <= min_crit:
-            state = max(state, 2)
-            extra_info += '(!!) Minimum at %d ' % min_crit
-        elif found <= min_warn:
-            state = max(state, 1)
-            extra_info += '(!) Minimum at %d ' % min_warn
-
-    if params.get("max_states"):
-        max_warn, max_crit = params["max_states"]
-        if found >= max_crit:
-            state = max(state, 2)
-            extra_info += '(!!) Maximum at %d ' % max_crit
-        elif found >= max_warn:
-            state = max(state, 1)
-            extra_info += '(!) Maximum at %d ' % max_warn
-
-    if not found:
-        state = 2
-
-    return state, "Found %d matching entries %s" % (found, extra_info)
 
 check_info["win_netstat"] = {
     'check_function'        : check_win_netstat,
     'service_description'   : "TCP Connection %s",
     'group'                 : "tcp_connections",
+    'includes'              : [ "netstat.include" ],
 }

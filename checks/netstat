@@ -1,0 +1,73 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output from agent (Linux)
+# <<netstat>>>
+# tcp        0      0 127.0.0.1:57573         127.0.0.1:80            ESTABLISHED
+# tcp        0      0 10.1.1.50:38692         178.248.246.154:993     ESTABLISHED
+# tcp        0      0 127.0.0.1:34929         127.0.0.1:5000          TIME_WAIT
+# tcp        0      0 127.0.0.1:34922         127.0.0.1:5000          TIME_WAIT
+# tcp        0      0 127.0.0.1:80            127.0.0.1:57454         TIME_WAIT
+# tcp        0      0 127.0.0.1:35005         127.0.0.1:5000          TIME_WAIT
+# tcp        0      0 10.1.1.50:38612         178.248.246.154:993     ESTABLISHED
+# tcp        0      0 127.0.0.1:80            127.0.0.1:57548         TIME_WAIT
+# tcp        0      0 127.0.0.1:34981         127.0.0.1:5000          TIME_WAIT
+# tcp        0      0 127.0.0.1:54552         127.0.0.1:13419         ESTABLISHED
+# tcp        0      0 127.0.0.1:35012         127.0.0.1:5000          TIME_WAIT
+# tcp        0      0 127.0.0.1:34910         127.0.0.1:5000          TIME_WAIT
+# tcp        0      0 127.0.0.1:34915         127.0.0.1:5000          TIME_WAIT
+# tcp        0      0 127.0.0.1:80            127.0.0.1:57546         TIME_WAIT
+# tcp        0      0 127.0.0.1:34935         127.0.0.1:5000          TIME_WAIT
+# tcp        0      0 127.0.0.1:34984         127.0.0.1:5000          TIME_WAIT
+# tcp        0      0 127.0.0.1:80            127.0.0.1:57488         TIME_WAIT
+# tcp        0      0 127.0.0.1:34967         127.0.0.1:5000          TIME_WAIT
+
+def parse_netstat(info):
+    connections = []
+    for line in info:
+        if len(line) == 6:
+            proto, recv_q, send_q, local, remote, connstate = line
+            if proto.startswith("tcp"): # also tcp4 and tcp6
+                proto = "TCP"
+            elif proto.startswith("udp"):
+                proto = "UDP"
+
+            connections.append( (proto, local.rsplit(":", 1), remote.rsplit(":", 1),
+                                connstate) )
+    return connections
+
+
+def check_netstat(item, params, info):
+    connections = parse_netstat(info)
+    return check_netstat_generic(item, params, connections)
+
+check_info["netstat"] = {
+    'check_function'        : check_netstat,
+    'service_description'   : "TCP Connection %s",
+    'group'                 : "tcp_connections",
+    'includes'              : [ "netstat.include" ],
+}
+

@@ -1,0 +1,10 @@
+Title: netstat: new check for monitoring TCP/UDP connections and Linux and AIX
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1409320371
+Class: feature
+
+The check does the same as <tt>win_netstat</tt> and also uses the same WATO rule.
+You need to deploy the agent plugin <tt>netstat.linux</tt> or <tt>netstat.aix</tt>.

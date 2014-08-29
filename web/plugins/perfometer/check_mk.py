@@ -1156,7 +1156,7 @@ def perfometer_voltage(row, check_command, perf_data):
 
 perfometers["check_mk-bintec_sensors.voltage"] = perfometer_voltage
 
-def perfometer_fec( row, check_command, perf_data ):
+def perfometer_fec(row, check_command, perf_data):
     total           = float(perf_data[3][1])
     corrected       = ( int(perf_data[1][1]) / total ) * 100
     uncorrected     = ( int(perf_data[2][1]) / total ) * 100
@@ -1170,8 +1170,8 @@ def perfometer_fec( row, check_command, perf_data ):
 
 perfometers["check_mk-docsis_signal_quality"] = perfometer_fec
 
-def perfometer_mhz( row, check_command, perf_data ):
-    mhz_current = int(perf_data[0][1])
-    return str(mhz_current) + " Mhz", perfometer_logarithmic(mhz_current, 50, 2, "#da6")
+def perfometer_dbmv(row, check_command, perf_data):
+    dbmv = float(perf_data[0][1])
+    return "%.1f dBmV" % dbmv, perfometer_logarithmic(dbmv, 50, 2, "#da6")
 
-perfometers["check_mk-docsis_channels_downstream"] = perfometer_mhz
+perfometers["check_mk-docsis_channels_downstream"] = perfometer_dbmv

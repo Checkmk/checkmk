@@ -1383,28 +1383,28 @@ register_check_parameters(
 register_check_parameters(
     subgroup_networking,
     'docsis_signal_quality',
-    _("Docsis Singal Quality"),
+    _("Docsis Signal Quality"),
     Dictionary(
         elements = [
             ( 'signal_noise', Tuple(
-                title = _("Levels for Signal Noise"),
+                title = _("Levels for signal/noise ratio"),
                 elements = [
-                    Integer( title = _("Warning at"), unit = "dB", default_value = 50),
-                    Integer( title = _("Critical at"), unit = "dB",  default_value = 60 ),
+                    Float(title = _("Warning at or below"), unit = "dB", default_value = 50.0),
+                    Float(title = _("Critical at"), unit = "dB",  default_value = 60.0 ),
                 ]
             )),
             ( 'corrected', Tuple(
                 title = _("Levels for corrected Packages"),
                 elements = [
                     Percentage( title = _("Warning at"), default_value = 25.0),
-                    Percentage( title = _("Critical at"), default_value = 30.0 ),
+                    Percentage( title = _("Critical at"), default_value = 30.0),
                 ]
             )),
             ( 'uncorrected', Tuple(
                 title = _("Levels for uncorrected Packages"),
                 elements = [
-                    Percentage( title = _("Warning at"), default_value = 25.0 ),
-                    Percentage( title = _("Critical at"), default_value = 30.0 ),
+                    Percentage( title = _("Warning at"), default_value = 25.0),
+                    Percentage( title = _("Critical at"), default_value = 30.0),
                 ]
             )),
         ]
@@ -1423,15 +1423,15 @@ register_check_parameters(
                 title = _("Power"),
                 help = _(" The operational transmit power"),
                 elements = [
-                    Integer(title = _("warning at"), unit = "dBmV", default_value = 250 ),
-                    Integer(title = _("critical at"), unit = "dBmV", default_value = 260 ),
+                    Float(title = _("warning at or below"), unit = "dBmV", default_value = 5.0 ),
+                    Float(title = _("critical at or below"), unit = "dBmV", default_value = 1.0 ),
                 ])),
             ( "frequency", Tuple(
                 title = _("Frequency"),
                 help = _("The current tuner frequency"),
                 elements = [
-                    Integer(title = _("warning at"), unit = "Mhz", default_value = 155 ),
-                    Integer(title = _("critical at"), unit = "Mhz", default_value = 163 ),
+                    Integer(title = _("warning at"), unit = "MHz", default_value = 155 ),
+                    Integer(title = _("critical at"), unit = "MHz", default_value = 163 ),
                 ])),
         ]
     ),
@@ -1469,8 +1469,8 @@ register_check_parameters(
                 title = _("Power"),
                 help = _(" The operational transmit power"),
                 elements = [
-                    Integer(title = _("warning at"), unit = "dBmV", default_value = 250 ),
-                    Integer(title = _("critical at"), unit = "dBmV", default_value = 260 ),
+                    Float(title = _("warning at"), unit = "dBmV", default_value = 20.0 ),
+                    Float(title = _("critical at"), unit = "dBmV", default_value = 10.0 ),
                 ])),
         ]
     ),

@@ -49,7 +49,7 @@ def check_docsis_signal_quality( item, params, info):
         if entry == item:
             # Signal Noise
             noise_db = float(signal_noise) / 10
-            infotext = "Signal/Noise-rate: %.2f dB" % noise_db
+            infotext = "Signal/Noise ratio: %.2f dB" % noise_db
             warn, crit = params['signal_noise']
             levels = " (warn/crit at %.1f/%.1f dB)" % ( warn, crit )
             state = 0

@@ -1,0 +1,15 @@
+Title: f5_bigip_interfaces: indentation error and oid to determine the interface state fixed
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1409238534
+Class: fix
+
+A major indentation errors has lead to interface throuputs identical for all ifs.
+The oid for the determination of the if state was wrong
+
+Both errors have been fixed.
+
+Also the scan function was extended to detect more and newer f5 devices
+

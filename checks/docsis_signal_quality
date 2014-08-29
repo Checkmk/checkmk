@@ -36,7 +36,7 @@
 factory_settings["docsis_signal_quality_default_levels"] = {
         "corrected"     : ( 25.0 , 30.0 ),
         "uncorrected"   : ( 25.0 , 30.0 ),
-        "signal_noise"  : ( 50, 60 ), #dB
+        "signal_noise"  : ( 50.0, 60.0 ), # dB
 }
 
 def inventory_docsis_signal_quality(info):
@@ -49,9 +49,9 @@ def check_docsis_signal_quality( item, params, info):
         if entry == item:
             # Signal Noise
             noise_db = float(signal_noise) / 10
-            infotext = "Noise: %.2f dB" % noise_db
+            infotext = "Signal/Noise-rate: %.2f dB" % noise_db
             warn, crit = params['signal_noise']
-            levels = " (Warn/Crit at %s dB/ %s dB)" % ( warn, crit )
+            levels = " (warn/crit at %.1f/%.1f dB)" % ( warn, crit )
             state = 0
             if noise_db >= crit:
                 state = 2
@@ -82,15 +82,15 @@ def check_docsis_signal_quality( item, params, info):
 check_info["docsis_signal_quality"] = {
     "check_function"          : check_docsis_signal_quality,
     "inventory_function"      : inventory_docsis_signal_quality,
-    "service_description"     : "Signal Quality %s",
+    "service_description"     : "Signal Quality Channel %s",
     "snmp_scan_function"      : docsis_scan_function,
     "has_perfdata"            : True,
     "snmp_info"               : ( ".1.3.6.1.2.1.10.127.1.1.4.1", [
                                                                     OID_END,
-                                                                    2, #docsIfSigQUnerroreds
-                                                                    3, #docsIfSigQCorrecteds
-                                                                    4, #docsIfSigQUnerroreds
-                                                                    5, #docsIfSigQSignalNoise
+                                                                    2, # docsIfSigQUnerroreds
+                                                                    3, # docsIfSigQCorrecteds
+                                                                    4, # docsIfSigQUnerroreds
+                                                                    5, # docsIfSigQSignalNoise
                                                                 ]),
     "default_levels_variable" : "docsis_signal_quality_default_levels",
     "group"                   : "docsis_signal_quality",

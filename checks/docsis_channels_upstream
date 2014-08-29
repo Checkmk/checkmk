@@ -55,7 +55,6 @@ def check_docsis_channels_upstream(item, params, info):
             noise_db = float(signal_noise) / 10
             infotext = "Signal/Noise ratio: %.2f dB" % noise_db
             warn, crit = params['signal_noise']
-            print warn, crit
             levels = " (warn/crit at %.1f/%.1f dB)" % ( warn, crit )
             state = 0
             if noise_db <= crit:

@@ -30,12 +30,12 @@
 #include "logger.h"
 #include "OutputBuffer.h"
 
-    CustomVarsFilter::CustomVarsFilter(CustomVarsColumn *column, int opid, char *value)
+CustomVarsFilter::CustomVarsFilter(CustomVarsColumn *column, int opid, char *value)
     : _column(column)
     , _opid(abs(opid))
     , _negate(opid < 0)
     , _ref_text(value)
-      , _regex(0)
+    , _regex(0)
 {
     // Prepare part in case of DICT filter
     if (_column->type() == COLTYPE_DICT) {

@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 factory_settings["docsis_channels_downstream"] = {
-    "frequency" : ( 155,  163 ),
     "power"     : ( 5.0, 1.0 ),
 }
 
@@ -54,16 +53,17 @@ def check_docsis_channels_downstream(item, params, info):
             # Check Frequency
             frequency_mhz = float(frequency) / 1000000
             infotext = "Frequency is %.1f MHz" % frequency_mhz
-            warn, crit = params["frequency"]
             perfdata = [("frequency" , frequency_mhz, warn, crit )]
-            levels = " (Levels Warn/Crit at %d MHz/ %d MHz)" % ( warn, crit )
             state = 0
-            if frequency_mhz >= crit:
-                state = 2
-                infotext += levels
-            elif frequency_mhz >= warn:
-                state  = 1
-                infotext += levels
+            if "frequency" in params:
+                warn, crit = params["frequency"]
+                levels = " (warn/crit at %d MHz/ %d MHz)" % ( warn, crit )
+                if frequency_mhz >= crit:
+                    state = 2
+                    infotext += levels
+                elif frequency_mhz >= warn:
+                    state  = 1
+                    infotext += levels
             # Change this to yield in case of future extension of the check
             yield state, infotext, perfdata
             return

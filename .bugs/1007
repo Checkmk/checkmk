@@ -1,0 +1,10 @@
+Title: liveproxyd erkennt sehr langsame Verbindungen noch nicht gut genug
+Component: multisite
+State: open
+Date: 2014-08-29 16:07:35
+Targetversion: future
+Class: nastiness
+
+In case of network problems in a distributed monitoring setup liveproxyd still has problems identifying
+a slow connection with a lot of packet loss. It does not declare the connection as dead, and as a consequence
+the load of the monitoring server can get very high, making it essentially unusable.

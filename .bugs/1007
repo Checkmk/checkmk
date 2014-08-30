@@ -1,4 +1,4 @@
-Title: liveproxyd erkennt sehr langsame Verbindungen noch nicht gut genug
+Title: liveproxyd does not handle very slow and stalled connections well
 Component: multisite
 State: open
 Date: 2014-08-29 16:07:35

@@ -56,10 +56,15 @@ def check_oracle_instance(item, _no_params, info):
             # ORACLE is sick and cannot handle timezone changes >:-P
             up_seconds = max(0, int(up_seconds))
             infotext += ", Logins %s, Version %s, Role %s, " \
-                       "%s, Force-Logging %s, Up since %s (%s)" % (
+                       "%s, Force-Logging %s, Up since %s (%s), Log Mode %s" % (
                        logins.lower(), version, database_role, \
                        archiver, force_logging, time.strftime("%F %T", time.localtime(time.time() - up_seconds)), \
-                       get_age_human_readable(up_seconds))
+                       get_age_human_readable(up_seconds), log_mode)
+
+            # log_mode should not be "NOARCHIVELOG"
+            if log_mode == 'NOARCHIVELOG':
+                state = max(state,1)
+                infotext += "(!)"
 
             perfdata = [('uptime', up_seconds)]
             return state, infotext, perfdata

@@ -1,0 +1,9 @@
+Title: oracle_instance: now also monitors the log mode
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1409397002
+Class: feature
+
+

@@ -25,6 +25,8 @@
 
 # Developed by Thorsten Bruhns from OPITZ CONSULTING Deutschland GmbH
 
+set -f
+
 ocrcfgfile=/etc/oracle/ocr.loc
 olrcfgfile=/etc/oracle/olr.loc
 resourcefilter="^NAME=|^TYPE=|^STATE=|^TARGET=|^ENABLED="
@@ -43,7 +45,8 @@ resourcefilter="^NAME=|^TYPE=|^STATE=|^TARGET=|^ENABLED="
 function set_has_env(){
     test -f ${ocrcfgfile} || exit 0
 
-    local_has_type=$(cat $ocrcfgfile | grep "^local_only=" | cut -d"=" -f2)
+    local_has_type=$(cat $ocrcfgfile | grep "^local_only=" | cut -d"=" -f2 | tr '[:lower:]' '[:upper:]')
+    local_has_type=${local_has_type:-"FALSE"}
     has_ORACLE_HOME=$(cat $olrcfgfile | grep "^crs_home=" | cut -d"=" -f2)
     CRSCTL=${has_ORACLE_HOME}/bin/crsctl
     OLSNODES=${has_ORACLE_HOME}/bin/olsnodes

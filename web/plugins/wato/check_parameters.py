@@ -1382,34 +1382,20 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_networking,
-    'docsis_signal_quality',
-    _("Docsis Signal Quality"),
+    'docsis_channels_upstream',
+    _("Docsis Upstream Channels"),
     Dictionary(
         elements = [
             ( 'signal_noise', Tuple(
                 title = _("Levels for signal/noise ratio"),
                 elements = [
-                    Float(title = _("Warning at or below"), unit = "dB", default_value = 50.0),
-                    Float(title = _("Critical at"), unit = "dB",  default_value = 60.0 ),
-                ]
-            )),
-            ( 'corrected', Tuple(
-                title = _("Levels for corrected Packages"),
-                elements = [
-                    Percentage( title = _("Warning at"), default_value = 25.0),
-                    Percentage( title = _("Critical at"), default_value = 30.0),
-                ]
-            )),
-            ( 'uncorrected', Tuple(
-                title = _("Levels for uncorrected Packages"),
-                elements = [
-                    Percentage( title = _("Warning at"), default_value = 25.0),
-                    Percentage( title = _("Critical at"), default_value = 30.0),
+                    Float(title = _("Warning at or below"), unit = "dB", default_value = 10.0),
+                    Float(title = _("Critical at or below"), unit = "dB",  default_value = 5.0 ),
                 ]
             )),
         ]
     ),
-    TextAscii( title = _("ID of the Entry")),
+    TextAscii(title = _("ID of the channel (usually ranging from 1)")),
     "dict"
 )
 
@@ -1421,21 +1407,15 @@ register_check_parameters(
         elements = [
             ( "power", Tuple(
                 title = _("Power"),
-                help = _(" The operational transmit power"),
+                help = _("The operational transmit power"),
                 elements = [
                     Float(title = _("warning at or below"), unit = "dBmV", default_value = 5.0 ),
                     Float(title = _("critical at or below"), unit = "dBmV", default_value = 1.0 ),
-                ])),
-            ( "frequency", Tuple(
-                title = _("Frequency"),
-                help = _("The current tuner frequency"),
-                elements = [
-                    Integer(title = _("warning at"), unit = "MHz", default_value = 155 ),
-                    Integer(title = _("critical at"), unit = "MHz", default_value = 163 ),
-                ])),
+                ])
+            ),
         ]
     ),
-    TextAscii( title = _("ID of the Channel")),
+    TextAscii(title = _("ID of the Channel (usually ranging from 1)")),
     "dict"
 )
 
@@ -1449,19 +1429,19 @@ register_check_parameters(
                 title = _("Modem States whats lead to critical state"),
                 help = _("If one of the selected state occur, the check will repsond with a Critical state "),
                 choices = [
-                  ( 1 , "other" ),
-                  ( 2 , "notReady" ),
-                  ( 3 , "notSynchronized" ),
-                  ( 4 , "phySynchronized" ),
-                  ( 5 , "usParametersAcquired" ),
-                  ( 6 , "rangingComplete" ),
-                  ( 7 , "ipComplete" ),
-                  ( 8 , "todEstablished" ),
-                  ( 9 , "securityEstablished" ),
-                  ( 10 ,  "paramTransferComplete"),
-                  ( 11 ,  "registrationComplete"),
-                  ( 12 ,  "operational"),
-                  ( 13 ,  "accessDenied"),
+                  ( 1,   "other" ),
+                  ( 2,   "notReady" ),
+                  ( 3,   "notSynchronized" ),
+                  ( 4,   "phySynchronized" ),
+                  ( 5,   "usParametersAcquired" ),
+                  ( 6,   "rangingComplete" ),
+                  ( 7,   "ipComplete" ),
+                  ( 8,   "todEstablished" ),
+                  ( 9,   "securityEstablished" ),
+                  ( 10,  "paramTransferComplete"),
+                  ( 11,  "registrationComplete"),
+                  ( 12,  "operational"),
+                  ( 13,  "accessDenied"),
                 ],
                 default_value = [ 1, 2, 13 ],
                 )),

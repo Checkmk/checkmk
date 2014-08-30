@@ -100,6 +100,7 @@
             NOTE: Please refer to the migration notes!
     * 0652 windows software inventory gives some more details about OS and installed software...
             NOTE: Please refer to the migration notes!
+    * 0653 script to extract hw/sw inventory data in csv format...
 
 
 1.2.5i5:

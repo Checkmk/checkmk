@@ -33,7 +33,7 @@
 
 def inv_win_exefiles(info):
     paclist = inv_tree("software.packages:")
-    for full_name, write_time, size in info:
+    for full_name, write_time, size, description, product_version, product_name in info:
         parts = full_name.split('\\')
         entry = {
             "name"            : parts[-1],
@@ -41,6 +41,9 @@ def inv_win_exefiles(info):
             "package_type"    : "exe",
             "install_date"    : write_time,
             "size"            : int(size),
+            "version"         : product_version,
+            "summary"         : description,
+            "vendor"          : product_name,
         }
         paclist.append(entry)
 

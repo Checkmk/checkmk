@@ -1,0 +1,10 @@
+Title: windows software inventory gives some more details about OS and installed software
+Level: 1
+Component: inv
+Compatible: incomp
+Version: 1.2.5i6
+Date: 1409391576
+Class: feature
+
+most notably the installation date of the OS and a description and version number for exe files
+

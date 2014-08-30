@@ -1,4 +1,5 @@
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+write-output "" # workaround to prevent the byte order mark to be at the beginning of the first section
 $name = (Get-Item env:\Computername).Value
 $separator = "|"
 # filename for timestamp
@@ -30,7 +31,7 @@ Get-WmiObject Win32_Processor -ComputerName $name | Select Name,Manufacturer,Cap
 
 # OS Version
 write-host "<<<win_os:sep(124):persist($until)>>>"
-Get-WmiObject Win32_OperatingSystem -ComputerName $name -Recurse | foreach-object { write-host -separator $separator $_.csname, $_.caption, $_.version, $_.OSArchitecture, $_.servicepackmajorversion, $_.ServicePackMinorVersion }
+Get-WmiObject Win32_OperatingSystem -ComputerName $name -Recurse | foreach-object { write-host -separator $separator $_.csname, $_.caption, $_.version, $_.OSArchitecture, $_.servicepackmajorversion, $_.ServicePackMinorVersion, $_.InstallDate }
 
 # Memory
 #Get-WmiObject Win32_PhysicalMemory -ComputerName $name  | select BankLabel,DeviceLocator,Capacity,Manufacturer,PartNumber,SerialNumber,Speed
@@ -54,15 +55,14 @@ Get-WmiObject Win32_VideoController -ComputerName $name | Select Name, Descripti
 
 # Installed Software
 write-host "<<<win_wmi_software:sep(124):persist($until)>>>"
-Get-WmiObject -Class Win32_Product  -ComputerName $name | foreach-object { write-host -separator $separator $_.Name, $_.Vendor, $_.Version, $_.InstallDate }
-Get-WmiObject Win32_Product  -ComputerName $name | foreach-object { write-host -separator $separator $_.Name, $_.Vendor, $_.Version, $_.InstallDate }
+Get-WmiObject Win32_Product -ComputerName $name | foreach-object { write-host -separator $separator $_.Name, $_.Vendor, $_.Version, $_.InstallDate }
 
 # Search Registry
 write-host "<<<win_reg_uninstall:sep(124):persist($until)>>>"
 $paths = @("HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall")
 foreach ($path in $paths) {
-    Get-ChildItem $path -Recurse | foreach-object { $path2 = $path+"\"+$_.PSChildName; get-ItemProperty -path $path2 | 
-        foreach-object { write-host -separator $separator $_.DisplayName, $_.Publisher, $_.PSParentPath, $_.PSChildName, $_.DisplayVersion, $_.EstimatedSize, $_.InstallDate }}
+    Get-ChildItem $path -Recurse | foreach-object { $path2 = $path+"\"+$_.PSChildName; get-ItemProperty -path $path2 |
+        foreach-object { write-host -separator $separator $_.DisplayName, $_.Publisher, $path, $_.PSChildName, $_.DisplayVersion, $_.EstimatedSize, $_.InstallDate }}
 }
 
 # Search exes
@@ -72,7 +72,7 @@ foreach ($item in $paths)
 {
     if ((Test-Path $item -pathType container))
     {
-        Get-ChildItem -Path $item -include *.exe -Recurse | foreach-object { write-host -separator $separator $_.Fullname, $_.LastWriteTime, $_.Length }
+        Get-ChildItem -Path $item -include *.exe -Recurse | foreach-object { write-host -separator $separator $_.Fullname, $_.LastWriteTime, $_.Length, $_.VersionInfo.FileDescription, $_.VersionInfo.ProductVersion, $_.VersionInfo.ProductName }
     }
 }
 

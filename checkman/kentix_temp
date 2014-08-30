@@ -1,6 +1,6 @@
 title: Kentix MultiSensor-RACK: Temperature Sensor
 agents: snmp
-catalog: hw/server/kentix
+catalog: hw/environment/kentix
 license: GPL
 distribution: check_mk
 description:

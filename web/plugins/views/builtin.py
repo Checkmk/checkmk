@@ -1781,7 +1781,7 @@ multisite_builtin_views.update({
                   'public': True,
                   'show_filters': [],
                   'sorters': [('site_host', False), ('svcdescr', False)],
-                  'title': u'Stale services',
+                  'title': _('Stale services'),
                   'topic': _('Problems'),
                   'user_sortable': 'on'},
 'events': {'browser_reload': 0,

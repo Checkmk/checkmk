@@ -298,8 +298,24 @@ register_rule(group + '/' + subgroup_inventory,
                 toggle_all = True,
                 default_value = ['1', '3', '4' ],
         )),
+        ("phystates", ListChoice(title = _("Physical port states to inventorize"),
+                help = _("When doing inventory on brocade switches only ports with the given physical "
+                         "states will be added to the monitoring system."),
+                choices = _brocade_fcport_phy_choices,
+                columns = 1,
+                toggle_all = True,
+                default_value =  [ 3, 4, 5, 6, 7, 8, 9, 10 ]
+        )),
+        ("opstates", ListChoice(title = _("Operational port states to inventorize"),
+                help = _("When doing inventory on brocade switches only ports with the given operational "
+                         "states will be added to the monitoring system."),
+                choices = _brocade_fcport_op_choices,
+                columns = 1,
+                toggle_all = True,
+                default_value = [ 1, 2, 3, 4 ]
+        )),
         ],
-        help = _('This mule can be used to control the inventory for brocade ports. '
+        help = _('This rule can be used to control the inventory for brocade ports. '
                  'You can configure the port states for inventory '
                  'and the use of the description as service name.'),
     ),

@@ -1,0 +1,13 @@
+Title: Add variables (HOST/SERVICE)ACK(AUTHOR/COMMENT) to notification context
+Level: 1
+Component: notifications
+Compatible: compat
+Version: 1.2.5i6
+Date: 1409582877
+Class: feature
+
+The four variables <tt>HOSTACKAUTHOR</tt>, <tt>HOSTACKCOMMENT</tt>,
+<tt>SERVICEACKAUTHOR</tt> and <tt>SERVICEACKCOMMENT</tt> can now be used. In
+notifications for acknowledgements these variables reflect the author and
+the comment of the acknowledgement.
+

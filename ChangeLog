@@ -104,6 +104,7 @@
     * 0652 windows software inventory gives some more details about OS and installed software...
             NOTE: Please refer to the migration notes!
     * 0653 script to extract hw/sw inventory data in csv format...
+    * 0655 FIX: win_cpuinfo and mk_inventory.ps1 agent: unit of CPU speed fixed, fixes for long output lines in agent
 
 
 1.2.5i5:

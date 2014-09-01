@@ -1956,7 +1956,7 @@ filesystem_elements = [
                Integer(title = _("Critical if below"), unit = _("hours"), default_value = 6, ),
             ])),
     ( "trend_showtimeleft",
-            FixedValue(True, title = _("Display timeleft in check output"), totext = "",
+            Checkbox( title = _("Display timeleft in check output"), label = _("Enable"),
                        help = _("Normally the timeleft until disk full is only displayed when "
                                 "the configured levels have been breached. If you set this option "
                                 "the check always reports this information"))

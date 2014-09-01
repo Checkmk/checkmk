@@ -27,7 +27,9 @@ $until = [int]($epoch -replace ",.*", "") + $delay + 600
 
 # Processor
 write-host "<<<win_cpuinfo:sep(58):persist($until)>>>"
-Get-WmiObject Win32_Processor -ComputerName $name | Select Name,Manufacturer,Caption,DeviceID,MaxClockSpeed,AddressWidth,L2CacheSize,L3CacheSize,Architecture,NumberOfCores,NumberOfLogicalProcessors,CurrentVoltage,Status
+$cpu = Get-WmiObject Win32_Processor -ComputerName $name
+$cpu_vars = @( "Name","Manufacturer","Caption","DeviceID","MaxClockSpeed","AddressWidth","L2CacheSize","L3CacheSize","Architecture","NumberOfCores","NumberOfLogicalProcessors","CurrentVoltage","Status" )
+foreach ( $entry in $cpu ) { foreach ( $item in $cpu_vars) {  write-host $item ":" $entry.$item } }
 
 # OS Version
 write-host "<<<win_os:sep(124):persist($until)>>>"
@@ -38,20 +40,27 @@ Get-WmiObject Win32_OperatingSystem -ComputerName $name -Recurse | foreach-objec
 
 # BIOS
 write-host "<<<win_bios:sep(58):persist($until)>>>"
-Get-WmiObject win32_bios -ComputerName $name | Select Manufacturer,Name,SerialNumber,InstallDate,BIOSVersion,ListOfLanguages,PrimaryBIOS,ReleaseDate,SMBIOSBIOSVersion,SMBIOSMajorVersion,SMBIOSMinorVersion
+$bios = Get-WmiObject win32_bios -ComputerName $name
+$bios_vars= @( "Manufacturer","Name","SerialNumber","InstallDate","BIOSVersion","ListOfLanguages","PrimaryBIOS","ReleaseDate","SMBIOSBIOSVersion","SMBIOSMajorVersion","SMBIOSMinorVersion" )
+foreach ( $entry in $bios ) { foreach ( $item in $bios_vars) {  write-host $item ":" $entry.$item } }
 
 # System
 write-host "<<<win_system:sep(58):persist($until)>>>"
-Get-WmiObject Win32_SystemEnclosure -ComputerName $name | Select Manufacturer,Name,Model,HotSwappable,InstallDate,PartNumber,SerialNumber
+$system = Get-WmiObject Win32_SystemEnclosure -ComputerName $name
+$system_vars = @( "Manufacturer","Name","Model","HotSwappable","InstallDate","PartNumber","SerialNumber" )
+foreach ( $entry in $system ) { foreach ( $item in $system_vars) {  write-host $item ":" $entry.$item } }
 
 # Hard-Disk
 write-host "<<<win_disks:sep(58):persist($until)>>>"
-Get-WmiObject win32_diskDrive -ComputerName $name | select Manufacturer,InterfaceType,Model,Name,SerialNumber,Size,MediaType,Signature
+$disk = Get-WmiObject win32_diskDrive -ComputerName $name
+$disk_vars = @( "Manufacturer","InterfaceType","Model","Name","SerialNumber","Size","MediaType","Signature" )
+foreach ( $entry in $disk ) { foreach ( $item in $disk_vars) {  write-host $item ":" $entry.$item } }
 
 # Graphics Adapter
 write-host "<<<win_video:sep(58):persist($until)>>>"
-Get-WmiObject Win32_VideoController -ComputerName $name | Select Name, Description, Caption, AdapterCompatibility, VideoModeDescription, VideoProcessor, DriverVersion, DriverDate, MaxMemorySupported
-
+$adapters=Get-WmiObject Win32_VideoController -ComputerName $name
+$adapter_vars = @( "Name", "Description", "Caption", "AdapterCompatibility", "VideoModeDescription", "VideoProcessor", "DriverVersion", "DriverDate", "MaxMemorySupported")
+foreach ( $entry in $adapters ) { foreach ( $item in $adapter_vars) {  write-host $item ":" $entry.$item } }
 
 # Installed Software
 write-host "<<<win_wmi_software:sep(124):persist($until)>>>"
@@ -67,7 +76,7 @@ foreach ($path in $paths) {
 
 # Search exes
 write-host "<<<win_exefiles:sep(124):persist($until)>>>"
-$paths = @("d:\", "c:\Program Files", "c:\Program Files (x86)", "c:\Progs")
+$paths = @("c:\Program Files (x86)")
 foreach ($item in $paths)
 {
     if ((Test-Path $item -pathType container))

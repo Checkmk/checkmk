@@ -3955,6 +3955,30 @@ register_rule(group + '/' + subgroup_networking,
     match = 'all',
 )
 
+register_rule(group + '/' + subgroup_inventory,
+    varname   = "winperf_msx_queues_inventory",
+    title     = _('Microsoft Exchange Queues Inventory'),
+    help      = _('Per default all Counters a preconfigured in the check. '
+                  'It needed it is possible to overwrite that with this rule. '
+                  'To do that, knowledge about the Agent Output is needed. '),
+    valuespec = ListOf(
+                    Tuple(
+                        elements = [
+                            TextAscii(
+                                title = _("Name of Counter"),
+                                help  = _("Name of the Counter to be monitored."),
+                                allow_empty = False,
+                            ),
+                            Integer(
+                                title = _("Offset"),
+                                help  = _("The Offset of the information relative to counter base"),
+                                allow_empty = False,
+                            ),
+                        ]),
+                    add_label = _("Add Counter")),
+    match = 'all',
+)
+
 register_check_parameters(
     subgroup_applications,
     "mailqueue_length",

@@ -1,0 +1,9 @@
+Title: winperf_msx_queues: The list of counters for inventory can now be configured host based using wato
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1409577386
+Class: feature
+
+

@@ -41,6 +41,7 @@
     * 1150 netstat: new check for monitoring TCP/UDP connections and Linux and AIX...
     * 0654 oracle_instance: now also monitors the log mode
     * 1176 winperf_msx_queues: The list of counters for inventory can now be configured host based using wato
+    * 0656 brocade_fcport: inventory rule can now choose upon physical und operations states as well, state choices were also updated
     * 1051 FIX: tcp_conn_stats: fix missing performance data...
     * 1142 FIX: winperf_ts_sessions: fix computation, check has never really worked
     * 1090 FIX: zfsget: fixed exception which happened on incomplete zfs entries
@@ -90,6 +91,7 @@
     * 1101 FIX: WATO check parameter: renamed 'Nominal Voltages' to 'Voltage Levels..'
 
     Notifications:
+    * 1151 Add variables (HOST/SERVICE)ACK(AUTHOR/COMMENT) to notification context...
     * 1156 FIX: Graphs in HTML mails are now sent again where they where missing...
     * 1157 FIX: Fixed SMS plugin on at least debian (distrs which have no sendsms/smssend)...
 
@@ -103,6 +105,7 @@
     * 0652 windows software inventory gives some more details about OS and installed software...
             NOTE: Please refer to the migration notes!
     * 0653 script to extract hw/sw inventory data in csv format...
+    * 0655 FIX: win_cpuinfo and mk_inventory.ps1 agent: unit of CPU speed fixed, fixes for long output lines in agent
 
 
 1.2.5i5:

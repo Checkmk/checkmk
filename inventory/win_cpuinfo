@@ -44,7 +44,7 @@ def win_cpuinfo_parse_speed(v): # into Hz (float)
         return None
     parts = v.split()
     if len(parts) == 1:
-        return float(parts[0])
+        return float(parts[0]) * 1000000.0 # seems to be in MHz as default
     elif parts[1] == "GHz":
         return float(parts[0]) * 1000000000.0
     elif parts[1] == "MHz":

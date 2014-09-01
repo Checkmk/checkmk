@@ -1264,6 +1264,30 @@ _brocade_fcport_adm_choices = [
                         ( 4, 'faulty(4)'),
                         ]
 
+_brocade_fcport_op_choices = [
+                        ( 0, 'unkown(0)'),
+                        ( 1, 'online(1)'),
+                        ( 2, 'offline(2)'),
+                        ( 3, 'testing(3)'),
+                        ( 4, 'faulty(4)'),
+                        ]
+
+_brocade_fcport_phy_choices = [
+                        ( 1, 'noCard(1)'),
+                        ( 2, 'noTransceiver(2)'),
+                        ( 3, 'laserFault(3)'),
+                        ( 4, 'noLight(4)'),
+                        ( 5, 'noSync(5)'),
+                        ( 6, 'inSync(6)'),
+                        ( 7, 'portFault(7)'),
+                        ( 8, 'diagFault(8)'),
+                        ( 9, 'lockRef(9)'),
+                        ( 10, 'validating(10)'),
+                        ( 11, 'invalidModule(11)'),
+                        ( 14, 'noSigDet(14)'),
+                        ( 255, 'unkown(255)'),
+                        ]
+
 _if_porttype_choices = [
   ("1", "other(1)" ), ("2", "regular1822(2)" ), ("3", "hdh1822(3)" ), ("4", "ddnX25(4)" ),
   ("5", "rfc877x25(5)" ), ("6", "ethernetCsmacd(6)" ), ("7", "iso88023Csmacd(7)" ), ("8",

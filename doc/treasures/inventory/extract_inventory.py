@@ -37,26 +37,36 @@ relations = {
             ( "hardware.system.family", "device_model" ),
             ( "hardware.system.serial", "serial_number" ),
             ( "software.os.name", "operating_system" ),
-            ( "software.os.install_date", "installation date" ),
+            ( "@inventory_date", "inventory_date" ),
+            ( "software.os.install_date", "installation_date" ),
+            ( "hardware.cpu.sockets", "cpu_socket_count" ),
             ( "hardware.cpu.cpus", "cpu_chip_count" ),
             ( "hardware.cpu.cores", "cpu_core_count" ),
             ( "hardware.cpu.max_speed", "cpu_speed" ),
             ( "hardware.cpu.model",  "cpu_name" ),
             ),
         "filter": {},
+        "converter": {
+            "software.os.install_date": lambda val: time.strftime("%Y-%m-%d", time.localtime(val)),
+            "@inventory_date": lambda val: time.strftime("%Y-%m-%d", time.localtime(val)),
+            "hardware.cpu.max_speed": lambda val: val/1000000, # hz in mhz
+            },
     },
     "inv_raw_arp": {
         "columns": (
             ( "software.packages:*.vendor", "publisher" ),
             ( "software.packages:*.summary", "product" ),
             ( "software.packages:*.version", "product_version" ),
+            ( "@hostname", "import_device_id" ),
         ),
         "filter": {
             "software.packages:*.package_type": "reg_uninstall", # nur aus registry
             },
+        "converter": {},
     },
     "inv_raw_file": {
         "columns": (
+            ( "@hostname", "import_device_id" ),
             ( "software.packages:*.name", "file_name" ),
             ( "software.packages:*.size", "file_size" ),
             ( "software.packages:*.path", "file_path" ),
@@ -67,25 +77,29 @@ relations = {
         "filter": {
             "software.packages:*.package_type": "exe", # nur exe files
             },
+        "converter": {},
     },
     "inv_raw_generic(OS)": {
         "columns": (
             ( "software.os.name", "generic_key" ),
         ),
         "filter": {},
+        "converter": {},
     },
     "inv_raw_generic(Linux)": {
         "columns": (
             ( "software.packages:*.name", "name" ),
             ( "software.packages:*.version", "product_version" ),
+            ( "@hostname", "import_device_id" ),
         ),
         "filter": {
             "software.packages:*.package_type": "deb", # nur exe files
             },
+        "converter": {},
     },
 }
 
-import os, sys, re
+import os, sys, re, time
 
 omd_root = os.environ["OMD_ROOT"]
 
@@ -99,13 +113,18 @@ if not omd_root:
 
 def is_list(relation):
     list_start = ""
-    if type(relation) == dict: # filter is a dict
+    if type(relation) == dict: # filter and converter are dicts, check them too
         relation = relation.keys()
-    is_list = (":*" in relation[0])
-    if is_list:
-        list_start = relation[0].split(":")[0]
     for field in relation:
-        if is_list != (":*" in field) or not field.startswith(list_start):
+        if not field.startswith("@"):
+            if ":*" in field:
+                is_list = True
+                list_start = field.split(":")[0]
+            else:
+                is_list = False
+            break
+    for field in relation:
+        if ( is_list != (":*" in field) or not field.startswith(list_start) ) and not field.startswith("@"):
             print "bad definition of relation, must be list or dict, not both"
             sys.exit(1)
     return list_start
@@ -126,27 +145,43 @@ def filt_it(package, relation):
                     return False
     return True
 
-def print_line(out_rel, hostname, items):
-    out_rel.write("\"%s\"" % hostname)
-    for item in items:
-        out_rel.write(", \"%s\"" % item)
-    out_rel.write("\n")
+def convert_it(c_relation, item, field):
+    for c_field in c_relation.keys():
+        if c_field == field:
+            item = c_relation[field](item) # apply the function defined to item
+    return item
 
+def print_line(out_rel, items):
+    outtxt = "\", \"".join(map(str,items))
+    out_rel.write("\"")
+    out_rel.write("%s" % outtxt)
+    out_rel.write("\"\n")
+
+# special values starting with a "@"
+def special_value(item, hostname):
+    if item == "@hostname":
+        return hostname
+    elif item == "@inventory_date":
+        return inventory_date[hostname]
+    else:
+        return ""
 
 # extract all data
 all_data = {}
+inventory_date = {}
 for hostname in os.listdir(inv_dir):
     fn = inv_dir + hostname
     if os.path.isfile(fn):
         a = eval(open(fn,'r').read())
 	all_data[hostname] = a
+	inventory_date[hostname] =  os.path.getmtime(fn)
 
 # loop over all relations, create an output file for each relation
 for ofs in relations:
     ofn = out_dir + ofs
     out_rel = open(ofn,'w')
     titles = [col[1] for col in relations[ofs]["columns"]]
-    print_line(out_rel, "hostname", titles)
+    print_line(out_rel, titles)
     elements = [col[0] for col in relations[ofs]["columns"]]
     list_start = is_list(elements)
     print "starting", ofn
@@ -157,16 +192,20 @@ for ofs in relations:
                 if field:
                     subtree = all_data[hostname]
                     for item in field.split("."):
-                        try:
-                            subtree = subtree[item]
-                        except:
-                            items.append("")
-                            break
+                        if item.startswith("@"): # take subtree vom special_value
+                            subtree = special_value(item,hostname)
+                        else:
+                            try:
+                                subtree = subtree[item]
+                            except:
+                                items.append("")
+                                break
                         if type(subtree) in (str, int, float):
-                            items.append(subtree)
+                            converted = convert_it(relations[ofs]['converter'], subtree,field)
+                            items.append(converted)
                 else:
                     items.append("")
-            print_line(out_rel, hostname, items)
+            print_line(out_rel, items)
         out_rel.close()
     else:
         for hostname in all_data:
@@ -175,8 +214,7 @@ for ofs in relations:
                 try:
                     subtree = subtree[item]
                 except:
-                    print "does not exist"
-                    sys.exit(1)
+                    print "   %s does not exist in database of host" % item
             if type(subtree) == list:
                 for package in subtree:
                     if filt_it(package, relations[ofs]):
@@ -186,15 +224,17 @@ for ofs in relations:
                         if field:
                             field = re.sub(list_start+":\*.", "", field)
                             for item in field.split("."):
-                                try:
-                                    value = package[item]
-                                except:
-                                    items.append("")
-                                    break
+                                if item.startswith("@"): # take subtree vom special_value
+                                    value = special_value(item,hostname)
+                                else:
+                                    try:
+                                        value = package[item]
+                                    except:
+                                        items.append("")
+                                        break
                                 if type(value) in (str, int, float):
                                     items.append(value)
                         else:
                             items.append("")
-                    print_line(out_rel, hostname, items)
-            #out_rel.write("\n")
+                    print_line(out_rel, items)
         out_rel.close()

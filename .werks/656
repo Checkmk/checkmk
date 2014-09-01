@@ -1,0 +1,9 @@
+Title: brocade_fcport: inventory rule can now choose upon physical und operations states as well, state choices were also updated
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1409583785
+Class: feature
+
+

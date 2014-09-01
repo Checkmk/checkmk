@@ -894,7 +894,7 @@ if mkeventd_enabled:
 
     def mkeventd_view(d):
         x = {
-            'topic':           u'Event Console',
+            'topic':           _('Event Console'),
             'browser_reload':  60,
             'column_headers':  'pergroup',
             'icon':            'mkeventd',
@@ -918,8 +918,8 @@ if mkeventd_enabled:
 
     # Table of all open events
     multisite_builtin_views['ec_events'] = mkeventd_view({
-        'title':       u'Events',
-        'description': u'Table of all currently open events (handled and unhandled)',
+        'title':       _('Events'),
+        'description': _('Table of all currently open events (handled and unhandled)'),
         'datasource':  'mkeventd_events',
         'layout':      'table',
         'painters': [
@@ -962,8 +962,8 @@ if mkeventd_enabled:
     })
 
     multisite_builtin_views['ec_events_of_monhost'] = mkeventd_view({
-        'title':       u'Events of Monitored Host',
-        'description': u'Currently open events of a host that is monitored',
+        'title':       _('Events of Monitored Host'),
+        'description': _('Currently open events of a host that is monitored'),
         'datasource':  'mkeventd_events',
         'layout':      'table',
         'hidden':      True,
@@ -1001,8 +1001,8 @@ if mkeventd_enabled:
         ],
     })
     multisite_builtin_views['ec_events_of_host'] = mkeventd_view({
-        'title':       u'Events of Host',
-        'description': u'Currently open events of one specific host',
+        'title':       _('Events of Host'),
+        'description': _('Currently open events of one specific host'),
         'datasource':  'mkeventd_events',
         'layout':      'table',
         'hidden':      True,
@@ -1041,8 +1041,8 @@ if mkeventd_enabled:
     })
 
     multisite_builtin_views['ec_event'] = mkeventd_view({
-        'title':        u'Event Details',
-        'description':  u'Details about one event',
+        'title':        _('Event Details'),
+        'description':  _('Details about one event'),
         'linktitle':    'Event Details',
         'datasource':   'mkeventd_events',
         'layout':       'dataset',
@@ -1080,9 +1080,8 @@ if mkeventd_enabled:
     })
 
     multisite_builtin_views['ec_history_recent'] = mkeventd_view({
-        'title':       u'Recent Event History',
-        'description': u'Information about events and actions on events during the '
-                       u'recent 24 hours.',
+        'title':       _('Recent Event History'),
+        'description': _('Information about events and actions on events during the recent 24 hours.'),
         'datasource':  'mkeventd_history',
         'layout':      'table',
 
@@ -1134,8 +1133,8 @@ if mkeventd_enabled:
     })
 
     multisite_builtin_views['ec_historyentry'] = mkeventd_view({
-        'title':        u'Event History Entry',
-        'description':  u'Details about a historical event history entry',
+        'title':        _('Event History Entry'),
+        'description':  _('Details about a historical event history entry'),
         'datasource':   'mkeventd_history',
         'layout':       'dataset',
 
@@ -1175,8 +1174,8 @@ if mkeventd_enabled:
     })
 
     multisite_builtin_views['ec_history_of_event'] = mkeventd_view({
-        'title':        u'History of Event',
-        'description':  u'History entries of one specific event',
+        'title':        _('History of Event'),
+        'description':  _('History entries of one specific event'),
         'datasource':   'mkeventd_history',
         'layout':       'table',
         'columns':      1,
@@ -1209,8 +1208,8 @@ if mkeventd_enabled:
     })
 
     multisite_builtin_views['ec_history_of_host'] = mkeventd_view({
-        'title':        u'Event History of Host',
-        'description':  u'History entries of one specific host',
+        'title':        _('Event History of Host'),
+        'description':  _('History entries of one specific host'),
         'datasource':   'mkeventd_history',
         'layout':       'table',
         'columns':      1,

@@ -246,11 +246,11 @@ body_elements = [
     "$LONGSERVICEOUTPUT$",
     "$LONGSERVICEOUTPUT$",),
 
-  ( "ack_author", "host", False, "Acknowledge Author",
+  ( "ack_author", "service", False, "Acknowledge Author",
     "$SERVICEACKAUTHOR$",
     "$SERVICEACKAUTHOR$",),
 
-  ( "ack_comment", "host", False, "Acknowledge Comment",
+  ( "ack_comment", "service", False, "Acknowledge Comment",
     "$SERVICEACKCOMMENT$",
     "$SERVICEACKCOMMENT$",),
 

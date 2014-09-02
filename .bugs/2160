@@ -1,0 +1,10 @@
+Title: Visuals: when single-context views are shown without context, show proper error
+Component: multisite
+State: open
+Date: 2014-09-02 12:18:00
+Targetversion: future
+Class: bug
+
+In the table of all views, a single-context view should either not be clickable
+(except it has its context hard coded). Also we should display a useful error
+if the view is being called directly via URL.

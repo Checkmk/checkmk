@@ -622,7 +622,7 @@ def render_view_config(view):
     for ident, vs in view_editor_specs(view['context_type'], ds_name):
         ty = visuals.context_types[view['context_type']]
         if ident == 'filters' and type(ty['parameters']) == list:
-            value = view[ident]
+            value = view.get(ident, []) # "filters" might be missing, for single-context views
         else:
             value = view
         vs.render_input(ident, value)
@@ -1393,13 +1393,16 @@ def get_limit():
         return config.soft_query_limit
 
 def view_title(view):
-    extra_titles = [ ]
+    extra_titles = []
     datasource = multisite_datasources[view["datasource"]]
     tablename = datasource["table"]
 
     context_type = visuals.context_types[view['context_type']]
     if context_type['single']:
-        extra_titles = [ v for k, v in visuals.get_context_html_vars(view) ]
+        # Beware: if a single context view is being visited *without* a context, then
+        # the value of the context variable(s) is None. In order to avoid exceptions,
+        # we simply drop these here.
+        extra_titles = [ v for k, v in visuals.get_context_html_vars(view) if v != None ]
     else:
         used_filters = [ multisite_filters[fn] for fn in view["context"].keys() ]
         for filt in used_filters:
@@ -1407,7 +1410,9 @@ def view_title(view):
             if heading:
                 extra_titles.append(heading)
 
-    title = _u(view["title"]) + " " + ", ".join(extra_titles)
+    title = _u(view["title"])
+    if extra_titles:
+        title += " " + ", ".join(extra_titles)
 
     for fn in ubiquitary_filters:
         # Disable 'wato_folder' filter, if WATO is disabled or there is a single host view

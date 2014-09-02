@@ -1772,27 +1772,46 @@ register_check_parameters(
     has_inventory = False,
 )
 
+def transform_msx_queues(params):
+    if type(params) == tuple:
+        return { "levels" : ( params[0], params[1] ) }
+    return params
+       
+
 register_check_parameters(
     subgroup_applications,
     "msx_queues",
     _("MS Exchange Message Queues"),
-    Tuple(
-        help = _("This rule applies to the number of E-Mails in the various Exchange Message Queues"),
-        elements = [
-            Integer(title = _("Warning if above"), unit = _("E-Mails")),
-            Integer(title = _("Critical if above"), unit = _("E-Mails"))
-        ]),
-    OptionalDropdownChoice(
+         Transform(
+              Dictionary(
+                  title = _("Set Levels"),
+                  elements = [
+                     ( 'levels', 
+                            Tuple(
+                                title = _("Maximum Number of E-Mails in Queue"),
+                                help = _("This rule applies to the number of E-Mails in the various Exchange Message Queues"),
+                                elements = [
+                                    Integer(title = _("Warning if above"), unit = _("E-Mails")),
+                                    Integer(title = _("Critical if above"), unit = _("E-Mails"))
+                                ]),
+                     ),
+                     ('offset', 
+                        Integer( 
+                            title = _("Offset"),
+                            help = _("Use this only if you want to overwrite the postion of the information in the agent "
+                                     "Output. Also refer to the rule <i>Microsoft Exchange Queues Inventory</i> ")
+                        ) 
+                    ),
+                  ],
+                optional_keys = [ "offset" ],
+              ),
+              back  = transform_msx_queues,
+              forth = transform_msx_queues,
+         ),
+    TextAscii(
         title = _("Explicit Queue Names"),
-        help = _("Select queue names that the rule should apply"),
-        choices = [
-            ( "Active Remote Delivery",  _("Active Remote Delivery") ),
-            ( "Retry Remote Delivery",   _("Retry Remote Delivery") ),
-            ( "Active Mailbox Delivery", _("Active Mailbox Delivery") ),
-            ( "Poison Queue Length",     _("Poison Queue Length") ),
-        ],
-        otherlabel = _("specify manually ->"),
-        explicit = TextAscii(allow_empty = False)),
+        help = _("Specify queue names that the rule should apply"),
+    ),
     "first"
 )
 
@@ -1972,7 +1991,7 @@ filesystem_elements = [
                Integer(title = _("Critical if below"), unit = _("hours"), default_value = 6, ),
             ])),
     ( "trend_showtimeleft",
-            FixedValue(True, title = _("Display timeleft in check output"), totext = "",
+            Checkbox( title = _("Display timeleft in check output"), label = _("Enable"),
                        help = _("Normally the timeleft until disk full is only displayed when "
                                 "the configured levels have been breached. If you set this option "
                                 "the check always reports this information"))
@@ -3979,10 +3998,12 @@ register_rule(group + '/' + subgroup_inventory,
                   'To do that, knowledge about the Agent Output is needed. '),
     valuespec = ListOf(
                     Tuple(
+                        orientation = "horizontal",
                         elements = [
                             TextAscii(
                                 title = _("Name of Counter"),
                                 help  = _("Name of the Counter to be monitored."),
+                                size = 50,
                                 allow_empty = False,
                             ),
                             Integer(
@@ -3991,6 +4012,7 @@ register_rule(group + '/' + subgroup_inventory,
                                 allow_empty = False,
                             ),
                         ]),
+                    movable = False,
                     add_label = _("Add Counter")),
     match = 'all',
 )

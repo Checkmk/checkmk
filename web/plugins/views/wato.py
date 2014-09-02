@@ -47,7 +47,24 @@ class FilterWatoFile(Filter):
 
     def display(self):
         self.check_wato_data_update()
-        html.select(self.name, [("", "")] + self.selection)
+        # Note: WATO Folders that the user has not permissions to must not be visible.
+        # Permissions in this case means, that the user has view permissions for at
+        # least one host in that folder.
+        result = html.live.query("GET hosts\nCache: reload\nColumns: filename\nStats: state >= 0\n")
+        allowed_folders = set([""])
+        for path, host_count in result:
+            # convert '/wato/server/hosts.mk' to 'server'
+            folder = path[6:-9]
+            # allow the folder an all of its parents
+            parts = folder.split("/")
+            subfolder = ""
+            for part in parts:
+                if subfolder:
+                    subfolder += "/"
+                subfolder += part
+                allowed_folders.add(subfolder)
+
+        html.select(self.name, [("", "")] + [ entry for entry in self.selection if (entry[0] in allowed_folders) ])
 
     def filter(self, infoname):
         self.check_wato_data_update()

@@ -2039,10 +2039,14 @@ group = "monconf/" + _("Various")
 register_rule(group,
      "clustered_services_mapping",
      TextAscii(
-        title = _("Explicit mapping of Clustered Services"),
-        help = _( "It's possible to have overlaping nodes between multiple clusters."
-                  "With this rule the direct mapping of services from nodes to the "
-                  "favored Cluster can be done."),
+        title = _("Clustered services for overlapping clusters"),
+        label = _("Assign services to the following cluster:"),
+        help = _("It's possible to have clusters that share nodes. You could say that "
+                  "such clusters &quot;overlap&quot;. In such a case using the ruleset "
+                  "<i>Clustered services</i> is not sufficient since it would not be clear "
+                  "to which of the several possible clusters a service found on such a shared "
+                  "node should be assigned to. With this ruleset you can assign services and "
+                  "explicitely specify which cluster assign them to."),
      ),
      itemtype = "service",
      )

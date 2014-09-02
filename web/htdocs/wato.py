@@ -5904,9 +5904,9 @@ class ContactGroupsAttribute(Attribute):
         self.load_data()
         items = self._contactgroups.items()
         items.sort(cmp = lambda a,b: cmp(a[1]['alias'], b[1]['alias']))
-        for name, alias in items:
+        for name, cgroup in items:
             if name in value["groups"]:
-                display_name = alias and alias or name
+                display_name = cgroup.get("alias", name)
                 texts.append('<a href="wato.py?mode=edit_contact_group&edit=%s">%s</a>' % (name, display_name))
         result = ", ".join(texts)
         if texts and value["use"]:
@@ -7909,7 +7909,7 @@ def mode_edit_group(phase, what):
         )
 
         if not new:
-            permitted_maps = groups[name]['nagvis_maps']
+            permitted_maps = groups[name].get('nagvis_maps', [])
         else:
             permitted_maps = []
 
@@ -7980,7 +7980,8 @@ def mode_edit_group(phase, what):
             alias = name
     html.text_input("alias", alias)
 
-    if edit_nagvis_map_permissions:
+    # Show permissions for NagVis maps if any of those exist
+    if edit_nagvis_map_permissions and get_nagvis_maps():
         forms.header(_("Permissions"))
         forms.section(_("Access to NagVis Maps"))
         html.help(_("Configure access permissions to NagVis maps."))

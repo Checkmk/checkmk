@@ -79,6 +79,11 @@ class html:
         self.current_transid = None
         self.page_context = {}
 
+        # Time measurement
+        self.times            = {}
+        self.start_time       = time.time()
+        self.last_measurement = self.start_time
+
     RETURN = 13
     SHIFT = 16
     CTRL = 17
@@ -849,6 +854,15 @@ class html:
                      (url, img, tooltip)
             else:
                 h += '<img class=statusicon src="images/status_%s.png" title="%s">\n' % (img, tooltip)
+
+        if self.times:
+            self.measure_time('body')
+            h += '<div class=execution_times>'
+            entries = self.times.items()
+            entries.sort()
+            for name, duration in entries:
+                h += "<div>%s: %.1fms</div>" % (name, duration * 1000)
+            h += '</div>'
         return h
 
     def show_error(self, msg):
@@ -1374,3 +1388,11 @@ class html:
 
     def get_cached(self, name):
         return self.caches.get(name)
+
+    def measure_time(self, name):
+        self.times.setdefault(name, 0.0)
+        now = time.time()
+        elapsed = now - self.last_measurement
+        self.times[name] += elapsed
+        self.last_measurement = now
+

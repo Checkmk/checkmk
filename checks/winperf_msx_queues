@@ -105,7 +105,6 @@ def check_winperf_msx_queues(item, params, info):
     for line in info[2:]:
         if line[0] == offset:
             length = int(line[-2])
-            warn, crit = params
             perfdata = [("length", length, warn, crit)]
             infotext = "%d entries" % length
             if length >= crit:

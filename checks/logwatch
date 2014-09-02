@@ -83,7 +83,7 @@ def inventory_logwatch(info):
         if groups:
             continue
         else:
-            inventory.append((logfile, None))
+            inventory.append((logfile, []))
     return inventory
 
 
@@ -283,7 +283,7 @@ def inventory_logwatch_groups(info):
         for group in groups:
             if group not in added_groups:
                 added_groups.append(group)
-                inventory.append((group, None ))
+                inventory.append((group, [] ))
     return inventory
 
 def check_logwatch_groups(item, params, info):

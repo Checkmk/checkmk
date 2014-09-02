@@ -163,7 +163,7 @@ def check_apc(item, params, info):
 
     # 5. Check System temperature
     # The Name AdvBatteryTemperature is a wrong naming in the vendor mib.
-    infotxt = "sys. temp. %dC" % AdvBatteryTemperature
+    infotxt = "sys. temp. %d °C" % AdvBatteryTemperature
     if AdvBatteryTemperature >= crit_sys_temp:
         state = 2
         infotxt += "(!!)"
@@ -172,7 +172,7 @@ def check_apc(item, params, info):
     single_states.append( (state, infotxt, ("systemp", AdvBatteryTemperature, "", crit_sys_temp) ) )
 
     # 6. Check battery current
-    infotxt = "bat. curr. %dA" % AdvBatteryCurrent
+    infotxt = "bat. curr. %d A" % AdvBatteryCurrent
     if AdvBatteryCurrent >= crit_batt_curr:
         state = 2
         infotxt += "(!!)"
@@ -181,10 +181,10 @@ def check_apc(item, params, info):
     single_states.append( (state, infotxt, ("batcurr", AdvBatteryCurrent, "", crit_batt_curr, 0) ) )
 
     # 6a. Simply show input voltage (no performance data)
-    single_states.append( (0, "input voltage %dV" % AdvInputVoltage, None) )
+    single_states.append( (0, "input voltage %d V" % AdvInputVoltage, None) )
 
     # 7. Check output voltage
-    infotxt = "output voltage %dV" % AdvOutputVoltage
+    infotxt = "output voltage %d V" % AdvOutputVoltage
     if AdvOutputVoltage <= crit_voltage:
         state = 2
         infotxt += "(!!)"
@@ -193,7 +193,7 @@ def check_apc(item, params, info):
     single_states.append( (state, infotxt, ("voltage", AdvOutputVoltage, "", crit_voltage, 0) ) )
 
     # 8. Simply add output current as perfdata
-    single_states.append( (0, "output current %dA" % AdvOutputCurrent, ("current", AdvOutputCurrent)) )
+    single_states.append( (0, "output current %d A" % AdvOutputCurrent, ("current", AdvOutputCurrent)) )
 
     # 9. run time remaining
     # RunTimeRemaining formatiert == "26:00.00"

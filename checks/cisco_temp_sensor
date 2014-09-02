@@ -161,7 +161,7 @@ def check_cisco_temp_sensor(item, params, info):
             else:
                 warn, crit = levels[0:2]
 
-            infotext = "Temperature is: %.1f °C " % temp
+            infotext = "Temperature is %.1f °C " % temp
             levels = " (warn/crit at %.1f/%.1f °C)" % (warn, crit)
             perfdata = [ ( "temperature", temp, warn, crit ) ]
             state = 0

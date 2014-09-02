@@ -56,7 +56,7 @@ def check_akcp_sensor_temp(item, params, info):
                     if unit == "F":
                         temp = to_celsius(temp)
                         unit = "C"
-                    infotext = "Temperature is: %.1f °%s" % ( temp, unit)
+                    infotext = "Temperature is %.1f °%s" % (temp, unit)
                     levels = " (warn/crit at %1f/%1f °%s)" % ( warn, crit, unit )
                     perfdata = [ ( "temperature", temp, warn, crit ) ]
                     if temp >= crit:

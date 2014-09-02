@@ -62,7 +62,7 @@ def check_lnx_thermal(item, params, info):
             if tp_reached:
                 detail_txt = ' (Trip Points reached: %s)' % ', '.join(tp_reached)
 
-            return (state, 'Temperature is %dC%s' % (cur, detail_txt), [ ( 'temperature', cur ) ])
+            return (state, 'Temperature is %d °C%s' % (cur, detail_txt), [ ( 'temperature', cur ) ])
     return (3, 'No data found for sensor "thermal_zone%s"' % item)
 
 check_info['lnx_thermal'] = {

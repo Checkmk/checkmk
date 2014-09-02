@@ -37,7 +37,7 @@ def check_arris_cmts_temp(item, params, info):
         if name == item:
             temp = int(temp)
             warn, crit = params
-            infotext = "Temperature is: %.1f °C " % temp
+            infotext = "Temperature is %.1f °C " % temp
             levels = " (warn/crit at %.1f/%.1f °C)" % (warn, crit)
             perfdata = [ ( "temperature", temp, warn, crit ) ]
             if temp >= crit:

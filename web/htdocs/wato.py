@@ -5904,9 +5904,9 @@ class ContactGroupsAttribute(Attribute):
         self.load_data()
         items = self._contactgroups.items()
         items.sort(cmp = lambda a,b: cmp(a[1]['alias'], b[1]['alias']))
-        for name, alias in items:
+        for name, cgroup in items:
             if name in value["groups"]:
-                display_name = alias and alias or name
+                display_name = cgroup.get("alias", name)
                 texts.append('<a href="wato.py?mode=edit_contact_group&edit=%s">%s</a>' % (name, display_name))
         result = ", ".join(texts)
         if texts and value["use"]:

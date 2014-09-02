@@ -96,7 +96,7 @@ def check_winperf_msx_queues(item, params, info):
         offset = winperf_msx_queues.get(item)
     else:
         warn, crit = params['levels']
-        if params['offset']:
+        if params.get('offset'):
             offset = str(params['offset'])
         # If no offset is set, we assume that still the default counters are used
         else:

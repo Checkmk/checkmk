@@ -2969,9 +2969,9 @@ register_check_parameters(
               Integer(title = _("Critical if above"), unit="%" ),
               ]),
     TextAscii(
-        title = _("Service descriptions"),
+        title = _("Sensor names"),
         allow_empty = False),
-     None
+    None
 )
 
 register_check_parameters(
@@ -2989,6 +2989,7 @@ register_check_parameters(
      None,
      None
 )
+
 register_check_parameters(
     subgroup_applications,
     "oracle_tablespaces",

@@ -95,7 +95,6 @@ def allnet_ip_sensoric_parse(info):
     for key, value in info:
         match = re.search('(\w+)\.(\w+)', key)
         if match:
-            #print "g1: %s, g2: %s, value: %s" % (match.group(1), match.group(2), value)
             if match.group(1) not in parsed.keys():
                 parsed[match.group(1)] = {}
             parsed[match.group(1)][match.group(2)] = value

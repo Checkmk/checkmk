@@ -220,6 +220,14 @@ body_elements = [
     "$HOSTOUTPUT$",
     "$HOSTOUTPUT$",),
 
+  ( "ack_author", "host", False, "Acknowledge Author",
+    "$HOSTACKAUTHORNAME$",
+    "$HOSTACKAUTHORNAME$",),
+
+  ( "ack_comment", "host", False, "Acknowledge Comment",
+    "$HOSTACKCOMMENT$",
+    "$HOSTACKCOMMENT$",),
+
   ( "perfdata", "host", False, "Performance Data",
     "$HOSTPERFDATA$",
     "$HOSTPERFDATA$",),
@@ -237,6 +245,18 @@ body_elements = [
   ( "longoutput", "service", False, "Additional Output",
     "$LONGSERVICEOUTPUT$",
     "$LONGSERVICEOUTPUT$",),
+
+  ( "ack_author", "host", False, "Acknowledge Author",
+    "$SERVICEACKAUTHOR$",
+    "$SERVICEACKAUTHOR$",),
+
+  ( "ack_comment", "host", False, "Acknowledge Comment",
+    "$SERVICEACKCOMMENT$",
+    "$SERVICEACKCOMMENT$",),
+
+  ( "perfdata", "host", False, "Performance Data",
+    "$HOSTPERFDATA$",
+    "$HOSTPERFDATA$",),
 
   ( "perfdata", "service", False, "Performance Data",
     "$SERVICEPERFDATA$",
@@ -431,6 +451,7 @@ def construct_content(context):
         html_info = "Downtime " + what + " (while " + html_state + ")"
 
     elif notification_type == "ACKNOWLEDGEMENT":
+
         txt_info = "Acknowledged ($@SHORTSTATE$)"
         html_info = "Acknowledged (while " + html_state + ")"
 

@@ -1,0 +1,11 @@
+Title: Visual: single-context views with hardcoded context should not display filter
+Component: multisite
+State: open
+Date: 2014-09-02 12:20:34
+Targetversion: future
+Class: bug
+
+Currently the filter is being displayed, with an Warning icon, and any changes are silently
+ignored.
+
+The filter should not be visible in that case.

@@ -1,0 +1,11 @@
+Title: casa_cpu_temp, casa_cpu_util: Change service description to standard
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.5i6
+Date: 1409667738
+Class: fix
+
+The service description of these two checks has been changed to be compliant
+with Check_MK standard. This is an incompatible change because you will
+loose the connection to your previous performance data and alert history.

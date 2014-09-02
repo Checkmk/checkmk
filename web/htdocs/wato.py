@@ -7909,7 +7909,7 @@ def mode_edit_group(phase, what):
         )
 
         if not new:
-            permitted_maps = groups[name]['nagvis_maps']
+            permitted_maps = groups[name].get('nagvis_maps', [])
         else:
             permitted_maps = []
 
@@ -7980,7 +7980,8 @@ def mode_edit_group(phase, what):
             alias = name
     html.text_input("alias", alias)
 
-    if edit_nagvis_map_permissions:
+    # Show permissions for NagVis maps if any of those exist
+    if edit_nagvis_map_permissions and get_nagvis_maps():
         forms.header(_("Permissions"))
         forms.section(_("Access to NagVis Maps"))
         html.help(_("Configure access permissions to NagVis maps."))

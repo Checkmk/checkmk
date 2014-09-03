@@ -42,7 +42,7 @@ def check_akcp_daisy_temp(item, params, info):
         if name == item:
             warn, crit = params
             temp = savefloat(temp) / 10
-            infotext = "Temperature is: %.1f °C " % temp
+            infotext = "Temperature is %.1f °C " % temp
             levels = " (warn/crit at %.1f/%.1f °C)" % (warn, crit)
             perfdata = [ ( "temperature", temp, warn, crit ) ]
             if temp >= crit:

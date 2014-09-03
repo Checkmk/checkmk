@@ -68,7 +68,7 @@ def check_f5_bigip_temp(item, params, info):
     for sensor in f5_bigip_temp_genitem(info):
         if item == sensor[0]:
             tmpdiff = sensor[1] - sensor[2]
-            msgtxt = "Temperature is %dC" % (sensor[1])
+            msgtxt = "Temperature is %d °C" % (sensor[1])
             perfdata = [ ("temp", sensor[1]) ]
             if 5 >= tmpdiff:
                 return (0, msgtxt, perfdata)

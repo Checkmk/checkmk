@@ -30,10 +30,13 @@ def parse_casa_info_temp(info):
     temp_status  = dict(map(lambda x: [int(x[0]), x[1]], info[2]))
     temp_unit    = dict(map(lambda x: [int(x[0]), x[1]], info[3]))
     data = {}
-    for idx, entry in enumerate(info[1]):
+    for entry in info[1]:
         entry_nr = int(entry[0])
         def beautify_module_text(text):
-            return text.replace("temperature sensor", "")
+            text = text.replace("temperature sensor", "")
+            if text.startswith("Module "):
+                text = text.rsplit(None, 1)[0] # Drop trailing " CPU"
+            return text
         data[beautify_module_text(entity_names[entry_nr])] = {
                                 "temp_value"      : temp_value.get(entry_nr),
                                 "temp_status"     : temp_status.get(entry_nr),
@@ -69,7 +72,7 @@ def check_casa_cpu_temp(item, params, info):
                     state = 1
                     error_text = "(!)"
             perfdata.append( ("temp", value, warn, crit, 0, 100) )
-            infotext = "%.1f°C %s%s" % (value, error_text, levels_text)
+            infotext = "Temperature is %.1f °C %s%s" % (value, error_text, levels_text)
         else:
             state = 2
             infotext = "Sensor failure!"

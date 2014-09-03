@@ -78,7 +78,7 @@ def check_dell_powerconnect_temp(_no_item, params, info):
         else:
             status = dell_powerconnect_temp_status2nagios_map[dell_powerconnect_status]
 
-        return (status, 'The temperature sensor is currently (%s)%s, and the current temperature is %sC%s' %
+        return (status, 'The temperature sensor is currently (%s)%s, and the current temperature is %s °C%s' %
                         (dell_powerconnect_temp_status_map[state], sensor_info, temp, temp_info), [
                ("temperature", int(temp), warn, crit, 0, 200),
                ])

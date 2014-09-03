@@ -312,7 +312,7 @@ def perfometer_temperature(row, check_command, perf_data):
     color = "#39f"
     value = float(perf_data[0][1])
     crit = savefloat(perf_data[0][4])
-    return u"%d°C" % int(value), perfometer_logarithmic(value, 40, 1.2, color)
+    return u"%d °C" % int(value), perfometer_logarithmic(value, 40, 1.2, color)
 
 perfometers["check_mk-nvidia.temp"] = perfometer_temperature
 perfometers["check_mk-cisco_temp_sensor"] = perfometer_temperature
@@ -343,6 +343,7 @@ perfometers["check_mk-qlogic_sanbox.temp"] = perfometer_temperature
 perfometers["check_mk-bintec_sensors.temp"] = perfometer_temperature
 perfometers["check_mk-knuerr_rms_temp"] = perfometer_temperature
 perfometers["check_mk-arris_cmts_temp"] = perfometer_temperature
+perfometers["check_mk-casa_cpu_temp"] = perfometer_temperature
 perfometers["check_mk-rms200_temp"] = perfometer_temperature
 
 def perfometer_temperature_multi(row, check_command, perf_data):
@@ -564,7 +565,7 @@ perfometers["check_mk-oracle_processes"] = perfometer_oracle_sessions
 
 def perfometer_cpu_utilization(row, check_command, perf_data):
     util = float(perf_data[0][1]) # is already percentage
-    color = "#60f020"
+    color = "#60c080"
     return "%.0f %%" % util, perfometer_linear(util, color)
 
 #perfometer_linear(perc, color)
@@ -583,6 +584,7 @@ perfometers["check_mk-juniper_trpz_cpu_util"] = perfometer_cpu_utilization
 perfometers["check_mk-ibm_svc_nodestats.cpu_util"] = perfometer_cpu_utilization
 perfometers["check_mk-ibm_svc_systemstats.cpu_util"] = perfometer_cpu_utilization
 perfometers["check_mk-sni_octopuse_cpu"] = perfometer_cpu_utilization
+perfometers["check_mk-casa_cpu_util"] = perfometer_cpu_utilization
 
 def perfometer_ps_perf(row, check_command, perf_data):
     perf_dict = dict([(p[0], float(p[1])) for p in perf_data])

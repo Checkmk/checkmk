@@ -44,7 +44,7 @@ def check_enterasys_temp(item, params, info):
     temp_c = float("%0.1f" % temp_c)
 
     perfdata = [ ("temp", str(temp_c) + "C", warn, crit) ]
-    infotext = "Temperature is %0.1f C (warn/crit at %0.1f/%0.1f C)" % (temp_c, warn, crit)
+    infotext = "Temperature is %0.1f °C (warn/crit at %0.1f/%0.1f °C)" % (temp_c, warn, crit)
     status = 0
     if temp_c >= crit:
         status = 2

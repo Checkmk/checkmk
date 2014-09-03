@@ -1,0 +1,9 @@
+Title: Hivemanger: New agent to check hivemanager devices
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1409737851
+Class: feature
+
+

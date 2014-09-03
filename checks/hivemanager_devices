@@ -1,0 +1,106 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+#<<<hivemanager_devices:sep(124)>>>
+#BBSA-WIFI-LSN-Rhod-F4-1|8|Cleared|True|21 Days, 17 Hrs 43 Mins 43 Secs
+#BBSA-WIFI-LSN-Rhod-F4-2|8|Cleared|True|21 Days, 17 Hrs 43 Mins 43 Secs
+#BBSA-WIFI-LSN-Hald-F4-1|4|Cleared|True|2 Days, 0 Hrs 30 Mins 41 Secs
+#BBSA-WIFI-LSN-Hald-F2-1|24|Cleared|True|57 Days, 3 Hrs 24 Mins 22 Secs
+
+
+
+factory_settings['hivemanger_devices'] = {
+        'alert_on_loss'     : True,
+        'max_clients'       : ( 25, 50 ),
+        'max_uptime'        : False,
+}
+
+def inventory_hivemanager_devices(info):
+    for line in info:
+        yield line[0], {}
+
+def check_hivemanager_devices(item, params, info):
+    for hostname, clients, alarm, connection, uptime in info:
+        if hostname == item:
+
+            # Check for Alarm State
+            alarmstate = "Alarm state: " + alarm
+            if alarm in  [ 'Maybe', 'Major', 'Minor' ]:
+                yield 1, alarmstate
+            elif alarm == 'Critical':
+                yield 2, alarmstate
+
+            # If activated, Check for lost connection of client
+            if params['alert_on_loss']:
+                if connection == 'False':
+                    yield 2, "Connection lost"
+            
+            # The number of clients
+            number_of_clients = int(clients)
+            warn, crit = params['max_clients']
+
+            perfdata = [ ( 'client_count', number_of_clients, warn, crit )]
+            infotext = "Clients: %s" % number_of_clients
+            levels = ' Warn/Crit at %s/%s' % ( warn, crit )
+
+            if number_of_clients >= crit:
+                yield 2, infotext+levels, perfdata
+            elif number_of_clients >= warn:
+                yield 1, infotext+levels, perfdata
+            else:
+                yield 0, infotext, perfdata
+
+
+            #Uptime
+            if uptime != 'down':
+                days, hrs, mins, secs = map(int, uptime.split()[::2])
+                uptime_secs = secs
+                uptime_secs += days * 86400
+                uptime_secs += hrs * 3600
+                uptime_secs += mins * 60
+
+                infotext = "Uptime: %s" % get_age_human_readable(uptime_secs)
+                state = 0
+                if params['max_uptime']:
+                    warn, crit = params['max_uptime']
+                    if uptime_secs >= crit:
+                        state = 2
+                    elif uptime_secs >= warn:
+                        state = 1
+                yield state, infotext
+
+
+
+check_info["hivemanager_devices"] = {
+    "check_function"            : check_hivemanager_devices,
+    "inventory_function"        : inventory_hivemanager_devices,
+    "service_description"       : "Client %s",
+    "default_levels_variable"   : "hivemanger_devices",
+    "group"                     : "hivemanager_devices",
+    "has_perfdata"              : True,
+    
+}
+

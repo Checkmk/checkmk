@@ -1534,6 +1534,41 @@ register_check_parameters(
     None,
     "dict"
 )
+register_check_parameters(
+    subgroup_networking,
+    "hivemanager_devices",
+    _("Hivemanager Devices"),
+    Dictionary(
+        elements = [
+            ( 'max_clients',
+                Tuple(
+                    title = _("Number of clients"),
+                    help  = _("Number of clients connected to a Device."),
+                          elements = [
+                              Integer(title = _("Warning if above"),  unit=_("clients")),
+                              Integer(title = _("Critical if above"), unit=_("clients")),
+                          ]
+                )),
+            ( 'max_uptime',
+                Tuple(
+                    title = _("Maximum uptime of Device"),
+                          elements = [
+                              Age(title = _("Warning if above")),  
+                              Age(title = _("Critical if above")),
+                          ]
+                )),
+            ( 'alert_on_loss',
+                FixedValue(
+                  False,
+                  totext = "",
+                  title = _("Do not alert on connection loss"),
+                )),
+        ]),
+    TextAscii(
+       title = _("Hostname of the Device")
+    ),
+    "first"
+)
 
 register_check_parameters(
     subgroup_networking,

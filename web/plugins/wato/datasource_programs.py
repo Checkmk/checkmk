@@ -351,6 +351,18 @@ register_rule(group,
     factory_default = FACTORY_DEFAULT_UNUSED,
     match = "first")
 
+register_rule(group,
+    "special_agents:hivemanager",
+    Tuple(
+        title = _("Hivemanager"),
+        help = _( "Connect to AeroHive HiveManger via a webcall to get a list of all devices"),
+        elements = [
+           TextAscii(title = _("Username")),
+           Password( title = _("Password")),
+        ]
+    ),
+    factory_default = FACTORY_DEFAULT_UNUSED,
+    match = "first")
 
 register_rule(group,
     "special_agents:allnet_ip_sensoric",

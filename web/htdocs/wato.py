@@ -8379,7 +8379,7 @@ def vs_notification_rule(userid = None):
             ),
             ( "match_host_event",
                ListChoice(
-                    title = _("Match Host Event Type"),
+                    title = _("Match host event type"),
                     help = _("Select the host event types and transitions this rule should handle. Note: "
                              "If you activate this option and do <b>not</b> also specify service event "
                              "types then this rule will never hold for service notifications!"),
@@ -8399,7 +8399,7 @@ def vs_notification_rule(userid = None):
             ),
             ( "match_service_event",
                 ListChoice(
-                    title = _("Match Service Event Type"),
+                    title = _("Match service event type"),
                      help  = _("Select the service event types and transitions this rule should handle. Note: "
                                "If you activate this option and do <b>not</b> also specify host event "
                                "types then this rule will never hold for host notifications!"),
@@ -8427,6 +8427,53 @@ def vs_notification_rule(userid = None):
                     default_value = [ 'rw', 'rc', 'ru', 'wc', 'wu', 'uc', 'f', 's', 'x' ],
                )
              ),
+             ( "match_ec",
+               Alternative(
+                   title = _("Event Console alerts"),
+                   help = _("The Event Console can have events create notifications in Check_MK. "
+                            "These notifications will be processed by the rule based notification "
+                            "system of Check_MK. This matching option helps you distinguishing "
+                            "and also gives you access to special event fields."),
+                   style = "dropdown",
+                   elements = [
+                        FixedValue(False, title = _("Do not match Event Console alerts"), totext=""),
+                        Dictionary(
+                            title = _("Match only Event Console alerts"),
+                            elements = [
+                                ( "match_rule_id",
+                                  ID(title = _("Match event rule"), label = _("Rule ID:"), size=12, allow_empty=False),
+                                ),
+                                ( "match_priority",
+                                  Tuple(
+                                      title = _("Match syslog priority"),
+                                      help = _("Define a range of syslog priorities this rule matches"),
+                                      orientation = "horizontal",
+                                      show_titles = False,
+                                      elements = [
+                                         DropdownChoice(label = _("from:"), choices = mkeventd.syslog_priorities, default_value = 4),
+                                         DropdownChoice(label = _(" to:"),   choices = mkeventd.syslog_priorities, default_value = 0),
+                                      ],
+                                  ),
+                                ),
+                                ( "match_facility",
+                                  DropdownChoice(
+                                      title = _("Match syslog facility"),
+                                      help = _("Make the rule match only if the event has a certain syslog facility. "
+                                               "Messages not having a facility are classified as <tt>user</tt>."),
+                                      choices = mkeventd.syslog_facilities,
+                                  )
+                                ),
+                                ( "match_comment",
+                                  RegExpUnicode(
+                                      title = _("Match event comment"),
+                                      help = _("This is a regular expression for matching the event's comment."),
+                                  )
+                                ),
+                            ]
+                        )
+                   ]
+               )
+             )
         ] +
         section_contacts +
         [
@@ -8494,7 +8541,7 @@ def vs_notification_rule(userid = None):
         optional_keys = [ "match_folder", "match_hosttags", "match_hostgroups", "match_hosts", "match_exclude_hosts",
                           "match_services", "match_exclude_services", "match_plugin_output",
                           "match_timeperiod", "match_escalation", "match_escalation_throttle",
-                          "match_sl", "match_host_event", "match_service_event",
+                          "match_sl", "match_host_event", "match_service_event", "match_ec",
                           "match_checktype", "bulk", "contact_users", "contact_groups", "contact_emails" ],
         headers = [
             ( _("General Properties"), [ "description", "comment", "disabled", "allow_disable" ] ),
@@ -8505,7 +8552,7 @@ def vs_notification_rule(userid = None):
                                          "match_services", "match_exclude_services", "match_plugin_output",
                                          "match_checktype", "match_timeperiod",
                                          "match_escalation", "match_escalation_throttle",
-                                         "match_sl", "match_host_event", "match_service_event" ] ),
+                                         "match_sl", "match_host_event", "match_service_event", "match_ec" ] ),
         ],
         render = "form",
         form_narrow = True,
@@ -8750,7 +8797,9 @@ def mode_notifications(phase):
         url = 'wato.py?mode=edit_configvar&varname=enable_rulebased_notifications'
         html.show_warning(
            _("<p>Warning</b><br><br>Rule based notifications are disabled in your global settings. "
-             "The rules that you edit here will not have affect."
+             "The rules that you edit here will have affect only on notifications that are "
+             "created by the Event Console. Normal monitoring alerts will <b>not</b> use the "
+             "rule based notifications now."
              "<br><br>"
              "You can change this setting <a href=\"%s\">here</a>.") % url)
 

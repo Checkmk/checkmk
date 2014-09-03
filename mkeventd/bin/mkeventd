@@ -2243,14 +2243,18 @@ class StatusServer:
         g_event_status.reset_counters(rule_id)
 
     def handle_command_action(self, arguments):
-        with lock_configuration:
-            event_id, user, action_id = arguments
-            event = g_event_status.event(int(event_id))
-            if action_id not in g_config["action"]:
-                raise MKClientError("The action '%s' is not defined. After adding new commands please "
-                   "make sure that you activate the changes in the Event Console." % action_id)
-            action = g_config["action"][action_id]
-        do_event_action(action, event, user)
+        event_id, user, action_id = arguments
+        event = g_event_status.event(int(event_id))
+
+        if action_id == "@NOTIFY":
+            do_notify(event, user, is_cancelling = False)
+        else:
+            with lock_configuration:
+                if action_id not in g_config["action"]:
+                    raise MKClientError("The action '%s' is not defined. After adding new commands please "
+                       "make sure that you activate the changes in the Event Console." % action_id)
+                action = g_config["action"][action_id]
+            do_event_action(action, event, user)
 
     def handle_command_switchmode(self, arguments):
         new_mode = arguments[0]
@@ -2610,7 +2614,7 @@ class EventStatus():
                         event["priority"] = new_event["priority"]
                         log_event_history(event, "CANCELLED")
                         actions = rule.get("cancel_actions", [])
-                        do_event_actions(actions, event)
+                        do_event_actions(actions, event, is_cancelling = True)
 
                         to_delete.append(nr)
             for nr in to_delete[::-1]:
@@ -2777,20 +2781,23 @@ def event_has_opened(rule, event):
         event["live_until"] = time.time() + livetime
         event["live_until_phases"] = phases
 
-    do_event_actions(rule.get("actions", []), event)
+    do_event_actions(rule.get("actions", []), event, is_cancelling = False)
 
 
 # Execute a list of actions on an event that has just been
 # opened or cancelled.
-def do_event_actions(actions, event):
+def do_event_actions(actions, event, is_cancelling):
     for aname in actions:
-        action = g_config["action"].get(aname)
-        if not action:
-            log("Cannot execute undefined action '%s'" % aname)
-            log("We have to following actions: %s" % ", ".join(g_config["action"].keys()))
+        if aname == "@NOTIFY":
+            do_notify(event, None, is_cancelling)
         else:
-            log("Going to execute action '%s' on event %d" % (action["title"], event["id"]))
-            do_event_action(action, event)
+            action = g_config["action"].get(aname)
+            if not action:
+                log("Cannot execute undefined action '%s'" % aname)
+                log("We have to following actions: %s" % ", ".join(g_config["action"].keys()))
+            else:
+                log("Going to execute action '%s' on event %d" % (action["title"], event["id"]))
+                do_event_action(action, event)
 
 
 # Rule actions are currently done synchronously. Actions should
@@ -2816,6 +2823,80 @@ def do_event_action(action, event, user=""):
         if opt_debug:
             raise
         log("Error during execution of action %s: %s" % (action["id"], format_exception()))
+
+
+# This function creates a Check_MK Notification for a locally running Check_MK.
+# We simulate a *service* notification.
+monitoring_state_names = [ "OK", "WARN", "CRIT", "UNKNOWN" ]
+
+def do_notify(event, username, is_cancelling):
+    # Create notification context based on event
+
+    # If the host name is the IP address, then use that. Otherwise let
+    # the variable empty.
+    if event["host"] and event["host"][0].isdigit():
+        ipaddress = event["host"]
+    else:
+        ipaddress = ""
+
+    context = {
+        "WHAT":                        "SERVICE",
+        "DATE":                        str(int(event["last"])), # -> Event: Time
+        "MICROTIME":                   str(int(event["last"] * 1000000)),
+        "HOSTADDRESS":                 ipaddress,
+        "HOSTALIAS":                   event["host"], # -> = HOSTNAME
+        "HOSTDOWNTIME":                "0",
+        "HOSTNAME":                    event["host"],
+        "HOSTTAGS":                    "", # alas, we have not host tags...
+        "LASTSERVICESTATE":            is_cancelling and "CRIT" or "OK", # better assume OK, we have no transition information
+        "LASTSERVICESTATEID":          is_cancelling and "2" or "0", # -> immer OK
+        "LASTSERVICEOK":               "0", # 1.1.1970
+        "LASTSERVICESTATECHANGE":      str(int(event["last"])),
+        "LONGSERVICEOUTPUT":           "",
+        "NOTIFICATIONAUTHOR":          username or "",
+        "NOTIFICATIONAUTHORALIAS":     username or "",
+        "NOTIFICATIONAUTHORNAME":      username or "",
+        "NOTIFICATIONCOMMENT":         "",
+        "NOTIFICATIONTYPE":            is_cancelling and "RECOVERY" or "PROBLEM",
+        "SERVICEACKAUTHOR":            "",
+        "SERVICEACKCOMMENT":           "",
+        "SERVICEATTEMPT":              "1",
+        "SERVICECHECKCOMMAND":         "ec-rule-" + event["rule_id"],
+        "SERVICEDESC":                 event["application"],
+        "SERVICENOTIFICATIONNUMBER":   "1",
+        "SERVICEOUTPUT":               event["text"],
+        "SERVICEPERFDATA":             "",
+        "SERVICEPROBLEMID":            "ec-id-" + str(event["id"]),
+        "SERVICESTATE":                monitoring_state_names[event["state"]],
+        "SERVICESTATEID":              str(event["state"]),
+        "SERVICE_EC_CONTACT":          event.get("owner", ""),
+        "SERVICE_SL":                  str(event["sl"]),
+        "SVC_SL":                      str(event["sl"]),
+
+        # Some fields only found in EC notifications
+        "EC_ID":                       str(event["id"]),
+        "EC_RULE_ID":                  event["rule_id"],
+        "EC_PRIORITY":                 str(event["priority"]),
+        "EC_FACILITY":                 str(event["facility"]),
+        "EC_PHASE":                    event["phase"],
+        "EC_COMMENT":                  event.get("comment", ""),
+        "EC_OWNER":                    event.get("owner", ""),
+        "EC_PID":                      str(event["pid"]),
+        "EC_MATCH_GROUPS":             "\t".join(event["match_groups"]),
+        "EC_CONTACT_GROUPS":           event["contact_groups"] and " ".join(event["contact_groups"]) or "",
+    }
+
+    # Send notification context via stdin.
+    context_string = "".join([ "%s=%s\n" % (varname, value.replace("\n", "\\n")) for (varname, value) in context.items() ])
+
+    p = subprocess.Popen(["cmk", "--notify", "stdin"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+    response = p.communicate(input=context_string)[0]
+    status = p.returncode
+    if status:
+        log("Error notifying via Check_MK: %s" % response.strip())
+    else:
+        log("Successfully forwarded notification for event %d to Check_MK" % event["id"])
+
 
 def substitute_event_tags(text, event):
     substs = [("match_group_%d" % (nr+1), g)

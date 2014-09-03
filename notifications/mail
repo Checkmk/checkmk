@@ -170,6 +170,17 @@ td.graphs {
 img {
     margin-right: 10px;
 }
+
+table.context {
+    border-collapse: collapse;
+}
+
+table.context td {
+    border: 1px solid #888;
+    padding: 3px 8px;
+}
+
+
 </style>
 </head>
 <body>
@@ -261,6 +272,12 @@ body_elements = [
   ( "perfdata", "service", False, "Performance Data",
     "$SERVICEPERFDATA$",
     "$SERVICEPERFDATA$",),
+
+  # Debugging
+  ( "context", "both", False, "Complete variable list",
+    "$CONTEXT_ASCII$",
+    "$CONTEXT_HTML$",
+  )
 ]
 
 tmpl_host_subject = 'Check_MK: $HOSTNAME$ - $EVENT_TXT$'
@@ -278,9 +295,31 @@ def substitute_context(template, context):
     for varname, value in context.items():
         template = template.replace('$'+varname+'$', value)
 
+    # Debugging of variables. Create content only on demand
+    if "$CONTEXT_ASCII$" in template or "$CONTEXT_HTML$" in template:
+        template = replace_variable_context(template, context)
+
     # Remove the rest of the variables and make them empty
     template = re.sub("\$[A-Z_][A-Z_0-9]*\$", "", template)
     return template
+
+
+def replace_variable_context(template, context):
+    ascii_output = ""
+    html_output = "<table class=context>\n"
+    elements = context.items()
+    elements.sort()
+    for varname, value in elements:
+        ascii_output += "%s=%s\n" % (varname, value)
+        html_output += "<tr><td class=varname>%s</td><td class=value>%s</td></tr>\n" % (
+            varname, encode_entities(value))
+    html_output += "</table>\n"
+    return template.replace("$CONTEXT_ASCII$", ascii_output).replace("$CONTEXT_HTML$", html_output)
+
+
+def encode_entities(text):
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
 
 def multipart_mail(target, subject, from_address, reply_to, content_txt, content_html, attach = []):
     m = MIMEMultipart('related', _charset='utf-8')

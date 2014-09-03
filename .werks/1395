@@ -1,0 +1,71 @@
+Title: Event Console can now create notifications via Check_MK RBN
+Level: 2
+Component: ec
+Compatible: compat
+Version: 1.2.5i6
+Date: 1409752217
+Class: feature
+
+The Event Console has now the new builtin action <i>Send monitoring
+notification</i> that can be used in all three situations where actions
+are possible:
+
+<ul>
+<li>When an event is being opened</li>
+<li>When an event is being cancelled</li>
+<li>By a user executing an action on an open event</li>
+</ul>
+
+This new action creates a monitoring notification just as the ones that happen,
+when in normal (non-EC) monitoring a service goes from OK to CRIT or vice
+versa. This notification is being process by the rule based notifications
+and is handled just like a monitoring notification.
+
+Why whould you want to do that?
+
+<ul>
+<li>You can use the same notification plugins for alarms triggered by the
+monitoring and by the Event Console. No need for an extra SMS script in
+the Event Console.</li>
+<li>You can use all of the flexiblity of existing notification plugins - including
+configuring their parameters via WATO.</li>
+<li>All notifications from your Check_MK environment are now controlled by a common set of notification
+rule. For example if a user wants to disable all of his notifications then there is just
+one place for doing that.</li>
+</ul>
+
+There is nothing you need to setup. Just check the action <i>Send monitoring
+notification</i> in your event rules and that's it.
+
+<b>Note</b>: Because events are not exactly the same as services and because
+of the nature of distributed monitoring there are a few specialities in
+notifications that come from the Event Console:
+
+<ul>
+<li>EC notifications have only limited information about the host. There is
+<b>no information</b> about host tags or WATO folders. Do not use matching
+criteria on those or otherwise that match will always fail.</li>
+<li>EC notifications currently have no information about contacts or groups of
+a host. This would need an online Livestatus query, but that would fail
+if the host is being monitored by a remote system.</li>
+<li>EC notifications do not have a <i>previous</i> host or service state,
+since the Event Console is a stateless monitoring.
+Do not set any matching criteria on the event type since none of these
+can be fullfilled currently.</li>
+<li>All EC notifications are sent as <i>service</i> notifications. The name
+of the event's application is taken as service description.</li>
+</ul>
+
+The notification rules have got a new matching option especially for EC
+notifications: <i>Event Console alerts</i>. Here you can make a notification
+rule deal only with EC notifications or exclude just those.  You can also match
+on EC specific fields like the event's rule id, syslog priority, syslog
+facility and event comment.
+
+Most of the event's special fields are available as notification
+context variables - to be used in custom notification scripts or
+template definitions.  Please use the standard debugging methods
+for displaying all variables.  At least defined are <tt>EC_ID</tt>,
+<tt>EC_RULE_ID</tt>, <tt>EC_PRIORITY</tt>, <tt>EC_FACILITY</tt>,
+<tt>EC_PHASE</tt>, <tt>EC_COMMENT</tt>, <tt>EC_OWNER</tt>, <tt>EC_PID</tt>,
+<tt>EC_MATCH_GROUPS</tt>, and <tt>EC_CONTACT_GROUPS</tt>.

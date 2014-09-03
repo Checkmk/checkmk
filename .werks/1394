@@ -1,0 +1,14 @@
+Title: HTML notifications have a new content field for debugging variables
+Level: 2
+Component: notifications
+Compatible: compat
+Version: 1.2.5i6
+Date: 1409752076
+Class: feature
+
+When configuring notifications and customizing templates then you might often
+wonder, which variables are present and which values they have. In the HTML
+email notifications you can now enable the new field <i>Complete variable list</i>
+in the <i>Information to be displayed in the email body<i/>. This adds a table
+with all avaiable variables and their current settings in the notification
+in question.

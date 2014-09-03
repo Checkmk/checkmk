@@ -15,11 +15,13 @@ sudo chown root.omd $OMD_ROOT/bin/mkeventd_open514
 sudo chmod 4750 $OMD_ROOT/bin/mkeventd_open514
 sudo touch $OMD_ROOT/share/check_mk/web/htdocs/*.py
 sudo touch $OMD_ROOT/etc/check_mk/mkeventd.mk
+make -C lib
 sudo install -m 755 lib/check_mkevents $OMD_ROOT/lib/nagios/plugins
 sudo install -m 644 checks/* $OMD_ROOT/share/check_mk/checks
 
 sudo chown -R $SITE.$SITE $OMD_ROOT/{etc,local,var}
 sudo omd restart $SITE apache
+echo "Starte EC neu..."
 sudo omd status $SITE mkeventd && sudo omd restart $SITE mkeventd
 
 

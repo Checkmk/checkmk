@@ -1,0 +1,20 @@
+title: Hivemanager Devices
+agents: special
+catalog: hw/network/hivemanager
+license: GPL
+distribution: check_mk
+description:
+ This check connects to a Hivemanager Account and get a list of all connected devices.
+ Then the connection state and the alarm state will be checked. Also it's possible to set levels for
+ the maximum number of connected clients and for the maximum Uptime of a client.
+ To connect to the Hivemanager a special Datasource
+ Program is used. You can find it under the name <i>Hivemanager</i> in Wato -> Datasource Programs.
+
+item:
+ The name of the Devices
+
+perfdata:
+ One variable: the current number of clients
+
+inventory:
+ One check for each device will be created

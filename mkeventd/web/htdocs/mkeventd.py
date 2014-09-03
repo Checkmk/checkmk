@@ -112,7 +112,8 @@ def action_choices(omit_hidden = False):
     # not in multisite.mk (like the service levels). That
     # way we have not direct access to them but need
     # to load them from the configuration.
-    return [ (a["id"], a["title"])
+    return [ ( "@NOTIFY", _("Send monitoring notification")) ] + \
+           [ (a["id"], a["title"])
              for a in eventd_configuration().get("actions", [])
              if not omit_hidden or not a.get("hidden") ]
 

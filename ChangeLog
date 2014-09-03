@@ -101,6 +101,7 @@
 
     Event Console:
     * 1148 Allow execution of actions when cancelling events...
+    * 1395 Event Console can now create notifications via Check_MK RBN...
     * 1007 FIX: check_mkevents: fix case where events contain binary zeroes
 
     HW/SW-Inventory:

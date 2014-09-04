@@ -114,7 +114,7 @@ def fileinfo_groups_precompile(hostname, item, params):
         for group_name, pattern in line:
             if group_name == item:
                 if type(pattern) == str: # support old format
-                    pattern = ( pattern, '' )
+                    pattern = (pattern, '')
                 patterns.append(pattern)
     params['precompiled_patterns'] = patterns
     return params

@@ -2705,9 +2705,9 @@ def mode_object_parameters(phase):
 
     forms.end()
 
-PARAMETERS_UNKNOW = []
+PARAMETERS_UNKNOWN = []
 PARAMETERS_OMIT = []
-def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_settings=PARAMETERS_UNKNOW):
+def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_settings=PARAMETERS_UNKNOWN):
     def rule_url(rule):
         rule_folder, rule_nr = rule
         return make_link([
@@ -2741,11 +2741,18 @@ def output_analysed_ruleset(all_rulesets, rulespec, hostname, service, known_set
     # Show the resulting value or factory setting
     html.write("<td class='settingvalue %s'>" % (len(rules) > 0 and "used" or "unused"))
 
-    # In some cases we now the settings from a check_mk auomation
+    # In some cases we now the settings from a check_mk automation
     if known_settings is PARAMETERS_OMIT:
         return
 
-    elif known_settings is not PARAMETERS_UNKNOW:
+    # Special handling for logwatch: The check parameter is always None. The actual
+    # patterns are configured in logwatch_rules. We do not have access to the actual
+    # patterns here but just to the useless "None". In order not to complicate things
+    # we simply display nothing here.
+    elif varname == "logwatch_rules":
+        pass
+
+    elif known_settings is not PARAMETERS_UNKNOWN:
         html.write(valuespec.value_to_text(known_settings))
 
     else:

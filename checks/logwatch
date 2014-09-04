@@ -83,11 +83,11 @@ def inventory_logwatch(info):
         if groups:
             continue
         else:
-            inventory.append((logfile, []))
+            inventory.append((logfile, None))
     return inventory
 
 
-#logwatch_patterns = {
+# logwatch_patterns = {
 #    'System': [
 #    ( 'W', 'sshd' ),
 #    ( ['host1', 'host2'],        'C', 'ssh' ), # only applies to certain hosts
@@ -256,8 +256,8 @@ precompile_params['logwatch'] = logwatch_precompile
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def logwatch_group_precompile( hostname, item, _unused):
-    return logwatch_precompile( hostname, item, None ), host_extra_conf( hostname, logwatch_groups )
+def logwatch_group_precompile(hostname, item, _unused):
+    return logwatch_precompile(hostname, item, None), host_extra_conf(hostname, logwatch_groups)
 
 def logwatch_groups_of_logfile(filename, params=False):
     import fnmatch
@@ -283,7 +283,7 @@ def inventory_logwatch_groups(info):
         for group in groups:
             if group not in added_groups:
                 added_groups.append(group)
-                inventory.append((group, [] ))
+                inventory.append((group, None))
     return inventory
 
 def check_logwatch_groups(item, params, info):
@@ -359,9 +359,7 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
     if os.path.exists(logfile) and os.path.getsize(logfile) > logwatch_max_filesize:
         return (2, "unacknowledged messages have exceeded max size (%d Bytes)" % logwatch_max_filesize)
 
-    #
     # Write out new log lines (no reclassify here. It is done later in general for all logs)
-    #
     if len(loglines) > 0:
         worst = -1
         for line in loglines:
@@ -380,8 +378,8 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
 
     # Get the patterns (either compile or reuse the precompiled ones)
     # Check_MK creates an empty string if the precompile function has
-    # not been exectued yet. The precomile function creates an empty
-    # list when no rules/patterns are defined. In case of the logwatch.groups
+    # not been executed yet. The precompile function creates an empty
+    # list when no ruless/patterns are defined. In case of the logwatch.groups
     # checks, params are a tuple with the normal logwatch parameters on the first
     # and the grouping patterns on the second position
     if params not in ('', None):
@@ -399,10 +397,8 @@ def check_logwatch_generic(item, params, loglines, found, groups=False):
                 level = newlevel
         return level
 
-    #
     # Read current log messages, reclassify all messages and write out the
     # whole file again if at least one line has been reclassified
-    #
     worst = 0
     last_worst_line = ''
     reclassified_lines = []

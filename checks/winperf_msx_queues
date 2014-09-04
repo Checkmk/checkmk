@@ -53,6 +53,9 @@
 # 4 0 0 0 0 rawcount
 # 6 0 0 0 0 rawcount
 
+# For Legacy reasons we need still this var.
+msx_queues_default_levels = (500, 2000)
+
 # Default warn/crit levels for length of queues
 factory_settings['winperf_msx_queues'] = {
         'levels': ( 500, 2000 ),

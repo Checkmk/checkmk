@@ -4,44 +4,22 @@ catalog: app/oracle
 license: GPL
 distribution: check_mk
 description:
- This check measures the usage of ASM disk groups.  The usage
- is checked against a warning and a critical level, which
- can be specified in numerous ways.
+ Checks usage of ORACLE ASM Disk Groups.
 
- {Requirements:} The {mk_oracle} is needed on the monitored machines.
- See details for {mk_oracle} at manpage of {oracle_instance}.
+ Make sure you have installed the mk_oracle_asm agent plugin on the monitored
+ machines. (It uses asmcmd commandline tool there to gather the needed
+ informations.)
 
- {Trends:} This checks supports diskgroup {trends}. This means that the
- check is able to compute the {change} of the used space over the time
- and can make a forecast into the future. It can estimate the time when
- the diskgroup will be full.
-
- In a default configuration the check will compute the trend based on the
- data of the last 24 hours using a logarithmic average that gives more recent
- data a higher weight. Also data beyond the 24 hours will to some small degree be
- reflected in the computation. The advantage of this algorithm is a more
- precise prediction and a simpler implementation, which does not need any
- access to any RRDs or similar storage.
-
- Please note that when a diskgroup is started to be monitored,
- the trend of the past is unknown and is assumed to be {zero}.
- It will take at least one trend range of time until the trend
- approximately reflects the reality.
+ See also check manpage for df. All the configuration from there can
+ also be used for ORACLE ASM Disk Groups.
 
 item:
- The name of the disk group as delivered by the agent without the {/} at the
- end.
-
- See also check manpage for {df}. All configurations are usable for ORACLE ASM
- disk groups.
-
- The old parameter {filesystem_default_levels} is replaced with
- {asm_diskgroup_default_levels}.
+ The name of the disk group as delivered by asmcmd.
 
 examples:
  # Set default levels for all filesystems (including ORACLE ASM Disk Groups)
  # to 90/95
- asm_diskgroup_default_levels = (90, 95)
+ filesystem_default_levels = (90, 95)
 
  # more examples in check manpage for df
 
@@ -49,17 +27,11 @@ perfdata:
  see check manpage for df
 
 inventory:
- Creates one check for every diskgroup in the agent's output.
+ Creates one check for every disk group in the agent's output.
 
 [parameters]
-parameters(dict): see check manpage for df. The following parameters
- are added for more functionality.
-
- {"req_mir_free"}: If this is set to {True}, the free space is checked
- against the req_mir_free instead of free_mb. This works only for
- NORMAL or HIGH redundancy disk groups. {required mirror free space used}
- is added to the output, when {req_mir_free} is {True}
+parameters(dict): see check manpage for df
 
 [configuration]
-asm_diskgroup_default_levels: see check manpage for df and comments above
+filesystem_default_levels: see check manpage for df
 

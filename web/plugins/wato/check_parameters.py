@@ -3270,28 +3270,6 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
-    "asm_diskgroup",
-    _("ASM Diskgroup (used space and growth)"),
-    Dictionary(
-        elements = filesystem_elements + [
-            ("req_mir_free", FixedValue(False, title = _("Use required mirror free space as free space"),
-                                         totext = "",
-                                         help = _("ASM calculates the free space depending on free_mb or require mirror "
-                                                  "free space. Enable this option to set the check against require "
-                                                  "mirror free space. This only works for normal or high redundancy. "))
-            ),
-        ],
-        hidden_keys = ["flex_levels"],
-    ),
-    TextAscii(
-        title = _("ASM-Diskgroups"),
-        help = _("Specify the name of the ASM-Diskgroup "),
-        allow_empty = False),
-    "dict"
-)
-
-register_check_parameters(
-    subgroup_applications,
     "mssql_backup",
     _("MSSQL Time since last Backup"),
     Optional(

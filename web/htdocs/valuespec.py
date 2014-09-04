@@ -38,7 +38,6 @@ class ValueSpec:
     def __init__(self, **kwargs):
         self._title         = kwargs.get("title")
         self._help          = kwargs.get("help")
-        self._attrencode    = kwargs.get("attrencode", False)
         if "default_value" in kwargs:
             self._default_value = kwargs.get("default_value")
         self._validate      = kwargs.get("validate")
@@ -324,6 +323,7 @@ class TextAscii(ValueSpec):
         self._size          = kwargs.get("size", 25) # also possible: "max"
         self._cssclass      = kwargs.get("cssclass", "text")
         self._strip         = kwargs.get("strip", True)
+        self._attrencode    = kwargs.get("attrencode", False)
         self._allow_empty   = kwargs.get("allow_empty", _("none"))
         self._empty_text    = kwargs.get("empty_text", "")
         self._read_only     = kwargs.get("read_only")

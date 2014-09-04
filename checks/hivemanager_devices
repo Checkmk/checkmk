@@ -35,12 +35,12 @@
 factory_settings['hivemanger_devices'] = {
         'alert_on_loss'     : True,
         'max_clients'       : ( 25, 50 ),
-        'max_uptime'        : False,
 }
 
 def inventory_hivemanager_devices(info):
-    for line in info:
-        yield line[0], {}
+    for hostname, clients, alarm, connection, uptime in info:
+        if connection == "True":
+            yield hostname, {}
 
 def check_hivemanager_devices(item, params, info):
     for hostname, clients, alarm, connection, uptime in info:
@@ -84,7 +84,7 @@ def check_hivemanager_devices(item, params, info):
 
                 infotext = "Uptime: %s" % get_age_human_readable(uptime_secs)
                 state = 0
-                if params['max_uptime']:
+                if 'max_uptime' in params:
                     warn, crit = params['max_uptime']
                     if uptime_secs >= crit:
                         state = 2

@@ -57,7 +57,7 @@
 msx_queues_default_levels = (500, 2000)
 
 # Default warn/crit levels for length of queues
-factory_settings['winperf_msx_queues'] = {
+factory_settings['winperf_msx_queues_factory'] = {
         'levels': ( 500, 2000 ),
 }
 
@@ -92,7 +92,6 @@ def check_winperf_msx_queues(item, params, info):
     if num_instances < 1:
         return (3, "no counters available, transport service running?")
 
-    
     # Old default case:
     if type(params) == tuple:
         warn, crit = params
@@ -126,6 +125,6 @@ check_info["winperf_msx_queues"] = {
     'inventory_function':      inventory_winperf_msx_queues,
     'service_description':     'Queue %s',
     'has_perfdata':            True,
-    "default_levels_variable" : "winperf_msx_queues",
+    "default_levels_variable" : "winperf_msx_queues_factory",
     'group':                   'msx_queues',
 }

@@ -34,7 +34,7 @@
 
 factory_settings['hivemanger_devices'] = {
         'alert_on_loss'     : True,
-        'max_clients'       : ( 25, 50 ),
+        'max_clients'       : (25, 50),
 }
 
 def inventory_hivemanager_devices(info):
@@ -48,7 +48,7 @@ def check_hivemanager_devices(item, params, info):
 
             # Check for Alarm State
             alarmstate = "Alarm state: " + alarm
-            if alarm in  [ 'Maybe', 'Major', 'Minor' ]:
+            if alarm in  ['Maybe', 'Major', 'Minor']:
                 yield 1, alarmstate
             elif alarm == 'Critical':
                 yield 2, alarmstate
@@ -62,7 +62,7 @@ def check_hivemanager_devices(item, params, info):
             number_of_clients = int(clients)
             warn, crit = params['max_clients']
 
-            perfdata = [ ( 'client_count', number_of_clients, warn, crit )]
+            perfdata = [('client_count', number_of_clients, warn, crit)]
             infotext = "Clients: %s" % number_of_clients
             levels = ' Warn/Crit at %s/%s' % ( warn, crit )
 
@@ -84,13 +84,14 @@ def check_hivemanager_devices(item, params, info):
 
                 infotext = "Uptime: %s" % get_age_human_readable(uptime_secs)
                 state = 0
+                warn, crit = 0 , 0
                 if 'max_uptime' in params:
                     warn, crit = params['max_uptime']
                     if uptime_secs >= crit:
                         state = 2
                     elif uptime_secs >= warn:
                         state = 1
-                yield state, infotext
+                yield state, infotext, [('uptime', uptime_secs, warn, crit)]
 
 
 

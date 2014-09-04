@@ -30,6 +30,15 @@
 # MOUNTED  NORMAL  N         512   4096  1048576      3072     2146              309             918              0             Y  OCR_VOTE/
 # The agent section <<<oracle_asm_diskgroup>>> does not output the header line
 
+factory_settings["asm_diskgroup_default_levels"] = {
+    "levels"          : (80.0, 90.0), # warn/crit in percent
+    "magic_normsize"  : 20,       # Standard size if 20 GB
+    "levels_low"      : (50.0, 60.0), # Never move warn level below 50% due to magic factor
+    "trend_range"     : 24,
+    "trend_perfdata"  : True,    # do send performance data for trends
+    "req_mir_free"    : False,   # Ignore Requirre mirror free space in DG
+}
+
 def inventory_oracle_asm_diskgroup(info):
     return [ (line[-1].rstrip("/"), {}) for line in info ]
 
@@ -46,10 +55,40 @@ def check_oracle_asm_diskgroup(item, params, info):
                 name = line
         else:
             name = ""
-        if name.rstrip('/') == item:
-            return df_check_filesystem(g_hostname, item, int(total_mb),
-                   int(free_mb), params)
-    return (3, "Disk group not found")
+
+        dg_name = name.rstrip('/')
+
+        if dg_name == item:
+            if typ in ('NORMAL', 'HIGH') and params.get('req_mir_free'):
+
+                req_mir_free_mb = saveint(req_mir_free_mb)
+
+                if req_mir_free_mb < 0:
+                    # requirred mirror free space could be negative!
+                    req_mir_free_mb = 0
+
+                status, infotext, perfdata =  df_check_filesystem(g_hostname, item, int(total_mb),
+                       int(req_mir_free_mb), params)
+                infotext += ', %s redundancy, requirred mirror free space used' % typ.lower()
+
+            else:
+                status, infotext, perfdata =  df_check_filesystem(g_hostname, item, int(total_mb),
+                       int(free_mb), params)
+                infotext += ', %s redundancy' % typ.lower()
+
+            offline_disks = saveint(offline_disks)
+            if offline_disks > 0:
+                status = max(2, status)
+                infotext += ', %d Offline disks found(!!)' % offline_disks
+
+            return (status, infotext, perfdata)
+
+    # In case of missing information we assume that the ASM-Instance is
+    # checked at a later time.
+    # This reduce false notifications for not running ASM-Instances
+    raise MKCounterWrapped(None, "Diskgroup %s not found" % item)
+
+>>>>>>> 7774f2a... mk_oracle_asm Offline disks and requirred mirror free space are accounted
 
 
 check_info["oracle_asm_diskgroup"] = {
@@ -57,7 +96,7 @@ check_info["oracle_asm_diskgroup"] = {
     'inventory_function'      : inventory_oracle_asm_diskgroup,
     'service_description'     : 'ASM Diskgroup %s',
     'has_perfdata'            : True,
-    'group'                   : 'filesystem',
-    'default_levels_variable' : 'filesystem_default_levels',
+    'group'                   : 'asm_diskgroup',
+    'default_levels_variable' : 'asm_diskgroup_default_levels',
     "includes"                : [ "df.include" ],
 }

@@ -1,0 +1,14 @@
+Title: Offline disks and rewuired mirror free space are accounted in oracle_asm_diskgroup
+Level: 2
+Component: checks
+Compatible: incomp
+Version: 1.2.5i6
+Date: 1409772890
+Class: feature
+
+New rule in WATO is requirred to account this change. The old
+<i>filesystem_default_levels</i> is replaced by <i>asm_diskgroup_default_levels</i>. WATO use
+the new rulename but old values must be migrated to
+<i>asm_diskgroup_default_levels</i>.
+
+

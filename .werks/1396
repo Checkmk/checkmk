@@ -1,0 +1,13 @@
+Title: Fix default setting of Enable sounds in views
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.5i6
+Date: 1409912476
+Class: fix
+
+The global settings in WATO displayed the default value for the setting
+<i>Enable sounds in views</i> as <b>on</b>. If fact the default is
+<b>off</b>. So as long as you did not switch this once back and forth no
+sounds were being played. This has been fixed now and the default settings
+is correctly being displayed as <b>off</b>.

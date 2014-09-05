@@ -18,6 +18,7 @@
     WATO:
     * 1056 FIX: Fixed selection of hosts for bulk actions
     * 0191 FIX: Added swp files to the ignore list for the WATO git feature...
+    * 1396 FIX: Fix default setting of Enable sounds in views...
 
 
 1.2.4p5:

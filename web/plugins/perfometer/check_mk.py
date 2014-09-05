@@ -1163,3 +1163,9 @@ def perfometer_dbmv(row, check_command, perf_data):
     return "%.1f dBmV" % dbmv, perfometer_logarithmic(dbmv, 50, 2, "#da6")
 
 perfometers["check_mk-docsis_channels_downstream"] = perfometer_dbmv
+
+def perfometer_docsis_snr(row, check_command, perf_data):
+    dbmv = float(perf_data[0][1])
+    return "%.1f dB" % dbmv, perfometer_logarithmic(dbmv, 50, 2, "#ad6")
+
+perfometers["check_mk-docsis_channels_upstream"] = perfometer_docsis_snr

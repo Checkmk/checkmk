@@ -19,7 +19,7 @@
 # in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
 # out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
 # PARTICULAR PURPOSE. See the  GNU General Public License for more de-
-# ails.  You should have  received  a copy of the  GNU  General Public
+# tails.  You should have  received  a copy of the  GNU  General Public
 # License along with GNU Make; see the file  COPYING.  If  not,  write
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
@@ -28,44 +28,74 @@ factory_settings["docsis_channels_upstream_default_levels"] = {
     "signal_noise"  : ( 10.0, 5.0 ), # dB
 }
 
+def docsis_channels_upstream_convert(info):
+    parsed = {}
+    freq_info, sig_info, cm_info = info
+    if len(freq_info) == 1 and len(sig_info) == 1 and \
+        freq_info[0][0] != sig_info[0][0]: # Probably ARRIS modem
+            cid = freq_info[0][0]
+            parsed[cid] = freq_info[0][1:] + sig_info[0][1:]
+            if len(cm_info) == 1: # Never seen
+                parsed[cid] += cm_info[0]
+
+    else:
+        sig_info_dict = dict([ (x[0], x[1:]) for x in sig_info])
+        cm_info_dict  = dict([ (x[0], x[1:]) for x in cm_info])
+        for line in freq_info:
+            endoid = line[0]
+            cid = line[1]
+            if line[2] != '0':
+                parsed[cid] = line[1:] + sig_info_dict[endoid] + cm_info_dict.get(endoid, [])
+
+    return parsed
+
 def inventory_docsis_channels_upstream(info):
-    for line in info:
-        if line[1] != '0':
-            yield line[0], {}
+    parsed = docsis_channels_upstream_convert(info)
+    for cid, entry in parsed.items():
+        if entry[2] != '0' and entry[5] != '0': 
+            yield cid, {}
 
 def check_docsis_channels_upstream(item, params, info):
-    for channel_id, mhz, total, active, registered, avg_util, \
-        unerroreds, correcteds, uncorrectables, signal_noise in info:
-        if channel_id == item:
-            for varname, value, title, form, unit in [
-                ( "frequency",  float(mhz) / 1000000, "Frequency",          "%.2f", " MHz"),
+    parsed = docsis_channels_upstream_convert(info)
+    if item in parsed:
+        entry = parsed[item]
+
+        channel_id, mhz, unerroreds, correcteds, uncorrectables, signal_noise = entry[:6]
+
+        # Signal Noise
+        noise_db = float(signal_noise) / 10
+        infotext = "Signal/Noise ratio: %.2f dB" % noise_db
+        warn, crit = params['signal_noise']
+        levels = " (warn/crit at %.1f/%.1f dB)" % ( warn, crit )
+        state = 0
+        if noise_db <= crit:
+            state = 2
+            infotext += levels
+        elif noise_db <= warn:
+            state = 1
+            infotext += levels
+        yield state, infotext, [ ('signal_noise', noise_db, warn, crit ) ]
+
+        fields = [
+            ( "frequency",      float(mhz) / 1000000, "Frequency",          "%.2f", " MHz"),
+            ( "unerroreds",     int(unerroreds),      "codewords without errors", "%d", "" ),
+            ( "correcteds",     int(correcteds),      "corrected errors",         "%d", "" ),
+            ( "uncorrectables", int(uncorrectables),  "uncorrectable errors",     "%d", "" ),
+        ]
+        if len(entry) >= 10:
+            total, active, registered, avg_util = entry[6:10]
+            fields += [
                 ( "total",      int(total),           "Modems total",        "%d", "" ),
                 ( "active",     int(active),          "active",              "%d", "" ),
                 ( "registered", int(registered),      "registered",          "%d", "" ),
                 ( "util",       int(avg_util),        "average utilization", "%d", "%" ),
+            ]
 
-                # Replace with counters later
-                ( "unerroreds",     int(unerroreds),      "codewords without errors", "%d", "" ),
-                ( "correcteds",     int(correcteds),      "corrected errors",         "%d", "" ),
-                ( "uncorrectables", int(uncorrectables),  "uncorrectable errors",     "%d", "" ),
-            ]:
-                yield 0, title + ": " + (form + "%s") % (value, unit), [ (varname, value) ]
+        for varname, value, title, form, unit in fields:
+            yield 0, title + ": " + (form + "%s") % (value, unit), [ (varname, value) ]
 
-            # Signal Noise
-            noise_db = float(signal_noise) / 10
-            infotext = "Signal/Noise ratio: %.2f dB" % noise_db
-            warn, crit = params['signal_noise']
-            levels = " (warn/crit at %.1f/%.1f dB)" % ( warn, crit )
-            state = 0
-            if noise_db <= crit:
-                state = 2
-                infotext += levels
-            elif noise_db <= warn:
-                state = 1
-                infotext += levels
-            yield state, infotext, [ ('signal_noise', noise_db, warn, crit ) ]
 
-            return
+        return
 
     yield 3, "Channel information not found in SNMP data"
 
@@ -77,32 +107,39 @@ check_info["docsis_channels_upstream"] = {
     "service_description"     : "Upstream Channel %s",
     "has_perfdata"            : True,
     "snmp_scan_function"      : docsis_scan_function,
-    "snmp_info"               : (
-    ".1.3.6.1", [
-            "2.1.10.127.1.1.2.1.1",  # docsIfUpChannelId
-            "2.1.10.127.1.1.2.1.2",  # docsIfUpChannelFrequency
-            "4.1.9.9.116.1.4.1.1.3", # cdxIfUpChannelCmTotal
-            "4.1.9.9.116.1.4.1.1.4", # cdxIfUpChannelCmActive
-            "4.1.9.9.116.1.4.1.1.5", # cdxIfUpChannelCmRegistered
-            "4.1.9.9.116.1.4.1.1.7", # cdxIfUpChannelAvgUtil
+    "snmp_info"               : [
+       ( ".1.3.6.1.2.1.10.127.1.1.2.1", [
+            OID_END,
+            "1",  # docsIfUpChannelId
+            "2",  # docsIfUpChannelFrequency
+       ]),
+       ( ".1.3.6.1.2.1.10.127.1.1.4.1", [
+            OID_END,
+            "2",  # docsIfSigQUnerroreds:
+                  # "Codewords received on this channel without error.
+                  # This includes all codewords, whether or not they
+                  # were part of frames destined for this device."
 
-            "2.1.10.127.1.1.4.1.2",  # docsIfSigQUnerroreds:
-                                     # "Codewords received on this channel without error.
-                                     # This includes all codewords, whether or not they
-                                     # were part of frames destined for this device."
+            "3",  # docsIfSigQCorrecteds:
+                  # "Codewords received on this channel with correctable
+                  # errors. This includes all codewords, whether or not
+                  # they were part of frames destined for this device."
 
-            "2.1.10.127.1.1.4.1.3",  # docsIfSigQCorrecteds:
-                                     # "Codewords received on this channel with correctable
-                                     # errors. This includes all codewords, whether or not
-                                     # they were part of frames destined for this device."
+            "4",  # docsIfSigQUncorrectables:
+                  # "Codewords received on this channel with uncorrectable
+                  # errors. This includes all codewords, whether or not
+                  # they were part of frames destined for this device."
 
-            "2.1.10.127.1.1.4.1.4",  # docsIfSigQUncorrectables:
-                                     # "Codewords received on this channel with uncorrectable
-                                     # errors. This includes all codewords, whether or not
-                                     # they were part of frames destined for this device."
-
-            "2.1.10.127.1.1.4.1.5",  # docsIfSigQSignalNoise
-    ]),
+            "5",  # docsIfSigQSignalNoise
+      ]),
+      ( ".1.3.6.1.4.1.9.9.116.1.4.1.1" , [
+            OID_END,
+            "3", # cdxIfUpChannelCmTotal
+            "4", # cdxIfUpChannelCmActive
+            "5", # cdxIfUpChannelCmRegistered
+            "7", # cdxIfUpChannelAvgUtil
+      ]),
+    ],
     "default_levels_variable" : "docsis_channels_upstream_default_levels",
     "group"                   : "docsis_channels_upstream",
     "includes"                : [ "docsis.include" ],

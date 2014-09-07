@@ -1,0 +1,17 @@
+title: Juniper/ScreenOS: VPN Tunnel State
+agents: snmp
+catalog: hw/network/juniper
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the current state of Juniper ScreenOS VPN tunnels. It uses the vpn ike 2 state
+ to verify the VPN tunnel state.
+
+inventory:
+ One service for each VPN tunnel will be create
+
+perfdata:
+ tunnel state: returns 1 if VPN tunnel is up and 0 if VPN tunnel is down
+
+[configuration]:
+ There are no configuration values

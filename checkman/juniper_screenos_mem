@@ -1,0 +1,21 @@
+title: Juniper/ScreenOS: Memory Usage
+agents: snmp
+catalog: hw/network/juniper
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the current memory usage Juniper ScreenOS devices.
+
+inventory:
+ One service will be created
+
+perfdata:
+ usage: The current usage in MB
+
+[parameters]
+warning (float): The percentage of memory usage that triggers a warning level.
+critical (float): The percentage of memory usage that triggers a critical level.
+
+[configuration]
+juniper_screenos_mem_default_levels (float, float): Default levels for warning and critical used
+  by inventorized checks. This is preset to {(70.0, 80.0)}

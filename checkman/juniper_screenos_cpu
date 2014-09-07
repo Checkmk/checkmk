@@ -1,0 +1,22 @@
+title: Juniper ScreenOS CPU utilization of the last 1/5/15 minutes
+agents: snmp
+catalog: hw/network/juniper
+license: GPL
+distribution: check_mk
+description:
+ Check CPU utilization of the last minute and  last 15 minutes in percent on Juniper ScreenOS devices.
+
+perfdata:
+ util1: The CPU utilization of the last few seconds in percent.
+ util15: The CPU utilization of the last 15 minutes in percent.
+
+inventory:
+ One service will be created
+
+[parameters]
+warning (float): The percentage of CPU utilization for the last 15 minutes that triggers a warning level.
+critical (float): The percentage of CPU utilization for the last 15 minutes that triggers a critical level.
+
+[configuration]
+juniper_screenos_cpu_default_levels (float, float): Default levels for warning and critical used
+  by inventorized checks. This is preset to {(80.0, 90.0)}

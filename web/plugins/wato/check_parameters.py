@@ -2424,6 +2424,21 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_os,
+    "juniper_screenos_mem",
+    _("Juniper Screenos Memory Usage"),
+    Tuple(
+        title = _("Specify labesl in percentage of total Memory Usage"),
+        elements = [
+            Percentage(title = _("Warning at a usage of"), unit =_("% of RAM"), default_value = 80.0, maxvalue = 100.0 ),
+            Percentage(title = _("Critical at a usage of"), unit =_("% of RAM"), default_value = 90.0, maxvalue = 100.0 )
+        ]
+    ),
+    None,
+    "first"
+)
+
+register_check_parameters(
+    subgroup_os,
     "general_flash_usage",
     _("Flash Space Usage"),
     Alternative(

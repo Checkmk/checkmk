@@ -1,0 +1,13 @@
+title: Juniper/ScreenOS: FAN health status
+agents: snmp
+catalog: hw/network/juniper
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the state of fans on Juniper ScreenOS devices.
+
+item:
+ The description of the sensor as provided by the device.
+
+inventory:
+ One check for each sensor is created by the inventory.

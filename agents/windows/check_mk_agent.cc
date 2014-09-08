@@ -3733,7 +3733,7 @@ bool handle_global_config_variable(char *var, char *value)
             g_default_script_async_execution = SEQUENTIAL;
         return true;
     }
-    // Do no longer use this!
+    // Do not longer use this!
     else if (!strcmp(var, "caching_method")) {
         if (!strcmp(value, "async")) {
             g_default_script_async_execution = PARALLEL;

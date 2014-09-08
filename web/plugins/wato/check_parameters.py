@@ -1553,7 +1553,7 @@ register_check_parameters(
                 Tuple(
                     title = _("Maximum uptime of Device"),
                           elements = [
-                              Age(title = _("Warning if above")),  
+                              Age(title = _("Warning if above")),
                               Age(title = _("Critical if above")),
                           ]
                 )),
@@ -1811,7 +1811,7 @@ def transform_msx_queues(params):
     if type(params) == tuple:
         return { "levels" : ( params[0], params[1] ) }
     return params
-       
+
 
 register_check_parameters(
     subgroup_applications,
@@ -1821,7 +1821,7 @@ register_check_parameters(
               Dictionary(
                   title = _("Set Levels"),
                   elements = [
-                     ( 'levels', 
+                     ( 'levels',
                             Tuple(
                                 title = _("Maximum Number of E-Mails in Queue"),
                                 help = _("This rule applies to the number of E-Mails in the various Exchange Message Queues"),
@@ -1830,12 +1830,12 @@ register_check_parameters(
                                     Integer(title = _("Critical if above"), unit = _("E-Mails"))
                                 ]),
                      ),
-                     ('offset', 
-                        Integer( 
+                     ('offset',
+                        Integer(
                             title = _("Offset"),
                             help = _("Use this only if you want to overwrite the postion of the information in the agent "
                                      "Output. Also refer to the rule <i>Microsoft Exchange Queues Inventory</i> ")
-                        ) 
+                        )
                     ),
                   ],
                 optional_keys = [ "offset" ],

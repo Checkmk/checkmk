@@ -56,7 +56,7 @@ def check_hivemanager_devices(item, params, info):
             if params['alert_on_loss']:
                 if connection == 'False':
                     yield 2, "Connection lost"
-            
+
             # The number of clients
             number_of_clients = int(clients)
             warn, crit = params['max_clients']
@@ -101,6 +101,6 @@ check_info["hivemanager_devices"] = {
     "default_levels_variable"   : "hivemanger_devices",
     "group"                     : "hivemanager_devices",
     "has_perfdata"              : True,
-    
+
 }
 

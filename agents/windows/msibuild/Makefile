@@ -51,5 +51,5 @@ msibuild:
 exchange_msi_files: msibuild
 	mkdir -p work sources
 	cp ../check_mk_agent.exe ../check_mk_agent-64.exe ../check_mk.example.ini sources
-	./msi-update -v msi_container.msi sources $(BUILD_VERSION) $(CHECK_MK_VERSION)
+	./msi-update -v vanilla_container.msi sources $(BUILD_VERSION) $(CHECK_MK_VERSION)
 	rm -rf work sources

@@ -1,0 +1,84 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+factory_settings["arris_cmts_mem"] = {
+    "levels"     : ( 80.0, 90.0 ),
+}
+
+def inventory_arris_cmts_mem(info):
+    for cid, heap, heap_free in info:
+        yield cid, {}
+
+def check_arris_cmts_mem(item, params, info):
+    for cid, heap, heap_free in info:
+        if cid == item:
+            heap_free, heap = float(heap_free), float(heap)
+            usage_perc = (heap_free / heap) * 100
+            usage = heap - heap_free
+            infotext = "Usage: %s of %s (%.2f %%)" % \
+                (get_bytes_human_readable(heap_free), get_bytes_human_readable(heap),usage_perc)
+            warn, crit = params['levels']
+            # Percent level
+            if type(crit) == float:
+                warn_abs = heap * warn / 100
+                crit_abs = heap * crit / 100
+                perfdata = [ ( 'usage', usage, warn_abs, crit_abs, 0, heap )] 
+                levels = " (Warn/Crit at %f/%f %%)" % ( warn, crit )
+                if usage_perc >= crit:
+                    yield 2, infotext+levels, perfdata
+                elif usage_perc >= warn:
+                    yield 1, infotext+levels, perfdata
+                else:
+                    yield 0, infotext, perfdata
+            else:
+                perfdata = [ ( 'usage', usage, warn, crit, 0, heap )] 
+                levels = " (Warn/Crit at %s/%s)" % \
+                    ( get_bytes_human_readable(warn), get_bytes_human_readable(crit) )
+                if usage >= crit:
+                    yield 2, infotext+levels, perfdata
+                elif usage >= warn:
+                    yield 1, infotext+levels, perfdata
+                else:
+                    yield 0, infotext, perfdata
+            return
+    yield 3, "Card not found in Output"
+
+check_info["arris_cmts_mem"] = {
+    "check_function"        : check_arris_cmts_mem,
+    "inventory_function"    : inventory_arris_cmts_mem,
+    "service_description"   : "Memory Module %s",
+    "has_perfdata"          : True,
+    "snmp_scan_function"    : arris_cmts_scan_function,
+    "default_levels_variable" : "arris_cmts_mem",
+    "snmp_info"             : ( ".1.3.6.1.4.1.4998.1.1.5.3.2.1.1", [
+                                          OID_END,
+                                          2, # cadMeHeapSize
+                                          3, # cadMeHeapRemaining
+                                          ] ),
+    "group"                 : "memory_multiitem",
+    "includes"              : [ "arris_cmts.include" ]
+}
+

@@ -936,6 +936,7 @@ perfometers['check_mk-db2_mem'] = perfometer_simple_mem_usage
 perfometers['check_mk-esx_vsphere_hostsystem.mem_usage'] = perfometer_simple_mem_usage
 perfometers['check_mk-brocade_mlx.module_mem'] = perfometer_simple_mem_usage
 perfometers['check_mk-innovaphone_mem'] = perfometer_simple_mem_usage
+perfometers['check_mk-arris_cmts_mem'] = perfometer_simple_mem_usage
 
 def perfometer_vmguest_mem_usage(row, command, perf):
     used = float(perf[0][1])

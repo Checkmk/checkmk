@@ -7792,7 +7792,7 @@ def mode_groups(phase, what):
         html.context_button(_("New group"), make_link([("mode", "edit_%s_group" % what)]), "new")
         if what == "contact":
             html.context_button(_("Rules"), make_link([("mode", "rulesets"),
-                ("filled_in", "search"), ("search", "contact group")]), "rulesets")
+                ("filled_in", "search"), ("search", _("contact group"))]), "rulesets")
         else:
             varname = what + "_groups"
             html.context_button(_("Rules"), make_link([("mode", "edit_ruleset"), ("varname", varname)]), "rulesets")

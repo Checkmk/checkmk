@@ -599,7 +599,7 @@ void df_output_filesystem(SOCKET &out, char *volid)
         if (total.QuadPart > 0)
             perc_used = 100 - (100 * free_avail.QuadPart / total.QuadPart);
 
-        if (volume[0]) // have a volume name 
+        if (volume[0]) // have a volume name
             char_replace(' ', '_', volume);
         else
             strncpy(volume, volid, sizeof(volume));
@@ -1161,7 +1161,7 @@ void process_eventlog_entries(SOCKET &out, const char *logname, char *buffer,
     EVENTLOGRECORD *event = (EVENTLOGRECORD *)buffer;
     while (bytesread > 0)
     {
-        crash_log("     - record %d: process_eventlog_entries bytesread %d, event->Length %d", *record_number, bytesread, event->Length); 
+        crash_log("     - record %d: process_eventlog_entries bytesread %d, event->Length %d", *record_number, bytesread, event->Length);
         *record_number = event->RecordNumber;
 
         char type_char;
@@ -1973,7 +1973,7 @@ void update_or_create_logwatch_textfile(const char *full_filename, glob_token* t
 }
 
 // Process a single expression (token) of a globline and try to find matching files
-void process_glob_expression(glob_token *glob_token, condition_patterns_t *patterns) 
+void process_glob_expression(glob_token *glob_token, condition_patterns_t *patterns)
 {
     WIN32_FIND_DATA data;
     char full_filename[512];
@@ -2068,7 +2068,7 @@ bool globmatch(const char *pattern, char *astring);
 
 // Remove missing files from list
 void cleanup_logwatch_textfiles()
-{ 
+{
     for (logwatch_textfiles_t::iterator it_tf = g_logwatch_textfiles.begin();
          it_tf != g_logwatch_textfiles.end();) {
         if ((*it_tf)->missing) {
@@ -2081,7 +2081,7 @@ void cleanup_logwatch_textfiles()
 }
 
 // Called on program exit
-void cleanup_logwatch() 
+void cleanup_logwatch()
 {
     // cleanup textfiles
     for (logwatch_textfiles_t::iterator it_tf = g_logwatch_textfiles.begin();
@@ -2755,7 +2755,7 @@ int launch_program(script_container* cont)
             while (out_offset + bread > current_heap_size) {
                 // Increase heap buffer
                 if (current_heap_size * 2 <= HEAP_BUFFER_MAX) {
-                    cont->buffer_work = (char *) HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
+                    cont->buffer_work = (char *) HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
                                                              cont->buffer_work, current_heap_size * 2);
                     current_heap_size = HeapSize(GetProcessHeap(), 0, cont->buffer_work);
                 }
@@ -3733,7 +3733,7 @@ bool handle_global_config_variable(char *var, char *value)
             g_default_script_async_execution = SEQUENTIAL;
         return true;
     }
-    // Do no longer use this!
+    // Do not longer use this!
     else if (!strcmp(var, "caching_method")) {
         if (!strcmp(value, "async")) {
             g_default_script_async_execution = PARALLEL;
@@ -4178,7 +4178,7 @@ void stop_threads()
             it_cont->second->should_terminate = 1;
         }
         it_cont++;
-    } 
+    }
     WaitForMultipleObjects(active_thread_count, hThreadArray, TRUE, 5000);
     TerminateJobObject(g_workers_job_object, 0);
 }
@@ -4366,7 +4366,7 @@ void usage()
             "check_mk_agent remove  -- remove Windows NT service\n"
             "check_mk_agent adhoc   -- open TCP port %d and answer request until killed\n"
             "check_mk_agent test    -- test output of plugin, do not open TCP port\n"
-            "check_mk_agent debug   -- similar to test, but with lots of debug output\n", 
+            "check_mk_agent debug   -- similar to test, but with lots of debug output\n",
             check_mk_version, g_port);
     exit(1);
 }

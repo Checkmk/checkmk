@@ -15,11 +15,12 @@ A new option <tt>nocontext</tt> has been introduced for the logfiles section in 
 
 F+:check_mk.ini
 [logfiles]
-# The following textfile will not report any context info (nocontext option)
-textfile = nocontext C:\tmp\memo.udf
-# Set patterns for defined textfile
-warn = *overdue*
-ok = *mail sent*
+    # The following textfile will not report any context info (nocontext option)
+    textfile = nocontext C:\tmp\memo.udf
+
+    # Set patterns for defined textfile
+    warn = *overdue*
+    ok = *mail sent*
 F-:
 
 If you simply prepend the parameter <tt>nocontext</tt> to the actual path (or path pattern),

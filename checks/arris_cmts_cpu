@@ -50,7 +50,7 @@ def check_arris_cmts_cpu(item, params, info):
             cpu_util = 100 - int(cpu_idle_util)
             warn, crit = params
             infotext = "Current utilization is: %d %% " % cpu_util
-            levels = " (warn/crit at %.1f/%.1f °C)" % (warn, crit)
+            levels = " (warn/crit at %.1f/%.1f %%)" % (warn, crit)
             perfdata = [ ( "util", cpu_util, warn, crit ) ]
             if cpu_util >= crit:
                 yield 2, infotext + levels, perfdata

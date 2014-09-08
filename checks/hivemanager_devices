@@ -39,8 +39,7 @@ factory_settings['hivemanger_devices'] = {
 
 def inventory_hivemanager_devices(info):
     for hostname, clients, alarm, connection, uptime in info:
-        if connection == "True":
-            yield hostname, {}
+        yield hostname, {}
 
 def check_hivemanager_devices(item, params, info):
     for hostname, clients, alarm, connection, uptime in info:

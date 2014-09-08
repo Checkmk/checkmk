@@ -1553,7 +1553,7 @@ register_check_parameters(
                 Tuple(
                     title = _("Maximum uptime of Device"),
                           elements = [
-                              Age(title = _("Warning if above")),  
+                              Age(title = _("Warning if above")),
                               Age(title = _("Critical if above")),
                           ]
                 )),
@@ -1811,7 +1811,7 @@ def transform_msx_queues(params):
     if type(params) == tuple:
         return { "levels" : ( params[0], params[1] ) }
     return params
-       
+
 
 register_check_parameters(
     subgroup_applications,
@@ -1821,7 +1821,7 @@ register_check_parameters(
               Dictionary(
                   title = _("Set Levels"),
                   elements = [
-                     ( 'levels', 
+                     ( 'levels',
                             Tuple(
                                 title = _("Maximum Number of E-Mails in Queue"),
                                 help = _("This rule applies to the number of E-Mails in the various Exchange Message Queues"),
@@ -1830,12 +1830,12 @@ register_check_parameters(
                                     Integer(title = _("Critical if above"), unit = _("E-Mails"))
                                 ]),
                      ),
-                     ('offset', 
-                        Integer( 
+                     ('offset',
+                        Integer(
                             title = _("Offset"),
                             help = _("Use this only if you want to overwrite the postion of the information in the agent "
                                      "Output. Also refer to the rule <i>Microsoft Exchange Queues Inventory</i> ")
-                        ) 
+                        )
                     ),
                   ],
                 optional_keys = [ "offset" ],
@@ -3301,6 +3301,32 @@ register_check_parameters(
         regex = '.+\..+',
         allow_empty = False),
     None
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "asm_diskgroup",
+    _("ASM Disk Group (used space and growth)"),
+    Dictionary(
+        elements = filesystem_elements + [
+            ("req_mir_free", DropdownChoice(
+             title = _("Handling for required mirror space"),
+             totext = "",
+             choices = [
+                 ( False, _("Disregard required mirror space as free space")),
+                 ( True, _("Regard required mirror space as free space")),],
+             help = _("ASM calculates the free space depending on free_mb or require mirror "
+                      "free space. Enable this option to set the check against require "
+                      "mirror free space. This only works for normal or high redundancy Disk Groups. "))
+            ),
+        ],
+        hidden_keys = ["flex_levels"],
+    ),
+    TextAscii(
+        title = _("ASM Disk Group"),
+        help = _("Specify the name of the ASM Disk Group "),
+        allow_empty = False),
+    "dict"
 )
 
 register_check_parameters(

@@ -52,7 +52,7 @@ def docsis_channels_upstream_convert(info):
 def inventory_docsis_channels_upstream(info):
     parsed = docsis_channels_upstream_convert(info)
     for cid, entry in parsed.items():
-        if entry[2] != '0' and entry[5] != '0': 
+        if entry[2] != '0' and entry[5] != '0':
             yield cid, {}
 
 def check_docsis_channels_upstream(item, params, info):

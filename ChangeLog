@@ -44,6 +44,8 @@
     * 0656 brocade_fcport: inventory rule can now choose upon physical und operations states as well, state choices were also updated
     * 1177 Hivemanger: New agent to check hivemanager devices
     * 1178 arris_cmts_mem: New check for Memory usage on arris cmts modules.
+    * 1383 oracle_asm_diskgroup: Account for offline disks and required mirror free space
+            NOTE: Please refer to the migration notes!
     * 1051 FIX: tcp_conn_stats: fix missing performance data...
     * 1142 FIX: winperf_ts_sessions: fix computation, check has never really worked
     * 1090 FIX: zfsget: fixed exception which happened on incomplete zfs entries

@@ -49,7 +49,7 @@ try:
     source_dir        = sys.argv[2]
 
     # Version formatted, e.g. 1.2.4.99
-    new_version_build = "1.0.%s" % sys.argv[3]
+    new_version_build = "1.0.0.%s" % sys.argv[3]
 
     # Official version name, e.g 1.2.5i4p1
     new_version_name  = sys.argv[4]
@@ -59,7 +59,7 @@ except:
 
 if "OMD_ROOT" in os.environ:
     path_prefix = ""
-    tmp_dir = os.environ("OMD_ROOT")
+    tmp_dir = os.environ["OMD_ROOT"]
 else:
     path_prefix = "./"
     tmp_dir = "."
@@ -90,9 +90,11 @@ lines_file_idt = file(work_dir + "/File.idt").readlines()
 file_idt_new   = file(work_dir + "/File.idt.new", "w")
 file_idt_new.write("".join(lines_file_idt[:3]))
 
+cabinet_files = []
 for line in lines_file_idt[3:]:
     tokens = line.split("\t")
     filename = tokens[0]
+    cabinet_files.append(filename)
     file_stats = os.stat(source_dir + "/" + filename)
     new_size    = file_stats.st_size
     tokens[3] = str(new_size)
@@ -113,7 +115,7 @@ upgrade_idt_new.write("".join(lines_upgrade_idt[:3]))
 for idx, token_offset in [ (3, 1), (4, 2) ]:
     new_line = lines_upgrade_idt[idx]
     tokens = new_line.split("\t")
-    tokens[token_offset] = new_version_build
+    tokens[token_offset] = ".".join(new_version_build.split(".")[:3])
     upgrade_idt_new.write("\t".join(tokens))
 upgrade_idt_new.close()
 # ==============================================
@@ -137,7 +139,7 @@ for line in lines_property_idt[3:]:
     elif tokens[0] == "ProductCode":
         tokens[1] = product_code
     elif tokens[0] == "ProductVersion":
-        tokens[1] = "%s\r\n" % new_version_build
+        tokens[1] = "%s\r\n" % ".".join(new_version_build.split(".")[:3])
     property_idt_new.write("\t".join(tokens))
 property_idt_new.close()
 # ==============================================
@@ -168,8 +170,12 @@ os.system((path_prefix + "msibuild %(new_msi_file)s -q \"DELETE FROM _Streams wh
 
 # Prepare product.cab file
 verbose("Generating new product.cab")
-os.system("lcab -n %(source_dir)s/check_mk.example.ini %(source_dir)s/check_mk_agent.exe "
-          "%(source_dir)s/check_mk_agent64.exe %(work_dir)s/product.cab" % globals())
+
+lcab_files = ""
+for lcab_file in cabinet_files:
+    lcab_files += "%(source_dir)s/%(lcab_file)s " % globals()
+
+os.system("lcab -n %(lcab_files)s %(work_dir)s/product.cab" % globals())
 
 # Add modified product.cab
 verbose("Add modified product.cab")

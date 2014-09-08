@@ -130,7 +130,7 @@ os.system("./msibuild %(new_msi_file)s -q \"DELETE FROM _Streams where Name = 'p
 
 # Prepare product.cab file
 print "Generating new product.cab"
-os.system("lcab -n sources/check_mk.example.ini sources/check_mk_agent.exe sources/check_mk_agent64.exe  work/product.cab ; sync")
+os.system("lcab -n sources/check_mk.example.ini sources/check_mk_agent.exe sources/check_mk_agent64.exe  work/product.cab")
 
 # Add modified product.cab
 print "Add modified product.cab"

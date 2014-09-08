@@ -36,66 +36,112 @@
 # IODBSZ1 EXFSYS RLM$SCHDNEGACTION SCHEDULED 0 18954 TRUE 23.04.13 14:51:57,000000 +02:00 - SUCCEEDED
 # IODBSZ1 EXFSYS RLM$EVTCLEANUP SCHEDULED 0 18202 TRUE 23.04.13 13:41:48,200000 +01:00 - SUCCEEDED
 
+
+factory_settings["oracle_jobs_defaults"] = {
+    "disabled": True,
+}
+
 def inventory_oracle_jobs(info):
-    inventory = []
-    for line in info:
-        if line[6] == "TRUE": # only add enabled jobs
-            inventory.append(("%s.%s" % (line[0], line[2]), {}))
-    return inventory
+    return [ ( ("%s.%s.%s" % (line[0], line[1], line[2])), {} ) for line in info ]
 
 def check_oracle_jobs(item, params, info):
     try:
-        sid, jobname = item.split('.')
+        if item.count('.') == 2:
+            sid, job_owner, job_name = item.split('.')
     except ValueError:
-        return (3, 'Invalid check item given (must be <SID>.<job_name>)')
+        return (3, 'Invalid check item given (<SID>.<job_owner>.<job_name> expected)')
 
-    data = None
+    data_found = False
     for line in info:
-        if line[0] == sid and line[2] == jobname:
-            data = line
+
+        service_found = False
+
+        if line[0] == sid:
+            data_found = True
+
+        if   (line[0] == sid and line[1] == job_owner and line[2] == job_name):
+
+            service_found = True
+            param_disabled = params["disabled"]
+
+            if len(line) == 10:
+                # new agent output with '|' separator
+                sid, job_owner, job_name, job_state, job_runtime, job_run_count, \
+                job_enabled, job_nextrun, job_schedule, job_status = line
+
+            else:
+                # old agent format
+                # the extraction of data is complicated due to missing field separator
+                job_name = line[2]
+                job_state = line[3]
+                job_runtime = line[4]
+                job_enabled = line[6]
+                job_nextrun = " ".join(line[7:-3])
+                job_schedule = line[-2]
+                job_status = line[-1]
+
             break
-    if not data:
+
+    if not data_found:
         # In case of missing information we assume that the login into
         # the database has failed and we simply skip this check. It won't
         # switch to UNKNOWN, but will get stale.
-        raise MKCounterWrapped(None, "Login into database failed or job not existing")
+        raise MKCounterWrapped(None, "Login not possible for check %s" % item)
+
+    if not service_found:
+        return (2, 'Job is missing')
 
     state = 0
     output = []
     perfdata = []
 
-    job_state = line[3]
 
     txt = "Job-State: %s" % job_state
     if job_state == "BROKEN":
-        txt += " (!!)"
+        txt += "(!!)"
         state = max(state, 2)
     output.append(txt)
 
-    txt = "Enabled: %s" % (line[6] == "TRUE" and "Yes" or "No")
-    if line[6] != "TRUE" and job_state != 'RUNNING':
-        txt += " (!)"
-        state = max(state, 1)
+    txt = "Enabled: %s" % (job_enabled == "TRUE" and "Yes" or "No")
+    if job_enabled != "TRUE" and job_state != 'RUNNING':
+        if param_disabled:
+            txt += ' ignored'
+        else:
+            txt += "(!)"
+            state = max(state, 1)
     output.append(txt)
 
     # bugfix for an error in mk_oracle agent with missing round over last_duration
-    last_duration = int(line[4].replace('.',',').split(',',1)[0])
-    output.append("Last Duration: %s" % get_age_human_readable(last_duration))
+    last_duration = int(job_runtime.replace('.',',').split(',',1)[0])
+
+    output.append("Last Duration: %s" % (get_age_human_readable(last_duration)))
+
+    if "run_duration" in params:
+        warn, crit = params["run_duration"]
+
+        output.append(" levels at (%ds/%ds)" % (warn, crit))
+
+        if last_duration >= crit:
+            output.append("(!!)")
+            state = max(state, 2)
+        elif last_duration >= warn:
+            output.append("(!)")
+            state = max(state, 1)
+
     perfdata.append(("duration", last_duration))
 
     # 01.05.13 01:01:01,000000 +01:00
-    next_run = " ".join(line[7:-3])
-    if next_run.startswith("01.01.70 00:00:00"):
-        if line[-2] == "-":
-            next_run = "not scheduled (!)"
+    if job_nextrun.startswith("01.01.70 00:00:00"):
+        if job_schedule == "-":
+            job_nextrun = "not scheduled(!)"
             state = max(state, 1)
         else:
-            next_run = line[-2]
-    output.append("Next Run: %s" % next_run)
+            job_nextrun = job_schedule
+    output.append("Next Run: %s" % job_nextrun)
 
-    txt = "Last Run Status: %s" % (line[-1])
-    if line[-1] != "SUCCEEDED":
-        txt += " (!!)"
+    txt = "Last Run Status: %s" % (job_status)
+    if job_status != "SUCCEEDED":
+        txt += "(!!)"
         state = max(state, 2)
     output.append(txt)
 
@@ -103,7 +149,9 @@ def check_oracle_jobs(item, params, info):
 
 check_info['oracle_jobs'] = {
     "service_description"     : "ORA %s Job",
+    "group"                   : "oracle_jobs",
     "check_function"          : check_oracle_jobs,
     "inventory_function"      : inventory_oracle_jobs,
     "has_perfdata"            : True,
+    "default_levels_variable" : "oracle_jobs_defaults",
 }

@@ -3270,6 +3270,41 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "oracle_jobs",
+    _("ORACLE Scheduler Job"),
+    Dictionary(
+        help = _("A scheduler job is an object in an ORACLE database which could be "
+                 "compared to a cron job on unix. "
+                 "This rule allows you to define the maximum run duration and state.."),
+        elements = [
+            ( "run_duration",
+              Tuple(
+                  title = _("Maximum run duration for last execution"),
+                  help = _("Here you can define an upper limit for the run duration of "
+                           "last execution of the job."),
+                     elements = [
+                          Age(title = _("warning at")),
+                          Age(title = _("critical at")),
+                     ])),
+            ( "disabled", DropdownChoice(
+             title = _("Job State"),
+             totext = "",
+             choices = [
+                 ( True, _("Ignore the state of the Job")),
+                 ( False, _("Consider the state of the job")),],
+             help = _("The state of the job is ignored per default.")
+            )),]),
+    TextAscii(
+        title = _("Scheduler Job Name"),
+        help = _("Here you can set explicit Scheduler-Jobs  by defining them via SID, Job-Owner "
+                 "and Job-Name, separated by a dot, for example <b>TUX12C.SYS.PURGE_LOG</b>"),
+        regex = '.+\..+',
+        allow_empty = False),
+    None
+)
+
+register_check_parameters(
+    subgroup_applications,
     "mssql_backup",
     _("MSSQL Time since last Backup"),
     Optional(

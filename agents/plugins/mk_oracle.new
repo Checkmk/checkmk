@@ -324,17 +324,17 @@ sql_resumable()
 
 sql_jobs()
 {
-    echo 'PROMPT <<<oracle_jobs>>>'
+    echo 'PROMPT <<<oracle_jobs:sep(124)>>>'
     echo "SELECT upper(d.NAME)
-                 ||' '|| j.OWNER
-                 ||' '|| j.JOB_NAME
-                 ||' '|| j.STATE
-                 ||' '|| ROUND((TRUNC(sysdate) + j.LAST_RUN_DURATION - TRUNC(sysdate)) * 86400)
-                 ||' '|| j.RUN_COUNT
-                 ||' '|| j.ENABLED
-                 ||' '|| NVL(j.NEXT_RUN_DATE, to_date('1970-01-01', 'YYYY-mm-dd'))
-                 ||' '|| NVL(j.SCHEDULE_NAME, '-')
-                 ||' '|| d.STATUS
+                 ||'|'|| j.OWNER
+                 ||'|'|| j.JOB_NAME
+                 ||'|'|| j.STATE
+                 ||'|'|| ROUND((TRUNC(sysdate) + j.LAST_RUN_DURATION - TRUNC(sysdate)) * 86400)
+                 ||'|'|| j.RUN_COUNT
+                 ||'|'|| j.ENABLED
+                 ||'|'|| NVL(j.NEXT_RUN_DATE, to_date('1970-01-01', 'YYYY-mm-dd'))
+                 ||'|'|| NVL(j.SCHEDULE_NAME, '-')
+                 ||'|'|| d.STATUS
           FROM dba_scheduler_jobs j, dba_scheduler_job_run_details d, v\$database d
           WHERE d.owner=j.OWNER AND d.JOB_NAME=j.JOB_NAME
             AND d.LOG_ID=(SELECT max(LOG_ID) FROM dba_scheduler_job_run_details dd

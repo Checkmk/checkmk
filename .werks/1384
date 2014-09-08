@@ -1,0 +1,15 @@
+Title: oracle_jobs: new WATO rules, changed service name to SID.OWNER.NAME
+Level: 2
+Component: check
+Compatible: incomp
+Version: 1.2.5i6
+Date: 1410149976
+Class: feature
+
+The name of the services have changed. This change is required, because
+a job in ORACLE is only unique with the owner.
+New format: <tt>ORA</tt> <tt>SID.JOB_OWNER.JOB_NAME</tt> <tt>Job<tt>
+Disabled jobs are no longer ignored at inventory. New rules are
+added to configure the behaviour of disabled jobs and run duration.
+
+A reinventory of all <i>ORACLE</i> <i>jobs</i> is required!

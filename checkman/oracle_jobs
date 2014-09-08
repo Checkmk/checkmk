@@ -4,22 +4,42 @@ catalog: app/oracle
 license: GPL
 distribution: check_mk
 description:
- This check monitors jobs configured in ORACLE databases. It
- monitors all enabled jobs wether or not their last execution
- was successfull and the next execution is scheduled. It also
- records the execution time of the jobs.
+ This check monitors scheduler jobs configured in ORACLE
+ databases. It monitors all jobs wether or not their last
+ execution was successfull and the next execution is
+ scheduled. It also records the execution time of the jobs.
 
  This check needs the Check_MK {mk_oracle}-plugin installed in
  the agent. Please refer to the online documentation
  for how to install that plugin.
 
+ {"disabled"}: The state of a job is ignored when this parameter
+ is {True}. This is the default behavior.
+
+ {"run_duration"}: Create a WARN or CRIT when the run duration
+ exceeds the time in seconds.
+
 item:
- The SID of the database (as appearing in the process
- name of the pmon_... process) concatenated with the name
- of the job separated by a single dot.
+ {ORA} {<SID>.<JOB_OWNER>.<JOB_NAME>} {Job} for each entry from the
+ plugin.
 
 perfdata:
  One value: the duration of the last job execution in seconds.
 
+
 inventory:
  One separate check for each enabled job will be created.
+
+[parameters]
+parameters (dict):
+
+ {"disabled"}: Either {True} (default) or {False} - Ignore the state of
+ the job. {True} => a disabled job is OK
+
+ {"run_duration"}:  By default a tuple containing the warn and crit levels
+ in seconds for the run_duration of the job.
+
+[configuration]
+disabled (boolean): Default is {True}
+run_duration (int): Maximum run dureation for a job in seconds. Default is
+ None. Example for WARN=10 and CRIT=30 Seconds. {(10, 30)}

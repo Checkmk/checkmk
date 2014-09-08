@@ -1,0 +1,23 @@
+title: Arris CMTS: Memory Usage
+agents: snmp
+catalog: hw/network/arris
+license: GPL
+distribution: check_mk
+description:
+ This Check shows the current and total memory usage of module in a Arris CMTS device.
+
+item:
+ The id of the module
+
+perfdata:
+ One value is returned: The amount of memory used (in Bytes),
+ together with warn and crit levels and maximum value
+
+[parameters]
+parameters (dict): with the element
+{"levels"}: (float/int, float/int): levels of memory usage for {WARN} and {CRIT},
+            whereas {int} are treated as absolute and {float} as percentage values
+
+inventory:
+ One check for each module is created by the inventory.
+

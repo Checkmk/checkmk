@@ -1,0 +1,9 @@
+Title: arris_cmts_mem: New check for Memory usage on arris cmts modules.
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1410177635
+Class: feature
+
+

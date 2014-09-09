@@ -345,6 +345,7 @@ perfometers["check_mk-knuerr_rms_temp"] = perfometer_temperature
 perfometers["check_mk-arris_cmts_temp"] = perfometer_temperature
 perfometers["check_mk-casa_cpu_temp"] = perfometer_temperature
 perfometers["check_mk-rms200_temp"] = perfometer_temperature
+perfometers["check_mk-juniper_screenos_temp"] = perfometer_temperature
 
 def perfometer_temperature_multi(row, check_command, perf_data):
     display_value = -1
@@ -585,6 +586,7 @@ perfometers["check_mk-ibm_svc_nodestats.cpu_util"] = perfometer_cpu_utilization
 perfometers["check_mk-ibm_svc_systemstats.cpu_util"] = perfometer_cpu_utilization
 perfometers["check_mk-sni_octopuse_cpu"] = perfometer_cpu_utilization
 perfometers["check_mk-casa_cpu_util"] = perfometer_cpu_utilization
+perfometers["check_mk-juniper_screenos_cpu"] = perfometer_cpu_utilization
 
 def perfometer_ps_perf(row, check_command, perf_data):
     perf_dict = dict([(p[0], float(p[1])) for p in perf_data])
@@ -936,6 +938,7 @@ perfometers['check_mk-db2_mem'] = perfometer_simple_mem_usage
 perfometers['check_mk-esx_vsphere_hostsystem.mem_usage'] = perfometer_simple_mem_usage
 perfometers['check_mk-brocade_mlx.module_mem'] = perfometer_simple_mem_usage
 perfometers['check_mk-innovaphone_mem'] = perfometer_simple_mem_usage
+perfometers['check_mk-juniper_screenos_mem'] = perfometer_simple_mem_usage
 perfometers['check_mk-arris_cmts_mem'] = perfometer_simple_mem_usage
 
 def perfometer_vmguest_mem_usage(row, command, perf):

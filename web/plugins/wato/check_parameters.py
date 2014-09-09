@@ -6006,7 +6006,206 @@ register_check_parameters(
     "dict"
 ),
 
+bluecat_operstates = [
+        (1, "running normally"),
+        (2, "not running"),
+        (3, "currently starting"),
+        (4, "currently stopping"),
+        (5, "fault"),
+]
 
+register_check_parameters(
+    subgroup_networking,
+    "bluecat_ntp",
+    _("Bluecat NTP Settings"),
+    Dictionary(
+        elements = [
+            ( "oper_states",
+                Dictionary(
+                    title = _("Oper States"),
+                    elements = [
+                        ( "warning",
+                            ListChoice(
+                                title = _("States treated as warning"),
+                                choices = bluecat_operstates,
+                                default_value = [ 2, 3, 4 ],
+                                )
+                        ),
+                        ( "critical", 
+                            ListChoice(
+                                title = _("States treated as critical"),
+                                choices = bluecat_operstates,
+                                default_value = [ 5 ],
+                                )
+                        ),
+                    ],
+                    required_keys = [ 'warning', 'critical' ],
+                )
+            ),
+            ( "stratum",
+              Tuple(
+                  title = _("Levels for Stratum "),
+                  elements = [
+                      Integer(title = _("Warning if above")), 
+                      Integer(title = _("Critical if above")),
+                  ])
+            ),
+        ]
+    ),
+    None,
+    "first"
+),
+
+register_check_parameters(
+    subgroup_networking,
+    "bluecat_dhcp",
+    _("Bluecat DHCP Settings"),
+    Dictionary(
+        elements = [
+            ( "oper_states",
+                Dictionary(
+                    title = _("Oper States"),
+                    elements = [
+                        ( "warning",
+                            ListChoice(
+                                title = _("States treated as warning"),
+                                choices = bluecat_operstates,
+                                default_value = [ 2, 3, 4 ],
+                                )
+                        ),
+                        ( "critical", 
+                            ListChoice(
+                                title = _("States treated as critical"),
+                                choices = bluecat_operstates,
+                                default_value = [ 5 ],
+                                )
+                        ),
+                    ],
+                    required_keys = [ 'warning', 'critical' ],
+                )
+            ),
+        ],
+        required_keys = [ 'oper_states' ],  # There is only one value, so its required
+    ),
+    None,
+    "first"
+),
+
+register_check_parameters(
+    subgroup_networking,
+    "bluecat_command_server",
+    _("Bluecat Command Server Settings"),
+    Dictionary(
+        elements = [
+            ( "oper_states",
+                Dictionary(
+                    title = _("Oper States"),
+                    elements = [
+                        ( "warning",
+                            ListChoice(
+                                title = _("States treated as warning"),
+                                choices = bluecat_operstates,
+                                default_value = [ 2, 3, 4 ],
+                                )
+                        ),
+                        ( "critical", 
+                            ListChoice(
+                                title = _("States treated as critical"),
+                                choices = bluecat_operstates,
+                                default_value = [ 5 ],
+                                )
+                        ),
+                    ],
+                    required_keys = [ 'warning', 'critical' ],
+                )
+            ),
+        ],
+        required_keys = [ 'oper_states' ],  # There is only one value, so its required
+    ),
+    None,
+    "first"
+),
+
+register_check_parameters(
+    subgroup_networking,
+    "bluecat_dns",
+    _("Bluecat DNS Settings"),
+    Dictionary(
+        elements = [
+            ( "oper_states",
+                Dictionary(
+                    title = _("Oper States"),
+                    elements = [
+                        ( "warning",
+                            ListChoice(
+                                title = _("States treated as warning"),
+                                choices = bluecat_operstates,
+                                default_value = [ 2, 3, 4 ],
+                                )
+                        ),
+                        ( "critical", 
+                            ListChoice(
+                                title = _("States treated as critical"),
+                                choices = bluecat_operstates,
+                                default_value = [ 5 ],
+                                )
+                        ),
+                    ],
+                    required_keys = [ 'warning', 'critical' ],
+                )
+            ),
+        ],
+        required_keys = [ 'oper_states' ],  # There is only one value, so its required
+    ),
+    None,
+    "first"
+),
+
+bluecat_ha_operstates = [
+   ( 1 , "standalone"),
+   ( 2 , "active"),
+   ( 3 , "passiv"),
+   ( 4 , "stopped"),
+   ( 5 , "stopping"),
+   ( 6 , "becoming active"),
+   ( 7 , "becomming passive"),
+   ( 8 , "fault"),
+]
+
+register_check_parameters(
+    subgroup_networking,
+    "bluecat_ha",
+    _("Bluecat HA Settings"),
+    Dictionary(
+        elements = [
+            ( "oper_states",
+                Dictionary(
+                    title = _("Oper States"),
+                    elements = [
+                        ( "warning",
+                            ListChoice(
+                                title = _("States treated as warning"),
+                                choices = bluecat_ha_operstates,
+                                default_value = [ 5, 6, 7 ],
+                                ),
+                        ),
+                        ( "critical", 
+                            ListChoice(
+                                title = _("States treated as critical"),
+                                choices = bluecat_ha_operstates ,
+                                default_value = [ 8, 4 ],
+                                ),
+                        ),
+                    ],
+                    required_keys = [ 'warning', 'critical' ],
+                )
+            ),
+        ],
+        required_keys = [ 'oper_states' ],  # There is only one value, so its required
+    ),
+    None,
+    "first"
+),
 register_check_parameters(
     subgroup_storage,
     "fc_port",

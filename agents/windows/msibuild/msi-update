@@ -94,7 +94,7 @@ cabinet_files = []
 for line in lines_file_idt[3:]:
     tokens = line.split("\t")
     filename = tokens[0]
-    cabinet_files.append(filename)
+    cabinet_files.append((tokens[-1], filename))
     file_stats = os.stat(source_dir + "/" + filename)
     new_size    = file_stats.st_size
     tokens[3] = str(new_size)
@@ -172,9 +172,8 @@ os.system((path_prefix + "msibuild %(new_msi_file)s -q \"DELETE FROM _Streams wh
 verbose("Generating new product.cab")
 
 lcab_files = ""
-for lcab_file in cabinet_files:
+for index, lcab_file in sorted(cabinet_files):
     lcab_files += "%(source_dir)s/%(lcab_file)s " % globals()
-
 os.system("lcab -n %(lcab_files)s %(work_dir)s/product.cab" % globals())
 
 # Add modified product.cab

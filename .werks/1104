@@ -1,0 +1,15 @@
+Title: winperf_if: Improved matching of data from wmic_if.bat / wmic_if.ps1 scripts
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1410263307
+Class: fix
+
+Interfaces reported by the wmic_if.bat, wmic_if.ps1 script were not
+entirely identical with the interface names reported by the windows
+performance counters.
+The matching algorhytm has been improved. Due to the better matching
+the interface checks will provide more output, like the mac address.
+
+Note: The new matching algorhythm should have no negative side effects for existing winperf_if checks

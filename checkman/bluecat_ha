@@ -1,0 +1,14 @@
+title: Bluecat Adonis HA State
+agents: snmp
+catalog: hw/network/bluecat
+license: GPL
+distribution: check_mk
+description:
+ This Check monitors the OperState of the HA Service on bluecat adonis devices.
+ Per default the check returns {CRITICAL} if the device is in the state fault or stopped. {WARNING} will be returned if
+ the device is in the state stopping, becoming active, becoming passive.
+ The behavior can be changed using WATO.
+
+inventory:
+ One service will be created 
+

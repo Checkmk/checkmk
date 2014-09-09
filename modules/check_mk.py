@@ -4879,8 +4879,13 @@ def do_create_config():
     if bake_agents_on_restart and 'do_bake_agents' in globals():
         sys.stdout.write("Baking agents...")
         sys.stdout.flush()
-        do_bake_agents()
-        sys.stdout.write(tty_ok + "\n")
+        try:
+            do_bake_agents()
+            sys.stdout.write(tty_ok + "\n")
+        except Exception, e:
+            if opt_debug:
+               raise
+            sys.stdout.write("Error: %s\n" % e)
 
 
 def do_output_nagios_conf(args):

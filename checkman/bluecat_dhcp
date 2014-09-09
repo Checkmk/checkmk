@@ -1,0 +1,15 @@
+title: Bluecat Adonis DHCP State
+agents: snmp
+catalog: hw/network/bluecat
+license: GPL
+distribution: check_mk
+description:
+ This Check monitors the OperState of the DHCP Service on bluecat adonis devices.
+ The Check will return {OK} if the Service is running, {CRITICAL} if the state is fault, {WARNING} in each other case.
+ The number of successful DHCP leases issued per second is return as information.
+
+inventory:
+ One service will be created 
+
+perfdata:
+ One value is returned: The number of DHCP leases per second

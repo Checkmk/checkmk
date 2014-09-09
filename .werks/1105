@@ -1,0 +1,13 @@
+Title: wmic_if.ps1: Powershell version of the wmic_if.bat script
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1410264432
+Class: feature
+
+The new script wmic_if.ps1 should deliver the same information like the
+wmic_if.bat script, but more reliable. In Win2012 the wmic_if.bat script
+is unable to determine the correct interface speed for teaming interfaces.
+This script is able to do so.<br>
+Note: Do not use both plugins at the same time

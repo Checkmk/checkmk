@@ -23,18 +23,18 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-$opt[1] = "--vertical-label \"CPU Utilization %\"  -l0  --title \"CPU Utilization for $hostname\" ";
+$opt[1] = "--vertical-label \"CPU utilization %\"  -l0  --title \"CPU utilization for $hostname\" ";
 #
 $def[1] =  "DEF:util1=$RRDFILE[1]:$DS[1]:MAX " ;
-$def[1] .= "AREA:util1#66FFFF:\"Avg. Utilization last minute\" " ;
-$def[1] .= "GPRINT:util1:LAST:\"%6.2lf last\" " ;
-$def[1] .= "GPRINT:util1:AVERAGE:\"%6.2lf avg\" " ;
-$def[1] .= "GPRINT:util1:MAX:\"%6.2lf max\\n\" ";
+$def[1] .= "AREA:util1#60C080:\"Avg. utilization last minute    \" " ;
+$def[1] .= "GPRINT:util1:LAST:\"%6.0lf%% last\" " ;
+$def[1] .= "GPRINT:util1:AVERAGE:\"%6.0lf%% avg\" " ;
+$def[1] .= "GPRINT:util1:MAX:\"%6.0lf%% max\\n\" ";
 $def[1] .= "DEF:util15=$RRDFILE[2]:$DS[1]:MAX " ;
-$def[1] .= "LINE:util15#0000CC:\"Avg. Utilization last 15 minutes\" " ;
-$def[1] .= "GPRINT:util15:LAST:\"%6.2lf last\" " ;
-$def[1] .= "GPRINT:util15:AVERAGE:\"%6.2lf avg\" " ;
-$def[1] .= "GPRINT:util15:MAX:\"%6.2lf max\\n\" ";
+$def[1] .= "LINE:util15#306040:\"Avg. utilization last 15 minutes\" " ;
+$def[1] .= "GPRINT:util15:LAST:\"%6.0lf%% last\" " ;
+$def[1] .= "GPRINT:util15:AVERAGE:\"%6.0lf%% avg\" " ;
+$def[1] .= "GPRINT:util15:MAX:\"%6.0lf%% max\\n\" ";
 $def[1] .= "HRULE:$WARN[1]#FFFF00 ";
 $def[1] .= "HRULE:$CRIT[1]#FF0000 ";
 ?>

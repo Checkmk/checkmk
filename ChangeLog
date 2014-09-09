@@ -46,6 +46,7 @@
     * 1383 oracle_asm_diskgroup: Account for offline disks and required mirror free space...
             NOTE: Please refer to the migration notes!
     * 1178 arris_cmts_mem: New check for Memory usage on arris cmts modules.
+    * 1397 juniper_screenos_cpu, juniper_screenos_fan, juniper_screenos_mem, juniper_screenos_temp, juniper_screenos_vpn: new checks for Juniper ScreenOS Firewalls
     * 1051 FIX: tcp_conn_stats: fix missing performance data...
     * 1142 FIX: winperf_ts_sessions: fix computation, check has never really worked
     * 1090 FIX: zfsget: fixed exception which happened on incomplete zfs entries

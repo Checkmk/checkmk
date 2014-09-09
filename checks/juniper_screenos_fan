@@ -26,18 +26,19 @@
 
 
 def inventory_juniper_screenos_fan(info):
-    return [ (line[0], None) for line in info ]
+    # SNMP outputs "Fan 1". Our item is just '1'
+    return [ (line[0].split()[-1], None) for line in info ]
 
 def check_juniper_screenos_fan(item, params, info):
     for fan_id, fan_status in info:
-        if fan_id == item:
+        if fan_id.split()[-1] == item:
             if fan_status == "1":
-               return (0, "%s Status is good" % fan_id)
+               return (0, "status is good")
             elif fan_status == "2":
-               return (2, "%s Status is failed" % fan_id)
+               return (2, "status is failed")
             else:
                 return (2, "Unknown fan status %s" % fan_status )
-    return (2, "Sensor not found in SNMP data")
+    return (3, "Sensor not found in SNMP data")
 
 check_info["juniper_screenos_fan"] = {
     "check_function"        : check_juniper_screenos_fan,

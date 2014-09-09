@@ -2424,10 +2424,10 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_os,
-    "juniper_screenos_mem",
-    _("Juniper Screenos Memory Usage"),
+    "juniper_mem",
+    _("Juniper Memory Usage"),
     Tuple(
-        title = _("Specify labesl in percentage of total Memory Usage"),
+        title = _("Specify levels in percentage of total memory usage"),
         elements = [
             Percentage(title = _("Warning at a usage of"), unit =_("% of RAM"), default_value = 80.0, maxvalue = 100.0 ),
             Percentage(title = _("Critical at a usage of"), unit =_("% of RAM"), default_value = 90.0, maxvalue = 100.0 )

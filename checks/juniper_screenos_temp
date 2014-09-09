@@ -27,22 +27,30 @@
 juniper_screenos_temp_default_levels = ( 70, 80 )
 
 def inventory_juniper_screenos_temp(info):
-    return [ (line[0] , "juniper_screenos_temp_default_levels" ) for line in info ]
+    for name, temp in info:
+        if name.endswith("Temperature"):
+            name = name.rsplit(None, 1)[0]
+        yield (name, "juniper_screenos_temp_default_levels")
 
 def check_juniper_screenos_temp(item, params, info):
-    for line in info:
-        if line[0] == item:
-            temp = int(line[1])
+    for name, temp in info:
+        if name.endswith("Temperature"):
+            name = name.rsplit(None, 1)[0]
+        if name == item:
+            temp = int(temp)
             warn, crit = params
             perfdata = [( "temp", temp, warn, crit )]
-            infotxt = "%s °C (levels at %d °C/%d °C)" % (temp, warn, crit)
+            infotxt = "Temperature is %s °C" % temp
             if temp >= crit:
-                return (2, infotxt, perfdata)
+                status = 2
             elif temp >= warn:
-                return (1, infotxt, perfdata)
+                status = 1
             else:
-                return (0, infotxt, perfdata)
-    return (2, "Sensor not found in SNMP data")
+                status = 0
+            if status:
+                infotext += " (levels at %d °C/%d °C)" % (warn, crit)
+            return status, infotxt, perfdata
+    return (3, "Sensor not found in SNMP data")
 
 check_info["juniper_screenos_temp"] = {
     "check_function"        : check_juniper_screenos_temp,

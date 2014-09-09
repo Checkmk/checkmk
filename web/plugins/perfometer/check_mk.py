@@ -219,7 +219,6 @@ def perfometer_check_mk_mem_win(row, check_command, perf_data):
     return "%d%%" % perc, perfometer_linear(perc, color)
 
 perfometers["check_mk-mem.win"] = perfometer_check_mk_mem_win
-perfometers["check_mk-juniper_trpz_mem"] = perfometer_check_mk_mem_win
 
 def perfometer_check_mk_cpu_threads(row, check_command, perf_data):
     color = { 0: "#a4f", 1: "#ff2", 2: "#f22", 3: "#fa2" }[row["service_state"]]
@@ -940,6 +939,7 @@ perfometers['check_mk-brocade_mlx.module_mem'] = perfometer_simple_mem_usage
 perfometers['check_mk-innovaphone_mem'] = perfometer_simple_mem_usage
 perfometers['check_mk-juniper_screenos_mem'] = perfometer_simple_mem_usage
 perfometers['check_mk-arris_cmts_mem'] = perfometer_simple_mem_usage
+perfometers["check_mk-juniper_trpz_mem"] = perfometer_simple_mem_usage
 
 def perfometer_vmguest_mem_usage(row, command, perf):
     used = float(perf[0][1])

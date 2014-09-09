@@ -39,7 +39,7 @@ def check_bluecat_dns_queries(item, _no_params, info):
     for value, name in zip(map(int, info[0]), value_names):
         try:
             timedif, rate = get_counter("bluecat_dns_queries."+name, now, value)
-            yield 0, "%s: %s (last %.0f sec)" % (name, rate, timedif), [ ( name, value )]
+            yield 0, "%s: %s (last %.0f sec)" % (name, rate, timedif), [ ( name, rate )]
         except MKCounterWrapped:
             wrapped = True
     if wrapped:

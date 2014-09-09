@@ -1,0 +1,14 @@
+title: Bluecat Adonis/ Proteus NTP 
+agents: snmp
+catalog: hw/network/bluecat
+license: GPL
+distribution: check_mk
+description:
+ This Check monitors the OperState of the NTP Service on bluecat devices.
+ The Check will return {OK} if the Service is running, {CRITICAL} if the state is fault, {WARNING} in each other case.
+ The Levels can be set with WATO.
+ Also Checked are the Stratum and the Leap Seconds. Each aberrancy will lead to a {WARNING} state.
+
+inventory:
+ One service will be created 
+

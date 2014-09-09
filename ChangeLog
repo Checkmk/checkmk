@@ -48,6 +48,7 @@
     * 1178 arris_cmts_mem: New check for Memory usage on arris cmts modules.
     * 1179 bluecat_dhcp: New Check for DHCP Service on bluecat adonis devices.
     * 1180 bluecat_dns, bluecat_dns_queries: New DNS Checks for Bluecat Adonis.
+    * 1181 bluecat_ntp: New Check for NTP on bluecat adonis or proteus devices
     * 1051 FIX: tcp_conn_stats: fix missing performance data...
     * 1142 FIX: winperf_ts_sessions: fix computation, check has never really worked
     * 1090 FIX: zfsget: fixed exception which happened on incomplete zfs entries

@@ -5991,6 +5991,51 @@ register_check_parameters(
     "dict"
 ),
 
+bluecat_operstates = [
+        (1, "running normally"),
+        (2, "not running"),
+        (3, "currently starting"),
+        (4, "currently stopping"),
+        (5, "fault"),
+]
+
+register_check_parameters(
+    subgroup_networking,
+    "bluecat_ntp",
+    _("Bluecat NTP Settings"),
+    Dictionary(
+        elements = [
+            ( "oper_states",
+                Dictionary(
+                    title = _("Oper States"),
+                    elements = [
+                        ( "warning",
+                            ListChoice(
+                                title = _("States treated as warning"),
+                                choices = bluecat_operstates )
+                        ),
+                        ( "critical", 
+                            ListChoice(
+                                title = _("States treated as critical"),
+                                choices = bluecat_operstates )
+                        ),
+                    ],
+                    required_keys = [ 'warning', 'critical' ],
+                )
+            ),
+            ( "stratum",
+              Tuple(
+                  title = _("Levels for Stratum "),
+                  elements = [
+                      Integer(title = _("Warning if above")), 
+                      Integer(title = _("Critical if above")),
+                  ])
+            ),
+        ]
+    ),
+    None,
+    "first"
+),
 
 register_check_parameters(
     subgroup_storage,

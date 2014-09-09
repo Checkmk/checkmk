@@ -497,6 +497,26 @@ sql_longactivesessions()
          "
 }
 
+sql_102_asm_diskgroup()
+{
+    echo 'prompt <<<oracle_asm_diskgroup>>>'
+    echo "select STATE
+                 || ' ' || TYPE
+                 || ' ' || 'N'
+                 || ' ' || sector_size
+                 || ' ' || block_size
+                 || ' ' || allocation_unit_size
+                 || ' ' || total_mb
+                 || ' ' || free_mb
+                 || ' ' || required_mirror_free_mb
+                 || ' ' || usable_file_mb
+                 || ' ' || offline_disks
+                 || 'N' -- || voting_files
+                 || ' ' || name || '/'
+            from v\$asm_diskgroup;
+         "
+}
+
 sql_112_asm_diskgroup()
 {
     echo 'prompt <<<oracle_asm_diskgroup>>>'

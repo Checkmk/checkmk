@@ -77,7 +77,6 @@ def convert_winperf_if(info):
             if counter:
                 for nr, value in enumerate(line[1:len(nic_names)+1]):
                     nics[nic_names[nr]][counter] = int(value)
-
             # Not and integer: then this must be the line with the additional
             # information from wmic (which is optional!)
             else:
@@ -91,20 +90,58 @@ def convert_winperf_if(info):
                         nic_name += " " + str(conn_id)
                     except:
                         pass
+
+
+                    def transform_name(name):
+                        # Intel[R] PRO 1000 MT-Desktopadapter__3   (perf counter)
+                        # Intel(R) PRO/1000 MT-Desktopadapter 3    (wmic name)
+                        # Intel(R) PRO/1000 MT-Desktopadapter #3   (wmic InterfaceDescription)
+                        mod_nic_name = name
+                        for from_token, to_token in [ ("/", " "), ("(", "["), (")", "]"), ("#", " ") ]:
+                            for n in nic_names:
+                                if from_token in n:
+                                    # we do not modify it if this character is in any of the counter names
+                                    break
+                            else:
+                                mod_nic_name = mod_nic_name.replace(from_token, to_token).replace("  ", " ")
+                        return mod_nic_name
+
+                    found_match = False
+
+                    # Exact match
+                    if nic_name in nic_names:
+                        found_match = True
+
                     # In the perf counters the nics have strange suffixes, e.g.
                     # Ethernetadapter der AMD-PCNET-Familie 2 - Paketplaner-Miniport, while
                     # in wmic it's only named "Ethernetadapter der AMD-PCNET-Familie 2".
-                    longest_match = 0
-                    if nic_name not in nic_names:
-                        for n in nic_names:
-                            if n.startswith(nic_name + " "):
-                                l = len(nic_name)
-                                if not (n[l:].strip()[0]).isdigit():
-                                    nic_name = n
-                                    break
+                    if not found_match:
+                        mod_nic_name = transform_name(nic_name)
+
+                        if mod_nic_name not in nic_names:
+                            for n in nic_names:
+                                if n.startswith(mod_nic_name + " "):
+                                    l = len(mod_nic_name)
+                                    if not (n[l:].strip()[0]).isdigit():
+                                        nic_name = n
+                                        found_match = True
+                                        break
                         else:
-                            # Ignore interfaces that do not have counters
-                            continue
+                            nic_name = mod_nic_name
+
+                    # The last straw. Try to find this the name as exact match in other fields
+                    if not found_match:
+                        for entry in [ "NetConnectionID", "InterfaceDescription" ]:
+                            if as_dict.get(entry):
+                                mod_nic_name = transform_name(as_dict.get(entry))
+                                if mod_nic_name in nic_names:
+                                    nic_name = mod_nic_name
+                                    found_match = True
+                                    break
+
+                    if not found_match:
+                        # Ignore interfaces that do not have counters
+                        continue
 
                     nics[nic_name].update(as_dict)
     except StopIteration:
@@ -112,7 +149,6 @@ def convert_winperf_if(info):
 
     # Now convert the dicts into the format that is needed by if.include
     converted = []
-
 
     # Sort NIC names are create artifical index
     nic_names = nics.keys()

@@ -42,6 +42,8 @@ except:
 
 folders = {}
 for line in datei:
+    if line.startswith('#'):
+        continue
     ordner, name, alias, ipaddress = line.split(';')[:4]
     if ordner:
         try:

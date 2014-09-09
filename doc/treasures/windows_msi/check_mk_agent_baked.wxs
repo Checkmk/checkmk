@@ -81,11 +81,11 @@
 
         <InstallExecuteSequence>
             <Custom Action="install_service" After="InstallFinalize">NOT REMOVE="ALL" AND INSTALLSERVICE</Custom>
-            <Custom Action="start_service"     After="InstallFinalize">NOT REMOVE="ALL" AND INSTALLSERVICE</Custom>
+            <Custom Action="start_service"   After="InstallFinalize">NOT REMOVE="ALL" AND INSTALLSERVICE</Custom>
         </InstallExecuteSequence>
 
         <InstallExecuteSequence>
-           <Custom Action="stop_service"        After="InstallInitialize">REMOVE="ALL"</Custom>
+           <Custom Action="stop_service"      After="InstallInitialize">REMOVE="ALL"</Custom>
            <Custom Action='uninstall_service' After='InstallInitialize'>REMOVE="ALL"</Custom>
         </InstallExecuteSequence>
 
@@ -100,8 +100,11 @@
                       Name="check_mk_agent.exe" KeyPath="yes" Checksum="yes"/>
                 <Condition>VersionNT64</Condition>
             </Component>
-            <Component Id="check_mk.example.ini" Guid="1383472d-d59e-4c7d-beca-02574758212a">
-                <File Id="check_mk.example.ini" Source="sources\check_mk.example.ini"/>
+            <Component Id="plugins.cmkp" Guid="0e9229ec-373b-11e4-824b-002713b4a9ec">
+                <File Id="plugins.cmkp" Source="sources\plugins.cmkp"/>
+            </Component>
+            <Component Id="check_mk.ini" Guid="fa07238c-373b-11e4-961a-002713b4a9ec">
+                <File Id="check_mk.ini" Source="sources\check_mk.ini"/>
             </Component>
 	        <Directory Id="LocalName" Name="local">
   		        <Component Id="localFolder" Guid="f0cdd975-2dad-45c5-b089-d566d7418ae7">
@@ -128,7 +131,8 @@
         <Feature Id="Agent" Level="1">
             <ComponentRef Id="agent32"/>
             <ComponentRef Id="agent64"/>
-            <ComponentRef Id="check_mk.example.ini"/>
+            <ComponentRef Id="check_mk.ini"/>
+            <ComponentRef Id="plugins.cmkp"/>
             <ComponentRef Id="localFolder"/>
             <ComponentRef Id="pluginFolder"/>
             <ComponentRef Id="RegistryEntries"/>

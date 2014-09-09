@@ -34,8 +34,18 @@ def inventory_bluecat_dns_queries(info):
 def check_bluecat_dns_queries(item, _no_params, info):
     value_names = [ 'Success', 'Referral', 'NXRSet',
                     'NXDomain', 'Recursion', 'Failure' ]
-    for value, name in zip(info[0], value_names):
-        yield 0, "%s: %s" % (name, value), [ ( name, value )]
+    wrapped = False
+    now = time.time()
+    for value, name in zip(map(int, info[0]), value_names):
+        try:
+            timedif, rate = get_counter("bluecat_dns_queries."+name, now, value)
+            yield 0, "%s: %s (last %.0f sec)" % (name, rate, timedif), [ ( name, value )]
+        except MKCounterWrapped:
+            wrapped = True
+    if wrapped:
+        raise MKCounterWrapped(None, "")
+
+
 
 check_info["bluecat_dns_queries"] = {
     "check_function"        : check_bluecat_dns_queries,

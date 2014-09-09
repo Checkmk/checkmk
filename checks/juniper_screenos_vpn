@@ -7,7 +7,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -24,16 +24,29 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-check_info["juniper_trpz_mem"] = {
-    'check_function':        check_juniper_mem,
-    'inventory_function':    inventory_juniper_mem,
-    'service_description':   'Memory used',
-    'has_perfdata':          True,
-    "group":                 "juniper_mem",
-    "snmp_scan_function":    lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.14525.3.1.6"),
-    "snmp_info":             (".1.3.6.1.4.1.14525.4.8.1.1", [
-                                                            "12.1", # trpzSysCpuMemoryInstantUsage
-                                                            "6",    # trpzSysCpuMemorySize
-                                                            ]),
-    "includes":              [ "juniper_mem.include" ],
+
+def inventory_juniper_screenos_vpn(info):
+    return [ (line[0], None) for line in info ]
+
+def check_juniper_screenos_vpn(item, params, info):
+    for vpn_id, vpn_status in info:
+        if vpn_id == item:
+            if vpn_status == "1":
+               return (0, "VPN Status %s is active" % vpn_id)
+            elif vpn_status == "0":
+               return (2, "VPN Status %s inactive" % vpn_id)
+            else:
+                return (1, "Unknown vpn status %s" % vpn_status)
+    return (2, "VPN name not found in SNMP data")
+
+check_info["juniper_screenos_vpn"] = {
+    "check_function"        : check_juniper_screenos_vpn,
+    "inventory_function"    : inventory_juniper_screenos_vpn,
+    "service_description"   : "VPN %s",
+    "has_perfdata"          : False,
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.3224.1"),
+    "snmp_info"             : (".1.3.6.1.4.1.3224.4.1.1.1",[
+                                                             4, # VPN Name
+                                                             23, # VPN Ike 2 Status
+                                                             ])
 }

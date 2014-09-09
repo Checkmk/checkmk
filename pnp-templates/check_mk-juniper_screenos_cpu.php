@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -7,7 +6,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -24,16 +23,18 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-check_info["juniper_trpz_mem"] = {
-    'check_function':        check_juniper_mem,
-    'inventory_function':    inventory_juniper_mem,
-    'service_description':   'Memory used',
-    'has_perfdata':          True,
-    "group":                 "juniper_mem",
-    "snmp_scan_function":    lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.14525.3.1.6"),
-    "snmp_info":             (".1.3.6.1.4.1.14525.4.8.1.1", [
-                                                            "12.1", # trpzSysCpuMemoryInstantUsage
-                                                            "6",    # trpzSysCpuMemorySize
-                                                            ]),
-    "includes":              [ "juniper_mem.include" ],
-}
+$opt[1] = "--vertical-label \"CPU utilization %\"  -l0  --title \"CPU utilization for $hostname\" ";
+#
+$def[1] =  "DEF:util1=$RRDFILE[1]:$DS[1]:MAX " ;
+$def[1] .= "AREA:util1#60C080:\"Avg. utilization last minute    \" " ;
+$def[1] .= "GPRINT:util1:LAST:\"%6.0lf%% last\" " ;
+$def[1] .= "GPRINT:util1:AVERAGE:\"%6.0lf%% avg\" " ;
+$def[1] .= "GPRINT:util1:MAX:\"%6.0lf%% max\\n\" ";
+$def[1] .= "DEF:util15=$RRDFILE[2]:$DS[1]:MAX " ;
+$def[1] .= "LINE:util15#306040:\"Avg. utilization last 15 minutes\" " ;
+$def[1] .= "GPRINT:util15:LAST:\"%6.0lf%% last\" " ;
+$def[1] .= "GPRINT:util15:AVERAGE:\"%6.0lf%% avg\" " ;
+$def[1] .= "GPRINT:util15:MAX:\"%6.0lf%% max\\n\" ";
+$def[1] .= "HRULE:$WARN[1]#FFFF00 ";
+$def[1] .= "HRULE:$CRIT[1]#FF0000 ";
+?>

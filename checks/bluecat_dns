@@ -34,7 +34,7 @@ factory_settings["bluecat_dns"] = {
 def inventory_bluecat_dns(info):
     return [(None, None)]
 
-def check_bluecat_dns(item, _no_params, info):
+def check_bluecat_dns(item, params, info):
     oper_state = int(info[0][0])
     oper_states = {
         1 : "running normally",

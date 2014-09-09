@@ -6041,6 +6041,76 @@ register_check_parameters(
     "first"
 ),
 
+register_check_parameters(
+    subgroup_networking,
+    "bluecat_dhcp",
+    _("Bluecat DHCP Settings"),
+    Dictionary(
+        elements = [
+            ( "oper_states",
+                Dictionary(
+                    title = _("Oper States"),
+                    elements = [
+                        ( "warning",
+                            ListChoice(
+                                title = _("States treated as warning"),
+                                choices = bluecat_operstates,
+                                default_value = [ 2, 3, 4 ],
+                                )
+                        ),
+                        ( "critical", 
+                            ListChoice(
+                                title = _("States treated as critical"),
+                                choices = bluecat_operstates,
+                                default_value = [ 5 ],
+                                )
+                        ),
+                    ],
+                    required_keys = [ 'warning', 'critical' ],
+                )
+            ),
+        ],
+        required_keys = [ 'oper_states' ],  # There is only one value, so its required
+    ),
+    None,
+    "first"
+),
+
+register_check_parameters(
+    subgroup_networking,
+    "bluecat_dns",
+    _("Bluecat DNS Settings"),
+    Dictionary(
+        elements = [
+            ( "oper_states",
+                Dictionary(
+                    title = _("Oper States"),
+                    elements = [
+                        ( "warning",
+                            ListChoice(
+                                title = _("States treated as warning"),
+                                choices = bluecat_operstates,
+                                default_value = [ 2, 3, 4 ],
+                                )
+                        ),
+                        ( "critical", 
+                            ListChoice(
+                                title = _("States treated as critical"),
+                                choices = bluecat_operstates,
+                                default_value = [ 5 ],
+                                )
+                        ),
+                    ],
+                    required_keys = [ 'warning', 'critical' ],
+                )
+            ),
+        ],
+        required_keys = [ 'oper_states' ],  # There is only one value, so its required
+    ),
+    None,
+    "first"
+),
+
 bluecat_ha_operstates = [
    ( 1 , "standalone"),
    ( 2 , "active"),

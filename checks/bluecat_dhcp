@@ -24,9 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Example output from agent:
-# Put here the example output from your TCP-Based agent. If the
-# check is SNMP-Based, then remove this section
+factory_settings["bluecat_dhcp"] = {
+    "oper_states" : {
+        "warning"     : [ 2, 3, 4 ],
+        "critical"    : [ 5 ],
+    },
+}
 
 def inventory_bluecat_dhcp(info):
     return [(None, None)]
@@ -42,20 +45,22 @@ def check_bluecat_dhcp(item, _no_params, info):
 
     }
     state = 0
-    if oper_state in [ 2, 3, 4 ]:
+    if oper_state in params['oper_states']['warning']:
         state = 1
-    elif oper_state == 5:
+    elif oper_state in params['oper_states']['critical']:
         state = 2
     yield state, "DHCP is %s" % oper_states[oper_state]
     yield 0, '%s Leases per second' % leases_sec, [ ('leases', leases_sec ) ]
 
-check_info["bluecat_dhcp"] = {
-    "check_function"        : check_bluecat_dhcp,
-    "inventory_function"    : inventory_bluecat_dhcp,
-    "service_description"   : "DHCP",
-    "has_perfdata"          : True,
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.13315.2.1",
-    "snmp_info"             : (".1.3.6.1.4.1.13315.3.1.1.2.1", [
+check_info["bluecat_dhcp"] =     {
+    "check_function"            : check_bluecat_dhcp,
+    "inventory_function"        : inventory_bluecat_dhcp,
+    "service_description"       : "DHCP",
+    "has_perfdata"              : True,
+    "default_levels_variable"   : "bluecat_dhcp",
+    "group"                     : "bluecat_dhcp",
+    "snmp_scan_function"        : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.13315.2.1",
+    "snmp_info"                 : (".1.3.6.1.4.1.13315.3.1.1.2.1", [
                                                                 1, # dhcpOperState
                                                                 3, # dhcpLeaseStatsSuccess
                                                                ])

@@ -45,7 +45,7 @@ def check_arris_cmts_mem(item, params, info):
             if type(crit) == float:
                 warn_abs = heap * warn / 100
                 crit_abs = heap * crit / 100
-                perfdata = [ ( 'usage', usage, warn_abs, crit_abs, 0, heap )] 
+                perfdata = [ ( 'usage', usage, warn_abs, crit_abs, 0, heap )]
                 levels = " (Warn/Crit at %f/%f %%)" % ( warn, crit )
                 if usage_perc >= crit:
                     yield 2, infotext+levels, perfdata
@@ -54,7 +54,7 @@ def check_arris_cmts_mem(item, params, info):
                 else:
                     yield 0, infotext, perfdata
             else:
-                perfdata = [ ( 'usage', usage, warn, crit, 0, heap )] 
+                perfdata = [ ( 'usage', usage, warn, crit, 0, heap )]
                 levels = " (Warn/Crit at %s/%s)" % \
                     ( get_bytes_human_readable(warn), get_bytes_human_readable(crit) )
                 if usage >= crit:

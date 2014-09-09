@@ -49,6 +49,7 @@
     * 1179 bluecat_dhcp: New Check for DHCP Service on bluecat adonis devices.
     * 1180 bluecat_dns, bluecat_dns_queries: New DNS Checks for Bluecat Adonis.
     * 1181 bluecat_ntp: New Check for NTP on bluecat adonis or proteus devices
+    * 1105 wmic_if.ps1: Powershell version of the wmic_if.bat script...
     * 1051 FIX: tcp_conn_stats: fix missing performance data...
     * 1142 FIX: winperf_ts_sessions: fix computation, check has never really worked
     * 1090 FIX: zfsget: fixed exception which happened on incomplete zfs entries

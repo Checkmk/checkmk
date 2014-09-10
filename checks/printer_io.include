@@ -97,6 +97,8 @@ def check_printer_io(item, params, info, what):
         if name == item or descr == item or index.split('.')[-1] == item:
             state_txt = []
             state_state = 0
+
+            yield  0, descr
             if snmp_status == 0:
                 state_txt.append(printer_io_states[0][1])
             else:

@@ -53,6 +53,7 @@
     * 1182 bluecat_ha: New Check for HA Status on Bluecat Adonis devices
     * 1183 bluecat_commandserver: New Check for bluecat adonis devices
     * 1397 juniper_screenos_cpu, juniper_screenos_fan, juniper_screenos_mem, juniper_screenos_temp, juniper_screenos_vpn: new checks for Juniper ScreenOS Firewalls
+    * 1106 mk_inventory.ps1: now uses the MK_CONFDIR environment variable from the agent (if available)...
     * 1051 FIX: tcp_conn_stats: fix missing performance data...
     * 1142 FIX: winperf_ts_sessions: fix computation, check has never really worked
     * 1090 FIX: zfsget: fixed exception which happened on incomplete zfs entries

@@ -1,0 +1,20 @@
+Title: mk_inventory.ps1: now uses the MK_CONFDIR environment variable from the agent (if available)
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1410341164
+Class: feature
+
+The mk_inventory.ps1 needs to create statefile for each host.
+The path of this files were hardcoded to <tt>c:\Program Files (x86)\check_mk\timestamp.$remote_host</tt><br>
+This has been changed. The latest check_mk agent now provides additional environment variables
+
+<ul>
+<li>PLUGINSDIR</li>
+<li>LOCALDIR</li>
+<li>SPOOLDIR</li>
+<li>MK_CONFDIR</li>
+</ul>
+
+and the script uses them accordingly.

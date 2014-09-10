@@ -4,7 +4,15 @@ $name = (Get-Item env:\Computername).Value
 $separator = "|"
 # filename for timestamp
 $remote_host = $env:REMOTE_HOST
-$timestamp = "c:\Program Files (x86)\check_mk\timestamp.$remote_host"
+$agent_dir   = $env:MK_CONFDIR
+
+# Fallback if the (old) agent does not provide the MK_CONFDIR
+if (!$agent_dir) {
+    $agent_dir = "c:\Program Files (x86)\check_mk"
+}
+
+$timestamp = $agent_dir + "\timestamp."+ $remote_host
+
 # execute agent only every $delay seconds
 $delay = 14400
 

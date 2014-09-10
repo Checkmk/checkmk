@@ -4662,6 +4662,12 @@ void determine_directories()
     snprintf(g_local_dir, sizeof(g_local_dir), "%s\\local", g_agent_directory);
     snprintf(g_spool_dir, sizeof(g_spool_dir), "%s\\spool", g_agent_directory);
     snprintf(g_logwatch_statefile, sizeof(g_logwatch_statefile), "%s\\logstate.txt", g_agent_directory);
+
+    // Set these directories as environment variables. Some scripts might use them...
+    SetEnvironmentVariable("PLUGINSDIR", g_plugins_dir);
+    SetEnvironmentVariable("LOCALDIR",   g_local_dir);
+    SetEnvironmentVariable("SPOOLDIR",   g_spool_dir);
+    SetEnvironmentVariable("MK_CONFDIR", g_agent_directory);
 }
 
 int get_counter_id_from_lang(const char *language, const char *counter_name)

@@ -1,0 +1,20 @@
+Title: windows agent: now sets additional environment variables
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1410341500
+Class: feature
+
+The agent now sets the following environment variables on startup.
+
+<ul>
+<li>PLUGINSDIR</li>
+<li>LOCALDIR</li>
+<li>SPOOLDIR</li>
+<li>MK_CONFDIR</li>
+</ul>
+
+These can be used in the local an plugin scripts. There is also a dynamic
+environment variable <tt>REMOTE_HOST</tt> available, representing the host ip
+of the current connection.

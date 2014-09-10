@@ -30,10 +30,19 @@ description:
  We strongly recommend you switch to the rule-based configuration, which
  handles anything you want it to.
 
+ In single disk mode the check now also supports being used in a Check_MK
+ cluster environment. In this case it goes to CRIT if it finds more than
+ one disk item in the cluster. If it finds only one disk item, it also prints
+ the node name the disk was found on.
+
+ SUMMARY and legacy read/write modes are not supported in a cluster
+ configuration.  The check goes to UNKNOWN and prints an appropriate message
+ if configured like that.
+
 item:
- Either {"SUMMARY"} for a summarized check of all disks or the
- name of the disk device, e.g. {"sda"}. Additionally also one service
- per logical volume defined in Linux LVM and Veritas VxVM on Linux.
+ Either {"SUMMARY"} for a summarized check of all disks or the name of the
+ disk device, e.g. {"sda"}. Additionally also one service per logical volume
+ defined in Linux LVM and Veritas VxVM on Linux.
 
  In order to support configurations
  up to version 1.1.10 also the items {"read"} and {"write"} are supported.

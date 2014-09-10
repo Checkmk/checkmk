@@ -79,28 +79,35 @@ def diskstat_parse_info(info):
     info_plain = []
     nameinfo = {}
     phase = 'info'
+    node = None
     for line in info:
-        if line[0] == '[dmsetup_info]':
+        if node == None:
+            node = line[0]
+        if line[1] == '[dmsetup_info]':
             phase = 'dmsetup_info'
-        elif line[0] == '[vx_dsk]':
+        elif line[1] == '[vx_dsk]':
             phase = 'vx_dsk'
+        # new node in case of a cluster, restart with info phase
+        elif line[0] != node:
+            phase = 'info'
+            node = line[0]
         else:
             if phase == 'info':
                 info_plain.append(line)
             elif phase == 'dmsetup_info':
                 try:
-                    majmin = tuple(map(int, line[1].split(':')))
+                    majmin = tuple(map(int, line[2].split(':')))
                     if len(line) == 4:
-                        name = "LVM %s" % line[0]
+                        name = "LVM %s" % line[1]
                     else:
-                        name = "DM %s" % line[0]
+                        name = "DM %s" % line[1]
                     nameinfo[majmin] = name
                 except:
                     pass # ignore such crap as "No Devices Found"
             elif phase == 'vx_dsk':
-                maj = int(line[0], 16)
-                min = int(line[1], 16)
-                group, disk = line[2].split('/')[-2:]
+                maj = int(line[1], 16)
+                min = int(line[2], 16)
+                group, disk = line[3].split('/')[-2:]
                 name = "VxVM %s-%s" % (group, disk)
                 nameinfo[(maj, min)] = name
 
@@ -124,32 +131,35 @@ def linux_diskstat_convert(info):
     #  6: read queue length *counters*
     #  7: write queue length *counters*
     rewritten = [
-        ( diskstat_rewrite_device(nameinfo, l[0:3]),
-        int(l[5]),
-        int(l[9]),
-        int(l[3]),
-        int(l[7]),
-        # int(l[12])
-        ) for l in info[1:] if len(l) >= 13
+        ( l[0], # node name or None
+        diskstat_rewrite_device(nameinfo, l[1:4]),
+        int(l[6]),
+        int(l[10]),
+        int(l[4]),
+        int(l[8]),
+        # int(l[13])
+        ) for l in info[1:] if len(l) >= 14
     ]
 
     # Remove device mapper devices without a translated name
-    return [ line for line in rewritten if not line[0].startswith("dm-") ]
+    return [ line for line in rewritten if not line[1].startswith("dm-") ]
 
 def inventory_diskstat(info):
     return inventory_diskstat_generic(linux_diskstat_convert(info))
 
 def check_diskstat(item, params, info):
-    return check_diskstat_generic(item, params, int(info[0][0]), linux_diskstat_convert(info))
+    this_time = int(info[0][1])
+    return check_diskstat_generic(item, params, this_time, linux_diskstat_convert(info))
 
 
 
 check_info["diskstat"] = {
-    'check_function':          check_diskstat,
-    'inventory_function':      inventory_diskstat,
-    'service_description':     'Disk IO %s',
-    'has_perfdata':            True,
-    'group':                   'disk_io',
-    'includes':                [ "diskstat.include" ],
+    'check_function'      : check_diskstat,
+    'inventory_function'  : inventory_diskstat,
+    'service_description' : 'Disk IO %s',
+    'has_perfdata'        : True,
+    'group'               : 'disk_io',
+    "node_info"           : True, # add first column with actual host name
+    'includes'            : [ "diskstat.include" ],
 }
 

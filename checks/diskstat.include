@@ -71,19 +71,19 @@ def inventory_diskstat_generic(info):
         inventory += [ ( "read", None ), ( "write", None ) ]
 
     if "physical" in modes:
-        inventory += [ (line[0], "diskstat_default_levels")
+        inventory += [ (line[1], "diskstat_default_levels")
                        for line in info
-                       if not ' ' in line[0] ]
+                       if not ' ' in line[1] ]
 
     if "lvm" in modes:
-        inventory += [ (line[0], "diskstat_default_levels")
+        inventory += [ (line[1], "diskstat_default_levels")
                        for line in info
-                       if line[0].startswith("LVM ") ]
+                       if line[1].startswith("LVM ") ]
 
     if "vxvm" in modes:
-        inventory += [ (line[0], "diskstat_default_levels")
+        inventory += [ (line[1], "diskstat_default_levels")
                        for line in info
-                       if line[0].startswith("VxVM ") ]
+                       if line[1].startswith("VxVM ") ]
 
     return inventory
 
@@ -94,9 +94,15 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
     perfdata = []
     infos = []
     status = 0
+    node = line[0]
+    if node != None and node != "":
+        infos.append("Node %s" % node)
     prediction_perf = []
-    for what, ctr in [ ("read",  line[1]), ("write", line[2]) ]:
-        countername = "diskstat.%s.%s" % (item, what)
+    for what, ctr in [ ("read",  line[2]), ("write", line[3]) ]:
+        if node:
+            countername = "diskstat.%s.%s.%s" % (node, item, what)
+        else:
+            countername = "diskstat.%s.%s" % (item, what)
 
         # unpack levels now, need also for perfdata
         levels = params.get(what)
@@ -137,8 +143,8 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
 
     # Process IOs when available
     ios_per_sec = None
-    if len(line) >= 5 and line[3] >= 0 and line[4] > 0:
-        reads, writes = map(int, line[3:5])
+    if len(line) >= 6 and line[4] >= 0 and line[5] > 0:
+        reads, writes = map(int, line[4:6])
         ios = reads + writes
         timedif, ios_per_sec = get_counter(countername + ".ios", this_time, ios)
         infos.append("IOs: %.2f/sec" % ios_per_sec)
@@ -147,8 +153,8 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
             perfdata.append(("ios", ios_per_sec))
 
     # Do Latency computation if this information is available:
-    if len(line) >= 6 and line[5] >= 0:
-        timems = int(line[5])
+    if len(line) >= 7 and line[6] >= 0:
+        timems = int(line[6])
         timedif, timems_per_sec = get_counter(countername + ".time", this_time, timems)
         if not ios_per_sec:
             latency = 0.0
@@ -171,8 +177,8 @@ def check_diskstat_line(this_time, item, params, line, mode='sectors'):
 
     # Queue Lengths (currently only Windows). Windows uses counters here.
     # I have not understood, why....
-    if len(line) >= 8:
-        for what, ctr in [ ("read",  line[6]), ("write", line[7]) ]:
+    if len(line) >= 9:
+        for what, ctr in [ ("read",  line[7]), ("write", line[8]) ]:
             countername = "diskstat.%s.ql.%s" % (item, what)
             levels = params.get(what + "_ql")
             if levels:
@@ -212,16 +218,23 @@ def check_diskstat_generic(item, params, this_time, info, mode='sectors'):
         if len(info) == 0:
             return 3, "No performance information about any disk found"
         for line in info:
-            devname = line[0]
+            if line[0] != None:
+                return 3, "summary mode not supported in a cluster"
+            devname = line[1]
             if ' ' in devname:
                 continue
-            summary_line = map(lambda e: e[0] + int(e[1]), zip(summary_line, line[1:]))
+            summary_line = map(lambda e: e[0] + int(e[1]), zip(summary_line, line[2:]))
         return check_diskstat_line(this_time, "SUMMARY", params, [''] + summary_line, mode)
 
     # single mode
+    result = ""
     for line in info:
-        if line[0] == item:
-            return check_diskstat_line(this_time, item, params, line, mode)
+        if line[1] == item: # this may happen several times for a cluster
+            if result == "":
+                result = check_diskstat_line(this_time, item, params, line, mode)
+            else:
+                result = (2, "more than one device found in cluster")
+    return result
 
     return (3, "device missing")
 
@@ -232,13 +245,19 @@ def check_diskstat_generic(item, params, this_time, info, mode='sectors'):
 def check_diskstat_old(item, params, this_time, info):
     # sum up over all devices
     if item == 'read':
-        index = 1 # sectors read
+        index = 2 # sectors read
     elif item == 'write':
-        index = 2 # sectors written
+        index = 3 # sectors written
     else:
         return (3, "invalid item %s" % (item,))
 
-    this_val  = sum([int(x[index]) for x in info if ' ' not in x[0]])
+    #this_val  = sum([int(x[index]) for x in info if ' ' not in x[1]])
+    this_val = 0
+    for line in info:
+        if line[0] != None:
+            return 3, "read/write mode not supported in a cluster"
+        if ' ' not in line[1]:
+            thisval += int(x[index])
 
     timedif, per_sec = get_counter("diskstat." + item, this_time, this_val)
     mb_per_s = per_sec / 2048.0    # Diskstat output is in sectors a 512 Byte

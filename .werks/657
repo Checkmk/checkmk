@@ -1,0 +1,8 @@
+Title: diskstat: cluster support added for single disk modes
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1410381056
+Class: feature
+

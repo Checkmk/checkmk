@@ -2809,6 +2809,7 @@ DWORD WINAPI ScriptWorkerThread(LPVOID lpParam)
             cont->status       = SCRIPT_FINISHED;
             cont->last_problem = SCRIPT_NONE;
             cont->retry_count  = cont->max_retries;
+            cont->buffer_time  = time(0);
             break;
         case 1:
             cont->status       = SCRIPT_ERROR;
@@ -2858,7 +2859,6 @@ void run_script_container(script_container *cont)
         if (cont->status == SCRIPT_COLLECT || cont->status == SCRIPT_FINISHED) {
             return;
         }
-        cont->buffer_time = time(0);
         cont->status = SCRIPT_COLLECT;
 
         if (cont->worker_thread != INVALID_HANDLE_VALUE)

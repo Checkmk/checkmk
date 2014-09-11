@@ -1,0 +1,11 @@
+Title: windows agent: fixed missing agent section problem if a cached script ran into a timeout
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1410437655
+Class: fix
+
+If a cache_age was set for a local or plugin script and the script ran into a timeout,
+no data was reported by this script until the cache_age was expired.
+This lead to missing agent sections.

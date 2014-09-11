@@ -222,7 +222,7 @@ def page_notify():
         message += "</table>"
 
         message += ' <a href="%s">%s</a>' % (html.makeuri([]), _('Back to previous page'))
-        message += '<p>Sent notification to: %s</p>' % ', '.join(recipients)
+        message += _('<p>Sent notification to: %s</p>') % ', '.join(recipients)
         html.message(message)
 
         if errors:

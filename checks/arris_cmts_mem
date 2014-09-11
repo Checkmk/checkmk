@@ -30,16 +30,19 @@ factory_settings["arris_cmts_mem"] = {
 
 def inventory_arris_cmts_mem(info):
     for cid, heap, heap_free in info:
+        # The Module numbers are starting with 0, not with 1 like the OIDs
+        cid = int(cid) - 1
         yield cid, {}
 
 def check_arris_cmts_mem(item, params, info):
     for cid, heap, heap_free in info:
+        cid = int(cid) - 1
         if cid == item:
             heap_free, heap = float(heap_free), float(heap)
-            usage_perc = (heap_free / heap) * 100
             usage = heap - heap_free
+            usage_perc = (usage / heap) * 100
             infotext = "Usage: %s of %s (%.2f %%)" % \
-                (get_bytes_human_readable(heap_free), get_bytes_human_readable(heap),usage_perc)
+                (get_bytes_human_readable(usage), get_bytes_human_readable(heap), usage_perc)
             warn, crit = params['levels']
             # Percent level
             if type(crit) == float:

@@ -630,7 +630,7 @@ register_rule(group,
                                           title = _("Username"),
                                           size = 12,
                                           allow_empty = False),
-                                      TextAscii(
+                                      Password(
                                           title = _("Password"),
                                           size = 12,
                                           allow_empty = False),
@@ -645,7 +645,7 @@ register_rule(group,
                                           title = _("Username"),
                                           size = 12,
                                           allow_empty = False),
-                                      TextAscii(
+                                      Password(
                                           title = _("Password"),
                                           size = 12,
                                           allow_empty = False),
@@ -850,7 +850,7 @@ register_rule(group,
                                  allow_empty = False,
                                  size = 60,
                              ),
-                             TextAscii(
+                             Password(
                                  title = _("Password"),
                                  help = _("Password for binding, if you server requires an authentication"),
                                  allow_empty = False,
@@ -1024,7 +1024,7 @@ register_rule(group,
                                  title = _("Username"),
                                  size = 12,
                                  allow_empty = False),
-                             TextAscii(
+                             Password(
                                  title = _("Password"),
                                  size = 12,
                                  allow_empty = False),

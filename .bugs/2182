@@ -1,0 +1,10 @@
+Title: Host diagnostic page: warn/show agent types that are not configured
+Component: wato
+State: open
+Date: 2014-09-11 09:26:46
+Targetversion: future
+Class: nastiness
+
+Example: In the host there is configured 'No Agent'. Then in the diagnostig
+page in the section for the agent output there should be a warning, that
+this output is not being used! For SNMP we can do the same.

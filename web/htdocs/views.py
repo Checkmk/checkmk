@@ -1890,7 +1890,7 @@ def show_command_form(is_open, datasource):
 # (host name, service description, downtime/commands id) and
 # construct one or several core command lines and a descriptive
 # title.
-def core_command(what, row):
+def core_command(what, row, row_nr, total_rows):
     host = row.get("host_name")
     descr = row.get("service_description")
 
@@ -1917,7 +1917,14 @@ def core_command(what, row):
     # confirmation dialog.
     for cmd in multisite_commands:
         if config.may(cmd["permission"]):
-            result = cmd["action"](cmdtag, spec, row)
+
+            # Does the command need information about the total number of rows
+            # and the number of the current row? Then specify that
+            if cmd.get("row_stats"):
+                result = cmd["action"](cmdtag, spec, row, row_nr, total_rows)
+            else:
+                result = cmd["action"](cmdtag, spec, row)
+
             if result:
                 executor = cmd.get("executor", command_executor_livestatus)
                 commands, title = result
@@ -1965,14 +1972,14 @@ def do_actions(view, what, action_rows, backurl):
         return False # no actions done
 
     command = None
-    title, executor = core_command(what, action_rows[0])[1:3] # just get the title and executor
+    title, executor = core_command(what, action_rows[0], 0, len(action_rows))[1:3] # just get the title and executor
     if not html.confirm(_("Do you really want to %(title)s the following %(count)d %(what)s?") %
             { "title" : title, "count" : len(action_rows), "what" : _(what + "s"), }, method = 'GET'):
         return False
 
     count = 0
-    for row in action_rows:
-        core_commands, title, executor = core_command(what, row)
+    for nr, row in enumerate(action_rows):
+        core_commands, title, executor = core_command(what, row, nr, len(action_rows))
         for command in core_commands:
             if type(command) == unicode:
                 command = command.encode("utf-8")

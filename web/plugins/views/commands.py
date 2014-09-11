@@ -40,21 +40,39 @@
 #file('/tmp/1', 'a').write('%s %s\n%s' % (datetime.datetime.now(), current_language, ''.join(traceback.format_stack())))
 
 # RESCHEDULE ACTIVE CHECKS
+def command_reschedule(cmdtag, spec, row, row_nr, total_rows):
+    if html.var("_resched_checks"):
+        spread = saveint(html.var("_resched_spread"))
+        text = _("<b>reschedule an immediate check")
+        if spread:
+            text += _(" spreaded over %d minutes") % spread
+
+        text += "</b>" + _("of")
+
+        t = time.time()
+        if spread:
+            t += spread * 60.0 * row_nr / total_rows
+
+        command = "SCHEDULE_FORCED_" + cmdtag + "_CHECK;%s;%d" % (spec, int(t))
+        return command, text
+
 config.declare_permission("action.reschedule",
         _("Reschedule checks"),
         _("Reschedule host and service checks"),
         [ "user", "admin" ])
 
+
 multisite_commands.append({
     "tables"      : [ "host", "service" ],
     "permission"  : "action.reschedule",
-    "title"       : _("Reschedule"),
+    "title"       : _("Reschedule active checks"),
     "render"      : lambda: \
-        html.button("_resched_checks", _("Reschedule active checks")),
-    "action"      : lambda cmdtag, spec, row:
-        html.var("_resched_checks") and (
-            "SCHEDULE_FORCED_" + cmdtag + "_CHECK;%s;%d" % (spec, int(time.time())),
-            _("<b>reschedule an immediate check</b> of"))
+        html.button("_resched_checks", _("Reschedule")) == \
+        html.write(_("and spread over") + " ") == \
+        html.number_input("_resched_spread", 0, size=3) == \
+        html.write(" " + _("minutes") + " "),
+    "action"      : command_reschedule,
+    "row_stats"   : True, # Get information about number of rows and current row nr.
 })
 
 

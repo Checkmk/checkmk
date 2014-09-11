@@ -1,0 +1,16 @@
+Title: Allow to spread times of next check when rescheduling
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.5i6
+Date: 1410440913
+Class: feature
+
+When you do the action <i>Reschedule active checks</i> for more than one
+active checks then you now can enter a number of minutes. All checks will
+then be distributed evenly over that time.
+
+This feature is interesting for checks with larger intervals. Most prominent
+example is the <tt>Check_MK Inventory</tt> check, which usually is done every
+2, 4 or 24 hours. By spreading the executing of these checks you avoid large
+peaks in CPU load.

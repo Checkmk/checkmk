@@ -17,7 +17,7 @@ $pswindow.buffersize = $newsize
 
 ###
 
-Write-Host –NoNewLine "<<<win_printers>>>"
+Write-Host -NoNewLine "<<<win_printers>>>"
 $Data_Set1 = Get-WMIObject Win32_PerfFormattedData_Spooler_PrintQueue | Select Name, @{Expression={$_.jobs};Label="CurrentJobs"}
 $Data_Set2 = Get-WmiObject win32_printer | select name, printerstatus, detectederrorstate
 

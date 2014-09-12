@@ -22,3 +22,4 @@ check-mk-agent-*.exe
 RemoteSystemsTempFiles
 .directory
 .site
+*.msi

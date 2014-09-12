@@ -4,3 +4,5 @@ spool
 success.log
 *.res
 *.rc
+msibuild
+check_mk_agent.mis

@@ -63,36 +63,39 @@
 check_includes['winperf_phydisk'] = [ "diskstat.include" ]
 
 def winperf_phydisk_convert(info):
+    # node_info has been activated. This check simply ignores this
+    # for now.
     # In case disk performance counters are not enabled, the agent sends
     # an almost empty section, where the second line is missing completely
     if len(info) == 1:
         return []
-    disks = [ d.split('_')[-1] for d in info[1][2:-1] ]
+    disks = [ d.split('_')[-1] for d in info[1][3:-1] ]
     for line in info[2:]:
-        if line[0] == '-14':
-            disk_read_bytes  = [ int(x) / 512 for x in line[1:-2] ]
-        elif line[0] == '-12':
-            disk_write_bytes = [ int(x) / 512 for x in line[1:-2] ]
-        elif line[0] == '-20':
-            disk_reads       = [ int(x) for x in line[1:-2] ]
-        elif line[0] == '-18':
-            disk_writes      = [ int(x) for x in line[1:-2] ]
-        elif line[0] == '1168': # Average Disk Read Queue Length
-            disk_readq_ctrs  = [ int(x) for x in line[1:-2] ]
-        elif line[0] == '1170': # Average Disk Read Queue Length
-            disk_writeq_ctrs = [ int(x) for x in line[1:-2] ]
+        if line[1] == '-14':
+            disk_read_bytes  = [ int(x) / 512 for x in line[2:-2] ]
+        elif line[1] == '-12':
+            disk_write_bytes = [ int(x) / 512 for x in line[2:-2] ]
+        elif line[1] == '-20':
+            disk_reads       = [ int(x) for x in line[2:-2] ]
+        elif line[1] == '-18':
+            disk_writes      = [ int(x) for x in line[2:-2] ]
+        elif line[1] == '1168': # Average Disk Read Queue Length
+            disk_readq_ctrs  = [ int(x) for x in line[2:-2] ]
+        elif line[1] == '1170': # Average Disk Read Queue Length
+            disk_writeq_ctrs = [ int(x) for x in line[2:-2] ]
 
     # Missing columns are donted by negative values (Linux sends here latency
     # information)
     empty = [ -1 for x in disks ]
+    none  = [ None for x in disks ] # Used as dummy node info
 
-    return zip(disks, disk_read_bytes, disk_write_bytes, disk_reads, disk_writes, empty, disk_readq_ctrs, disk_writeq_ctrs)
+    return zip(none, disks, disk_read_bytes, disk_write_bytes, disk_reads, disk_writes, empty, disk_readq_ctrs, disk_writeq_ctrs)
 
 def inventory_winperf_phydisk(info):
     return inventory_diskstat_generic(winperf_phydisk_convert(info))
 
 def check_winperf_phydisk(item, params, info):
-    this_time = int(float(info[0][0]))
+    this_time = int(time.time())
     return check_diskstat_generic(item, params, this_time, winperf_phydisk_convert(info))
 
 
@@ -100,6 +103,7 @@ check_info["winperf_phydisk"] = {
     'check_function':          check_winperf_phydisk,
     'inventory_function':      inventory_winperf_phydisk,
     'service_description':     'Disk IO %s',
+    'node_info':               True,
     'has_perfdata':            True,
     'group':                   'disk_io',
 }

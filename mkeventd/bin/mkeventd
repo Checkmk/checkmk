@@ -577,14 +577,13 @@ def parse_history_file(path, headers, filters, greptexts, limit):
     cmd = 'tac "%s"' % path
     if greptexts:
         cmd += ' | grep -i -e %s' % ".*".join(greptexts)
-    grep = subprocess.Popen(cmd, shell = True, close_fds=True, stdout=subprocess.PIPE)
-    logfile = grep.stdout
+    grep = subprocess.Popen(cmd, shell=True, close_fds=True, stdout=subprocess.PIPE)
 
-    for line in logfile:
+    for line in grep.stdout:
         line_no += 1
         if limit != None and len(entries) > limit:
-            if greptexts:
-                os.kill(grep.pid, 15)
+            grep.kill()
+            grep.wait()
             break
 
         try:

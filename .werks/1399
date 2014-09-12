@@ -1,0 +1,12 @@
+Title: Fix left-over tac processes when showing Event Console history
+Level: 2
+Component: ec
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.5i6
+Date: 1410528075
+
+When you show the Event Console history and run into a soft or hard
+query limit (of usually 1,000 or 5,000 entries), then every time one
+<tt>tac</tt> process was left over. This has been fixed.

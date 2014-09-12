@@ -15,6 +15,7 @@ echo -e "GET services\nColumns: host_name check_command" \
     | unixcat "$LIVE_SOCKET" \
     | sort -u \
     | cut -d\; -f2 \
+    | cut -d\! -f1 \
     | sort \
     | uniq -c \
     | sort -rn

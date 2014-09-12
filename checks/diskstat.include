@@ -224,7 +224,7 @@ def check_diskstat_generic(item, params, this_time, info, mode='sectors'):
             if ' ' in devname:
                 continue
             summary_line = map(lambda e: e[0] + int(e[1]), zip(summary_line, line[2:]))
-        return check_diskstat_line(this_time, "SUMMARY", params, [''] + summary_line, mode)
+        return check_diskstat_line(this_time, "SUMMARY", params, [None, ''] + summary_line, mode)
 
     # single mode
     result = ""

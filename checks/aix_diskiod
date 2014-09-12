@@ -46,8 +46,8 @@
 
 def aix_diskiod_convert(info):
     converted = []
-    for device, tm_act, kbps, tps, kb_read, kb_written in info:
-        converted.append((device, int(kb_read) * 1024, int(kb_written) * 1024))
+    for node_info, device, tm_act, kbps, tps, kb_read, kb_written in info:
+        converted.append((node_info, device, int(kb_read) * 1024, int(kb_written) * 1024))
     return converted
 
 
@@ -63,6 +63,7 @@ check_info["aix_diskiod"] = {
     'inventory_function':      inventory_aix_diskiod,
     'service_description':     'Disk IO %s',
     'has_perfdata':            True,
+    'node_info':               True,
     'group':                   'disk_io',
     'includes':                [ "diskstat.include" ],
 }

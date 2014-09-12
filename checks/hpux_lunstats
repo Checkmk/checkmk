@@ -62,7 +62,7 @@ def hpux_lunstats_convert(info):
                 bytes_read = int(right) / 512
             elif left == 'Bytes written':
                 bytes_written = int(right) / 512
-                luns.append((lun, bytes_read, bytes_written))
+                luns.append((None, lun, bytes_read, bytes_written))
     return luns
 
 def check_hpux_lunstats(item, params, info):

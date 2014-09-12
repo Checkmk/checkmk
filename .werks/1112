@@ -1,0 +1,11 @@
+Title: esx_vsphere_hostsystem.mem_usage_cluster: allows to monitor total RAM usage of all nodes in a cluster
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1410535073
+Class: feature
+
+This check can not be inventorized. You need to create a manual check and assign it to a cluster.
+The memory information of each cluster node is added to the total memory pool.
+You are able to set limits for the total RAM usage depending on the number of cluster nodes.

@@ -1,0 +1,34 @@
+title: VMware ESX vCenter: Total physical RAM usage of clustered ESX hosts
+agents: vsphere
+catalog: os/kernel
+license: GPL
+distribution: check_mk
+description:
+ This check measures the total physical RAM usage for a cluster of hosts.
+ This check is only applicable for clusters and cannot be inventorized.
+ You need to create a manual check for it in WATO and assign it to a cluster host.
+
+examples:
+ static_checks['mem_cluster'] = [
+   ( ('esx_vsphere_hostsystem.mem_usage_cluster', None, 
+    [(2, (60.0, 70.0)),
+     (5, (70.0, 80.0)),
+     (7, (85.0, 90.0))
+    ]), [], ['esx_cluster'] ),
+ ] + static_checks['mem_cluster']
+
+
+
+inventory:
+ Not applicable
+
+perfdata:
+ One value: the current total usage in bytes.
+
+[parameters]
+parameters (dict): A list of tuples where you can define the number of
+ minimum required nodes and the corresponding levels.
+
+OneElement Tuple: number_of_nodes(int), (WARN(float), CRIT(float))
+
+ Please refer example.

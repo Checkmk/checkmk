@@ -99,6 +99,56 @@ check_info['esx_vsphere_hostsystem.cpu_usage'] = {
 
 
 #.
+#   .--Mem-Cluster---------------------------------------------------------.
+#   |     __  __                       ____ _           _                  |
+#   |    |  \/  | ___ _ __ ___        / ___| |_   _ ___| |_ ___ _ __       |
+#   |    | |\/| |/ _ \ '_ ` _ \ _____| |   | | | | / __| __/ _ \ '__|      |
+#   |    | |  | |  __/ | | | | |_____| |___| | |_| \__ \ ||  __/ |         |
+#   |    |_|  |_|\___|_| |_| |_|      \____|_|\__,_|___/\__\___|_|         |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+
+def check_esx_vsphere_hostsystem_mem_cluster(item, params, info):
+    data = {}
+    for line in info:
+        if line[0] in ["summary.quickStats.overallMemoryUsage", "hardware.memorySize", "name"]:
+            data.setdefault(line[0], []).append(line[1])
+    sorted_params = sorted(params, reverse = True)
+
+    nodes_count = len(data['name'])
+    total_memory_usage = sum(map(lambda x: savefloat(x) * 1024 * 1024, data['summary.quickStats.overallMemoryUsage']))
+    total_memory_size  = sum(map(lambda x: savefloat(x), data['hardware.memorySize']))
+
+    level = total_memory_usage / total_memory_size * 100
+    label = ""
+    state = 0
+    for count, levels in sorted_params:
+        if nodes_count >= count:
+            warn, crit = levels
+            if level > crit:
+                state = 2
+                label = " (Levels at %d%%/%d%%)" % (warn, crit)
+            elif level > warn:
+                state = 1
+                label = " (Levels at %d%%/%d%%)" % (warn, crit)
+            break
+
+
+    perf = [("usage", total_memory_usage, warn * total_memory_size / 100,
+                      crit * total_memory_size / 100, 0, total_memory_size)]
+    yield state, "%d%%%s used - %s/%s" % \
+    (level, label, get_bytes_human_readable(total_memory_usage), get_bytes_human_readable(total_memory_size)), perf
+
+
+check_info['esx_vsphere_hostsystem.mem_usage_cluster'] = {
+  "check_function"      : check_esx_vsphere_hostsystem_mem_cluster,
+  "service_description" : "Memory used",
+  "group"               : "mem_cluster",
+  "has_perfdata"        : True,
+}
+
+
+
 #   .--Memory--------------------------------------------------------------.
 #   |               __  __                                                 |
 #   |              |  \/  | ___ _ __ ___   ___  _ __ _   _                 |

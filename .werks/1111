@@ -1,0 +1,17 @@
+Title: vCenter monitoring: greatly improved performance (at least 40 times faster)
+Level: 3
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1410518906
+Class: feature
+
+The pysphere API is no longer used when monitoring ESX vCenter systems.
+We are now using much simpler tools to evaluate the vCenter response instead,
+thus saving quite a lot of cpu time. Depending on the number of ESX Hosts and
+virtualmachines you will see a performance increase by a factor of 40-200.
+<br><br>
+
+Note:<br>
+If the "Compatibility mode" is set in WATO the old "pysphere" version is still being used.
+This option remains for older (<5.0) ESX versions.

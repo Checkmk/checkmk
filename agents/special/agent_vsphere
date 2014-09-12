@@ -30,39 +30,268 @@
 # Instead a simple string process approach is used which drastically
 # reduces the CPU load for this agent
 
-# Usage:
-# Replace the classic agent_vsphere with this file
-
-# Note: This agent is still in development
-
 import httplib, pprint, sys, os, getopt, socket, time, datetime, re
 
-#execfile("soap_commands.py", globals(), globals())
+telegram_list = {
+       "systeminfo":
+         '<ns1:RetrieveServiceContent xsi:type="ns1:RetrieveServiceContentRequestType">'\
+         '<ns1:_this type="ServiceInstance">ServiceInstance</ns1:_this></ns1:RetrieveServiceContent>',
 
-soapdata_list = [
-            (["required"],      "1_serviceinfo", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:RetrieveServiceContent xsi:type="ns1:RetrieveServiceContentRequestType"><ns1:_this type="ServiceInstance">ServiceInstance</ns1:_this></ns1:RetrieveServiceContent></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
-            (["required"],      "2_login", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:Login xsi:type="ns1:LoginRequestType"><ns1:_this type="SessionManager">ha-sessionmgr</ns1:_this><ns1:userName>###user###</ns1:userName><ns1:password>###secret###</ns1:password></ns1:Login></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
-            (["required"],      "3_hostsystem_name", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType"><ns1:_this type="PropertyCollector">ha-property-collector</ns1:_this><ns1:specSet><ns1:propSet><ns1:type>HostSystem</ns1:type><ns1:pathSet>name</ns1:pathSet></ns1:propSet><ns1:objectSet><ns1:obj type="Folder">ha-folder-root</ns1:obj><ns1:skip>false</ns1:skip><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>visitFolders</ns1:name><ns1:type>Folder</ns1:type><ns1:path>childEntity</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToHf</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToVmf</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>crToH</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>crToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToDs</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>hToVm</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToVmf</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>vmFolder</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToDs</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>datastore</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToHf</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>hostFolder</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToH</ns1:name><ns1:type>ComputeResource</ns1:type><ns1:path>host</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToRp</ns1:name><ns1:type>ComputeResource</ns1:type><ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToRp</ns1:name><ns1:type>ResourcePool</ns1:type><ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>hToVm</ns1:name><ns1:type>HostSystem</ns1:type><ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToVm</ns1:name><ns1:type>ResourcePool</ns1:type><ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet></ns1:objectSet></ns1:specSet><ns1:options></ns1:options></ns1:RetrievePropertiesEx></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
-            (["datastore"],     "4_datastores", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType"><ns1:_this type="PropertyCollector">ha-property-collector</ns1:_this><ns1:specSet><ns1:propSet><ns1:type>Datastore</ns1:type><ns1:pathSet>name</ns1:pathSet><ns1:pathSet>summary.freeSpace</ns1:pathSet><ns1:pathSet>summary.capacity</ns1:pathSet><ns1:pathSet>summary.uncommitted</ns1:pathSet><ns1:pathSet>summary.url</ns1:pathSet><ns1:pathSet>summary.accessible</ns1:pathSet><ns1:pathSet>summary.type</ns1:pathSet><ns1:pathSet>summary.maintenanceMode</ns1:pathSet></ns1:propSet><ns1:objectSet><ns1:obj type="Folder">ha-folder-root</ns1:obj><ns1:skip>false</ns1:skip><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>visitFolders</ns1:name><ns1:type>Folder</ns1:type><ns1:path>childEntity</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToHf</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToVmf</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>crToH</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>crToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToDs</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>hToVm</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToVmf</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>vmFolder</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToDs</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>datastore</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToHf</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>hostFolder</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToH</ns1:name><ns1:type>ComputeResource</ns1:type><ns1:path>host</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToRp</ns1:name><ns1:type>ComputeResource</ns1:type><ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToRp</ns1:name><ns1:type>ResourcePool</ns1:type><ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>hToVm</ns1:name><ns1:type>HostSystem</ns1:type><ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToVm</ns1:name><ns1:type>ResourcePool</ns1:type><ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet></ns1:objectSet></ns1:specSet><ns1:options></ns1:options></ns1:RetrievePropertiesEx></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
-#            ([],                "5_retrieve_ex_3", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType"><ns1:_this type="PropertyCollector">ha-property-collector</ns1:_this><ns1:specSet><ns1:propSet><ns1:type>PerformanceManager</ns1:type><ns1:all>true</ns1:all></ns1:propSet><ns1:objectSet><ns1:obj type="PerformanceManager">ha-perfmgr</ns1:obj><ns1:skip>false</ns1:skip></ns1:objectSet></ns1:specSet><ns1:options></ns1:options></ns1:RetrievePropertiesEx></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
-#            ([],                "6_query_perf_provider_summary", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:QueryPerfProviderSummary xsi:type="ns1:QueryPerfProviderSummaryRequestType"><ns1:_this type="PerformanceManager">ha-perfmgr</ns1:_this><ns1:entity type="HostSystem">ha-host</ns1:entity></ns1:QueryPerfProviderSummary></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
-            (["counters"],      "7_query_avail_perf_metric", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:QueryAvailablePerfMetric xsi:type="ns1:QueryAvailablePerfMetricRequestType"><ns1:_this type="PerformanceManager">ha-perfmgr</ns1:_this><ns1:entity type="HostSystem">ha-host</ns1:entity><ns1:intervalId>20</ns1:intervalId></ns1:QueryAvailablePerfMetric></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
-            (["counters"],      "8_perf_counter_syntax", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:QueryPerfCounter xsi:type="ns1:QueryPerfCounterRequestType"><ns1:_this type="PerformanceManager">ha-perfmgr</ns1:_this>###counters###</ns1:QueryPerfCounter></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
-            (["counters"],      "9_perf_counter_data", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:QueryPerf xsi:type="ns1:QueryPerfRequestType"><ns1:_this type="PerformanceManager">ha-perfmgr</ns1:_this><ns1:querySpec><ns1:entity type="HostSystem">ha-host</ns1:entity><ns1:maxSample>1</ns1:maxSample>###counters###<ns1:intervalId>20</ns1:intervalId></ns1:querySpec></ns1:QueryPerf></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
-            (["hostsystem"],    "10_hostsystem", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType"><ns1:_this type="PropertyCollector">ha-property-collector</ns1:_this><ns1:specSet><ns1:propSet><ns1:type>HostSystem</ns1:type><ns1:pathSet>summary.quickStats.overallMemoryUsage</ns1:pathSet><ns1:pathSet>hardware.cpuInfo.numCpuThreads</ns1:pathSet><ns1:pathSet>runtime.powerState</ns1:pathSet><ns1:pathSet>summary.quickStats.overallCpuUsage</ns1:pathSet><ns1:pathSet>hardware.cpuInfo.hz</ns1:pathSet><ns1:pathSet>hardware.cpuInfo.numCpuPackages</ns1:pathSet><ns1:pathSet>config.multipathState.path</ns1:pathSet><ns1:pathSet>hardware.cpuInfo.numCpuCores</ns1:pathSet><ns1:pathSet>name</ns1:pathSet><ns1:pathSet>overallStatus</ns1:pathSet><ns1:pathSet>runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo</ns1:pathSet><ns1:pathSet>runtime.inMaintenanceMode</ns1:pathSet><ns1:pathSet>hardware.memorySize</ns1:pathSet></ns1:propSet><ns1:objectSet><ns1:obj type="Folder">ha-folder-root</ns1:obj><ns1:skip>false</ns1:skip><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>visitFolders</ns1:name><ns1:type>Folder</ns1:type><ns1:path>childEntity</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToHf</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToVmf</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>crToH</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>crToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToDs</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>hToVm</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToVmf</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>vmFolder</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToDs</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>datastore</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToHf</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>hostFolder</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToH</ns1:name><ns1:type>ComputeResource</ns1:type><ns1:path>host</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToRp</ns1:name><ns1:type>ComputeResource</ns1:type><ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToRp</ns1:name><ns1:type>ResourcePool</ns1:type><ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>hToVm</ns1:name><ns1:type>HostSystem</ns1:type><ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToVm</ns1:name><ns1:type>ResourcePool</ns1:type><ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet></ns1:objectSet></ns1:specSet><ns1:options></ns1:options></ns1:RetrievePropertiesEx></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
-            (["virtualmachine"],"11_virtualmachine", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType"><ns1:_this type="PropertyCollector">ha-property-collector</ns1:_this><ns1:specSet><ns1:propSet><ns1:type>VirtualMachine</ns1:type><ns1:pathSet>summary.quickStats.consumedOverheadMemory</ns1:pathSet><ns1:pathSet>config.hardware.numCPU</ns1:pathSet><ns1:pathSet>summary.quickStats.overallCpuDemand</ns1:pathSet><ns1:pathSet>summary.quickStats.distributedCpuEntitlement</ns1:pathSet><ns1:pathSet>runtime.host</ns1:pathSet><ns1:pathSet>summary.quickStats.distributedMemoryEntitlement</ns1:pathSet><ns1:pathSet>summary.quickStats.uptimeSeconds</ns1:pathSet><ns1:pathSet>summary.quickStats.sharedMemory</ns1:pathSet><ns1:pathSet>config.hardware.memoryMB</ns1:pathSet><ns1:pathSet>summary.quickStats.privateMemory</ns1:pathSet><ns1:pathSet>summary.quickStats.balloonedMemory</ns1:pathSet><ns1:pathSet>summary.quickStats.staticMemoryEntitlement</ns1:pathSet><ns1:pathSet>runtime.powerState</ns1:pathSet><ns1:pathSet>summary.quickStats.overallCpuUsage</ns1:pathSet><ns1:pathSet>config.hardware.numCoresPerSocket</ns1:pathSet><ns1:pathSet>config.hardware.device</ns1:pathSet><ns1:pathSet>guest.toolsVersion</ns1:pathSet><ns1:pathSet>guestHeartbeatStatus</ns1:pathSet><ns1:pathSet>name</ns1:pathSet><ns1:pathSet>summary.quickStats.compressedMemory</ns1:pathSet><ns1:pathSet>summary.quickStats.swappedMemory</ns1:pathSet><ns1:pathSet>summary.quickStats.guestMemoryUsage</ns1:pathSet><ns1:pathSet>summary.quickStats.staticCpuEntitlement</ns1:pathSet><ns1:pathSet>summary.quickStats.hostMemoryUsage</ns1:pathSet><ns1:pathSet>config.datastoreUrl</ns1:pathSet><ns1:pathSet>guest.toolsVersionStatus</ns1:pathSet></ns1:propSet><ns1:objectSet><ns1:obj type="Folder">ha-folder-root</ns1:obj><ns1:skip>false</ns1:skip><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>visitFolders</ns1:name><ns1:type>Folder</ns1:type><ns1:path>childEntity</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToHf</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToVmf</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>crToH</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>crToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>dcToDs</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>hToVm</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToVmf</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>vmFolder</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToDs</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>datastore</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToHf</ns1:name><ns1:type>Datacenter</ns1:type><ns1:path>hostFolder</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToH</ns1:name><ns1:type>ComputeResource</ns1:type><ns1:path>host</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToRp</ns1:name><ns1:type>ComputeResource</ns1:type><ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToRp</ns1:name><ns1:type>ResourcePool</ns1:type><ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet><ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>hToVm</ns1:name><ns1:type>HostSystem</ns1:type><ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip><ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet><ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToVm</ns1:name><ns1:type>ResourcePool</ns1:type><ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet></ns1:objectSet></ns1:specSet><ns1:options></ns1:options></ns1:RetrievePropertiesEx></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
-            (["required"],      "12_logout", '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25"><ns1:Logout xsi:type="ns1:LogoutRequestType"><ns1:_this type="SessionManager">ha-sessionmgr</ns1:_this></ns1:Logout></SOAP-ENV:Body></SOAP-ENV:Envelope>'),
-           ]
+       "login":
+         '<ns1:Login xsi:type="ns1:LoginRequestType"><ns1:_this type="SessionManager">%(sessionManager)s</ns1:_this>'\
+         '<ns1:userName>%(username)s</ns1:userName><ns1:password>%(password)s</ns1:password></ns1:Login>',
 
+       "hostsystems":
+         '<ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType">'\
+         '<ns1:_this type="PropertyCollector">%(propertyCollector)s</ns1:_this><ns1:specSet>'\
+         '<ns1:propSet><ns1:type>HostSystem</ns1:type><ns1:pathSet>name</ns1:pathSet></ns1:propSet>'\
+         '<ns1:objectSet><ns1:obj type="Folder">%(rootFolder)s</ns1:obj><ns1:skip>false</ns1:skip>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>visitFolders</ns1:name>'\
+           '<ns1:type>Folder</ns1:type><ns1:path>childEntity</ns1:path><ns1:skip>false</ns1:skip>'\
+           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>dcToHf</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>dcToVmf</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>crToH</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>crToRp</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>dcToDs</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>hToVm</ns1:name></ns1:selectSet>'\
+         '<ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToVmf</ns1:name><ns1:type>Datacenter</ns1:type>'\
+           '<ns1:path>vmFolder</ns1:path><ns1:skip>false</ns1:skip>'\
+           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToDs</ns1:name><ns1:type>Datacenter</ns1:type>'\
+           '<ns1:path>datastore</ns1:path><ns1:skip>false</ns1:skip>'\
+           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToHf</ns1:name><ns1:type>Datacenter</ns1:type>'\
+           '<ns1:path>hostFolder</ns1:path><ns1:skip>false</ns1:skip>'\
+           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToH</ns1:name><ns1:type>ComputeResource</ns1:type>'\
+         '<ns1:path>host</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToRp</ns1:name><ns1:type>ComputeResource</ns1:type>'\
+         '<ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip>'\
+         '<ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet>'\
+         '<ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToRp</ns1:name><ns1:type>ResourcePool</ns1:type>'\
+           '<ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip>'\
+           '<ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>hToVm</ns1:name><ns1:type>HostSystem</ns1:type>'\
+           '<ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip>'\
+           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToVm</ns1:name><ns1:type>ResourcePool</ns1:type>'\
+         '<ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet>'\
+         '</ns1:objectSet></ns1:specSet><ns1:options></ns1:options></ns1:RetrievePropertiesEx>',
+
+     "datastores":
+         '<ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType">'\
+         '<ns1:_this type="PropertyCollector">%(propertyCollector)s</ns1:_this><ns1:specSet>'\
+         '<ns1:propSet><ns1:type>Datastore</ns1:type><ns1:pathSet>name</ns1:pathSet>'\
+         '<ns1:pathSet>summary.freeSpace</ns1:pathSet>'\
+         '<ns1:pathSet>summary.capacity</ns1:pathSet>'\
+         '<ns1:pathSet>summary.uncommitted</ns1:pathSet>'\
+         '<ns1:pathSet>summary.url</ns1:pathSet>'\
+         '<ns1:pathSet>summary.accessible</ns1:pathSet>'\
+         '<ns1:pathSet>summary.type</ns1:pathSet>'\
+         '<ns1:pathSet>summary.maintenanceMode</ns1:pathSet></ns1:propSet>'\
+         '<ns1:objectSet><ns1:obj type="Folder">%(rootFolder)s</ns1:obj><ns1:skip>false</ns1:skip>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>visitFolders</ns1:name>'\
+           '<ns1:type>Folder</ns1:type><ns1:path>childEntity</ns1:path><ns1:skip>false</ns1:skip>'\
+           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>dcToHf</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>dcToVmf</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>crToH</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>crToRp</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>dcToDs</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>hToVm</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToVmf</ns1:name><ns1:type>Datacenter</ns1:type>'\
+           '<ns1:path>vmFolder</ns1:path><ns1:skip>false</ns1:skip>'\
+           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToDs</ns1:name><ns1:type>Datacenter</ns1:type>'\
+           '<ns1:path>datastore</ns1:path><ns1:skip>false</ns1:skip>'\
+           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToHf</ns1:name><ns1:type>Datacenter</ns1:type>'\
+           '<ns1:path>hostFolder</ns1:path><ns1:skip>false</ns1:skip>'\
+           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToH</ns1:name><ns1:type>ComputeResource</ns1:type>'\
+         '<ns1:path>host</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToRp</ns1:name><ns1:type>ComputeResource</ns1:type>'\
+           '<ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip>'\
+           '<ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet>'\
+         '<ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToRp</ns1:name><ns1:type>ResourcePool</ns1:type>'\
+           '<ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip>'\
+           '<ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>hToVm</ns1:name><ns1:type>HostSystem</ns1:type>'\
+           '<ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip>'\
+           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToVm</ns1:name><ns1:type>ResourcePool</ns1:type>'\
+         '<ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet>'\
+         '</ns1:objectSet></ns1:specSet><ns1:options></ns1:options></ns1:RetrievePropertiesEx>',
+
+     "perfcountersummary":
+         '<ns1:QueryPerfProviderSummary xsi:type="ns1:QueryPerfProviderSummaryRequestType">'\
+         '<ns1:_this type="PerformanceManager">%(perfManager)</ns1:_this>'\
+         '<ns1:entity type="HostSystem">%(esxhost)s</ns1:entity></ns1:QueryPerfProviderSummary>',
+
+     "perfcountersyntax":
+         '<ns1:QueryPerfCounter xsi:type="ns1:QueryPerfCounterRequestType">'\
+         '<ns1:_this type="PerformanceManager">%(perfManager)s</ns1:_this>%(counters)s</ns1:QueryPerfCounter>',
+
+     "perfcounteravail":
+         '<ns1:QueryAvailablePerfMetric xsi:type="ns1:QueryAvailablePerfMetricRequestType">'\
+         '<ns1:_this type="PerformanceManager">%(perfManager)s</ns1:_this>'\
+         '<ns1:entity type="HostSystem">%(esxhost)s</ns1:entity>'\
+         '<ns1:intervalId>20</ns1:intervalId></ns1:QueryAvailablePerfMetric>',
+
+     "perfcounterdata":
+         '<ns1:QueryPerf xsi:type="ns1:QueryPerfRequestType"><ns1:_this type="PerformanceManager">%(perfManager)s</ns1:_this>'\
+         '<ns1:querySpec><ns1:entity type="HostSystem">%(esxhost)s</ns1:entity><ns1:maxSample>1</ns1:maxSample>%(counters)s'\
+         '<ns1:intervalId>20</ns1:intervalId></ns1:querySpec></ns1:QueryPerf>',
+
+     "esxhostdetails":
+         '<ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType">'
+         '<ns1:_this type="PropertyCollector">%(propertyCollector)s</ns1:_this><ns1:specSet><ns1:propSet>'\
+         '<ns1:type>HostSystem</ns1:type>'\
+         '<ns1:pathSet>summary.quickStats.overallMemoryUsage</ns1:pathSet>'\
+         '<ns1:pathSet>hardware.cpuInfo.numCpuThreads</ns1:pathSet>'\
+         '<ns1:pathSet>runtime.powerState</ns1:pathSet>'\
+         '<ns1:pathSet>summary.quickStats.overallCpuUsage</ns1:pathSet>'\
+         '<ns1:pathSet>hardware.cpuInfo.hz</ns1:pathSet>'\
+         '<ns1:pathSet>hardware.cpuInfo.numCpuPackages</ns1:pathSet>'\
+         '<ns1:pathSet>config.multipathState.path</ns1:pathSet>'\
+         '<ns1:pathSet>hardware.cpuInfo.numCpuCores</ns1:pathSet>'\
+         '<ns1:pathSet>name</ns1:pathSet>'\
+         '<ns1:pathSet>overallStatus</ns1:pathSet>'\
+         '<ns1:pathSet>runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo</ns1:pathSet>'\
+         '<ns1:pathSet>runtime.inMaintenanceMode</ns1:pathSet>'\
+         '<ns1:pathSet>hardware.memorySize</ns1:pathSet></ns1:propSet>'\
+         '<ns1:objectSet><ns1:obj type="Folder">%(rootFolder)s</ns1:obj><ns1:skip>false</ns1:skip>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>visitFolders</ns1:name>'\
+           '<ns1:type>Folder</ns1:type><ns1:path>childEntity</ns1:path><ns1:skip>false</ns1:skip>'\
+           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>dcToHf</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>dcToVmf</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>crToH</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>crToRp</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>dcToDs</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>hToVm</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToVmf</ns1:name><ns1:type>Datacenter</ns1:type>'\
+           '<ns1:path>vmFolder</ns1:path><ns1:skip>false</ns1:skip>'\
+           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToDs</ns1:name><ns1:type>Datacenter</ns1:type>'\
+           '<ns1:path>datastore</ns1:path><ns1:skip>false</ns1:skip>'\
+           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToHf</ns1:name><ns1:type>Datacenter</ns1:type>'\
+           '<ns1:path>hostFolder</ns1:path><ns1:skip>false</ns1:skip>'\
+           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToH</ns1:name><ns1:type>ComputeResource</ns1:type>'\
+           '<ns1:path>host</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToRp</ns1:name><ns1:type>ComputeResource</ns1:type>'\
+           '<ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip>'\
+           '<ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToRp</ns1:name><ns1:type>ResourcePool</ns1:type>'\
+           '<ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip>'\
+           '<ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>hToVm</ns1:name><ns1:type>HostSystem</ns1:type>'\
+           '<ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip>'\
+           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToVm</ns1:name><ns1:type>ResourcePool</ns1:type>'\
+           '<ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet>'\
+         '</ns1:objectSet></ns1:specSet><ns1:options></ns1:options></ns1:RetrievePropertiesEx>',
+     "vmdetails":
+         '<ns1:RetrievePropertiesEx xsi:type="ns1:RetrievePropertiesExRequestType">'\
+         '<ns1:_this type="PropertyCollector">%(propertyCollector)s</ns1:_this><ns1:specSet><ns1:propSet>'\
+         '<ns1:type>VirtualMachine</ns1:type>'\
+           '<ns1:pathSet>summary.quickStats.consumedOverheadMemory</ns1:pathSet>'\
+           '<ns1:pathSet>config.hardware.numCPU</ns1:pathSet>'\
+           '<ns1:pathSet>summary.quickStats.overallCpuDemand</ns1:pathSet>'\
+           '<ns1:pathSet>summary.quickStats.distributedCpuEntitlement</ns1:pathSet>'\
+           '<ns1:pathSet>runtime.host</ns1:pathSet>'\
+           '<ns1:pathSet>summary.quickStats.distributedMemoryEntitlement</ns1:pathSet>'\
+           '<ns1:pathSet>summary.quickStats.uptimeSeconds</ns1:pathSet>'\
+           '<ns1:pathSet>summary.quickStats.sharedMemory</ns1:pathSet>'\
+           '<ns1:pathSet>config.hardware.memoryMB</ns1:pathSet>'\
+           '<ns1:pathSet>summary.quickStats.privateMemory</ns1:pathSet>'\
+           '<ns1:pathSet>summary.quickStats.balloonedMemory</ns1:pathSet>'\
+           '<ns1:pathSet>summary.quickStats.staticMemoryEntitlement</ns1:pathSet>'\
+           '<ns1:pathSet>runtime.powerState</ns1:pathSet>'\
+           '<ns1:pathSet>summary.quickStats.overallCpuUsage</ns1:pathSet>'\
+           '<ns1:pathSet>config.hardware.numCoresPerSocket</ns1:pathSet>'\
+           '<ns1:pathSet>config.hardware.device</ns1:pathSet>'\
+           '<ns1:pathSet>guest.toolsVersion</ns1:pathSet>'\
+           '<ns1:pathSet>guestHeartbeatStatus</ns1:pathSet>'\
+           '<ns1:pathSet>name</ns1:pathSet>'\
+           '<ns1:pathSet>summary.quickStats.compressedMemory</ns1:pathSet>'\
+           '<ns1:pathSet>summary.quickStats.swappedMemory</ns1:pathSet>'\
+           '<ns1:pathSet>summary.quickStats.guestMemoryUsage</ns1:pathSet>'\
+           '<ns1:pathSet>summary.quickStats.staticCpuEntitlement</ns1:pathSet>'\
+           '<ns1:pathSet>summary.quickStats.hostMemoryUsage</ns1:pathSet>'\
+           '<ns1:pathSet>config.datastoreUrl</ns1:pathSet>'\
+           '<ns1:pathSet>guest.toolsVersionStatus</ns1:pathSet></ns1:propSet>'\
+         '<ns1:objectSet><ns1:obj type="Folder">%(rootFolder)s</ns1:obj><ns1:skip>false</ns1:skip>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>visitFolders</ns1:name>'\
+           '<ns1:type>Folder</ns1:type><ns1:path>childEntity</ns1:path><ns1:skip>false</ns1:skip>'\
+           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>dcToHf</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>dcToVmf</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>crToH</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>crToRp</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>dcToDs</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>hToVm</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToVmf</ns1:name><ns1:type>Datacenter</ns1:type>'\
+           '<ns1:path>vmFolder</ns1:path><ns1:skip>false</ns1:skip>'\
+           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToDs</ns1:name><ns1:type>Datacenter</ns1:type>'\
+           '<ns1:path>datastore</ns1:path><ns1:skip>false</ns1:skip>'\
+           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>dcToHf</ns1:name><ns1:type>Datacenter</ns1:type>'\
+           '<ns1:path>hostFolder</ns1:path><ns1:skip>false</ns1:skip>'\
+           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToH</ns1:name><ns1:type>ComputeResource</ns1:type>'\
+         '<ns1:path>host</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>crToRp</ns1:name><ns1:type>ComputeResource</ns1:type>'\
+           '<ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip>'\
+           '<ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToRp</ns1:name><ns1:type>ResourcePool</ns1:type>'\
+           '<ns1:path>resourcePool</ns1:path><ns1:skip>false</ns1:skip>'\
+           '<ns1:selectSet><ns1:name>rpToRp</ns1:name></ns1:selectSet>'\
+           '<ns1:selectSet><ns1:name>rpToVm</ns1:name></ns1:selectSet></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec">'\
+           '<ns1:name>hToVm</ns1:name><ns1:type>HostSystem</ns1:type>'\
+           '<ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip>'\
+           '<ns1:selectSet><ns1:name>visitFolders</ns1:name></ns1:selectSet></ns1:selectSet>'\
+         '<ns1:selectSet xsi:type="ns1:TraversalSpec"><ns1:name>rpToVm</ns1:name><ns1:type>ResourcePool</ns1:type>'\
+         '<ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet>'\
+         '</ns1:objectSet></ns1:specSet><ns1:options></ns1:options></ns1:RetrievePropertiesEx>',
+
+     "logout":
+         '<ns1:Logout xsi:type="ns1:LogoutRequestType">'\
+         '<ns1:_this type="SessionManager">%(sessionManager)s</ns1:_this></ns1:Logout>',
+
+     "continuetoken":
+         '<ns1:ContinueRetrievePropertiesEx xsi:type="ns1:ContinueRetrievePropertiesExRequestType">'\
+         '<ns1:_this type="PropertyCollector">propertyCollector</ns1:_this><ns1:token>%(token)s</ns1:token></ns1:ContinueRetrievePropertiesEx>'
+}
+
+def put_in_envelope(payload):
+    return '<SOAP-ENV:Envelope xmlns:SOAP-ENC="http://schemas.xmlsoap.org/soap/encoding/" '\
+           'xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ZSI="http://www.zolera.com/schemas/ZSI/" '\
+           'xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" '\
+           'xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'\
+           '<SOAP-ENV:Header></SOAP-ENV:Header><SOAP-ENV:Body xmlns:ns1="urn:vim25">' + payload + '</SOAP-ENV:Body></SOAP-ENV:Envelope>'
 
 def convert_hostname(h):
     if opt_spaces == "cut":
         return h.split()[0]
     else:
         return h.replace(" ", "_")
-
-# List of predefined SOAP requests
-# ( [{used_by_object}], {internal_id}, {SOAP telegram} )
 
 def get_counters(esx_version_num):
     needed_ids = [
@@ -170,16 +399,15 @@ OPTIONS:
 
 """)
 
-short_options = 'hi:u:s:Dat:H:cPp:S:'
+short_options = 'hi:u:s:Dat:H:Pp:S:'
 long_options  = [
-    'help', 'user=', 'secret=', 'direct', 'agent', 'debug', 'modules=', 'timeout=', 'hostname=',
-    'dump-counters', 'tracefile=', "pysphere", "port=", "spaces=",
+    'help', 'user=', 'secret=', 'direct', 'agent', 'debug', 'modules=', 'timeout=',
+    'hostname=', 'tracefile=', "pysphere", "port=", "spaces=",
 ]
 
 opt_debug               = False
 opt_direct              = False
 opt_agent               = False
-opt_dump_counters       = False
 opt_timeout             = 60
 opt_port                = 443
 opt_hostname            = None
@@ -195,7 +423,7 @@ host_address  = None
 user          = None
 secret        = None
 tracefile     = None
-query_objects = [ 'hostsystem', 'virtualmachine', 'datastore', 'counters', 'required' ]
+query_objects = [ 'hostsystem', 'virtualmachine', 'datastore', 'counters' ]
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -223,13 +451,11 @@ for o,a in opts:
     elif o in [ '-s', '--secret' ]:
         secret = a
     elif o in [ '-i', '--modules' ]:
-        query_objects = a.split(',') + [ "required" ]
+        query_objects = a.split(',')
     elif o in [ '-t', '--timeout' ]:
         opt_timeout = int(a)
     elif o in [ '-H', '--hostname' ]:
         opt_hostname = a
-    elif o in [ '-c', '--dump-counters' ]:
-        opt_dump_counters = True
     elif o in [ '-S', '--spaces']:
         if a not in [ "cut", "underscore" ]:
             usage()
@@ -239,9 +465,9 @@ for o,a in opts:
         usage()
         sys.exit(0)
 
-# vCenter only supports the classical slow vSphere agent (based on pysphere)
-# Also we do not support ESX 4.1 (yet).
-if not opt_direct or opt_pysphere:
+
+# If the --pysphere option is set we use the legacy pysphere agent, though 50 times slower...
+if opt_pysphere:
     path_vsphere_pysphere = os.path.dirname(os.path.abspath(__file__))
     cmd = [ "%s/agent_vsphere.pysphere" % path_vsphere_pysphere ]
     import subprocess
@@ -253,7 +479,6 @@ if not opt_direct or opt_pysphere:
         sys.stderr.write(err)
     sys.exit(p.returncode)
 
-
 if len(args) == 1:
     host_address = args[0]
 elif not args:
@@ -262,7 +487,6 @@ elif not args:
 else:
     sys.stderr.write("ERROR: Please specify exactly one host.\n")
     sys.exit(1)
-
 
 socket.setdefaulttimeout(opt_timeout)
 
@@ -298,13 +522,18 @@ def get_agent_info_tcp(hostname):
     return output
 
 
-results = {}
-
-esx_version_num = None
-esx_name        = ""
+# Globals of ESX System. These settings are available after the first "systeminfo" query
+systeminfo = {
+    "apiVersion"     : None,
+    "name"           : None,
+    "rootFolder"     : None,
+    "perfManager"    : None,
+    "sessionManager" : None,
+}
 
 if opt_tracefile:
-    if os.path.exists(os.path.dirname(opt_tracefile)):
+    tracefile_dir = os.path.dirname(opt_tracefile) or "."
+    if os.path.exists(tracefile_dir):
         tracefile = file(opt_tracefile, "w")
     elif opt_debug:
         sys.stderr.write("Path for tracefile %s does not exist" % opt_tracefile)
@@ -320,101 +549,99 @@ if tracefile:
     tracefile.write("Tracefile %s Host address: %s\n" %
                     (datetime.datetime.now().strftime("%Y-%m-%d %H:%M"), host_address))
 
+my_cookie     = None
+server_handle = None
+transport     = None
+def query_server(payload, payload_params = {}):
+    # Finalize payload
+    payload_params.update(systeminfo)
+    soapdata = put_in_envelope(payload)
+    soapdata = soapdata % payload_params
+
+    def init_headers(soapdata):
+        server_handle.putrequest("POST", "/sdk")
+        server_handle.putheader("Content-Length", "%d" % len(soapdata))
+        server_handle.putheader("Content-Type", 'text/xml; charset="utf-8"')
+        server_handle.putheader("SOAPAction", "urn:vim25/5.0")
+        server_handle.putheader("User-Agent", "VMware VI Client/5.0.0") # TODO: set client version?
+        if my_cookie:
+            server_handle.putheader("Cookie", my_cookie)
+        server_handle.endheaders()
+    init_headers(soapdata)
+
+    response_data = []
+
+    time_sent = time.time()
+    server_handle.send(soapdata)
+    response  = server_handle.getresponse()
+    response_data.append(response.read())
+
+    while True:
+        # Look for a <token>0</token> field.
+        # If it exists not all data was transmitted and we need to start a
+        # ContinueRetrievePropertiesExResponse query...
+        token = re.findall("<token>(.*)</token>", response_data[-1][:512])
+        if token:
+            soapdata = put_in_envelope(telegram_list["continuetoken"] % {"token": token[0]})
+            init_headers(soapdata)
+            server_handle.send(soapdata)
+            response  = server_handle.getresponse()
+            response_data.append(response.read())
+        else:
+            break
+    time_response = time.time()
+
+    if tracefile:
+        tracefile.write("####   Sent  ####\n%s" % soapdata)
+        timing_info = "Response took: %f" % (time_response - time_sent)
+        tracefile.write("\n#### Received #### %s\n%s\n" % (timing_info, "".join(response_data)))
+
+    return response.status, response.reason, response.msg, "".join(response_data)
+
+def encode_url(text):
+    for char, replacement in [ ( "&",  "&amp;"),
+                               ( ">",  "&gt;" ),
+                               ( "<",  "&lt;"),
+                               ( "'",  "&apos;"),
+                               ( "\"", "&quot;") ]:
+        text = text.replace(char, replacement)
+    return text
+
+# Initialize server connection
 try:
-    my_cookie   = None
-    netloc      = host_address + ":" + str(opt_port)
-    request_uri = "/sdk"
-    transport   = httplib.HTTPSConnection
-    transdict   = {'timeout': opt_timeout}
-    handle      = transport(netloc, None, **transdict)
-    handle.connect()
+    netloc        = host_address + ":" + str(opt_port)
+    transport     = httplib.HTTPSConnection
+    transdict     = {'timeout': opt_timeout}
+    server_handle = transport(netloc, None, **transdict)
 
     if opt_debug:
         sys.stderr.write("Connecting to %s..." % netloc)
         sys.stderr.flush()
 
-    def query_server(soapdata):
-        handle.putrequest("POST", request_uri)
-        handle.putheader("Content-Length", "%d" % len(soapdata))
-        handle.putheader("Content-Type", 'text/xml; charset="utf-8"')
-        handle.putheader("SOAPAction", "urn:vim25/5.0")
-        handle.putheader("User-Agent", "VMware VI Client/5.0.0") # TODO: set client version?
-        if my_cookie:
-            handle.putheader("Cookie", my_cookie)
-        handle.endheaders()
+    server_handle.connect()
 
-        handle.send(soapdata)
 
-        time_sent     = time.time()
-        response = handle.getresponse()
-        time_response = time.time()
+    # Retrieve basic data, like systeminfo and session cookie
+    for name in [ "systeminfo", "login" ]:
+        payload = telegram_list[name]
 
-        body = response.read()
-        if tracefile:
-            tracefile.write("####   Sent  ####\n%s" % soapdata)
-            timing_info = "Response took: %f" % (time_response - time_sent)
-            tracefile.write("\n#### Received #### %s\n%s" % (timing_info, body))
-
-        return response.status, response.reason, response.msg, body
-
-    def get_counter_instances():
-        p = re.compile("<counterId>([0-9]*)</counterId><instance>([^<]*)")
-        m = p.findall( results["7_query_avail_perf_metric"] )
-
-        elements = get_pattern("<counterId>([0-9]*)</counterId><instance>([^<]*)", results["7_query_avail_perf_metric"])
-        counters_avail  = {}
-        for counter, instance in elements:
-            counters_avail.setdefault(counter, []).append(instance)
-
-        return counters_avail
-
-    for (objects, name, soapdata) in soapdata_list:
-        # Only sent queries we actually need
-        for entry in objects:
-            if entry in query_objects:
-                break
+        if name == "login":
+            reply_code, repy_msg, reply_headers, reply_data = query_server(payload, payload_params = { "username": encode_url(user),
+                                                                                       "password": encode_url(secret)})
         else:
-            continue
+            reply_code, reply_msg, reply_headers, reply_data = query_server(payload)
 
-        # Prepare request data
-        if name == "2_login":
-            def encode_url(text):
-                for char, replacement in [ ( "&",  "&amp;"),
-                                           ( ">",  "&gt;" ),
-                                           ( "<",  "&lt;"),
-                                           ( "'",  "&apos;"),
-                                           ( "\"", "&quot;") ]:
-                    text = text.replace(char, replacement)
-                return text 
-            soapdata = soapdata.replace("###user###", encode_url(user)).replace("###secret###", encode_url(secret))
-        elif name == "8_perf_counter_syntax":
-            needed_ids = get_counters(esx_version_num)
-            counter_data = []
-            for entry in needed_ids:
-                counter_data.append("<ns1:counterId>%s</ns1:counterId>" % entry)
-            soapdata = soapdata.replace("###counters###", "".join(counter_data))
-        elif name == "9_perf_counter_data":
-            needed_ids     = get_counters(esx_version_num)
-            counters_avail = get_counter_instances()
-            counter_data = []
-            for entry in needed_ids:
-                for instance in counters_avail.get(entry, []):
-                    counter_data.append("<ns1:metricId><ns1:counterId>%d</ns1:counterId><ns1:instance>%s</ns1:instance></ns1:metricId>" % (entry, instance))
-            soapdata = soapdata.replace("###counters###", "".join(counter_data))
-
-        # Query data 
-        if tracefile:
-            tracefile.write("\n\nStart query: %s\n" % name)
-        reply_code, reply_msg, reply_headers, reply_data = query_server(soapdata)
-        results[name] = reply_data
-
-        # Postprocess response data
-        if name == "1_serviceinfo":
-            elements = get_pattern("<name>(.*)</name>.*<apiVersion>([0-9\.]*)</apiVersion>", results["1_serviceinfo"])
-            esx_name        = elements[0][0]
-            esx_version_num = float(elements[0][1])
-        elif name == "2_login":
-            my_cookie =  reply_headers.get("Set-Cookie")
+        if name == "systeminfo":
+            for entry, function in [ ("name", None),
+                                     ("apiVersion", float),
+                                     ("rootFolder", None),
+                                     ("propertyCollector", None),
+                                     ("sessionManager", None),
+                                     ("perfManager", None) ]:
+                 element = get_pattern("<%(entry)s.*>(.*)</%(entry)s>" % { "entry": entry }, reply_data)
+                 systeminfo[entry] = function and function(element[0]) or element[0]
+        elif name == "login":
+            my_cookie = reply_headers.get("Set-Cookie")
             if reply_msg != "OK":
                 raise Exception("Login response is not 'OK'. Please check the credentials")
 
@@ -425,36 +652,40 @@ except Exception, e:
             "credentials. Please check your connection settings and try " \
             "again."
 
+
 if not error:
     try:
 
         ##########################
         # Check MK header and Agent Version
         print   "<<<check_mk>>>"
-        print "Version: %.1f" %  esx_version_num
-        print "AgentOs: %s" %  esx_name
+        print "Version: %.1f" % systeminfo["apiVersion"]
+        print "AgentOs: %s" %   systeminfo["name"]
 
         #############################
-        # Hostsystem instance to name
+        # Determine available host systems
         #############################
-        hostsystem_name = {}
-        elements = get_pattern('<obj type="HostSystem">(.*?)</obj>.*?<val xsi:type="xsd:string">(.*?)</val>',
-                               results["3_hostsystem_name"])
+        hostsystems = {}
+
+        reply_code, reply_msg, reply_headers, hostsystems_response = query_server(telegram_list["hostsystems"])
+        elements = get_pattern('<obj type="HostSystem">(.*?)</obj>.*?<val xsi:type="xsd:string">(.*?)</val>', hostsystems_response)
+
+
         for hostsystem, name in elements:
-            hostsystem_name[hostsystem] = name
+            hostsystems[hostsystem] = name
 
         ###########################
         # Datastores
         ###########################
         datastores = {} # We also need the datastore info later in the virtualmachines section
         if "datastore" in query_objects:
-            elements = get_pattern('<objects><obj type="Datastore">(.*?)</obj>(.*?)</objects>', results["4_datastores"])
+            reply_code, reply_msg, reply_headers, datastores_response = query_server(telegram_list["datastores"])
+            elements = get_pattern('<objects><obj type="Datastore">(.*?)</obj>(.*?)</objects>', datastores_response)
             for datastore, content in elements:
                 entries = get_pattern('<name>(.*?)</name><val xsi:type.*?>(.*?)</val>', content)
                 datastores[datastore] = {}
                 for name, value in entries:
                     datastores[datastore][name] = value
-
 
             print "<<<esx_vsphere_datastores:sep(9)>>>"
             for key in sorted(datastores.keys()):
@@ -469,87 +700,136 @@ if not error:
         # Counters
         ###########################
         if "counters" in query_objects:
-            ### Syntax
+            # Get counter syntax
+            counter_syntax_payload = telegram_list["perfcountersyntax"]
+            needed_ids             = get_counters(systeminfo["apiVersion"])
+            counter_data = []
+            for entry in needed_ids:
+                counter_data.append("<ns1:counterId>%s</ns1:counterId>" % entry)
+
+            reply_code, reply_msg, reply_headers, counters_syntax_response = \
+                query_server(counter_syntax_payload, payload_params = { "counters": "".join(counter_data)})
+
             counters_syntax = {}
             elements = get_pattern('<returnval><key>(.*?)</key>.*?<key>(.*?)</key>.*?'\
-                                   '<key>(.*?)</key>.*?<key>(.*?)</key>.*?', results["8_perf_counter_syntax"])
+                                   '<key>(.*?)</key>.*?<key>(.*?)</key>.*?', counters_syntax_response)
 
             for key, nameInfo, groupInfo, unitInfo in elements:
                 counters_syntax[key] = { "name": nameInfo, "group": groupInfo, "unit": unitInfo }
 
+            # We need to query each ESX host system separately..
+            hostnames = hostsystems.keys()
+            counter_data_payload = telegram_list["perfcounterdata"]
+            for idx, host in enumerate(hostnames):
+                if not opt_direct:
+                    print "<<<<%s>>>>" % convert_hostname(hostsystems[host])
 
-            ### Data
-            counters_value = {}
+                ### TODO: check if this host supports perfdata
+                ### TODO: try to get esx hosts perfdata from vCenter
+                counter_avail = telegram_list["perfcounteravail"]
+                reply_code, reply_msg, reply_headers, counter_avail_response = query_server(counter_avail, payload_params = { "esxhost": host })
 
-            elements = get_pattern("<id><counterId>(.*?)</counterId><instance>(.*?)</instance></id><value>(.*?)</value>", results["9_perf_counter_data"])
+                counters_avail  = {}
+                p = re.compile("<counterId>([0-9]*)</counterId><instance>([^<]*)")
+                elements = get_pattern("<counterId>([0-9]*)</counterId><instance>([^<]*)", counter_avail_response)
+                for counter, instance in elements:
+                    counters_avail.setdefault(counter, []).append(instance)
 
-            for counter, instance, value in elements:
-                if counter in counters_syntax:
-                    counters_value["%s.%s" % (counter, instance)] = { "id": counter, "instance": instance, "value": value }
+                counter_data = []
+                for entry in needed_ids:
+                    for instance in counters_avail.get(entry, []):
+                        counter_data.append("<ns1:metricId><ns1:counterId>%d</ns1:counterId><ns1:instance>%s</ns1:instance></ns1:metricId>" % (entry, instance))
+                counters_value = {}
+                reply_code, reply_msg, reply_headers, counter_data_response = \
+                    query_server(counter_data_payload, payload_params = { "esxhost": host, "counters": "".join(counter_data) })
+                elements = get_pattern("<id><counterId>(.*?)</counterId><instance>(.*?)</instance></id><value>(.*?)</value>", counter_data_response)
 
-            print "<<<esx_vsphere_counters:sep(124)>>>"
-            counters_output = {}
-            for key in sorted(counters_value.keys()):
-                value = counters_value[key]
-                desc  = counters_syntax[value["id"]]
-                counters_output[ (desc["group"], desc["name"], value["instance"]) ] = ( value["value"], desc["unit"] )
+                for counter, instance, value in elements:
+                    if counter in counters_syntax:
+                        counters_value["%s.%s" % (counter, instance)] = { "id": counter, "instance": instance, "value": value }
 
-            for key in sorted(counters_output.keys()):
-                value = counters_output[key]
-                print "%s.%s|%s|%s|%s" % (key + value)
+                print "<<<esx_vsphere_counters:sep(124)>>>"
+                counters_output = {}
+                for key in sorted(counters_value.keys()):
+                    value = counters_value[key]
+                    desc  = counters_syntax[value["id"]]
+                    counters_output[ (desc["group"], desc["name"], value["instance"]) ] = ( value["value"], desc["unit"] )
+
+                for key in sorted(counters_output.keys()):
+                    value = counters_output[key]
+                    print "%s.%s|%s|%s|%s" % (key + value)
+
+            if not opt_direct:
+                print '<<<<>>>>'
 
         ###########################
         # Hostsystem
         ###########################
         if "hostsystem" in query_objects:
-            hostsystem_propsets = {}
-            hostsystem_sensors  = {}
+            hostsystems_properties = {}
+            hostsystems_sensors    = {}
 
             # Propsets
-            elements = get_pattern('<propSet><name>(.*?)</name><val.*?>(.*?)</val></propSet>', results["10_hostsystem"])
-            sensor_propset = None
-            for name, value in elements:
-                if name == "runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo":
-                    sensor_propset = value
-                elif name == "config.multipathState.path":
-                    multipaths = get_pattern("<name>(.*?)</name><pathState>(.*?)</pathState>", value)
-                    for mp_name, mp_state in multipaths:
-                        hostsystem_propsets.setdefault(name, []).append("%s %s" % (mp_name, mp_state))
+            reply_code, reply_msg, reply_headers, esxhostdetails_response = query_server(telegram_list["esxhostdetails"])
+            hostsystems_objects = get_pattern('<objects>(.*?)</objects>', esxhostdetails_response)
+
+            for entry in hostsystems_objects:
+                hostname = get_pattern('<obj type="HostSystem">(.*)</obj>', entry[:512])[0]
+                hostsystems_properties[hostname] = {}
+                hostsystems_sensors[hostname]    = {}
+
+                elements = get_pattern('<propSet><name>(.*?)</name><val.*?>(.*?)</val></propSet>', entry)
+                sensor_propset = None
+                for name, value in elements:
+                    if name == "runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo":
+                        sensor_propset = value # Sensors are evaluated further later on..
+                    elif name == "config.multipathState.path":
+                        multipaths = get_pattern("<name>(.*?)</name><pathState>(.*?)</pathState>", value)
+                        for mp_name, mp_state in multipaths:
+                            hostsystems_properties[hostname].setdefault(name, []).append("%s %s" % (mp_name, mp_state))
+                    else:
+                        hostsystems_properties[hostname].setdefault(name, []).append(value)
+
+                # Sensor info
+                entry_pattern = ""
+                for key in [ "name", "label", "summary", "key", "currentReading",
+                             "unitModifier", "baseUnits", "sensorType" ]:
+                    entry_pattern += "<%(name)s>(.*?)</%(name)s>.*?" % { "name": key}
+
+                # TODO: rate unit?
+                sensor_data = get_pattern(entry_pattern, sensor_propset)
+                for name, label, summary, key, currentReading, unitModifier, baseUnits, sensorType in sensor_data:
+                    hostsystems_sensors[hostname][name] = { "name": name, "label": label, "summary": summary, "key": key,
+                                                            "currentReading": currentReading, "unitModifier": unitModifier,
+                                                            "baseUnits": baseUnits, "sensorType": sensorType }
+
+
+
+            # TODO: improve error handling: check if multiple results and opt_direct
+            for hostname, properties in hostsystems_properties.items():
+                if opt_direct and opt_hostname:
+                    print "<<<<%s>>>>" % opt_hostname
                 else:
-                    hostsystem_propsets.setdefault(name, []).append(value)
+                    print "<<<<%s>>>>" % convert_hostname(properties["name"][0])
 
-            # Sensor info
-            entry_pattern = ""
-            for key in [ "name", "label", "summary", "key", "currentReading",
-                         "unitModifier", "baseUnits", "sensorType" ]:
-                entry_pattern += "<%(name)s>(.*?)</%(name)s>.*?" % { "name": key}
+                print "<<<esx_vsphere_hostsystem>>>"
+                for key in sorted(properties.keys()):
+                    if key == "runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo":
+                        continue
+                    value = properties[key]
+                    print "%s %s" % (key, " ".join(value))
 
-            # TODO: rate unit?
-            sensor_data = get_pattern(entry_pattern, sensor_propset)
-            for name, label, summary, key, currentReading, unitModifier, baseUnits, sensorType in sensor_data:
-                hostsystem_sensors[name] = { "name": name, "label": label, "summary": summary, "key": key,
-                                             "currentReading": currentReading, "unitModifier": unitModifier,
-                                             "baseUnits": baseUnits, "sensorType": sensorType }
-
-
-            print "<<<esx_vsphere_hostsystem>>>"
-            for key in sorted(hostsystem_propsets.keys()):
-                if key == "runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo":
-                    continue
-                value = hostsystem_propsets[key]
-                print "%s %s" % (key, " ".join(value))
-
-            print "<<<esx_vsphere_sensors:sep(59)>>>"
-            for key in sorted(hostsystem_sensors.keys()):
-                data = hostsystem_sensors[key]
-                if data["key"] in ["green", "unknown"]:
-                    continue
-                line = '%s;%s;%s;%s;%s;' % (data["name"], data["baseUnits"], data["currentReading"],
-                                            data["sensorType"], data["unitModifier"])
-                if "rateUnits" in data:
-                    line += data["rateUnits"]
-                line += ";%s;%s;%s" % ( data["key"], data["label"], data["summary"] )
-                print line
+                print "<<<esx_vsphere_sensors:sep(59)>>>"
+                for key in sorted(hostsystems_sensors[hostname].keys()):
+                    data = hostsystems_sensors[hostname][key]
+                    if data["key"] in ["green", "unknown"]:
+                        continue
+                    line = '%s;%s;%s;%s;%s;' % (data["name"], data["baseUnits"], data["currentReading"],
+                                                data["sensorType"], data["unitModifier"])
+                    if "rateUnits" in data:
+                        line += data["rateUnits"]
+                    line += ";%s;%s;%s" % ( data["key"], data["label"], data["summary"] )
+                    print line
 
 
         ###########################
@@ -565,7 +845,9 @@ if not error:
                 return False
 
             # <objects><propSet><name>...</name><val ..>...</val></propSet></objects>
-            elements = get_pattern("<objects>(.*?)</objects>", results["11_virtualmachine"])
+            reply_code, reply_msg, reply_headers, vmdetails_response = query_server(telegram_list["vmdetails"])
+
+            elements = get_pattern("<objects>(.*?)</objects>", vmdetails_response)
             for entry in elements:
                 vm_data = dict(get_pattern("<name>(.*?)</name><val.*?>(.*?)</val>", entry))
                 if opt_skip_placeholder_vm and is_placeholder_vm(vm_data.get("config.hardware.device")):
@@ -610,18 +892,20 @@ if not error:
         print "<<<esx_vsphere_objects:sep(9)>>>"
         if "hostsystem" in query_objects:
             if opt_direct and opt_hostname:
-                hostname = opt_hostname
+                print "hostsystem\t%s\t\t%s" % ( opt_hostname, hostsystems_properties[hostname]["runtime.powerState"][0] )
             else:
-                # Note: Won't work with vCenter queries..
-                hostname = hostsystem_propsets["name"][0]
-            print "hostsystem\t%s\t\t%s" % ( hostname, "".join(hostsystem_propsets["runtime.powerState"]) )
+                for hostname, data in hostsystems_properties.items():
+                    print "hostsystem\t%s\t\t%s" % ( convert_hostname(hostsystems_properties[hostname]["name"][0]),
+                                                     hostsystems_properties[hostname]["runtime.powerState"][0] )
 
 
         if "virtualmachine" in query_objects:
-            for key in sorted(vms.keys()):
+            for key in vms.keys():
                 data = vms[key]
-                running_on = hostsystem_name.get(data.get("runtime.host"), data.get("runtime.host"))
+                running_on = hostsystems.get(data.get("runtime.host"), data.get("runtime.host"))
                 print "virtualmachine\t%s\t%s\t%s" % (convert_hostname(data.get("name")), running_on, data.get("runtime.powerState"))
+
+        query_server(telegram_list["logout"])
 
     except Exception, e:
         if opt_debug:

@@ -1,0 +1,11 @@
+LOG_DIRECTORY_CLIENT = /var/log/check_mk/oracle_client
+DIAG_ADR_ENABLED = OFF
+
+SQLNET.WALLET_OVERRIDE = FALSE
+WALLET_LOCATION =
+ (SOURCE=
+  (METHOD = FILE)
+  (METHOD_DATA = (DIRECTORY=/etc/check_mk/oracle_wallet))
+ )
+
+

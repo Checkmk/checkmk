@@ -1,0 +1,9 @@
+Title: megaraid_ldisk: now longer raises an exception for adapters with 'No Virtual Drive Configured'
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1410789580
+Class: fix
+
+

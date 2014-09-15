@@ -2265,10 +2265,11 @@ register_rule(group,
 
 register_rule(group,
     "snmpv2c_hosts",
-    title = _("Hosts using SNMP v2c"),
-    help = _("There exist a few devices out there that behave very badly when using SNMP bulk walk. "
-             "If you want to use SNMP v2c on those devices, nevertheless, then use this rule set. "
-             "One reason is enabling 64 bit counters."))
+    title = _("Legacy SNMP devices using SNMP v2c"),
+    help = _("There exist a few devices out there that behave very badly when using SNMP v2c and bulk walk. "
+             "If you want to use SNMP v2c on those devices, nevertheless, you need to configure this device as "
+             "legacy snmp device and upgrade it to SNMP v2c (without bulk walk) with this rule set. One reason is enabling 64 bit counters. "
+             "Note: This rule won't apply if the device is already configured as SNMP v2c device."))
 
 register_rule(group,
     "snmp_timing",

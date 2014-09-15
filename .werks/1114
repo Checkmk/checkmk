@@ -1,0 +1,10 @@
+Title: bluecat_threads: no longer detected on wrong systems
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1410769126
+Class: fix
+
+The oid in the snmp_scan function was incorrect.
+This caused the check to appear on wrong hosts, where there was no bluecat_threads info available.

@@ -1,0 +1,13 @@
+Title: Renamed rule: Hosts using SNMP v2c -> Legacy SNMP devices using SNMP v2c
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.5i6
+Date: 1410771999
+Class: feature
+
+The previous rule set "Hosts using SNMP v2c" only applied to legacy snmp devices.
+So if you had your host configured as "SNMP (Networking device, Appliance)" it was
+already marked as SNMP v2c, however with bulk walk...<br><br>
+
+Renaming this rule set should now make its purpose more clear.

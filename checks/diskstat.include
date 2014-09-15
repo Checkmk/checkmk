@@ -251,16 +251,15 @@ def check_diskstat_old(item, params, this_time, info):
     else:
         return (3, "invalid item %s" % (item,))
 
-    #this_val  = sum([int(x[index]) for x in info if ' ' not in x[1]])
     this_val = 0
     for line in info:
         if line[0] != None:
             return 3, "read/write mode not supported in a cluster"
         if ' ' not in line[1]:
-            thisval += int(x[index])
+            this_val += int(line[index])
 
     timedif, per_sec = get_counter("diskstat." + item, this_time, this_val)
     mb_per_s = per_sec / 2048.0    # Diskstat output is in sectors a 512 Byte
     kb_per_s = per_sec / 2.0
     perfdata = [ (item, "%f" % kb_per_s ) ]
-    return (0, "%.1fMB/s (in last %d secs)" % (mb_per_s, timedif), perfdata)
+    return (0, "%.1f MB/s (in last %d secs)" % (mb_per_s, timedif), perfdata)

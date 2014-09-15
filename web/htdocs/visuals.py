@@ -229,18 +229,15 @@ def available(what, all_visuals):
 #   | Show a list of all visuals with actions to delete/clone/edit         |
 #   '----------------------------------------------------------------------'
 
-def page_list(what, visuals, custom_columns = []):
+def page_list(what, title, visuals, custom_columns = []):
     what_s = what[:-1]
     if not config.may("general.edit_" + what):
-        raise MKAuthException(_("You are not allowed to edit %s.") % what)
+        raise MKAuthException(_("Sorry, you lack the permission for editing this type of visuals."))
 
-    html.header(_("Edit %s") % what, stylesheets=["pages","views","status"])
-    html.help(_("Here you can create and edit customizable <b>views</b>. A view "
-            "displays monitoring status or log data by combining filters, sortings, "
-            "groupings and other aspects."))
+    html.header(title, stylesheets=["pages", "views", "status"])
 
     html.begin_context_buttons()
-    html.context_button(_('Create %s') % what_s.title(), 'create_%s.py' % what_s, what_s)
+    html.context_button(_('New'), 'create_%s.py' % what_s, "new")
     if what != 'views':
         html.context_button(_('Views'), 'edit_views.py', 'view')
     if what != 'dashboards':
@@ -277,7 +274,7 @@ def page_list(what, visuals, custom_columns = []):
             builtin.append((owner, visualname, visual))
 
     for title, items in [ (_('Custom'), custom), (_('Builtin'), builtin) ]:
-        html.write('<h3>' + title + ' ' + what.title() + '</h3>')
+        html.write('<h3>' + title + '</h3>')
 
         table.begin(css = 'data', limit = None)
 
@@ -292,8 +289,7 @@ def page_list(what, visuals, custom_columns = []):
                 html.icon_button("edit_%s.py?load_name=%s" % (what_s, visualname), _("Edit"), "edit")
 
             # Clone / Customize
-            buttontext = not owner and _("Customize this %s") % what_s \
-                         or _("Create a clone of this %s") % what_s
+            buttontext = _("Create a customized copy of this")
             backurl = html.urlencode(html.makeuri([]))
             clone_url = "edit_%s.py?load_user=%s&load_name=%s&back=%s" \
                         % (what_s, owner, visualname, backurl)
@@ -302,7 +298,7 @@ def page_list(what, visuals, custom_columns = []):
             # Delete
             if owner == config.user_id:
                 html.icon_button(html.makeactionuri([('_delete', visualname)]),
-                    _("Delete this %s!") % what_s, "delete")
+                    _("Delete!"), "delete")
 
             # visual Name
             table.cell(_('ID'), visualname)

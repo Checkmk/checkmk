@@ -592,7 +592,7 @@ def ajax_dashlet():
 
 def page_edit_dashboards():
     load_dashboards()
-    visuals.page_list('dashboards', dashboards)
+    visuals.page_list('dashboards', _("Edit Dashboards"), dashboards)
 
 #.
 #   .--Create Dashb.-------------------------------------------------------.

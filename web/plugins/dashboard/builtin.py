@@ -71,7 +71,7 @@ builtin_dashboards["main"] = {
                     'hstp': '',
                 },
                 'summary_host': {'is_summary_host': '0'},
-                'host_acknowledged': {'is_host_acknowledged': '-1'},
+                'host_acknowledged': {'is_host_acknowledged': '0'},
                 'host_scheduled_downtime_depth': {'is_host_scheduled_downtime_depth': '0'},
             },
             'hidden': True,

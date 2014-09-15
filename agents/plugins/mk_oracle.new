@@ -875,7 +875,6 @@ touch $MK_CONFDIR/mk_oracle.found
 # do not contain valid data anyway.
 for section in $SYNC_SECTIONS $ASYNC_SECTIONS $SYNC_ASM_SECTIONS $ASYNC_ASM_SECTIONS
 do
-    # cut the leading number from sections with sed
     echo "<<<oracle_"$section">>>"
 done
 

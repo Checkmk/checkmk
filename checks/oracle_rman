@@ -28,7 +28,7 @@
 # TUX2 COMPLETED 2014-07-08_17:27:59 2014-07-08_17:29:35 DB_INCR 32
 # TUX2 COMPLETED 2014-07-08_17:30:02 2014-07-08_17:30:06 ARCHIVELOG 121
 
-# Columns: SID STATUS START END BACKUPTYPE BACKUAGE
+# Columns: SID STATUS START END BACKUPTYPE BACKUPAGE
 
 def inventory_oracle_rman(info):
     return [ (line[0] + "." + line[4], {}) for line in info
@@ -39,6 +39,8 @@ def inventory_oracle_rman(info):
 def check_oracle_rman(item, params, info):
     for sid, status, start, end, backuptype, backupage in info:
         if item == sid + "." + backuptype:
+            if not backupage:
+                return 0, "Backup is currently running"
             backupage = int(backupage)
             infotext = "Last backup %s ago" % get_age_human_readable(backupage * 60)
 

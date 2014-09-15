@@ -1,0 +1,14 @@
+title: Retrieve informational SNMP data about Brocade switches
+agents: snmp
+catalog: hw/storagehw/brocade
+license: GPL
+distribution: check_mk
+description:
+ This check retrieves the {model name}, {soft serial number}, {firmware
+ version}, and {WWN} of Brocade switches using SNMP.
+
+ Depending on the firmware version only part of the information may be
+ available.
+
+inventory:
+ One check per host will be created.

@@ -29,7 +29,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>       
+#include <errno.h>
 #include <signal.h>
 #include <getopt.h>
 
@@ -110,7 +110,7 @@ int main(int argc, char **argv)
 
   int maxtime = atoi(argv[optind]);
   if (maxtime <= 0) usage();
-  
+
   g_pid = fork();
   if (g_pid == 0) {
     signal(SIGALRM, signalhandler);
@@ -122,7 +122,7 @@ int main(int argc, char **argv)
     out("\n");
     exit(253);
   }
-  
+
   signal(SIGALRM, signalhandler);
   alarm(maxtime);
   int status;
@@ -138,7 +138,7 @@ int main(int argc, char **argv)
       }
       else break;
   }
-   
+
   if (WIFEXITED(status)) {
     int exitcode = WEXITSTATUS(status);
     return exitcode;

@@ -25,8 +25,8 @@
 
 # EXAMPLE
 
-# This script is called by the Check_MK ORACLE plugin in order to 
-# execute an SQL query. 
+# This script is called by the Check_MK ORACLE plugin in order to
+# execute an SQL query.
 
 # It is your task to adapt this script so that the ORACLE environment
 # is setup and the correct user chosen to execute sqlplus.

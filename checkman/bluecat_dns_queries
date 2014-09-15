@@ -7,5 +7,5 @@ description:
  This check currently only returns variables for information. The check will be extended in the future.
 
 inventory:
- One service will be created 
+ One service will be created
 

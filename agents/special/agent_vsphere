@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 # This agent version uses predefined soap inquiries which are sent
-# to an esx host system. # Unlike the classic agent the reported data 
+# to an esx host system. # Unlike the classic agent the reported data
 # isn't processed through the pysphere module.
 # Instead a simple string process approach is used which drastically
 # reduces the CPU load for this agent

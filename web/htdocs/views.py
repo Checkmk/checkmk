@@ -302,7 +302,7 @@ def save_views(us):
 def page_edit_views():
     load_views()
     cols = [ (_('Datasource'), lambda v: multisite_datasources[v["datasource"]]['title']) ]
-    visuals.page_list('views', multisite_views, cols)
+    visuals.page_list('views', _("Edit Views"), multisite_views, cols)
 
 #.
 #   .--Create View---------------------------------------------------------.

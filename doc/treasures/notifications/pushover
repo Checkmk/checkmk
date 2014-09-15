@@ -1,0 +1,67 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Send notification to Pushover
+#
+# This notification script can be put below share/check_mk/notifications. It sends
+# notifications to Pushover. Note: this currently is just a simple test. The device
+# should probably be set to a user name or similar.
+
+import sys, os, urllib, httplib
+
+# Enter your keys and tokens here. For details about what that's
+# about please refer to the Pushover documentation.
+user_key   = "XXXXXXXXXXXXXXXXXXXXXXXXXXX"
+app_token  = "XXXXXXXXXXXXXXXXXXXXXXXXXXX"
+device     = "XXXXX"
+
+message = os.environ['NOTIFY_HOSTNAME'] + " "
+
+if os.environ['NOTIFY_WHAT'] == 'SERVICE':
+    message += os.environ['NOTIFY_SERVICESTATE'][:2] + " "
+    avail_len = max_len - len(message)
+    message += os.environ['NOTIFY_SERVICEDESC'][:avail_len] + " "
+    avail_len = max_len - len(message)
+    message += os.environ['NOTIFY_SERVICEOUTPUT'][:avail_len]
+
+else:
+    message += "is " + os.environ['NOTIFY_HOSTSTATE']
+
+
+conn = httplib.HTTPSConnection("api.pushover.net:443")
+conn.request("POST", "/1/messages.json",
+urllib.urlencode({
+      "token"   : app_token,
+      "user"    : user_key,
+      "message" : message,
+}), { "Content-type": "application/x-www-form-urlencoded" })
+response = conn.getresponse()
+headers = dict(response.getheaders())
+status = headers.get('status')
+code, explanation = status.split(None, 1)
+if code != "200":
+    print "Failed to notify via Pushover: %s, HTTP status is %s" % (explanation, status)
+    sys.exit(1)

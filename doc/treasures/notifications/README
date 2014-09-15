@@ -1,0 +1,8 @@
+These are notifications plugins for Check_MK. You can put them
+in the notifications/ directory of your Check_MK installations.
+OMD-based users put this into their site in to.
+local/share/check_mk/notifications/
+
+These scripts to not yet have a WATO integration. You might
+need to update keys, passwords, etc. directly within these
+scripts currently.

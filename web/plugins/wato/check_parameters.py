@@ -6056,7 +6056,7 @@ register_check_parameters(
                                 default_value = [ 2, 3, 4 ],
                                 )
                         ),
-                        ( "critical", 
+                        ( "critical",
                             ListChoice(
                                 title = _("States treated as critical"),
                                 choices = bluecat_operstates,
@@ -6071,7 +6071,7 @@ register_check_parameters(
               Tuple(
                   title = _("Levels for Stratum "),
                   elements = [
-                      Integer(title = _("Warning if above")), 
+                      Integer(title = _("Warning if above")),
                       Integer(title = _("Critical if above")),
                   ])
             ),
@@ -6098,7 +6098,7 @@ register_check_parameters(
                                 default_value = [ 2, 3, 4 ],
                                 )
                         ),
-                        ( "critical", 
+                        ( "critical",
                             ListChoice(
                                 title = _("States treated as critical"),
                                 choices = bluecat_operstates,
@@ -6133,7 +6133,7 @@ register_check_parameters(
                                 default_value = [ 2, 3, 4 ],
                                 )
                         ),
-                        ( "critical", 
+                        ( "critical",
                             ListChoice(
                                 title = _("States treated as critical"),
                                 choices = bluecat_operstates,
@@ -6168,7 +6168,7 @@ register_check_parameters(
                                 default_value = [ 2, 3, 4 ],
                                 )
                         ),
-                        ( "critical", 
+                        ( "critical",
                             ListChoice(
                                 title = _("States treated as critical"),
                                 choices = bluecat_operstates,
@@ -6214,7 +6214,7 @@ register_check_parameters(
                                 default_value = [ 5, 6, 7 ],
                                 ),
                         ),
-                        ( "critical", 
+                        ( "critical",
                             ListChoice(
                                 title = _("States treated as critical"),
                                 choices = bluecat_ha_operstates ,

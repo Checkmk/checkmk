@@ -8,5 +8,5 @@ description:
  The Check will return {OK} if the Service is running, {CRITICAL} if the state is fault, {WARNING} in each other case.
 
 inventory:
- One service will be created 
+ One service will be created
 

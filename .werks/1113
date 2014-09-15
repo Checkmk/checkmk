@@ -1,0 +1,9 @@
+Title: oracle_rman: fixed exception when backup was currently running
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1410766821
+Class: fix
+
+

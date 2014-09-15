@@ -532,12 +532,12 @@ def output_hostsystem_counters(all_counters = False):
                 131078, 131079, 131091, 131076, 131077,
             ]
 
-            
+
             #needed_ids = [
             #    # sys.resourceMem*
             #    262151, 262155, 262169, 262152, 262154, 262153, 262157, 262156, 262168,
             #]
-            
+
             # Seems as this is not available in ESX 5.0 but we saw it on 5.1
         if esx_version_num > 5.0:
             # sys.resourceMemConsumed
@@ -649,7 +649,7 @@ def output_mors(what, properties, direct=False):
 
 g_datastores = {}
 def output_datastores():
-    property_names = [ 
+    property_names = [
         "name",
         "summary.freeSpace",
         "summary.capacity",

@@ -102,7 +102,7 @@ password       = None
 mortypes       = [ 'all' ]
 fetch_agent_info = False
 
-naviseccli_options = { 
+naviseccli_options = {
     "disks"      : {"cmd_option" : "-disk",  "active" : False},
     "hba"        : {"cmd_option" : "-hba",   "active" : False},
     "hwstatus"   : {"cmd_option" : "-array", "active" : False},

@@ -50,8 +50,8 @@ HEAL_SPACES_IN = checkman/* modules/* checks/* notifications/* inventory/* \
 	       $$(find pnp-templates -type f -name "*.php") \
                mkeventd/bin/mkeventd mkeventd/web/htdocs/*.py mkeventd/web/plugins/*/*.py \
 	       mkeventd/src/*.c mkeventd/checks/* check_mk_templates.cfg \
-	       doc/treasures/mknotifyd agents/check_mk_agent* \
-	       $$(find agents/plugins -type f)
+	       doc/treasures/mknotifyd agents/check_mk_*agent* agents/*.c agents/cfg_examples/* \
+	       agents/special/* $$(find agents/plugins -type f)
 
 
 .PHONY: help install clean

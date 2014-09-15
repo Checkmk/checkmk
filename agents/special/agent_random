@@ -60,7 +60,7 @@ services = [
 
 print '<<<local>>>'
 state_names = [ "OK", "WARN", "CRIT", "UNKNOWN" ]
-state_texts = [ 
+state_texts = [
   "Everying is OK now",
   "The freibl might go slisk",
   "Bad luck, everything is broken",

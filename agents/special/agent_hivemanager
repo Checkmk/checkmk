@@ -31,7 +31,7 @@ import urllib2, base64, json
 try:
     ip = sys.argv[1]
     user = sys.argv[2]
-    password = sys.argv[3] 
+    password = sys.argv[3]
 except:
     print "Usage: agent_hivemanager <IP> <USERNAME> <PASSWORD>"
     sys.exit(2)
@@ -39,7 +39,7 @@ except:
 def get_url(address):
     request = urllib2.Request(address)
     base64string = base64.encodestring('%s:%s' % (user, password)).replace('\n', '')
-    request.add_header("Authorization", "Basic %s" % base64string)   
+    request.add_header("Authorization", "Basic %s" % base64string)
     request.add_header("Content-Type", "application/json")
     try:
         return urllib2.urlopen(request)
@@ -48,7 +48,7 @@ def get_url(address):
         sys.exit(2)
 
 print   "<<<check_mk>>>"
-print "Version: 1.2.5" 
+print "Version: 1.2.5"
 print "AgentOs: Hivemanager"
 
 print "<<<hivemanager_devices:sep(124)>>>"

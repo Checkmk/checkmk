@@ -50,7 +50,7 @@
 export MK_CACHEDIR="/var/cache/check_mk"
 
 # Determine the IP address of the remote Nagios server.
-# xinetd sends us the IP address of the remote host via 
+# xinetd sends us the IP address of the remote host via
 # the environment variable REMOTE_HOST. SSH sets a variable
 # SSH_CONNECTION where the remote IP address is the first
 # part of a space-separated list. Of both fails, we set

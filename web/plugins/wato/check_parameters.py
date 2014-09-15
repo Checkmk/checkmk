@@ -2607,7 +2607,7 @@ register_check_parameters(
             elements = [
                 Integer(title = _("Equal or more than"), unit = _("nodes")),
                 Tuple(
-                    title = _("Specify levels in percentage of total RAM"),
+                    title = _("Percentage of total RAM"),
                     elements = [
                       Percentage(title = _("Warning at a RAM usage of"), default_value = 80.0),
                       Percentage(title = _("Critical at a RAM usage of"), default_value = 90.0),
@@ -2615,8 +2615,8 @@ register_check_parameters(
             ]
         ),
         help = _("Here you can specify the total memory usage levels for clustered hosts "),
-        title = _(""),
-        add_label = _("Add setting")
+        title = _("Memory Usage"),
+        add_label = _("Add limits")
     ),
     None,
    "first",

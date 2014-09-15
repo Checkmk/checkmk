@@ -65,7 +65,7 @@ def check_oracle_recovery_status(item, params, info):
 
         if oldest_checkpoint_age == -1:
             infotext += ", no online datafiles found(!!)"
-            state = max(2, state)
+            state = 2
         else:
             infotext += ", oldest Checkpoint %s ago" \
                        % (get_age_human_readable(int(oldest_checkpoint_age)))
@@ -87,7 +87,7 @@ def check_oracle_recovery_status(item, params, info):
             # check the checkpoint age on a non primary database!
             if oldest_checkpoint_age >= crit:
                 infotext += '(!!)'
-                state = max(2, state)
+                state = 2
             elif oldest_checkpoint_age >= warn:
                 infotext += '(!)'
                 state = max(1, state)
@@ -95,7 +95,7 @@ def check_oracle_recovery_status(item, params, info):
         if offlinecount > 0:
             infotext += " %i datafiles offline(!!)" \
                         % (offlinecount)
-            state = max(2, state)
+            state = 2
 
 
         return state, infotext, perfdata

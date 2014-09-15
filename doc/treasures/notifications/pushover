@@ -63,5 +63,5 @@ headers = dict(response.getheaders())
 status = headers.get('status')
 code, explanation = status.split(None, 1)
 if code != "200":
-    print "Failed to notify via Pushover: %s, HTTP status is %s" % (explanation, status)
+    sys.stdout.write("Failed to notify via Pushover: %s, HTTP status is %s\n" % (explanation, status))
     sys.exit(1)

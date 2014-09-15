@@ -122,7 +122,7 @@ url += urllib.urlencode([
 try:
     handle = urllib.urlopen(url)
     response = handle.read().strip()
-    print response
+    sys.stdout.write("%s\n" % response)
     if response.startswith("ID:"):
         sys.stdout.write("Successfully sent SMS to %s\n" % to)
     else:

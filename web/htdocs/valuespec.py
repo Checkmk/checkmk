@@ -186,12 +186,12 @@ class Age(ValueSpec):
         html.write("</div>")
 
     def from_html_vars(self, varprefix):
-            return (
-                   saveint(html.var(varprefix+'_days')) * 3600 * 24
-                 + saveint(html.var(varprefix+'_hours')) * 3600
-                 + saveint(html.var(varprefix+'_minutes')) * 60
-                 + saveint(html.var(varprefix+'_seconds'))
-            )
+        return (
+               saveint(html.var(varprefix+'_days')) * 3600 * 24
+             + saveint(html.var(varprefix+'_hours')) * 3600
+             + saveint(html.var(varprefix+'_minutes')) * 60
+             + saveint(html.var(varprefix+'_seconds'))
+        )
 
     def value_to_text(self, value):
         days,    rest    = divmod(value, 60*60*24)

@@ -1302,28 +1302,43 @@ def render_view(view, rows, datasource, group_painters, painters,
         if 'H' in display_options:
             html.body_end()
 
+# We should rename this into "painter_options". Also the saved file.
 def view_options(viewname):
     # Options are stored per view. Get all options for all views
     vo = config.load_user_file("viewoptions", {})
+
     # Now get options for the view in question
     v = vo.get(viewname, {})
     must_save = False
 
+    # Now override the loaded options with new option settings that are
+    # provided by the URL. Our problem: we do not know the URL variables
+    # that a valuespec expects. But we know the common prefix of all
+    # variables for each option.
     if config.may("general.painter_options"):
-        for on, opt in multisite_painter_options.items():
-            vs = opt['valuespec']
-            value = vs.from_html_vars('po_' + on)
-            if value is None:
-                value = vs.default_value()
+        for option_name, opt in multisite_painter_options.items():
+            old_value = v.get(option_name)
+            var_prefix = 'po_' + option_name
 
-            old_value = v.get(on)
+            # Are there settings for this painter option present?
+            if html.has_var_prefix(var_prefix):
 
-            v[on] = value
-            opt['value'] = value
+                # Get new value for the option from the value spec
+                vs = opt['valuespec']
+                value = vs.from_html_vars(var_prefix)
 
-            if v[on] != old_value:
-                must_save = True
+                v[option_name] = value
+                opt['value'] = value # make globally present for painters
 
+                if v[option_name] != old_value:
+                    must_save = True
+
+            else:
+                opt['value'] = old_value # make globally present for painters
+
+    # If the user has no permission for changing painter options
+    # (or has *lost* his permission) then we need to remove all
+    # of the options. But we do not save.
     else:
         for on, opt in multisite_painter_options.items():
             if on in v:

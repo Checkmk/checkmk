@@ -1,0 +1,13 @@
+Title: Display options in views are now again persistent
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.5i6
+Date: 1410859507
+Class: fix
+
+When you change a "Display Option" in a view - such as the <i>Time stamp format</i>, then
+this option was only valid whilst you were visiting that view. This was due to a bug, which
+was introduced in Januar 2014. This has been fixed now. If you are visiting a view again
+after changing display options, then these will be persisted forever. Note: the persistance
+is on a per-user-base and per-view-base.

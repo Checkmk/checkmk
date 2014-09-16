@@ -917,7 +917,31 @@ class html:
     def set_focus(self, varname):
         self.focus_object = (self.form_name, varname)
 
+    def debug_vars(self, prefix=None, hide_with_mouse=True):
+        if hide_with_mouse:
+            hover = ' onmouseover="this.style.display=\'none\';"'
+        else:
+            hover = ""
+        self.lowlevel_write('<table %s class=debug_vars>' % hover)
+        self.lowlevel_write("<tr><th colspan=2>POST / GET Variables</th></tr>")
+        for name, value in sorted(self.vars.items()):
+            if not prefix or name.startswith(prefix):
+                self.write("<tr><td class=left>%s</td><td class=right>%s</td></tr>\n" %
+                    (self.attrencode(name), self.attrencode(value)))
+        self.write("</table>")
 
+    def var(self, varname, deflt = None):
+        return self.vars.get(varname, deflt)
+
+    def has_var(self, varname):
+        return varname in self.vars
+
+    # Checks if a variable with a given prefix is present
+    def has_var_prefix(self, prefix):
+        for varname in self.vars:
+            if varname.startswith(prefix):
+                return True
+        return False
 
     def var_utf8(self, varname, deflt = None):
         val = self.vars.get(varname, deflt)
@@ -1115,25 +1139,6 @@ class html:
         for element in x:
             self.lowlevel_write("<pre>%s</pre>\n" % pprint.pformat(element))
 
-
-    def debug_vars(self, prefix=None, hide_with_mouse=True):
-        if hide_with_mouse:
-            hover = ' onmouseover="this.style.display=\'none\';"'
-        else:
-            hover = ""
-        self.lowlevel_write('<table %s class=debug_vars>' % hover)
-        self.lowlevel_write("<tr><th colspan=2>POST / GET Variables</th></tr>")
-        for name, value in sorted(self.vars.items()):
-            if not prefix or name.startswith(prefix):
-                self.write("<tr><td class=left>%s</td><td class=right>%s</td></tr>\n" %
-                    (self.attrencode(name), self.attrencode(value)))
-        self.write("</table>")
-
-    def var(self, varname, deflt = None):
-        return self.vars.get(varname, deflt)
-
-    def has_var(self, varname):
-        return varname in self.vars
 
     def has_cookie(self, varname):
         return varname in self.cookies

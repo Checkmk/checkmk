@@ -322,24 +322,34 @@ def page_create_view():
 
 # Seconds step: Select the data source
 def page_create_view_ds(next_url = 'edit_view.py?context_type=%s&datasource=%s'):
-    context_type = html.var('context_type')
+    context_type_name = html.var('context_type')
 
     available = visuals.context_types.keys()
     available.remove('global')
-    if context_type not in available:
+    if context_type_name not in available:
         raise MKGeneralException(_('The context type is missing'))
+    context_type = visuals.context_types[context_type_name]
 
     # Filter out datasources which are available for this context type. The
     # matching is done based on the "info" available for each datasource
     datasources = []
     for ds_name, ds in multisite_datasources.items():
-        datasources.append((ds_name, ds['title'], None, ds.get('description')))
+        if "infos" in context_type:
+            skip = False
+            for needed_info in context_type["infos"]:
+                if needed_info not in ds["infos"]:
+                    skip = True
+                    break
+            if not skip:
+                datasources.append((ds_name, ds['title']))
 
-    vs_ds = RadioChoice(
+    vs_ds = DropdownChoice(
         title = _('Datasource'),
         choices = datasources,
+        sorted = True,
         help = _('The datasources defines which type of objects should be displayed with this view.'),
         columns = 1,
+        default_value = "service",
     )
 
     html.header(_('Create View'), stylesheets=["pages"])
@@ -353,7 +363,7 @@ def page_create_view_ds(next_url = 'edit_view.py?context_type=%s&datasource=%s')
             ds = vs_ds.from_html_vars('ds')
             vs_ds.validate_value(ds, 'ds')
 
-            html.http_redirect(next_url % (context_type, ds))
+            html.http_redirect(next_url % (context_type_name, ds))
             return
 
         except MKUserError, e:
@@ -1302,28 +1312,43 @@ def render_view(view, rows, datasource, group_painters, painters,
         if 'H' in display_options:
             html.body_end()
 
+# We should rename this into "painter_options". Also the saved file.
 def view_options(viewname):
     # Options are stored per view. Get all options for all views
     vo = config.load_user_file("viewoptions", {})
+
     # Now get options for the view in question
     v = vo.get(viewname, {})
     must_save = False
 
+    # Now override the loaded options with new option settings that are
+    # provided by the URL. Our problem: we do not know the URL variables
+    # that a valuespec expects. But we know the common prefix of all
+    # variables for each option.
     if config.may("general.painter_options"):
-        for on, opt in multisite_painter_options.items():
-            vs = opt['valuespec']
-            value = vs.from_html_vars('po_' + on)
-            if value is None:
-                value = vs.default_value()
+        for option_name, opt in multisite_painter_options.items():
+            old_value = v.get(option_name)
+            var_prefix = 'po_' + option_name
 
-            old_value = v.get(on)
+            # Are there settings for this painter option present?
+            if html.has_var_prefix(var_prefix):
 
-            v[on] = value
-            opt['value'] = value
+                # Get new value for the option from the value spec
+                vs = opt['valuespec']
+                value = vs.from_html_vars(var_prefix)
 
-            if v[on] != old_value:
-                must_save = True
+                v[option_name] = value
+                opt['value'] = value # make globally present for painters
 
+                if v[option_name] != old_value:
+                    must_save = True
+
+            else:
+                opt['value'] = old_value # make globally present for painters
+
+    # If the user has no permission for changing painter options
+    # (or has *lost* his permission) then we need to remove all
+    # of the options. But we do not save.
     else:
         for on, opt in multisite_painter_options.items():
             if on in v:

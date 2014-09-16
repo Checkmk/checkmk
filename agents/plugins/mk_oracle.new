@@ -576,8 +576,6 @@ sql_asm_diskgroup()
 
 function set_oraenv () {
     ORACLE_SID=${1}
-    # mk_oracle_dbusers.conf is for compatibility. Do not use it anymore
-    ORACLE_USERCONF=${MK_CONFDIR}/mk_oracle_dbuser.conf
 
     test -f /etc/oratab && ORATAB=/etc/oratab
     # /var/opt/oracle/oratab is needed for Oracle Solaris
@@ -601,7 +599,7 @@ function set_oraenv () {
 
     test -f ${TNS_ADMIN}/sqlnet.ora || ( echo "ORA-99998 Couldn't find "${TNS_ADMIN}/sqlnet.ora ; exit 1)
 
-    export ORACLE_HOME TNS_ADMIN
+    export ORACLE_HOME TNS_ADMIN ORACLE_SID
 }
 
 function get_oraversion () {
@@ -654,6 +652,15 @@ function get_oraversion () {
 function sqlplus_internal() {
     loc_stdin=$(cat)
     set_oraenv $SID
+
+    # reload mk_oracle.cfg for run_cached. Otherwise some variables are missing
+    if [ -e "$MK_CONFDIR/mk_oracle.cfg" ]
+    then
+        . $MK_CONFDIR/mk_oracle.cfg
+    fi
+
+    # mk_oracle_dbusers.conf is for compatibility. Do not use it anymore
+    ORACLE_USERCONF=${MK_CONFDIR}/mk_oracle_dbuser.conf
 
     TNSPINGOK=no
     if [ -f ${TNS_ADMIN}/tnsnames.ora ] ; then
@@ -837,7 +844,11 @@ function run_cached_local () {
 
     # Cache file outdated and new job not yet running? Start it
     if [ -z "$USE_CACHEFILE" -a ! -e "$CACHEFILE.new" ] ; then
-        echo "set -o noclobber ; exec > \"$CACHEFILE.new\" || exit 1 ; $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" |  bash 2>/dev/null
+        if [ $DEBUG -eq 1 ] ; then
+            echo "set -o noclobber ; exec > \"$CACHEFILE.new\" || exit 1 ; $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | bash 
+        else
+            echo "set -o noclobber ; exec > \"$CACHEFILE.new\" || exit 1 ; $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | nohup bash 2>/dev/null &
+        fi
     fi
 }
 

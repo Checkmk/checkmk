@@ -322,24 +322,34 @@ def page_create_view():
 
 # Seconds step: Select the data source
 def page_create_view_ds(next_url = 'edit_view.py?context_type=%s&datasource=%s'):
-    context_type = html.var('context_type')
+    context_type_name = html.var('context_type')
 
     available = visuals.context_types.keys()
     available.remove('global')
-    if context_type not in available:
+    if context_type_name not in available:
         raise MKGeneralException(_('The context type is missing'))
+    context_type = visuals.context_types[context_type_name]
 
     # Filter out datasources which are available for this context type. The
     # matching is done based on the "info" available for each datasource
     datasources = []
     for ds_name, ds in multisite_datasources.items():
-        datasources.append((ds_name, ds['title'], None, ds.get('description')))
+        if "infos" in context_type:
+            skip = False
+            for needed_info in context_type["infos"]:
+                if needed_info not in ds["infos"]:
+                    skip = True
+                    break
+            if not skip:
+                datasources.append((ds_name, ds['title']))
 
-    vs_ds = RadioChoice(
+    vs_ds = DropdownChoice(
         title = _('Datasource'),
         choices = datasources,
+        sorted = True,
         help = _('The datasources defines which type of objects should be displayed with this view.'),
         columns = 1,
+        default_value = "service",
     )
 
     html.header(_('Create View'), stylesheets=["pages"])
@@ -353,7 +363,7 @@ def page_create_view_ds(next_url = 'edit_view.py?context_type=%s&datasource=%s')
             ds = vs_ds.from_html_vars('ds')
             vs_ds.validate_value(ds, 'ds')
 
-            html.http_redirect(next_url % (context_type, ds))
+            html.http_redirect(next_url % (context_type_name, ds))
             return
 
         except MKUserError, e:

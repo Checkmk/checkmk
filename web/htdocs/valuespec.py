@@ -1343,7 +1343,12 @@ class RadioChoice(DropdownChoice):
             html.write("<table class=radiochoice>")
             html.write("<tr>")
 
-        for n, entry in enumerate(self._choices):
+        if self._sorted:
+            choices = self._choices[:]
+            choices.sort(cmp=lambda a,b: cmp(a[1], b[1]))
+        else:
+            choices = self._choices
+        for n, entry in enumerate(choices):
             if self._columns != None:
                 html.write("<td>")
             if len(entry) > 2 and entry[2] != None: # icon!

@@ -345,10 +345,17 @@ def page_list(what, title, visuals, custom_columns = []):
 def page_create_visual(what, allow_global = False, next_url = None):
     what_s = what[:-1]
 
+    def cmp_context_titles(a, b):
+        return - cmp(context_types[a[0]]["single"], context_types[b[0]]["single"]) \
+            or cmp(a[1], b[1])
+    context_choices = [ (k, v['title'])
+                for (k, v) in context_types.items()
+                if (allow_global or k != 'global') ]
+    context_choices.sort(cmp=cmp_context_titles)
+
     vs_type = DropdownChoice(
         title = _('Context Type'),
-        choices = [(None, _('--- Select a Context type ---'))]
-                  + [ (k, v['title']) for k, v in context_types.items() if allow_global or k != 'global' ],
+        choices = context_choices,
         help = _('The context of a %s controls the type of objects to be shown. It '
                  'also sets wether single or multiple objects are displayed. The context '
                  'type of a %s can not be changed anymore.') % (what_s, what_s),

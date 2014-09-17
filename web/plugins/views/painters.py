@@ -452,14 +452,14 @@ multisite_painters["svc_check_command"] = {
     "title"   : _("Service check command"),
     "short"   : _("Check command"),
     "columns" : ["service_check_command"],
-    "paint"   : lambda row: (None, row["service_check_command"]),
+    "paint"   : lambda row: (None, html.attrencode(row["service_check_command"])),
 }
 
 multisite_painters["svc_check_command_expanded"] = {
     "title"   : _("Service check command expanded"),
     "short"   : _("Check command expanded"),
     "columns" : ["service_check_command_expanded"],
-    "paint"   : lambda row: (None, row["service_check_command_expanded"]),
+    "paint"   : lambda row: (None, html.attrencode(row["service_check_command_expanded"])),
 }
 
 multisite_painters["svc_contacts"] = {

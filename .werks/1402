@@ -1,0 +1,9 @@
+Title: Fixed cased where counting events did not reach required count
+Level: 2
+Component: ec
+Compatible: compat
+Version: 1.2.5i6
+Date: 1410959775
+Class: fix
+
+This bug was found and fixed by Andreas Döhler!

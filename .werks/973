@@ -13,7 +13,7 @@ Renaming a host is a complex precedure that will not only rename the host in WAT
 but also in:
 
 <ul>
-<li>all rules from <i>Host &amp; Service Parameters</i></li>
+<li>all rules from Host &amp; Service Parameters</li>
 <li>cluster's node definitions</li>
 <li>a host's parent definitions</li>
 <li>Business Intelligence rules</li>

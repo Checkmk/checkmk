@@ -642,7 +642,7 @@ try:
                  systeminfo[entry] = function and function(element[0]) or element[0]
         elif name == "login":
             my_cookie = reply_headers.get("Set-Cookie")
-            if reply_msg != "OK":
+            if "InvalidLogin" in reply_data:
                 raise Exception("Login response is not 'OK'. Please check the credentials")
 
 except Exception, e:
@@ -890,7 +890,8 @@ if not error:
         print "<<<esx_vsphere_objects:sep(9)>>>"
         if "hostsystem" in query_objects:
             if opt_direct and opt_hostname:
-                print "hostsystem\t%s\t\t%s" % ( opt_hostname, hostsystems_properties[hostname]["runtime.powerState"][0] )
+                for hostname, data in hostsystems_properties.items():
+                    print "hostsystem\t%s\t\t%s" % ( opt_hostname, hostsystems_properties[hostname]["runtime.powerState"][0] )
             else:
                 for hostname, data in hostsystems_properties.items():
                     print "hostsystem\t%s\t\t%s" % ( convert_hostname(hostsystems_properties[hostname]["name"][0]),

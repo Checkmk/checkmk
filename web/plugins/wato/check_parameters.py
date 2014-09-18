@@ -3013,22 +3013,43 @@ register_check_parameters(
 register_check_parameters(
     subgroup_os,
     "cpu_iowait",
-    _("CPU utilization (disk wait)"),
-    Optional(
-        Tuple(
-              elements = [
-                  Percentage(title = _("Warning at a disk wait of"), label = "%"),
-                  Percentage(title = _("Critical at a disk wait of"), label = "%")]),
-        label = _("Alert on too high disk wait (IO wait)"),
-        help = _("The CPU utilization sums up the percentages of CPU time that is used "
-                 "for user processes, kernel routines (system), disk wait (sometimes also "
-                 "called IO wait) or nothing (idle). "
-                 "Currently you can only set warning/critical levels to the disk wait. This "
-                 "is the total percentage of time all CPUs have nothing else to do then waiting "
-                 "for data coming from or going to disk. If you have a significant disk wait "
-                 "the the bottleneck of your server is IO. Please note that depending on the "
-                 "applications being run this might or might not be totally normal.")),
-    None, None
+    _("CPU utilization on Linux/UNIX"),
+    Transform(
+        Dictionary(
+            elements = [
+                ( "util",
+                   Tuple(
+                       title = _("Alert on too high CPU utilization"),
+                       elements = [
+                             Percentage(title = _("Warning at a utilization of"), default_value = 90.0),
+                             Percentage(title = _("Critical at a utilization of"), default_value = 95.0)],
+
+                       help = _("Here you can set levels on the total CPU utilization, i.e. the sum of "
+                                "<i>system</i>, <i>user</i> and <i>iowait</i>. The levels are always applied "
+                                "on the average utiliazation since the last check - which is usually one minute."),
+                    )
+                ),
+                ( "iowait",
+                   Tuple(
+                       title = _("Alert on too high disk wait (IO wait)"),
+                       elements = [
+                             Percentage(title = _("Warning at a disk wait of"), default_value = 30.0),
+                             Percentage(title = _("Critical at a disk wait of"), default_value = 50.0)],
+                       help = _("The CPU utilization sums up the percentages of CPU time that is used "
+                                "for user processes, kernel routines (system), disk wait (sometimes also "
+                                "called IO wait) or nothing (idle). "
+                                "Currently you can only set warning/critical levels to the disk wait. This "
+                                "is the total percentage of time all CPUs have nothing else to do then waiting "
+                                "for data coming from or going to disk. If you have a significant disk wait "
+                                "the the bottleneck of your server is IO. Please note that depending on the "
+                                "applications being run this might or might not be totally normal.")),
+                ),
+            ]
+        ),
+        forth = lambda old: type(old) != dict and { "iowait" : old } or old,
+    ),
+    None,
+    "dict",
 )
 
 register_check_parameters(

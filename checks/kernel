@@ -24,6 +24,17 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+#   .--kernel--Counters----------------------------------------------------.
+#   |                ____                  _                               |
+#   |               / ___|___  _   _ _ __ | |_ ___ _ __ ___                |
+#   |              | |   / _ \| | | | '_ \| __/ _ \ '__/ __|               |
+#   |              | |__| (_) | |_| | | | | ||  __/ |  \__ \               |
+#   |               \____\___/ \__,_|_| |_|\__\___|_|  |___/               |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Check page faults, context switches and process creations           |
+#   '----------------------------------------------------------------------'
+
 # Inventory creates three checks per default:
 inventory_kernel_counters = [ "pgmajfault", "ctxt", "processes" ]
 kernel_default_levels = None
@@ -71,6 +82,26 @@ def check_kernel(item, params, info):
     if text:
         infotext += ", " + text
     return state, infotext, perfdata
+
+check_info["kernel"] = {
+    'check_function':          check_kernel,
+    'inventory_function':      inventory_kernel,
+    'service_description':     'Kernel %s',
+    'has_perfdata':            True,
+    'group':                   'vm_counter',
+}
+
+#.
+#   .--kernel.util--CPU Utilization----------------------------------------.
+#   |             _   _ _   _ _ _          _   _                           |
+#   |            | | | | |_(_) (_)______ _| |_(_) ___  _ __                |
+#   |            | | | | __| | | |_  / _` | __| |/ _ \| '_ \               |
+#   |            | |_| | |_| | | |/ / (_| | |_| | (_) | | | |              |
+#   |             \___/ \__|_|_|_/___\__,_|\__|_|\___/|_| |_|              |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Check system/user/io-wait                                           |
+#   '----------------------------------------------------------------------'
 
 kernel_util_default_levels = None
 
@@ -156,10 +187,3 @@ check_info["kernel.util"] = {
     'group':                   'cpu_iowait',
 }
 
-check_info["kernel"] = {
-    'check_function':          check_kernel,
-    'inventory_function':      inventory_kernel,
-    'service_description':     'Kernel %s',
-    'has_perfdata':            True,
-    'group':                   'vm_counter',
-}

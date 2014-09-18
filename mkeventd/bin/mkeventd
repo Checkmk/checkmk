@@ -1206,7 +1206,7 @@ class EventServer:
                         if event["first"] + count["period"] <= now: # End of period reached
                             log("Rule %s: reached only %d out of %d events within %d seconds. "
                                 "Resetting to zero." % (rule["id"], event["count"], count["count"], count["period"]))
-                            event["phase"] = closed
+                            event["phase"] = "closed"
                             log_event_history(event, "COUNTFAILED")
                             events_to_delete.append(nr)
 

@@ -148,6 +148,7 @@
     check:
     * 1384 oracle_jobs: new WATO rules, changed service name to SID.OWNER.NAME...
             NOTE: Please refer to the migration notes!
+    * 1385 oracle_instance: WATO rules for archivelog, logging, login and uptime
 
 
 1.2.5i5:

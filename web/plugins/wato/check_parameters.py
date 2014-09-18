@@ -3365,6 +3365,60 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "oracle_instance",
+    _("Oracle Instance"),
+    Dictionary(
+        title = _("Consider state of Archivelogmode: "),
+        elements = [(
+            'archivelog',
+                MonitoringState(
+                    default_value = 0,
+                    title = _("State in case of Archivelogmode is enabled: "),
+                )
+            ),(
+            'noarchivelog',
+                MonitoringState(
+                    default_value = 1,
+                    title = _("State in case of Archivelogmode is disabled: "),
+                ),
+            ),(
+            'forcelogging',
+                MonitoringState(
+                    default_value = 0,
+                    title = _("State in case of Force Logging is enabled: "),
+                ),
+            ),(
+            'noforcelogging',
+                MonitoringState(
+                    default_value = 1,
+                    title = _("State in case of Force Logging is disabled: "),
+                ),
+            ),(
+            'logins',
+                MonitoringState(
+                    default_value = 2,
+                    title = _("State in case of logins are not possible: "),
+                ),
+            ),(
+            'uptime_min',
+             Tuple(
+                 title = _("Minimum required uptime"),
+                 elements = [
+                     Age(title = _("Warning if below")),
+                     Age(title = _("Critical if below")),
+                 ]
+           )),
+        ],
+    ),
+    TextAscii(
+        title = _("Database SID"),
+        size = 12,
+        allow_empty = False),
+    'first',
+)
+
+register_check_parameters(
+    subgroup_applications,
     "asm_diskgroup",
     _("ASM Disk Group (used space and growth)"),
     Dictionary(

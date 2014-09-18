@@ -1,0 +1,10 @@
+Title: oracle_instance: new WATO rules for archivelog, logging, login and uptime
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1411033109
+Class: feature
+
+New rules for Oracle Instance to check the state of Archivelog, Force Logging,
+Logins and Uptime.

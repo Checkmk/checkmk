@@ -24,16 +24,36 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# In cooperation with Thorsten Bruhns from OPITZ Consulting
+# In cooperation with Thorsten Bruhns
 
 # <<<oracle_instance:sep(124)>>>
 # TUX2|12.1.0.1.0|OPEN|ALLOWED|STARTED|6735|1297771692|ARCHIVELOG|PRIMARY|NO|TUX2
 # TUX5|12.1.0.1.1|MOUNTED|ALLOWED|STARTED|82883|1297771692|NOARCHIVELOG|PRIMARY|NO|0|TUX5
 
-def inventory_oracle_instance(info):
-    return [ (line[0], None) for line in info ]
+factory_settings["oracle_instance_defaults"] = {
+    "logins"  : 2,
+    "noforcelogging"  : 1,
+    "noarchivelog"  : 1,
+}
 
-def check_oracle_instance(item, _no_params, info):
+
+def inventory_oracle_instance(info):
+    return [ (line[0], {} ) for line in info ]
+
+
+def check_oracle_instance(item, params, info):
+
+    def state_marker(state, infotext, param, column, data):
+	value = params.get(param)
+	if value != None and column == data:
+            state = max(state, value)
+            if value == 1:
+                infotext += '(!)'
+            elif value == 2:
+                infotext += '(!!)'
+        return state, infotext
+
+    state = 0
     for line in info:
         if line[0] == item:
 
@@ -46,25 +66,53 @@ def check_oracle_instance(item, _no_params, info):
                 log_mode, database_role, force_logging, name = line
 
             state = 0
-            infotext = "Database Name %s, Status %s" % (name, openmode)
+            infotext = "Database Name %s, Status %s" % \
+                       (name, openmode)
 
             # Make sure that primary databases are always open
             if database_role == 'PRIMARY' and openmode != 'OPEN':
                 state = 2
-                infotext += "(!!)"
+                infotext += '(!!)'
 
             # ORACLE is sick and cannot handle timezone changes >:-P
             up_seconds = max(0, int(up_seconds))
-            infotext += ", Logins %s, Version %s, Role %s, " \
-                       "%s, Force-Logging %s, Up since %s (%s), Log Mode %s" % (
-                       logins.lower(), version, database_role, \
-                       archiver, force_logging, time.strftime("%F %T", time.localtime(time.time() - up_seconds)), \
-                       get_age_human_readable(up_seconds), log_mode)
+            infotext += ", Role %s, Version %s, " \
+                       "Up since %s (%s)" % (
+                       database_role, version, \
+                       time.strftime("%F %T", time.localtime(time.time() - up_seconds)), \
+                       get_age_human_readable(up_seconds))
 
-            # log_mode should not be "NOARCHIVELOG"
-            if log_mode == 'NOARCHIVELOG':
-                state = max(state,1)
-                infotext += "(!)"
+            if params.get('uptime_min'):
+                warn, crit = params.get('uptime_min')
+                warn = int(warn)
+                crit = int(crit)
+
+                infotext += ' (levels at %s/%s)' % (get_age_human_readable(warn), get_age_human_readable(crit))
+                if up_seconds <= crit:
+                    state = 2
+                    infotext += '(!!) not long enough up'
+                elif up_seconds <= warn:
+                    state = max(state, 1)
+                    infotext += '(!) not long enough up'
+
+            # logins are only possible when the database is open
+            if openmode == 'OPEN':
+                infotext += ', Logins %s' % (logins.lower())
+                state, infotext = state_marker(state, infotext, 'logins', logins, 'RESTRICTED')
+
+            infotext += ', Log Mode %s' % (log_mode.lower())
+            state, infotext = state_marker(state, infotext, 'archivelog', log_mode, 'ARCHIVELOG')
+            state, infotext = state_marker(state, infotext, 'noarchivelog',log_mode,  'NOARCHIVELOG')
+
+            # force logging is only usable when archivelog is enabled
+            if log_mode == 'ARCHIVELOG':
+                if archiver != 'STARTED':
+                    infotext += '. Archiver %s(!!)' % (archiver.lower())
+                    state = 2
+
+                infotext += ', Force Logging %s' % (force_logging.lower())
+                state, infotext = state_marker(state, infotext, 'forcelogging', force_logging, 'YES')
+                state, infotext = state_marker(state, infotext, 'noforcelogging', force_logging, 'NO')
 
             perfdata = [('uptime', up_seconds)]
             return state, infotext, perfdata
@@ -76,5 +124,7 @@ check_info['oracle_instance'] = {
     "check_function"          : check_oracle_instance,
     "inventory_function"      : inventory_oracle_instance,
     "service_description"     : "ORA %s Instance",
+    "default_levels_variable" : "oracle_instance_defaults",
+    "group"                   : "oracle_instance",
     "has_perfdata"            : True,
 }

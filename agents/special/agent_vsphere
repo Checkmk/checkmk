@@ -807,9 +807,7 @@ if not error:
 
             # TODO: improve error handling: check if multiple results and opt_direct
             for hostname, properties in hostsystems_properties.items():
-                if opt_direct and opt_hostname:
-                    print "<<<<%s>>>>" % opt_hostname
-                else:
+                if not opt_direct:
                     print "<<<<%s>>>>" % convert_hostname(properties["name"][0])
 
                 print "<<<esx_vsphere_hostsystem>>>"

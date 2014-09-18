@@ -853,6 +853,8 @@ if not error:
                 else:
                     # we don't need this in the agent output
                     del vm_data["config.hardware.device"]
+                if "runtime.host" in vm_data:
+                    vm_data["runtime.host"] = hostsystems.get(vm_data["runtime.host"], vm_data["runtime.host"])
                 vms[vm_data.get("name")] = vm_data
 
 

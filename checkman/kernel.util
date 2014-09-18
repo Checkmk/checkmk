@@ -5,9 +5,8 @@ license: GPL
 distribution: check_mk
 description:
  This check measures the CPU utilization during the last check
- cycle. A level can be set only on {wait} (disk wait). If you
- want to set levels on your CPU usage you better use the check
- {cpu.loads}.
+ cycle. Levels can be set on the total utilization and also 
+ specifically on the disk wait (IO wait). 
 
 perfdata:
  Three variables: The percentage of time spent in {user}, {system} and {wait}
@@ -21,10 +20,14 @@ inventory:
  preset to {None} thus imposing no levels and making the check always OK.
 
 [parameters]
-warning (int): The percentage of {wait} that triggers a warning level.
-critical (int): The percentage of {wait} that triggers a critical level
- The parameters may also be set to {None}, which makes the check alwas {OK}.
+dictionary: A dictionary for two keys, both of which are optional:
+
+  {"iowait"} a pair of float values with percentages for warning and critical
+  for the disk wait
+
+  {"util"} a pair of float values with percentages for warning and critical
+  for the total utilization
 
 [configuration]
-kernel_util_default_levels (int, int): Default levels used by inventorized
-  checks. This is present to {None}, which disables the levels.
+kernel_util_default_levels (dictionary): Default levels used by inventorized
+  checks. The default is not to impose any levels.

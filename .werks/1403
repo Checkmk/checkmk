@@ -1,0 +1,26 @@
+Title: kernel.util: allow levels for the total CPU utilization
+Level: 2
+Component: checks
+Compatible: incomp
+Version: 1.2.5i6
+Date: 1411043758
+Class: feature
+
+The CPU utilization check for Linux only allowed to set levels for the disk
+wait percentage. The parameters have been converted to a dictionary and
+now allow to set levels on the total CPU utilization as well.
+
+Please note: if you have defined the variable {kernel_util_default_levels} in
+your {main.mk}, then you need to convert this to a dictionary - otherwise it
+will be ignored. Instead of
+
+F+:main.mk
+kernel_util_default_levels = (10, 20)
+F-:
+
+... please now write...:
+F+:main.mk
+kernel_util_default_levels = { "iowait" : (10, 20) }
+F-:
+
+Users of WATO are not affected by this and do not need to change anything.

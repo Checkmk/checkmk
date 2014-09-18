@@ -108,7 +108,7 @@ kernel_util_default_levels = None
 def inventory_cpu_utilization(info):
     for x in info:
         if len(x) > 0 and x[0] == 'cpu':
-            return [(None, "kernel_util_default_levels")]
+            return [(None, {})]
 
 # Columns of cpu usage /proc/stat:
 # - cpuX: number of CPU or only 'cpu' for aggregation
@@ -121,11 +121,17 @@ def inventory_cpu_utilization(info):
 # - softirq: servicing softirqs
 # - steal: involuntary wait
 def kernel_check_cpu_utilization(item, params, info):
-    global g_counters
+
+    # Convert old style tuple-parameter to new dict
+    if type(params) != dict:
+        params = { "iowait": params }
+
     # Look for entry beginning with "cpu"
     f = [ l for l in info if l[0] == "cpu" ]
     if len(f) != 1:
-        return (3, "invalid output from plugin")
+        yield 3, "More than one line with CPU info found. This check is not cluster-enabled."
+        return
+
     line = f[0]
     if len(line) < 8:
         line = line + ['0', '0', '0', '0'] # needed for Linux 2.4
@@ -135,8 +141,11 @@ def kernel_check_cpu_utilization(item, params, info):
     # convert number to int
     values = [ int(x) for x in line[1:8] ]
     this_time = int(time.time())
+
+    # Compute jiffi-differences of all relevant counters
     diff_values = []
     n = 0
+    global g_counters
     for v in values:
         n += 1
         countername = "cpu.util.%d" % n
@@ -146,7 +155,8 @@ def kernel_check_cpu_utilization(item, params, info):
 
     sum_jiffies = sum(diff_values[0:7]) # do not account for steal!
     if sum_jiffies == 0:
-        return (0, "too short interval")
+        raise MKCounterException(None, "Too short time difference since last check")
+
     user        = diff_values[0] + diff_values[1] # add user + nice
     system      = diff_values[2]
     wait        = diff_values[4]
@@ -158,32 +168,42 @@ def kernel_check_cpu_utilization(item, params, info):
           ( "system", "%.3f" % system_perc ),
           ( "wait",   "%.3f" % wait_perc ) ]
 
-    infotext = "user: %2.1f%%, system: %2.1f%%, wait: %2.1f%%" % (user_perc, system_perc, wait_perc)
+    yield 0, "user: %.1f%%, system: %.1f%%" % (user_perc, system_perc), perfdata
 
-    # You may set a warning/critical level on the io wait
-    # percentage. This can be done by setting params to
-    # a pair of (warn, crit)
-    result = 0
-    try:
-        warn, crit = params
+    # Handle level on iowait
+    state = 0
+    if "iowait" in params and params["iowait"] != None:
+        warn, crit = params["iowait"]
         if wait_perc >= crit:
-            result = 2
-            infotext += "(!!)"
+            state = 2
         elif wait_perc >= warn:
-            result = 1
-            infotext += "(!)"
-    except:
-        pass
+            state = 1
+    yield state, "wait: %.1f%%" % (wait_perc)
 
-    return (result, infotext, perfdata)
+    # Total utilization
+    util_total_perc = user_perc + system_perc + wait_perc
+    state = 0
+    levelstext = ""
+    if "util" in params:
+        warn, crit = params["util"]
+        if util_total_perc >= crit:
+            state = 2
+        elif util_total_perc >= warn:
+            state = 1
+        else:
+            state = 0
+        if state:
+            levelstext = " (warn/crit at %.1f%%/%.1f%%)" % (warn, crit)
 
+    yield state, "total: %.1f%%" % util_total_perc + levelstext
 
 
 check_info["kernel.util"] = {
-    'check_function':          kernel_check_cpu_utilization,
-    'inventory_function':      inventory_cpu_utilization,
-    'service_description':     'CPU utilization',
-    'has_perfdata':            True,
-    'group':                   'cpu_iowait',
+    'check_function':           kernel_check_cpu_utilization,
+    'inventory_function':       inventory_cpu_utilization,
+    'service_description':      'CPU utilization',
+    'has_perfdata':             True,
+    'default_levels_variable':  'kernel_util_default_levels',
+    'group':                    'cpu_iowait',
 }
 

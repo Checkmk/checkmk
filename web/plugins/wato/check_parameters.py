@@ -1840,7 +1840,6 @@ register_check_parameters(
                   ],
                 optional_keys = [ "offset" ],
               ),
-              back  = transform_msx_queues,
               forth = transform_msx_queues,
          ),
     TextAscii(

@@ -1,0 +1,11 @@
+Title: cmk --check-inventory fails with exit code 4 on invalid configuration
+Component: core
+State: open
+Date: 2014-09-19 11:01:41
+Targetversion: future
+Class: bug
+
+If you have a duplicate host, for example, then the Inventory check fails with
+4. This makes Nagios unhappy.
+
+Solution: Fail with code 3 and a useful error message

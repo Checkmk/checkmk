@@ -9037,7 +9037,7 @@ def mode_notification_rule(phase, profilemode):
         if new:
             return _("Create new notification rule") + suffix
         else:
-            return _("Edit notification rule %d" % edit_nr) + suffix
+            return _("Edit notification rule %d") % edit_nr + suffix
 
     elif phase == "buttons":
         if profilemode:

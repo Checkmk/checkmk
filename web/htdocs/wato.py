@@ -12056,7 +12056,7 @@ def mode_edit_role(phase):
     id = html.var("edit")
 
     if phase == "title":
-        return _("Edit user role %s" % id)
+        return _("Edit user role %s") % id
 
     elif phase == "buttons":
         html.context_button(_("All Roles"), make_link([("mode", "roles")]), "back")

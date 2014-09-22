@@ -51,33 +51,7 @@ def check_citrix_licenses(item, params, info):
     if not have:
         return 3, "No licenses of that type found"
 
-    if params == None:
-        warn = have
-        crit = have
-    elif type(params[0]) == int:
-        warn = max(0, have - params[0])
-        crit = max(0, have - params[1])
-    else:
-        warn = have * (1 - params[0]/100)
-        crit = have * (1 - params[1]/100)
-
-    perfdata = [ ( "licenses", used, warn, crit, 0, have )]
-    if used <= have:
-        infotext = "used %d out of %d licenses" % (used, have)
-    else:
-        infotext = "used %d licenses, but you have only %d" % (used, have)
-
-    if used >= have:
-        status = 2
-    elif used >= warn:
-        status = 1
-    else:
-        status = 0
-
-    if status:
-        infotext += " (levels at %d/%d)" % (warn, crit)
-
-    return status, infotext, perfdata
+    return license_check_levels(have, used, params)
 
 check_info["citrix_licenses"] = {
     'check_function'       : check_citrix_licenses,
@@ -85,4 +59,5 @@ check_info["citrix_licenses"] = {
     'service_description'  : 'Citrix Licenses %s',
     'has_perfdata'         : True,
     'group'                : "citrix_licenses",
+    'includes'             : [ "license.include" ]
 }

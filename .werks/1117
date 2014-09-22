@@ -1,0 +1,12 @@
+Title: agent_vsphere: now able to query license information from esx system
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1411396124
+Class: feature
+
+The agent_vsphere is now able to get the license usage from the LicenseManager instance.
+Upon inventory each license will lead to an own check name esx_licenses.
+The check parameters (absolute used, percentage used, all used) can be configured via the WATO rule
+<tt>Number of used VMware licenses</tt>

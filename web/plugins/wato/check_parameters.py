@@ -5990,11 +5990,8 @@ register_check_parameters(
     "first"
 )
 
-register_check_parameters(
-    subgroup_applications,
-    "citrix_licenses",
-    _("Number of used Citrix licenses"),
-    Alternative(
+
+vs_license = Alternative(
         style = "dropdown",
         default_value = None,
         elements = [
@@ -6017,8 +6014,27 @@ register_check_parameters(
                  totext = _("critical if all are used"),
                  title = _("Go critical if all licenses are used"),
              ),
-        ]
+          ]
+        )
+
+register_check_parameters(
+    subgroup_applications,
+    "esx_licenses",
+    _("Number of used VMware licenses"),
+    vs_license,
+    TextAscii(
+       title = _("Name of the license"),
+       help  = _("For example <tt>VMware vSphere 5 Standard</tt>"),
+       allow_empty = False,
     ),
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "citrix_licenses",
+    _("Number of used Citrix licenses"),
+    vs_license,
     TextAscii(
        title = _("ID of the license, e.g. <tt>PVSD_STD_CCS</tt>"),
        allow_empty = False,

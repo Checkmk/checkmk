@@ -1,0 +1,55 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def license_check_levels(have, used, params):
+    if params == None:
+        warn = have
+        crit = have
+    elif type(params[0]) == int:
+        warn = max(0, have - params[0])
+        crit = max(0, have - params[1])
+    else:
+        warn = have * (1 - params[0]/100)
+        crit = have * (1 - params[1]/100)
+
+    perfdata = [ ( "licenses", used, warn, crit, 0, have )]
+    if used <= have:
+        infotext = "used %d out of %d licenses" % (used, have)
+    else:
+        infotext = "used %d licenses, but you have only %d" % (used, have)
+
+    if used >= crit:
+        status = 2
+    elif used >= warn:
+        status = 1
+    else:
+        status = 0
+
+    if status:
+        infotext += " (levels at %d/%d)" % (warn, crit)
+
+    return status, infotext, perfdata

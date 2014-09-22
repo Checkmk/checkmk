@@ -7,6 +7,6 @@ Date: 1411396124
 Class: feature
 
 The agent_vsphere is now able to get the license usage from the LicenseManager instance.
-Upon inventory each license will lead to an own check name esx_licenses.
+Upon inventory each license will lead to an own check named esx_licenses.
 The check parameters (absolute used, percentage used, all used) can be configured via the WATO rule
 <tt>Number of used VMware licenses</tt>

@@ -1812,7 +1812,7 @@ if mkeventd_enabled:
             minvalue = 1,
             default_value = 10,
             label = "max.",
-            unit = "pending connections",
+            unit = _("pending connections"),
         ),
         domain = "mkeventd",
     )
@@ -1829,7 +1829,7 @@ if mkeventd_enabled:
             minvalue = 1,
             default_value = 10,
             label = "max.",
-            unit = "pending connections",
+            unit = _("pending connections"),
         ),
         domain = "mkeventd",
     )

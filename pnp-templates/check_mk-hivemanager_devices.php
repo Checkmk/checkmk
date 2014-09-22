@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,33 +23,25 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-#<<<citrix_serverload>>>
-#100
+# Devices
+$opt[1] = "--vertical-label 'Sessions' -l0 -X0 --title \"$servicedesc / Active Clients\" ";
 
-citrix_serverload_default_levels = ( 8500, 9500 )
+$def[1] = "DEF:clients=$RRDFILE[1]:$DS[1]:MAX ";
+$def[1] .= "AREA:clients#0030f0:\"Active Sessions\" ";
+$def[1] .= "LINE:clients#001f80 ";
+$def[1] .= "GPRINT:clients:LAST:\"%7.0lf %s last\" ";
+$def[1] .= "GPRINT:clients:MAX:\"%7.0lf %s max\" ";
+$def[1] .= "GPRINT:clients:AVERAGE:\"%7.2lf %s avg\\n\" ";
+$def[1] .= "HRULE:$WARN[1]#ffff00:\"Warning at $WARN[1]\\n\" ";
+$def[1] .= "HRULE:$CRIT[1]#ff0000:\"Critical at $CRIT[1]\\n\" ";
 
-def inventory_citrix_serverload(info):
-    return [ ( None, 'citrix_serverload_default_levels' )]
+# Uptime
+$opt[2] = "--vertical-label 'Uptime (d)' -l0 --title \"Uptime (time since last reboot)\" ";
 
-def check_citrix_serverload(_no_item, params, info):
-    try:
-        load = int(info[0][0])
-    except:
-        return 3, "Load information not found"
-
-    warn, crit = params
-    state = 0
-    if load > crit:
-        state = 2
-    elif load > warn:
-        state = 1
-    return state, "Current Citrix Load is: " + str(load), [ ('perf', load, warn, crit ) ]
-
-check_info["citrix_serverload"] = {
-    "group"                 : "citrix_load",
-    "check_function"        : check_citrix_serverload,
-    "inventory_function"    : inventory_citrix_serverload,
-    "service_description"   : "Citrix Serverload",
-    "has_perfdata"          : True,
-}
-
+$def[2] = "DEF:sec=$RRDFILE[2]:$DS[2]:MAX ";
+$def[2] .= "CDEF:uptime=sec,86400,/ ";
+$def[2] .= "AREA:uptime#80f000:\"Uptime (days)\" ";
+$def[2] .= "LINE:uptime#408000 ";
+$def[2] .= "GPRINT:uptime:LAST:\"%7.2lf %s LAST\" ";
+$def[2] .= "GPRINT:uptime:MAX:\"%7.2lf %s MAX\" ";
+?>

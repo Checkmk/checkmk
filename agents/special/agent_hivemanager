@@ -47,7 +47,7 @@ def get_url(address):
         print e
         sys.exit(2)
 
-print   "<<<check_mk>>>"
+print "<<<check_mk>>>"
 print "Version: 1.2.5"
 print "AgentOS: Hivemanager"
 

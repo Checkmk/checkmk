@@ -1327,10 +1327,12 @@ def view_options(viewname):
     # variables for each option.
     if config.may("general.painter_options"):
         for option_name, opt in multisite_painter_options.items():
-            old_value = v.get(option_name)
-            var_prefix = 'po_' + option_name
+            have_old_value = option_name in v
+            if have_old_value:
+                old_value = v.get(option_name)
 
             # Are there settings for this painter option present?
+            var_prefix = 'po_' + option_name
             if html.has_var_prefix(var_prefix):
 
                 # Get new value for the option from the value spec
@@ -1340,11 +1342,13 @@ def view_options(viewname):
                 v[option_name] = value
                 opt['value'] = value # make globally present for painters
 
-                if v[option_name] != old_value:
+                if not have_old_value or v[option_name] != old_value:
                     must_save = True
 
-            else:
+            elif have_old_value:
                 opt['value'] = old_value # make globally present for painters
+            elif 'value' in opt:
+                del opt['value']
 
     # If the user has no permission for changing painter options
     # (or has *lost* his permission) then we need to remove all
@@ -2376,7 +2380,8 @@ def get_painter_option(name):
     opt = multisite_painter_options[name]
     if not config.may("general.painter_options"):
         return opt['valuespec'].default_value()
-    return opt.get("value", opt['valuespec'].default_value())
+    else:
+        return opt.get("value", opt['valuespec'].default_value())
 
 def get_host_tags(row):
     if type(row.get("host_custom_variables")) == dict:

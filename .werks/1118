@@ -1,0 +1,11 @@
+Title: bluecat_dns, bluecat_dhcp: no able to run as clustered checks
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1411471414
+Class: feature
+
+Both checks can now be configured as clustered services.
+If either of the cluster nodes is in OK state, the check will report OK.
+

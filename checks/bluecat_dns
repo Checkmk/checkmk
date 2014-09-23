@@ -35,20 +35,25 @@ def inventory_bluecat_dns(info):
     return [(None, None)]
 
 def check_bluecat_dns(item, params, info):
-    oper_state = int(info[0][0])
     oper_states = {
         1 : "running normally",
         2 : "not running",
         3 : "currently starting",
         4 : "currently stopping",
         5 : "fault"
-
     }
+
     state = 0
-    if oper_state in params['oper_states']['warning']:
-        state = 1
-    elif oper_state in params['oper_states']['critical']:
-        state = 2
+    for line in info:
+        oper_state = int(line[0])
+        if oper_state in params['oper_states']['warning']:
+            state = 1
+        elif oper_state in params['oper_states']['critical']:
+            state = 2
+        else:
+            state = 0
+            break
+
     yield state, "DNS is %s" % oper_states[oper_state]
 
 check_info["bluecat_dns"] = {

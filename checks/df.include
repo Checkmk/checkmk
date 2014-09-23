@@ -483,7 +483,7 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, inodes_t
                     problems.append("less than %0.2f%% inodes available(!!)" % inodes_crit)
                 elif inodes_warn > inodes_avail_perc:
                     status = max(1, status)
-                    problems.append("less than %.02f%% inodes available(!!)" % inodes_warn)
+                    problems.append("less than %.02f%% inodes available(!)" % inodes_warn)
         infotext += ", inodes available %dk/%0.2f %%" % (inodes_avail / 1000, inodes_avail_perc)
 
     if problems:

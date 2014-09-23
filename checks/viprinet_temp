@@ -34,10 +34,10 @@ def check_viprinet_temp(item, params, info):
     if params:
         warn, crit = params
         if value > crit:
-            state_info = "((!!) at %d°C)" % crit
+            state_info = "(crit at %d°C)" % crit
             state = 2
         elif value > warn:
-            state_info = "((!) at %d°C)" % warn
+            state_info = "(warn at %d°C)" % warn
             state = 1
 
     infotext = "%s: %s°C %s" % (item, value, state_info)

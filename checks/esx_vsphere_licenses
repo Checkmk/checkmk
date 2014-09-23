@@ -31,7 +31,7 @@
 #vCenter Server 5 Standard   1 1
 
 def inventory_esx_vsphere_licenses(info):
-    return [ (line[0], {}) for line in info ]
+    return [ (line[0], None) for line in info ]
 
 def check_esx_vsphere_licenses(item, params, info):
     if params == None:

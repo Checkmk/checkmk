@@ -24,11 +24,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Author: Lars Michelsen <lm@mathias-kettner.de>
 
 def inventory_snmp_uptime(info):
     if len(info) > 0 and len(info[0]) >= 1:
         return [ (None, {}) ]
+
 
 def check_snmp_uptime(checktype, params, info):
     ticks            = info[0][0]

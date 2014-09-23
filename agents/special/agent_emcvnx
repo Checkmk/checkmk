@@ -188,10 +188,10 @@ for line in os.popen(cmd).readlines():
 
 print "Version: %s" % emcvnx_version
 
-# maybe we could fill AgentOs: by reading "Model:" line of naviseccli output
+# maybe we could fill AgentOS: by reading "Model:" line of naviseccli output
 # in section "Agent/Host Information", but need a call of naviseccli with an
 # other commandline argument
-#print "AgentOs: %s " % emcvnx_model
+#print "AgentOS: %s " % emcvnx_model
 
 print "<<<emcvnx_info>>>"
 for line in cmdout:

@@ -660,7 +660,7 @@ if not error:
         # Check MK header and Agent Version
         print   "<<<check_mk>>>"
         print "Version: %.1f" % systeminfo["apiVersion"]
-        print "AgentOs: %s" %   systeminfo["name"]
+        print "AgentOS: %s" %   systeminfo["name"]
 
         #############################
         # Determine available host systems

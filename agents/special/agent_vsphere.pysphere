@@ -244,7 +244,7 @@ esx_version_num = float(esx_version)
 
 print "<<<check_mk>>>"
 print "Version: %s" % esx_version
-print "AgentOs: %s " % host.get_server_type()
+print "AgentOS: %s " % host.get_server_type()
 
 # Prepare list of all hosts systems
 all_hosts = host.get_hosts()

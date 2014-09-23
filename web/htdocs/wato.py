@@ -8849,9 +8849,14 @@ def mode_notifications(phase):
                     html.icon(_("You are analysing this notification"), "rulematch")
 
                 table.cell(_("Nr."), nr+1, css="number")
-                date = entry.get("SHORTDATETIME", "")
-                if not date:
+                if "MICROTIME" in entry:
                     date = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(int(entry["MICROTIME"]) / 1000000.0))
+                else:
+                    date = entry.get("SHORTDATETIME") or \
+                           entry.get("LONGDATETIME") or \
+                           entry.get("DATE") or \
+                           _("Unknown date")
+
                 table.cell(_("Date/Time"), date, css="nobr")
                 nottype = entry.get("NOTIFICATIONTYPE")
                 table.cell(_("Type"), nottype)

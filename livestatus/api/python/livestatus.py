@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import socket, time
+import socket, time, re
 
 # Python 2.3 does not have 'set' in normal namespace.
 # But it can be imported from 'sets'
@@ -51,6 +51,9 @@ r2 = conn.query_row("GET status")
 
 # Keep a global array of persistant connections
 persistent_connections = {}
+
+# Regular expression for removing Cache: headers if caching is not allowed
+remove_cache_regex = re.compile("\nCache:[^\n]*")
 
 # DEBUGGING PERSISTENT CONNECTIONS
 # import os
@@ -160,10 +163,11 @@ class Helpers:
 
 
 class BaseConnection:
-    def __init__(self, socketurl, persist = False):
+    def __init__(self, socketurl, persist = False, allow_cache = False):
         """Create a new connection to a MK Livestatus socket"""
         self.add_headers = ""
         self.persist = persist
+        self.allow_cache = allow_cache
         self.socketurl = socketurl
         self.socket = None
         self.timeout = None
@@ -185,7 +189,7 @@ class BaseConnection:
             self.socket = persistent_connections[self.socketurl]
             self.successful_persistence = True
             return
-        
+
         self.successful_persistence = False
 
         # Create new socket
@@ -194,7 +198,7 @@ class BaseConnection:
         parts = url.split(":")
         if parts[0] == "unix":
             if len(parts) != 2:
-                raise MKLivestatusConfigError("Invalid livestatus unix url: %s. "
+                raise MKLivestatusConfigError("Invalid livestatus unix URL: %s. "
                         "Correct example is 'unix:/var/run/nagios/rw/live'" % url)
             self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
             target = parts[1]
@@ -204,21 +208,37 @@ class BaseConnection:
                 host = parts[1]
                 port = int(parts[2])
             except:
-                raise MKLivestatusConfigError("Invalid livestatus tcp url '%s'. "
+                raise MKLivestatusConfigError("Invalid livestatus tcp URL '%s'. "
                         "Correct example is 'tcp:somehost:6557'" % url)
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             target = (host, port)
         else:
-            raise MKLivestatusConfigError("Invalid livestatus url '%s'. "
+            raise MKLivestatusConfigError("Invalid livestatus URL '%s'. "
                     "Must begin with 'tcp:' or 'unix:'" % url)
 
-        try:
-            if self.timeout:
-                self.socket.settimeout(float(self.timeout))
-            self.socket.connect(target)
-        except Exception, e:
-            self.socket = None
-            raise MKLivestatusSocketError("Cannot connect to '%s': %s" % (self.socketurl, e))
+        # If a timeout is set, then we retry after a failure with mild
+        # a binary backoff.
+        if self.timeout:
+            before = time.time()
+            sleep_interval = 0.1
+
+        while True:
+            try:
+                if self.timeout:
+                    self.socket.settimeout(float(sleep_interval))
+                self.socket.connect(target)
+                break
+            except Exception, e:
+                if self.timeout:
+                    time_left = self.timeout - (time.time() - before)
+                    # only try again, if there is substantial time left
+                    if time_left > sleep_interval:
+                        time.sleep(sleep_interval)
+                        sleep_interval *= 1.5
+                        continue
+
+                self.socket = None
+                raise MKLivestatusSocketError("Cannot connect to '%s': %s" % (self.socketurl, e))
 
         if self.persist:
             persistent_connections[self.socketurl] = self.socket
@@ -230,6 +250,8 @@ class BaseConnection:
 
     def receive_data(self, size):
         result = ""
+        # Timeout is only honored when connecting
+        self.socket.settimeout(None)
         while size > 0:
             packet = self.socket.recv(size)
             if len(packet) == 0:
@@ -242,7 +264,10 @@ class BaseConnection:
         self.send_query(query, add_headers)
         return self.recv_response(query, add_headers)
 
-    def send_query(self, query, add_headers = ""):
+    def send_query(self, query, add_headers = "", do_reconnect=True):
+        if not self.allow_cache:
+            query = remove_cache_regex.sub("", query)
+        orig_query = query
         if self.socket == None:
             self.connect()
         if not query.endswith("\n"):
@@ -250,23 +275,36 @@ class BaseConnection:
         query += self.auth_header + self.add_headers
         query += "Localtime: %d\nOutputFormat: python\nKeepAlive: on\nResponseHeader: fixed16\n" % int(time.time())
         query += add_headers
+
         if not query.endswith("\n"):
             query += "\n"
         query += "\n"
 
         try:
+            # socket.send() will implicitely cast to str(), we need ot
+            # convert to UTF-8 in order to avoid exceptions
+            if type(query) == unicode:
+                query = query.encode("utf-8")
             self.socket.send(query)
         except IOError, e:
             if self.persist:
                 del persistent_connections[self.socketurl]
                 self.successful_persistence = False
             self.socket = None
-            raise MKLivestatusSocketError(str(e))
+
+            if do_reconnect:
+                # Automatically try to reconnect in case of an error, but
+                # only once.
+                self.connect()
+                self.send_query(orig_query, add_headers, False)
+                return
+
+            raise MKLivestatusSocketError("RC1:" + str(e))
 
     # Reads a response from the livestatus socket. If the socket is closed
     # by the livestatus server, we automatically make a reconnect and send
     # the query again (once). This is due to timeouts during keepalive.
-    def recv_response(self, query = None, add_headers = ""):
+    def recv_response(self, query = None, add_headers = "", timeout_at = None):
         try:
             resp = self.receive_data(16)
             code = resp[0:3]
@@ -282,20 +320,26 @@ class BaseConnection:
                     raise MKLivestatusSocketError("Malformed output")
             else:
                 raise MKLivestatusQueryError(code, data.strip())
-        except MKLivestatusSocketClosed:
+
+        # In case of an IO error or the other side having
+        # closed the socket do a reconnect and try again, but
+        # only once
+        except (MKLivestatusSocketClosed, IOError), e:
             self.disconnect()
-            if query:
+            now = time.time()
+            if query and (not timeout_at or timeout_at > now):
+                if timeout_at == None:
+                    timeout_at = now + self.timeout
+                time.sleep(0.1)
                 self.connect()
                 self.send_query(query, add_headers)
-                return self.recv_response() # do not send query again -> danger of infinite loop
+                return self.recv_response(query, add_headers, timeout_at) # do not send query again -> danger of infinite loop
             else:
-                raise
+                raise MKLivestatusSocketError(str(e))
 
-        except IOError, e:
-            self.socket = None
-            if self.persist:
-                del persistent_connections[self.socketurl]
-            raise MKLivestatusSocketError(str(e))
+        except Exception, e:
+            raise MKLivestatusSocketError("Unhandled exception: %s" % e)
+
 
     def do_command(self, command):
         if self.socket == None:
@@ -312,8 +356,8 @@ class BaseConnection:
 
 
 class SingleSiteConnection(BaseConnection, Helpers):
-    def __init__(self, socketurl, persist = False):
-        BaseConnection.__init__(self, socketurl, persist)
+    def __init__(self, socketurl, persist = False, allow_cache = False):
+        BaseConnection.__init__(self, socketurl, persist, allow_cache)
         self.prepend_site = False
         self.auth_users = {}
         self.deadsites = {} # never filled, just for compatibility
@@ -377,7 +421,7 @@ class MultiSiteConnection(Helpers):
             try:
                 url = site["socket"]
                 persist = not temporary and site.get("persist", False)
-                connection = SingleSiteConnection(url, persist)
+                connection = SingleSiteConnection(url, persist, allow_cache=site.get("cache", False))
                 if "timeout" in site:
                     connection.set_timeout(int(site["timeout"]))
                 connection.connect()
@@ -628,7 +672,7 @@ class MultiSiteConnection(Helpers):
     # Return connection to localhost (UNIX), if available
     def local_connection(self):
         for sitename, site, connection in self.connections:
-            if site["socket"].startswith("unix:"):
+            if site["socket"].startswith("unix:") and "liveproxy" not in site["socket"]:
                 return connection
         raise MKLivestatusConfigError("No livestatus connection to local host")
 

@@ -38,6 +38,9 @@ builtin_user_attribute_names = []
 
 # Load all userdb plugins
 def load_plugins():
+    global user_attributes
+    global multisite_user_connectors
+
     # Do not cache the custom user attributes. They can be created by the user
     # during runtime, means they need to be loaded during each page request.
     # But delete the old definitions before to also apply removals of attributes
@@ -52,8 +55,8 @@ def load_plugins():
         return
 
     # declare & initialize global vars
-    global user_attributes ; user_attributes = {}
-    global multisite_user_connectors ; multisite_user_connectors = []
+    user_attributes = {}
+    multisite_user_connectors = []
 
     load_web_plugins("userdb", globals())
 

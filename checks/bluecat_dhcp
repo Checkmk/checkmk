@@ -45,7 +45,7 @@ def check_bluecat_dhcp(item, params, info):
 
     state = 0
     for line in info:
-        oper_state, leases_sec = map(int, info[0])
+        oper_state, leases_sec = map(int, line[0])
         if oper_state in params['oper_states']['warning']:
             state = 1
         elif oper_state in params['oper_states']['critical']:

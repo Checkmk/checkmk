@@ -24,40 +24,32 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Example output from plugin:
-# <<<citrix_licenses>>>
-# PVS_STD_CCS 80 0
-# PVS_STD_CCS 22 0
-# CEHV_ENT_CCS 22 0
-# MPS_ENT_CCU 2160 1636
-# MPS_ENT_CCU 22 22
-# XDT_ENT_UD 22 18
-# XDS_ENT_CCS 22 0
-# PVSD_STD_CCS 42 0
 
-def inventory_citrix_licenses(info):
-    license_types = set([])
-    for license_type, have, used in info:
-        license_types.add(license_type)
-    return [ (lt, None) for lt in license_types ]
+def license_check_levels(have, used, params):
+    if params == None:
+        warn = have
+        crit = have
+    elif type(params[0]) == int:
+        warn = max(0, have - params[0])
+        crit = max(0, have - params[1])
+    else:
+        warn = have * (1 - params[0]/100)
+        crit = have * (1 - params[1]/100)
 
-def check_citrix_licenses(item, params, info):
-    have = 0
-    used = 0
-    for license_type, h, u in info:
-        if item == license_type:
-            have += int(h)
-            used += int(u)
-    if not have:
-        return 3, "No licenses of that type found"
+    perfdata = [ ( "licenses", used, warn, crit, 0, have )]
+    if used <= have:
+        infotext = "used %d out of %d licenses" % (used, have)
+    else:
+        infotext = "used %d licenses, but you have only %d" % (used, have)
 
-    return license_check_levels(have, used, params)
+    if used >= crit:
+        status = 2
+    elif used >= warn:
+        status = 1
+    else:
+        status = 0
 
-check_info["citrix_licenses"] = {
-    'check_function'       : check_citrix_licenses,
-    'inventory_function'   : inventory_citrix_licenses,
-    'service_description'  : 'Citrix Licenses %s',
-    'has_perfdata'         : True,
-    'group'                : "citrix_licenses",
-    'includes'             : [ "license.include" ]
-}
+    if status:
+        infotext += " (levels at %d/%d)" % (warn, crit)
+
+    return status, infotext, perfdata

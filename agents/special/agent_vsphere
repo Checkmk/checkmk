@@ -130,6 +130,10 @@ telegram_list = {
          '<ns1:path>vm</ns1:path><ns1:skip>false</ns1:skip></ns1:selectSet>'\
          '</ns1:objectSet></ns1:specSet><ns1:options></ns1:options></ns1:RetrievePropertiesEx>',
 
+     "licenseassigned":
+         '<ns1:QueryAssignedLicenses xsi:type="ns1:QueryAssignedLicensesRequestType">'\
+         '<ns1:_this type="LicenseAssignmentManager">LicenseAssignmentManager</ns1:_this></ns1:QueryAssignedLicenses>',
+
      "perfcountersummary":
          '<ns1:QueryPerfProviderSummary xsi:type="ns1:QueryPerfProviderSummaryRequestType">'\
          '<ns1:_this type="PerformanceManager">%(perfManager)</ns1:_this>'\
@@ -423,7 +427,7 @@ host_address  = None
 user          = None
 secret        = None
 tracefile     = None
-query_objects = [ 'hostsystem', 'virtualmachine', 'datastore', 'counters' ]
+query_objects = [ 'hostsystem', 'virtualmachine', 'datastore', 'counters', 'licenses' ]
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -523,13 +527,17 @@ def get_agent_info_tcp(hostname):
 
 
 # Globals of ESX System. These settings are available after the first "systeminfo" query
-systeminfo = {
-    "apiVersion"     : None,
-    "name"           : None,
-    "rootFolder"     : None,
-    "perfManager"    : None,
-    "sessionManager" : None,
-}
+systemfields = [
+ ("apiVersion", float),
+ ("name", None),
+ ("rootFolder", None),
+ ("perfManager", None),
+ ("sessionManager", None),
+ ("licenseManager", None),
+ ("propertyCollector", None)
+]
+
+systeminfo = {}
 
 if opt_tracefile:
     tracefile_dir = os.path.dirname(opt_tracefile) or "."
@@ -632,18 +640,14 @@ try:
             reply_code, reply_msg, reply_headers, reply_data = query_server(payload)
 
         if name == "systeminfo":
-            for entry, function in [ ("name", None),
-                                     ("apiVersion", float),
-                                     ("rootFolder", None),
-                                     ("propertyCollector", None),
-                                     ("sessionManager", None),
-                                     ("perfManager", None) ]:
+            for entry, function in systemfields:
                  element = get_pattern("<%(entry)s.*>(.*)</%(entry)s>" % { "entry": entry }, reply_data)
                  systeminfo[entry] = function and function(element[0]) or element[0]
         elif name == "login":
             my_cookie = reply_headers.get("Set-Cookie")
             if "InvalidLogin" in reply_data:
                 raise Exception("Login response is not 'OK'. Please check the credentials")
+
 
 except Exception, e:
     if opt_debug:
@@ -662,6 +666,25 @@ if not error:
         print "Version: %.1f" % systeminfo["apiVersion"]
         print "AgentOS: %s" %   systeminfo["name"]
 
+        ###########################
+        # Licenses
+        ###########################
+        reply_code, reply_msg, reply_headers, licenses_response = query_server(telegram_list["licenseassigned"])
+        license_hosts = get_pattern('<returnval>(.*?)</returnval>', licenses_response)
+        licenses = {}
+        for host in license_hosts:
+            key, name, total, used = get_pattern("<licenseKey>(.*?)</licenseKey>.*?<name>(.*?)</name><total>(.*?)</total><used>(.*?)</used>", host)[0]
+            # We merge all entries with the same name, duplicate keys are ignored since they provide the same data
+            licenses.setdefault(name, {"used_keys": [], "total": 0, "used": 0})
+            if key not in licenses[name]["used_keys"]:
+                licenses[name]["total"] += int(total)
+                licenses[name]["used"]  += int(used)
+                licenses[name]["used_keys"].append(key)
+
+        print "<<<esx_vsphere_licenses:sep(9)>>>"
+        for license, values in licenses.items():
+            print "%s\t%s %s" % (license, values["used"], values["total"])
+
         #############################
         # Determine available host systems
         #############################
@@ -670,9 +693,9 @@ if not error:
         reply_code, reply_msg, reply_headers, hostsystems_response = query_server(telegram_list["hostsystems"])
         elements = get_pattern('<obj type="HostSystem">(.*?)</obj>.*?<val xsi:type="xsd:string">(.*?)</val>', hostsystems_response)
 
-
         for hostsystem, name in elements:
             hostsystems[hostsystem] = name
+
 
         ###########################
         # Datastores

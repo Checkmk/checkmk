@@ -24,40 +24,35 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Example output from plugin:
-# <<<citrix_licenses>>>
-# PVS_STD_CCS 80 0
-# PVS_STD_CCS 22 0
-# CEHV_ENT_CCS 22 0
-# MPS_ENT_CCU 2160 1636
-# MPS_ENT_CCU 22 22
-# XDT_ENT_UD 22 18
-# XDS_ENT_CCS 22 0
-# PVSD_STD_CCS 42 0
+# Example output from agent:
+#esx_vsphere_licenses:sep(9)>>>
+#VMware vSphere 5 Standard   100 130
+#VMware vSphere 5 Enterprise 86 114
+#vCenter Server 5 Standard   1 1
 
-def inventory_citrix_licenses(info):
-    license_types = set([])
-    for license_type, have, used in info:
-        license_types.add(license_type)
-    return [ (lt, None) for lt in license_types ]
+def inventory_esx_vsphere_licenses(info):
+    return [ (line[0], {}) for line in info ]
 
-def check_citrix_licenses(item, params, info):
-    have = 0
-    used = 0
-    for license_type, h, u in info:
-        if item == license_type:
-            have += int(h)
-            used += int(u)
-    if not have:
-        return 3, "No licenses of that type found"
+def check_esx_vsphere_licenses(item, params, info):
+    if params == None:
+        params = {}
+    # Transform: VMware vSphere 5 Standard   100 13
+    # Into dict: 'VMware vSphere 5 Standard': (100, 130)
+    licenses = dict(map(
+                    lambda x: (x[0], tuple(map(lambda y: int(y), x[1].split()))),
+                    info))
+    if item not in licenses:
+        return 3, "License not found in agent output"
 
+    used, have = licenses[item]
     return license_check_levels(have, used, params)
 
-check_info["citrix_licenses"] = {
-    'check_function'       : check_citrix_licenses,
-    'inventory_function'   : inventory_citrix_licenses,
-    'service_description'  : 'Citrix Licenses %s',
-    'has_perfdata'         : True,
-    'group'                : "citrix_licenses",
-    'includes'             : [ "license.include" ]
+check_info['esx_vsphere_licenses'] = {
+  "inventory_function"  : inventory_esx_vsphere_licenses,
+  "check_function"      : check_esx_vsphere_licenses,
+  "service_description" : "License %s",
+  "has_perfdata"        : True,
+  "group"               : "esx_licenses",
+  "includes"            : [ "license.include" ]
 }
+

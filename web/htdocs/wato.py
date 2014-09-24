@@ -11463,7 +11463,7 @@ def mode_users(phase):
         # the visible custom attributes
         for name, attr in visible_custom_attrs:
             vs = attr['valuespec']
-            table.cell(vs.title())
+            table.cell(_u(vs.title()))
             html.write(vs.value_to_text(user.get(name, vs.default_value())))
 
     table.end()
@@ -11522,7 +11522,7 @@ def mode_edit_user(phase):
 
             if not attr.get("permission") or config.may(attr["permission"]):
                 vs = attr['valuespec']
-                forms.section(vs.title())
+                forms.section(_u(vs.title()))
                 if attr['user_editable'] and not is_locked(name):
                     vs.render_input("ua_" + name, user.get(name, vs.default_value()))
                 else:
@@ -11531,7 +11531,7 @@ def mode_edit_user(phase):
                     html.write('<div style="display:none">')
                     vs.render_input("ua_" + name, user.get(name, vs.default_value()))
                     html.write('</div>')
-                html.help(vs.help())
+                html.help(_u(vs.help()))
 
     # Load data that is referenced - in order to display dropdown
     # boxes and to check for validity.
@@ -15345,9 +15345,9 @@ def page_user_profile():
                 if attr['user_editable']:
                     if not attr.get("permission") or config.may(attr["permission"]):
                         vs = attr['valuespec']
-                        forms.section(vs.title())
+                        forms.section(_u(vs.title()))
                         vs.render_input("ua_" + name, user.get(name, vs.default_value()))
-                        html.help(vs.help())
+                        html.help(_u(vs.help()))
 
     # Save button
     forms.end()
@@ -16680,7 +16680,7 @@ def mode_edit_custom_attr(phase, what):
         html.write(name)
         html.set_focus("title")
 
-    forms.section(_("Title"))
+    forms.section(_("Title") + "<sup>*</sup>")
     html.help(_("The title is used to label this attribute."))
     html.text_input("title", attr.get('title'))
 
@@ -16693,7 +16693,7 @@ def mode_edit_custom_attr(phase, what):
         ('personal', _('Personal Settings')),
     ], attr.get('topic', 'personal'))
 
-    forms.section(_('Help Text'))
+    forms.section(_('Help Text') + "<sup>*</sup>")
     html.help(_('You might want to add some helpful description for the attribute.'))
     html.text_area('help', attr.get('help', ''))
 
@@ -16719,6 +16719,7 @@ def mode_edit_custom_attr(phase, what):
     html.checkbox('add_custom_macro', attr.get('add_custom_macro', False))
 
     forms.end()
+    show_localization_hint()
     html.button("save", _("Save"))
     html.hidden_fields()
     html.end_form()

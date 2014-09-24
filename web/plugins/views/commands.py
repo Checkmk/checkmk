@@ -365,10 +365,12 @@ def command_downtime(cmdtag, spec, row):
 
         down_to = time.time() + minutes * 60
         title = _("<b>schedule an immediate downtime for the next %d minutes</b> on" % minutes)
+
     elif html.var("_down_adhoc"):
         minutes = config.adhoc_downtime.get("duration",0)
         down_to = time.time() + minutes * 60
         title = _("<b>schedule an immediate downtime for the next %d minutes</b> on" % minutes)
+
     elif html.var("_down_custom"):
         down_from = html.get_datetime_input("_down_from")
         down_to   = html.get_datetime_input("_down_to")
@@ -381,6 +383,9 @@ def command_downtime(cmdtag, spec, row):
             time.asctime(time.localtime(down_to)))
 
     elif html.var("_down_remove"):
+        if html.var("_on_hosts"):
+            raise MKUserError("_on_hosts", _("The checkbox for setting host downtimes does not work when removing downtimes."))
+
         downtime_ids = []
         if cmdtag == "HOST":
             prefix = "host_"
@@ -412,6 +417,10 @@ def command_downtime(cmdtag, spec, row):
 
         if html.var("_include_childs"): # only for hosts
             specs = [ spec ] + get_child_hosts(row["site"], [spec], recurse = not not html.var("_include_childs_recurse"))
+        elif html.var("_on_hosts"): # set on hosts instead of services
+            specs = [ spec.split(";")[0] ]
+            title += " the hosts of"
+            cmdtag = "HOST"
         else:
             specs = [ spec ]
 
@@ -419,6 +428,7 @@ def command_downtime(cmdtag, spec, row):
                    + ("%d;%d;%d;0;%d;%s;" % (down_from, down_to, fixed, duration, config.user_id)) \
                    + comment) for spec in specs]
         return commands, title
+
 
 def get_child_hosts(site, hosts, recurse):
     hosts = set(hosts)
@@ -436,6 +446,7 @@ def get_child_hosts(site, hosts, recurse):
         rec_childs = get_child_hosts(site, new_childs, True)
         new_childs.update(rec_childs)
     return list(new_childs)
+
 
 def paint_downtime_buttons(what):
 
@@ -472,11 +483,14 @@ def paint_downtime_buttons(what):
     html.checkbox("_down_flexible", False, label=_('flexible with max. duration')+" ")
     html.time_input("_down_duration", 2, 0)
     html.write(" "+_('(HH:MM)'))
+    html.write("<hr>")
     if what == "host":
-        html.write("<hr>")
         html.checkbox("_include_childs", False, label=_('Also set downtime on child hosts'))
         html.write("  ")
         html.checkbox("_include_childs_recurse", False, label=_('Do this recursively'))
+    else:
+        html.checkbox("_on_hosts", False, label=_('Schedule downtimes on the affected <b>hosts</b> instead of their services'))
+
 
 
 multisite_commands.append({

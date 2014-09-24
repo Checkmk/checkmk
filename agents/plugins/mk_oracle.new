@@ -845,7 +845,7 @@ function run_cached_local () {
     # Cache file outdated and new job not yet running? Start it
     if [ -z "$USE_CACHEFILE" -a ! -e "$CACHEFILE.new" ] ; then
         if [ $DEBUG -eq 1 ] ; then
-            echo "set -o noclobber ; exec > \"$CACHEFILE.new\" || exit 1 ; $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | bash 
+            echo "set -o noclobber ; exec > \"$CACHEFILE.new\" || exit 1 ; $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | bash
         else
             echo "set -o noclobber ; exec > \"$CACHEFILE.new\" || exit 1 ; $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | nohup bash 2>/dev/null &
         fi

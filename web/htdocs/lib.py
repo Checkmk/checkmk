@@ -344,6 +344,9 @@ def release_lock(path):
             g_aquired_locks.remove((lock_path, fd))
     g_locked_paths.remove(path)
 
+def have_lock(path):
+    return path in g_locked_paths
+
 def release_all_locks():
     global g_aquired_locks, g_locked_paths
     for path, fd in g_aquired_locks:

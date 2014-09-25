@@ -1,0 +1,12 @@
+Title: SNMP Community in host properties not shown on IE?
+Component: wato
+State: open
+Date: 2014-09-25 16:13:09
+Targetversion: future
+Class: bug
+
+A host that is tagged as SNMP host is opened in WATO. Nevertheless
+the attribute SNMP Community is not visible. In Firefox it is
+visible. Looks like some JS problem with IE...
+
+Switching back and forth the tag seems not help.

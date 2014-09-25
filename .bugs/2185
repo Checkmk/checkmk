@@ -1,0 +1,10 @@
+Title: Page reload with click on page title loads *.css files new
+Component: multisite
+State: open
+Date: 2014-09-25 16:31:49
+Targetversion: future
+Class: nastiness
+
+If you initiate a page reload on a view by clicking on the page title,
+then all static web files are being reloaded. This is not neccessary
+and create extensive page requests.

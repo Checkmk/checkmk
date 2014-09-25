@@ -14291,7 +14291,8 @@ def mode_edit_rule(phase, new = False):
             new_rule_folder = g_folders[html.var("new_rule_folder")]
 
             # Check permissions on folders
-            check_folder_permissions(folder, "write", True)
+            if not new:
+                check_folder_permissions(folder, "write", True)
             check_folder_permissions(new_rule_folder, "write", True)
 
             # VALUE

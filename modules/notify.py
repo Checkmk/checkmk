@@ -1874,12 +1874,12 @@ def core_notification_log(plugin, plugin_context):
     log_message = "%s NOTIFICATION: %s;%s;%s;%s;%s" % (
             what, contact, spec, state, plugin or "plain email", output)
     if monitoring_core == "cmc":
-        livestatus_send_command("LOG;" + log_message)
+        livestatus_send_command("LOG;" + log_message.encode("utf-8"))
     else:
         # Nagios and friends do not support logging via an
         # external command. We write the files into a help file
         # in var/check_mk/notify. If the users likes he can
         # replace that file with a symbolic link to the nagios
         # log file. But note: Nagios logging might not atomic.
-        file(notification_core_log, "a").write("[%d] %s\n" % (time.time(), log_message))
+        file(notification_core_log, "a").write("[%d] %s\n" % (time.time(), log_message.encode("utf-8")))
 

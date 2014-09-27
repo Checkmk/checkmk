@@ -75,6 +75,7 @@ ASYNC_SECTIONS="tablespaces rman jobs ts_quotas resumable locks"
 # Note: _ASM_ sections are only executed when SID starts with '+'
 #       sections listed in SYNC_SECTIONS or ASYNC_SECTIONS are not
 #       executed for ASM.
+SYNC_ASM_SECTIONS="instance"
 ASYNC_ASM_SECTIONS="asm_diskgroup"
 
 # Interval for running async checks (in seconds)
@@ -402,19 +403,37 @@ sql_version()
 sql_instance()
 {
     echo 'prompt <<<oracle_instance:sep(124)>>>'
-    echo "select upper(i.instance_name)
-	          || '|' || i.VERSION
-	          || '|' || i.STATUS
-	          || '|' || i.LOGINS
-	          || '|' || i.ARCHIVER
-                  || '|' || round((sysdate - i.startup_time) * 24*60*60)
-                  || '|' || DBID
-                  || '|' || LOG_MODE
-                  || '|' || DATABASE_ROLE
-                  || '|' || FORCE_LOGGING
-	          || '|' || d.name
-           from v\$instance i, v\$database d;
-         "
+    if [ ${ORACLE_SID:0:1} = '+' ] ; then
+        # ASM
+        echo "select upper(i.instance_name)
+                     || '|' || i.VERSION
+                     || '|' || i.STATUS
+                     || '|' || i.LOGINS
+                     || '|' || i.ARCHIVER
+                     || '|' || round((sysdate - i.startup_time) * 24*60*60)
+                     || '|' || '0'
+                     || '|' || 'NO'
+                     || '|' || 'ASM'
+                     || '|' || 'NO'
+                     || '|' || i.instance_name
+                from v\$instance i;
+             "
+    else
+        # normal Instance
+        echo "select upper(i.instance_name)
+                     || '|' || i.VERSION
+                     || '|' || i.STATUS
+                     || '|' || i.LOGINS
+                     || '|' || i.ARCHIVER
+                     || '|' || round((sysdate - i.startup_time) * 24*60*60)
+                     || '|' || DBID
+                     || '|' || LOG_MODE
+                     || '|' || DATABASE_ROLE
+                     || '|' || FORCE_LOGGING
+                     || '|' || d.name
+                from v\$instance i, v\$database d;
+             "
+    fi
 }
 
 sql_sessions()

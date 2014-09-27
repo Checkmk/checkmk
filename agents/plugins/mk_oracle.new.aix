@@ -28,38 +28,29 @@
 # and Mathias Kettner. Thorsten is responsible for the ORACLE
 # stuff, Mathias for the shell hacking...
 
-DEBUG=0
-DEBUGCONNECT=0
-if [ $# -ne 0 ] ; then
-    ARGS=$(getopt -s bash --options "dt"--name $PROGNAME -- "$@" )
-    eval set -- "$ARGS"
+# Example for mk_oracle.cfg
+# DBUSER=<DBUSER>:<PASSWORD>:<SYSDBA>:<HOSTNAME>:<Port>
+# DBASM=<DBUSER>:<PASSWORD>:<SYSDBA/SYSASM>:<HOSTNAME>:<Port>
+#
+# SYSDBA or SYSASM is optional but needed for a mounted instance
+# HOSTNAME is optional - Default is localhost
+# PORT is optional - Default is 1521
 
-    if [ ${?} -eq 0 ]
-    then
-        while true;
-        do
-            case "$1" in
-                -d)
-                    set -xv
-                    DEBUG=1
-                    shift;;
-
-                -t)
-                    DEBUGCONNECT=1
-                    shift;;
-
-                --)
-                    shift
-                    break;;
-            esac
-        done
+while test $# -gt 0
+do
+    if [ "${1}" = '-d' ] ; then
+        set -xv ; DEBUG=1
+    elif [ "${1}" = '-t' ] ; then
+        DEBUGCONNECT=1
     fi
-fi
+    shift
+done
 
 if [ ! "$MK_CONFDIR" ] ; then
     echo "MK_CONFDIR not set!" >&2
     exit 1
 fi
+
 
 #   .--Config--------------------------------------------------------------.
 #   |                     ____             __ _                            |
@@ -73,7 +64,7 @@ fi
 #   '----------------------------------------------------------------------'
 
 # Sections that run fast and do no caching
-SYNC_SECTIONS="instance sessions logswitches undostat recovery_area processes recovery_status longactivesessions dataguard_stats"
+SYNC_SECTIONS="instance sessions logswitches undostat recovery_area processes recovery_status longactivesessions dataguard_stats performance"
 
 # Sections that are run in the background and at a larger interval.
 # Note: sections not listed in SYNC_SECTIONS or ASYNC_SECTIONS will not be
@@ -84,7 +75,7 @@ ASYNC_SECTIONS="tablespaces rman jobs ts_quotas resumable locks"
 # Note: _ASM_ sections are only executed when SID starts with '+'
 #       sections listed in SYNC_SECTIONS or ASYNC_SECTIONS are not
 #       executed for ASM.
-ASYNC_ASM_SECTIONS=""
+ASYNC_ASM_SECTIONS="asm_diskgroup"
 
 # Interval for running async checks (in seconds)
 CACHE_MAXAGE=600
@@ -131,64 +122,98 @@ fi
 #   | name as first column.                                                |
 #   '----------------------------------------------------------------------'
 
+sql_performance()
+{
+    echo 'PROMPT <<<oracle_performance:sep(124)>>>'
+    echo "select upper(i.INSTANCE_NAME)
+                 ||'|'|| 'sys_time_model'
+                 ||'|'|| S.STAT_NAME
+                 ||'|'|| Round(s.value/1000000)
+          from v\$instance i,
+               v\$sys_time_model s
+          where s.stat_name in('DB time', 'DB CPU')
+          order by s.stat_name;
+          select upper(i.INSTANCE_NAME)
+                 ||'|'|| 'buffer_pool_statistics'
+                 ||'|'|| b.name
+                 ||'|'|| b.db_block_gets
+                 ||'|'|| b.db_block_change
+                 ||'|'|| b.consistent_gets
+                 ||'|'|| b.physical_reads
+                 ||'|'|| b.physical_writes
+                 ||'|'|| b.FREE_BUFFER_WAIT
+                 ||'|'|| b.BUFFER_BUSY_WAIT
+          from v\$instance i, V\$BUFFER_POOL_STATISTICS b;
+          select upper(i.INSTANCE_NAME)
+                 ||'|'|| 'librarycache'
+                 ||'|'|| b.namespace
+                 ||'|'|| b.gets
+                 ||'|'|| b.gethits
+                 ||'|'|| b.pins
+                 ||'|'|| b.pinhits
+                 ||'|'|| b.reloads
+                 ||'|'|| b.invalidations
+          from v\$instance i, V\$librarycache b;"
+}
+
 sql_tablespaces()
 {
     echo 'PROMPT <<<oracle_tablespaces:sep(124)>>>'
-    echo "select upper(d.NAME) || '|' || file_name ||'|'|| tablespace_name ||'|'|| fstatus ||'|'|| AUTOEXTENSIBLE
-              ||'|'|| blocks ||'|'|| maxblocks ||'|'|| USER_BLOCKS ||'|'|| INCREMENT_BY
-              ||'|'|| ONLINE_STATUS ||'|'|| BLOCK_SIZE
-              ||'|'|| decode(tstatus,'READ ONLY', 'READONLY', tstatus) || '|' || free_blocks
-              ||'|'|| contents
-       from v\$database d , (
-                select f.file_name, f.tablespace_name, f.status fstatus, f.AUTOEXTENSIBLE,
-                f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY,
-                f.ONLINE_STATUS, t.BLOCK_SIZE, t.status tstatus, nvl(sum(fs.blocks),0) free_blocks, t.contents
-                from dba_data_files f, dba_tablespaces t, dba_free_space fs
-                where f.tablespace_name = t.tablespace_name
-                and f.file_id = fs.file_id(+)
-                group by f.file_name, f.tablespace_name, f.status, f.autoextensible,
-                f.blocks, f.maxblocks, f.user_blocks, f.increment_by, f.online_status,
-                t.block_size, t.status, t.contents
-                UNION
-                select f.file_name, f.tablespace_name, f.status, f.AUTOEXTENSIBLE,
-                f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY, 'TEMP',
-                t.BLOCK_SIZE, t.status, sum(sh.blocks_free) free_blocks, 'TEMPORARY'
-                from v\$thread th, dba_temp_files f, dba_tablespaces t, v\$temp_space_header sh
-                WHERE f.tablespace_name = t.tablespace_name and f.file_id = sh.file_id
-                GROUP BY th.instance, f.file_name, f.tablespace_name, f.status,
-                f.autoextensible, f.blocks, f.maxblocks, f.user_blocks, f.increment_by,
-                'TEMP', t.block_size, t.status);
-          "
-}
+    if [ "$AT_LEAST_ORACLE_102" = 'yes' ] ; then
 
-sql_92_tablespaces()
-{
-    echo 'PROMPT <<<oracle_tablespaces:sep(124)>>>'
-    echo "select upper(d.NAME) || '|' || file_name ||'|'|| tablespace_name ||'|'|| fstatus ||'|'|| AUTOEXTENSIBLE
-              ||'|'|| blocks ||'|'|| maxblocks ||'|'|| USER_BLOCKS ||'|'|| INCREMENT_BY
-              ||'|'|| ONLINE_STATUS ||'|'|| BLOCK_SIZE
-              ||'|'|| decode(tstatus,'READ ONLY', 'READONLY', tstatus) || '|' || free_blocks
-              ||'|'|| contents
-       from v\$database d , (
-                select f.file_name, f.tablespace_name, f.status fstatus, f.AUTOEXTENSIBLE,
-                f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY,
-                'ONLINE' ONLINE_STATUS, t.BLOCK_SIZE, t.status tstatus, nvl(sum(fs.blocks),0) free_blocks, t.contents
-                from dba_data_files f, dba_tablespaces t, dba_free_space fs
-                where f.tablespace_name = t.tablespace_name
-                and f.file_id = fs.file_id(+)
-                group by f.file_name, f.tablespace_name, f.status, f.autoextensible,
-                f.blocks, f.maxblocks, f.user_blocks, f.increment_by, 'ONLINE',
-                t.block_size, t.status, t.contents
-                UNION
-                select f.file_name, f.tablespace_name, 'ONLINE' status, f.AUTOEXTENSIBLE,
-                f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY, 'TEMP',
-                t.BLOCK_SIZE, 'TEMP' status, sum(sh.blocks_free) free_blocks, 'TEMPORARY'
-                from v\$thread th, dba_temp_files f, dba_tablespaces t, v\$temp_space_header sh
-                WHERE f.tablespace_name = t.tablespace_name and f.file_id = sh.file_id
-                GROUP BY th.instance, f.file_name, f.tablespace_name, 'ONLINE',
-                f.autoextensible, f.blocks, f.maxblocks, f.user_blocks, f.increment_by,
-                'TEMP', t.block_size, t.status);
-          "
+        echo "select upper(d.NAME) || '|' || file_name ||'|'|| tablespace_name ||'|'|| fstatus ||'|'|| AUTOEXTENSIBLE
+                  ||'|'|| blocks ||'|'|| maxblocks ||'|'|| USER_BLOCKS ||'|'|| INCREMENT_BY
+                  ||'|'|| ONLINE_STATUS ||'|'|| BLOCK_SIZE
+                  ||'|'|| decode(tstatus,'READ ONLY', 'READONLY', tstatus) || '|' || free_blocks
+                  ||'|'|| contents
+           from v\$database d , (
+                    select f.file_name, f.tablespace_name, f.status fstatus, f.AUTOEXTENSIBLE,
+                    f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY,
+                    f.ONLINE_STATUS, t.BLOCK_SIZE, t.status tstatus, nvl(sum(fs.blocks),0) free_blocks, t.contents
+                    from dba_data_files f, dba_tablespaces t, dba_free_space fs
+                    where f.tablespace_name = t.tablespace_name
+                    and f.file_id = fs.file_id(+)
+                    group by f.file_name, f.tablespace_name, f.status, f.autoextensible,
+                    f.blocks, f.maxblocks, f.user_blocks, f.increment_by, f.online_status,
+                    t.block_size, t.status, t.contents
+                    UNION
+                    select f.file_name, f.tablespace_name, f.status, f.AUTOEXTENSIBLE,
+                    f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY, 'TEMP',
+                    t.BLOCK_SIZE, t.status, sum(sh.blocks_free) free_blocks, 'TEMPORARY'
+                    from v\$thread th, dba_temp_files f, dba_tablespaces t, v\$temp_space_header sh
+                    WHERE f.tablespace_name = t.tablespace_name and f.file_id = sh.file_id
+                    GROUP BY th.instance, f.file_name, f.tablespace_name, f.status,
+                    f.autoextensible, f.blocks, f.maxblocks, f.user_blocks, f.increment_by,
+                    'TEMP', t.block_size, t.status);
+              "
+    elif [ "$AT_LEAST_ORACLE_92" = 'yes' ] ; then
+
+        echo "select upper(d.NAME) || '|' || file_name ||'|'|| tablespace_name ||'|'|| fstatus ||'|'|| AUTOEXTENSIBLE
+                  ||'|'|| blocks ||'|'|| maxblocks ||'|'|| USER_BLOCKS ||'|'|| INCREMENT_BY
+                  ||'|'|| ONLINE_STATUS ||'|'|| BLOCK_SIZE
+                  ||'|'|| decode(tstatus,'READ ONLY', 'READONLY', tstatus) || '|' || free_blocks
+                  ||'|'|| contents
+           from v\$database d , (
+                    select f.file_name, f.tablespace_name, f.status fstatus, f.AUTOEXTENSIBLE,
+                    f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY,
+                    'ONLINE' ONLINE_STATUS, t.BLOCK_SIZE, t.status tstatus, nvl(sum(fs.blocks),0) free_blocks, t.contents
+                    from dba_data_files f, dba_tablespaces t, dba_free_space fs
+                    where f.tablespace_name = t.tablespace_name
+                    and f.file_id = fs.file_id(+)
+                    group by f.file_name, f.tablespace_name, f.status, f.autoextensible,
+                    f.blocks, f.maxblocks, f.user_blocks, f.increment_by, 'ONLINE',
+                    t.block_size, t.status, t.contents
+                    UNION
+                    select f.file_name, f.tablespace_name, 'ONLINE' status, f.AUTOEXTENSIBLE,
+                    f.blocks, f.maxblocks, f.USER_BLOCKS, f.INCREMENT_BY, 'TEMP',
+                    t.BLOCK_SIZE, 'TEMP' status, sum(sh.blocks_free) free_blocks, 'TEMPORARY'
+                    from v\$thread th, dba_temp_files f, dba_tablespaces t, v\$temp_space_header sh
+                    WHERE f.tablespace_name = t.tablespace_name and f.file_id = sh.file_id
+                    GROUP BY th.instance, f.file_name, f.tablespace_name, 'ONLINE',
+                    f.autoextensible, f.blocks, f.maxblocks, f.user_blocks, f.increment_by,
+                    'TEMP', t.block_size, t.status);
+              "
+    fi
 }
 
 sql_dataguard_stats()
@@ -229,72 +254,74 @@ sql_recovery_status()
 
 sql_rman()
 {
-    echo 'PROMPT <<<oracle_rman:sep(124)>>>'
-    echo "SELECT upper(d.NAME)
-                 ||'|'|| a.STATUS
-                 ||'|'|| to_char(a.START_TIME, 'YYYY-mm-dd_HH24:MI:SS')
-                 ||'|'|| to_char(a.END_TIME, 'YYYY-mm-dd_HH24:MI:SS')
-                 ||'|'|| replace(b.INPUT_TYPE, ' ', '_')
-                 ||'|'|| round(((sysdate - END_TIME) * 24 * 60),0)
-                 FROM V\$RMAN_BACKUP_JOB_DETAILS a, v\$database d,
-                      (SELECT input_type, max(command_id) as command_id
-                       FROM V\$RMAN_BACKUP_JOB_DETAILS
-                      WHERE START_TIME > sysdate-14
-                        and STATUS<>'RUNNING' GROUP BY input_type) b
-                 WHERE a.COMMAND_ID = b.COMMAND_ID;
-         "
+    if [ "$AT_LEAST_ORACLE_102" = 'yes' ] ; then
+        echo 'PROMPT <<<oracle_rman:sep(124)>>>'
+        echo "SELECT upper(d.NAME)
+                     ||'|'|| a.STATUS
+                     ||'|'|| to_char(a.START_TIME, 'YYYY-mm-dd_HH24:MI:SS')
+                     ||'|'|| to_char(a.END_TIME, 'YYYY-mm-dd_HH24:MI:SS')
+                     ||'|'|| replace(b.INPUT_TYPE, ' ', '_')
+                     ||'|'|| round(((sysdate - END_TIME) * 24 * 60),0)
+                     FROM V\$RMAN_BACKUP_JOB_DETAILS a, v\$database d,
+                          (SELECT input_type, max(command_id) as command_id
+                           FROM V\$RMAN_BACKUP_JOB_DETAILS
+                          WHERE START_TIME > sysdate-14
+                            and STATUS<>'RUNNING' GROUP BY input_type) b
+                     WHERE a.COMMAND_ID = b.COMMAND_ID;
+             "
+    fi
 }
 
 sql_recovery_area()
 {
-    echo 'PROMPT <<<oracle_recovery_area>>>'
-    echo "select upper(d.NAME)
-                 ||' '|| round((SPACE_USED-SPACE_RECLAIMABLE)/
-                           (CASE NVL(SPACE_LIMIT,1) WHEN 0 THEN 1 ELSE SPACE_LIMIT END)*100)
-                 ||' '|| round(SPACE_LIMIT/1024/1024)
-                 ||' '|| round(SPACE_USED/1024/1024)
-                 ||' '|| round(SPACE_RECLAIMABLE/1024/1024)
-          from V\$RECOVERY_FILE_DEST, v\$database d;
-         "
-}
-
-sql_92_undostat()
-{
-    # TUNED_UNDORETENTION and ACTIVEBLKS are not availibe in Oracle <=9.2!
-    # we sent a -1 for filtering in check_undostat
-    echo 'PROMPT <<<oracle_undostat>>>'
-    echo "select upper(i.INSTANCE_NAME)
-                 ||' -1'
-                 ||' '|| MAXCONCURRENCY
-                 ||' -1'
-                 ||' '|| maxquerylen
-                 ||' '|| NOSPACEERRCNT
-          from v\$instance i,
-              (select * from (select *
-                              from v\$undostat order by end_time desc
-                             )
-                        where rownum = 1
-              );
-         "
+    if [ "$AT_LEAST_ORACLE_102" = 'yes' ] ; then
+        echo 'PROMPT <<<oracle_recovery_area>>>'
+        echo "select upper(d.NAME)
+                     ||' '|| round((SPACE_USED-SPACE_RECLAIMABLE)/
+                               (CASE NVL(SPACE_LIMIT,1) WHEN 0 THEN 1 ELSE SPACE_LIMIT END)*100)
+                     ||' '|| round(SPACE_LIMIT/1024/1024)
+                     ||' '|| round(SPACE_USED/1024/1024)
+                     ||' '|| round(SPACE_RECLAIMABLE/1024/1024)
+              from V\$RECOVERY_FILE_DEST, v\$database d;
+             "
+    fi
 }
 
 sql_undostat()
 {
-    echo 'PROMPT <<<oracle_undostat>>>'
-    echo "select upper(i.INSTANCE_NAME)
-                 ||' '|| ACTIVEBLKS
-                 ||' '|| MAXCONCURRENCY
-                 ||' '|| TUNED_UNDORETENTION
-                 ||' '|| maxquerylen
-                 ||' '|| NOSPACEERRCNT
-          from v\$instance i,
-              (select * from (select *
-                              from v\$undostat order by end_time desc
-                             )
-                        where rownum = 1
-                        and TUNED_UNDORETENTION > 0
-              );
-         "
+    echo 'PROMPT <<<oracle_undostat:sep(124)>>>'
+    if [ "$AT_LEAST_ORACLE_102" = 'yes' ] ; then
+        echo "select upper(i.INSTANCE_NAME)
+                     ||'|'|| ACTIVEBLKS
+                     ||'|'|| MAXCONCURRENCY
+                     ||'|'|| TUNED_UNDORETENTION
+                     ||'|'|| maxquerylen
+                     ||'|'|| NOSPACEERRCNT
+              from v\$instance i,
+                  (select * from (select *
+                                  from v\$undostat order by end_time desc
+                                 )
+                            where rownum = 1
+                              and TUNED_UNDORETENTION > 0
+                  );
+             "
+    elif [ "$AT_LEAST_ORACLE_92" = 'yes' ] ; then
+        # TUNED_UNDORETENTION and ACTIVEBLKS are not availibe in Oracle <=9.2!
+        # we sent a -1 for filtering in check_undostat
+        echo "select upper(i.INSTANCE_NAME)
+                     ||'|-1'
+                     ||'|'|| MAXCONCURRENCY
+                     ||'|-1'
+                     ||'|'|| maxquerylen
+                     ||'|'|| NOSPACEERRCNT
+                  from v\$instance i,
+                  (select * from (select *
+                                  from v\$undostat order by end_time desc
+                                 )
+                            where rownum = 1
+                  );
+             "
+    fi
 }
 
 sql_resumable()
@@ -324,23 +351,25 @@ sql_resumable()
 
 sql_jobs()
 {
-    echo 'PROMPT <<<oracle_jobs:sep(124)>>>'
-    echo "SELECT upper(d.NAME)
-                 ||'|'|| j.OWNER
-                 ||'|'|| j.JOB_NAME
-                 ||'|'|| j.STATE
-                 ||'|'|| ROUND((TRUNC(sysdate) + j.LAST_RUN_DURATION - TRUNC(sysdate)) * 86400)
-                 ||'|'|| j.RUN_COUNT
-                 ||'|'|| j.ENABLED
-                 ||'|'|| NVL(j.NEXT_RUN_DATE, to_date('1970-01-01', 'YYYY-mm-dd'))
-                 ||'|'|| NVL(j.SCHEDULE_NAME, '-')
-                 ||'|'|| d.STATUS
-          FROM dba_scheduler_jobs j, dba_scheduler_job_run_details d, v\$database d
-          WHERE d.owner=j.OWNER AND d.JOB_NAME=j.JOB_NAME
-            AND d.LOG_ID=(SELECT max(LOG_ID) FROM dba_scheduler_job_run_details dd
-                          WHERE dd.owner=j.OWNER and dd.JOB_NAME=j.JOB_NAME
-                         );
-         "
+    if [ "$AT_LEAST_ORACLE_102" = 'yes' ] ; then
+        echo 'PROMPT <<<oracle_jobs:sep(124)>>>'
+        echo "SELECT upper(d.NAME)
+                     ||'|'|| j.OWNER
+                     ||'|'|| j.JOB_NAME
+                     ||'|'|| j.STATE
+                     ||'|'|| ROUND((TRUNC(sysdate) + j.LAST_RUN_DURATION - TRUNC(sysdate)) * 86400)
+                     ||'|'|| j.RUN_COUNT
+                     ||'|'|| j.ENABLED
+                     ||'|'|| NVL(j.NEXT_RUN_DATE, to_date('1970-01-01', 'YYYY-mm-dd'))
+                     ||'|'|| NVL(j.SCHEDULE_NAME, '-')
+                     ||'|'|| d.STATUS
+              FROM dba_scheduler_jobs j, dba_scheduler_job_run_details d, v\$database d
+              WHERE d.owner=j.OWNER AND d.JOB_NAME=j.JOB_NAME
+                AND d.LOG_ID=(SELECT max(LOG_ID) FROM dba_scheduler_job_run_details dd
+                              WHERE dd.owner=j.OWNER and dd.JOB_NAME=j.JOB_NAME
+                             );
+             "
+    fi
 }
 
 sql_ts_quotas()
@@ -360,7 +389,6 @@ sql_ts_quotas()
           order by 1;
          "
 }
-
 
 sql_version()
 {
@@ -497,55 +525,63 @@ sql_longactivesessions()
          "
 }
 
-sql_102_asm_diskgroup()
+sql_asm_diskgroup()
 {
     echo 'prompt <<<oracle_asm_diskgroup>>>'
-    echo "select STATE
-                 || ' ' || TYPE
-                 || ' ' || 'N'
-                 || ' ' || sector_size
-                 || ' ' || block_size
-                 || ' ' || allocation_unit_size
-                 || ' ' || total_mb
-                 || ' ' || free_mb
-                 || ' ' || required_mirror_free_mb
-                 || ' ' || usable_file_mb
-                 || ' ' || offline_disks
-                 || 'N' -- || voting_files
-                 || ' ' || name || '/'
-            from v\$asm_diskgroup;
-         "
+    if [ "$AT_LEAST_ORACLE_112" = 'yes' ] ; then
+        echo "select STATE
+                     || ' ' || TYPE
+                     || ' ' || 'N'
+                     || ' ' || sector_size
+                     || ' ' || block_size
+                     || ' ' || allocation_unit_size
+                     || ' ' || total_mb
+                     || ' ' || free_mb
+                     || ' ' || required_mirror_free_mb
+                     || ' ' || usable_file_mb
+                     || ' ' || offline_disks
+                     || ' ' || voting_files
+                     || ' ' || name || '/'
+                from v\$asm_diskgroup;
+             "
+    elif [ "$AT_LEAST_ORACLE_102" = 'yes' ] ; then
+        echo "select STATE
+                     || ' ' || TYPE
+                     || ' ' || 'N'
+                     || ' ' || sector_size
+                     || ' ' || block_size
+                     || ' ' || allocation_unit_size
+                     || ' ' || total_mb
+                     || ' ' || free_mb
+                     || ' ' || required_mirror_free_mb
+                     || ' ' || usable_file_mb
+                     || ' ' || offline_disks
+                     || ' ' || 'N'
+                     || ' ' || name || '/'
+                from v\$asm_diskgroup;
+             "
+    fi
 }
 
-sql_112_asm_diskgroup()
-{
-    echo 'prompt <<<oracle_asm_diskgroup>>>'
-    echo "select STATE
-                 || ' ' || TYPE
-                 || ' ' || 'N'
-                 || ' ' || sector_size
-                 || ' ' || block_size
-                 || ' ' || allocation_unit_size
-                 || ' ' || total_mb
-                 || ' ' || free_mb
-                 || ' ' || required_mirror_free_mb
-                 || ' ' || usable_file_mb
-                 || ' ' || offline_disks
-                 || ' ' || voting_files
-                 || ' ' || name || '/'
-            from v\$asm_diskgroup;
-         "
-}
+#   .--oraenv--------------------------------------------------------------.
+#   |                                                                      |
+#   |                    ___  _ __ __ _  ___ _ ____   __                   |
+#   |                   / _ \| '__/ _` |/ _ \ '_ \ \ / /                   |
+#   |                  | (_) | | | (_| |  __/ | | \ V /                    |
+#   |                   \___/|_|  \__,_|\___|_| |_|\_/                     |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | Functions for getting the Oracle environment                         |
+#   '----------------------------------------------------------------------'
 
 function set_oraenv () {
     ORACLE_SID=${1}
-    ORACLE_USERCONF=${MK_CONFDIR}/mk_oracle_dbuser.conf
 
-    if [ -f /etc/oratab ] ; then
-        ORATAB=/etc/oratab
-    elif [ -f /var/opt/oracle/oratab ] ; then
-        ORATAB=/var/opt/oracle//oratab
-    fi
+    test -f /etc/oratab && ORATAB=/etc/oratab
+    # /var/opt/oracle/oratab is needed for Oracle Solaris
+    test -f /var/opt/oracle/oratab && ORATAB=/var/opt/oracle/oratab
+    test -f ${ORATAB:-""} || echo "ORA-99999 oratab not found"
+    test -f ${ORATAB:-""} || exit 1
 
     ORACLE_HOME=$(cat ${ORATAB} | grep "^"${ORACLE_SID}":" | cut -d":" -f2)
     if [ -z $ORACLE_HOME ] ; then
@@ -559,50 +595,45 @@ function set_oraenv () {
         exit 1
     fi
 
-    SQLPLUS=${ORACLE_HOME}/bin/sqlplus
-    export ORACLE_HOME
+    TNS_ADMIN=${TNS_ADMIN:-$MK_CONFDIR}
+
+    test -f ${TNS_ADMIN}/sqlnet.ora || ( echo "ORA-99998 Couldn't find "${TNS_ADMIN}/sqlnet.ora ; exit 1)
+
+    export ORACLE_HOME TNS_ADMIN ORACLE_SID
 }
 
 function get_oraversion () {
     set_oraenv ${1}
-    ORACLE_VERSION=$($SQLPLUS -V | grep ^SQL | cut -d" " -f3 | cut -d"." -f-2)
-}
+    ORACLE_VERSION=$($ORACLE_HOME/bin/sqlplus -V | grep ^SQL | cut -d" " -f3 | cut -d"." -f-2)
 
-# Runs a command asynchronous by use of a cache file
-function run_cached () {
-    local section=
-    if [ "$1" = -s ] ; then local section="echo '<<<$2>>>' ; " ; shift ; fi
-    local NAME=$1
-    local MAXAGE=$2
-    shift 2
-    local CMDLINE="$section$@"
-
-    if [ ! -d $MK_CONFDIR/cache ]; then mkdir -p $MK_CONFDIR/cache ; fi
-    CACHEFILE="$MK_CONFDIR/cache/$NAME.cache"
-
-    # Check if the creation of the cache takes suspiciously long and return
-    # nothing if the age (access time) of $CACHEFILE.new is twice the MAXAGE
-    local NOW=$(date +%s)
-    if [ -e "$CACHEFILE.new" ] ; then
-        local CF_ATIME=$(stat -c %X "$CACHEFILE.new")
-        if [ $((NOW - CF_ATIME)) -ge $((MAXAGE * 2)) ] ; then
-            return
-        fi
+    if [ "$ORACLE_VERSION" = '12.1' ] ; then
+        AT_LEAST_ORACLE_121=yes
     fi
 
-
-    # Check if cache file exists and is recent enough
-    if [ -s "$CACHEFILE" ] ; then
-        local MTIME=$(stat -c %Y "$CACHEFILE")
-        if [ $((NOW - MTIME)) -le $MAXAGE ] ; then local USE_CACHEFILE=1 ; fi
-        # Output the file in any case, even if it is
-        # outdated. The new file will not yet be available
-        cat "$CACHEFILE"
+    if [ "$ORACLE_VERSION" = '12.1' -o "$ORACLE_VERSION" = '11.2' ] ; then
+        AT_LEAST_ORACLE_112=yes
     fi
 
-    # Cache file outdated and new job not yet running? Start it
-    if [ -z "$USE_CACHEFILE" -a ! -e "$CACHEFILE.new" ] ; then
-        echo "set -o noclobber ; exec > \"$CACHEFILE.new\" || exit 1 ; $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | nohup bash 2>/dev/null &
+    if [ "$ORACLE_VERSION" = '12.1' -o "$ORACLE_VERSION" = '11.2' \
+         -o "$ORACLE_VERSION" = '11.1' ] ; then
+        AT_LEAST_ORACLE_111=yes
+    fi
+
+    if [ "$ORACLE_VERSION" = '12.1' -o "$ORACLE_VERSION" = '11.2' \
+         -o "$ORACLE_VERSION" = '11.1' -o "$ORACLE_VERSION" = '10.2' ] ; then
+        AT_LEAST_ORACLE_102=yes
+    fi
+
+    if [ "$ORACLE_VERSION" = '12.1' -o "$ORACLE_VERSION" = '11.2' \
+         -o "$ORACLE_VERSION" = '11.1' -o "$ORACLE_VERSION" = '10.2' \
+         -o "$ORACLE_VERSION" = '10.1' ] ; then
+        AT_LEAST_ORACLE_101=yes
+    fi
+
+    if [ "$ORACLE_VERSION" = '12.1' -o "$ORACLE_VERSION" = '11.2' \
+         -o $ORACLE_VERSION" = '11.1' -o "$ORACLE_VERSION" = '10.2' \
+         -o $ORACLE_VERSION" = '10.1' -o "$ORACLE_VERSION" = '9.2' ] ; then
+        AT_LEAST_ORACLE_92=yes
     fi
 }
 
@@ -618,18 +649,117 @@ function run_cached () {
 #   | Helper functions                                                     |
 #   '----------------------------------------------------------------------'
 
+function sqlplus_internal() {
+    loc_stdin=$(cat)
+    set_oraenv $SID
+
+    # reload mk_oracle.cfg for run_cached. Otherwise some variables are missing
+    if [ -e "$MK_CONFDIR/mk_oracle.cfg" ]
+    then
+        . $MK_CONFDIR/mk_oracle.cfg
+    fi
+
+    # mk_oracle_dbusers.conf is for compatibility. Do not use it anymore
+    ORACLE_USERCONF=${MK_CONFDIR}/mk_oracle_dbuser.conf
+
+    TNSPINGOK=no
+    if [ -f ${TNS_ADMIN}/tnsnames.ora ] ; then
+        if "${ORACLE_HOME}"/bin/tnsping "${ORACLE_SID}" >/dev/null 2>&1  ; then
+            TNSALIAS=$ORACLE_SID
+            TNSPINGOK=yes
+        fi
+    fi
+
+    ORADBUSER=""
+    DBPASSWORD=""
+
+    # ASM use '+' as 1st character in SID!
+    if [ ${ORACLE_SID:0:1} = '+' ] ; then
+        ORACFGLINE=${ASMUSER}
+    else
+        # use an individuel user or the default DBUSER from mk_oracle.cfg
+        dummy="DBUSER_"${ORACLE_SID}
+        ORACFGLINE=${!dummy}
+        if [ "$ORACFGLINE" = '' ] ; then
+            ORACFGLINE=${DBUSER}
+        fi
+    fi
+
+    if [ -f ${ORACLE_USERCONF} -a "${ORACFGLINE}" = '' ] ; then
+        # mk_oracle_dbuser.conf
+        ORACFGLINE=$(cat ${ORACLE_USERCONF} | grep "^"${ORACLE_SID}":")
+        # mk_oracle_dbuser has ORACLE_SID as 1. parameter. we need an offset for all values
+        offset=1
+    else
+        # mk_oracle.cfg
+        offset=0
+    fi
+
+    ORADBUSER=$(echo ${ORACFGLINE} | cut -d":" -f$[1+offset])
+    DBPASSWORD=$(echo ${ORACFGLINE} | cut -d":" -f$[2+offset])
+    DBSYSCONNECT=$(echo ${ORACFGLINE} | cut -d":" -f$[3+offset])
+    DBHOST=$(echo ${ORACFGLINE} | cut -d":" -f$[4+offset])
+    DBPORT=$(echo ${ORACFGLINE} | cut -d":" -f$[5+offset])
+
+    if [ ! "${ORACFGLINE}" ] ; then
+        # no configuration found
+        # => use the wallet with tnsnames.ora or EZCONNECT
+        TNSALIAS=${TNSALIAS:-"localhost:1521/${ORACLE_SID}"}
+    else
+        if [ ${DBSYSCONNECT} ] ; then
+            assysdbaconnect=" as "${DBSYSCONNECT}
+        fi
+        TNSALIAS=${TNSALIAS:-"(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=${DBHOST:-"localhost"})(PORT=${DBPORT:-1521}))(CONNECT_DATA=(SID=${ORACLE_SID})))"}
+
+        # ORADBUSER = '/'? => ignore DBPASSWORD and use the wallet
+        if [ "${ORADBUSER}" = '/' ] ; then
+            # connect with / and wallet
+            ORADBUSER=""
+            DBPASSWORD=""
+            if [ "$TNSPINGOK" = 'no' ] ; then
+                # create an EZCONNECT string when no tnsnames.ora is usable
+                # defaults to localhost:1521/<ORACLE_SID>
+                TNSALIAS="${DBHOST:-"localhost"}:${DBPORT:-1521}/${ORACLE_SID}"
+            fi
+        fi
+    fi
+
+    DBCONNECT="${ORADBUSER}/${DBPASSWORD}@${TNSALIAS}${assysdbaconnect}"
+
+    SQLPLUS=${ORACLE_HOME}/bin/sqlplus
+    if [ ! -x ${SQLPLUS} ] ; then
+        echo "sqlplus not found or ORACLE_HOME wrong! "
+        echo "SQLPLUS="${SQLPLUS}
+        return 1
+    fi
+
+    echo "$loc_stdin" | ${SQLPLUS} -L -s ${DBCONNECT}
+    if [ $? -ne 0 ] ; then
+        if [ "$DEBUGCONNECT" ] ; then
+            echo "Logindetails: ${DBCONNECT}" >&2
+        fi
+        return 1
+    fi
+}
+
 # Helper function that calls an SQL statement with a clean output
 # Usage: echo "..." | sqlplus SID
 function sqlplus ()
 {
     local SID=$1
-    if OUTPUT=$({ echo 'set pages 0 trimspool on feedback off lines 8000' ; echo 'whenever sqlerror exit 1'; cat ; } | $MK_CONFDIR/sqlplus.sh $SID)
+    loc_stdin=$(cat)
+
+    # use sqlplus_internal when no sqlplus.sh is found
+    SQLPLUS="$MK_CONFDIR"/sqlplus.sh
+    test -f "$SQLPLUS" || SQLPLUS=sqlplus_internal
+
+    if OUTPUT=$({ echo 'set pages 0 trimspool on feedback off lines 8000' ; echo 'whenever sqlerror exit 1'; echo "$loc_stdin" ; } | "$SQLPLUS" $SID)
     then
         echo "$OUTPUT"
     else
         echo '<<<oracle_instance:sep(124)>>>'
         local SID_UPPER=$(echo "$SID" | tr '[:lower:]' '[:upper:]')
-        echo "$OUTPUT" | sed -r -e "/^(ERROR:)?$/d" | tr '\n' ' ' | sed "s/^/$SID_UPPER|FAILURE|/" ; echo
+        echo "$OUTPUT" | grep -v "^ERROR at line" | tr '\n' ' ' | sed "s/^/$SID_UPPER|FAILURE|/" ; echo
         return 1
     fi
 }
@@ -678,7 +808,52 @@ function do_async_checks ()
 # Make sure that the new shell that is being run by run_cached inherits
 # our functions
 export -f sqlplus
+export -f sqlplus_internal
 export -f do_async_checks
+export -f set_oraenv
+
+function file_age() {
+    /usr/bin/perl -e 'if (! -f $ARGV[0]){die "0000000"};$mtime=(stat($ARGV[0]))[9];print ($^T-$mtime);' "$1"
+}
+
+function run_cached_local () {
+    local section=
+    if [ "$1" = -s ] ; then local section="echo '<<<$2>>>' ; " ; shift ; fi
+    local NAME=$1
+    local MAXAGE=$2
+    shift 2
+    local CMDLINE="$section$@"
+
+    if [ ! -d $MK_CONFDIR/cache ]; then mkdir -p $MK_CONFDIR/cache ; fi
+    CACHEFILE="$MK_CONFDIR/cache/$NAME.cache"
+
+    # Check if the creation of the cache takes suspiciously long and return
+    # nothing if the age (access time) of $CACHEFILE.new is twice the MAXAGE
+    if [ -e "$CACHEFILE.new" ] ; then
+        AGE=$(file_age "$CACHEFILE.new")
+        if [ $AGE -ge $((MAXAGE * 2)) ] ; then
+            return
+        fi
+    fi
+
+    # Check if cache file exists and is recent enough
+    if [ -s "$CACHEFILE" ] ; then
+        AGE=$(file_age "$CACHEFILE")
+        if [ $AGE -le $MAXAGE ] ; then local USE_CACHEFILE=1 ; fi
+        # Output the file in any case, even if it is
+        # outdated. The new file will not yet be available
+        cat "$CACHEFILE"
+    fi
+
+    # Cache file outdated and new job not yet running? Start it
+    if [ -z "$USE_CACHEFILE" -a ! -e "$CACHEFILE.new" ] ; then
+        if [ "$DEBUG" ] ; then
+            echo "set -o noclobber ; exec > \"$CACHEFILE.new\" || exit 1 ; $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | bash
+        else
+            echo "set -o noclobber ; exec > \"$CACHEFILE.new\" || exit 1 ; $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | nohup bash 2>/dev/null &
+        fi
+    fi
+}
 
 #.
 #   .--Main----------------------------------------------------------------.
@@ -712,10 +887,9 @@ touch $MK_CONFDIR/mk_oracle.found
 # section shows the general state of a database instance. If
 # that section fails for an instance then all other sections
 # do not contain valid data anyway.
-for section in $SYNC_SECTIONS $ASYNC_SECTIONS $ASYNC_ASM_SECTIONS
+for section in $SYNC_SECTIONS $ASYNC_SECTIONS $SYNC_ASM_SECTIONS $ASYNC_ASM_SECTIONS
 do
-    # cut the leading number from sections with sed
-    echo "<<<oracle_"$(echo $section | sed "s/^[0-9]*_//")">>>"
+    echo "<<<oracle_"$section">>>"
 done
 
 for SID in $SIDS
@@ -744,41 +918,38 @@ do
     fi
 
     if [ ${SID:0:1} = '+' ] ; then
+        DO_ASYNC_SECTIONS=${ASYNC_ASM_SECTIONS}
+        DO_SYNC_SECTIONS=${SYNC_ASM_SECTIONS}
+    else
         # switch sections to ASM
-        SYNC_SECTIONS_OLD=${SYNC_SECTIONS}
-        ASYNC_SECTIONS_OLD=${ASYNC_SECTIONS}
-
-        ASYNC_SECTIONS=${ASYNC_ASM_SECTIONS}
-        SYNC_SECTIONS=${SYNC_ASM_SECTIONS}
+        DO_SYNC_SECTIONS=${SYNC_SECTIONS}
+        DO_ASYNC_SECTIONS=${ASYNC_SECTIONS}
     fi
+
+    get_oraversion $SID
 
     # Do sync checks
     EXCLUDED=$(eval 'echo $EXCLUDE'"_$SID")
-    SECTIONS=$(remove_excluded_sections "$SYNC_SECTIONS" "$EXCLUDED")
-
-    if [ $DEBUGCONNECT = 0 ] ; then
-        do_sync_checks $SID "$SECTIONS"
-    else
-        get_oraversion $SID
-        echo "-----------------------------------------------"
-        echo "Logincheck to Instance: "$SID"  Version: "$ORACLE_VERSION
-        echo "select 'Login ok User: ' || user from dual;" | sqlplus $SID
-        echo "SYNC_SECTIONS=$SECTIONS"
-    fi
+    SECTIONS=$(remove_excluded_sections "$DO_SYNC_SECTIONS" "$EXCLUDED")
 
     # Do async checks
-    SECTIONS=$(remove_excluded_sections "$ASYNC_SECTIONS" "$EXCLUDED")
-    ASYNC_SQL=$(for section in $SECTIONS ; do eval "sql_$section" ; done)
+    ASECTIONS=$(remove_excluded_sections "$DO_ASYNC_SECTIONS" "$EXCLUDED")
+    ASYNC_SQL=$(for section in $ASECTIONS ; do eval "sql_$section" ; done)
     export ASYNC_SQL
 
-    if [ $DEBUGCONNECT = 0 ] ; then
-        run_cached oracle_$SID $CACHE_MAXAGE do_async_checks $SID
-    else
-        echo "ASYNC_SECTIONS=$SECTIONS"
+    if [ "$DEBUGCONNECT" ] ; then
+        echo "-----------------------------------------------"
+        echo "Logincheck to Instance: "$SID"  Version: "$ORACLE_VERSION
+        echo "select 'Login ok User: ' || user || ' on ' || host_name
+              from v\$instance;" | sqlplus $SID
+        echo "SYNC_SECTIONS=$SECTIONS"
+        echo "ASYNC_SECTIONS=$ASECTIONS"
+        # do not execute any check
+        continue
     fi
 
-    if [ ${SID:0:1} = '+' ] ; then
-        ASYNC_SECTIONS=${ASYNC_SECTIONS_OLD}
-        SYNC_SECTIONS=${SYNC_SECTIONS_OLD}
-    fi
+    do_sync_checks $SID "$SECTIONS"
+
+    run_cached_local oracle_$SID $CACHE_MAXAGE do_async_checks $SID
+
 done

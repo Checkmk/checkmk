@@ -1,0 +1,12 @@
+Title: Multisite filters Host/Service Contactgroup: Fixed livestatus exception
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.5i6
+Date: 1411994905
+Class: fix
+
+The multisite filters <tt>Host Contactgroups</tt> and <tt>Service Contactgroups</tt> were
+not working because of an incorrect livestatus filter formatting.
+This resulted in an livestatus exception every time any of these filters were actively used.
+

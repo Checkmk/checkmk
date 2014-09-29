@@ -119,9 +119,8 @@ def inventory_fc_port(info):
                     opstate not in fc_port_no_inventory_opstates and \
                     phystate not in fc_port_no_inventory_phystates:
 
-                inventory.append( (fc_port_getitem(len(info), index, portname),
-                   '{ "admstate": [%d], "opstate": [%d], "phystate": [%d] }'
-                    % (admstate, opstate, phystate) ))
+                inventory.append( (fc_port_getitem(len(info), index, portname), \
+                        'fc_port_default_levels') )
     return inventory
 
 
@@ -317,9 +316,9 @@ check_info["fc_port"] = {
     'has_perfdata'           : True,
     'group'                  : 'fc_port',
     'default_levels_variable': 'fc_port_default_levels',
-    #'snmp_scan_function'     : lambda oid:
-    #        oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1588.2.1.1") \
-    #                    and not oid(".1.3.6.1.4.1.1588.2.1.1.1.6.2.1.1"),
+    'snmp_scan_function'     : lambda oid:
+            oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.1588.2.1.1") \
+                        and oid(".1.3.6.1.4.1.1588.2.1.1.1.6.2.1.*") == None,
     'snmp_scan_function'     : lambda oid: False,
     'snmp_info'              :  ( ".1.3.6.1.3.94", [
             "1.10.1.2",         # connUnitPortIndex                             # 0

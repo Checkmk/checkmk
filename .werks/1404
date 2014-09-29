@@ -1,0 +1,9 @@
+Title: Make title/help of custom user attributes localizable
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.5i6
+Date: 1411565020
+Class: feature
+
+These two texts now also use the existing <i>Customer user localization</i> mechanism.

@@ -25,27 +25,27 @@
 # Boston, MA 02110-1301 USA.
 
 # Example output from agent:
-#Number of tasks: 15
-#Name: System:EventManager
-#        Id: 1
-#        Runtime ID: 1314160393
-#        Class: EventManager
-#        State: Started
-#Name: System:AVS
-#        Id: 2
-#        Runtime ID: 1314160398
-#        Class: AVS
-#        State: Started
-#Name: System:Quarantine
-#        Id: 3
-#        Runtime ID: 1314160399
-#        Class: Quarantine
-#        State: Started
-#Name: System:Statistics
-#        Id: 4
-#        Runtime ID: 1314160396
-#        Class: Statistics
-#        State: Started
+# Number of tasks: 15
+# Name: System:EventManager
+#         Id: 1
+#         Runtime ID: 1314160393
+#         Class: EventManager
+#         State: Started
+# Name: System:AVS
+#         Id: 2
+#         Runtime ID: 1314160398
+#         Class: AVS
+#         State: Started
+# Name: System:Quarantine
+#         Id: 3
+#         Runtime ID: 1314160399
+#         Class: Quarantine
+#         State: Started
+# Name: System:Statistics
+#         Id: 4
+#         Runtime ID: 1314160396
+#         Class: Statistics
+#         State: Started
 #
 
 def inventory_kaspersky_av_tasks(info):

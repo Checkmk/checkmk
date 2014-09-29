@@ -25,8 +25,8 @@
 # Boston, MA 02110-1301 USA.
 
 # Example output:
-#<<<vxvm_enclosures>>>
-#LIO-Sechs         aluadisk       ALUAdisk             CONNECTED    ALUA        3
+# <<<vxvm_enclosures>>>
+# LIO-Sechs         aluadisk       ALUAdisk             CONNECTED    ALUA        3
 
 def check_vxvm_enclosures(item, params, info):
     for line in info:
@@ -35,7 +35,7 @@ def check_vxvm_enclosures(item, params, info):
                 return(2, "Status is %s" % line[3])
             else:
                 return(0, "Status is CONNECTED")
-    return(3, "UKN - Item not found")
+    return(3, "Item not found")
 
 
 check_info["vxvm_enclosures"] = {

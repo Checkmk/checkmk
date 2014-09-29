@@ -1,0 +1,16 @@
+Title: Checkbox for settings downtimes on the hosts of the selected services
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.5i6
+Date: 1411574194
+Class: feature
+
+In the Multisite command box for setting downtimes on services there is now
+a new checkbox called <i>Schedule downtimes on the affected hosts instead
+of their services</i>.  When you check this then the scheduled downtimes
+are set on the hosts of the selected services rather then on the services
+themselves. Note: When a host is in scheduled downtime then all its services
+are considered to be in a scheduled downtime, as well. There is no need to
+set a downtime on these.
+

@@ -2007,13 +2007,16 @@ def do_actions(view, what, action_rows, backurl):
         return False
 
     count = 0
+    already_executed = set([])
     for nr, row in enumerate(action_rows):
         core_commands, title, executor = core_command(what, row, nr, len(action_rows))
         for command in core_commands:
-            if type(command) == unicode:
-                command = command.encode("utf-8")
-            executor(command, row["site"])
-            count += 1
+            if command not in already_executed:
+                if type(command) == unicode:
+                    command = command.encode("utf-8")
+                executor(command, row["site"])
+                already_executed.add(command)
+                count += 1
 
     message = None
     if command:

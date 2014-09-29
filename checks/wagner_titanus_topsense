@@ -327,9 +327,9 @@ def check_wagner_titanus_topsense_temp(item, params, info):
     if temp >= crit:
         status = 2
 
-    perfdata = [("temp", str(temp) + "C", warn, crit)]
+    perfdata = [("temp", temp, warn, crit)]
 
-    return status, "Temperature is %0.2f °C" % temp, perfdata
+    return status, "Temperature is %0.1f °C" % temp, perfdata
 
 check_info["wagner_titanus_topsense.temp"] = {
     "check_function"        : check_wagner_titanus_topsense_temp,

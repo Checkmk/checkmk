@@ -1,0 +1,16 @@
+Title: Assume PEND in count_ok aggregations if all nodes are PEND
+Level: 2
+Component: bi
+Compatible: compat
+Version: 1.2.5i6
+Date: 1411721844
+Class: feature
+
+If you are using the BI aggregation function <tt>count_ok</tt> then nodes
+with the state <tt>PEND</tt> (which essentially means unmonitored or not
+present) are handled differently from now.
+
+If <b>all</b> nodes are pending then the total state will also be pending.
+If just some of the nodes are pending then they will not taken into account.
+This is especially imported when doing availability computations on
+BI aggregates.

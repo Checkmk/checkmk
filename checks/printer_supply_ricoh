@@ -35,18 +35,15 @@ def check_printer_supply_ricoh(item, params, info):
     for line in info:
         if item == line[0]:
             state = 0
-            label = ""
             level = saveint(line[1])
             if level < crit:
                 state = 2
-                label = "(!!)"
             elif level < warn:
                 state = 1
-                label = "(!)"
             message = "Remaining: %s%%%s (levels at %d%%/%d%%) " % (level, label, warn, crit)
             perfdata = [ ("level", level, warn, crit, 0, 100)]
             return (state, message, perfdata)
-    return(3, "Ukn: Supply not found in SNMP data")
+    return(3, "Supply information not found")
 
 check_info['printer_supply_ricoh'] = {
   "inventory_function"  : inventory_printer_supply_ricoh,

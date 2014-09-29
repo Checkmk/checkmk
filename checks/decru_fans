@@ -27,18 +27,18 @@
 decru_fan_default_levels = (8000, 8400)
 
 def inventory_decru_fans(info):
-    return [ (l[0], l[1] + " RPM", "decru_fan_default_levels") for l in info ]
+    return [ (l[0], "decru_fan_default_levels") for l in info ]
 
 def check_decru_fans(item, params, info):
-    for fan in info:
-        if fan[0] == item:
-            rpm = int(fan[1])
+    for fan_name, rpm in info:
+        if fan_name == item:
+            rpm = int(rpm)
             crit, warn = params
-            perfdata = [("rpm", rpm, 0, "", warn, crit)]
+            perfdata = [("rpm", rpm, 0, None, warn, crit)]
             infotxt = "%d RPM" % rpm
-            if rpm < crit:
+            if rpm <= crit:
                 return (2, infotxt, perfdata)
-            elif rpm < warn:
+            elif rpm <= warn:
                 return (1, infotxt, perfdata)
             else:
                 return (0, infotxt, perfdata)

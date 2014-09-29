@@ -1,0 +1,16 @@
+Title: WATO create rule: No longer raises an incorrect permission warning when creating a new rule
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.5i6
+Date: 1411639616
+Class: fix
+
+A normal monitoring user which had only permissions to a given subfolder
+could not create a new rule when the rule formular was created with the
+main directory as rule path.<br><br>
+
+For example, if the user pressed "Create in folder: 'Main directory'" and
+switched the actual rule folder to his subfolder afterwards.<br>
+This resulted in a permission warning stating that the user has no permission to
+write into the 'Main directory'.

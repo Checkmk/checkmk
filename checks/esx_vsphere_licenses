@@ -34,8 +34,6 @@ def inventory_esx_vsphere_licenses(info):
     return [ (line[0], None) for line in info ]
 
 def check_esx_vsphere_licenses(item, params, info):
-    if params == None:
-        params = {}
     # Transform: VMware vSphere 5 Standard   100 13
     # Into dict: 'VMware vSphere 5 Standard': (100, 130)
     licenses = dict(map(

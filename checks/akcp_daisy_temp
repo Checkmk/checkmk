@@ -42,7 +42,6 @@ def check_akcp_daisy_temp(item, params, info):
         if name == item:
             temp = float(rawtemp) / 10
             return check_temperature(temp, params)
-    print item, info
 
     return 3, "Sensor not found in SNMP data"
 

@@ -9105,7 +9105,7 @@ def mode_notification_rule(phase, profilemode):
             return "notifications"
 
 
-    html.begin_form("rule")
+    html.begin_form("rule", method = "POST")
     vs.render_input("rule", rule)
     vs.set_focus("rule")
     forms.end()

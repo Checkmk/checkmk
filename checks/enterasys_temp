@@ -27,9 +27,7 @@
 enterasys_temp_default_levels = (30, 35)
 
 def inventory_enterasys_temp(info):
-    if info[0][0] == "0":
-        return []
-    else:
+    if info and info[0][0] != "0":
         return [ (None, "enterasys_temp_default_levels") ]
 
 def check_enterasys_temp(item, params, info):

@@ -35,7 +35,7 @@ def check_vxvm_enclosures(item, params, info):
                 return(2, "Status is %s" % line[3])
             else:
                 return(0, "Status is CONNECTED")
-    return(3, "UKN - Item not found")
+    return(3, "Item not found")
 
 
 check_info["vxvm_enclosures"] = {

@@ -1849,7 +1849,7 @@ register_check_parameters(
     "first"
 )
 
-def get_filesystem_valuespec(what):
+def get_free_used_dynamic_valuespec(what, name, default_value = (80.0, 90.0)):
     if what == "used":
         title  = _("used space")
         course = _("above")
@@ -1874,17 +1874,16 @@ def get_filesystem_valuespec(what):
                    ]
 
     return Alternative(
-            title = _("Levels for filesystem %s") % title,
+            title = _("Levels for %s %s") % (name, title),
             show_alternative_title = True,
-            default_value = (80.0, 90.0),
+            default_value = default_value,
                     elements = vs_subgroup + [
                                 ListOf(
                                     Tuple(
                                         orientation = "horizontal",
                                         elements = [
-                                            Filesize(title = _("Filesystem larger than")),
+                                            Filesize(title = _("%s larger than") % name.title()),
                                             Alternative(
-                                                title = _("Levels for %s") % title,
                                                 elements = vs_subgroup
                                             )
                                         ]
@@ -1933,9 +1932,9 @@ filesystem_elements = [
             default_value = (80.0, 90.0),
             match = match_dual_level_type,
             elements = [
-                   get_filesystem_valuespec("used"),
+                   get_free_used_dynamic_valuespec("used", "filesystem"),
                    Transform(
-                            get_filesystem_valuespec("free"),
+                            get_free_used_dynamic_valuespec("free", "filesystem", default_value = (20.0, 10.0)),
                             title = _("Levels for filesystem free space"),
                             allow_empty = False,
                             forth = transform_filesystem_free,
@@ -3084,6 +3083,7 @@ register_check_parameters(
      None,
      None
 )
+
 
 register_check_parameters(
     subgroup_applications,
@@ -5592,6 +5592,18 @@ register_check_parameters(
     "dict",
 )
 
+
+register_check_parameters(
+    subgroup_applications,
+    "db2_logsizes",
+    _("Size of DB2 logfiles"),
+    get_free_used_dynamic_valuespec("free", "logfile", default_value = (20.0, 10.0)),
+    TextAscii(
+        title = _("Logfile name"),
+        allow_empty = True),
+    "first"
+)
+
 register_check_parameters(
     subgroup_applications,
     "db2_mem",
@@ -6027,7 +6039,7 @@ register_check_parameters(
        help  = _("For example <tt>VMware vSphere 5 Standard</tt>"),
        allow_empty = False,
     ),
-    "dict"
+    "first"
 )
 
 register_check_parameters(
@@ -6039,7 +6051,7 @@ register_check_parameters(
        title = _("ID of the license, e.g. <tt>PVSD_STD_CCS</tt>"),
        allow_empty = False,
     ),
-    "dict"
+    "first"
 )
 
 register_check_parameters(

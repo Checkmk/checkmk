@@ -1,0 +1,12 @@
+Title: mknotifyd now really reads all configuration files below mknotifyd.d
+Level: 2
+Component: notifications
+Compatible: compat
+Version: 1.2.5i6
+Date: 1411974839
+Class: fix
+
+Previously the notification spooler daemon <tt>mknotifyd</tt> just read the
+single file <tt>etc/check_mk/mknotifyd.d/wato/global.mk</tt>. Now it reads
+all files below <tt>etc/check_mk/mknotifyd.d</tt> - just as one would
+expect. Note: there is still no <tt>etc/check_mk/mknotifyd.mk</tt> file.

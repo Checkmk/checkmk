@@ -25,11 +25,11 @@
 # Boston, MA 02110-1301 USA.
 
 # Example output:
-#<<<vxvm_multipath>>>
-#sda                  ENABLED      OTHER_DISKS  1      1     0     other_disks
-#LIO-Sechs_0          ENABLED      aluadisk     1      1     0     LIO-Sechs
-#LIO-Sechs_1          ENABLED      aluadisk     1      1     0     LIO-Sechs
-#LIO-Sechs_2          ENABLED      aluadisk     1      1     0     LIO-Sechs
+# <<<vxvm_multipath>>>
+# sda                  ENABLED      OTHER_DISKS  1      1     0     other_disks
+# LIO-Sechs_0          ENABLED      aluadisk     1      1     0     LIO-Sechs
+# LIO-Sechs_1          ENABLED      aluadisk     1      1     0     LIO-Sechs
+# LIO-Sechs_2          ENABLED      aluadisk     1      1     0     LIO-Sechs
 #
 
 def check_vxvm_multipath(item, params, info):
@@ -42,7 +42,7 @@ def check_vxvm_multipath(item, params, info):
                 state = 2
             return(state, "Status: %s, (%d/%d) Paths to enclosure %s enabled" % (status_txt, int(paths_act), int(paths), enclosure  ))
 
-    return(3, "UKN - Item not found")
+    return(3, "Item not found")
 
 
 check_info["vxvm_multipath"] = {

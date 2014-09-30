@@ -1301,16 +1301,33 @@ def aggr_countok_convert(num, count):
 
 def aggr_countok(nodes, needed_for_ok=2, needed_for_warn=1):
     states = [ i[0]["state"] for i in nodes ]
-    num_ok = len([s for s in states if s == 0 ])
+    num_ok      = len([s for s in states if s == 0 ])
+    num_nonok   = len([s for s in states if s > 0 ])
+    num_pending = len(states) - num_ok - num_nonok
+    num_nodes   = num_ok + num_nonok
+
+    # We need to handle the special case "PENDING" separately.
+    # Example: count is set to 50%. You have 10 nodes, all of
+    # which are PENDING, then the outcome must be PENDING, not
+    # CRIT.
+    if num_nodes == 0: # All are pending
+        return { "state": -1, "output": "" }
 
     # counts can be specified as integer (e.g. '2') or
     # as percentages (e.g. '70%').
-    if num_ok >= aggr_countok_convert(needed_for_ok, len(states)):
-        return { "state" : 0, "output" : "" }
-    elif num_ok >= aggr_countok_convert(needed_for_warn, len(states)):
-        return { "state" : 1, "output" : "" }
+    ok_count = aggr_countok_convert(needed_for_ok, num_nodes)
+    warn_count = aggr_countok_convert(needed_for_warn, num_nodes)
+
+    # Enough nodes are OK -> state is OK
+    if num_ok >= ok_count:
+        return { "state": 0, "output": "" }
+
+    # Enough nodes OK in order to trigger warn level -> WARN
+    elif num_ok >= warn_count:
+        return { "state": 1, "output": "" }
+
     else:
-        return { "state" : 2, "output" : "" }
+        return { "state": 2, "output": "" }
 
 config.aggregation_functions["count_ok"] = aggr_countok
 

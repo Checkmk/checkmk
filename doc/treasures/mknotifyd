@@ -352,9 +352,16 @@ def daemonize(user=0, group=0):
 def load_configuration():
     global g_config, g_config_changed
     last_config = g_config.copy()
-    config_file = "%s/mknotifyd.d/wato/global.mk" % g_config_dir
+    config_dir = "%s/mknotifyd.d" % g_config_dir
+
     try:
-        execfile(config_file, {}, g_config)
+        list_of_files = reduce(lambda a,b: a+b,
+           [ [ "%s/%s" % (d, f) for f in fs if f.endswith(".mk")]
+             for d, sb, fs in os.walk(config_dir) ], [])
+        list_of_files.sort(cmp = cmp_config_paths)
+        for path in list_of_files:
+            verbose("Reading configuration file %s" % path)
+            execfile(path, {}, g_config)
     except:
         g_config = last_config
 
@@ -362,6 +369,21 @@ def load_configuration():
         log("Configuration has changed")
         g_config_changed = True
 
+# This function has been stolen from check_mk.py.
+# Helper function that determines the sort order of the
+# configuration files. The following two rules are implemented:
+# 1. *.mk files in the same directory will be read
+#    according to their lexical order.
+# 2. subdirectories in the same directory will be
+#    scanned according to their lexical order.
+# 3. subdirectories of a directory will always be read *after*
+#    the *.mk files in that directory.
+def cmp_config_paths(a, b):
+    pa = a.split('/')
+    pb = b.split('/')
+    return cmp(pa[:-1], pb[:-1]) or \
+           cmp(len(pa), len(pb)) or \
+           cmp(pa, pb)
 
 def usage():
     sys.stdout.write("""Usage: mknotifyd [OPTIONS]

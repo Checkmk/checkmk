@@ -1131,14 +1131,22 @@ def convert_check_info():
             snmp_scan_functions[basename] = info["snmp_scan_function"]
 
 
-def convert_check_result(result):
+def convert_check_result(result, is_snmp):
     if type(result) == tuple:
         return result
+
+    elif result == None:
+        return item_not_found(is_snmp)
 
     # The check function may either return a tuple (pair or triple) or an iterator
     # (using yield). The latter one is new since version 1.2.5i5.
     else: # We assume an iterator, convert to tuple
         subresults = list(result)
+
+        # Empty list? Check returned nothing
+        if not subresults:
+            return item_not_found(is_snmp)
+
 
         # Simple check with no separate subchecks (yield wouldn't have been neccessary here!)
         if len(subresults) == 1:
@@ -1164,6 +1172,13 @@ def convert_check_result(result):
                     perfdata += subresult[2]
 
             return status, ", ".join(infotexts),  perfdata
+
+
+def item_not_found(is_snmp):
+    if is_snmp:
+        return 3, "Item not found in SNMP data"
+    else:
+        return 3, "Item not found in agent output"
 
 
 # Loops over all checks for a host, gets the data, calls the check
@@ -1232,9 +1247,11 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
 
             try:
                 dont_submit = False
+                is_snmp = check_info[checkname].get("snmp_info") or \
+                         ( infotype in check_info and check_info[infotype].get("snmp_info"))
 
                 # Call the actual check function
-                result = convert_check_result(check_function(item, params, info))
+                result = convert_check_result(check_function(item, params, info), is_snmp)
 
 
             # handle check implementations that do not yet support the

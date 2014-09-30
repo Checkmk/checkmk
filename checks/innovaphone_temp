@@ -24,13 +24,13 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-innovaphone_temp_default_levels = ( 45, 50 )
+innovaphone_temp_default_levels = (45, 50)
 
 def inventory_innovaphone_temp(info):
     return [ (None, "innovaphone_temp_default_levels") ]
 
 def check_innovaphone_temp(_no_item, params, info):
-    return check_temperature(int(info[0][1])), params)
+    return check_temperature(int(info[0][1]), params)
 
 check_info["innovaphone_temp"] = {
     "check_function"        : check_innovaphone_temp,

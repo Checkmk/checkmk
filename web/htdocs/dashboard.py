@@ -608,7 +608,7 @@ def page_edit_dashboards():
 #   '----------------------------------------------------------------------'
 
 def page_create_dashboard():
-    visuals.page_create_visual('dashboards', allow_global = True)
+    visuals.page_create_visual('dashboards', _("Dashboard"), allow_global = True)
 
 #.
 #   .--Dashb. Config-------------------------------------------------------.
@@ -654,7 +654,7 @@ def page_edit_dashboard():
         ],
     )
 
-    visuals.page_edit_visual('dashboards', dashboards,
+    visuals.page_edit_visual('dashboards', _("Dashboard"), dashboards,
         create_handler = create_dashboard,
         custom_field_handler = custom_field_handler
     )
@@ -701,7 +701,7 @@ def page_create_view_dashlet():
 
     if create:
         # Create a new view by choosing the context type and then the datasource
-        visuals.page_create_visual('views', allow_global = False,
+        visuals.page_create_visual('views', _("View"), allow_global = False,
             next_url = 'create_view_dashlet_ds.py?mode=create&context_type=%s'
                        + '&name=%s' % html.urlencode(name))
 

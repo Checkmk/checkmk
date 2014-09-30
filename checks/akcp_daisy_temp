@@ -32,25 +32,18 @@ def inventory_akcp_daisy_temp(info):
     for port, subport, name, temp in info:
         # Ignore sensors that are found by the non-daisychaining-version of
         # this check (akcp_sensor_temp)
-        if subport != '-1' and subport != '0':
+        if subport not in [ '-1', '0' ]:
             inventory.append((name, 'akcp_daisy_temp_defaultlevels' ))
     return inventory
 
 
 def check_akcp_daisy_temp(item, params, info):
-    for port, subport, name, temp in info:
+    for port, subport, name, rawtemp in info:
         if name == item:
-            warn, crit = params
-            temp = savefloat(temp) / 10
-            infotext = "Temperature is %.1f °C " % temp
-            levels = " (warn/crit at %.1f/%.1f °C)" % (warn, crit)
-            perfdata = [ ( "temperature", temp, warn, crit ) ]
-            if temp >= crit:
-                return 2, infotext + levels, perfdata
-            if temp >= warn:
-                return 1, infotext + levels, perfdata
-            return 0, infotext, perfdata
-    return 3, "Sensor not found"
+            temp = float(rawtemp) / 10
+            return check_temperature(temp, params)
+
+    return 3, "Sensor not found in SNMP data"
 
 
 check_info["akcp_daisy_temp"] = {
@@ -71,4 +64,5 @@ check_info["akcp_daisy_temp"] = {
     'snmp_scan_function':  lambda oid: oid(".1.3.6.1.2.1.1.2.0") in \
                          [ ".1.3.6.1.4.1.3854.1.2.2.1.1", ".1.3.6.1.4.1.3854.1" ],
     'group'             :  'room_temperature',
+    'includes'          : [ 'temperature.include' ],
 }

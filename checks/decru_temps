@@ -29,20 +29,12 @@ def inventory_decru_temps(info):
     int(to_celsius(int(l[1]))) + 8.0 ) ) for l in info ]
 
 def check_decru_temps(item, params, info):
-    for temp in info:
-        if temp[0] == item:
-            temp = to_celsius(int(temp[1]))
-            warn, crit = params
-            perfdata = [("temp", temp, "", "", warn, crit)]
-            infotxt = "%d C (levels at %d/%d)" % (temp, warn, crit)
-            if temp >= crit:
-                return (2, infotxt, perfdata)
-            elif temp >= warn:
-                return (1, infotxt, perfdata)
-            else:
-                return (0, infotxt, perfdata)
+    for name, rawtemp in info:
+        if name == item:
+            temp = to_celsius(int(rawtemp))
+            return check_temperature(temp, params)
 
-    return (3, "sensor not found")
+    return 3, "Sensor not found in SNMP data"
 
 
 
@@ -55,4 +47,5 @@ check_info["decru_temps"] = {
     'snmp_scan_function':      \
      lambda oid: "datafort" in oid('.1.3.6.1.2.1.1.1.0').lower(),
     'group':                   'hw_temperature',
+    'includes':                [ 'temperature.include' ],
 }

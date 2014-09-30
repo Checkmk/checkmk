@@ -32,22 +32,14 @@ def inventory_arris_cmts_temp(info):
         if line[1] != '999':
             yield line[0], 'arris_cmts_temp_default_levels'
 
+
 def check_arris_cmts_temp(item, params, info):
     for name, temp in info:
         if name == item:
-            temp = int(temp)
-            warn, crit = params
-            infotext = "Temperature is %.1f °C " % temp
-            levels = " (warn/crit at %.1f/%.1f °C)" % (warn, crit)
-            perfdata = [ ( "temperature", temp, warn, crit ) ]
-            if temp >= crit:
-                yield 2, infotext + levels, perfdata
-            elif temp >= warn:
-                yield 1, infotext + levels, perfdata
-            else:
-                yield 0, infotext, perfdata
-            return
-    yield 3, "Temperature Sensor not found"
+            return check_temperature(int(temp), params)
+
+    return 3, "Sensor not found in SNMP data"
+
 
 check_info["arris_cmts_temp"] = {
     "check_function"        : check_arris_cmts_temp,
@@ -60,6 +52,6 @@ check_info["arris_cmts_temp"] = {
                                           29, # Card Temperature
                                           ] ),
     "group"                 : "hw_temperature",
-    "includes"              : [ "arris_cmts.include" ]
+    "includes"              : [ "arris_cmts.include", "temperature.include" ],
 }
 

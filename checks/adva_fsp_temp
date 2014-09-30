@@ -46,14 +46,14 @@ def check_adva_fsp_temp(item, params, info):
             high = float(high)/10
             low = float(low)/10
             if low > -273:
-                infotext = "%.1f C (limits %.1fC/%.1fC) at %s" % (temp, low, high, descr)
+                infotext = "Temperature is %.1f °C (limits %.1f/%.1f °C) at %s" % (temp, low, high, descr)
                 perfdata = [ ("temp", temp, "", str(low)+":"+str(high),  ) ]
             else:
-                infotext = "%.1f C (limit %.1fC) at %s" % (temp, high, descr)
+                infotext = "Temperature is %.1f °C (crit at %.1f °C) at %s" % (temp, high, descr)
                 perfdata = [ ("temp", temp, "", high,  ) ]
 
             if temp <= -2730:
-                return(3, "Invalid Sensor Data")
+                return(3, "Invalid sensor data")
             elif temp >= high or temp <= low:
                 state = 2
             else:
@@ -76,17 +76,17 @@ def check_adva_fsp_temp(item, params, info):
                     # rate_avg is growth in C/s, trend is in C per trend range minutes
                     trend = float(rate_avg * range_sec)
                     sign = trend > 0 and "+" or ""
-                    infotext += ", rate: %s%.2fC/%g min" %  (sign, trend, range)
+                    infotext += ", rate: %s%.2f °C/%g min" %  (sign, trend, range)
 
                     # apply levels for absolute growth in C / interval
                     trend_c = params.get("trend_c")
                     if trend_c:
                         wa, cr = trend_c
                         if trend >= cr:
-                            problems.append("rising faster than %sC/%g min(!!)" % ( cr, range ))
+                            problems.append("rising faster than %s °C/%g min(!!)" % ( cr, range ))
                             state = 2
                         elif trend >= wa:
-                            problems.append("rising faster than %sC/%g min(!)" % ( wa, range ))
+                            problems.append("rising faster than %s °C/%g min(!)" % ( wa, range ))
                             state = max(1, state)
                     else:
                         wa, cr = None, None

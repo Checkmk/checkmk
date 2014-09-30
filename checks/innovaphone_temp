@@ -30,7 +30,7 @@ def inventory_innovaphone_temp(info):
     return [ (None, "innovaphone_temp_default_levels") ]
 
 def check_innovaphone_temp(_no_item, params, info):
-    return check_innovaphone(params, info, "°C")
+    return check_temperature(int(info[0][1])), params)
 
 check_info["innovaphone_temp"] = {
     "check_function"        : check_innovaphone_temp,
@@ -38,6 +38,6 @@ check_info["innovaphone_temp"] = {
     "service_description"   : "Temperature",
     "has_perfdata"          : True,
     "group"                 : "hw_single_temperature",
-    "include"               : ["innovaphone.include"]
+    "include"               : [ "temperature.include" ],
 }
 

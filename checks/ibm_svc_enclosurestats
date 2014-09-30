@@ -52,35 +52,23 @@
 ibm_svc_enclosurestats_temperature_default_levels = (35, 40)
 
 def inventory_ibm_svc_enclosurestats_temp(info):
-    inventory = []
     for enclosure_id, stat_name, stat_current, stat_peak, stat_peak_time in info:
         if stat_name == "temp_c":
-            inventory.append( (enclosure_id, "ibm_svc_enclosurestats_temperature_default_levels") )
-    return inventory
+            yield enclosure_id, "ibm_svc_enclosurestats_temperature_default_levels"
 
 def check_ibm_svc_enclosurestats_temp(item, params, info):
-    warn, crit = params
-    perfdata = []
-    status = 0
-
     for enclosure_id, stat_name, stat_current, stat_peak, stat_peak_time in info:
         if enclosure_id == item and stat_name == "temp_c":
-            stat_current = int(stat_current)
-            if stat_current > crit:
-                status = 2
-            elif stat_current > warn:
-                status = 1
-            perfdata = [ ('temp', str(stat_current)+"C", warn, crit) ]
-            return status, "Enclosure %s temperature is %s°C" % (enclosure_id, stat_current), perfdata
+            return check_temperature(int(stat_current), params)
 
-    return 3, "Temperature for enclosure %s not found in agent output" % item
 
 check_info["ibm_svc_enclosurestats.temp"] = {
     "check_function"        : check_ibm_svc_enclosurestats_temp,
     "inventory_function"    : inventory_ibm_svc_enclosurestats_temp,
     "service_description"   : "Temperature Enclosure %s",
     "has_perfdata"          : True,
-    "group"                 : "hw_temperature",
+    "group"                 : "room_temperature",
+    "includes"              : [ "temperature.include" ],
 }
 
 #.

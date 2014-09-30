@@ -153,7 +153,7 @@ inline bool LogEntry::handleStatusEntry()
 
         _host_name    = next_token(&scan, ';');
         _state_type   = next_token(&scan, ';');
-        _comment      = next_token(&scan, ';') + 1;
+        _comment      = next_token(&scan, ';');
         return true;
     }
     else if (!strncmp(_text, "HOST FLAPPING ALERT: ", 21))
@@ -166,7 +166,7 @@ inline bool LogEntry::handleStatusEntry()
 
         _host_name    = next_token(&scan, ';');
         _state_type   = next_token(&scan, ';');
-        _comment      = next_token(&scan, ';') + 1;
+        _comment      = next_token(&scan, ';');
         return true;
     }
 
@@ -175,7 +175,7 @@ inline bool LogEntry::handleStatusEntry()
           || !strncmp(_text, "CURRENT SERVICE STATE: ", 23)
           || !strncmp(_text, "SERVICE ALERT: ", 15))
     {
-        if (_text[0] == 'S'){
+        if (_text[0] == 'S') {
             _logclass = LOGCLASS_ALERT;
             _type     = ALERT_SERVICE;
         }
@@ -210,7 +210,7 @@ inline bool LogEntry::handleStatusEntry()
         _host_name    = next_token(&scan, ';');
         _svc_desc     = next_token(&scan, ';');
         _state_type   = next_token(&scan, ';');
-        _comment      = next_token(&scan, ';') + 1;
+        _comment      = next_token(&scan, ';');
         return true;
     }
     else if (!strncmp(_text, "SERVICE FLAPPING ALERT: ", 24))
@@ -224,7 +224,7 @@ inline bool LogEntry::handleStatusEntry()
         _host_name    = next_token(&scan, ';');
         _svc_desc     = next_token(&scan, ';');
         _state_type   = next_token(&scan, ';');
-        _comment      = next_token(&scan, ';') + 1;
+        _comment      = next_token(&scan, ';');
         return true;
     }
 

@@ -1705,8 +1705,11 @@ multisite_painters["log_message"] = {
 
 def paint_log_plugin_output(row):
     output = row["log_plugin_output"]
+    comment = row["log_comment"]
     if output:
         return "", format_plugin_output(output, row)
+    elif comment:
+        return "", comment
     else:
         log_type = row["log_type"]
         lst = row["log_state_type"]
@@ -1729,7 +1732,7 @@ def paint_log_plugin_output(row):
 multisite_painters["log_plugin_output"] = {
     "title"   : _("Log: output of check plugin"),
     "short"   : _("Check output"),
-    "columns" : ["log_plugin_output", "log_type", "log_state_type" ],
+    "columns" : ["log_plugin_output", "log_type", "log_state_type", "log_comment" ],
     "paint"   : paint_log_plugin_output,
 }
 

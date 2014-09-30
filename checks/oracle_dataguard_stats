@@ -93,16 +93,13 @@ def check_oracle_dataguard_stats(item, params, info):
 
 
                     if crit == warn and crit == -1:
-                        state = max(0, state)
+                        pass
                     elif seconds >= crit:
-                        print "%s %d %d %d" % (parameter, warn, crit, seconds)
                         infotext += '(!!) '
                         state = 2
                     elif seconds >= warn:
                         infotext += '(!) '
                         state = max(1, state)
-                    else:
-                        state = max(0, state)
 
                     perfdata.append([parameter.replace(' ', '_'), seconds, warn, crit])
 

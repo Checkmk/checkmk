@@ -37,7 +37,7 @@ def check_temperature(temp, params):
 
     warn, crit = params
     perfdata = [ ("temp", temp, warn, crit) ]
-    infotext  = "Temperature is %s °C HAGARBL" % tostring(temp)
+    infotext  = "Temperature is %s °C" % tostring(temp)
     levelstext = " (warn/crit at %s/%s °C)" % (tostring(warn), tostring(crit))
 
     if temp >= crit:

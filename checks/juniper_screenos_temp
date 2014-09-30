@@ -37,20 +37,8 @@ def check_juniper_screenos_temp(item, params, info):
         if name.endswith("Temperature"):
             name = name.rsplit(None, 1)[0]
         if name == item:
-            temp = int(temp)
-            warn, crit = params
-            perfdata = [( "temp", temp, warn, crit )]
-            infotxt = "Temperature is %s °C" % temp
-            if temp >= crit:
-                status = 2
-            elif temp >= warn:
-                status = 1
-            else:
-                status = 0
-            if status:
-                infotext += " (levels at %d °C/%d °C)" % (warn, crit)
-            return status, infotxt, perfdata
-    return (3, "Sensor not found in SNMP data")
+            return check_temperature(int(temp), params)
+
 
 check_info["juniper_screenos_temp"] = {
     "check_function"        : check_juniper_screenos_temp,
@@ -62,7 +50,6 @@ check_info["juniper_screenos_temp"] = {
     "snmp_info"             : (".1.3.6.1.4.1.3224.21.4.1",[
                                                              4, # Name
                                                              3, # Temperatur
-                                                             ])
-
-
+                                                             ]),
+    "includes"              : [ "temperature.include" ],
 }

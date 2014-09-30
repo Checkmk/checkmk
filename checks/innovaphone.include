@@ -24,15 +24,15 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def check_innovaphone( params, info, unit="%", msg=False ):
+def check_innovaphone(params, info, unit="%", msg=False):
     warn, crit = params
-    current = saveint(info[0][1])
-    message = "Current: %d%s" % ( current, unit )
+    current = int(info[0][1])
+    message = "Current: %d%s" % (current, unit)
     if msg:
-        message += " "+msg
-    perf = [ ("usage", current, warn, crit, 0, 100 ) ]
-    if current > crit:
+        message += " " + msg
+    perf = [ ("usage", current, warn, crit, 0, 100) ]
+    if current >= crit:
         return 2, message, perf
-    if current > warn:
+    if current >= warn:
         return 1, message, perf
     return 0, message, perf

@@ -1247,11 +1247,9 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
 
             try:
                 dont_submit = False
-                is_snmp = check_info[checkname].get("snmp_info") or \
-                         ( infotype in check_info and check_info[infotype].get("snmp_info"))
 
                 # Call the actual check function
-                result = convert_check_result(check_function(item, params, info), is_snmp)
+                result = convert_check_result(check_function(item, params, info), check_uses_snmp(checkname))
 
 
             # handle check implementations that do not yet support the

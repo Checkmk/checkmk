@@ -34,35 +34,23 @@ def inventory_dell_chassis_temp(info):
         inventory.append( ( "CMC Processor", "dell_chassis_temp_default_levels") )
         return inventory
 
+
 def check_dell_chassis_temp(item, params, info):
 
-    warn, crit = params
-
     items = {
-                "Front Panel"  : 0,
-                "CMC Ambient"  : 1,
-                "CMC Processor": 2,
+        "Front Panel"  : 0,
+        "CMC Ambient"  : 1,
+        "CMC Processor": 2,
     }
-    item_id = items.get(item, None)
 
-    if item_id in ( 0, 1, 2 ):
+    if item in items:
+        item_id = items[item]
 
-        temp = savefloat(info[0][item_id])
+        temp = float(info[0][item_id])
+        return check_temperature(temp, params)
 
-        if temp >= crit:
-            state = 2
-        elif temp >= warn:
-            state = 1
-        else:
-            state = 0
+    return 3, "Sensor not found in SNMP data"
 
-        infotext = "%.1fC (warn/crit: %.0fC/%.0fC)" % (temp,warn,crit)
-        perfdata = [( "temp", str(temp)+"C", warn, crit, "", 100 )]
-
-        return state, infotext, perfdata
-
-    else:
-        return 3, "no such temperature"
 
 check_info["dell_chassis_temp"] = {
     "check_function"        : check_dell_chassis_temp,
@@ -76,5 +64,6 @@ check_info["dell_chassis_temp"] = {
                                       "12", # drsCMCProcessorTemperature
                               ]),
     "snmp_scan_function"    : lambda oid: oid('.1.3.6.1.2.1.1.2.0') == ".1.3.6.1.4.1.674.10892.2",
+    "includes"              : [ "temperature.include" ],
 }
 

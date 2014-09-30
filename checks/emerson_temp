@@ -38,24 +38,22 @@
 emerson_temp_default = (40, 50) # warning / critical
 
 def inventory_emerson_temp(info):
-    if info:
-        return [ ( i, "emerson_temp_default") for i in range(0,len(info)) ]
+    for nr, line in enumerate(info):
+        # Device appears to mark missing sensors by temperature value -999999
+        if int(line[0])  >= -273000:
+            yield nr, "emerson_temp_default"
+
 
 def check_emerson_temp(item, params, info):
-    warn, crit = params
-    temp = float(info[item][0])/1000.0
-    perfdata = [ ( "temp", temp, warn, crit, 0 ) ]
-    infotext = "temperature: %f°C , (warn/crit at %d°C/%d°C) " % \
-	 	(temp, warn, crit)
+    if len(info) > item:
+        if int(info[item][0]) < -273000:
+            return 3, "Sensor offline"
 
-    if temp >= crit:
-        return (2, infotext, perfdata)
-    elif temp >= warn:
-        return (1, infotext, perfdata)
-    else:
-        return (0, infotext, perfdata)
+        temp = float(info[item][0]) / 1000.0
+        return check_temperature(temp, params)
 
-    return (3, "Temperature %s not found in SNMP output" % item)
+    return 3, "Sensor not found in SNMP data"
+
 
 check_info['emerson_temp'] = {
   "inventory_function"  : inventory_emerson_temp,
@@ -65,4 +63,5 @@ check_info['emerson_temp'] = {
   "group"               : "hw_temperature",
   "snmp_info"           : ( ".1.3.6.1.4.1.6302.2.1.2", ["7"] ),
   "snmp_scan_function"  : lambda oid: oid('.1.3.6.1.4.1.6302.2.1.1.1.0').startswith('Emerson Network Power'),
+  "includes"            : [ "temperature.include" ],
 }

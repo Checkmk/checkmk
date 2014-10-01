@@ -24,7 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Checks Temperature against crit/warn levels defined in params. temp must
+
+def fahrenheit_to_celsius(tempf):
+    return (float(tempf) - 32) * (5.0 / 9.0)
+
+
+# Checks Celsius temperature against crit/warn levels defined in params. temp must
 # be int or float
 
 def check_temperature(temp, params):

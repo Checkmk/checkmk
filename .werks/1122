@@ -1,0 +1,23 @@
+Title: windows agent: unicode logfile monitoring: now able to detect incomplete written lines
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1412178359
+Class: fix
+
+There were instances where a logline was not fully written to a unicode file.
+
+For example
+C+:
+This is the first line
+This is the sec
+C-:
+
+In this scenario the agent is not allowed to parse the second line, because
+it has not been fully written to disk yet. A complete line is considered to
+be finished with a carriage return followed by a newline.<br><br>
+
+With this update the agent now stops parsing after the first line and
+continues at the start of the second line on the following agent query.
+Note: This only applies to utf-8 files

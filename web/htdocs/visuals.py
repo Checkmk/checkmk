@@ -342,7 +342,7 @@ def page_list(what, title, visuals, custom_columns = []):
 #   | Realizes the steps before getting to the editor (context type)       |
 #   '----------------------------------------------------------------------'
 
-def page_create_visual(what, allow_global = False, next_url = None):
+def page_create_visual(what, title, allow_global = False, next_url = None):
     what_s = what[:-1]
 
     def cmp_context_titles(a, b):
@@ -356,17 +356,15 @@ def page_create_visual(what, allow_global = False, next_url = None):
     vs_type = DropdownChoice(
         title = _('Context Type'),
         choices = context_choices,
-        help = _('The context of a %s controls the type of objects to be shown. It '
+        help = _('The context of a visual controls the type of objects to be shown. It '
                  'also sets wether single or multiple objects are displayed. The context '
-                 'type of a %s can not be changed anymore.') % (what_s, what_s),
+                 'type of a visual can not be changed anymore.'),
     )
 
-    html.header(_('Create %s') % what_s.title(), stylesheets=["pages"])
+    html.header(_('Create %s') % title, stylesheets=["pages"])
     html.begin_context_buttons()
     back_url = html.var("back", "")
-    if back_url:
-        html.context_button(_("Back"), back_url, "back")
-    html.context_button(_("All %s") % what.title(), "edit_%s.py" % what, what_s)
+    html.context_button(_("Back"), back_url or "edit_%s.py" % what, "back")
     html.end_context_buttons()
 
     if html.var('save') and html.check_transaction():
@@ -412,11 +410,11 @@ def page_create_visual(what, allow_global = False, next_url = None):
 #   | Edit global settings of the visual                                   |
 #   '----------------------------------------------------------------------'
 
-def page_edit_visual(what, all_visuals, custom_field_handler = None, create_handler = None, try_handler = None,
+def page_edit_visual(what, title, all_visuals, custom_field_handler = None, create_handler = None, try_handler = None,
                      load_handler = None):
     what_s = what[:-1]
     if not config.may("general.edit_" + what):
-        raise MKAuthException(_("You are not allowed to edit %s.") % what)
+        raise MKAuthException(_("You are not allowed to edit %s.") % title)
 
     visual = {}
 
@@ -430,7 +428,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None, create_hand
             mode  = 'clone'
             visual = copy.deepcopy(all_visuals.get((cloneuser, visualname), None))
             if not visual:
-                raise MKUserError('cloneuser', _('The %s does not exist.') % what_s)
+                raise MKUserError('cloneuser', _('The %s does not exist.') % title)
 
             # Make sure, name is unique
             if cloneuser == config.user_id: # Clone own visual
@@ -466,18 +464,16 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None, create_hand
         visual['context_type'] = context_type
 
     if mode == 'clone':
-        title = _('Clone %s') % what_s.title()
+        title = _('Clone %s') % title
     elif mode == 'create':
-        title = _('Create %s') % what_s.title()
+        title = _('Create %s') % title
     else:
-        title = _('Edit %s') % what_s.title()
+        title = _('Edit %s') % title
 
     html.header(title, stylesheets=["pages", "views", "status", "bi"])
     html.begin_context_buttons()
     back_url = html.var("back", "")
-    if back_url:
-        html.context_button(_("Back"), back_url, "back")
-    html.context_button(_("All %s") % what.title(), "edit_%s.py" % what, what_s)
+    html.context_button(_("Back"), back_url or "edit_%s.py" % what, "back")
     html.end_context_buttons()
 
     vs_general = Dictionary(
@@ -512,7 +508,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None, create_hand
             ('linktitle', TextUnicode(
                 title = _('Button Text') + '<sup>*</sup>',
                 help = _('If you define a text here, then it will be used in '
-                         'context buttons linking to the %s instead of the regular title.') % what_s,
+                         'context buttons linking to the %s instead of the regular title.') % title,
                 size = 26)),
             ('icon', IconSelector(
                 title = _('Button Icon'),
@@ -520,10 +516,10 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None, create_hand
             ('visibility', ListChoice(
                 title = _('Visibility'),
                 choices = (config.may("general.publish_" + what) and [
-                           ('public', _('Make this %s available for all users') % what_s),
+                           ('public', _('Make this %s available for all users') % title),
                            ] or []) +
-                          [ ('hidden', _('Hide this %s from the sidebar') % what_s),
-                            ('hidebutton', _('Do not show a context button to this %s') % what_s)
+                          [ ('hidden', _('Hide this %s from the sidebar') % title),
+                            ('hidebutton', _('Do not show a context button to this %s') % title)
                           ],
             )),
         ],
@@ -575,7 +571,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None, create_hand
                     save(what, all_visuals)
 
                 html.immediate_browser_redirect(1, back)
-                html.message(_('Your %s has been saved.') % what_s)
+                html.message(_('Your %s has been saved.') % title)
                 html.reload_sidebar()
                 html.footer()
                 return

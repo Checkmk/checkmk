@@ -155,7 +155,7 @@ def kernel_check_cpu_utilization(item, params, info):
 
     sum_jiffies = sum(diff_values[0:7]) # do not account for steal!
     if sum_jiffies == 0:
-        raise MKCounterException(None, "Too short time difference since last check")
+        raise MKCounterWrapped(None, "Too short time difference since last check")
 
     user        = diff_values[0] + diff_values[1] # add user + nice
     system      = diff_values[2]

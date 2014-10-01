@@ -149,19 +149,10 @@ def inventory_smart_temp(info):
 def check_smart_temp(item, params, info):
     disks = parse_smart(info)
     if item not in disks:
-        return 3, "Disk not found"
-    disk = disks[item]
+        return
 
-    celsius = disk["Temperature_Celsius"]
-    warn, crit = params
-    perfdata = [ ( "temp", celsius, warn, crit ) ]
-    if celsius >= crit:
-        state = 2
-    elif celsius >= warn:
-        state = 1
-    else:
-        state = 0
-    return state, "Temperature is %dC" % celsius, perfdata
+    disk = disks[item]
+    return check_temperature(disk["Temperature_Celsius"], params)
 
 check_info["smart.temp"] = {
     'check_function':            check_smart_temp,
@@ -169,4 +160,5 @@ check_info["smart.temp"] = {
     'service_description':       'Temperature SMART %s',
     'group':                     'disk_temperature',
     'has_perfdata':               True,
+    'includes':                  [ 'temperature.include' ],
 }

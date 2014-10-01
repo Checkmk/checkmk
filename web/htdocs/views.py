@@ -317,7 +317,7 @@ def page_edit_views():
 #   '----------------------------------------------------------------------'
 
 def page_create_view():
-    visuals.page_create_visual('views', allow_global = False,
+    visuals.page_create_visual('views', _("View"), allow_global = False,
         next_url = 'create_view_ds.py?mode=create&context_type=%s')
 
 # Seconds step: Select the data source
@@ -400,7 +400,7 @@ def page_create_view_ds(next_url = 'edit_view.py?context_type=%s&datasource=%s')
 def page_edit_view():
     load_views()
 
-    visuals.page_edit_visual('views', multisite_views,
+    visuals.page_edit_visual('views', _("View"), multisite_views,
         custom_field_handler = render_view_config,
         load_handler = transform_view_to_valuespec,
         create_handler = create_view_config,

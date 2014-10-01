@@ -1,0 +1,226 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# ------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# ------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# no used space check for Tablsspaces with CONTENTS in ('TEMPORARY','UNDO')
+# It is impossible to check the used space in UNDO and TEMPORARY Tablespaces
+# These Types of Tablespaces are ignored in this plugin.
+# This restriction is only working with newer agents, because we need an
+# additional parameter at end if each datafile
+
+# <<<db2_tablespaces>>>
+#[[[db2taddm]]]
+#DB2 TSM Variablen werden gesetzt
+#
+#   Database Connection Information
+#
+#    Database server        = DB2/AIX64 9.7.4
+#     SQL authorization ID   = DB2TADDM
+#      Local database alias   = CMDBS2
+#
+#TBSP_NAME TBSP_TYPE TBSP_STATE TBSP_USABLE_SIZE_KB TBSP_TOTAL_SIZE_KB TBSP_USED_SIZE_KB TBSP_FREE_SIZE_KB
+#-------------------------------------------------------------------------------------------------------------------------------- ---------- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- -------------------- -------------------- -------------------- --------------------
+#SYSCATSPACE DMS NORMAL 655232    655360    623632    31600
+#USERSPACE1 DMS NORMAL 15203328    15204352    15171072    32256
+#SYSTOOLSPACE DMS NORMAL 32640    32768     3600    29040
+#LARGESPACE2 DMS NORMAL 80896    81920     3072    77824
+#TEMPSPACE1 SMS NORMAL  32     32     32   682252576
+#USERSPACE2 SMS NORMAL 2700864    2700864    2700864    85281572
+#LARGETEMP2 SMS NORMAL  3520     3520     3520    85281572
+#USERSPACE3 SMS NORMAL 4421232    4421232    4421232    85281572
+#MYTMPSPACE SMS NORMAL   64     64     64   682252576
+#SYSTOOLSTMPSPACE SMS NORMAL   32     32     32   682252576
+#
+#  10 record(s) selected.
+
+#
+# Order of columns
+# 0. TBSP_NAME
+# 1. TBSP_TYPE
+# 2. TBSP_STATE
+# 3. TBSP_USABLE_SIZE_KB
+# 4. TBSP_TOTAL_SIZE_KB
+# 5. TBSP_USED_SIZE_KB
+# 6. TBSP_FREE_SIZE_KB
+
+
+factory_settings["db2_tablespaces_defaults"] = {
+    "levels"         : (10.0, 5.0),
+    "magic_normsize" : 1000,
+    "levels_low"     : (0.0, 0.0)
+}
+
+def inventory_db2_tablespaces(info):
+    inventory = []
+    tbsp_name = ""
+    for line in info:
+        if len(line) == 1:
+            if line[0].startswith("[[["):
+                instance = line[0].replace("[[[","").replace("]]]","")
+                tbsp_name = ""
+        elif len(line) == 7:
+            try:
+                tbsp_name, tbsp_type, tbsp_state = line[0:3]
+                usable_kb, total_kb, used_kb, free_kb = map(int, line[3:7])
+            except Exception, e:
+	     #   tbsp_name = ""
+                continue
+        else:
+	    #tbsp_name = ""
+            continue
+
+        if tbsp_name:
+            inventory.append(("%s.%s" % ( instance, tbsp_name), None))
+    return inventory
+
+
+def get_tablespace_levels_in_bytes(size_bytes, params):
+    # If the magic factor is used, take table size and magic factor
+    # into account in order to move levels
+    magic  = params.get("magic")
+
+    # Use tablespace size dependent dynamic levels or static levels
+    if type(params.get("levels")) == tuple:
+        warn, crit = params.get("levels")
+    else:
+        # A list of levels. Choose the correct one depending on the
+        # size of the current tablespace
+        for to_size, this_levels in params.get("levels"):
+            if size_bytes > to_size:
+                warn, crit = this_levels
+                break
+        else:
+            return None, None, ""
+
+    levels_text = "levels at "
+    if magic:
+        # convert warn/crit to percentage
+        if type(warn) != float:
+            warn = savefloat(warn * 1024 * 1024 / float(size_bytes)) * 100
+        if type(crit) != float:
+            crit = savefloat(crit * 1024 * 1024 / float(size_bytes)) * 100
+
+        normsize = params["magic_normsize"]
+        hbytes_size = size_bytes / (float(normsize) * 1024 * 1024)
+        felt_size = hbytes_size ** magic
+        scale = felt_size / hbytes_size
+        warn_scaled = 100 - (( 100 - warn ) * scale)
+        crit_scaled = 100 - (( 100 - crit ) * scale)
+
+        # Make sure levels do never get too low due to magic factor
+        lowest_warning_level, lowest_critical_level = params["levels_low"]
+        if warn_scaled < lowest_warning_level:
+            warn_scaled = lowest_warning_level
+        if crit_scaled < lowest_critical_level:
+            crit_scaled = lowest_critical_level
+        warn_bytes = savefloat(size_bytes * warn_scaled / 100)
+        crit_bytes = savefloat(size_bytes * crit_scaled / 100)
+        levels_text = get_bytes_human_readable(warn_bytes)
+        levels_text = "/%s" % get_bytes_human_readable(crit_bytes)
+    else:
+        # warn/crit level are float => percentages of max size, otherwise MB
+        if type(warn) == float:
+            warn_bytes = warn / 100.0 * size_bytes
+            levels_text = "%.1f%%" % warn
+        else:
+            warn_bytes = warn * 1024 * 1024
+            levels_text = get_bytes_human_readable(warn_bytes)
+
+        if type(crit) == float:
+            crit_bytes = crit / 100.0 * size_bytes
+            levels_text += "/%.1f%%" % crit
+        else:
+            crit_bytes = crit * 1024 * 1024
+            levels_text += "/%s" % get_bytes_human_readable(crit_bytes)
+
+    return warn_bytes, crit_bytes, levels_text
+
+
+def check_db2_tablespaces(item, params, info):
+    try:
+        instance, tbsname = item.split('.')
+    except ValueError:
+        return (3, 'Invalid check item given (must be <instance>.<tablespace>)')
+
+    started = False
+    for line in info:
+        if line[0] == "[[["+instance+"]]]":
+            started = True
+	    
+        elif len(line) == 7 and started and line[0] == tbsname:
+            try:
+                tbsp_name, tbsp_type, tbsp_state = line[0:3]
+                usable, total, used, free = map(lambda x: float(x)*1024, line[3:7])
+            except Exception, e:
+                continue
+
+            #perc_used = used/usable*100.0
+            if tbsp_type == "SMS":
+                usable = free # for SMS free size is the amount of disk space available to the db file
+
+            perc_free = 100.0 - used/usable*100.0
+
+            infotext = "%.1f%% free" % perc_free
+
+            status = 0
+            sym = ""
+
+            warn, crit, levels_text = get_tablespace_levels_in_bytes(usable, params)
+            if (crit is not None and free <= crit)  or (warn is not None and free <= warn):
+                infotext += " (%s)" % levels_text
+                if free <= crit:
+                    status = 2
+                    sym = "(!!)"
+                elif free <= warn:
+                    status = max(1, status)
+                    sym = "(!)"
+
+            infotext += ", %s of %s usable" % \
+               (get_bytes_human_readable(used),
+                get_bytes_human_readable(usable))
+
+            sym = ""
+            if tbsp_state.lower() != "normal":
+                status = max(1, status)
+                sym = "(!)"
+
+            infotext += ", State: %s%s, Type: %s" % ( tbsp_state, sym, tbsp_type )
+
+            perfdata = [ ("size", usable, total - (warn or 0), total - (crit or 0)),
+                         ("used", used),
+                         ("max_size", total) ]
+
+            return status, infotext, perfdata
+
+    return 3, "no such tablespace found"
+
+check_info['db2_tablespaces'] = {
+    "service_description"     : "DB2 Tablespace %s",
+    "check_function"          : check_db2_tablespaces,
+    "inventory_function"      : inventory_db2_tablespaces,
+    "has_perfdata"            : True,
+    "group"                   : "db2_tablespaces",
+    "default_levels_variable" : "db2_tablespaces_defaults",
+}

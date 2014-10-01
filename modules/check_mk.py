@@ -719,9 +719,6 @@ def get_snmp_character_encoding(hostname):
     if len(entries) > 0:
         return entries[0]
 
-def check_uses_snmp(check_type):
-    return snmp_info.get(check_type.split(".")[0]) != None
-
 def is_snmp_host(hostname):
     return in_binary_hostlist(hostname, snmp_hosts)
 

@@ -1585,6 +1585,9 @@ def nodes_of(hostname):
     g_nodesof_cache[hostname] = None
     return None
 
+def check_uses_snmp(check_type):
+    return snmp_info.get(check_type.split(".")[0]) != None
+
 def pnp_cleanup(s):
     return s \
         .replace(' ',  '_') \

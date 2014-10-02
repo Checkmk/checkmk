@@ -155,31 +155,18 @@ def check_cisco_temp_sensor(item, params, info):
     sensors = parse_cisco_temp_sensor(info)
     for id, descr, sensortype, temp, sensorstate, levels in sensors:
         if item == descr:
-            # Use build in levels if no lavels are configured
+            # Use built in levels if no levels are configured
             if params:
                 warn, crit = params
             else:
                 warn, crit = levels[0:2]
-
-            infotext = "Temperature is %.1f °C " % temp
-            levels = " (warn/crit at %.1f/%.1f °C)" % (warn, crit)
-            perfdata = [ ( "temperature", temp, warn, crit ) ]
-            state = 0
 
             if sensorstate == "2":
                 return (3, "Data from sensor currently not available")
             elif sensorstate == "3":
                 return (3, "Sensor is broken")
 
-            if temp >= crit:
-                state = 2
-                infotext += levels
-            elif temp >= warn:
-                state = 1
-                infotext += levels
-            return state, infotext, perfdata
-
-    return (3, "Sensor not found in SNMP data")
+            return check_temperature(temp, (warn, crit))
 
 
 check_info['cisco_temp_sensor'] = {
@@ -210,5 +197,6 @@ check_info['cisco_temp_sensor'] = {
                                  4, # Thresholds
                                ]),
                             ],
+    "includes"          : [ "temperature.include" ]
 }
 

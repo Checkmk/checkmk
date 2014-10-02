@@ -56,8 +56,8 @@ def load():
            "If combined with 'perform commands' then commands may be done on all objects."),
          [ "admin", "guest" ])
 
-    declare_visual_permissions('views', _("Views"))
-    declare_visual_permissions('dashboards', _("Dashboards"))
+    declare_visual_permissions('views', _("views"))
+    declare_visual_permissions('dashboards', _("dashboards"))
 
     config.declare_permission("general.view_option_columns",
          _("Change view display columns"),

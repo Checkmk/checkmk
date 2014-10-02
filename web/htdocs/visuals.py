@@ -59,6 +59,8 @@ def load_plugins():
 
     global title_functions ; title_functions = []
     global infos ; infos = {}
+    global multisite_filters         ; multisite_filters          = {}
+    global ubiquitary_filters        ; ubiquitary_filters         = [] # Always show this filters
 
     load_web_plugins('visuals', globals())
     loaded_with_language = current_language
@@ -675,6 +677,241 @@ def page_edit_visual(what, title, all_visuals, custom_field_handler = None,
     html.footer()
 
 #.
+#   .--Filters-------------------------------------------------------------.
+#   |                     _____ _ _ _                                      |
+#   |                    |  ___(_) | |_ ___ _ __ ___                       |
+#   |                    | |_  | | | __/ _ \ '__/ __|                      |
+#   |                    |  _| | | | ||  __/ |  \__ \                      |
+#   |                    |_|   |_|_|\__\___|_|  |___/                      |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+def declare_filter(sort_index, f, comment = None):
+    multisite_filters[f.name] = f
+    f.comment = comment
+    f.sort_index = sort_index
+
+# Base class for all filters
+# name:          The unique id of that filter. This id is e.g. used in the
+#                persisted view configuration
+# title:         The title of the filter visible to the user. This text
+#                may be localized
+# info:          The datasource info this filter needs to work. If this
+#                is "service", the filter will also be available in tables
+#                showing service information. "host" is available in all
+#                service and host views. The log datasource provides both
+#                "host" and "service". Look into datasource.py for which
+#                datasource provides which information
+# htmlvars:      HTML variables this filter uses
+# link_columns:  If this filter is used for linking (state "hidden"), then
+#                these Livestatus columns are needed to fill the filter with
+#                the proper information. In most cases, this is just []. Only
+#                a few filters are useful for linking (such as the host_name and
+#                service_description filters with exact match)
+class Filter:
+    def __init__(self, name, title, info, htmlvars, link_columns):
+        self.name = name
+        self.info = info
+        self.title = title
+        self.htmlvars = htmlvars
+        self.link_columns = link_columns
+
+    # Some filters can be unavailable due to the configuration (e.g.
+    # the WATO Folder filter is only available if WATO is enabled.
+    def available(self):
+        return True
+
+    # Some filters can be invisible. This is useful to hide filters which have always
+    # the same value but can not be removed using available() because the value needs
+    # to be set during runtime.
+    # A good example is the "site" filter which does not need to be available to the
+    # user in single site setups.
+    def visible(self):
+        return True
+
+    # More complex filters need more height in the HTML layout
+    def double_height(self):
+        return False
+
+    def display(self):
+        raise MKInternalError(_("Incomplete implementation of filter %s '%s': missing display()") % \
+                (self.name, self.title))
+        html.write(_("FILTER NOT IMPLEMENTED"))
+
+    def filter(self, tablename):
+        return ""
+
+    # Wether this filter needs to load host inventory data
+    def need_inventory(self):
+        return False
+
+    # post-Livestatus filtering (e.g. for BI aggregations)
+    def filter_table(self, rows):
+        return rows
+
+    def variable_settings(self, row):
+        return [] # return pairs of htmlvar and name according to dataset in row
+
+    def infoprefix(self, infoname):
+        if self.info == infoname:
+            return ""
+        else:
+            return self.info[:-1] + "_"
+
+    # Hidden filters may contribute to the pages headers of the views
+    def heading_info(self):
+        return None
+
+    # Returns the current representation of the filter settings from the HTML
+    # var context. This can be used to persist the filter settings.
+    def value(self):
+        val = {}
+        for varname in self.htmlvars:
+            val[varname] = html.var(varname, '')
+        return val
+
+    # Is used to populate a value, for example loaded from persistance, into
+    # the HTML context where it can be used by e.g. the display() method.
+    def set_value(self, value):
+        val = {}
+        for varname in self.htmlvars:
+            html.set_var(varname, value.get(varname))
+
+def get_filter(name):
+    return multisite_filters[name]
+
+def filters_allowed_for_info(info):
+    allowed = {}
+    for fname, filt in multisite_filters.items():
+        if filt.info == None or info == filt.info:
+            allowed[fname] = filt
+    return allowed
+
+# Collects all filters to be shown for the given visual
+def show_filters(visual, info_keys):
+    show_filters = []
+    for info_key in info_keys:
+        if info_key in visual['single_infos']:
+            for key in info_params(info_key):
+                show_filters.append(get_filter(key))
+        else:
+            for key, val in visual['context'].items():
+                if type(val) == dict: # this is a real filter
+                    show_filters.append(get_filter(key))
+
+    # add ubiquitary_filters that are possible for these infos
+    for fn in ubiquitary_filters:
+        # Disable 'wato_folder' filter, if WATO is disabled or there is a single host view
+        if fn == "wato_folder" and (not config.wato_enabled or 'host' in visual['single_infos']):
+            continue
+        filter = get_filter(fn)
+        if not filter.info or filter.info in info_keys:
+            show_filters.append(filter)
+    return show_filters
+
+#.
+#   .--ValueSpecs----------------------------------------------------------.
+#   |        __     __    _            ____                                |
+#   |        \ \   / /_ _| |_   _  ___/ ___| _ __   ___  ___ ___           |
+#   |         \ \ / / _` | | | | |/ _ \___ \| '_ \ / _ \/ __/ __|          |
+#   |          \ V / (_| | | |_| |  __/___) | |_) |  __/ (__\__ \          |
+#   |           \_/ \__,_|_|\__,_|\___|____/| .__/ \___|\___|___/          |
+#   |                                       |_|                            |
+#   +----------------------------------------------------------------------+
+#   |                                                                      |
+#   '----------------------------------------------------------------------'
+
+# Implements a list of available filters for the given infos. By default no
+# filter is selected. The user may select a filter to be activated, then the
+# filter is rendered and the user can provide a default value.
+class VisualFilterList(ListOfMultiple):
+    def __init__(self, infos, **kwargs):
+        self._infos = infos
+
+        # First get all filters useful for the infos, then create VisualFilter
+        # valuespecs from them and then sort them
+        fspecs = {}
+        self._filters = {}
+        for info in self._infos:
+            for fname, filter in filters_allowed_for_info(info).items():
+                if fname not in fspecs and fname not in ubiquitary_filters:
+                    fspecs[fname] = VisualFilter(fname,
+                        title = filter.title,
+                    )
+                    self._filters[fname] = fspecs[fname]._filter
+
+        # Convert to list and sort them!
+        fspecs = fspecs.items()
+        fspecs.sort(key = lambda x: (x[1]._filter.sort_index, x[1].title()))
+
+        kwargs.setdefault('title', _('Filters'))
+        kwargs.setdefault('add_label', _('Add filter'))
+
+        ListOfMultiple.__init__(self, fspecs, **kwargs)
+
+    def filter_names(self):
+        return self._filters.keys()
+
+    # get the filters to be used from the value and the data from the filter
+    # objects using the row data
+    def filter_variable_settings(self, value, row):
+        vars = []
+        for fname in value.keys():
+            try:
+                vars += self._filters[fname].variable_settings(row)
+            except KeyError:
+                # When the row misses at least one var for a filter ignore this filter completely
+                pass
+        return vars
+
+# Realizes a Multisite/visual filter in a valuespec. It can render the filter form, get
+# the filled in values and provide the filled in information for persistance.
+class VisualFilter(ValueSpec):
+    def __init__(self, name, **kwargs):
+        self._name   = name
+        self._filter = multisite_filters[name]
+
+        ValueSpec.__init__(self, **kwargs)
+
+    def title(self):
+        return self._filter.title
+
+    def canonical_value(self):
+        return {}
+
+    def render_input(self, varprefix, value):
+        # kind of a hack to make the current/old filter API work. This should
+        # be cleaned up some day
+        if value != None:
+            self._filter.set_value(value)
+
+        # A filter can not be used twice on a page, because the varprefix is not used
+        html.write('<div class="floatfilter %s">' % (self._filter.double_height() and "double" or "single"))
+        html.write('<div class=legend>%s</div>' % self._filter.title)
+        html.write('<div class=content>')
+        self._filter.display()
+        html.write("</div>")
+        html.write("</div>")
+
+    def value_to_text(self, value):
+        # FIXME: optimize. Needed?
+        return repr(value)
+
+    def from_html_vars(self, varprefix):
+        # A filter can not be used twice on a page, because the varprefix is not used
+        return self._filter.value()
+
+    def validate_datatype(self, value, varprefix):
+        if type(value) != dict:
+            raise MKUserError(varprefix, _("The value must be of type dict, but it has type %s") %
+                                                                    type_name(value))
+
+    def validate_value(self, value, varprefix):
+        ValueSpec.custom_validate(self, value, varprefix)
+
+#.
 #   .--Misc----------------------------------------------------------------.
 #   |                          __  __ _                                    |
 #   |                         |  \/  (_)___  ___                           |
@@ -686,11 +923,42 @@ def page_edit_visual(what, title, all_visuals, custom_field_handler = None,
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def visual_title(what, visual, title):
+def visual_title(what, visual):
+    extra_titles = []
+
+    # Beware: if a single context visual is being visited *without* a context, then
+    # the value of the context variable(s) is None. In order to avoid exceptions,
+    # we simply drop these here.
+    extra_titles = [ v for k, v in get_context_html_vars(visual) if v != None ]
+    # FIXME: Is this really only needed for visuals without single infos?
+    if not visual['single_infos']:
+        used_filters = [ multisite_filters[fn] for fn in visual["context"].keys() ]
+        for filt in used_filters:
+            heading = filt.heading_info()
+            if heading:
+                extra_titles.append(heading)
+
+    title = _u(visual["title"])
+    if extra_titles:
+        title += " " + ", ".join(extra_titles)
+
+    for fn in ubiquitary_filters:
+        # Disable 'wato_folder' filter, if WATO is disabled or there is a single host view
+        if fn == "wato_folder" and (not config.wato_enabled or 'host' in visual['single_infos']):
+            continue
+        heading = get_filter(fn).heading_info()
+        if heading:
+            title = heading + " - " + title
+
+    # Execute title plugin functions which might be added by the user to
+    # the visuals plugins. When such a plugin function returns None, the regular
+    # title of the page is used, otherwise the title returned by the plugin
+    # function is used.
     for func in title_functions:
         result = func(what, visual, title)
         if result != None:
             return result
+
     return title
 
 def info_params(info_key):

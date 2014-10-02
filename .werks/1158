@@ -1,0 +1,18 @@
+Title: Moved filter logic to visuals module
+Level: 1
+Component: multisite
+Compatible: incomp
+Version: 1.2.5i6
+Date: 1412255726
+Class: fix
+
+This change is kind of an internal code restucturing. So if you do not
+understand this, you mostly do not need to care about it.
+
+The filter logic, which was former part of the views, has been moved
+to the visuals module to be available to all visuals types like
+dashboards in the future.
+
+If you have defined custom filter plugins for your views, which are
+normally located below share/check_mk/web/plugins/views/*.py, you need
+to move the filter definitions to share/check_mk/web/plugins/visuals/*.py.

@@ -27,7 +27,6 @@
 import config, defaults, livestatus, time, os, re, pprint, time
 import weblib, traceback, forms, valuespec, inventory, visuals
 from lib import *
-from pagefunctions import *
 
 # Python 2.3 does not have 'set' in normal namespace.
 # But it can be imported from 'sets'
@@ -46,14 +45,12 @@ def load_plugins():
         return
 
     global multisite_datasources     ; multisite_datasources      = {}
-    global multisite_filters         ; multisite_filters          = {}
     global multisite_layouts         ; multisite_layouts          = {}
     global multisite_painters        ; multisite_painters         = {}
     global multisite_sorters         ; multisite_sorters          = {}
     global multisite_builtin_views   ; multisite_builtin_views    = {}
     global multisite_painter_options ; multisite_painter_options  = {}
     global multisite_commands        ; multisite_commands         = []
-    global ubiquitary_filters        ; ubiquitary_filters         = [] # Always show this filters
     global view_hooks                ; view_hooks                 = {}
     global inventory_displayhints    ; inventory_displayhints     = {}
 
@@ -81,122 +78,6 @@ def load_plugins():
     for n, p in multisite_painters.items():
         p["name"] = n
 
-#   .--Filters-------------------------------------------------------------.
-#   |                     _____ _ _ _                                      |
-#   |                    |  ___(_) | |_ ___ _ __ ___                       |
-#   |                    | |_  | | | __/ _ \ '__/ __|                      |
-#   |                    |  _| | | | ||  __/ |  \__ \                      |
-#   |                    |_|   |_|_|\__\___|_|  |___/                      |
-#   |                                                                      |
-#   +----------------------------------------------------------------------+
-#   |                                                                      |
-#   '----------------------------------------------------------------------'
-
-def declare_filter(sort_index, f, comment = None):
-    multisite_filters[f.name] = f
-    f.comment = comment
-    f.sort_index = sort_index
-
-# Base class for all filters
-# name:          The unique id of that filter. This id is e.g. used in the
-#                persisted view configuration
-# title:         The title of the filter visible to the user. This text
-#                may be localized
-# info:          The datasource info this filter needs to work. If this
-#                is "service", the filter will also be available in tables
-#                showing service information. "host" is available in all
-#                service and host views. The log datasource provides both
-#                "host" and "service". Look into datasource.py for which
-#                datasource provides which information
-# htmlvars:      HTML variables this filter uses
-# link_columns:  If this filter is used for linking (state "hidden"), then
-#                these Livestatus columns are needed to fill the filter with
-#                the proper information. In most cases, this is just []. Only
-#                a few filters are useful for linking (such as the host_name and
-#                service_description filters with exact match)
-class Filter:
-    def __init__(self, name, title, info, htmlvars, link_columns):
-        self.name = name
-        self.info = info
-        self.title = title
-        self.htmlvars = htmlvars
-        self.link_columns = link_columns
-
-    # Some filters can be unavailable due to the configuration (e.g.
-    # the WATO Folder filter is only available if WATO is enabled.
-    def available(self):
-        return True
-
-    # Some filters can be invisible. This is useful to hide filters which have always
-    # the same value but can not be removed using available() because the value needs
-    # to be set during runtime.
-    # A good example is the "site" filter which does not need to be available to the
-    # user in single site setups.
-    def visible(self):
-        return True
-
-    # More complex filters need more height in the HTML layout
-    def double_height(self):
-        return False
-
-    def display(self):
-        raise MKInternalError(_("Incomplete implementation of filter %s '%s': missing display()") % \
-                (self.name, self.title))
-        html.write(_("FILTER NOT IMPLEMENTED"))
-
-    def filter(self, tablename):
-        return ""
-
-    # Wether this filter needs to load host inventory data
-    def need_inventory(self):
-        return False
-
-    # post-Livestatus filtering (e.g. for BI aggregations)
-    def filter_table(self, rows):
-        return rows
-
-    def variable_settings(self, row):
-        return [] # return pairs of htmlvar and name according to dataset in row
-
-    def infoprefix(self, infoname):
-        if self.info == infoname:
-            return ""
-        else:
-            return self.info[:-1] + "_"
-
-    # Hidden filters may contribute to the pages headers of the views
-    def heading_info(self, infoname):
-        return None
-
-    # Returns the current representation of the filter settings from the HTML
-    # var context. This can be used to persist the filter settings.
-    def value(self):
-        val = {}
-        for varname in self.htmlvars:
-            val[varname] = html.var(varname, '')
-        return val
-
-    # Is used to populate a value, for example loaded from persistance, into
-    # the HTML context where it can be used by e.g. the display() method.
-    def set_value(self, value):
-        val = {}
-        for varname in self.htmlvars:
-            html.set_var(varname, value.get(varname))
-
-
-def unset_all_filtervars():
-    for f in multisite_filters.values():
-        for varname in f.htmlvars:
-            html.del_var(varname)
-
-def get_all_filtervars():
-    filtervars = {}
-    for f in multisite_filters.values():
-        for varname in f.htmlvars:
-            if html.has_var(varname):
-                filtervars[varname] = html.var(varname)
-    return filtervars
-
 # Load all views - users or builtins
 def load_views():
     global multisite_views, available_views
@@ -208,7 +89,6 @@ def load_views():
 
 def permitted_views():
     return available_views
-
 
 # Convert views that are saved in the pre 1.2.6-style
 def transform_old_views():
@@ -269,10 +149,11 @@ def transform_old_views():
                     continue # skip conflictings vars / filters
 
                 context.setdefault(fname, {})
-                for var in multisite_filters[fname].htmlvars:
+                f = visuals.get_filter(fname)
+                for var in f.htmlvars:
                     # Check whether or not the filter is supported by the datasource,
                     # then either skip or use the filter vars
-                    if var in filtervars and multisite_filters[fname].info in datasource['infos']:
+                    if var in filtervars and f.info in datasource['infos']:
                         value = filtervars[var]
                         all_vars[var] = value
                         context[fname][var] = value
@@ -937,24 +818,7 @@ def show_view(view, show_heading = False, show_buttons = True,
     # Filters to show in the view
     # In case of single object views, the needed filters are fixed, but not always present
     # in context. In this case, take them from the context type definition.
-    show_filters = []
-    for info_key in datasource['infos']:
-        if info_key in view['single_infos']:
-            for key in visuals.info_params(info_key):
-                show_filters.append(multisite_filters[key])
-        else:
-            for key, val in view['context'].items():
-                if type(val) == dict: # this is a real filter
-                    show_filters.append(multisite_filters[key])
-
-    # add ubiquitary_filters that are possible for this datasource
-    for fn in ubiquitary_filters:
-        # Disable 'wato_folder' filter, if WATO is disabled or there is a single host view
-        if fn == "wato_folder" and (not config.wato_enabled or 'host' in view['single_infos']):
-            continue
-        filter = multisite_filters[fn]
-        if not filter.info or filter.info in datasource["infos"]:
-            show_filters.append(filter)
+    show_filters = visuals.show_filters(view, datasource['infos'])
 
     # Populate the HTML vars with missing context vars. The context vars set
     # in single context are enforced (can not be overwritten by URL). The normal
@@ -1401,36 +1265,7 @@ def get_limit():
         return config.soft_query_limit
 
 def view_title(view):
-    extra_titles = []
-    datasource = multisite_datasources[view["datasource"]]
-    tablename = datasource["table"]
-
-    # Beware: if a single context view is being visited *without* a context, then
-    # the value of the context variable(s) is None. In order to avoid exceptions,
-    # we simply drop these here.
-    extra_titles = [ v for k, v in visuals.get_context_html_vars(view) if v != None ]
-    # FIXME: Is this really only needed for views without single infos?
-    if not view['single_infos']:
-        used_filters = [ multisite_filters[fn] for fn in view["context"].keys() ]
-        for filt in used_filters:
-            heading = filt.heading_info(tablename)
-            if heading:
-                extra_titles.append(heading)
-
-    title = _u(view["title"])
-    if extra_titles:
-        title += " " + ", ".join(extra_titles)
-
-    for fn in ubiquitary_filters:
-        # Disable 'wato_folder' filter, if WATO is disabled or there is a single host view
-        if fn == "wato_folder" and (not config.wato_enabled or 'host' in view['single_infos']):
-            continue
-        filt = multisite_filters[fn]
-        heading = filt.heading_info(tablename)
-        if heading:
-            title = heading + " - " + title
-
-    return visuals.visual_title('view', view, title)
+    return visuals.visual_title('view', view)
 
 def view_optiondial(view, option, choices, help):
     vo = view_options(view["name"])
@@ -1762,27 +1597,6 @@ def sort_data(data, sorters):
 
     data.sort(multisort)
 
-# Create a list of filters allowed for a certain data source.
-# Each filter is valid for a special info, e.g. "host" or
-# "service". or always (info is None in that case).
-# Each datasource provides a list of info. The datasource "services"
-# provides "service" and "host", for example.
-def filters_allowed_for_datasource(datasourcename):
-    datasource = multisite_datasources[datasourcename]
-    infos = datasource["infos"]
-    allowed = {}
-    for fname, filt in multisite_filters.items():
-        if filt.info == None or filt.info in infos:
-            allowed[fname] = filt
-    return allowed
-
-def filters_allowed_for_info(info):
-    allowed = {}
-    for fname, filt in multisite_filters.items():
-        if filt.info == None or info == filt.info:
-            allowed[fname] = filt
-    return allowed
-
 # Filters a list of sorters or painters and decides which of
 # those are available for a certain data source
 def allowed_for_datasource(collection, datasourcename):
@@ -2112,10 +1926,10 @@ def link_to_view(content, row, view_name):
         for info_key in datasource['infos']:
             if info_key in view['single_infos']:
                 for key in visuals.info_params(info_key):
-                    vars += multisite_filters[key].variable_settings(row)
+                    vars += visuals.get_filter(key).variable_settings(row)
 
             else:
-                vars += VisualFilterList([info_key]).filter_variable_settings(view['context'], row)
+                vars += visuals.VisualFilterList([info_key]).filter_variable_settings(view['context'], row)
 
         do = html.var("display_options")
         if do:

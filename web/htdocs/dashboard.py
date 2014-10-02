@@ -258,11 +258,11 @@ def render_dashboard(name):
 
     wato_folder = html.var("wato_folder")
 
+    title = visuals.visual_title('dashboard', board)
+
     # The title of the dashboard needs to be prefixed with the WATO path,
     # in order to make it clear to the user, that he is seeing only partial
     # data.
-    title = _u(board["title"])
-
     global header_height
     if not board.get('show_title'):
         # Remove the whole header line
@@ -271,7 +271,6 @@ def render_dashboard(name):
 
     elif wato_folder is not None:
         title = wato.get_folder_title(wato_folder) + " - " + title
-    title = visuals.visual_title('dashboard', board, title)
 
     html.header(title, javascripts=["dashboard"], stylesheets=["pages", "dashboard", "status", "views"])
 

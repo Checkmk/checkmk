@@ -35,7 +35,6 @@ loaded_with_language = False
 #   |       |_|   \___|_|  |_| |_| |_|_|___/___/_|\___/|_| |_|___/         |
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
-#   |                                                                      |
 #   | Declare general permissions for Multisite                            |
 #   '----------------------------------------------------------------------'
 
@@ -57,8 +56,8 @@ def load():
            "If combined with 'perform commands' then commands may be done on all objects."),
          [ "admin", "guest" ])
 
-    declare_visual_permissions('views')
-    declare_visual_permissions('dashboards')
+    declare_visual_permissions('views', _("Views"))
+    declare_visual_permissions('dashboards', _("Dashboards"))
 
     config.declare_permission("general.view_option_columns",
          _("Change view display columns"),
@@ -144,23 +143,23 @@ def load():
 
     loaded_with_language = current_language
 
-def declare_visual_permissions(what):
+def declare_visual_permissions(what, what_plural):
     config.declare_permission("general.edit_" + what,
-         _("Customize %s and use them") % what,
-         _("Allows to create own %s, customize builtin %s and use them.") % (what, what),
+         _("Customize %s and use them") % what_plural,
+         _("Allows to create own %s, customize builtin %s and use them.") % (what_plural, what_plural),
          [ "admin", "user" ])
 
     config.declare_permission("general.publish_" + what,
-         _("Publish %s") % what,
-         _("Make %s visible and usable for other users") % what,
+         _("Publish %s") % what_plural,
+         _("Make %s visible and usable for other users") % what_plural,
          [ "admin", "user" ])
 
     config.declare_permission("general.see_user_" + what,
-         _("See user %s") % what,
-         _("Is needed for seeing %s that other users have created.") % what,
+         _("See user %s") % what_plural,
+         _("Is needed for seeing %s that other users have created.") % what_plural,
          [ "admin", "user", "guest" ])
 
     config.declare_permission("general.force_" + what,
-         _("Modify builtin %s") % what,
-         _("Make own published %s override builtin %s for all users.") % (what, what),
+         _("Modify builtin %s") % what_plural,
+         _("Make own published %s override builtin %s for all users.") % (what_plural, what_plural),
          [ "admin" ])

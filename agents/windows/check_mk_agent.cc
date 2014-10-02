@@ -2124,7 +2124,7 @@ int fill_unicode_bytebuffer(FILE *file, char* buffer, int offset) {
     return read_bytes + offset;
 }
 
-int find_unicode_linebreak(char* buffer) {
+int find_crnl_end(char* buffer) {
     int index = 0;
     while (true) {
         if (index >= UNICODE_BUFFER_SIZE)
@@ -2136,39 +2136,51 @@ int find_unicode_linebreak(char* buffer) {
     return -1;
 }
 
-bool process_textfile_unicode(FILE *file, logwatch_textfile* textfile, SOCKET &out, bool write_output)
+struct process_textfile_response{
+    bool found_match;
+    int  unprocessed_bytes;
+};
+
+process_textfile_response process_textfile_unicode(FILE *file, logwatch_textfile* textfile, SOCKET &out, bool write_output)
 {
     verbose("Checking UNICODE file %s\n", textfile->path);
-
+    process_textfile_response response;
     char output_buffer[UNICODE_BUFFER_SIZE];
     char unicode_block[UNICODE_BUFFER_SIZE];
 
     condition_pattern *pattern = 0;
     int  buffer_level          = 0;     // Current bytes in buffer
     bool cut_line              = false; // Line does not fit in buffer
-    int  linebreak_offset;              // Byte index of CRLF in unicode block
+    int  crnl_end_offset;              // Byte index of CRLF in unicode block
+    int  old_buffer_level      = 0;
 
     memset(unicode_block, 0, UNICODE_BUFFER_SIZE);
 
     while (true) {
         // Only fill buffer if there is no CRNL present
-        if (find_unicode_linebreak(unicode_block) == -1) {
-            int old_buffer_level = buffer_level;
+        if (find_crnl_end(unicode_block) == -1) {
+            old_buffer_level = buffer_level;
             buffer_level = fill_unicode_bytebuffer(file, unicode_block, buffer_level);
 
             if (old_buffer_level == buffer_level)
                 break; // Nothing new, file finished
         }
 
-        linebreak_offset = find_unicode_linebreak(unicode_block);
-        if (linebreak_offset == -1) {
-            // This line is too long, only report up to the buffers size
-            cut_line = true;
+        crnl_end_offset = find_crnl_end(unicode_block);
+        if (crnl_end_offset == -1)
+        {
+            if (buffer_level == UNICODE_BUFFER_SIZE )
+                // This line is too long, only report up to the buffers size
+                cut_line = true;
+            else
+                // Missing CRNL... this line is not finished yet
+                continue;
         }
 
+        // Convert unicode to utf-8
         memset(output_buffer, 0, UNICODE_BUFFER_SIZE);
         WideCharToMultiByte(CP_UTF8, 0, (wchar_t*)unicode_block,
-                            cut_line ? (UNICODE_BUFFER_SIZE - 2) / 2 : (linebreak_offset - 4) / 2,
+                            cut_line ? (UNICODE_BUFFER_SIZE - 2) / 2 : (crnl_end_offset - 4) / 2,
                             output_buffer, sizeof(output_buffer), NULL, NULL);
 
         // Check line
@@ -2178,7 +2190,11 @@ bool process_textfile_unicode(FILE *file, logwatch_textfile* textfile, SOCKET &o
             pattern = *it_patt;
             if (globmatch(pattern->glob_pattern, output_buffer)){
                 if (!write_output && (pattern->state == 'C' || pattern->state == 'W' || pattern->state == 'O'))
-                    return true;
+                {
+                    response.found_match = true;
+                    response.unprocessed_bytes = buffer_level;
+                    return response;
+                }
                 state = pattern->state;
                 break;
             }
@@ -2191,28 +2207,36 @@ bool process_textfile_unicode(FILE *file, logwatch_textfile* textfile, SOCKET &o
 
         if (cut_line) {
             cut_line = false;
-            while (linebreak_offset == -1) {
+            buffer_level = 2;
+            while (crnl_end_offset == -1) {
                 memcpy(unicode_block, unicode_block + UNICODE_BUFFER_SIZE - 2, 2);
                 memset(unicode_block + 2, 0, UNICODE_BUFFER_SIZE - 2);
+                old_buffer_level = buffer_level;
                 buffer_level = fill_unicode_bytebuffer(file, unicode_block, 2);
-                if (buffer_level == 2)
+                if (old_buffer_level == buffer_level)
                     // Nothing new, file finished
                     break;
-                linebreak_offset = find_unicode_linebreak(unicode_block);
+                crnl_end_offset = find_crnl_end(unicode_block);
             }
         }
 
-        buffer_level = buffer_level - linebreak_offset;
-        memmove(unicode_block, unicode_block + linebreak_offset, buffer_level);
-        memset(unicode_block + buffer_level, 0, UNICODE_BUFFER_SIZE - buffer_level);
+        if (crnl_end_offset > 0) {
+           buffer_level = buffer_level - crnl_end_offset;
+           memmove(unicode_block, unicode_block + crnl_end_offset, buffer_level);
+           memset(unicode_block + buffer_level, 0, UNICODE_BUFFER_SIZE - buffer_level);
+        }
     }
-    return false;
+
+    response.found_match = false;
+    response.unprocessed_bytes = buffer_level;
+    return response;
 }
 
-bool process_textfile(FILE *file, logwatch_textfile* textfile, SOCKET &out, bool write_output)
+process_textfile_response process_textfile(FILE *file, logwatch_textfile* textfile, SOCKET &out, bool write_output)
 {
     char line[4096];
     condition_pattern *pattern = 0;
+    process_textfile_response response;
     verbose("Checking file %s\n", textfile->path);
 
     while (!feof(file)) {
@@ -2227,8 +2251,12 @@ bool process_textfile(FILE *file, logwatch_textfile* textfile, SOCKET &out, bool
              it_patt != textfile->patterns->end(); it_patt++) {
             pattern = *it_patt;
             if (globmatch(pattern->glob_pattern, line)){
-                if (!write_output && (pattern->state == 'C' || pattern->state == 'W' || pattern->state == 'O'))
-                    return true;
+                if (!write_output && (pattern->state == 'C' || pattern->state == 'W' || pattern->state == 'O')) 
+                {
+                    response.found_match = true;
+                    response.unprocessed_bytes = 0;
+                    return response;
+                }
                 state = pattern->state;
                 break;
             }
@@ -2238,7 +2266,9 @@ bool process_textfile(FILE *file, logwatch_textfile* textfile, SOCKET &out, bool
             output(out, "%c %s\n", state, line);
     }
 
-    return false;
+    response.found_match = false;
+    response.unprocessed_bytes = 0;
+    return response;
 }
 
 
@@ -2308,22 +2338,22 @@ void section_logfiles(SOCKET &out)
         }
 
         fseek(file, (textfile->encoding == UNICODE && textfile->offset == 0) ? 2 : textfile->offset, SEEK_SET);
-        bool found_match;
+        process_textfile_response response;
         if (textfile->encoding == UNICODE)
-            found_match = process_textfile_unicode(file, textfile, out, false);
+            response = process_textfile_unicode(file, textfile, out, false);
         else
-            found_match = process_textfile(file, textfile, out, false);
+            response = process_textfile(file, textfile, out, false);
 
-        if (found_match) {
+        if (response.found_match) {
             fseek(file, (textfile->encoding == UNICODE && textfile->offset == 0) ? 2 : textfile->offset, SEEK_SET);
             if (textfile->encoding == UNICODE)
-                found_match = process_textfile_unicode(file, textfile, out, true);
+                response = process_textfile_unicode(file, textfile, out, true);
             else
-                found_match = process_textfile(file, textfile, out, true);
+                response = process_textfile(file, textfile, out, true);
         }
 
         fclose(file);
-        textfile->offset = textfile->file_size;
+        textfile->offset = textfile->file_size - response.unprocessed_bytes;
     }
 
     cleanup_logwatch_textfiles();

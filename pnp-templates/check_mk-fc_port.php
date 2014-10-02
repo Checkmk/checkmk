@@ -136,7 +136,7 @@ $def[1] =
   "GPRINT:outtraffic:LAST:\"%7.1lf %s$unit/s last\" ".
   "GPRINT:outtraffic:AVERAGE:\"%7.1lf %s$unit/s avg\" ".
   "GPRINT:outtraffic:MAX:\"%7.1lf %s$unit/s max\\n\" ".
-  "VDEF:outperc=minusouttraffic,5,PERCENTNAN ".
+  "VDEF:outperc=outtraffic,5,PERCENTNAN ".
   "VDEF:outpercmb=minusoutmb,5,PERCENTNAN ".
   "LINE:outpercmb#00008f:\"95% percentile\" ".
   "GPRINT:outperc:\"%7.1lf %s$unit/s\\n\" ".

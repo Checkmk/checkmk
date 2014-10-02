@@ -809,7 +809,8 @@ def show_filters(visual, info_keys):
         filter = get_filter(fn)
         if not filter.info or filter.info in info_keys:
             show_filters.append(filter)
-    return show_filters
+
+    return list(set(show_filters)) # remove duplicates
 
 #.
 #   .--ValueSpecs----------------------------------------------------------.

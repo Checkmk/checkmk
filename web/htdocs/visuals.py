@@ -480,12 +480,14 @@ def render_context_specs(visual, context_specs):
 
 def page_edit_visual(what, all_visuals, custom_field_handler = None,
                      create_handler = None, try_handler = None,
-                     load_handler = None, info_handler = None):
+                     load_handler = None, info_handler = None,
+                     sub_pages = []):
     visual_type = visual_types[what]
 
-    what_s = what[:-1]
+    visual_type = visual_types[what]
     if not config.may("general.edit_" + what):
         raise MKAuthException(_("You are not allowed to edit %s.") % visual_type["plural_title"])
+    what_s = what[:-1]
 
     visual = {}
 
@@ -547,6 +549,14 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
     html.begin_context_buttons()
     back_url = html.var("back", "")
     html.context_button(_("Back"), back_url or "edit_%s.py" % what, "back")
+
+    # Extra buttons to sub modules. These are used for things to edit about
+    # this visual that are more complex to be done in one value spec.
+    if mode not in [ "clone", "create" ]:
+        for title, pagename, icon in sub_pages:
+            uri = html.makeuri_contextless([(visual_types[what]['ident_attr'], visualname)],
+                                           filename = pagename + '.py')
+            html.context_button(title, uri, icon)
     html.end_context_buttons()
 
     # A few checkboxes concerning the visibility of the visual. These will
@@ -608,7 +618,13 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
     context_specs = get_context_specs(visual, info_handler)
 
     # handle case of save or try or press on search button
-    if html.var("save") or html.var("try") or html.var("search"):
+    save_and_go = None
+    for nr, (title, pagename, icon) in enumerate(sub_pages):
+        if html.var("save%d" % nr):
+            save_and_go = html.makeuri_contextless([(visual_types[what]['ident_attr'], visualname)],
+                                                   filename = pagename + '.py')
+
+    if save_and_go or html.var("save") or html.var("try") or html.var("search"):
         try:
             general_properties = vs_general.from_html_vars('general')
             vs_general.validate_value(general_properties, 'general')
@@ -636,10 +652,13 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
 
             visual['context'] = process_context_specs(context_specs)
 
-            if html.var("save"):
-                back = html.var('back')
-                if not back:
-                    back = 'edit_%s.py' % what
+            if html.var("save") or save_and_go:
+                if save_and_go:
+                    back = save_and_go
+                else:
+                    back = html.var('back')
+                    if not back:
+                        back = 'edit_%s.py' % what
 
                 if html.check_transaction():
                     all_visuals[(config.user_id, visual["name"])] = visual
@@ -650,7 +669,8 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
                             del all_visuals[(config.user_id, oldname)]
                         # -> change visual_name in back parameter
                         if back:
-                            back = back.replace('view_name=' + oldname, 'view_name=' + visual["name"])
+                            varstring = visual_type["ident_attr"] + "="
+                            back = back.replace(varstring + oldname, varstring + visual["name"])
                     save(what, all_visuals)
 
                 html.immediate_browser_redirect(1, back)
@@ -690,6 +710,8 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
           "language. You can configure the localizations <a href=\"%s\">in the global settings</a>.") % url)
 
     html.button("save", _("Save"))
+    for nr, (title, pagename, icon) in enumerate(sub_pages):
+        html.button("save%d" % nr, _("Save and go to ") + title)
     html.hidden_fields()
 
     if try_handler:

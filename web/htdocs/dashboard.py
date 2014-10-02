@@ -86,7 +86,7 @@ def load_plugins():
                 board.get("description", ""),
                 config.builtin_role_ids)
 
-    # Make sure that custom views also have permissions
+    # Make sure that custom dashboards also have permissions
     config.declare_dynamic_permissions(lambda: visuals.declare_custom_permissions('dashboards'))
 
 def load_dashboards():

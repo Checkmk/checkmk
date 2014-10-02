@@ -32,10 +32,14 @@ import config, table
 
 visual_types = {
     'views': {
-        'ident_attr': 'view_name',
+        'ident_attr':  'view_name',
+        'title':        _("view"),
+        'plural_title': _("views"),
     },
     'dashboards': {
         'ident_attr': 'name',
+        'title':        _("dashboard"),
+        'plural_title': _("dashboards"),
     },
 }
 
@@ -238,10 +242,9 @@ def page_list(what, title, visuals, custom_columns = []):
 
     html.begin_context_buttons()
     html.context_button(_('New'), 'create_%s.py' % what_s, "new")
-    if what != 'views':
-        html.context_button(_('Views'), 'edit_views.py', 'view')
-    if what != 'dashboards':
-        html.context_button(_('Dashboards'), 'edit_dashboards.py', 'dashboard')
+    for other_what, info in visual_types.items():
+        if what != other_what:
+            html.context_button(info["plural_title"].title(), 'edit_%s.py' % other_what, other_what[:-1])
     html.end_context_buttons()
 
     # Deletion of visuals
@@ -410,11 +413,15 @@ def page_create_visual(what, title, allow_global = False, next_url = None):
 #   | Edit global settings of the visual                                   |
 #   '----------------------------------------------------------------------'
 
+# FIXME: das Argument title brauchen wir nicht mehr, es ist jetzt
+# in den visual_types
 def page_edit_visual(what, title, all_visuals, custom_field_handler = None, create_handler = None, try_handler = None,
                      load_handler = None):
+    visual_type = visual_types[what]
+
     what_s = what[:-1]
     if not config.may("general.edit_" + what):
-        raise MKAuthException(_("You are not allowed to edit %s.") % title)
+        raise MKAuthException(_("You are not allowed to edit %s.") % visual_type["plural_title"])
 
     visual = {}
 
@@ -428,7 +435,7 @@ def page_edit_visual(what, title, all_visuals, custom_field_handler = None, crea
             mode  = 'clone'
             visual = copy.deepcopy(all_visuals.get((cloneuser, visualname), None))
             if not visual:
-                raise MKUserError('cloneuser', _('The %s does not exist.') % title)
+                raise MKUserError('cloneuser', _('The %s does not exist.') % visual_type["title"])
 
             # Make sure, name is unique
             if cloneuser == config.user_id: # Clone own visual
@@ -464,17 +471,28 @@ def page_edit_visual(what, title, all_visuals, custom_field_handler = None, crea
         visual['context_type'] = context_type
 
     if mode == 'clone':
-        title = _('Clone %s') % title
+        title = _('Clone %s') % visual_type["title"]
     elif mode == 'create':
-        title = _('Create %s') % title
+        title = _('Create %s') % visual_type["title"]
     else:
-        title = _('Edit %s') % title
+        title = _('Edit %s') % visual_type["title"]
 
     html.header(title, stylesheets=["pages", "views", "status", "bi"])
     html.begin_context_buttons()
     back_url = html.var("back", "")
     html.context_button(_("Back"), back_url or "edit_%s.py" % what, "back")
     html.end_context_buttons()
+
+    # A few checkboxes concerning the visibility of the visual. These will
+    # appear as boolean-keys directly in the visual dict, but encapsulated
+    # in a list choice in the value spec.
+    visibility_choices = [
+        ('hidden',     _('Hide this %s from the sidebar') % visual_type["title"]),
+        ('hidebutton', _('Do not show a context button to this %s') % visual_type["title"]),
+    ]
+    if config.may("general.publish_" + what):
+        visibility_choices.append(
+            ('public', _('Make this %s available for all users') % visual_type["title"]))
 
     vs_general = Dictionary(
         title = _("General Properties"),
@@ -508,19 +526,14 @@ def page_edit_visual(what, title, all_visuals, custom_field_handler = None, crea
             ('linktitle', TextUnicode(
                 title = _('Button Text') + '<sup>*</sup>',
                 help = _('If you define a text here, then it will be used in '
-                         'context buttons linking to the %s instead of the regular title.') % title,
+                         'context buttons linking to the %s instead of the regular title.') % visual_type["title"],
                 size = 26)),
             ('icon', IconSelector(
                 title = _('Button Icon'),
             )),
             ('visibility', ListChoice(
                 title = _('Visibility'),
-                choices = (config.may("general.publish_" + what) and [
-                           ('public', _('Make this %s available for all users') % title),
-                           ] or []) +
-                          [ ('hidden', _('Hide this %s from the sidebar') % title),
-                            ('hidebutton', _('Do not show a context button to this %s') % title)
-                          ],
+                choices = visibility_choices,
             )),
         ],
     )
@@ -537,18 +550,16 @@ def page_edit_visual(what, title, all_visuals, custom_field_handler = None, crea
                 general_properties['topic'] = _("Other")
 
             old_visual = visual
-            visual = {
-                'context_type': general_properties['context_type'],
-                'name'        : general_properties['name'],
-                'title'       : general_properties['title'],
-                'topic'       : general_properties['topic'],
-                'description' : general_properties['description'],
-                'linktitle'   : general_properties['linktitle'],
-                'icon'        : general_properties['icon'],
-                'public'      : 'public' in general_properties['visibility'] and config.may("general.publish_" + what),
-                'hidden'      : 'hidden' in general_properties['visibility'],
-                'hidebutton'  : 'hidebutton' in general_properties['visibility'],
-            }
+
+            # The dict of the value spec does not match exactly the dict
+            # of the visual. We take over some keys...
+            for key in ['context_type', 'name', 'title',
+                 'topic', 'description', 'linktitle', 'icon']:
+                visual[key] = general_properties[key]
+
+            # ...and import the visibility flags directly into the visual
+            for key, title in visibility_choices:
+                visual[key] = key in general_properties['visibility']
 
             if create_handler:
                 visual = create_handler(old_visual, visual)
@@ -571,7 +582,7 @@ def page_edit_visual(what, title, all_visuals, custom_field_handler = None, crea
                     save(what, all_visuals)
 
                 html.immediate_browser_redirect(1, back)
-                html.message(_('Your %s has been saved.') % title)
+                html.message(_('Your %s has been saved.') % visual_type["title"])
                 html.reload_sidebar()
                 html.footer()
                 return
@@ -585,6 +596,14 @@ def page_edit_visual(what, title, all_visuals, custom_field_handler = None, crea
     html.hidden_field("mode", mode)
     html.hidden_field("load_user", html.var("load_user", "")) # safe old name in case user changes it
     html.hidden_field("load_name", oldname) # safe old name in case user changes it
+
+    # FIXME: Hier werden die Flags aus visbility nicht korrekt geladen. Wäre es nicht besser,
+    # diese in einem Unter-Dict zu lassen, anstatt diese extra umzukopieren?
+    visib = []
+    for key, title in visibility_choices:
+        if visual.get(key):
+            visib.append(key)
+    visual["visibility"] = visib
 
     vs_general.render_input("general", visual)
 

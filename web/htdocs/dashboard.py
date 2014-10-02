@@ -86,7 +86,7 @@ def load_plugins():
                 board.get("description", ""),
                 config.builtin_role_ids)
 
-    # Make sure that custom dashboards also have permissions
+    # Make sure that custom views also have permissions
     config.declare_dynamic_permissions(lambda: visuals.declare_custom_permissions('dashboards'))
 
 def load_dashboards():
@@ -622,6 +622,7 @@ def page_create_dashboard():
 #   | Configures the global settings of a dashboard.                       |
 #   '----------------------------------------------------------------------'
 
+# FIXME: gehört das nicht allgmeine nach visuals.py?
 def context_spec(dashboard):
     if 'context_type' in dashboard:
         context_type = visuals.context_types[dashboard['context_type']]
@@ -640,6 +641,7 @@ global vs_dashboard
 def page_edit_dashboard():
     load_dashboards()
 
+    # This is not defined here in the function in order to be l10n'able
     global vs_dashboard
     vs_dashboard = Dictionary(
         title = _('Dashboard Properties'),

@@ -28,20 +28,12 @@ sensatronics_temp_default_levels = ( 23.0, 25.0 )
 def inventory_sensatronics_temp(info):
     return [ (x[0], sensatronics_temp_default_levels) for x in info if savefloat(x[1]) > 0 ]
 
+
 def check_sensatronics_temp(item, params, info):
     for line in info:
         if line[0] == item:
-            warn, crit = params
-            temperatur = savefloat(line[1])
-            message = "Temperature: %.2f°C" % temperatur
-            perf = [ ('temp', temperatur, warn, crit ) ]
-            if  temperatur > crit:
-                return 2, message, perf
-            elif temperatur > warn:
-                return 1, message, perf
-            return 0, message, perf
+            return check_temperature(float(line[1]), params)
 
-    return 3, "Sensor not found"
 
 check_info["sensatronics_temp"] = {
     "check_function"        : check_sensatronics_temp,
@@ -56,5 +48,6 @@ check_info["sensatronics_temp"] = {
                                      "1.0", #Sensor Name
                                      "2.0", #Sensor Value
                                     ]),
+    "includes"              : [ "temperature.include" ],
 }
 

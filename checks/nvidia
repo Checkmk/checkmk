@@ -39,21 +39,15 @@ def check_nvidia_temp(item, params, info):
                 warn, crit = params[2:4]
             else:
                 warn, crit = params[0:2]
-            infotext = "%dC - levels at %d/%d" % (temp, warn, crit)
-            perfdata = [ ("temp", temp, warn, crit ) ]
-            if temp >= crit:
-                return (2, infotext, perfdata)
-            elif temp >= warn:
-                return (1, infotext, perfdata)
-            else:
-                return (0, infotext, perfdata)
-    return (3, 'sensor not found in agent output')
+
+            return check_temperature(temp, (warn, crit))
 
 check_info["nvidia.temp"] = {
     'check_function':          check_nvidia_temp,
     'inventory_function':      inventory_nvidia_temp,
     'service_description':     'Temperature NVIDIA %s',
     'has_perfdata':            True,
+    'includes':                [ 'temperature.include' ],
 }
 
 

@@ -624,6 +624,7 @@ global vs_dashboard
 def page_edit_dashboard():
     load_dashboards()
 
+    # This is not defined here in the function in order to be l10n'able
     global vs_dashboard
     vs_dashboard = Dictionary(
         title = _('Dashboard Properties'),

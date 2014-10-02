@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-stulz_temp_default_levels = ( 25, 28 )
+stulz_temp_default_levels = (25, 28)
 
 def inventory_stulz_temp(info):
     return [ (x[0], "stulz_temp_default_levels" ) for x in info ]
@@ -32,17 +32,7 @@ def inventory_stulz_temp(info):
 def check_stulz_temp(item, params, info):
     for line in info:
         if line[0] == item:
-            warn, crit = params
-            temp = saveint(line[1])/10
-            state = 0
-            if temp >= crit:
-                state = 2
-            elif temp >= warn:
-                state = 1
-            message = " Current Temperature: %d°C" % temp
-            perf = [ ('temp', temp, warn, crit ) ]
-            return state, message, perf
-    return 3, "No information found about the device"
+            return check_temperature(int(line[1])/10, params)
 
 check_info["stulz_temp"] = {
     "check_function"        : check_stulz_temp,
@@ -52,5 +42,6 @@ check_info["stulz_temp"] = {
     "group"                 : "room_temperature",
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.29462.10",
     "snmp_info"             : ( ".1.3.6.1.4.1.29462.10.2.1.1.1.1.1.1.1.1192", [ OID_END, 1] ),
+    "includes"              : [ "temperature.include" ],
 }
 

@@ -313,32 +313,24 @@ def inventory_wagner_titanus_topsense_temp(info):
              ("2", "wagner_titanus_topsense_temperature_default_values") ]
 
 def check_wagner_titanus_topsense_temp(item, params, info):
-    warn, crit = params
-    status=0
     if item == "1":
         temp = float(info[2][0][7])
     elif item == "2":
         temp = float(info[2][0][8])
     else:
-        return 3, "Temperature Detector %s not found in SNMP" % item
+        return
 
-    if temp >= warn:
-        status = 1
-    if temp >= crit:
-        status = 2
-
-    perfdata = [("temp", temp, warn, crit)]
-
-    return status, "Temperature is %0.1f °C" % temp, perfdata
+    return check_temperature(temp, params)
 
 check_info["wagner_titanus_topsense.temp"] = {
     "check_function"        : check_wagner_titanus_topsense_temp,
     "inventory_function"    : inventory_wagner_titanus_topsense_temp,
-    "service_description"   : "Temperature Detector %s",
+    "service_description"   : "Temperature %s",
     "has_perfdata"          : True,
     "group"                 : "room_temperature",
     "snmp_info"             : wagner_titanus_topsense_info,
-    "snmp_scan_function"    : wagner_titanus_topsense_scan
+    "snmp_scan_function"    : wagner_titanus_topsense_scan,
+    "includes"              : [ "temperature.include" ],
 }
 
 #.

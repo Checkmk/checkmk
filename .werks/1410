@@ -1,0 +1,12 @@
+Title: Output log text of scheduled downtime log entries
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.5i6
+Date: 1412081129
+Class: feature
+
+Multisite now shows the text that is attached to a scheduled downtime start/stop in the
+monitoring logfile when showing the history of a host or service. Alas, Nagios does not
+log anything useful in those entries. The Check_MK Micro Core logs the downtime comment,
+which is by that way now visible in the historic views of Multisite.

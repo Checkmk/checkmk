@@ -1,0 +1,12 @@
+Title: Edit view: Unable to save because of an empty selection
+Component: multisite
+State: open
+Date: 2014-10-02 10:37:41
+Targetversion: future
+Class: bug
+
+1) Edit any view
+2) Press "Add column". Do not select an entry
+3) Press "Save" causes an empty selection warning
+4) Remove this empty selection
+5) Press "Save" -> Warning persists

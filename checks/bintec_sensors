@@ -93,6 +93,7 @@ check_info["bintec_sensors.fan"] = {
 
 bintec_sensors_temp_default_levels = (35, 40)
 
+
 def inventory_bintec_sensors_temp(info):
     inventory = []
     for sensor_id, sensor_descr, sensor_type, sensor_value, sensor_unit in info:
@@ -100,23 +101,14 @@ def inventory_bintec_sensors_temp(info):
             inventory.append( (sensor_descr, "bintec_sensors_temp_default_levels" ) )
     return inventory
 
+
 def check_bintec_sensors_temp(item, params, info):
     for sensor_id, sensor_descr, sensor_type, sensor_value, sensor_unit in info:
         if sensor_descr == item:
-            status = 0
-            sensor_value = int(sensor_value)
-            warn, crit = params
-            if sensor_value >= warn:
-                status = 1
-            if sensor_value >= crit:
-                status = 2
+            return check_temperature(int(sensor_value), params)
 
-            message = "%s is at %s %s" % (sensor_descr, sensor_value, sensor_unit)
-            perfdata = [ ("temp", str(sensor_value)+"C", warn, crit) ]
+    return 3, "Sensor not found in SNMP data"
 
-            return status, message, perfdata
-
-    return 3, "Sensor %s not found" % item
 
 check_info["bintec_sensors.temp"] = {
     "check_function"        : check_bintec_sensors_temp,
@@ -126,6 +118,7 @@ check_info["bintec_sensors.temp"] = {
     "has_perfdata"          : True,
     "snmp_info"             : bintec_sensors_info,
     "snmp_scan_function"    : bintec_sensors_scan,
+    "includes"              : [ "temperature.include" ],
 }
 
 #.

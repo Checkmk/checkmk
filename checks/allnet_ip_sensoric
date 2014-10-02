@@ -25,49 +25,50 @@
 # Boston, MA 02110-1301 USA.
 
 # Example output from agent:
+
 # <<<check_mk>>>
-# AgentOS: ALL5000
-# <<<allnet_ip_sensoric>>>
-# sensor0.alarm0 0
-# sensor0.all4000_typ 0
-# sensor0.function 1
-# sensor0.limit_high 50.00
-# sensor0.limit_low 10.00
-# sensor0.maximum 28.56
-# sensor0.minimum 27.50
-# sensor0.name Temperatur intern
-# sensor0.value_float 27.50
-# sensor0.value_int 2750
-# sensor0.value_string 27.50
-# sensor1.alarm1 0
-# sensor1.all4000_typ 0
-# sensor1.function 3
-# sensor1.limit_high 50.00
-# sensor1.limit_low -0.50
-# sensor1.maximum 0.00
-# sensor1.minimum 2048000.00
-# sensor1.name ADC 0
-# sensor1.value_float 0.00
-# sensor1.value_int 0
-# sensor1.value_string 0.00
+# AgentOS:;ALL5000
+# <<<allnet_ip_sensoric:sep(59)>>>
+# sensor0.alarm0;0
+# sensor0.all4000_typ;0
+# sensor0.function;1
+# sensor0.limit_high;50.00
+# sensor0.limit_low;10.00
+# sensor0.maximum;28.56
+# sensor0.minimum;27.50
+# sensor0.name;Temperatur intern
+# sensor0.value_float;27.50
+# sensor0.value_int;2750
+# sensor0.value_string;27.50
+# sensor1.alarm1;0
+# sensor1.all4000_typ;0
+# sensor1.function;3
+# sensor1.limit_high;50.00
+# sensor1.limit_low;-0.50
+# sensor1.maximum;0.00
+# sensor1.minimum;2048000.00
+# sensor1.name;ADC 0
+# sensor1.value_float;0.00
+# sensor1.value_int;0
+# sensor1.value_string;0.00
 # [...]
-# sensor9.alarm9 1
-# sensor9.all4000_typ 101
-# sensor9.function 12
-# sensor9.limit_high 85.00
-# sensor9.limit_low 10.00
-# sensor9.maximum 100.00
-# sensor9.minimum 2048000.02
-# sensor9.name USV Spannung
-# sensor9.value_float 100.00
-# sensor9.value_int 100
-# sensor9.value_string 100
-# system.alarmcount 4
-# system.date 30.06.2014
-# system.devicename all5000
-# system.devicetype ALL5000
-# system.sys 114854
-# system.time 16:08:48
+# sensor9.alarm9;1
+# sensor9.all4000_typ;101
+# sensor9.function;12
+# sensor9.limit_high;85.00
+# sensor9.limit_low;10.00
+# sensor9.maximum;100.00
+# sensor9.minimum;2048000.02
+# sensor9.name;USV Spannung
+# sensor9.value_float;100.00
+# sensor9.value_int;100
+# sensor9.value_string;100
+# system.alarmcount;4
+# system.date;30.06.2014
+# system.devicename;all5000
+# system.devicetype;ALL5000
+# system.sys;114854
+# system.time;16:08:48
 
 # parses agent output in a structure like:
 # {'sensor0': {'alarm0': '0',
@@ -174,24 +175,15 @@ def inventory_allnet_ip_sensoric_temp(info):
     return inventory
 
 def check_allnet_ip_sensoric_temp(item, params, info):
-    warn, crit = params
     parsed = allnet_ip_sensoric_parse(info)
     sensor_id = "sensor" + re.sub(".+Sensor ", "", item)
 
     if sensor_id not in parsed.keys():
-        return 3, "%s not found in agent output" % item
+        return 3, "Sensor not found in agent output"
 
-    value = float(parsed[sensor_id]["value_float"])
+    temp = float(parsed[sensor_id]["value_float"])
 
-    perfdata = [ ("temp", "%0.2fC" % value, warn, crit, -40, 85) ]
-
-    status = 0
-    if value > crit:
-        status = 2
-    elif value > warn:
-        status = 1
-
-    return status, "%s is %0.2f °C" % (item, value), perfdata
+    return check_temperature(temp, params)
 
 check_info["allnet_ip_sensoric.temp"] = {
     "check_function"        : check_allnet_ip_sensoric_temp,
@@ -199,6 +191,7 @@ check_info["allnet_ip_sensoric.temp"] = {
     "service_description"   : "Temperature %s",
     "has_perfdata"          : True,
     "group"                 : "hw_temperature",
+    "includes"              : [ "temperature.include" ],
 }
 
 #.

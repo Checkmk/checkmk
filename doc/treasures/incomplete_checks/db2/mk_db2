@@ -1,0 +1,60 @@
+#!/bin/ksh
+# $HOME/sqllib/db2profile
+
+INSTANCES=$(ps -ef | grep [d]b2sysc | awk '{print $1 }')
+
+for INSTANCE in $INSTANCES; do
+	# find home directory
+    HOMEDIR=`grep "^$INSTANCE" /etc/passwd | awk -F: '{print $6}'|grep "$INSTANCE$"`
+    db_version=$(su $INSTANCE -c ". $HOMEDIR/sqllib/db2profile; db2 get snapshot for dbm; exit"| grep -e "Product name" -e "Service level"|awk -v FS="=" '{print $2}'|sed 'N;s/\n/,/g'|sed 's/ //g')
+    echo "<<<db2_versions>>>"
+    echo $INSTANCE $db_version
+
+    DBS=$(su $INSTANCE -c ". $HOMEDIR/sqllib/db2profile; db2 list database directory on $HOMEDIR " | grep "Database name" | awk '{ print $NF }')
+
+    # Each database in an instance has the same port information
+    db2_tcp_service=`su $INSTANCE -c ". $HOMEDIR/sqllib/db2profile > /dev/null; db2 connect to $(echo $DBS|tail -1) > /dev/null;db2 -x get dbm cfg|grep $INSTANCE|grep \"TCP/IP Service\"; exit"|awk -v FS="=" '{print $2}'|tr -d ' ' `
+    db_port="port 0"
+    if ( grep $db2_tcp_service /etc/services|grep -q "^$db2_tcp_service " ); then
+       db_port="port "`grep $db2_tcp_service /etc/services|grep "^$db2_tcp_service "|awk '{print $2}'|awk -v FS="/" '{print $1}'`
+    fi
+
+	for DB in $DBS; do
+            echo "<<<db2_tablespaces>>>"
+            echo "[[[$INSTANCE:$DB]]]"
+
+            su $INSTANCE -c ". $HOMEDIR/sqllib/db2profile > /dev/null; db2 connect to $DB > /dev/null;db2 -x \"SELECT tbsp_name, tbsp_type, tbsp_state, tbsp_usable_size_kb, tbsp_total_size_kb, tbsp_used_size_kb, tbsp_free_size_kb FROM sysibmadm.tbsp_utilization WHERE tbsp_type = 'DMS' UNION ALL SELECT tu.tbsp_name, tu.tbsp_type, tu.tbsp_state, tu.tbsp_usable_size_kb, tu.tbsp_total_size_kb, tu.tbsp_used_size_kb, (cu.fs_total_size_kb - cu.fs_used_size_kb) AS tbsp_free_size_kb FROM sysibmadm.tbsp_utilization tu INNER JOIN ( SELECT tbsp_id, 1 AS fs_total_size_kb, 0 AS fs_used_size_kb FROM sysibmadm.container_utilization WHERE (fs_total_size_kb IS NULL OR fs_used_size_kb IS NULL) GROUP BY tbsp_id) cu ON (tu.tbsp_type = 'SMS' AND tu.tbsp_id = cu.tbsp_id) UNION ALL SELECT tu.tbsp_name, tu.tbsp_type, tu.tbsp_state, tu.tbsp_usable_size_kb, tu.tbsp_total_size_kb, tu.tbsp_used_size_kb, (cu.fs_total_size_kb - cu.fs_used_size_kb) AS tbsp_free_size_kb FROM sysibmadm.tbsp_utilization tu INNER JOIN ( SELECT tbsp_id, SUM(fs_total_size_kb) AS fs_total_size_kb, SUM(fs_used_size_kb) AS fs_used_size_kb FROM sysibmadm.container_utilization WHERE (fs_total_size_kb IS NOT NULL AND fs_used_size_kb IS NOT NULL) GROUP BY tbsp_id) cu ON (tu.tbsp_type = 'SMS' AND tu.tbsp_id = cu.tbsp_id)\";exit"|awk '{print $1" "$2" "$3" "$4" "$5" "$6" "$7}'
+
+    		echo "<<<db2_counters>>>"
+		    deadlocks=`su $INSTANCE -c ". $HOMEDIR/sqllib/db2profile > /dev/null; db2 connect to $DB > /dev/null;db2 -x \"SELECT deadlocks from sysibmadm.snapdb\"; exit"`
+    		echo "$INSTANCE:$DB deadlocks $deadlocks"
+		    lockwaits=`su $INSTANCE -c ". $HOMEDIR/sqllib/db2profile > /dev/null; db2 connect to $DB > /dev/null;db2 -x \"SELECT lock_waits from sysibmadm.snapdb\"; exit"`
+    		echo "$INSTANCE:$DB lockwaits $lockwaits"
+		    sortoverflows=`su $INSTANCE -c ". $HOMEDIR/sqllib/db2profile > /dev/null; db2 connect to $DB > /dev/null;db2 -x \"SELECT sort_overflows from sysibmadm.snapdb\"; exit"`
+            echo "$INSTANCE:$DB sortoverflows $sortoverflows"
+
+            echo "<<<db2_logsizes>>>"
+            echo "[[[$INSTANCE:$DB]]]"
+#            su $INSTANCE -c ". $HOMEDIR/sqllib/db2profile > /dev/null; db2 connect to $DB > /dev/null;db2 \"select total_log_used as Log_Used, total_log_available as Log_Free, tot_log_used_top as Max_Log_Used, sec_log_used_top as Max_Secondary_Used, sec_logs_allocated as Secondaries from sysibmadm.snapdb\";exit"|grep -v "selected."|sed -e '/^$/d' -e '/^-/d'
+            echo "used_space "$(su $INSTANCE -c ". $HOMEDIR/sqllib/db2profile > /dev/null; db2 connect to $DB > /dev/null;db2 -x \"select total_log_used from sysibmadm.snapdb\";exit" | tr -d ' ')
+            su $INSTANCE -c ". $HOMEDIR/sqllib/db2profile > /dev/null; db2 connect to $DB > /dev/null;db2 -x \"SELECT NAME, VALUE FROM SYSIBMADM.DBCFG WHERE NAME IN ('logfilsiz','logprimary','logsecond')\"| awk '{print \$1\" \"\$2}'; exit"
+
+            echo "<<<db2_sessions>>>"
+            echo "[[[$INSTANCE:$DB]]]"
+            echo $db_port
+            echo "connections:$(su $INSTANCE -c ". $HOMEDIR/sqllib/db2profile > /dev/null; db2 connect to $DB > /dev/null;db2 list applications |grep -v Auth|grep -v Name|sed -e '/^$/d'|wc -l|tr -d ' ';exit")"
+            su $INSTANCE -c ". $HOMEDIR/sqllib/db2profile > /dev/null; ksh -c \"time db2 connect to $DB > /dev/null\" 2>&1 | grep real | awk '{print \"latency \"\$2}'| sed -e 's/m/:/' -e 's/s//';exit"
+
+            echo "<<<db2_bp_hitratios>>>"
+            echo "[[[$INSTANCE:$DB]]]"
+            su $INSTANCE -c ". $HOMEDIR/sqllib/db2profile > /dev/null; db2 connect to $DB > /dev/null;db2 \"SELECT SUBSTR(BP_NAME,1,14) AS BP_NAME, TOTAL_HIT_RATIO_PERCENT, DATA_HIT_RATIO_PERCENT, INDEX_HIT_RATIO_PERCENT, XDA_HIT_RATIO_PERCENT FROM SYSIBMADM.BP_HITRATIO\";exit"|grep -v "selected."|sed -e '/^$/d' -e '/^-/d'
+
+            echo "<<<db2_sort_overflow_percentage>>>"
+            echo "$INSTANCE:$DB $(su $INSTANCE -c ". $HOMEDIR/sqllib/db2profile > /dev/null; db2 connect to $DB > /dev/null;db2 \"get snapshot for database on $DB\";exit"|grep -i sort)"
+
+            echo "<<<db2_last_backup>>>"
+            echo "$INSTANCE:$DB $(su $INSTANCE -c ". $HOMEDIR/sqllib/db2profile > /dev/null; db2 connect to $DB > /dev/null;db2 \"select SQLM_ELM_LAST_BACKUP from table(SNAPSHOT_DATABASE( cast( null as VARCHAR(255)), cast(null as
+ int))) as ref\";exit"|grep -v "selected."|sed -e '/^$/d' -e '/^[- ]*/d')"
+        done
+done
+exit

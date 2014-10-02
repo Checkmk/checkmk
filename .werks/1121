@@ -1,0 +1,12 @@
+Title: Rule based notifications formular: No longer raises Request-Uri-Too-Large errors
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.5i6
+Date: 1412070448
+Class: fix
+
+If you wanted to create/edit a rule based notifcation and the formular itself had too much
+configurable host tags, contact groups, etc. there was a problem on sending this formular to the server.
+The data was sent with a GET request, which only allowed a limited url length.
+This formular is now sent with a POST request.

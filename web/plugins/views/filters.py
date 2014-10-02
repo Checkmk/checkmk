@@ -214,7 +214,8 @@ class FilterGroupCombo(Filter):
             if not self.enforce:
                 return ""
             # Take first group with the name we search
-            current_value = html.live.query_value("GET %sgroups\nCache: reload\nColumns: name\nLimit: 1\n" % self.what, None)
+            table = self.what.replace("host_contact", "contact").replace("service_contact", "contact")
+            current_value = html.live.query_value("GET %sgroups\nCache: reload\nColumns: name\nLimit: 1\n" % table, None)
 
         if current_value == None:
             return "" # no {what}group exists!
@@ -242,8 +243,9 @@ class FilterGroupCombo(Filter):
     def heading_info(self, infoname):
         current_value = self.current_value(infoname)
         if current_value:
+            table = self.what.replace("host_contact", "contact").replace("service_contact", "contact")
             alias = html.live.query_value("GET %sgroups\nCache: reload\nColumns: alias\nFilter: name = %s\n" %
-                (self.what, current_value), current_value)
+                (table, current_value), current_value)
             return alias
 
 
@@ -701,6 +703,7 @@ class FilterLogClass(Filter):
 
 declare_filter(255, FilterLogClass())
 declare_filter(202, FilterText("log_plugin_output",  _("Log: plugin output"), "log", "log_plugin_output", "log_plugin_output", "~~"))
+declare_filter(203, FilterText("log_type", _("Log: message type"), "log", "log_type", "log_type", "~~"))
 declare_filter(260, FilterText("log_contact_name",   _("Log: contact name"),  "log", "log_contact_name",  "log_contact_name",  "="),
                                                                                                   _("Exact match, used for linking"))
 

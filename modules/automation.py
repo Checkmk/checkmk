@@ -388,10 +388,12 @@ def automation_try_inventory_node(hostname, leave_no_tcp=False, with_snmp_scan=F
                     params = compute_check_parameters(hostname, ct, item, params)
 
                 try:
-                    result = convert_check_result(check_function(item, params, info))
+                    result = convert_check_result(check_function(item, params, info), check_uses_snmp(ct))
                 except MKCounterWrapped, e:
                     result = (None, "WAITING - Counter based check, cannot be done offline")
                 except Exception, e:
+                    if opt_debug:
+                        raise
                     result = (3, "UNKNOWN - invalid output from agent or error in check implementation")
                 if len(result) == 2:
                     result = (result[0], result[1], [])

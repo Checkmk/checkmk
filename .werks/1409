@@ -1,0 +1,32 @@
+Title: Extended Check_MK-API: check function may return None
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1412058117
+Class: feature
+
+A check function may now return <tt>None</tt> (or simply end without
+returning anything). This will no longer create an exception but return
+state <tt>UNKNOWN</tt> and - depending on the type of the check -
+one of the following outputs:
+
+<tt>Item not found in SNMP data</tt>
+
+<tt>Item not found in agent output</tt>
+
+This means that for the typical check that loops through the agent
+output looking for its item now does not need to manually do a
+
+C+:
+    return 3, "Something not found in agent output"
+C-:
+
+anymore. This is now the default case. This has several advantages:
+
+<ul>
+<li>You save some code in the check implementation.</li>
+<li>The output of the various checks is unified.</li>
+<li>A future Check_MK version can easily have a rule for changing the state
+in such cases from UNKNOWN to WARN or CRIT.</li>
+</ul>

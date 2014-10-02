@@ -27,31 +27,20 @@
 enterasys_temp_default_levels = (30, 35)
 
 def inventory_enterasys_temp(info):
-    if info[0][0] == "0":
-        return []
-    else:
+    if info and info[0][0] != "0":
         return [ (None, "enterasys_temp_default_levels") ]
 
 def check_enterasys_temp(item, params, info):
-    warn, crit = params
-
     # info for MIB: The ambient temperature of the room in which the chassis
     # is located. If this sensor is broken or not supported, then
     # this object will be set to zero. The value of this object
     # is the actual temperature in degrees Fahrenheit * 10.
-    temp_value_snmp = int(info[0][0])
-    temp_c = (temp_value_snmp / 10 - 32) / 1.8
-    temp_c = float("%0.1f" % temp_c)
+    if info[0][0] == "0":
+        return 3, "Sensor broken or not supported"
 
-    perfdata = [ ("temp", str(temp_c) + "C", warn, crit) ]
-    infotext = "Temperature is %0.1f °C (warn/crit at %0.1f/%0.1f °C)" % (temp_c, warn, crit)
-    status = 0
-    if temp_c >= crit:
-        status = 2
-    elif temp_c >= warn:
-        status = 1
+    temp = to_celsius(int(info[0][0]) / 10.0)
+    return check_temperature(temp, params)
 
-    return status, infotext, perfdata
 
 check_info["enterasys_temp"] = {
     "check_function"        : check_enterasys_temp,
@@ -61,5 +50,6 @@ check_info["enterasys_temp"] = {
     "snmp_info"             : ( ".1.3.6.1.4.1.52.4.1.1.8.1", [ 1 ]), # chEnvAmbientTemp
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5624.2.1"),
     "group"                 : "hw_single_temperature",
+    "includes"              : [ "temperature.include" ],
 }
 

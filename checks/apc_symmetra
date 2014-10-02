@@ -252,6 +252,6 @@ check_info['apc_symmetra'] = {
                             "7.2.6.0", # AdvTestCalibrationResults
                             "4.2.3.0", # AdvOutputLoad
                             "7.2.4.0", # LastDiagnosticsDate
-                        ] )
+                        ] ),
 }
 

@@ -1,0 +1,101 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# ------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# ------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<db2_logsizes>>>
+# db2taddm DB2v10.1.0.4,s140509(IP23577)
+
+def inventory_db2_logsizes(info):
+    inventory = []
+    for line in info:
+        if line[0].startswith("[[["):
+            inventory.append((line[0][3:-3], None))
+    return inventory
+
+def check_db2_logsizes(item, params, info):
+    lines = iter(info)
+    sector_size = 4096
+    try:
+        while True:
+            line = lines.next()
+            if item == line[0][3:-3]:
+                data = {}
+                data.update(dict([lines.next()])) # usedspace
+                data.update(dict([lines.next()])) # logfilsiz
+                data.update(dict([lines.next()])) # logprimary
+                data.update(dict([lines.next()])) # logsecond
+
+                total     = int(data["logfilsiz"]) * (int(data["logprimary"]) + int(data["logsecond"])) * sector_size
+                used      = int(data["usedspace"])
+                free      = total - used
+                perc_free = (float(free) / total) * 100
+
+                warn, crit = None, None
+                if params:
+                    if type(params) == tuple:
+                        warn, crit = params
+                    else:
+                        # A list of levels. Choose the correct one depending on the
+                        # size of the logfile. We do not make the first
+                        # rule match, but that with the largest size_gb. That way
+                        # the order of the entries is not important.
+                        found_size = 0
+                        found      = False
+                        for to_size, this_levels in params:
+                            if total > to_size and to_size >= found_size:
+                                warn, crit = this_levels
+                                found_size = to_size
+                                found = True
+                        if not found:
+                            warn, crit = 100.0, 100.0 # entry not found in list
+
+                        if type(warn) == float: # percentage free
+                            levels_info = "(Levels at %.1f/%.1f%%)" % (warn, crit)
+                            if perc_free <= crit:
+                                yield 2, levels_info
+                            elif perc_free <= warn:
+                                yield 1, levels_info
+                        else:                   # absolute free
+                            warn = warn * 1024 * 1024
+                            cirt = crit * 1024 * 1024
+                            levels_info = "(Levels at %s/%s%%)" % (tuple(map(lambda x: get_bytes_human_readable(x), [warn, crit])))
+                            if free <= crit:
+                                yield 2, levels_info
+                            elif free <= warn:
+                                yield 1, levels_info
+
+                perfdata = [("free", free, warn, crit, 0, total)]
+                yield 0, "%.2f%% free: (%s of %s)" % tuple([perc_free] +  map(lambda x: get_bytes_human_readable(x), [free, total])), perfdata
+                break
+    except StopIteration:
+        pass
+
+check_info['db2_logsizes'] = {
+    "service_description"     : "DB2 Logsize %s",
+    "check_function"          : check_db2_logsizes,
+    "inventory_function"      : inventory_db2_logsizes,
+    "group"                   : "db2_logsizes",
+    "has_perfdata"            : True
+}

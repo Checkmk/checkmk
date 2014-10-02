@@ -57,8 +57,8 @@ def load_plugins():
     if loaded_with_language == current_language:
         return
 
-    global context_types ; context_types = {}
     global title_functions ; title_functions = []
+    global infos ; infos = {}
 
     load_web_plugins('visuals', globals())
     loaded_with_language = current_language
@@ -342,20 +342,16 @@ def page_list(what, title, visuals, custom_columns = []):
 #   | Realizes the steps before getting to the editor (context type)       |
 #   '----------------------------------------------------------------------'
 
-def page_create_visual(what, title, allow_global = False, next_url = None):
+def page_create_visual(what, title, info_keys, next_url = None):
     what_s = what[:-1]
 
-    def cmp_context_titles(a, b):
-        return - cmp(context_types[a[0]]["single"], context_types[b[0]]["single"]) \
-            or cmp(a[1], b[1])
-    context_choices = [ (k, v['title'])
-                for (k, v) in context_types.items()
-                if (allow_global or k != 'global') ]
-    context_choices.sort(cmp=cmp_context_titles)
+    info_choices = []
+    for key in info_keys:
+        info_choices.append((key, _('Show information of a single %s') % infos[key]['title']))
 
-    vs_type = DropdownChoice(
-        title = _('Context Type'),
-        choices = context_choices,
+    vs_infos = ListChoice(
+        title = _('Specific objects'),
+        choices = info_choices,
         help = _('The context of a visual controls the type of objects to be shown. It '
                  'also sets wether single or multiple objects are displayed. The context '
                  'type of a visual can not be changed anymore.'),
@@ -369,14 +365,12 @@ def page_create_visual(what, title, allow_global = False, next_url = None):
 
     if html.var('save') and html.check_transaction():
         try:
-            context_type = vs_type.from_html_vars('context_type')
-            vs_type.validate_value(context_type, 'context_type')
-            if context_type == None:
-                raise MKUserError('context_type', _('Please select a context type'))
+            single_infos = vs_infos.from_html_vars('single_infos')
+            vs_infos.validate_value(single_infos, 'single_infos')
 
             if not next_url:
-                next_url = 'edit_'+what_s+'.py?mode=create&context_type=%s'
-            html.http_redirect(next_url % context_type)
+                next_url = 'edit_'+what_s+'.py?mode=create&single_infos=%s'
+            html.http_redirect(next_url % ','.join(single_infos))
             return
 
         except MKUserError, e:
@@ -386,10 +380,10 @@ def page_create_visual(what, title, allow_global = False, next_url = None):
     html.begin_form('create_visual')
     html.hidden_field('mode', 'create')
 
-    forms.header(_('Select Context Type'))
-    forms.section(vs_type.title())
-    vs_type.render_input('context_type', '')
-    html.help(vs_type.help())
+    forms.header(_('Select specific objects'))
+    forms.section(vs_infos.title())
+    vs_infos.render_input('single_infos', '')
+    html.help(vs_infos.help())
     forms.end()
 
     html.button('save', _('Continue'), 'submit')
@@ -410,8 +404,63 @@ def page_create_visual(what, title, allow_global = False, next_url = None):
 #   | Edit global settings of the visual                                   |
 #   '----------------------------------------------------------------------'
 
-def page_edit_visual(what, title, all_visuals, custom_field_handler = None, create_handler = None, try_handler = None,
-                     load_handler = None):
+def get_context_specs(visual, info_handler):
+    context_specs = []
+    info_keys = info_handler and info_handler(visual) or infos.keys()
+    for info_key in info_keys:
+        info = infos[info_key]
+
+        if info_key in visual['single_infos']:
+            params = info['single_spec']
+            optional = True
+            isopen = True
+        else:
+            filter_list  = VisualFilterList([info_key])
+            filter_names = filter_list.filter_names()
+            params = [
+                ('filters', filter_list),
+            ]
+            optional = None
+            # Make it open by default when at least one filter is used
+            isopen = bool([ fn for fn in visual.get('context', {}).keys()
+                                                   if fn in filter_names ])
+
+        vs = Dictionary(
+            title = _('Context: ') + info['title'],
+            render = 'form',
+            form_isopen = isopen,
+            optional_keys = optional,
+            elements = params,
+        )
+
+        context_specs.append((info_key, vs))
+    return context_specs
+
+def process_context_specs(context_specs):
+    context = {}
+    for info_key, spec in context_specs:
+        ident = 'context_' + info_key
+
+        attrs = spec.from_html_vars(ident)
+        spec.validate_value(attrs, ident)
+        if 'filters' in attrs: # multi object context
+            context.update(attrs['filters'])
+        else: # single object context
+            context.update(attrs)
+    return context
+
+def render_context_specs(visual, context_specs):
+    for info_key, spec in context_specs:
+        ident = 'context_' + info_key
+        if info_key in visual['single_infos']:
+            value = visual.get('context', {})
+        else:
+            value = {'filters': visual.get('context', {})}
+        spec.render_input(ident, value)
+
+def page_edit_visual(what, title, all_visuals, custom_field_handler = None,
+                     create_handler = None, try_handler = None,
+                     load_handler = None, info_handler = None):
     what_s = what[:-1]
     if not config.may("general.edit_" + what):
         raise MKAuthException(_("You are not allowed to edit %s.") % title)
@@ -450,27 +499,29 @@ def page_edit_visual(what, title, all_visuals, custom_field_handler = None, crea
             if not visual:
                 visual = all_visuals.get(('', visualname)) # load builtin visual
 
-        context_type = visual['context_type']
+        single_infos = visual['single_infos']
 
         if load_handler:
             load_handler(visual)
     else:
         mode = 'create'
-        context_type = html.var('context_type')
-        if not context_type:
-            raise MKUserError('context_type', _('The context type is missing.'))
-        if context_type not in context_types:
-            raise MKUserError('context_type', _('The context type does not exist.'))
-        visual['context_type'] = context_type
+        single_infos = []
+        single_infos_raw = html.var('single_infos')
+        if single_infos_raw:
+            single_infos = single_infos_raw.split(',')
+            for key in single_infos:
+                if key not in infos:
+                    raise MKUserError('single_infos', _('The info %s does not exist.') % key)
+        visual['single_infos'] = single_infos
 
     if mode == 'clone':
-        title = _('Clone %s') % title
+        page_title = _('Clone %s') % title
     elif mode == 'create':
-        title = _('Create %s') % title
+        page_title = _('Create %s') % title
     else:
-        title = _('Edit %s') % title
+        page_title = _('Edit %s') % title
 
-    html.header(title, stylesheets=["pages", "views", "status", "bi"])
+    html.header(page_title, stylesheets=["pages", "views", "status", "bi"])
     html.begin_context_buttons()
     back_url = html.var("back", "")
     html.context_button(_("Back"), back_url or "edit_%s.py" % what, "back")
@@ -481,9 +532,10 @@ def page_edit_visual(what, title, all_visuals, custom_field_handler = None, crea
         render = 'form',
         optional_keys = None,
         elements = [
-            ('context_type', FixedValue(context_type,
-                title = _('Context Type'),
-                totext = context_types[context_type]['title'],
+            ('single_infos', FixedValue(single_infos,
+                title = _('Show information of single'),
+                totext = single_infos and ', '.join(single_infos) \
+                                      or _('Not showing information for a specific object.'),
             )),
             ('name', TextAscii(
                 title = _('Unique ID'),
@@ -525,6 +577,8 @@ def page_edit_visual(what, title, all_visuals, custom_field_handler = None, crea
         ],
     )
 
+    context_specs = get_context_specs(visual, info_handler)
+
     # handle case of save or try or press on search button
     if html.var("save") or html.var("try") or html.var("search"):
         try:
@@ -538,20 +592,22 @@ def page_edit_visual(what, title, all_visuals, custom_field_handler = None, crea
 
             old_visual = visual
             visual = {
-                'context_type': general_properties['context_type'],
-                'name'        : general_properties['name'],
-                'title'       : general_properties['title'],
-                'topic'       : general_properties['topic'],
-                'description' : general_properties['description'],
-                'linktitle'   : general_properties['linktitle'],
-                'icon'        : general_properties['icon'],
-                'public'      : 'public' in general_properties['visibility'] and config.may("general.publish_" + what),
-                'hidden'      : 'hidden' in general_properties['visibility'],
-                'hidebutton'  : 'hidebutton' in general_properties['visibility'],
+                'single_infos' : general_properties['single_infos'],
+                'name'         : general_properties['name'],
+                'title'        : general_properties['title'],
+                'topic'        : general_properties['topic'],
+                'description'  : general_properties['description'],
+                'linktitle'    : general_properties['linktitle'],
+                'icon'         : general_properties['icon'],
+                'public'       : 'public' in general_properties['visibility'] and config.may("general.publish_" + what),
+                'hidden'       : 'hidden' in general_properties['visibility'],
+                'hidebutton'   : 'hidebutton' in general_properties['visibility'],
             }
 
             if create_handler:
                 visual = create_handler(old_visual, visual)
+
+            visual['context'] = process_context_specs(context_specs)
 
             if html.var("save"):
                 back = html.var('back')
@@ -590,6 +646,8 @@ def page_edit_visual(what, title, all_visuals, custom_field_handler = None, crea
 
     if custom_field_handler:
         custom_field_handler(visual)
+
+    render_context_specs(visual, context_specs)
 
     forms.end()
     url = "wato.py?mode=edit_configvar&varname=user_localizations"
@@ -635,12 +693,15 @@ def visual_title(what, visual, title):
             return result
     return title
 
+def info_params(info_key):
+    return dict(infos[info_key]['single_spec']).keys()
+
 def get_context_html_vars(visual):
-    context_type = context_types[visual['context_type']]
-    if context_type['single']:
-        return [ (p[0], html.var(p[0], visual['context'].get(p[0]))) for p in context_type['parameters'] ]
-    else:
-        return []
+    vars = []
+    for info_key in visual['single_infos']:
+        for single_key in info_params(info_key):
+            vars.append((single_key, html.var(single_key, visual['context'].get(single_key))))
+    return vars
 
 # Collect all visuals that share a context with visual. For example
 # if a visual has a host context, get all relevant visuals.
@@ -684,8 +745,8 @@ def collect_context_links_of(what, this_visual, active_filter_vars, mobile):
            or mobile and not visual.get('mobile'):
             continue
 
-        if not context_types[visual['context_type']]['single']:
-            continue
+        if not visual['single_infos']:
+            continue # skip non single visuals
 
         needed_vars = get_context_html_vars(visual)
         skip = False

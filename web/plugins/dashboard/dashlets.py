@@ -365,7 +365,7 @@ dashlet_types["pnpgraph"] = {
     "refresh"      : 60,
     "size"         : (60, 21),
     "allowed"      : config.builtin_role_ids,
-    "context_type" : "service",
+    "single_infos" : ["service"],
     "parameters"   : [
         ("timerange", DropdownChoice(
             title = _('Timerange'),

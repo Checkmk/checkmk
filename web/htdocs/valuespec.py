@@ -928,7 +928,8 @@ class ListOfMultiple(ValueSpec):
             value = self.from_html_vars(varprefix)
 
         # Save all selected items
-        html.hidden_field('%s_active' % varprefix, ';'.join(value.keys()),
+        html.hidden_field('%s_active' % varprefix,
+            ';'.join([ k for k in value.keys() if k in self._choice_dict]),
             id = '%s_active' % varprefix, add_var = True)
 
         # Actual table of currently existing entries
@@ -2506,6 +2507,7 @@ class Dictionary(ValueSpec):
         self._columns = kwargs.get("columns", 1) # possible: 1 or 2
         self._render = kwargs.get("render", "normal") # also: "form" -> use forms.section()
         self._form_narrow = kwargs.get("form_narrow", False) # used if render == "form"
+        self._form_isopen = kwargs.get("form_isopen", True) # used if render == "form"
         self._headers = kwargs.get("headers") # "sup" -> small headers in oneline mode
         self._migrate = kwargs.get("migrate") # value migration from old tuple version
         self._indent = kwargs.get("indent", True)
@@ -2609,7 +2611,7 @@ class Dictionary(ValueSpec):
             self.render_input_form_header(varprefix, value, self.title(), None)
 
     def render_input_form_header(self, varprefix, value, title, sections):
-        forms.header(title, narrow=self._form_narrow)
+        forms.header(title, isopen=self._form_isopen, narrow=self._form_narrow)
         for param, vs in self._get_elements():
             if param in self._hidden_keys:
                 continue
@@ -3103,6 +3105,9 @@ class VisualFilterList(ListOfMultiple):
         kwargs.setdefault('add_label', _('Add filter'))
 
         ListOfMultiple.__init__(self, fspecs, **kwargs)
+
+    def filter_names(self):
+        return self._filters.keys()
 
     # get the filters to be used from the value and the data from the filter
     # objects using the row data

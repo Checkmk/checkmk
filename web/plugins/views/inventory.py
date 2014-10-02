@@ -870,7 +870,6 @@ multisite_datasources["invswpacs"] = {
     "infos"        : [ "host", "invswpac" ],
     "keys"         : [],
     "idkeys"       : [],
-    "context_type" : "invswpac",
 }
 
 

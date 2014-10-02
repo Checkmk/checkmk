@@ -152,7 +152,7 @@ def transform_builtin_dashboards():
             dashboard['title'] = _('No title')
             dashboard['show_title'] = False
 
-        dashboard.setdefault('context_type', 'global')
+        dashboard.setdefault('single_infos', [])
         dashboard.setdefault('context', {})
         dashboard.setdefault('topic', _('Overview'))
         dashboard.setdefault('description', dashboard.get('title', ''))
@@ -203,27 +203,25 @@ def add_wato_folder_to_url(url, wato_folder):
 def apply_global_context(board, dashlet):
     dashlet_type = dashlet_types[dashlet['type']]
 
-    context_type = None
-    if 'context_type' in dashlet:
-        context_type = dashlet['context_type']
-    elif 'context_type' in dashlet_type:
-        context_type = dashlet_type['context_type']
+    # Either load the single object info from the dashlet or the dashlet type
+    single_infos = []
+    if 'single_infos' in dashlet:
+        single_infos = dashlet['single_infos']
+    elif 'single_infos' in dashlet_type:
+        single_infos = dashlet_type['single_infos']
 
     global_context = board.get('context', {})
 
     url_vars = []
-    if context_type:
-        ty = visuals.context_types[context_type]
-        if ty['single']:
-            needed_params = [ p for p, vs in visuals.context_types[context_type]['parameters'] ]
-            for param in needed_params:
-                if param not in dashlet['context']:
-                    # Get the vars from the global context or http vars
-                    if param in global_context:
-                        dashlet['context'][param] = global_context[param]
-                    else:
-                        dashlet['context'][param] = html.var(param)
-                        url_vars.append((param, html.var(param)))
+    for info_key in single_infos:
+        for param in visuals.info_params(info_key):
+            if param not in dashlet['context']:
+                # Get the vars from the global context or http vars
+                if param in global_context:
+                    dashlet['context'][param] = global_context[param]
+                else:
+                    dashlet['context'][param] = html.var(param)
+                    url_vars.append((param, html.var(param)))
     return url_vars
 
 def load_dashboard_with_cloning(name, edit = True):
@@ -608,7 +606,7 @@ def page_edit_dashboards():
 #   '----------------------------------------------------------------------'
 
 def page_create_dashboard():
-    visuals.page_create_visual('dashboards', _("Dashboard"), allow_global = True)
+    visuals.page_create_visual('dashboards', _("Dashboard"), visuals.infos.keys())
 
 #.
 #   .--Dashb. Config-------------------------------------------------------.
@@ -621,19 +619,6 @@ def page_create_dashboard():
 #   +----------------------------------------------------------------------+
 #   | Configures the global settings of a dashboard.                       |
 #   '----------------------------------------------------------------------'
-
-def context_spec(dashboard):
-    if 'context_type' in dashboard:
-        context_type = visuals.context_types[dashboard['context_type']]
-
-        if context_type['single']:
-            return Dictionary(
-                title = _('Context'),
-                render = 'form',
-                optional_keys = True,
-                elements = context_type['parameters'],
-            )
-    return None
 
 global vs_dashboard
 
@@ -662,20 +647,10 @@ def page_edit_dashboard():
 def custom_field_handler(dashboard):
     vs_dashboard.render_input('dashboard', dashboard and dashboard or None)
 
-    vs_context = context_spec(dashboard)
-    if vs_context:
-        vs_context.render_input('context', dashboard and dashboard or None)
-
 def create_dashboard(old_dashboard, dashboard):
     board_properties = vs_dashboard.from_html_vars('dashboard')
     vs_dashboard.validate_value(board_properties, 'dashboard')
     dashboard.update(board_properties)
-
-    vs_context = context_spec(dashboard)
-    if vs_context:
-        context = vs_context.from_html_vars('context')
-        vs_context.validate_value(context, 'context')
-        dashboard['context'] = context
 
     # Do not remove the dashlet configuration during general property editing
     dashboard['dashlets'] = old_dashboard.get('dashlets', [])
@@ -700,14 +675,23 @@ def page_create_view_dashlet():
     name = html.var('name')
 
     if create:
-        # Create a new view by choosing the context type and then the datasource
-        visuals.page_create_visual('views', _("View"), allow_global = False,
-            next_url = 'create_view_dashlet_ds.py?mode=create&context_type=%s'
-                       + '&name=%s' % html.urlencode(name))
+        import views
+        url = html.makeuri([('datasource', '%s')], filename = "create_view_dashlet_infos.py")
+        views.page_create_view(next_url=url)
 
     else:
         # Choose an existing view from the list of available views
         choose_view(name)
+
+def page_create_view_dashlet_infos():
+    ds_name = html.var('datasource')
+    if ds_name not in multisite_datasources:
+        raise MKGeneralException(_('The given datasource is not supported'))
+
+    # Create a new view by choosing the datasource and the single object types
+    visuals.page_create_visual('views', _("View"), multisite_datasources[ds_name]['infos'],
+        next_url = 'edit_dashlet.py?name=%s&type=view&datasource=%s&single_infos=%%s' %
+            (html.urlencode(html.var('name'), ds_name)))
 
 def choose_view(name):
     import views
@@ -759,12 +743,6 @@ def choose_view(name):
     html.end_form()
     html.footer()
 
-def page_create_view_dashlet_ds():
-    import views
-    url = 'edit_dashlet.py?name=%s&type=view' % html.urlencode(html.var('name'))
-    url += '&context_type=%s&datasource=%s'
-    views.page_create_view_ds(url)
-
 def page_edit_dashlet():
     if not config.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
@@ -799,6 +777,15 @@ def page_edit_dashlet():
         dashlet = {}
         ident   =  len(dashboard['dashlets'])
         dashboard['dashlets'].append(dashlet)
+
+        single_infos_raw = html.var('single_infos')
+        if single_infos_raw:
+            single_infos = single_infos_raw.split(',')
+            for key in single_infos:
+                if key not in visuals.infos:
+                    raise MKUserError('single_infos', _('The info %s does not exist.') % key)
+
+        dashlet['single_infos'] = single_infos
     else:
         mode    = 'edit'
         title   = _('Edit Dashlet')
@@ -814,12 +801,12 @@ def page_edit_dashlet():
 
     if not dashlet: # Initial configuration
         dashlet.update({
-            'position': (1, 1),
-            'size':     dashlet_type.get('size', dashlet_min_size)
+            'position'     : (1, 1),
+            'size'         : dashlet_type.get('size', dashlet_min_size),
+            'single_infos' : [],
         })
 
-        if html.has_var('context_type'):
-            dashlet['context_type'] = html.var('context_type')
+    single_infos = dashlet['single_infos']
 
     html.header(title, stylesheets=["pages","views"])
 
@@ -836,6 +823,11 @@ def page_edit_dashlet():
             ('type', FixedValue(ty,
                 totext = dashlet_type['title'],
                 title = _('Dashlet Type'),
+            )),
+            ('single_infos', FixedValue(single_infos,
+                title = _('Show information of single'),
+                totext = single_infos and ', '.join(single_infos) \
+                                      or _('Not showing information for a specific object.'),
             )),
             ('background', Checkbox(
                 title = _('Colored Background'),
@@ -864,14 +856,7 @@ def page_edit_dashlet():
         ],
     )
 
-    vs_context = None
-    if 'context_type' in dashlet_type:
-        vs_context = Dictionary(
-            title = _('Context'),
-            render = 'form',
-            optional_keys = True,
-            elements = visuals.context_types[dashlet_type['context_type']]['parameters'],
-        )
+    context_specs = visuals.get_context_specs(dashlet, info_handler=None)
 
     vs_type = None
     params = dashlet_type.get('parameters')
@@ -905,10 +890,8 @@ def page_edit_dashlet():
             elif handle_input_func:
                 dashlet = handle_input_func(ident, dashlet)
 
-            if vs_context:
-                context = vs_context.from_html_vars('context')
-                vs_context.validate_value(context, 'context')
-                dashlet['context'] = context
+            if context_specs:
+                dashlet['context'] = visuals.process_context_specs(context_specs)
 
             visuals.save('dashboards', dashboards)
 
@@ -933,8 +916,7 @@ def page_edit_dashlet():
     elif render_input_func:
         render_input_func(dashlet)
 
-    if vs_context:
-        vs_context.render_input("context", dashlet.get('context', {}))
+    visuals.render_context_specs(dashlet, context_specs)
 
     forms.end()
     html.button("save", _("Save"))

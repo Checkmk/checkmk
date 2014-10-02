@@ -32,37 +32,23 @@ except:
 # Declare datasource only if the event console is activated. We do
 # not want to irritate users that do not know anything about the EC.
 if mkeventd_enabled:
-    context_types['mkeventd_event'] = {
-        'title'      : _('Single Event Console Event'),
-        'single'     : True,
-        'parameters' : [
+    infos['event'] = {
+        'title'       : _('Event Console Event'),
+        'single_spec' : [
             ('event_id', Integer(
                 title = _('Event ID'),
             )),
-        ],
+        ]
     }
 
-    context_types['mkeventd_events'] = {
-        'title'      : _('Multiple Event Console Events'),
-        'single'     : False,
-        'parameters' : VisualFilterList(['event', 'host']),
-    }
-
-    context_types['mkeventd_history_event'] = {
-        'title'      : _('Single Event Console Event (History)'),
-        'single'     : True,
-        'parameters' : [
+    infos['history'] = {
+        'title'       : _('Historic Event Console Event'),
+        'single_spec' : [
             ('event_id', Integer(
                 title = _('Event ID'),
             )),
             ('history_line', Integer(
                 title = _('History Line'),
             )),
-        ],
-    }
-
-    context_types['mkeventd_history_events'] = {
-        'title'      : _('Multiple Event Console Events (History)'),
-        'single'     : False,
-        'parameters' : VisualFilterList(['history', 'event', 'host']),
+        ]
     }

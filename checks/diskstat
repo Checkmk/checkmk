@@ -97,7 +97,7 @@ def diskstat_parse_info(info):
             elif phase == 'dmsetup_info':
                 try:
                     majmin = tuple(map(int, line[2].split(':')))
-                    if len(line) == 4:
+                    if len(line) == 5:
                         name = "LVM %s" % line[1]
                     else:
                         name = "DM %s" % line[1]

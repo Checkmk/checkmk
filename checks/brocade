@@ -134,22 +134,10 @@ def inventory_brocade_temp(info):
 
 def check_brocade_temp(item, params, info):
     converted = brocade_sensor_convert(info, "SLOT")
-    warn, crit = params
     for snmp_item, name, value in converted:
         if item == snmp_item:
-            state = 0
-            label = ""
-            value = saveint(value)
-            perf = [ ('temp', value, warn, crit) ]
-            if value >= crit:
-                state = 2
-                label = "(Levels at: %d/%d) %s" % (warn, crit, name)
-            elif value >= warn:
-                state = 1
-                label = "(Levels at: %d/%d) %s" % (warn, crit, name)
+            return check_temperature(int(value), params)
 
-            return state, "Temperature at %d°C%s " % (value, label), perf
-    return 3, "Temperature sensor not found"
 
 check_info["brocade.temp"] = {
     "check_function"        : check_brocade_temp,
@@ -159,4 +147,5 @@ check_info["brocade.temp"] = {
     "group"                 : "hw_temperature",
     "snmp_info"             : brocade_info,
     'snmp_scan_function'    : brocade_scan,
+    "includes"              : [ "temperature.include" ],
 }

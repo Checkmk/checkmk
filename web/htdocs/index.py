@@ -36,6 +36,11 @@ import sys, os, pprint
 from lib import *
 import livestatus
 import defaults, config, login, userdb, hooks, visuals, default_permissions
+try:
+    import reporting
+except:
+    reporting = None
+
 from html_mod_python import *
 
 # Load page handlers
@@ -60,7 +65,8 @@ if defaults.omd_root:
 
 # Call the load_plugins() function in all modules
 def load_all_plugins():
-    for module in [ hooks, userdb, views, visuals, sidebar, dashboard, wato, bi, mobile, notify, webapi ]:
+    for module in [ hooks, userdb, views, visuals, sidebar, dashboard,
+                    wato, bi, mobile, notify, webapi, reporting ]:
         try:
             module.load_plugins # just check if this function exists
         except AttributeError:

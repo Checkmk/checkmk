@@ -1254,7 +1254,7 @@ class CascadingDropdown(ValueSpec):
 
         # make sure, that the visibility is done correctly, in both
         # cases:
-        # 1. Form painted for the first time (no submission yet, vp missing in URL
+        # 1. Form painted for the first time (no submission yet, vp missing in URL)
         # 2. Form already submitted -> honor URL variable vp for visibility
         cur_val = html.var(vp)
 
@@ -1264,7 +1264,10 @@ class CascadingDropdown(ValueSpec):
                 vp = varprefix + "_%d" % nr
                 # Form already submitted once (and probably in complain state)
                 if cur_val != None:
-                    def_val_2 = vs.from_html_vars(vp)
+                    try:
+                        def_val_2 = vs.from_html_vars(vp)
+                    except MKUserError:
+                        def_val_2 = vs.default_value()
                     if cur_val == str(nr):
                         disp = ""
                     else:

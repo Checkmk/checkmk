@@ -347,6 +347,7 @@ def page_list(what, title, visuals, custom_columns = []):
 def page_create_visual(what, title, info_keys, next_url = None):
     what_s = what[:-1]
 
+    # FIXME: Sort by (assumed) common usage
     info_choices = []
     for key in info_keys:
         info_choices.append((key, _('Show information of a single %s') % infos[key]['title']))
@@ -354,9 +355,6 @@ def page_create_visual(what, title, info_keys, next_url = None):
     vs_infos = ListChoice(
         title = _('Specific objects'),
         choices = info_choices,
-        help = _('The context of a visual controls the type of objects to be shown. It '
-                 'also sets wether single or multiple objects are displayed. The context '
-                 'type of a visual can not be changed anymore.'),
     )
 
     html.header(_('Create %s') % title, stylesheets=["pages"])
@@ -364,6 +362,17 @@ def page_create_visual(what, title, info_keys, next_url = None):
     back_url = html.var("back", "")
     html.context_button(_("Back"), back_url or "edit_%s.py" % what, "back")
     html.end_context_buttons()
+
+    html.write('<p>')
+    html.write(
+        _('Depending on the choosen datasource a %s can list <i>multiple</i> or <i>single</i> objects. '
+          'For example the <i>services</i> datasource can be used to simply create a list '
+          'of <i>multiple</i> services, a list of <i>multiple</i> services of a <i>single</i> host or even '
+          'a list of services with the same name on <i>multiple</i> hosts. When you just want to '
+          'create a list of objects, you do not need to make any selection in this dialog. '
+          'If you like to create a view for a specific object of a specific type, select the '
+          'object type below and continue.') % what_s)
+    html.write('</p>')
 
     if html.var('save') and html.check_transaction():
         try:
@@ -435,7 +444,11 @@ def get_context_specs(visual, info_handler):
             elements = params,
         )
 
-        context_specs.append((info_key, vs))
+        # Single info context specifications should be listed first
+        if info_key in visual['single_infos']:
+            context_specs.insert(0, (info_key, vs))
+        else:
+            context_specs.append((info_key, vs))
     return context_specs
 
 def process_context_specs(context_specs):
@@ -965,11 +978,16 @@ def visual_title(what, visual):
 def info_params(info_key):
     return dict(infos[info_key]['single_spec']).keys()
 
+def get_single_info_keys(visual):
+    keys = []
+    for info_key in visual['single_infos']:
+        keys += info_params(info_key)
+    return list(set(keys))
+
 def get_context_html_vars(visual):
     vars = []
-    for info_key in visual['single_infos']:
-        for single_key in info_params(info_key):
-            vars.append((single_key, html.var(single_key, visual['context'].get(single_key))))
+    for key in get_single_info_keys(visual):
+        vars.append((key, html.var(key, visual['context'].get(key))))
     return vars
 
 # Collect all visuals that share a context with visual. For example

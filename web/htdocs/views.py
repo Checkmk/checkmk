@@ -136,9 +136,7 @@ def transform_old_views():
         if 'context' not in view:
             view['show_filters'] = view['hide_filters'] + view['hard_filters'] + view['show_filters']
 
-            single_keys = []
-            for info_key in view['single_infos']:
-                single_keys += visuals.info_params(info_key)
+            single_keys = visuals.get_single_info_keys(view)
 
             # First get vars for the classic filters
             context = {}
@@ -211,14 +209,16 @@ def page_create_view(next_url = None):
     for ds_name, ds in multisite_datasources.items():
         datasources.append((ds_name, ds['title']))
 
+    # FIXME: Sort the datasources by (assumed) common usage
     vs_ds = DropdownChoice(
         title = _('Datasource'),
         choices = datasources,
         sorted = True,
         help = _('The datasources defines which type of objects should be displayed with this view.'),
         columns = 1,
-        default_value = "service",
     )
+
+    ds = 'services' # Default selection
 
     html.header(_('Create View'), stylesheets=["pages"])
     html.begin_context_buttons()
@@ -232,8 +232,10 @@ def page_create_view(next_url = None):
             vs_ds.validate_value(ds, 'ds')
 
             if not next_url:
-                next_url = html.makeuri([('datasource', '%s')], filename = "create_view_infos.py")
-            html.http_redirect(next_url % ds)
+                next_url = html.makeuri([('datasource', ds)], filename = "create_view_infos.py")
+            else:
+                next_url = next_url % ds
+            html.http_redirect(next_url)
             return
 
         except MKUserError, e:
@@ -245,7 +247,7 @@ def page_create_view(next_url = None):
 
     forms.header(_('Select Datasource'))
     forms.section(vs_ds.title())
-    vs_ds.render_input('ds', '')
+    vs_ds.render_input('ds', ds)
     html.help(vs_ds.help())
     forms.end()
 
@@ -693,16 +695,18 @@ def page_view():
 def get_needed_columns(view, painters):
     columns = []
     for entry in painters:
-        p = entry[0]
-        v = entry[1]
-        columns += p["columns"]
-        if v:
-            linkview = available_views.get(v)
+        painter = entry[0]
+        linkview_name = entry[1]
+        columns += painter["columns"]
+        if linkview_name:
+            linkview = available_views.get(linkview_name)
             if linkview:
-                columns += multisite_datasources[view['datasource']]['idkeys']
+                for filt in [ visuals.get_filter(fn) for fn in visuals.get_single_info_keys(linkview) ]:
+                    columns += filt.link_columns
+
                 # The site attribute is no column. Filter it out here
-                if 'site' in columns:
-                    columns.remove('site')
+                #if 'site' in columns:
+                #    columns.remove('site')
 
         if len(entry) > 2 and entry[2]:
             tt = entry[2]
@@ -823,11 +827,9 @@ def show_view(view, show_heading = False, show_buttons = True,
     # Populate the HTML vars with missing context vars. The context vars set
     # in single context are enforced (can not be overwritten by URL). The normal
     # filter vars in "multiple" context are not enforced.
-    for info_key in view['single_infos']:
-        keys = visuals.info_params(info_key)
-        for key in keys:
-            if key in view['context']:
-                html.set_var(key, view['context'][key])
+    for key in visuals.get_single_info_keys(view):
+        if key in view['context']:
+            html.set_var(key, view['context'][key])
 
     # Now apply the multiple context filters
     for info_key in datasource['infos']:

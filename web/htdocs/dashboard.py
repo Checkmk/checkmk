@@ -770,19 +770,29 @@ def page_edit_dashlet():
     dashboard = available_dashboards[board]
 
     if ident == None:
-        mode    = 'add'
-        title   = _('Add Dashlet')
+        mode         = 'add'
+        title        = _('Add Dashlet')
+        dashlet_type = dashlet_types[ty]
         # Initial configuration
-        dashlet = {}
+        dashlet = {
+            'position'     : (1, 1),
+            'size'         : dashlet_type.get('size', dashlet_min_size),
+            'single_infos' : dashlet_type.get('single_infos', []),
+            'type'         : ty,
+        }
         ident   =  len(dashboard['dashlets'])
         dashboard['dashlets'].append(dashlet)
 
         single_infos_raw = html.var('single_infos')
+        single_infos = []
         if single_infos_raw:
             single_infos = single_infos_raw.split(',')
             for key in single_infos:
                 if key not in visuals.infos:
                     raise MKUserError('single_infos', _('The info %s does not exist.') % key)
+
+        if not single_infos:
+            single_infos = dashlet_types[ty].get('single_infos', [])
 
         dashlet['single_infos'] = single_infos
     else:
@@ -794,18 +804,9 @@ def page_edit_dashlet():
         except IndexError:
             raise MKGeneralException(_('The dashlet does not exist.'))
 
-        ty = dashlet['type']
-
-    dashlet_type = dashlet_types[ty]
-
-    if not dashlet: # Initial configuration
-        dashlet.update({
-            'position'     : (1, 1),
-            'size'         : dashlet_type.get('size', dashlet_min_size),
-            'single_infos' : [],
-        })
-
-    single_infos = dashlet['single_infos']
+        ty           = dashlet['type']
+        dashlet_type = dashlet_types[ty]
+        single_infos = dashlet['single_infos']
 
     html.header(title, stylesheets=["pages","views"])
 
@@ -855,7 +856,8 @@ def page_edit_dashlet():
         ],
     )
 
-    context_specs = visuals.get_context_specs(dashlet, info_handler=None)
+    context_specs = visuals.get_context_specs(dashlet,
+        info_handler=lambda dashlet: dashlet_types[dashlet['type']].get('infos'))
 
     vs_type = None
     params = dashlet_type.get('parameters')

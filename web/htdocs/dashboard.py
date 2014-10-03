@@ -639,7 +639,7 @@ def page_edit_dashboard():
         ],
     )
 
-    visuals.page_edit_visual('dashboards', _("Dashboard"), dashboards,
+    visuals.page_edit_visual('dashboards', dashboards,
         create_handler = create_dashboard,
         custom_field_handler = custom_field_handler
     )

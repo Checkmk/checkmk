@@ -1548,10 +1548,9 @@ class DualListChoice(ListChoice):
 # A type-save dropdown choice with one extra field that
 # opens a further value spec for entering an alternative
 # Value.
-class OptionalDropdownChoice(ValueSpec):
+class OptionalDropdownChoice(DropdownChoice):
     def __init__(self, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
-        self._choices = kwargs["choices"]
+        DropdownChoice.__init__(self, **kwargs)
         self._explicit = kwargs["explicit"]
         self._otherlabel = kwargs.get("otherlabel", _("Other"))
 
@@ -1559,15 +1558,17 @@ class OptionalDropdownChoice(ValueSpec):
         return self._explicit.canonical_value()
 
     def value_is_explicit(self, value):
-        return value not in [ c[0] for c in self._choices ]
+        return value not in [ c[0] for c in self.choices() ]
 
     def render_input(self, varprefix, value):
         defval = "other"
         options = []
-        for n, (val, title) in enumerate(self._choices):
+        for n, (val, title) in enumerate(self.choices()):
             options.append((str(n), title))
             if val == value:
                 defval = str(n)
+        if self._sorted:
+            options.sort(cmp = lambda a,b: cmp(a[1], b[1]))
         options.append(("other", self._otherlabel))
         html.select(varprefix, options, defval, # attrs={"style":"float:left;"},
                     onchange="valuespec_toggle_dropdown(this, '%s_ex');" % varprefix )
@@ -1588,20 +1589,21 @@ class OptionalDropdownChoice(ValueSpec):
         html.write("</span>")
 
     def value_to_text(self, value):
-        for val, title in self._choices:
+        for val, title in self.choices():
             if val == value:
                 return title
         return self._explicit.value_to_text(value)
 
     def from_html_vars(self, varprefix):
+        choices = self.choices()
         sel = html.var(varprefix)
         if sel == "other":
             return self._explicit.from_html_vars(varprefix + "_ex")
 
-        for n, (val, title) in enumerate(self._choices):
+        for n, (val, title) in enumerate(choices):
             if sel == str(n):
                 return val
-        return self._choices[0][0] # can only happen if user garbled URL
+        return choices[0][0] # can only happen if user garbled URL
 
     def validate_value(self, value, varprefix):
         if self.value_is_explicit(value):
@@ -1610,7 +1612,7 @@ class OptionalDropdownChoice(ValueSpec):
         ValueSpec.custom_validate(self, value, varprefix)
 
     def validate_datatype(self, value, varprefix):
-        for val, title in self._choices:
+        for val, title in self.choices():
             if val == value:
                 return
         self._explicit.validate_datatype(value, varprefix + "_ex")

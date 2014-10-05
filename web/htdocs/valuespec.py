@@ -2114,6 +2114,21 @@ class PNPTimerange(Timerange):
         Timerange.__init__(self, **kwargs)
 
 
+# A selection of various date formats
+def DateFormat(**args):
+    args.setdefault("title", _("Date format"))
+    args.setdefault("default_value", "%Y-%m-%d")
+    args["choices"] = [
+        ("%Y-%m-%d", "1970-12-18"),
+        ("%d.%m.%Y", "18.12.1970"),
+        ("%m/%d/%Y", "12/18/1970"),
+        ("%d.%m.",   "18.12."),
+        ("%m/%d",    "12/18"),
+    ]
+    return DropdownChoice(**args)
+
+
+
 # Make a configuration value optional, i.e. it may be None.
 # The user has a checkbox for activating the option. Example:
 # debug_log: it is either None or set to a filename.

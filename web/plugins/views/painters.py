@@ -97,17 +97,7 @@ multisite_painter_options["ts_format"] = {
 }
 
 multisite_painter_options["ts_date"] = {
-    'valuespec' : DropdownChoice(
-        title = _("Date format"),
-        default_value = "%Y-%m-%d",
-        choices = [
-            ("%Y-%m-%d", "1970-12-18"),
-            ("%d.%m.%Y", "18.12.1970"),
-            ("%m/%d/%Y", "12/18/1970"),
-            ("%d.%m.",   "18.12."),
-            ("%m/%d",    "12/18")
-        ],
-    )
+    'valuespec' : DateFormat(),
 }
 
 # This helper function returns the value of the given custom var

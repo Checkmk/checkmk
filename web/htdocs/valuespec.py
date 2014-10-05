@@ -2128,6 +2128,20 @@ def DateFormat(**args):
     return DropdownChoice(**args)
 
 
+def TimeFormat(**args):
+    args.setdefault("title", _("Time format"))
+    args.setdefault("default_value", "%H:%M:%S")
+    args["choices"] = [
+        ("%H:%M:%S",    "18:27:36"),
+        ("%l:%M:%S %p", "12:27:36 PM"),
+        ("%H:%M",       "18:27"),
+        ("%l:%M %p",    "6:27 PM"),
+        ("%H",          "18"),
+        ("%l %p",      "6 PM"),
+    ]
+    return DropdownChoice(**args)
+
+
 
 # Make a configuration value optional, i.e. it may be None.
 # The user has a checkbox for activating the option. Example:

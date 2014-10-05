@@ -237,7 +237,7 @@ def available(what, all_visuals):
 #   | Show a list of all visuals with actions to delete/clone/edit         |
 #   '----------------------------------------------------------------------'
 
-def page_list(what, title, visuals, custom_columns = []):
+def page_list(what, title, visuals, custom_columns = [], render_custom_buttons=None):
     what_s = what[:-1]
     if not config.may("general.edit_" + what):
         raise MKAuthException(_("Sorry, you lack the permission for editing this type of visuals."))
@@ -307,6 +307,10 @@ def page_list(what, title, visuals, custom_columns = []):
                 html.icon_button(html.makeactionuri([('_delete', visualname)]),
                     _("Delete!"), "delete")
 
+            # Custom buttons - visual specific
+            if render_custom_buttons:
+                render_custom_buttons(visualname, visual)
+
             # visual Name
             table.cell(_('ID'), visualname)
 
@@ -349,6 +353,7 @@ def page_list(what, title, visuals, custom_columns = []):
 #   | Realizes the steps before getting to the editor (context type)       |
 #   '----------------------------------------------------------------------'
 
+# FIXME: title is not needed, that's contained in visual_types
 def page_create_visual(what, title, info_keys, next_url = None):
     what_s = what[:-1]
 

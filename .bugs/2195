@@ -1,0 +1,9 @@
+Title: Group all context boxes together into one box in visual editor
+Component: multisite
+State: open
+Date: 2014-10-06 19:10:03
+Targetversion: 1.2.5i1
+Class: nastiness
+
+Currently due to the large number of mostly useless boxes everything
+get's very confuscated...

@@ -32,14 +32,16 @@ import config, table
 
 visual_types = {
     'views': {
-        'ident_attr':  'view_name',
-        'title':        _("view"),
-        'plural_title': _("views"),
+        'ident_attr':   'view_name',
+        'title':         _("view"),
+        'plural_title':  _("views"),
+        'module_name':  'views',
     },
     'dashboards': {
-        'ident_attr': 'name',
+        'ident_attr':   'name',
         'title':        _("dashboard"),
         'plural_title': _("dashboards"),
+        'module_name':  'dashboard',
     },
 }
 
@@ -1027,7 +1029,7 @@ def collect_context_links_of(what, this_visual, active_filter_vars, mobile):
     context_links = []
 
     # FIXME: Make this cross module access cleaner
-    module_name = what == 'views' and what or what[:-1]
+    module_name = visual_types[what]["module_name"]
     thing_module = __import__(module_name)
     thing_module.__dict__['load_%s'% what]()
     available = thing_module.__dict__['permitted_%s' % what]()

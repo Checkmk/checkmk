@@ -373,7 +373,7 @@ def page_create_visual(what, title, info_keys, next_url = None):
           'of <i>multiple</i> services, a list of <i>multiple</i> services of a <i>single</i> host or even '
           'a list of services with the same name on <i>multiple</i> hosts. When you just want to '
           'create a list of objects, you do not need to make any selection in this dialog. '
-          'If you like to create a view for a specific object of a specific type, select the '
+          'If you like to create a view for one specific object of a specific type, select the '
           'object type below and continue.') % what_s)
     html.write('</p>')
 
@@ -394,7 +394,7 @@ def page_create_visual(what, title, info_keys, next_url = None):
     html.begin_form('create_visual')
     html.hidden_field('mode', 'create')
 
-    forms.header(_('Select specific objects'))
+    forms.header(_('Select specific object type'))
     forms.section(vs_infos.title())
     vs_infos.render_input('single_infos', '')
     html.help(vs_infos.help())
@@ -564,9 +564,9 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
         optional_keys = None,
         elements = [
             ('single_infos', FixedValue(single_infos,
-                title = _('Show information of single'),
+                title = _('Specific objects'),
                 totext = single_infos and ', '.join(single_infos) \
-                                      or _('Not showing information for a specific object.'),
+                                      or _('Showing information of multiple objects.'),
             )),
             ('name', TextAscii(
                 title = _('Unique ID'),

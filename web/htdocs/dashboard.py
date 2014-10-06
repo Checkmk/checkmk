@@ -676,7 +676,8 @@ def page_create_view_dashlet():
 
     if create:
         import views
-        url = html.makeuri([('datasource', '%s')], filename = "create_view_dashlet_infos.py")
+        url = html.makeuri([], filename = "create_view_dashlet_infos.py")
+        url += '&datasource=%s' # %s can not be added using html.makeuri()
         views.page_create_view(next_url=url)
 
     else:
@@ -684,14 +685,15 @@ def page_create_view_dashlet():
         choose_view(name)
 
 def page_create_view_dashlet_infos():
+    import views
     ds_name = html.var('datasource')
-    if ds_name not in multisite_datasources:
+    if ds_name not in views.multisite_datasources:
         raise MKGeneralException(_('The given datasource is not supported'))
 
     # Create a new view by choosing the datasource and the single object types
-    visuals.page_create_visual('views', _("View"), multisite_datasources[ds_name]['infos'],
+    visuals.page_create_visual('views', _("View"), views.multisite_datasources[ds_name]['infos'],
         next_url = 'edit_dashlet.py?name=%s&type=view&datasource=%s&single_infos=%%s' %
-            (html.urlencode(html.var('name'), ds_name)))
+            (html.urlencode(html.var('name')), ds_name))
 
 def choose_view(name):
     import views

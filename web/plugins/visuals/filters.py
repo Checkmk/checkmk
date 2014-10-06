@@ -49,7 +49,7 @@ class FilterText(Filter):
     def variable_settings(self, row):
         return [ (self.htmlvars[0], row[self.column]) ]
 
-    def heading_info(self, infoname):
+    def heading_info(self):
         return html.var(self.htmlvars[0])
 
 
@@ -128,7 +128,7 @@ class FilterIPAddress(Filter):
     def variable_settings(self, row):
         return [ ("host_address", row["host_address"]) ]
 
-    def heading_info(self, infoname):
+    def heading_info(self):
         return html.var("host_address")
 
 declare_filter(102, FilterIPAddress())
@@ -204,12 +204,12 @@ class FilterGroupCombo(Filter):
             html.checkbox(self.htmlvars[1], label=_("negate"))
             html.write("</nobr>")
 
-    def current_value(self, infoname):
+    def current_value(self):
         htmlvar = self.htmlvars[0]
         return html.var(htmlvar)
 
     def filter(self, infoname):
-        current_value = self.current_value(infoname)
+        current_value = self.current_value()
         if not current_value:
             if not self.enforce:
                 return ""
@@ -240,8 +240,8 @@ class FilterGroupCombo(Filter):
         else:
             return []
 
-    def heading_info(self, infoname):
-        current_value = self.current_value(infoname)
+    def heading_info(self):
+        current_value = self.current_value()
         if current_value:
             table = self.what.replace("host_contact", "contact").replace("service_contact", "contact")
             alias = html.live.query_value("GET %sgroups\nCache: reload\nColumns: alias\nFilter: name = %s\n" %
@@ -464,7 +464,17 @@ class FilterSite(Filter):
         return config.is_multisite()
 
     def display(self):
-        site_selector(html, "site", self.enforce)
+        if not config.is_multisite():
+            choices = [("", _("(local)"))]
+        else:
+            if self.enforce:
+                choices = []
+            else:
+                choices = [("","")]
+            for sitename, state in html.site_status.items():
+                if state["state"] == "online":
+                    choices.append((sitename, config.site(sitename)["alias"]))
+        html.sorted_select("site", choices)
 
     def filter(self, infoname):
         if config.is_multisite():
@@ -478,7 +488,7 @@ class FilterSite(Filter):
         else:
             return ""
 
-    def heading_info(self, infoname):
+    def heading_info(self):
         current_value = html.var("site")
         if current_value:
             alias = config.site(current_value)["alias"]
@@ -620,7 +630,7 @@ class FilterTime(Filter):
     #         vars.append((self.name + "_" + n, secs))
     #     return vars
 
-    # def heading_info(self, infoname):
+    # def heading_info(self):
     #     return _("since the last couple of seconds")
 
 declare_filter(250, FilterTime("service", "svc_last_state_change", _("Last service state change"), "service_last_state_change"))

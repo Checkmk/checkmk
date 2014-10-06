@@ -25,7 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 builtin_dashboards["main"] = {
-    "context_type": "global",
+    "single_infos": [],
     "context"     : {},
     "mtime"       : 0,
     "title"       : _("Main Overview"),
@@ -61,7 +61,7 @@ builtin_dashboards["main"] = {
             'browser_reload': 30,
             'column_headers': 'pergroup',
             'datasource': 'hosts',
-            'context_type': 'hosts',
+            'single_infos': [],
             'group_painters': [],
             'context': {
                 'hoststate': {
@@ -104,7 +104,7 @@ builtin_dashboards["main"] = {
             'browser_reload': 30,
             'column_headers': 'pergroup',
             'datasource': 'services',
-            'context_type': 'services',
+            'single_infos': [],
             'group_painters': [],
             'context': {
                 'service_acknowledged': {'is_service_acknowledged': '0'},
@@ -154,7 +154,7 @@ builtin_dashboards["main"] = {
             'browser_reload': 90,
             'column_headers': 'pergroup',
             'datasource': 'log_events',
-            'context_type': 'logs',
+            'single_infos': [],
             'group_painters': [],
             'context': {
                 'logtime': {
@@ -186,7 +186,7 @@ builtin_dashboards["main"] = {
 #Only work in OMD installations
 if defaults.omd_site:
     builtin_dashboards["topology"] = {
-        "context_type": "global",
+        "single_infos": [],
         "context"     : {},
         "mtime"       : 0,
         "title"       : _("Network Topology"),
@@ -210,7 +210,7 @@ if defaults.omd_site:
     }
 
 builtin_dashboards["simple_problems"] = {
-    "context_type": "global",
+    "single_infos": [],
     "context"     : {},
     "mtime"       : 0,
     "title"       : _("Host &amp; Services Problems"),
@@ -229,7 +229,7 @@ builtin_dashboards["simple_problems"] = {
             'browser_reload': 30,
             'column_headers': 'pergroup',
             'datasource': 'hosts',
-            'context_type': 'hosts',
+            'single_infos': [],
             'group_painters': [],
             'context': {
                 'host_acknowledged': {'is_host_acknowledged': '0'},
@@ -270,7 +270,7 @@ builtin_dashboards["simple_problems"] = {
             'browser_reload': 30,
             'column_headers': 'pergroup',
             'datasource': 'services',
-            'context_type': 'services',
+            'single_infos': [],
             'group_painters': [],
             'context': {
                 'service_acknowledged': {'is_service_acknowledged': '0'},

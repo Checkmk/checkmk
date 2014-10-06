@@ -928,7 +928,8 @@ class ListOfMultiple(ValueSpec):
             value = self.from_html_vars(varprefix)
 
         # Save all selected items
-        html.hidden_field('%s_active' % varprefix, ';'.join(value.keys()),
+        html.hidden_field('%s_active' % varprefix,
+            ';'.join([ k for k in value.keys() if k in self._choice_dict]),
             id = '%s_active' % varprefix, add_var = True)
 
         # Actual table of currently existing entries
@@ -1253,7 +1254,7 @@ class CascadingDropdown(ValueSpec):
 
         # make sure, that the visibility is done correctly, in both
         # cases:
-        # 1. Form painted for the first time (no submission yet, vp missing in URL
+        # 1. Form painted for the first time (no submission yet, vp missing in URL)
         # 2. Form already submitted -> honor URL variable vp for visibility
         cur_val = html.var(vp)
 
@@ -1263,7 +1264,10 @@ class CascadingDropdown(ValueSpec):
                 vp = varprefix + "_%d" % nr
                 # Form already submitted once (and probably in complain state)
                 if cur_val != None:
-                    def_val_2 = vs.from_html_vars(vp)
+                    try:
+                        def_val_2 = vs.from_html_vars(vp)
+                    except MKUserError:
+                        def_val_2 = vs.default_value()
                     if cur_val == str(nr):
                         disp = ""
                     else:
@@ -1547,10 +1551,9 @@ class DualListChoice(ListChoice):
 # A type-save dropdown choice with one extra field that
 # opens a further value spec for entering an alternative
 # Value.
-class OptionalDropdownChoice(ValueSpec):
+class OptionalDropdownChoice(DropdownChoice):
     def __init__(self, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
-        self._choices = kwargs["choices"]
+        DropdownChoice.__init__(self, **kwargs)
         self._explicit = kwargs["explicit"]
         self._otherlabel = kwargs.get("otherlabel", _("Other"))
 
@@ -1558,15 +1561,17 @@ class OptionalDropdownChoice(ValueSpec):
         return self._explicit.canonical_value()
 
     def value_is_explicit(self, value):
-        return value not in [ c[0] for c in self._choices ]
+        return value not in [ c[0] for c in self.choices() ]
 
     def render_input(self, varprefix, value):
         defval = "other"
         options = []
-        for n, (val, title) in enumerate(self._choices):
+        for n, (val, title) in enumerate(self.choices()):
             options.append((str(n), title))
             if val == value:
                 defval = str(n)
+        if self._sorted:
+            options.sort(cmp = lambda a,b: cmp(a[1], b[1]))
         options.append(("other", self._otherlabel))
         html.select(varprefix, options, defval, # attrs={"style":"float:left;"},
                     onchange="valuespec_toggle_dropdown(this, '%s_ex');" % varprefix )
@@ -1587,20 +1592,21 @@ class OptionalDropdownChoice(ValueSpec):
         html.write("</span>")
 
     def value_to_text(self, value):
-        for val, title in self._choices:
+        for val, title in self.choices():
             if val == value:
                 return title
         return self._explicit.value_to_text(value)
 
     def from_html_vars(self, varprefix):
+        choices = self.choices()
         sel = html.var(varprefix)
         if sel == "other":
             return self._explicit.from_html_vars(varprefix + "_ex")
 
-        for n, (val, title) in enumerate(self._choices):
+        for n, (val, title) in enumerate(choices):
             if sel == str(n):
                 return val
-        return self._choices[0][0] # can only happen if user garbled URL
+        return choices[0][0] # can only happen if user garbled URL
 
     def validate_value(self, value, varprefix):
         if self.value_is_explicit(value):
@@ -1609,7 +1615,7 @@ class OptionalDropdownChoice(ValueSpec):
         ValueSpec.custom_validate(self, value, varprefix)
 
     def validate_datatype(self, value, varprefix):
-        for val, title in self._choices:
+        for val, title in self.choices():
             if val == value:
                 return
         self._explicit.validate_datatype(value, varprefix + "_ex")
@@ -2113,6 +2119,35 @@ class PNPTimerange(Timerange):
         Timerange.__init__(self, **kwargs)
 
 
+# A selection of various date formats
+def DateFormat(**args):
+    args.setdefault("title", _("Date format"))
+    args.setdefault("default_value", "%Y-%m-%d")
+    args["choices"] = [
+        ("%Y-%m-%d", "1970-12-18"),
+        ("%d.%m.%Y", "18.12.1970"),
+        ("%m/%d/%Y", "12/18/1970"),
+        ("%d.%m.",   "18.12."),
+        ("%m/%d",    "12/18"),
+    ]
+    return DropdownChoice(**args)
+
+
+def TimeFormat(**args):
+    args.setdefault("title", _("Time format"))
+    args.setdefault("default_value", "%H:%M:%S")
+    args["choices"] = [
+        ("%H:%M:%S",    "18:27:36"),
+        ("%l:%M:%S %p", "12:27:36 PM"),
+        ("%H:%M",       "18:27"),
+        ("%l:%M %p",    "6:27 PM"),
+        ("%H",          "18"),
+        ("%l %p",      "6 PM"),
+    ]
+    return DropdownChoice(**args)
+
+
+
 # Make a configuration value optional, i.e. it may be None.
 # The user has a checkbox for activating the option. Example:
 # debug_log: it is either None or set to a filename.
@@ -2506,6 +2541,7 @@ class Dictionary(ValueSpec):
         self._columns = kwargs.get("columns", 1) # possible: 1 or 2
         self._render = kwargs.get("render", "normal") # also: "form" -> use forms.section()
         self._form_narrow = kwargs.get("form_narrow", False) # used if render == "form"
+        self._form_isopen = kwargs.get("form_isopen", True) # used if render == "form"
         self._headers = kwargs.get("headers") # "sup" -> small headers in oneline mode
         self._migrate = kwargs.get("migrate") # value migration from old tuple version
         self._indent = kwargs.get("indent", True)
@@ -2609,7 +2645,7 @@ class Dictionary(ValueSpec):
             self.render_input_form_header(varprefix, value, self.title(), None)
 
     def render_input_form_header(self, varprefix, value, title, sections):
-        forms.header(title, narrow=self._form_narrow)
+        forms.header(title, isopen=self._form_isopen, narrow=self._form_narrow)
         for param, vs in self._get_elements():
             if param in self._hidden_keys:
                 continue
@@ -3071,94 +3107,3 @@ class IconSelector(ValueSpec):
     def validate_value(self, value, varprefix):
         if value and value not in self.available_icons():
             raise MKUserError(varprefix, _("The selected icon image does not exist."))
-
-
-# Implements a list of available filters for the given infos. By default no
-# filter is selected. The user may select a filter to be activated, then the
-# filter is rendered and the user can provide a default value.
-class VisualFilterList(ListOfMultiple):
-    def __init__(self, infos, **kwargs):
-        self._infos = infos
-
-        # FIXME: Hack! Maybe move the multisite_filters to a common module
-        import views
-
-        # First get all filters useful for the infos, then create VisualFilter
-        # valuespecs from them and then sort them
-        fspecs = {}
-        self._filters = {}
-        for info in self._infos:
-            for fname, filter in views.filters_allowed_for_info(info).items():
-                if fname not in fspecs and fname not in views.ubiquitary_filters:
-                    fspecs[fname] = VisualFilter(fname,
-                        title = filter.title,
-                    )
-                    self._filters[fname] = fspecs[fname]._filter
-
-        # Convert to list and sort them!
-        fspecs = fspecs.items()
-        fspecs.sort(key = lambda x: (x[1]._filter.sort_index, x[1].title()))
-
-        kwargs.setdefault('title', _('Filters'))
-        kwargs.setdefault('add_label', _('Add filter'))
-
-        ListOfMultiple.__init__(self, fspecs, **kwargs)
-
-    # get the filters to be used from the value and the data from the filter
-    # objects using the row data
-    def filter_variable_settings(self, value, row):
-        vars = []
-        for fname in value.keys():
-            try:
-                vars += self._filters[fname].variable_settings(row)
-            except KeyError:
-                # When the row misses at least one var for a filter ignore this filter completely
-                pass
-        return vars
-
-# Realizes a Multisite/visual filter in a valuespec. It can render the filter form, get
-# the filled in values and provide the filled in information for persistance.
-class VisualFilter(ValueSpec):
-    def __init__(self, name, **kwargs):
-        self._name   = name
-        # FIXME: Hack! Maybe move the multisite_filters to a common module
-        import views
-        self._filter = views.multisite_filters[name]
-
-        ValueSpec.__init__(self, **kwargs)
-
-    def title(self):
-        return self._filter.title
-
-    def canonical_value(self):
-        return {}
-
-    def render_input(self, varprefix, value):
-        # kind of a hack to make the current/old filter API work. This should
-        # be cleaned up some day
-        if value != None:
-            self._filter.set_value(value)
-
-        # A filter can not be used twice on a page, because the varprefix is not used
-        html.write('<div class="floatfilter %s">' % (self._filter.double_height() and "double" or "single"))
-        html.write('<div class=legend>%s</div>' % self._filter.title)
-        html.write('<div class=content>')
-        self._filter.display()
-        html.write("</div>")
-        html.write("</div>")
-
-    def value_to_text(self, value):
-        # FIXME: optimize. Needed?
-        return repr(value)
-
-    def from_html_vars(self, varprefix):
-        # A filter can not be used twice on a page, because the varprefix is not used
-        return self._filter.value()
-
-    def validate_datatype(self, value, varprefix):
-        if type(value) != dict:
-            raise MKUserError(varprefix, _("The value must be of type dict, but it has type %s") %
-                                                                    type_name(value))
-
-    def validate_value(self, value, varprefix):
-        ValueSpec.custom_validate(self, value, varprefix)

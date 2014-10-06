@@ -65,7 +65,7 @@ if defaults.omd_root:
 
 # Call the load_plugins() function in all modules
 def load_all_plugins():
-    for module in [ hooks, userdb, views, visuals, sidebar, dashboard,
+    for module in [ hooks, userdb, visuals, views, sidebar, dashboard,
                     wato, bi, mobile, notify, webapi, reporting ]:
         try:
             module.load_plugins # just check if this function exists

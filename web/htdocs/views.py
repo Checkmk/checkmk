@@ -285,7 +285,7 @@ def get_view_infos(view):
 def page_edit_view():
     load_views()
 
-    visuals.page_edit_visual('views', _("View"), multisite_views,
+    visuals.page_edit_visual('views', multisite_views,
         custom_field_handler = render_view_config,
         load_handler = transform_view_to_valuespec,
         create_handler = create_view_config,

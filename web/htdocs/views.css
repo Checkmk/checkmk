@@ -705,24 +705,17 @@ td.invtree table td {
     background-color: #fff;
 }
 
-/*-Dashlet Popup-------------------------------------------------------.
-|   ____            _     _      _     ____                            |
-|  |  _ \  __ _ ___| |__ | | ___| |_  |  _ \ ___  _ __  _   _ _ __     |
-|  | | | |/ _` / __| '_ \| |/ _ \ __| | |_) / _ \| '_ \| | | | '_ \    |
-|  | |_| | (_| \__ \ | | | |  __/ |_  |  __/ (_) | |_) | |_| | |_) |   |
-|  |____/ \__,_|___/_| |_|_|\___|\__| |_|   \___/| .__/ \__,_| .__/    |
-|                                                |_|         |_|       |
-+---------------------------------------------------------------------*/
+/* Popup for adding to visuals (Dashboard, Reports */
 
-div.graph, div.dashadd {
+div.graph, div.visualadd {
     position: relative;
 }
 
-div.dashadd {
+div.visualadd {
     display: inline-block;
 }
 
-div.graph a.dashadd {
+div.graph a.visualadd {
     position: absolute;
     top: 10px;
     left: 10px;
@@ -733,12 +726,12 @@ div.graph a.dashadd {
     background-image: url(images/button_add_dashlet_lo.png);
 }
 
-div.graph a.dashadd:hover {
+div.graph a.visualadd:hover {
     background-image: url(images/button_add_dashlet_hi.png);
     cursor: pointer;
 }
 
-#dashadd_popup {
+#visualadd_popup {
     position: absolute;
     bottom: 15px;
     left: 15px;
@@ -759,13 +752,13 @@ div.graph a.dashadd:hover {
             progid:DXImageTransform.Microsoft.Chroma(Color='#ffffff');
 }
 
-#dashadd_popup ul {
+#visualadd_popup ul {
     list-style: none;
     margin: 0;
     padding: 5px;
 }
 
-#dashadd_popup a, #dashadd_popup span {
+#visualadd_popup a, #visualadd_popup span {
     display: block;
     padding: 5px 15px;
     text-align: left;
@@ -773,10 +766,10 @@ div.graph a.dashadd:hover {
     color: #fff;
 }
 
-#dashadd_popup span {
+#visualadd_popup span {
     padding-left: 5px;
 }
 
-#dashadd_popup a:hover {
+#visualadd_popup a:hover {
     text-decoration: underline;
 }

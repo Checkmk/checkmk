@@ -41,6 +41,7 @@ import bi
 import userdb
 import notify
 import webapi
+import visuals
 
 # map URLs to page rendering functions
 
@@ -91,8 +92,9 @@ pagehandlers.update({
    "create_view_dashlet"      : dashboard.page_create_view_dashlet,
    "create_view_dashlet_infos": dashboard.page_create_view_dashlet_infos,
    "ajax_dashlet_pos"         : dashboard.ajax_dashlet_pos,
-   "ajax_popup_add_dashlet"   : dashboard.ajax_popup_add_dashlet,
-   "ajax_add_dashlet"         : dashboard.ajax_add_dashlet,
+
+   "ajax_popup_add_visual"   : visuals.ajax_popup_add,
+   "ajax_add_visual"         : visuals.ajax_add_visual,
 
    "ajax_userdb_sync"         : userdb.ajax_sync,
    "notify"                   : notify.page_notify,

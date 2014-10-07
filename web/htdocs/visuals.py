@@ -38,10 +38,12 @@ visual_types = {
         'module_name':  'views',
     },
     'dashboards': {
-        'ident_attr':   'name',
-        'title':        _("dashboard"),
-        'plural_title': _("dashboards"),
-        'module_name':  'dashboard',
+        'ident_attr':         'name',
+        'title':              _("dashboard"),
+        'plural_title':       _("dashboards"),
+        'module_name':        'dashboard',
+        'popup_add_handler':  'popup_list_dashboards',
+        'add_visual_handler': 'popup_add_dashlet',
     },
 }
 
@@ -1147,4 +1149,41 @@ def collect_context_links_of(what, this_visual, active_filter_vars, mobile):
             context_links.append((_u(linktitle), uri, icon, buttonid))
 
     return context_links
+
+#.
+#   .--Popup Add-----------------------------------------------------------.
+#   |          ____                              _       _     _           |
+#   |         |  _ \ ___  _ __  _   _ _ __      / \   __| | __| |          |
+#   |         | |_) / _ \| '_ \| | | | '_ \    / _ \ / _` |/ _` |          |
+#   |         |  __/ (_) | |_) | |_| | |_) |  / ___ \ (_| | (_| |          |
+#   |         |_|   \___/| .__/ \__,_| .__/  /_/   \_\__,_|\__,_|          |
+#   |                    |_|         |_|                                   |
+#   +----------------------------------------------------------------------+
+#   |  Handling of popup for adding a visual element to a dashboard, etc.  |
+#   '----------------------------------------------------------------------'
+
+def ajax_popup_add():
+    html.write("<ul>")
+
+    for visual_type_name, visual_type in visual_types.items():
+        if "popup_add_handler" in visual_type:
+            module_name = visual_type["module_name"]
+            visual_module = __import__(module_name)
+            handler = eval("visual_module." + visual_type["popup_add_handler"])
+            visuals = handler()
+            html.write('<li><span>Add to %s:</span></li>' % visual_type["title"])
+            for name, title in handler():
+                html.write('<li><a href="javascript:void(0)" '
+                           'onclick="add_to_visual(\'%s\', \'%s\')">%s</a></li>' %
+                           (visual_type_name, name, title))
+    html.write('</ul>\n')
+
+
+def ajax_add_visual():
+    visual_type = html.var('visual_type')
+    visual_type = visual_types[visual_type]
+    module_name = visual_type["module_name"]
+    visual_module = __import__(module_name)
+    handler = eval("visual_module." + visual_type["add_visual_handler"])
+    handler()
 

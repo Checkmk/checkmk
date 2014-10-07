@@ -1046,19 +1046,14 @@ def ajax_dashlet_pos():
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def ajax_popup_add_dashlet():
+def popup_list_dashboards():
     if not config.may("general.edit_dashboards"):
-        raise MKAuthException(_("You are not allowed to edit dashboards."))
+        return []
 
     load_dashboards()
-    html.write('<ul>\n')
-    html.write('<li><span>%s</span></li>' % _('Add to dashboard:'))
-    for dname, board in available_dashboards.items():
-        html.write('<li>')
-        html.write('<a href="javascript:void(0)" onclick="add_to_dashboard(\'%s\')">%s</a>' %
-                                                               (dname, board['title']))
-        html.write('</li>')
-    html.write('</ul>\n')
+    return [ (name, board["title"])
+             for (name, board)
+             in available_dashboards.items() ]
 
 def default_dashlet_definition(ty):
     return {
@@ -1073,20 +1068,20 @@ def add_dashlet(dashlet, dashboard):
     dashboard['mtime'] = int(time.time())
     visuals.save('dashboards', dashboards)
 
-def ajax_add_dashlet():
+def popup_add_dashlet():
     if not config.may("general.edit_dashboards"):
         raise MKAuthException(_("You are not allowed to edit dashboards."))
 
-    board = html.var('name')
-    if not board:
+    dashboard_name = html.var('name')
+    if not dashboard_name:
         raise MKGeneralException(_('The name of the dashboard is missing.'))
 
     load_dashboards()
 
-    if board not in available_dashboards:
+    if dashboard_name not in available_dashboards:
         raise MKGeneralException(_('The requested dashboard does not exist.'))
 
-    dashboard = load_dashboard_with_cloning(board)
+    dashboard = load_dashboard_with_cloning(dashboard_name)
 
     ty = html.var('type')
     if not ty:
@@ -1128,3 +1123,7 @@ def ajax_add_dashlet():
         dashlet['context'] = context
 
     add_dashlet(dashlet, dashboard)
+
+    # Directly go to the dashboard in edit mode. We send the URL as an answer
+    # to the AJAX request
+    html.write('dashboard.py?name=' + dashboard_name + '&edit=1')

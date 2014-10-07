@@ -557,19 +557,19 @@ function create_graph(data, params) {
         var source = parseInt(getUrlParam('source', params));
 
         // Add the control for adding the graph to a dashboard
-        var dashadd = document.createElement('a');
-        dashadd.title = 'Add to dashboard';
-        dashadd.setAttribute('class', 'dashadd');
-        dashadd.onclick = function(host, service, view, source) {
+        var visualadd = document.createElement('a');
+        visualadd.title = 'Add to dashboard';
+        visualadd.setAttribute('class', 'visualadd');
+        visualadd.onclick = function(host, service, view, source) {
             return function() {
-                toggle_add_to_dashboard(this, 'pnpgraph',
+                toggle_add_to_visual(this, 'pnpgraph',
                     { 'host': host, 'service': service },
                     { 'timerange': view, 'source': source }
                 );
             }
         }(data['host'], data['service'], view, source);
 
-        graph_container.appendChild(dashadd);
+        graph_container.appendChild(visualadd);
 
         var link = document.createElement('a');
         link.href = data['pnp_url'] + 'index.php/graph?' + urlvars;
@@ -2192,22 +2192,15 @@ function toggle_popup(event, id)
     return false;
 }
 
-//   .--Add to Dashb.-------------------------------------------------------.
-//   |       _       _     _   _          ____            _     _           |
-//   |      / \   __| | __| | | |_ ___   |  _ \  __ _ ___| |__ | |__        |
-//   |     / _ \ / _` |/ _` | | __/ _ \  | | | |/ _` / __| '_ \| '_ \       |
-//   |    / ___ \ (_| | (_| | | || (_) | | |_| | (_| \__ \ | | | |_) |      |
-//   |   /_/   \_\__,_|\__,_|  \__\___/  |____/ \__,_|___/_| |_|_.__(_)     |
-//   |                                                                      |
-//   +----------------------------------------------------------------------+
+// Add to Visual
 
-var add_dashboard_data    = null;
-var dashadd_popup_id      = null;
-var dashadd_popup_content = null;
+var add_visual_data    = null;
+var visualadd_popup_id      = null;
+var visualadd_popup_content = null;
 
-function close_dashadd_popup()
+function close_visualadd_popup()
 {
-    var menu = document.getElementById('dashadd_popup');
+    var menu = document.getElementById('visualadd_popup');
     if (menu) {
         // hide the open menu
         menu.parentNode.removeChild(menu);
@@ -2215,7 +2208,7 @@ function close_dashadd_popup()
     }
 }
 
-function toggle_add_to_dashboard(trigger_obj, dashlet_type, context, params)
+function toggle_add_to_visual(trigger_obj, element_type, context, params)
 {
     var container = trigger_obj.parentNode;
     var ident;
@@ -2226,61 +2219,62 @@ function toggle_add_to_dashboard(trigger_obj, dashlet_type, context, params)
         }
     }
 
-    close_dashadd_popup();
+    close_visualadd_popup();
 
-    if (dashadd_popup_id === ident) {
-        dashadd_popup_id = null;
+    if (visualadd_popup_id === ident) {
+        visualadd_popup_id = null;
         return; // same icon clicked: just close the menu
     }
-    dashadd_popup_id = ident;
+    visualadd_popup_id = ident;
 
     menu = document.createElement('div');
-    menu.setAttribute('id', 'dashadd_popup');
+    menu.setAttribute('id', 'visualadd_popup');
 
     // populate the menu using a webservice, because the list of dashboards
     // is not known in the javascript code. But it might have been cached
     // before. In this case do not perform a second request.
-    if (dashadd_popup_content !== null)
-        menu.innerHTML = dashadd_popup_content;
+    if (visualadd_popup_content !== null)
+        menu.innerHTML = visualadd_popup_content;
     else
-        get_url('ajax_popup_add_dashlet.py', add_dashboard_response_handler);
+        get_url('ajax_popup_add_visual.py', add_dashboard_response_handler);
 
-    add_dashboard_data = [ dashlet_type, context, params ];
+    add_visual_data = [ element_type, context, params ];
 
     container.appendChild(menu);
 }
 
 function add_dashboard_response_handler(data, response_text)
 {
-    dashadd_popup_content = response_text;
-    var popup = document.getElementById('dashadd_popup');
+    visualadd_popup_content = response_text;
+    var popup = document.getElementById('visualadd_popup');
     if (popup) {
         popup.innerHTML = response_text;
     }
 }
 
-function add_to_dashboard(name)
+function add_to_visual(visual_type, name)
 {
-    close_dashadd_popup();
+    close_visualadd_popup();
 
     var context_txt = [];
-    for (var key in add_dashboard_data[1]) {
-        var ty = typeof(add_dashboard_data[1][key]);
-        context_txt.push(key+':'+ty+':'+add_dashboard_data[1][key]);
+    for (var key in add_visual_data[1]) {
+        var ty = typeof(add_visual_data[1][key]);
+        context_txt.push(key+':'+ty+':'+add_visual_data[1][key]);
     }
 
     var params_txt = [];
-    for (var key in add_dashboard_data[2]) {
-        var ty = typeof(add_dashboard_data[2][key]);
-        params_txt.push(key+':'+ty+':'+add_dashboard_data[2][key]);
+    for (var key in add_visual_data[2]) {
+        var ty = typeof(add_visual_data[2][key]);
+        params_txt.push(key+':'+ty+':'+add_visual_data[2][key]);
     }
 
-    get_url_sync('ajax_add_dashlet.py?name=' + name
-                                  + '&type=' + add_dashboard_data[0]
+    response = get_url_sync('ajax_add_visual.py?visual_type=' + visual_type
+                                  + '&name=' + name
+                                  + '&type=' + add_visual_data[0]
                                   + '&context=' + encodeURIComponent(context_txt.join('|'))
                                   + '&params=' + encodeURIComponent(params_txt.join('|')));
-    add_dashboard_data = null;
+    add_visual_data = null;
 
     // After adding a dashlet, go to the choosen dashboard
-    window.location.href = 'dashboard.py?name=' + name + '&edit=1';
+    window.location.href = response;
 }

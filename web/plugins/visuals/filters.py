@@ -68,7 +68,7 @@ class FilterHostgroupVisibility(Filter):
             return "Filter: num_hosts > 0\n"
 
 #                               filter          title              info       column           htmlvar
-declare_filter(100, FilterText("hostregex",    _("Hostname"),        "host",    "host_name",      "host",    "~~"),
+declare_filter(100, FilterText("hostregex",    _("Hostname"),        "host",    "host_name",      "host_regex",    "~~"),
                           _("Search field allowing regular expressions and partial matches"))
 
 declare_filter(101, FilterText("host",    _("Hostname (exact match)"),             "host",    "host_name",          "host",    "="),
@@ -77,7 +77,7 @@ declare_filter(101, FilterText("host",    _("Hostname (exact match)"),          
 declare_filter(102, FilterText("hostalias",   _("Hostalias"),      "host",     "host_alias",      "hostalias",    "~~"),
                           _("Search field allowing regular expressions and partial matches"))
 
-declare_filter(200, FilterText("serviceregex", _("Service"),         "service", "service_description",   "service", "~~"),
+declare_filter(200, FilterText("serviceregex", _("Service"),         "service", "service_description",   "service_regex", "~~"),
                           _("Search field allowing regular expressions and partial matches"))
 
 declare_filter(201, FilterText("service", _("Service (exact match)"),              "service", "service_description",   "service", "="),
@@ -86,13 +86,13 @@ declare_filter(201, FilterText("service", _("Service (exact match)"),           
 declare_filter(202, FilterText("service_display_name", _("Service alternative display name"),   "service", "service_display_name",   "service_display_name", "~~"),
                           _("Alternative display name of the service, regex match"))
 
-declare_filter(101, FilterText("hostgroupnameregex",    _("Hostgroup"),        "hostgroup",    "hostgroup_name",      "hostgroup_name",    "~~"),
+declare_filter(101, FilterText("hostgroupnameregex",    _("Hostgroup"),        "hostgroup",    "hostgroup_name",      "hostgroup_regex",    "~~"),
                                _("Search field allowing regular expressions and partial matches on the names of hostgroups"))
 
 declare_filter(102, FilterHostgroupVisibility("hostgroupvisibility", _("Empty Hostgroup Visibilitiy")),
                                _("You can enable this checkbox to show empty hostgroups"))
 
-declare_filter(101, FilterText("servicegroupnameregex", _("Servicegroup"),   "servicegroup", "servicegroup_name",   "servicegroup_name", "~~"),
+declare_filter(101, FilterText("servicegroupnameregex", _("Servicegroup"),   "servicegroup", "servicegroup_name",   "servicegroup_regex", "~~"),
                           _("Search field allowing regular expression and partial matches"))
 
 declare_filter(101, FilterText("servicegroupname", _("Servicegroup (enforced)"),   "servicegroup", "servicegroup_name",   "servicegroup_name", "="),
@@ -250,10 +250,10 @@ class FilterGroupCombo(Filter):
 
 
 declare_filter(104, FilterGroupCombo("host",            _("Hostgroup"),            False), _("Optional selection of host group"))
-declare_filter(104, FilterGroupCombo("host",            _("Hostgroup (enforced)"),            True),  _("Dropdown list, selection of host group is <b>enforced</b>"))
+declare_filter(104, FilterGroupCombo("host",            _("Hostgroup (enforced)"), True),  _("Dropdown list, selection of host group is <b>enforced</b>"))
 declare_filter(105, FilterMultigroup("host",            _("Several Hostgroups")), _("Selection of multiple host groups"))
 declare_filter(204, FilterGroupCombo("service",         _("Servicegroup"),         False), _("Optional selection of service group"))
-declare_filter(205, FilterGroupCombo("service",         _("Servicegroup (enforced)"),         True),  _("Dropdown list, selection of service group is <b>enforced</b>"))
+declare_filter(205, FilterGroupCombo("service",         _("Servicegroup (enforced)"), True),  _("Dropdown list, selection of service group is <b>enforced</b>"))
 declare_filter(205, FilterMultigroup("service",         _("Several Servicegroups")), _("Selection of multiple service groups"))
 
 declare_filter(106, FilterGroupCombo("host_contact",    _("Host Contactgroup"),    False), _("Optional selection of host contact group"))

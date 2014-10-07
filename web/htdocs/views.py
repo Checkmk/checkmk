@@ -145,19 +145,24 @@ def transform_old_views():
             context = {}
             filtervars = dict(view['hard_filtervars'])
             all_vars = {}
-            for fname in view['show_filters']:
-                if fname in single_keys:
+            for filter_name in view['show_filters']:
+                if filter_name in single_keys:
                     continue # skip conflictings vars / filters
 
-                context.setdefault(fname, {})
-                f = visuals.get_filter(fname)
+                context.setdefault(filter_name, {})
+                try:
+                    f = visuals.get_filter(filter_name)
+                except:
+                    # The exact match filters have been removed. They where used only as
+                    # link filters anyway - at least by the builtin views.
+                    continue
                 for var in f.htmlvars:
                     # Check whether or not the filter is supported by the datasource,
                     # then either skip or use the filter vars
                     if var in filtervars and f.info in datasource['infos']:
                         value = filtervars[var]
                         all_vars[var] = value
-                        context[fname][var] = value
+                        context[filter_name][var] = value
 
             # Now, when there are single object infos specified, add these keys to the
             # context
@@ -839,7 +844,8 @@ def prepare_display_options():
 # Display view with real data. This is *the* function everying
 # is about.
 def show_view(view, show_heading = False, show_buttons = True,
-              show_footer = True, render_function = None, only_count=False):
+              show_footer = True, render_function = None, only_count=False,
+              all_filters_active=False):
     if html.var("mode") == "availability" and html.has_var("av_aggr_name") and html.var("timeline"):
         bi.page_timeline()
         return
@@ -867,9 +873,9 @@ def show_view(view, show_heading = False, show_buttons = True,
     # Filters to show in the view
     # In case of single object views, the needed filters are fixed, but not always present
     # in context. In this case, take them from the context type definition.
-    show_filters = visuals.show_filters(view, datasource['infos'])
+    show_filters = visuals.show_filters(view, datasource['infos'], all_filters_active)
 
-    visuals.add_context_to_html_vars(view, datasource["infos"], only_count)
+    visuals.add_context_to_uri_vars(view, datasource["infos"], only_count)
 
     # Af any painter, sorter or filter needs the information about the host's
     # inventory, then we load it and attach it as column "host_inventory"

@@ -849,16 +849,21 @@ def filters_allowed_for_info(info):
     return allowed
 
 # Collects all filters to be shown for the given visual
-def show_filters(visual, info_keys):
+def show_filters(visual, info_keys, show_all=False):
     show_filters = []
     for info_key in info_keys:
         if info_key in visual['single_infos']:
             for key in info_params(info_key):
                 show_filters.append(get_filter(key))
-        else:
+        elif not show_all:
             for key, val in visual['context'].items():
                 if type(val) == dict: # this is a real filter
                     show_filters.append(get_filter(key))
+
+    if show_all: # add *all* available filters of these infos
+        for filter_name, filter in multisite_filters.items():
+            if filter.info in info_keys:
+                show_filters.append(filter)
 
     # add ubiquitary_filters that are possible for these infos
     for fn in ubiquitary_filters:
@@ -872,7 +877,7 @@ def show_filters(visual, info_keys):
     return list(set(show_filters)) # remove duplicates
 
 
-def add_context_to_html_vars(visual, only_infos=None, only_count=False):
+def add_context_to_uri_vars(visual, only_infos=None, only_count=False):
     if only_infos == None:
         only_infos = infos.keys() # all datasources!
 
@@ -885,12 +890,18 @@ def add_context_to_html_vars(visual, only_infos=None, only_count=False):
 
     # Now apply the multiple context filters
     for info_key in only_infos:
-        for fname, fval in visual['context'].items():
-            if type(fval) == dict: # this is a real filter
-                for varname, val in fval.items():
-                    # shown filters are set, if form is fresh and variable not supplied in URL
-                    if only_count or (html.var("filled_in") != "filter" and not html.has_var(varname)):
-                        html.set_var(varname, val)
+        for filter_name, filter_vars in visual['context'].items():
+            if type(filter_vars) == dict: # this is a multi-context filter
+                # We add the filter only if *none* if its HTML variables are present on the URL
+                # This important because checkbox variables are not present if the box is not checked.
+                skip = False
+                for uri_varname, value in filter_vars.items():
+                    if html.has_var(uri_varname):
+                        skip = True
+                        break
+                if not skip or only_count:
+                    for uri_varname, value in filter_vars.items():
+                        html.set_var(uri_varname, value)
 
 
 

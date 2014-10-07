@@ -34,12 +34,13 @@ builtin_dashboards["main"] = {
                       "monitored devices."),
     "dashlets" : [
         {
-            "title"      : _("Host Statistics"),
-            "type"       : 'hoststats',
-            "position"   : (1, 1),
-            "refresh"    : 60,
-            "show_title" : True,
-            "context"    : {},
+            "title"        : _("Host Statistics"),
+            "type"         : 'hoststats',
+            "position"     : (1, 1),
+            "refresh"      : 60,
+            "show_title"   : True,
+            "context"      : {},
+            'single_infos' : [],
         },
         {
             "title"      : _("Service Statistics"),
@@ -48,6 +49,7 @@ builtin_dashboards["main"] = {
             "refresh"    : 60,
             "show_title" : True,
             "context"    : {},
+            'single_infos' : [],
         },
         {
             "type"       : "view",
@@ -205,6 +207,7 @@ if defaults.omd_site:
                 "position"         : (1, 1),
                 "size"             : (GROW, GROW),
                 "context"          : {},
+                "single_infos"     : [],
             },
         ]
     }

@@ -536,7 +536,7 @@ def dashlet_view_render_input(dashlet):
     views.load_views()
     if html.var("id"):
         # only needed in case of editing an existing view
-        views.transform_view_to_valuespec(dashlet)
+        views.transform_view_to_valuespec_value(dashlet)
     return views.render_view_config(dashlet)
 
 def dashlet_view_handle_input(ident, dashlet):
@@ -544,7 +544,7 @@ def dashlet_view_handle_input(ident, dashlet):
     dashlet.setdefault('title', _('View'))
     import views # FIXME: HACK, clean this up somehow
     views.load_views()
-    return views.create_view_config(dashlet, dashlet)
+    return views.create_view_from_valuespec(dashlet, dashlet)
 
 dashlet_types["view"] = {
     "title"          : _("View"),

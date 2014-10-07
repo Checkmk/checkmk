@@ -362,10 +362,7 @@ def page_create_visual(what, title, info_keys, next_url = None):
     for key in info_keys:
         info_choices.append((key, _('Show information of a single %s') % infos[key]['title']))
 
-    vs_infos = ListChoice(
-        title = _('Specific objects'),
-        choices = info_choices,
-    )
+    vs_infos = SingleInfoSelection(info_keys)
 
     html.header(_('Create %s') % title, stylesheets=["pages"])
     html.begin_context_buttons()
@@ -971,6 +968,17 @@ class VisualFilter(ValueSpec):
 
     def validate_value(self, value, varprefix):
         ValueSpec.custom_validate(self, value, varprefix)
+
+
+def SingleInfoSelection(info_keys, **args):
+    info_choices = []
+    for key in info_keys:
+        info_choices.append((key, _('Show information of a single %s') % infos[key]['title']))
+
+    args.setdefault("title", _('Specific objects'))
+    args["choices"] = info_choices
+    return  ListChoice(**args)
+
 
 #.
 #   .--Misc----------------------------------------------------------------.

@@ -626,6 +626,7 @@ def rbn_match_rule(rule, context):
         rbn_match_folder(rule, context)                or \
         rbn_match_hosttags(rule, context)              or \
         rbn_match_hostgroups(rule, context)            or \
+        rbn_match_servicegroups(rule, context)         or \
         rbn_match_hosts(rule, context)                 or \
         rbn_match_exclude_hosts(rule, context)         or \
         rbn_match_services(rule, context)              or \
@@ -672,6 +673,29 @@ def rbn_match_hosttags(rule, context):
                 "|".join(tags), "|".join(required))
 
 
+def rbn_match_servicegroups(rule, context):
+    if context["WHAT"] != "SERVICE":
+        return
+    required_groups = rule.get("match_servicegroups")
+    if required_groups != None:
+        sgn = context.get("SERVICEGROUPNAMES")
+        if sgn == None:
+            return "No information about service groups is in the context, but service " \
+                   "must be in group %s" % ( " or ".join(required_groups))
+        if sgn:
+            servicegroups = sgn.split(",")
+        else:
+            return "The service is in no group, but %s is required" % (
+                 " or ".join(required_groups))
+
+        for group in required_groups:
+            if group in servicegroups:
+                return
+
+        return "The service is only in the groups %s, but %s is required" % (
+              sgn, " or ".join(required_groups))
+
+
 def rbn_match_hostgroups(rule, context):
     required_groups = rule.get("match_hostgroups")
     if required_groups != None:
@@ -689,7 +713,7 @@ def rbn_match_hostgroups(rule, context):
             if group in hostgroups:
                 return
 
-        return "The host only is the groups %s, but %s is required" % (
+        return "The host is only in the groups %s, but %s is required" % (
               hgn, " or ".join(required_groups))
 
 

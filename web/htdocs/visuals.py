@@ -434,8 +434,15 @@ def get_context_specs(visual, info_handler):
             params = info['single_spec']
             optional = True
             isopen = True
+            vs = Dictionary(
+                title = info['title'],
+                # render = 'form',
+                form_isopen = isopen,
+                optional_keys = optional,
+                elements = params,
+            )
         else:
-            filter_list  = VisualFilterList([info_key])
+            filter_list  = VisualFilterList([info_key], title=info['title'])
             filter_names = filter_list.filter_names()
             params = [
                 ('filters', filter_list),
@@ -444,14 +451,8 @@ def get_context_specs(visual, info_handler):
             # Make it open by default when at least one filter is used
             isopen = bool([ fn for fn in visual.get('context', {}).keys()
                                                    if fn in filter_names ])
+            vs = filter_list
 
-        vs = Dictionary(
-            title = _('Context: ') + info['title'],
-            render = 'form',
-            form_isopen = isopen,
-            optional_keys = optional,
-            elements = params,
-        )
 
         # Single info context specifications should be listed first
         if info_key in visual['single_infos']:
@@ -466,20 +467,17 @@ def process_context_specs(context_specs):
         ident = 'context_' + info_key
 
         attrs = spec.from_html_vars(ident)
+        html.debug(attrs)
         spec.validate_value(attrs, ident)
-        if 'filters' in attrs: # multi object context
-            context.update(attrs['filters'])
-        else: # single object context
-            context.update(attrs)
+        context.update(attrs)
     return context
 
 def render_context_specs(visual, context_specs):
+    forms.header(_("Context / Search Filters"))
     for info_key, spec in context_specs:
+        forms.section(spec.title())
         ident = 'context_' + info_key
-        if info_key in visual['single_infos']:
-            value = visual.get('context', {})
-        else:
-            value = {'filters': visual.get('context', {})}
+        value = visual.get('context', {})
         spec.render_input(ident, value)
 
 def page_edit_visual(what, all_visuals, custom_field_handler = None,
@@ -908,6 +906,7 @@ class VisualFilterList(ListOfMultiple):
 
         kwargs.setdefault('title', _('Filters'))
         kwargs.setdefault('add_label', _('Add filter'))
+        kwargs.setdefault("size", 50)
 
         ListOfMultiple.__init__(self, fspecs, **kwargs)
 

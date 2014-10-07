@@ -124,6 +124,30 @@ div.floatfilter .content .filtertime select {
     width: 136px;
 }
 
+/* Improving styling of floatfilters that are contained in a ListOf() */
+table.valuespec_listof.filter {
+    width: 300px;
+    border-spacing: 0px;
+}
+select.vlof_filter {
+    width: 312px;
+}
+table.valuespec_listof td.vlof_content.filter {
+    width: 1px;
+    border-style: none;
+}
+table.valuespec_listof td.vlof_buttons.filter {
+    width: 1px;
+    border-style: none;
+}
+table.valuespec_listof td.vlof_buttons.filter img {
+    position: relative;
+    top: -18px;
+    left: -28px;
+    width: 16px;
+    height: 16px;
+}
+
 table.filtertime td {
     vertical-align: middle;
 }

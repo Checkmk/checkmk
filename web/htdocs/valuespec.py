@@ -908,6 +908,7 @@ class ListOfMultiple(ValueSpec):
         self._choice_dict = dict(choices)
         self._size = kwargs.get("size")
         self._add_label = kwargs.get("add_label", _("Add element"))
+        self._delete_style = kwargs.get("delete_style", "default") # or "filter"
 
     def del_button(self, varprefix, ident):
         js = "vs_listofmultiple_del('%s', '%s')" % (varprefix, ident)
@@ -921,6 +922,12 @@ class ListOfMultiple(ValueSpec):
         # here is *not* an option since this might not work in case of
         # a wrong user input.
 
+        # Special styling for filters
+        if self._delete_style == "filter":
+            extra_css=" filter"
+        else:
+            extra_css=""
+
         # In the 'complain' phase, where the user already saved the
         # form but the validation failed, we must not display the
         # original 'value' but take the value from the HTML variables.
@@ -933,15 +940,29 @@ class ListOfMultiple(ValueSpec):
             id = '%s_active' % varprefix, add_var = True)
 
         # Actual table of currently existing entries
-        html.write('<table class="valuespec_listof" id="%s_table">' % varprefix)
+        html.write('<table class="valuespec_listof%s" id="%s_table">' % (extra_css, varprefix))
+
+        def render_content():
+            html.write('<td class="vlof_content%s">' % extra_css)
+            vs.render_input(prefix, value.get(ident))
+            html.write("</td>")
+
+        def render_del():
+            html.write('<td class="vlof_buttons%s">' % extra_css)
+            self.del_button(varprefix, ident)
+            html.write('</td>')
+
         for ident, vs in self._choices:
             cls = ident not in value and 'unused' or ''
             prefix = varprefix + '_' + ident
-            html.write('<tr id="%s_row" class="%s"><td class=vlof_buttons>' % (prefix, cls))
-            self.del_button(varprefix, ident)
-            html.write("</td><td class=vlof_content>")
-            vs.render_input(prefix, value.get(ident))
-            html.write("</td></tr>")
+            html.write('<tr id="%s_row" class="%s">' % (prefix, cls))
+            if self._delete_style == "filter":
+                render_content()
+                render_del()
+            else:
+                render_del()
+                render_content()
+            html.write("</tr>")
         html.write("</table>")
         html.write("<br>")
 
@@ -949,6 +970,8 @@ class ListOfMultiple(ValueSpec):
         attrs = {}
         if self._size != None:
             attrs["style"] = "width: %dex" % self._size
+        if self._delete_style == "filter":
+            attrs["class"] = "vlof_filter"
         html.select(varprefix + '_choice', choosable, attrs=attrs)
         html.javascript('vs_listofmultiple_init(\'%s\');' % varprefix)
         html.jsbutton(varprefix + '_add', self._add_label, "vs_listofmultiple_add('%s')" % varprefix)

@@ -121,7 +121,13 @@ class FilterHasInventory(FilterTristate):
         return "" # No Livestatus filtering right now
 
     def filter_table(self, rows):
-        return [ row for row in rows if row["host_inventory"] ]
+        tri = self.tristate_value()
+        if tri == -1:
+            return rows
+        elif tri == 1:
+            return [ row for row in rows if row["host_inventory"] ]
+        else: # not
+            return [ row for row in rows if not row["host_inventory"] ]
 
 declare_filter(801, FilterHasInventory())
 

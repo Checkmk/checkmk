@@ -1,0 +1,10 @@
+Title: Fixed filter "Host has inventory data"
+Level: 1
+Component: inv
+Compatible: compat
+Version: 1.2.5i6
+Date: 1412697314
+Class: fix
+
+This filter just worked in the positive sense, not in the negative or
+in the ignore sense. This has been fixed.

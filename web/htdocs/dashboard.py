@@ -442,7 +442,7 @@ window.onresize = function () { calculate_dashboard(); }
 dashboard_scheduler(1);
     """ % (MAX, GROW, raster, header_height, screen_margin, title_height, dashlet_padding, dashlet_min_size,
            corner_overlap, refresh_dashlets, ','.join(on_resize), name, board['mtime'],
-           html.makeuri([]), repr(dashlets_js)))
+           html.makeuri([('edit', '1')]), repr(dashlets_js)))
 
     if mode == 'edit':
         html.javascript('toggle_dashboard_edit(true)')

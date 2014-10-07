@@ -388,7 +388,8 @@ def render_dashboard(name):
 
             add_existing_view_type = dashlet_types['view'].copy()
             add_existing_view_type['title'] = _('Existing View')
-            add_existing_view_type['add_urlfunc'] = lambda: 'create_view_dashlet.py?name=%s&create=0' % html.urlencode(name)
+            add_existing_view_type['add_urlfunc'] = lambda: 'create_view_dashlet.py?name=%s&create=0&back=%s' % \
+                                                            (html.urlencode(name), html.urlencode(html.makeuri([('edit', '1')])))
 
             choices = [ ('view', add_existing_view_type) ]
             choices += sorted(dashlet_types.items(), key = lambda x: x[1].get('sort_index', 0))
@@ -442,7 +443,7 @@ window.onresize = function () { calculate_dashboard(); }
 dashboard_scheduler(1);
     """ % (MAX, GROW, raster, header_height, screen_margin, title_height, dashlet_padding, dashlet_min_size,
            corner_overlap, refresh_dashlets, ','.join(on_resize), name, board['mtime'],
-           html.makeuri([]), repr(dashlets_js)))
+           html.makeuri([('edit', '1')]), repr(dashlets_js)))
 
     if mode == 'edit':
         html.javascript('toggle_dashboard_edit(true)')
@@ -679,9 +680,7 @@ def page_create_view_dashlet():
 
     if create:
         import views
-        url = html.makeuri([], filename = "create_view_dashlet_infos.py")
-        url += '&datasource=%s' # %s can not be added using html.makeuri()
-        # Note: %s will later be replaced by datasource
+        url = html.makeuri([('back', html.makeuri([]))], filename = "create_view_dashlet_infos.py")
         views.page_create_view(next_url=url)
 
     else:
@@ -696,8 +695,13 @@ def page_create_view_dashlet_infos():
 
     # Create a new view by choosing the datasource and the single object types
     visuals.page_create_visual('views', _("View"), views.multisite_datasources[ds_name]['infos'],
-        next_url = 'edit_dashlet.py?name=%s&type=view&datasource=%s&single_infos=%%s' %
-            (html.urlencode(html.var('name')), ds_name))
+        next_url = html.makeuri_contextless([
+            ('name', html.var('name')),
+            ('type', 'view'),
+            ('datasource', ds_name),
+            ('back', html.makeuri([])),
+            ('next', html.makeuri_contextless([('name', html.var('name')), ('edit', '1')],'dashboard.py')),
+        ], filename = 'edit_dashlet.py'))
 
 def choose_view(name):
     import views
@@ -710,7 +714,8 @@ def choose_view(name):
 
     html.header(_('Create Dashlet from existing View'), stylesheets=["pages"])
     html.begin_context_buttons()
-    html.context_button(_("Back"), html.makeuri([('edit', 1)], filename = "dashboard.py"), "back")
+    back_url = html.var("back", "dashboard.py?edit=1&name=%s" % html.urlencode(html.var('name')))
+    html.context_button(_("Back"), back_url, "back")
     html.end_context_buttons()
 
     if html.var('save') and html.check_transaction():
@@ -819,6 +824,7 @@ def page_edit_dashlet():
 
     html.begin_context_buttons()
     back_url = html.var('back', 'dashboard.py?name=%s&edit=1' % board)
+    next_url = html.var('next', back_url)
     html.context_button(_('Back'), back_url, 'back')
     html.end_context_buttons()
 
@@ -903,7 +909,7 @@ def page_edit_dashlet():
 
             visuals.save('dashboards', dashboards)
 
-            html.immediate_browser_redirect(1, back_url)
+            html.immediate_browser_redirect(1, next_url)
             if mode == 'edit':
                 html.message(_('The dashlet has been saved.'))
             else:
@@ -974,9 +980,9 @@ def page_delete_dashlet():
             dashboard['mtime'] = int(time.time())
             visuals.save('dashboards', dashboards)
 
-            html.message(_('The dashlet has deleted.'))
+            html.message(_('The dashlet has been deleted.'))
         except MKUserError, e:
-            html.write("<div class=error>%s</div>\n" % e.message)
+            html.write("<div class=error>%s</div>\n" % html.attrencode(e.message))
             return
 
     html.immediate_browser_redirect(1, back_url)

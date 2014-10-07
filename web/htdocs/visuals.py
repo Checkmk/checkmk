@@ -387,8 +387,10 @@ def page_create_visual(what, title, info_keys, next_url = None):
             vs_infos.validate_value(single_infos, 'single_infos')
 
             if not next_url:
-                next_url = 'edit_'+what_s+'.py?mode=create&single_infos=%s'
-            html.http_redirect(next_url % ','.join(single_infos))
+                next_url = 'edit_'+what_s+'.py?mode=create&single_infos=%s' % ','.join(single_infos)
+            else:
+                next_url += '&single_infos=%s' % ','.join(single_infos)
+            html.http_redirect(next_url)
             return
 
         except MKUserError, e:

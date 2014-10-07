@@ -1,9 +1,9 @@
 Title: Dashboard: Exception when editing dashlet details of host stats
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2014-10-06 19:02:25
 Targetversion: future
-Class: bug
 
 When you go to the dashlet properties of the host statistics, then you get
 an exception:
@@ -15,3 +15,6 @@ Traceback (most recent call last):
   File "/omd/sites/heute/share/check_mk/web/htdocs/dashboard.py", line 816, in page_edit_dashlet
     single_infos = dashlet['single_infos']
 KeyError: 'single_infos'
+
+2014-10-07 08:41:35: changed state open -> done
+Fixed.

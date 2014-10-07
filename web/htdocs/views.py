@@ -208,6 +208,7 @@ def page_edit_views():
 # Create datasource selection valuespec, also for other modules
 # FIXME: Sort the datasources by (assumed) common usage
 def DatasourceSelection():
+    # FIXME: Sort the datasources by (assumed) common usage
     datasources = []
     for ds_name, ds in multisite_datasources.items():
         datasources.append((ds_name, ds['title']))
@@ -241,7 +242,7 @@ def page_create_view(next_url = None):
             if not next_url:
                 next_url = html.makeuri([('datasource', ds)], filename = "create_view_infos.py")
             else:
-                next_url = next_url % ds
+                next_url = next_url + '&datasource=%s' % ds
             html.http_redirect(next_url)
             return
 

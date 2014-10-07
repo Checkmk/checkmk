@@ -1896,6 +1896,9 @@ def ajax_export():
         view["public"] = True
     html.write(pprint.pformat(available_views))
 
+def get_view_by_name(view_name):
+    load_views()
+    return available_views[view_name]
 
 #.
 #   .--Plugin Helpers------------------------------------------------------.

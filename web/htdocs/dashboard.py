@@ -1068,55 +1068,27 @@ def add_dashlet(dashlet, dashboard):
     dashboard['mtime'] = int(time.time())
     visuals.save('dashboards', dashboards)
 
-def popup_add_dashlet():
+def popup_add_dashlet(dashboard_name, dashlet_type, context, params):
     if not config.may("general.edit_dashboards"):
-        raise MKAuthException(_("You are not allowed to edit dashboards."))
-
-    dashboard_name = html.var('name')
-    if not dashboard_name:
-        raise MKGeneralException(_('The name of the dashboard is missing.'))
+	# Exceptions do not work here.
+	return
 
     load_dashboards()
 
     if dashboard_name not in available_dashboards:
-        raise MKGeneralException(_('The requested dashboard does not exist.'))
-
+	return
     dashboard = load_dashboard_with_cloning(dashboard_name)
+    dashlet = default_dashlet_definition(dashlet_type)
 
-    ty = html.var('type')
-    if not ty:
-        raise MKGeneralException(_('The type of the dashlet is missing.'))
+    dashlet["context"] = context
+    if dashlet_type == 'view':
+        view_name = params['name']
+    else:
+        dashlet.update(params)
 
-    dashlet_type = dashlet_types[ty]
-
-    dashlet = default_dashlet_definition(ty)
-
-    # Parse context and params
-    view_name = None
-    for what in [ 'context', 'params' ]:
-        val = html.var(what)
-        data = {}
-        if val == None:
-            raise MKGeneralException(_('Unable to parse the dashlet parameter "%s".') % what)
-        elif val == '':
-            dashlet[what] = {}
-            continue # silently skip empty vars
-
-        for entry in val.split('|'):
-            key, vartype, val = entry.split(':', 2)
-            if vartype == 'number':
-                val = int(val)
-            data[key] = val
-
-        if what == 'context':
-            dashlet[what] = data
-        else:
-            if ty == 'view':
-                view_name = data['name']
-            dashlet.update(data)
 
     # When a view shal be added to the dashboard, load the view and put it into the dashlet
-    if ty == 'view':
+    if dashlet_type == 'view':
         # save the original context and override the context provided by the view
         context = dashlet['context']
         load_view_into_dashlet(dashlet, len(dashboard['dashlets']), view_name)

@@ -239,7 +239,10 @@ def available(what, all_visuals):
 #   | Show a list of all visuals with actions to delete/clone/edit         |
 #   '----------------------------------------------------------------------'
 
-def page_list(what, title, visuals, custom_columns = [], render_custom_buttons=None):
+def page_list(what, title, visuals, custom_columns = [],
+    render_custom_buttons = None,
+    render_custom_columns = None):
+
     what_s = what[:-1]
     if not config.may("general.edit_" + what):
         raise MKAuthException(_("Sorry, you lack the permission for editing this type of visuals."))
@@ -271,23 +274,23 @@ def page_list(what, title, visuals, custom_columns = [], render_custom_buttons=N
 
     custom  = []
     builtin = []
-    for (owner, visualname) in keys_sorted:
-        if owner == "" and not config.may("%s.%s" % (what_s, visualname)):
+    for (owner, visual_name) in keys_sorted:
+        if owner == "" and not config.may("%s.%s" % (what_s, visual_name)):
             continue # not allowed to see this view
 
-        visual = visuals[(owner, visualname)]
+        visual = visuals[(owner, visual_name)]
         if owner == config.user_id or \
            (visual["public"] and owner != '' and config.user_may(owner, "general.publish_" + what)):
-            custom.append((owner, visualname, visual))
+            custom.append((owner, visual_name, visual))
         elif visual["public"] and owner == "":
-            builtin.append((owner, visualname, visual))
+            builtin.append((owner, visual_name, visual))
 
     for title, items in [ (_('Custom'), custom), (_('Builtin'), builtin) ]:
         html.write('<h3>' + title + '</h3>')
 
         table.begin(css = 'data', limit = None)
 
-        for owner, visualname, visual in items:
+        for owner, visual_name, visual in items:
             table.row(css = 'data')
 
             # Actions
@@ -295,33 +298,33 @@ def page_list(what, title, visuals, custom_columns = [], render_custom_buttons=N
 
             # Edit
             if owner == config.user_id:
-                html.icon_button("edit_%s.py?load_name=%s" % (what_s, visualname), _("Edit"), "edit")
+                html.icon_button("edit_%s.py?load_name=%s" % (what_s, visual_name), _("Edit"), "edit")
 
             # Clone / Customize
             buttontext = _("Create a customized copy of this")
             backurl = html.urlencode(html.makeuri([]))
             clone_url = "edit_%s.py?load_user=%s&load_name=%s&back=%s" \
-                        % (what_s, owner, visualname, backurl)
+                        % (what_s, owner, visual_name, backurl)
             html.icon_button(clone_url, buttontext, "clone")
 
             # Delete
             if owner == config.user_id:
-                html.icon_button(html.makeactionuri([('_delete', visualname)]),
+                html.icon_button(html.makeactionuri([('_delete', visual_name)]),
                     _("Delete!"), "delete")
 
             # Custom buttons - visual specific
             if render_custom_buttons:
-                render_custom_buttons(visualname, visual)
+                render_custom_buttons(visual_name, visual)
 
             # visual Name
-            table.cell(_('ID'), visualname)
+            table.cell(_('ID'), visual_name)
 
             # Title
             table.cell(_('Title'))
             title = _u(visual['title'])
             if not visual["hidden"]:
                 html.write("<a href=\"%s.py?%s=%s\">%s</a>" %
-                    (what_s, visual_types[what]['ident_attr'], visualname, html.attrencode(title)))
+                    (what_s, visual_types[what]['ident_attr'], visual_name, html.attrencode(title)))
             else:
                 html.write(html.attrencode(title))
             html.help(html.attrencode(_u(visual['description'])))
@@ -338,6 +341,9 @@ def page_list(what, title, visuals, custom_columns = [], render_custom_buttons=N
             table.cell(_('Owner'), ownertxt)
             table.cell(_('Public'), visual["public"] and _("yes") or _("no"))
             table.cell(_('Hidden'), visual["hidden"] and _("yes") or _("no"))
+
+            if render_custom_columns:
+                render_custom_columns(visual_name, visual)
 
         table.end()
 
@@ -1185,5 +1191,22 @@ def ajax_add_visual():
     module_name = visual_type["module_name"]
     visual_module = __import__(module_name)
     handler = eval("visual_module." + visual_type["add_visual_handler"])
-    handler()
+    element_name = html.var("name")
+    element_type = html.var("type")
+    # Context and params are | separated lists of : separated triples
+    # of name, datatype and value. Datatype is int or string
+    extra_data = []
+    for what in [ 'context', 'params' ]:
+        value = html.var(what)
+        data = {}
+        extra_data.append(data)
+        if value == '':
+            continue
+        for entry in value.split('|'):
+            key, vartype, value = entry.split(':', 2)
+            if vartype == 'number':
+                value = int(value)
+            data[key] = value
+
+    handler(element_name, element_type, *extra_data)
 

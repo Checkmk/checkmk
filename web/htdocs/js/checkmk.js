@@ -2276,5 +2276,6 @@ function add_to_visual(visual_type, name)
     add_visual_data = null;
 
     // After adding a dashlet, go to the choosen dashboard
-    window.location.href = response;
+    if (response)
+        window.location.href = response;
 }

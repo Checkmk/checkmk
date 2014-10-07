@@ -97,6 +97,9 @@ def transform_old_views():
         ds_name    = view['datasource']
         datasource = multisite_datasources[ds_name]
 
+        if "context" not in view: # legacy views did not have this explicitly
+            view.setdefault("user_sortable", True)
+
         # This tries to map the datasource and additional settings of the
         # views to get the correct view context
         if 'single_infos' not in view:
@@ -295,8 +298,8 @@ def page_edit_view():
 
     visuals.page_edit_visual('views', multisite_views,
         custom_field_handler = render_view_config,
-        load_handler = transform_view_to_valuespec,
-        create_handler = create_view_config,
+        load_handler = transform_view_to_valuespec_value,
+        create_handler = create_view_from_valuespec,
         info_handler = get_view_infos,
         try_handler = lambda view: show_view(view, False, False)
     )
@@ -509,71 +512,74 @@ def render_view_config(view, general_properties=True):
     view['datasource'] = ds_name
 
     for ident, vs in view_editor_specs(ds_name, general_properties):
-        vs.render_input(ident, view)
+        vs.render_input(ident, view[ident])
 
-# Is used to change the view structure to be compatible to the valuespec
-# This needs to perform the inverted steps of the create_view() function
-# FIXME: One day we should rewrite this to make no transform needed anymore
-def transform_view_to_valuespec(view):
-    view['options'] = []
+# Is used to change the view structure to be compatible to
+# the valuespec This needs to perform the inverted steps of the
+# transform_valuespec_value_to_view() function. FIXME: One day we should
+# rewrite this to make no transform needed anymore
+def transform_view_to_valuespec_value(view):
+    view["view"] = {} # Several global variables are put into a sub-dict
+    # Only copy our known keys. Reporting element, etc. might have their own keys as well
+    for key in [ "datasource", "browser_reload", "layout", "num_columns", "column_headers" ]:
+        if key in view:
+            view["view"][key] = view[key]
+
+    view["view"]['options'] = []
     for key, title in view_editor_options():
         if view.get(key):
-            view['options'].append(key)
+            view['view']['options'].append(key)
 
     view['visibility'] = []
     for key in [ 'hidden', 'hidebutton', 'public' ]:
         if view.get(key):
             view['visibility'].append(key)
 
-    view['grouping'] = view['group_painters']
-    view['filters']  = view['context']
+    view['grouping'] = { "grouping" : view.get('group_painters', []) }
+    view['filters']  = { "context" : view.get('context', {}) }
+    view['sorting']  = { "sorters" : view.get('sorters', {}) }
 
-    view['columns'] = []
-    for entry in view['painters']:
+    columns = []
+    view['columns'] = { "columns" : columns }
+    for entry in view.get('painters', []):
         if len(entry) == 5:
             pname, viewname, tooltip, join_index, col_title = entry
-            view['columns'].append((pname, join_index, viewname, tooltip, col_title))
+            columns.append((pname, join_index, viewname, tooltip, col_title))
 
         elif len(entry) == 4:
             pname, viewname, tooltip, join_index = entry
-            view['columns'].append((pname, join_index, viewname, tooltip, ''))
+            columns.append((pname, join_index, viewname, tooltip, ''))
 
         elif len(entry) == 3:
             pname, viewname, tooltip = entry
-            view['columns'].append((pname, viewname, tooltip))
+            columns.append((pname, viewname, tooltip))
 
         else:
             pname, viewname = entry
-            view['columns'].append((pname, viewname, ''))
+            columns.append((pname, viewname, ''))
 
-# Extract properties of view from HTML variables and construct
-# view object, to be used for saving or displaying
-#
-# old_view is the old view dict which might be loaded from storage.
-# view is the new dict object to be updated.
-def create_view_config(old_view, view):
-    ds_name = old_view.get('datasource', html.var('datasource'))
-    datasource = multisite_datasources[ds_name]
 
-    for ident, vs in view_editor_specs(ds_name):
-        attrs = vs.from_html_vars(ident)
-        vs.validate_value(attrs, ident)
 
+
+def transform_valuespec_value_to_view(view):
+    for ident, attrs in view.items():
         # Transform some valuespec specific options to legacy view
         # format. We do not want to change the view data structure
         # at the moment.
         if ident == 'view':
-            for option in attrs['options']:
-                view[option] = True
-            del attrs['options']
-
+            if "options" in attrs:
+                for option in attrs['options']:
+                    view[option] = True
+                del attrs['options']
             view.update(attrs)
 
         elif ident == 'sorting':
             view.update(attrs)
+            del view["sorting"]
 
         elif ident == 'grouping':
             view['group_painters'] = attrs['grouping']
+            del view["grouping"]
 
         elif ident == 'columns':
             painters = []
@@ -593,7 +599,25 @@ def create_view_config(old_view, view):
                 else:
                     painters.append((pname, viewname, tooltip))
             view['painters'] = painters
+            del view["columns"]
 
+
+# Extract properties of view from HTML variables and construct
+# view object, to be used for saving or displaying
+#
+# old_view is the old view dict which might be loaded from storage.
+# view is the new dict object to be updated.
+def create_view_from_valuespec(old_view, view):
+    ds_name = old_view.get('datasource', html.var('datasource'))
+    datasource = multisite_datasources[ds_name]
+    vs_value = {}
+    for ident, vs in view_editor_specs(ds_name):
+        attrs = vs.from_html_vars(ident)
+        vs.validate_value(attrs, ident)
+        vs_value[ident] = attrs
+
+    transform_valuespec_value_to_view(vs_value)
+    view.update(vs_value)
     return view
 
 #.
@@ -704,6 +728,13 @@ def page_view():
 # (e.g. from the services table while we are in a hosts view)
 # If join_columns is False, we only return the "normal" columns.
 def get_needed_columns(view, painters):
+    # Make sure that the information about the available views is present. If
+    # called via the reporting, than this might not be the case
+    try:
+        available_views
+    except:
+        load_views()
+
     columns = []
     for entry in painters:
         painter = entry[0]
@@ -818,8 +849,13 @@ def show_view(view, show_heading = False, show_buttons = True,
     display_options = prepare_display_options()
 
     # User can override the layout settings via HTML variables (buttons)
-    # which are safed persistently. This is known as "view options"
-    vo = view_options(view["name"])
+    # which are safed persistently. This is known as "view options". Note: a few
+    # can be anonymous (e.g. when embedded into a report). In that case there
+    # are no display options.
+    if "name" in view:
+        vo = view_options(view["name"])
+    else:
+        vo = {}
     num_columns     = vo.get("num_columns",     view.get("num_columns",    1))
     browser_reload  = vo.get("refresh",         view.get("browser_reload", None))
 
@@ -994,9 +1030,15 @@ def show_view(view, show_heading = False, show_buttons = True,
         html.set_browser_reload(browser_reload)
 
     # The layout of the view: it can be overridden by several specifying
-    # an output format (like json or python).
+    # an output format (like json or python). Note: the layout is not
+    # always needed. In case of an embedded view in the reporting this
+    # field is simply missing, because the rendering is done by the
+    # report itself.
     if html.output_format == "html":
-        layout = multisite_layouts[view["layout"]]
+        if "layout" in view:
+            layout = multisite_layouts[view["layout"]]
+        else:
+            layout = None
     else:
         layout = multisite_layouts.get(html.output_format)
         if not layout:

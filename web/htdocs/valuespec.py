@@ -904,9 +904,9 @@ class ListOf(ValueSpec):
 class ListOfMultiple(ValueSpec):
     def __init__(self, choices, **kwargs):
         ValueSpec.__init__(self, **kwargs)
-        self._choices     = choices
+        self._choices = choices
         self._choice_dict = dict(choices)
-
+        self._size = kwargs.get("size")
         self._add_label = kwargs.get("add_label", _("Add element"))
 
     def del_button(self, varprefix, ident):
@@ -946,7 +946,10 @@ class ListOfMultiple(ValueSpec):
         html.write("<br>")
 
         choosable = [('', '')] + [ (ident, vs.title()) for ident, vs in self._choices if ident not in value ]
-        html.select(varprefix + '_choice', choosable)
+        attrs = {}
+        if self._size != None:
+            attrs["style"] = "width: %dex" % self._size
+        html.select(varprefix + '_choice', choosable, attrs=attrs)
         html.javascript('vs_listofmultiple_init(\'%s\');' % varprefix)
         html.jsbutton(varprefix + '_add', self._add_label, "vs_listofmultiple_add('%s')" % varprefix)
 

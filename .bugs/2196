@@ -1,0 +1,8 @@
+Title: Dashboard: "Show this view in the mobile GUI" does not make sense
+Component: multisite
+State: open
+Date: 2014-10-06 19:12:23
+Targetversion: future
+Class: nastiness
+
+This checkbox does not make any sense when a view is an embedded dashlet.

@@ -206,6 +206,7 @@ def page_edit_views():
 # First step: Select the data source
 
 # Create datasource selection valuespec, also for other modules
+# FIXME: Sort the datasources by (assumed) common usage
 def DatasourceSelection():
     # FIXME: Sort the datasources by (assumed) common usage
     datasources = []
@@ -324,86 +325,58 @@ def view_editor_options():
     #            % docu_link("multisite_sounds", _("documentation")))
     ]
 
-def view_editor_specs(ds_name):
+def view_editor_specs(ds_name, general_properties=True):
+    load_views() # make sure that available_views is present
     specs = []
-    specs.append(
-        ('view', Dictionary(
-            title = _('View Properties'),
-            render = 'form',
-            optional_keys = None,
-            elements = [
-                ('datasource', FixedValue(ds_name,
-                    title = _('Datasource'),
-                    totext = multisite_datasources[ds_name]['title'],
-                    help = _('The datasource of a view cannot be changed.'),
-                )),
-                ('options', ListChoice(
-                    title = _('Options'),
-                    choices = view_editor_options(),
-                    default_value = ['user_sortable'],
-                )),
-                ('browser_reload', Integer(
-                    title = _('Automatic page reload'),
-                    unit = _('seconds'),
-                    minvalue = 0,
-                    help = _('Leave this empty or at 0 for no automatic reload.'),
-                )),
-                ('layout', DropdownChoice(
-                    title = _('Basic Layout'),
-                    choices = [ (k, v["title"]) for k,v in multisite_layouts.items() if not v.get("hide")],
-                    default_value = 'table',
-                    sorted = True,
-                )),
-                ('num_columns', Integer(
-                    title = _('Number of Columns'),
-                    default_value = 1,
-                    minvalue = 1,
-                    maxvalue = 50,
-                )),
-                ('column_headers', DropdownChoice(
-                    title = _('Column Headers'),
-                    choices = [
-                        ("off",      _("off")),
-                        ("pergroup", _("once per group")),
-                        ("repeat",   _("repeat every 20'th row")),
-                    ],
-                    default_value = 'pergroup',
-                )),
-            ],
-        ))
-    )
-
-    # [4] Sorting
-    allowed = allowed_for_datasource(multisite_sorters, ds_name)
-    specs.append(
-        ('sorting', Dictionary(
-            title = _('Sorting'),
-            render = 'form',
-            optional_keys = None,
-            elements = [
-                ('sorters', ListOf(
-                    Tuple(
-                        elements = [
-                            DropdownChoice(
-                                title = _('Column'),
-                                choices = [ (name, p["title"]) for name, p in allowed.items() ],
-                                sorted = True,
-                                no_preselect = True,
-                            ),
-                            DropdownChoice(
-                                title = _('Order'),
-                                choices = [(False, _("Ascending")),
-                                           (True, _("Descending"))],
-                            ),
+    if general_properties:
+        specs.append(
+            ('view', Dictionary(
+                title = _('View Properties'),
+                render = 'form',
+                optional_keys = None,
+                elements = [
+                    ('datasource', FixedValue(ds_name,
+                        title = _('Datasource'),
+                        totext = multisite_datasources[ds_name]['title'],
+                        help = _('The datasource of a view cannot be changed.'),
+                    )),
+                    ('options', ListChoice(
+                        title = _('Options'),
+                        choices = view_editor_options(),
+                        default_value = ['user_sortable'],
+                    )),
+                    ('browser_reload', Integer(
+                        title = _('Automatic page reload'),
+                        unit = _('seconds'),
+                        minvalue = 0,
+                        help = _('Leave this empty or at 0 for no automatic reload.'),
+                    )),
+                    ('layout', DropdownChoice(
+                        title = _('Basic Layout'),
+                        choices = [ (k, v["title"]) for k,v in multisite_layouts.items() if not v.get("hide")],
+                        default_value = 'table',
+                        sorted = True,
+                    )),
+                    ('num_columns', Integer(
+                        title = _('Number of Columns'),
+                        default_value = 1,
+                        minvalue = 1,
+                        maxvalue = 50,
+                    )),
+                    ('column_headers', DropdownChoice(
+                        title = _('Column Headers'),
+                        choices = [
+                            ("off",      _("off")),
+                            ("pergroup", _("once per group")),
+                            ("repeat",   _("repeat every 20'th row")),
                         ],
-                        orientation = 'horizontal',
-                    ),
-                    title = _('Sorting'),
-                    add_label = _('Add column'),
-                )),
-            ],
-        )),
-    )
+                        default_value = 'pergroup',
+                    )),
+                ],
+            ))
+        )
+
+    allowed = allowed_for_datasource(multisite_sorters, ds_name)
 
     def column_spec(ident, title, ds_name):
         allowed = allowed_for_datasource(multisite_painters, ds_name)
@@ -490,12 +463,43 @@ def view_editor_specs(ds_name):
             ],
         ))
 
-    specs.append(column_spec('grouping', _('Grouping'), ds_name))
     specs.append(column_spec('columns', _('Columns'), ds_name))
+
+    specs.append(
+        ('sorting', Dictionary(
+            title = _('Sorting'),
+            render = 'form',
+            optional_keys = None,
+            elements = [
+                ('sorters', ListOf(
+                    Tuple(
+                        elements = [
+                            DropdownChoice(
+                                title = _('Column'),
+                                choices = [ (name, p["title"]) for name, p in allowed.items() ],
+                                sorted = True,
+                                no_preselect = True,
+                            ),
+                            DropdownChoice(
+                                title = _('Order'),
+                                choices = [(False, _("Ascending")),
+                                           (True, _("Descending"))],
+                            ),
+                        ],
+                        orientation = 'horizontal',
+                    ),
+                    title = _('Sorting'),
+                    add_label = _('Add column'),
+                )),
+            ],
+        )),
+    )
+
+    specs.append(column_spec('grouping', _('Grouping'), ds_name))
 
     return specs
 
-def render_view_config(view):
+def render_view_config(view, general_properties=True):
     ds_name = view.get("datasource", html.var("datasource"))
     if not ds_name:
         raise MKInternalError(_("No datasource defined."))
@@ -504,7 +508,7 @@ def render_view_config(view):
 
     view['datasource'] = ds_name
 
-    for ident, vs in view_editor_specs(ds_name):
+    for ident, vs in view_editor_specs(ds_name, general_properties):
         vs.render_input(ident, view)
 
 # Is used to change the view structure to be compatible to the valuespec

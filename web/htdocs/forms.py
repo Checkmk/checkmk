@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 from lib import *
+from valuespec import *
 
 # A input function with the same call syntax as htmllib.textinput()
 def input(valuespec, varprefix, defvalue):
@@ -40,34 +41,42 @@ def get_input(valuespec, varprefix):
     return value
 
 
+def edit_dictionary(entries, value, **args):
+    return edit_dictionaries(
+        [ ("value", Dictionary(title=title, elements=entries)) ],
+          { "value" : value },
+          **args)
 
-# preview = True: Do not output error messages, do not consume
-# current transaction. This is for preview mode
-def edit_dictionary(entries, value, focus=None, hover_help=True,
+# Edit a dictionary with several sub-dictionaries
+def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
                     validate=None, buttontext=None, title=None,
                     buttons = None, method="GET", preview=False,
                     varprefix="", formname="form", consume_transid = True):
+
     new_value = value.copy()
     if html.var("filled_in") == formname and html.transaction_valid():
         if not preview and consume_transid:
             html.check_transaction()
 
         messages = []
-        for name, vs in entries:
-            try:
-                v = vs.from_html_vars(varprefix + name)
-                vs.validate_value(v, varprefix + name)
-                new_value[name] = v
-            except MKUserError, e:
-                messages.append("%s: %s" % (vs.title(), e.message))
-                html.add_user_error(e.varname, e.message)
+        for keyname, dictionary in dictionaries:
+            new_value[keyname] = {}
+            entries = dictionary._elements
+            for name, vs in entries:
+                try:
+                    v = vs.from_html_vars(keyname + "_" + varprefix + name)
+                    vs.validate_value(v, keyname + "_" + varprefix + name)
+                    new_value[keyname][name] = v
+                except MKUserError, e:
+                    messages.append("%s: %s" % (vs.title(), e.message))
+                    html.add_user_error(e.varname, e.message)
 
-        if validate and not html.has_user_errors():
-            try:
-                validate(new_value)
-            except MKUserError, e:
-                messages.append(e.message)
-                html.add_user_error(e.varname, e.message)
+            if validate and not html.has_user_errors():
+                try:
+                    validate(new_value[keyname])
+                except MKUserError, e:
+                    messages.append(e.message)
+                    html.add_user_error(e.varname, e.message)
 
         if messages:
             if not preview:
@@ -79,19 +88,20 @@ def edit_dictionary(entries, value, focus=None, hover_help=True,
 
 
     html.begin_form(formname, method=method)
-    header(title and title or _("Properties"))
-    first = True
-    for name, vs in entries:
-        section(vs.title())
-        html.help(vs.help())
-        if name in value:
-            v = value[name]
-        else:
-            v = vs.default_value()
-        vs.render_input(varprefix + name, v)
-        if (not focus and first) or (name == focus):
-            vs.set_focus(varprefix + name)
-            first = False
+    for keyname, dictionary in dictionaries:
+        header(dictionary.title())
+        first = True
+        for name, vs in dictionary._elements:
+            section(vs.title())
+            html.help(vs.help())
+            if name in value:
+                v = value[name]
+            else:
+                v = vs.default_value()
+            vs.render_input(keyname + "_" + varprefix + name, v)
+            if (not focus and first) or (name == focus):
+                vs.set_focus(keyname + "_" + varprefix + name)
+                first = False
 
     end()
     if buttons:

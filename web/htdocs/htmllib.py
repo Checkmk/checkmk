@@ -58,6 +58,7 @@ class html:
         self.link_target = None
         self.form_name = None
         self.form_vars = []
+        self.var_stash = []
         self.context_buttons_open = False
         self.mobile = False
         self.buffering = True
@@ -986,6 +987,12 @@ class html:
         else:
             self.vars = dict([(k,v) for (k,v) in self.vars.iteritems() if not k.startswith(prefix)])
             self.listvars = dict([(k,v) for (k,v) in self.listvars.iteritems() if not k.startswith(prefix)])
+
+    def stash_vars(self):
+        self.var_stash.append(self.vars.copy())
+
+    def unstash_vars(self):
+        self.vars = self.var_stash.pop()
 
     def javascript(self, code):
         self.write("<script language=\"javascript\">\n%s\n</script>\n" % code)

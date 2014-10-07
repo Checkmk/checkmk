@@ -388,7 +388,8 @@ def render_dashboard(name):
 
             add_existing_view_type = dashlet_types['view'].copy()
             add_existing_view_type['title'] = _('Existing View')
-            add_existing_view_type['add_urlfunc'] = lambda: 'create_view_dashlet.py?name=%s&create=0' % html.urlencode(name)
+            add_existing_view_type['add_urlfunc'] = lambda: 'create_view_dashlet.py?name=%s&create=0&back=%s' % \
+                                                            (html.urlencode(name), html.urlencode(html.makeuri([('edit', '1')])))
 
             choices = [ ('view', add_existing_view_type) ]
             choices += sorted(dashlet_types.items(), key = lambda x: x[1].get('sort_index', 0))
@@ -679,9 +680,10 @@ def page_create_view_dashlet():
 
     if create:
         import views
+        # %s can not be added using html.makeuri(), replaced with datasource later
         url = html.makeuri([], filename = "create_view_dashlet_infos.py")
-        url += '&datasource=%s' # %s can not be added using html.makeuri()
-        # Note: %s will later be replaced by datasource
+        url += '&datasource=%s'
+
         views.page_create_view(next_url=url)
 
     else:
@@ -710,7 +712,8 @@ def choose_view(name):
 
     html.header(_('Create Dashlet from existing View'), stylesheets=["pages"])
     html.begin_context_buttons()
-    html.context_button(_("Back"), html.makeuri([('edit', 1)], filename = "dashboard.py"), "back")
+    back_url = html.var("back", "dashboard.py?edit=1&name=%s" % html.urlencode(html.var('name')))
+    html.context_button(_("Back"), back_url, "back")
     html.end_context_buttons()
 
     if html.var('save') and html.check_transaction():

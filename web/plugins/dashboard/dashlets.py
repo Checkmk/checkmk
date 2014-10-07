@@ -525,7 +525,8 @@ def dashlet_view(nr, params):
     views.show_view(params, True, True, True)
 
 def dashlet_view_add_url():
-    return 'create_view_dashlet.py?name=%s' % html.urlencode(html.var('name'))
+    return 'create_view_dashlet.py?name=%s&back=%s' % \
+        (html.urlencode(html.var('name')), html.urlencode(html.makeuri([('edit', '1')])))
 
 def dashlet_view_parameters():
     return dashlet_view_render_input, dashlet_view_handle_input

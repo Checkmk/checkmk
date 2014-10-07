@@ -207,6 +207,7 @@ def page_edit_views():
 
 # Create datasource selection valuespec, also for other modules
 def DatasourceSelection():
+    # FIXME: Sort the datasources by (assumed) common usage
     datasources = []
     for ds_name, ds in multisite_datasources.items():
         datasources.append((ds_name, ds['title']))
@@ -222,7 +223,6 @@ def DatasourceSelection():
 
 def page_create_view(next_url = None):
 
-    # FIXME: Sort the datasources by (assumed) common usage
     vs_ds = DatasourceSelection()
 
     ds = 'services' # Default selection

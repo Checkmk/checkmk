@@ -980,9 +980,9 @@ def page_delete_dashlet():
             dashboard['mtime'] = int(time.time())
             visuals.save('dashboards', dashboards)
 
-            html.message(_('The dashlet has deleted.'))
+            html.message(_('The dashlet has been deleted.'))
         except MKUserError, e:
-            html.write("<div class=error>%s</div>\n" % e.message)
+            html.write("<div class=error>%s</div>\n" % html.attrencode(e.message))
             return
 
     html.immediate_browser_redirect(1, back_url)

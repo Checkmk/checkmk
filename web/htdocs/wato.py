@@ -8114,16 +8114,16 @@ def FolderChoice(**kwargs):
     return DropdownChoice(**kwargs)
 
 
-class HostgroupChoice(DualListChoice):
-    def __init__(self, **kwargs):
+class GroupChoice(DualListChoice):
+    def __init__(self, what, **kwargs):
         DualListChoice.__init__(self, **kwargs)
+        self.what = what
         self._choices = lambda: self.load_groups()
 
     def load_groups(self):
         all_groups = userdb.load_group_information()
-        this_group = all_groups.get("host", {})
+        this_group = all_groups.get(self.what, {})
         return [ (k, t['alias'] and t['alias'] or k) for (k, t) in this_group.items() ]
-
 
 def vs_notification_bulkby():
     return ListChoice(
@@ -8262,7 +8262,7 @@ def vs_notification_rule(userid = None):
                   title = _("Match Host Tags"))
             ),
             ( "match_hostgroups",
-              HostgroupChoice(
+              GroupChoice("host",
                   title = _("Match Host Groups"),
                   help = _("The host must be in one of the selected host groups"),
                   allow_empty = False,
@@ -8294,6 +8294,13 @@ def vs_notification_rule(userid = None):
                   orientation = "horizontal",
                   allow_empty = False,
                   empty_text = _("Please specify at least one service regex. Disable the option if you want to allow all services."),
+              )
+            ),
+            ( "match_servicegroups",
+              GroupChoice("service",
+                  title = _("Match Service Groups"),
+                  help = _("The host must be in one of the selected service groups"),
+                  allow_empty = False,
               )
             ),
             ( "match_exclude_services",
@@ -8546,7 +8553,7 @@ def vs_notification_rule(userid = None):
 
         ],
         optional_keys = [ "match_folder", "match_hosttags", "match_hostgroups", "match_hosts", "match_exclude_hosts",
-                          "match_services", "match_exclude_services", "match_plugin_output",
+                          "match_services", "match_servicegroups", "match_exclude_services", "match_plugin_output",
                           "match_timeperiod", "match_escalation", "match_escalation_throttle",
                           "match_sl", "match_host_event", "match_service_event", "match_ec",
                           "match_checktype", "bulk", "contact_users", "contact_groups", "contact_emails" ],
@@ -8556,7 +8563,7 @@ def vs_notification_rule(userid = None):
             + contact_headers
             + [
             ( _("Conditions"),         [ "match_folder", "match_hosttags", "match_hostgroups", "match_hosts", "match_exclude_hosts",
-                                         "match_services", "match_exclude_services", "match_plugin_output",
+                                         "match_services", "match_servicegroups", "match_exclude_services", "match_plugin_output",
                                          "match_checktype", "match_timeperiod",
                                          "match_escalation", "match_escalation_throttle",
                                          "match_sl", "match_host_event", "match_service_event", "match_ec" ] ),

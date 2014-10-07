@@ -299,10 +299,7 @@ class FilterServiceState(Filter):
         for var, text in [(self.prefix + "st0", _("OK")), (self.prefix + "st1", _("WARN")), \
                           (self.prefix + "st2", _("CRIT")), (self.prefix + "st3", _("UNKNOWN")),
                           (self.prefix + "stp", _("PEND"))]:
-	    #if html.mobile:
-	        #text = text[:1]
             html.checkbox(var, True, label=text)
-            # html.write(" %s " % text)
         html.end_checkbox_group()
 
     def filter(self, infoname):

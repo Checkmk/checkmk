@@ -680,10 +680,7 @@ def page_create_view_dashlet():
 
     if create:
         import views
-        # %s can not be added using html.makeuri(), replaced with datasource later
-        url = html.makeuri([], filename = "create_view_dashlet_infos.py")
-        url += '&datasource=%s'
-
+        url = html.makeuri([('back', html.makeuri([]))], filename = "create_view_dashlet_infos.py")
         views.page_create_view(next_url=url)
 
     else:
@@ -698,8 +695,13 @@ def page_create_view_dashlet_infos():
 
     # Create a new view by choosing the datasource and the single object types
     visuals.page_create_visual('views', _("View"), views.multisite_datasources[ds_name]['infos'],
-        next_url = 'edit_dashlet.py?name=%s&type=view&datasource=%s&single_infos=%%s' %
-            (html.urlencode(html.var('name')), ds_name))
+        next_url = html.makeuri_contextless([
+            ('name', html.var('name')),
+            ('type', 'view'),
+            ('datasource', ds_name),
+            ('back', html.makeuri([])),
+            ('next', html.makeuri_contextless([('name', html.var('name')), ('edit', '1')],'dashboard.py')),
+        ], filename = 'edit_dashlet.py'))
 
 def choose_view(name):
     import views
@@ -822,6 +824,7 @@ def page_edit_dashlet():
 
     html.begin_context_buttons()
     back_url = html.var('back', 'dashboard.py?name=%s&edit=1' % board)
+    next_url = html.var('next', back_url)
     html.context_button(_('Back'), back_url, 'back')
     html.end_context_buttons()
 
@@ -906,7 +909,7 @@ def page_edit_dashlet():
 
             visuals.save('dashboards', dashboards)
 
-            html.immediate_browser_redirect(1, back_url)
+            html.immediate_browser_redirect(1, next_url)
             if mode == 'edit':
                 html.message(_('The dashlet has been saved.'))
             else:

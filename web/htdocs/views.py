@@ -241,7 +241,7 @@ def page_create_view(next_url = None):
             if not next_url:
                 next_url = html.makeuri([('datasource', ds)], filename = "create_view_infos.py")
             else:
-                next_url = next_url % ds
+                next_url = next_url + '&datasource=%s' % ds
             html.http_redirect(next_url)
             return
 

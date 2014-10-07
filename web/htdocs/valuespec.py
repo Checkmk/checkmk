@@ -2558,10 +2558,12 @@ class Dictionary(ValueSpec):
             return value
 
     def _get_elements(self):
-        if type(self._elements) == list:
+        if type(self._elements) == type(lambda: None):
+            return self._elements()
+        elif type(self._elements) == list:
             return self._elements
         else:
-            return self._elements()
+            return []
 
     def render_input(self, varprefix, value):
         value = self.migrate(value)

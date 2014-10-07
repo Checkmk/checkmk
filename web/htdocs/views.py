@@ -536,7 +536,6 @@ def transform_view_to_valuespec_value(view):
             view['visibility'].append(key)
 
     view['grouping'] = { "grouping" : view.get('group_painters', []) }
-    view['filters']  = { "context" : view.get('context', {}) }
     view['sorting']  = { "sorters" : view.get('sorters', {}) }
 
     columns = []
@@ -559,8 +558,6 @@ def transform_view_to_valuespec_value(view):
             columns.append((pname, viewname, ''))
 
 
-
-
 def transform_valuespec_value_to_view(view):
     for ident, attrs in view.items():
         # Transform some valuespec specific options to legacy view
@@ -572,6 +569,7 @@ def transform_valuespec_value_to_view(view):
                     view[option] = True
                 del attrs['options']
             view.update(attrs)
+            del view["view"]
 
         elif ident == 'sorting':
             view.update(attrs)
@@ -871,21 +869,7 @@ def show_view(view, show_heading = False, show_buttons = True,
     # in context. In this case, take them from the context type definition.
     show_filters = visuals.show_filters(view, datasource['infos'])
 
-    # Populate the HTML vars with missing context vars. The context vars set
-    # in single context are enforced (can not be overwritten by URL). The normal
-    # filter vars in "multiple" context are not enforced.
-    for key in visuals.get_single_info_keys(view):
-        if key in view['context']:
-            html.set_var(key, view['context'][key])
-
-    # Now apply the multiple context filters
-    for info_key in datasource['infos']:
-        for fname, fval in view['context'].items():
-            if type(fval) == dict: # this is a real filter
-                for varname, val in fval.items():
-                    # shown filters are set, if form is fresh and variable not supplied in URL
-                    if only_count or (html.var("filled_in") != "filter" and not html.has_var(varname)):
-                        html.set_var(varname, val)
+    visuals.add_context_to_html_vars(view, datasource["infos"], only_count)
 
     # Af any painter, sorter or filter needs the information about the host's
     # inventory, then we load it and attach it as column "host_inventory"

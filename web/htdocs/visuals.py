@@ -467,7 +467,6 @@ def process_context_specs(context_specs):
         ident = 'context_' + info_key
 
         attrs = spec.from_html_vars(ident)
-        html.debug(attrs)
         spec.validate_value(attrs, ident)
         context.update(attrs)
     return context
@@ -477,6 +476,9 @@ def render_context_specs(visual, context_specs):
     for info_key, spec in context_specs:
         forms.section(spec.title())
         ident = 'context_' + info_key
+        # Trick: the field "context" contains a dictionary with
+        # all filter settings, from which the value spec will automatically
+        # extract those that it needs.
         value = visual.get('context', {})
         spec.render_input(ident, value)
 
@@ -623,8 +625,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
     save_and_go = None
     for nr, (title, pagename, icon) in enumerate(sub_pages):
         if html.var("save%d" % nr):
-            save_and_go = html.makeuri_contextless([(visual_types[what]['ident_attr'], visualname)],
-                                                   filename = pagename + '.py')
+            save_and_go = pagename
 
     if save_and_go or html.var("save") or html.var("try") or html.var("search"):
         try:
@@ -656,7 +657,8 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
 
             if html.var("save") or save_and_go:
                 if save_and_go:
-                    back = save_and_go
+                    back = html.makeuri_contextless([(visual_types[what]['ident_attr'], visual['name'])],
+                                                   filename = save_and_go + '.py')
                 else:
                     back = html.var('back')
                     if not back:
@@ -868,6 +870,30 @@ def show_filters(visual, info_keys):
             show_filters.append(filter)
 
     return list(set(show_filters)) # remove duplicates
+
+
+def add_context_to_html_vars(visual, only_infos=None, only_count=False):
+    if only_infos == None:
+        only_infos = infos.keys() # all datasources!
+
+    # Populate the HTML vars with missing context vars. The context vars set
+    # in single context are enforced (can not be overwritten by URL). The normal
+    # filter vars in "multiple" context are not enforced.
+    for key in get_single_info_keys(visual):
+        if key in visual['context']:
+            html.set_var(key, visual['context'][key])
+
+    # Now apply the multiple context filters
+    for info_key in only_infos:
+        for fname, fval in visual['context'].items():
+            if type(fval) == dict: # this is a real filter
+                for varname, val in fval.items():
+                    # shown filters are set, if form is fresh and variable not supplied in URL
+                    if only_count or (html.var("filled_in") != "filter" and not html.has_var(varname)):
+                        html.set_var(varname, val)
+
+
+
 
 #.
 #   .--ValueSpecs----------------------------------------------------------.

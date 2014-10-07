@@ -1,0 +1,11 @@
+Title: Dashboard: Back button (abort) while adding view to dashboard leads away
+Component: multisite
+State: open
+Date: 2014-10-06 18:38:23
+Targetversion: future
+Class: bug
+
+When you add a view to a dashboard, and in the process press "Back", then
+you do not get back but to the list of views.
+
+Solution: Either remove the button or make it work as expected.

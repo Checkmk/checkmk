@@ -181,7 +181,10 @@ def permitted_dashboards():
 def page_dashboard():
     load_dashboards()
 
-    name = html.var("name", "main")
+    name = html.var("name")
+    if not name:
+        name = "main"
+        html.set_var("name", name) # make sure that URL context is always complete
     if name not in available_dashboards:
         raise MKGeneralException(_("The requested dashboard can not be found."))
 
@@ -678,6 +681,7 @@ def page_create_view_dashlet():
         import views
         url = html.makeuri([], filename = "create_view_dashlet_infos.py")
         url += '&datasource=%s' # %s can not be added using html.makeuri()
+        # Note: %s will later be replaced by datasource
         views.page_create_view(next_url=url)
 
     else:

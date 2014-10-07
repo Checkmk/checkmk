@@ -1,0 +1,10 @@
+Title: Dashboard: after going to a dashlet detail, edit mode is lost
+Component: multisite
+State: open
+Date: 2014-10-06 19:00:53
+Targetversion: future
+Class: nastiness
+
+When you are in dashboard edit mode and go to the details of a dashlet
+and then got back - either by saving or by the back button - then the
+edit mode of the dashboard is lost. But it should keep in edit mode.

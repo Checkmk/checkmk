@@ -204,19 +204,26 @@ def page_edit_views():
 #   '----------------------------------------------------------------------'
 
 # First step: Select the data source
-def page_create_view(next_url = None):
+
+# Create datasource selection valuespec, also for other modules
+def DatasourceSelection():
     datasources = []
     for ds_name, ds in multisite_datasources.items():
         datasources.append((ds_name, ds['title']))
 
-    # FIXME: Sort the datasources by (assumed) common usage
-    vs_ds = DropdownChoice(
+    return DropdownChoice(
         title = _('Datasource'),
+        help = _('The datasources defines which type of objects should be displayed with this view.'),
         choices = datasources,
         sorted = True,
-        help = _('The datasources defines which type of objects should be displayed with this view.'),
         columns = 1,
+        default_value = 'services',
     )
+
+def page_create_view(next_url = None):
+
+    # FIXME: Sort the datasources by (assumed) common usage
+    vs_ds = DatasourceSelection()
 
     ds = 'services' # Default selection
 

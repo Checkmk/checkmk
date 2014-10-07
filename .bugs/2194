@@ -1,0 +1,17 @@
+Title: Dashboard: Exception when editing dashlet details of host stats
+Component: multisite
+State: open
+Date: 2014-10-06 19:02:25
+Targetversion: future
+Class: bug
+
+When you go to the dashlet properties of the host statistics, then you get
+an exception:
+
+Internal error: 'single_infos'
+Traceback (most recent call last):
+  File "/omd/sites/heute/share/check_mk/web/htdocs/index.py", line 241, in handler
+    handler()
+  File "/omd/sites/heute/share/check_mk/web/htdocs/dashboard.py", line 816, in page_edit_dashlet
+    single_infos = dashlet['single_infos']
+KeyError: 'single_infos'

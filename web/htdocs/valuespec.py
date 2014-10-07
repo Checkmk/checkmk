@@ -1421,6 +1421,8 @@ class ListChoice(ValueSpec):
             html.checkbox("%s_%d" % (varprefix, nr), key in value, label = title)
             html.write("</td>")
         html.write("</tr></table>")
+        # Make sure that at least one variable with the prefix is present
+        html.hidden_field(varprefix, "1")
 
     def value_to_text(self, value):
         self.load_elements()

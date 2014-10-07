@@ -25,7 +25,6 @@
 # Boston, MA 02110-1301 USA.
 
 from lib import *
-from valuespec import *
 
 # A input function with the same call syntax as htmllib.textinput()
 def input(valuespec, varprefix, defvalue):
@@ -42,16 +41,27 @@ def get_input(valuespec, varprefix):
 
 
 def edit_dictionary(entries, value, **args):
-    return edit_dictionaries(
-        [ ("value", Dictionary(title=title, elements=entries)) ],
-          { "value" : value },
-          **args)
+    result = edit_dictionaries([("value", entries)], value, **args)
+    if result:
+        return result["value"]
+    else:
+        return result
 
-# Edit a dictionary with several sub-dictionaries
+# Edit a list of several dictionaries. Those can either be dictionary
+# valuespec or just a list of elements. Each entry in dictionaries is
+# a pair of key and either a list of elements or a Dictionary.
 def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
                     validate=None, buttontext=None, title=None,
                     buttons = None, method="GET", preview=False,
                     varprefix="", formname="form", consume_transid = True):
+
+    # Convert list of entries/dictionaries
+    sections = []
+    for keyname, d in dictionaries:
+        if type(d) == list:
+            sections.append((keyname, title or _("Properties"), d))
+        else:
+            sections.append((keyname, d.title() or title, d._elements)) # valuespec Dictionary
 
     new_value = value.copy()
     if html.var("filled_in") == formname and html.transaction_valid():
@@ -59,16 +69,19 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
             html.check_transaction()
 
         messages = []
-        for keyname, dictionary in dictionaries:
+        for keyname, section_title, entries in sections:
             new_value[keyname] = {}
-            entries = dictionary._elements
             for name, vs in entries:
+                if len(sections) == 1:
+                    vp = varprefix
+                else:
+                    vp = keyname + "_" + varprefix
                 try:
-                    v = vs.from_html_vars(keyname + "_" + varprefix + name)
+                    v = vs.from_html_vars(vp + name)
                     vs.validate_value(v, keyname + "_" + varprefix + name)
                     new_value[keyname][name] = v
                 except MKUserError, e:
-                    messages.append("%s: %s" % (vs.title(), e.message))
+                    messages.append("%s: %s" % (title, e.message))
                     html.add_user_error(e.varname, e.message)
 
             if validate and not html.has_user_errors():
@@ -88,25 +101,30 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
 
 
     html.begin_form(formname, method=method)
-    for keyname, dictionary in dictionaries:
-        header(dictionary.title())
+    for keyname, title, entries in sections:
+        subvalue = value.get(keyname, {})
+        header(title)
         first = True
-        for name, vs in dictionary._elements:
+        for name, vs in entries:
             section(vs.title())
             html.help(vs.help())
-            if name in value:
-                v = value[name]
+            if name in subvalue:
+                v = subvalue[name]
             else:
                 v = vs.default_value()
-            vs.render_input(keyname + "_" + varprefix + name, v)
+            if len(sections) == 1:
+                vp = varprefix
+            else:
+                vp = keyname + "_" + varprefix
+            vs.render_input(vp + name, v)
             if (not focus and first) or (name == focus):
-                vs.set_focus(keyname + "_" + varprefix + name)
+                vs.set_focus(vp + name)
                 first = False
 
     end()
     if buttons:
-        for name, title, icon in buttons:
-            html.button(name, title)
+        for name, button_title, icon in buttons:
+            html.button(name, button_title)
     else:
         if buttontext == None:
             buttontext = _("Save")

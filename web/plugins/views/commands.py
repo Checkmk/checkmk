@@ -546,13 +546,6 @@ multisite_commands.append({
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def load_stars():
-    return set(config.load_user_file("favorites", []))
-
-def save_stars(stars):
-    config.save_user_file("favorites", list(stars))
-
-
 def command_star(cmdtag, spec, row):
     if html.var("_star") or html.var("_unstar"):
         star = html.var("_star") and 1 or 0
@@ -565,12 +558,12 @@ def command_star(cmdtag, spec, row):
 
 def command_executor_star(command, site):
     foo, star, spec = command.split(";", 2)
-    stars = load_stars()
+    stars = config.load_stars()
     if star == "0" and spec in stars:
         stars.remove(spec)
     elif star == "1":
         stars.add(spec)
-    save_stars(stars)
+    config.save_stars(stars)
 
 config.declare_permission("action.star",
     _("Use favorites"),

@@ -908,7 +908,7 @@ class FilterStarred(FilterTristate):
         else:
             aand, oor, eq = "Or", "And", "!="
 
-        stars = load_stars()
+        stars = config.load_stars()
         filters = ""
         count = 0
         if self.what == "host":

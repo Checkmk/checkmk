@@ -372,6 +372,13 @@ def get_role_permissions():
                 role_permissions[role_id].append(perm['name'])
     return role_permissions
 
+
+def load_stars():
+    return set(config.load_user_file("favorites", []))
+
+def save_stars(stars):
+    config.save_user_file("favorites", list(stars))
+
 # Helper functions
 def load_user_file(name, deflt, lock = False):
     path = user_confdir + "/" + name + ".mk"

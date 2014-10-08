@@ -1824,7 +1824,7 @@ register_check_parameters(
                      ( 'levels',
                             Tuple(
                                 title = _("Maximum Number of E-Mails in Queue"),
-                                help = _("This rule applies to the number of E-Mails in the various Exchange Message Queues"),
+                                help = _("This rule applies to the number of e-mails in the various Exchange Message Queues"),
                                 elements = [
                                     Integer(title = _("Warning if above"), unit = _("E-Mails")),
                                     Integer(title = _("Critical if above"), unit = _("E-Mails"))
@@ -1834,7 +1834,7 @@ register_check_parameters(
                         Integer(
                             title = _("Offset"),
                             help = _("Use this only if you want to overwrite the postion of the information in the agent "
-                                     "Output. Also refer to the rule <i>Microsoft Exchange Queues Inventory</i> ")
+                                     "output. Also refer to the rule <i>Microsoft Exchange Queues Inventory</i> ")
                         )
                     ),
                   ],
@@ -6508,7 +6508,7 @@ register_check_parameters(
                    title = _("Collection time levels"),
                    elements = [
                        Tuple(
-                           title = _("Time of garbage gollection in ms per minute"),
+                           title = _("Time of garbage collection in ms per minute"),
                            elements = [
                                Integer(title = _("Warning at"),
                                        unit = _("ms"),

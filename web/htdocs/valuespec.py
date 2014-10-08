@@ -2676,7 +2676,7 @@ class Dictionary(ValueSpec):
             for header, sections in self._headers:
                 self.render_input_form_header(varprefix, value, header, sections)
         else:
-            self.render_input_form_header(varprefix, value, self.title(), None)
+            self.render_input_form_header(varprefix, value, self.title() or _("Properties"), None)
 
     def render_input_form_header(self, varprefix, value, title, sections):
         forms.header(title, isopen=self._form_isopen, narrow=self._form_narrow)

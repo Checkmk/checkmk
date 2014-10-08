@@ -61,7 +61,7 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
         if type(d) == list:
             sections.append((keyname, title or _("Properties"), d))
         else:
-            sections.append((keyname, d.title() or title, d)) # valuespec Dictionary
+            sections.append((keyname, None, d)) # valuespec Dictionary, title used from dict
 
     new_value = value.copy()
     if html.var("filled_in") == formname and html.transaction_valid():
@@ -90,7 +90,7 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
                     new_value[keyname] = entries.from_html_vars(keyname)
                     entries.validate_value(new_value[keyname], keyname)
                 except:
-                    messages.append("%s: %s" % (title, e.message))
+                    messages.append("%s: %s" % (entries.title(), e.message))
                     html.add_user_error(e.varname, e.message)
 
             if validate and not html.has_user_errors():

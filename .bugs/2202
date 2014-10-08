@@ -1,0 +1,60 @@
+Title: smstools smsd monitoring
+Component: checks
+State: open
+Date: 2014-10-08 14:04:38
+Targetversion: 1.2.5i1
+Class: feature
+
+We should implement such a monitoring, it would be really useful for the new SMS support of the appliance.
+
+http://smstools3.kekekasvi.com/index.php?p=statusmonitor
+
+Modem-Status: /var/log/smstools/smsd_stats/modem_status
+    Probleme hier:
+
+    a) Datei verschwindet während die Daten neu abgefragt werden.
+       Damit muss der Agent richtig umgehen.
+
+    b) Wenn das Modem auf nicht (mehr) da ist, wird die Datei nicht
+       aktualisiert. Man muss also das Dateialter im Blick haben.
+
+    Der Agent-Part müsste verschiedene "übliche" Pfade ausprobieren:
+    /var/log/smstools/smsd_stats/modem_status (verschiedene howtos, appliance)
+    /dev/shm/sms_stat (alte checks, howtos)
+    /var/log/sms_stat (alte checks)
+
+    Alles OK:
+    2014-08-28 15:40:42,5, CEP_CT63: CMD: AT+CREG?;+CSQ;+COPS?: +CREG: 2,1,"4361","9499" +CSQ: 26,99 +COPS: 0,0,"Telekom.de" OK
+
+    SIM-Karte gezogen:
+    2014-08-28 15:36:55,5, CEP_CT63: CMD: AT+CREG?;+CSQ;+COPS?: +CREG: 2,0 +CSQ: 22,99 +COPS: 0 OK
+
+
+Datei: /var/log/smstools/smsd_stats/status
+    Problem hier: Datei wird scheinbar nicht konsequent aktualisiert. Habe noch nicht ganz
+    herausgefunden, wann die Datei aktualisiert wird und wann nicht.
+
+Alles OK:
+
+Status:     14-08-28 12:00:02,  i---------------------------------------------------------------
+CEP_CT63:   14-08-28 11:59:20,  Idle,       0,  0,  0,  ssi: -63 dBm (Excellent), ber: ??
+
+Abgesteckt:
+
+Status:     14-08-28 12:03:08,  ----------------------------------------------------------------
+CEP_CT63:   -,  Unknown,    0,  0,  0
+
+Gerade angesteckt:
+
+Status:     14-08-28 12:03:37,  b---------------------------------------------------------------
+CEP_CT63:   -,  Blocked,    0,  0,  0
+
+Kurz nach anstecken:
+
+Status:     14-08-28 12:04:00,  ----------------------------------------------------------------
+CEP_CT63:   -,  Unknown,    0,  0,  0
+
+Nach abstecken:
+
+Status:     14-08-28 12:11:00,  ----------------------------------------------------------------
+CEP_CT63:   14-08-28 12:09:12,  Unknown,    0,  0,  0,  ssi: -63 dBm (Excellent), ber: ??

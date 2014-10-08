@@ -2588,11 +2588,15 @@ class Dictionary(ValueSpec):
         else:
             return []
 
-    def render_input(self, varprefix, value):
+    # Additional variale form allows to specify the rendering
+    # style right now
+    def render_input(self, varprefix, value, form=None):
         value = self.migrate(value)
         if type(value) != dict:
             value = {} # makes code simpler in complain phase
-        if self._render == "form":
+        if form == True:
+            self.render_input_form(varprefix, value)
+        elif self._render == "form" and form == None:
             self.render_input_form(varprefix, value)
         else:
             self.render_input_normal(varprefix, value, self._render == "oneline")

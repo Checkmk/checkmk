@@ -209,6 +209,9 @@ class FilterGroupCombo(Filter):
         return html.var(htmlvar)
 
     def filter(self, infoname):
+        if not html.has_var(self.htmlvars[0]):
+            return "" # Skip if filter is not being set at all
+
         current_value = self.current_value()
         if not current_value:
             if not self.enforce:

@@ -278,7 +278,7 @@ def page_create_view_infos():
     if ds_name not in multisite_datasources:
         raise MKGeneralException(_('The given datasource is not supported'))
 
-    visuals.page_create_visual('views', _("View"), multisite_datasources[ds_name]['infos'],
+    visuals.page_create_visual('views', multisite_datasources[ds_name]['infos'],
         next_url = 'edit_view.py?mode=create&datasource=%s&single_infos=%%s' % ds_name)
 
 #.

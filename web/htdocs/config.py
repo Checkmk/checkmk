@@ -374,10 +374,10 @@ def get_role_permissions():
 
 
 def load_stars():
-    return set(config.load_user_file("favorites", []))
+    return set(load_user_file("favorites", []))
 
 def save_stars(stars):
-    config.save_user_file("favorites", list(stars))
+    save_user_file("favorites", list(stars))
 
 # Helper functions
 def load_user_file(name, deflt, lock = False):

@@ -482,49 +482,49 @@ def render_dashlet(name, board, nr, dashlet, wato_folder, add_url_vars):
         bg = ""
     html.write('<div class="dashlet_inner%s" id="dashlet_inner_%d">' % (bg, nr))
 
-    # Optional way to render a dynamic iframe URL
-    if "iframe_urlfunc" in dashlet_type:
-        url = dashlet_type["iframe_urlfunc"](dashlet)
-        if url != None:
-            dashlet["iframe"] = url
+    try:
+        # Optional way to render a dynamic iframe URL
+        if "iframe_urlfunc" in dashlet_type:
+            url = dashlet_type["iframe_urlfunc"](dashlet)
+            if url != None:
+                dashlet["iframe"] = url
 
-    elif "iframe_render" in dashlet_type:
-        dashlet["iframe"] = html.makeuri_contextless([
-            ('name', name),
-            ('id', nr),
-            ('mtime', board['mtime'])] + add_url_vars, filename = "dashboard_dashlet.py")
+        elif "iframe_render" in dashlet_type:
+            dashlet["iframe"] = html.makeuri_contextless([
+                ('name', name),
+                ('id', nr),
+                ('mtime', board['mtime'])] + add_url_vars, filename = "dashboard_dashlet.py")
 
-    # The content is rendered only if it is fixed. In the
-    # other cases the initial (re)-size will paint the content.
-    if "render" in dashlet_type:
-        try:
+        # The content is rendered only if it is fixed. In the
+        # other cases the initial (re)-size will paint the content.
+        if "render" in dashlet_type:
             render_dashlet_content(nr, dashlet)
-        except MKUserError, e:
-            html.write('Problem while rendering the dashlet: %s' % html.attrencode(e))
-        except Exception, e:
-            if config.debug:
-                import traceback
-                html.write(traceback.format_exc().replace('\n', '<br>\n'))
+
+        elif "content" in dashlet: # fixed content
+            html.write(dashlet["content"])
+
+        elif "iframe" in dashlet: # fixed content containing iframe
+            if not dashlet.get("reload_on_resize"):
+                url = add_wato_folder_to_url(dashlet["iframe"], wato_folder)
             else:
-                html.write('Problem while rendering the dashlet: %s' % html.attrencode(e))
+                url = 'about:blank'
 
-    elif "content" in dashlet: # fixed content
-        html.write(dashlet["content"])
-
-    elif "iframe" in dashlet: # fixed content containing iframe
-        if not dashlet.get("reload_on_resize"):
-            url = add_wato_folder_to_url(dashlet["iframe"], wato_folder)
+            # Fix of iPad >:-P
+            html.write('<div style="width: 100%; height: 100%; -webkit-overflow-scrolling:touch; overflow: hidden;">')
+            html.write('<iframe id="dashlet_iframe_%d" allowTransparency="true" frameborder="0" width="100%%" '
+                       'height="100%%" src="%s"> </iframe>' % (nr, url))
+            html.write('</div>')
+            if dashlet.get("reload_on_resize"):
+                html.javascript('reload_on_resize["%d"] = "%s"' %
+                                (nr, add_wato_folder_to_url(dashlet["iframe"], wato_folder)))
+    except MKUserError, e:
+        html.write('Problem while rendering the dashlet: %s' % html.attrencode(e))
+    except Exception, e:
+        if config.debug:
+            import traceback
+            html.write(traceback.format_exc().replace('\n', '<br>\n'))
         else:
-            url = 'about:blank'
-
-        # Fix of iPad >:-P
-        html.write('<div style="width: 100%; height: 100%; -webkit-overflow-scrolling:touch; overflow: hidden;">')
-        html.write('<iframe id="dashlet_iframe_%d" allowTransparency="true" frameborder="0" width="100%%" '
-                   'height="100%%" src="%s"> </iframe>' % (nr, url))
-        html.write('</div>')
-        if dashlet.get("reload_on_resize"):
-            html.javascript('reload_on_resize["%d"] = "%s"' %
-                            (nr, add_wato_folder_to_url(dashlet["iframe"], wato_folder)))
+            html.write('Problem while rendering the dashlet: %s' % html.attrencode(e))
 
     html.write("</div></div>\n")
 
@@ -609,7 +609,7 @@ def page_edit_dashboards():
 #   '----------------------------------------------------------------------'
 
 def page_create_dashboard():
-    visuals.page_create_visual('dashboards', _("Dashboard"), visuals.infos.keys())
+    visuals.page_create_visual('dashboards', visuals.infos.keys())
 
 #.
 #   .--Dashb. Config-------------------------------------------------------.
@@ -694,7 +694,7 @@ def page_create_view_dashlet_infos():
         raise MKGeneralException(_('The given datasource is not supported'))
 
     # Create a new view by choosing the datasource and the single object types
-    visuals.page_create_visual('views', _("View"), views.multisite_datasources[ds_name]['infos'],
+    visuals.page_create_visual('views', views.multisite_datasources[ds_name]['infos'],
         next_url = html.makeuri_contextless([
             ('name', html.var('name')),
             ('type', 'view'),
@@ -881,6 +881,7 @@ def page_edit_dashlet():
             title = _('Properties'),
             render = 'form',
             optional_keys = dashlet_type.get('opt_params'),
+            validate = dashlet_type.get('validate_params'),
             elements = params,
         )
     elif type(params) == type(lambda x: x):

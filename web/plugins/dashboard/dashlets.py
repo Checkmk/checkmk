@@ -534,9 +534,7 @@ def dashlet_view_parameters():
 def dashlet_view_render_input(dashlet):
     import views # FIXME: HACK, clean this up somehow
     views.load_views()
-    if html.var("id"):
-        # only needed in case of editing an existing view
-        views.transform_view_to_valuespec_value(dashlet)
+    views.transform_view_to_valuespec_value(dashlet)
     return views.render_view_config(dashlet)
 
 def dashlet_view_handle_input(ident, dashlet):
@@ -573,6 +571,12 @@ def dashlet_url(params):
     if params.get('show_in_iframe', True):
         return params['url']
 
+def dashlet_url_validate(value, varprefix):
+    if 'url' not in value and 'urlfunc' not in value:
+        raise MKUserError(varprefix, _('You need to provide either an URL or '
+                                       'the name of a python function to be used '
+                                       'for rendering the dashlet.'))
+
 dashlet_types["url"] = {
     "title"          : _("Custom URL"),
     "sort_index"     : 80,
@@ -580,7 +584,7 @@ dashlet_types["url"] = {
     "iframe_urlfunc" : dashlet_url,
     "allowed"        : config.builtin_role_ids,
     "size"           : (30, 10),
-    "parameters"  : [
+    "parameters"     : [
         ("url", TextAscii(
             title = _('URL'),
             size = 50,
@@ -595,5 +599,6 @@ dashlet_types["url"] = {
             default_value = True,
         )),
     ],
-    "opt_params": ['url', 'urlfunc'],
+    "opt_params"      : ['url', 'urlfunc'],
+    "validate_params" : dashlet_url_validate,
 }

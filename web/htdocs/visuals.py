@@ -361,8 +361,8 @@ def page_list(what, title, visuals, custom_columns = [],
 #   | Realizes the steps before getting to the editor (context type)       |
 #   '----------------------------------------------------------------------'
 
-# FIXME: title is not needed, that's contained in visual_types
-def page_create_visual(what, title, info_keys, next_url = None):
+def page_create_visual(what, info_keys, next_url = None):
+    title = visual_types[what]['title']
     what_s = what[:-1]
 
     # FIXME: Sort by (assumed) common usage

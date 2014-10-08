@@ -609,7 +609,7 @@ def page_edit_dashboards():
 #   '----------------------------------------------------------------------'
 
 def page_create_dashboard():
-    visuals.page_create_visual('dashboards', _("Dashboard"), visuals.infos.keys())
+    visuals.page_create_visual('dashboards', visuals.infos.keys())
 
 #.
 #   .--Dashb. Config-------------------------------------------------------.
@@ -694,7 +694,7 @@ def page_create_view_dashlet_infos():
         raise MKGeneralException(_('The given datasource is not supported'))
 
     # Create a new view by choosing the datasource and the single object types
-    visuals.page_create_visual('views', _("View"), views.multisite_datasources[ds_name]['infos'],
+    visuals.page_create_visual('views', views.multisite_datasources[ds_name]['infos'],
         next_url = html.makeuri_contextless([
             ('name', html.var('name')),
             ('type', 'view'),

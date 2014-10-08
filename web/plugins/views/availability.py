@@ -184,10 +184,18 @@ def av_output_csv_mimetype(title):
         filename = filename.encode("utf-8")
     html.req.headers_out['Content-Disposition'] = 'Attachment; filename="%s"' % filename
 
+
+# Options for availability computation and rendering. These are four-tuple
+# with the columns:
+# 1. variable name
+# 2. show in single or double height box
+# 3. use this in reporting
+# 4. the valuespec
 avoption_entries = [
   # Time range selection
   ( "rangespec",
     "double",
+    False,
     Timerange(
         title = _("Time Range"),
         default_value = 'm1',
@@ -197,6 +205,7 @@ avoption_entries = [
   # Labelling and Texts
   ( "labelling",
     "double",
+    True,
     ListChoice(
         title = _("Labelling Options"),
         choices = [
@@ -212,6 +221,7 @@ avoption_entries = [
   # How to deal with downtimes
   ( "downtimes",
     "double",
+    True,
     Dictionary(
         title = _("Scheduled Downtimes"),
         columns = 2,
@@ -236,6 +246,7 @@ avoption_entries = [
   # How to deal with downtimes, etc.
   ( "consider",
     "double",
+    True,
     Dictionary(
        title = _("Status Classification"),
        columns = 2,
@@ -257,6 +268,7 @@ avoption_entries = [
   # Optionally group some states together
   ( "state_grouping",
     "double",
+    True,
     Dictionary(
        title = _("Status Grouping"),
        columns = 2,
@@ -303,6 +315,7 @@ avoption_entries = [
   # Visual levels for the availability
   ( "av_levels",
     "double",
+    False,
     Optional(
         Tuple(
             elements = [
@@ -318,6 +331,7 @@ avoption_entries = [
   # Show colummns for min, max, avg duration and count
   ( "outage_statistics",
     "double",
+    True,
     Tuple(
         title = _("Outage statistics"),
         orientation = "horizontal",
@@ -352,6 +366,7 @@ avoption_entries = [
   # Omit all non-OK columns
   ( "av_mode",
     "single",
+    True,
     Checkbox(
         title = _("Availability"),
         label = _("Just show the availability (i.e. OK/UP)"),
@@ -361,6 +376,7 @@ avoption_entries = [
   # How to deal with the service periods
   ( "service_period",
     "single",
+    True,
      DropdownChoice(
          title = _("Service Time"),
          choices = [
@@ -374,6 +390,7 @@ avoption_entries = [
   # How to deal with times out of the notification period
   ( "notification_period",
     "single",
+    True,
      DropdownChoice(
          title = _("Notification Period"),
          choices = [
@@ -387,6 +404,7 @@ avoption_entries = [
   # Group by Host, Hostgroup or Servicegroup?
   ( "grouping",
     "single",
+    True,
     DropdownChoice(
         title = _("Grouping"),
         choices = [
@@ -401,6 +419,7 @@ avoption_entries = [
   # Format of numbers
   ( "dateformat",
     "single",
+    True,
     DropdownChoice(
         title = _("Format time stamps as"),
         choices = [
@@ -411,6 +430,7 @@ avoption_entries = [
   ),
   ( "timeformat",
     "single",
+    True,
     DropdownChoice(
         title = _("Format time ranges as"),
         choices = [
@@ -430,6 +450,7 @@ avoption_entries = [
   # Short time intervals
   ( "short_intervals",
     "single",
+    True,
     Integer(
         title = _("Short Time Intervals"),
         minvalue = 0,
@@ -441,6 +462,7 @@ avoption_entries = [
   # Merging
   ( "dont_merge",
     "single",
+    True,
     Checkbox(
         title = _("Phase Merging"),
         label = _("Do not merge consecutive phases with equal state")),
@@ -449,6 +471,7 @@ avoption_entries = [
   # Summary line
   ( "summary",
     "single",
+    True,
     DropdownChoice(
         title = _("Summary line"),
         choices = [
@@ -463,6 +486,7 @@ avoption_entries = [
   # Timeline
   ( "show_timeline",
     "single",
+    False,
     Checkbox(
         title = _("Timeline"),
         label = _("Show timeline of each object directly in table")),
@@ -471,6 +495,7 @@ avoption_entries = [
   # Timelimit
   ( "timelimit",
     "single",
+    False,
     Age(
         title = _("Query Time Limit"),
         default_value = 30,
@@ -531,7 +556,7 @@ def render_availability_options():
     html.begin_form("avoptions")
     html.hidden_field("avoptions", "set")
     if html.var("avoptions") == "set":
-        for name, height, vs in avoption_entries:
+        for name, height, show_in_reporting, vs in avoption_entries:
             try:
                 avoptions[name] = vs.from_html_vars("avo_" + name)
             except MKUserError, e:
@@ -539,7 +564,7 @@ def render_availability_options():
                 is_open = True
 
     range_vs = None
-    for name, height, vs in avoption_entries:
+    for name, height, show_in_reporting, vs in avoption_entries:
         if name == 'rangespec':
             range_vs = vs
 
@@ -556,7 +581,7 @@ def render_availability_options():
             % (not is_open and 'style="display: none"' or '') )
     html.write("<table border=0 cellspacing=0 cellpadding=0 class=filterform><tr><td>")
 
-    for name, height, vs in avoption_entries:
+    for name, height, show_in_reporting, vs in avoption_entries:
         html.write('<div class="floatfilter %s %s">' % (height, name))
         html.write('<div class=legend>%s</div>' % vs.title())
         html.write('<div class=content>')
@@ -657,7 +682,8 @@ bi_availability_columns = [
 ]
 
 
-def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
+# Fetch = true: return av table as Python data, do render nothing
+def do_render_availability(rows, what, avoptions, timeline, timewarpcode, fetch=False):
     # Sort by site/host and service, while keeping native order
     by_host = {}
     for row in rows:
@@ -795,6 +821,27 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
     range, range_title = avoptions["range"]
     from_time, until_time = range
     duration = until_time - from_time
+    render_number = render_number_function(avoptions)
+
+    fetch_data = {}
+
+    if timeline:
+        if not fetch: # Timeline does not support fetch
+            render_timeline(timeline_rows, from_time, until_time, total_duration,
+                            timeline, range_title, render_number, what, timewarpcode, avoptions, style="standalone")
+    else:
+        fetch_data["table"] = render_availability_table(availability, from_time, until_time, range_title, 
+                                                        what, avoptions, render_number, fetch)
+
+    if not fetch:
+        render_annotations(annotations, from_time, until_time, by_host, what, avoptions, omit_service = timeline)
+
+    return fetch_data
+
+
+# Creates a function for rendering time values according to
+# the avoptions of the report.
+def render_number_function(avoptions):
     timeformat = avoptions["timeformat"]
     if timeformat.startswith("percentage_"):
         def render_number(n, d):
@@ -817,14 +864,7 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode):
             hours, minn = divmod(minn, 60)
             return "%02d:%02d:%02d" % (hours, minn, sec)
 
-    if timeline:
-        render_timeline(timeline_rows, from_time, until_time, total_duration,
-                        timeline, range_title, render_number, what, timewarpcode, avoptions, style="standalone")
-    else:
-        render_availability_table(availability, from_time, until_time, range_title, what, avoptions, render_number)
-
-    render_annotations(annotations, from_time, until_time, by_host, what, avoptions, omit_service = timeline)
-
+    return render_number
 
 # style is either inline (just the timeline bar) or "standalone" (the complete page)
 def render_timeline(timeline_rows, from_time, until_time, considered_duration,
@@ -1113,18 +1153,22 @@ statistics_headers = {
     "cnt" : _("Count"),
 }
 
-def render_availability_table(availability, from_time, until_time, range_title, what, avoptions, render_number):
+def render_availability_table(availability, from_time, until_time, range_title, what, avoptions, render_number, fetch):
     do_csv = html.output_format == "csv_export"
+    no_html = do_csv or fetch
 
     if not availability:
-        if not do_csv:
+        if not no_html:
             html.message(_("No matching hosts/services."))
         return # No objects
 
     grouping = avoptions["grouping"]
+    fetch_data = []
 
     if not grouping:
-        render_availability_group(range_title, range_title, None, availability, from_time, until_time, what, avoptions, render_number)
+        fetch_data.append((None,
+            render_availability_group(range_title, range_title, None, availability, from_time, 
+                                      until_time, what, avoptions, render_number, fetch)))
 
     else:
         # Grouping is one of host/hostgroup/servicegroup
@@ -1149,11 +1193,14 @@ def render_availability_table(availability, from_time, until_time, range_title, 
 
         # 3. Loop over all groups and render them
         for title, group_id in titled_groups:
-            render_availability_group(title, range_title, group_id, availability, from_time, until_time, what, avoptions, render_number)
+            fetch_data.append((title,
+                render_availability_group(title, range_title, group_id, availability, 
+                                          from_time, until_time, what, avoptions, render_number, fetch)
+            ))
 
     # Legend for Availability levels
     av_levels = avoptions["av_levels"]
-    if av_levels and not do_csv:
+    if av_levels and not no_html:
         warn, crit = av_levels
         html.write('<div class="avlegend levels">')
         html.write('<h3>%s</h3>' % _("Availability levels"))
@@ -1163,8 +1210,10 @@ def render_availability_table(availability, from_time, until_time, range_title, 
         html.write('</div>')
 
     # Legend for timeline
-    if "display_timeline_legend" in avoptions["labelling"] and avoptions["show_timeline"] and not do_csv:
+    if "display_timeline_legend" in avoptions["labelling"] and avoptions["show_timeline"] and not no_html:
         render_timeline_legend(what)
+
+    return fetch_data
 
 
 def render_timeline_legend(what):
@@ -1194,7 +1243,7 @@ def get_av_groups(availability, grouping):
 
 
 # When grouping is enabled, this function is called once for each group
-def render_availability_group(group_title, range_title, group_id, availability, from_time, until_time, what, avoptions, render_number):
+def render_availability_group(group_title, range_title, group_id, availability, from_time, until_time, what, avoptions, render_number, fetch):
 
     # Filter out groups that we want to show this time
     group_availability = []
@@ -1235,13 +1284,14 @@ def render_availability_group(group_title, range_title, group_id, availability, 
 
     # Render the stuff
     do_csv = html.output_format == "csv_export"
+    no_html = do_csv or fetch
 
     availability.sort()
     show_summary = avoptions.get("summary")
     summary = {}
     summary_counts = {}
     table.begin("av_items", group_title, css="availability",
-        searchable = False, limit = None, output_format = do_csv and "csv" or "html",
+        searchable = False, limit = None, output_format = do_csv and "csv" or (fetch and "fetch" or "html"),
         omit_headers = "omit_headers" in avoptions["labelling"])
     for site, host, service, display_name, states, considered_duration, total_duration, statistics, timeline_rows, group_ids in group_availability:
         table.row()
@@ -1256,7 +1306,7 @@ def render_availability_group(group_title, range_title, group_id, availability, 
             timeline_url = html.makeuri([("timeline", "yes"), ("av_aggr_name", service), ("av_aggr_group", host)])
 
 
-        if not "omit_buttons" in labelling and not do_csv:
+        if not "omit_buttons" in labelling and not no_html:
             table.cell("", css="buttons")
             if what != "bi":
                 history_url = history_url_of(site, host, service, from_time, until_time)
@@ -1272,19 +1322,29 @@ def render_availability_group(group_title, range_title, group_id, availability, 
             availability_columns = bi_availability_columns
         else:
             if not "omit_host" in labelling:
-                table.cell(_("Host"), '<a href="%s">%s</a>' % (host_url, host))
+                table.cell(_("Host"))
+                if no_html:
+                    html.write(host)
+                else:
+                    html.write('<a href="%s">%s</a>' % (host_url, host))
             if what == "service":
-                service_url = "view.py?" + html.urlencode_vars([("view_name", "service"), ("site", site), ("host", host), ("service", service)])
                 if "use_display_name" in labelling:
                     service_name = display_name
                 else:
                     service_name = service
-                table.cell(_("Service"), '<a href="%s">%s</a>' % (service_url, service_name))
+
+                table.cell(_("Service"))
+                if no_html:
+                    html.write(service_name)
+                else:
+                    service_url = "view.py?" + html.urlencode_vars([("view_name", "service"), ("site", site), ("host", host), ("service", service)])
+                    html.write('<a href="%s">%s</a>' % (service_url, service_name))
+
                 availability_columns = service_availability_columns
             else:
                 availability_columns = host_availability_columns
 
-        if show_timeline and not do_csv:
+        if show_timeline and not no_html:
             table.cell(_("Timeline"), css="timeline")
             html.write('<a href="%s">' % timeline_url)
             render_timeline(timeline_rows, from_time, until_time, total_duration, (site, host, service), range_title, render_number, what, "", avoptions, style="inline")
@@ -1337,14 +1397,14 @@ def render_availability_group(group_title, range_title, group_id, availability, 
 
     if show_summary:
         table.row(css="summary")
-        if not "omit_buttons" in labelling and not do_csv:
+        if not "omit_buttons" in labelling and not no_html:
             table.cell("")
         if not "omit_host" in labelling:
             table.cell("", _("Summary"))
         if what == "service":
             table.cell("", "")
 
-        if show_timeline and not do_csv:
+        if show_timeline and not no_html:
             table.cell("")
 
         for sid, css, sname, help in availability_columns:
@@ -1376,7 +1436,7 @@ def render_availability_group(group_title, range_title, group_id, availability, 
                     else:
                         table.cell(title, "")
 
-    table.end()
+    return table.end() # returns Table data if fetch == True
 
 def check_av_levels(number, av_levels, considered_duration):
     if considered_duration == 0:

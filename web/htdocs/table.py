@@ -44,7 +44,7 @@ def begin(table_id=None, title=None, **kwargs):
         pass
 
     limit = kwargs.get('limit', limit)
-    if html.var('limit') == 'none' or kwargs.get("output_format", "html") == "csv":
+    if html.var('limit') == 'none' or kwargs.get("output_format", "html") != "html":
         limit = None
 
     table = {
@@ -58,7 +58,7 @@ def begin(table_id=None, title=None, **kwargs):
         "omit_headers"    : kwargs.get("omit_headers", False),
         "searchable"      : kwargs.get("searchable", True),
         "next_header"     : None,
-        "output_format"   : kwargs.get("output_format", "html"),
+        "output_format"   : kwargs.get("output_format", "html"), # possible: html, csv, fetch
     }
     if kwargs.get("empty_text"):
         table["empty_text"] = kwargs["empty_text"]
@@ -121,6 +121,11 @@ def end():
     global table
     finish_previous()
     html.unplug()
+
+    # Output-Format "fetch" simply means that all data is being
+    # returned as Python-values to be rendered somewhere else.
+    if table["output_format"] == "fetch":
+        return table["headers"], table["rows"]
 
     if not table:
         return

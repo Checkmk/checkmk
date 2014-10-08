@@ -881,6 +881,7 @@ def page_edit_dashlet():
             title = _('Properties'),
             render = 'form',
             optional_keys = dashlet_type.get('opt_params'),
+            validate = dashlet_type.get('validate_params'),
             elements = params,
         )
     elif type(params) == type(lambda x: x):

@@ -86,7 +86,7 @@ infos['downtime'] = {
 infos['contact'] = {
     'title'       : _('Contact'),
     'single_spec' : [
-        ('contact_name', TextUnicode(
+        ('log_contact_name', TextUnicode(
             title = _('Contact Name'),
         )),
     ]

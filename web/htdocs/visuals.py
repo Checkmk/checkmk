@@ -898,7 +898,7 @@ def add_context_to_uri_vars(visual, only_infos=None, only_count=False):
 
     # Now apply the multiple context filters
     for info_key in only_infos:
-        for filter_name, filter_vars in visual['context'].items():
+        for filter_name, filter_vars in visual.get('context', {}).items():
             if type(filter_vars) == dict: # this is a multi-context filter
                 # We add the filter only if *none* if its HTML variables are present on the URL
                 # This important because checkbox variables are not present if the box is not checked.

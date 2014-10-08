@@ -217,7 +217,7 @@ def match_host_service_url_tmpl(used_filters, row_dict, host_is_ip = False):
             if type(row_dict[entry]) == list:
                 row_dict[entry] = row_dict[entry][0]
 
-    for param, key in [                ("service",         "service_description"),
+    for param, key in [                ("service_regex",   "service_description"),
                 (host_is_ip and "host_address" or  "host", "host_name"),
                                        ("opthostgroup",    "host_groups"),
                                        ("optservicegroup", "service_groups"),
@@ -242,7 +242,7 @@ def search_host_service_url_tmpl(used_filters, data, host_is_ip = False):
             filters_combined[key] = value[0]
 
     tmpl = 'view.py?view_name=searchsvc&filled_in=filter'
-    for url_param, qs_name in [        ("service",         "services"     ),
+    for url_param, qs_name in [        ("service_regex",   "services"     ),
                         host_is_ip and ("host_address",    "host"         )\
                                     or ("host",            "hosts"        ),
                                        ("opthostgroup",    "hostgroups"   ),

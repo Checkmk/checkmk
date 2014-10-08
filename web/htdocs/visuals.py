@@ -914,14 +914,18 @@ def add_context_to_uri_vars(visual, only_infos=None, only_count=False):
 
 # Vice versa: find all filters that belong to the current URI variables
 # and create a context dictionary from that.
-def get_context_from_uri_vars(only_infos=None):
+def get_context_from_uri_vars(only_infos=None, single_infos=[]):
     context = {}
     for filter_name, filter_object in multisite_filters.items():
         if only_infos == None or filter_object.info in only_infos:
             this_filter_vars = {}
             for varname in filter_object.htmlvars:
                 if html.has_var(varname):
-                    this_filter_vars[varname] = html.var(varname)
+                    if filter_object.info in single_infos:
+                        context[filter_name] = html.var(varname)
+                        break
+                    else:
+                        this_filter_vars[varname] = html.var(varname)
             if this_filter_vars:
                 context[filter_name] = this_filter_vars
     return context

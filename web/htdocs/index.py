@@ -38,7 +38,9 @@ import livestatus
 import defaults, config, login, userdb, hooks, visuals, default_permissions
 try:
     import reporting
-except 1:
+except SyntaxError:
+    raise
+except:
     reporting = None
 
 from html_mod_python import *

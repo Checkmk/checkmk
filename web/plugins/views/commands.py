@@ -45,7 +45,7 @@ def command_reschedule(cmdtag, spec, row, row_nr, total_rows):
         spread = saveint(html.var("_resched_spread"))
         text = _("<b>reschedule an immediate check")
         if spread:
-            text += _(" spreaded over %d minutes ") % spread
+            text += _(" spread over %d minutes ") % spread
 
         text += "</b>" + _("of")
 

@@ -534,7 +534,7 @@ register_configvar(group,
     Checkbox(title = _("Allow upload of insecure WATO snapshots"),
              label = _("upload insecure snapshots"),
              help = _("When enabled, insecure snapshots are allowed. Please keep in mind that the upload "
-                      "of unverified snapshots represent a security risk, since the content of a snapshot is executed "
+                      "of unverified snapshots represents a security risk, since the content of a snapshot is executed "
                       "during runtime. Any manipulations in the content - either willingly or unwillingly (XSS attack) "
                       "- pose a serious security risk."),
              default_value = False),
@@ -553,7 +553,7 @@ register_configvar(group,
     "wato_hide_varnames",
     Checkbox(title = _("Hide names of configuration variables"),
              label = _("hide variable names"),
-             help = _("When enabled, internal configuration variable names of Check_MK are hidded "
+             help = _("When enabled, internal configuration variable names of Check_MK are hidden "
                       "from the user (for example in the rule editor)"),
              default_value = True),
     domain = "multisite")
@@ -563,7 +563,7 @@ register_configvar(group,
     "wato_hide_help_in_lists",
     Checkbox(title = _("Hide help text of rules in list views"),
              label = _("hide help text"),
-             help = _("When disabled, WATO shows the help texts of the rules also in the list views."),
+             help = _("When disabled, WATO shows the help texts of rules also in the list views."),
              default_value = True),
     domain = "multisite")
 

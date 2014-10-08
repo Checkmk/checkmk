@@ -487,13 +487,13 @@ register_rule(group,
             ("job",
                 CascadingDropdown(
                     title = _("Mode of the Check"),
-                    help = _("Choose if you just want to query the version number,"
-                             " or if you want to check the response to a address querie"),
+                    help = _("Choose, whether you just want to query the version number,"
+                             " or if you want to check the response to an adress query."),
                     choices = [
                         ("version", _("Check for Version")),
-                        ("address", _("Check for a Address"),
+                        ("address", _("Check for an Adress"),
                             Dictionary(
-                                title = _("Address Check mode"),
+                                title = _("Adress Check mode"),
                                 optional_keys = False,
                                 elements = [
                                     ( "street",

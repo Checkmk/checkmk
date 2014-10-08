@@ -534,6 +534,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
             visual = all_visuals.get((config.user_id, visualname))
             if not visual:
                 visual = all_visuals.get(('', visualname)) # load builtin visual
+                mode = 'clone'
 
         single_infos = visual['single_infos']
 

@@ -61,7 +61,7 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
         if type(d) == list:
             sections.append((keyname, title or _("Properties"), d))
         else:
-            sections.append((keyname, d.title() or title, d._elements)) # valuespec Dictionary
+            sections.append((keyname, d.title() or title, d)) # valuespec Dictionary
 
     new_value = value.copy()
     if html.var("filled_in") == formname and html.transaction_valid():
@@ -70,17 +70,26 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
 
         messages = []
         for keyname, section_title, entries in sections:
-            new_value[keyname] = {}
-            for name, vs in entries:
-                if len(sections) == 1:
-                    vp = varprefix
-                else:
-                    vp = keyname + "_" + varprefix
+            if type(entries) == list:
+                new_value[keyname] = {}
+                for name, vs in entries:
+                    if len(sections) == 1:
+                        vp = varprefix
+                    else:
+                        vp = keyname + "_" + varprefix
+                    try:
+                        v = vs.from_html_vars(vp + name)
+                        vs.validate_value(v, keyname + "_" + varprefix + name)
+                        new_value[keyname][name] = v
+                    except MKUserError, e:
+                        messages.append("%s: %s" % (title, e.message))
+                        html.add_user_error(e.varname, e.message)
+
+            else:
                 try:
-                    v = vs.from_html_vars(vp + name)
-                    vs.validate_value(v, keyname + "_" + varprefix + name)
-                    new_value[keyname][name] = v
-                except MKUserError, e:
+                    new_value[keyname] = entries.from_html_vars(keyname)
+                    entries.validate_value(new_value[keyname], keyname)
+                except:
                     messages.append("%s: %s" % (title, e.message))
                     html.add_user_error(e.varname, e.message)
 
@@ -103,23 +112,27 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
     html.begin_form(formname, method=method)
     for keyname, title, entries in sections:
         subvalue = value.get(keyname, {})
-        header(title)
-        first = True
-        for name, vs in entries:
-            section(vs.title())
-            html.help(vs.help())
-            if name in subvalue:
-                v = subvalue[name]
-            else:
-                v = vs.default_value()
-            if len(sections) == 1:
-                vp = varprefix
-            else:
-                vp = keyname + "_" + varprefix
-            vs.render_input(vp + name, v)
-            if (not focus and first) or (name == focus):
-                vs.set_focus(vp + name)
-                first = False
+        if type(entries) == list:
+            header(title)
+            first = True
+            for name, vs in entries:
+                section(vs.title())
+                html.help(vs.help())
+                if name in subvalue:
+                    v = subvalue[name]
+                else:
+                    v = vs.default_value()
+                if len(sections) == 1:
+                    vp = varprefix
+                else:
+                    vp = keyname + "_" + varprefix
+                vs.render_input(vp + name, v)
+                if (not focus and first) or (name == focus):
+                    vs.set_focus(vp + name)
+                    first = False
+        else:
+            entries.render_input(keyname, subvalue, form=True)
+
 
     end()
     if buttons:

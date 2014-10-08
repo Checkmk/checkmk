@@ -1444,6 +1444,13 @@ def show_context_links(thisview, show_filters, display_options,
             html.context_button(_("WATO"), url, "wato", id="wato",
                 bestof = config.context_buttons_to_show)
 
+        try:
+            # FIXME: Berechtigung prüfen
+            config.reporting_available
+            html.context_button(_("Export as PDF"), html.makeuri([], filename="report_instant.py"), "pdf")
+        except:
+            pass
+
         links = visuals.collect_context_links(thisview)
         for linktitle, uri, icon, buttonid in links:
             html.context_button(linktitle, url=uri, icon=icon, id=buttonid, bestof=config.context_buttons_to_show)

@@ -93,13 +93,8 @@ def render_availability(view, datasource, filterheaders, display_options,
     if handle_edit_annotations():
         return
 
-    # We need the availability options now, but cannot display the
-    # form code for that yet. Ignore the HTML code.
-    html.plug()
-    avoptions = render_availability_options()
+    avoptions = get_availability_options_from_url()
     range, range_title = avoptions["range"]
-    html.drain()
-    html.unplug()
 
     timeline = not not html.var("timeline")
     if timeline:
@@ -146,6 +141,11 @@ def render_availability(view, datasource, filterheaders, display_options,
         html.begin_context_buttons()
         togglebutton("avoptions", html.has_user_errors(), "painteroptions", _("Configure details of the report"))
         html.context_button(_("Status View"), html.makeuri([("mode", "status")]), "status")
+        try:
+            config.reporting_available
+            html.context_button(_("Export as PDF"), html.makeuri([], filename="report_instant.py"), "pdf")
+        except:
+            pass
         if timeline:
             html.context_button(_("Availability"), html.makeuri([("timeline", "")]), "availability")
             history_url = history_url_of(tl_site, tl_host, tl_service, range[0], range[1])
@@ -505,6 +505,14 @@ avoption_entries = [
     ),
    )
 ]
+
+# Get availability options without rendering the valuespecs
+def get_availability_options_from_url():
+    html.plug()
+    avoptions = render_availability_options()
+    html.drain()
+    html.unplug()
+    return avoptions
 
 
 def render_availability_options():

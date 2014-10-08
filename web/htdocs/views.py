@@ -845,7 +845,7 @@ def prepare_display_options():
 # is about.
 def show_view(view, show_heading = False, show_buttons = True,
               show_footer = True, render_function = None, only_count=False,
-              all_filters_active=False):
+              all_filters_active=False, limit=None):
     if html.var("mode") == "availability" and html.has_var("av_aggr_name") and html.var("timeline"):
         bi.page_timeline()
         return
@@ -899,9 +899,9 @@ def show_view(view, show_heading = False, show_buttons = True,
     # the limit was not applied on the resulting rows but on the
     # lines of the log processed. This resulted in wrong stats.
     # For these datasources we ignore the query limits.
-    limit = None
-    if not datasource.get('ignore_limit', False):
-        limit = get_limit()
+    if limit == None: # Otherwise: specified as argument
+        if not datasource.get('ignore_limit', False):
+            limit = get_limit()
 
     # Fork to availability view. We just need the filter headers, since we do not query the normal
     # hosts and service table, but "statehist". This is *not* true for BI availability, though (see later)

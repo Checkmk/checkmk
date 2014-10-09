@@ -517,7 +517,7 @@ def render_view_config(view, general_properties=True):
     view['datasource'] = ds_name
 
     for ident, vs in view_editor_specs(ds_name, general_properties):
-        vs.render_input(ident, view[ident])
+        vs.render_input(ident, view.get(ident))
 
 # Is used to change the view structure to be compatible to
 # the valuespec This needs to perform the inverted steps of the

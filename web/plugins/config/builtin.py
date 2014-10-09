@@ -56,6 +56,7 @@ sidebar = [
     ('tactical_overview', 'open'),
     ('search',            'open'),
     ('views',             'open'),
+    ('reports',           'closed'), # does not harm if not available
     ('bookmarks',         'open'),
     ('admin',             'open'),
     ('master_control',    'closed')

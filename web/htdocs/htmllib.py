@@ -197,8 +197,11 @@ class html:
         self.write("</form>\n")
         self.form_name = None
 
-    def form_submitted(self):
-        return self.has_var("filled_in")
+    def form_submitted(self, form_name):
+        if form_name:
+            return self.var("filled_in") == form_name
+        else:
+            return self.has_var("filled_in")
 
     def add_user_error(self, varname, message):
         if type(varname) == list:

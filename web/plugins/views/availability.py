@@ -1427,7 +1427,7 @@ def render_availability_group(group_title, range_title, group_id, availability,
         if not "omit_buttons" in labelling and not no_html:
             table.cell("")
         if not "omit_host" in labelling:
-            table.cell("", _("Summary"))
+            table.cell("", _("Summary"), css="heading")
         if what == "service":
             table.cell("", "")
 
@@ -1447,7 +1447,7 @@ def render_availability_group(group_title, range_title, group_id, availability,
 
             if number and av_levels and sid in [ "ok", "up" ]:
                 css = "state%d" % check_av_levels(number, av_levels, considered_duration)
-            table.cell(sname, render_number(number, considered_duration), css="number " + css, help=help)
+            table.cell(sname, render_number(number, considered_duration), css="heading number " + css, help=help)
             os_aggrs, os_states = avoptions.get("outage_statistics", ([],[]))
             if sid in os_states:
                 for aggr in os_aggrs:

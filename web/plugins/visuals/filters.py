@@ -536,12 +536,6 @@ declare_filter(234, FilterNumberRange("host_num_services", _("Number of Services
 
 
 # Filter for setting time ranges, e.g. on last_state_change and last_check
-# Variante eins:
-# age [  ] seconds  [  ] minutes  [  ] hours  [  ] days
-# Variante zwei: (not implemented)
-# since [2010-01-02] [00:00:00]
-# Variante drei: (not implemented)
-# from [2010-01-02] [00:00:00] until [2010-01-02] [00:00:00]
 class FilterTime(Filter):
     def __init__(self, info, name, title, column):
         self.column = column

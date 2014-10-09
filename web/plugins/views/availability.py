@@ -852,7 +852,7 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode, fetch=
             render_timeline(timeline_rows, from_time, until_time, total_duration,
                             timeline, range_title, render_number, what, timewarpcode, avoptions, style="standalone")
     else:
-        fetch_data["table"] = render_availability_table(availability, from_time, until_time, range_title, 
+        fetch_data["table"] = render_availability_table(availability, from_time, until_time, range_title,
                                                         what, avoptions, render_number, fetch)
 
     if not fetch:
@@ -1189,7 +1189,7 @@ def render_availability_table(availability, from_time, until_time, range_title, 
 
     if not grouping:
         fetch_data.append((None,
-            render_availability_group(range_title, range_title, None, availability, from_time, 
+            render_availability_group(range_title, range_title, None, availability, from_time,
                                       until_time, what, avoptions, render_number, fetch)))
 
     else:
@@ -1216,7 +1216,7 @@ def render_availability_table(availability, from_time, until_time, range_title, 
         # 3. Loop over all groups and render them
         for title, group_id in titled_groups:
             fetch_data.append((title,
-                render_availability_group(title, range_title, group_id, availability, 
+                render_availability_group(title, range_title, group_id, availability,
                                           from_time, until_time, what, avoptions, render_number, fetch)
             ))
 
@@ -1265,7 +1265,8 @@ def get_av_groups(availability, grouping):
 
 
 # When grouping is enabled, this function is called once for each group
-def render_availability_group(group_title, range_title, group_id, availability, from_time, until_time, what, avoptions, render_number, fetch):
+def render_availability_group(group_title, range_title, group_id, availability,
+                              from_time, until_time, what, avoptions, render_number, fetch):
 
     # Filter out groups that we want to show this time
     group_availability = []
@@ -1339,8 +1340,12 @@ def render_availability_group(group_title, range_title, group_id, availability, 
 
         host_url = "view.py?" + html.urlencode_vars([("view_name", "hoststatus"), ("site", site), ("host", host)])
         if what == "bi":
-            bi_url = "view.py?" + html.urlencode_vars([("view_name", "aggr_single"), ("aggr_group", host), ("aggr_name", service)])
-            table.cell(_("Aggregate"), '<a href="%s">%s</a>' % (bi_url, service))
+            table.cell(_("Aggregate"))
+            if no_html:
+                html.write(service)
+            else:
+                bi_url = "view.py?" + html.urlencode_vars([("view_name", "aggr_single"), ("aggr_group", host), ("aggr_name", service)])
+                html.write('<a href="%s">%s</a>' % (bi_url, service))
             availability_columns = bi_availability_columns
         else:
             if not "omit_host" in labelling:
@@ -1473,6 +1478,13 @@ def check_av_levels(number, av_levels, considered_duration):
     else:
         return 0
 
+
+def compute_bi_availability(avoptions, aggr_rows):
+    rows = []
+    for aggr_row in aggr_rows:
+        these_rows, tree_state = get_bi_timeline(aggr_row["aggr_tree"], aggr_row["aggr_group"], avoptions, False)
+        rows += these_rows
+    return do_render_availability(rows, "bi", avoptions, timeline=False, timewarpcode=None, fetch=True)
 
 
 # Render availability of a BI aggregate. This is currently

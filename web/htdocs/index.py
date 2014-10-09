@@ -76,11 +76,6 @@ def load_all_plugins():
         else:
             module.load_plugins()
 
-    # Load reporting plugins (only available in subscription version)
-    try:
-        reporting.load_plugins()
-    except:
-        pass
 
 __builtin__.load_all_plugins = load_all_plugins
 

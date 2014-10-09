@@ -713,14 +713,6 @@ def page_view():
 
     html.set_page_context(dict(visuals.get_context_html_vars(view)))
 
-    if config.may("reporting.instant"):
-        if html.var("instant_report"):
-            import reporting
-            reporting.instant_report()
-            return
-
-        html.add_status_icon("report", _("Export as PDF (instant report)"), html.makeuri([("instant_report", "1")]))
-
     show_view(view, True, True, True)
 
 
@@ -1444,12 +1436,8 @@ def show_context_links(thisview, show_filters, display_options,
             html.context_button(_("WATO"), url, "wato", id="wato",
                 bestof = config.context_buttons_to_show)
 
-        try:
-            # FIXME: Berechtigung prüfen
-            config.reporting_available
+        if config.reporting_available():
             html.context_button(_("Export as PDF"), html.makeuri([], filename="report_instant.py"), "pdf")
-        except:
-            pass
 
         links = visuals.collect_context_links(thisview)
         for linktitle, uri, icon, buttonid in links:

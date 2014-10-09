@@ -2191,7 +2191,9 @@ def group_value(row, group_painters):
 
 def get_painter_option(name):
     opt = multisite_painter_options[name]
-    if not config.may("general.painter_options"):
+    if "forced_value" in opt:
+        return opt["forced_value"]
+    elif not config.may("general.painter_options"):
         return opt['valuespec'].default_value()
     else:
         return opt.get("value", opt['valuespec'].default_value())

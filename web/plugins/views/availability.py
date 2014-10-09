@@ -195,7 +195,7 @@ avoption_entries = [
     False,
     Timerange(
         title = _("Time Range"),
-        default_value = 'm1',
+        default_value = 'd0',
     )
   ),
 
@@ -229,7 +229,8 @@ avoption_entries = [
                     ( "honor", _("Honor scheduled downtimes") ),
                     ( "ignore", _("Ignore scheduled downtimes") ),
                     ( "exclude", _("Exclude scheduled downtimes" ) ),
-                 ]
+                 ],
+                 default_value = "honor",
               )
             ),
             ( "exclude_ok",
@@ -249,13 +250,19 @@ avoption_entries = [
        columns = 2,
        elements = [
            ( "flapping",
-              Checkbox(label = _("Consider periods of flapping states")),
+              Checkbox(
+                  label = _("Consider periods of flapping states"),
+                  default_value = True),
            ),
            ( "host_down",
-              Checkbox(label = _("Consider times where the host is down")),
+              Checkbox(
+                  label = _("Consider times where the host is down"),
+                  default_value = True),
            ),
            ( "unmonitored",
-              Checkbox(label = _("Include unmonitored time")),
+              Checkbox(
+                  label = _("Include unmonitored time"),
+                  default_value = True),
            ),
        ],
        optional_keys = False,
@@ -278,7 +285,8 @@ avoption_entries = [
                     ( "warn",    _("WARN") ),
                     ( "crit",    _("CRIT") ),
                     ( "unknown", _("UNKNOWN") ),
-                  ]
+                  ],
+                  default_value = "warn",
                 ),
            ),
            ( "unknown",
@@ -289,7 +297,8 @@ avoption_entries = [
                     ( "warn",    _("WARN") ),
                     ( "crit",    _("CRIT") ),
                     ( "unknown", _("UNKNOWN") ),
-                  ]
+                  ],
+                  default_value = "unknown",
                 ),
            ),
            ( "host_down",
@@ -301,7 +310,8 @@ avoption_entries = [
                     ( "crit",      _("CRIT") ),
                     ( "unknown",   _("UNKNOWN") ),
                     ( "host_down", _("Host Down") ),
-                  ]
+                  ],
+                  default_value = "host_down",
                 ),
            ),
        ],
@@ -380,7 +390,8 @@ avoption_entries = [
             ( "honor",    _("Base report only on service times") ),
             ( "ignore",   _("Include both service and non-service times" ) ),
             ( "exclude",  _("Base report only on non-service times" ) ),
-         ]
+         ],
+         default_value = "honor",
      )
   ),
 
@@ -394,7 +405,8 @@ avoption_entries = [
             ( "honor", _("Distinguish times in and out of notification period") ),
             ( "exclude", _("Exclude times out of notification period" ) ),
             ( "ignore", _("Ignore notification period") ),
-         ]
+         ],
+         default_value = "ignore",
      )
   ),
 
@@ -409,7 +421,8 @@ avoption_entries = [
           ( "host",           _("By Host")       ),
           ( "host_groups",    _("By Host group") ),
           ( "service_groups", _("By Service group") ),
-        ]
+        ],
+        default_value = None,
     )
   ),
 
@@ -423,6 +436,7 @@ avoption_entries = [
             ("yyyy-mm-dd hh:mm:ss", _("YYYY-MM-DD HH:MM:SS") ),
             ("epoch",               _("Unix Timestamp (Epoch)") ),
         ],
+        default_value = "yyyy-mm-dd hh:mm:ss",
     )
   ),
   ( "timeformat",
@@ -440,9 +454,9 @@ avoption_entries = [
             ("hours",        _("Hours") ),
             ("hhmmss",       _("HH:MM:SS") ),
         ],
+        default_value = "percentage_2",
     )
   ),
-
 
   # Short time intervals
   ( "short_intervals",
@@ -450,9 +464,10 @@ avoption_entries = [
     True,
     Integer(
         title = _("Short Time Intervals"),
+        label = _("Ignore intervals shorter or equal"),
         minvalue = 0,
         unit = _("sec"),
-        label = _("Ignore intervals shorter or equal"),
+        default_value = 0,
     ),
   ),
 
@@ -476,7 +491,7 @@ avoption_entries = [
             ( "sum",     _("Display total sum (for % the average)") ),
             ( "average", _("Display average") ),
         ],
-        default_value = sum,
+        default_value = "sum",
     )
   ),
 
@@ -495,10 +510,10 @@ avoption_entries = [
     False,
     Age(
         title = _("Query Time Limit"),
-        default_value = 30,
-        unit = _("sec"),
         help = _("Limit the execution time of the query, in order to "
                  "avoid a hanging system."),
+        unit = _("sec"),
+        default_value = 30,
     ),
    )
 ]
@@ -511,6 +526,39 @@ def get_availability_options_from_url():
     html.unplug()
     return avoptions
 
+def get_default_avoptions():
+    return {
+        "range"          : (time.time() - 86400, time.time()),
+        "rangespec"      : "d0",
+        "labelling"      : [],
+        "downtimes"      : {
+            "include" : "honor",
+            "exclude_ok" : False,
+        },
+        "consider"       : {
+            "flapping"            : True,
+            "host_down"           : True,
+            "unmonitored"         : True,
+        },
+        "state_grouping" : {
+            "warn"      : "warn",
+            "unknown"   : "unknown",
+            "host_down" : "host_down",
+        },
+        "av_levels"         : None,
+        "outage_statistics" : ([],[]),
+        "av_mode"           : False,
+        "service_period"      : "honor",
+        "notification_period" : "ignore",
+        "grouping"          : None,
+        "dateformat"     : "yyyy-mm-dd hh:mm:ss",
+        "timeformat"     : "percentage_2",
+        "short_intervals"   : 0,
+        "dont_merge"        : False,
+        "summary"           : "sum",
+        "show_timeline"     : False,
+        "timelimit"         : 30,
+    }
 
 def render_availability_options():
     if html.var("_reset") and html.check_transaction():
@@ -520,38 +568,7 @@ def render_availability_options():
                 html.del_var(varname)
             html.del_var("avoptions")
 
-    avoptions = {
-        "range"          : (time.time() - 86400, time.time()),
-        "downtimes"      : {
-            "include" : "honor",
-            "exclude_ok" : False,
-        },
-        "notification_period" : "ignore",
-        "service_period"      : "honor",
-        "consider"       : {
-            "flapping"            : True,
-            "host_down"           : True,
-            "unmonitored"         : True,
-        },
-        "dateformat"     : "yyyy-mm-dd hh:mm:ss",
-        "timeformat"     : "percentage_2",
-        "labelling"      : [],
-        "rangespec"      : "d0",
-        "state_grouping" : {
-            "warn"      : "warn",
-            "unknown"   : "unknown",
-            "host_down" : "host_down",
-        },
-        "outage_statistics" : ([],[]),
-        "short_intervals"   : 0,
-        "dont_merge"        : False,
-        "show_timeline"     : False,
-        "summary"           : "sum",
-        "av_levels"         : None,
-        "av_mode"           : False,
-        "grouping"          : None,
-        "timelimit"         : 30,
-    }
+    avoptions = get_default_avoptions()
 
     # Users of older versions might not have all keys set. The following
     # trick will merge their options with our default options.

@@ -1437,7 +1437,7 @@ def show_context_links(thisview, show_filters, display_options,
                 bestof = config.context_buttons_to_show)
 
         if config.reporting_available():
-            html.context_button(_("Export as PDF"), html.makeuri([], filename="report_instant.py"), "pdf")
+            html.context_button(_("Export as PDF"), html.makeuri([], filename="report_instant.py"), "report")
 
         links = visuals.collect_context_links(thisview)
         for linktitle, uri, icon, buttonid in links:

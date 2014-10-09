@@ -142,7 +142,7 @@ def render_availability(view, datasource, filterheaders, display_options,
         togglebutton("avoptions", html.has_user_errors(), "painteroptions", _("Configure details of the report"))
         html.context_button(_("Status View"), html.makeuri([("mode", "status")]), "status")
         if config.reporting_available():
-            html.context_button(_("Export as PDF"), html.makeuri([], filename="report_instant.py"), "pdf")
+            html.context_button(_("Export as PDF"), html.makeuri([], filename="report_instant.py"), "report")
         if timeline:
             html.context_button(_("Availability"), html.makeuri([("timeline", "")]), "availability")
             history_url = history_url_of(tl_site, tl_host, tl_service, range[0], range[1])

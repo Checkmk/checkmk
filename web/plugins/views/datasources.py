@@ -174,6 +174,7 @@ multisite_datasources["log"] = {
     "infos"    : [ "log", "host", "service", "contact", "command" ],
     "keys"     : [],
     "idkeys"   : [ "log_lineno" ],
+    "time_filters" : [ "logtime" ],
 }
 
 multisite_datasources["log_events"] = {
@@ -183,6 +184,7 @@ multisite_datasources["log_events"] = {
     "infos"       : [ "log", "host", "service" ],
     "keys"        : [],
     "idkeys"      : [ "log_lineno" ],
+    "time_filters" : [ "logtime" ],
 }
 
 multisite_datasources["log_host_events"] = {
@@ -192,6 +194,7 @@ multisite_datasources["log_host_events"] = {
     "infos"       : [ "log", "host" ],
     "keys"        : [],
     "idkeys"      : [ "log_lineno" ],
+    "time_filters" : [ "logtime" ],
 }
 
 multisite_datasources["alert_stats"] = {
@@ -203,4 +206,5 @@ multisite_datasources["alert_stats"] = {
     "keys"         : [],
     "idkeys"       : [ 'host_name', 'service_description' ],
     "ignore_limit" : True,
+    "time_filters" : [ "logtime" ],
 }

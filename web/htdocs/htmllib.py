@@ -197,7 +197,7 @@ class html:
         self.write("</form>\n")
         self.form_name = None
 
-    def form_submitted(self, form_name):
+    def form_submitted(self, form_name=None):
         if form_name:
             return self.var("filled_in") == form_name
         else:

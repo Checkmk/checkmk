@@ -24,21 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# The following debug code can be used to tackle a mod_python
-# problem when using the local hierarchy for plugins that refer
-# to the config module.
-# import time, os
-# fn = "/tmp/config.load.%d" % os.getpid()
-# if os.path.exists(fn):
-#     raise Exception("Mist: config zweimal geladen!!")
-#
-# file(fn, "a").write("[%d] Geladen: %s\n" % (os.getpid(), time.time()))
-
 import os, pprint, glob
 from lib import *
 
-# In case we start standalone and outside an check_mk enviroment,
-# we have another path for the defaults
+# In case we start standalone and outside a Check_MK enviroment,
+# we have another path for the defaults.
+# FIXME: Do we need thus rubbish anymore?
 try:
     import defaults
 except:
@@ -46,6 +37,7 @@ except:
 
 # Python 2.3 does not have 'set' in normal namespace.
 # But it can be imported from 'sets'
+# FIXME: We should officially drop Python 2.3 support
 try:
     set()
 except NameError:
@@ -110,7 +102,7 @@ aggregation_functions = {}
 
 
 #.
-#   .----------------------------------------------------------------------.
+#   .--Functions-----------------------------------------------------------.
 #   |             _____                 _   _                              |
 #   |            |  ___|   _ _ __   ___| |_(_) ___  _ __  ___              |
 #   |            | |_ | | | | '_ \ / __| __| |/ _ \| '_ \/ __|             |
@@ -428,6 +420,7 @@ def save_user_file(name, content, unlock = False):
         raise MKConfigError(_("Cannot save %s options for user <b>%s</b> into <b>%s</b>: %s") % \
                 (name, user_id, path, e))
 
+#.
 #   .--Sites---------------------------------------------------------------.
 #   |                        ____  _ _                                     |
 #   |                       / ___|(_) |_ ___  ___                          |

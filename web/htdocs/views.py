@@ -711,7 +711,7 @@ def page_view():
     if not view:
         raise MKGeneralException(_("No view defined with the name '%s'.") % html.attrencode(view_name))
 
-    html.set_page_context(dict(visuals.get_context_html_vars(view)))
+    html.set_page_context(dict(visuals.get_singlecontext_html_vars(view)))
 
     show_view(view, True, True, True)
 
@@ -1421,8 +1421,8 @@ def show_context_links(thisview, show_filters, display_options,
             view_optiondial_off("refresh")
 
 
-    # WATO: If we have a host context, then show button to WATO, if permissions allow this
     if 'B' in display_options:
+        # WATO: If we have a host context, then show button to WATO, if permissions allow this
         if html.has_var("host") \
            and config.wato_enabled \
            and config.may("wato.use") \
@@ -1436,9 +1436,11 @@ def show_context_links(thisview, show_filters, display_options,
             html.context_button(_("WATO"), url, "wato", id="wato",
                 bestof = config.context_buttons_to_show)
 
+        # Button for creating an instant report (if reporting is available)
         if config.reporting_available():
             html.context_button(_("Export as PDF"), html.makeuri([], filename="report_instant.py"), "report")
 
+        # Buttons to other views, dashboards, etc.
         links = visuals.collect_context_links(thisview)
         for linktitle, uri, icon, buttonid in links:
             html.context_button(linktitle, url=uri, icon=icon, id=buttonid, bestof=config.context_buttons_to_show)

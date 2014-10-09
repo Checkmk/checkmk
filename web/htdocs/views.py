@@ -223,7 +223,7 @@ def DatasourceSelection():
 
     return DropdownChoice(
         title = _('Datasource'),
-        help = _('The datasources defines which type of objects should be displayed with this view.'),
+        help = _('The datasources define which type of objects should be displayed with this view.'),
         choices = datasources,
         sorted = True,
         columns = 1,

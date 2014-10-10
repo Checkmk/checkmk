@@ -223,7 +223,7 @@ def DatasourceSelection():
 
     return DropdownChoice(
         title = _('Datasource'),
-        help = _('The datasources defines which type of objects should be displayed with this view.'),
+        help = _('The datasources define which type of objects should be displayed with this view.'),
         choices = datasources,
         sorted = True,
         columns = 1,
@@ -517,7 +517,7 @@ def render_view_config(view, general_properties=True):
     view['datasource'] = ds_name
 
     for ident, vs in view_editor_specs(ds_name, general_properties):
-        vs.render_input(ident, view[ident])
+        vs.render_input(ident, view.get(ident))
 
 # Is used to change the view structure to be compatible to
 # the valuespec This needs to perform the inverted steps of the
@@ -711,15 +711,7 @@ def page_view():
     if not view:
         raise MKGeneralException(_("No view defined with the name '%s'.") % html.attrencode(view_name))
 
-    html.set_page_context(dict(visuals.get_context_html_vars(view)))
-
-    if config.may("reporting.instant"):
-        if html.var("instant_report"):
-            import reporting
-            reporting.instant_report()
-            return
-
-        html.add_status_icon("report", _("Export as PDF (instant report)"), html.makeuri([("instant_report", "1")]))
+    html.set_page_context(dict(visuals.get_singlecontext_html_vars(view)))
 
     show_view(view, True, True, True)
 
@@ -1429,8 +1421,8 @@ def show_context_links(thisview, show_filters, display_options,
             view_optiondial_off("refresh")
 
 
-    # WATO: If we have a host context, then show button to WATO, if permissions allow this
     if 'B' in display_options:
+        # WATO: If we have a host context, then show button to WATO, if permissions allow this
         if html.has_var("host") \
            and config.wato_enabled \
            and config.may("wato.use") \
@@ -1444,6 +1436,11 @@ def show_context_links(thisview, show_filters, display_options,
             html.context_button(_("WATO"), url, "wato", id="wato",
                 bestof = config.context_buttons_to_show)
 
+        # Button for creating an instant report (if reporting is available)
+        if config.reporting_available():
+            html.context_button(_("Export as PDF"), html.makeuri([], filename="report_instant.py"), "report")
+
+        # Buttons to other views, dashboards, etc.
         links = visuals.collect_context_links(thisview)
         for linktitle, uri, icon, buttonid in links:
             html.context_button(linktitle, url=uri, icon=icon, id=buttonid, bestof=config.context_buttons_to_show)
@@ -2194,7 +2191,9 @@ def group_value(row, group_painters):
 
 def get_painter_option(name):
     opt = multisite_painter_options[name]
-    if not config.may("general.painter_options"):
+    if "forced_value" in opt:
+        return opt["forced_value"]
+    elif not config.may("general.painter_options"):
         return opt['valuespec'].default_value()
     else:
         return opt.get("value", opt['valuespec'].default_value())

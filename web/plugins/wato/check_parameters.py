@@ -1442,7 +1442,7 @@ register_check_parameters(
     Dictionary(
         elements = [
             ( "error_states", ListChoice(
-                title = _("Modem States whats lead to critical state"),
+                title = _("Modem States that lead to a critical state"),
                 help = _("If one of the selected state occur, the check will repsond with a Critical state "),
                 choices = [
                   ( 1,   "other" ),
@@ -1824,7 +1824,7 @@ register_check_parameters(
                      ( 'levels',
                             Tuple(
                                 title = _("Maximum Number of E-Mails in Queue"),
-                                help = _("This rule applies to the number of E-Mails in the various Exchange Message Queues"),
+                                help = _("This rule applies to the number of e-mails in the various Exchange Message Queues"),
                                 elements = [
                                     Integer(title = _("Warning if above"), unit = _("E-Mails")),
                                     Integer(title = _("Critical if above"), unit = _("E-Mails"))
@@ -1834,7 +1834,7 @@ register_check_parameters(
                         Integer(
                             title = _("Offset"),
                             help = _("Use this only if you want to overwrite the postion of the information in the agent "
-                                     "Output. Also refer to the rule <i>Microsoft Exchange Queues Inventory</i> ")
+                                     "output. Also refer to the rule <i>Microsoft Exchange Queues Inventory</i> ")
                         )
                     ),
                   ],
@@ -2024,8 +2024,8 @@ filesystem_elements = [
                Integer(title = _("Critical if below"), unit = _("hours"), default_value = 6, ),
             ])),
     ( "trend_showtimeleft",
-            Checkbox( title = _("Display timeleft in check output"), label = _("Enable"),
-                       help = _("Normally the timeleft until disk full is only displayed when "
+            Checkbox( title = _("Display time left in check output"), label = _("Enable"),
+                       help = _("Normally, the time left until the disk is full is only displayed when "
                                 "the configured levels have been breached. If you set this option "
                                 "the check always reports this information"))
     ),
@@ -2318,7 +2318,7 @@ register_check_parameters(
                Alternative(
                    title = _("Used bandwidth (traffic)"),
                    help = _("Settings levels on the used bandwidth is optional. If you do set "
-                            "levels you might also consider using an averaging."),
+                            "levels you might also consider using averaging."),
                    elements = [
                        Tuple(
                            title = _("Percentual levels (in relation to policy speed)"),
@@ -2492,7 +2492,7 @@ register_check_parameters(
                                "currently used memory (RAM or SWAP) by all processes and sets this in relation "
                                "to the total RAM of the system. This means that the memory usage can exceed 100%. "
                                "A usage of 200% means that the total size of all processes is twice as large as "
-                               "the main memory, so <b>at least</b> the half of it is currently swapped out. "
+                               "the main memory, so <b>at least</b> half of it is currently swapped out. "
                                "Besides Linux and UNIX systems, these parameters are also used for memory checks "
                                "of other devices, like Fortigate devices."),
                         elements = [
@@ -2551,7 +2551,7 @@ register_check_parameters(
                         title = _("Averaging"),
                         help = _("If this parameter is set, all measured values will be averaged "
                                "over the specified time interval before levels are being applied. Per "
-                               "default, averaging is turned off. "),
+                               "default, averaging is turned off."),
                        unit = _("minutes"),
                        minvalue = 1,
                        default_value = 60,
@@ -2748,7 +2748,7 @@ register_check_parameters(
     _("State of ESX hosts and virtual machines"),
     Dictionary(
         help = _("Usually the check goes to WARN if a VM or host is powered off and OK otherwise. "
-                 "You can change this behaviour on a per-state-base here."),
+                 "You can change this behaviour on a per-state-basis here."),
         optional_keys = False,
         elements = [
            ( "states",
@@ -5749,7 +5749,7 @@ register_check_parameters(subgroup_applications,
                         Checkbox(
                             title =  _("Monitoring of forwarded logfiles"),
                             label = _("Warn if list of forwarded logfiles changes"),
-                            help = _("If this option is enabled then the check monitors the list of forwarded "
+                            help = _("If this option is enabled, the check monitors the list of forwarded "
                                   "logfiles and will warn you if at any time a logfile is missing or exceeding "
                                   "when compared to the initial list that was snapshotted during service detection. "
                                   "Reinventorize this check in order to make it OK again."),
@@ -5768,9 +5768,9 @@ register_check_parameters(subgroup_applications,
 register_rule(group + '/' + subgroup_applications,
     varname   = "logwatch_groups",
     title     = _('Logfile Grouping Patterns'),
-    help      = _('The check <tt>logwatch</tt> normaly creates one service for each logfile '
+    help      = _('The check <tt>logwatch</tt> normally creates one service for each logfile. '
                   'By defining grouping patterns you can switch to the check <tt>logwatch.groups</tt>. '
-                  'That check monitors a list of logfiles at once. This is usefull if you have '
+                  'That check monitors a list of logfiles at once. This is useful if you have '
                   'e.g. a folder with rotated logfiles where the name of the current logfile'
                   'also changes with each rotation'),
     valuespec = ListOf(
@@ -5923,7 +5923,7 @@ register_check_parameters(
                      help = _("By activating averaging, Check_MK will compute the average of "
                               "the CPU utilization over a given interval. If you have defined "
                               "alerting levels then these will automatically be applied on the "
-                              "averaged value. This helps to mask out short peaks. "),
+                              "averaged value. This helps to mask out short peaks."),
                      unit = _("minutes"),
                      minvalue = 1,
                      default_value = 15,
@@ -6508,7 +6508,7 @@ register_check_parameters(
                    title = _("Collection time levels"),
                    elements = [
                        Tuple(
-                           title = _("Time of garbage gollection in ms per minute"),
+                           title = _("Time of garbage collection in ms per minute"),
                            elements = [
                                Integer(title = _("Warning at"),
                                        unit = _("ms"),

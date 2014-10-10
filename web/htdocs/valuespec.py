@@ -197,7 +197,20 @@ class Age(ValueSpec):
         days,    rest    = divmod(value, 60*60*24)
         hours,   rest    = divmod(rest,   60*60)
         minutes, seconds = divmod(rest,      60)
-        return "%sd %sh %sm %ss" % (days, hours, minutes, seconds)
+        parts = []
+        for title, count in [
+            ( _("days"), days, ),
+            ( _("hours"), hours, ),
+            ( _("minutes"), minutes, ),
+            ( _("seconds"), seconds, )]:
+            if count:
+                parts.append("%d %s" % (count, title))
+
+        if parts:
+            return " ".join(parts)
+        else:
+            return _("no time")
+
 
     def validate_datatype(self, value, varprefix):
         if type(value) != int:

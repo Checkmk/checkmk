@@ -69,7 +69,7 @@ def link(text, url, target="main", onclick = None):
     # [1] protocol://hostname/url/link.py
     # [2] /absolute/link.py
     # [3] relative.py
-    if not (":" in url[:10]) and url[0] != '/':
+    if not (":" in url[:10]) and not url.startswith("javascript") and url[0] != '/':
         url = defaults.url_prefix + "check_mk/" + url
     onclick = onclick and (' onclick="%s"' % html.attrencode(onclick)) or ''
     return '<a onfocus="if (this.blur) this.blur();" target="%s" ' \
@@ -759,7 +759,7 @@ def search_url_tmpl(used_filters, row, exact = True):
             elif ty == 'servicegroups':
                 return 'view.py?view_name=servicegroup&servicegroup=%(name)s&site=%(site)s'
             elif ty == 'services':
-                return 'view.py?view_name=allservices&service=%(name)s&site=%(site)s'
+                return 'view.py?view_name=allservices&service_regex=%(name)s&site=%(site)s'
         else: # Get the search template
             if plugin.get("search_url_tmpl_func"):
                 return plugin['search_url_tmpl_func'](used_filters, row_data)
@@ -775,7 +775,7 @@ def search_url_tmpl(used_filters, row, exact = True):
             elif ty == 'servicegroups':
                 return 'view.py?view_name=svcgroups&servicegroup_name=%(name)s&site=%(site)s'
             elif ty == 'services':
-                return 'view.py?view_name=allservices&service=%(name)s&site=%(site)s'
+                return 'view.py?view_name=allservices&service_regex=%(name)s&site=%(site)s'
 
     # Search the template
     url_tmpl = find_tmpl()

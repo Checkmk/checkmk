@@ -214,7 +214,9 @@ def page_handler():
     # Check general permission for this mode
     if modeperms != None and not config.may("wato.seeall"):
         for pname in modeperms:
-            config.need_permission("wato." + pname)
+            if '.' not in pname:
+                pname = "wato." + pname
+            config.need_permission(pname)
 
     # Do actions (might switch mode)
     action_message = None

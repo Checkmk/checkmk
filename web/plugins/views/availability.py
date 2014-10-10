@@ -93,13 +93,8 @@ def render_availability(view, datasource, filterheaders, display_options,
     if handle_edit_annotations():
         return
 
-    # We need the availability options now, but cannot display the
-    # form code for that yet. Ignore the HTML code.
-    html.plug()
-    avoptions = render_availability_options()
+    avoptions = get_availability_options_from_url()
     range, range_title = avoptions["range"]
-    html.drain()
-    html.unplug()
 
     timeline = not not html.var("timeline")
     if timeline:
@@ -146,6 +141,8 @@ def render_availability(view, datasource, filterheaders, display_options,
         html.begin_context_buttons()
         togglebutton("avoptions", html.has_user_errors(), "painteroptions", _("Configure details of the report"))
         html.context_button(_("Status View"), html.makeuri([("mode", "status")]), "status")
+        if config.reporting_available():
+            html.context_button(_("Export as PDF"), html.makeuri([], filename="report_instant.py"), "report")
         if timeline:
             html.context_button(_("Availability"), html.makeuri([("timeline", "")]), "availability")
             history_url = history_url_of(tl_site, tl_host, tl_service, range[0], range[1])
@@ -198,7 +195,7 @@ avoption_entries = [
     False,
     Timerange(
         title = _("Time Range"),
-        default_value = 'm1',
+        default_value = 'd0',
     )
   ),
 
@@ -232,7 +229,8 @@ avoption_entries = [
                     ( "honor", _("Honor scheduled downtimes") ),
                     ( "ignore", _("Ignore scheduled downtimes") ),
                     ( "exclude", _("Exclude scheduled downtimes" ) ),
-                 ]
+                 ],
+                 default_value = "honor",
               )
             ),
             ( "exclude_ok",
@@ -252,13 +250,19 @@ avoption_entries = [
        columns = 2,
        elements = [
            ( "flapping",
-              Checkbox(label = _("Consider periods of flapping states")),
+              Checkbox(
+                  label = _("Consider periods of flapping states"),
+                  default_value = True),
            ),
            ( "host_down",
-              Checkbox(label = _("Consider times where the host is down")),
+              Checkbox(
+                  label = _("Consider times where the host is down"),
+                  default_value = True),
            ),
            ( "unmonitored",
-              Checkbox(label = _("Include unmonitored time")),
+              Checkbox(
+                  label = _("Include unmonitored time"),
+                  default_value = True),
            ),
        ],
        optional_keys = False,
@@ -281,7 +285,8 @@ avoption_entries = [
                     ( "warn",    _("WARN") ),
                     ( "crit",    _("CRIT") ),
                     ( "unknown", _("UNKNOWN") ),
-                  ]
+                  ],
+                  default_value = "warn",
                 ),
            ),
            ( "unknown",
@@ -292,7 +297,8 @@ avoption_entries = [
                     ( "warn",    _("WARN") ),
                     ( "crit",    _("CRIT") ),
                     ( "unknown", _("UNKNOWN") ),
-                  ]
+                  ],
+                  default_value = "unknown",
                 ),
            ),
            ( "host_down",
@@ -304,7 +310,8 @@ avoption_entries = [
                     ( "crit",      _("CRIT") ),
                     ( "unknown",   _("UNKNOWN") ),
                     ( "host_down", _("Host Down") ),
-                  ]
+                  ],
+                  default_value = "host_down",
                 ),
            ),
        ],
@@ -383,7 +390,8 @@ avoption_entries = [
             ( "honor",    _("Base report only on service times") ),
             ( "ignore",   _("Include both service and non-service times" ) ),
             ( "exclude",  _("Base report only on non-service times" ) ),
-         ]
+         ],
+         default_value = "honor",
      )
   ),
 
@@ -397,7 +405,8 @@ avoption_entries = [
             ( "honor", _("Distinguish times in and out of notification period") ),
             ( "exclude", _("Exclude times out of notification period" ) ),
             ( "ignore", _("Ignore notification period") ),
-         ]
+         ],
+         default_value = "ignore",
      )
   ),
 
@@ -412,7 +421,8 @@ avoption_entries = [
           ( "host",           _("By Host")       ),
           ( "host_groups",    _("By Host group") ),
           ( "service_groups", _("By Service group") ),
-        ]
+        ],
+        default_value = None,
     )
   ),
 
@@ -426,6 +436,7 @@ avoption_entries = [
             ("yyyy-mm-dd hh:mm:ss", _("YYYY-MM-DD HH:MM:SS") ),
             ("epoch",               _("Unix Timestamp (Epoch)") ),
         ],
+        default_value = "yyyy-mm-dd hh:mm:ss",
     )
   ),
   ( "timeformat",
@@ -443,9 +454,9 @@ avoption_entries = [
             ("hours",        _("Hours") ),
             ("hhmmss",       _("HH:MM:SS") ),
         ],
+        default_value = "percentage_2",
     )
   ),
-
 
   # Short time intervals
   ( "short_intervals",
@@ -453,9 +464,10 @@ avoption_entries = [
     True,
     Integer(
         title = _("Short Time Intervals"),
+        label = _("Ignore intervals shorter or equal"),
         minvalue = 0,
         unit = _("sec"),
-        label = _("Ignore intervals shorter or equal"),
+        default_value = 0,
     ),
   ),
 
@@ -479,7 +491,7 @@ avoption_entries = [
             ( "sum",     _("Display total sum (for % the average)") ),
             ( "average", _("Display average") ),
         ],
-        default_value = sum,
+        default_value = "sum",
     )
   ),
 
@@ -498,14 +510,55 @@ avoption_entries = [
     False,
     Age(
         title = _("Query Time Limit"),
-        default_value = 30,
-        unit = _("sec"),
         help = _("Limit the execution time of the query, in order to "
                  "avoid a hanging system."),
+        unit = _("sec"),
+        default_value = 30,
     ),
    )
 ]
 
+# Get availability options without rendering the valuespecs
+def get_availability_options_from_url():
+    html.plug()
+    avoptions = render_availability_options()
+    html.drain()
+    html.unplug()
+    return avoptions
+
+def get_default_avoptions():
+    return {
+        "range"          : (time.time() - 86400, time.time()),
+        "rangespec"      : "d0",
+        "labelling"      : [],
+        "downtimes"      : {
+            "include" : "honor",
+            "exclude_ok" : False,
+        },
+        "consider"       : {
+            "flapping"            : True,
+            "host_down"           : True,
+            "unmonitored"         : True,
+        },
+        "state_grouping" : {
+            "warn"      : "warn",
+            "unknown"   : "unknown",
+            "host_down" : "host_down",
+        },
+        "av_levels"         : None,
+        "outage_statistics" : ([],[]),
+        "av_mode"           : False,
+        "service_period"      : "honor",
+        "notification_period" : "ignore",
+        "grouping"          : None,
+        "dateformat"     : "yyyy-mm-dd hh:mm:ss",
+        "timeformat"     : "percentage_2",
+        "short_intervals"   : 0,
+        "dont_merge"        : False,
+        "summary"           : "sum",
+        "show_timeline"     : False,
+        "timelimit"         : 30,
+    }
 
 def render_availability_options():
     if html.var("_reset") and html.check_transaction():
@@ -515,38 +568,7 @@ def render_availability_options():
                 html.del_var(varname)
             html.del_var("avoptions")
 
-    avoptions = {
-        "range"          : (time.time() - 86400, time.time()),
-        "downtimes"      : {
-            "include" : "honor",
-            "exclude_ok" : False,
-        },
-        "notification_period" : "ignore",
-        "service_period"      : "honor",
-        "consider"       : {
-            "flapping"            : True,
-            "host_down"           : True,
-            "unmonitored"         : True,
-        },
-        "dateformat"     : "yyyy-mm-dd hh:mm:ss",
-        "timeformat"     : "percentage_2",
-        "labelling"      : [],
-        "rangespec"      : "d0",
-        "state_grouping" : {
-            "warn"      : "warn",
-            "unknown"   : "unknown",
-            "host_down" : "host_down",
-        },
-        "outage_statistics" : ([],[]),
-        "short_intervals"   : 0,
-        "dont_merge"        : False,
-        "show_timeline"     : False,
-        "summary"           : "sum",
-        "av_levels"         : None,
-        "av_mode"           : False,
-        "grouping"          : None,
-        "timelimit"         : 30,
-    }
+    avoptions = get_default_avoptions()
 
     # Users of older versions might not have all keys set. The following
     # trick will merge their options with our default options.
@@ -830,7 +852,7 @@ def do_render_availability(rows, what, avoptions, timeline, timewarpcode, fetch=
             render_timeline(timeline_rows, from_time, until_time, total_duration,
                             timeline, range_title, render_number, what, timewarpcode, avoptions, style="standalone")
     else:
-        fetch_data["table"] = render_availability_table(availability, from_time, until_time, range_title, 
+        fetch_data["table"] = render_availability_table(availability, from_time, until_time, range_title,
                                                         what, avoptions, render_number, fetch)
 
     if not fetch:
@@ -1167,7 +1189,7 @@ def render_availability_table(availability, from_time, until_time, range_title, 
 
     if not grouping:
         fetch_data.append((None,
-            render_availability_group(range_title, range_title, None, availability, from_time, 
+            render_availability_group(range_title, range_title, None, availability, from_time,
                                       until_time, what, avoptions, render_number, fetch)))
 
     else:
@@ -1194,7 +1216,7 @@ def render_availability_table(availability, from_time, until_time, range_title, 
         # 3. Loop over all groups and render them
         for title, group_id in titled_groups:
             fetch_data.append((title,
-                render_availability_group(title, range_title, group_id, availability, 
+                render_availability_group(title, range_title, group_id, availability,
                                           from_time, until_time, what, avoptions, render_number, fetch)
             ))
 
@@ -1243,7 +1265,8 @@ def get_av_groups(availability, grouping):
 
 
 # When grouping is enabled, this function is called once for each group
-def render_availability_group(group_title, range_title, group_id, availability, from_time, until_time, what, avoptions, render_number, fetch):
+def render_availability_group(group_title, range_title, group_id, availability,
+                              from_time, until_time, what, avoptions, render_number, fetch):
 
     # Filter out groups that we want to show this time
     group_availability = []
@@ -1317,8 +1340,12 @@ def render_availability_group(group_title, range_title, group_id, availability, 
 
         host_url = "view.py?" + html.urlencode_vars([("view_name", "hoststatus"), ("site", site), ("host", host)])
         if what == "bi":
-            bi_url = "view.py?" + html.urlencode_vars([("view_name", "aggr_single"), ("aggr_group", host), ("aggr_name", service)])
-            table.cell(_("Aggregate"), '<a href="%s">%s</a>' % (bi_url, service))
+            table.cell(_("Aggregate"))
+            if no_html:
+                html.write(service)
+            else:
+                bi_url = "view.py?" + html.urlencode_vars([("view_name", "aggr_single"), ("aggr_group", host), ("aggr_name", service)])
+                html.write('<a href="%s">%s</a>' % (bi_url, service))
             availability_columns = bi_availability_columns
         else:
             if not "omit_host" in labelling:
@@ -1400,7 +1427,7 @@ def render_availability_group(group_title, range_title, group_id, availability, 
         if not "omit_buttons" in labelling and not no_html:
             table.cell("")
         if not "omit_host" in labelling:
-            table.cell("", _("Summary"))
+            table.cell("", _("Summary"), css="heading")
         if what == "service":
             table.cell("", "")
 
@@ -1420,7 +1447,7 @@ def render_availability_group(group_title, range_title, group_id, availability, 
 
             if number and av_levels and sid in [ "ok", "up" ]:
                 css = "state%d" % check_av_levels(number, av_levels, considered_duration)
-            table.cell(sname, render_number(number, considered_duration), css="number " + css, help=help)
+            table.cell(sname, render_number(number, considered_duration), css="heading number " + css, help=help)
             os_aggrs, os_states = avoptions.get("outage_statistics", ([],[]))
             if sid in os_states:
                 for aggr in os_aggrs:
@@ -1451,6 +1478,13 @@ def check_av_levels(number, av_levels, considered_duration):
     else:
         return 0
 
+
+def compute_bi_availability(avoptions, aggr_rows):
+    rows = []
+    for aggr_row in aggr_rows:
+        these_rows, tree_state = get_bi_timeline(aggr_row["aggr_tree"], aggr_row["aggr_group"], avoptions, False)
+        rows += these_rows
+    return do_render_availability(rows, "bi", avoptions, timeline=False, timewarpcode=None, fetch=True)
 
 
 # Render availability of a BI aggregate. This is currently

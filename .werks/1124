@@ -1,0 +1,14 @@
+Title: WATO EC configuration: no longer raises an exception when user has restricted WATO access
+Level: 1
+Component: ec
+Compatible: compat
+Version: 1.2.5i6
+Date: 1412864930
+Class: fix
+
+An exception happened, when a user had restricted WATO permissions, but was allowed to edit the WATO EC configuration.
+The following role settings caused this error:<br>
+<br>
+<tt>WATO - Check_MK's Web Administration Tool -> Read access to all modules.... -> No</tt><br>
+and<br>
+<tt>Event Console -> Configuration of event rules -> Yes</tt>

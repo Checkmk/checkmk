@@ -292,10 +292,10 @@ vs_mkeventd_rule = Dictionary(
           ListOf(
               GroupSelection("contact"),
               title = _("Fallback Contact Groups"),
-              help = _("When displaying events in the Check_MK GUI you can make a user only see events "
-                       "for hosts he is a contact for. When you expect this rule to reveice events from "
-                       "hosts that are <i>not</i> known to the monitoring you can specify contact groups "
-                       "for the visibility here. Note: if you activate this option and do not specify "
+              help = _("When displaying events in the Check_MK GUI, you can make a user see only events "
+                       "for hosts he is a contact for. When you expect this rule to receive events from "
+                       "hosts that are <i>not</i> known to the monitoring, you can specify contact groups "
+                       "for visibility here. Note: If you activate this option and do not specify "
                        "any group, then users with restricted permissions can never see these events."),
               movable = False,
           )

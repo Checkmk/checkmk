@@ -139,10 +139,11 @@ table.valuespec_listof td.vlof_content.filter {
 table.valuespec_listof td.vlof_buttons.filter {
     width: 1px;
     border-style: none;
+    vertical-align: top;
 }
 table.valuespec_listof td.vlof_buttons.filter img {
     position: relative;
-    top: -18px;
+    top: 2px;
     left: -28px;
     width: 16px;
     height: 16px;

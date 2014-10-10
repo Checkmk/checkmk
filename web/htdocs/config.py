@@ -24,21 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# The following debug code can be used to tackle a mod_python
-# problem when using the local hierarchy for plugins that refer
-# to the config module.
-# import time, os
-# fn = "/tmp/config.load.%d" % os.getpid()
-# if os.path.exists(fn):
-#     raise Exception("Mist: config zweimal geladen!!")
-#
-# file(fn, "a").write("[%d] Geladen: %s\n" % (os.getpid(), time.time()))
-
 import os, pprint, glob
 from lib import *
 
-# In case we start standalone and outside an check_mk enviroment,
-# we have another path for the defaults
+# In case we start standalone and outside a Check_MK enviroment,
+# we have another path for the defaults.
+# FIXME: Do we need thus rubbish anymore?
 try:
     import defaults
 except:
@@ -46,10 +37,24 @@ except:
 
 # Python 2.3 does not have 'set' in normal namespace.
 # But it can be imported from 'sets'
+# FIXME: We should officially drop Python 2.3 support
 try:
     set()
 except NameError:
     from sets import Set as set
+
+#.
+#   .--Declarations--------------------------------------------------------.
+#   |       ____            _                 _   _                        |
+#   |      |  _ \  ___  ___| | __ _ _ __ __ _| |_(_) ___  _ __  ___        |
+#   |      | | | |/ _ \/ __| |/ _` | '__/ _` | __| |/ _ \| '_ \/ __|       |
+#   |      | |_| |  __/ (__| | (_| | | | (_| | |_| | (_) | | | \__ \       |
+#   |      |____/ \___|\___|_|\__,_|_|  \__,_|\__|_|\___/|_| |_|___/       |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Declarations of global variables and constants                      |
+#   '----------------------------------------------------------------------'
+
 
 user = None
 user_id = None
@@ -97,7 +102,7 @@ aggregation_functions = {}
 
 
 #.
-#   .----------------------------------------------------------------------.
+#   .--Functions-----------------------------------------------------------.
 #   |             _____                 _   _                              |
 #   |            |  ___|   _ _ __   ___| |_(_) ___  _ __  ___              |
 #   |            | |_ | | | | '_ \ / __| __| |/ _ \| '_ \/ __|             |
@@ -151,15 +156,27 @@ def load_config():
         include(p)
 
 
+def reporting_available():
+    try:
+        # Check the existance of one arbitrary config variable from the
+        # reporting module
+        reporting_filename
+        return True
+    except:
+        return False
+
+
 #.
-# -------------------------------------------------------------------
-#    ____                     _         _
-#   |  _ \ ___ _ __ _ __ ___ (_)___ ___(_) ___  _ __  ___
-#   | |_) / _ \ '__| '_ ` _ \| / __/ __| |/ _ \| '_ \/ __|
-#   |  __/  __/ |  | | | | | | \__ \__ \ | (_) | | | \__ \
-#   |_|   \___|_|  |_| |_| |_|_|___/___/_|\___/|_| |_|___/
-#
-# -------------------------------------------------------------------
+#   .--Permissions---------------------------------------------------------.
+#   |        ____                     _         _                          |
+#   |       |  _ \ ___ _ __ _ __ ___ (_)___ ___(_) ___  _ __  ___          |
+#   |       | |_) / _ \ '__| '_ ` _ \| / __/ __| |/ _ \| '_ \/ __|         |
+#   |       |  __/  __/ |  | | | | | | \__ \__ \ | (_) | | | \__ \         |
+#   |       |_|   \___|_|  |_| |_| |_|_|___/___/_|\___/|_| |_|___/         |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Handling of users, permissions and roles                            |
+#   '----------------------------------------------------------------------'
 
 def declare_permission(name, title, description, defaults):
     perm = { "name" : name, "title" : title, "description" : description, "defaults" : defaults }
@@ -403,14 +420,17 @@ def save_user_file(name, content, unlock = False):
         raise MKConfigError(_("Cannot save %s options for user <b>%s</b> into <b>%s</b>: %s") % \
                 (name, user_id, path, e))
 
-# -------------------------------------------------------------------
-#    ____  _ _
-#   / ___|(_) |_ ___  ___
-#   \___ \| | __/ _ \/ __|
-#    ___) | | ||  __/\__ \
-#   |____/|_|\__\___||___/
-#
-# -------------------------------------------------------------------
+#.
+#   .--Sites---------------------------------------------------------------.
+#   |                        ____  _ _                                     |
+#   |                       / ___|(_) |_ ___  ___                          |
+#   |                       \___ \| | __/ _ \/ __|                         |
+#   |                        ___) | | ||  __/\__ \                         |
+#   |                       |____/|_|\__\___||___/                         |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  The config module provides some helper functions for sites.         |
+#   '----------------------------------------------------------------------'
 
 sites = { "": {} }
 use_siteicons = False
@@ -467,6 +487,19 @@ def read_site_config():
 
 def save_site_config():
     save_user_file("siteconfig", user_siteconf)
+
+#.
+#   .--Plugins-------------------------------------------------------------.
+#   |                   ____  _             _                              |
+#   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
+#   |                  | |_) | | | | |/ _` | | '_ \/ __|                   |
+#   |                  |  __/| | |_| | (_| | | | | \__ \                   |
+#   |                  |_|   |_|\__,_|\__, |_|_| |_|___/                   |
+#   |                                 |___/                                |
+#   +----------------------------------------------------------------------+
+#   |  Handling of our own plugins. In plugins other software pieces can   |
+#   |  declare defaults for configuration variables.                       |
+#   '----------------------------------------------------------------------'
 
 def load_plugins():
     load_web_plugins("config", globals())

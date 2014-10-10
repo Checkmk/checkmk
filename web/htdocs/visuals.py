@@ -32,18 +32,22 @@ import config, table
 
 visual_types = {
     'views': {
-        'ident_attr':   'view_name',
-        'title':         _("view"),
-        'plural_title':  _("views"),
-        'module_name':  'views',
+        'show_url'           : 'view.py',
+        'ident_attr'         : 'view_name',
+        'title'              : _("view"),
+        'plural_title'       : _("views"),
+        'module_name'        : 'views',
+        'multicontext_links' : False,
     },
     'dashboards': {
-        'ident_attr':         'name',
-        'title':              _("dashboard"),
-        'plural_title':       _("dashboards"),
-        'module_name':        'dashboard',
-        'popup_add_handler':  'popup_list_dashboards',
-        'add_visual_handler': 'popup_add_dashlet',
+        'show_url'           : 'dashboard.py',
+        'ident_attr'         : 'name',
+        'title'              : _("dashboard"),
+        'plural_title'       : _("dashboards"),
+        'module_name'        : 'dashboard',
+        'popup_add_handler'  : 'popup_list_dashboards',
+        'add_visual_handler' : 'popup_add_dashlet',
+        'multicontext_links' : False,
     },
 }
 
@@ -534,6 +538,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
             visual = all_visuals.get((config.user_id, visualname))
             if not visual:
                 visual = all_visuals.get(('', visualname)) # load builtin visual
+                mode = 'clone'
 
         single_infos = visual['single_infos']
 
@@ -898,7 +903,7 @@ def add_context_to_uri_vars(visual, only_infos=None, only_count=False):
 
     # Now apply the multiple context filters
     for info_key in only_infos:
-        for filter_name, filter_vars in visual.get('context', {}).items():
+        for filter_name, filter_vars in visual['context'].items():
             if type(filter_vars) == dict: # this is a multi-context filter
                 # We add the filter only if *none* if its HTML variables are present on the URL
                 # This important because checkbox variables are not present if the box is not checked.
@@ -911,7 +916,51 @@ def add_context_to_uri_vars(visual, only_infos=None, only_count=False):
                     for uri_varname, value in filter_vars.items():
                         html.set_var(uri_varname, value)
 
+# Vice versa: find all filters that belong to the current URI variables
+# and create a context dictionary from that.
+def get_context_from_uri_vars(only_infos=None, single_infos=[]):
+    context = {}
+    for filter_name, filter_object in multisite_filters.items():
+        if only_infos == None or filter_object.info in only_infos:
+            this_filter_vars = {}
+            for varname in filter_object.htmlvars:
+                if html.has_var(varname):
+                    if filter_object.info in single_infos:
+                        context[filter_name] = html.var(varname)
+                        break
+                    else:
+                        this_filter_vars[varname] = html.var(varname)
+            if this_filter_vars:
+                context[filter_name] = this_filter_vars
+    return context
 
+
+# Compute Livestatus-Filters based on a given context. Returns
+# the only_sites list and a string with the filter headers
+def get_filter_headers(datasource, context):
+    # Prepare Filter headers for Livestatus
+    filter_headers = ""
+    only_sites = None
+    html.stash_vars()
+    for filter_name, filter_vars in context.items():
+        # first set the HTML variables. Sorry - the filters need this
+        if type(filter_vars) == dict: # this is a multi-context filter
+            for uri_varname, value in filter_vars.items():
+                html.set_var(uri_varname, value)
+        else:
+            html.set_var(filter_name, filter_vars)
+
+    # Now compute filter headers for all infos of the used datasource
+    our_infos = datasource["infos"]
+    for filter_name, filter_object in multisite_filters.items():
+        if filter_object.info in our_infos:
+            header = filter_object.filter(datasource["table"])
+            if header.startswith("Sites:"):
+                only_sites = header.strip().split(" ")[1:]
+            else:
+                filter_headers += header
+    html.unstash_vars()
+    return filter_headers, only_sites
 
 
 #.
@@ -1044,7 +1093,7 @@ def visual_title(what, visual):
     # Beware: if a single context visual is being visited *without* a context, then
     # the value of the context variable(s) is None. In order to avoid exceptions,
     # we simply drop these here.
-    extra_titles = [ v for k, v in get_context_html_vars(visual) if v != None ]
+    extra_titles = [ v for k, v in get_singlecontext_html_vars(visual) if v != None ]
     # FIXME: Is this really only needed for visuals without single infos?
     if not visual['single_infos']:
         used_filters = [ multisite_filters[fn] for fn in visual["context"].keys() ]
@@ -1085,7 +1134,7 @@ def get_single_info_keys(visual):
         keys += info_params(info_key)
     return list(set(keys))
 
-def get_context_html_vars(visual):
+def get_singlecontext_html_vars(visual):
     vars = []
     for key in get_single_info_keys(visual):
         vars.append((key, html.var(key, visual['context'].get(key))))
@@ -1096,7 +1145,7 @@ def get_context_html_vars(visual):
 def collect_context_links(this_visual, mobile = False, only_types = []):
     # compute list of html variables needed for this visual
     active_filter_vars = set([])
-    for var, val in get_context_html_vars(this_visual):
+    for var, val in get_singlecontext_html_vars(this_visual):
         if html.has_var(var):
             active_filter_vars.add(var)
 
@@ -1106,14 +1155,15 @@ def collect_context_links(this_visual, mobile = False, only_types = []):
             context_links += collect_context_links_of(what, this_visual, active_filter_vars, mobile)
     return context_links
 
-def collect_context_links_of(what, this_visual, active_filter_vars, mobile):
+def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, mobile):
     context_links = []
 
     # FIXME: Make this cross module access cleaner
-    module_name = visual_types[what]["module_name"]
+    visual_type = visual_types[visual_type_name]
+    module_name = visual_type["module_name"]
     thing_module = __import__(module_name)
-    thing_module.__dict__['load_%s'% what]()
-    available = thing_module.__dict__['permitted_%s' % what]()
+    thing_module.__dict__['load_%s'% visual_type_name]()
+    available = thing_module.__dict__['permitted_%s' % visual_type_name]()
 
     # sort buttons somehow
     visuals = available.values()
@@ -1133,23 +1183,35 @@ def collect_context_links_of(what, this_visual, active_filter_vars, mobile):
            or mobile and not visual.get('mobile'):
             continue
 
-        if not visual['single_infos']:
-            continue # skip non single visuals
+        # For dashboards and views we currently only show a link button,
+        # if the target dashboard/view shares a single info with the
+        # current visual.
+        if not visual['single_infos'] and not visual_type["multicontext_links"]:
+            continue # skip non single visuals for dashboard, views
 
-        needed_vars = get_context_html_vars(visual)
+        # We can show a button only if all single contexts of the
+        # target visual are known currently
+        needed_vars = get_singlecontext_html_vars(visual)
         skip = False
         vars_values = []
         for var, val in needed_vars:
             if var not in active_filter_vars:
-                skip = True
+                skip = True # At least one single context missing
                 break
-
             vars_values.append((var, val))
 
         if not skip:
-            # add context link to this visual
-            uri = html.makeuri_contextless(vars_values + [(visual_types[what]['ident_attr'], name)],
-                                           filename = what[:-1] + '.py')
+            # add context link to this visual. For reports we put in
+            # the *complete* context, even the non-single one.
+            if visual_type["multicontext_links"]:
+                uri = html.makeuri([(visual_type['ident_attr'], name)],
+                                     filename = visual_type["show_url"])
+
+            # For views and dashboards currently the current filter
+            # settings
+            else:
+                uri = html.makeuri_contextless(vars_values + [(visual_type['ident_attr'], name)],
+                                               filename = visual_type["show_url"])
             icon = visual.get("icon")
             buttonid = "cb_" + name
             context_links.append((_u(linktitle), uri, icon, buttonid))

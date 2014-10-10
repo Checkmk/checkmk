@@ -89,8 +89,8 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
                 try:
                     new_value[keyname] = entries.from_html_vars(keyname)
                     entries.validate_value(new_value[keyname], keyname)
-                except:
-                    messages.append("%s: %s" % (entries.title(), e.message))
+                except Exception, e:
+                    messages.append("%s: %s" % (entries.title() or _("Properties"), e.message))
                     html.add_user_error(e.varname, e.message)
 
             if validate and not html.has_user_errors():

@@ -197,8 +197,11 @@ class html:
         self.write("</form>\n")
         self.form_name = None
 
-    def form_submitted(self):
-        return self.has_var("filled_in")
+    def form_submitted(self, form_name=None):
+        if form_name:
+            return self.var("filled_in") == form_name
+        else:
+            return self.has_var("filled_in")
 
     def add_user_error(self, varname, message):
         if type(varname) == list:
@@ -843,10 +846,12 @@ class html:
                  '<img class=statusicon src="images/status_download_csv.png" title="%s"></a>\n' % \
                  (self.makeuri([("output_format", "csv_export")]), _("Export as CSV"))
 
+        if self.myfile == "view":
+            mode_name = self.var('mode') == "availability" and "availability" or "view"
             h += '<div class="visualadd"><a class="visualadd" href="javascript:void(0)" ' \
-                 'onclick="toggle_add_to_visual(this, \'view\', %s, {\'name\': \'%s\'})">' \
+                 'onclick="toggle_add_to_visual(this, \'%s\', %s, {\'name\': \'%s\'})">' \
                  '<img class=statusicon src="images/status_add_dashlet.png" title="%s"></a></div>\n' % \
-                 (self.page_context, self.attrencode(self.var('view_name')), _("Add this view to..."))
+                 (mode_name, self.attrencode(self.page_context), self.var('view_name'), _("Add this view to..."))
 
         for img, tooltip in self.status_icons.items():
             if type(tooltip) == tuple:

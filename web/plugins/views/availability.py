@@ -1182,7 +1182,7 @@ def render_availability_table(availability, from_time, until_time, range_title, 
     if not availability:
         if not no_html:
             html.message(_("No matching hosts/services."))
-        return # No objects
+        return [] # No objects
 
     grouping = avoptions["grouping"]
     fetch_data = []

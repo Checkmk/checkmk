@@ -1007,20 +1007,6 @@ class VisualFilterList(ListOfMultiple):
     def filter_names(self):
         return self._filters.keys()
 
-    # get the filters to be used from the value and the data from the filter
-    # objects using the row data
-    ## FIXME: This function does not deal with user input. It is just being
-    ## used for creating links to views. Why is it here?
-    ## def filter_variable_settings(self, value, row):
-    ##     vars = []
-    ##     for fname in value.keys():
-    ##         try:
-    ##             vars += self._filters[fname].variable_settings(row)
-    ##         except KeyError:
-    ##             # When the row misses at least one var for a filter ignore this filter completely
-    ##             pass
-    ##     return vars
-
 # Realizes a Multisite/visual filter in a valuespec. It can render the filter form, get
 # the filled in values and provide the filled in information for persistance.
 class VisualFilter(ValueSpec):

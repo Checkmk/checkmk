@@ -88,7 +88,7 @@ class ActionList(ListOf):
         rules = load_mkeventd_rules()
         for rule in rules:
             for action_id in rule.get("actions", []):
-                if action_id not in action_ids:
+                if action_id not in action_ids + ["@NOTIFY"]:
                     raise MKUserError(varprefix, _("You are missing the action with the ID <b>%s</b>, "
                        "which is still used in some rules.") % action_id)
 

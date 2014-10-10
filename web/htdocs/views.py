@@ -1975,23 +1975,6 @@ def link_to_view(content, row, view_name):
                     new_vars = filter_object.variable_settings(row)
                     vars += new_vars
 
-            # FIXME: WDTCD (What Does This Contraption Do)?
-            # Brauchen wir das hier? Aktuell macht das ein Problem: Wenn man in der View "allservices"
-            # auf einen Gruppenkopf klickt - den Hostnamen, dann steckt in der Row der komplette Datensatz
-            # zum ersten Service der Gruppe. Die new_vars erzeugen daraufhin einen Filter mit service_regex
-            # mit dem ersten Service. In der Zielview bekommt man dann nur noch einen Service zu sehen,
-            # und nicht alle von dem Host. Außerdem: VisualFilterList ist ein ValueSpec - zum Editieren
-            # von Daten durch den Benutzer. Sollte das hier mißbraucht werden für ganz andere Zwecke?
-            ## else:
-            ##     new_vars = visuals.VisualFilterList([info_key]).filter_variable_settings(view['context'], row)
-            ##     if "service_regex" in dict(new_vars):
-            ##         html.debug("VIEW-Titel", view["title"])
-            ##         html.debug('CONTEXT', view["context"])
-            ##         html.debug("NEW", new_vars)
-            ##         html.debug("row", row)
-            ##         raise 9
-            ##     vars += new_vars
-
         do = html.var("display_options")
         if do:
             vars.append(("display_options", do))

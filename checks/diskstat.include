@@ -234,7 +234,9 @@ def check_diskstat_generic(item, params, this_time, info, mode='sectors'):
                 result = check_diskstat_line(this_time, item, params, line, mode)
             else:
                 result = (2, "more than one device found in cluster")
-    return result
+
+    if result != "":
+        return result
 
     return (3, "device missing")
 

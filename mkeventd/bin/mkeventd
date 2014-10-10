@@ -377,6 +377,185 @@ class MKClientError(Exception):
         Exception.__init__(self, t)
 
 #.
+#   .--MongoDB-------------------------------------------------------------.
+#   |             __  __                         ____  ____                |
+#   |            |  \/  | ___  _ __   __ _  ___ |  _ \| __ )               |
+#   |            | |\/| |/ _ \| '_ \ / _` |/ _ \| | | |  _ \               |
+#   |            | |  | | (_) | | | | (_| | (_) | |_| | |_) |              |
+#   |            |_|  |_|\___/|_| |_|\__, |\___/|____/|____/               |
+#   |                                |___/                                 |
+#   +----------------------------------------------------------------------+
+#   | The Event Log Archive can be stored in a MongoDB instead of files,   |
+#   | this section contains MongoDB related code.                          |
+#   '----------------------------------------------------------------------'
+
+try:
+    from pymongo.connection import Connection
+    from pymongo import DESCENDING, ASCENDING
+    from pymongo.errors import OperationFailure
+    import datetime
+except ImportError:
+    Connection = None
+g_mongo_conn = None
+g_mongo_db   = None
+
+def mongodb_local_connection_opts():
+    ip, port = None, None
+    for l in file('%s/etc/mongodb.conf' % os.environ['OMD_ROOT']):
+        if l.startswith('bind_ip'):
+            ip = l.split('=')[1].strip()
+        elif l.startswith('port'):
+            port = int(l.split('=')[1].strip())
+    return ip, port
+
+def connect_mongodb():
+    global g_mongo_conn, g_mongo_db
+    if Connection == None:
+        raise Exception('Could not initialize MongoDB (Python-Modules are missing)')
+    g_mongo_conn = Connection(*mongodb_local_connection_opts())
+    g_mongo_db   = g_mongo_conn.__getitem__(os.environ['OMD_SITE'])
+
+def flush_event_history_mongodb():
+    g_mongo_db.ec_archive.drop()
+
+def get_mongodb_max_history_age():
+    result = g_mongo_db.ec_archive.index_information()
+    if 'dt_-1' not in result or 'expireAfterSeconds' not in result['dt_-1']:
+        return -1
+    else:
+        return result['dt_-1']['expireAfterSeconds']
+
+def update_mongodb_indexes():
+    if not g_mongo_conn:
+        connect_mongodb()
+    result = g_mongo_db.ec_archive.index_information()
+
+    if 'time_-1' not in result:
+        g_mongo_db.ec_archive.ensure_index([('time', DESCENDING)])
+
+def update_mongodb_history_lifetime():
+    if not g_mongo_conn:
+        connect_mongodb()
+
+    if get_mongodb_max_history_age() == g_config['history_lifetime']:
+        return # do not update already correct index
+
+    try:
+        g_mongo_db.ec_archive.drop_index("dt_-1")
+    except OperationFailure:
+        pass # Ignore not existing index
+
+    log(repr(g_config['history_lifetime']))
+
+    # Delete messages after x days
+    g_mongo_db.ec_archive.ensure_index([('dt', DESCENDING)],
+        expireAfterSeconds = g_config['history_lifetime'],
+        unique = False
+    )
+
+    log(repr(get_mongodb_max_history_age()))
+
+def mongodb_next_id(name, first_id = 0):
+    ret = g_mongo_db.counters.find_and_modify(
+        query = { '_id': name },
+        update = { '$inc': { 'seq': 1 } },
+        new = True
+    )
+
+    if not ret:
+        # Initialize the index!
+        g_mongo_db.counters.insert({
+           '_id': name,
+           'seq': first_id
+        })
+        return first_id
+    else:
+        return ret['seq']
+
+def log_event_history_to_mongodb(event, what, who, addinfo):
+    if not g_mongo_conn:
+        connect_mongodb()
+    # We converted _id to be an auto incrementing integer. This makes the unique
+    # index compatible to history_line of the file (which is handled as integer)
+    # within mkeventd. It might be better to use the ObjectId() of MongoDB, but
+    # for the first step, we use the integer index for simplicity
+    now = time.time()
+    g_mongo_db.ec_archive.insert({
+        '_id'     : mongodb_next_id('ec_archive_id'),
+        'dt'      : datetime.datetime.fromtimestamp(now),
+        'time'    : now,
+        'event'   : event,
+        'what'    : what,
+        'who'     : who,
+        'addinfo' : addinfo,
+    })
+
+def get_event_history_from_mongodb(filters, limit):
+    history_entries = []
+    headers = [ c[0] for c in history_columns ]
+
+    if not g_mongo_conn:
+        connect_mongodb()
+
+    # Construct the mongodb filtering specification. We could fetch all information
+    # and do filtering on this data, but this would be way too inefficient.
+    query = {}
+    for filter_name, opfunc, args in filters:
+
+        if opfunc == filter_operators['=']:
+            mongo_filter = args
+        elif opfunc == filter_operators['>']:
+            mongo_filter = {'$gt': args}
+        elif opfunc == filter_operators['<']:
+            mongo_filter = {'$lt': args}
+        elif opfunc == filter_operators['>=']:
+            mongo_filter = {'$gte': args}
+        elif opfunc == filter_operators['<=']:
+            mongo_filter = {'$lte': args}
+        elif opfunc == filter_operators['~']: # case sensitive regex, find pattern in string
+            mongo_filter = {'$regex': args, '$options': ''}
+        elif opfunc == filter_operators['=~']: # case insensitive, match whole string
+            mongo_filter = {'$regex': args, '$options': 'mi'}
+        elif opfunc == filter_operators['~~']: # case insensitive regex, find pattern in string
+            mongo_filter = {'$regex': args, '$options': 'i'}
+        elif opfunc == filter_operators['in']:
+            mongo_filter = {'$in': args}
+        else:
+            raise Exception('Filter operator of filter %s not implemented for MongoDB archive' % filter_name)
+
+        if filter_name[:6] == 'event_':
+            query['event.' + filter_name[6:]] = mongo_filter
+        elif filter_name[:8] == 'history_':
+            key = filter_name[8:]
+            if key == 'line':
+                key = '_id'
+            query[key] = mongo_filter
+        else:
+            raise Exception('Filter %s not implemented for MongoDB' % filter_name)
+
+    result = g_mongo_db.ec_archive.find(query).sort('time', -1)
+    # Might be used for debugging / profiling
+    #file(os.environ['OMD_ROOT'] + '/var/log/check_mk/ec_history_debug.log', 'a').write(pprint.pformat(filters) + '\n' + pprint.pformat(result.explain()) + '\n')
+    if limit:
+        result = result.limit(limit + 1)
+
+    # now convert the MongoDB data structure to the eventd internal one
+    for entry in result:
+        item = [
+            entry['_id'],
+            entry['time'],
+            entry['what'],
+            entry['who'],
+            entry['addinfo'],
+        ]
+        for colname, defval in event_columns:
+            key = colname[6:] # drop "event_"
+            item.append(entry['event'].get(key, defval))
+        history_entries.append(item)
+
+    return headers, history_entries
+
+#.
 #   .--History-------------------------------------------------------------.
 #   |                   _   _ _     _                                      |
 #   |                  | | | (_)___| |_ ___  _ __ _   _                    |
@@ -388,6 +567,15 @@ class MKClientError(Exception):
 #   | Functions for logging the history of events                          |
 #   '----------------------------------------------------------------------'
 
+def log_event_history(event, what, who="", addinfo=""):
+    if g_config["debug_rules"]:
+        log("Event %d: %s/%s/%s - %s" % (event["id"], what, who, addinfo, event["text"]))
+
+    if g_config['archive_mode'] == 'mongodb':
+        log_event_history_to_mongodb(event, what, who, addinfo)
+    else:
+        log_event_history_to_file(event, what, who, addinfo)
+
 # Make a new entry in the event history. Each entry is tab-separated line
 # with the following columns:
 # 0: time of log entry
@@ -395,9 +583,7 @@ class MKClientError(Exception):
 # 2: user who initiated the action (for GUI actions)
 # 3: additional information about the action
 # 4-oo: event_columns
-def log_event_history(event, what, who="", addinfo=""):
-    if g_config["debug_rules"]:
-        log("Event %d: %s/%s/%s - %s" % (event["id"], what, who, addinfo, event["text"]))
+def log_event_history_to_file(event, what, who, addinfo):
     with lock_logging:
         columns = [
             str(time.time()),
@@ -491,13 +677,25 @@ def expire_logfiles(flush = False):
         log("Error expiring log files: %s" % e)
 
 def flush_event_history():
+    if g_config['archive_mode'] == 'mongodb':
+        flush_event_history_mongodb()
+    else:
+        flush_event_history_files()
+
+def flush_event_history_files():
     with lock_logging:
-       expire_logfiles(True)
+        expire_logfiles(True)
 
 grepping_filters = [ 'event_text', 'event_comment', 'event_host', 'event_host_regex',
                      'event_contact', 'event_application', 'event_rule_id', 'event_owner' ]
 
 def get_event_history(filters, limit):
+    if g_config['archive_mode'] == 'mongodb':
+        return get_event_history_from_mongodb(filters, limit)
+    else:
+        return get_event_history_from_file(filters, limit)
+
+def get_event_history_from_file(filters, limit):
     history_entries = []
     headers = [ c[0] for c in history_columns ]
     log_dir = g_state_dir + "/history"
@@ -1145,8 +1343,10 @@ class EventServer:
             with lock_configuration:
                 self.hk_handle_event_timeouts()
                 self.hk_check_expected_messages()
-        with lock_logging:
-            expire_logfiles()
+
+        if g_config['archive_mode'] != 'mongodb':
+            with lock_logging:
+                expire_logfiles()
 
     def hk_handle_event_timeouts(self):
         # 1. Automatically delete all events that are in state "counting"
@@ -3165,6 +3365,7 @@ def load_configuration():
         "eventsocket_queue_len" : 10,
         "hostname_translation"  : {},
         "archive_orphans"       : False,
+        "archive_mode"          : "file",
     }
     main_file = g_config_dir + "/mkeventd.mk"
     if not os.path.exists(main_file):
@@ -3177,6 +3378,11 @@ def load_configuration():
     list_of_files.sort()
     for path in [ main_file ] + list_of_files:
         execfile(path, g_config, g_config)
+
+    # Configure the auto deleting indexes in the DB when mongodb is enabled
+    if g_config['archive_mode'] == 'mongodb':
+        update_mongodb_indexes()
+        update_mongodb_history_lifetime()
 
     # Are we a replication slave? Parts of the configuration
     # will be overridden by values from the master.

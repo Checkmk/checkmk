@@ -528,9 +528,9 @@ register_rule(group + '/' + subgroup_inventory,
 register_rule(group + '/' + subgroup_inventory,
     varname   = "sap_value_groups",
     title     = _('SAP Value Grouping Patterns'),
-    help      = _('The check <tt>sap.value</tt> normaly creates one service for each sap value '
-                  'By defining grouping patterns you can switch to the check <tt>sap.value-groups</tt>. '
-                  'That check monitors a list of SAP values at once. This is usefull if you have '
+    help      = _('The check <tt>sap.value</tt> normally creates one service for each SAP value. '
+                  'By defining grouping patterns, you can switch to the check <tt>sap.value-groups</tt>. '
+                  'That check monitors a list of SAP values at once. This is useful if you have '
                   'a very big list of values which do you want to monitor'),
     valuespec = ListOf(
         Tuple(

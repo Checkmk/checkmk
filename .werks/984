@@ -17,7 +17,7 @@ this was modified as a security means from a former version, which used
 documentation clearly state, "pickle" should be considered unsafe as well,
 see: <tt>https://docs.python.org/2/library/pickle.html</tt>.</i>
 
-The fix replaces <tt>pickle<tt> with a module called <tt>ast</tt>. Unfortunately
+The fix replaces <tt>pickle</tt> with a module called <tt>ast</tt>. Unfortunately
 this module is not available on Centos/RedHat 5.X and Debian 5. On these
 systems WATO still uses <tt>pickle</tt>, even with this fix.
 

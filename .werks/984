@@ -24,6 +24,6 @@ systems WATO still uses <tt>pickle</tt>, even with this fix.
 <b>Note:</b> This change makes the current Check_MK versions incompatible
 to older versions.  In a mixed environment with old and new Check_MK versions or with old
 and newer Python versions you have to force WATO to use the old
-unsafe method by setting <tt>wato_legacy_eval = True<tt> in <tt>multisite.mk</tt>.
+unsafe method by setting <tt>wato_legacy_eval = True</tt> in <tt>multisite.mk</tt>.
 This can also be done with the new global WATO setting <i>Use unsafe legacy
 encoding for distributed WATO</i>.

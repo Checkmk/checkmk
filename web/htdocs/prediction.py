@@ -140,9 +140,13 @@ def page_graph():
     if now >= from_time and now <= until_time:
         rrd_step, rrd_data = get_rrd_data(host, service, dsname, "MAX", from_time, until_time)
         render_curve(rrd_data, "#0000ff", 2)
-
+        if time.daylight:
+            tz_offset = time.altzone
+        else:
+            tz_offset = time.timezone
         if current_value != None:
-            rel_time = (time.time() - time.timezone) % timegroup["slice"]
+            html.debug(now, tz_offset, timegroup["slice"])
+            rel_time = (now - tz_offset) % timegroup["slice"]
             render_point(timegroup["range"][0] + rel_time, current_value, "#0000ff")
 
     html.footer()

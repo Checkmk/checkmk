@@ -1,0 +1,10 @@
+Title: cisco_power: Fixed detection of item. In some cases the status information was part of the item
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.5i6
+Date: 1413272472
+Class: fix
+
+A reinventory is in some cases necessary. Please Check after the Update for {UNKOWN} states of checks of this check_type
+

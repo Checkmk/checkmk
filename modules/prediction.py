@@ -113,42 +113,54 @@ def get_rrd_data(hostname, service_description, varname, cf, fromtime, untiltime
 daynames = [ "monday", "tuesday", "wednesday", "thursday",
              "friday", "saturday", "sunday"]
 
+# Check wether a certain time stamp lies with in daylight safing time (DST)
+def is_dst(timestamp):
+    return time.localtime(timestamp).tm_isdst
+
+# Returns the timezone *including* DST shift at a certain point of time
+def timezone_at(timestamp):
+    if is_dst(timestamp):
+        return time.altzone
+    else:
+        return time.timezone
+
 def group_by_wday(t):
     wday = time.localtime(t).tm_wday
-    day_of_epoch, rel_time = divmod(t - time.timezone, 86400)
+    day_of_epoch, rel_time = divmod(t - timezone_at(t), 86400)
     return daynames[wday], rel_time
 
 def group_by_day(t):
-    return "everyday", (t - time.timezone) % 86400
+    return "everyday", (t - timezone_at(t)) % 86400
 
 def group_by_day_of_month(t):
     broken = time.localtime(t)
     mday = broken[2]
-    return str(mday), (t - time.timezone) % 86400
+    return str(mday), (t - timezone_at(t)) % 86400
 
 def group_by_everyhour(t):
-    return "everyhour", (t - time.timezone) % 3600
+    return "everyhour", (t - timezone_at(t)) % 3600
+
 
 prediction_periods = {
     "wday" : {
-        "slice" : 86400, # 7 slices
-        "groupby" : group_by_wday,
-        "valid" : 7,
+        "slice"     : 86400, # 7 slices
+        "groupby"   : group_by_wday,
+        "valid"     : 7,
     },
     "day" : {
-        "slice" : 86400, # 31 slices
-        "groupby" : group_by_day_of_month,
-        "valid" : 28,
+        "slice"     : 86400, # 31 slices
+        "groupby"   : group_by_day_of_month,
+        "valid"     : 28,
     },
     "hour" : {
-        "slice" : 86400, # 1 slice
-        "groupby" : group_by_day,
-        "valid" : 1,
+        "slice"     : 86400, # 1 slice
+        "groupby"   : group_by_day,
+        "valid"     : 1,
     },
     "minute" : {
-        "slice" : 3600, # 1 slice
-        "groupby" : group_by_everyhour,
-        "valid" : 24,
+        "slice"     : 3600, # 1 slice
+        "groupby"   : group_by_everyhour,
+        "valid"     : 24,
     },
 }
 
@@ -168,10 +180,16 @@ def compute_prediction(pred_file, timegroup, params, period_info, from_time, dsn
     begin = from_time
     slices = []
     absolute_begin = from_time - params["horizon"] * 86400
-    # The resolution of the different time ranges differs. We interpolate
+
+    # The resolutions of the different time ranges differ. We interpolate
     # to the best resolution. We assume that the youngest slice has the
-    # finest resolution. We also assume, that step step is always dividable
+    # finest resolution. We also assume, that each step is always dividable
     # by the smallest step.
+
+    # Note: due to the f**king DST, we can have several shifts between
+    # DST and non-DST during are computation. We need to compensate for
+    # those. DST swaps within slices are being ignored. The DST flag
+    # is checked against the beginning of the slice.
     smallest_step = None
     while begin >= absolute_begin:
         tg, fr, un, rel = get_prediction_timegroup(begin, period_info)

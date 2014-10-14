@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import os, sys, uuid, tempfile
+import os, sys, uuid, tempfile, shutil
 
 def verbose(text):
     if opt_verbose:
@@ -181,5 +181,6 @@ verbose("Add modified product.cab")
 os.system((path_prefix + "msibuild %(new_msi_file)s -a product.cab %(work_dir)s/product.cab") % \
         { "work_dir" : work_dir, "new_msi_file": new_msi_file })
 
+shutil.rmtree(work_dir)
 verbose("Successfully created file " + new_msi_file)
 

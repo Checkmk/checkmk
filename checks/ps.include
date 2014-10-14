@@ -198,7 +198,7 @@ def process_matches(ps, procname, l_user):
 #    "warnmax" : 1,
 # }
 
-def check_ps_common(what, item, params, info, with_perfdata = False, cpu_cores = 1):
+def check_ps_common(item, params, info, with_perfdata = False, cpu_cores = 1, info_name = "processes" ):
     now = time.time()
     if type(params) in (list, tuple):
         if len(params) == 5:
@@ -308,7 +308,7 @@ def check_ps_common(what, item, params, info, with_perfdata = False, cpu_cores =
     else:
         perfdata = []
 
-    infotext = "%d %s" % (count, what)
+    infotext = "%d %s" % (count, info_name)
     if running_on:
         infotext += " [running on %s]" % ", ".join(running_on)
 

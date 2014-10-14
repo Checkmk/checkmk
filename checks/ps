@@ -154,14 +154,14 @@ def inventory_ps_perf(info):
 
 def check_ps(item, params, info, with_perfdata):
     cpu_cores, info = ps_parse_info(info) # parse windows wmic information
-    return check_ps_common("processes", item, params, info, with_perfdata = with_perfdata, cpu_cores = cpu_cores)
+    return check_ps_common(item, params, info, with_perfdata = with_perfdata, cpu_cores = cpu_cores )
 
 
 check_info['ps'] = {
     "check_function"          : lambda i,p,n: check_ps(i,p,n,False),
     "inventory_function"      : inventory_ps,
     "service_description"     : "proc_%s",
-    "includes"                : "ps.include",
+    "includes"                : [ "ps.include" ],
     "has_perfdata"            : False,
     "node_info"               : True, # add first column with actual host name
     "group"                   : "ps",
@@ -171,7 +171,7 @@ check_info['ps.perf'] = {
     "check_function"          : lambda i,p,n: check_ps(i,p,n,True),
     "inventory_function"      : inventory_ps_perf,
     "service_description"     : "proc_%s",
-    "includes"                : "ps.include",
+    "includes"                : [ "ps.include" ],
     "has_perfdata"            : True,
     "node_info"               : True, # add first column with actual host name
     "group"                   : "ps",

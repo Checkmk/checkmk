@@ -146,11 +146,11 @@ def ps_parse_info(info):
 
 def inventory_ps(info):
     cpu_cores, info = ps_parse_info(info) # parse windows wmic information
-    return inventory_ps_common(inventory_processes, info)
+    return inventory_ps_common(inventory_processes, inventory_processes_rules, info)
 
 def inventory_ps_perf(info):
     cpu_cores, info = ps_parse_info(info) # parse windows wmic information
-    return inventory_ps_common(inventory_processes_perf, info, with_perfdata = True)
+    return inventory_ps_common(inventory_processes_perf, inventory_processes_rules, info, with_perfdata = True)
 
 def check_ps(item, params, info, with_perfdata):
     cpu_cores, info = ps_parse_info(info) # parse windows wmic information

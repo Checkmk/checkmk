@@ -4734,7 +4734,8 @@ def usage():
  cmk -P, --package COMMAND            do package operations
  cmk --localize COMMAND               do localization operations
  cmk --notify                         used to send notifications from core
- cmk --create-rrd [--keepalive|SPEC]  create round robin database
+ cmk --create-rrd [--keepalive|SPEC]  create round robin database (only CMC)
+ cmk --convert-rrds [HOST1 HOST2...]  convert exiting RRD to new format (only CMC)
  cmk -i, --inventory [HOST1 HOST2...] Do a HW/SW-Inventory of some ar all hosts
  cmk --inventory-as-check HOST        Do HW/SW-Inventory, behave like check plugin
  cmk -A, --bake-agents [-f] [H1 H2..] Bake agents for hosts (not in all versions)
@@ -4853,6 +4854,12 @@ NOTES:
   agents are renewed, even if an uptodate version for a configuration
   already exists. Note: baking agents is only contained in the
   subscription version of Check_MK.
+
+  --convert-rrds converts the internal structure of existing RRDs
+  to the new structure as configured via the rulesets cmc_host_rrd_config
+  and cmc_service_rrd_config. If you do not specify hosts, then all
+  RRDs will be converted. Conversion just takes place if the configuration
+  of the RRDs has changed.
 
 
 """ % (check_mk_configfile,
@@ -5952,6 +5959,7 @@ if __name__ == "__main__":
                      "snmptranslate", "bake-agents", "force",
                      "usewalk", "scan-parents", "procs=", "automation=", "notify",
                      "snmpget=", "profile", "keepalive", "keepalive-fd=", "create-rrd",
+                     "convert-rrds",
                      "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
                      "man", "nowiki", "config-check", "backup=", "restore=",
                      "check-inventory=", "paths", "checks=", "inventory", "inventory-as-check=",
@@ -5959,7 +5967,7 @@ if __name__ == "__main__":
 
     non_config_options = ['-L', '--list-checks', '-P', '--package', '-M', '--notify',
                           '--man', '-V', '--version' ,'-h', '--help', '--automation',
-                          '--create-rrd' ]
+                          '--create-rrd', '--convert-rrds' ]
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
@@ -6156,6 +6164,11 @@ if __name__ == "__main__":
                 read_config_files(False, True)
                 execfile(modules_dir + "/rrd.py")
                 do_create_rrd(args)
+                done = True
+            elif o == '--convert-rrds':
+                read_config_files(False, True)
+                execfile(modules_dir + "/rrd.py")
+                do_convert_rrds(args)
                 done = True
             elif o in [ '-A', '--bake-agents' ]:
                 if 'do_bake_agents' not in globals():

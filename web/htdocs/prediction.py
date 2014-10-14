@@ -159,7 +159,7 @@ vranges = [
 def compute_vertical_scala(low, high):
     m = max(abs(low), abs(high))
     for letter, factor in vranges:
-        if m <= 15 * factor:
+        if m <= 99 * factor:
             break
     else:
         letter = 'P'
@@ -172,6 +172,10 @@ def compute_vertical_scala(low, high):
         step = 0.2 * factor
     elif steps < 6:
         step = 0.5 * factor
+    elif steps > 50:
+        step = 5 * factor
+    elif steps > 20:
+        step = 2 * factor
     else:
         step = factor
 
@@ -183,6 +187,13 @@ def compute_vertical_scala(low, high):
     while v >= min(0, low):
         vert_scala = [ [v, "%.1f%s" % (v / factor, letter)] ] + vert_scala
         v -= step
+
+    # Remove trailing ".0", if that is present for *all* entries
+    for entry in vert_scala:
+        if not entry[1].endswith(".0"):
+            break
+    else:
+        vert_scala = [ [e[0],e[1][:-2]] for e in vert_scala ]
 
     return vert_scala
 

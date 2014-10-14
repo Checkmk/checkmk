@@ -1,0 +1,9 @@
+Title: Fixed labelling of Y achsis in prediction graphs
+Level: 1
+Component: multisite
+Version: 1.2.4p6
+Date: 1413280924
+Class: fix
+
+In some cases the vertical achsis was not labelled. This has
+been fixed.

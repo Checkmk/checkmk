@@ -2393,6 +2393,32 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_os,
+    "statgrab_mem",
+    _("Statgrab Memory Usage"),
+    Alternative(
+        elements = [
+            Tuple(
+                title = _("Specify levels in percentage of total RAM"),
+                elements = [
+                  Percentage(title = _("Warning at a usage of"), unit = _("% of RAM"), maxvalue = None),
+                  Percentage(title = _("Critical at a usage of"), unit = _("% of RAM"), maxvalue = None)
+                ]
+            ),
+            Tuple(
+                title = _("Specify levels in absolute usage values"),
+                elements = [
+                  Integer(title = _("Warning if above"), unit = _("MB")),
+                  Integer(title = _("Critical if above"), unit = _("MB"))
+                ]
+            ),
+        ]
+    ),
+    None,
+    "first"
+)
+
+register_check_parameters(
+    subgroup_os,
     "cisco_mem",
     _("Cisco Memory Usage"),
     Alternative(

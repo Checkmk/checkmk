@@ -136,12 +136,14 @@ def page_graph():
 
     # Try to get current RRD data and render it also
     from_time, until_time = timegroup["range"]
-    rrd_step, rrd_data = get_rrd_data(host, service, dsname, "MAX", from_time, until_time)
-    render_curve(rrd_data, "#0000ff", 2)
+    now = time.time()
+    if now >= from_time and now <= until_time:
+        rrd_step, rrd_data = get_rrd_data(host, service, dsname, "MAX", from_time, until_time)
+        render_curve(rrd_data, "#0000ff", 2)
 
-    if current_value != None:
-        rel_time = (time.time() - time.timezone) % timegroup["slice"]
-        render_point(timegroup["range"][0] + rel_time, current_value, "#0000ff")
+        if current_value != None:
+            rel_time = (time.time() - time.timezone) % timegroup["slice"]
+            render_point(timegroup["range"][0] + rel_time, current_value, "#0000ff")
 
     html.footer()
 

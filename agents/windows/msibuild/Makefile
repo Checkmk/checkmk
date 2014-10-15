@@ -25,7 +25,7 @@
 MSITOOLS      = msitools-0.93
 MSITOOLS_FILE = $(MSITOOLS).tar.xz
 
-BUILD_VERSION    = 1.0.1
+BUILD_VERSION    = 1
 CHECK_MK_VERSION = TESTVERSION
 
 all: exchange_msi_files

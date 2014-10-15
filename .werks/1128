@@ -1,0 +1,9 @@
+Title: bluecat_dns: now reports UNKNOWN if no snmp data is available
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1413380242
+Class: fix
+
+

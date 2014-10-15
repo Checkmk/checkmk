@@ -103,36 +103,40 @@ def transform_old_views():
         # This tries to map the datasource and additional settings of the
         # views to get the correct view context
         if 'single_infos' not in view:
-            hide_filters = view.get('hide_filters')
+            try:
+                hide_filters = view.get('hide_filters')
 
-            if 'service' in hide_filters and 'host' in hide_filters:
-                view['single_infos'] = ['service', 'host']
-            elif 'service' in hide_filters and 'host' not in hide_filters:
-                view['single_infos'] = ['service']
-            elif 'host' in hide_filters:
-                view['single_infos'] = ['host']
-            elif 'hostgroup' in hide_filters:
-                view['single_infos'] = ['hostgroup']
-            elif 'servicegroup' in hide_filters:
-                view['single_infos'] = ['servicegroup']
-            elif 'aggr_service' in hide_filters:
-                view['single_infos'] = ['service']
-            elif 'aggr_name' in hide_filters:
-                view['single_infos'] = ['aggr']
-            elif 'log_contact_name' in hide_filters:
-                view['single_infos'] = ['contact']
-            elif 'event_host' in hide_filters:
-                view['single_infos'] = ['host']
-            elif hide_filters == ['event_id', 'history_line']:
-                view['single_infos'] = ['history']
-            elif 'event_id' in hide_filters:
-                view['single_infos'] = ['event']
-            elif 'aggr_hosts' in hide_filters:
-                view['single_infos'] = ['host']
-            else:
-                # For all other context types assume the view is showing multiple objects
-                # and the datasource can simply be gathered from the datasource
-                view['single_infos'] = []
+                if 'service' in hide_filters and 'host' in hide_filters:
+                    view['single_infos'] = ['service', 'host']
+                elif 'service' in hide_filters and 'host' not in hide_filters:
+                    view['single_infos'] = ['service']
+                elif 'host' in hide_filters:
+                    view['single_infos'] = ['host']
+                elif 'hostgroup' in hide_filters:
+                    view['single_infos'] = ['hostgroup']
+                elif 'servicegroup' in hide_filters:
+                    view['single_infos'] = ['servicegroup']
+                elif 'aggr_service' in hide_filters:
+                    view['single_infos'] = ['service']
+                elif 'aggr_name' in hide_filters:
+                    view['single_infos'] = ['aggr']
+                elif 'log_contact_name' in hide_filters:
+                    view['single_infos'] = ['contact']
+                elif 'event_host' in hide_filters:
+                    view['single_infos'] = ['host']
+                elif hide_filters == ['event_id', 'history_line']:
+                    view['single_infos'] = ['history']
+                elif 'event_id' in hide_filters:
+                    view['single_infos'] = ['event']
+                elif 'aggr_hosts' in hide_filters:
+                    view['single_infos'] = ['host']
+                else:
+                    # For all other context types assume the view is showing multiple objects
+                    # and the datasource can simply be gathered from the datasource
+                    view['single_infos'] = []
+            except: # Exceptions can happen for views saved with certain GIT versions
+                if config.debug:
+                    raise
 
         # Convert from show_filters, hide_filters, hard_filters and hard_filtervars
         # to context construct

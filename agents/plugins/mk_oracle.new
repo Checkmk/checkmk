@@ -6,7 +6,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -29,13 +29,13 @@
 # stuff, Mathias for the shell hacking...
 
 # Example for mk_oracle.cfg
-# DBUSER=<DBUSER>:<PASSWORD>:<SYSDBA/SYSASM>:<HOSTNAME>:<Port>
+# DBUSER=<DBUSER>:<PASSWORD>:<SYSDBA>:<HOSTNAME>:<Port>
+# DBASM=<DBUSER>:<PASSWORD>:<SYSDBA/SYSASM>:<HOSTNAME>:<Port>
+#
 # SYSDBA or SYSASM is optional but needed for a mounted instance
 # HOSTNAME is optional - Default is localhost
 # PORT is optional - Default is 1521
 
-DEBUG=0
-DEBUGCONNECT=0
 while test $# -gt 0
 do
     if [ "${1}" = '-d' ] ; then
@@ -75,6 +75,7 @@ ASYNC_SECTIONS="tablespaces rman jobs ts_quotas resumable locks"
 # Note: _ASM_ sections are only executed when SID starts with '+'
 #       sections listed in SYNC_SECTIONS or ASYNC_SECTIONS are not
 #       executed for ASM.
+SYNC_ASM_SECTIONS="instance"
 ASYNC_ASM_SECTIONS="asm_diskgroup"
 
 # Interval for running async checks (in seconds)
@@ -159,7 +160,7 @@ sql_performance()
 sql_tablespaces()
 {
     echo 'PROMPT <<<oracle_tablespaces:sep(124)>>>'
-    if [ $AT_LEAST_ORACLE_102 = 'yes' ] ; then
+    if [ "$AT_LEAST_ORACLE_102" = 'yes' ] ; then
 
         echo "select upper(d.NAME) || '|' || file_name ||'|'|| tablespace_name ||'|'|| fstatus ||'|'|| AUTOEXTENSIBLE
                   ||'|'|| blocks ||'|'|| maxblocks ||'|'|| USER_BLOCKS ||'|'|| INCREMENT_BY
@@ -186,7 +187,7 @@ sql_tablespaces()
                     f.autoextensible, f.blocks, f.maxblocks, f.user_blocks, f.increment_by,
                     'TEMP', t.block_size, t.status);
               "
-    elif [ $AT_LEAST_ORACLE_92 = 'yes' ] ; then
+    elif [ "$AT_LEAST_ORACLE_92" = 'yes' ] ; then
 
         echo "select upper(d.NAME) || '|' || file_name ||'|'|| tablespace_name ||'|'|| fstatus ||'|'|| AUTOEXTENSIBLE
                   ||'|'|| blocks ||'|'|| maxblocks ||'|'|| USER_BLOCKS ||'|'|| INCREMENT_BY
@@ -254,7 +255,7 @@ sql_recovery_status()
 
 sql_rman()
 {
-    if [ $AT_LEAST_ORACLE_102 = 'yes' ] ; then
+    if [ "$AT_LEAST_ORACLE_102" = 'yes' ] ; then
         echo 'PROMPT <<<oracle_rman:sep(124)>>>'
         echo "SELECT upper(d.NAME)
                      ||'|'|| a.STATUS
@@ -274,7 +275,7 @@ sql_rman()
 
 sql_recovery_area()
 {
-    if [ $AT_LEAST_ORACLE_102 = 'yes' ] ; then
+    if [ "$AT_LEAST_ORACLE_102" = 'yes' ] ; then
         echo 'PROMPT <<<oracle_recovery_area>>>'
         echo "select upper(d.NAME)
                      ||' '|| round((SPACE_USED-SPACE_RECLAIMABLE)/
@@ -290,7 +291,7 @@ sql_recovery_area()
 sql_undostat()
 {
     echo 'PROMPT <<<oracle_undostat:sep(124)>>>'
-    if [ $AT_LEAST_ORACLE_102 = 'yes' ] ; then
+    if [ "$AT_LEAST_ORACLE_102" = 'yes' ] ; then
         echo "select upper(i.INSTANCE_NAME)
                      ||'|'|| ACTIVEBLKS
                      ||'|'|| MAXCONCURRENCY
@@ -305,7 +306,7 @@ sql_undostat()
                               and TUNED_UNDORETENTION > 0
                   );
              "
-    elif [ $AT_LEAST_ORACLE_92 = 'yes' ] ; then
+    elif [ "$AT_LEAST_ORACLE_92" = 'yes' ] ; then
         # TUNED_UNDORETENTION and ACTIVEBLKS are not availibe in Oracle <=9.2!
         # we sent a -1 for filtering in check_undostat
         echo "select upper(i.INSTANCE_NAME)
@@ -351,7 +352,7 @@ sql_resumable()
 
 sql_jobs()
 {
-    if [ $AT_LEAST_ORACLE_102 = 'yes' ] ; then
+    if [ "$AT_LEAST_ORACLE_102" = 'yes' ] ; then
         echo 'PROMPT <<<oracle_jobs:sep(124)>>>'
         echo "SELECT upper(d.NAME)
                      ||'|'|| j.OWNER
@@ -402,19 +403,37 @@ sql_version()
 sql_instance()
 {
     echo 'prompt <<<oracle_instance:sep(124)>>>'
-    echo "select upper(i.instance_name)
-	          || '|' || i.VERSION
-	          || '|' || i.STATUS
-	          || '|' || i.LOGINS
-	          || '|' || i.ARCHIVER
-                  || '|' || round((sysdate - i.startup_time) * 24*60*60)
-                  || '|' || DBID
-                  || '|' || LOG_MODE
-                  || '|' || DATABASE_ROLE
-                  || '|' || FORCE_LOGGING
-	          || '|' || d.name
-           from v\$instance i, v\$database d;
-         "
+    if [ ${ORACLE_SID:0:1} = '+' ] ; then
+        # ASM
+        echo "select upper(i.instance_name)
+                     || '|' || i.VERSION
+                     || '|' || i.STATUS
+                     || '|' || i.LOGINS
+                     || '|' || i.ARCHIVER
+                     || '|' || round((sysdate - i.startup_time) * 24*60*60)
+                     || '|' || '0'
+                     || '|' || 'NO'
+                     || '|' || 'ASM'
+                     || '|' || 'NO'
+                     || '|' || i.instance_name
+                from v\$instance i;
+             "
+    else
+        # normal Instance
+        echo "select upper(i.instance_name)
+                     || '|' || i.VERSION
+                     || '|' || i.STATUS
+                     || '|' || i.LOGINS
+                     || '|' || i.ARCHIVER
+                     || '|' || round((sysdate - i.startup_time) * 24*60*60)
+                     || '|' || DBID
+                     || '|' || LOG_MODE
+                     || '|' || DATABASE_ROLE
+                     || '|' || FORCE_LOGGING
+                     || '|' || d.name
+                from v\$instance i, v\$database d;
+             "
+    fi
 }
 
 sql_sessions()
@@ -528,7 +547,7 @@ sql_longactivesessions()
 sql_asm_diskgroup()
 {
     echo 'prompt <<<oracle_asm_diskgroup>>>'
-    if [ $AT_LEAST_ORACLE_112 = 'yes' ] ; then
+    if [ "$AT_LEAST_ORACLE_112" = 'yes' ] ; then
         echo "select STATE
                      || ' ' || TYPE
                      || ' ' || 'N'
@@ -544,7 +563,7 @@ sql_asm_diskgroup()
                      || ' ' || name || '/'
                 from v\$asm_diskgroup;
              "
-    elif [ $AT_LEAST_ORACLE_102 = 'yes' ] ; then
+    elif [ "$AT_LEAST_ORACLE_102" = 'yes' ] ; then
         echo "select STATE
                      || ' ' || TYPE
                      || ' ' || 'N'
@@ -556,7 +575,7 @@ sql_asm_diskgroup()
                      || ' ' || required_mirror_free_mb
                      || ' ' || usable_file_mb
                      || ' ' || offline_disks
-                     || 'N'
+                     || ' ' || 'N'
                      || ' ' || name || '/'
                 from v\$asm_diskgroup;
              "
@@ -606,33 +625,33 @@ function get_oraversion () {
     set_oraenv ${1}
     ORACLE_VERSION=$($ORACLE_HOME/bin/sqlplus -V | grep ^SQL | cut -d" " -f3 | cut -d"." -f-2)
 
-    if [ $ORACLE_VERSION = '12.1' ] ; then
+    if [ "$ORACLE_VERSION" = '12.1' ] ; then
         AT_LEAST_ORACLE_121=yes
     fi
 
-    if [ $ORACLE_VERSION = '12.1' -o $ORACLE_VERSION = '11.2' ] ; then
+    if [ "$ORACLE_VERSION" = '12.1' -o "$ORACLE_VERSION" = '11.2' ] ; then
         AT_LEAST_ORACLE_112=yes
     fi
 
-    if [ $ORACLE_VERSION = '12.1' -o $ORACLE_VERSION = '11.2' \
-         -o $ORACLE_VERSION = '11.1' ] ; then
+    if [ "$ORACLE_VERSION" = '12.1' -o "$ORACLE_VERSION" = '11.2' \
+         -o "$ORACLE_VERSION" = '11.1' ] ; then
         AT_LEAST_ORACLE_111=yes
     fi
 
-    if [ $ORACLE_VERSION = '12.1' -o $ORACLE_VERSION = '11.2' \
-         -o $ORACLE_VERSION = '11.1' -o $ORACLE_VERSION = '10.2' ] ; then
+    if [ "$ORACLE_VERSION" = '12.1' -o "$ORACLE_VERSION" = '11.2' \
+         -o "$ORACLE_VERSION" = '11.1' -o "$ORACLE_VERSION" = '10.2' ] ; then
         AT_LEAST_ORACLE_102=yes
     fi
 
-    if [ $ORACLE_VERSION = '12.1' -o $ORACLE_VERSION = '11.2' \
-         -o $ORACLE_VERSION = '11.1' -o $ORACLE_VERSION = '10.2' \
-         -o $ORACLE_VERSION = '10.1' ] ; then
+    if [ "$ORACLE_VERSION" = '12.1' -o "$ORACLE_VERSION" = '11.2' \
+         -o "$ORACLE_VERSION" = '11.1' -o "$ORACLE_VERSION" = '10.2' \
+         -o "$ORACLE_VERSION" = '10.1' ] ; then
         AT_LEAST_ORACLE_101=yes
     fi
 
-    if [ $ORACLE_VERSION = '12.1' -o $ORACLE_VERSION = '11.2' \
-         -o $ORACLE_VERSION = '11.1' -o $ORACLE_VERSION = '10.2' \
-         -o $ORACLE_VERSION = '10.1' -o $ORACLE_VERSION = '9.2' ] ; then
+    if [ "$ORACLE_VERSION" = '12.1' -o "$ORACLE_VERSION" = '11.2' \
+         -o $ORACLE_VERSION" = '11.1' -o "$ORACLE_VERSION" = '10.2' \
+         -o $ORACLE_VERSION" = '10.1' -o "$ORACLE_VERSION" = '9.2' ] ; then
         AT_LEAST_ORACLE_92=yes
     fi
 }
@@ -735,7 +754,7 @@ function sqlplus_internal() {
 
     echo "$loc_stdin" | ${SQLPLUS} -L -s ${DBCONNECT}
     if [ $? -ne 0 ] ; then
-        if [ $DEBUGCONNECT = 1 ] ; then
+        if [ "$DEBUGCONNECT" ] ; then
             echo "Logindetails: ${DBCONNECT}" >&2
         fi
         return 1
@@ -759,7 +778,7 @@ function sqlplus ()
     else
         echo '<<<oracle_instance:sep(124)>>>'
         local SID_UPPER=$(echo "$SID" | tr '[:lower:]' '[:upper:]')
-        echo "$OUTPUT" | sed -r -e "/^(ERROR:)?$/d" | tr '\n' ' ' | sed "s/^/$SID_UPPER|FAILURE|/" ; echo
+        echo "$OUTPUT" | grep -v "^ERROR at line" | tr '\n' ' ' | sed "s/^/$SID_UPPER|FAILURE|/" ; echo
         return 1
     fi
 }
@@ -844,7 +863,7 @@ function run_cached_local () {
 
     # Cache file outdated and new job not yet running? Start it
     if [ -z "$USE_CACHEFILE" -a ! -e "$CACHEFILE.new" ] ; then
-        if [ $DEBUG -eq 1 ] ; then
+        if [ "$DEBUG" ] ; then
             echo "set -o noclobber ; exec > \"$CACHEFILE.new\" || exit 1 ; $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | bash
         else
             echo "set -o noclobber ; exec > \"$CACHEFILE.new\" || exit 1 ; $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | nohup bash 2>/dev/null &
@@ -934,7 +953,7 @@ do
     ASYNC_SQL=$(for section in $ASECTIONS ; do eval "sql_$section" ; done)
     export ASYNC_SQL
 
-    if [ $DEBUGCONNECT = 1 ] ; then
+    if [ "$DEBUGCONNECT" ] ; then
         echo "-----------------------------------------------"
         echo "Logincheck to Instance: "$SID"  Version: "$ORACLE_VERSION
         echo "select 'Login ok User: ' || user || ' on ' || host_name

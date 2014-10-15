@@ -1,0 +1,9 @@
+Title: Fix compensation for daylight safing time in prediction
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1413285066
+Class: fix
+
+

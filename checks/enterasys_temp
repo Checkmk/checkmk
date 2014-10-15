@@ -38,7 +38,7 @@ def check_enterasys_temp(item, params, info):
     if info[0][0] == "0":
         return 3, "Sensor broken or not supported"
 
-    temp = to_celsius(int(info[0][0]) / 10.0)
+    temp = fahrenheit_to_celsius(int(info[0][0]) / 10.0)
     return check_temperature(temp, params)
 
 

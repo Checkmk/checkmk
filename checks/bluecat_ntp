@@ -45,6 +45,7 @@ def check_bluecat_ntp(item, params, info):
         5 : "fault"
 
     }
+
     state = 0
     if oper_state in params['oper_states']['warning']:
         state = 1
@@ -53,15 +54,15 @@ def check_bluecat_ntp(item, params, info):
     yield state, "Process is %s" % oper_states[oper_state]
 
     sys_leap_states = {
-        0 : 'no Warning',
-        1 : 'add second',
-        2 : 'subtract second',
-        3 : 'Alarm'
+        0  : 'no Warning',
+        1  : 'add second',
+        10 : 'subtract second',
+        11 : 'Alarm'
     }
     state = 0
-    if sys_leap == 3:
+    if sys_leap == 11:
         state = 2
-    elif sys_leap in [ 1, 2 ]:
+    elif sys_leap in [ 1, 10 ]:
         state = 1
     yield state, "Sys Leap: %s" % sys_leap_states[sys_leap]
 

@@ -1,0 +1,372 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+def inventory_ps_common(invdata, invrules, info, with_perfdata = False):
+    inventory = []
+
+    entries = []
+
+    # Handle inventory_processes, inventory_processes_perf variables
+    for inventry in invdata:
+        # New in 1.1.7i1: inventory_processes may be prefixed with list of
+        # host names or tags + ALL_HOSTS
+        tags = None
+        if len(inventry) == 8:
+            tags = []
+            hostlist = inventry[0]
+            inventry = inventry[1:]
+        elif len(inventry) == 9:
+            tags = inventry[0]
+            hostlist = inventry[1]
+            inventry = inventry[2:]
+
+        # Filter out entries with do not match our current host
+        if tags != None and ( not hosttags_match_taglist(tags_of_host(g_hostname), tags) or
+                              not in_extraconf_hostlist(hostlist, g_hostname)):
+            continue
+
+        if len(inventry) == 7: # extend old inventory_processes
+            inventry += ([],)
+
+        entries.append(inventry)
+
+    # Handle new wato style inventory rules
+    for rule in invrules:
+        taglist, hostlist = rule[1:3]
+        if len(rule) >= 4:
+            options = rule[3]
+            if options.get("disabled"):
+                continue
+
+        # Filter out entries with do not match our current host
+        if not hosttags_match_taglist(tags_of_host(g_hostname), taglist) \
+           or not in_extraconf_hostlist(hostlist, g_hostname):
+            continue
+
+        v = rule[0]
+
+        # set values for user und perfdata to None if they dont exist
+        d_user = v.get('user')
+        v['user'] = d_user
+        d_perfdata = v.get('perfdata')
+        v['perfdata'] = d_perfdata
+
+        # Make ps skip rules for ps.perf and vice versa
+        # Ignore if perfdata key is not set
+        if v.get('perfdata') and with_perfdata != v.get('perfdata'):
+            continue
+
+        extra_options = []
+        for token in [ 'cpulevels', 'cpu_average', 'virtual_levels', 'resident_levels', 'handle_count' ]:
+            extra_options.append( (token, v.get(token)) )
+        entries.append((v['descr'], v['match'], v['user']) + v['levels'] +  (extra_options,) )
+
+    for servicedesc, pattern, userspec, warnmin, okmin, okmax, warnmax, extra_options in entries:
+        num_perc_s = servicedesc.count("%s")
+        for line in info:
+            # First entry in line is the node name or None for non-clusters
+            ps = line[1:]
+            l_user = [userspec]
+            matches = process_matches(ps, pattern, l_user)
+            if matches != False:
+                if len(matches) < num_perc_s:
+                    raise MKGeneralException("Invalid entry in inventory_processes: service description '%s' contains "
+                            "%d times '%%s', but regular expression '%s' contains only %d subexpression(s)." % \
+                            (servicedesc, num_perc_s, pattern, len(matches)))
+
+                if userspec == GRAB_USER:
+                    i_userspec = l_user[0]
+                    i_servicedesc = servicedesc.replace("%u", l_user[0])
+                else:
+                    i_userspec = userspec
+                    i_servicedesc = servicedesc
+
+                # New in 1.2.2b4: Alle %1, %2, etc. to be replaced with first, second, ...
+                # group. This allows a reordering of the matched groups
+                for nr, group in enumerate(matches):
+                    i_servicedesc = i_servicedesc.replace("%%%d" % (nr+1), group)
+
+                # It is allowed (1.1.4) that the pattern contains more subexpressions then the
+                # service description. In that case only the first subexpressions are used as
+                # item.
+                i_servicedesc = i_servicedesc % tuple(matches[:num_perc_s])
+
+                # Problem here: We need to instantiate all subexpressions
+                # with their actual values of the found process.
+                extra_keys = {}
+                for key, value in extra_options:
+                    if value:
+                        extra_keys[key] = value
+
+                i_pattern = instantiate_regex_pattern(pattern, matches)
+                inv_keys = {
+                    "process" : i_pattern,
+                    "user"    : i_userspec,
+                    "warnmin" : warnmin,
+                    "okmin"   : okmin,
+                    "okmax"   : okmax,
+                    "warnmax" : warnmax }
+                inv_keys.update(extra_keys)
+                inv = ( i_servicedesc, inv_keys )
+
+                if inv not in inventory:
+                    inventory.append(inv)
+
+    return inventory
+
+def instantiate_regex_pattern(pattern, matches):
+    for m in matches:
+        pattern = instantiate_regex_pattern_once(pattern, m)
+    return pattern
+
+def instantiate_regex_pattern_once(pattern, match):
+    # this correctly handles \( and \) but not [^)] - sorry
+    return re.compile(r"(?<!\\)\(.*?(?<!\\)\)").sub(escape_regex_chars(match), pattern, 1)
+
+def escape_regex_chars(match):
+    r = ""
+    for c in match:
+        if c in r"[]\().?{}|*^$":
+            r += "\\"
+        r += c
+    return r
+
+
+def process_matches(ps, procname, l_user):
+    # procname is either:
+    # 1. a string beginning with ~. Then it is interpreted as regular expression
+    # that must match the *beginning* of the process line. Please check the output of
+    # check_mk -d HOSTNAME. Note: groups of whitespaces are reduced to one single
+    # whitespace!
+    # 2. a string *not* beginning with ~: It must be equal to the first column
+    # in the process table (i.e. the process name). No regular expressions are
+    # applied. A simple string compare is done.
+
+    # agent might output username in brackets in the first columns
+    userspec = l_user[0]
+    if ps[0].startswith("(") and ps[0].endswith(")") and len(ps) > 1:
+        addinfo = ps[0][1:-1].split(",")
+        user = addinfo[0]
+        if userspec and userspec != user:
+            return False
+        l_user[0] = user # return actual user that way
+        ps = ps[1:]
+    else:
+        l_user[0] = None
+
+    if not procname:
+        return ()
+
+    elif not procname[0].startswith("~"):
+        if ps[0] == procname:
+            return ()
+    else:
+        pattern = procname[1:]
+        reg = compiled_regexes.get(pattern)
+        if not reg:
+            reg = re.compile(pattern)
+            compiled_regexes[pattern] = reg
+        matchobject = reg.match(" ".join(ps))
+        if matchobject:
+            return [ g and g or "" for g in matchobject.groups() ]
+    return False
+
+# New parameter format: dictionary. Example:
+# {
+#    "user" : "foo",
+#    "process" : "/usr/bin/food",
+#    "warnmin" : 1,
+#    "okmin"   : 1,
+#    "okmax"   : 1,
+#    "warnmax" : 1,
+# }
+
+def check_ps_common(item, params, info, with_perfdata = False, cpu_cores = 1, info_name = "processes" ):
+    now = time.time()
+    if type(params) in (list, tuple):
+        if len(params) == 5:
+            procname, warnmin, okmin, okmax, warnmax = params
+            user = None
+        elif len(params) == 6:
+            procname, user, warnmin, okmin, okmax, warnmax = params
+        params = {
+            "process" : procname,
+            "warnmin" : warnmin,
+            "okmin"   : okmin,
+            "okmax"   : okmax,
+            "warnmax" : warnmax,
+        }
+        if user != None:
+            params["user"] = user
+
+    count = 0
+    virtual_size   = 0
+    resident_size  = 0
+    handle_count   = 0
+    percent_cpu    = 0.0
+    extended_perfdata = False
+
+    # The counter names for the ps check are quite volatile, because there is
+    # dynamic part (the pid) in the name. Therefore we clear any counters
+    # older than one day. Affected are ps_wmic.user, ps_wmic.kernel, ps_stat.pcpu
+    clear_counters("ps_", 86400)
+
+    running_on = set([]) # collect information about nodes the processes run on
+    for line in info:
+        node_name = line[0]
+        ps = line[1:]
+        if process_matches(ps, params["process"], [params.get("user")]) != False:
+            count += 1
+            if node_name != None:
+                running_on.add(node_name)
+            if ps[0][0] == '(':
+                addinfo = ps[0][1:-1].split(",")
+                if len(addinfo) >= 4: # extended performance data: virtualsize, residentsize, %cpu
+                    virtual_size += int(addinfo[1])  # kB
+                    resident_size += int(addinfo[2]) # kB
+                    if len(addinfo) >= 10: # even more data: processId, pagefile_usage, usermodetime, kernelmodetime, threadCount, openHandles
+                        pid, pagefile_usage, user_c, kernel_c, handle_c = map(int, addinfo[4:9])
+                        counter_wrapped = False
+                        try:
+                            timedif, user_per_sec   = get_counter("ps_wmic.user.%d" % pid, now, user_c)
+                        except MKCounterWrapped, e:
+                            counter_wrapped = True
+
+                        try:
+                            timedif, kernel_per_sec = get_counter("ps_wmic.kernel.%d" % pid, now, kernel_c)
+                        except MKCounterWrapped, e:
+                            counter_wrapped = True
+
+                        if counter_wrapped:
+                            user_per_sec   = 0
+                            kernel_per_sec = 0
+
+                        user_perc = user_per_sec / 100000.0 / cpu_cores
+                        kernel_perc = kernel_per_sec / 100000.0 / cpu_cores
+                        percent_cpu += user_perc + kernel_perc
+                        handle_count += handle_c
+                    else:
+                        if ":" in addinfo[3]:
+                            if "-" in addinfo[3]:
+                                tokens     = addinfo[3].split("-")
+                                days       = int(tokens[0])
+                                addinfo[3] = tokens[1]
+                            else:
+                                days = 0
+                            pid = addinfo[4]
+                            hours, minutes, seconds = map(int, addinfo[3].split(":"))
+                            total_seconds = 86400 * days + 3600 * hours + 60 * minutes + seconds
+                            try:
+                                timedif, cputime = get_counter("ps_stat.pcpu.%s" % pid, now, total_seconds)
+                            except MKCounterWrapped, e:
+                                cputime = 0
+
+                            pcpu = cputime * 100
+                        else:
+                            pcpu = savefloat(addinfo[3])
+                        percent_cpu += pcpu
+                    extended_perfdata = True
+
+    if "cpulevels" in params:
+        warn_cpu, crit_cpu = params["cpulevels"]
+    else:
+        warn_cpu, crit_cpu = None, None
+
+    if with_perfdata:
+        perfdata = [ ("count", count, params["okmax"]+1, params["warnmax"]+1, 0) ]
+        if count == 0 and not extended_perfdata:
+            # No matching process found. Therefore we don't know yet,
+            # wether the agents sends extended data for processes.
+            # We need to know this in order to create the RRD with the
+            # correct number of DSes. To just look at the first process
+            # in the agent output to make sure. We assume that at least
+            # one process is always present.
+            firstword = info[0][1]
+            if firstword[0] == '(' and firstword.count(",") >= 3:
+                extended_perfdata = True
+        if extended_perfdata:
+            perfdata += [ ("vsz", virtual_size),
+                          ("rss", resident_size)]
+            perfdata.append(("pcpu", percent_cpu, warn_cpu, crit_cpu))
+    else:
+        perfdata = []
+
+    infotext = "%d %s" % (count, info_name)
+    if running_on:
+        infotext += " [running on %s]" % ", ".join(running_on)
+
+    state = 0
+    if count > params["warnmax"] or count < params["warnmin"]:
+        state = 2
+        infotext += " (ok from %d to %d)(!!)" % (params["okmin"], params["okmax"])
+    elif count > params["okmax"] or count < params["okmin"]:
+        state = 1
+        infotext += " (ok from %d to %d)(!)" % (params["okmin"], params["okmax"])
+
+    if virtual_size:
+        for size, name in [ (virtual_size, "virtual"), (resident_size, "resident") ]:
+            infotext += " %.1f MB %s" % ((size / 1024.0), name)
+            if "%s_levels" % name in params:
+                warn_level, crit_level = params["%s_levels" % name]
+                if size * 1024 >= crit_level:
+                    state = 2
+                    infotext += "(!!)"
+                elif size * 1024 >= warn_level:
+                    state = max(state, 1)
+                    infotext += "(!)"
+            infotext += ","
+
+        infotext += " %.1f%% CPU" % percent_cpu
+
+        if "cpu_average" in params:
+            timedif, avg_cpu = get_average("ps.%s.cpu" % item, now, percent_cpu, params["cpu_average"], False)
+            infotext += " (%d min average: %.1f%%)" % (params["cpu_average"], avg_cpu)
+            percent_cpu = avg_cpu # use this for level comparison
+            if with_perfdata and extended_perfdata:
+                perfdata.append(("pcpuavg", avg_cpu, warn_cpu, crit_cpu, 0, params["cpu_average"]))
+
+        if "cpulevels" in params:
+            if percent_cpu >= crit_cpu:
+                state = 2
+                infotext += "(!!)"
+            elif percent_cpu >= warn_cpu:
+                state = max(state, 1)
+                infotext += "(!)"
+
+        # only check handle_count if provided by wmic counters
+        if handle_count:
+            infotext += ", %d process handles" % handle_count
+            if "handle_count" in params:
+                warn_handle, crit_handle = params["handle_count"]
+                if handle_count >= crit_handle:
+                    state = 2
+                    infotext += "(!!)"
+                elif handle_count >= warn_handle:
+                    state = max(state, 1)
+                    infotext += "(!)"
+
+    return state, infotext, perfdata

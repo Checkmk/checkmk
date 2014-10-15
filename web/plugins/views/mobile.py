@@ -707,7 +707,6 @@ multisite_builtin_views.update({
                                'title': _('Service Notifications'),
                                'topic': _('Other')}),
 
-
 })
 
 

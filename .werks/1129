@@ -1,0 +1,11 @@
+Title: Windows MSI-Installer: some systems created corrupted check_mk_agent.msi files
+Level: 2
+Component: core
+Compatible: compat
+Version: 1.2.5i6
+Date: 1413380611
+Class: fix
+
+The tool msibuild had troubles updating the msi's "Summary Information" on some distributions.
+It is no longer used for this task...
+

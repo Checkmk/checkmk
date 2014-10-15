@@ -159,10 +159,10 @@ for entry in [ "Property", "File", "Upgrade" ]:
     os.system((path_prefix + "msibuild %(new_msi_file)s -i %(work_dir)s/%(file)s.idt") % \
          { "work_dir" : work_dir, "new_msi_file": new_msi_file, "file": entry })
 
-# Update summary info with new uid
+# Update summary info with new uuid (HACK! - the msibuild way is not working on all systems...)
 package_code = ("{%s}" % uuid.uuid1()).upper()
-os.system((path_prefix + 'msibuild %(new_msi_file)s -s "Check_MK 32/64 bit MSI installer" "Mathias Kettner GmbH" "Intel;1033" "%(code)s"') %\
-        {"code": package_code, "new_msi_file": new_msi_file})
+os.system("sed -i -e s/{08012468-53DE-4/%(start)s/ -e s/2A3-BAA9-FE4C2A129135}/%(end)s/ %(new_msi_file)s" % \
+    {"new_msi_file": new_msi_file, "start": package_code[:16], "end": package_code[16:]})
 
 # Remove original product.cab from stream
 verbose("Removing product.cab from %s" % new_msi_file)

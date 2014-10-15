@@ -58,7 +58,10 @@ cisco_temp_perf_envmon_states = {
 def inventory_cisco_temp_perf(info):
     inventory = []
     for line in info:
-        name = line[0]
+        try:
+            name = line[0].split(',')[0]
+        except:
+            name = line[0]
         if name == "":
             name = line[4]
         inventory.append((name, None))
@@ -66,7 +69,11 @@ def inventory_cisco_temp_perf(info):
 
 def check_cisco_temp_perf(item, _no_params, info):
     for line in info:
-        if line[0] == item or line[4] == item:
+        try:
+            name = line[0].split(',')[0]
+        except:
+            name = line[0]
+        if name == item or line[4] == item:
             temp = saveint(line[1])
             if temp != 0:
                 perfdata = [("temp", temp, None, saveint(line[2]) )]

@@ -79,7 +79,7 @@ write-host "<<<win_reg_uninstall:sep(124):persist($until)>>>"
 $paths = @("HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall")
 foreach ($path in $paths) {
     Get-ChildItem $path -Recurse | foreach-object { $path2 = $path+"\"+$_.PSChildName; get-ItemProperty -path $path2 |
-        foreach-object { write-host -separator $separator $_.DisplayName, $_.Publisher, $path, $_.PSChildName, $_.DisplayVersion, $_.EstimatedSize, $_.InstallDate }}
+        foreach-object { write-host -separator $separator $_.DisplayName, $_.Publisher, $_.InstallLocation, $_.PSChildName, $_.DisplayVersion, $_.EstimatedSize, $_.InstallDate }}
 }
 
 # Search exes

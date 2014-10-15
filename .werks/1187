@@ -1,0 +1,12 @@
+Title: Hivemanager: Extended Check and Agent
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1413384591
+Class: feature
+
+The Hivemanger special agent now returns mutch more informations. ( eth0LLDPPort, eth0LLDPSysName, hive, hiveOS, hwmodel, serialNumber, nodeId, location, networkPolicy).
+
+Also it is now possible to set states for warning/ critical in Wato.
+

@@ -578,3 +578,28 @@ multisite_icons.append({
     'paint': paint_stars,
 })
 
+def paint_icon_check_bi_aggr(what, row, tags, custom_vars):
+    if what == "service" and row.get("service_check_command","").startswith("check_mk_active-bi_aggr!"):
+        args = row['service_check_command']
+        start = args.find('-b \'') + 4
+        end   = args.find('\' ', start)
+        base_url = args[start:end]
+        base_url = base_url.replace('$HOSTADDRESS$', row['host_address'])
+        base_url = base_url.replace('$HOSTNAME$', row['host_name'])
+
+        start = args.find('-a \'') + 4
+        end   = args.find('\' ', start)
+        aggr_name = args[start:end]
+
+        url = "%s/check_mk/view.py?view_name=aggr_single&aggr_name=%s" % \
+              (base_url, html.urlencode(aggr_name))
+
+        return '<a href="%s"><img class=icon src="images/icon_aggr.gif" title="%s"></a>' % \
+                 (html.attrencode(url), _('Open this Aggregation'))
+
+
+multisite_icons.append({
+    'host_columns' : [ 'check_command', 'name', 'address' ],
+    'paint'        : paint_icon_check_bi_aggr,
+})
+

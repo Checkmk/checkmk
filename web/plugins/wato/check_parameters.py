@@ -1617,6 +1617,13 @@ register_check_parameters(
     None,
     "dict"
 )
+
+hivemanger_states = [
+ ( "Critical" , "Critical" ),
+ ( "Maybe" , "Maybe" ),
+ ( "Major" , "Major" ),
+ ( "Minor" , "Minor" ),
+]
 register_check_parameters(
     subgroup_networking,
     "hivemanager_devices",
@@ -1646,6 +1653,20 @@ register_check_parameters(
                   totext = "",
                   title = _("Do not alert on connection loss"),
                 )),
+                ( "war_states",
+                    ListChoice(
+                        title = _("States treated as warning"),
+                        choices = hivemanger_states,
+                        default_value = ['Maybe', 'Major', 'Minor'],
+                        )
+                ),
+                ( "crit_states",
+                    ListChoice(
+                        title = _("States treated as critical"),
+                        choices = hivemanger_states,
+                        default_value = ['Critical'],
+                        )
+                ),
         ]),
     TextAscii(
        title = _("Hostname of the Device")

@@ -45,17 +45,16 @@ def check_akcp_sensor_temp(item, params, info):
                 return 3, "Sensor is offline"
 
             if degreeraw != "":
-                temp = saveint(degreeraw) / 10.0
+                temp = int(degreeraw) / 10.0
             else:
                 temp = float(degree)
 
              # break temp down to celsius if it had been defined as Fahrenheit.
             if degreetype == "0":
-                temp = to_celsius(temp)
+                temp = fahrenheit_to_celsius(temp)
 
             return check_temperature(temp, params)
 
-    return 3, "Sensor not found"
 
 # possible values for sensorProbeTempStatus:
 # noStatus(1), normal(2), highWarning(3), highCritical(4),

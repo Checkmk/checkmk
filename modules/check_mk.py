@@ -3572,8 +3572,6 @@ no_inventory_possible = None
 #   | that is used by the official Check_MK documentation ("nowiki").      |
 #   '----------------------------------------------------------------------'
 
-opt_nowiki   = False
-
 def get_tty_size():
     import termios,struct,fcntl
     try:
@@ -4735,7 +4733,7 @@ def usage():
  cmk --localize COMMAND               do localization operations
  cmk --notify                         used to send notifications from core
  cmk --create-rrd [--keepalive|SPEC]  create round robin database (only CMC)
- cmk --convert-rrds [HOST1 HOST2...]  convert exiting RRD to new format (only CMC)
+ cmk --convert-rrds [--split] [H...]  convert exiting RRD to new format (only CMC)
  cmk -i, --inventory [HOST1 HOST2...] Do a HW/SW-Inventory of some ar all hosts
  cmk --inventory-as-check HOST        Do HW/SW-Inventory, behave like check plugin
  cmk -A, --bake-agents [-f] [H1 H2..] Bake agents for hosts (not in all versions)
@@ -4859,7 +4857,8 @@ NOTES:
   to the new structure as configured via the rulesets cmc_host_rrd_config
   and cmc_service_rrd_config. If you do not specify hosts, then all
   RRDs will be converted. Conversion just takes place if the configuration
-  of the RRDs has changed.
+  of the RRDs has changed. The option --split will activate conversion
+  from exising RRDs in PNP storage type SINGLE to MULTIPLE.
 
 
 """ % (check_mk_configfile,
@@ -5949,6 +5948,10 @@ def output_profile():
 #   | Main entry point and option parsing. Here is where all begins.       |
 #   '----------------------------------------------------------------------'
 
+opt_nowiki     = False
+opt_split_rrds = False
+
+
 # Do option parsing and execute main function -
 # if check_mk is not called as module
 if __name__ == "__main__":
@@ -5959,7 +5962,7 @@ if __name__ == "__main__":
                      "snmptranslate", "bake-agents", "force",
                      "usewalk", "scan-parents", "procs=", "automation=", "notify",
                      "snmpget=", "profile", "keepalive", "keepalive-fd=", "create-rrd",
-                     "convert-rrds",
+                     "convert-rrds", "split-rrds",
                      "no-cache", "update", "restart", "reload", "dump", "fake-dns=",
                      "man", "nowiki", "config-check", "backup=", "restore=",
                      "check-inventory=", "paths", "checks=", "inventory", "inventory-as-check=",
@@ -6030,6 +6033,8 @@ if __name__ == "__main__":
             check_types = a.split(",")
         elif o == "--cmc-file":
             opt_cmc_relfilename = a
+        elif o == "--split-rrds":
+            opt_split_rrds = True
 
     # Perform actions (major modes)
     try:

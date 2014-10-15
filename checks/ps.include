@@ -69,8 +69,15 @@ def inventory_ps_common(invdata, invrules, info, with_perfdata = False):
 
         v = rule[0]
 
+        # set values for user und perfdata to None if they dont exist
+        d_user = v.get('user')
+        v['user'] = d_user
+        d_perfdata = v.get('perfdata')
+        v['perfdata'] = d_perfdata
+
         # Make ps skip rules for ps.perf and vice versa
-        if with_perfdata != v['perfdata']:
+        # Ignore if perfdata key is not set
+        if v.get('perfdata') and with_perfdata != v.get('perfdata'):
             continue
 
         extra_options = []

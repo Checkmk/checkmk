@@ -169,7 +169,7 @@ default_package_codes = {
         "vanilla_container.msi": { "dftl_start": "{08012468-53DE-4", "dftl_end": "2A3-BAA9-FE4C2A129135}"},
         "baked_container.msi"  : { "dftl_start": "{47ED1918-CEDF-4", "dftl_end": "D37-943C-B4DBC3F58E6C}"}
 }
-summary_info.update(default_package_codes[msi_file])
+summary_info.update(default_package_codes[os.path.basename(msi_file)])
 os.system("sed -i -e 's/%(dftl_start)s/%(start)s/' -e 's/%(dftl_end)s/%(end)s/' %(new_msi_file)s" % summary_info)
 
 # Remove original product.cab from stream

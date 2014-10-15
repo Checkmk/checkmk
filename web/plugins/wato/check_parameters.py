@@ -483,6 +483,89 @@ register_rule(group + '/' + subgroup_inventory,
 )
 
 register_rule(group + '/' + subgroup_inventory,
+    varname   = "inv_domino_tasks_rules",
+    title     = _('Lotus Domino Task Inventory'),
+    help      = _("Keep in mind that all configuration parameters in this rule are only applied during the "
+                  "hosts inventory. Any changes later on require a host re-inventory"),
+    valuespec = Dictionary(
+        elements = [
+            ('descr', TextAscii(
+                title = _('Service Description'),
+                allow_empty = False,
+                help  = _('<p>The service description may contain one or more occurances of <tt>%s</tt>. In this '
+                          'case, the pattern must be a regular expression prefixed with ~. For each '
+                          '<tt>%s</tt> in the description, the expression has to contain one "group". A group '
+                          'is a subexpression enclosed in brackets, for example <tt>(.*)</tt> or '
+                          '<tt>([a-zA-Z]+)</tt> or <tt>(...)</tt>. When the inventory finds a task '
+                          'matching the pattern, it will substitute all such groups with the actual values when '
+                          'creating the check. In this way one rule can create several checks on a host.</p>'
+                          '<p>If the pattern contains more groups than occurrences of <tt>%s</tt> in the service '
+                          'description, only the first matching subexpressions are used for the service '
+                          'descriptions. The matched substrings corresponding to the remaining groups '
+                          'are nevertheless copied into the regular expression.</p>'
+                          '<p>As an alternative to <tt>%s</tt> you may also use <tt>%1</tt>, <tt>%2</tt>, etc. '
+                          'These expressions will be replaced by the first, second, ... matching group, allowing '
+                          'you to reorder things.</p>'
+                          ),
+            )),
+            ('match', Alternative(
+                title = _("Task Matching"),
+                elements = [
+                    TextAscii(
+                        title = _("Exact name of the task"),
+                        size = 50,
+                    ),
+                    Transform(
+                        RegExp(size = 50),
+                        title = _("Regular expression matching command line"),
+                        help = _("This regex must match the <i>beginning</i> of the task"),
+                        forth = lambda x: x[1:],   # remove ~
+                        back  = lambda x: "~" + x, # prefix ~
+                    ),
+                    FixedValue(
+                        None,
+                        totext = "",
+                        title = _("Match all tasks"),
+                    )
+                ],
+                match = lambda x: (not x and 2) or (x[0] == '~' and 1 or 0),
+                default_value = 'foo',
+            )),
+            ('levels', Tuple(
+                title = _('Levels'),
+                help = _("Please note that if you specify and also if you modify levels here, the change is "
+                         "activated only during an inventory.  Saving this rule is not enough. This is due to "
+                         "the nature of inventory rules."),
+                elements = [
+                    Integer(
+                        title = _("Critical below"),
+                        unit = _("processes"),
+                        default_value = 1,
+                    ),
+                    Integer(
+                        title = _("Warning below"),
+                        unit = _("processes"),
+                        default_value = 1,
+                    ),
+                    Integer(
+                        title = _("Warning above"),
+                        unit = _("processes"),
+                        default_value = 1,
+                    ),
+                    Integer(
+                        title = _("Critical above"),
+                        unit = _("processes"),
+                        default_value = 1,
+                    ),
+                ],
+            )),
+        ],
+        required_keys = ['match', 'levels', 'descr'],
+    ),
+    match = 'all',
+)
+
+register_rule(group + '/' + subgroup_inventory,
     varname   = "inventory_sap_values",
     title     = _('SAP R/3 Single Value Inventory'),
     valuespec = Dictionary(
@@ -1534,6 +1617,13 @@ register_check_parameters(
     None,
     "dict"
 )
+
+hivemanger_states = [
+ ( "Critical" , "Critical" ),
+ ( "Maybe" , "Maybe" ),
+ ( "Major" , "Major" ),
+ ( "Minor" , "Minor" ),
+]
 register_check_parameters(
     subgroup_networking,
     "hivemanager_devices",
@@ -1563,6 +1653,20 @@ register_check_parameters(
                   totext = "",
                   title = _("Do not alert on connection loss"),
                 )),
+                ( "war_states",
+                    ListChoice(
+                        title = _("States treated as warning"),
+                        choices = hivemanger_states,
+                        default_value = ['Maybe', 'Major', 'Minor'],
+                        )
+                ),
+                ( "crit_states",
+                    ListChoice(
+                        title = _("States treated as critical"),
+                        choices = hivemanger_states,
+                        default_value = ['Critical'],
+                        )
+                ),
         ]),
     TextAscii(
        title = _("Hostname of the Device")
@@ -2386,6 +2490,32 @@ register_check_parameters(
           Percentage(title = _("Warning at a usage of"), unit = _("% of RAM") ),
           Percentage(title = _("Critical at a usage of"), unit = _("% of RAM") ),
        ]
+    ),
+    None,
+    "first"
+)
+
+register_check_parameters(
+    subgroup_os,
+    "statgrab_mem",
+    _("Statgrab Memory Usage"),
+    Alternative(
+        elements = [
+            Tuple(
+                title = _("Specify levels in percentage of total RAM"),
+                elements = [
+                  Percentage(title = _("Warning at a usage of"), unit = _("% of RAM"), maxvalue = None),
+                  Percentage(title = _("Critical at a usage of"), unit = _("% of RAM"), maxvalue = None)
+                ]
+            ),
+            Tuple(
+                title = _("Specify levels in absolute usage values"),
+                elements = [
+                  Integer(title = _("Warning if above"), unit = _("MB")),
+                  Integer(title = _("Critical if above"), unit = _("MB"))
+                ]
+            ),
+        ]
     ),
     None,
     "first"
@@ -6645,4 +6775,64 @@ register_check_parameters(
         allow_empty = False,
     ),
     "first"
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "domino_tasks",
+    _("Lotus Domino Tasks"),
+    Dictionary(
+        elements = [
+            ( "process", Alternative(
+                title = _("Name of the task"),
+                style = "dropdown",
+                elements = [
+                    TextAscii(
+                        title = _("Exact name of the task"),
+                        size = 50,
+                    ),
+                    Transform(
+                        RegExp(size = 50),
+                        title = _("Regular expression matching tasks"),
+                        help = _("This regex must match the <i>beginning</i> of the complete "
+                                 "command line of the task including arguments"),
+                        forth = lambda x: x[1:],   # remove ~
+                        back  = lambda x: "~" + x, # prefix ~
+                    ),
+                    FixedValue(
+                        None,
+                        totext = "",
+                        title = _("Match all tasks"),
+                    )
+                ],
+                match = lambda x: (not x and 2) or (x[0] == '~' and 1 or 0)
+            )),
+            ( "warnmin", Integer(
+                title = _("Minimum number of matched tasks for WARNING state"),
+                default_value = 1,
+            )),
+            ( "okmin", Integer(
+                title = _("Minimum number of matched tasks for OK state"),
+                default_value = 1,
+            )),
+            ( "okmax", Integer(
+                title = _("Maximum number of matched tasks for OK state"),
+                default_value = 1,
+            )),
+            ( "warnmax", Integer(
+                title = _("Maximum number of matched tasks for WARNING state"),
+                default_value = 1,
+            )),
+        ],
+        required_keys = [ 'warnmin', 'okmin', 'okmax', 'warnmax', 'process' ],
+    ),
+    TextAscii(
+        title = _("Name of service"),
+        help = _("This name will be used in the description of the service"),
+        allow_empty = False,
+        regex = "^[a-zA-Z_0-9 _.-]*$",
+        regex_error = _("Please use only a-z, A-Z, 0-9, space, underscore, "
+                        "dot and hyphon for your service description"),
+    ),
+    "first", False
 )

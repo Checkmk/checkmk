@@ -627,6 +627,7 @@ def rbn_match_rule(rule, context):
         rbn_match_hosttags(rule, context)              or \
         rbn_match_hostgroups(rule, context)            or \
         rbn_match_servicegroups(rule, context)         or \
+        rbn_match_contactgroups(rule, context)         or \
         rbn_match_hosts(rule, context)                 or \
         rbn_match_exclude_hosts(rule, context)         or \
         rbn_match_services(rule, context)              or \
@@ -694,6 +695,31 @@ def rbn_match_servicegroups(rule, context):
 
         return "The service is only in the groups %s, but %s is required" % (
               sgn, " or ".join(required_groups))
+
+def rbn_match_contactgroups(rule, context):
+    required_groups = rule.get("match_contactgroups")
+    if context["WHAT"] != "SERVICE":
+        cgn = context.get("SERVICECONTACTGROUPNAMES")
+    else:
+        cgn = context.get("HOSTCONTACTGROUPNAMES")
+
+    if required_groups != None:
+        if cgn == None:
+            notify_log("Warning: No information about contact groups in the context. " \
+                       "Seams that you don't use the Check_MK Microcore. ")
+            return 
+        if cgn:
+            contactgroups = cgn.split(",")
+        else:
+            return "The object is in no group, but %s is required" % (
+                 " or ".join(required_groups))
+
+        for group in required_groups:
+            if group in contactgroups:
+                return
+
+        return "The object is only in the groups %s, but %s is required" % (
+              cgn, " or ".join(required_groups))
 
 
 def rbn_match_hostgroups(rule, context):

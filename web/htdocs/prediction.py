@@ -136,12 +136,17 @@ def page_graph():
 
     # Try to get current RRD data and render it also
     from_time, until_time = timegroup["range"]
-    rrd_step, rrd_data = get_rrd_data(host, service, dsname, "MAX", from_time, until_time)
-    render_curve(rrd_data, "#0000ff", 2)
-
-    if current_value != None:
-        rel_time = (time.time() - time.timezone) % timegroup["slice"]
-        render_point(timegroup["range"][0] + rel_time, current_value, "#0000ff")
+    now = time.time()
+    if now >= from_time and now <= until_time:
+        if time.daylight:
+            tz_offset = time.altzone
+        else:
+            tz_offset = time.timezone
+        rrd_step, rrd_data = get_rrd_data(host, service, dsname, "MAX", from_time, until_time)
+        render_curve(rrd_data, "#0000ff", 2)
+        if current_value != None:
+            rel_time = (now - tz_offset) % timegroup["slice"]
+            render_point(timegroup["range"][0] + rel_time, current_value, "#0000ff")
 
     html.footer()
 
@@ -159,7 +164,7 @@ vranges = [
 def compute_vertical_scala(low, high):
     m = max(abs(low), abs(high))
     for letter, factor in vranges:
-        if m <= 15 * factor:
+        if m <= 99 * factor:
             break
     else:
         letter = 'P'
@@ -172,6 +177,10 @@ def compute_vertical_scala(low, high):
         step = 0.2 * factor
     elif steps < 6:
         step = 0.5 * factor
+    elif steps > 50:
+        step = 5 * factor
+    elif steps > 20:
+        step = 2 * factor
     else:
         step = factor
 
@@ -183,6 +192,13 @@ def compute_vertical_scala(low, high):
     while v >= min(0, low):
         vert_scala = [ [v, "%.1f%s" % (v / factor, letter)] ] + vert_scala
         v -= step
+
+    # Remove trailing ".0", if that is present for *all* entries
+    for entry in vert_scala:
+        if not entry[1].endswith(".0"):
+            break
+    else:
+        vert_scala = [ [e[0],e[1][:-2]] for e in vert_scala ]
 
     return vert_scala
 

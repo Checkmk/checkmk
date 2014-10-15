@@ -1,0 +1,20 @@
+Title: bluecat_ntp: check no longer crashes on evaluating sysLeap values higher than 1
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1413379702
+Class: fix
+
+The oid sysLeap is specificied as bitfield.
+The 4 possible values are reported as
+
+<ul>
+<li>0: no warning</li>
+<li>1: add second</li>
+<li>10: subtract second</li>
+<li>11: Alarm</li>
+</ul>
+<br>
+
+The previous implementation was incorrected, because it expected the numbers 0-3.

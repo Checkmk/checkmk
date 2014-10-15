@@ -8301,7 +8301,15 @@ def vs_notification_rule(userid = None):
             ( "match_servicegroups",
               GroupChoice("service",
                   title = _("Match Service Groups"),
-                  help = _("The host must be in one of the selected service groups"),
+                  help = _("The service must be in one of the selected service groups"),
+                  allow_empty = False,
+              )
+            ),
+            ( "match_contactgroups",
+              GroupChoice("contact",
+                  title = _("Match Contact Groups (cmc only)"),
+                  help = _("The host/ service must be in one of the selected contact groups. Only works with Check_MK Microcore. " \
+                           "If you don't use the CMC, that filter will not apply"),
                   allow_empty = False,
               )
             ),
@@ -8555,7 +8563,7 @@ def vs_notification_rule(userid = None):
 
         ],
         optional_keys = [ "match_folder", "match_hosttags", "match_hostgroups", "match_hosts", "match_exclude_hosts",
-                          "match_services", "match_servicegroups", "match_exclude_services", "match_plugin_output",
+                          "match_services", "match_servicegroups", "match_contactgroups", "match_exclude_services", "match_plugin_output",
                           "match_timeperiod", "match_escalation", "match_escalation_throttle",
                           "match_sl", "match_host_event", "match_service_event", "match_ec",
                           "match_checktype", "bulk", "contact_users", "contact_groups", "contact_emails" ],
@@ -8565,7 +8573,7 @@ def vs_notification_rule(userid = None):
             + contact_headers
             + [
             ( _("Conditions"),         [ "match_folder", "match_hosttags", "match_hostgroups", "match_hosts", "match_exclude_hosts",
-                                         "match_services", "match_servicegroups", "match_exclude_services", "match_plugin_output",
+                                         "match_services", "match_servicegroups", "match_contactgroups", "match_exclude_services", "match_plugin_output",
                                          "match_checktype", "match_timeperiod",
                                          "match_escalation", "match_escalation_throttle",
                                          "match_sl", "match_host_event", "match_service_event", "match_ec" ] ),

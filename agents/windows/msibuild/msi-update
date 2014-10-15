@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import os, sys, uuid, tempfile
+import os, sys, uuid, tempfile, shutil
 
 def verbose(text):
     if opt_verbose:
@@ -33,7 +33,6 @@ def verbose(text):
 def bail_out(text):
     sys.stderr.write("ERROR: %s\n" % text)
     sys.exit(1)
-
 
 try:
     if sys.argv[1] == '-v':
@@ -159,10 +158,19 @@ for entry in [ "Property", "File", "Upgrade" ]:
     os.system((path_prefix + "msibuild %(new_msi_file)s -i %(work_dir)s/%(file)s.idt") % \
          { "work_dir" : work_dir, "new_msi_file": new_msi_file, "file": entry })
 
-# Update summary info with new uid
+# Update summary info with new uuid (HACK! - the msibuild tool is not able to do this on all systems)
+# In this step we replace the package code with a new uuid. This uuid is important, because it is
+# the unqiue identifier for this package. Inside the package the uuid is split into two halfs.
+# Each of it is updated with the corresponding new package code. Since msi-update uses the
+# vanilla_container.msi as well as the baked_container.msi we need to handle both..
 package_code = ("{%s}" % uuid.uuid1()).upper()
-os.system((path_prefix + 'msibuild %(new_msi_file)s -s "Check_MK 32/64 bit MSI installer" "Mathias Kettner GmbH" "Intel;1033" "%(code)s"') %\
-        {"code": package_code, "new_msi_file": new_msi_file})
+summary_info = {"new_msi_file": new_msi_file, "start": package_code[:16], "end": package_code[16:]}
+default_package_codes = {
+        "vanilla_container.msi": { "dftl_start": "{08012468-53DE-4", "dftl_end": "2A3-BAA9-FE4C2A129135}"},
+        "baked_container.msi"  : { "dftl_start": "{47ED1918-CEDF-4", "dftl_end": "D37-943C-B4DBC3F58E6C}"}
+}
+summary_info.update(default_package_codes[msi_file])
+os.system("sed -i -e 's/%(dftl_start)s/%(start)s/' -e 's/%(dftl_end)s/%(end)s/' %(new_msi_file)s" % summary_info)
 
 # Remove original product.cab from stream
 verbose("Removing product.cab from %s" % new_msi_file)
@@ -181,5 +189,6 @@ verbose("Add modified product.cab")
 os.system((path_prefix + "msibuild %(new_msi_file)s -a product.cab %(work_dir)s/product.cab") % \
         { "work_dir" : work_dir, "new_msi_file": new_msi_file })
 
+shutil.rmtree(work_dir)
 verbose("Successfully created file " + new_msi_file)
 

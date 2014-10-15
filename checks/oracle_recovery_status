@@ -70,8 +70,11 @@ def check_oracle_recovery_status(item, params, info):
             infotext += ", oldest Checkpoint %s ago" \
                        % (get_age_human_readable(int(oldest_checkpoint_age)))
 
+        if database_role == 'PRIMARY' and db_name == '_MGMTDB' and db_unique_name == '_mgmtdb':
+            # _mgmtdb is new internal instance from 12.1.0.2 on Grid-Infrastructure
+            perfdata = [('checkpoint_age', oldest_checkpoint_age)]
 
-        if database_role == 'PRIMARY':
+        elif database_role == 'PRIMARY':
             # checkpoint age should not higher on primary as well
             # There is no CRIT for older checkoint age as this is mostly no a
             # serios issue.

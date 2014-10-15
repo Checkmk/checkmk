@@ -1,0 +1,93 @@
+title: Count of Lotus Domino Tasks
+agents: snmp
+catalog: all/lotusnotes
+license: GPL
+distribution: check_mk
+description:
+ This check uses snmp to extract the list of currently running tasks
+ on IBMs Lotus Domino Servers. It monitors the number of tasks
+ matching a certain name or regular expression and checks it against
+ warning and critical upper and lower levels.
+
+item:
+ A user definable service description.  The description must be unique
+ within each host.  Changing the description will make Nagios think that it
+ is another service.
+
+inventory:
+ Since Check_MK cannot know which tasks should be monitored, an inventory
+ needs some configuration. The configuration is done via {inv_domino_tasks}.
+ The structure of this variable is a list of seven-tuples. It is similar but not
+ completely the same as the configuration of manual checks. The seven
+ components of each entry are: {(1)} a service description, {(2)} a pattern
+ (just as the first parameter of the check), {(3)} the boolean value {None}
+ and {(4)} - {(7)} the warning and critical levels for the number of processes.
+
+ During inventory Check_MK tries to match all entries on each
+ process found on the target host. If an entry matches, a new check will
+ be created according to the entry (if it's not already existing).
+
+ The {service description} may contain one or more occurances of {%s}. In this
+ case, the pattern must be a regular expression prefixed with ~. For each
+ {%s} in the description, the expression has to contain one "group". A group
+ is a subexpression enclosed in brackets, for example {(.*)} or
+ {([a-zA-Z]+)} or {(...)}. When the inventory finds a task
+ matching the pattern, it will substitute all such groups with the actual values when
+ creating the check. In this way one rule can create several checks on a host.
+
+ If the pattern contains more groups than occurrences of {%s} in the service
+ description, only the first matching subexpressions are used for the service
+ descriptions. The matched substrings corresponding to the remaining groups
+ are nevertheless copied into the regular expression.
+
+ As an alternative to {%s} you may also use {%1}, {%2}, etc.
+ These expressions will be replaced by the first, second, ... matching group, allowing
+ you to reorder things.
+
+ Wildcards not enclosed by brackets are simply copied verbatim to the created
+ checks. Please refer to the examples for more details.
+
+ The {user specification} must be the boolean value {None} because the check
+ uses the inventory function of the {ps} check, where this key is required.
+
+ The {warning and critical levels} are simply copied to the created
+ checks.
+
+ Inventory allows optional host specification.  You can prepend a list of
+ host names or a list of tag names and {ALL_HOSTS} to some of all rules of
+ the inventory specification. That way you can make the inventory apply some
+ rules only to certain hosts.
+
+examples:
+ # Examples for manually configured checks
+ checks += [
+   # make sure 6 Router tasks are running
+   ( 'somehost', 'domino_tasks', 'Router', {
+                                'process': 'Router',
+                                'warnmin': 1,
+                                'warnmax': 1,
+                                'okmin': 1
+                                'okmax': 1,
+   }),
+
+   # the same, but  for all hosts with the tag "lnx"
+   ( ["lnx"], ALL_HOSTS, "domino_tasks", "Router", {
+                                'process': 'Router',
+                                'warnmin': 1,
+                                'warnmax': 1,
+                                'okmin': 1
+                                'okmax': 1,
+ ]
+[configuration]
+inv_domino_tasks (list): A list of 7-tuples. See {INVENTORY} for details.
+
+[parameters]
+parameters (dict): The parameters can be given in a dictionary based syntax
+   with the elements below.
+
+{"process"}: name of the task, see above
+{"user"}: None, see above
+{"warnmin"}: see above
+{"warnmax"}: see above
+{"okmin"}: see above
+{"okmax"}: see above

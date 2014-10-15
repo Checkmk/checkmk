@@ -107,6 +107,7 @@
             NOTE: Please refer to the migration notes!
     * 1078 FIX: Fix compensation for daylight safing time in prediction
     * 1126 FIX: bluecat_ntp: check no longer crashes on evaluating sysLeap values higher than 1...
+    * 1127 FIX: bluecat_dhcp: fixed exception when data was available.. returns UNKNOWN when data is missing
 
     Multisite:
     * 1066 Implemented Dashboard Designer...

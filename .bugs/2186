@@ -1,0 +1,8 @@
+Title: agent_vsphere not running on RedHat 5
+Component: checks
+State: open
+Date: 2014-10-16 10:43:36
+Targetversion: 1.2.5i1
+Class: bug
+
+Reason is the Python version. Shouldn't be too hard to fix.

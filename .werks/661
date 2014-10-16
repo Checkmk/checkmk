@@ -1,4 +1,4 @@
-Title: hw/sw-inventory: install date of software packages no longer in unix timestamps but date format
+Title: HW/SW-Inventory: install date of software packages no longer in unix timestamps but date format
 Level: 1
 Component: inv
 Compatible: incomp

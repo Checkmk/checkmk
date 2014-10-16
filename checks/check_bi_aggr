@@ -24,32 +24,29 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-enterasys_temp_default_levels = (30, 35)
+def check_bi_aggr_arguments(params):
+    base_url, aggr_name, username, secret, opt_params = params
+    args = ''
 
-def inventory_enterasys_temp(info):
-    if info and info[0][0] != "0":
-        return [ (None, "enterasys_temp_default_levels") ]
+    args += ' -b %s' % quote_shell_string(base_url)
+    args += ' -a %s' % quote_shell_string(aggr_name)
+    args += ' -u %s' % quote_shell_string(username)
 
-def check_enterasys_temp(item, params, info):
-    # info for MIB: The ambient temperature of the room in which the chassis
-    # is located. If this sensor is broken or not supported, then
-    # this object will be set to zero. The value of this object
-    # is the actual temperature in degrees Fahrenheit * 10.
-    if info[0][0] == "0":
-        return 3, "Sensor broken or not supported"
+    args += ' -s %s' % quote_shell_string(secret)
 
-    temp = fahrenheit_to_celsius(int(info[0][0]) / 10.0)
-    return check_temperature(temp, params)
+    if "auth_mode" in opt_params:
+        args += ' -m %s' % quote_shell_string(opt_params['auth_mode'])
+
+    if "timeout" in opt_params:
+        args += ' -t %d' % opt_params['timeout']
+
+    return args
 
 
-check_info["enterasys_temp"] = {
-    "check_function"        : check_enterasys_temp,
-    "inventory_function"    : inventory_enterasys_temp,
-    "service_description"   : "Temperature",
-    "has_perfdata"          : True,
-    "snmp_info"             : ( ".1.3.6.1.4.1.52.4.1.1.8.1", [ 1 ]), # chEnvAmbientTemp
-    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.2.0").startswith(".1.3.6.1.4.1.5624.2.1"),
-    "group"                 : "hw_single_temperature",
-    "includes"              : [ "temperature.include" ],
+active_check_info['bi_aggr'] = {
+    "command_line"        : '$USER1$/check_bi_aggr $ARG1$',
+    "argument_function"   : check_bi_aggr_arguments,
+    "service_description" : lambda params: "Aggr %s" % params[1],
+    "has_perfdata"        : False,
 }
 

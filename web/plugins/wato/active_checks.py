@@ -1231,6 +1231,64 @@ register_rule(group,
 )
 
 register_rule(group,
+    "active_checks:bi_aggr",
+    Tuple(
+        title = _("Check State of BI Aggregation"),
+        help = _("Connect to the local or a remote monitoring host, which uses Check_MK BI to aggregate "
+                 "several states to a single BI aggregation, which you want to show up as a single "
+                 "service."),
+        elements = [
+            TextAscii(
+                title = _("Base URL (OMD Site)"),
+                help = _("The base URL to the monitoring instance. For example <tt>http://<hostname>/<siteid></tt>. You can use "
+                         "macros like <tt>$HOSTADDRESS$</tt> and <tt>$HOSTNAME$</tt> within this URL to make them be replaced by "
+                         "the hosts values."),
+                size = 60,
+                allow_empty = False
+            ),
+            TextAscii(
+                title = _("Aggregation Name"),
+                help = _("The name of the aggregation to fetch. It will be added to the service description."),
+                allow_empty = False
+            ),
+            TextAscii(
+                title = _("Username"),
+                help = _("The name of the user account to use for fetching the BI aggregation via HTTP. When "
+                         "using the cookie based authentication mode (default), this must be a user where "
+                         "authentication is set to \"Automation Secret\" based authentication."),
+                allow_empty = False
+            ),
+            Password(
+                title = _("Password"),
+                help = _("Valid automation secret or password for the user, depending on the choosen "
+                         "authentication mode."),
+                allow_empty = False
+            ),
+            Dictionary(
+                title = _("Optional parameters"),
+                elements = [
+                    ("auth_mode", DropdownChoice(
+                        title = _('Authentication Mode'),
+                        default_value = 'cookie',
+                        choices = [
+                            ('cookie', _('Form (Cookie) based')),
+                            ('basic',  _('HTTP basic')),
+                            ('digest', _('HTTP digest')),
+                        ],
+                    )),
+                    ("timeout", Integer(
+                        title = _("Seconds before connection times out"),
+                        unit = _("sec"),
+                        default_value = 60,
+                    )),
+                ]
+            ),
+        ]
+    ),
+    match = 'all'
+)
+
+register_rule(group,
     "active_checks:form_submit",
     Tuple(
         title = _("Check HTML Form Submit"),

@@ -2214,6 +2214,16 @@ def get_host_tags(row):
             return  val
     return ""
 
+# Get the definition of a tag group
+g_taggroups_by_id = {}
+def get_tag_group(tgid):
+    # Build a cache
+    if not g_taggroups_by_id:
+        for entry in config.wato_host_tags:
+            g_taggroups_by_id[entry[0]] = (entry[1], entry[2])
+
+    return g_taggroups_by_id.get(tgid)
+
 def get_custom_var(row, key):
     for name, val in zip(row["custom_variable_names"],
                          row["custom_variable_values"]):

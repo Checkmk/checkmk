@@ -4539,6 +4539,8 @@ def mode_random_hosts(phase):
             folders = int(html.var("folders"))
             levels = int(html.var("levels"))
             created = create_random_hosts(g_folder, count, folders, levels)
+            log_pending(AFFECTED, g_folder, "create-random-hosts",
+                _("Created %d random hosts in %d folders") % (created, folders))
             return "folder", _("Created %d random hosts.") % created
         else:
             return "folder"
@@ -4569,6 +4571,7 @@ def create_random_hosts(folder, count, folders, levels):
             created += 1
         folder["num_hosts"] += count
         save_folder_and_hosts(folder)
+        mark_affected_sites_dirty(folder)
         reload_hosts()
         return count
     else:
@@ -16858,9 +16861,17 @@ def get_folder_title(path):
 
 # Return a list with all the titles of the paths'
 # components, e.g. "muc/north" -> [ "Main Directory", "Munich", "North" ]
-def get_folder_title_path(path, withlinks=False):
-    load_all_folders() # TODO: speed up!
-    return folder_title_path(path, withlinks)
+def get_folder_title_path(path, with_links=False):
+    # In order to speed this up, we work with a per HTML-request cache
+    cache_name = "wato_folder_titles" + (with_links and "_linked" or "")
+    cache = html.get_cached(cache_name)
+    if cache == None:
+        load_all_folders()
+        cache = {}
+        html.set_cache(cache_name, cache)
+    if path not in cache:
+        cache[path] = folder_title_path(path, with_links)
+    return cache[path]
 
 def sort_by_title(folders):
     def folder_cmp(f1, f2):

@@ -4760,9 +4760,9 @@ register_check_parameters(
                  "be independent of the hardware manufacturer."),
         title = _("Required plug state"),
         choices = [
-                  ( "on", "Plug is ON" ),
-                  ( "off", "Plug is OFF" ),
-                  ],
+             ( "on", _("Plug is ON") ),
+             ( "off", _("Plug is OFF") ),
+        ],
         default_value = "on"
     ),
     TextAscii(

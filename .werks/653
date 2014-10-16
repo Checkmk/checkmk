@@ -1,4 +1,4 @@
-Title: script to extract hw/sw inventory data in csv format
+Title: script to extract HW/SW-Inventory data in CSV format
 Level: 1
 Component: inv
 Compatible: compat
@@ -6,7 +6,7 @@ Version: 1.2.5i6
 Date: 1409393403
 Class: feature
 
-This script extracts data from the hw/sw inventory into various configurable relations,
+This script extracts data from the HW/SW-Inventory into various configurable relations,
 which are written into csv files. Configuration of the relations is carried out in the
 script itself in the dicts called relations.
 

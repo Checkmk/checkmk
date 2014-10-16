@@ -35,11 +35,17 @@ def inv_win_exefiles(info):
     paclist = inv_tree("software.packages:")
     for full_name, write_time, size, description, product_version, product_name in info:
         parts = full_name.split('\\')
+        # 14.02.2014 23:12:04
+        if re.match("^\d{2}\.\d{2}\.20\d{2} \d{2}:\d{2}:\d{2}", write_time):
+            install_date = int(time.mktime(time.strptime(write_time, "%d.%m.%Y %H:%M:%S")))
+        else:
+            install_date = write_time
+
         entry = {
             "name"            : parts[-1],
             "path"            : "\\".join(parts[:-1]),
             "package_type"    : "exe",
-            "install_date"    : write_time,
+            "install_date"    : install_date,
             "size"            : int(size),
             "version"         : product_version,
             "summary"         : description,

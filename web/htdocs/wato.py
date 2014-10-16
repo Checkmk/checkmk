@@ -4539,6 +4539,8 @@ def mode_random_hosts(phase):
             folders = int(html.var("folders"))
             levels = int(html.var("levels"))
             created = create_random_hosts(g_folder, count, folders, levels)
+            log_pending(AFFECTED, g_folder, "create-random-hosts",
+                _("Created %d random hosts in %d folders") % (created, folders))
             return "folder", _("Created %d random hosts.") % created
         else:
             return "folder"
@@ -4569,6 +4571,7 @@ def create_random_hosts(folder, count, folders, levels):
             created += 1
         folder["num_hosts"] += count
         save_folder_and_hosts(folder)
+        mark_affected_sites_dirty(folder)
         reload_hosts()
         return count
     else:

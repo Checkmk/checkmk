@@ -16861,9 +16861,17 @@ def get_folder_title(path):
 
 # Return a list with all the titles of the paths'
 # components, e.g. "muc/north" -> [ "Main Directory", "Munich", "North" ]
-def get_folder_title_path(path, withlinks=False):
-    load_all_folders() # TODO: speed up!
-    return folder_title_path(path, withlinks)
+def get_folder_title_path(path, with_links=False):
+    # In order to speed this up, we work with a per HTML-request cache
+    cache_name = "wato_folder_titles" + (with_links and "_linked" or "")
+    cache = html.get_cached(cache_name)
+    if cache == None:
+        load_all_folders()
+        cache = {}
+        html.set_cache(cache_name, cache)
+    if path not in cache:
+        cache[path] = folder_title_path(path, with_links)
+    return cache[path]
 
 def sort_by_title(folders):
     def folder_cmp(f1, f2):

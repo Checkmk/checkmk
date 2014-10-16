@@ -2412,7 +2412,7 @@ def rename_host(host, newname):
         elif what == "snmpwalk":
             actions.append(_("A stored SNMP walk"))
         elif what == "rrd":
-            actions.append(_("RR databases with performance data"))
+            actions.append(_("RRD databases with performance data"))
         elif what == "rrdcached":
             actions.append(_("RRD updates in journal of RRD Cache"))
         elif what == "pnpspool":

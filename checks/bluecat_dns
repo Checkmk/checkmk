@@ -43,7 +43,9 @@ def check_bluecat_dns(item, params, info):
         5 : "fault"
     }
 
-    state = 0
+    if not info:
+        return
+
     for line in info:
         oper_state = int(line[0])
         if oper_state in params['oper_states']['warning']:

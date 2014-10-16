@@ -25,17 +25,14 @@
 # Boston, MA 02110-1301 USA.
 
 def inventory_decru_temps(info):
-    return [ (l[0], (int(to_celsius(int(l[1]))) + 4.0,
-    int(to_celsius(int(l[1]))) + 8.0 ) ) for l in info ]
+    return [ (l[0], (int(fahrenheit_to_celsius(int(l[1]))) + 4.0,
+    int(fahrenheit_to_celsius(int(l[1]))) + 8.0 ) ) for l in info ]
 
 def check_decru_temps(item, params, info):
     for name, rawtemp in info:
         if name == item:
-            temp = to_celsius(int(rawtemp))
+            temp = fahrenheit_to_celsius(int(rawtemp))
             return check_temperature(temp, params)
-
-    return 3, "Sensor not found in SNMP data"
-
 
 
 check_info["decru_temps"] = {

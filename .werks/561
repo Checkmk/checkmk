@@ -1,4 +1,4 @@
-Title: quicksearch: now able to search with multiple filters
+Title: Quicksearch: now able to search with multiple filters
 Level: 2
 Component: multisite
 Version: 1.2.5i1
@@ -8,10 +8,10 @@ Class: feature
 The classical quicksearch allowed certain filter prefixes,
 which specified the item to look for. For example:
 <ul>
-<li>h: {search_text} # Find hostname, host_address or hostalias</li>
-<li>s: {search_text} # Find service</li>
-<li>hg: {search_text} # Find hostgroup</li>
-<li>sg: {search_text} # Find servicegroup</li>
+<li><tt>h:</tt> {search_text} # Find hostname, host_address or hostalias</li>
+<li><tt>s:</tt> {search_text} # Find service</li>
+<li><tt>hg:</tt> {search_text} # Find hostgroup</li>
+<li><tt>sg:</tt> {search_text} # Find servicegroup</li>
 </ul>
 
 The new search feature enhances the service search.<br>

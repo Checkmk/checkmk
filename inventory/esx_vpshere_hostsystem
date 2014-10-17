@@ -1,0 +1,101 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output:
+# hardware.pciDevice.deviceName.00:00.0 5520 I/O Hub to ESI Port
+# hardware.pciDevice.deviceName.00:01.0 5520/5500/X58 I/O Hub PCI Express Root Port 1
+# hardware.pciDevice.deviceName.00:02.0 5520/5500/X58 I/O Hub PCI Express Root Port 2
+# hardware.pciDevice.deviceName.00:03.0 5520/5500/X58 I/O Hub PCI Express Root Port 3
+# hardware.cpuPkg.busHz.0 133338028
+# hardware.cpuPkg.busHz.1 133338066
+# hardware.cpuPkg.description.0 Intel(R) Xeon(R) CPU           X5670  @ 2.93GHz
+# hardware.cpuPkg.description.1 Intel(R) Xeon(R) CPU           X5670  @ 2.93GHz
+# hardware.cpuPkg.hz.0 2933437438
+# hardware.cpuPkg.hz.1 2933437797
+# hardware.cpuPkg.index.0 0
+# hardware.cpuPkg.index.1 1
+# hardware.cpuPkg.vendor.0 intel
+# hardware.cpuPkg.vendor.1 intel
+
+def inv_esx_vsphere_hostsystem_parse(info, inv_items = {}):
+    result = {}
+    for line in info:
+        key = line[0]
+        for pattern, settings in inv_items.items():
+            if key.startswith(pattern):
+                tokens = key.split(".")
+                if settings.get("index"):
+                    name, subtype, index = ".".join(tokens[:2]), tokens[2], ".".join(tokens[3:])
+                    result.setdefault(name, {})
+                    result[name].setdefault(index, {})[subtype] = " ".join(line[1:])
+                else:
+                    result.setdefault(".".join(tokens[:-1]), {})[tokens[-1]] = " ".join(line[1:])
+                break
+    return result
+
+def inv_esx_vsphere_hostsystem(info):
+    inv_items = {
+                  "hardware.cpuPkg":     { "index": True},
+                  "hardware.cpuInfo":    { "index": False},
+                  "hardware.biosInfo":   { "index": False},
+                  "hardware.systemInfo": { "index": False}
+                }
+
+    data = inv_esx_vsphere_hostsystem_parse(info, inv_items)
+    # data example: {'hardware.cpuPkg': {'0': {'busHz': '133338028',
+    #                                          'description': 'Intel(R) Xeon(R) CPU X5670 @ 2.93GHz',
+    #                                          'hz': '2933437438',
+    #                                          'index': '0',
+    #                                          'vendor': 'intel'}}}
+
+    node = inv_tree("hardware.cpu.")
+    node["max_speed"]       = float(data["hardware.cpuInfo"]["hz"])
+    node["cpus"]            = int(data["hardware.cpuInfo"]["numCpuPackages"])
+    node["cores"]           = int(data["hardware.cpuInfo"]["numCpuCores"])
+    node["cores_per_cpu"]   = node["cores"] / node["cpus"]
+    node["threads"]         = int(data["hardware.cpuInfo"]["numCpuThreads"])
+    node["threads_per_cpu"] = node["threads"] / node["cpus"]
+    node["model"]           = data["hardware.cpuPkg"]["0"]["description"]
+    node["vendor"]          = data["hardware.cpuPkg"]["0"]["vendor"]
+    node["bus_speed"]       = float(data["hardware.cpuPkg"]["0"]["busHz"])
+
+    node = inv_tree("hardware.bios.")
+    node["version"] = data["hardware.biosInfo"]["biosVersion"]
+    import time
+    try:
+        node["date"] = float(time.strftime("%s", \
+                       time.strptime(data["hardware.biosInfo"]["releaseDate"],"%Y-%m-%dT%H:%M:%SZ")))
+    except Exception, e:
+        pass
+
+    node = inv_tree("hardware.system.")
+    node["product"] = data["hardware.systemInfo"]["model"]
+    node["vendor"]  = data["hardware.systemInfo"]["vendor"]
+
+inv_info['esx_vsphere_hostsystem'] = {
+   "inv_function"           : inv_esx_vsphere_hostsystem,
+}
+

@@ -159,13 +159,19 @@ telegram_list = {
          '<ns1:_this type="PropertyCollector">%(propertyCollector)s</ns1:_this><ns1:specSet><ns1:propSet>'\
          '<ns1:type>HostSystem</ns1:type>'\
          '<ns1:pathSet>summary.quickStats.overallMemoryUsage</ns1:pathSet>'\
-         '<ns1:pathSet>hardware.cpuInfo.numCpuThreads</ns1:pathSet>'\
+         '<ns1:pathSet>hardware.cpuPkg</ns1:pathSet>'\
+#         '<ns1:pathSet>hardware.pciDevice</ns1:pathSet>'\
          '<ns1:pathSet>runtime.powerState</ns1:pathSet>'\
          '<ns1:pathSet>summary.quickStats.overallCpuUsage</ns1:pathSet>'\
+         '<ns1:pathSet>hardware.biosInfo.biosVersion</ns1:pathSet>'\
+         '<ns1:pathSet>hardware.biosInfo.releaseDate</ns1:pathSet>'\
          '<ns1:pathSet>hardware.cpuInfo.hz</ns1:pathSet>'\
+         '<ns1:pathSet>hardware.cpuInfo.numCpuThreads</ns1:pathSet>'\
          '<ns1:pathSet>hardware.cpuInfo.numCpuPackages</ns1:pathSet>'\
-         '<ns1:pathSet>config.multipathState.path</ns1:pathSet>'\
          '<ns1:pathSet>hardware.cpuInfo.numCpuCores</ns1:pathSet>'\
+         '<ns1:pathSet>config.multipathState.path</ns1:pathSet>'\
+         '<ns1:pathSet>hardware.systemInfo.model</ns1:pathSet>'\
+         '<ns1:pathSet>hardware.systemInfo.vendor</ns1:pathSet>'\
          '<ns1:pathSet>name</ns1:pathSet>'\
          '<ns1:pathSet>overallStatus</ns1:pathSet>'\
          '<ns1:pathSet>runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo</ns1:pathSet>'\
@@ -801,32 +807,56 @@ if not error:
                 hostsystems_properties[hostname] = {}
                 hostsystems_sensors[hostname]    = {}
 
+                current_propname = ""
+
+                def eval_sensor_info(sensor_propset):
+                    sensor_pattern = ""
+                    for key in [ "name", "label", "summary", "key", "currentReading",
+                                 "unitModifier", "baseUnits", "sensorType" ]:
+                        sensor_pattern += "<%(name)s>(.*?)</%(name)s>.*?" % { "name": key}
+
+                    sensor_data = get_pattern(sensor_pattern, sensor_propset)
+                    for name, label, summary, key, currentReading, unitModifier, baseUnits, sensorType in sensor_data:
+                        hostsystems_sensors[hostname][name] = { "name": name, "label": label, "summary": summary, "key": key,
+                                                                "currentReading": currentReading, "unitModifier": unitModifier,
+                                                                "baseUnits": baseUnits, "sensorType": sensorType }
+
+                def eval_multipath_state(multipath_propset):
+                    multipaths = get_pattern("<name>(.*?)</name><pathState>(.*?)</pathState>", value)
+                    for mp_name, mp_state in multipaths:
+                        hostsystems_properties[hostname].setdefault(current_propname, []).append("%s %s" % (mp_name, mp_state))
+
+                def eval_propset_block(elements, id_key, propset):
+                    pattern = ""
+                    for key in elements:
+                        pattern += "<%(name)s>(.*?)</%(name)s>.*?" % { "name": key}
+
+                    data = get_pattern(pattern, propset)
+                    for match_groups in data:
+                        entries = dict(zip(elements, match_groups))
+                        for key, value in entries.items():
+                            hostsystems_properties[hostname].setdefault("%s.%s.%s" % \
+                                (current_propname, key, entries[id_key]), []).append(value)
+
+                def eval_cpu_pkg(cpu_pkg_propset):
+                    eval_propset_block( [ "index", "vendor", "hz", "busHz", "description" ], "index", cpu_pkg_propset)
+
+                def eval_pci_device(pci_propset):
+                    eval_propset_block( [ "id", "vendorName", "deviceName" ], "id", pci_propset)
+
+                eval_functions = {
+                    "config.multipathState.path"                                    : eval_multipath_state,
+                    "runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo": eval_sensor_info,
+                    "hardware.cpuPkg"                                               : eval_cpu_pkg,
+                    "hardware.pciDevice"                                            : eval_pci_device,
+                }
+
                 elements = get_pattern('<propSet><name>(.*?)</name><val.*?>(.*?)</val></propSet>', entry)
-                sensor_propset = None
-                for name, value in elements:
-                    if name == "runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo":
-                        sensor_propset = value # Sensors are evaluated further later on..
-                    elif name == "config.multipathState.path":
-                        multipaths = get_pattern("<name>(.*?)</name><pathState>(.*?)</pathState>", value)
-                        for mp_name, mp_state in multipaths:
-                            hostsystems_properties[hostname].setdefault(name, []).append("%s %s" % (mp_name, mp_state))
+                for current_propname, value in elements:
+                    if eval_functions.get(current_propname):
+                        eval_functions[current_propname](value)
                     else:
-                        hostsystems_properties[hostname].setdefault(name, []).append(value)
-
-                # Sensor info
-                entry_pattern = ""
-                for key in [ "name", "label", "summary", "key", "currentReading",
-                             "unitModifier", "baseUnits", "sensorType" ]:
-                    entry_pattern += "<%(name)s>(.*?)</%(name)s>.*?" % { "name": key}
-
-                # TODO: rate unit?
-                sensor_data = get_pattern(entry_pattern, sensor_propset)
-                for name, label, summary, key, currentReading, unitModifier, baseUnits, sensorType in sensor_data:
-                    hostsystems_sensors[hostname][name] = { "name": name, "label": label, "summary": summary, "key": key,
-                                                            "currentReading": currentReading, "unitModifier": unitModifier,
-                                                            "baseUnits": baseUnits, "sensorType": sensorType }
-
-
+                        hostsystems_properties[hostname].setdefault(current_propname, []).append(value)
 
             # TODO: improve error handling: check if multiple results and opt_direct
             for hostname, properties in hostsystems_properties.items():

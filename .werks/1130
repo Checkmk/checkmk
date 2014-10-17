@@ -1,0 +1,34 @@
+Title: esx monitoring: agent_vsphere now retrieves additional data (used by HW-inventory)
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1413552488
+Class: feature
+
+The ESX Agent now also queries the following data which is used in the HW-Inventory<br>
+
+<tt>BIOS</tt>
+C+:
+Date      2012-11-26
+Version   -[D6E158AUS-1.16]-
+C-:
+
+<tt>Processor</tt>
+C+:
+Speed                          133.3 MHz
+Cores per CPU                  6
+Hyperthreads per CPU           12
+Maximum Speed                  2.93 GHz
+Model                          Intel(R) Xeon(R) CPU X5670 @ 2.93GHz
+Total Number of CPUs           2
+Total Number of Cores          12
+Total Number of Hyperthreads   24
+Vendor                         intel
+C-:
+
+<tt>System</tt>
+C+:
+Product   System x3650 M3 -[7945M2G]-
+Vendor    IBM
+C-:

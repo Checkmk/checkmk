@@ -25,15 +25,15 @@
 # Boston, MA 02110-1301 USA.
 
 # Example out from agent:
-# <<<nfsmounts>>>
+# <<<cifsmounts>>>
 # /foobar hanging 0 0 0 0
 # /with spaces ok 217492 123563 112515 524288
 
 
-check_info["nfsmounts"] = {
+check_info["cifsmounts"] = {
     'check_function':          check_network_fs_mounts,
     'inventory_function':      inventory_network_fs_mounts,
-    'service_description':     'NFS mount %s',
+    'service_description':     'CIFS mount %s',
     'group':                   'network_fs',
     'includes':                 [ 'network_fs.include' ],
 }

@@ -6,7 +6,8 @@ Version: 1.2.5i6
 Date: 1413552488
 Class: feature
 
-The ESX Agent now also queries the following data which is used in the HW-Inventory<br>
+The ESX Agent now also queries more data which is used in the HW-Inventory<br>
+For example:<br><br>
 
 <tt>BIOS</tt>
 C+:

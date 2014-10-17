@@ -42,7 +42,7 @@ factory_settings['hivemanger_devices'] = {
 def inventory_hivemanager_devices(info):
     for line in info:
         infos = dict([ x.split('::') for x in line ])
-        yield hostname, {}
+        yield infos['hostName'], {}
 
 def check_hivemanager_devices(item, params, info):
     for line in info:

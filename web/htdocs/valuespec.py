@@ -186,7 +186,7 @@ class Age(ValueSpec):
             if uid in self._display:
                 value += takeover
                 takeover = 0
-                html.number_input(varprefix + "_" + uid, value, first and 6 or 2)
+                html.number_input(varprefix + "_" + uid, value, first and 3 or 2)
                 html.write(" %s " % title)
                 first = False
             else:

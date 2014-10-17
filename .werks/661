@@ -1,0 +1,9 @@
+Title: HW/SW-Inventory: install date of software packages no longer in unix timestamps but date format
+Level: 1
+Component: inv
+Compatible: incomp
+Version: 1.2.5i6
+Date: 1413442748
+Class: feature
+
+Please redo an inventory

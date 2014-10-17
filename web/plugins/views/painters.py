@@ -1926,14 +1926,6 @@ multisite_painters["host_tags_with_titles"] = {
     "sorter"  : 'host',
 }
 
-g_tags_by_id = {}
-def get_tag_group(tgid):
-    # Build a cache
-    if not g_tags_by_id:
-        for entry in config.wato_host_tags:
-            g_tags_by_id[entry[0]] = (entry[1], entry[2])
-
-    return g_tags_by_id.get(tgid)
 
 def paint_host_tag(row, tgid):
     tags_of_host = get_host_tags(row).split()

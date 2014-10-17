@@ -1,0 +1,13 @@
+Title: HW/SW-Inventory implementation step one finished
+Level: 3
+Component: inv
+Compatible: compat
+Version: 1.2.5i6
+Date: 1413461701
+Class: feature
+
+Check_MK now has its own system for hardware/software inventory.
+The implementation has already been started a couple of months
+ago. This system is far from complete but already useful.
+A basic documentation is 
+<a href="http://mathias-kettner.com/checkmk_inv.html">here</a>.

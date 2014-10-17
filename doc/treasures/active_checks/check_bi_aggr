@@ -1,0 +1,140 @@
+#!/usr/bin/python
+
+import sys, getopt, urllib2, traceback
+
+def usage():
+    sys.stderr.write("""
+USAGE: check_bi_aggr -b <BASE_URL> -a <AGGR_NAME> -u <USER> -s <SECRET>
+                     [-m <AUTH_MODE>] [-t <TIMEOUT>] [-d]
+
+OPTIONS:
+  -b BASE_URL     The base URL to the monitoring environment, e.g.
+                  http://<hostname>/<site-id>
+  -a AGGR_NAME    Name of the aggregation, not the aggregation group.
+                  It is possible that there are multiple aggregations
+                  with an equal name, but you should ensure, that it
+                  is a unique one to prevent confusions
+  -u USER         User-ID of an automation user which is permitted to
+                  see all contents of the aggregation
+  -s SECRET       Automation secret of the user
+  -m AUTH_MODE    Authentication mode, either "cookie", "basic" or "digest",
+                  defaults to "cookie"
+  -t TIMEOUT      HTTP connect timeout in seconds (Default: 60)
+  -d              Enable debug mode
+  -h, --help      Show this help message and exit
+
+""")
+
+short_options = 'b:a:u:s:m:t:dh'
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], short_options, ['help'])
+except getopt.GetoptError, err:
+    sys.stderr.write("%s\n" % err)
+    sys.exit(1)
+
+base_url  = None
+aggr_name = None
+username  = None
+password  = None
+auth_mode = 'cookie'
+timeout   = 60
+debug     = False
+
+for o,a in opts:
+    if o in [ '-h', '--help' ]:
+        usage()
+        sys.exit(0)
+    elif o == '-b':
+        base_url = a
+    elif o == '-a':
+        aggr_name = a
+    elif o == '-u':
+        username = a
+    elif o == '-s':
+        password = a
+    elif o == '-m':
+        auth_mode = a
+    elif o == '-t':
+        timeout = int(a)
+    elif o == '-d':
+        debug = True
+
+if not base_url:
+    sys.stderr.write('Please provide the URL to the monitoring instance.\n')
+    usage()
+    sys.exit(1)
+
+if not aggr_name:
+    sys.stderr.write('Please provide the name of the aggregation.\n')
+    usage()
+    sys.exit(1)
+
+if not username or not password:
+    sys.stderr.write('Please provide valid user credentials.\n')
+    usage()
+    sys.exit(1)
+
+def init_auth():
+    if username and password:
+        passwdmngr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+        passwdmngr.add_password(None, base_url, username, password)
+        if mode == 'digest':
+            authhandler = urllib2.HTTPDigestAuthHandler(passwdmngr)
+        else:
+            authhandler = urllib2.HTTPBasicAuthHandler(passwdmngr)
+        opener = urllib2.build_opener(authhandler)
+        urllib2.install_opener(opener)
+
+url = "%s/check_mk/view.py" \
+      "?view_name=aggr_single_api" \
+      "&aggr_name=%s&output_format=python" % \
+      (base_url, urllib2.quote(aggr_name))
+
+if auth_mode in ['basic', 'digest']:
+    init_auth()
+else:
+    url += "&_username=%s&_secret=%s" % \
+        (urllib2.quote(username), urllib2.quote(password))
+
+if debug:
+    sys.stderr.write('URL: %s\n' % url)
+
+try:
+    json = urllib2.urlopen(url, timeout = timeout).read()
+except urllib2.socket.timeout:
+    sys.stdout.write('ERROR: Socket timeout while opening URL: %s\n' % (url))
+    sys.exit(3)
+except urllib2.URLError:
+    sys.stdout.write("UNKNOWN: Nagios not available.\n")
+    sys.exit(3)
+except Exception, e:
+    sys.stdout.write('ERROR: Exception while opening URL (%s): %s\n' %
+                                            (url, traceback.format_exc()))
+    sys.exit(3)
+
+try:
+    obj = eval(json)
+except Exception, e:
+    sys.stdout.write('ERROR: Invalid json response (%s): %s\n' % (e, json))
+    sys.exit(3)
+
+if len(obj) == 1:
+    sys.stdout.write('ERROR: Aggregation does not exist or user is not permitted\n')
+    sys.exit(3)
+
+if type(obj) != list or len(obj) != 2:
+    sys.stdout.write('ERROR: Invalid response: %s\n' % (json.replace("\n", "")))
+    sys.exit(3)
+
+aggr_state, aggr_output = obj[1] # Only care about first replied aggregation
+aggr_state = int(aggr_state)
+
+if aggr_state == -1:
+    aggr_state = 3
+if aggr_output == '':
+    aggr_output = 'Aggregation state is %s' % \
+            ['OK', 'WARN', 'CRIT', 'UNKN'][aggr_state]
+
+sys.stdout.write('%s\n' % aggr_output)
+sys.exit(aggr_state)

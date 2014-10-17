@@ -1,4 +1,4 @@
-Title: quicksearch: multiple hostname matches now lead to the searchhost view instead of the hosts view
+Title: Quicksearch: multiple hostname matches now lead to the searchhost view instead of the hosts view
 Level: 1
 Component: multisite
 Version: 1.2.5i5

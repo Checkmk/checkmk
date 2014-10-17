@@ -1,4 +1,4 @@
-Title: Distributed WATO now disabled WATO on slave sites per default
+Title: Distributed WATO now disable WATO on slave sites per default
 Level: 1
 Component: wato
 Version: 1.2.5i1
@@ -6,7 +6,7 @@ Date: 1390819312
 Class: feature
 
 When pushing a configuration to a slave site on that site WATO is
-now disabled per default. This can be configured in the site
+now disable per default. This can be configured in the site
 configuration with a new check box <i>Disable configuration via WATO on this site</i>,
 which is check per default.
 

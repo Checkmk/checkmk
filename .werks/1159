@@ -1,0 +1,11 @@
+Title: Remote BI Aggregations can now be configured to be checked as single services
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.5i6
+Date: 1413382852
+Class: feature
+
+It is now possible to create services out of the total state of local BI aggregations
+or BI aggregations of other sites. This can be configured via WATO
+(Host & Service Parameters > Active Checks > Check State of BI Aggregation).

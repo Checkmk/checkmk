@@ -1,6 +1,6 @@
 Title: check_http: now able to enter non-ascii signs in "Send HTTP POST data" rule
 Level: 1
-Component: wato
+Component: checks
 Version: 1.2.5i5
 Date: 1406117033
 Class: feature

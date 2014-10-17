@@ -1,0 +1,12 @@
+Title: Host tag painters missing after new tags have been created
+Component: multisite
+State: open
+Date: 2014-10-16 10:53:29
+Targetversion: 1.2.5i1
+Class: bug
+
+If you create a new host tag group in WATO then the according
+Multisite painter for that tag is not present. It needs an
+Apache reload. Seems that the automatic creation of painters for
+the host tag groups is just done once one the module is being
+loaded.

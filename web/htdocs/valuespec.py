@@ -177,13 +177,20 @@ class Age(ValueSpec):
         if self._label:
             html.write(self._label + " ")
 
-        for uid, title, value, length in [ ("days",    _("days"),  days,    3),
-                                           ("hours",   _("hours"), hours,   2),
-                                           ("minutes", _("mins"),  minutes, 2),
-                                           ("seconds", _("secs"),  seconds, 2) ]:
+        takeover = 0
+        first = True
+        for uid, title, value, tkovr_fac in [ ("days",    _("days"),  days,    24),
+                                              ("hours",   _("hours"), hours,   60),
+                                              ("minutes", _("mins"),  minutes, 60),
+                                              ("seconds", _("secs"),  seconds, 60) ]:
             if uid in self._display:
-                html.number_input(varprefix + "_" + uid, value, length)
+                value += takeover
+                takeover = 0
+                html.number_input(varprefix + "_" + uid, value, first and 6 or 2)
                 html.write(" %s " % title)
+                first = False
+            else:
+                takeover = (takeover + value) * tkovr_fac
         html.write("</div>")
 
     def from_html_vars(self, varprefix):

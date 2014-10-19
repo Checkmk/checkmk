@@ -468,15 +468,13 @@ if __name__ == "__main__":
 #   +----------------------------------------------------------------------+
 
 def output_check_info():
-    print "Available check types:"
-    print
-    print "                                 plugin  perf-  in- "
-    print "Name                             type    data   vent.  service description"
-    print "-------------------------------------------------------------------------"
+    all_check_manuals = all_manuals()
+    read_manpage_catalog()
 
     checks_sorted = check_info.items() + active_check_info.items()
     checks_sorted.sort()
     for check_type, check in checks_sorted:
+        man_filename = all_check_manuals.get(check_type)
         try:
             if 'command_line' in check:
                 what = 'active'
@@ -488,27 +486,15 @@ def output_check_info():
                 what = 'tcp'
                 ty_color = tty_yellow
 
-            if check.get("has_perfdata", False):
-                p = tty_green + tty_bold + "yes" + tty_normal
+            if man_filename:
+                title = file(man_filename).readlines()[0].split(":", 1)[1].strip()
             else:
-                p = "no"
+                title = "(no man page present)"
 
-            if what == 'active':
-                i = '-'
-            elif check["inventory_function"] == None:
-                i = "no"
-            else:
-                i = tty_blue + tty_bold + "yes" + tty_normal
-
-            if what == 'active':
-                descr = '-'
-            else:
-                descr = check["service_description"]
-
-            print (tty_bold + "%-32s" + tty_normal
+            print (tty_bold + "%-44s" + tty_normal
                    + ty_color + " %-6s " + tty_normal
-                   + " %-3s    %-3s    %s") % \
-                  (check_type, what, p, i, descr)
+                   + "%s") % \
+                  (check_type, what, title)
         except Exception, e:
             sys.stderr.write("ERROR in check_type %s: %s\n" % (check_type, e))
 
@@ -2546,7 +2532,7 @@ define hostgroup {
     # No creation of host groups but we need to define
     # default host group
     elif default_host_group in hostgroups_to_define:
-	outfile.write("""
+        outfile.write("""
 define hostgroup {
   hostgroup_name\t\t%s
   alias\t\t\t\tCheck_MK default hostgroup
@@ -2935,8 +2921,8 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
                 # handling for WATO.
                 if check_only and not include_state and str(e):
                     raise
-		elif not include_state and str(e):
-		    sys.stderr.write("Host '%s': %s\n" % (hostname, str(e)))
+                elif not include_state and str(e):
+                    sys.stderr.write("Host '%s': %s\n" % (hostname, str(e)))
                 elif include_state and str(e): # WATO automation. Abort
                     raise
                 continue
@@ -2945,7 +2931,7 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
                 # handling for WATO.
                 if check_only and not include_state and str(e):
                     raise
-		elif not include_state and str(e):
+                elif not include_state and str(e):
                     sys.stderr.write("Host '%s': %s\n" % (hostname, str(e)))
                 continue
             except Exception, e:
@@ -2974,7 +2960,7 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
                     sys.stderr.write("Exception in inventory function of check type %s\n" % checkname)
                     raise
                 if opt_verbose:
-		    sys.stderr.write("%s: Invalid output from agent or invalid configuration: %s\n" % (hostname, e))
+                    sys.stderr.write("%s: Invalid output from agent or invalid configuration: %s\n" % (hostname, e))
                 continue
 
             if not isinstance(inventory, list):
@@ -3082,7 +3068,7 @@ def check_inventory(hostname):
             if check_uses_snmp(ct) and not is_snmp:
                 continue # Skip SNMP checks on non-SNMP hosts
             elif check_uses_snmp(ct) and ct not in hosts_checktypes and ct not in snmp_checktypes:
- 		continue # Only try positive scans and existing types
+                continue # Only try positive scans and existing types
             elif not check_uses_snmp(ct) and not is_tcp:
                 continue # Skip TCP checks on non-TCP hosts
 
@@ -4566,8 +4552,8 @@ def dump_host(hostname):
         add_txt = " (cluster of " + (",".join(nodes_of(hostname))) + ")"
         try:
             ipaddress = lookup_ipaddress(hostname)
-	except:
-	    ipaddress = "0.0.0.0"
+        except:
+            ipaddress = "0.0.0.0"
     else:
         color = tty_bgblue
         try:

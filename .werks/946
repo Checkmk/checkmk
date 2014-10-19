@@ -1,4 +1,4 @@
-Title: hw/sw inventory: fixed display bug for byte fields with the value 0
+Title: HW/SW-Inventory: fixed display bug for byte fields with the value 0
 Level: 2
 Component: inv
 Class: fix

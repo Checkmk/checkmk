@@ -28,10 +28,12 @@
 
 # This script extracts data of the hardware inventory to csv files
 
-
 relations = {
     "devices": {
         "columns": (
+            ( "@hostname", "import_id" ), # special functions start with "@"
+            ( "!sla", "import_data_source_id" ), # fixed value is prepended with "!"
+            ( "!default", "import_org_level_2_id" ),
             ( "@hostname", "device_key" ),
             ( "hardware.system.manufacturer", "device_manufacturer" ),
             ( "hardware.system.family", "device_model" ),
@@ -54,25 +56,27 @@ relations = {
     },
     "inv_raw_arp": {
         "columns": (
+            ( "software.packages:*.+@hostname+vendor+name+version", "import_id" ),
             ( "software.packages:*.vendor", "publisher" ),
-            ( "software.packages:*.summary", "product" ),
+            ( "software.packages:*.name", "product" ),
             ( "software.packages:*.version", "product_version" ),
             ( "@hostname", "import_device_id" ),
         ),
         "filter": {
-            "software.packages:*.package_type": "reg_uninstall", # nur aus registry
+            "software.packages:*.package_type": "registry", # nur aus registry
             },
         "converter": {},
     },
     "inv_raw_file": {
         "columns": (
-            ( "@hostname", "import_device_id" ),
+            ( "software.packages:*.+@hostname+name+path", "import_id" ),
             ( "software.packages:*.name", "file_name" ),
             ( "software.packages:*.size", "file_size" ),
             ( "software.packages:*.path", "file_path" ),
             ( "software.packages:*.vendor", "publisher" ),
             ( "software.packages:*.summary", "product" ),
             ( "software.packages:*.version", "product_version" ),
+            ( "@hostname", "import_device_id" ),
         ),
         "filter": {
             "software.packages:*.package_type": "exe", # nur exe files
@@ -82,12 +86,14 @@ relations = {
     "inv_raw_generic(OS)": {
         "columns": (
             ( "software.os.name", "generic_key" ),
+            ( "@hostname", "import_id" ),
         ),
         "filter": {},
         "converter": {},
     },
     "inv_raw_generic(Linux)": {
         "columns": (
+            ( "software.packages:*.+@hostname+name+version", "import_id" ),
             ( "software.packages:*.name", "name" ),
             ( "software.packages:*.version", "product_version" ),
             ( "@hostname", "import_device_id" ),
@@ -99,7 +105,7 @@ relations = {
     },
 }
 
-import os, sys, re, time
+import os, sys, re, time, hashlib
 
 omd_root = os.environ["OMD_ROOT"]
 
@@ -124,8 +130,9 @@ def is_list(relation):
                 is_list = False
             break
     for field in relation:
-        if ( is_list != (":*" in field) or not field.startswith(list_start) ) and not field.startswith("@"):
-            print "bad definition of relation, must be list or dict, not both"
+        if ( is_list != (":*" in field) or not field.startswith(list_start) ) \
+                and not field.startswith("@") and not field.startswith("!"):
+            print "bad definition of relation, must be list or dict, not both:"
             sys.exit(1)
     return list_start
 
@@ -166,6 +173,53 @@ def special_value(item, hostname):
     else:
         return ""
 
+def no_list_get(hostname, field):
+    out_line = ""
+    if field.startswith("!"):
+        out_line = re.sub("^!", "", field)
+    else:
+        subtree = all_data[hostname]
+        for item in field.split("."):
+            if item.startswith("@"): # take subtree from special_value
+                subtree = special_value(item,hostname)
+            else:
+                try:
+                    subtree = subtree[item]
+                except:
+                    break
+            if type(subtree) in (str, int, float):
+                out_line = convert_it(relations[ofs]['converter'], subtree,field)
+    return out_line
+
+def list_get(hostname, list_start):
+    items = []
+    subtree = all_data[hostname]
+    for item in list_start.split("."):
+        try:
+            subtree = subtree[item]
+        except:
+            print "   %s does not exist in database of host" % item
+    if type(subtree) == list:
+        for package in subtree:
+            if filt_it(package, relations[ofs]):
+                continue
+            for field in elements:
+                if field:
+                    field = re.sub(list_start+":\*.", "", field)
+                    for item in field.split("."):
+                        if item.startswith("@"): # take subtree vom special_value
+                            value = special_value(item,hostname)
+                        else:
+                            try:
+                                value = package[item]
+                            except:
+                                break
+                    if type(value) in (str, int, float):
+                        items.append(value)
+                else:
+                    items.append("")
+    return items
+
 # extract all data
 all_data = {}
 inventory_date = {}
@@ -176,6 +230,7 @@ for hostname in os.listdir(inv_dir):
 	all_data[hostname] = a
 	inventory_date[hostname] =  os.path.getmtime(fn)
 
+
 # loop over all relations, create an output file for each relation
 for ofs in relations:
     ofn = out_dir + ofs
@@ -184,31 +239,17 @@ for ofs in relations:
     print_line(out_rel, titles)
     elements = [col[0] for col in relations[ofs]["columns"]]
     list_start = is_list(elements)
-    print "starting", ofn
     if list_start == "":
         for hostname in all_data:
+            print "creating relation %s for %s" % ( ofs, hostname )
             items = []
             for field in elements:
-                if field:
-                    subtree = all_data[hostname]
-                    for item in field.split("."):
-                        if item.startswith("@"): # take subtree vom special_value
-                            subtree = special_value(item,hostname)
-                        else:
-                            try:
-                                subtree = subtree[item]
-                            except:
-                                items.append("")
-                                break
-                        if type(subtree) in (str, int, float):
-                            converted = convert_it(relations[ofs]['converter'], subtree,field)
-                            items.append(converted)
-                else:
-                    items.append("")
+                items.append(no_list_get(hostname, field))
             print_line(out_rel, items)
         out_rel.close()
     else:
         for hostname in all_data:
+            print "creating relation %s for %s" % ( ofs, hostname )
             subtree = all_data[hostname]
             for item in list_start.split("."):
                 try:
@@ -223,9 +264,21 @@ for ofs in relations:
                     for field in elements:
                         if field:
                             field = re.sub(list_start+":\*.", "", field)
+                            concat = ""
                             for item in field.split("."):
                                 if item.startswith("@"): # take subtree vom special_value
                                     value = special_value(item,hostname)
+                                elif item.startswith("+"):
+                                    for item2 in item.split("+"):
+                                        if item2:
+                                            if item2.startswith("@"): # take subtree vom special_value
+                                                concat += special_value(item2,hostname)
+                                            else:
+                                                try:
+                                                    concat += package[item2]
+                                                except:
+                                                    continue
+                                    value = hashlib.md5(concat).hexdigest()
                                 else:
                                     try:
                                         value = package[item]

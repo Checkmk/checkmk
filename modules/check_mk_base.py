@@ -279,7 +279,7 @@ def get_host_info(hostname, ipaddress, checkname):
         exception_texts = []
         global opt_use_cachefile
         opt_use_cachefile = True
-	is_snmp_error = False
+        is_snmp_error = False
         for node in nodes:
             # If an error with the agent occurs, we still can (and must)
             # try the other nodes.
@@ -294,16 +294,16 @@ def get_host_info(hostname, ipaddress, checkname):
             except MKSkipCheck:
                 at_least_one_without_exception = True
             except MKAgentError, e:
-		if str(e) != "": # only first error contains text
+                if str(e) != "": # only first error contains text
                     exception_texts.append(str(e))
-		g_broken_agent_hosts.add(node)
+                g_broken_agent_hosts.add(node)
             except MKSNMPError, e:
-		if str(e) != "": # only first error contains text
-		    exception_texts.append(str(e))
-		g_broken_snmp_hosts.add(node)
-		is_snmp_error = True
+                if str(e) != "": # only first error contains text
+                    exception_texts.append(str(e))
+                g_broken_snmp_hosts.add(node)
+                is_snmp_error = True
         if not at_least_one_without_exception:
-	    if is_snmp_error:
+            if is_snmp_error:
                 raise MKSNMPError(", ".join(exception_texts))
             else:
                 raise MKAgentError(", ".join(exception_texts))
@@ -364,8 +364,8 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_che
         # Not cached -> need to get info via SNMP
 
         # Try to contact host only once
-	if hostname in g_broken_snmp_hosts:
-	    raise MKSNMPError("")
+        if hostname in g_broken_snmp_hosts:
+            raise MKSNMPError("")
 
         # New in 1.1.3: oid_info can now be a list: Each element
         # of that list is interpreted as one real oid_info, fetches
@@ -393,7 +393,7 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_che
     # tries to get data from the agent? If yes we must not do that again! Even if
     # no cache file is present.
     if g_agent_already_contacted.has_key(hostname):
-	raise MKAgentError("")
+        raise MKAgentError("")
 
     g_agent_already_contacted[hostname] = True
     store_cached_hostinfo(hostname, []) # leave emtpy info in case of error
@@ -983,7 +983,7 @@ def do_check(hostname, ipaddress, only_check_types = None):
         num_errors = len(error_sections)
         save_counters(hostname)
         if problems:
-	    output = "%s, " % problems
+            output = "%s, " % problems
             status = exit_spec.get("connection", 2)
         elif num_errors > 0 and num_success > 0:
             output = "Missing agent sections: %s - " % ", ".join(error_sections)
@@ -1221,22 +1221,22 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
 
         infotype = checkname.split('.')[0]
         try:
-	    info = get_host_info(hostname, ipaddress, infotype)
+            info = get_host_info(hostname, ipaddress, infotype)
         except MKSkipCheck, e:
             continue
         except MKSNMPError, e:
-	    if str(e):
-	        problems.append(str(e))
-            error_sections.add(infotype)
-	    g_broken_snmp_hosts.add(hostname)
-	    continue
-
-        except MKAgentError, e:
-	    if str(e):
+            if str(e):
                 problems.append(str(e))
             error_sections.add(infotype)
-	    g_broken_agent_hosts.add(hostname)
-	    continue
+            g_broken_snmp_hosts.add(hostname)
+            continue
+
+        except MKAgentError, e:
+            if str(e):
+                problems.append(str(e))
+            error_sections.add(infotype)
+            g_broken_agent_hosts.add(hostname)
+            continue
 
         if info or info == []:
             num_success += 1
@@ -1307,7 +1307,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
         else:
             agent_version = None
     except MKAgentError, e:
-	g_broken_agent_hosts.add(hostname)
+        g_broken_agent_hosts.add(hostname)
         agent_version = "(unknown)"
     except:
         agent_version = "(unknown)"

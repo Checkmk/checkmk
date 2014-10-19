@@ -25,15 +25,44 @@
 # Boston, MA 02110-1301 USA.
 
 # Example out from agent:
-# <<<nfsmounts>>>
+# <<<...mounts>>>
 # /foobar hanging 0 0 0 0
 # /with spaces ok 217492 123563 112515 524288
 
+def inventory_network_fs_mounts(info):
+    return [ (" ".join(line[:-5]), None) for line in info ]
 
-check_info["nfsmounts"] = {
-    'check_function':          check_network_fs_mounts,
-    'inventory_function':      inventory_network_fs_mounts,
-    'service_description':     'NFS mount %s',
-    'group':                   'network_fs',
-    'includes':                 [ 'network_fs.include' ],
-}
+def check_network_fs_mounts(item, _no_params, info):
+    for line in info:
+        mountpoint = " ".join(line[:-5])
+        if mountpoint == item:
+            # On some operating systems there is no information about
+            # used and free space, but just dahshes (e.g. AIX)
+            if line[-4] == '-':
+                if line[-5] == 'ok':
+                   return 0, "mount seems OK"
+                else:
+                   return 2, "Server not responding"
+
+
+            size_blocks = int(line[-4])
+            free_blocks = int(line[-2]) # for non-root user
+            blocksize = int(line[-1])
+
+            if size_blocks < 0 or free_blocks < 0 or blocksize > 1024*1024:
+                return (2, "Stale fs handle")
+
+            if line[-5] == 'ok':
+                gb = 1024 * 1024 * 1024.0
+                size_gb = (size_blocks * blocksize) / gb
+                if size_gb == 0:
+                    return (0, "server is responding")
+
+                free_gb = (free_blocks * blocksize) / gb
+                used_gb = size_gb - free_gb
+                used_perc = 100.0 * used_gb / size_gb
+                return (0, "%.1f%% used (%.1f of %.1f GB)" % (used_perc, used_gb, size_gb))
+            else:
+                return (2, "server not responding")
+    return (3, "not mounted")
+

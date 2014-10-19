@@ -160,6 +160,7 @@ class Age(ValueSpec):
         ValueSpec.__init__(self, **kwargs)
         self._label    = kwargs.get("label")
         self._minvalue = kwargs.get("minvalue")
+        self._display  = kwargs.get("display", ["days", "hours", "minutes", "seconds"])
 
     def canonical_value(self):
         if self._minvalue:
@@ -175,22 +176,29 @@ class Age(ValueSpec):
         html.write("<div>")
         if self._label:
             html.write(self._label + " ")
-        html.number_input(varprefix+'_days', days, 3)
-        html.write(" %s " % _("days"))
-        html.number_input(varprefix+'_hours', hours, 2)
-        html.write(" %s " % _("hours"))
-        html.number_input(varprefix+'_minutes', minutes, 2)
-        html.write(" %s " % _("min"))
-        html.number_input(varprefix+'_seconds', seconds, 2)
-        html.write(" %s " % _("sec"))
+
+        takeover = 0
+        first = True
+        for uid, title, value, tkovr_fac in [ ("days",    _("days"),  days,    24),
+                                              ("hours",   _("hours"), hours,   60),
+                                              ("minutes", _("mins"),  minutes, 60),
+                                              ("seconds", _("secs"),  seconds, 60) ]:
+            if uid in self._display:
+                value += takeover
+                takeover = 0
+                html.number_input(varprefix + "_" + uid, value, first and 3 or 2)
+                html.write(" %s " % title)
+                first = False
+            else:
+                takeover = (takeover + value) * tkovr_fac
         html.write("</div>")
 
     def from_html_vars(self, varprefix):
         return (
-               saveint(html.var(varprefix+'_days')) * 3600 * 24
-             + saveint(html.var(varprefix+'_hours')) * 3600
-             + saveint(html.var(varprefix+'_minutes')) * 60
-             + saveint(html.var(varprefix+'_seconds'))
+               saveint(html.var(varprefix+'_days', 0))   * 3600 * 24
+             + saveint(html.var(varprefix+'_hours',0))   * 3600
+             + saveint(html.var(varprefix+'_minutes',0)) * 60
+             + saveint(html.var(varprefix+'_seconds',0))
         )
 
     def value_to_text(self, value):

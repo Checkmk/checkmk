@@ -375,17 +375,26 @@ def inv_paint_timestamp(stamp):
     else:
         return "", ""
 
+def inv_paint_date(stamp):
+    if stamp:
+        date_painted = time.strftime("%Y-%m-%d", time.localtime(stamp))
+        return "Date", "%s" % date_painted
+    else:
+        return "", ""
+
 inventory_displayhints.update({
     "."                                                : { "title" : _("Inventory") },
     ".hardware."                                       : { "title" : _("Hardware"), "icon" : "hardware", },
     ".hardware.bios."                                  : { "title" : _("BIOS"), },
     ".hardware.bios.vendor"                            : { "title" : _("Vendor"), },
     ".hardware.bios.version"                           : { "title" : _("Version"), },
+    ".hardware.bios.date"                              : { "title" : _("Date"), "paint": "date"},
     ".hardware.chassis."                               : { "title" : _("Chassis"), },
     ".hardware.cpu."                                   : { "title" : _("Processor"), },
     ".hardware.cpu.model"                              : { "title" : _("Model"), "short" : _("CPU Model"), },
     ".hardware.cpu.cache_size"                         : { "title" : _("Cache Size"),                     "paint" : "bytes" },
     ".hardware.cpu.max_speed"                          : { "title" : _("Maximum Speed"),                  "paint" : "hz" },
+    ".hardware.cpu.bus_speed"                          : { "title" : _("Bus Speed"),                      "paint" : "hz" },
     ".hardware.cpu.voltage"                            : { "title" : _("Voltage"),                        "paint" : "volt" },
     ".hardware.cpu.cores_per_cpu"                      : { "title" : _("Cores per CPU"),                  "paint" : "count" },
     ".hardware.cpu.threads_per_cpu"                    : { "title" : _("Hyperthreads per CPU"),           "paint" : "count" },
@@ -433,7 +442,7 @@ inventory_displayhints.update({
     ".software.os.version"                             : { "title" : _("Version"), },
     ".software.os.vendor"                              : { "title" : _("Vendor"), },
     ".software.os.type"                                : { "title" : _("Type"), }, # e.g. "linux"
-    ".software.os,install_date"                        : { "title" : _("Install Date"),                 "paint" : "timestamp" },
+    ".software.os.install_date"                        : { "title" : _("Install Date"), "paint" : "date" },
     ".software.os.kernel_version"                      : { "title" : _("Kernel Version"), "short" : _("Kernel") },
     ".software.os.arch"                                : { "title" : _("Kernel Architecture"), "short" : _("Architecture") },
     ".software.os.service_pack"                        : { "title" : _("Service Pack"), "short" : _("Service Pack") },
@@ -448,7 +457,7 @@ inventory_displayhints.update({
     ".software.packages:*.version"                     : { "title" : _("Version"), },
     ".software.packages:*.vendor"                      : { "title" : _("Publisher"), },
     ".software.packages:*.package_version"             : { "title" : _("Package Version"), },
-    ".software.packages:*.install_date"                : { "title" : _("Install Date"), },
+    ".software.packages:*.install_date"                : { "title" : _("Install Date"), "paint" : "date"},
     ".software.packages:*.size"                        : { "title" : _("Size"), "paint" : "count" },
     ".software.packages:*.path"                        : { "title" : _("Path"), },
 })

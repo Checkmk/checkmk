@@ -13,8 +13,10 @@ _num_zombies = 100
 for _z in range(0, _num_zombies):
     _name = "zombie%04d" % _z
     all_hosts.append(_name + "|zombie")
-    ipaddresses[_name] = "127.0.0.1"
+    _x = _z % 255 + 1
+    _y = (_z / 255) % 255 + 1
+    ipaddresses[_name] = "127.0.%d.%d" % (_y, _x)
 
 datasource_programs = [
- ( "cat /var/lib/check_mk/cache/localhost", [ "zombie" ], ALL_HOSTS),
+ ( "cat ~/tmp/check_mk/cache/localhost", [ "zombie" ], ALL_HOSTS),
 ]

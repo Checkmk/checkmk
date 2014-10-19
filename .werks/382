@@ -1,6 +1,6 @@
 Title: Active HTTP check now supports multiline regexp matching
 Level: 1
-Component: wato
+Component: checks
 Class: feature
 State: unknown
 Version: 1.2.5i1

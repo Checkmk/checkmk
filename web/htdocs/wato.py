@@ -7675,7 +7675,7 @@ def save_configuration_settings(vars):
         per_domain.setdefault(domain, {})[varname] = vars[varname]
 
     # The global setting wato_enabled is not registered in the configuration domains
-    # sind the user must not change it directly. It is set by D-WATO on slave sites.
+    # since the user must not change it directly. It is set by D-WATO on slave sites.
     if "wato_enabled" in vars:
         per_domain.setdefault("multisite", {})["wato_enabled"] = vars["wato_enabled"]
 

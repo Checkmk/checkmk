@@ -1,0 +1,13 @@
+Title: esx_vsphere_hostsystem.maintenance: fixed misspelling in service description
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.5i6
+Date: 1413811961
+Class: fix
+
+"Maintenace Mode" has been renamed to "Maintenance Mode".
+Note: This is only a minor incompatible change, since this check has no performance data.<br>
+If you have any rules specifically configured for this check (e.g disabled services)
+you need to update the service description filter.
+

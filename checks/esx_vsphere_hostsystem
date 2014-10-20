@@ -278,7 +278,7 @@ def check_esx_vsphere_hostsystem_maintenance(_no_item, params, info):
 check_info['esx_vsphere_hostsystem.maintenance'] = {
   "inventory_function"  : inventory_esx_vsphere_hostsystem_maintenance,
   "check_function"      : check_esx_vsphere_hostsystem_maintenance,
-  "service_description" : "Maintenace Mode",
+  "service_description" : "Maintenance Mode",
   "group"               : "esx_hostystem_maintenance",
 }
 

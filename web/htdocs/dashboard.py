@@ -474,7 +474,9 @@ def render_dashlet(name, board, nr, dashlet, wato_folder, add_url_vars):
     if title and dashlet.get('show_title'):
         url = dashlet.get("title_url", None)
         if url:
-            title = '<a href="%s">%s</a>' % (url, title)
+            title = '<a href="%s">%s</a>' % (url, _u(title))
+        else:
+            title = _u(title)
         html.write('<div class="title" id="dashlet_title_%d">%s</div>' % (nr, title))
     if dashlet.get("background", True):
         bg = " background"
@@ -855,7 +857,7 @@ def page_edit_dashlet():
                 default_value = True,
             )),
             ('title', TextUnicode(
-                title = _('Custom Title'),
+                title = _('Custom Title') + '<sup>*</sup>',
                 help = _('Most dashlets have a hard coded default title. For example the view snapin '
                          'has even a dynamic title which defaults to the real title of the view. If you '
                          'like to use another title, set it here.'),
@@ -934,6 +936,9 @@ def page_edit_dashlet():
     visuals.render_context_specs(dashlet, context_specs)
 
     forms.end()
+    url = "wato.py?mode=edit_configvar&varname=user_localizations"
+    html.message("<sup>*</sup>" + _("These texts may be localized depending on the users' "
+          "language. You can configure the localizations <a href=\"%s\">in the global settings</a>.") % url)
     html.button("save", _("Save"))
     html.hidden_fields()
     html.end_form()

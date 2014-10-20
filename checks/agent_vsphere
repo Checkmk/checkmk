@@ -59,6 +59,12 @@ def agent_vsphere_arguments(params, hostname, ipaddress):
     if params.get("use_pysphere"):
         args += ' --pysphere'
 
+    if params.get("vm_pwr_display"):
+        args += ' --vm_pwr_display %s' % params.get("vm_pwr_display")
+
+    if params.get("host_pwr_display"):
+        args += ' --host_pwr_display %s' % params.get("host_pwr_display")
+
     args += " " + quote_shell_string(ipaddress)
     return args
 

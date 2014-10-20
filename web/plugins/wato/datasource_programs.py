@@ -98,6 +98,28 @@ register_rule(group,
                        title = _("Retrieve information about..."),
                     )
                  ),
+                 ( "host_pwr_display",
+                   DropdownChoice(
+                       title = _("Display ESX Host power state on"),
+                       choices = [
+                           ( None,      _("The queried ESX system (vCenter / Host)") ),
+                           ( "esxhost", _("The ESX Host") ),
+                           ( "vm",      _("The Virtual Machine") ),
+                       ],
+                       default = None,
+                   )
+                 ),
+                 ( "vm_pwr_display",
+                   DropdownChoice(
+                       title = _("Display VM power state on"),
+                       choices = [
+                           ( None,      _("The queried ESX system (vCenter / Host)") ),
+                           ( "esxhost", _("The ESX Host") ),
+                           ( "vm",      _("The Virtual Machine") ),
+                       ],
+                       default = None,
+                   )
+                 ),
                  ( "spaces",
                    DropdownChoice(
                        title = _("Spaces in hostnames"),
@@ -143,7 +165,7 @@ register_rule(group,
                   )
                 ),
             ],
-            optional_keys = [ "tcp_port", "timeout", ],
+            optional_keys = [ "tcp_port", "timeout", "vm_pwr_display", "host_pwr_display" ],
         ),
         title = _("Check state of VMWare ESX via vSphere"),
         help = _("This rule selects the vSphere agent instead of the normal Check_MK Agent "

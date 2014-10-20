@@ -1006,7 +1006,7 @@ def mode_mkeventd_rules(phase):
             table.cell(_("ID"), '<a href="%s">%s</a>' % (edit_url, rule["id"]))
 
             if rule.get("drop"):
-                table.cell(_("Priority"), _("DROP"), css="state statep")
+                table.cell(_("State"), _("DROP"), css="state statep")
             else:
                 if type(rule['state']) == tuple:
                     stateval = rule["state"][0]
@@ -1016,7 +1016,7 @@ def mode_mkeventd_rules(phase):
                         2: _("CRIT"), 3:_("UNKNOWN"),
                        -1: _("(syslog)"),
                        'text_pattern':_("(set by message text)") }[stateval]
-                table.cell(_("Priority"), txt,  css="state state%s" % stateval)
+                table.cell(_("State"), txt,  css="state state%s" % stateval)
 
             # Syslog priority
             if "match_priority" in rule:

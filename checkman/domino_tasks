@@ -1,6 +1,6 @@
-title: Count of Lotus Domino Tasks
+title: IBM Lotus Domino: Count of Tasks
 agents: snmp
-catalog: all/lotusnotes
+catalog: app/lotusnotes
 license: GPL
 distribution: check_mk
 description:

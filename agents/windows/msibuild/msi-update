@@ -56,139 +56,144 @@ except:
     bail_out("Usage: %s MSIFILE.msi SOURCEDIR BUILDNUMBER VERSION" % sys.argv[0])
 
 
-if "OMD_ROOT" in os.environ:
-    path_prefix = ""
-    tmp_dir = os.environ["OMD_ROOT"]
-else:
-    path_prefix = "./"
-    tmp_dir = "."
+try:
+    if "OMD_ROOT" in os.environ:
+        path_prefix = ""
+        tmp_dir = os.environ["OMD_ROOT"]
+    else:
+        path_prefix = "./"
+        tmp_dir = "."
 
-new_msi_file = "check_mk_agent.msi"
-work_dir = tempfile.mkdtemp(prefix = tmp_dir + "/msi-update.")
+    new_msi_file = "check_mk_agent.msi"
+    work_dir = tempfile.mkdtemp(prefix = tmp_dir + "/msi-update.")
 
-# When this script is run in the build environment then we need to specify
-# paths to the msitools. When running in an OMD site, these tools are in
-# our path
+    # When this script is run in the build environment then we need to specify
+    # paths to the msitools. When running in an OMD site, these tools are in
+    # our path
 
-# Export required idt files into work dir
-for entry in [ "File", "Upgrade", "Property" ]:
-    verbose("Export table %s from file %s" % (entry, msi_file))
-    os.system((path_prefix + "msiinfo export %(msi_file)s %(property)s > %(work_dir)s/%(property)s.idt") % \
-             { "work_dir" : work_dir, "msi_file": msi_file, "property": entry })
-
-
-verbose("Modify extracted files..")
-
-# ==============================================
-# Modify File.idt
-
-# HACK: the 64 bit agent is msi internally handled as check_mk_agent64.exe
-os.rename(source_dir + "/check_mk_agent-64.exe", source_dir + "/check_mk_agent64.exe")
-
-lines_file_idt = file(work_dir + "/File.idt").readlines()
-file_idt_new   = file(work_dir + "/File.idt.new", "w")
-file_idt_new.write("".join(lines_file_idt[:3]))
-
-cabinet_files = []
-for line in lines_file_idt[3:]:
-    tokens = line.split("\t")
-    filename = tokens[0]
-    cabinet_files.append((tokens[-1], filename))
-    file_stats = os.stat(source_dir + "/" + filename)
-    new_size    = file_stats.st_size
-    tokens[3] = str(new_size)
-    # The version of this file is different from the msi installer version !
-    tokens[4] = tokens[4] and new_version_build or ""
-    tokens[4] = tokens[4] and new_version_build or ""
-    file_idt_new.write("\t".join(tokens))
-file_idt_new.close()
-# ==============================================
+    # Export required idt files into work dir
+    for entry in [ "File", "Upgrade", "Property" ]:
+        verbose("Export table %s from file %s" % (entry, msi_file))
+        os.system((path_prefix + "msiinfo export %(msi_file)s %(property)s > %(work_dir)s/%(property)s.idt") % \
+                 { "work_dir" : work_dir, "msi_file": msi_file, "property": entry })
 
 
-# ==============================================
-# Modify Upgrade.idt
-lines_upgrade_idt = file(work_dir + "/Upgrade.idt").readlines()
-upgrade_idt_new   = file(work_dir + "/Upgrade.idt.new", "w")
-upgrade_idt_new.write("".join(lines_upgrade_idt[:3]))
+    verbose("Modify extracted files..")
 
-for idx, token_offset in [ (3, 1), (4, 2) ]:
-    new_line = lines_upgrade_idt[idx]
-    tokens = new_line.split("\t")
-    tokens[token_offset] = ".".join(new_version_build.split(".")[:3])
-    upgrade_idt_new.write("\t".join(tokens))
-upgrade_idt_new.close()
-# ==============================================
+    # ==============================================
+    # Modify File.idt
 
+    # HACK: the 64 bit agent is msi internally handled as check_mk_agent64.exe
+    os.rename(source_dir + "/check_mk_agent-64.exe", source_dir + "/check_mk_agent64.exe")
 
-# ==============================================
-# Modify Property.idt
-product_code = ("{%s}\r\n" % uuid.uuid1()).upper()
-upgrade_code = ("{%s}\r\n" % uuid.uuid1()).upper()
-lines_property_idt = file(work_dir + "/Property.idt").readlines()
-property_idt_new   = file(work_dir + "/Property.idt.new", "w")
-property_idt_new.write("".join(lines_property_idt[:3]))
+    lines_file_idt = file(work_dir + "/File.idt").readlines()
+    file_idt_new   = file(work_dir + "/File.idt.new", "w")
+    file_idt_new.write("".join(lines_file_idt[:3]))
 
-for line in lines_property_idt[3:]:
-    tokens = line.split("\t")
-    if tokens[0] == "ProductName":
-        tokens[1] = "Check_MK Agent MSI %s Rev %s\r\n" % (new_version_name, new_version_build.split(".")[-1])
-# The upgrade code defines the product family. Do not change it!
-#    elif tokens[0] == "UpgradeCode":
-#        tokens[1] = upgrade_code
-    elif tokens[0] == "ProductCode":
-        tokens[1] = product_code
-    elif tokens[0] == "ProductVersion":
-        tokens[1] = "%s\r\n" % ".".join(new_version_build.split(".")[:3])
-    property_idt_new.write("\t".join(tokens))
-property_idt_new.close()
-# ==============================================
+    cabinet_files = []
+    for line in lines_file_idt[3:]:
+        tokens = line.split("\t")
+        filename = tokens[0]
+        cabinet_files.append((tokens[-1], filename))
+        file_stats = os.stat(source_dir + "/" + filename)
+        new_size    = file_stats.st_size
+        tokens[3] = str(new_size)
+        # The version of this file is different from the msi installer version !
+        tokens[4] = tokens[4] and new_version_build or ""
+        tokens[4] = tokens[4] and new_version_build or ""
+        file_idt_new.write("\t".join(tokens))
+    file_idt_new.close()
+    # ==============================================
 
 
+    # ==============================================
+    # Modify Upgrade.idt
+    lines_upgrade_idt = file(work_dir + "/Upgrade.idt").readlines()
+    upgrade_idt_new   = file(work_dir + "/Upgrade.idt.new", "w")
+    upgrade_idt_new.write("".join(lines_upgrade_idt[:3]))
 
-verbose("Creating copy of original file %s -> %s" % (msi_file, new_msi_file))
+    for idx, token_offset in [ (3, 1), (4, 2) ]:
+        new_line = lines_upgrade_idt[idx]
+        tokens = new_line.split("\t")
+        tokens[token_offset] = ".".join(new_version_build.split(".")[:3])
+        upgrade_idt_new.write("\t".join(tokens))
+    upgrade_idt_new.close()
+    # ==============================================
 
-# Make a copy
-os.system("cp %(msi_file)s %(new_msi_file)s" % { "msi_file": msi_file, "new_msi_file": new_msi_file})
 
-# Rename modified tables
-for entry in [ "Property", "File", "Upgrade" ]:
-    os.rename(work_dir + "/%s.idt.new" % entry , work_dir + "/%s.idt" % entry)
+    # ==============================================
+    # Modify Property.idt
+    product_code = ("{%s}\r\n" % uuid.uuid1()).upper()
+    upgrade_code = ("{%s}\r\n" % uuid.uuid1()).upper()
+    lines_property_idt = file(work_dir + "/Property.idt").readlines()
+    property_idt_new   = file(work_dir + "/Property.idt.new", "w")
+    property_idt_new.write("".join(lines_property_idt[:3]))
 
-for entry in [ "Property", "File", "Upgrade" ]:
-    os.system((path_prefix + "msibuild %(new_msi_file)s -i %(work_dir)s/%(file)s.idt") % \
-         { "work_dir" : work_dir, "new_msi_file": new_msi_file, "file": entry })
+    for line in lines_property_idt[3:]:
+        tokens = line.split("\t")
+        if tokens[0] == "ProductName":
+            tokens[1] = "Check_MK Agent MSI %s Rev %s\r\n" % (new_version_name, new_version_build.split(".")[-1])
+    # The upgrade code defines the product family. Do not change it!
+    #    elif tokens[0] == "UpgradeCode":
+    #        tokens[1] = upgrade_code
+        elif tokens[0] == "ProductCode":
+            tokens[1] = product_code
+        elif tokens[0] == "ProductVersion":
+            tokens[1] = "%s\r\n" % ".".join(new_version_build.split(".")[:3])
+        property_idt_new.write("\t".join(tokens))
+    property_idt_new.close()
+    # ==============================================
 
-# Update summary info with new uuid (HACK! - the msibuild tool is not able to do this on all systems)
-# In this step we replace the package code with a new uuid. This uuid is important, because it is
-# the unqiue identifier for this package. Inside the package the uuid is split into two halfs.
-# Each of it is updated with the corresponding new package code. Since msi-update uses the
-# vanilla_container.msi as well as the baked_container.msi we need to handle both..
-package_code = ("{%s}" % uuid.uuid1()).upper()
-summary_info = {"new_msi_file": new_msi_file, "start": package_code[:16], "end": package_code[16:]}
-default_package_codes = {
-        "vanilla_container.msi": { "dftl_start": "{08012468-53DE-4", "dftl_end": "2A3-BAA9-FE4C2A129135}"},
-        "baked_container.msi"  : { "dftl_start": "{47ED1918-CEDF-4", "dftl_end": "D37-943C-B4DBC3F58E6C}"}
-}
-summary_info.update(default_package_codes[os.path.basename(msi_file)])
-os.system("sed -i -e 's/%(dftl_start)s/%(start)s/' -e 's/%(dftl_end)s/%(end)s/' %(new_msi_file)s" % summary_info)
 
-# Remove original product.cab from stream
-verbose("Removing product.cab from %s" % new_msi_file)
-os.system((path_prefix + "msibuild %(new_msi_file)s -q \"DELETE FROM _Streams where Name = 'product.cab'\"") % { "new_msi_file": new_msi_file } )
 
-# Prepare product.cab file
-verbose("Generating new product.cab")
+    verbose("Creating copy of original file %s -> %s" % (msi_file, new_msi_file))
 
-lcab_files = ""
-for index, lcab_file in sorted(cabinet_files):
-    lcab_files += "%(source_dir)s/%(lcab_file)s " % globals()
-os.system("lcab -n %(lcab_files)s %(work_dir)s/product.cab" % globals())
+    # Make a copy
+    os.system("cp %(msi_file)s %(new_msi_file)s" % { "msi_file": msi_file, "new_msi_file": new_msi_file})
 
-# Add modified product.cab
-verbose("Add modified product.cab")
-os.system((path_prefix + "msibuild %(new_msi_file)s -a product.cab %(work_dir)s/product.cab") % \
-        { "work_dir" : work_dir, "new_msi_file": new_msi_file })
+    # Rename modified tables
+    for entry in [ "Property", "File", "Upgrade" ]:
+        os.rename(work_dir + "/%s.idt.new" % entry , work_dir + "/%s.idt" % entry)
 
-shutil.rmtree(work_dir)
-verbose("Successfully created file " + new_msi_file)
+    for entry in [ "Property", "File", "Upgrade" ]:
+        os.system((path_prefix + "msibuild %(new_msi_file)s -i %(work_dir)s/%(file)s.idt") % \
+             { "work_dir" : work_dir, "new_msi_file": new_msi_file, "file": entry })
+
+    # Update summary info with new uuid (HACK! - the msibuild tool is not able to do this on all systems)
+    # In this step we replace the package code with a new uuid. This uuid is important, because it is
+    # the unqiue identifier for this package. Inside the package the uuid is split into two halfs.
+    # Each of it is updated with the corresponding new package code. Since msi-update uses the
+    # vanilla_container.msi as well as the baked_container.msi we need to handle both..
+    package_code = ("{%s}" % uuid.uuid1()).upper()
+    summary_info = {"new_msi_file": new_msi_file, "start": package_code[:16], "end": package_code[16:]}
+    default_package_codes = {
+            "vanilla_container.msi": { "dftl_start": "{08012468-53DE-4", "dftl_end": "2A3-BAA9-FE4C2A129135}"},
+            "baked_container.msi"  : { "dftl_start": "{47ED1918-CEDF-4", "dftl_end": "D37-943C-B4DBC3F58E6C}"}
+    }
+    summary_info.update(default_package_codes[os.path.basename(msi_file)])
+    os.system("sed -i -e 's/%(dftl_start)s/%(start)s/' -e 's/%(dftl_end)s/%(end)s/' %(new_msi_file)s" % summary_info)
+
+    # Remove original product.cab from stream
+    verbose("Removing product.cab from %s" % new_msi_file)
+    os.system((path_prefix + "msibuild %(new_msi_file)s -q \"DELETE FROM _Streams where Name = 'product.cab'\"") % { "new_msi_file": new_msi_file } )
+
+    # Prepare product.cab file
+    verbose("Generating new product.cab")
+
+    lcab_files = ""
+    for index, lcab_file in sorted(cabinet_files):
+        lcab_files += "%(source_dir)s/%(lcab_file)s " % globals()
+    os.system("lcab -n %(lcab_files)s %(work_dir)s/product.cab" % globals())
+
+    # Add modified product.cab
+    verbose("Add modified product.cab")
+    os.system((path_prefix + "msibuild %(new_msi_file)s -a product.cab %(work_dir)s/product.cab") % \
+            { "work_dir" : work_dir, "new_msi_file": new_msi_file })
+
+    shutil.rmtree(work_dir)
+    verbose("Successfully created file " + new_msi_file)
+except Exception, e:
+    if work_dir and os.path.exists(work_dir):
+        shutil.rmtree(work_dir)
+    bail_out("Error on creating msi file: %s" % str(e))
 

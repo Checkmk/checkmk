@@ -1,6 +1,6 @@
-title: Hivemanager Devices
+title: Aerohive Hivemanager Devices
 agents: special
-catalog: hw/network/hivemanager
+catalog: hw/network/aerohive
 license: GPL
 distribution: check_mk
 description:

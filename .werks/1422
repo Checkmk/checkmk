@@ -1,0 +1,18 @@
+Title: agent_vsphere: now able to configure where the power state of a vm or esx-host should be assigned
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1413821252
+Class: feature
+
+Previously the virtual machines and hosts power states were always assigned to the queried vCenter or host system.<br>
+You can now configure via WATO rule <tt>Check state of VMWare ESX via vSphere</tt> that this information is piggybacked
+'down' to the esx hosts or the virtual machines.<br>
+
+With this new feature a virtual machine may also have the following informations<br>
+<tt>ESX Hostsystem       OK - Running on esx.mathias-kettner.de</tt><br>
+<tt>VM LinuxIII          OK - power state: poweredOn, running on [esx.mathias-kettner.de]</tt>
+
+
+

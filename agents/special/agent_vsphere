@@ -407,12 +407,21 @@ OPTIONS:
                                 after the first space, "underscore": replace with
                                 underscores. Default is "underscore".
 
+  --vm_pwr_display WHERE        Specifies where the virtual machines power state should be shown
+                                Default (no option) is on the queried vCenter or ESX-Host
+                                Possible WHERE options: * esxhost : show on ESX host
+                                                        * vm      : show on virtual machine
+  --host_pwr_display WHERE      Specifies where the ESX hosts power state should be shown
+                                Default (no option) is on the queried vCenter or ESX-Host
+                                Possible WHERE options: * esxhost : show on ESX host
+                                                        * vm      : show on virtual machine
+
 """)
 
 short_options = 'hi:u:s:Dat:H:Pp:S:'
 long_options  = [
     'help', 'user=', 'secret=', 'direct', 'agent', 'debug', 'modules=', 'timeout=',
-    'hostname=', 'tracefile=', "pysphere", "port=", "spaces=",
+    'hostname=', 'tracefile=', "pysphere", "port=", "spaces=", "host_pwr_display=", "vm_pwr_display="
 ]
 
 opt_debug               = False
@@ -423,6 +432,9 @@ opt_port                = 443
 opt_hostname            = None
 opt_skip_placeholder_vm = False
 opt_pysphere            = False
+opt_tracefile           = None
+opt_host_pwr_display    = None
+opt_vm_pwr_display      = None
 opt_tracefile           = None
 opt_spaces              = "underscore"
 
@@ -466,6 +478,10 @@ for o,a in opts:
         opt_timeout = int(a)
     elif o in [ '-H', '--hostname' ]:
         opt_hostname = a
+    elif o in [ '--vm_pwr_display' ]:
+        opt_vm_pwr_display = a
+    elif o in [ '--host_pwr_display' ]:
+        opt_host_pwr_display = a
     elif o in [ '-S', '--spaces']:
         if a not in [ "cut", "underscore" ]:
             usage()
@@ -943,21 +959,62 @@ if not error:
 
         print "<<<<>>>>"
         print "<<<esx_vsphere_objects:sep(9)>>>"
-        if "hostsystem" in query_objects:
-            if opt_direct and opt_hostname:
-                for hostname, data in hostsystems_properties.items():
-                    print "hostsystem\t%s\t\t%s" % ( opt_hostname, hostsystems_properties[hostname]["runtime.powerState"][0] )
-            else:
-                for hostname, data in hostsystems_properties.items():
-                    print "hostsystem\t%s\t\t%s" % ( convert_hostname(hostsystems_properties[hostname]["name"][0]),
-                                                     hostsystems_properties[hostname]["runtime.powerState"][0] )
 
+        # the piggybacked data is printed later on, because it looks quite messy...
+        vm_piggy_data   = {}
+        host_piggy_data = {}
+
+        if "hostsystem" in query_objects:
+            if opt_host_pwr_display != "vm": # handled later on..
+                if opt_direct and opt_hostname:
+                    for hostname, data in hostsystems_properties.items():
+                        print "hostsystem\t%s\t\t%s" % (opt_hostname, hostsystems_properties[hostname]["runtime.powerState"][0])
+                else:
+                    for hostname, data in hostsystems_properties.items():
+                        converted_hostname = convert_hostname(hostsystems_properties[hostname]["name"][0])
+                        host_info = "hostsystem\t%s\t\t%s" % (converted_hostname, hostsystems_properties[hostname]["runtime.powerState"][0])
+                        if opt_host_pwr_display == "esxhost" and not opt_direct:
+                            host_piggy_data.setdefault(converted_hostname, []).append(host_info)
+                        else:
+                            print host_info
 
         if "virtualmachine" in query_objects:
             for key in vms.keys():
                 data = vms[key]
                 running_on = hostsystems.get(data.get("runtime.host"), data.get("runtime.host"))
-                print "virtualmachine\t%s\t%s\t%s" % (convert_hostname(data.get("name")), running_on, data.get("runtime.powerState"))
+                vm_info = "virtualmachine\t%s\t%s\t%s" % (convert_hostname(data.get("name")), running_on, data.get("runtime.powerState"))
+
+                if opt_vm_pwr_display == "vm":
+                    vm_name = convert_hostname(data.get("name"))
+                    vm_piggy_data.setdefault(vm_name, []).append(vm_info)
+                elif opt_vm_pwr_display == "esxhost" and not opt_direct:
+                    host_piggy_data.setdefault(running_on, []).append(vm_info)
+                else:
+                    print vm_info
+
+        if "virtualmachine" in query_objects and "hostsystem" in query_objects and opt_host_pwr_display == "vm":
+            def find_host(hostname):
+                for key, value in hostsystems_properties.items():
+                    if value.get("name")[0] == hostname:
+                        return key
+
+            for key in vms.keys():
+                data = vms[key]
+                running_on = hostsystems.get(data.get("runtime.host"), data.get("runtime.host"))
+                vm_host = find_host(running_on)
+                if not vm_host:
+                    continue
+
+                vm_info = "hostsystem\t%s\t\t%s" % (running_on, hostsystems_properties[vm_host]["runtime.powerState"][0])
+                vm_name = convert_hostname(data.get("name"))
+                vm_piggy_data.setdefault(vm_name, []).append(vm_info)
+
+        for entries in [ host_piggy_data, vm_piggy_data ]:
+            for key, values in entries.items():
+                print "<<<<%s>>>>" % key
+                print "<<<esx_vsphere_objects:sep(9)>>>"
+                print "\n".join(values)
+        print "<<<<>>>>"
 
         query_server(telegram_list["logout"])
 

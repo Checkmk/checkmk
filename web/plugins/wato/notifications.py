@@ -197,3 +197,23 @@ register_notification_parameters("mkeventd",
         ]
     )
 )
+
+
+register_notification_parameters("spectrum",
+    Dictionary(
+        optional_keys = None,
+        elements = [
+            ("destination",
+             IPv4Address(
+                title = _("Destination IP"),
+                help = _("IP Address of the Spectrum server receiving the SNMP trap")
+             ),
+            ),
+            ("community",
+             TextAscii(
+                title = _("SNMP Community"),
+                help = _("SNMP Community for the SNMP trap")
+             ),
+            ),
+        ])
+    )

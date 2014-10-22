@@ -72,7 +72,8 @@ check_info["cisco_wlc_clients"] = {
     "service_description"   : "Clients",
     "group"                 : "wlc_clients",
     "has_perfdata"          : True,
-    "snmp_scan_function"    : lambda oid: oid('.1.3.6.1.2.1.1.2.0') in [".1.3.6.1.4.1.9.1.1069"],
+    "snmp_scan_function"    : lambda oid: oid('.1.3.6.1.2.1.1.2.0') in [".1.3.6.1.4.1.9.1.1069",
+                                                                        ".1.3.6.1.4.1.9.1.1645"],
     "snmp_info"             : ( ".1.3.6.1.4.1.14179.2.1.1.1",  [ 2, 42, 38 ]),
 }
 

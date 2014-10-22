@@ -1,0 +1,25 @@
+title: IBM Lotus Domino: Mail Queues
+agents: snmp
+catalog: app/lotusnotes
+license: GPL
+distribution: check_mk
+description:
+ This check uses snmp to extract the number of mails present in various
+ mail queues of the Lotus Domino Mail Server. Warning and critical levels
+ may be configured for each of the queues.
+
+item:
+ The names of the mail queues as given in the Lotus Notes SNMP MIB.
+
+inventory:
+ The names of the mail queues are predefined in the check. If the corresponding
+ oid is found, the corresponding mail queue is inventorized.
+
+[configuration]
+domino_mailqueues_defaults (dict)
+
+[parameters]
+parameters (dict): The parameters can be given in a dictionary based syntax
+   with the single element below.
+
+{"queue_length"}: a tuple of warning and critical levels

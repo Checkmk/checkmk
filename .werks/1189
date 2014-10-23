@@ -1,0 +1,9 @@
+Title: sms notification: also send information about Downtimes, Acknowledgments and Fallping now
+Level: 1
+Component: notifications
+Compatible: compat
+Version: 1.2.5i6
+Date: 1414072375
+Class: feature
+
+

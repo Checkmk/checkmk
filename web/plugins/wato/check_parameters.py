@@ -6836,3 +6836,33 @@ register_check_parameters(
     ),
     "first", False
 )
+
+register_check_parameters(
+    subgroup_applications,
+    "domino_mailqueues",
+    _("Lotus Domino Mail Queues"),
+    Dictionary(
+        elements = [
+            ( "queue_length",
+            Tuple(
+                title = _("Number of Mails in Queue"),
+                elements = [
+                    Integer(title = _("warning if above"), default_value = 300 ),
+                    Integer(title = _("critical if above"), default_value = 350 ),
+                ]
+            )),
+        ],
+        required_keys = [ 'queue_length' ],
+    ),
+    DropdownChoice(
+        choices = [
+            ('lnDeadMail', _('Mails in Dead Queue')),
+            ('lnWaitingMail', _('Mails in Waiting Queue')),
+            ('lnMailHold', _('Mails in Hold Queue')),
+            ('lnMailTotalPending', _('Total Pending Mails')),
+            ('InMailWaitingforDNS', _('Mails Waiting for DNS Queue')),
+        ],
+        title = _("Domino Mail Queue Names"),
+    ),
+    "first"
+)

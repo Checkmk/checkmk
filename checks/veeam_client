@@ -51,6 +51,31 @@ def check_veeam_client(item, params, info):
     # Only output the Job name
     infotexts.append("Job: %s" % data['JobName'] )
 
+
+
+    size_info = []
+    size_legend = []
+
+    TotalSizeByte = int(data['TotalSizeByte'])
+    perfdata.append(('totalsize', TotalSizeByte))
+    size_info.append(get_bytes_human_readable(TotalSizeByte))
+    size_legend.append("total")
+
+    # Output ReadSize and TransferedSize if available
+    if "ReadSizeByte" in data:
+        ReadSizeByte = int(data['ReadSizeByte'])
+        perfdata.append(('readsize', ReadSizeByte))
+        size_info.append(get_bytes_human_readable(ReadSizeByte))
+        size_legend.append("read")
+
+    if "TransferedSizeByte" in data:
+        TransferedSizeByte = int(data['TransferedSizeByte'])
+        perfdata.append(('transferredsize', TransferedSizeByte))
+        size_info.append(get_bytes_human_readable(TransferedSizeByte))
+        size_legend.append("transferred")
+    
+    infotexts.append("Size (%s): %s" % ("/".join(size_legend), "/ ".join(size_info)))
+
     # Check Stop time in any case, that we can catch hanging backups
     if "StopTime" not in data:
         state = 2
@@ -89,9 +114,6 @@ def check_veeam_client(item, params, info):
     perfdata.append(('avgspeed', AvgSpeedBps))
     infotexts.append(("Average Speed: %s/s" % get_bytes_human_readable(AvgSpeedBps)))
 
-    TotalSizeByte = int(data['TotalSizeByte'])
-    perfdata.append(('totalsize', TotalSizeByte))
-    infotexts.append(("Total Size: %s" % get_bytes_human_readable(TotalSizeByte)))
 
     return state, ", ".join(infotexts), perfdata
 

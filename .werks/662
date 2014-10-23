@@ -1,0 +1,9 @@
+Title: domino_mailqueues: new check to monitor mail queues in Lotus Domino
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1414008002
+Class: feature
+
+

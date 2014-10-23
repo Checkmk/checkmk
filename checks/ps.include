@@ -69,21 +69,15 @@ def inventory_ps_common(invdata, invrules, info, with_perfdata = False):
 
         v = rule[0]
 
-        # set values for user und perfdata to None if they dont exist
-        d_user = v.get('user')
-        v['user'] = d_user
-        d_perfdata = v.get('perfdata')
-        v['perfdata'] = d_perfdata
-
         # Make ps skip rules for ps.perf and vice versa
         # Ignore if perfdata key is not set
-        if v.get('perfdata') and with_perfdata != v.get('perfdata'):
+        if v.get('perfdata', False) != with_perfdata:
             continue
 
         extra_options = []
         for token in [ 'cpulevels', 'cpu_average', 'virtual_levels', 'resident_levels', 'handle_count' ]:
             extra_options.append( (token, v.get(token)) )
-        entries.append((v['descr'], v['match'], v['user']) + v['levels'] +  (extra_options,) )
+        entries.append((v['descr'], v['match'], v.get('user')) + v['levels'] +  (extra_options,) )
 
     for servicedesc, pattern, userspec, warnmin, okmin, okmax, warnmax, extra_options in entries:
         num_perc_s = servicedesc.count("%s")

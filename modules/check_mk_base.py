@@ -1793,12 +1793,12 @@ def get_age_human_readable(secs):
         return "%d min" % mins
     hours, mins = divmod(mins, 60)
     if hours < 12 and mins > 0:
-        return "%d hours, %d min" % (hours, mins)
+        return "%d hours %d min" % (hours, mins)
     elif hours < 48:
         return "%d hours" % hours
     days, hours = divmod(hours, 24)
     if days < 7 and hours > 0:
-        return "%d days, %d hours" % (days, hours)
+        return "%d days %d hours" % (days, hours)
     return "%d days" % days
 
 # Quote string for use as arguments on the shell

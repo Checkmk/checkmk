@@ -1,0 +1,124 @@
+title: Oracle Database Instance
+agents: linux, aix, hpux, solaris, windows
+distribution: check_mk
+catalog: app/oracle
+license: GPL
+description:
+ This check monitors the state of an Oracle Instance. The check depends on
+ the state of the database.
+
+ The database must be a Primary Database and OPEN (startup in sqlplus) or
+ a Physical Standby Database and OPEN or MOUNTED. The state is CRITICAL when
+ this is not true.
+
+ The archive logmode, logging option, logins and uptime are also checked:
+ the state is WARNING when the Database is in NOARCHIVELOG or in ARCHIVELOG
+ and FORCE LOGGING is disabled. The state is CRITICAL when logins are not
+ possible.  This behaviour can be changed with rules.  The rule for logins
+ is only working when the connection is established with 'sysdba'. Otherwise
+ the rule for logins is always CRITICAL.
+
+ This check requires the new agent plugin mk_oracle(.new) from our plugin
+ directory.
+
+ You can find a description for a basic configuration below. More details for
+ special setups will be available on the homepage of the Check_MK project.
+ https://mathias-kettner.de/checkmk_oracle.html
+
+ There are two configuration files important and stored in $MK_CONFDIR.
+ {sqlnet.ora} is a static file and is essential for the connection to the
+ database. It is also used to disable trace. Otherwise the oracle client
+ might create a lot of trace data in $HOME of the root user and may fill the
+ '/' filesystem.
+
+ {mk_oracle.cfg} is the main configuration file for the plugin. Most
+ importantly, it contains the {credentials} for the connection to the
+ database. The ':' is used as a field separator in each line defining
+ the credentials. <sysdba>, <Host> and <Port> are optional: per default
+ <sysdba> is empty, Host=localhost and Port=1521. Host and Port depends on
+ the Listener configuration of the database.  DBUSER is used as a default for
+ all Instances on the Host. This default could be replaced for each Instance
+ with a DBUSER_<ORACLE_SID> entry. ASMUSER is a special entry for an Oracle
+ ASM Instance. ASM needs a 'sysdba' or 'asmsnmp' entry because this instance
+ is not OPEN. There is no ASMUSER_<ORACLE_SID> entry!
+
+ ASMUSER=<Username>:<Password>:<sysdba/asmsnmp>:<Host>:<Port>
+
+ DBUSER=<Username>:<Password>:<sysdba>:<Host>:<Port>
+
+ DBUSER_<ORACLE_SID>=<Username>:<Password>:<sysdba>:<Host>:<Port>
+
+ The configuration of a normal Instance is very easy. An example for ASM
+ follows afterwards below.
+
+ sqlplus / as sysdba
+
+ create user check_mk identifiebd by checkmk;
+
+ grant connect, select_catalog_role to check_mk;
+
+ An additional grant for a configuration to a Physical Standby Database is
+ mandatory when the Standby is not running in OPEN mode.  In most setups,
+ the Standby is running in MOUNT state requiring a 'SYSDBA' connection
+ due to the closed Data Dictionary. This grant is needed on the Primary as
+ well. Otherwise mk_oracle is not able to monitor the Instance after a role
+ change on the old Primary.
+
+ grant sysdba to check_mk;
+
+ Example for ASM:
+
+ An ASM Instance does not have a data dictionary. This is why a sysdba or
+ asmsnmp connection is required. Oracle changed the security in Release 11.1.
+ The connection with sqlplus must be carried out with 'as sysasm'. Older
+ versions are working like a normal Instance requiring a 'as sysdba'
+ connection. There is no requirement to create a new user for mk_oracle.
+ You cold use the existent default user asmsnmp.
+
+ sqlplus / as sysasm
+
+ create user check_mk identifiebd by checkmk;
+
+ grant sysdba to check_mk;
+
+ There is no ASM Instance Check at the moment. The configuration is needed
+ for the other checks.
+
+ More details can be found in the documentation in
+ https://mathias-kettner.de/checkmk_oracle.html
+
+examples:
+ factory_settings["oracle_instance_defaults"] = {
+    "logins"         : 2,
+    "noforcelogging" : 1,
+    "noarchivelog"   : 1,
+ }
+
+item:
+ ORA <ORACLE_SID> Instance
+
+[parameters]
+parameters (dict):
+
+ "archivelog":  (int) - State if Archive Logmode is enabled. No check is
+ done by default. 0 OK, 1 WARNING, 2 CRIITCAL or 3 UNKNOWN
+
+ "noarchivelog":  (int) -  State in  if Archive Logmode is  disabled. 1 is
+ default. 0 OK, 1 WARNING, 2 CRIITCAL or 3 UNKNOWN
+
+ "forcelogging": (int) - State if of Force Logging is enabled. No check is
+ done by default. 0 OK, 1 WARNING, 2 CRIITCAL or 3 UNKNOWN
+
+ "noforcelogging":  (int) - State if Force Logging is disabled. 1 is
+ default. 0 OK, 1 WARNING, 2 CRIITCAL or 3 UNKNOWN
+
+ "logins":  (int) - State if logins are not possible. 3 is default. 0
+ OK, 1 WARNING, 2 CRIITCAL or 3 UNKNOWN
+
+ "uptime_min": (int, int) - Minimum required uptime (warn, crit) in seconds.
+
+perfdata:
+ The uptime in seconds.
+
+inventory:
+ One service will be created for each Oracle Instance.

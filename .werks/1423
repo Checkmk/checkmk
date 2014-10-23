@@ -1,0 +1,9 @@
+Title: Host HW-inventory: now longer generates an exception on displaying the BIOS date
+Level: 2
+Component: inv
+Compatible: compat
+Version: 1.2.5i6
+Date: 1414053851
+Class: fix
+
+

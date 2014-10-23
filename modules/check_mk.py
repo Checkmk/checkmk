@@ -3858,7 +3858,7 @@ def show_check_manual(checkname):
             return re.sub('(?<!{){', bold_color, re.sub('(?<!})}', tty_normal + attr, line))
 
         def print_sectionheader(left, right):
-            print_splitline(title_color_left, "%-19s" % left, title_color_right, right)
+            print_splitline(title_color_left, "%-25s" % left, title_color_right, right)
 
         def print_subheader(line):
             empty_line()
@@ -3990,12 +3990,12 @@ def show_check_manual(checkname):
                          "solaris":"Solaris", "windows":"Windows", "snmp":"SNMP",
                          "openvms" : "OpenVMS", "vsphere" : "vSphere" }
                          .get(agent, agent.upper()))
-        print_splitline(header_color_left, "Supported Agents:  ", header_color_right, ", ".join(ags))
+        print_splitline(header_color_left, "Supported Agents:        ", header_color_right, ", ".join(ags))
         distro = header['distribution']
         if distro == 'check_mk':
             distro = "official part of Check_MK"
-        print_splitline(header_color_left, "Distribution:      ", header_color_right, distro)
-        print_splitline(header_color_left, "License:           ", header_color_right, header['license'])
+        print_splitline(header_color_left, "Distribution:            ", header_color_right, distro)
+        print_splitline(header_color_left, "License:                 ", header_color_right, header['license'])
 
         empty_line()
         print_textbody(header['description'])

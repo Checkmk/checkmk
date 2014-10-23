@@ -1,0 +1,9 @@
+Title: ups_socomec_out_source: New check for checking the power source of out phases for Socomec UPSs
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1413993443
+Class: feature
+
+

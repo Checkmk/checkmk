@@ -1,0 +1,11 @@
+Title: veeam_client: Check now also outputs ReadSize and TransferedSize
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1414050515
+Class: feature
+
+If you want to use this new information, you also have to update the agent plugin.
+If you don't want, you can keep the old plugin.
+

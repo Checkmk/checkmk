@@ -70,7 +70,7 @@ sidebar_snapins["about"] = {
 def visuals_by_topic(permitted_visuals,
         default_order = [ _("Overview"), _("Hosts"), _("Hostgroups"), _("Services"), _("Servicegroups"),
                          _("Business Intelligence"), _("Problems"), _("Addons") ]):
-    s = [ (visual.get("topic") or _("Other"), visual.get("title"), name, 'painters' in visual)
+    s = [ (_u(visual.get("topic") or _("Other")), _u(visual.get("title")), name, 'painters' in visual)
           for name, visual
           in permitted_visuals
           if not visual["hidden"] and not visual.get("mobile")]

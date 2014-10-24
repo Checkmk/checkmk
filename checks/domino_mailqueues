@@ -48,8 +48,7 @@ def check_domino_mailqueues(item, params, info):
         if item == domino_mailqueues[val][0]:
             reading = int(line[0][1])
             warn, crit = params.get("queue_length")
-            infotext = "%d Mails in %s Queue" % \
-                        (reading, domino_mailqueues[val][1])
+            infotext = "%d %s" % (reading, domino_mailqueues[val][1])
             levels = " (Warn/Crit at %s/%s)" % ( warn, crit )
             perfdata = [ ( "mails", reading, warn, crit ) ]
             state = 0

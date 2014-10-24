@@ -24,34 +24,35 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+domino_transactions_default_levels = ( 30000, 35000 )
 
-def fahrenheit_to_celsius(tempf):
-    return (float(tempf) - 32) * (5.0 / 9.0)
+def inventory_domino_transactions(info):
+    if info:
+        yield None, 'domino_transactions_default_levels'
+
+def check_domino_transactions(_no_item, params, info):
+    if info:
+        reading = int(info[0][0])
+        warn, crit = params
+        infotext = "Transactions per minute (avg): %s" % reading
+        levels = " (Warn/Crit at %s/%s)" % ( warn, crit )
+        perfdata = [ ( "transactions", reading, warn, crit ) ]
+        state = 0
+        if reading >= crit:
+            state = 2
+            infotext += levels
+        elif reading >= warn:
+            state = 1
+            infotext += levels
+        yield state, infotext, perfdata
 
 
-# Checks Celsius temperature against crit/warn levels defined in params. temp must
-# be int or float
-
-def check_temperature(temp, params):
-
-    def tostring(temp):
-        if type(temp) == int:
-            return "%d" % temp
-        else:
-            return "%.1f" % temp
-
-    warn, crit = params
-    perfdata = [ ("temp", temp, warn, crit) ]
-    infotext  = "Temperature: %s °C" % tostring(temp)
-    levelstext = " (warn/crit at %s/%s °C)" % (tostring(warn), tostring(crit))
-
-    if crit != None and temp >= crit:
-        status = 2
-        infotext += levelstext
-    elif warn != None and temp >= warn:
-        status = 1
-        infotext += levelstext
-    else:
-        status = 0
-
-    return status, infotext, perfdata
+check_info["domino_transactions"] = {
+    "check_function"          : check_domino_transactions,
+    "inventory_function"      : inventory_domino_transactions,
+    "service_description"     : "Domino Server Transactions",
+    "has_perfdata"            : True,
+    "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.311.1.1.3.1.2",
+    "snmp_info"               : (".1.3.6.1.4.1.334.72.1.1.6.3", [2]),
+    "group"		      : "domino_transactions"
+}

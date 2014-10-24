@@ -310,7 +310,6 @@ def perfometer_temperature(row, check_command, perf_data):
     state = row["service_state"]
     color = "#39f"
     value = float(perf_data[0][1])
-    crit = savefloat(perf_data[0][4])
     return u"%d °C" % int(value), perfometer_logarithmic(value, 40, 1.2, color)
 
 perfometers["check_mk-nvidia.temp"] = perfometer_temperature
@@ -345,6 +344,7 @@ perfometers["check_mk-arris_cmts_temp"] = perfometer_temperature
 perfometers["check_mk-casa_cpu_temp"] = perfometer_temperature
 perfometers["check_mk-rms200_temp"] = perfometer_temperature
 perfometers["check_mk-juniper_screenos_temp"] = perfometer_temperature
+perfometers["check_mk-lnx_thermal"] = perfometer_temperature
 
 def perfometer_temperature_multi(row, check_command, perf_data):
     display_value = -1

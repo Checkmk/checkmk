@@ -1,0 +1,10 @@
+title: IBM Lotus Domino: Informational Data
+agents: snmp
+catalog: app/lotusnotes
+license: GPL
+distribution: check_mk
+description:
+ This check uses snmp to extract the following informational data about a
+ Lotus Notes Server: {lnServerName} the server name, {lnMailDomain} the server
+ domain, {lnServerNotesVersion} the Lotus Notes version. No configuration and
+ no limits can be set in this check.

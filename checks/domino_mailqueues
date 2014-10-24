@@ -37,12 +37,10 @@ domino_mailqueues = {
 }
 
 def inventory_domino_mailqueues(info):
-    inventory = []
     for line in info:
         val = int(line[0][0].split(".")[12])
         if val in domino_mailqueues.keys():
-            inventory.append(( domino_mailqueues[val][0], "domino_mailqueues_defaults" ))
-    return inventory
+            yield domino_mailqueues[val][0], {}
 
 def check_domino_mailqueues(item, params, info):
     for line in info:
@@ -50,8 +48,7 @@ def check_domino_mailqueues(item, params, info):
         if item == domino_mailqueues[val][0]:
             reading = int(line[0][1])
             warn, crit = params.get("queue_length")
-            infotext = "%d Mails in %s Queue" % \
-                        (reading, domino_mailqueues[val][1])
+            infotext = "%d %s" % (reading, domino_mailqueues[val][1])
             levels = " (Warn/Crit at %s/%s)" % ( warn, crit )
             perfdata = [ ( "mails", reading, warn, crit ) ]
             state = 0
@@ -61,14 +58,12 @@ def check_domino_mailqueues(item, params, info):
             elif reading >= warn:
                 state = 1
                 infotext += levels
-            return state, infotext, perfdata
-
-    return 3, "no information found"
+            yield state, infotext, perfdata
 
 check_info["domino_mailqueues"] = {
     "check_function"          : check_domino_mailqueues,
     "inventory_function"      : inventory_domino_mailqueues,
-    "service_description"     : "Domino %s",
+    "service_description"     : "Domino Queue %s",
     "has_perfdata"            : True,
     "default_levels_variable" : "domino_mailqueues_defaults",
     "snmp_scan_function"      : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.311.1.1.3.1.2",

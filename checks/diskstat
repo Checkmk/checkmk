@@ -96,12 +96,12 @@ def diskstat_parse_info(info):
                 info_plain.append(line)
             elif phase == 'dmsetup_info':
                 try:
-                    majmin = tuple(map(int, line[2].split(':')))
+                    maj, min = map(int, line[2].split(':'))
                     if len(line) == 5:
                         name = "LVM %s" % line[1]
                     else:
                         name = "DM %s" % line[1]
-                    nameinfo[majmin] = name
+                    nameinfo[node, maj, min] = name
                 except:
                     pass # ignore such crap as "No Devices Found"
             elif phase == 'vx_dsk':
@@ -109,14 +109,15 @@ def diskstat_parse_info(info):
                 min = int(line[2], 16)
                 group, disk = line[3].split('/')[-2:]
                 name = "VxVM %s-%s" % (group, disk)
-                nameinfo[(maj, min)] = name
+                nameinfo[(node, maj, min)] = name
 
     return info_plain, nameinfo
 
 def diskstat_rewrite_device(nameinfo, linestart):
-    major, minor = map(int, linestart[:2])
-    device = linestart[2]
-    return nameinfo.get((major, minor), device)
+    node = linestart[0]
+    major, minor = map(int, linestart[1:3])
+    device = linestart[3]
+    return nameinfo.get((node, major, minor), device)
 
 def linux_diskstat_convert(info):
     info, nameinfo = diskstat_parse_info(info)
@@ -132,7 +133,7 @@ def linux_diskstat_convert(info):
     #  7: write queue length *counters*
     rewritten = [
         ( l[0], # node name or None
-        diskstat_rewrite_device(nameinfo, l[1:4]),
+        diskstat_rewrite_device(nameinfo, l[0:4]),
         int(l[6]),
         int(l[10]),
         int(l[4]),

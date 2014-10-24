@@ -77,3 +77,60 @@ def check_cpu_util(util, params, this_time = None):
     perfdata += extraperf # reference curve for predictive levels
     return state, infotext, perfdata
 
+# This one can handle user, system and wait
+def check_cpu_util_unix(values, params):
+    this_time = int(time.time())
+    # Compute jiffi-differences of all relevant counters
+    diff_values = []
+    n = 0
+    global g_counters
+    for v in values:
+        n += 1
+        countername = "cpu.util.%d" % n
+        last_time, last_val = g_counters.get(countername, (0, 0))
+        diff_values.append(v - last_val)
+        g_counters[countername] = (this_time, v)
+
+    sum_jiffies = sum(diff_values) # do not account for steal!
+    if sum_jiffies == 0:
+        raise MKCounterWrapped(None, "Too short time difference since last check")
+
+    user        = diff_values[0] + diff_values[1] # add user + nice
+    system      = diff_values[2]
+    wait        = diff_values[3]
+    user_perc   = 100.0 * float(user)   / float(sum_jiffies)
+    system_perc = 100.0 * float(system) / float(sum_jiffies)
+    wait_perc   = 100.0 * float(wait)   / float(sum_jiffies)
+    perfdata = [
+          ( "user",   "%.3f" % user_perc ),
+          ( "system", "%.3f" % system_perc ),
+          ( "wait",   "%.3f" % wait_perc ) ]
+
+    yield 0, "user: %.1f%%, system: %.1f%%" % (user_perc, system_perc), perfdata
+
+    # Handle level on iowait
+    state = 0
+    if "iowait" in params and params["iowait"] != None:
+        warn, crit = params["iowait"]
+        if wait_perc >= crit:
+            state = 2
+        elif wait_perc >= warn:
+            state = 1
+    yield state, "wait: %.1f%%" % (wait_perc)
+
+    # Total utilization
+    util_total_perc = user_perc + system_perc + wait_perc
+    state = 0
+    levelstext = ""
+    if "util" in params:
+        warn, crit = params["util"]
+        if util_total_perc >= crit:
+            state = 2
+        elif util_total_perc >= warn:
+            state = 1
+        else:
+            state = 0
+        if state:
+            levelstext = " (warn/crit at %.1f%%/%.1f%%)" % (warn, crit)
+
+    yield state, "total: %.1f%%" % util_total_perc + levelstext

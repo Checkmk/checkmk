@@ -74,6 +74,7 @@
     * 1442 ups_socomec_out_source: New check for checking the power source of out phases for Socomec UPSs
     * 0662 domino_mailqueues: new check to monitor mail queues in Lotus Domino
     * 1188 veeam_client: Check now also outputs ReadSize and TransferedSize...
+    * 0663 domino_info: new check to extract informational data about a Lotus Domino Server
     * 1051 FIX: tcp_conn_stats: fix missing performance data...
     * 1142 FIX: winperf_ts_sessions: fix computation, check has never really worked
     * 1090 FIX: zfsget: fixed exception which happened on incomplete zfs entries

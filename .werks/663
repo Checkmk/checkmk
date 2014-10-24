@@ -1,0 +1,9 @@
+Title: domino_info: new check to extract informational data about a Lotus Domino Server
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1414137636
+Class: feature
+
+

@@ -41,7 +41,7 @@ def get_input(valuespec, varprefix):
 
 
 def edit_dictionary(entries, value, **args):
-    result = edit_dictionaries([("value", entries)], value, **args)
+    result = edit_dictionaries([("value", entries)], {"value": value}, **args)
     if result:
         return result["value"]
     else:

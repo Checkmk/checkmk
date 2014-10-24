@@ -1694,23 +1694,28 @@ weekdays = {
 
 class RelativeDate(OptionalDropdownChoice):
     def __init__(self, **kwargs):
-        ValueSpec.__init__(self, **kwargs)
-        self._choices = [
-          (0, _("today")),
-          (1, _("tomorrow"))]
+        choices = [
+            (0, _("today")),
+            (1, _("tomorrow"))
+        ]
         weekday = time.localtime(today()).tm_wday
         for w in range(2, 7):
             wd = (weekday + w) % 7
-            self._choices.append((w, weekdays[wd]))
+            choices.append((w, weekdays[wd]))
         for w in range(0, 7):
             wd = (weekday + w) % 7
             if w < 2:
                 title = _(" next week")
             else:
                 title = _(" in %d days") % (w + 7)
-            self._choices.append((w + 7, weekdays[wd] + title))
-        self._explicit = Integer()
-        self._otherlabel = _("in ... days")
+            choices.append((w + 7, weekdays[wd] + title))
+
+        kwargs['choices']    = choices
+        kwargs['explicit']   = Integer()
+        kwargs['otherlabel'] = _("in ... days")
+
+        OptionalDropdownChoice.__init__(self, **kwargs)
+
         if "default_days" in kwargs:
             self._default_value = kwargs["default_days"] * seconds_per_day + today()
         else:

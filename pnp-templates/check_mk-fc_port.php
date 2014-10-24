@@ -89,6 +89,19 @@ if($bandwidth > $base * $base * $base) {
 	$bwuom = 'k';
 }
 
+# The number of data source various due to different
+# settings (such as averaging). We rather work with names
+# than with numbers.
+$RRD = array();
+foreach ($NAME as $i => $n) {
+    $RRD[$n]    = "$RRDFILE[$i]:$DS[$i]:MAX";
+    $RRDAVG[$n] = "$RRDFILE[$i]:$DS[$i]:AVERAGE";
+    $WARN[$n]   = $WARN[$i];
+    $CRIT[$n]   = $CRIT[$i];
+    $MIN[$n]    = $MIN[$i];
+    $MAX[$n]    = $MAX[$i];
+}
+
 if ($mBandwidthH < 10)
    $range = $mBandwidthH;
 else
@@ -114,7 +127,7 @@ $def[1] =
 
   $def[1] .= "".
   # incoming
-  "DEF:inbytes=$RRDFILE[1]:$DS[1]:MAX ".
+  "DEF:inbytes=$RRD[in] ".
   "CDEF:intraffic=inbytes,$unit_multiplier,* ".
   "CDEF:inmb=intraffic,1048576,/ ".
   "AREA:inmb#00e060:\"in            \" ".
@@ -127,7 +140,7 @@ $def[1] =
   "GPRINT:inperc:\"%7.1lf %s$unit/s\\n\" ".
 
   # outgoing
-  "DEF:outbytes=$RRDFILE[2]:$DS[2]:MAX ".
+  "DEF:outbytes=$RRD[out] ".
   "CDEF:outtraffic=outbytes,$unit_multiplier,* ".
   "CDEF:minusouttraffic=outtraffic,-1,* ".
   "CDEF:outmb=outtraffic,1048576,/ ".
@@ -146,8 +159,8 @@ $def[1] =
 # averages
 if (isset($DS[9])) {
   $def[1] .=
-  "DEF:inbytesa=$RRDFILE[9]:$DS[9]:MAX ".
-  "DEF:outbytesa=$RRDFILE[10]:$DS[10]:MAX ".
+  "DEF:inbytesa=$RRD[in_avg] ".
+  "DEF:outbytesa=$RRD[out_avg] ".
   "CDEF:intraffica=inbytesa,$unit_multiplier,* ".
   "CDEF:outtraffica=outbytesa,$unit_multiplier,* ".
   "CDEF:inmba=intraffica,1048576,/ ".
@@ -169,7 +182,7 @@ $opt[2] = "--vertical-label \"objects/sec\" --title \"Objects $hostname / $servi
 $def[2] =
   # rxobjects
   "HRULE:0#c0c0c0 ".
-  "DEF:inu=$RRDFILE[3]:$DS[3]:MAX ".
+  "DEF:inu=$RRD[rxobjects] ".
   "CDEF:in=inu ".
   "AREA:inu#00ffc0:\"rxobjects         \" ".
   "GPRINT:inu:LAST:\"%9.1lf/s last \" ".
@@ -180,15 +193,16 @@ $def[2] =
   "GPRINT:inperc:\"%9.1lf/s\\n\" ".
 
   # txobjects
-  "DEF:outu=$RRDFILE[4]:$DS[4]:MAX ".
+  "DEF:outu=$RRD[txobjects] ".
   "CDEF:minusoutu=0,outu,- ".
   "AREA:minusoutu#00c0ff:\"txobjects         \" ".
   "GPRINT:outu:LAST:\"%9.1lf/s last \" ".
   "GPRINT:outu:AVERAGE:\"%9.1lf/s avg \" ".
   "GPRINT:outu:MAX:\"%9.1lf/s max\\n\" ".
-  "VDEF:outperc=minusoutu,5,PERCENTNAN ".
-  "LINE:outperc#0000cf:\"out 95% percentile\" ".
-  "GPRINT:outperc:\"%9.1lf/s\\n\" ".
+  "VDEF:outperc_neg=minusoutu,5,PERCENTNAN ".
+  "VDEF:outperc_pos=outu,5,PERCENTNAN ".
+  "LINE:outperc_neg#0000cf:\"out 95% percentile\" ".
+  "GPRINT:outperc_pos:\"%9.1lf/s\\n\" ".
   "";
 
 # Graph 3: errors and discards
@@ -196,8 +210,8 @@ $ds_name[3] = 'Errors and discards';
 $opt[3] = "--vertical-label \"errors/sec\" -X0 --title \"Problems $hostname / $servicedesc\" ";
 $def[3] =
   "HRULE:0#c0c0c0 ".
-  "DEF:crcerr=$RRDFILE[5]:$DS[5]:MAX ".
-  "DEF:encout=$RRDFILE[6]:$DS[6]:MAX ".
+  "DEF:crcerr=$RRD[rxcrcs] ".
+  "DEF:encout=$RRD[rxencoutframes] ".
   "AREA:crcerr#ff0000:\"crc errors        \" ".
   "GPRINT:crcerr:LAST:\"%7.2lf/s last  \" ".
   "GPRINT:crcerr:AVERAGE:\"%7.2lf/s avg  \" ".
@@ -206,8 +220,8 @@ $def[3] =
   "GPRINT:encout:LAST:\"%7.2lf/s last  \" ".
   "GPRINT:encout:AVERAGE:\"%7.2lf/s avg  \" ".
   "GPRINT:encout:MAX:\"%7.2lf/s max\\n\" ".
-  "DEF:c3discards=$RRDFILE[7]:$DS[7]:MAX ".
-  "DEF:notxcredits=$RRDFILE[8]:$DS[8]:MAX ".
+  "DEF:c3discards=$RRD[c3discards] ".
+  "DEF:notxcredits=$RRD[notxcredits] ".
   "CDEF:minusc3=0,c3discards,- ".
   "CDEF:minusnotxcredits=0,notxcredits,- ".
   "AREA:minusc3#ff0080:\"c3 discards       \" ".

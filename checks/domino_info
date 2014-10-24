@@ -27,40 +27,31 @@
 
 # Example SNMP walk:
 #
-# InTaskName: The actual name of the task as it appears in the SERVER.TASK statistic on the server.
-# .1.3.6.1.4.1.334.72.1.1.6.1.2.1.4.0 Router
-# .1.3.6.1.4.1.334.72.1.1.6.1.2.1.4.1 tm_grab Subsystems
-# .1.3.6.1.4.1.334.72.1.1.6.1.2.1.4.2 tm_grab M01
-# .1.3.6.1.4.1.334.72.1.1.6.1.2.1.4.3 tm_grab M02
-# .1.3.6.1.4.1.334.72.1.1.6.1.2.1.4.4 tm_grab M03
-# .1.3.6.1.4.1.334.72.1.1.6.1.2.1.4.5 tm_grab M04
-# .1.3.6.1.4.1.334.72.1.1.6.1.2.1.4.6 tm_grab M05
-# .1.3.6.1.4.1.334.72.1.1.6.1.2.1.4.7 tm_grab
-# .1.3.6.1.4.1.334.72.1.1.6.1.2.1.4.8 Router
+# .1.3.6.1.4.1.334.72.1.1.4.8.0 MEDEMA
+# .1.3.6.1.4.1.334.72.1.1.6.2.1.0 CN=HH-BK4/OU=SRV/O=MEDEMA/C=DE
+# .1.3.6.1.4.1.334.72.1.1.6.2.4.0 Release 8.5.3FP5 HF89
 
 
-inv_domino_tasks_rules = []
-inv_domino_tasks = []
+def inventory_domino_info(info):
+    if info and len(info) == 3:
+        yield None, None
 
-def inventory_domino_tasks(info):
-    return inventory_ps_common(inv_domino_tasks, inv_domino_tasks_rules, info)
+def check_domino_info(_no_item, _no_params, info):
+    if len(info) == 3:
+        domain, name, release = info
+        infotext = "Name: %s, Domain: %s, %s" % ( domain[0][0], name[0][0], release[0][0] )
+        yield 0, infotext
 
-def check_domino_tasks(item, params, info):
-    return check_ps_common( item, params, info, with_perfdata = True, info_name = "Tasks" )
-
-check_info['domino_tasks'] = {
-    "check_function"      : check_domino_tasks,
-    "inventory_function"  : inventory_domino_tasks,
-    "has_perfdata"        : True,
-    "group"               : "domino_tasks",
-    "service_description" : "Domino Task %s",
-    "includes"            : [ "ps.include" ],
-    "node_info"           : True, # add first column with actual host name
+check_info['domino_info'] = {
+    "check_function"      : check_domino_info,
+    "inventory_function"  : inventory_domino_info,
+    "has_perfdata"        : False,
+    "service_description" : "Domino Info",
     "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.311.1.1.3.1.2",
-    "snmp_info"           : (".1.3.6.1.4.1.334.72.1.1.6.1.2.1",
-                                [
-                                    4, # InTaskName
-                                ]
-                            ),
+    "snmp_info"           : [
+                                    [ ".1.3.6.1.4.1.334.72.1.1.4", [ 8 ] ], # lnMailDomain
+                                    [ ".1.3.6.1.4.1.334.72.1.1.6.2", [ 1 ] ], # lnServerName
+                                    [ ".1.3.6.1.4.1.334.72.1.1.6.2", [ 4 ] ], # lnServerNotesVersion
+                            ]
 }
 

@@ -1,0 +1,9 @@
+Title: statgrab_cpu: Check can now handle parameters
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1414158659
+Class: feature
+
+

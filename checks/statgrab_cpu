@@ -28,49 +28,38 @@
 
 def inventory_statgrab_cpu(info):
    if len(info) > 1:
-       return [(None, None)]
+       return [(None, {})]
 
 
 def check_statgrab_cpu(item, params, info):
-    global g_counters
+    if not params:
+        params = {}
     user = 0
+    nice = 0
     for var, value in info:
         if var == 'iowait':
             wait = int(value)
         elif var == 'kernel':
             system = int(value)
-        elif var == 'nice' or var == 'user':
-            user += int(value)
+        elif var == 'nice': 
+            nice = int(value)
+        elif var == 'user':
+            user = int(value)
         elif var == 'total':
             total = int(value)
-
-    values = [ user, system, wait, total ]
-    this_time = int(time.time())
-    diff_values = [ ]
-    n = 0
-    for v in values:
-        n += 1
-        countername = "cpu.util.%d" % n
-        last_time, last_val = g_counters.get(countername, (0, 0))
-        diff_values.append(v - last_val)
-        g_counters[countername] = (this_time, v)
-
-    diff_total = diff_values[3]
-    if diff_total == 0:
-        return (0, "too short interval")
-    user_perc   = 100.0 * float(diff_values[0]) / float(diff_total)
-    system_perc = 100.0 * float(diff_values[1]) / float(diff_total)
-    wait_perc   = 100.0 * float(diff_values[2]) / float(diff_total)
-    perfdata = [
-          ( "user",   "%.3f" % user_perc ),
-          ( "system", "%.3f" % system_perc ),
-          ( "wait",   "%.3f" % wait_perc ) ]
-    return (0, "user: %2.0f%%, system: %2.0f%%, wait: %2.0f%%" % (user_perc, system_perc, wait_perc), perfdata)
+    idle = 100 - total
+    # user, nice, system, wait, hw-int, sw-int, idle
+    values = [ user, nice, system, wait, 0, 0, idle ]
+    
+    # No return cause of the use of yield
+    return check_cpu_util_unix(values, params)
 
 
 check_info["statgrab_cpu"] = {
-    'check_function':          check_statgrab_cpu,
-    'inventory_function':      inventory_statgrab_cpu,
-    'service_description':     'CPU utilization',
-    'has_perfdata':            True,
+    'check_function':       check_statgrab_cpu,
+    'inventory_function':   inventory_statgrab_cpu,
+    'service_description':  'CPU utilization',
+    'has_perfdata':         True,
+    'includes':             ['cpu_util.include'],
+    'group':                'cpu_iowait',                    
 }

@@ -63,15 +63,15 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
         else:
             sections.append((keyname, None, d)) # valuespec Dictionary, title used from dict
 
-    new_value = value.copy()
     if html.var("filled_in") == formname and html.transaction_valid():
         if not preview and consume_transid:
             html.check_transaction()
 
         messages = []
+        new_value = {}
         for keyname, section_title, entries in sections:
+            new_value[keyname] = value.get(keyname, {}).copy()
             if type(entries) == list:
-                new_value[keyname] = {}
                 for name, vs in entries:
                     if len(sections) == 1:
                         vp = varprefix
@@ -87,8 +87,9 @@ def edit_dictionaries(dictionaries, value, focus=None, hover_help=True,
 
             else:
                 try:
-                    new_value[keyname] = entries.from_html_vars(keyname)
-                    entries.validate_value(new_value[keyname], keyname)
+                    edited_value = entries.from_html_vars(keyname)
+                    entries.validate_value(edited_value, keyname)
+                    new_value[keyname].update(edited_value)
                 except Exception, e:
                     messages.append("%s: %s" % (entries.title() or _("Properties"), e.message))
                     html.add_user_error(e.varname, e.message)

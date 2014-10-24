@@ -1,0 +1,13 @@
+Title: fc_port: Fixed invalid values of counters, fixed wrong values in graphs
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1414156402
+Class: fix
+
+Previous versions of the checks computed wrong values for all counters like
+transfered bytes, errors etc. This has been fixed now.
+
+The performance graphs, for example error counters, were using wrong datasources
+which made the graphs show dramatically wrong values.

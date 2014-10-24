@@ -6866,3 +6866,17 @@ register_check_parameters(
     ),
     "first"
 )
+
+register_check_parameters(
+    subgroup_applications,
+    "domino_users",
+    _("Lotus Domino Users"),
+    Tuple(
+        title = _("Number of Lotus Domino Users"),
+        elements = [
+            Integer(title = _("warning if above"), default_value = 1000 ),
+            Integer(title = _("critical if above"), default_value = 1500 ),
+        ]
+    ),
+    None, None
+)

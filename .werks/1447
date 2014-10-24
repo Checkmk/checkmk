@@ -1,0 +1,9 @@
+Title: domino_transactions: new check to monitor the number of transactions per minute on Lotus Domino servers
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1414146516
+Class: feature
+
+

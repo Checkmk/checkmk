@@ -6880,3 +6880,17 @@ register_check_parameters(
     ),
     None, None
 )
+
+register_check_parameters(
+    subgroup_applications,
+    "domino_transactions",
+    _("Lotus Domino Transactions"),
+    Tuple(
+        title = _("Number of Transactions per Minute on a Lotus Domino Server"),
+        elements = [
+            Integer(title = _("warning if above"), default_value = 30000 ),
+            Integer(title = _("critical if above"), default_value = 35000 ),
+        ]
+    ),
+    None, None
+)

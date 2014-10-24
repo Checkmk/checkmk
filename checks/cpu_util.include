@@ -94,7 +94,6 @@ def check_cpu_util_unix(values, params):
     sum_jiffies = sum(diff_values) # do not account for steal!
     if sum_jiffies == 0:
         raise MKCounterWrapped(None, "Too short time difference since last check")
-    print sum_jiffies
 
     user        = diff_values[0] + diff_values[1] # add user + nice
     system      = diff_values[2]

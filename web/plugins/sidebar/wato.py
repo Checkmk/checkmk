@@ -36,7 +36,7 @@ import config, wato, views, dashboard
 #   +----------------------------------------------------------------------+
 def render_wato(mini):
     if not config.wato_enabled:
-        html.write(_("WATO is disabled in <tt>multisite.mk</tt>."))
+        html.write(_("WATO is disabled."))
         return False
     elif not config.may("wato.use"):
         html.write(_("You are not allowed to use Check_MK's web configuration GUI."))

@@ -1,0 +1,16 @@
+Title: User profiles can not be edited on WATO remote sites anymore
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.5i6
+Date: 1414398442
+Class: fix
+
+In previous versions it was possible for users to edit their own
+user profile (language, password, ...) on WATO remote sites. This
+was an problem, because it leads to inconsistent settings between
+the master and remote site, because the changes on the remote site
+are not synced to the master.
+
+The edit dialog of the user profile has been removed/disabled for
+all users of the remote site of a WATO distributed setup.

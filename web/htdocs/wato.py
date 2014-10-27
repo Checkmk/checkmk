@@ -15218,6 +15218,9 @@ def page_user_profile():
     if not config.may('general.edit_profile') and not config.may('general.change_password'):
         raise MKAuthException(_("You are not allowed to edit your user profile."))
 
+    if not config.wato_enabled:
+        raise MKAuthException(_('User profiles can not be edited (WATO is disabled).'))
+
     success = None
     if html.has_var('_save') and html.check_transaction():
         try:

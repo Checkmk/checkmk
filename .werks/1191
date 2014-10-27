@@ -8,5 +8,5 @@ Class: feature
 
 By default, the behavior of the df check is to ignore this filesystems.
 If you want to see the temp filsystems you have to overwrite the inventory_df_exclude_fs  variable in main.mk in the
-following way: inventory_df_exclude_fs = [ 'tmpfs', 'nfs', 'smbfs', 'cifs', 'iso9660' ]
+following way: inventory_df_exclude_fs = [ 'nfs', 'smbfs', 'cifs', 'iso9660' ]
 

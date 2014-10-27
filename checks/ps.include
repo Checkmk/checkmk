@@ -165,7 +165,11 @@ def process_matches(ps, procname, l_user):
     if ps[0].startswith("(") and ps[0].endswith(")") and len(ps) > 1:
         addinfo = ps[0][1:-1].split(",")
         user = addinfo[0]
-        if userspec and userspec != user:
+        if userspec and userspec.startswith('~'):
+            if not re.match(userspec[1:], user):
+                return False
+
+        elif userspec and userspec != user:
             return False
         l_user[0] = user # return actual user that way
         ps = ps[1:]

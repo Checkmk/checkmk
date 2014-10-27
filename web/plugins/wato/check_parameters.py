@@ -6034,10 +6034,30 @@ register_check_parameters(
                     title = _("Maximum number of matched process for WARNING state"),
                     default_value = 1,
                 )),
-                ( "user", TextAscii(
+                ( "user", Alternative(
                     title = _("Name of operating system user"),
-                    help = _("Leave this empty, if the user does not matter"),
-                    none_is_empty = True,
+                    style = "dropdown",
+                    elements = [
+                        TextAscii(
+                            title = _("Exact name of the oeprating system user")
+                        ),
+                        Transform(
+                            RegExp(size = 50),
+                            title = _("Regular expression matching username"),
+                            help = _("This regex must match the <i>beginning</i> of the complete "
+                                     "username"),
+                            forth = lambda x: x[1:],   # remove ~
+                            back  = lambda x: "~" + x, # prefix ~
+                        ),
+                        FixedValue(
+                            None,
+                            totext = "",
+                            title = _("Match all users"),
+                        )
+                       
+                    ],
+                    match = lambda x: (not x and 2) or (x[0] == '~' and 1 or 0)
+                   
                 )),
                 ( "cpulevels",
                   Tuple(

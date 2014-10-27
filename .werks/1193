@@ -1,0 +1,11 @@
+Title: ps: Manual Checks can now use RegEx for user matching
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1414417457
+Class: feature
+
+If you start the username with a tilde, the string will be interpreted as RegEx.
+When using Wato just choice RegEx in the Dropdown.
+

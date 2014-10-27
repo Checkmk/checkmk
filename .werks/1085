@@ -5,13 +5,13 @@ Version: 1.2.5i5
 Date: 1405937822
 Class: feature
 
-When a quicksearch pattern matched multiple hosts the view <tt>hosts</tt> was shown.
+When a Quicksearch pattern matched multiple hosts the view <i>All hosts</i> was shown.
 This view displayed all services for these hosts, which could lead to plenty of (unwanted) output in the view.
-The quicksearch feature has been changed in the following way<br>
+The quicksearch feature has been changed in the following way:
 
 <ul>
-<li>If there are multiple host matches the <tt>searchhost</tt> view is displayed</li>
-<li>If there is a single match the <tt>hosts</tt> view is displayed (this view also contains the services)</li>
+<li>If there are multiple host matches the <i>Search Host</i> view is displayed</li>
+<li>If there is a single match the <i>Host</i> view is displayed (this view also contains the services)</li>
 </ul>
 
 Note: This also applies to special search patterns like <tt>h:localhost h:otherhost</tt>

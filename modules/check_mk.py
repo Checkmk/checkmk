@@ -5560,6 +5560,10 @@ def do_check_keepalive():
                  (3, len(total_check_output), total_check_output))
 
         keepalive_check_memory(num_checks, keepalive_fd)
+        # In case of profiling do just this one cycle and end afterwards
+        if g_profile:
+            output_profile()
+            sys.exit(0)
 
 
 # Just one lines from stdin. But: make sure that

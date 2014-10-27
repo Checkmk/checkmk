@@ -49,7 +49,7 @@ if not send_path and not spool_dir:
 max_len = 160
 message = os.environ['NOTIFY_HOSTNAME'] + " "
 
-notification_type = os.environ["NOTIFICATIONTYPE"]
+notification_type = os.environ["NOTIFY_NOTIFICATIONTYPE"]
 
 # Prepare Default information and Type PROBLEM, RECOVERY
 if os.environ['NOTIFY_WHAT'] == 'SERVICE':
@@ -76,12 +76,15 @@ if notification_type.startswith("FLAP"):
 elif notification_type.startswith("DOWNTIME"):
     what = notification_type[8:].title()
     message += " Downtime " + what 
+    message += " " + os.environ['NOTIFY_NOTIFICATIONCOMMENT']
 
 elif notification_type == "ACKNOWLEDGEMENT":
     message += " Acknowledged"
+    message += " " + os.environ['NOTIFY_NOTIFICATIONCOMMENT']
 
 elif notification_type == "CUSTOM":
     message += " Custom Notification"
+    message += " " + os.environ['NOTIFY_NOTIFICATIONCOMMENT']
 
 recipient = os.environ['NOTIFY_CONTACTPAGER'].replace(" ", "")
 

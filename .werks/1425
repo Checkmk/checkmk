@@ -8,7 +8,11 @@ Class: feature
 
 If you write your own check plugins you might know that a section
 header can contain additional options separated by a colon.
-For example <tt>&lt;&lt;&lt;lnx_distro:sep(124):persist(141442125)&gt;&gt;&gt;</tt>
+For example:
+
+F+:
+<<<lnx_distro:sep(124):persist(141442125)>>>
+F-:
 
 An additional option <tt>encoding</tt> has been introduced.
 Generally all check plugins should output valid utf-8 encoded text.

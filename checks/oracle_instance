@@ -104,7 +104,7 @@ def check_oracle_instance(item, params, info):
                     state, infotext = state_marker(state, infotext, 'logins', logins, 'RESTRICTED')
 
                 # the new internal database _MGMTDB from 12.1.0.2 is always in NOARCHIVELOG mode
-                if name != '_MGMTDB' and db_unique_name != '_mgmtdb' and sid != '-MGMTDB':
+                if name != '_MGMTDB' and sid != '-MGMTDB':
                     infotext += ', Log Mode %s' % (log_mode.lower())
                     state, infotext = state_marker(state, infotext, 'archivelog', log_mode, 'ARCHIVELOG')
                     state, infotext = state_marker(state, infotext, 'noarchivelog',log_mode,  'NOARCHIVELOG')

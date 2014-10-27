@@ -1,0 +1,19 @@
+Title: New section header option "encoding"
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1414421080
+Class: feature
+
+If you write your own check plugins you might know that a section
+header can contain additional options separated by a colon.<br>
+For example <tt><<<lnx_distro:sep(124):persist(141442125)>>></tt><br><br>
+
+An additional option <tt>encoding</tt> has been introduced.
+Generally all check plugins should output valid utf-8 encoded text.
+In some instances this is not possible, because the plugin itself
+has its own hardcoded encoding. With the encoding option you can specify
+the encoding for this entire section.<br>
+Check_MK will decode the given section output and recode it into utf-8 for
+further processing.

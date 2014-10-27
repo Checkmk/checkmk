@@ -757,6 +757,7 @@ def parse_info(lines, hostname):
     section = []
     section_options = {}
     separator = None
+    encoding  = None
     for line in lines:
         if line[:4] == '<<<<' and line[-4:] == '>>>>':
             host = line[4:-4]
@@ -799,7 +800,16 @@ def parse_info(lines, hostname):
                 until = int(section_options["persist"])
                 persist[section_name] = ( until, section )
 
+            # The section data might have a different encoding
+            encoding = section_options.get("encoding")
+
         elif line != '':
+            if encoding:
+                try:
+                    decoded_line = line.decode(encoding)
+                    line = decoded_line.encode('utf-8')
+                except:
+                    pass
             section.append(line.split(separator))
     return info, piggybacked, persist
 

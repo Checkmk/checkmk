@@ -1,6 +1,6 @@
-Title: New section header option "encoding"
+Title: New section header option "encoding" for agent output
 Level: 1
-Component: checks
+Component: core
 Compatible: compat
 Version: 1.2.5i6
 Date: 1414421080
@@ -10,15 +10,17 @@ If you write your own check plugins you might know that a section
 header can contain additional options separated by a colon.
 For example:
 
+For section headers of agent outputs an additional option <tt>encoding</tt>
+has been introduced.  Generally all check plugins should output valid UTF-8
+encoded text.  In some instances this is not possible, because the plugin
+itself has its own hardcoded encoding. With the encoding option you can
+specify the encoding for this entire section. Check_MK will then decode the
+given section output and recode it into UTF-8 for further processing.
+Example:
+
 F+:
-<<<lnx_distro:sep(124):persist(141442125)>>>
+<<<win_foobar:encoding(cp1252)>>>
 F-:
 
-An additional option <tt>encoding</tt> has been introduced.
-Generally all check plugins should output valid utf-8 encoded text.
-In some instances this is not possible, because the plugin itself
-has its own hardcoded encoding. With the encoding option you can specify
-the encoding for this entire section.
-
-Check_MK will decode the given section output and recode it into utf-8 for
-further processing.
+You find a list of all available encoding
+<a href="https://docs.python.org/2.4/lib/standard-encodings.html">here</a>.

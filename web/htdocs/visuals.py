@@ -1151,6 +1151,9 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
     visual_type = visual_types[visual_type_name]
     module_name = visual_type["module_name"]
     thing_module = __import__(module_name)
+    load_func_name = 'load_%s'% visual_type_name
+    if load_func_name not in thing_module.__dict__:
+        return context_links # in case of exception in "reporting", the load function might be missing
     thing_module.__dict__['load_%s'% visual_type_name]()
     available = thing_module.__dict__['permitted_%s' % visual_type_name]()
 

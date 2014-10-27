@@ -1,0 +1,12 @@
+Title: mknotifyd: now able to check if its still listening for telegrams
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1414413785
+Class: feature
+
+The mknotifyd server is now able to handle heartbeat telegrams.<br>
+Just send an empty pickled python object to the server, like "N." (a pickled None)<br>
+The mknotifyd will answer with an "OK".<br>
+You can monitor this behaviour with the active check "Check connecting to a TCP port".

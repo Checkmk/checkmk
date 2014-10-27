@@ -1,0 +1,12 @@
+Title: Linux agent now also sends information about tmpfs
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1414403947
+Class: feature
+
+By default, the behavior of the df check is to ignore this filesystems.
+If you want to see the temp filsystems you have to overwrite the inventory_df_exclude_fs  variable in main.mk in the
+following way: inventory_df_exclude_fs = [ 'nfs', 'smbfs', 'cifs', 'iso9660' ]
+

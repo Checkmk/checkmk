@@ -30,27 +30,6 @@ from lib import *
 from valuespec import *
 import config, table
 
-visual_types = {
-    'views': {
-        'show_url'           : 'view.py',
-        'ident_attr'         : 'view_name',
-        'title'              : _("view"),
-        'plural_title'       : _("views"),
-        'module_name'        : 'views',
-        'multicontext_links' : False,
-    },
-    'dashboards': {
-        'show_url'           : 'dashboard.py',
-        'ident_attr'         : 'name',
-        'title'              : _("dashboard"),
-        'plural_title'       : _("dashboards"),
-        'module_name'        : 'dashboard',
-        'popup_add_handler'  : 'popup_list_dashboards',
-        'add_visual_handler' : 'popup_add_dashlet',
-        'multicontext_links' : False,
-    },
-}
-
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
 #   |                  |  _ \| |_   _  __ _(_)_ __  ___                    |
@@ -69,10 +48,32 @@ def load_plugins():
     if loaded_with_language == current_language:
         return
 
-    global title_functions ; title_functions = []
-    global infos ; infos = {}
-    global multisite_filters         ; multisite_filters          = {}
-    global ubiquitary_filters        ; ubiquitary_filters         = [] # Always show this filters
+    global visual_types
+    visual_types = {
+        'views': {
+            'show_url'           : 'view.py',
+            'ident_attr'         : 'view_name',
+            'title'              : _("view"),
+            'plural_title'       : _("views"),
+            'module_name'        : 'views',
+            'multicontext_links' : False,
+        },
+        'dashboards': {
+            'show_url'           : 'dashboard.py',
+            'ident_attr'         : 'name',
+            'title'              : _("dashboard"),
+            'plural_title'       : _("dashboards"),
+            'module_name'        : 'dashboard',
+            'popup_add_handler'  : 'popup_list_dashboards',
+            'add_visual_handler' : 'popup_add_dashlet',
+            'multicontext_links' : False,
+        },
+    }
+
+    global title_functions      ; title_functions    = []
+    global infos                ; infos              = {}
+    global multisite_filters    ; multisite_filters  = {}
+    global ubiquitary_filters   ; ubiquitary_filters = [] # Always show these filters
 
     load_web_plugins('visuals', globals())
     loaded_with_language = current_language
@@ -1150,6 +1151,9 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
     visual_type = visual_types[visual_type_name]
     module_name = visual_type["module_name"]
     thing_module = __import__(module_name)
+    load_func_name = 'load_%s'% visual_type_name
+    if load_func_name not in thing_module.__dict__:
+        return context_links # in case of exception in "reporting", the load function might be missing
     thing_module.__dict__['load_%s'% visual_type_name]()
     available = thing_module.__dict__['permitted_%s' % visual_type_name]()
 

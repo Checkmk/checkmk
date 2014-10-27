@@ -182,9 +182,12 @@ def sidebar_foot():
     if config.may("general.configure_sidebar"):
         html.icon_button("sidebar_add_snapin.py", _("Add snapin to the sidebar"), "sidebar_addsnapin",
                          target="main")
-    if config.may("general.edit_profile") or config.may("general.change_password"):
-        html.icon_button("user_profile.py", _("Edit your personal settings, change your password"), "sidebar_settings",
-                         target="main")
+    # editing the profile is not possible on remote sites which are sync targets
+    # of a central WATO system
+    if config.wato_enabled and \
+       (config.may("general.edit_profile") or config.may("general.change_password")):
+        html.icon_button("user_profile.py", _("Edit your personal settings, change your password"),
+            "sidebar_settings", target="main")
     if config.may("general.logout") and not config.auth_by_http_header:
         html.icon_button("logout.py", _("Log out"), "sidebar_logout", target="_top")
 

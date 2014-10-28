@@ -1,0 +1,9 @@
+Title: oracle_jobs: Bugfix for forever running jobs
+Level: 3
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1414494668
+Class: fix
+
+A forever running Scheduler-Job has now an OK state.

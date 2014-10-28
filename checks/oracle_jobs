@@ -111,10 +111,12 @@ def check_oracle_jobs(item, params, info):
             state = max(state, 1)
     output.append(txt)
 
-    # bugfix for an error in mk_oracle agent with missing round over last_duration
-    last_duration = int(job_runtime.replace('.',',').split(',',1)[0])
-
-    output.append("Last Duration: %s" % (get_age_human_readable(last_duration)))
+    if job_runtime == '':
+        last_duration = 0
+    else:
+        last_duration = int(job_runtime.replace('.',',').split(',',1)[0])
+        # bugfix for an error in mk_oracle agent with missing round over last_duration
+        output.append("Last Duration: %s" % (get_age_human_readable(last_duration)))
 
     if "run_duration" in params:
         warn, crit = params["run_duration"]
@@ -139,10 +141,15 @@ def check_oracle_jobs(item, params, info):
             job_nextrun = job_schedule
     output.append("Next Run: %s" % job_nextrun)
 
-    txt = "Last Run Status: %s" % (job_status)
-    if job_status != "SUCCEEDED":
-        txt += "(!!)"
-        state = max(state, 2)
+    # A job who is running forever has no last run state and job_status is
+    # STOPPED
+    if job_state == "RUNNING" and job_runtime == '' and job_status == 'STOPPED':
+        txt = 'Job is running forever'
+    else:
+        txt = "Last Run Status: %s" % (job_status)
+        if job_status != "SUCCEEDED":
+            txt += "(!!)"
+            state = max(state, 2)
     output.append(txt)
 
     return (state, ", ".join(output), perfdata)

@@ -1173,3 +1173,15 @@ def perfometer_docsis_snr(row, check_command, perf_data):
     return "%.1f dB" % dbmv, perfometer_logarithmic(dbmv, 50, 2, "#ad6")
 
 perfometers["check_mk-docsis_channels_upstream"] = perfometer_docsis_snr
+
+def perfometer_veeam_client(row, check_command, perf_data):
+    avgspeed_bytes = int(perf_data[4][1])
+    duration_secs = int(perf_data[3][1])
+    h = perfometer_logarithmic_dual_independent(avgspeed_bytes, '#54b948', 10000000, 2, duration_secs, '#2098cb', 1000, 2)
+
+    avgspeed = bytes_human_readable(avgspeed_bytes)
+    duration = age_human_readable(duration_secs)
+
+    return "%s/s&nbsp;&nbsp;&nbsp;%s" % (avgspeed, duration), h
+
+perfometers["check_mk-veeam_client"] = perfometer_veeam_client

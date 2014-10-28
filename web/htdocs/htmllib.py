@@ -71,6 +71,7 @@ class html:
         self.keybindings_enabled = True
         self.io_error = False
         self.enable_debug = False
+        self.screenshotmode = True
         self.help_visible = False
         self.treestates = {}
         self.treestates_for_id = None
@@ -746,11 +747,22 @@ class html:
     def immediate_browser_redirect(self, secs, url):
         self.javascript("setReload(%s, '%s');" % (secs, url))
 
+    def body_css_classes(self):
+        body_classes = [ "main" ]
+        if self.var("_body_class"):
+            body_classes.append(self.var("_body_class"))
+        if self.screenshotmode:
+            body_classes.append("screenshotmode")
+        return " ".join(body_classes)
+
+    def body_start(self, title='', **args):
+        self.html_head(title, **args)
+        self.write('<body class="%s">' % self.body_css_classes())
+
     def header(self, title='', **args):
         if self.output_format == "html":
             if not self.header_sent:
-                self.html_head(title, **args)
-                self.write('<body class="main %s">' % self.var("_body_class", ""))
+                self.body_start(title, **args)
                 self.header_sent = True
                 if self.render_headfoot:
                     self.top_heading(title)
@@ -775,10 +787,6 @@ class html:
         self.begin_foldable_container("html", "debug_vars", True, _("GET/POST variables of this page"))
         self.debug_vars(hide_with_mouse = False)
         self.end_foldable_container()
-
-    def body_start(self, title='', **args):
-        self.html_head(title, **args)
-        self.write('<body class="main %s">' % self.var("_body_class", ""))
 
     def bottom_focuscode(self):
         if self.focus_object:

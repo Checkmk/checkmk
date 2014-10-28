@@ -1,0 +1,10 @@
+Title: veeam_jobs: Check now recognize sync jobs
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1414413296
+Class: fix
+
+The check not longer throws an unknown state.
+

@@ -70,6 +70,14 @@ body.main {
     background-color: #426D8A;
 }
 
+/* Special mode for creating screenshots of single elements. Omit background.
+   This can be selected in multisite.mk with screenshotmode = True or screenshotmode=1
+   on the URL */
+body.main.screenshotmode {
+    background-image: url("");
+    background-color: white;
+}
+
 body.main div.main {
     padding-left: 10px;
     border-left: 1px solid red;

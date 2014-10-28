@@ -89,6 +89,32 @@ def perfometer_logarithmic_dual(value_left, color_left, value_right, color_right
 
     return result + '</tr></table>'
 
+def perfometer_logarithmic_dual_independent\
+    (value_left, color_left, half_value_left, base_left, value_right, color_right, half_value_right, base_right):
+    result = '<table><tr>'
+    for where, value, color, half_value, base in [
+        ("left", value_left, color_left, half_value_left, base_left),
+        ("right", value_right, color_right, half_value_right, base_left) ]:
+        value = float(value)
+        if value == 0.0:
+            pos = 0
+        else:
+            half_value = float(half_value)
+            h = math.log(half_value, base) # value to be displayed at 50%
+            pos = 25 + 10.0 * (math.log(value, base) - h)
+            if pos < 1:
+                pos = 1
+            if pos > 49:
+                pos = 49
+
+        if where == "right":
+            result += perfometer_td(pos, color) + \
+                 perfometer_td(50 - pos, "white")
+        else:
+            result += perfometer_td(50 - pos, "white") + \
+                 perfometer_td(pos, color)
+
+    return result + '</tr></table>'
 
 def number_human_readable(n, precision=1, unit="B"):
     base = 1024.0
@@ -117,6 +143,27 @@ def age_human_readable(secs):
         return "%d hours" % hours
     days = hours / 24
     return "%d days" % days
+
+def bytes_human_readable(b, base=1024.0, bytefrac=True, unit="B"):
+    base = float(base)
+    # Handle negative bytes correctly
+    prefix = ''
+    if b < 0:
+        prefix = '-'
+        b *= -1
+
+    if b >= base * base * base * base:
+        return '%s%.2f T%s' % (prefix, b / base / base / base / base, unit)
+    elif b >= base * base * base:
+        return '%s%.2f G%s' % (prefix, b / base / base / base, unit)
+    elif b >= base * base:
+        return '%s%.2f M%s' % (prefix, b / base / base, unit)
+    elif b >= base:
+        return '%s%.2f k%s' % (prefix, b / base, unit)
+    elif bytefrac:
+        return '%s%.2f %s' % (prefix, b, unit)
+    else: # Omit byte fractions
+        return '%s%.0f %s' % (prefix, b, unit)
 
 
 def paint_perfometer(row):

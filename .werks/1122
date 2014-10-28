@@ -6,18 +6,18 @@ Version: 1.2.5i6
 Date: 1412178359
 Class: fix
 
-There were instances where a logline was not fully written to a unicode file.
+There were instances where a logline was not fully written to a UTF-16 (unicode) encoded file.
+For example:
 
-For example
-C+:
+F+:C:\some\log\file.log
 This is the first line
 This is the sec
-C-:
+F-:
 
 In this scenario the agent is not allowed to parse the second line, because
 it has not been fully written to disk yet. A complete line is considered to
-be finished with a carriage return followed by a newline.<br><br>
+be finished with a carriage return followed by a newline.
 
 With this update the agent now stops parsing after the first line and
 continues at the start of the second line on the following agent query.
-Note: This only applies to utf-8 files
+Note: This only applies to UTF-16 encoded files.

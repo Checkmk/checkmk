@@ -6,13 +6,13 @@ Version: 1.2.5i6
 Date: 1413821252
 Class: feature
 
-Previously the virtual machines and hosts power states were always assigned to the queried vCenter or host system.<br>
-You can now configure via WATO rule <tt>Check state of VMWare ESX via vSphere</tt> that this information is piggybacked
-'down' to the esx hosts or the virtual machines.<br>
+Previously the virtual machines and hosts power states were always assigned to the queried vCenter or host system.
+You can now configure via WATO rule <i>Check state of VMWare ESX via vSphere</i> that this information is piggybacked
+'down' to the esx hosts or the virtual machines.
 
-With this new feature a virtual machine may also have the following informations<br>
-<tt>ESX Hostsystem       OK - Running on esx.mathias-kettner.de</tt><br>
-<tt>VM LinuxIII          OK - power state: poweredOn, running on [esx.mathias-kettner.de]</tt>
-
-
+With this new feature a virtual machine may also have the following informations
+C+:
+ESX Hostsystem       OK - Running on esx.mathias-kettner.de
+VM LinuxIII          OK - power state: poweredOn, running on [esx.mathias-kettner.de]
+C-:
 

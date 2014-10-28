@@ -260,10 +260,11 @@ class TcpServer:
 
                 try:
                     content = pickle.loads(client_data)
-                    if not os.path.exists(g_spool_dir):
-                        os.makedirs(g_spool_dir)
-                    spoolfile = "%s/%s" % (g_spool_dir, uuid.uuid1())
-                    file(spoolfile,"w").write(pprint.pformat(content))
+                    if content:
+                        if not os.path.exists(g_spool_dir):
+                            os.makedirs(g_spool_dir)
+                        spoolfile = "%s/%s" % (g_spool_dir, uuid.uuid1())
+                        file(spoolfile,"w").write(pprint.pformat(content))
                     verbose("client data processed - sending OK", 2)
                     client_socket.send("OK")
 

@@ -43,7 +43,6 @@ body.main {
     vertical-align: middle;
 }
 
-
 div#login {
     background-image: url("images/login_spotlight.png");
     background-repeat: no-repeat;
@@ -54,6 +53,10 @@ div#login {
     left: 50%;
     margin: -276px 0px 0px -386px;
     /* border: 1px solid yellow; */
+}
+
+body.main.screenshotmode div#login {
+    background-image: url("");
 }
 
 img#login_window {

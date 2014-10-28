@@ -42,14 +42,21 @@ def inventory_veeam_jobs(info):
 def check_veeam_jobs(item, _no_params, info):
     for line in info:
         if line[0] == item:
-            if line[3] == "Success":
+            backup_type = line[1]
+            backup_status = line[3]
+            backup_current = line[2]
+
+            if backup_status == "Success":
                 state = 0
-            elif line[2] == "Working":
+            elif backup_status == 'Idle' and backup_type == "BackupSync":
+                # A sync job is always idle
+                state = 0
+            elif backup_current == "Working":
                 state = 0
                 line = line[:6]
-            elif line[3] == "Failed":
+            elif backup_status == "Failed":
                 state = 2
-            elif line[2] == "Stopped" and line[3] == "Warning":
+            elif backup_current == "Stopped" and backup_status == "Warning":
                 state = 1
             else:
                 state = 3

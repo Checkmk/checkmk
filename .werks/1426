@@ -9,6 +9,6 @@ Class: fix
 Sometimes the windows agent read error texts out of dll files.
 Most dll files were prefixed with <tt>%SystemRoot%</tt> which gets replaced by the real path.
 
-However, there were instances were the prefix was <tt>%windir%</tt>.
-This placeholder was not replaced correctly. As a result the dll were not found,
+However, there were instances where the prefix was <tt>%windir%</tt>.
+This placeholder was not replaced correctly. As a result the dll could not get opened,
 which lead to incorrect formatted texts.

@@ -213,7 +213,10 @@ def page_side():
     else:
         interval = 'null'
     html.html_head(_("Check_MK Sidebar"), javascripts=["sidebar"], stylesheets=["sidebar", "status"])
-    html.write('<body class="side" onload="initScrollPos(); setSidebarHeight(); init_messages(%s);" '
+    html.write('<body class="side')
+    if config.screenshotmode:
+        html.write(" screenshotmode")
+    html.write('" onload="initScrollPos(); setSidebarHeight(); init_messages(%s);" '
                'onunload="storeScrollPos()">\n' % interval)
     html.write('<div id="check_mk_sidebar">\n')
 

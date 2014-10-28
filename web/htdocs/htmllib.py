@@ -71,7 +71,7 @@ class html:
         self.keybindings_enabled = True
         self.io_error = False
         self.enable_debug = False
-        self.screenshotmode = True
+        self.screenshotmode = False
         self.help_visible = False
         self.treestates = {}
         self.treestates_for_id = None

@@ -106,6 +106,10 @@ def handler(req, fields = None, profiling = True):
         config.load_config() # load multisite.mk
         if html.var("debug"): # Debug flag may be set via URL
             config.debug = True
+
+        if html.var("screenshotmode") or config.screenshotmode: # Omit fancy background, make it white
+            html.screenshotmode = True
+
         html.enable_debug = config.debug
         html.set_buffering(config.buffered_http_stream)
 

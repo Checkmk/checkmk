@@ -47,6 +47,10 @@ body.side {
     margin: 0px;
 }
 
+body.side.screenshotmode {
+    background-image: url("");
+}
+
 /* Top logo part */
 #side_header {
     position: absolute;

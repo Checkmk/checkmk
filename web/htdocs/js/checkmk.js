@@ -1704,7 +1704,8 @@ function vs_passwordspec_randomize(img) {
     oInput.value = password;
 }
 
-function vs_duallist_switch(field, varprefix, keeporder) {
+function vs_duallist_switch(field_suffix, varprefix, keeporder) {
+    var field = document.getElementById(varprefix + '_' + field_suffix);
     if (field.id != varprefix + '_selected') {
         // The other field is the one without "_unselected" suffix
         var other_id = varprefix + '_selected';
@@ -1725,6 +1726,8 @@ function vs_duallist_switch(field, varprefix, keeporder) {
 
     // Move the selected option to the other select field
     var selected = field.options[field.selectedIndex];
+    if (typeof selected === 'undefined')
+        return; // when add/remove clicked, but none selected
     field.removeChild(selected);
 
     // Determine the correct child to insert. If keeporder is being set,

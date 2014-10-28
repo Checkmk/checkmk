@@ -455,6 +455,26 @@ table.valuespec_listof .unused {
     display: none;
 }
 
+table.vs_duallist td.head {
+    text-align:center;
+}
+
+table.vs_duallist a.control {
+    display: inline-block;
+    width: 14px;
+    border: 1px solid #fff;
+    text-decoration: none;
+    text-align: center;
+}
+
+table.vs_duallist a.control.add {
+    float: right;
+}
+
+table.vs_duallist a.control.del {
+    float: left;
+}
+
 textarea.tt {
     font-family: monospace;
 }

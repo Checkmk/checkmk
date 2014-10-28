@@ -1539,6 +1539,7 @@ class DualListChoice(ListChoice):
         ListChoice.__init__(self, **kwargs)
         self._autoheight = kwargs.get("autoheight", True)
         self._custom_order = kwargs.get("custom_order", False)
+        self._instant_add = kwargs.get("instant_add", False)
 
     def render_input(self, varprefix, value):
         self.load_elements()
@@ -1564,20 +1565,34 @@ class DualListChoice(ListChoice):
                 else:
                     unselected.append(e)
 
+        select_func   = 'vs_duallist_switch(\'unselected\', \'%s\', %d);' % (varprefix, self._custom_order and 1 or 0)
+        unselect_func = 'vs_duallist_switch(\'selected\', \'%s\', 1);' % varprefix
 
-        html.write('<table><tr><td>')
-        html.write(_('Available:'))
-        html.write('</td><td>')
-        html.write(_('Selected:'))
+        html.write('<table class="vs_duallist"><tr><td class="head">')
+        html.write(_('Available'))
+        if not self._instant_add:
+            html.write('<a href="javascript:%s" class="control add">&gt;</a>' % select_func)
+        html.write('</td><td class="head">')
+        html.write(_('Selected'))
+        if not self._instant_add:
+            html.write('<a href="javascript:%s" class="control del">&lt;</a>' % unselect_func)
         html.write('</td></tr><tr><td>')
+
+        if self._instant_add:
+            onchange_unselected = select_func
+            onchange_selected   = unselect_func
+        else:
+            onchange_unselected = ''
+            onchange_selected = ''
+
         html.sorted_select(varprefix + '_unselected', unselected,
                            attrs = {'size': 5, 'style': self._autoheight and 'height:auto' or ''},
-                           onchange = 'vs_duallist_switch(this, \'%s\', %d);' % (varprefix, self._custom_order and 1 or 0))
+                           onchange = onchange_unselected)
         html.write('</td><td>')
         func = self._custom_order and html.select or html.sorted_select
         func(varprefix + '_selected', selected,
                            attrs = {'size': 5, 'style': self._autoheight and 'height:auto' or '', 'multiple': 'multiple'},
-                           onchange = 'vs_duallist_switch(this, \'%s\', 1);' % varprefix)
+                           onchange = onchange_selected)
         html.write('</td></tr></table>')
         html.hidden_field(varprefix, '|'.join([k for k, v in selected]), id = varprefix, add_var = True)
 

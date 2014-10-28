@@ -1540,6 +1540,7 @@ class DualListChoice(ListChoice):
         self._autoheight = kwargs.get("autoheight", True)
         self._custom_order = kwargs.get("custom_order", False)
         self._instant_add = kwargs.get("instant_add", False)
+        self._enlarge_active = kwargs.get("enlarge_active", False)
 
     def render_input(self, varprefix, value):
         self.load_elements()
@@ -1584,6 +1585,10 @@ class DualListChoice(ListChoice):
         else:
             onchange_unselected = ''
             onchange_selected = ''
+
+        if self._enlarge_active:
+            onchange_selected   += ';vs_duallist_enlarge(\'selected\', \'%s\')' % varprefix
+            onchange_unselected += ';vs_duallist_enlarge(\'unselected\', \'%s\')' % varprefix
 
         html.sorted_select(varprefix + '_unselected', unselected,
                            attrs = {'size': 5, 'style': self._autoheight and 'height:auto' or ''},

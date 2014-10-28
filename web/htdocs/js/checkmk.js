@@ -1704,6 +1704,28 @@ function vs_passwordspec_randomize(img) {
     oInput.value = password;
 }
 
+function vs_duallist_enlarge(field_suffix, varprefix) {
+    var field = document.getElementById(varprefix + '_' + field_suffix);
+    if (field.id != varprefix + '_selected') {
+        // The other field is the one without "_unselected" suffix
+        var other_id = varprefix + '_selected';
+        var positive = true;
+    } else {
+        // The other field is the one with "_unselected" suffix
+        var other_id = varprefix + '_unselected';
+        var positive = false;
+    }
+
+    var other_field = document.getElementById(other_id);
+    if (!other_field)
+        return;
+
+    remove_class(other_field, 'large');
+    add_class(other_field, 'small');
+    remove_class(field, 'small');
+    add_class(field, 'large');
+}
+
 function vs_duallist_switch(field_suffix, varprefix, keeporder) {
     var field = document.getElementById(varprefix + '_' + field_suffix);
     if (field.id != varprefix + '_selected') {

@@ -1,0 +1,14 @@
+Title: windows agent: logwatch: no longer reports incorrect formatted texts (japanese characters)
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.5i6
+Date: 1414500095
+Class: fix
+
+Sometimes the windows agent read error texts out of dll files.
+Most dll files were prefixed with <tt>%SystemRoot%</tt> which gets replaced by the real path.
+
+However, there were instances were the prefix was <tt>%windir%</tt>.
+This placeholder was not replaced correctly. As a result the dll were not found,
+which lead to incorrect formatted texts.

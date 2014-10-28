@@ -1055,6 +1055,8 @@ bool output_eventlog_entry(SOCKET &out, char *dllpath, EVENTLOGRECORD *event, ch
         // but not entirely for sure - C:\WINDOWS
         if (strncasecmp(dllpath, "%SystemRoot%", 12) == 0)
             snprintf(dll_realpath, sizeof(dll_realpath), "%s%s", system_root(), dllpath + 12);
+        else if (strncasecmp(dllpath, "%windir%", 8) == 0)
+            snprintf(dll_realpath, sizeof(dll_realpath), "%s%s", system_root(), dllpath + 8);
         else
             snprintf(dll_realpath, sizeof(dll_realpath), "%s", dllpath);
 

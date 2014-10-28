@@ -1,0 +1,11 @@
+Title: New screenshot mode for Multisite
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.5i6
+Date: 1414477007
+Class: feature
+
+If you add <tt>screenshotmode = True</tt> to your <tt>multisite.mk</tt> or add a <tt>?screenshotmode=1</tt>
+to your URL, then Multisite will replace the fancy blue background by a plain white. This makes it easier
+to screenshot parts of the GUI like configuration boxes, sidebar snapins, etc.

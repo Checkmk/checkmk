@@ -71,6 +71,7 @@ class html:
         self.keybindings_enabled = True
         self.io_error = False
         self.enable_debug = False
+        self.screenshotmode = True
         self.help_visible = False
         self.treestates = {}
         self.treestates_for_id = None
@@ -750,7 +751,12 @@ class html:
         if self.output_format == "html":
             if not self.header_sent:
                 self.html_head(title, **args)
-                self.write('<body class="main %s">' % self.var("_body_class", ""))
+                body_classes = [ "main" ]
+                if self.var("_body_class"):
+                    body_classes.append(self.var("_body_class"))
+                if self.screenshotmode:
+                    body_classes.append("screenshotmode")
+                self.write('<body class="%s">' % " ".join(body_classes))
                 self.header_sent = True
                 if self.render_headfoot:
                     self.top_heading(title)

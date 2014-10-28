@@ -34,6 +34,7 @@ roles = {} # User supplied roles
 
 # define default values for all settings
 debug                  = False
+screenshotmode         = False
 profile                = False
 users                  = []
 admin_users            = []

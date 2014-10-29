@@ -299,7 +299,11 @@ def esx_vsphere_multipath_convert(info):
     data = zip(data[::2], data[1::2])
     paths = {}
     for path, state in data:
-        path_type, path_id = path.split('-')[-1].split('.')
+        path_tokens = path.split('-')
+        if "." not in path_tokens[-1]:
+            continue # invalid format / unknown type
+        path_type, path_id = path_tokens[-1].split('.')
+
         if path_type in ['naa', 'eui']:
             hw_type = path.split('.')[0]
             if hw_type != 'unknown':

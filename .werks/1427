@@ -1,0 +1,11 @@
+Title: esx_vsphere_hostsystem.multipath: no longer crashes at invalid multipath types
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1414510819
+Class: fix
+
+The check had problems (crashed) when processing multipaths elements of the type <tt>usb.vmhba32-usb.0:0-</tt>.
+Those elements are now ignored.
+

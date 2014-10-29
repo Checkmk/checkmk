@@ -120,6 +120,14 @@ div.floatfilter .content .multigroup select {
     height: 66px;
 }
 
+div.floatfilter .content .multigroup select.large {
+    width: 228px;
+}
+
+div.floatfilter .content .multigroup select.small {
+    width: 68px;
+}
+
 div.floatfilter .content .filtertime select {
     width: 136px;
 }

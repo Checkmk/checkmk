@@ -49,7 +49,6 @@ check_info['ups_socomec_out_source'] = {
   "inventory_function"       : inventory_ups_socomec_out_source,
   "check_function"           : check_ups_socomec_out_source,
   "service_description"      : "Output Source",
-  "has_perfdata"             : False,
   "snmp_info"                : ( ".1.3.6.1.4.1.4555.1.1.1.1.4", ["1"] ),
-  "snmp_scan_function"       : lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Net Vision"),
+  "snmp_scan_function"       : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.4555.1.1.1",
 }

@@ -1,0 +1,9 @@
+Title: ups_socomec_outphase: New check for monitoring the out phases of Socomec UPSs
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1414597481
+Class: feature
+
+

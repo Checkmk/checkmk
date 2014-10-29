@@ -4948,8 +4948,35 @@ register_check_parameters(
                       Integer(title = _("critical if above"), unit = u"%", default_value = 75),
                   ])),
             ]),
-            None,
-    "first"
+    None,
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_environment,
+    "ups_outphase",
+    _("Parameters for output phases of UPSs"),
+    Dictionary(
+        elements = [
+            ( "voltage",
+              Tuple(
+                  title = _("Voltage"),
+                  elements = [
+                      Integer(title = _("warning if below"), unit = u"V", default_value = 210),
+                      Integer(title = _("critical if below"), unit = u"V", default_value = 200),
+                  ])),
+            ( "load",
+              Tuple(
+                  title = _("Load"),
+                  elements = [
+                      Integer(title = _("warning at"), unit = u"%", default_value = 80),
+                      Integer(title = _("critical at"), unit = u"%", default_value = 90),
+                  ])),
+            ]),
+    TextAscii(
+        title = _("Phase Number"),
+        help = _("The number of the phase (usually <tt>1</tt>,<tt>2</tt>,<tt>3</tt>).")),
+    "dict"
 )
 
 register_check_parameters(

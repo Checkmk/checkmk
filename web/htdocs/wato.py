@@ -3323,7 +3323,7 @@ def show_service_table(host, firsttime):
                                  ("varname", varname),
                                  ("host", hostname),
                                  ("item", mk_repr(item))])
-                html.icon_button(url, _("Edit and analyze the check parameters of this services"), "diagnose")
+                html.icon_button(url, _("Edit and analyze the check parameters of this service"), "check_parameters")
 
             # Permanently disable icon
             if state_type in ['new', 'old']:

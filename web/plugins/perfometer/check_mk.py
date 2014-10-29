@@ -1177,10 +1177,11 @@ perfometers["check_mk-docsis_channels_upstream"] = perfometer_docsis_snr
 def perfometer_veeam_client(row, check_command, perf_data):
     avgspeed_bytes = int(perf_data[4][1])
     duration_secs = int(perf_data[3][1])
-    h = perfometer_logarithmic_dual_independent(avgspeed_bytes, '#54b948', 10000000, 2, duration_secs, '#2098cb', 1000, 2)
+    h = perfometer_logarithmic_dual_independent(avgspeed_bytes, '#54b948', 10000000, 2, duration_secs, '#2098cb', 500, 2)
 
     avgspeed = bytes_human_readable(avgspeed_bytes)
-    duration = age_human_readable(duration_secs)
+    # Return Value always as minutes
+    duration = age_human_readable(duration_secs, True)
 
     return "%s/s&nbsp;&nbsp;&nbsp;%s" % (avgspeed, duration), h
 

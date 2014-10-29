@@ -3300,10 +3300,6 @@ def show_service_table(host, firsttime):
                 table.cell(_("Check Parameters"))
                 if varname and varname in g_rulespecs:
                     rulespec = g_rulespecs[varname]
-                    url = make_link([("mode", "edit_ruleset"),
-                                     ("varname", varname),
-                                     ("host", hostname),
-                                     ("item", mk_repr(item))])
                     try:
                         rulespec["valuespec"].validate_datatype(params, "")
                         rulespec["valuespec"].validate_value(params, "")
@@ -3314,30 +3310,22 @@ def show_service_table(host, firsttime):
 
                     html.write(paramtext)
 
-                    #  # Strip all HTML code from the paramtext
-                    #  table.cell("")
-                    #  paramtext = paramtext.replace('</td>', '\t')
-                    #  paramtext = paramtext.replace('</tr>', '\n')
-                    #  paramtext = html.strip_tags(paramtext)
-
-                    #  if parameter_column:
-                    #      title = _("Edit the parameters of this services")
-                    #  else:
-                    #      title = _("Check parameters for this service") + ": \n" + paramtext
-                    #  #html.write('<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' %
-                    #  #   (url, title))
-
             # Icon for Service parameters. Not for missing services!
-            table.cell("", "")
+            table.cell(css='buttons')
             if state_type not in [ "new", "ignored" ]:
+                # Link to list of all rulesets affecting this service
                 params_url = make_link([("mode", "object_parameters"),
                                         ("host", hostname),
                                         ("service", descr)])
                 html.icon_button(params_url, _("View and modify the parameters for this service"), "rulesets")
 
+                url = make_link([("mode", "edit_ruleset"),
+                                 ("varname", varname),
+                                 ("host", hostname),
+                                 ("item", mk_repr(item))])
+                html.icon_button(url, _("Edit and analyze the check parameters of this services"), "diagnose")
 
             # Permanently disable icon
-            table.cell()
             if state_type in ['new', 'old']:
                 url = make_link([
                     ('mode', 'edit_ruleset'),
@@ -3350,8 +3338,7 @@ def show_service_table(host, firsttime):
                     ('rule_folder', ''),
                     ('back_mode', 'inventory'),
                 ])
-                html.write('<a href="%s"><img title="%s" class=icon src="images/icon_ignore.png"></a>' %
-                    (url, _("Create rule to permanently disable this service")))
+                html.icon_button(url, _("Create rule to permanently disable this service"), "ignore")
 
             # Temporary ignore checkbox
             table.cell()

@@ -1,0 +1,11 @@
+Title: Service discovery: Added direct link to check parameter ruleset of services
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.5i6
+Date: 1414567986
+Class: feature
+
+This link was existing before. It had been replaced by a link to a page which lists
+all rulesets affecting a service. This commit adds the link again as additional one to the
+list of discovered services

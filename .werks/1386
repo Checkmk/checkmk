@@ -1,5 +1,5 @@
 Title: oracle_jobs: Bugfix for forever running jobs
-Level: 3
+Level: 1
 Component: checks
 Compatible: compat
 Version: 1.2.5i6

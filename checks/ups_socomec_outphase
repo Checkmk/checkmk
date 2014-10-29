@@ -47,7 +47,6 @@ def inventory_ups_socomec_outphase(info):
 
 
 def check_ups_socomec_outphase(item, params, info):
-    print params
     phaseinfo = parse_ups_socomec_outphase(info)
     return check_ups_outphase(item, params, phaseinfo)
 

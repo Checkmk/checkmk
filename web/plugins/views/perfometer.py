@@ -132,7 +132,10 @@ def number_human_readable(n, precision=1, unit="B"):
     else:
         return (f + "%s") % (n, unit)
 
-def age_human_readable(secs):
+def age_human_readable(secs, min_only=False):
+    if min_only:
+        mins = secs / 60.0
+        return "%.1f min" % mins
     if secs < 240:
         return "%d sec" % secs
     mins = secs / 60

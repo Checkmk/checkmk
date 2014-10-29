@@ -2857,10 +2857,13 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
 
     try:
         for host in hostnamelist:
-
-            # Skip SNMP checks on non-SNMP hosts
-            if is_snmp_check and not is_snmp_host(host):
-                continue
+            if is_snmp_check:
+                # Skip SNMP check on non-SNMP hosts
+                if not is_snmp_host(host):
+                    continue
+                # Skip SNMP check if this checktype is disabled
+                if service_ignored(host, checkname, None):
+                    continue
 
             # The decision wether to contact the agent via TCP
             # is done in get_realhost_info(). This is due to
@@ -3109,7 +3112,7 @@ def check_inventory(hostname):
 def service_ignored(hostname, checktype, service_description):
     if checktype and checktype in ignored_checktypes:
         return True
-    if in_boolean_serviceconf_list(hostname, service_description, ignored_services):
+    if service_description != None and in_boolean_serviceconf_list(hostname, service_description, ignored_services):
         return True
     if checktype and checktype_ignored_for_host(hostname, checktype):
         return True

@@ -1,0 +1,18 @@
+Title: Disabled snmp checktypes are now sorted out before Check_MK contacts the snmp host
+Level: 2
+Component: core
+Compatible: compat
+Version: 1.2.5i6
+Date: 1414574411
+Class: fix
+
+Behaviour in the previous version: If a snmp host should be inventorized it was checked
+with the full palette of all available snmp inventory functions. The filtering of unwanted checktypes
+was done afterwards. This caused needless snmp queries towards the snmp host.
+
+The filtering of unwanted checktypes is now done before the snmp host is contacted.
+
+Note: This only applies to the WATO rule <i>Disabled checktypes</i> respectively the parameters
+<tt>ignored_checktypes</tt> and <tt>ignored_checks</tt>, but not to <i>Disabled services</i>.
+The latter one matches to service descriptions which are the result of a successful inventory.
+

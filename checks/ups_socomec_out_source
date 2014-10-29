@@ -30,16 +30,31 @@ def inventory_ups_socomec_out_source(info):
 
 
 def check_ups_socomec_out_source(_no_item, _no_params, info):
+
+# This is from the old (v5.01) MIB and is incompatible with the new one below
+#    ups_socomec_source_states = {
+#        1: (3, "Other"),
+#        2: (2, "Offline"),
+#        3: (0, "Normal"),
+#        4: (1, "Internal Maintenance Bypass"),
+#        5: (2, "On battery"),
+#        6: (0, "Booster"),
+#        7: (0, "Reducer"),
+#        8: (0, "Standby"),
+#        9: (0, "Eco mode"),
+#    }
+
+# This is from the new (v6) MIB
     ups_socomec_source_states = {
-        1: (3, "Other"),
-        2: (2, "Offline"),
-        3: (0, "Normal"),
-        4: (1, "Internal Maintenance Bypass"),
-        5: (2, "On battery"),
-        6: (0, "Booster"),
-        7: (0, "Reducer"),
-        8: (0, "Standby"),
-        9: (0, "Eco mode"),
+        1: (3, "Unknown"),
+        2: (2, "On inverter"),
+        3: (0, "On mains"),
+        4: (0, "Eco mode"),
+        5: (1, "On bypass"),
+        6: (0, "Standby"),
+        7: (1, "On maintenance bypass"),
+        8: (2, "UPS off"),
+        9: (0, "Normal mode"),
     }
 
     return ups_socomec_source_states[int(info[0][0])]
@@ -49,7 +64,6 @@ check_info['ups_socomec_out_source'] = {
   "inventory_function"       : inventory_ups_socomec_out_source,
   "check_function"           : check_ups_socomec_out_source,
   "service_description"      : "Output Source",
-  "has_perfdata"             : False,
   "snmp_info"                : ( ".1.3.6.1.4.1.4555.1.1.1.1.4", ["1"] ),
-  "snmp_scan_function"       : lambda oid: oid(".1.3.6.1.2.1.1.1.0").startswith("Net Vision"),
+  "snmp_scan_function"       : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.4555.1.1.1",
 }

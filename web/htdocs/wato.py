@@ -3323,7 +3323,7 @@ def show_service_table(host, firsttime):
                                  ("varname", varname),
                                  ("host", hostname),
                                  ("item", mk_repr(item))])
-                html.icon_button(url, _("Edit and analyze the check parameters of this services"), "diagnose")
+                html.icon_button(url, _("Edit and analyze the check parameters of this service"), "check_parameters")
 
             # Permanently disable icon
             if state_type in ['new', 'old']:
@@ -17135,7 +17135,7 @@ class API:
     def __get_valid_api_host_attributes(self, attributes):
         result = {}
 
-        host_attribute_names = map(lambda (x, y): x.name(), host_attributes) + ["inventory_failed"]
+        host_attribute_names = map(lambda (x, y): x.name(), host_attributes) + ["inventory_failed", ".nodes"]
 
         for key, value in attributes.items():
             if key in host_attribute_names:

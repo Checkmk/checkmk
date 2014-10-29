@@ -45,6 +45,8 @@ import os, sys, urllib2, re
 
 config_dir = os.getenv("MK_CONFDIR", "/etc/check_mk")
 config_file = config_dir + "/apache_status.conf"
+timeout = 5
+
 if not os.path.exists(config_file):
     config_file = config_dir + "/apache_status.cfg"
 
@@ -127,13 +129,13 @@ for server in servers:
         # Try to fetch the status page for each server
         try:
             request = urllib2.Request(url, headers={"Accept" : "text/plain"})
-            fd = urllib2.urlopen(request)
+            fd = urllib2.urlopen(request, timeout=timeout)
         except urllib2.URLError, e:
             if 'SSL23_GET_SERVER_HELLO:unknown protocol' in str(e):
                 # HACK: workaround misconfigurations where port 443 is used for
                 # serving non ssl secured http
                 url = 'http://%s:%s/server-status?auto' % (address, port)
-                fd = urllib2.urlopen(url)
+                fd = urllib2.urlopen(url, timeout=timeout)
             else:
                 raise
 

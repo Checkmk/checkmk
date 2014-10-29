@@ -17134,7 +17134,7 @@ class API:
     def __get_valid_api_host_attributes(self, attributes):
         result = {}
 
-        host_attribute_names = map(lambda (x, y): x.name(), host_attributes) + ["inventory_failed"]
+        host_attribute_names = map(lambda (x, y): x.name(), host_attributes) + ["inventory_failed", ".nodes"]
 
         for key, value in attributes.items():
             if key in host_attribute_names:

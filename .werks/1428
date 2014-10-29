@@ -1,0 +1,14 @@
+Title: Web-API: now able to add cluster hosts
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.5i6
+Date: 1414572424
+Class: feature
+
+Its quite easy to accomplish. On your add host telegram simply add
+the new key <tt>{ ".nodes" = ["nodename1", "nodename2"] }</tt>.
+
+Please note that the existance of the nodes is not verified.
+So you might get an invalid host configuration and being unable
+to activate the changes.

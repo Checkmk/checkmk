@@ -97,6 +97,13 @@ if type stat >/dev/null 2>&1 ; then
 	    waitmax 2 stat -f -c '"'$MP' ok - - - -"' "$MP" || \
 		echo "$MP hanging 0 0 0 0"
 	done
+    echo '<<<cifsmounts>>>'
+     mount | grep ' cifs' | awk '{print $3;}' | \
+        while read MP
+	do
+	    waitmax 2 stat -f -c '"'$MP' ok - - - -"' "$MP" || \
+		echo "$MP hanging 0 0 0 0"
+	done
 fi
 
 echo '<<<ps>>>'

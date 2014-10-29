@@ -1,0 +1,10 @@
+Title: apache_status: Added timeout
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6
+Date: 1414575509
+Class: feature
+
+The apache_status plugin now has a timeout for the urlopen operation.
+

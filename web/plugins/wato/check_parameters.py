@@ -1137,14 +1137,15 @@ register_rule(group + '/' + subgroup_storage,
             elements = [
                 TextAscii(
                      title = _("Name of group"),
+                     size = 10,
                 ),
                 Transform(
                     Tuple(
                         show_titles = True,
                         orientation = "vertical",
                         elements = [
-                            TextAscii(title = _("Include Pattern")),
-                            TextAscii(title = _("Exclude Pattern"))
+                            TextAscii(title = _("Include Pattern"), size=40),
+                            TextAscii(title = _("Exclude Pattern"), size=40),
                         ],
                     ),
                     forth = lambda params: type(params) == str and ( params, '' ) or params

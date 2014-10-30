@@ -1186,3 +1186,9 @@ def perfometer_veeam_client(row, check_command, perf_data):
     return "%s/s&nbsp;&nbsp;&nbsp;%s" % (avgspeed, duration), h
 
 perfometers["check_mk-veeam_client"] = perfometer_veeam_client
+
+def perfometer_ups_outphase(row, check_command, perf_data):
+    load = saveint(perf_data[2][1])
+    return "%d%%" % load, perfometer_linear(load, "#8050ff")
+
+perfometers["check_mk-ups_socomec_outphase"] = perfometer_ups_outphase

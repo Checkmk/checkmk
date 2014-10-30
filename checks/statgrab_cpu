@@ -27,7 +27,6 @@
 
 
 def inventory_statgrab_cpu(info):
-    print info
     if len(info) > 1:
         return [(None, {})]
 

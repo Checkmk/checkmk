@@ -74,7 +74,7 @@ def link(text, url, target="main", onclick = None):
     onclick = onclick and (' onclick="%s"' % html.attrencode(onclick)) or ''
     return '<a onfocus="if (this.blur) this.blur();" target="%s" ' \
            'class=link href="%s"%s>%s</a>' % \
-            (html.attrencode(target), html.attrencode(url), onclick, html.attrencode(text))
+            (html.attrencode(target or ""), html.attrencode(url), onclick, html.attrencode(text))
 
 def simplelink(text, url, target="main"):
     html.write(link(text, url, target) + "<br>\n")
@@ -88,11 +88,17 @@ def iconlink(text, url, icon):
     html.write('<a target=main class="iconlink link" href="%s">%s</a><br>' % \
             (html.attrencode(url), linktext))
 
-def footnotelinks(links):
+def begin_footnote_links():
     html.write("<div class=footnotelink>")
+
+def end_footnote_links():
+    html.write("</div>\n")
+
+def footnotelinks(links):
+    begin_footnote_links()
     for text, target in links:
         html.write(link(text, target))
-    html.write("</div>\n")
+    end_footnote_links()
 
 def iconbutton(what, url, target="side", handler="", name="", css_class = ""):
     if target == "side":

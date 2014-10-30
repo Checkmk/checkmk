@@ -1,0 +1,10 @@
+Title: Clone group: Now displays correct alias name of cloned group
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.5i6
+Date: 1414662122
+Class: fix
+
+This applies to contact-, host- and servicegroups.
+

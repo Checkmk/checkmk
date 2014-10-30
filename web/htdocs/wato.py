@@ -7974,7 +7974,7 @@ def mode_edit_group(phase, what):
     alias = groups.get(name, {}).get('alias', '')
     if not alias:
         if clone_group:
-            alias = groups.get(clone_group, "")
+            alias = groups.get(clone_group, {}).get('alias', '')
         else:
             alias = name
     html.text_input("alias", alias)

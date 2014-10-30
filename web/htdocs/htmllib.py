@@ -715,7 +715,11 @@ class html:
 
             # Load specified Javascript files
             for js in [ "checkmk", "hover" ] + javascripts:
-                self.write('<script type="text/javascript" src="js/%s.js"></script>\n' % js)
+                if defaults.omd_root:
+                    fname = 'js/%s-%s.js' % (js, defaults.check_mk_version)
+                else:
+                    fname = 'js/%s.js' % js
+                self.write('<script type="text/javascript" src="%s"></script>\n' % fname)
 
             if self.browser_reload != 0:
                 if self.browser_redirect != '':

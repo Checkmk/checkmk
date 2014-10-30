@@ -1,1 +1,1 @@
-check_mk-brocade_mlx_temp.php
+template-temperature.php

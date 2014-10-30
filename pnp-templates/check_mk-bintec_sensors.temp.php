@@ -1,1 +1,1 @@
-check_mk-hitachi_hnas_temp.php
+template-temperature.php

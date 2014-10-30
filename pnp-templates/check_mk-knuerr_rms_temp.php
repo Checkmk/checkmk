@@ -1,1 +1,1 @@
-check_mk-cmctc.temp.php
+template-temperature.php

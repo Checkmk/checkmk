@@ -1,1 +1,1 @@
-check_mk-stulz_temp.php
+template-temperature.php

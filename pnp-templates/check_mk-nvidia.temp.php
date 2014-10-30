@@ -1,1 +1,1 @@
-check_mk-ipmi_sensors.php
+template-temperature.php

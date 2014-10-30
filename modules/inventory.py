@@ -24,8 +24,9 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-inventory_output_dir = var_dir + "/inventory"
+import gzip
 
+inventory_output_dir = var_dir + "/inventory"
 inventory_pprint_output = True
 
 #   .--Plugins-------------------------------------------------------------.
@@ -251,8 +252,16 @@ def do_inv_for(hostname, ipaddress):
     path = inventory_output_dir + "/" + hostname
     if g_inv_tree:
         file(path, "w").write(r + "\n")
-    elif os.path.exists(path): # Remove emtpy inventory files. Important for host inventory icon
-        os.remove(path)
+        gzip.open(path + ".gz", "w").write(r + "\n")
+
+    else:
+        if os.path.exists(path): # Remove empty inventory files. Important for host inventory icon
+            os.remove(path)
+        if os.path.exists(path + ".gz"):
+            os.remove(path + ".gz")
+
+    # Inform Livestatus about the latest inventory update
+    file(inventory_output_dir + "/.last", "w")
 
     if opt_verbose:
         sys.stdout.write("..%s%s%d%s entries" % (tty_bold, tty_yellow, count_nodes(g_inv_tree), tty_normal))

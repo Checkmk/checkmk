@@ -36,11 +36,10 @@ import sys, os, pprint
 from lib import *
 import livestatus
 import defaults, config, login, userdb, hooks, visuals, default_permissions
-try:
+
+if os.path.exists(os.path.dirname(os.path.abspath(__file__)) + '/reporting.py'):
     import reporting
-except SyntaxError:
-    raise
-except:
+else:
     reporting = None
 
 from html_mod_python import *

@@ -122,13 +122,13 @@ def end():
     finish_previous()
     html.unplug()
 
+    if not table:
+        return
+
     # Output-Format "fetch" simply means that all data is being
     # returned as Python-values to be rendered somewhere else.
     if table["output_format"] == "fetch":
         return table["headers"], table["rows"]
-
-    if not table:
-        return
 
     if table["output_format"] == "csv":
         do_csv = True

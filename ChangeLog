@@ -1,4 +1,7 @@
 1.2.5i6p1:
+    Multisite:
+    * 1164 FIX: Fixed links from servicegroup overviews to single servicegroups
+
 
 1.2.5i6:
     Core & Setup:

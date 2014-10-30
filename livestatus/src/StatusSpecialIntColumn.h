@@ -22,26 +22,20 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef HostSpecialIntColumn_h
-#define HostSpecialIntColumn_h
-
-#include "config.h"
+#ifndef StatusSpecialIntColumn_h
+#define StatusSpecialIntColumn_h
 
 #include "IntColumn.h"
 
-#define HSIC_REAL_HARD_STATE      0
-#define HSIC_PNP_GRAPH_PRESENT    1
-#define HSIC_MK_INVENTORY_LAST    2
+#define SPIC_MK_INVENTORY_LAST 0
 
-class HostSpecialIntColumn : public IntColumn
+class StatusSpecialIntColumn : public IntColumn
 {
     int _type;
-
 public:
-    HostSpecialIntColumn(string name, string description, int hsic_type, int indirect)
-        : IntColumn(name, description, indirect) , _type(hsic_type) {}
-    int32_t getValue(void *data, Query *);
+    StatusSpecialIntColumn(string name, string description, int type) 
+      : IntColumn(name, description, -1), _type(type) {}
+    int32_t getValue(void *, Query *);
 };
 
-#endif // HostSpecialIntColumn_h
-
+#endif // StatusSpecialIntColumn_h

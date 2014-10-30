@@ -22,26 +22,27 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef HostSpecialIntColumn_h
-#define HostSpecialIntColumn_h
+#include <unistd.h>
+#include <stdio.h>
+#include <sys/stat.h>
 
-#include "config.h"
+#include "mk_inventory.h"
 
-#include "IntColumn.h"
+extern char g_mk_inventory_path[];
 
-#define HSIC_REAL_HARD_STATE      0
-#define HSIC_PNP_GRAPH_PRESENT    1
-#define HSIC_MK_INVENTORY_LAST    2
-
-class HostSpecialIntColumn : public IntColumn
+int mk_inventory_last(const char *host)
 {
-    int _type;
+    char path[4096];
+    snprintf(path, sizeof(path), "%s/%s", g_mk_inventory_path, host);
+    struct stat st;
+    if (0 != stat(path, &st))
+        return 0;
+    else
+        return st.st_mtime;
+}
 
-public:
-    HostSpecialIntColumn(string name, string description, int hsic_type, int indirect)
-        : IntColumn(name, description, indirect) , _type(hsic_type) {}
-    int32_t getValue(void *data, Query *);
-};
-
-#endif // HostSpecialIntColumn_h
-
+int mk_inventory_last_of_all()
+{
+    // Check_MK Inventory touches the file ".last" after each inventory
+    return mk_inventory_last(".last");
+}

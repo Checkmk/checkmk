@@ -414,7 +414,7 @@ function makeuri(addvars) {
     // Skip unwanted parmas
     for(var i = 0; i < tmp.length; i++) {
         pair = tmp[i].split('=');
-        if(pair[0][0] == '_') // Skip _<vars>
+        if(pair[0][0] == '_' && pair[0] != "_username" && pair[0] != "_secret") // Skip _<vars>
             continue;
         if(addvars.hasOwnProperty(pair[0])) // Skip vars present in addvars
             continue;

@@ -8579,14 +8579,15 @@ def validate_notification_rule(rule, varprefix):
              _("It does not make sense to add a bulk configuration for cancelling rules."))
 
     if "bulk" in rule:
-        if rule["notify_plugin"]:
+        if rule["notify_plugin"][0]:
             info = load_notification_scripts()[rule["notify_plugin"][0]]
             if not info["bulk"]:
                 raise MKUserError(varprefix + "_p_notify_plugin",
                       _("The notification script %s does not allow bulking.") % info["title"])
         else:
             raise MKUserError(varprefix + "_p_notify_plugin",
-                  _("The plain emails currently do not support bulking."))
+                  _("Legacy ASCII Emails do not support bulking. You can either disable notification "
+                    "bulking or choose another notification plugin which allows bulking."))
 
 
 def render_notification_rules(rules, userid="", show_title=False, show_buttons=True,

@@ -804,7 +804,7 @@ multisite_builtin_views.update({
           'title': _('Problems of host')},
  'hostgroup': {'browser_reload': 30,
                'column_headers': 'off',
-               'datasource': 'hosts',
+               'datasource': 'hostsbygroup',
                'description': _('All hostgroups including number of hosts in the different states.'),
                'group_painters': [('site_icon', None),
                                   ('sitealias', 'sitehosts')],

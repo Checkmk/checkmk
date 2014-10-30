@@ -121,7 +121,7 @@ multisite_datasources["servicesbyhostgroup"] = {
 multisite_datasources["hostgroups"] = {
     "title"   : _("Hostgroups"),
     "table"   : "hostgroups",
-    "infos"   : [ "hostgroup", "hostgroups" ],
+    "infos"   : [ "hostgroup", "hostgroup_summary" ],
     "keys"    : [ "hostgroup_name" ],
     "idkeys"  : [ "site", "hostgroup_name" ],
 }
@@ -130,7 +130,7 @@ multisite_datasources["merged_hostgroups"] = {
     "title"    : _("Hostgroups, merged"),
     "table"    : "hostgroups",
     "merge_by" : "hostgroup_name",
-    "infos"    : [ "hostgroup" ],
+    "infos"    : [ "hostgroup", "hostgroup_summary" ],
     "keys"     : [ "hostgroup_name" ],
     "idkeys"   : [ "hostgroup_name" ],
 }

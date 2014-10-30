@@ -56,7 +56,7 @@ class FilterText(Filter):
 
 class FilterHostgroupVisibility(Filter):
     def __init__(self, name, title):
-        Filter.__init__(self, name, title, "hostgroups", [ "hostgroupshowempty" ], [])
+        Filter.__init__(self, name, title, "hostgroup_summary", [ "hostgroupshowempty" ], [])
 
     def display(self):
         html.checkbox("hostgroupshowempty", False, label="Show empty groups")

@@ -139,14 +139,7 @@ def kernel_check_cpu_utilization(item, params, info):
     # 'cpu' user nice system idle wait hw-int sw-int (steal ...)
     # convert number to int
     values = [ int(x) for x in line[1:8] ]
-    user = values[0]
-    nice = values[1]
-    system = values[2]
-    wait  = values[4]
-    hw_int = values[5]
-    sw_int = values[6]
-    idle = 100 - user - system - nice - wait
-    return check_cpu_util_unix([user, nice, system, wait, hw_int, sw_int, idle], params)
+    return check_cpu_util_unix(values, params)
 
 check_info["kernel.util"] = {
     'check_function':           kernel_check_cpu_utilization,

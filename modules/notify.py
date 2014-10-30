@@ -707,7 +707,7 @@ def rbn_match_contactgroups(rule, context):
         if cgn == None:
             notify_log("Warning: No information about contact groups in the context. " \
                        "Seams that you don't use the Check_MK Microcore. ")
-            return 
+            return
         if cgn:
             contactgroups = cgn.split(",")
         else:

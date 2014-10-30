@@ -6082,10 +6082,10 @@ register_check_parameters(
                             totext = "",
                             title = _("Match all users"),
                         )
-                       
+
                     ],
                     match = lambda x: (not x and 2) or (x[0] == '~' and 1 or 0)
-                   
+
                 )),
                 ( "cpulevels",
                   Tuple(

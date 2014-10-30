@@ -2253,7 +2253,7 @@ process_textfile_response process_textfile(FILE *file, logwatch_textfile* textfi
              it_patt != textfile->patterns->end(); it_patt++) {
             pattern = *it_patt;
             if (globmatch(pattern->glob_pattern, line)){
-                if (!write_output && (pattern->state == 'C' || pattern->state == 'W' || pattern->state == 'O')) 
+                if (!write_output && (pattern->state == 'C' || pattern->state == 'W' || pattern->state == 'O'))
                 {
                     response.found_match = true;
                     response.unprocessed_bytes = 0;

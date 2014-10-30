@@ -54,7 +54,7 @@ print "AgentOS: Hivemanager"
 print "<<<hivemanager_devices:sep(124)>>>"
 address = "https://%s/hm/api/v1/devices" % ip
 informations = ['hostName', 'clients', 'alarm', 'connection', 'upTime',
-                'eth0LLDPPort', 'eth0LLDPSysName', 'hive', 'hiveOS', 'hwmodel' 
+                'eth0LLDPPort', 'eth0LLDPSysName', 'hive', 'hiveOS', 'hwmodel'
                 'serialNumber', 'nodeId', 'location', 'networkPolicy' ]
 for line in json.loads(get_url(address).read()):
     if line['upTime'] == '':

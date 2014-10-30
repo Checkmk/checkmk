@@ -60,7 +60,7 @@ echo "MemTotal: $(echo $(sysctl -n hw.memsize)/1024 | bc) kB"
 echo "MemFree: $(echo "( $(vm_stat | grep speculative: | awk '{print $3}') + $(vm_stat | grep inactive: | awk '{print $3}') + $(vm_stat | grep free: | awk '{print $3}') ) * $(vm_stat | grep Mach | awk '{print $8}') / 1024" | bc) kB"
 echo "SwapTotal: 0 kB"
 echo "SwapFree: 0 kB"
-# FIXME: Just call vm_stat here, write a check plugin that uses that 
+# FIXME: Just call vm_stat here, write a check plugin that uses that
 # navite output of vm_stat
 
 echo '<<<uptime>>>';

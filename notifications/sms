@@ -75,7 +75,7 @@ if notification_type.startswith("FLAP"):
 
 elif notification_type.startswith("DOWNTIME"):
     what = notification_type[8:].title()
-    message += " Downtime " + what 
+    message += " Downtime " + what
     message += " " + os.environ['NOTIFY_NOTIFICATIONCOMMENT']
 
 elif notification_type == "ACKNOWLEDGEMENT":

@@ -41,7 +41,7 @@ def check_statgrab_cpu(item, params, info):
             wait = int(value)
         elif var == 'kernel':
             system = int(value)
-        elif var == 'nice': 
+        elif var == 'nice':
             nice = int(value)
         elif var == 'user':
             user = int(value)
@@ -50,7 +50,7 @@ def check_statgrab_cpu(item, params, info):
     idle = 100 - total
     # user, nice, system, wait, hw-int, sw-int, idle
     values = [ user, nice, system, wait, 0, 0, idle ]
-    
+
     # No return cause of the use of yield
     return check_cpu_util_unix(values, params)
 
@@ -61,5 +61,5 @@ check_info["statgrab_cpu"] = {
     'service_description':  'CPU utilization',
     'has_perfdata':         True,
     'includes':             ['cpu_util.include'],
-    'group':                'cpu_iowait',                    
+    'group':                'cpu_iowait',
 }

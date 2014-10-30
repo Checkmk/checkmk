@@ -97,11 +97,11 @@ def check_hivemanager_devices(item, params, info):
             yield state, infotext, [('uptime', uptime_secs, warn, crit)]
 
             # Additional Information
-            additional_informations = [ 
+            additional_informations = [
                 'eth0LLDPPort', 'eth0LLDPSysName', 'hive', 'hiveOS', 'hwmodel',
                 'serialNumber', 'nodeId', 'location', 'networkPolicy']
             yield 0, ", ".join(["%s: %s" % (x,y ) for x, y in infos.items() \
-                                            if x in additional_informations ]) 
+                                            if x in additional_informations ])
 
 
 

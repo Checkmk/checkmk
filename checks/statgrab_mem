@@ -83,5 +83,5 @@ check_info["statgrab_mem"] = {
     'inventory_function'  : inventory_statgrab_mem,
     'service_description' : 'Memory used',
     'has_perfdata'        : True,
-    'group'               : "statgrab_mem",      
+    'group'               : "statgrab_mem",
 }

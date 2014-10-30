@@ -47,7 +47,16 @@ infos['hostgroup'] = {
     'single_spec' : [ 
         ('hostgroup', TextUnicode(
             title = _('Hostgroup Name'),
-        )), 
+        )),
+    ],
+}
+
+infos['hostgroup_summary'] = {
+    'title'       : _('Hostgroup Summary'),
+    'single_spec' : [ 
+        ('hostgroup', TextUnicode(
+            title = _('Hostgroup Name'),
+        )),
     ],
 }
 

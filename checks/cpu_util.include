@@ -77,7 +77,16 @@ def check_cpu_util(util, params, this_time = None):
     perfdata += extraperf # reference curve for predictive levels
     return state, infotext, perfdata
 
-# This one can handle user, system and wait
+
+# This one can handle user, system and wait. values is a list of:
+# - 0 - user: normal processes executing in user mode
+# - 1 - nice: niced processes executing in user mode
+# - 2 - system: processes executing in kernel mode
+# - 3 - idle: twiddling thumbs
+# - 4 - iowait: waiting for I/O to complete
+# - 5 - irq: servicing interrupts
+# - 6 - softirq: servicing softirqs
+# - 7 - steal: involuntary wait
 def check_cpu_util_unix(values, params):
     this_time = int(time.time())
     # Compute jiffi-differences of all relevant counters
@@ -96,8 +105,8 @@ def check_cpu_util_unix(values, params):
         raise MKCounterWrapped(None, "Too short time difference since last check")
 
     user        = diff_values[0] + diff_values[1] # add user + nice
-    system      = diff_values[2]
-    wait        = diff_values[3]
+    system      = diff_values[2] + diff_values[5] + diff_values[6]
+    wait        = diff_values[4]
     user_perc   = 100.0 * float(user)   / float(sum_jiffies)
     system_perc = 100.0 * float(system) / float(sum_jiffies)
     wait_perc   = 100.0 * float(wait)   / float(sum_jiffies)

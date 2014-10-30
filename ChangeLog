@@ -1,3 +1,5 @@
+1.2.5i7:
+
 1.2.5i6:
     Core & Setup:
     * 1008 Overall check timeout for Check_MK checks now defaults to CRIT state...

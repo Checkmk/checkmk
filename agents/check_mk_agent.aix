@@ -82,7 +82,7 @@ function waitmax
 }
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.5i6
+echo Version: 1.2.5i7
 echo AgentOS: aix
 
 echo '<<<df>>>'

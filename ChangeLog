@@ -1,3 +1,5 @@
+1.2.5i6p2:
+
 1.2.5i6p1:
     Checks & Agents:
     * 1478 FIX: kernel.util, statgrab_cpu: fix computation of utilization...

@@ -1,0 +1,12 @@
+Title: HTML mails can now be configured to display graphs among each other
+Level: 1
+Component: notifications
+Compatible: compat
+Version: 1.2.5i7
+Date: 1414763224
+Class: fix
+
+By default all graphs are displayed besides eachother, trying to fill
+horizontally as much space as possible. Now you can configure the mail
+notifications to display the graphs among each other by setting the
+notification parmeter.

@@ -171,6 +171,11 @@ img {
     margin-right: 10px;
 }
 
+img.nofloat {
+    display: block;
+    margin-bottom: 10px;
+}
+
 table.context {
     border-collapse: collapse;
 }
@@ -555,7 +560,10 @@ def construct_content(context):
             name = '%s-%s-%d.png' % (context['HOSTNAME'], svc_desc, source)
 
             attachments.append(('img', name, content, 'inline'))
-            graph_code += '<img src="cid:%s" />' % name
+            cls = ''
+            if context.get('PARAMETER_NO_FLOATING_GRAPHS'):
+                cls = ' class="nofloat"'
+            graph_code += '<img src="cid:%s"%s />' % (name, cls)
 
         if graph_code:
             content_html += (

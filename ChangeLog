@@ -11,6 +11,9 @@
     WATO:
     * 1165 FIX: Fixed exception in service discovery of logwatch event console forwarding checks...
 
+    Notifications:
+    * 1168 FIX: HTML mails can now be configured to display graphs among each other...
+
 
 1.2.5i6:
     Core & Setup:

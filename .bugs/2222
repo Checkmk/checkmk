@@ -1,0 +1,9 @@
+Title: Views for services of one host and for all services have icons at different positions
+Component: multisite
+State: open
+Date: 2014-10-31 15:20:29
+Targetversion: future
+Class: nastiness
+
+The position of the column "service icons" is not always the same.
+Sometimes it's at the beginning, sometimes at the end.

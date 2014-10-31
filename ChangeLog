@@ -4,7 +4,7 @@
 
     Multisite:
     * 1164 FIX: Fixed links from servicegroup overviews to single servicegroups
-    * 1166 FIX: Also prevting stylesheet update issues during version updates (just like for JS files)
+    * 1166 FIX: Also preventing stylesheet update issues during version updates (just like for JS files)
 
     WATO:
     * 1165 FIX: Fixed exception in service discovery of logwatch event console forwarding checks...

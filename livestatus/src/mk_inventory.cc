@@ -28,12 +28,18 @@
 
 #include "mk_inventory.h"
 
+#ifdef CMC
+#include <Config.h>
+#define MK_INVENTORY_PATH g_config->_mk_inventory_path
+#else
 extern char g_mk_inventory_path[];
+#define MK_INVENTORY_PATH g_mk_inventory_path
+#endif
 
 int mk_inventory_last(const char *host)
 {
     char path[4096];
-    snprintf(path, sizeof(path), "%s/%s", g_mk_inventory_path, host);
+    snprintf(path, sizeof(path), "%s/%s", MK_INVENTORY_PATH, host);
     struct stat st;
     if (0 != stat(path, &st))
         return 0;

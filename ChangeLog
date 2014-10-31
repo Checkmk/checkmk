@@ -2,7 +2,9 @@
     Checks & Agents:
     * 1197 climaveneta_temp: New check for temperature sensors on Climaveneta clima devices
     * 1167 citrix_license/esx_license: Can now be configured to always show OK as state
+    * 1198 climaveneta_fan: New check for fan speed on Climaveneta devices
     * 1478 FIX: kernel.util, statgrab_cpu: fix computation of utilization...
+    * 1480 FIX: brocade_vdx_status: disable check on some devices that do not support it...
 
     Multisite:
     * 1164 FIX: Fixed links from servicegroup overviews to single servicegroups
@@ -13,6 +15,10 @@
 
     Notifications:
     * 1168 FIX: HTML mails can now be configured to display graphs among each other...
+
+    HW/SW-Inventory:
+    * 1479 liveproxyd: new function for collecting remote inventory data...
+            NOTE: Please refer to the migration notes!
 
 
 1.2.5i6:

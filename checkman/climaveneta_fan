@@ -1,0 +1,22 @@
+title: Climaveneta Fan
+agents: snmp
+catalog: hw/environment/climaveneta
+license: GPL
+distribution:
+description:
+ This check monitors the Fan speeds on Climaveneta mc01_o4cv devices.
+
+item:
+ The id of the Fan (1 or 2)
+
+perfdata:
+ the current Fan speed in rpm
+
+inventory:
+ one service for each Fan
+
+[parameters]
+lower_warning (int): Warning if speed is beneath
+lower_critical (int): Minimum level for the speed
+upper_warning (int):  Warning if the speed is above
+upper_critical (int): Maximum level for the speed

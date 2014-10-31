@@ -11,6 +11,7 @@
     * 1164 FIX: Fixed links from servicegroup overviews to single servicegroups
     * 1166 FIX: Also prevting stylesheet update issues during version updates (just like for JS files)
     * 1481 FIX: Fix broken layout of Host-, Service- and Contactgroup filters
+    * 1482 FIX: Fix exception when editing a visual of type single host group...
 
     WATO:
     * 1165 FIX: Fixed exception in service discovery of logwatch event console forwarding checks...

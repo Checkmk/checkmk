@@ -1,0 +1,10 @@
+Title: Also prevting stylesheet update issues during version updates (just like for JS files)
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.5i7
+Date: 1414749505
+
+

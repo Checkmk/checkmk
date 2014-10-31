@@ -705,11 +705,17 @@ class html:
                 self.write('<base target="%s">\n' % self.attrencode(self.link_target))
 
             # Load all specified style sheets and all user style sheets in htdocs/css
-            for css in [ "check_mk" ] + stylesheets:
-                self.write('<link rel="stylesheet" type="text/css" href="%s.css" />\n' % css)
-            self.write('<!--[if IE]>\n'
-                       '<link rel="stylesheet" href="ie.css" type="text/css" />\n'
-                       '<![endif]-->\n')
+            for css in [ "check_mk" ] + stylesheets + [ 'ie' ]:
+                if defaults.omd_root:
+                    fname = '%s-%s.css' % (css, defaults.check_mk_version)
+                else:
+                    fname = '%s.css' % css
+
+                if css == 'ie':
+                    self.write('<!--[if IE]>\n')
+                self.write('<link rel="stylesheet" type="text/css" href="%s" />\n' % fname)
+                if css == 'ie':
+                    self.write('<![endif]-->\n')
 
             self.add_custom_style_sheet()
 

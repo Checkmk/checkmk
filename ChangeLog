@@ -2,6 +2,9 @@
     Multisite:
     * 1164 FIX: Fixed links from servicegroup overviews to single servicegroups
 
+    WATO:
+    * 1165 FIX: Fixed exception in service discovery of logwatch event console forwarding checks...
+
 
 1.2.5i6:
     Core & Setup:

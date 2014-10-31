@@ -1,0 +1,11 @@
+Title: Fixed exception in service discovery of logwatch event console forwarding checks
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.5i6p1
+Date: 1414747390
+Class: fix
+
+When a service "logwatch.ec" (event console forwarding) is found via service discovery
+and the check parameters are displayed in the table, an exception occured, because
+WATO could not interpret the inventorized parameters correctly.

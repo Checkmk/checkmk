@@ -194,6 +194,9 @@ class FilterGroupCombo(Filter):
                 [ what + "group_name" ])                    # rows needed to fetch for link information
         self.what = what
 
+    def double_height(self):
+        return True
+
     def display(self):
         choices = all_groups(self.what.split("_")[-1])
         if not self.enforce:

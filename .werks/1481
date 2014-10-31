@@ -1,0 +1,10 @@
+Title: Fix broken layout of Host-, Service- and Contactgroup filters
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.5i6p2
+Date: 1414770459
+
+

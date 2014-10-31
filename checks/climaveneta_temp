@@ -24,27 +24,24 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Example output from agent:
-# Put here the example output from your TCP-Based agent. If the
-# check is SNMP-Based, then remove this section
 climaveneta_sensors = {
-    1 : "Room", 
-    3 : "Outlet air 1", 
-    4 : "Outlet air 2", 
-    5 : "Outlet air 3", 
-    6 : "Outlet air 4", 
-    7 : "Intlet air 1", 
-    8 : "Intlet air 2", 
-    9 : "Intlet air 3", 
-    10 : "Intlet air 4", 
-    11 : "Coil 1 Inlet Water", 
-    12 : "Coil 2 Inlet Water", 
-    13 : "Coil 1 Outlet Water", 
-    14 : "Coil 2 Outlet Water", 
-    23 : "Regulation valve/compressor", 
-    24 : "Regulation fan 1", 
-    25 : "Regulation fan 2", 
-    28 : "Suction", 
+    1 : "Room",
+    3 : "Outlet Air 1",
+    4 : "Outlet Air 2",
+    5 : "Outlet Air 3",
+    6 : "Outlet Air 4",
+    7 : "Intlet Air 1",
+    8 : "Intlet Air 2",
+    9 : "Intlet Air 3",
+    10 : "Intlet Air 4",
+    11 : "Coil 1 Inlet Water",
+    12 : "Coil 2 Inlet Water",
+    13 : "Coil 1 Outlet Water",
+    14 : "Coil 2 Outlet Water",
+    23 : "Regulation Valve/Compressor",
+    24 : "Regulation Fan 1",
+    25 : "Regulation Fan 2",
+    28 : "Suction",
 }
 
 climaveneta_temp_default_levels = (28, 30)
@@ -55,21 +52,23 @@ def inventory_climaveneta_temp(info):
         if sensor_id in climaveneta_sensors.keys() and int(value) > 0:
             yield climaveneta_sensors[sensor_id], 'climaveneta_temp_default_levels'
 
+
 def check_climaveneta_temp(item, params, info):
     for sensor_id, sensor_value in info:
         sensor_id = int(sensor_id.split('.')[0])
         if climaveneta_sensors.get(sensor_id) == item:
-            sensor_value = int(sensor_value) / 10
+            sensor_value = int(sensor_value) / 10.0
             return check_temperature(sensor_value, params)
+
 
 check_info["climaveneta_temp"] = {
     "check_function"        : check_climaveneta_temp,
     "inventory_function"    : inventory_climaveneta_temp,
-    "service_description"   : "Temperature",
+    "service_description"   : "Temperature %s",
     "has_perfdata"          : True,
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.1.0") == "pCO Gateway",
     "snmp_info"             : (".1.3.6.1.4.1.9839.2.1", [ OID_END, 2 ] ),
-    "group"                 : "hw_temperature",
+    "group"                 : "room_temperature",
     "includes"              : [ "temperature.include" ],
 }
 

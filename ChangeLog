@@ -1,5 +1,6 @@
 1.2.5i7:
     Checks & Agents:
+    * 1167 citrix_license/esx_license: Can now be configured to always show OK as state
     * 1478 FIX: kernel.util, statgrab_cpu: fix computation of utilization...
 
     Multisite:

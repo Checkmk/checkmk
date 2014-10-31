@@ -40,6 +40,7 @@ manpage_catalog_titles = {
             "stulz"        : "STULZ",
             "wut"          : "Wiesemann & Theis",
             "wagner"       : "WAGNER Group",
+            "climaventa"   : "Climaventa",
         "other"       : "Other devices",
         "network"     : "Networking (Switches, Routers, etc.)",
             "alcatel"    : "Alcatel",

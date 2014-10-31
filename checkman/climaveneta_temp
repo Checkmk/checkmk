@@ -1,11 +1,11 @@
-title: Climaveneta Temperature
+title: Climaveneta: Temperature sensors
 agents: snmp
 catalog: hw/environment/climaveneta
 license: GPL
-distribution:
+distribution: check_mk
 description:
  This check monitors the temperature of sensors attached
- to climaveneta mc01_o4cv device.
+ to Climaveneta mc01_o4cv device.
 
 item:
  The item is the sensor description of the sensor as string.

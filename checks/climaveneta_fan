@@ -24,28 +24,31 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
 factory_settings["climaveneta_fan_default_levels"] = {
     "lower" : ( 200, 100 ),
     "upper" : ( 700, 800 ),
 }
 
+
 def inventory_climaveneta_fan(info):
     if len(info[0]) == 2:
         return [ (1, {}), (2, {}) ]
 
+
 def check_climaveneta_fan(item, params, info):
-    item = item-1
-    rpm = int(info[0][item])
+    rpm = int(info[0][item - 1])
     l_warn, l_crit = params['lower']
     u_warn, u_crit = params['upper']
     perfdata = [("rpm", rpm )]
-    message = "Speed at %d rpm" % rpm
+    message = "Speed at %d RPM" % rpm
     if rpm <= l_crit or rpm >= u_crit:
         return 2, message, perfdata
-    if rpm <= l_warn or rpm >= u_warn:
-        return 1, messagae, perfdata
-    return 0, message, perfdata
-    
+    elif rpm <= l_warn or rpm >= u_warn:
+        return 1, message, perfdata
+    else:
+        return 0, message, perfdata
+
 
 check_info["climaveneta_fan"] = {
     "check_function"           : check_climaveneta_fan,

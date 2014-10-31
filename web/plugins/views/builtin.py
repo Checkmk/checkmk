@@ -1400,7 +1400,7 @@ multisite_builtin_views.update({
                     'topic': _('Other')},
  'servicegroup': {'browser_reload': 30,
                   'column_headers': 'pergroup',
-                  'datasource': 'services',
+                  'datasource': 'servicesbygroup',
                   'description': _('Services of a servicegroup'),
                   'group_painters': [('sitealias', 'sitehosts'),
                                      ('host', 'host')],

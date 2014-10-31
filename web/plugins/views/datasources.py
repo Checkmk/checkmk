@@ -126,6 +126,7 @@ multisite_datasources["hostgroups"] = {
     "idkeys"  : [ "site", "hostgroup_name" ],
 }
 
+# Merged groups across sites
 multisite_datasources["merged_hostgroups"] = {
     "title"    : _("Hostgroups, merged"),
     "table"    : "hostgroups",
@@ -143,6 +144,7 @@ multisite_datasources["servicegroups"] = {
     "idkeys"   : [ "site", "servicegroup_name" ],
 }
 
+# Merged groups across sites
 multisite_datasources["merged_servicegroups"] = {
     "title"    : _("Servicegroups, merged"),
     "table"    : "servicegroups",

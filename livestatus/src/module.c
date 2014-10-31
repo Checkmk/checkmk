@@ -97,7 +97,8 @@ void *g_nagios_handle;
 int g_unix_socket = -1;
 int g_max_fd_ever = 0;
 char g_socket_path[4096];
-char g_pnp_path[4096];
+char g_pnp_path[4096]; // base path for PNP4Nagios graphs
+char g_mk_inventory_path[4096]; // base path of Check_MK inventor files
 char g_logfile_path[4096];
 int g_debug_level = 0;
 int g_should_terminate = false;
@@ -607,19 +608,18 @@ void deregister_callbacks()
     neb_deregister_callback(NEBCALLBACK_TIMED_EVENT_DATA,      broker_event);
 }
 
-
-void check_pnp_path()
+void check_path(const char *name, char *path)
 {
     struct stat st;
-    if (0 == stat(g_pnp_path, &st)) {
-        if (0 != access(g_pnp_path, R_OK)) {
-            logger(LG_ERR, "PNP perfdata directory '%s' not readable. Please fix permissions.", g_pnp_path);
-            g_pnp_path[0] = 0; // disable
+    if (0 == stat(path, &st)) {
+        if (0 != access(path, R_OK)) {
+            logger(LG_ERR, "%s '%s' not readable. Please fix permissions.", name, path);
+            path[0] = 0; // disable
         }
     }
     else {
-        logger(LG_ERR, "PNP perfdata directory '%s' not existing. Please check pnp_path option!", g_pnp_path);
-        g_pnp_path[0] = 0; // disable
+        logger(LG_ERR, "%s '%s' not existing!", name, path);
+        path[0] = 0; // disable
     }
 }
 
@@ -734,7 +734,13 @@ void livestatus_parse_arguments(const char *args_orig)
                 strncpy(g_pnp_path, right, sizeof(g_pnp_path) - 1);
                 if (right[strlen(right) - 1] != '/')
                     strncat(g_pnp_path, "/",  sizeof(g_pnp_path) - strlen(g_pnp_path) - 1 ); // make sure, that trailing slash is always there
-                check_pnp_path();
+                check_path("PNP perfdata directory", g_pnp_path);
+            }
+            else if (!strcmp(left, "mk_inventory_path")) {
+                strncpy(g_mk_inventory_path, right, sizeof(g_mk_inventory_path) - 1);
+                if (right[strlen(right) - 1] != '/')
+                    strncat(g_mk_inventory_path, "/",  sizeof(g_mk_inventory_path) - strlen(g_mk_inventory_path) - 1 ); // make sure, that trailing slash is always there
+                check_path("Check_MK Inventory directory", g_mk_inventory_path);
             }
             else if (!strcmp(left, "data_encoding")) {
                 if (!strcmp(right, "utf8"))

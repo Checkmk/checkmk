@@ -22,26 +22,22 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef HostSpecialIntColumn_h
-#define HostSpecialIntColumn_h
+#ifndef BlobColumn_h
+#define BlobColumn_h
 
 #include "config.h"
+#include "Column.h"
 
-#include "IntColumn.h"
-
-#define HSIC_REAL_HARD_STATE      0
-#define HSIC_PNP_GRAPH_PRESENT    1
-#define HSIC_MK_INVENTORY_LAST    2
-
-class HostSpecialIntColumn : public IntColumn
+class BlobColumn : public Column
 {
-    int _type;
-
 public:
-    HostSpecialIntColumn(string name, string description, int hsic_type, int indirect)
-        : IntColumn(name, description, indirect) , _type(hsic_type) {}
-    int32_t getValue(void *data, Query *);
+    BlobColumn(string name, string description, int indirect_offset) :
+        Column(name, description, indirect_offset) {}
+    virtual char *getBlob(void *data, int *size) = 0;
+    void output(void *, Query *);
+    int type() { return COLTYPE_BLOB; }
 };
 
-#endif // HostSpecialIntColumn_h
+#endif // BlobColumn_h
+
 

@@ -1,4 +1,14 @@
 1.2.5i7:
+    Checks & Agents:
+    * 1478 FIX: kernel.util, statgrab_cpu: fix computation of utilization...
+
+    Multisite:
+    * 1164 FIX: Fixed links from servicegroup overviews to single servicegroups
+    * 1166 FIX: Also prevting stylesheet update issues during version updates (just like for JS files)
+
+    WATO:
+    * 1165 FIX: Fixed exception in service discovery of logwatch event console forwarding checks...
+
 
 1.2.5i6:
     Core & Setup:

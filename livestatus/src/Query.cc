@@ -1043,6 +1043,13 @@ void Query::outputDouble(double value)
     _output->addBuffer(buf, l);
 }
 
+void Query::outputAsciiEscape(char value)
+{
+    char buf[8];
+    snprintf(buf, sizeof(buf), "\\%03o", value);
+    _output->addBuffer(buf, 4);
+}
+
 void Query::outputUnicodeEscape(unsigned value)
 {
     char buf[8];
@@ -1066,7 +1073,17 @@ void Query::outputHostService(const char *host_name, const char *service_descrip
     }
 }
 
-void Query::outputString(const char *value)
+void Query::outputBlob(const char *buffer, int size)
+{
+    if (_output_format != OUTPUT_FORMAT_CSV)
+        outputString(buffer, size);
+    else
+        _output->addBuffer(buffer, size);
+}
+
+// len = -1 -> use strlen(), len >= 0: consider
+// output as blob, do not handle UTF-8.
+void Query::outputString(const char *value, int len)
 {
     if (!value) {
         if (_output_format != OUTPUT_FORMAT_CSV)
@@ -1079,18 +1096,22 @@ void Query::outputString(const char *value)
 
     else // JSON
     {
-        if (_output_format == OUTPUT_FORMAT_PYTHON)
+        if (_output_format == OUTPUT_FORMAT_PYTHON && len < 0)
             _output->addChar('u'); // mark strings as unicode
         _output->addChar('"');
         const char *r = value;
-        int chars_left = strlen(r);
+        int chars_left = len >= 0 ? len : strlen(r);
         while (*r) {
             // Always escape control characters (1..31)
-            if (*r < 32 && *r >= 0)
-                outputUnicodeEscape((unsigned)*r);
+            if (*r < 32 && *r >= 0) {
+                if (len < 0)
+                    outputUnicodeEscape((unsigned)*r);
+                else
+                    outputAsciiEscape(*r);
+            }
 
             // Output ASCII characters unencoded
-            else if (*r >= 32) {
+            else if (*r >= 32 || len >= 0) {
                 if (*r == '"' || *r == '\\')
                     _output->addChar('\\');
                 _output->addChar(*r);

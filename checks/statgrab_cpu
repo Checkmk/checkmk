@@ -27,8 +27,8 @@
 
 
 def inventory_statgrab_cpu(info):
-   if len(info) > 1:
-       return [(None, {})]
+    if len(info) > 1:
+        return [(None, {})]
 
 
 def check_statgrab_cpu(item, params, info):
@@ -37,19 +37,19 @@ def check_statgrab_cpu(item, params, info):
     user = 0
     nice = 0
     for var, value in info:
-        if var == 'iowait':
-            wait = int(value)
-        elif var == 'kernel':
-            system = int(value)
+        if var == 'user':
+            user = int(value)
         elif var == 'nice':
             nice = int(value)
-        elif var == 'user':
-            user = int(value)
-        elif var == 'total':
-            total = int(value)
-    idle = 100 - total
-    # user, nice, system, wait, hw-int, sw-int, idle
-    values = [ user, nice, system, wait, 0, 0, idle ]
+        elif var == 'kernel':
+            system = int(value)
+        elif var == 'idle':
+            idle = int(value)
+        elif var == 'iowait':
+            wait = int(value)
+
+    # user, nice, system, idle, iowait, hw-int, sw-int, steal
+    values = [ user, nice, system, idle, wait, 0, 0, 0 ]
 
     # No return cause of the use of yield
     return check_cpu_util_unix(values, params)

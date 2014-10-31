@@ -22,26 +22,63 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef HostSpecialIntColumn_h
-#define HostSpecialIntColumn_h
 
-#include "config.h"
+#include <sys/types.h>
+#include <unistd.h>
+#include <nagios.h>
 
-#include "IntColumn.h"
+#include "logger.h"
+#include "HostFileColumn.h"
 
-#define HSIC_REAL_HARD_STATE      0
-#define HSIC_PNP_GRAPH_PRESENT    1
-#define HSIC_MK_INVENTORY_LAST    2
-
-class HostSpecialIntColumn : public IntColumn
+HostFileColumn::HostFileColumn(string name, string description, const char *base_dir,
+               const char *suffix, int indirect_offset)
+    : BlobColumn(name, description, indirect_offset)
+    , _base_dir(base_dir)
+    , _suffix(suffix)
 {
-    int _type;
+}
 
-public:
-    HostSpecialIntColumn(string name, string description, int hsic_type, int indirect)
-        : IntColumn(name, description, indirect) , _type(hsic_type) {}
-    int32_t getValue(void *data, Query *);
-};
+// returns a buffer to be freed afterwards!! Return 0
+// in size of a missing file
+char *HostFileColumn::getBlob(void *data, int *size)
+{
+    *size = 0;
+    if (!_base_dir[0])
+        return 0; // Path is not configured
 
-#endif // HostSpecialIntColumn_h
+    data = shiftPointer(data);
+    if (!data) return 0;
+    host *hst  = (host *)data;
 
+    char path[4096];
+    snprintf(path, sizeof(path), "%s/%s%s", _base_dir, hst->name, _suffix);
+    int fd = open(path, O_RDONLY);
+    if (fd < 0) {
+        return 0;
+    }
+
+    *size = lseek(fd, 0, SEEK_END);
+    if (*size < 0) {
+        close(fd);
+        *size = 0;
+        logger(LG_WARN, "Cannot seek to end of file %s", path);
+        return 0;
+    }
+
+    lseek(fd, 0, SEEK_SET);
+    char *buffer = (char *)malloc(*size);
+    if (!buffer) {
+        close(fd);
+        return 0;
+    }
+
+    int read_bytes = read(fd, buffer, *size);
+    close(fd);
+    if (read_bytes != *size) {
+        logger(LG_WARN, "Cannot read %d from %s", *size, path);
+        free(buffer);
+        return 0;
+    }
+
+    return buffer;
+}

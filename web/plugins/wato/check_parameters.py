@@ -5913,8 +5913,15 @@ register_check_parameters(subgroup_applications,
                                   "Reinventorize this check in order to make it OK again."),
                      )
                     ),
+                    ('expected_logfiles',
+                        ListOfStrings(
+                            title = _("List of expected logfiles"),
+                            help = _("When the monitoring of forwarded logfiles is enabled, the check verifies that "
+                                     "all of the logfiles listed here are reported by the monitored system."),
+                        )
+                    ),
                 ],
-                optional_keys = ['restrict_logfiles'],
+                optional_keys = ['restrict_logfiles', 'expected_logfiles'],
             ),
         ],
         default_value = '',

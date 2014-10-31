@@ -184,13 +184,13 @@ class FilterGroupCombo(Filter):
     def __init__(self, what, title, enforce):
         self.enforce = enforce
         self.prefix = not self.enforce and "opt" or ""
-        htmlvars = [ self.prefix + what + "group" ]
+        htmlvars = [ self.prefix + what + "_group" ]
         if not enforce:
             htmlvars.append("neg_" + htmlvars[0])
         Filter.__init__(self, self.prefix + what + "group", # name,     e.g. "hostgroup"
                 title,                                      # title,    e.g. "Hostgroup"
                 what.split("_")[0],                         # info,     e.g. "host"
-                htmlvars,                                   # htmlvars, e.g. "hostgroup"
+                htmlvars,                                   # htmlvars, e.g. "host_group"
                 [ what + "group_name" ])                    # rows needed to fetch for link information
         self.what = what
 

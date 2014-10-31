@@ -2,6 +2,9 @@
     Checks & Agents:
     * 1480 FIX: brocade_vdx_status: disable check on some devices that do not support it...
 
+    Multisite:
+    * 1482 FIX: Fix exception when editing a visual of type single host group...
+
 
 1.2.5i6p1:
     Checks & Agents:

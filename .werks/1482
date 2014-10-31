@@ -1,0 +1,13 @@
+Title: Fix exception when editing a visual of type single host group
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.5i6p2
+Date: 1414770553
+
+Context editor was broken, because there were two filters with the
+same HTML variable name <tt>hostgroup</tt>. This has been fixed
+by renaming the name of the host group selection filter to <tt>host_group</tt>.
+

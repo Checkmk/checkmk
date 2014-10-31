@@ -3,7 +3,7 @@
 
 import os, sys, getopt, signal, time, socket, select, traceback, re
 
-VERSION="1.2.3i1"
+VERSION="1.2.5i7"
 
 sites = {}
 dump_interval = 5 # dump state once every five seconds

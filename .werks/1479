@@ -1,0 +1,17 @@
+Title: liveproxyd: new function for collecting remote inventory data
+Level: 2
+Component: inv
+Compatible: incomp
+Version: 1.2.5i7
+Date: 1414758985
+Class: feature
+
+The Livestatus Proxy Daemon has now a new function for collecting HW/SW-Data
+from remote sites. This needs up-to-date versions of Nagios or CMC on these
+sites, otherwise the proxy daemon will fail to consider these sites as up! So
+if you update the liveproxd you also need to update your remote sites!
+
+Note: The new feature only works in OMD based installations. After updating
+all sites to the new version, HW/SW-Inventory data collected on remote
+sites that are connected via liveproxyd will automatically be transferred
+to the central site.

@@ -11,6 +11,10 @@
     WATO:
     * 1165 FIX: Fixed exception in service discovery of logwatch event console forwarding checks...
 
+    HW/SW-Inventory:
+    * 1479 liveproxyd: new function for collecting remote inventory data...
+            NOTE: Please refer to the migration notes!
+
 
 1.2.5i6:
     Core & Setup:

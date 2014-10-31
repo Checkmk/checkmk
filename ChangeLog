@@ -4,6 +4,7 @@
     * 1167 citrix_license/esx_license: Can now be configured to always show OK as state
     * 1198 climaveneta_fan: New check for FAN speed on climaveneta devices
     * 1478 FIX: kernel.util, statgrab_cpu: fix computation of utilization...
+    * 1480 FIX: brocade_vdx_status: disable check on some devices that do not support it...
 
     Multisite:
     * 1164 FIX: Fixed links from servicegroup overviews to single servicegroups

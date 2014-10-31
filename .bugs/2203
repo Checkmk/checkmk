@@ -1,0 +1,9 @@
+Title: Windows-Dateien: Sicherstellen, dass alle CRLF-Umbrüche nutzen
+Component: checks
+State: open
+Date: 2014-10-31 11:36:39
+Targetversion: 1.2.5i1
+Class: bug
+
+Some files contained in the windows agent (example config) and agent plugins do not use windows
+line endings. This should be changed to make easier editing on windows systems easier

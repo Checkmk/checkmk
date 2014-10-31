@@ -56,14 +56,15 @@ void logger(int priority, const char *loginfo, ...)
     va_start(ap, loginfo);
 
     /* Only the main process may use the Nagios log methods */
-    if (g_mainthread_id == pthread_self()) {
+    if (!g_logfile || g_mainthread_id == pthread_self()) {
         char buffer[8192];
         snprintf(buffer, 20, "livestatus: ");
         vsnprintf(buffer + strlen(buffer),
         sizeof(buffer) - strlen(buffer), loginfo, ap);
         va_end(ap);
         write_to_all_logs(buffer, priority);
-    } else {
+    }
+    else {
         if (g_logfile) {
             /* write date/time */
             char timestring[64];

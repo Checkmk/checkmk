@@ -25,6 +25,7 @@
 #include "HostSpecialIntColumn.h"
 #include "nagios.h"
 #include "pnp4nagios.h"
+#include "mk_inventory.h"
 
 int32_t HostSpecialIntColumn::getValue(void *data, Query *)
 {
@@ -40,8 +41,13 @@ int32_t HostSpecialIntColumn::getValue(void *data, Query *)
                 return hst->current_state; // we have reached a hard state
             else
                 return hst->last_hard_state;
+
         case HSIC_PNP_GRAPH_PRESENT:
             return pnpgraph_present(hst->name, 0);
-    }
-    return -1; // never reached
+
+        case HSIC_MK_INVENTORY_LAST:
+            return mk_inventory_last(hst->name);
+
+    } 
+    // never reached
 }

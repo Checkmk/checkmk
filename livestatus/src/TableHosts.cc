@@ -40,6 +40,7 @@
 #include "CustomVarsColumn.h"
 #include "CustomVarsExplicitColumn.h"
 #include "HostlistColumn.h"
+#include "HostFileColumn.h"
 #include "ServicelistColumn.h"
 #include "ServicelistStateColumn.h"
 #include "HostgroupsColumn.h"
@@ -51,6 +52,7 @@
 
 extern host *host_list;
 extern hostgroup *hostgroup_list;
+extern char g_mk_inventory_path[];
 
 struct hostbygroup {
     host       _host;
@@ -329,7 +331,13 @@ void TableHosts::addColumns(Table *table, string prefix, int indirect_offset)
     table->addColumn(new HostSpecialIntColumn(prefix + "hard_state",
                 "The effective hard state of the host (eliminates a problem in hard_state)", HSIC_REAL_HARD_STATE, indirect_offset));
     table->addColumn(new HostSpecialIntColumn(prefix + "pnpgraph_present",
-                "Whether there is a PNP4Nagios graph present for this host (0/1)", HSIC_PNP_GRAPH_PRESENT, indirect_offset));
+                "Whether there is a PNP4Nagios graph present for this host (-1/0/1)", HSIC_PNP_GRAPH_PRESENT, indirect_offset));
+    table->addColumn(new HostSpecialIntColumn(prefix + "mk_inventory_last",
+                "The timestamp of the last Check_MK HW/SW-Inventory for this host. 0 means that no inventory data is present", HSIC_MK_INVENTORY_LAST, indirect_offset));
+    table->addColumn(new HostFileColumn(prefix + "mk_inventory",
+                "The file content content of the Check_MK HW/SW-Inventory", g_mk_inventory_path, "", indirect_offset));
+    table->addColumn(new HostFileColumn(prefix + "mk_inventory_gz",
+                "The gzipped file content content of the Check_MK HW/SW-Inventory", g_mk_inventory_path, ".gz", indirect_offset));
 
     table->addColumn(new HostSpecialDoubleColumn(prefix + "staleness",
                     "Staleness indicator for this host", HSDC_STALENESS, indirect_offset));

@@ -40,14 +40,14 @@ livestatus_so_SOURCES = \
 	OffsetTimeColumn.cc TimePointerColumn.cc TimeColumnFilter.cc PerfdataAggregator.cc \
 	Query.cc ServiceContactsColumn.cc ServicegroupsColumn.cc ServicelistColumn.cc \
 	ServicelistColumnFilter.cc ServicelistStateColumn.cc store_c.cc Store.cc \
-	StringColumn.cc StringColumnFilter.cc strutil.cc Table.cc TableColumns.cc \
+	StringColumn.cc StringColumnFilter.cc strutil.cc Table.cc TableColumns.cc StatusSpecialIntColumn.cc \
 	HostSpecialDoubleColumn.cc TableCommands.cc TableContacts.cc TableDownComm.cc TableHostgroups.cc \
 	ServiceSpecialDoubleColumn.cc TableHosts.cc TableServicegroups.cc TableServices.cc TableStatus.cc  \
 	LogEntry.cc LogCache.cc Logfile.cc TableStateHistory.cc TableLog.cc TableTimeperiods.cc TableContactgroups.cc \
 	ContactgroupsMemberColumn.cc OffsetStringMacroColumn.cc OffsetStringServiceMacroColumn.cc \
 	OffsetStringHostMacroColumn.cc StatsColumn.cc IntAggregator.cc CountAggregator.cc \
-	DoubleAggregator.cc AttributelistColumn.cc AttributelistFilter.cc \
-	global_counters.c  module.c  logger.c waittriggers.c TimeperiodsCache.cc pnp4nagios.cc \
+	DoubleAggregator.cc AttributelistColumn.cc AttributelistFilter.cc BlobColumn.cc HostFileColumn.cc \
+	global_counters.c  module.c  logger.c waittriggers.c TimeperiodsCache.cc pnp4nagios.cc mk_inventory.cc \
 	ContactgroupsColumn.cc CustomTimeperiodColumn.cc HostServiceState.cc opids.cc auth.cc
 
 livestatus_so_CXXFLAGS = -I$(top_srcdir)/$(nagios_headers) -fPIC

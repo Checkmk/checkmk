@@ -1,0 +1,11 @@
+Title: kernel.util, statgrab_cpu: fix computation of utilization
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.5i7
+Date: 1414684254
+
+This was broken due to a recent code restructuration.
+

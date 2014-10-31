@@ -29,6 +29,7 @@
 #include "IntPointerColumn.h"
 #include "TimePointerColumn.h"
 #include "StringPointerColumn.h"
+#include "StatusSpecialIntColumn.h"
 #include "nagios.h"
 #include "logger.h"
 #include "string.h"
@@ -213,6 +214,11 @@ TableStatus::TableStatus()
                 "The current number of queued connections to MK Livestatus (that wait for a free thread)", &g_num_queued_connections));
     addColumn(new IntPointerColumn("livestatus_threads",
                 "The maximum number of connections to MK Livestatus that can be handled in parallel", &g_num_clientthreads));
+
+    // Special stuff for Check_MK
+    addColumn(new StatusSpecialIntColumn("mk_inventory_last",
+                "The timestamp of the last time a host has been inventorized by Check_MK HW/SW-Inventory",
+                SPIC_MK_INVENTORY_LAST));
 
 }
 

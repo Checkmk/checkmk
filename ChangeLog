@@ -1,4 +1,7 @@
 1.2.5i7:
+    Checks & Agents:
+    * 1478 FIX: kernel.util, statgrab_cpu: fix computation of utilization...
+
     Multisite:
     * 1164 FIX: Fixed links from servicegroup overviews to single servicegroups
 

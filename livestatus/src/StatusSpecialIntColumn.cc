@@ -22,26 +22,15 @@
 // to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 // Boston, MA 02110-1301 USA.
 
-#ifndef HostSpecialIntColumn_h
-#define HostSpecialIntColumn_h
+#include "StatusSpecialIntColumn.h"
+#include "mk_inventory.h"
 
-#include "config.h"
 
-#include "IntColumn.h"
-
-#define HSIC_REAL_HARD_STATE      0
-#define HSIC_PNP_GRAPH_PRESENT    1
-#define HSIC_MK_INVENTORY_LAST    2
-
-class HostSpecialIntColumn : public IntColumn
+int32_t StatusSpecialIntColumn::getValue(void *, Query *)
 {
-    int _type;
-
-public:
-    HostSpecialIntColumn(string name, string description, int hsic_type, int indirect)
-        : IntColumn(name, description, indirect) , _type(hsic_type) {}
-    int32_t getValue(void *data, Query *);
-};
-
-#endif // HostSpecialIntColumn_h
-
+    switch (_type) {
+        case SPIC_MK_INVENTORY_LAST:
+            return mk_inventory_last_of_all();
+    }
+    // never reached
+}

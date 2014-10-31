@@ -1,3 +1,0 @@
-Check if sites that go dead really terminate current hanging requests.
-
-If the state of the site is "starting" immediately cancel all client requests?

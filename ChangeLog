@@ -1,4 +1,7 @@
 1.2.5i6p2:
+    Checks & Agents:
+    * 1480 FIX: brocade_vdx_status: disable check on some devices that do not support it...
+
 
 1.2.5i6p1:
     Checks & Agents:

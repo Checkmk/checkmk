@@ -1,5 +1,6 @@
 1.2.5i7:
     Checks & Agents:
+    * 1197 climaveneta_temp: New check for temperature sensors on Climaveneta clima devices
     * 1478 FIX: kernel.util, statgrab_cpu: fix computation of utilization...
 
     Multisite:

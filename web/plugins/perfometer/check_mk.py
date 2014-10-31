@@ -345,6 +345,7 @@ perfometers["check_mk-casa_cpu_temp"] = perfometer_temperature
 perfometers["check_mk-rms200_temp"] = perfometer_temperature
 perfometers["check_mk-juniper_screenos_temp"] = perfometer_temperature
 perfometers["check_mk-lnx_thermal"] = perfometer_temperature
+perfometers["check_mk-climaveneta_temp"] = perfometer_temperature
 
 def perfometer_temperature_multi(row, check_command, perf_data):
     display_value = -1

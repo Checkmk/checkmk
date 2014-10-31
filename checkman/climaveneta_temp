@@ -1,0 +1,21 @@
+title: Climaveneta Temperature
+agents: snmp
+catalog: hw/environment/climaveneta
+license: GPL
+distribution:
+description:
+ This check monitors the temperature of sensors attached
+ to climaveneta mc01_o4cv device.
+
+item:
+ The item is the sensor description of the sensor as string.
+
+perfdata:
+ the current temperature in degree celsius
+
+inventory:
+ All available temperature sensors are automatically inventorized.
+
+[parameters]
+warning (int): temperature in degrees at which the check goes warning
+critical (int): level for critical temperature

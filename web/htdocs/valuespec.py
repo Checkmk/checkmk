@@ -1591,12 +1591,20 @@ class DualListChoice(ListChoice):
             onchange_unselected += ';vs_duallist_enlarge(\'unselected\', \'%s\')' % varprefix
 
         html.sorted_select(varprefix + '_unselected', unselected,
-                           attrs = {'size': 5, 'style': self._autoheight and 'height:auto' or ''},
+                           attrs = {
+                               'size'       : 5,
+                               'style'      : self._autoheight and 'height:auto' or '',
+                               'ondblclick' : not self._instant_add and select_func or '',
+                           },
                            onchange = onchange_unselected)
         html.write('</td><td>')
         func = self._custom_order and html.select or html.sorted_select
         func(varprefix + '_selected', selected,
-                           attrs = {'size': 5, 'style': self._autoheight and 'height:auto' or '', 'multiple': 'multiple'},
+                           attrs = {
+                               'size'       : 5,
+                               'style'      : self._autoheight and 'height:auto' or '',
+                               'ondblclick' : not self._instant_add and unselect_func or '',
+                           },
                            onchange = onchange_selected)
         html.write('</td></tr></table>')
         html.hidden_field(varprefix, '|'.join([k for k, v in selected]), id = varprefix, add_var = True)

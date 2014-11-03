@@ -1402,6 +1402,12 @@ def submit_check_result(host, servicedesc, result, sa):
         infotext.startswith("UNKNOWN -")):
         infotext = nagios_state_names[state] + " - " + infotext
 
+    # make sure that plugin output does not contain a vertical bar. If that is the
+    # case then replace it with a Uniocode "Light vertical bar"
+    if type(infotext) == unicode:
+        infotext = infotext.encode("utf-8") # should never happen
+    infotext = infotext.replace("|", "\xe2\x9d\x98")
+
     global nagios_command_pipe
     # [<timestamp>] PROCESS_SERVICE_CHECK_RESULT;<host_name>;<svc_description>;<return_code>;<plugin_output>
 

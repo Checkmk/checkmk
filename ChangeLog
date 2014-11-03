@@ -4,6 +4,7 @@
 
     Checks & Agents:
     * 1480 FIX: brocade_vdx_status: disable check on some devices that do not support it...
+    * 1485 FIX: dell_om_disks, dell_om_esmlog, dell_om_mem, dell_om_processors, dell_om_sensors: detect more devices...
 
     Multisite:
     * 1481 FIX: Fix broken layout of Host-, Service- and Contactgroup filters

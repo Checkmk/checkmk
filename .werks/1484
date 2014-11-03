@@ -1,0 +1,16 @@
+Title: dell_om_sensors: Use sensor name as item
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.5i7
+Date: 1415030487
+Class: feature
+
+The checks of the type <tt>dell_om_sensors</tt> now use the sensor
+name rather then its index as the item. Also the check now allows to
+set levels that are more strict than the builtin critical level.
+This is done by using the same code now as in all other temperature
+checks. Also the check output is compatible now.
+
+Because of the renaming of the item a re-inventory will create
+one new item for each sensor.

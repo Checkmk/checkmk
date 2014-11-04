@@ -65,10 +65,12 @@ OPTIONS:
                           in a CRITICAL state. Defaults to 1 hour
 
   --connect-timeout       Timeout in seconds for network connects (defaults to 10)
-  --status-file PATH      This plugin needs a file to store information about
+  --status-dir PATH       This plugin needs a file to store information about
                           sent, received and expected mails. Defaults to either
-                          /tmp/check_mail_loop or /omd/sites/<sitename>/var/tmp/check_mail_loop
-                          when executed from within an OMD site
+                          /tmp/ or /omd/sites/<sitename>/var/tmp when executed
+                          from within an OMD site
+  --status-suffix SUFFIX  Concantenated with "check_mail_loop.SUFFIX.status" to
+                          generate the name of the status file. Empty by default
   --delete-messages       Delete all messages identified as being related to this
                           check plugin. This is disabled by default, which
                           might make your mailbox grow when you not clean it up
@@ -84,7 +86,7 @@ short_options = 'dh'
 long_options  = ['smtp-server=', 'smtp-port=', 'smtp-username=', 'smtp-password=',
     'smtp-tls', 'fetch-protocol=', 'fetch-server=', 'fetch-port=', 'fetch-username=',
     'fetch-password=', 'fetch-ssl', 'mail-from=', 'mail-to=', 'warning=', 'critical=',
-    'connect-timeout=', 'delete-messages', 'help']
+    'connect-timeout=', 'delete-messages', 'help', 'status-dir=', 'status-suffix=']
 
 required_params = [
     'smtp-server', 'fetch-server', 'fetch-username', 'fetch-password',
@@ -115,6 +117,8 @@ warning         = None
 critical        = 3600
 conn_timeout    = 10
 delete_messages = False
+status_dir      = None
+status_suffix   = None
 
 for o,a in opts:
     if o in [ '-h', '--help' ]:
@@ -155,6 +159,10 @@ for o,a in opts:
         conn_timeout = int(a)
     elif o == '--delete-messages':
         delete_messages = True
+    elif o == '--status-dir':
+        status_dir = a
+    elif o == '--status-suffix':
+        status_suffix = a
 
 param_names = dict(opts).keys()
 for p in required_params:
@@ -170,10 +178,16 @@ if fetch_port == None:
     else:
         fetch_port = fetch_ssl and 993 or 143
 
-path_prefix = os.environ.get('OMD_ROOT')
-if not path_prefix:
-    path_prefix = '/tmp'
-status_path = '%s/var/tmp/check_mail_loop.status' % path_prefix
+if not status_dir:
+    status_dir = os.environ.get('OMD_ROOT')
+    if status_dir:
+        status_dir += '/var/tmp'
+    else:
+        status_dir = '/tmp'
+if status_suffix:
+    status_path = '%s/check_mail_loop.%s.status' % (status_dir, status_suffix)
+else:
+    status_path = '%s/check_mail_loop.status' % (status_dir)
 
 socket.setdefaulttimeout(conn_timeout)
 
@@ -333,6 +347,9 @@ def check_mails():
     return state, output, perfdata
 
 def cleanup_mailbox():
+    if not g_M:
+        return # do not deal with mailbox when none sent yet
+
     try:
         # Do not delete all messages in the inbox. Only the ones which were
         # processed before! In the meantime there might be occured new ones.
@@ -353,6 +370,8 @@ def cleanup_mailbox():
         bail_out(2, 'Failed to delete mail: %s' % e)
 
 def close_mailbox():
+    if not g_M:
+        return # do not deal with mailbox when none sent yet
     if fetch_proto == 'POP3':
         g_M.quit()
     else:

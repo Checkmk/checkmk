@@ -96,9 +96,10 @@ def allnet_ip_sensoric_parse(info):
     for key, value in info:
         match = re.search('(\w+)\.(\w+)', key)
         if match:
-            if match.group(1) not in parsed.keys():
-                parsed[match.group(1)] = {}
-            parsed[match.group(1)][match.group(2)] = value
+            sensor = match.group(1)
+            field = match.group(2)
+            parsed.setdefault(sensor, {})
+            parsed[sensor][field] = value
 
     return parsed
 
@@ -169,7 +170,8 @@ def inventory_allnet_ip_sensoric_temp(info):
     parsed = allnet_ip_sensoric_parse(info)
     inventory = []
     for sensor in parsed.keys():
-        if "function" in parsed[sensor].keys() and parsed[sensor]["function"] == "1":
+        if (parsed[sensor].get('function') and parsed[sensor]["function"] == "1") \
+            or (parsed[sensor].get('unit') and parsed[sensor]['unit'] == '°C'):
             item = allnet_ip_sensoric_compose_item(sensor, parsed[sensor])
             inventory.append( (item, "allnet_ip_sensoric_temp_default_levels") )
     return inventory

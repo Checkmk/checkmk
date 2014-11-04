@@ -330,6 +330,7 @@ perfometers["check_mk-apc_inrow_temperature"] = perfometer_temperature
 perfometers["check_mk-hitachi_hnas_temp"] = perfometer_temperature
 perfometers["check_mk-dell_poweredge_temp"] = perfometer_temperature
 perfometers["check_mk-dell_chassis_temp"] = perfometer_temperature
+perfometers["check_mk-dell_om_sensors"] = perfometer_temperature
 perfometers["check_mk-innovaphone_temp"] = perfometer_temperature
 perfometers["check_mk-cmciii.temp"] = perfometer_temperature
 perfometers["check_mk-ibm_svc_enclosurestats.temp"] = perfometer_temperature
@@ -1168,6 +1169,7 @@ def perfometer_dbmv(row, check_command, perf_data):
     return "%.1f dBmV" % dbmv, perfometer_logarithmic(dbmv, 50, 2, "#da6")
 
 perfometers["check_mk-docsis_channels_downstream"] = perfometer_dbmv
+perfometers["check_mk-docsis_cm_status"] = perfometer_dbmv
 
 def perfometer_docsis_snr(row, check_command, perf_data):
     dbmv = float(perf_data[0][1])

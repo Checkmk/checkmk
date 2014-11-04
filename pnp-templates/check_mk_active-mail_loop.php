@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,36 +23,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def inventory_dell_om_esmlog(info):
-    if len(info) > 0:
-        return [ ( None, None ) ]
-    return []
+$opt[1] = "--vertical-label 'Duration (sec)' -l0 --title \"Delivery Duration\" ";
 
-def check_dell_om_esmlog(_no_item, _no_params, info):
-    status = int(info[0][0])
-    if status == 5:
-        state = 2
-        message = "ESM Log is full"
-    elif status == 3:
-        state = 0
-        message = "EMS Log is less then 80% full"
-    else:
-        state =1
-        message = "EMS log more then 80% full"
-
-    return state, message
-
-
-check_info["dell_om_esmlog"] = {
-    "check_function"        : check_dell_om_esmlog,
-    "inventory_function"    : inventory_dell_om_esmlog,
-    "service_description"   : "ESM Log",
-    "has_perfdata"          : False,
-    # There is no other way to find out that openmanage is present.
-    "snmp_scan_function"    : scan_dell_om,
-    "snmp_info"             : ( ".1.3.6.1.4.1.674.10892.1.200.10.1.41", [
-                                        1, # eventlogStatus
-                              ]),
-    "includes"              : [ "dell_om.include" ],
-}
-
+$def[1] = "DEF:dur=$RRDFILE[1]:$DS[1]:MAX ";
+$def[1] .= "AREA:dur#80f000:\"Duration (seconds)\" ";
+$def[1] .= "LINE:dur#408000 ";
+$def[1] .= "GPRINT:dur:LAST:\"%7.2lf %s LAST\" ";
+$def[1] .= "GPRINT:dur:MAX:\"%7.2lf %s MAX\" ";
+?>

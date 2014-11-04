@@ -1,0 +1,17 @@
+Title: Added new check for monitoring mail delivery (SMTP -> IMAP/POP3 mailbox)
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i7
+Date: 1415114521
+Class: feature
+
+A new check has been added which can be used to monitor your whole email
+delivery process. This check sends mails out to a SMTP server of your
+choice and tries to receive these sent mails by querying a POP3 or IMAP
+mailbox of your choice.
+
+You can either send the mail directly to this mailbox or use some echo
+services available on the internet, like for example echo@tu-berlin.de.
+Just set this as destination mail address and they will send you a response
+to your SMTP mail shortly.

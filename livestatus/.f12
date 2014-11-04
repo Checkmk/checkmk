@@ -4,6 +4,7 @@ SITE=${SITE:-$(omd sites --bare | head -n 1)}
 
 set -e
 if [ ! -f configure ]; then
+    automake --add-missing
     aclocal && autoheader && automake -a && autoconf
 fi
 

@@ -1,4 +1,4 @@
-title: Dell Open Manage: Sensors (Fan, Temperature)
+title: Dell OpenManage: Sensors (Fan, Temperature)
 agents: snmp
 catalog: hw/server/dell
 license: GPL
@@ -7,6 +7,7 @@ description:
  This check monitors the current Status of
  each Sensor Module on a Dell server which have the open_manage packet
  installed.
+
  The check returns a {CRIT} in case of an error state reported
  by the sensor and also reports the current reading of the sensor as perfdata.
 

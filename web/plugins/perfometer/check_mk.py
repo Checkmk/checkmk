@@ -330,6 +330,7 @@ perfometers["check_mk-apc_inrow_temperature"] = perfometer_temperature
 perfometers["check_mk-hitachi_hnas_temp"] = perfometer_temperature
 perfometers["check_mk-dell_poweredge_temp"] = perfometer_temperature
 perfometers["check_mk-dell_chassis_temp"] = perfometer_temperature
+perfometers["check_mk-dell_om_sensors"] = perfometer_temperature
 perfometers["check_mk-innovaphone_temp"] = perfometer_temperature
 perfometers["check_mk-cmciii.temp"] = perfometer_temperature
 perfometers["check_mk-ibm_svc_enclosurestats.temp"] = perfometer_temperature

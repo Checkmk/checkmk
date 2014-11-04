@@ -1471,3 +1471,174 @@ register_rule(group,
     ),
     match = 'all'
 )
+
+register_rule(group,
+    'active_checks:mail_loop',
+    Dictionary(
+        title = _('Check Email Delivery'),
+        help = _('This active check sends out special E-Mails to a defined mail address using '
+                 'the SMTP protocol and then tries to receive these mails back by querying the '
+                 'inbox of a IMAP or POP3 mailbox. With this check you can verify that your whole '
+                 'mail delivery progress is working.'),
+        optional_keys = ['smtp_server', 'smtp_tls', 'smtp_port', 'smtp_auth', 'connect_timeout', 'delete_messages'],
+        elements = [
+            ('item', TextUnicode(
+                title = _('Name'),
+                help = _('The service description will be <b>Mail Loop</b> plus this name'),
+                allow_empty = False
+            )),
+            ('smtp_server', TextAscii(
+                title = _('SMTP Server'),
+                allow_empty = False,
+                help = _('You can specify a hostname or IP address different from the IP address '
+                         'of the host this check will be assigned to.')
+            )),
+            ('smtp_tls', FixedValue(True,
+                title = _('Use TLS over SMTP'),
+                totext = _('Encrypt SMTP communication using TLS'),
+            )),
+            ('smtp_port', Integer(
+                title = _('SMTP TCP Port to connect to'),
+                help = _('The TCP Port the SMTP server is listening on. Defaulting to <tt>25</tt>.'),
+                allow_empty = False,
+                default_value = 25,
+            )),
+            ('smtp_auth', Tuple(
+                title = _('SMTP Authentication'),
+                elements = [
+                    TextAscii(
+                        title = _('Username'),
+                        allow_empty = False,
+                        size = 24
+                    ),
+                    Password(
+                        title = _('Password'),
+                        allow_empty = False,
+                        size = 12
+                    ),
+                ],
+            )),
+            ('fetch', CascadingDropdown(
+                title = _('Mail Receiving'),
+                choices = [
+                    ('IMAP', _('IMAP'), Dictionary(
+                        optional_keys = ['server'],
+                        elements = [
+                            ('server', TextAscii(
+                                title = _('IMAP Server'),
+                                allow_empty = False,
+                                help = _('You can specify a hostname or IP address different from the IP address '
+                                         'of the host this check will be assigned to.')
+                            )),
+                            ('ssl', CascadingDropdown(
+                                title = _('SSL Encryption'),
+                                default_value = (False, 143),
+                                choices = [
+                                    (False, _('Use no encryption'),
+                                        Optional(Integer(
+                                            allow_empty = False,
+                                            default_value = 143,
+                                        ),
+                                        title = _('TCP Port'),
+                                        help = _('By default the standard IMAP Port 143 is used.'),
+                                    )),
+                                    (True, _('Encrypt IMAP communication using SSL'),
+                                        Optional(Integer(
+                                            allow_empty = False,
+                                            default_value = 993,
+                                        ),
+                                        title = _('TCP Port'),
+                                        help = _('By default the standard IMAP/SSL Port 993 is used.'),
+                                    )),
+                                ],
+                            )),
+                            ('auth', Tuple(
+                                title = _('Authentication'),
+                                elements = [
+                                    TextAscii(
+                                        title = _('Username'),
+                                        allow_empty = False,
+                                        size = 24
+                                    ),
+                                    Password(
+                                        title = _('Password'),
+                                        allow_empty = False,
+                                        size = 12
+                                    ),
+                                ],
+                            )),
+                        ],
+                    )),
+                    ('POP3', _('POP3'), Dictionary(
+                        optional_keys = ['server'],
+                        elements = [
+                            ('server', TextAscii(
+                                title = _('POP3 Server'),
+                                allow_empty = False,
+                                help = _('You can specify a hostname or IP address different from the IP address '
+                                         'of the host this check will be assigned to.')
+                            )),
+                            ('ssl', CascadingDropdown(
+                                title = _('SSL Encryption'),
+                                default_value = (False, 110),
+                                choices = [
+                                    (True, _('Use no encryption'),
+                                        Optional(Integer(
+                                            allow_empty = False,
+                                            default_value = 110,
+                                        ),
+                                        title = _('TCP Port'),
+                                        help = _('By default the standard IMAP Port 110 is used.'),
+                                    )),
+                                    (False, _('Encrypt POP3 communication using SSL'),
+                                        Optional(Integer(
+                                            allow_empty = False,
+                                            default_value = 995,
+                                        ),
+                                        title = _('TCP Port'),
+                                        help = _('By default the standard POP3/SSL Port 995 is used.'),
+                                    )),
+                                ],
+                            )),
+                            ('auth', Tuple(
+                                title = _('Authentication'),
+                                elements = [
+                                    TextAscii(
+                                        title = _('Username'),
+                                        allow_empty = False,
+                                        size = 24
+                                    ),
+                                    Password(
+                                        title = _('Password'),
+                                        allow_empty = False,
+                                        size = 12
+                                    ),
+                                ],
+                            )),
+                        ],
+                    )),
+                ]
+            )),
+            ('mail_from', EmailAddress(
+                title = _('Sender email address'),
+            )),
+            ('mail_to', EmailAddress(
+                title = _('Destination email address'),
+            )),
+            ('connect_timeout', Integer(
+                title = _('Connect Timeout'),
+                minvalue = 1,
+                default_value = 10,
+                unit = _('sec'),
+            )),
+            ('delete_messages', FixedValue(True,
+                title = _('Delete processed messages'),
+                totext = _('Delete all processed message belonging to this check'),
+                help = _('Delete all messages identified as being related to this '
+                         'check. This is disabled by default, which will make '
+                         'your mailbox grow when you not clean it up on your own.'),
+            )),
+        ]
+    ),
+    match = 'all'
+)

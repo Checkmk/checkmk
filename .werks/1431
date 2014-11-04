@@ -1,0 +1,12 @@
+Title: windows_agent: fixed error on parsing unicode formatted logfiles
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.5i7
+Date: 1415115591
+Class: fix
+
+If the unicode logfile grew more than 8kB since the last query there was a
+chance that the last logline of this 8kB Block got cut in half and only
+the last part was reported.
+

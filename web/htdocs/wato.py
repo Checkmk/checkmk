@@ -13688,8 +13688,12 @@ def mode_edit_ruleset(phase):
             del rules[rulenr]
             if action == "up":
                 rules[rulenr-1:rulenr-1] = [ rule ]
-            else:
+            elif action == "down":
                 rules[rulenr+1:rulenr+1] = [ rule ]
+            elif action == "top":
+                rules.insert(0, rule)
+            else:
+                rules.append(rule)
             save_rulesets(rule_folder, rulesets)
             mark_affected_sites_dirty(rule_folder)
             log_pending(AFFECTED, None, "edit-ruleset",
@@ -13810,12 +13814,16 @@ def mode_edit_ruleset(phase):
             # Actions
             table.cell(_("Order"), css="buttons rulebuttons")
             if not first_in_group:
-                rule_button("up", _("Move this rule one position up"), folder, rel_rulenr)
+                rule_button("top", _("Move this rule to the top of the list"), folder, rel_rulenr)
+                rule_button("up",  _("Move this rule one position up"), folder, rel_rulenr)
             else:
                 rule_button(None)
+                rule_button(None)
             if not last_in_group:
-                rule_button("down", _("Move this rule one position down"), folder, rel_rulenr)
+                rule_button("down",   _("Move this rule one position down"), folder, rel_rulenr)
+                rule_button("bottom", _("Move this rule to the bottom of the list"), folder, rel_rulenr)
             else:
+                rule_button(None)
                 rule_button(None)
 
             table.cell(_("Actions"), css="buttons rulebuttons")

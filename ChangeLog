@@ -20,6 +20,7 @@
     * 1482 FIX: Fix exception when editing a visual of type single host group...
 
     WATO:
+    * 1170 Added buttons to move rules to top/bottom of the list to ruleset edit dialog
     * 1165 FIX: Fixed exception in service discovery of logwatch event console forwarding checks...
 
     Notifications:

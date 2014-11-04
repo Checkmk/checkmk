@@ -1,6 +1,7 @@
 1.2.5i7:
     Core & Setup:
     * 1483 FIX: Savely replace illegal vertical bars in check plugin output...
+    * 1431 FIX: windows_agent: fixed error on parsing unicode formatted logfiles...
 
     Checks & Agents:
     * 1197 climaveneta_temp: New check for temperature sensors on Climaveneta clima devices

@@ -258,10 +258,10 @@ def submit_check_mk_aggregation(hostname, status, output):
 # If the host is a cluster, the information is fetched from all its
 # nodes an then merged per-check-wise.
 
-# For cluster checks we do not have an ip address from Nagios
-# We need to do DNS-lookups in that case :-(. We could avoid that at
-# least in case of precompiled checks. On the other hand, cluster checks
-# usually use existing cache files, if check_mk is not misconfigured,
+# For cluster checks the monitoring core does not provide the IP addresses
+# of the node.  We need to do DNS-lookups in that case :-(. We could avoid
+# that at least in case of precompiled checks. On the other hand, cluster
+# checks usually use existing cache files, if check_mk is not misconfigured,
 # and thus do no network activity at all...
 
 def get_host_info(hostname, ipaddress, checkname):
@@ -307,13 +307,22 @@ def get_host_info(hostname, ipaddress, checkname):
                 raise MKSNMPError(", ".join(exception_texts))
             else:
                 raise MKAgentError(", ".join(exception_texts))
-        return info
+
     else:
         info = get_realhost_info(hostname, ipaddress, checkname, check_max_cachefile_age)
         if info != None and add_nodeinfo:
-            return [ [ None ] + line for line in info ]
-        else:
-            return info
+            info = [ [ None ] + line for line in info ]
+
+    # Now some check types define a parse function. In that case the
+    # info is automatically being parsed by that function - on the fly.
+    if checkname in check_info: # e.g. not the case for cpu (check is cpu.loads)
+        parse_function = check_info[checkname]["parse_function"]
+        if parse_function:
+            parsed = parse_function(info)
+            return parsed
+
+    return info
+
 
 # Gets info from a real host (not a cluster). There are three possible
 # ways: TCP, SNMP and external command.  This function raises
@@ -1107,6 +1116,7 @@ def convert_check_info():
             # Check does already use new API. Make sure that all keys are present,
             # extra check-specific information into file-specific variables.
             info.setdefault("inventory_function", None)
+            info.setdefault("parse_function", None)
             info.setdefault("group", None)
             info.setdefault("snmp_info", None)
             info.setdefault("snmp_scan_function", None)
@@ -1203,7 +1213,9 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
     check_table = get_sorted_check_table(hostname, remove_duplicates=True)
     problems = []
 
-    for checkname, item, params, description, info in check_table:
+    parsed_infos = {} # temporary cache for section infos, maybe parsed
+
+    for checkname, item, params, description, aggrinfo in check_table:
         if only_check_types != None and checkname not in only_check_types:
             continue
 
@@ -1222,16 +1234,21 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
             sys.stderr.write("Service %s: timeperiod %s is currently active.\n" %
                     (description, period))
 
-        # In case of a precompiled check table info is the aggrated
+        # In case of a precompiled check table aggrinfo is the aggrated
         # service name. In the non-precompiled version there are the dependencies
-        if type(info) == str:
-            aggrname = info
+        if type(aggrinfo) == str:
+            aggrname = aggrinfo
         else:
             aggrname = aggregated_service_name(hostname, description)
 
         infotype = checkname.split('.')[0]
         try:
-            info = get_host_info(hostname, ipaddress, infotype)
+            if infotype in parsed_infos:
+                info = parsed_infos[infotype]
+            else:
+                info = get_host_info(hostname, ipaddress, infotype)
+                parsed_infos[infotype] = info
+
         except MKSkipCheck, e:
             continue
         except MKSNMPError, e:

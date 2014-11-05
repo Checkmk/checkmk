@@ -3605,11 +3605,16 @@ def read_manpage_catalog():
         a, filename = os.path.split(path)
         if filename.startswith("."):
             continue
-        parsed = parse_man_header(checkname, path)
+        try:
+            parsed = parse_man_header(checkname, path)
+        except Exception, e:
+            sys.stderr.write('ERROR: Skipping invalid manpage: %s: %s\n' % (checkname, e))
+            continue
+
         try:
             cat = parsed["catalog"]
         except KeyError:
-            sys.stderr.write('ERROR: Invalid manpage: %s (Catalog info missing)\n' % checkname)
+            sys.stderr.write('ERROR: Skipping invalid manpage: %s (Catalog info missing)\n' % checkname)
             continue
 
         if not cat:
@@ -3736,8 +3741,7 @@ def parse_man_header(checkname, path):
             break
 
     if "agents" not in parsed:
-        sys.stderr.write("Section agents missing in man page of %s\n" % (checkname))
-        sys.exit(1)
+        raise Exception("Section agents missing in man page of %s\n" % (checkname))
     else:
         parsed["agents"] = parsed["agents"].replace(" ","").split(",")
 

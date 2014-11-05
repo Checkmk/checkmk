@@ -241,6 +241,7 @@ telegram_list = {
            '<ns1:pathSet>summary.quickStats.guestMemoryUsage</ns1:pathSet>'\
            '<ns1:pathSet>summary.quickStats.staticCpuEntitlement</ns1:pathSet>'\
            '<ns1:pathSet>summary.quickStats.hostMemoryUsage</ns1:pathSet>'\
+           '<ns1:pathSet>snapshot.rootSnapshotList</ns1:pathSet>'\
            '<ns1:pathSet>config.datastoreUrl</ns1:pathSet>'\
            '<ns1:pathSet>guest.toolsVersionStatus</ns1:pathSet></ns1:propSet>'\
          '<ns1:objectSet><ns1:obj type="Folder">%(rootFolder)s</ns1:obj><ns1:skip>false</ns1:skip>'\
@@ -924,27 +925,48 @@ if not error:
                     del vm_data["config.hardware.device"]
                 if "runtime.host" in vm_data:
                     vm_data["runtime.host"] = hostsystems.get(vm_data["runtime.host"], vm_data["runtime.host"])
+
+                def eval_snapshot_list(info):
+                    response = []
+                    snapshot_info = get_pattern("<name>(.*?)</name>.*?<id>(.*?)</id><createTime>(.*?)</createTime><state>(.*?)</state>", info)
+                    for entry in snapshot_info:
+                        try:
+                            # 2013-11-06T15:39:39.347543Z
+                            creation_time = int(time.mktime(time.strptime(entry[2][:19], "%Y-%m-%dT%H:%M:%S")))
+                        except:
+                            creation_time = 0
+                        response.append("%s %s %s %s" % (entry[1], creation_time, entry[3], entry[0].replace("|", " ")))
+                    return "|".join(response)
+
+
+                def eval_datastores(info):
+                    datastore_urls = get_pattern("<name>(.*?)</name><url>(.*?)</url>", info)
+                    response = []
+                    for name, url in datastore_urls:
+                        for datastore in datastores.values():
+                            if name == datastore["name"]:
+                                vm_datastore = []
+                                for key, value in datastore.items():
+                                    if key != "name":
+                                        key = key.split(".")[1]
+                                    vm_datastore.append("%s %s" % (key, value))
+                                response.append("|".join(vm_datastore))
+                                break
+                        else:
+                            # No matching datastore was found. At least add the name
+                            response.append("name %s" % name)
+                    return "\t".join(response)
+
+                transform_functions = {
+                    "snapshot.rootSnapshotList" : eval_snapshot_list,
+                    "config.datastoreUrl"       : eval_datastores,
+                }
+                for key, transform in transform_functions.items():
+                    if key in vm_data:
+                        vm_data[key] = transform(vm_data[key])
+
                 vms[vm_data.get("name")] = vm_data
 
-
-                # Add datastore infos to the field config.datastoreUrl
-                datastore_urls = get_pattern("<name>(.*?)</name><url>(.*?)</url>", vm_data.get("config.datastoreUrl"))
-                vm_datastores = []
-                for name, url in datastore_urls:
-                    for datastore in datastores.values():
-                        if name == datastore["name"]:
-                            vm_datastore = []
-                            for key, value in datastore.items():
-                                if key != "name":
-                                    key = key.split(".")[1]
-                                vm_datastore.append("%s %s" % (key, value))
-                            vm_datastores.append("|".join(vm_datastore))
-                            break
-                    else:
-                        # No matching datastore was found. At least add the name
-                        vm_datastores.append("name %s" % name)
-
-                vm_data["config.datastoreUrl"] = "\t".join(vm_datastores)
 
             for key in sorted(vms.keys()):
                 data = vms[key]

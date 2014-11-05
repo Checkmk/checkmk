@@ -349,12 +349,12 @@ class TextAscii(ValueSpec):
         self._empty_text    = kwargs.get("empty_text", "")
         self._read_only     = kwargs.get("read_only")
         self._none_is_empty = kwargs.get("none_is_empty", False)
+        self._forbidden_chars = kwargs.get("forbidden_chars", "")
         self._regex         = kwargs.get("regex")
         self._regex_error   = kwargs.get("regex_error",
             _("Your input does not match the required format."))
         if type(self._regex) == str:
             self._regex = re.compile(self._regex)
-
         self._prefix_buttons = kwargs.get("prefix_buttons", [])
 
     def canonical_value(self):
@@ -419,6 +419,10 @@ class TextAscii(ValueSpec):
             unicode(value)
         except:
             raise MKUserError(varprefix, _("Non-ASCII characters are not allowed here."))
+        if self._forbidden_chars:
+            for c in self._forbidden_chars:
+                if c in value:
+                    raise MKUserError(varprefix, _("The character <tt>%s</tt> is not allowed here.") % c)
         if self._none_is_empty and value == "":
             raise MKUserError(varprefix, _("An empty value must be represented with None here."))
         if not self._allow_empty and value.strip() == "":
@@ -1593,6 +1597,7 @@ class DualListChoice(ListChoice):
         html.sorted_select(varprefix + '_unselected', unselected,
                            attrs = {
                                'size'       : 5,
+                               'multiple'   : 'multiple',
                                'style'      : self._autoheight and 'height:auto' or '',
                                'ondblclick' : not self._instant_add and select_func or '',
                            },
@@ -1602,6 +1607,7 @@ class DualListChoice(ListChoice):
         func(varprefix + '_selected', selected,
                            attrs = {
                                'size'       : 5,
+                               'multiple'   : 'multiple',
                                'style'      : self._autoheight and 'height:auto' or '',
                                'ondblclick' : not self._instant_add and unselect_func or '',
                            },

@@ -350,3 +350,71 @@ check_info['esx_vsphere_vm.cpu'] = {
   "service_description" : "ESX CPU",
   "has_perfdata"        : True,
 }
+
+
+#   .--Snapshots-----------------------------------------------------------.
+#   |           ____                        _           _                  |
+#   |          / ___| _ __   __ _ _ __  ___| |__   ___ | |_ ___            |
+#   |          \___ \| '_ \ / _` | '_ \/ __| '_ \ / _ \| __/ __|           |
+#   |           ___) | | | | (_| | |_) \__ \ | | | (_) | |_\__ \           |
+#   |          |____/|_| |_|\__,_| .__/|___/_| |_|\___/ \__|___/           |
+#   |                            |_|                                       |
+#   +----------------------------------------------------------------------+
+
+# <<<esx_vsphere_vm>>>
+# snapshot.rootSnapshotList 1 1363596734 poweredOff 20130318_105600_snapshot_LinuxI|2 1413977827 poweredOn LinuxI Testsnapshot
+
+
+def inventory_esx_vsphere_vm_cpu(info):
+    data = esx_vsphere_vm_convert(info)
+    if 'snapshot.rootSnapshotList' in data:
+        return [(None, {})]
+
+def check_esx_vsphere_vm_cpu(_no_item, params, info):
+    data = esx_vsphere_vm_convert(info)
+
+    if 'snapshot.rootSnapshotList' not in data:
+        return
+
+    last_snapshot  = None
+    powered_on_snapshot = None
+    snapshots = map(lambda x: x.split(" ", 3), " ".join(data["snapshot.rootSnapshotList"]).split("|"))
+    snapshots = map(lambda x: (int(x[0]), int(x[1]), x[2], x[3]) , snapshots)
+    yield 0, "Number of Snapshots %d" % len(snapshots)
+
+    if len(snapshots) > 0:
+        last_snapshot = snapshots[0]
+        for snapshot in snapshots:
+            if snapshot[1] > last_snapshot[1]:
+                last_snapshot = snapshot
+            if snapshot[2] == "poweredOn":
+                powered_on_snapshot = snapshot
+
+        yield 0, "Powered On: %s" % (powered_on_snapshot and powered_on_snapshot[3] or "None")
+
+        perfdata = []
+        if params.get("age"):
+            warn, crit = params["age"]
+            snapshot_age = time.time() - last_snapshot[1]
+            if snapshot_age > crit:
+                yield 2, "Snapshot is older than %s" % get_age_human_readable(snapshot_age)
+            elif snapshot_age > warn:
+                yield 1, "Snapshot is older than %s" % get_age_human_readable(snapshot_age)
+            perfdata = [("age", last_snapshot[1], warn, crit)]
+        else:
+            perfdata = [("age", last_snapshot[1])]
+
+
+        yield 0, "Last Snapshot: %s %s" % (last_snapshot[3],
+                                           time.strftime("%D %H:%M",time.localtime(last_snapshot[1]))),\
+                                           perfdata
+
+
+
+check_info['esx_vsphere_vm.snapshots'] = {
+  "inventory_function"  : inventory_esx_vsphere_vm_cpu,
+  "check_function"      : check_esx_vsphere_vm_cpu,
+  "service_description" : "ESX Snapshots",
+  "group"               : "vm_snapshots",
+  "has_perfdata"        : True,
+}

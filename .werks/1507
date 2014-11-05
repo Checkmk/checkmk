@@ -1,0 +1,24 @@
+Title: New optional parse_function for check API
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.5i7
+Date: 1415193630
+Class: feature
+
+When developing your own checks you sometimes need to deal
+with more complex agent output that needs first to be parsed
+before that actual inventory or check logic can begin to do
+its works. Many checks therefore have something like a parse
+function. Now you can define a <tt>"parse_function"</tt> in
+the <tt>check_info</tt>. If you do that, then all agent
+output (the parameter <tt>info</tt>) will always be processed
+by that function before it is passed to the inventory or
+check function.
+
+Note: this is also a performance benefit since the parsing
+needs now only be done once and not again for each single
+check item.
+
+Please refer to the developer documentation for more
+details.

@@ -1,0 +1,15 @@
+Title: cisco_power, cisco_temp_perf: Both checks now using a new service description
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.5i7
+Date: 1415098852
+Class: fix
+
+Both checks are supported by a wide range of cisco devices. Unfortunately the behavior of the devices is
+not always the same. That means this devices not always return the same information via snamp.
+
+Cause of this problems, it was necessary to change the information what was used as item for the service description.
+
+After updating the Service description changes and a reinventory is needed. 
+

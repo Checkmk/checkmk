@@ -1,0 +1,11 @@
+Title: dell_om_disks, dell_om_esmlog, dell_om_mem, dell_om_processors, dell_om_sensors: detect more devices
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.5i7
+Date: 1415030746
+
+The inventory scan function has been improved so that more devices are
+being detected.

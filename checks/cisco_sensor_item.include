@@ -31,15 +31,26 @@ def cisco_sensor_item(trial_string, fall_back):
     # A string seperated by commas with status information
     # -> Depends on the device model
     try:
-        splited = trial_string.split(',')
-        if len(splited) == 1:
-            return trial_string
         # Try to handle all cases found in mkzeug/walks
-        if '#' in splited[-1] or 'Power' in splited[-1]:
-            return " ".join([ x.strip() for x in splited]).replace('#',' ')
-        if splited[-2].startswith(" Status"):
-            return " ".join([ x.strip() for x in splited[:-2]]).replace('#',' ')
-        return " ".join([ x.strip() for x in splited[:-1]]).replace('#',' ')
+        splited = [ x.strip for x in trial_string.split(',')]
+        if len(splited) == 1:
+            item = trial_string
+        # If the last part contains # or Power, take the complete string
+        elif '#' in splited[-1] or 'Power' in splited[-1]:
+            item = " ".join(splited)
+        # If second last part start with Status, remove that part
+        elif splited[-2].startswith(" Status"):
+            item = " ".join(splited[:-2])
+        # Take anything, but without last part
+        else:
+            item = " ".join(splited[:-1])
+        # Maye there a multiple Items, but always the same string.
+        # Try to prevent that by adding the fall_back number to the end
+        if not item[-1].isdigit():
+            item += " "+ fall_back
+        # Replace unwanted chars and return
+        return item.replace('#',' ')
     except:
         return fall_back
+
 

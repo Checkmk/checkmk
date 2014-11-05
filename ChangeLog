@@ -25,6 +25,7 @@
     * 1166 FIX: Also prevting stylesheet update issues during version updates (just like for JS files)
     * 1481 FIX: Fix broken layout of Host-, Service- and Contactgroup filters
     * 1482 FIX: Fix exception when editing a visual of type single host group...
+    * 1487 FIX: Fixed exception in Web GUI "Internal error:: name 'Filter' is not defined" in manual setups (using setup.py)...
 
     WATO:
     * 1170 Added buttons to move rules to top/bottom of the list to ruleset edit dialog

@@ -1,0 +1,18 @@
+Title: agent_vsphere: now able to monitor virtual machines snapshots
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6p2
+Date: 1415189473
+Class: feature
+
+The snapshot data is piggybacked to the virtual machines and provides
+the following informations
+
+<ul>
+<li>Number of snapshots</li>
+<li>Name of the latest snapshot</li>
+<li>Age of the latest snapshot. Levels can be configured in WATO.</li>
+<li>Currently powered on snapshot</li>
+</ul>
+

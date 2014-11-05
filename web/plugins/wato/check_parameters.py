@@ -3658,6 +3658,25 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_applications,
+    "vm_snapshots",
+    _("Virtual Machine Snapshots"),
+    Dictionary(
+        elements = [
+        ("age",
+          Tuple(
+            title = _("Age of the last snapshot"),
+            elements = [
+                Age(title = _("Warning if older than")),
+                Age(title = _("Critical if older than"))
+            ]
+          )
+        )]
+    ),
+    None,
+    None
+)
+register_check_parameters(
+    subgroup_applications,
     "veeam_backup",
     _("Veeam: Time since last Backup"),
     Dictionary(

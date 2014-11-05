@@ -30,7 +30,6 @@
 cisco_cpu_default_levels = (80.0, 90.0)
 
 def inventory_cisco_cpu(info):
-    print info
     if info:
         return [( None, 'cisco_cpu_default_levels') ]
 

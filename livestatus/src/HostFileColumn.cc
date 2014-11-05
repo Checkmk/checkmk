@@ -24,11 +24,18 @@
 
 
 #include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <nagios.h>
 
 #include "logger.h"
 #include "HostFileColumn.h"
+
+#ifdef CMC
+#include "Host.h"
+#endif
+
 
 HostFileColumn::HostFileColumn(string name, string description, const char *base_dir,
                const char *suffix, int indirect_offset)
@@ -48,10 +55,17 @@ char *HostFileColumn::getBlob(void *data, int *size)
 
     data = shiftPointer(data);
     if (!data) return 0;
-    host *hst  = (host *)data;
+
+#ifdef CMC
+    Host *hst = (Host *)data;
+    const char *host_name = hst->_name;
+#else
+    host *hst = (host *)data;
+    const char *host_name = hst->name;
+#endif
 
     char path[4096];
-    snprintf(path, sizeof(path), "%s/%s%s", _base_dir, hst->name, _suffix);
+    snprintf(path, sizeof(path), "%s/%s%s", _base_dir, host_name, _suffix);
     int fd = open(path, O_RDONLY);
     if (fd < 0) {
         return 0;

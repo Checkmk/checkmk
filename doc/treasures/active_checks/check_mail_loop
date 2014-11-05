@@ -1,0 +1,406 @@
+#!/usr/bin/python
+# encoding: utf-8
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+import sys, getopt, os, time, random, poplib, imaplib, smtplib, email
+import traceback, socket, re
+
+def bail_out(rc, s):
+    stxt = ['OK', 'WARN', 'CRIT', 'UNKN'][rc]
+    sys.stdout.write('%s - %s\n' % (stxt, s))
+    sys.exit(rc)
+
+def usage(msg=None):
+    if msg:
+        sys.stderr.write('ERROR: %s\n' % msg)
+    sys.stderr.write("""
+USAGE: check_mail_loop [OPTIONS]
+
+OPTIONS:
+  --smtp-server ADDRESS   Host address of the SMTP server to send the mail to
+  --smtp-port PORT        Port to use for SMTP (defaults to 25)
+  --smtp-username USER    Username to use for SMTP communictation
+                          (leave empty for anonymous SMTP)
+  --smtp-password PW      Password to authenticate SMTP
+  --smtp-tls              Use TLS over SMTP (disabled by default)
+
+  --fetch-protocol PROTO  Set to "IMAP" or "POP3", depending on your mailserver
+                          (defaults to IMAP)
+  --fetch-server ADDRESS  Host address of the IMAP/POP3 server hosting your mailbox
+  --fetch-port PORT       IMAP or POP3 port
+                          (defaults to 110 for POP3 and 995 for POP3 with SSL and
+                           143 for IMAP and 993 for IMAP with SSL)
+  --fetch-username USER   Username to use for IMAP/POP3
+  --fetch-password PW     Password to use for IMAP/POP3
+  --fetch-ssl             Use SSL for feching the mailbox (disabled by default)
+
+  --mail-from MAIL        Use this mail address as sender address
+  --mail-to MAIL          Use this mail address as recipient address
+
+  --warning AGE           Age of the most recent mail in seconds to result
+                          in a WARNING state
+  --critical AGE          Age of the most recent mail in seconds to result
+                          in a CRITICAL state. Defaults to 1 hour
+
+  --connect-timeout       Timeout in seconds for network connects (defaults to 10)
+  --status-dir PATH       This plugin needs a file to store information about
+                          sent, received and expected mails. Defaults to either
+                          /tmp/ or /omd/sites/<sitename>/var/tmp when executed
+                          from within an OMD site
+  --status-suffix SUFFIX  Concantenated with "check_mail_loop.SUFFIX.status" to
+                          generate the name of the status file. Empty by default
+  --delete-messages       Delete all messages identified as being related to this
+                          check plugin. This is disabled by default, which
+                          might make your mailbox grow when you not clean it up
+                          manually.
+
+  -d              Enable debug mode
+  -h, --help      Show this help message and exit
+
+""")
+    sys.exit(1)
+
+short_options = 'dh'
+long_options  = ['smtp-server=', 'smtp-port=', 'smtp-username=', 'smtp-password=',
+    'smtp-tls', 'fetch-protocol=', 'fetch-server=', 'fetch-port=', 'fetch-username=',
+    'fetch-password=', 'fetch-ssl', 'mail-from=', 'mail-to=', 'warning=', 'critical=',
+    'connect-timeout=', 'delete-messages', 'help', 'status-dir=', 'status-suffix=']
+
+required_params = [
+    'smtp-server', 'fetch-server', 'fetch-username', 'fetch-password',
+    'mail-from', 'mail-to',
+]
+
+try:
+    opts, args = getopt.getopt(sys.argv[1:], short_options, long_options)
+except getopt.GetoptError, err:
+    sys.stderr.write("%s\n" % err)
+    sys.exit(1)
+
+debug           = False
+smtp_server     = None
+smtp_port       = None
+smtp_user       = None
+smtp_pass       = None
+smtp_tls        = False
+fetch_proto     = 'IMAP'
+fetch_server    = None
+fetch_port      = None
+fetch_user      = None
+fetch_pass      = None
+fetch_ssl       = False
+mail_from       = None
+mail_to         = None
+warning         = None
+critical        = 3600
+conn_timeout    = 10
+delete_messages = False
+status_dir      = None
+status_suffix   = None
+
+for o,a in opts:
+    if o in [ '-h', '--help' ]:
+        usage()
+    elif o == '-d':
+        debug = True
+    elif o == '--smtp-server':
+        smtp_server = a
+    elif o == '--smtp-port':
+        smtp_port = int(a)
+    elif o == '--smtp-username':
+        smtp_user = a
+    elif o == '--smtp-password':
+        smtp_pass = a
+    elif o == '--smtp-tls':
+        smtp_tls = True
+    elif o == '--fetch-proto':
+        fetch_proto = a
+    elif o == '--fetch-server':
+        fetch_server = a
+    elif o == '--fetch-port':
+        fetch_port = int(a)
+    elif o == '--fetch-username':
+        fetch_user = a
+    elif o == '--fetch-password':
+        fetch_pass = a
+    elif o == '--fetch-ssl':
+        fetch_ssl = True
+    elif o == '--mail-from':
+        mail_from = a
+    elif o == '--mail-to':
+        mail_to = a
+    elif o == '--warning':
+        warning = int(a)
+    elif o == '--critical':
+        critical = int(a)
+    elif o == '--connect-timeout':
+        conn_timeout = int(a)
+    elif o == '--delete-messages':
+        delete_messages = True
+    elif o == '--status-dir':
+        status_dir = a
+    elif o == '--status-suffix':
+        status_suffix = a
+
+param_names = dict(opts).keys()
+for p in required_params:
+    if '--'+p not in param_names:
+        usage('The needed parameter --%s is missing' % p)
+
+if fetch_proto not in [ 'IMAP', 'POP3' ]:
+    usage('The given protocol is not supported.')
+
+if fetch_port == None:
+    if fetch_proto == 'POP3':
+        fetch_port = fetch_ssl and 995 or 110
+    else:
+        fetch_port = fetch_ssl and 993 or 143
+
+if not status_dir:
+    status_dir = os.environ.get('OMD_ROOT')
+    if status_dir:
+        status_dir += '/var/tmp'
+    else:
+        status_dir = '/tmp'
+if status_suffix:
+    status_path = '%s/check_mail_loop.%s.status' % (status_dir, status_suffix)
+else:
+    status_path = '%s/check_mail_loop.status' % (status_dir)
+
+socket.setdefaulttimeout(conn_timeout)
+
+g_expected = {}
+g_mails    = {}
+g_M        = None
+
+def load_expected_mails():
+    try:
+        for line in file(status_path):
+            ts, key = line.rstrip().split(' ', 1)
+            g_expected[ts+'-'+key] = (int(ts), int(key))
+    except IOError:
+        pass # Skip errors on not existing file
+
+def add_expected_msg(ts, key):
+    g_expected[str(ts)+'-'+str(key)] = (int(ts), key)
+
+def save_expected_mails():
+    lines = []
+    for ts, key in g_expected.values():
+        lines.append('%d %s' % (ts, key))
+    file(status_path, 'w').write('\n'.join(lines) + '\n')
+
+def fetch_mails():
+    global g_M
+    if not g_expected:
+        return # not expecting any mail, do not check for mails
+
+    mails = {}
+    try:
+        if fetch_proto == 'POP3':
+            # Get mails from POP3 mailbox
+            fetch_class = fetch_ssl and poplib.POP3_SSL or poplib.POP3
+            g_M = fetch_class(fetch_server, fetch_port)
+            g_M.user(fetch_user)
+            g_M.pass_(fetch_pass)
+
+            num_messages = len(g_M.list()[1])
+
+            for i in range(num_messages):
+                index = i+1
+                lines = g_M.retr(index, 0)[1]
+                mails[i] = email.message_from_string("".join(lines))
+
+        else:
+            # Get mails from IMAP mailbox
+            fetch_class = fetch_ssl and imaplib.IMAP4_SSL or imaplib.IMAP4
+            g_M = fetch_class(fetch_server, fetch_port)
+            g_M.login(fetch_user, fetch_pass)
+            g_M.select('INBOX', readonly=False) # select INBOX
+            retcode, messages = g_M.search(None, 'NOT', 'DELETED')
+            if retcode == 'OK':
+                for num in messages[0].split(' '):
+                    ty, data = g_M.fetch(num, '(RFC822)')
+                    mails[num] = email.message_from_string(data[0][1])
+
+        # Now filter out the messages for this check
+        pattern = re.compile('(?:Re: )?Check_MK-Mail-Loop ([^\s]+) ([^\s]+)')
+        for index, msg in mails.items():
+            matches = pattern.match(msg.get('Subject', ''))
+            if matches:
+                ts  = matches.group(1).strip()
+                key = matches.group(2).strip()
+
+                # extract received time
+                rx = msg.get('Received')
+                if rx:
+                    rx_ts = email.utils.mktime_tz(email.utils.parsedate_tz(rx.split(';')[-1]))
+                else:
+                    # use current time as fallback where no Received header could be found
+                    rx_ts = int(time.time())
+
+                g_mails[ts+'-'+key] = (index, rx_ts)
+
+    except Exception, e:
+        bail_out(3, 'Failed to check for mails: %s' % e)
+
+def send_mail():
+    now = time.time()
+    key = random.randint(1, 1000)
+
+    from email.mime.text import MIMEText as text
+    mail = email.mime.text.MIMEText("")
+    mail['From']    = mail_from
+    mail['To']      = mail_from
+    mail['Subject'] = 'Check_MK-Mail-Loop %d %d' % (now, key)
+
+    try:
+        S = smtplib.SMTP(smtp_server, smtp_port)
+        if smtp_tls:
+            S.starttls()
+        if smtp_user:
+            S.login(smtp_user, smtp_pass)
+        S.sendmail(mail_from, mail_to, mail.as_string())
+        S.quit()
+
+        add_expected_msg(now, key)
+    except Exception , e:
+        bail_out(3, 'Failed to send mail: %s' % e)
+
+def check_mails():
+    state    = 0
+    perfdata = []
+    output   = []
+
+    num_received = 0
+    num_pending  = 0
+    num_lost     = 0
+    duration     = None
+    now          = time.time()
+
+    # Loop all expected mails and check whether or not they have been received
+    for ident, (send_ts, key) in g_expected.items():
+        if ident in g_mails:
+            mail_index, recv_ts  = g_mails[ident]
+
+            if duration == None:
+                duration = recv_ts - send_ts
+            else:
+                duration = (duration + (recv_ts - send_ts)) / 2 # average
+
+            if critical != None and duration >= critical:
+                state = 2
+            elif warning != None and duration >= warning:
+                state = max(state, 1)
+
+            del g_expected[ident] # remove message from expect list
+            num_received += 1
+            # FIXME: Also remove older mails which have not yet been seen?
+
+        else:
+            # drop expecting messages when older than critical threshold,
+            # but keep waiting for other mails which have not yet reached it
+            if now - send_ts >= critical:
+                del g_expected[ident]
+                num_lost += 1
+                state = 2
+            else:
+                num_pending += 1
+
+    if num_received == 1:
+        output.append('Mail received within %d seconds' % duration)
+        perfdata.append(('duration', duration))
+    elif num_received > 1:
+        output.append('Received %d mails within average of %d seconds' % (num_received, duration))
+        perfdata.append(('duration', duration))
+    else:
+        output.append('Did not receive any new mail')
+
+    if num_lost:
+        output.append('Lost: %d (Did not arrive within %d seconds)' % (num_lost, critical))
+
+    if num_pending > 1:
+        output.append('Currently waiting for %d mails' % num_pending)
+
+    return state, output, perfdata
+
+def cleanup_mailbox():
+    if not g_M:
+        return # do not deal with mailbox when none sent yet
+
+    try:
+        # Do not delete all messages in the inbox. Only the ones which were
+        # processed before! In the meantime there might be occured new ones.
+        for ident, (mail_index, recv_ts) in g_mails.items():
+            if fetch_proto == 'POP3':
+                response = g_M.dele(ident)
+                response = None
+                if response != "+OK":
+                    raise Exception("Response from server: [%s]" % response)
+            else:
+                ty, data = g_M.store(mail_index, '+FLAGS', '\\Deleted')
+                if ty != 'OK':
+                    raise Exception("Response from server: [%s]" % response)
+
+        if fetch_proto == 'IMAP':
+            g_M.expunge()
+    except Exception, e:
+        bail_out(2, 'Failed to delete mail: %s' % e)
+
+def close_mailbox():
+    if not g_M:
+        return # do not deal with mailbox when none sent yet
+    if fetch_proto == 'POP3':
+        g_M.quit()
+    else:
+        g_M.close()
+        g_M.logout()
+
+def main():
+    load_expected_mails()
+
+    fetch_mails()
+    send_mail()
+
+    state, output, perfdata = check_mails()
+
+    if delete_messages:
+        cleanup_mailbox()
+    close_mailbox()
+
+    save_expected_mails()
+
+    sys.stdout.write(', '.join(output))
+    if perfdata:
+        sys.stdout.write(' | %s' % (' '.join(['%s=%s' % (p[0], ';'.join(map(str, p[1:]))) for p in perfdata ])))
+    sys.stdout.write('\n')
+    sys.exit(state)
+
+try:
+    main()
+except Exception, e:
+    if debug:
+        raise
+    bail_out(2, 'Unhandled exception: %s' % e)

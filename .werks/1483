@@ -1,0 +1,14 @@
+Title: Savely replace illegal vertical bars in check plugin output
+Level: 1
+Component: core
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.5i7
+Date: 1415004782
+
+If a check plugin has a vertical bar in its plugin output then the core chopped
+off the remaining text and interpreted that is performance values. That was
+for example the case when monitoring SAP R/3 jobs. This has now been fixed
+by automatically replacing the bar by the Unicode character LIGHT VERTICAL BAR
+(U+2758).

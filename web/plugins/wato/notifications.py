@@ -78,11 +78,11 @@ register_notification_parameters("mail",
             ),
             ( "url_prefix",
               TextAscii(
-                  title = _("URL prefix for links to Multisite"),
+                  title = _("URL prefix for links to Check_MK"),
                   help = _("If you specify an URL prefix here, then several parts of the "
-                           "email body are armed with hyperlinks to your Multisite GUI, so "
+                           "email body are armed with hyperlinks to your Check_MK GUI, so "
                            "that the recipient of the email can directly visit the host or "
-                           "service in question in Multisite. Specify an absolute URL including "
+                           "service in question in Check_MK. Specify an absolute URL including "
                            "the <tt>.../check_mk/</tt>"),
                   regex = "^(http|https)://.*/check_mk/$",
                   regex_error = _("The URL must begin with <tt>http</tt> or "
@@ -91,7 +91,15 @@ register_notification_parameters("mail",
                   default_value = "http://" + socket.gethostname() + "/" + (
                           defaults.omd_site and defaults.omd_site + "/" or "") + "check_mk/",
               )
-            )
+            ),
+            ( "no_floating_graphs", FixedValue(
+                True,
+                title = _("Display graphs among each other"),
+                totext = _("Graphs are shown among each other"),
+                help = _("By default all multiple graphs in emails are displayed floating "
+                         "nearby. You can enable this option to show the graphs among each "
+                         "other."),
+            )),
         ]
     )
 )

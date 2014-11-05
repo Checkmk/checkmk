@@ -1,0 +1,28 @@
+Title: mk_oracle: completely overhauled ORACLE monitoring
+Level: 3
+Component: checks
+Compatible: compat
+Version: 1.2.5i7
+Date: 1415093156
+Class: feature
+
+Check_MK now comes with a completely overhauled ORACLE monitoring. The
+new agent plugins <tt>mk_oracle</tt> and <tt>mk_oracle.aix</tt> are ready
+for use. The previous version of the Linux agent plugin has moved to
+<tt>doc/treasures/mk_oracle.old</tt>.
+
+Note: You do not need to update your already deployed plugins to the
+new version immediately. The check plugins are compatible with the
+output of both the old and the new agent.
+
+The new agent has several advantages:
+
+<ul>
+<li>It comes with many additional checks.</li>
+<li>It now correctly supports all ORACLE versions starting from 9.2.</li>
+<li>It supports authentication via the ORACLE password wallet.</li>
+<li>It is much faster: it only needs two logins into each database -
+one of which is being done only every 10 minutes.</li>
+</ul>
+
+We are preparing an update of the documentation as well.

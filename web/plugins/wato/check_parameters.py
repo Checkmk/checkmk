@@ -6189,18 +6189,19 @@ register_check_parameters(
 
 
 vs_license = Alternative(
+        title = _("Levels for Number of Licenses"),
         style = "dropdown",
         default_value = None,
         elements = [
               Tuple(
-                  title = _("Absolute Levels for unused licenses"),
+                  title = _("Absolute levels for unused licenses"),
                   elements = [
                       Integer(title = _("Warning at"), default_value = 5, unit = _("unused licenses")),
                       Integer(title = _("Critical at"), default_value = 0, unit = _("unused licenses")),
                   ]
               ),
               Tuple(
-                  title = _("Percentual Levels for unused licenses"),
+                  title = _("Percentual levels for unused licenses"),
                   elements = [
                       Percentage(title = _("Warning at"), default_value = 10.0),
                       Percentage(title = _("Critical at"), default_value = 0),
@@ -6208,9 +6209,14 @@ vs_license = Alternative(
              ),
              FixedValue(
                  None,
-                 totext = _("critical if all are used"),
+                 totext = _("Critical when all licenses are used"),
                  title = _("Go critical if all licenses are used"),
              ),
+             FixedValue(
+                False,
+                title = _("Always report OK"),
+                totext = _("Alerting depending on the number of used licenses is disabled"),
+             )
           ]
         )
 

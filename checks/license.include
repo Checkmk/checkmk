@@ -29,6 +29,9 @@ def license_check_levels(have, used, params):
     if params == None:
         warn = have
         crit = have
+    elif params == False:
+        warn = None
+        crit = None
     elif type(params[0]) == int:
         warn = max(0, have - params[0])
         crit = max(0, have - params[1])
@@ -42,9 +45,9 @@ def license_check_levels(have, used, params):
     else:
         infotext = "used %d licenses, but you have only %d" % (used, have)
 
-    if used >= crit:
+    if crit != None and used >= crit:
         status = 2
-    elif used >= warn:
+    elif warn != None and used >= warn:
         status = 1
     else:
         status = 0

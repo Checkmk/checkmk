@@ -2122,7 +2122,7 @@ void cleanup_logwatch()
 #define UNICODE_BUFFER_SIZE 8192
 int fill_unicode_bytebuffer(FILE *file, char* buffer, int offset) {
     int bytes_to_read = UNICODE_BUFFER_SIZE - offset;
-    int read_bytes = fread(buffer, 1, bytes_to_read, file);
+    int read_bytes = fread(buffer + offset, 1, bytes_to_read, file);
     return read_bytes + offset;
 }
 

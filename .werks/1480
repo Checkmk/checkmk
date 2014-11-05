@@ -1,0 +1,10 @@
+Title: brocade_vdx_status: disable check on some devices that do not support it
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.5i7
+Date: 1414761045
+
+Thanks to Oleg Roitburd.

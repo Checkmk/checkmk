@@ -968,6 +968,7 @@ if mkeventd_enabled:
             'history_time',
             'history_who',
             'history_what',
+            'host_state_type',
         ],
         'hard_filtervars': [
            ('history_time_from', '1'),

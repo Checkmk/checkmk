@@ -290,9 +290,6 @@ def get_stored_snmpwalk(hostname, oid):
 
     path = snmpwalks_dir + "/" + hostname
 
-    if opt_debug:
-        sys.stderr.write("Getting %s from %s\n" % (oid, path))
-
     rowinfo = []
 
     # New implementation: use binary search

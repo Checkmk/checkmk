@@ -349,12 +349,12 @@ class TextAscii(ValueSpec):
         self._empty_text    = kwargs.get("empty_text", "")
         self._read_only     = kwargs.get("read_only")
         self._none_is_empty = kwargs.get("none_is_empty", False)
+        self._forbidden_chars = kwargs.get("forbidden_chars", "")
         self._regex         = kwargs.get("regex")
         self._regex_error   = kwargs.get("regex_error",
             _("Your input does not match the required format."))
         if type(self._regex) == str:
             self._regex = re.compile(self._regex)
-
         self._prefix_buttons = kwargs.get("prefix_buttons", [])
 
     def canonical_value(self):
@@ -419,6 +419,10 @@ class TextAscii(ValueSpec):
             unicode(value)
         except:
             raise MKUserError(varprefix, _("Non-ASCII characters are not allowed here."))
+        if self._forbidden_chars:
+            for c in self._forbidden_chars:
+                if c in value:
+                    raise MKUserError(varprefix, _("The character <tt>%s</tt> is not allowed here.") % c)
         if self._none_is_empty and value == "":
             raise MKUserError(varprefix, _("An empty value must be represented with None here."))
         if not self._allow_empty and value.strip() == "":
@@ -1591,12 +1595,20 @@ class DualListChoice(ListChoice):
             onchange_unselected += ';vs_duallist_enlarge(\'unselected\', \'%s\')' % varprefix
 
         html.sorted_select(varprefix + '_unselected', unselected,
-                           attrs = {'size': 5, 'style': self._autoheight and 'height:auto' or ''},
+                           attrs = {
+                               'size'       : 5,
+                               'style'      : self._autoheight and 'height:auto' or '',
+                               'ondblclick' : not self._instant_add and select_func or '',
+                           },
                            onchange = onchange_unselected)
         html.write('</td><td>')
         func = self._custom_order and html.select or html.sorted_select
         func(varprefix + '_selected', selected,
-                           attrs = {'size': 5, 'style': self._autoheight and 'height:auto' or '', 'multiple': 'multiple'},
+                           attrs = {
+                               'size'       : 5,
+                               'style'      : self._autoheight and 'height:auto' or '',
+                               'ondblclick' : not self._instant_add and unselect_func or '',
+                           },
                            onchange = onchange_selected)
         html.write('</td></tr></table>')
         html.hidden_field(varprefix, '|'.join([k for k, v in selected]), id = varprefix, add_var = True)

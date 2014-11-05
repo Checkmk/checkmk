@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # encoding: utf-8
 
-import os, sys, getopt, signal, time, socket, select, traceback, re
+import os, sys, getopt, signal, time, socket, select, traceback, re, gzip, StringIO
 
 VERSION="1.2.5i7"
 
@@ -45,6 +45,8 @@ g_sites = {}
 #          'last_failed_connect': 0,
 #          'last_reset': 1370420492.879927,
 #          'last_reload' : 1370420492,
+#          'last_inventory_update' : 1370420492.879927,
+#          'inventory_pid' : None,
 #          'cache' : {},
 #          'socket': <socket._socketobject object at 0x7f5d0adc3910>,
 #          'state': 'ready'}}
@@ -86,6 +88,7 @@ def liveproxyd_run():
             send_responses(writable)
             handle_client_timeouts()
             garbage_collect_sockets()
+            collect_inventory_updates()
 
             now = time.time()
             if dump_interval != None and now - last_dump > dump_interval:
@@ -176,7 +179,7 @@ def send_heartbeat(sitename, sitestate):
             channel = next_channel
             # log("Sending heartbeat to channel %s/%d" % (sitename, channel["socket"].fileno()))
             try:
-                channel["socket"].send("GET status\nKeepAlive: on\nColumns: program_start\n\n")
+                channel["socket"].send("GET status\nKeepAlive: on\nColumns: program_start mk_inventory_last\n\n")
                 channel["state"] = "heartbeat"
                 channel["since"] = now
                 sitestate["heartbeat"]["since"] = now
@@ -219,7 +222,7 @@ def complete_connections(writable):
 
 # Master/Mega/Central poll(). We though we are the select() master. But select()
 # is limited to 1024 filedescriptors in most Python versions. So we rather use
-# poll(). If you have many sites and many users you will easily get more 
+# poll(). If you have many sites and many users you will easily get more
 # filedescriptors...
 def do_select(timeout):
     p = select.poll()
@@ -298,7 +301,7 @@ def get_new_requests(readable):
                                 request.replace("\n", "\\n"), sitename, client["socket"].fileno()))
                             client["state"] = "closed"
                         elif not request.startswith("COMMAND") and "ResponseHeader: fixed16\n" not in request:
-                            respond_client_with_error(client, 
+                            respond_client_with_error(client,
                                 "Invalid request, you must specify ResponseHeader: fixed16.")
                         else:
                             # Try to find a matching response in our cache
@@ -309,7 +312,7 @@ def get_new_requests(readable):
                 except Exception, e:
                     if opt_debug:
                         raise
-                    log("Cannot read request from client %s/%d: %s" % 
+                    log("Cannot read request from client %s/%d: %s" %
                         (sitename, client["socket"].fileno(), e))
 
 cache_regex = re.compile("\nCache: *([^\n]*)")
@@ -379,7 +382,7 @@ def forward_request(sitename, client, channel):
             client["request"] = ""
             client["state"] = "idle"
     except Exception, e:
-        if opt_debug: 
+        if opt_debug:
             raise
         log("Error: %s" % e)
         respond_client_with_error(client, str(e))
@@ -398,7 +401,7 @@ def respond_client_with_error(client, message):
                 else:
                     raise
     except Exception, e:
-        if opt_debug: 
+        if opt_debug:
             raise
         log("Cannot send error message to client %d: %s" % (
             client["socket"].fileno(), e))
@@ -454,7 +457,7 @@ def get_responses(readable):
 def receive_response(sitename, channel):
     client = channel.get("client") # None -> client timed out before response!
     if not client:
-        log("Response from timed-out client arrived lately on channel %s/%d" % 
+        log("Response from timed-out client arrived lately on channel %s/%d" %
             (sitename, channel["socket"].fileno()))
     # We always assume fixed16 as response header!
     old_response = channel.get("response", "")
@@ -467,7 +470,7 @@ def receive_response(sitename, channel):
         channel["response"] = response
 
     except Exception, e:
-        log("Cannot read response from %s/%d: %s" % 
+        log("Cannot read response from %s/%d: %s" %
             (sitename, channel["socket"].fileno(), e))
         if client:
             client["channel"] = None
@@ -481,7 +484,7 @@ def receive_response(sitename, channel):
     try:
         bodylength = int(response[3:15])
     except Exception, e:
-        log("Malformed response header from cannel %s/%d: [%s]" % 
+        log("Malformed response header from cannel %s/%d: [%s]" %
             (sitename, channel["socket"].fileno(), response[:16]))
         if client:
             client["channel"] = None
@@ -556,18 +559,26 @@ def receive_heartbeat(sitename, channel):
     try:
         chunk = channel["socket"].recv(4096)
         if not chunk:
-            log("Channel %s/%d closed by foreign host while reading heartbeat" % 
+            log("Channel %s/%d closed by foreign host while reading heartbeat" %
                 (sitename, channel["socket"].fileno()))
             disconnect_from_site(sitename)
         else:
-            # We expect a timestamp (integer): the time of the last
-            # configuration change.
-            if len(chunk) != 11 or not chunk[0].isdigit() or chunk[-1] != "\n":
+            # We expect two timestamps (integer): the time of the last
+            # configuration change and the time of the last HW/SW-Inventory
+            # update. Example responses:
+            # 1414747788;0          -> no inventory never ever done
+            # 1414747788;1414747545 -> last inventory was at 1414747545
+            if len(chunk) < 12 or not chunk[0].isdigit() or chunk[-1] != "\n" or chunk.count(";") != 1:
                 log("Channel %s/%d: invalid response \"%s\" to heartbeat" % (
                     sitename, channel["socket"].fileno(), chunk))
                 disconnect_from_site(sitename)
             else:
-                last_reload = int(chunk[:-1])
+                parts = chunk.split(";")
+                last_reload = int(parts[0])
+                mk_inventory_last = int(parts[1])
+                if mk_inventory_last: # Remote site has inventory data
+                    check_inventory_update(mk_inventory_last, sitename)
+
                 # Set site to ready if at least one other channel exists
                 if len(sitestate["channels"]) > 1:
                     sitestate["state"] = "ready"
@@ -585,7 +596,7 @@ def receive_heartbeat(sitename, channel):
     except Exception, e:
         if opt_debug:
             raise
-        log("Exception while reading heartbeat from channel %s/%d: %s" % 
+        log("Exception while reading heartbeat from channel %s/%d: %s" %
             (sitename, channel["socket"].fileno(), e))
 
 
@@ -599,7 +610,7 @@ def handle_client_timeouts():
                 age = now - client["since"]
                 if client["state"] == "wait_for_channel" and \
                     age >= siteconf["channel_timeout"]:
-                    respond_client_with_error(client, "Timeout while waiting for free Livestatus channel to site %s." % 
+                    respond_client_with_error(client, "Timeout while waiting for free Livestatus channel to site %s." %
                         sitename)
                 elif client["state"] == "wait_for_response" and \
                     age > siteconf["query_timeout"]:
@@ -656,21 +667,23 @@ def dump_state():
     now = time.time()
     for sitename, sitestate in g_sites.items():
         sf.write("[%s]\n" % sitename)
-        sf.write("  State:               %s\n" % sitestate["state"])
-        sf.write("  Last Reset:          %s\n" % format_time(sitestate["last_reset"]))
-        sf.write("  Site's last reload:  %s\n" % format_time(sitestate["last_reload"]))
-        sf.write("  Last failed connect: %s\n" % format_time(sitestate["last_failed_connect"]))
-        sf.write("  Cached responses:    %d\n" % len(sitestate["cache"]))
+        sf.write("  State:                   %s\n" % sitestate["state"])
+        sf.write("  Last Reset:              %s\n" % format_time(sitestate["last_reset"]))
+        sf.write("  Site's last reload:      %s\n" % format_time(sitestate["last_reload"]))
+        sf.write("  Last failed connect:     %s\n" % format_time(sitestate["last_failed_connect"]))
+        sf.write("  Cached responses:        %d\n" % len(sitestate["cache"]))
+        sf.write("  Last inventory update:   %s\n" % format_time(sitestate["last_inventory_update"]))
+        sf.write("  PID of inventory update: %s\n" % sitestate["inventory_pid"])
         sf.write("  Channels:\n")
         for channel in sitestate["channels"]:
-            sf.write("    %3d - %-18s-  client: %4s - since: %s\n" % 
-                (channel["socket"].fileno(), channel["state"], 
+            sf.write("    %3d - %-18s-  client: %4s - since: %s\n" %
+                (channel["socket"].fileno(), channel["state"],
                  channel.get("client") and channel["client"]["socket"].fileno() or "none",
                  format_time(channel["since"])))
         sf.write("  Clients:\n")
         for client in sitestate["clients"]:
-            sf.write("    %3d - %-18s- channel: %4s - since: %s\n" % 
-                (client["socket"].fileno(), client["state"], 
+            sf.write("    %3d - %-18s- channel: %4s - since: %s\n" %
+                (client["socket"].fileno(), client["state"],
                  client.get("channel") and client["channel"]["socket"].fileno() or "none",
                  format_time(client["since"])))
 
@@ -686,6 +699,157 @@ def dump_state():
     # sf.write("\n\n%s\n" % pprint.pformat(g_sites))
     os.rename(opt_statedumppath + ".new", opt_statedumppath)
 
+
+#.
+#   .--HW/SW-Inventory-----------------------------------------------------.
+#   |            ___                      _                                |
+#   |           |_ _|_ ____   _____ _ __ | |_ ___  _ __ _   _              |
+#   |            | || '_ \ \ / / _ \ '_ \| __/ _ \| '__| | | |             |
+#   |            | || | | \ V /  __/ | | | || (_) | |  | |_| |             |
+#   |           |___|_| |_|\_/ \___|_| |_|\__\___/|_|   \__, |             |
+#   |                                                   |___/              |
+#   +----------------------------------------------------------------------+
+#   | Synchronization of distributed HW/SW-Inventory                       |
+#   '----------------------------------------------------------------------'
+
+def check_inventory_update(mk_inventory_last, sitename):
+    if not opt_inventory_dir:
+        return # only works if this is set
+
+    sitestatus = g_sites[sitename]
+    if sitestatus["inventory_pid"]:
+        return # Sync already running
+
+    if mk_inventory_last <= sitestatus["last_inventory_update"]:
+        return # we are up-to-date
+
+    # log("Site %s: new HW/SW-Inventory data since last update %d secs ago" % (
+    #     sitename, mk_inventory_last - sitestatus["last_inventory_update"]))
+
+    # Inventory update goes in two steps:
+    # 1. Getting the list of all hosts that have new inventory
+    # 2. For each of those retriev the gzipped inventory data and store it
+    #    locally
+    # We cannot do this here since we must not block our main process!
+    # Instead we spawn a helper process that inherits one of the channels,
+    # does the update and returns a status code.
+
+    # Find a free channel
+    for cha in sitestatus["channels"]:
+        if cha["state"] == "ready":
+            channel = cha
+            break
+    else:
+        log("Currently no free channel, postponing until next heartbeat")
+        return
+
+    channel["state"] = "inventory"
+
+    # Now create helper process that inherits the filedescriptor of this
+    # channel.
+    pid = os.fork()
+    if pid:
+        sitestatus["inventory_pid"] = pid
+        sitestatus["inventory_new_last"] = mk_inventory_last
+
+    else:
+        try:
+            do_inventory_update(sitename, channel, sitestatus["last_inventory_update"])
+            sys.exit(0)
+        except Exception, e:
+            log("Inventory update of %s failed: %s" % (sitename, e))
+            sys.exit(1)
+
+
+def collect_inventory_updates():
+    for sitename, sitestatus in g_sites.items():
+        if sitestatus["inventory_pid"]:
+            pid, status = os.waitpid(sitestatus["inventory_pid"], os.WNOHANG)
+            if pid:
+                sitestatus["inventory_pid"] = None
+                for channel in sitestatus["channels"]:
+                    if channel["state"] == "inventory":
+                        channel["state"] = "ready"
+                if not status: # success
+                    sitestatus["last_inventory_update"] = sitestatus["inventory_new_last"]
+                    del sitestatus["inventory_new_last"]
+
+
+def do_inventory_update(sitename, channel, since):
+    # Close all filedescriptors that we do not need.
+    needed_fds = [
+        channel["socket"].fileno(),
+        g_logfile.fileno(),
+    ]
+
+    for fd in range(4096):
+        if fd not in needed_fds:
+            try:
+                os.close(fd)
+            except:
+                pass
+
+    # Get list of all hosts that have more recent inventory data
+    query = "GET hosts\n" \
+            "Columns: name mk_inventory_last\n" \
+            "Filter: mk_inventory_last > %d\n" \
+            "KeepAlive: on\n" \
+            "ResponseHeader: fixed16\n\n" % \
+        since
+
+    channel["socket"].send(query)
+    response = get_livestatus_response(channel["socket"])
+
+    entries = [ l.split(";") for l in response.split() ]
+
+    for host_name, timestamp in entries:
+        do_inventory_update_of(channel["socket"], sitename, host_name, int(timestamp))
+
+
+def get_livestatus_response(socket):
+    header = socket.recv(16)
+    if len(header) != 16:
+        raise Exception("Invalid resonse '%s' from remote site" % header)
+
+    status = header[:3]
+    length = int(header[3:].strip())
+    response = ""
+    while(len(response) != length):
+        response += socket.recv(4096)
+
+    if status != "200": raise Exception("Livestatus query failed: %s" % response)
+
+    return response
+
+
+# Update the inventory data of a host *if* its timestamp differs from
+# the file that we already have
+def do_inventory_update_of(socket, sitename, host_name, timestamp):
+    path = opt_inventory_dir + "/" + host_name
+    try:
+        last_mtime = int(os.stat(path).st_mtime)
+        if last_mtime == timestamp:
+            log("Inventory of %s is uptodate" % host_name)
+            return
+    except:
+        pass
+
+    query = "GET hosts\n" \
+            "Columns: mk_inventory_gz\n" \
+            "Filter: name = %s\n" \
+            "KeepAlive: on\n" \
+            "ResponseHeader: fixed16\n\n" % host_name
+
+    socket.send(query)
+    response = get_livestatus_response(socket)
+    gzipped_invdata = response[:-1] # drop final linefeed
+    file(path + ".gz", "w").write(gzipped_invdata)
+    os.utime(path + ".gz", (timestamp, timestamp))
+    unzipped_invdata = gzip.GzipFile(fileobj=StringIO.StringIO(gzipped_invdata)).read()
+    file(path, "w").write(unzipped_invdata)
+    os.utime(path, (timestamp, timestamp))
+    log("Site %s: new HW/SW-Inventory data for %s (%d bytes)" % (
+            sitename, host_name, len(gzipped_invdata)))
 
 
 #.
@@ -836,10 +1000,12 @@ def read_configuration():
                 "channel"   : None,
                 "count"     : 0,
             },
-            "last_reset"  : now,
-            "last_reload" : int(now),
-            "last_failed_connect" : 0,
-            "cache"       : {},
+            "last_reset"            : now,
+            "last_reload"           : int(now),
+            "last_failed_connect"   : 0,
+            "last_inventory_update" : 0,
+            "inventory_pid"         : None,
+            "cache"                 : {},
         }
         if siteconf["channels"] <= 1:
             raise bail_out("Invalid configuration for site %s: you need at least two channels" % sitename)
@@ -871,6 +1037,7 @@ if omd_root:
     opt_pid_file      = omd_root + "/tmp/run/liveproxyd.pid"
     opt_configfile    = omd_root + "/etc/check_mk/liveproxyd.mk"
     opt_socketdir     = omd_root + "/tmp/run/liveproxy"
+    opt_inventory_dir = omd_root + "/var/check_mk/inventory"
 else:
     curdir = os.path.abspath('.')
     opt_logfilepath   = curdir + "/liveproxyd.log"
@@ -878,6 +1045,7 @@ else:
     opt_pid_file      = curdir + "/liveproxyd.pid"
     opt_configfile    = curdir + "/liveproxyd.mk"
     opt_socketdir     = curdir + "/liveproxy"
+    opt_inventory_dir = None # Not supported for non-OMD installations
 
 short_options = "hvVgc"
 long_options = [ "help", "version", "verbose", "debug", "foreground", "config=" ]

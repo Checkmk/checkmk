@@ -48,6 +48,6 @@ int32_t HostSpecialIntColumn::getValue(void *data, Query *)
         case HSIC_MK_INVENTORY_LAST:
             return mk_inventory_last(hst->name);
 
-    } 
+    }
     // never reached
 }

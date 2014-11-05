@@ -1,4 +1,4 @@
-title: Dell Open Manage: Physical Memory
+title: Dell OpenManage: Physical Memory
 agents: snmp
 catalog: hw/server/dell
 license: GPL
@@ -9,6 +9,9 @@ description:
  installed.
  The check returns a {CRIT} in case of an error state reported
  by the device. The check also reports the size of the module.
+
+ For this check you need to install the Dell OpenManage Server Administrator
+ (OMSA) on your target server. This is available for Linux and Windows.
 
 item:
  The name of the module port

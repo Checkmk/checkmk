@@ -462,9 +462,17 @@ table.vs_duallist td.head {
 table.vs_duallist a.control {
     display: inline-block;
     width: 14px;
-    border: 1px solid #fff;
     text-decoration: none;
     text-align: center;
+    float: right;
+
+    background-color: #00F;
+    background-color: #497E95;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #86A9B8 #22404D #22414D #86A9B8;
+    box-shadow: 0px 0px 1.5px #000;
+    border-radius: 3px;
 }
 
 table.vs_duallist a.control.add {

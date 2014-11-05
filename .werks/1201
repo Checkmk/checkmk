@@ -1,0 +1,10 @@
+Title: allnet_ip_sensoric: Detect Temperature Sensors now in more cases
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i7
+Date: 1415097074
+Class: feature
+
+It's possible that the field function is missing in the Output of the allnet device, so check_mk uses in this case now the field unit to find temperature sensors.
+

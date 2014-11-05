@@ -3608,12 +3608,16 @@ def read_manpage_catalog():
         try:
             parsed = parse_man_header(checkname, path)
         except Exception, e:
+            if opt_debug:
+                raise
             sys.stderr.write('ERROR: Skipping invalid manpage: %s: %s\n' % (checkname, e))
             continue
 
         try:
             cat = parsed["catalog"]
         except KeyError:
+            if opt_debug:
+                raise
             sys.stderr.write('ERROR: Skipping invalid manpage: %s (Catalog info missing)\n' % checkname)
             continue
 

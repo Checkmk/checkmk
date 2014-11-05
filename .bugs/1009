@@ -1,0 +1,9 @@
+Title: quicksearch: combining host and service search no longer works
+Component: multisite
+State: open
+Date: 2014-11-05 22:13:21
+Targetversion: future
+Class: bug
+
+a search for services with 's:   ' combined with a search for hosts with 'h: ...' always returns
+ALL hosts with the selected services, not only the selected services on the selected hosts.

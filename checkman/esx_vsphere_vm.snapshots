@@ -1,0 +1,20 @@
+title: Virtual Machine under ESX: Snapshot settings
+agents: vsphere
+catalog: os/kernel
+license: GPL
+distribution: check_mk
+description:
+ For a virtual machine running on ESX this check reports the number of
+ snapshots, the currently running snapshot and the age of the latest snapshot
+
+perfdata:
+ One value is returned: The age of the latest snapshot
+
+inventory:
+ On each VM one check is generated if there is snapshot information available
+
+[parameters]
+parameters (dict): The dictionary supports the following key
+
+ {"age"}: Warning and critical levels for the age of the latest snapshot in seconds
+

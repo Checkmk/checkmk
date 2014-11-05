@@ -1746,35 +1746,45 @@ function vs_duallist_switch(field_suffix, varprefix, keeporder) {
     if (!helper)
         return;
 
-    // Move the selected option to the other select field
-    var selected = field.options[field.selectedIndex];
-    if (typeof selected === 'undefined')
-        return; // when add/remove clicked, but none selected
-    field.removeChild(selected);
-
-    // Determine the correct child to insert. If keeporder is being set,
-    // then new elements will aways be appended. That way the user can
-    // create an order of his choice. This is being used if DualListChoice
-    // has the option custom_order = True
-    var sibling = false;
-
-    if (!keeporder) {
-        sibling = other_field.firstChild;
-        while (sibling != null) {
-            if (sibling.nodeType == 1 && sibling.label.toLowerCase() > selected.label.toLowerCase())
-                break;
-            sibling = sibling.nextSibling
+    // Move the selected options to the other select field
+    var selected = [];
+    for (var i = 0; i < field.options.length; i++) {
+        if (field.options[i].selected) {
+            selected.push(field.options[i]);
         }
     }
+    if (selected.length == 0)
+        return; // when add/remove clicked, but none selected
 
-    if (sibling)
-        other_field.insertBefore(selected, sibling);
-    else
-        other_field.appendChild(selected);
+    // Now loop over all selected elements and add them to the other field
+    for (var i = 0; i < selected.length; i++) {
+        // remove option from origin
+        field.removeChild(selected[i]);
 
-    selected.selected = false;
+        // Determine the correct child to insert. If keeporder is being set,
+        // then new elements will aways be appended. That way the user can
+        // create an order of his choice. This is being used if DualListChoice
+        // has the option custom_order = True
+        var sibling = false;
 
-    // add remove from internal helper field
+        if (!keeporder) {
+            sibling = other_field.firstChild;
+            while (sibling != null) {
+                if (sibling.nodeType == 1 && sibling.label.toLowerCase() > selected[i].label.toLowerCase())
+                    break;
+                sibling = sibling.nextSibling
+            }
+        }
+
+        if (sibling)
+            other_field.insertBefore(selected[i], sibling);
+        else
+            other_field.appendChild(selected[i]);
+
+        selected[i].selected = false;
+    }
+
+    // Update internal helper field which contains a list of all selected keys
     if (positive)
         var pos_field = other_field;
     else

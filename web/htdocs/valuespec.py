@@ -1597,6 +1597,7 @@ class DualListChoice(ListChoice):
         html.sorted_select(varprefix + '_unselected', unselected,
                            attrs = {
                                'size'       : 5,
+                               'multiple'   : 'multiple',
                                'style'      : self._autoheight and 'height:auto' or '',
                                'ondblclick' : not self._instant_add and select_func or '',
                            },
@@ -1606,6 +1607,7 @@ class DualListChoice(ListChoice):
         func(varprefix + '_selected', selected,
                            attrs = {
                                'size'       : 5,
+                               'multiple'   : 'multiple',
                                'style'      : self._autoheight and 'height:auto' or '',
                                'ondblclick' : not self._instant_add and unselect_func or '',
                            },

@@ -1,0 +1,11 @@
+Title: f5_bigip_chassis_temp, f5_bigip_cpu_temp: Two new checks to replace the old f5_bigip_temp
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.5i7
+Date: 1415179492
+Class: feature
+
+The check <tt>f5_bigip_temp</tt> has been removed and replaced by <tt>f5_bigip_chassis_temp</tt> and
+<tt>f5_bigip_cpu_temp</tt>. Reinventorization (<tt>cmk -II</tt>) is required to deploy the new checks
+and prevent the Check_MK service from warning due to the missing old check.

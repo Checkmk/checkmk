@@ -1,5 +1,7 @@
 1.2.5i7:
     Checks & Agents:
+    * 1444 f5_bigip_chassis_temp, f5_bigip_cpu_temp: Two new checks to replace the old f5_bigip_temp...
+            NOTE: Please refer to the migration notes!
     * 1478 FIX: kernel.util, statgrab_cpu: fix computation of utilization...
 
     Multisite:

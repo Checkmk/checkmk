@@ -139,9 +139,7 @@ inventory_multipath_rules = []
 # Nov 05 17:17:03 | You can run /sbin/mpathconf to create or modify /etc/multipath.conf
 # Nov 05 17:17:03 | DM multipath kernel driver not loaded
 
-def parse_multipath(info, only_uuid = None):
-    # only_uuid --> look only for data of this uuid or alias
-
+def parse_multipath(info):
     # New reported header lines need to be placed here
     # the matches need to be put in a list of tupples
     # while the structure of the tupple is:
@@ -207,11 +205,6 @@ def parse_multipath(info, only_uuid = None):
             # No data row and no matching header row
             if not matchobject:
                 raise Exception("Invalid line in agent output: " + l)
-
-            # Skip unwanted devices in one device mode
-            if only_uuid and only_uuid not in [ uuid, alias ]:
-                uuid = None # wrong uuid, ignore this one
-                continue
 
             # initialize information about next device
             numpaths = 0

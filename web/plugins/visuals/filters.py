@@ -54,19 +54,6 @@ class FilterText(Filter):
 
 
 
-class FilterHostgroupVisibility(Filter):
-    def __init__(self, name, title):
-        Filter.__init__(self, name, title, "hostgroup_summary", [ "hostgroupshowempty" ], [])
-
-    def display(self):
-        html.checkbox("hostgroupshowempty", False, label="Show empty groups")
-
-    def filter(self, infoname):
-        if html.var("hostgroupshowempty"):
-            return ""
-        else:
-            return "Filter: num_hosts > 0\n"
-
 #                               filter          title              info       column           htmlvar
 declare_filter(100, FilterText("hostregex",    _("Hostname"),        "host",    "host_name",      "host_regex",    "~~"),
                           _("Search field allowing regular expressions and partial matches"))
@@ -85,18 +72,6 @@ declare_filter(201, FilterText("service", _("Service (exact match)"),           
 
 declare_filter(202, FilterText("service_display_name", _("Service alternative display name"),   "service", "service_display_name",   "service_display_name", "~~"),
                           _("Alternative display name of the service, regex match"))
-
-declare_filter(101, FilterText("hostgroupnameregex",    _("Hostgroup"),        "hostgroup",    "hostgroup_name",      "hostgroup_regex",    "~~"),
-                               _("Search field allowing regular expressions and partial matches on the names of hostgroups"))
-
-declare_filter(102, FilterHostgroupVisibility("hostgroupvisibility", _("Empty Hostgroup Visibilitiy")),
-                               _("You can enable this checkbox to show empty hostgroups"))
-
-declare_filter(101, FilterText("servicegroupnameregex", _("Servicegroup"),   "servicegroup", "servicegroup_name",   "servicegroup_regex", "~~"),
-                          _("Search field allowing regular expression and partial matches"))
-
-declare_filter(101, FilterText("servicegroupname", _("Servicegroup (enforced)"),   "servicegroup", "servicegroup_name",   "servicegroup_name", "="),
-                          _("Exact match, used for linking"))
 
 declare_filter(202, FilterText("output",  _("Status detail"), "service", "service_plugin_output", "service_output", "~~"))
 
@@ -180,6 +155,7 @@ class FilterMultigroup(Filter):
         return filters
 
 
+# Selection of a host/service(-contact) group as an attribute of a host or service
 class FilterGroupCombo(Filter):
     def __init__(self, what, title, enforce):
         self.enforce = enforce
@@ -254,23 +230,73 @@ class FilterGroupCombo(Filter):
                 (table, current_value), current_value)
             return alias
 
-
-declare_filter(104, FilterGroupCombo("host",            _("Hostgroup"),            False), _("Optional selection of host group"))
-declare_filter(104, FilterGroupCombo("host",            _("Hostgroup (enforced)"), True),  _("Dropdown list, selection of host group is <b>enforced</b>"))
-declare_filter(105, FilterMultigroup("host",            _("Several Hostgroups")), _("Selection of multiple host groups"))
-declare_filter(204, FilterGroupCombo("service",         _("Servicegroup"),         False), _("Optional selection of service group"))
+declare_filter(104, FilterGroupCombo("host",            _("Host is in Group"),     False), _("Optional selection of host group"))
+declare_filter(105, FilterMultigroup("host",            _("Several Host Groups")), _("Selection of multiple host groups"))
+declare_filter(204, FilterGroupCombo("service",         _("Service is in Group"),     False), _("Optional selection of service group"))
 declare_filter(205, FilterGroupCombo("service",         _("Servicegroup (enforced)"), True),  _("Dropdown list, selection of service group is <b>enforced</b>"))
-declare_filter(205, FilterMultigroup("service",         _("Several Servicegroups")), _("Selection of multiple service groups"))
+declare_filter(205, FilterMultigroup("service",         _("Several Service Groups")), _("Selection of multiple service groups"))
 
-declare_filter(106, FilterGroupCombo("host_contact",    _("Host Contactgroup"),    False), _("Optional selection of host contact group"))
-declare_filter(206, FilterGroupCombo("service_contact", _("Service Contactgroup"), False), _("Optional selection of service contact group"))
+declare_filter(106, FilterGroupCombo("host_contact",    _("Host Contact Group"),    False), _("Optional selection of host contact group"))
+declare_filter(206, FilterGroupCombo("service_contact", _("Service Contact Group"), False), _("Optional selection of service contact group"))
 
 declare_filter(107, FilterText("host_ctc", _("Host Contact"), "host", "host_contacts", "host_ctc", ">="))
 declare_filter(207, FilterText("service_ctc", _("Service Contact"), "service", "service_contacts", "service_ctc", ">="))
 
 
-# Livestatus still misses "contact_groups" column.
-# declare_filter(FilterGroupCombo("contact"))
+# Selection of one group to be used in the info "hostgroup" or "servicegroup".
+class FilterGroupSelection(Filter):
+    def __init__(self, infoname, title):
+        Filter.__init__(self, name=infoname, title=title, info=infoname, htmlvars=[infoname], link_columns=[])
+        self.what = infoname
+
+    def display(self):
+        choices = all_groups(self.what[:-5]) # chop off "group", leaves host or service
+        html.sorted_select(self.htmlvars[0], choices)
+
+    def current_value(self):
+        return html.var(self.htmlvars[0])
+
+    def filter(self, infoname):
+        current_value = self.current_value()
+        if not current_value:
+            raise MKGeneralException(_("This view needs a host/service group to be specified. "
+                                       "We are missing the URL variable <tt>%s</tt>." %
+                                        self.htmlvars[0]))
+
+        return "Filter: %s_name = %s\n" % (self.what, current_value)
+
+    def variable_settings(self, row):
+        group_name = row[self.what + "_name"]
+        return [ (self.htmlvars[0], group_name) ]
+
+# Filter for selecting one specific host group in the hostgroup views
+declare_filter(104, FilterGroupSelection("hostgroup",    _("Host Group")),       _("Selection of the host group"))
+declare_filter(104, FilterGroupSelection("servicegroup", _("Service Group")), _("Selection of the service group"))
+
+class FilterHostgroupVisibility(Filter):
+    def __init__(self, name, title):
+        Filter.__init__(self, name=name, title=title, info="hostgroup", htmlvars=[ "hostgroupshowempty" ], link_columns=[])
+
+    def display(self):
+        html.checkbox("hostgroupshowempty", False, label="Show empty groups")
+
+    def filter(self, infoname):
+        if html.var("hostgroupshowempty"):
+            return ""
+        else:
+            return "Filter: num_hosts > 0\n"
+
+declare_filter(101, FilterText("hostgroupnameregex",    _("Hostgroup (Regex)"),        "hostgroup",    "hostgroup_name",      "hostgroup_regex",    "~~"),
+                               _("Search field allowing regular expressions and partial matches on the names of hostgroups"))
+
+declare_filter(102, FilterHostgroupVisibility("hostgroupvisibility", _("Empty Hostgroup Visibilitiy")),
+                               _("You can enable this checkbox to show empty hostgroups"))
+
+declare_filter(101, FilterText("servicegroupnameregex", _("Servicegroup (Regex)"),   "servicegroup", "servicegroup_name",   "servicegroup_regex", "~~"),
+                          _("Search field allowing regular expression and partial matches"))
+
+declare_filter(101, FilterText("servicegroupname", _("Servicegroup (enforced)"),   "servicegroup", "servicegroup_name",   "servicegroup_name", "="),
+                          _("Exact match, used for linking"))
 
 class FilterQueryDropdown(Filter):
     def __init__(self, name, title, info, query, filterline):

@@ -1,0 +1,14 @@
+Title: Fixed wrong information showing up on "Host Group" and "Service Group" views
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.5i6p2
+Date: 1415200378
+Class: fix
+
+The views with the names hostgroup and servicegroup which are linked from several pages
+like the host group summary view when clicking on the name of a group showed hosts or
+services multiple times instead of once. This has been fixed now.
+
+If you used a link to access these views directly, you will need to re-create them,
+because the names of the URL variables changed.

@@ -1118,6 +1118,11 @@ def visual_title(what, visual):
 
     return title
 
+# Determines the names of HTML variables to be set in order to
+# specify a specify row in a datasource with a certain info.
+# Example: the info "history" (Event Console History) needs
+# the variables "event_id" and "history_line" to be set in order
+# to exactly specify one history entry.
 def info_params(info_key):
     return dict(infos[info_key]['single_spec']).keys()
 

@@ -1,0 +1,15 @@
+Title: Fixed exception in Web GUI "Internal error:: name 'Filter' is not defined" in manual setups (using setup.py)
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.5i7
+Date: 1415175416
+
+Previous versions shipped the file web/plugins/views/filters.py. This file is deprecated now, but manual
+setups of Check_MK (the ones using setup.py to install Check_MK) have the file left after an update. To
+workaround this issue, we ship an empty dummy file now to replace the original one.
+
+If you like to fix this problem manually without applying this update, just remove the file
+web/plugins/views/filters.py from your installation.

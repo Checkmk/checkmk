@@ -2919,6 +2919,13 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
                     else:
                         add_host = None
                     info = [ [add_host] + line for line in info ]
+
+                # Convert with parse function if available
+                if checkname_base in check_info: # parse function must be define for base check
+                    parse_function = check_info[checkname_base]["parse_function"]
+                    if parse_function:
+                        info = check_info[checkname]["parse_function"](info)
+
             except MKAgentError, e:
                 # This special handling is needed for the inventory check. It needs special
                 # handling for WATO.
@@ -2929,6 +2936,7 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
                 elif include_state and str(e): # WATO automation. Abort
                     raise
                 continue
+
             except MKSNMPError, e:
                 # This special handling is needed for the inventory check. It needs special
                 # handling for WATO.
@@ -2937,6 +2945,7 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
                 elif not include_state and str(e):
                     sys.stderr.write("Host '%s': %s\n" % (hostname, str(e)))
                 continue
+
             except Exception, e:
                 if check_only or opt_debug:
                     raise
@@ -3608,12 +3617,16 @@ def read_manpage_catalog():
         try:
             parsed = parse_man_header(checkname, path)
         except Exception, e:
+            if opt_debug:
+                raise
             sys.stderr.write('ERROR: Skipping invalid manpage: %s: %s\n' % (checkname, e))
             continue
 
         try:
             cat = parsed["catalog"]
         except KeyError:
+            if opt_debug:
+                raise
             sys.stderr.write('ERROR: Skipping invalid manpage: %s (Catalog info missing)\n' % checkname)
             continue
 

@@ -1974,8 +1974,12 @@ def link_to_view(content, row, view_name):
         datasource = multisite_datasources[view['datasource']]
         for info_key in datasource['infos']:
             if info_key in view['single_infos']:
-                for key in visuals.info_params(info_key):
-                    filter_object = visuals.get_filter(key)
+                # Determine which filters (their names) need to be set
+                # for specifying in order to select correct context for the
+                # target view.
+                for filter_name in visuals.info_params(info_key):
+                    filter_object = visuals.get_filter(filter_name)
+                    # Get the list of URI vars to be set for that filter
                     new_vars = filter_object.variable_settings(row)
                     vars += new_vars
 

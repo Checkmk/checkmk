@@ -67,7 +67,7 @@ OPTIONS:
   --connect-timeout       Timeout in seconds for network connects (defaults to 10)
   --status-dir PATH       This plugin needs a file to store information about
                           sent, received and expected mails. Defaults to either
-                          /tmp/ or /omd/sites/<sitename>/var/tmp when executed
+                          /tmp/ or /omd/sites/<sitename>/var/check_mk when executed
                           from within an OMD site
   --status-suffix SUFFIX  Concantenated with "check_mail_loop.SUFFIX.status" to
                           generate the name of the status file. Empty by default
@@ -181,7 +181,7 @@ if fetch_port == None:
 if not status_dir:
     status_dir = os.environ.get('OMD_ROOT')
     if status_dir:
-        status_dir += '/var/tmp'
+        status_dir += '/var/check_mk'
     else:
         status_dir = '/tmp'
 if status_suffix:

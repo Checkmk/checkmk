@@ -1,0 +1,10 @@
+Title: Added config option "Default filter group" to set the initial network topology view filter
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.5i7
+Date: 1415282309
+Class: feature
+
+The new "Network Topology: Default Filter Group" option can be used to initially render a filtered
+network topology view when opening it instead of a view which shows all hosts.

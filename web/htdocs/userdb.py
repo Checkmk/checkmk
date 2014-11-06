@@ -40,6 +40,7 @@ builtin_user_attribute_names = []
 def load_plugins():
     global user_attributes
     global multisite_user_connectors
+    global builtin_user_attribute_names
 
     # Do not cache the custom user attributes. They can be created by the user
     # during runtime, means they need to be loaded during each page request.
@@ -59,8 +60,6 @@ def load_plugins():
     multisite_user_connectors = []
 
     load_web_plugins("userdb", globals())
-
-    global builtin_user_attribute_names
     builtin_user_attribute_names = user_attributes.keys()
     declare_custom_user_attrs()
 

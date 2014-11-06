@@ -1,0 +1,16 @@
+Title: Fixed bug in dynamic lists where removing an item was not always possible
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.5i7
+Date: 1415277372
+
+We use the so called valuespec ListOf() in several places where a dynamic amount
+of elements can be added to a list of things, for example the number of exceptions
+of a timeperiod in the timeperiod edit dialog.
+
+Now, when you created a new timeperiod, added one exception and imediately removed
+it, you had no chance to save this timeperiod without adding another exception to
+the list. This has been fixed now.

@@ -30,7 +30,7 @@ hwg_temp_defaultlevels = (23, 25)
 def inventory_hwg_temp(info):
     return [ (line[0], "hwg_temp_defaultlevels")
               for line in info
-              if int(line[2]) != 0 and line[5] in ["1", "2", "3"] ]
+              if int(line[2]) != 0 and line[4] in ["1", "2", "3"] ]
 
 
 def check_hwg_temp(item, params, info):

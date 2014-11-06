@@ -9532,7 +9532,7 @@ def mode_edit_timeperiod(phase):
     # exclude the current timeperiod (in order to avoid cycles)
     other_tps = []
     for tpname, tp in timeperiods.items():
-        if not new and not timeperiod_excludes(timeperiods, tpname, name):
+        if not timeperiod_excludes(timeperiods, tpname, name):
             other_tps.append((tpname, tp.get("alias") or name))
 
     vs_excl = ListChoice(choices = other_tps)

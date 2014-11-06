@@ -9475,9 +9475,7 @@ def mode_timeperiod_import_ical(phase):
                     raise
                 raise MKUserError('ical_file', _('Failed to parse file: %s') % e)
 
-            html.set_var('name',  data.get('name', filename))
-            html.set_var('alias', _('Imported from iCalendar "%s" on %s') %
-                    (data.get('descr', filename), time.strftime('%Y-%m-%d')))
+            html.set_var('alias', data.get('descr', data.get('name', filename)))
 
             for day in [ "monday", "tuesday", "wednesday", "thursday",
                          "friday", "saturday", "sunday" ]:
@@ -9488,6 +9486,7 @@ def mode_timeperiod_import_ical(phase):
             for index, event in enumerate(data['events']):
                 index += 1
                 html.set_var('except_%d_0' % index, event['date'])
+                html.set_var('except_indexof_%d' % index, index)
                 if ical['times']:
                     for n in range(3):
                         if ical['times'][n]:

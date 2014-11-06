@@ -1,0 +1,10 @@
+Title: Fixed too long URL bug when deleting a timeperiod right after creating one
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.5i7
+Date: 1415280213
+
+

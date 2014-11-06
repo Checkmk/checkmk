@@ -175,7 +175,7 @@ def search_hosts_filter(filters, host_is_ip = False):
     return lq_filter
 
 def search_hosts_url_tmpl(used_filters, data, host_is_ip = False):
-    filter_field = host_is_ip and "host_address=(%s)" or "host=(%s)" % "|".join(map(lambda x: x[1], used_filters))
+    filter_field = host_is_ip and "host_address=(%s)" or "host_regex=(%s)" % "|".join(map(lambda x: x[1], used_filters))
     return 'view.py?view_name=searchhost&filled_in=filter&' + filter_field
 
 def search_host_service_filter(filters, host_is_ip = False):

@@ -9181,7 +9181,7 @@ def mode_timeperiods(phase):
 
         timeperiod = timeperiods[name]
         edit_url     = make_link([("mode", "edit_timeperiod"), ("edit", name)])
-        delete_url   = html.makeactionuri([("_delete", name)])
+        delete_url   = make_action_link([("mode", "timeperiods"), ("_delete", name)])
 
         table.cell(_("Actions"), css="buttons")
         html.icon_button(edit_url, _("Properties"), "edit")

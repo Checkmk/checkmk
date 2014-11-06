@@ -26,6 +26,7 @@
 
     Multisite:
     * 1508 Allow input of plugin output and perfdata when faking check results...
+    * 1493 Added config option "Default filter group" to set the initial network topology view filter...
     * 1164 FIX: Fixed links from servicegroup overviews to single servicegroups
     * 1166 FIX: Also prevting stylesheet update issues during version updates (just like for JS files)
     * 1481 FIX: Fix broken layout of Host-, Service- and Contactgroup filters

@@ -466,6 +466,29 @@ register_configvar(group,
     domain = "multisite",
 )
 
+# Helper that retrieves the list of hostgroups via Livestatus
+# use alias by default but fallback to name if no alias defined
+def list_hostgroups():
+    groups = dict(html.live.query("GET hostgroups\nCache: reload\nColumns: name alias\n"))
+    return [ (name, groups[name] or name) for name in groups.keys() ]
+
+register_configvar(group,
+    "topology_default_filter_group",
+    Optional(DropdownChoice(
+            choices = list_hostgroups,
+            sorted = True,
+        ),
+        title = _("Network Topology: Default Filter Group"),
+        help = _("By default the network topology view shows you the parent / child relations "
+                 "of all hosts within your local site. The list can be filtered based on hostgroup "
+                 "memberships by the users. You can define a default group to use for filtering "
+                 "which is used when a user opens the network topology view."),
+        none_label = _("Show all hosts when opening the network topology view"),
+        default_value = None,
+    ),
+    domain = "multisite"
+)
+
 #.
 #   .--WATO----------------------------------------------------------------.
 #   |                     __        ___  _____ ___                         |

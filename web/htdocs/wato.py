@@ -9384,14 +9384,6 @@ def parse_ical(ical_blob, horizon=10, times=(None, None, None)):
             raise Exception('The frequency "%s" is currently not supported' % freq)
         return t
 
-    ical['raw_events'].append({
-        'name': 'test',
-        'start': [2010, 1, 6, 0, 0, 0, 2, 6, -1],
-        'recurrence': {
-            'FREQ': 'MONTHLY',
-        }
-    })
-
     # Now resolve recurring events starting from 01.01 of current year
     resolved = []
     now  = list(time.strptime(str(time.localtime().tm_year-1), "%Y"))
@@ -9410,7 +9402,7 @@ def parse_ical(ical_blob, horizon=10, times=(None, None, None)):
                     'date'  : time.strftime('%Y-%m-%d', cur),
                 })
 
-    ical['events'] = resolved
+    ical['events'] = sorted(resolved)
     return ical
 
 # Displays a dialog for uploading an ical file which will then

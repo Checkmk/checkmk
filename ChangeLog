@@ -16,6 +16,7 @@
 
     WATO:
     * 1490 FIX: Timperiod excludes can now even be configured when creating a timeperiod...
+    * 1491 FIX: Fixed bug in dynamic lists where removing an item was not always possible...
 
 
 1.2.5i6p1:

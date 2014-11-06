@@ -1,0 +1,16 @@
+Title: Allow input of plugin output and perfdata when faking check results
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.5i7
+Date: 1415276255
+Class: feature
+
+The command <i>Fake check results</i> on hosts and services now allows
+to optionally specify the plugin output and the performance data of
+the check. It is allowed to leave both new input field empty - then
+everying behaves like before.
+
+The extension now allows to send check results to the monitoring
+via HTTP. Please refer to the documentation about using Multisite
+as a webservice (Automation).

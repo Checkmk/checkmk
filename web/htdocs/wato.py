@@ -9144,6 +9144,7 @@ def mode_timeperiods(phase):
     elif phase == "buttons":
         global_buttons()
         html.context_button(_("New Timeperiod"), make_link([("mode", "edit_timeperiod")]), "new")
+        html.context_button(_("Import iCalendar"), make_link([("mode", "import_ical")]), "ical")
         return
 
     timeperiods = load_timeperiods()
@@ -9282,6 +9283,231 @@ def timeperiod_excludes(timeperiods, tpa_name, tpb_name):
             return True
     return False
 
+def validate_ical_file(value, varprefix):
+    filename, ty, content = value
+    if not filename.endswith('.ics'):
+        raise MKUserError(varprefix, _('The given file does not seem to be a valid iCalendar file. '
+                                       'It needs to have the file extension <tt>.ics</tt>.'))
+
+    if not content.startswith('BEGIN:VCALENDAR'):
+        raise MKUserError(varprefix, _('The file does not seem to be a valid iCalendar file.'))
+
+    if not content.startswith('END:VCALENDAR'):
+        raise MKUserError(varprefix, _('The file does not seem to be a valid iCalendar file.'))
+
+# Returns a dictionary in the format:
+# {
+#   'name'   : '...',
+#   'descr'  : '...',
+#   'events' : [
+#       {
+#           'name': '...',
+#           'date': '...',
+#       },
+#   ],
+# }
+#
+# Relevant format specifications:
+#   http://tools.ietf.org/html/rfc2445
+#   http://tools.ietf.org/html/rfc5545
+def parse_ical(ical_blob, horizon=10, times=(None, None, None)):
+    ical = {'raw_events': []}
+
+    def get_params(key):
+        if ';' in key:
+            return dict([ p.split('=', 1) for p in key.split(';')[1:] ])
+        return {}
+
+    def parse_date(params, val):
+        # First noprmalize the date value to make it easier parsable later
+        if 'T' not in val and params.get('VALUE') == 'DATE':
+            val += 'T000000' # add 00:00:00 to date specification
+
+        return list(time.strptime(val, '%Y%m%dT%H%M%S'))
+
+    # First extract the relevant information from the file
+    in_event = False
+    event    = {}
+    for l in ical_blob.split('\n'):
+        line = l.strip()
+        if not line:
+            continue
+        try:
+            key, val = line.split(':', 1)
+        except ValueError:
+            raise Exception('Failed to parse line: "%s"' % line)
+
+        if key == 'X-WR-CALNAME':
+            ical['name'] = val
+        elif key == 'X-WR-CALDESC':
+            ical['descr'] = val
+
+        elif line == 'BEGIN:VEVENT':
+            in_event = True
+            event = {} # create new event
+
+        elif line == 'END:VEVENT':
+            # Finish the current event
+            ical['raw_events'].append(event)
+            in_event = False
+
+        elif in_event:
+            if key.startswith('DTSTART'):
+                params = get_params(key)
+                event['start'] = parse_date(params, val)
+
+            elif key.startswith('DTEND'):
+                params = get_params(key)
+                event['end'] = parse_date(params, val)
+
+            elif key == 'RRULE':
+                event['recurrence'] = dict([ p.split('=', 1) for p in val.split(';') ])
+
+            elif key == 'SUMMARY':
+                event['name'] = val
+
+    def next_occurrence(start, now, freq):
+        # convert struct_time to list to be able to modify it,
+        # then set it to the next occurence
+        t = start[:]
+
+        if freq == 'YEARLY':
+            t[0] = now[0]+1 # add 1 year
+        elif freq == 'MONTHLY':
+            if now[1] + 1 > 12:
+                t[0] = now[0]+1
+                t[1] = now[1] + 1 - 12
+            else:
+                t[0] = now[0]
+                t[1] = now[1] + 1
+        else:
+            raise Exception('The frequency "%s" is currently not supported' % freq)
+        return t
+
+    ical['raw_events'].append({
+        'name': 'test',
+        'start': [2010, 1, 6, 0, 0, 0, 2, 6, -1],
+        'recurrence': {
+            'FREQ': 'MONTHLY',
+        }
+    })
+
+    # Now resolve recurring events starting from 01.01 of current year
+    resolved = []
+    now  = list(time.strptime(str(time.localtime().tm_year-1), "%Y"))
+    last = now[:]
+    last[0] += horizon+1 # update year to horizon
+    for event in ical['raw_events']:
+        if 'recurrence' in event and event['start'] < now:
+            rule     = event['recurrence']
+            freq     = rule['FREQ']
+            interval = int(rule.get('INTERVAL', 1))
+            cur      = now
+            while cur < last:
+                cur = next_occurrence(event['start'], cur, freq)
+                resolved.append({
+                    'name'  : event['name'],
+                    'date'  : time.strftime('%Y-%m-%d', cur),
+                })
+
+    ical['events'] = resolved
+    return ical
+
+# Displays a dialog for uploading an ical file which will then
+# be used to generate timeperiod exceptions etc. and then finally
+# open the edit_timeperiod page to create a new timeperiod using
+# these information
+def mode_timeperiod_import_ical(phase):
+    if phase == "title":
+        return _("Import iCalendar File to create a Timeperiod")
+
+    elif phase == "buttons":
+        html.context_button(_("All Timeperiods"), make_link([("mode", "timeperiods")]), "back")
+        return
+
+    vs_ical = Dictionary(
+        title = _('Import iCalendar File'),
+        render = "form",
+        optional_keys = None,
+        elements = [
+            ('file', FileUpload(
+                title = _('iCalendar File'),
+                help = _("Select an iCalendar file (<tt>*.ics</tt>) from your PC"),
+                allow_empty = False,
+                custom_validate = validate_ical_file,
+            )),
+            ('horizon', Integer(
+                title = _('Time Horizon'),
+                help = _("When the iCalendar file contains definitions of repeating events, these repeating "
+                         "events will be resolved to single events for the number of years you specify here."),
+                minvalue = 0,
+                maxvalue = 50,
+                default_value = 10,
+                unit = _('years'),
+                allow_empty = False,
+            )),
+            ('times', Optional(
+                MultipleTimeRanges(
+                    default_value = [None, None, None],
+                ),
+                title = _('Use specific times'),
+                label = _('Use specific times instead of whole day'),
+                help = _("When you specify explicit time definitions here, these will be added to each "
+                         "date which is added to the resulting time period. By default the whole day is "
+                         "used."),
+            )),
+        ]
+    )
+
+    ical = {}
+
+    if phase == "action":
+        if html.check_transaction():
+            ical = vs_ical.from_html_vars("ical")
+            vs_ical.validate_value(ical, "ical")
+
+            filename, ty, content = ical['file']
+
+            try:
+                data = parse_ical(content, ical['horizon'], ical['times'])
+            except Exception, e:
+                if config.debug:
+                    raise
+                raise MKUserError('ical_file', _('Failed to parse file: %s') % e)
+
+            html.set_var('name',  data.get('name', filename))
+            html.set_var('alias', _('Imported from iCalendar "%s" on %s') %
+                    (data.get('descr', filename), time.strftime('%Y-%m-%d')))
+
+            for day in [ "monday", "tuesday", "wednesday", "thursday",
+                         "friday", "saturday", "sunday" ]:
+                html.set_var('%s_0_from' % day, '')
+                html.set_var('%s_0_until' % day, '')
+
+            html.set_var('except_count', len(data['events']))
+            for index, event in enumerate(data['events']):
+                index += 1
+                html.set_var('except_%d_0' % index, event['date'])
+                if ical['times']:
+                    for n in range(3):
+                        if ical['times'][n]:
+                            html.set_var('except_%d_1_%d_from' % (index, n+1), ical['times'][n][0])
+                            html.set_var('except_%d_1_%d_until' % (index, n+1), ical['times'][n][1])
+            return "edit_timeperiod"
+        return
+
+    html.write('<p>%s</p>' %
+        _('This page can be used to generate a new timeperiod definition based '
+          'on the appointments of an iCalendar (<tt>*.ics</tt>) file. This import is normally used '
+          'to import events like holidays, therefore only single whole day appointments are '
+          'handled by this import.'))
+
+    html.begin_form("import_ical", method="POST")
+    vs_ical.render_input("ical", ical)
+    forms.end()
+    html.button("upload", _("Upload"))
+    html.hidden_fields()
+    html.end_form()
 
 def mode_edit_timeperiod(phase):
     num_columns = 3
@@ -17750,6 +17976,7 @@ modes = {
    "user_notifications_p":(None, lambda phase: mode_user_notifications(phase, True)), # for personal settings
    "timeperiods"        : (["timeperiods"], mode_timeperiods),
    "edit_timeperiod"    : (["timeperiods"], mode_edit_timeperiod),
+   "import_ical"        : (["timeperiods"], mode_timeperiod_import_ical),
    "sites"              : (["sites"], mode_sites),
    "edit_site"          : (["sites"], mode_edit_site),
    "edit_site_globals"  : (["sites"], mode_edit_site_globals),

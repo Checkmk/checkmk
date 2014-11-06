@@ -3099,6 +3099,7 @@ class FileUpload(ValueSpec):
         html.upload_file(varprefix)
 
     def from_html_vars(self, varprefix):
+        # returns a triple of (filename, mime-type, content)
         return html.uploaded_file(varprefix)
 
 class IconSelector(ValueSpec):

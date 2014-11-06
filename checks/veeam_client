@@ -28,14 +28,38 @@ factory_settings["veeam_client"] = {
     "age": ( 108000, 172800 ), # 30h/2d
 }
 
-def inventory_veeam_client(info):
-    if info[0][0] == "Status":
-        return [ (None, {} ) ]
+def parse_veeam_client(info):
+    data = {}
+    for line in info:
+        if line[0] == "Status":
+            if len(line) == 2:
+                last_status = line[1]
+            else:
+                # Prevent empty entries
+                last_status = False
+        elif line[0] == 'JobName':
+            if last_status:
+                last_found = line[1]
+                data[last_found] = {}
+                data[last_found]['Status'] = last_status
+        else:
+            if last_status and len(line) == 2:
+                data[last_found][line[0]] = line[1]
+    return data
 
-def check_veeam_client(item, params, info):
-    if not info[0][0] == "Status":
-        return 3, "No status data found in first line of agent data"
-    data = dict(info[:-1])
+
+def inventory_veeam_client(parsed):
+    for job in parsed.keys():
+        yield job, {}
+
+def check_veeam_client(item, params, parsed):
+    # Fallback for old None item version
+    #FIXME Can be remvoed in CMK 2.0
+    if item == None:
+        key = parsed.keys()[0]
+        data = parsed[key]
+    else:
+        data = parsed[item]
 
     perfdata = []
     infotexts = []
@@ -49,7 +73,8 @@ def check_veeam_client(item, params, info):
     infotexts.append("Status: %s" % data['Status'] )
 
     # Only output the Job name
-    infotexts.append("Job: %s" % data['JobName'] )
+    if data.get('JobName'):
+        infotexts.append("Job: %s" % data['JobName'] )
 
 
 
@@ -122,7 +147,8 @@ check_info["veeam_client"] = {
     'inventory_function':      inventory_veeam_client,
     'service_description':     'VEEAM Client',
     'group':                   'veeam_backup',
-    "default_levels_variable" : "veeam_client",
+    'parse_function':          parse_veeam_client,
+    'default_levels_variable' : 'veeam_client',
     'has_perfdata':            True,
 }
 

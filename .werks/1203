@@ -1,0 +1,11 @@
+Title: veeam_client: Now supports multiple Backups for one host
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.5i7
+Date: 1415285052
+Class: fix
+
+Before the check only supported one backup per host, so no item was needed. Now the check supports multiple Backups.
+This means, now a item is in used. A reinventory is now necessary. Also you need to renew you Wato rule (if one). 
+

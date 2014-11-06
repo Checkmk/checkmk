@@ -172,10 +172,15 @@ config.declare_permission("action.fakechecks",
         [ "admin" ])
 
 def command_fake_checks(cmdtag, spec, row):
-    for s in [0,1,2,3]:
+    for s in [0, 1, 2, 3]:
         statename = html.var("_fake_%d" % s)
         if statename:
-            pluginoutput = _("Manually set to %s by %s") % (html.attrencode(statename), config.user_id)
+            pluginoutput = html.var_utf8("_fake_output").strip()
+            if not pluginoutput:
+                pluginoutput = _("Manually set to %s by %s") % (html.attrencode(statename), config.user_id)
+            perfdata = html.var("_fake_perfdata")
+            if perfdata:
+                pluginoutput += "|" + perfdata
             if cmdtag == "SVC":
                 cmdtag = "SERVICE"
             command = "PROCESS_%s_CHECK_RESULT;%s;%s;%s" % (cmdtag, spec, s, pluginoutput)
@@ -183,14 +188,35 @@ def command_fake_checks(cmdtag, spec, row):
             return command, title
 
 
+def render_fake_form(what):
+    html.write("<table><tr><td>")
+    html.write("%s: " % _("Plugin output"))
+    html.write("</td><td>")
+    html.text_input("_fake_output", "", size=50)
+    html.write("</td></tr><tr><td>")
+    html.write("%s: " % _("Performance data"))
+    html.write("</td><td>")
+    html.text_input("_fake_perfdata", "", size=50)
+    html.write("</td></tr><tr><td>")
+    html.write(_("Set to:"))
+    html.write("</td><td>")
+    if what == "host":
+        html.button("_fake_0", _("Up"))
+        html.button("_fake_1", _("Down"))
+        html.button("_fake_2", _("Unreachable"))
+    else:
+        html.button("_fake_0", _("OK"))
+        html.button("_fake_1", _("Warning"))
+        html.button("_fake_2", _("Critical"))
+        html.button("_fake_3", _("Unknown"))
+    html.write("</td></tr></table>")
+
 multisite_commands.append({
     "tables"      : [ "host" ],
     "permission"  : "action.fakechecks",
     "title"       : _("Fake check results"),
-    "render"      : lambda: \
-       html.button("_fake_0", _("Up")) == \
-       html.button("_fake_1", _("Down")) == \
-       html.button("_fake_2", _("Unreachable")),
+    "group"       : _("Fake check results"),
+    "render"      : lambda: render_fake_form("host"),
     "action"      : command_fake_checks,
 })
 
@@ -198,11 +224,8 @@ multisite_commands.append({
     "tables"      : [ "service" ],
     "permission"  : "action.fakechecks",
     "title"       : _("Fake check results"),
-    "render"      : lambda: \
-       html.button("_fake_0", _("OK")) == \
-       html.button("_fake_1", _("Warning")) == \
-       html.button("_fake_2", _("Critical")) == \
-       html.button("_fake_3", _("Unknown")),
+    "group"       : _("Fake check results"),
+    "render"      : lambda: render_fake_form("service"),
     "action"      : command_fake_checks,
 })
 
@@ -267,7 +290,7 @@ def command_acknowledgement(cmdtag, spec, row):
 multisite_commands.append({
     "tables"      : [ "host", "service" ],
     "permission"  : "action.acknowledge",
-    "title"       : _("Acknowledging Problems"),
+    "title"       : _("Acknowledge Problems"),
     "render"      : lambda: \
         html.button("_acknowledge", _("Acknowledge")) == \
         html.button("_remove_ack", _("Remove Acknowledgement")) == \

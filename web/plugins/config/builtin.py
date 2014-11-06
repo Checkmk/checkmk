@@ -242,3 +242,6 @@ user_localizations = default_user_localizations
 
 # Write WATO folder permissions to auth.php file
 export_folder_permissions = False
+
+# Name of the hostgroup to filter the network topology view by default
+topology_default_filter_group = None

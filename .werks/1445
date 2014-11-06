@@ -1,0 +1,9 @@
+Title: quantum_libsmall_door, quantum_libsmall_status: Two new checks for monitoring small Quantum tape libraries
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i7
+Date: 1415288440
+Class: feature
+
+

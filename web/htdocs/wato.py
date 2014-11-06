@@ -9535,7 +9535,7 @@ def mode_edit_timeperiod(phase):
         if not timeperiod_excludes(timeperiods, tpname, name):
             other_tps.append((tpname, tp.get("alias") or name))
 
-    vs_excl = ListChoice(choices = other_tps)
+    vs_excl = ListChoice(choices=other_tps)
 
     # convert Check_MK representation of range to ValueSpec-representation
     def convert_from_tod(tod):
@@ -9683,9 +9683,11 @@ def mode_edit_timeperiod(phase):
     html.write("</table>")
 
     # Exceptions
-    forms.section(_("Exceptions"))
+    forms.section(_("Exceptions (from weekdays)"))
     html.help(_("Here you can specify exceptional time ranges for certain "
-                 "dates in the form YYYY-MM-DD."))
+                "dates in the form YYYY-MM-DD which are used to define more "
+                "specific definitions to override the times configured for the matching "
+                "weekday."))
 
     exceptions = []
     for k in timeperiod:
@@ -9697,6 +9699,8 @@ def mode_edit_timeperiod(phase):
     # Excludes
     if other_tps:
         forms.section(_("Exclude"))
+        html.help(_('You can use other timeperiod defnitions to exclude the times '
+                    'defined in the other timeperiods from this current timeperiod.'))
         vs_excl.render_input("exclude", timeperiod.get("exclude", []))
 
 

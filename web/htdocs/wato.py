@@ -8841,7 +8841,7 @@ def mode_notifications(phase):
             backlog = []
 
         if backlog:
-            table.begin(table_id = "backlog", title = _("Recent notifications (for analysis)"))
+            table.begin(table_id = "backlog", title = _("Recent notifications (for analysis)"), sortable=False)
             for nr, entry in enumerate(backlog):
                 table.row()
                 table.cell(css="buttons")

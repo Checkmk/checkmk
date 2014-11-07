@@ -187,6 +187,13 @@ builtin_dashboards["main"] = {
 
 #Only work in OMD installations
 if defaults.omd_site:
+    def topology_url():
+        return defaults.url_prefix + 'nagvis/frontend/nagvis-js/index.php?' + \
+               'mod=Map&header_template=on-demand-filter&header_menu=1&label_show=1' + \
+               '&sources=automap&act=view&backend_id=' + defaults.omd_site + \
+               '&render_mode=undirected&url_target=main&filter_group=' + \
+               (config.topology_default_filter_group or '')
+
     builtin_dashboards["topology"] = {
         "single_infos": [],
         "context"     : {},
@@ -199,10 +206,7 @@ if defaults.omd_site:
             {
                 "type"             : "url",
                 "title"            : "Topology of Site " + defaults.omd_site,
-                "url"              : defaults.url_prefix + 'nagvis/frontend/nagvis-js/index.php?' + \
-                                     'mod=Map&header_template=on-demand-filter&header_menu=1&label_show=1' + \
-                                     '&sources=automap&act=view&backend_id=' + defaults.omd_site + \
-                                     '&render_mode=undirected&url_target=main',
+                "urlfunc"          : 'topology_url',
                 "reload_on_resize" : True,
                 "position"         : (1, 1),
                 "size"             : (GROW, GROW),

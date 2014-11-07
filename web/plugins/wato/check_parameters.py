@@ -3691,8 +3691,8 @@ register_check_parameters(
           )
         )]
     ),
-    None,
-    None
+    TextAscii(title=_("Jobname")),
+    "first"
 )
 
 register_check_parameters(

@@ -1,0 +1,21 @@
+Title: Added iCalendar import for generating timeperiods e.g. for holidays
+Level: 2
+Component: wato
+Compatible: compat
+Version: 1.2.5i7
+Date: 1415272776
+Class: feature
+
+The timeperiod management module of WATO has been extended with an import
+mode vor iCalendar (*.ics) files. This can be used to easily create timeperiods
+for holidays which then can be used to exclude them from your other timeperiods.
+
+There are a lot of pages on the internet which provide you with iCalendar including
+the appointments for either the holidays of specific years. They might also contain
+appointments which have a recurrence configured, e.g. on a yearly base. The import
+currently deals with monthly and yearly recurrences of appointments by resolving them
+for the configured time horizon.
+
+After interpreting the iCalendar file, you will be redirected to the timeperiod
+creation dialog where you can either modify the prefilled values or just confirm
+the dialog to finally create the timeperiod.

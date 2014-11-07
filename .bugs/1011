@@ -5,6 +5,7 @@ Date: 2014-11-05 22:49:22
 Targetversion: future
 Class: nastiness
 
-logging behaviour can be configured in several places in wato (e.g. global settings), however it is neven mentioned where the actual logfiles can be found, and
+logging behaviour can be configured in several places in wato (e.g. global settings),
+however it is often not mentioned where the actual logfiles can be found, and
 paths are not at all intuitive. It would be of great benefit to the users to
 mention the location of the log whenever logging behaviour can be configured.

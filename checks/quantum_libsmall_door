@@ -24,33 +24,27 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def cisco_sensor_item(trial_string, fall_back):
-    # trial_string can be:
-    # Empty
-    # A single string
-    # A string seperated by commas with status information
-    # -> Depends on the device model
-    try:
-        # Try to handle all cases found in mkzeug/walks
-        splited = [ x.strip() for x in trial_string.split(',')]
-        if len(splited) == 1:
-            item = trial_string
-        # If the last part contains # or Power, take the complete string
-        elif '#' in splited[-1] or 'Power' in splited[-1]:
-            item = " ".join(splited)
-        # If second last part start with Status, remove that part
-        elif splited[-2].startswith(" Status"):
-            item = " ".join(splited[:-2])
-        # Take anything, but without last part
-        else:
-            item = " ".join(splited[:-1])
-        # Maye there a multiple Items, but always the same string.
-        # Try to prevent that by adding the fall_back number to the end
-        if not item[-1].isdigit():
-            item += " "+ fall_back
-        # Replace unwanted chars and return
-        return item.replace('#',' ')
-    except:
-        return fall_back
 
+def inventory_quantum_libsmall_door(info):
+    if info:
+        return [ (None, None) ]
+
+
+def check_quantum_libsmall_door(_no_item, _no_params, info):
+    if info[0][0] == "1":
+        return 2, "Library door open"
+    elif info[0][0] == "2":
+        return 0, "Library door closed"
+    else:
+        return 3, "Library door status unknown"
+
+
+
+check_info['quantum_libsmall_door'] = {
+    "check_function"          : check_quantum_libsmall_door,
+    "inventory_function"      : inventory_quantum_libsmall_door,
+    "service_description"     : "Tape library door",
+    "snmp_info"               : (".1.3.6.1.4.1.3697.1.10.10.1.15.2", [ "0" ]),
+    "snmp_scan_function"      : lambda oid: "library" in oid(".1.3.6.1.2.1.1.1.0").lower(),
+}
 

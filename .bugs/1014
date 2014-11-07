@@ -1,0 +1,9 @@
+Title: some global settings show a help text when hovering over them, some dont
+Component: wato
+State: open
+Date: 2014-11-06 17:28:13
+Targetversion: future
+Class: nastiness
+
+most of the global settings show a help text when clicking on the settings line, however only some of these
+also show the help text when hovering over the line. hovering should work for all the global settings.

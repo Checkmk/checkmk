@@ -1,0 +1,9 @@
+Title: wato list of rules: display used rulesets in different color
+Component: wato
+State: open
+Date: 2014-11-06 17:04:46
+Targetversion: future
+Class: feature
+
+In the various rule listings it would be extremly useful if used rules sets
+are shown in a different color than unused rulesets.

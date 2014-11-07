@@ -82,6 +82,7 @@ manpage_catalog_titles = {
             "hitachi"    : "Hitachi",
             "emc"        : "EMC",
             "qlogic"     : "QLogic",
+            "quantum"    : "Quantum",
         "phone"       : "Telephony",
 
     "app"      : "Applications",

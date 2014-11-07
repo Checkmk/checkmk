@@ -322,7 +322,7 @@ def end():
                 html.write("</td>\n")
             html.write("</tr>\n")
 
-    if actions_enabled and search_term and not rows and not do_csv:
+    if table["searchable"] and search_term and not rows and not do_csv:
         html.write('<tr class="data odd0 no_match"><td colspan=%d>%s</td></tr>' %
             (num_cols, _('Found no matching rows. Please try another search term.')))
 

@@ -1,0 +1,10 @@
+Title: Fixed error in NagVis Maps snapin when some users had no contact groups assigned
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.5i7
+Date: 1415353168
+
+

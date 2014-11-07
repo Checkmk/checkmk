@@ -142,7 +142,7 @@ function user_roles($username) {
 
 function user_groups($username) {
     global $mk_users;
-    if(!isset($mk_users[$username]))
+    if(!isset($mk_users[$username]) || !isset($mk_users[$username]['contactgroups']))
         return array();
     else
         return $mk_users[$username]['contactgroups'];

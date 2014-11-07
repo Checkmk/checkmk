@@ -365,12 +365,10 @@ check_info['esx_vsphere_vm.cpu'] = {
 # snapshot.rootSnapshotList 1 1363596734 poweredOff 20130318_105600_snapshot_LinuxI|2 1413977827 poweredOn LinuxI Testsnapshot
 
 
-def inventory_esx_vsphere_vm_cpu(info):
-    data = esx_vsphere_vm_convert(info)
-    if 'snapshot.rootSnapshotList' in data:
-        return [(None, {})]
+def inventory_esx_vsphere_vm_snapshots(info):
+    return [(None, {})]
 
-def check_esx_vsphere_vm_cpu(_no_item, params, info):
+def check_esx_vsphere_vm_snapshots(_no_item, params, info):
     data = esx_vsphere_vm_convert(info)
 
     if 'snapshot.rootSnapshotList' not in data:
@@ -412,8 +410,8 @@ def check_esx_vsphere_vm_cpu(_no_item, params, info):
 
 
 check_info['esx_vsphere_vm.snapshots'] = {
-  "inventory_function"  : inventory_esx_vsphere_vm_cpu,
-  "check_function"      : check_esx_vsphere_vm_cpu,
+  "inventory_function"  : inventory_esx_vsphere_vm_snapshots,
+  "check_function"      : check_esx_vsphere_vm_snapshots,
   "service_description" : "ESX Snapshots",
   "group"               : "vm_snapshots",
   "has_perfdata"        : True,

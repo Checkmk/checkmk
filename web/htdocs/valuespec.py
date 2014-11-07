@@ -841,7 +841,7 @@ class ListOf(ValueSpec):
         # original 'value' but take the value from the HTML variables.
         if html.has_var("%s_count" % varprefix):
             filled_in = True
-            count = int(html.var("%s_count" % varprefix))
+            count = len(self.get_indexes(varprefix))
             value = [None] * count # dummy for the loop
         else:
             filled_in = False
@@ -888,16 +888,20 @@ class ListOf(ValueSpec):
                 s += '<tr><td>%s</td></tr>' % self._valuespec.value_to_text(v)
             return s + '</table>'
 
-    def from_html_vars(self, varprefix):
+    def get_indexes(self, varprefix):
         count = int(html.var(varprefix + "_count"))
         n = 1
         indexes = {}
         while n <= count:
             indexof = html.var(varprefix + "_indexof_%d" % n)
-            if indexof != None: # deleted entry
+            # for deleted entries, we have removed the whole row, therefore indexof is None
+            if indexof != None:
                 indexes[int(indexof)] = n
             n += 1
+        return indexes
 
+    def from_html_vars(self, varprefix):
+        indexes = self.get_indexes(varprefix)
         value = []
         k = indexes.keys()
         k.sort()

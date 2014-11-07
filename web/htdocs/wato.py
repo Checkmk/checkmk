@@ -9181,7 +9181,7 @@ def mode_timeperiods(phase):
 
         timeperiod = timeperiods[name]
         edit_url     = make_link([("mode", "edit_timeperiod"), ("edit", name)])
-        delete_url   = html.makeactionuri([("_delete", name)])
+        delete_url   = make_action_link([("mode", "timeperiods"), ("_delete", name)])
 
         table.cell(_("Actions"), css="buttons")
         html.icon_button(edit_url, _("Properties"), "edit")
@@ -9306,7 +9306,7 @@ def mode_edit_timeperiod(phase):
     # exclude the current timeperiod (in order to avoid cycles)
     other_tps = []
     for tpname, tp in timeperiods.items():
-        if not new and not timeperiod_excludes(timeperiods, tpname, name):
+        if not timeperiod_excludes(timeperiods, tpname, name):
             other_tps.append((tpname, tp.get("alias") or name))
 
     vs_excl = ListChoice(choices = other_tps)

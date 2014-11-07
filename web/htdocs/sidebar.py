@@ -781,7 +781,7 @@ def search_url_tmpl(used_filters, row, exact = True):
             # Default search templates
             ty = plugin.get("dftl_url_tmpl", plugin.get("id"))
             if ty == 'hosts':
-                return 'view.py?view_name=searchhost&host=%(name)s&filled_in=filter'
+                return 'view.py?view_name=searchhost&host_regex=%(name)s&filled_in=filter'
             elif ty == 'hostgroups':
                 return 'view.py?view_name=hostgroups&hostgroup_name=%(name)s&site=%(site)s'
             elif ty == 'servicegroups':

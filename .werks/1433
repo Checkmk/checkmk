@@ -1,0 +1,11 @@
+Title: Quicksearch: no longer shows an invalid search result when looking for multiple hosts
+Level: 2
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.5i6p2
+Date: 1415263841
+
+The quicksearch used the wrong search filter for the given pattern: <i>host</i>
+instead of <i>host_regex</i>

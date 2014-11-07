@@ -382,6 +382,9 @@ table.data td.singleicon {
 table.data tr.actions td {
     padding: 5px;
 }
+table.data tr.actions div {
+    display: inline-block;
+}
 table.data tr.actions td div.search input[type="text"] {
     margin-right: 2px;
 }

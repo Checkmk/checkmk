@@ -944,7 +944,7 @@ def mode_mkeventd_rules(phase):
         event = None
 
     if rules:
-        table.begin(limit = None)
+        table.begin(limit=None, sortable=False)
 
         have_match = False
         for nr, rule in enumerate(rules):

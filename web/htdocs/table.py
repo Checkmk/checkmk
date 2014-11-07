@@ -25,6 +25,7 @@
 # Boston, MA 02110-1301 USA.
 
 import config
+from lib import num_split
 
 table     = None
 mode      = None
@@ -57,6 +58,7 @@ def begin(table_id=None, title=None, **kwargs):
         "omit_if_empty"   : kwargs.get("omit_if_empty", False),
         "omit_headers"    : kwargs.get("omit_headers", False),
         "searchable"      : kwargs.get("searchable", True),
+        "sortable"        : kwargs.get("sortable", True),
         "next_header"     : None,
         "output_format"   : kwargs.get("output_format", "html"), # possible: html, csv, fetch
     }
@@ -109,12 +111,16 @@ def cell(*posargs, **kwargs):
     next_func = add_cell
     next_args = posargs, kwargs
 
-def add_cell(title="", text="", css=None, help=None, colspan=None):
+def add_cell(title="", text="", css=None, help=None, colspan=None, sortable=True):
     if type(text) != unicode:
         text = str(text)
     htmlcode = text + html.drain()
     if table["collect_headers"] == True:
-        table["headers"].append((title, help))
+        # small helper to make sorting introducion easier. Cells which contain
+        # buttons are never sortable
+        if css and 'buttons' in css and sortable:
+            sortable = False
+        table["headers"].append((title, help, sortable))
     table["rows"][-1][0].append((htmlcode, css, colspan))
 
 def end():
@@ -155,7 +161,7 @@ def end():
     rows = table["rows"]
 
     # Controls wether or not actions are available for a table
-    actions_enabled = table["searchable"] and not do_csv
+    actions_enabled = (table["searchable"] or table["sortable"]) and not do_csv
     if actions_enabled:
         user_opts = config.load_user_file("tableoptions", {})
         user_opts.setdefault(table_id, {})
@@ -173,20 +179,38 @@ def end():
             if 'search' in table_opts:
                 del table_opts['search'] # persist
 
-        # Search is always lower case -> case insensitive
-        search_term = html.var('_%s_search' % table_id, table_opts.get('search', '')).lower()
-        if search_term:
-            html.set_var('_%s_search' % table_id, search_term)
-            table_opts['search'] = search_term # persist
-            filtered_rows = []
-            for row, css, state in rows:
-                if state == "header":
-                    continue
-                for cell_content, css_classes, colspan in row:
-                    if search_term in cell_content.lower():
-                        filtered_rows.append((row, css, state))
-                        break # skip other cells when matched
-            rows = filtered_rows
+        if table["searchable"]:
+            # Search is always lower case -> case insensitive
+            search_term = html.var('_%s_search' % table_id, table_opts.get('search', '')).lower()
+            if search_term:
+                html.set_var('_%s_search' % table_id, search_term)
+                table_opts['search'] = search_term # persist
+                filtered_rows = []
+                for row, css, state in rows:
+                    if state == "header":
+                        continue
+                    for cell_content, css_classes, colspan in row:
+                        if search_term in cell_content.lower():
+                            filtered_rows.append((row, css, state))
+                            break # skip other cells when matched
+                rows = filtered_rows
+
+        if html.var('_%s_reset_sorting' % table_id):
+            html.del_var('_%s_sort' % table_id)
+            if 'sort' in table_opts:
+                del table_opts['sort'] # persist
+
+        if table["sortable"]:
+            # Now apply eventual sorting settings
+            sort = html.var('_%s_sort' % table_id, table_opts.get('sort'))
+            if sort != None:
+                html.set_var('_%s_sort' % table_id, sort)
+                table_opts['sort'] = sort # persist
+                sort_col, sort_reverse = map(int, sort.split(',', 1))
+                # Use natural sorting
+                rows.sort(cmp=lambda a, b: cmp(num_split(a[0][sort_col][0]),
+                                               num_split(b[0][sort_col][0])),
+                          reverse=sort_reverse==1)
 
     num_rows_unlimited = len(rows)
     num_cols = len(table["headers"])
@@ -207,14 +231,25 @@ def end():
             return
 
         if do_csv:
-            html.write(csv_separator.join([html.strip_tags(header) or "" for (header, help) in table["headers"]]) + "\n")
+            html.write(csv_separator.join([html.strip_tags(header) or "" for (header, help, sortable) in table["headers"]]) + "\n")
         else:
             html.write("  <tr>")
             first_col = True
-            for header, help in table["headers"]:
+            for nr, (header, help, sortable) in enumerate(table["headers"]):
+                text = header
                 if help:
                     header = '<span title="%s">%s</span>' % (html.attrencode(help), header)
-                html.write("  <th>")
+                if not table["sortable"] or not sortable:
+                    html.write("  <th>")
+                else:
+                    reverse = 0
+                    sort = html.var('_%s_sort' % table_id)
+                    if sort:
+                        sort_col, sort_reverse = map(int, sort.split(',', 1))
+                        if sort_col == nr:
+                            reverse = sort_reverse == 0 and 1 or 0
+                    html.write("  <th class=\"sort\" title=\"%s\" onclick=\"location.href='%s'\">" %
+                                (_('Sort by %s') % text, html.makeactionuri([('_%s_sort' % table_id, '%d,%d' % (nr, reverse))])))
 
                 # Add the table action link
                 if first_col:
@@ -246,8 +281,13 @@ def end():
             html.write("<div class=search>")
             html.text_input("_%s_search" % table_id)
             html.button("_%s_submit" % table_id, _("Search"))
-            html.button("_%s_reset" % table_id, _("Reset"))
+            html.button("_%s_reset" % table_id, _("Reset search"))
             html.set_focus("_%s_search" % table_id)
+            html.write("</div>\n")
+
+        if html.has_var('_%s_sort' % table_id):
+            html.write("<div class=sort>")
+            html.button("_%s_reset_sorting" % table_id, _("Reset sorting"))
             html.write("</div>\n")
 
         html.hidden_fields()
@@ -255,8 +295,6 @@ def end():
         html.write('</tr>')
 
     odd = "even"
-    # TODO: Sorting
-
     for nr, (row, css, state) in enumerate(rows):
         if do_csv:
             html.write(csv_separator.join([ html.strip_tags(cell_content) for cell_content, css_classes, colspan in row ]))

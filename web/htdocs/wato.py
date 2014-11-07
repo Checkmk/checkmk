@@ -12698,7 +12698,7 @@ def mode_hosttags(phase):
                 table.cell(_("Topic"), topic or '')
                 table.cell(_("Type"), (len(choices) == 1 and _("Checkbox") or _("Dropdown")))
                 table.cell(_("Choices"), str(len(choices)))
-                table.cell(_("Demonstration"))
+                table.cell(_("Demonstration"), sortable=False)
                 html.begin_form("tag_%s" % tag_id)
                 host_attribute["tag_%s" % tag_id].render_input(None)
                 html.end_form()
@@ -13963,8 +13963,8 @@ def mode_edit_ruleset(phase):
                     skip_this_folder = True
                     continue
 
-                table.begin("rules", title = "%s %s" % (_("Rules in folder"), alias_path),
-                    css="ruleset", searchable = False)
+                table.begin("rules", title="%s %s" % (_("Rules in folder"), alias_path),
+                    css="ruleset", searchable=False, sortable=False)
                 rel_rulenr = 0
             else:
                 if skip_this_folder:

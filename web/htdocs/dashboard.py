@@ -925,7 +925,7 @@ def page_edit_dashlet():
             html.write("<div class=error>%s</div>\n" % e.message)
             html.add_user_error(e.varname, e.message)
 
-    html.begin_form("dashlet")
+    html.begin_form("dashlet", method="POST")
     vs_general.render_input("general", dashlet)
 
     if vs_type:

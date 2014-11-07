@@ -12670,7 +12670,7 @@ def mode_hosttags(phase):
                              "such as <i>disable notifications for all hosts with the tags "
                              "<b>Network device</b> and <b>Test</b></i>.")),
                     empty_text = _("You haven't defined any tag groups yet."),
-                    searchable = False)
+                    searchable = False, sortable = False)
 
         if hosttags:
             for nr, entry in enumerate(hosttags):

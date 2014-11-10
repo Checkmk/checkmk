@@ -59,10 +59,12 @@ OPTIONS:
   --mail-from MAIL        Use this mail address as sender address
   --mail-to MAIL          Use this mail address as recipient address
 
-  --warning AGE           Age of the most recent mail in seconds to result
-                          in a WARNING state
-  --critical AGE          Age of the most recent mail in seconds to result
-                          in a CRITICAL state. Defaults to 1 hour
+  --warning AGE           Loop duration of the most recent mail in seconds or
+                          the average of all received mails within a single
+                          check to raise a WARNING state
+  --critical AGE          Loop duration of the most recent mail in seconds or
+                          the average of all received mails within a single
+                          check to raise a CRITICAL state
 
   --connect-timeout       Timeout in seconds for network connects (defaults to 10)
   --status-dir PATH       This plugin needs a file to store information about
@@ -312,8 +314,10 @@ def check_mails():
 
             if critical != None and duration >= critical:
                 state = 2
+                output.append(' (>= %d)' % critical)
             elif warning != None and duration >= warning:
                 state = max(state, 1)
+                output.append(' (>= %d)' % warning)
 
             del g_expected[ident] # remove message from expect list
             num_received += 1
@@ -330,13 +334,13 @@ def check_mails():
                 num_pending += 1
 
     if num_received == 1:
-        output.append('Mail received within %d seconds' % duration)
-        perfdata.append(('duration', duration))
+        output.insert(0, 'Mail received within %d seconds' % duration)
+        perfdata.append(('duration', duration, warning or '', critical or ''))
     elif num_received > 1:
-        output.append('Received %d mails within average of %d seconds' % (num_received, duration))
-        perfdata.append(('duration', duration))
+        output.insert(0, 'Received %d mails within average of %d seconds' % (num_received, duration))
+        perfdata.append(('duration', duration, warning or '', critical or ''))
     else:
-        output.append('Did not receive any new mail')
+        output.insert(0, 'Did not receive any new mail')
 
     if num_lost:
         output.append('Lost: %d (Did not arrive within %d seconds)' % (num_lost, critical))

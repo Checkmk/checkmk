@@ -29,5 +29,9 @@ $def[1] = "DEF:dur=$RRDFILE[1]:$DS[1]:MAX ";
 $def[1] .= "AREA:dur#80f000:\"Duration (seconds)\" ";
 $def[1] .= "LINE:dur#408000 ";
 $def[1] .= "GPRINT:dur:LAST:\"%7.2lf %s LAST\" ";
-$def[1] .= "GPRINT:dur:MAX:\"%7.2lf %s MAX\" ";
+$def[1] .= "GPRINT:dur:MAX:\"%7.2lf %s MAX\\n\" ";
+if ($WARN[1])
+    $def[1] .= "HRULE:$WARN[1]#FFFF00:\"Warning at $WARN[1] sec\" ";
+if ($CRIT[1])
+    $def[1] .= "HRULE:$CRIT[1]#FF0000:\"Critical at $CRIT[1] sec\" ";
 ?>

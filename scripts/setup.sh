@@ -955,7 +955,17 @@ and change the path there. Restart Apache afterwards."
        Allow from all
        Satisfy any
   </Location>
+
+  # Trigger cron jobs. This is done without authentication
+  <Location "${url_prefix}check_mk/run_cron.py">
+      Order allow,deny
+      Allow from all
+      Satisfy any
+  </Location>
+
 </IfModule>
+
+
 
 <IfModule !mod_python.c>
   Alias ${url_prefix}check_mk $web_dir/htdocs

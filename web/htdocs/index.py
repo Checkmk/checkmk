@@ -67,7 +67,7 @@ if defaults.omd_root:
 # Call the load_plugins() function in all modules
 def load_all_plugins():
     for module in [ hooks, userdb, visuals, views, sidebar, dashboard,
-                    wato, bi, mobile, notify, webapi, reporting ]:
+                    wato, bi, mobile, notify, webapi, reporting, cron ]:
         try:
             module.load_plugins # just check if this function exists
         except AttributeError:
@@ -90,8 +90,8 @@ def handler(req, fields = None, profiling = True):
     html.enable_debug = config.debug
     html.id = {} # create unique ID for this request
     __builtin__.html = html
-
     response_code = apache.OK
+
     try:
 
         # Ajax-Functions want no HTML output in case of an error but
@@ -160,7 +160,7 @@ def handler(req, fields = None, profiling = True):
 
         # Special handling for automation.py. Sorry, this must be hardcoded
         # here. Automation calls bybass the normal authentication stuff
-        if html.myfile == "automation":
+        if html.myfile in [ "automation", "run_cron" ]:
             try:
                 handler()
             except Exception, e:

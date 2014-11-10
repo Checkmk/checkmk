@@ -1111,6 +1111,7 @@ def convert_check_info():
                         snmp_scan_functions.get(basename)),
                 "default_levels_variable" : check_default_levels.get(check_type),
                 "node_info"               : False,
+                "parse_function"          : None,
             }
         else:
             # Check does already use new API. Make sure that all keys are present,

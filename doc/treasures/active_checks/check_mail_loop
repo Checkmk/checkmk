@@ -245,7 +245,10 @@ def fetch_mails():
             if retcode == 'OK':
                 for num in messages[0].split(' '):
                     ty, data = g_M.fetch(num, '(RFC822)')
-                    mails[num] = email.message_from_string(data[0][1])
+                    if ty == 'OK'
+                        mails[num] = email.message_from_string(data[0][1])
+                    else:
+                        raise Exception('Failed to fetch mail %s (%s). Available messages: %r' % (num, data[0], messages))
 
         # Now filter out the messages for this check
         pattern = re.compile('(?:Re: )?Check_MK-Mail-Loop ([^\s]+) ([^\s]+)')

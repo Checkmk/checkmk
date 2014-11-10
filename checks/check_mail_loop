@@ -70,6 +70,10 @@ def check_mail_loop_arguments(params):
 
     args += ' --status-suffix=%s' % quote_shell_string(g_hostname + '-' + params['item'])
 
+    if 'duration' in params:
+        args += ' --warning=%d' % params['duration'][0]
+        args += ' --critical=%d' % params['duration'][1]
+
     return args
 
 

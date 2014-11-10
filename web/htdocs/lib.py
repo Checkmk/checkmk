@@ -380,7 +380,7 @@ def num_split(s):
         return ( int(first_num), ) + num_split(s[len(first_num):])
     else:
         first_word = regex("[0-9]").split(s)[0]
-        return ( first_word, ) + num_split(s[len(first_word):])
+        return ( first_word.lower(), ) + num_split(s[len(first_word):])
 
 
 __builtin__.default_user_localizations = {

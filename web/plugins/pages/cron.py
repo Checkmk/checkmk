@@ -24,9 +24,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import mobile
+import cron
 
 pagehandlers.update({
-   "mobile"       : mobile.page_index,
-   "mobile_view"  : mobile.page_view,
+    "run_cron" :  cron.page_run_cron,
 })

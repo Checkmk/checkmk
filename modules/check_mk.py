@@ -4743,6 +4743,7 @@ def usage():
  cmk -i, --inventory [HOST1 HOST2...] Do a HW/SW-Inventory of some ar all hosts
  cmk --inventory-as-check HOST        Do HW/SW-Inventory, behave like check plugin
  cmk -A, --bake-agents [-f] [H1 H2..] Bake agents for hosts (not in all versions)
+ cmk --show-snmp-stats                Analyzes recorded Inline SNMP statistics
  cmk -V, --version                    print version
  cmk -h, --help                       print this help
 
@@ -4858,6 +4859,10 @@ NOTES:
   agents are renewed, even if an uptodate version for a configuration
   already exists. Note: baking agents is only contained in the
   subscription version of Check_MK.
+
+  --show-snmp-stats analyzes and shows a summary of the Inline SNMP
+  statistics which might have been recorded on your system before.
+  Note: This is only contained in the subscription version of Check_MK.
 
   --convert-rrds converts the internal structure of existing RRDs
   to the new structure as configured via the rulesets cmc_host_rrd_config
@@ -5969,7 +5974,7 @@ if __name__ == "__main__":
     long_options = [ "help", "version", "verbose", "compile", "debug", "interactive",
                      "list-checks", "list-hosts", "list-tag", "no-tcp", "cache",
                      "flush", "package", "localize", "donate", "snmpwalk", "oid=", "extraoid=",
-                     "snmptranslate", "bake-agents", "force",
+                     "snmptranslate", "bake-agents", "force", "show-snmp-stats",
                      "usewalk", "scan-parents", "procs=", "automation=", "notify",
                      "snmpget=", "profile", "keepalive", "keepalive-fd=", "create-rrd",
                      "convert-rrds", "split-rrds",
@@ -6195,7 +6200,12 @@ if __name__ == "__main__":
                     hostnames = None
                 do_bake_agents(hostnames)
                 done = True
-
+            elif o in [ '--show-snmp-stats' ]:
+                if 'do_show_snmp_stats' not in globals():
+                    sys.stderr.write("Handling of SNMP statistics is not implemented in your version of Check_MK. Sorry.\n")
+                    sys.exit(1)
+                do_show_snmp_stats()
+                done = True
 
     except MKGeneralException, e:
         sys.stderr.write("%s\n" % e)

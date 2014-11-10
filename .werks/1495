@@ -1,0 +1,14 @@
+Title: Most WATO tables can now be sorted (where useful)
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.5i7
+Date: 1415358543
+Class: feature
+
+Most of the data tables in WATO can now be used. Some of the
+tables which have a defined order, like the rules within a
+ruleset can not be sorted using the new sort mechanism.
+
+At the moment the host table is not sortable, but this will
+be added soon.

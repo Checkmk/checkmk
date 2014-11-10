@@ -47,6 +47,10 @@ def inventory_domino_info(info):
 
 def check_domino_info(_no_item, _no_params, info):
     serverstate, domain, name, release = info
+    if len(domain) > 0:
+        maildomain = domain[0][0]
+    else:
+        maildomain = "-"
     if int(serverstate[0][0]) > 4:
         state = 1
         infotext = "Server is %s" % ( domino_info_states[serverstate[0][0]] )
@@ -56,7 +60,7 @@ def check_domino_info(_no_item, _no_params, info):
     else:
         state = 0
         infotext = "Server is %s. Domain: %s, Name: %s, %s" \
-            % ( domino_info_states[serverstate[0][0]], domain[0][0], name[0][0], release[0][0] )
+            % ( domino_info_states[serverstate[0][0]], maildomain, name[0][0], release[0][0] )
     yield state, infotext
 
 check_info['domino_info'] = {

@@ -562,6 +562,13 @@ class IPv4Address(IPv4Network):
         self.validate_ipaddress(value, varprefix)
         ValueSpec.custom_validate(self, value, varprefix)
 
+# A host name with or without domain part. Also allow IP addresses
+class Hostname(TextAscii):
+    def __init__(self, **kwargs):
+        TextAscii.__init__(self, **kwargs)
+        self._regex = re.compile('^[-0-9a-zA-Z_.]+$')
+        self._regex_error = _("Please enter a valid hostname or IPv4 address.")
+
 
 # Valuespec for a HTTP Url (not HTTPS), that
 # automatically adds http:// to the value

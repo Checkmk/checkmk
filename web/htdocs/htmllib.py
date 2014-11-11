@@ -170,6 +170,9 @@ class html:
         days = hours / 24
         return "%d days" % days
 
+    def in_form(self):
+        return self.form_name != None
+
     def begin_form(self, name, action = None, method = "GET",
                    onsubmit = None, add_transid = True):
         self.form_vars = []

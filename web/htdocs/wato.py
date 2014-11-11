@@ -912,6 +912,10 @@ def mode_folder(phase):
         if not html.transaction_valid():
             return
 
+        # Host table: No error message on search filter reset
+        if html.var("_hosts_reset_sorting") or html.var("_hosts_sort"):
+            return
+
         selected_hosts = get_hostnames_from_checkboxes()
         if len(selected_hosts) == 0:
             raise MKUserError(None,
@@ -1319,9 +1323,9 @@ def show_hosts(folder):
     # of the table of hosts and - if there are more than just a few - also
     # at the top of the table.
     search_shown = False
-    def bulk_actions(at_least_one_imported, top, withsearch, colspan, odd, show_checkboxes):
-        html.write('<tr class="data %s0">' % odd)
-        html.write("<td class=bulksearch colspan=3>")
+    def bulk_actions(at_least_one_imported, top, withsearch, colspan, show_checkboxes):
+        table.row(collect_headers=False, fixed=True)
+        table.cell(css="bulksearch", colspan=3)
         if not show_checkboxes:
             html.write('<div id="%s_on" title="%s" class="togglebutton %s up" '
                        'onclick="location.href=\'%s\'"></div>' % (
@@ -1337,9 +1341,7 @@ def show_hosts(folder):
             html.text_input(top and "search" or "search")
             html.button("_search", _("Search"))
             html.set_focus("search")
-        html.write('</td>')
-        html.write("<td class=bulkactions colspan=%d>" % (colspan-3))
-
+        table.cell(css="bulkactions", colspan=colspan-3)
         html.write(' ' + _("Selected hosts:\n"))
 
         if not g_folder.get(".lock_hosts"):
@@ -1357,11 +1359,10 @@ def show_hosts(folder):
                 move_to_folder_combo("host", None, top)
                 if at_least_one_imported:
                     html.button("_bulk_movetotarget", _("Move to Target Folders"))
-        html.write("</td></tr>\n")
 
     # Show table of hosts in this folder
     html.begin_form("hosts", method = "POST")
-    html.write("<table class=data>\n")
+    table.begin("hosts", searchable=False)
 
     # Remember if that host has a target folder (i.e. was imported with
     # a folder information but not yet moved to that folder). If at least
@@ -1395,35 +1396,8 @@ def show_hosts(folder):
     # list shows more than 10 rows
     if more_than_ten_items and \
         (config.may("wato.edit_hosts") or config.may("wato.manage_hosts")):
-        bulk_actions(at_least_one_imported, True, True, colspan, "even", show_checkboxes)
+        bulk_actions(at_least_one_imported, True, True, colspan, show_checkboxes)
         search_shown = True
-
-    # Header line
-    html.write("<tr>")
-    if show_checkboxes:
-        html.write("<th class=left>")
-        html.write("<input type=button class=checkgroup name=_toggle_group"
-                       " onclick=\"toggle_all_rows();\" value=\"%s\" />" % _('X'))
-        html.write("</th>")
-
-    for h in _("Actions"), _("Hostname"):
-        html.write("<th>%s</th>" % h)
-
-    for attr, topic in host_attributes:
-        if attr.show_in_table():
-            html.write("<th>%s</th>" % attr.title())
-
-    for h in _("Auth"), _("Permissions"), _("Contact Groups"):
-        html.write("<th>%s</th>" % h)
-
-    if not config.wato_hide_hosttags:
-        html.write("<th>" + _("Tags") + "</th>")
-
-    if not g_folder.get(".lock_hosts") and config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
-        html.write("<th class=right>" + _("Move To") + "</th>")
-
-    html.write("</tr>\n")
-    odd = "odd"
 
     contact_group_names = userdb.load_group_information().get("contact", {})
     def render_contact_group(c):
@@ -1441,9 +1415,7 @@ def show_hosts(folder):
         host = g_folder[".hosts"][hostname]
         effective = effective_attributes(host, g_folder)
 
-        # Rows with alternating odd/even styles
-        html.write('<tr class="data %s0">' % odd)
-        odd = odd == "odd" and "even" or "odd"
+        table.row()
 
         # Column with actions (buttons)
         edit_url     = make_link([("mode", "edithost"), ("host", hostname)])
@@ -1454,7 +1426,8 @@ def show_hosts(folder):
         delete_url   = make_action_link([("mode", "folder"), ("_delete_host", hostname)])
 
         if show_checkboxes:
-            html.write('<td class=checkbox>')
+            table.cell("<input type=button class=checkgroup name=_toggle_group"
+                       " onclick=\"toggle_all_rows();\" value=\"%s\" />" % _('X'), sortable=False)
             # Use CSS class "failed" in order to provide information about
             # selective toggling inventory-failed hosts for Javascript
             if host.get("inventory_failed"):
@@ -1462,9 +1435,8 @@ def show_hosts(folder):
             else:
                 css_class = ""
             html.write("<input type=checkbox %s name=\"_c_%s\" value=%d />" % (css_class, hostname, colspan))
-            html.write('</td>\n')
 
-        html.write("<td class=buttons>")
+        table.cell(_("Actions"), css="buttons", sortable=False)
         html.icon_button(edit_url, _("Edit the properties of this host"), "edit")
         html.icon_button(params_url, _("View the rule based parameters of this host"), "rulesets")
         if check_host_permissions(hostname, False) == True:
@@ -1478,10 +1450,9 @@ def show_hosts(folder):
             if config.may("wato.clone_hosts"):
                 html.icon_button(clone_url, _("Create a clone of this host"), "insert")
             html.icon_button(delete_url, _("Delete this host"), "delete")
-        html.write("</td>\n")
 
         # Hostname with link to details page (edit host)
-        html.write('<td>')
+        table.cell(_("Hostname"))
         errors = host_errors.get(hostname,[]) + validate_host(host, g_folder)
         if errors:
             msg = _("Warning: This host has an invalid configuration: ")
@@ -1494,8 +1465,6 @@ def show_hosts(folder):
         if ".nodes" in host:
             html.write("&nbsp;")
             html.icon(_("This host is a cluster of %s") % ", ".join(host[".nodes"]), "cluster")
-        html.write('</td>')
-
 
         # Show attributes
         for attr, topic in host_attributes:
@@ -1506,9 +1475,7 @@ def show_hosts(folder):
                 else:
                     tdclass, tdcontent = attr.paint(effective.get(attrname), hostname)
                     tdclass += " inherited"
-                html.write('<td class="%s">' % tdclass)
-                html.write(tdcontent)
-                html.write("</td>\n")
+                table.cell(attr.title(), tdcontent, css=tdclass)
 
         # Am I authorized?
         auth = check_host_permissions(hostname, False)
@@ -1518,12 +1485,13 @@ def show_hosts(folder):
         else:
             icon = "autherr"
             title = html.strip_tags(auth)
-        html.write('<td><img class=icon src="images/icon_%s.png" title="%s"></td>' % (icon, title))
+
+        table.cell(_('Auth'), '<img class=icon src="images/icon_%s.png" title="%s">' % (icon, title), sortable=False)
 
         # Permissions and Contact groups - through complete recursion and inhertance
         perm_groups, contact_groups = collect_host_groups(host, folder)
-        html.write("<td>%s</td>" % ", ".join(map(render_contact_group, perm_groups)))
-        html.write("<td>%s</td>" % ", ".join(map(render_contact_group, contact_groups)))
+        table.cell(_("Permissions"), ", ".join(map(render_contact_group, perm_groups)))
+        table.cell(_("Contact Groups"), ", ".join(map(render_contact_group, contact_groups)))
 
         if not config.wato_hide_hosttags:
             # Raw tags
@@ -1532,20 +1500,18 @@ def show_hosts(folder):
             # 1. add <nobr> round the single tags to prevent wrap within tags
             # 2. add "zero width space" (&#8203;)
             tag_title = "|".join([ '%s' % t for t in host[".tags"] ])
-            html.write("<td title='%s' class='tag-ellipsis'>%s</td>" % (tag_title, "<b style='color: #888;'>|</b>&#8203;".join(
-                                                [ '<nobr>%s</nobr>' % t for t in host[".tags"] ])))
+            table.cell(_("Tags"), help=tag_title, css="tag-ellipsis")
+            html.write("<b style='color: #888;'>|</b>&#8203;".join([ '<nobr>%s</nobr>' % t for t in host[".tags"] ]))
 
         # Move to
         if not g_folder.get(".lock_hosts") and config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
-            html.write("<td class=right>")
+            table.cell(_("Move To"), css="right", sortable=False)
             move_to_folder_combo("host", hostname)
-            html.write("</td>\n")
-        html.write("</tr>\n")
 
     if config.may("wato.edit_hosts") or config.may("wato.manage_hosts"):
-        bulk_actions(at_least_one_imported, False, not search_shown, colspan, odd, show_checkboxes)
-    html.write("</table>\n")
+        bulk_actions(at_least_one_imported, False, not search_shown, colspan, show_checkboxes)
 
+    table.end()
     html.hidden_fields()
     html.end_form()
 

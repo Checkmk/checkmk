@@ -89,15 +89,16 @@ def row(*posargs, **kwargs):
     next_func = add_row
     next_args = posargs, kwargs
 
-def add_row(css=None, state=0):
+def add_row(css=None, state=0, collect_headers=True, fixed=False):
     if table["next_header"]:
-        table["rows"].append((table["next_header"], None, "header"))
+        table["rows"].append((table["next_header"], None, "header", True))
         table["next_header"] = None
-    table["rows"].append(([], css, state))
-    if table["collect_headers"] == False:
-        table["collect_headers"] = True
-    elif table["collect_headers"] == True:
-        table["collect_headers"] = "finished"
+    table["rows"].append(([], css, state, fixed))
+    if collect_headers:
+        if table["collect_headers"] == False:
+            table["collect_headers"] = True
+        elif table["collect_headers"] == True:
+            table["collect_headers"] = "finished"
 
 # Intermediate title, shown as soon as there is a following row.
 # We store the group headers in the list of rows, with css None
@@ -186,12 +187,12 @@ def end():
                 html.set_var('_%s_search' % table_id, search_term)
                 table_opts['search'] = search_term # persist
                 filtered_rows = []
-                for row, css, state in rows:
-                    if state == "header":
-                        continue
+                for row, css, state, fixed in rows:
+                    if state == "header" or fixed:
+                        continue # skip filtering of headers or fixed rows
                     for cell_content, css_classes, colspan in row:
-                        if search_term in cell_content.lower():
-                            filtered_rows.append((row, css, state))
+                        if fixed or search_term in cell_content.lower():
+                            filtered_rows.append((row, css, state, fixed))
                             break # skip other cells when matched
                 rows = filtered_rows
 
@@ -207,10 +208,23 @@ def end():
                 html.set_var('_%s_sort' % table_id, sort)
                 table_opts['sort'] = sort # persist
                 sort_col, sort_reverse = map(int, sort.split(',', 1))
-                # Use natural sorting
+
+                # remove and remind fixed rows, add to separate list
+                fixed_rows = []
+                for index, row in enumerate(rows[:]):
+                    if row[3] == True:
+                        rows.remove(row)
+                        fixed_rows.append((index, row))
+
+                # Then use natural sorting to sort the list
                 rows.sort(cmp=lambda a, b: cmp(num_split(a[0][sort_col][0]),
                                                num_split(b[0][sort_col][0])),
                           reverse=sort_reverse==1)
+
+                # Now re-add the removed "fixed" rows to the list again
+                if fixed_rows:
+                    for index, row in fixed_rows:
+                        rows.insert(index, row)
 
     num_rows_unlimited = len(rows)
     num_cols = len(table["headers"])
@@ -275,7 +289,8 @@ def end():
 
     if actions_enabled and actions_visible and not do_csv:
         html.write('<tr class="data even0 actions"><td colspan=%d>' % num_cols)
-        html.begin_form("%s_actions" % table_id)
+        if not html.in_form():
+            html.begin_form("%s_actions" % table_id)
 
         if table["searchable"]:
             html.write("<div class=search>")
@@ -290,12 +305,14 @@ def end():
             html.button("_%s_reset_sorting" % table_id, _("Reset sorting"))
             html.write("</div>\n")
 
-        html.hidden_fields()
-        html.end_form()
+        if not html.in_form():
+            html.begin_form("%s_actions" % table_id)
+            html.hidden_fields()
+            html.end_form()
         html.write('</tr>')
 
     odd = "even"
-    for nr, (row, css, state) in enumerate(rows):
+    for nr, (row, css, state, fixed) in enumerate(rows):
         if do_csv:
             html.write(csv_separator.join([ html.strip_tags(cell_content) for cell_content, css_classes, colspan in row ]))
             html.write("\n")

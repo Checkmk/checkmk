@@ -372,7 +372,7 @@ def check_esx_vsphere_vm_snapshots(_no_item, params, info):
     data = esx_vsphere_vm_convert(info)
 
     if 'snapshot.rootSnapshotList' not in data:
-        return
+        return 0, "No snapshots found"
 
     last_snapshot  = None
     powered_on_snapshot = None

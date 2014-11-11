@@ -489,6 +489,7 @@ class RegExpUnicode(TextUnicode, RegExp):
 
 class EmailAddress(TextAscii):
     def __init__(self, **kwargs):
+        kwargs.setdefault("size", 40)
         TextAscii.__init__(self, **kwargs)
         self._regex = re.compile('^[A-Z0-9._%+-]+@(localhost|[A-Z0-9.-]+\.[A-Z]{2,4})$', re.I)
         self._make_clickable = kwargs.get("make_clickable", False)
@@ -1729,6 +1730,14 @@ weekdays = {
    5: _("Saturday"),
    6: _("Sunday"),
 }
+
+class Weekday(DropdownChoice):
+    def __init__(self, **kwargs):
+        choices = weekdays.items()
+        choices.sort()
+        kwargs['choices'] = choices
+        DropdownChoice.__init__(self, **kwargs)
+
 
 class RelativeDate(OptionalDropdownChoice):
     def __init__(self, **kwargs):

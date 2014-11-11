@@ -1,0 +1,10 @@
+Title: Saving BI aggregations: No longer reports 'Request-URI Too Large'
+Level: 1
+Component: bi
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.5i7
+Date: 1415704778
+
+The data from this formular now gets send as a POST instead of a GET request.

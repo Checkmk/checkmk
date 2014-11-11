@@ -6010,7 +6010,9 @@ if __name__ == "__main__":
         elif o in [ '-f', '--force' ]:
             opt_force = True
         elif o == '-c':
-            check_mk_configfile = a
+            if check_mk_configfile != 'a':
+                sys.stderr.write("Please use the option -c separated by the other options.\n")
+                sys.exit(1)
         elif o == '--cache':
             opt_use_cachefile = True
             check_max_cachefile_age     = 1000000000

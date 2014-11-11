@@ -664,6 +664,9 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
             for key, title in visibility_choices:
                 visual[key] = key in general_properties['visibility']
 
+            if not config.may("general.publish_" + what):
+                visual['public'] = False
+
             if create_handler:
                 visual = create_handler(old_visual, visual)
 

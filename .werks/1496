@@ -1,0 +1,15 @@
+Title: Fixed exception after editing a dashboard as user without permission to publish dashboards
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.5i7
+Date: 1415696641
+
+When a user without permission to publish a dashboard created or customized a dashboard,
+the dashboard could be saved, but resulted in an exception later during rendering the
+following pages. This fix prevents creation of damages dashboards.
+
+The exception can be fixed by removing the dashboard definition from var/check_mk/web/USER/user_dashboards.mk
+or simply removing the whole file, which would delete all custom dashboards of the user.

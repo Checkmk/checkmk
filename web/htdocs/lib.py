@@ -149,18 +149,18 @@ def gen_id():
 # local-hierarchy for OMD
 def load_web_plugins(forwhat, globalvars):
     plugins_path = defaults.web_dir + "/plugins/" + forwhat
-
-    fns = os.listdir(plugins_path)
-    fns.sort()
-    for fn in fns:
-        file_path = plugins_path + "/" + fn
-        if fn.endswith(".py"):
-            if not os.path.exists(file_path + "c"):
-                execfile(file_path, globalvars)
-        elif fn.endswith(".pyc"):
-            code_bytes = file(file_path).read()[8:]
-            code = marshal.loads(code_bytes)
-            exec code in globalvars
+    if os.path.exists(plugins_path):
+        fns = os.listdir(plugins_path)
+        fns.sort()
+        for fn in fns:
+            file_path = plugins_path + "/" + fn
+            if fn.endswith(".py"):
+                if not os.path.exists(file_path + "c"):
+                    execfile(file_path, globalvars)
+            elif fn.endswith(".pyc"):
+                code_bytes = file(file_path).read()[8:]
+                code = marshal.loads(code_bytes)
+                exec code in globalvars
 
     if defaults.omd_root:
         local_plugins_path = defaults.omd_root + "/local/share/check_mk/web/plugins/" + forwhat

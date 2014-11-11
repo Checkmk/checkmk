@@ -16691,7 +16691,7 @@ def mode_bi_edit_aggregation(phase):
     else:
         value = aggregations[nr]
 
-    html.begin_form("biaggr")
+    html.begin_form("biaggr", method = "POST")
     vs_aggregation.render_input("aggr", value)
     forms.end()
     html.hidden_fields()

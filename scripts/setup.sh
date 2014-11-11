@@ -958,8 +958,9 @@ and change the path there. Restart Apache afterwards."
 
   # Trigger cron jobs. This is done without authentication
   <Location "${url_prefix}check_mk/run_cron.py">
-      Order allow,deny
-      Allow from all
+      Order deny,allow
+      Deny from all
+      Allow from 127.0.0.1
       Satisfy any
   </Location>
 

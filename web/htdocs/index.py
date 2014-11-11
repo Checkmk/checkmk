@@ -165,6 +165,8 @@ def handler(req, fields = None, profiling = True):
                 handler()
             except Exception, e:
                 html.write(str(e))
+                if config.debug:
+                    html.write(html.attrencode(format_exception()))
             release_all_locks()
             return apache.OK
 

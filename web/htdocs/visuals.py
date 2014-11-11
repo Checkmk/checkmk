@@ -246,7 +246,8 @@ def available(what, all_visuals):
 
 def page_list(what, title, visuals, custom_columns = [],
     render_custom_buttons = None,
-    render_custom_columns = None):
+    render_custom_columns = None,
+    render_custom_context_buttons = None):
 
     what_s = what[:-1]
     if not config.may("general.edit_" + what):
@@ -256,6 +257,8 @@ def page_list(what, title, visuals, custom_columns = [],
 
     html.begin_context_buttons()
     html.context_button(_('New'), 'create_%s.py' % what_s, "new")
+    if render_custom_context_buttons:
+        render_custom_context_buttons()
     for other_what, info in visual_types.items():
         if what != other_what:
             html.context_button(info["plural_title"].title(), 'edit_%s.py' % other_what, other_what[:-1])

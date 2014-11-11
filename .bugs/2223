@@ -1,0 +1,10 @@
+Title: SNMPv3 garbles cmk -D and also WATO dialog
+Component: core
+State: open
+Date: 2014-11-11 14:08:30
+Targetversion: 1.2.5i1
+Class: nastiness
+
+Hosts with SNMPv3 are not properly displayed in cmk -D. Also
+in the WATO host dialog the str(...) of the 4/6-tuple of the 
+v3 settings is being displayed as a string.

@@ -33,6 +33,7 @@ pagehandlers.update({
     "automation_login"        : wato.page_automation_login,
     "automation"              : wato.page_automation,
     "user_profile"            : wato.page_user_profile,
+    "user_change_pw"          : lambda: wato.page_user_profile(change_pw=True),
     "ajax_set_foldertree"     : wato.ajax_set_foldertree,
     "wato_ajax_diag_host"     : wato.ajax_diag_host,
     "wato_ajax_profile_repl"  : wato.ajax_profile_repl,

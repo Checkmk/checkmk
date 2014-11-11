@@ -1,0 +1,19 @@
+Title: Implemented password policy capabilities for local users
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.5i7
+Date: 1415718689
+Class: feature
+
+Passwords of local (htpasswd) users can now be enforced to be changed.
+Existing user sessions will be invalidated, the user will be logged off,
+needs to login again and change his password afterwards. This can be
+set in the user profile.
+
+A password policy can now be configured for globally all local users
+which can enforce the users to choose passwords of a minimal length
+which are using at least X character groups.
+It is also possible to define a maximum age for passwords, after which
+the user needs to change the password.
+

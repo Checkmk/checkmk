@@ -153,6 +153,26 @@ def on_succeeded_login(username):
 
     update_user_access_time(username)
 
+# userdb.need_to_change_pw returns either False or the reason description why the
+# password needs to be changed
+def need_to_change_pw(username):
+    if load_custom_attr(username, 'enforce_pw_change', saveint) == 1:
+        return 'enforced'
+
+    last_pw_change = load_custom_attr(username, 'last_pw_change', saveint)
+    max_pw_age = config.password_policy.get('max_age')
+    if max_pw_age:
+        if not last_pw_change:
+            # The age of the password is unknown. Assume the user has just set
+            # the password to have the first access after enabling password aging
+            # as starting point for the password period. This bewares all users
+            # from needing to set a new password after enabling aging.
+            save_custom_attr(username, 'last_pw_change', str(int(time.time())))
+            return False
+        elif time.time() - last_pw_change > max_pw_age:
+            return 'expired'
+    return False
+
 def on_failed_login(username):
     users = load_users(lock = True)
     if username in users:
@@ -171,7 +191,7 @@ root_dir      = defaults.check_mk_configdir + "/wato/"
 multisite_dir = defaults.default_config_dir + "/multisite.d/wato/"
 
 #.
-#   .--Users---------------------------------------------------------------.
+#   .-Users----------------------------------------------------------------.
 #   |                       _   _                                          |
 #   |                      | | | |___  ___ _ __ ___                        |
 #   |                      | | | / __|/ _ \ '__/ __|                       |
@@ -322,13 +342,15 @@ def load_users(lock = False):
 
             # read special values from own files
             if id in result:
-                num_failed = load_custom_attr(d, 'num_failed', saveint)
-                if num_failed != None:
-                    result[id]['num_failed'] = num_failed
-
-                last_seen = load_custom_attr(d, 'last_seen',  savefloat)
-                if last_seen != None:
-                    result[id]['last_seen'] = last_seen
+                for attr, conv_func in [
+                        ('num_failed',        saveint),
+                        ('last_pw_change',    saveint),
+                        ('last_seen',         savefloat),
+                        ('enforce_pw_change', lambda x: bool(saveint(x))),
+                    ]:
+                    val = load_custom_attr(id, attr, conv_func)
+                    if val != None:
+                        result[id][attr] = val
 
             # read automation secrets and add them to existing
             # users or create new users automatically
@@ -394,6 +416,8 @@ def save_users(profiles):
         "serial",
         "connector",
         "num_failed",
+        "enforce_pw_change",
+        "last_pw_change",
         "last_seen",
     ] + multisite_custom_values
 
@@ -474,11 +498,13 @@ def save_users(profiles):
         elif os.path.exists(auth_file):
             os.remove(auth_file)
 
-        # Write out the users serial
+        # Write out user attributes which are written to dedicated files in the user
+        # profile directory. The primary reason to have separate files, is to reduce
+        # the amount of data to be loaded during regular page processing
         save_custom_attr(id, 'serial', str(user.get('serial', 0)))
-
-        # Write out the users number of failed login
         save_custom_attr(id, 'num_failed', str(user.get('num_failed', 0)))
+        save_custom_attr(id, 'enforce_pw_change', str(int(user.get('enforce_pw_change', False))))
+        save_custom_attr(id, 'last_pw_change', str(user.get('last_pw_change', int(time.time()))))
 
         # Write out the last seent time
         if 'last_seen' in user:
@@ -625,7 +651,7 @@ def load_group_information():
         return {}
 
 #.
-#   .--Custom-Attrs.-------------------------------------------------------.
+#   .-Custom-Attrs.--------------------------------------------------------.
 #   |   ____          _                          _   _   _                 |
 #   |  / ___|   _ ___| |_ ___  _ __ ___         / \ | |_| |_ _ __ ___      |
 #   | | |  | | | / __| __/ _ \| '_ ` _ \ _____ / _ \| __| __| '__/ __|     |
@@ -674,7 +700,7 @@ def declare_custom_user_attrs():
         )
 
 #.
-#   .----------------------------------------------------------------------.
+#   .-Hooks----------------------------------------------------------------.
 #   |                     _   _             _                              |
 #   |                    | | | | ___   ___ | | _____                       |
 #   |                    | |_| |/ _ \ / _ \| |/ / __|                      |

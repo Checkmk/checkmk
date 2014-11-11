@@ -11759,7 +11759,7 @@ def mode_edit_user(phase):
 
         # Locking
         if id == config.user_id and html.get_checkbox("locked"):
-            raise MKUserError(_("You cannot lock your own account!"))
+            raise MKUserError("locked", _("You cannot lock your own account!"))
         new_user["locked"] = html.get_checkbox("locked")
 
         increase_serial = False
@@ -11792,8 +11792,16 @@ def mode_edit_user(phase):
                 raise MKUserError("password2", _("The both passwords do not match."))
 
             if password:
+                verify_password_policy(password)
                 new_user["password"] = userdb.encrypt_password(password)
+                new_user['last_pw_change'] = int(time.time())
                 increase_serial = True # password changed, reflect in auth serial
+
+            # PW change enforcement
+            new_user["enforce_pw_change"] = html.get_checkbox("enforce_pw_change")
+            if new_user["enforce_pw_change"]:
+                increase_serial = True # invalidate all existing user sessions, enforce relogon
+
 
         # Increase serial (if needed)
         if increase_serial:
@@ -11933,6 +11941,13 @@ def mode_edit_user(phase):
         html.write("</td></tr><tr><td>%s</td><td>" % _("repeat:"))
         html.password_input("password2_" + pw_suffix, autocomplete="off")
         html.write(" (%s)" % _("optional"))
+        html.write("</td></tr><tr><td>%s:</td><td>" % _("Enforce change"))
+        # Only make password enforcement selection possible when user is allowed to change the PW
+        if config.user_may(userid, 'general.edit_profile') and config.user_may(userid, 'general.change_password'):
+            html.checkbox("enforce_pw_change", user.get("enforce_pw_change", False))
+            html.write(_("Change password at next login or access"))
+        else:
+            html.write(_("Not permitted to change the password. Change can not be enforced."))
     else:
         html.write('<i>%s</i>' % _('The password can not be changed (It is locked by the user connector).'))
         html.hidden_field('password', '')
@@ -15300,13 +15315,41 @@ def HostnameTranslation(**kwargs):
             )),
         ])
 
+#.
+#   .--User Profile--------------------------------------------------------.
+#   |         _   _                 ____             __ _ _                |
+#   |        | | | |___  ___ _ __  |  _ \ _ __ ___  / _(_) | ___           |
+#   |        | | | / __|/ _ \ '__| | |_) | '__/ _ \| |_| | |/ _ \          |
+#   |        | |_| \__ \  __/ |    |  __/| | | (_) |  _| | |  __/          |
+#   |         \___/|___/\___|_|    |_|   |_|  \___/|_| |_|_|\___|          |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   | A user can change several aspects of it's own profile                |
+#   '----------------------------------------------------------------------'
 
+def verify_password_policy(password):
+    policy = config.password_policy
+    min_len = config.password_policy.get('min_length')
+    if min_len and len(password) < min_len:
+        raise MKUserError('password', _('The given password is too short. It must have at least %d characters.') % min_len)
 
+    num_groups = config.password_policy.get('num_groups')
+    if num_groups:
+        groups = {}
+        for c in password:
+            if c in "abcdefghijklmnopqrstuvwxyz":
+                groups['lcase'] = 1
+            elif c in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+                groups['ucase'] = 1
+            elif c in "0123456789":
+                groups['numbers'] = 1
+            else:
+                groups['special'] = 1
 
-#
-# User profile edit page
-# The user can edit the own profile
-#
+        if sum(groups.values()) < num_groups:
+            raise MKUserError('password', _('The password does not use enough character groups. You need to '
+                'set a password which uses at least %d of them.') % num_groups)
+
 
 def select_language(user_language):
     languages = [ l for l in get_languages() if not config.hide_language(l[0]) ]
@@ -15392,7 +15435,7 @@ def user_profile_async_replication_dialog():
     html.footer()
 
 
-def page_user_profile():
+def page_user_profile(change_pw=False):
     start_async_replication = False
 
     if not config.user_id:
@@ -15411,52 +15454,71 @@ def page_user_profile():
 
             # Profile edit (user options like language etc.)
             if config.may('general.edit_profile'):
-                set_lang = html.var('_set_lang')
-                language = html.var('language')
-                # Set the users language if requested
-                if set_lang and language != config.get_language():
-                    if language == '':
-                        language = None
-                    # Set custom language
-                    users[config.user_id]['language'] = language
-                    config.user['language'] = language
+                if not change_pw:
+                    set_lang = html.var('_set_lang')
+                    language = html.var('language')
+                    # Set the users language if requested
+                    if set_lang and language != config.get_language():
+                        if language == '':
+                            language = None
+                        # Set custom language
+                        users[config.user_id]['language'] = language
+                        config.user['language'] = language
 
-                else:
-                    # Remove the customized language
-                    if 'language' in users[config.user_id]:
-                        del users[config.user_id]['language']
-                    if 'language' in config.user:
-                        del config.user['language']
+                    else:
+                        # Remove the customized language
+                        if 'language' in users[config.user_id]:
+                            del users[config.user_id]['language']
+                        if 'language' in config.user:
+                            del config.user['language']
 
-                # load the new language
-                load_language(config.get_language())
-                load_all_plugins()
+                    # load the new language
+                    load_language(config.get_language())
+                    load_all_plugins()
 
-                user = users.get(config.user_id)
-                if config.may('general.edit_notifications') and user.get("notifications_enabled"):
-                    value = forms.get_input(vs_notification_method, "notification_method")
-                    users[config.user_id]["notification_method"] = value
+                    user = users.get(config.user_id)
+                    if config.may('general.edit_notifications') and user.get("notifications_enabled"):
+                        value = forms.get_input(vs_notification_method, "notification_method")
+                        users[config.user_id]["notification_method"] = value
 
-                # Custom attributes
-                if config.may('general.edit_user_attributes'):
-                    for name, attr in userdb.get_user_attributes():
-                        if attr['user_editable']:
-                            if not attr.get("permission") or config.may(attr["permission"]):
-                                vs = attr['valuespec']
-                                value = vs.from_html_vars('ua_' + name)
-                                vs.validate_value(value, "ua_" + name)
-                                users[config.user_id][name] = value
+                    # Custom attributes
+                    if config.may('general.edit_user_attributes'):
+                        for name, attr in userdb.get_user_attributes():
+                            if attr['user_editable']:
+                                if not attr.get("permission") or config.may(attr["permission"]):
+                                    vs = attr['valuespec']
+                                    value = vs.from_html_vars('ua_' + name)
+                                    vs.validate_value(value, "ua_" + name)
+                                    users[config.user_id][name] = value
 
             # Change the password if requested
-            password = False
             if config.may('general.change_password'):
-                password  = html.var('password')
-                password2 = html.var('password2', '')
-                if password:
-                    if password2 and password != password2:
-                        raise MKUserError("password2", _("The both passwords do not match."))
+                cur_password = html.var('cur_password')
+                password     = html.var('password')
+                password2    = html.var('password2', '')
 
+                if change_pw:
+                    # Force change pw mode
+                    if not cur_password:
+                        raise MKUserError("cur_password", _("You need to provide your current password."))
+                    if not password:
+                        raise MKUserError("password", _("You need to change your password."))
+                    if cur_password == password:
+                        raise MKUserError("password", _("The new password must differ from your current one."))
+
+                if cur_password and password:
+                    if userdb.hook_login(config.user_id, cur_password) in [ None, False ]:
+                        raise MKUserError("cur_password", _("Your old password is wrong."))
+                    if password2 and password != password2:
+                        raise MKUserError("password2", _("The both new passwords do not match."))
+
+                    verify_password_policy(password)
                     users[config.user_id]['password'] = userdb.encrypt_password(password)
+                    users[config.user_id]['last_pw_change'] = int(time.time())
+
+                    if change_pw:
+                        # Has been changed, remove enforcement flag
+                        del users[config.user_id]['enforce_pw_change']
 
                     # Increase serial to invalidate old cookies
                     if 'serial' not in users[config.user_id]:
@@ -15485,25 +15547,36 @@ def page_user_profile():
         user_profile_async_replication_dialog()
         return
 
+    if change_pw:
+        title = _("Change Password")
+    else:
+        title = _("Edit User Profile")
 
-    html.header(_("Edit user profile"),
-                javascripts = ['wato'],
-                stylesheets = ['check_mk', 'pages', 'wato', 'status'])
+    html.header(title, javascripts = ['wato'], stylesheets = ['check_mk', 'pages', 'wato', 'status'])
 
     # Rule based notifications: The user currently cannot simply call the according
     # WATO module due to WATO permission issues. So we cannot show this button
     # right now.
-
-    rulebased_notifications = load_configuration_settings().get("enable_rulebased_notifications")
-    if rulebased_notifications and config.may('general.edit_notifications'):
-        html.begin_context_buttons()
-        url = "wato.py?mode=user_notifications_p"
-        html.context_button(_("Notifications"), url, "notifications")
-        html.end_context_buttons()
-
+    if not change_pw:
+        rulebased_notifications = load_configuration_settings().get("enable_rulebased_notifications")
+        if rulebased_notifications and config.may('general.edit_notifications'):
+            html.begin_context_buttons()
+            url = "wato.py?mode=user_notifications_p"
+            html.context_button(_("Notifications"), url, "notifications")
+            html.end_context_buttons()
+    else:
+        reason = html.var('reason')
+        if reason == 'expired':
+            html.write('<p>%s</p>' % _('Your password is too old, you need to choose a new password.'))
+        else:
+            html.write('<p>%s</p>' % _('You are required to change your password before proceeding.'))
 
     if success:
-        html.message(_("Successfully updated user profile."))
+        if change_pw:
+            html.message(_("Your password has been changed."))
+            html.http_redirect(html.var('_origtarget', 'index.py'))
+        else:
+            html.message(_("Successfully updated user profile."))
 
     if html.has_user_errors():
         html.show_user_errors()
@@ -15523,19 +15596,23 @@ def page_user_profile():
 
     html.begin_form("profile", method="POST")
     html.write('<div class=wato>')
-
     forms.header(_("Personal Settings"))
-    forms.section(_("Name"), simple=True)
-    html.write(user.get("alias", config.user_id))
+
+    if not change_pw:
+        forms.section(_("Name"), simple=True)
+        html.write(user.get("alias", config.user_id))
 
     if config.may('general.change_password') and not is_locked('password'):
-        forms.section(_("Password"))
+        forms.section(_("Current Password"))
+        html.password_input('cur_password', autocomplete = "off")
+
+        forms.section(_("New Password"))
         html.password_input('password', autocomplete = "off")
 
-        forms.section(_("Password confirmation"))
+        forms.section(_("New Password Confirmation"))
         html.password_input('password2', autocomplete = "off")
 
-    if config.may('general.edit_profile'):
+    if not change_pw and config.may('general.edit_profile'):
         select_language(config.get_language(''))
 
         # Let the user configure how he wants to be notified

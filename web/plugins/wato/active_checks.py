@@ -1480,7 +1480,7 @@ register_rule(group,
                  'the SMTP protocol and then tries to receive these mails back by querying the '
                  'inbox of a IMAP or POP3 mailbox. With this check you can verify that your whole '
                  'mail delivery progress is working.'),
-        optional_keys = ['smtp_server', 'smtp_tls', 'smtp_port', 'smtp_auth', 'connect_timeout', 'delete_messages'],
+        optional_keys = ['smtp_server', 'smtp_tls', 'smtp_port', 'smtp_auth', 'connect_timeout', 'delete_messages', 'duration'],
         elements = [
             ('item', TextUnicode(
                 title = _('Name'),
@@ -1631,6 +1631,13 @@ register_rule(group,
                 default_value = 10,
                 unit = _('sec'),
             )),
+            ("duration", Tuple(
+                title = _("Loop duration"),
+                elements = [
+                    Age(title = _("Warning if above or equal")),
+                    Age(title = _("Critical if above or equal")),
+                ])
+            ),
             ('delete_messages', FixedValue(True,
                 title = _('Delete processed messages'),
                 totext = _('Delete all processed message belonging to this check'),

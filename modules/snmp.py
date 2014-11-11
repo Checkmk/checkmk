@@ -84,7 +84,7 @@ def oid_to_intlist(oid):
 def cmp_oids(o1, o2):
     return cmp(oid_to_intlist(o1), oid_to_intlist(o2))
 
-def get_snmp_table(hostname, ip, oid_info):
+def get_snmp_table(hostname, ip, check_type, oid_info):
     # oid_info is either ( oid, columns ) or
     # ( oid, suboids, columns )
     # suboids is a list if OID-infixes that are put between baseoid
@@ -137,7 +137,7 @@ def get_snmp_table(hostname, ip, oid_info):
             if opt_use_snmp_walk or is_usewalk_host(hostname):
                 rowinfo = get_stored_snmpwalk(hostname, fetchoid)
             elif has_inline_snmp and use_inline_snmp:
-                rowinfo = inline_snmpwalk_on_suboid(hostname, fetchoid)
+                rowinfo = inline_snmpwalk_on_suboid(hostname, check_type, fetchoid)
             else:
                 rowinfo = snmpwalk_on_suboid(hostname, ip, fetchoid)
 

@@ -381,12 +381,12 @@ def get_realhost_info(hostname, ipaddress, check_type, max_cache_age, ignore_che
         # a separate snmp table. The overall result is then the list
         # of these results.
         if type(oid_info) == list:
-            table = [ get_snmp_table(hostname, ipaddress, entry) for entry in oid_info ]
+            table = [ get_snmp_table(hostname, ipaddress, check_type, entry) for entry in oid_info ]
             # if at least one query fails, we discard the hole table
             if None in table:
                 table = None
         else:
-            table = get_snmp_table(hostname, ipaddress, oid_info)
+            table = get_snmp_table(hostname, ipaddress, check_type, oid_info)
         store_cached_checkinfo(hostname, check_type, table)
         # only write cache file in non interactive mode. Otherwise it would
         # prevent the regular checking from getting status updates during

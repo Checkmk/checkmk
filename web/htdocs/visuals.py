@@ -1070,6 +1070,25 @@ def SingleInfoSelection(info_keys, **args):
     args["choices"] = info_choices
     return  ListChoice(**args)
 
+# Converts a context from the form { filtername : { ... } } into
+# the for { infoname : { filtername : { } } for editing.
+def pack_context_for_editing(context):
+    # We need to pack all variables into dicts with the name of the
+    # info. Since we have no mapping from info the the filter variable,
+    # we pack into every info every filter. The dict valuespec will
+    # pick out what it needs. Yurks.
+    packed_context = {}
+    for info_name in infos.keys():
+        packed_context[info_name] = context
+    return packed_context
+
+def unpack_context_after_editing(packed_context):
+    context = {}
+    for info_type, its_context in packed_context.items():
+        context.update(its_context)
+    return context
+
+
 
 #.
 #   .--Misc----------------------------------------------------------------.

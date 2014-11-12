@@ -1112,7 +1112,7 @@ perfometers["check_mk-adva_fsp_current"] = perfometer_current
 
 def perfometer_raritan_pdu_inlet(row, check_command, perf_data):
     display_color = "#50f020"
-    cap = perf_data[0][0]
+    cap = perf_data[0][0].split('-')[-1]
     value = float(perf_data[0][1])
     unit = perf_data[0][2]
     display_str = perf_data[0][1] + " " + unit
@@ -1137,6 +1137,7 @@ def perfometer_raritan_pdu_inlet(row, check_command, perf_data):
     return "unimplemented" , perfometer_linear(0, "#ffffff")
 
 perfometers["check_mk-raritan_pdu_inlet"] = perfometer_raritan_pdu_inlet
+perfometers["check_mk-raritan_pdu_inlet_summary"] = perfometer_raritan_pdu_inlet
 
 
 def perfometer_raritan_pdu_outletcount(row, check_command, perf_data):

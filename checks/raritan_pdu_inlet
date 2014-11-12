@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-def raritan_pdu_inlet_convert(info):
+def parse_raritan_pdu_inlet(info):
     # List of tuples, sorting like the snmp output,
     # each tuple contains: capabilities, digits
     translation = (
@@ -38,6 +38,8 @@ def raritan_pdu_inlet_convert(info):
     phases = [ 'L1', 'L2', 'L3' ]
     i = 0
     state = 4 # We dont know the senosr state, so we assume normal
+
+    parsed = []
     for line in info:
         y = 0
         # loop over the current Sensor values.
@@ -46,19 +48,16 @@ def raritan_pdu_inlet_convert(info):
             item = phases[i] + '-' + capabilities[translation[y][0]]
             unit = translation[y][0]
             digits = translation[y][1]
-            yield item, unit, digits, '1', state, value
+            parsed.append( (item, unit, digits, '1', state, value) )
             y += 1
         i += 1
+    return parsed
 
-def inventory_raritan_pdu_inlet(info):
-    return inventory_raritan_pdu_inlet_generic( raritan_pdu_inlet_convert(info) )
-
-def check_raritan_pdu_inlet(item, _no_params, info):
-    return check_raritan_pdu_inlet_generic( item, _no_params, raritan_pdu_inlet_convert(info) )
 
 check_info['raritan_pdu_inlet'] = {
-  "inventory_function"  : inventory_raritan_pdu_inlet,
-  "check_function"      : check_raritan_pdu_inlet,
+  "inventory_function"  : inventory_raritan_pdu_inlet_generic,
+  "check_function"      : check_raritan_pdu_inlet_generic,
+  "parse_function"      : parse_raritan_pdu_inlet,
   "service_description" : "Inlet %s",
   "has_perfdata"        : True,
   "snmp_info"           : ( ".1.3.6.1.4.1.13742.6.5.2.4.1.4.1.1",

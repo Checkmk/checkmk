@@ -111,7 +111,7 @@ def check_oracle_jobs(item, params, info):
             state = max(state, 1)
     output.append(txt)
 
-    if job_runtime == '':
+    if job_runtime == '' or job_runtime == 'SCHEDULED':
         last_duration = 0
     else:
         last_duration = int(job_runtime.replace('.',',').split(',',1)[0])

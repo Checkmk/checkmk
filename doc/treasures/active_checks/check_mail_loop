@@ -244,11 +244,11 @@ def fetch_mails():
             retcode, messages = g_M.search(None, 'NOT', 'DELETED')
             if retcode == 'OK':
                 for num in messages[0].split(' '):
-                    ty, data = g_M.fetch(num, '(RFC822)')
-                    if ty == 'OK':
+                    try:
+                        ty, data = g_M.fetch(num, '(RFC822)')
                         mails[num] = email.message_from_string(data[0][1])
-                    else:
-                        raise Exception('Failed to fetch mail %s (%s). Available messages: %r' % (num, data[0], messages))
+                    except Exception, e:
+                        raise Exception('Failed to fetch mail %s (%s). Available messages: %r' % (num, e, messages))
 
         # Now filter out the messages for this check
         pattern = re.compile('(?:Re: )?Check_MK-Mail-Loop ([^\s]+) ([^\s]+)')
@@ -386,6 +386,10 @@ def close_mailbox():
         g_M.logout()
 
 def main():
+    # Enable showing protocol messages of imap for debugging
+    if debug:
+        imaplib.Debug = 4
+
     load_expected_mails()
 
     fetch_mails()

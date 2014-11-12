@@ -242,7 +242,7 @@ def fetch_mails():
             g_M.login(fetch_user, fetch_pass)
             g_M.select('INBOX', readonly=False) # select INBOX
             retcode, messages = g_M.search(None, 'NOT', 'DELETED')
-            if retcode == 'OK':
+            if retcode == 'OK' and messages[0].strip():
                 for num in messages[0].split(' '):
                     try:
                         ty, data = g_M.fetch(num, '(RFC822)')

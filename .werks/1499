@@ -1,0 +1,12 @@
+Title: Fixed XSS injections in different places
+Level: 1
+Component: multisite
+Class: security
+Compatible: compat
+State: unknown
+Version: 1.2.5i6p3
+Date: 1415796868
+
+Fixed different XSS injections in the Check_MK multisite code
+where an authenticated user could inject custom script code
+to be executed during page rendering.

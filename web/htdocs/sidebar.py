@@ -555,7 +555,7 @@ def ajax_switch_masterstate():
         html.live.set_only_sites()
         render_master_control()
     else:
-        html.write(_("Command %s/%d not found") % (column, state))
+        html.write(_("Command %s/%d not found") % (html.attrencode(column), state))
 
 def ajax_del_bookmark():
     try:

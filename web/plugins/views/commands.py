@@ -179,7 +179,7 @@ def command_fake_checks(cmdtag, spec, row):
             if cmdtag == "SVC":
                 cmdtag = "SERVICE"
             command = "PROCESS_%s_CHECK_RESULT;%s;%s;%s" % (cmdtag, spec, s, pluginoutput)
-            title = _("<b>manually set check results to %s</b> for") % statename
+            title = _("<b>manually set check results to %s</b> for") % html.attrencode(statename)
             return command, title
 
 

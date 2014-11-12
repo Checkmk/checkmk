@@ -416,7 +416,7 @@ def may_see(host):
         conn = html.live
 
     # livestatus connection is setup with AuthUser
-    return conn.query_value("GET hosts\nStats: state >= 0\nFilter: name = %s\n" % host) > 0
+    return conn.query_value("GET hosts\nStats: state >= 0\nFilter: name = %s\n" % lqencode(host)) > 0
 
 def form_level(level):
     levels = [ 'OK', 'WARN', 'CRIT', 'UNKNOWN' ]

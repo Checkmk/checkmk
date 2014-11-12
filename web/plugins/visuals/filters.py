@@ -42,7 +42,7 @@ class FilterText(Filter):
         htmlvar = self.htmlvars[0]
         current_value = html.var(htmlvar)
         if current_value:
-            return "Filter: %s %s %s\n" % (self.column, self.op, current_value)
+            return "Filter: %s %s %s\n" % (self.column, self.op, lqencode(current_value))
         else:
             return ""
 
@@ -94,9 +94,9 @@ class FilterIPAddress(Filter):
         address = html.var("host_address")
         if address:
             if html.var("host_address_prefix") == "yes":
-                return "Filter: host_address ~ ^%s\n" % address
+                return "Filter: host_address ~ ^%s\n" % lqencode(address)
             else:
-                return "Filter: host_address = %s\n" % address
+                return "Filter: host_address = %s\n" % lqencode(address)
         else:
             return ""
 
@@ -150,7 +150,7 @@ class FilterMultigroup(Filter):
             return "" # No group selected = all groups selected, filter unused
         filters = ""
         for group in current:
-            filters += "Filter: %s_groups >= %s\n" % (self.what, group)
+            filters += "Filter: %s_groups >= %s\n" % (self.what, lqencode(group))
         filters += "Or: %d\n" % len(current)
         return filters
 
@@ -207,7 +207,7 @@ class FilterGroupCombo(Filter):
             negate = "!"
         else:
             negate = ""
-        return "Filter: %s %s>= %s\n" % (col, negate, current_value)
+        return "Filter: %s %s>= %s\n" % (col, negate, lqencode(current_value))
 
     def variable_settings(self, row):
         varname = self.htmlvars[0]
@@ -227,7 +227,7 @@ class FilterGroupCombo(Filter):
         if current_value:
             table = self.what.replace("host_contact", "contact").replace("service_contact", "contact")
             alias = html.live.query_value("GET %sgroups\nCache: reload\nColumns: alias\nFilter: name = %s\n" %
-                (table, current_value), current_value)
+                (table, lqencode(current_value)), current_value)
             return alias
 
 declare_filter(104, FilterGroupCombo("host",            _("Host is in Group"),     False), _("Optional selection of host group"))
@@ -263,7 +263,7 @@ class FilterGroupSelection(Filter):
                                        "We are missing the URL variable <tt>%s</tt>." %
                                         self.htmlvars[0]))
 
-        return "Filter: %s_name = %s\n" % (self.what, current_value)
+        return "Filter: %s_name = %s\n" % (self.what, lqencode(current_value))
 
     def variable_settings(self, row):
         group_name = row[self.what + "_name"]
@@ -311,7 +311,7 @@ class FilterQueryDropdown(Filter):
     def filter(self, infoname):
         current = html.var(self.name)
         if current:
-            return self.filterline % current
+            return self.filterline % lqencode(current)
         else:
             return ""
 
@@ -864,7 +864,7 @@ class FilterHostTags(Filter):
         html.write('</table>')
 
     def hosttag_filter(self, negate, tag):
-        return  'Filter: host_custom_variables %s TAGS (^|[ ])%s($|[ ])' % (negate and '!~' or '~', tag)
+        return  'Filter: host_custom_variables %s TAGS (^|[ ])%s($|[ ])' % (negate and '!~' or '~', lqencode(tag))
 
     def filter(self, infoname):
         headers = []
@@ -938,15 +938,15 @@ class FilterStarred(FilterTristate):
             for star in stars:
                 if ";" in star:
                     continue
-                filters += "Filter: host_name %s %s\n" % (eq, star)
+                filters += "Filter: host_name %s %s\n" % (eq, lqencode(star))
                 count += 1
         else:
             for star in stars:
                 if ";" not in star:
                     continue
                 h, s = star.split(";")
-                filters += "Filter: host_name %s %s\n" % (eq, h)
-                filters += "Filter: service_description %s %s\n" % (eq, s)
+                filters += "Filter: host_name %s %s\n" % (eq, lqencode(h))
+                filters += "Filter: service_description %s %s\n" % (eq, lqencode(s))
                 filters += "%s: 2\n" % aand
                 count += 1
 

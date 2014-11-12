@@ -1,0 +1,17 @@
+Title: Preventing livestatus injections in different places
+Level: 2
+Component: multisite
+Compatible: compat
+Version: 1.2.5i7
+Date: 1415802792
+Class: security
+
+In some places strings provided by the users, e.g. by filling values into a form,
+are used to construct livestatus queries. This is, for example, done when filtering
+views or executing commands.
+Previous versions were directly using the strings provided by the user without
+escaping or filtering characters which could lead into some trouble. This has
+been fixed now. The strings provided by the user are now filtered before using
+them in livestatus queries.
+For the moment the only implemented action is to remove all newline (\n) characters
+from the values to prevent injections of non intended livestatus queries / commands.

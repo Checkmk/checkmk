@@ -57,10 +57,10 @@ def action_reschedule():
 
         if wait_svc:
             wait_spec = u'%s;%s' % (host, wait_svc)
-            add_filter = "Filter: service_description = %s\n" % wait_svc
+            add_filter = "Filter: service_description = %s\n" % lqencode(wait_svc)
         else:
             wait_spec = spec
-            add_filter = "Filter: service_description = %s\n" % service
+            add_filter = "Filter: service_description = %s\n" % lqencode(service)
     else:
         cmd = "HOST"
         what = "host"
@@ -70,7 +70,7 @@ def action_reschedule():
 
     try:
         now = int(time.time())
-        html.live.command("[%d] SCHEDULE_FORCED_%s_CHECK;%s;%d" % (now, cmd, spec, now), site)
+        html.live.command("[%d] SCHEDULE_FORCED_%s_CHECK;%s;%d" % (now, cmd, lqencode(spec), now), site)
         html.live.set_only_sites([site])
         query = u"GET %ss\n" \
                 "WaitObject: %s\n" \
@@ -79,7 +79,7 @@ def action_reschedule():
                 "WaitTrigger: check\n" \
                 "Columns: last_check state plugin_output\n" \
                 "Filter: host_name = %s\n%s" \
-                % (what, wait_spec, now, config.reschedule_timeout * 1000, host, add_filter)
+                % (what, lqencode(wait_spec), now, config.reschedule_timeout * 1000, lqencode(host), add_filter)
         row = html.live.query_row(query)
         html.live.set_only_sites()
         last_check = row[0]

@@ -1,0 +1,9 @@
+Title: cisco_temp_perf: Modified scan function for check to be inventorized alongside cisco_temp_sensor. Can lead to duplicate services in some cases
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i7
+Date: 1415804682
+Class: feature
+
+

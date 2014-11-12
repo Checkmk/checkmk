@@ -1674,6 +1674,8 @@ def host_extra_conf(hostname, conf):
         else:
             raise MKGeneralException("Invalid entry '%r' in host configuration list: must have 2 or 3 entries" % (entry,))
 
+        # Note: hostname may be True. This is an unknown generic host, that has
+        # no tags and that does not match any positive criteria in any rule.
         if hosttags_match_taglist(tags_of_host(hostname), tags) and \
            in_extraconf_hostlist(hostlist, hostname):
             items.append(item)
@@ -1887,8 +1889,8 @@ def in_extraconf_hostlist(hostlist, hostname):
         try:
             if not use_regex and hostname == hostentry:
                 return not negate
-            # Handle Regex
-            elif use_regex and regex(hostentry).match(hostname):
+            # Handle Regex. Note: hostname == True -> generic unknown host
+            elif use_regex and hostname != True and regex(hostentry).match(hostname):
                 return not negate
         except MKGeneralException:
             if opt_debug:

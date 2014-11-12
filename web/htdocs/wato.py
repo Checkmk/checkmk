@@ -7396,7 +7396,7 @@ def render_global_configuration_variables(default_values, current_settings, show
             help_text  = type(valuespec.help())  == unicode and valuespec.help().encode("utf-8")  or valuespec.help() or ''
             title_text = type(valuespec.title()) == unicode and valuespec.title().encode("utf-8") or valuespec.title()
             title = '<a href="%s" class=%s title="%s">%s</a>' % \
-                    (edit_url, varname in current_settings and "modified" or "",
+                    (edit_url, varname in current_settings and '"modified"' or '""',
                      html.strip_tags(help_text), title_text)
 
             if varname in current_settings:

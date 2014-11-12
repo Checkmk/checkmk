@@ -1,0 +1,10 @@
+Title: Fixed displaying of global settings titles / help texts
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.5i6p2
+Date: 1415789769
+Class: fix
+
+Some titles were not displayed correctly or the help texts were
+missing. This is fixed now.

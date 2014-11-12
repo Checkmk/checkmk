@@ -23,6 +23,9 @@
     * 1492 FIX: Fixed too long URL bug when deleting a timeperiod right after creating one
     * 1498 FIX: Fixed displaying of global settings titles / help texts...
 
+    BI:
+    * 1435 FIX: Saving BI aggregations: No longer reports 'Request-URI Too Large'...
+
 
 1.2.5i6p1:
     Checks & Agents:

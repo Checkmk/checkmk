@@ -117,6 +117,11 @@ def check_auth_cookie(cookie_name):
     # Once reached this the cookie is a good one. Renew it!
     renew_cookie(cookie_name, username, serial)
 
+    if html.myfile != 'user_change_pw':
+        result = userdb.need_to_change_pw(username)
+        if result:
+            html.http_redirect('user_change_pw.py?_origtarget=%s&reason=%s' % (html.urlencode(html.makeuri([])), result))
+
     # Return the authenticated username
     return username
 
@@ -176,8 +181,9 @@ def do_login():
             origtarget = html.var('_origtarget')
             # Disallow redirections to:
             #  - logout.py: Happens after login
+            #  - side.py: Happens when invalid login is detected during sidebar refresh
             #  - Full qualified URLs (http://...) to prevent redirection attacks
-            if not origtarget or "logout.py" in origtarget or '://' in origtarget:
+            if not origtarget or "logout.py" in origtarget or 'side.py' in origtarget or '://' in origtarget:
                 origtarget = defaults.url_prefix + 'check_mk/'
 
             # None        -> User unknown, means continue with other connectors
@@ -202,8 +208,13 @@ def do_login():
                 # Never use inplace redirect handling anymore as used in the past. This results
                 # in some unexpected situations. We simpy use 302 redirects now. So we have a
                 # clear situation.
-                html.set_http_header('Location', origtarget)
-                raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
+                # userdb.need_to_change_pw returns either False or the reason description why the
+                # password needs to be changed
+                result = userdb.need_to_change_pw(username)
+                if result:
+                    html.http_redirect('user_change_pw.py?_origtarget=%s&reason=%s' % (html.urlencode(origtarget), result))
+                else:
+                    html.http_redirect(origtarget)
             else:
                 userdb.on_failed_login(username)
                 raise MKUserError(None, _('Invalid credentials.'))
@@ -232,13 +243,6 @@ def normal_login_page(called_directly = True):
     origtarget = html.var('_origtarget', '')
     if not origtarget and not html.myfile in [ 'login', 'logout' ]:
         origtarget = html.makeuri([])
-
-    # When e.g. the password of a user is changed and the first frame that recognizes the
-    # non matching cookies is the sidebar it redirects the user to side.py while removing
-    # the frameset. This is not good. Instead of this redirect the user to the index page.
-    if html.myfile == 'side':
-        html.immediate_browser_redirect(0.1, 'login.py')
-        return apache.OK
 
     # Never allow the login page to be opened in a frameset. Redirect top page to login page.
     # This will result in a full screen login page.
@@ -291,8 +295,7 @@ def page_logout():
     del_auth_cookie()
 
     if config.auth_type == 'cookie':
-        html.set_http_header('Location', defaults.url_prefix + 'check_mk/login.py')
-        raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
+        html.http_redirect(defaults.url_prefix + 'check_mk/login.py')
     else:
         # Implement HTTP logout with cookie hack
         if not html.has_cookie('logout'):
@@ -301,5 +304,4 @@ def page_logout():
             raise apache.SERVER_RETURN, apache.HTTP_UNAUTHORIZED
         else:
             html.del_cookie('logout')
-            html.set_http_header('Location', defaults.url_prefix + 'check_mk/')
-            raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
+            html.http_redirect(defaults.url_prefix + 'check_mk/')

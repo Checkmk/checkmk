@@ -970,6 +970,38 @@ register_configvar(group,
     domain = "multisite"
 )
 
+register_configvar(group,
+    "password_policy",
+    Dictionary(
+        title = _('htpasswd: Password Policy'),
+        help  = _('You can define some rules which each user password must fit with. By default '
+                  'all passwords are accepted, even ones which are made of only a single character, '
+                  'which is obviously a bad idea. Using this option you can enforce your users '
+                  'to choose more secure passwords of a minimal length having a defined complexity.'),
+        elements = [
+            ('min_length', Integer(
+                title = _("Minimum password length"),
+                minvalue = 1,
+            )),
+            ('num_groups', Integer(
+                title = _("Number of character groups to use"),
+                minvalue = 1,
+                help = _("Make the user choose the password from this number of character groups. "
+                         "Character groups are: <ul><li>lowercase letters</li>"
+                         "<li>uppercase letters</li>"
+                         "<li>numbers</li>"
+                         "<li>special characters such as an underscore or dash</li>"
+                         "</ul>"),
+            )),
+            ('max_age', Age(
+                title = _("Maximum age of passwords"),
+                minvalue = 1,
+                display = ["days"],
+            )),
+        ],
+    ),
+    domain = "multisite",
+)
 
 def list_roles():
     roles = userdb.load_roles()

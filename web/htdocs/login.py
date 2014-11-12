@@ -50,7 +50,6 @@ def site_cookie_name(site_id = None):
 # Reads the auth secret from a file. Creates the files if it does
 # not exist. Having access to the secret means that one can issue valid
 # cookies for the cookie auth.
-# FIXME: Secret auch replizieren
 def load_secret():
     secret_path = '%s/auth.secret' % os.path.dirname(defaults.htpasswd_file)
     secret = ''
@@ -58,9 +57,14 @@ def load_secret():
         secret = file(secret_path).read().strip()
 
     # Create new secret when this installation has no secret
-    if secret == '':
-        secret = md5(str(time.time())).hexdigest()
-        file(secret_path, 'w').write(secret + "\n")
+    #
+    # In past versions we used another bad approach to generate a secret. This
+    # checks for such secrets and creates a new one. This will invalidate all
+    # current auth cookies which means that all logged in users will need to
+    # renew their login after update.
+    if secret == '' or len(secret) == 32:
+        secret = get_random_string(256)
+        file(secret_path, 'w').write(secret)
 
     return secret
 

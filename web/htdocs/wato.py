@@ -10842,17 +10842,7 @@ def get_login_secret(create_on_demand = False):
     except:
         if not create_on_demand:
             return None
-        # We should use /dev/random here for cryptographic safety. But
-        # that involves the great problem that the system might hang
-        # because of loss of entropy. So we hope /dev/urandom is enough.
-        # Furthermore we filter out non-printable characters. The byte
-        # 0x00 for example does not make it through HTTP and the URL.
-        secret = ""
-        urandom = file("/dev/urandom")
-        while len(secret) < 32:
-            c = urandom.read(1)
-            if ord(c) >= 48 and ord(c) <= 90:
-                secret += c
+        secret = get_random_string(32)
         write_settings_file(path, secret)
         return secret
 

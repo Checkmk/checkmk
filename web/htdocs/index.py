@@ -281,7 +281,7 @@ def handler(req, fields = None, profiling = True):
             html.header(_("Error"))
             html.show_error(unicode(e))
             html.footer()
-        # apache.log_error(_("Error: %s") % (e,), apache.APLOG_ERR)
+        apache.log_error(_("Error: %s") % (e,), apache.APLOG_ERR)
 
     except livestatus.MKLivestatusNotFoundError, e:
         if plain_error:

@@ -1,0 +1,25 @@
+Title: Replaced insecure auth.secret mechanism
+Level: 2
+Component: multisite
+Compatible: incomp
+Version: 1.2.5i7
+Date: 1415797737
+Class: security
+
+We replaced a insecure mechanism of generating the auth.secret which
+is used during construction of the authentication cookies when a user
+logs into the Check_MK Web GUI to make the authentication cookie only
+valid for an individual site or a group of sites connected in a
+distributed setup.
+
+What you have to know about:
+
+When the first user accesses the Web GUI after the update to this version,
+all currently valid auth cookies of all users will be invalidated. As a
+result all users will need to login again.
+
+In distributed setups you will also need to do a replication from the
+master site (which generated a new secret) to all slave sites (which
+generated another secret themselfs). The replication will synchronize
+the new secret of the master to all slaves which should make the
+transparent authentication between all sites work again.

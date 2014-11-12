@@ -36,9 +36,6 @@
 # - function that outputs the HTML input fields
 # - function that creates the nagios command and title
 
-#import datetime, traceback
-#file('/tmp/1', 'a').write('%s %s\n%s' % (datetime.datetime.now(), current_language, ''.join(traceback.format_stack())))
-
 # RESCHEDULE ACTIVE CHECKS
 def command_reschedule(cmdtag, spec, row, row_nr, total_rows):
     if html.var("_resched_checks"):
@@ -183,8 +180,8 @@ def command_fake_checks(cmdtag, spec, row):
                 pluginoutput += "|" + perfdata
             if cmdtag == "SVC":
                 cmdtag = "SERVICE"
-            command = "PROCESS_%s_CHECK_RESULT;%s;%s;%s" % (cmdtag, spec, s, pluginoutput)
-            title = _("<b>manually set check results to %s</b> for") % statename
+            command = "PROCESS_%s_CHECK_RESULT;%s;%s;%s" % (cmdtag, spec, s, lqencode(pluginoutput))
+            title = _("<b>manually set check results to %s</b> for") % html.attrencode(statename)
             return command, title
 
 
@@ -242,7 +239,7 @@ def command_custom_notification(cmdtag, spec, row):
         broadcast = html.get_checkbox("_cusnot_broadcast") and 1 or 0
         forced = html.get_checkbox("_cusnot_forced") and 2 or 0
         command = "SEND_CUSTOM_%s_NOTIFICATION;%s;%s;%s;%s" % \
-                ( cmdtag, spec, broadcast + forced, config.user_id, comment)
+                ( cmdtag, spec, broadcast + forced, config.user_id, lqencode(comment))
         title = _("<b>send a custom notification</b> regarding")
         return command, title
 
@@ -277,7 +274,7 @@ def command_acknowledgement(cmdtag, spec, row):
         sendnot = html.var("_ack_notify") and 1 or 0
         perscomm = html.var("_ack_persistent") and 1 or 0
         command = "ACKNOWLEDGE_" + cmdtag + "_PROBLEM;%s;%d;%d;%d;%s" % \
-                      (spec, sticky, sendnot, perscomm, config.user_id) + (";%s" % comment)
+                      (spec, sticky, sendnot, perscomm, config.user_id) + (";%s" % lqencode(comment))
         title = _("<b>acknowledge the problems</b> of")
         return command, title
 
@@ -318,7 +315,7 @@ def command_comment(cmdtag, spec, row):
         if not comment:
             raise MKUserError("_comment", _("You need to supply a comment."))
         command = "ADD_" + cmdtag + "_COMMENT;%s;1;%s" % \
-                  (spec, config.user_id) + (";%s" % comment)
+                  (spec, config.user_id) + (";%s" % lqencode(comment))
         title = _("<b>add a comment to</b>")
         return command, title
 
@@ -449,7 +446,7 @@ def command_downtime(cmdtag, spec, row):
 
         commands = [(("SCHEDULE_" + cmdtag + "_DOWNTIME;%s;" % spec ) \
                    + ("%d;%d;%d;0;%d;%s;" % (down_from, down_to, fixed, duration, config.user_id)) \
-                   + comment) for spec in specs]
+                   + lqencode(comment)) for spec in specs]
         return commands, title
 
 

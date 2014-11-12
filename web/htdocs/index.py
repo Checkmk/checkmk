@@ -270,7 +270,7 @@ def handler(req, fields = None, profiling = True):
             html.write(_("Configuration error") + ": %s\n" % e)
         elif not fail_silently:
             html.header(_("Configuration Error"))
-            html.show_error(unicode(e))
+            html.show_error(unicode(html.attrencode(e)))
             html.footer()
         apache.log_error(_("Configuration error: %s") % (e,), apache.APLOG_ERR)
 
@@ -279,7 +279,7 @@ def handler(req, fields = None, profiling = True):
             html.write(_("General error") + ": %s\n" % e)
         elif not fail_silently:
             html.header(_("Error"))
-            html.show_error(unicode(e))
+            html.show_error(unicode(html.attrencode(e)))
             html.footer()
         apache.log_error(_("Error: %s") % (e,), apache.APLOG_ERR)
 
@@ -289,7 +289,7 @@ def handler(req, fields = None, profiling = True):
         elif not fail_silently:
             html.header(_("Data not found"))
             html.show_error(_("The following query produced no output:\n<pre>\n%s</pre>\n") % \
-                    e.query)
+                    html.attrencode(e.query))
             html.footer()
         response_code = apache.HTTP_NOT_FOUND
 
@@ -298,7 +298,7 @@ def handler(req, fields = None, profiling = True):
             html.write(_("Livestatus problem") + ": %s\n" % e)
         elif not fail_silently:
             html.header(_("Livestatus problem"))
-            html.show_error(_("Livestatus problem: %s") % e)
+            html.show_error(_("Livestatus problem: %s") % html.attrencode(e))
             html.footer()
         else:
             response_code = apache.HTTP_BAD_GATEWAY

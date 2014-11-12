@@ -204,7 +204,7 @@ def compute_vertical_scala(low, high):
 
 def get_current_perfdata(host, service, dsname):
     perf_data = html.live.query_value("GET services\nFilter: host_name = %s\nFilter: description = %s\nColumns: perf_data" % (
-            host, service))
+            lqencode(host), lqencode(service)))
     for part in perf_data.split():
         name, rest = part.split("=")
         if name == dsname:

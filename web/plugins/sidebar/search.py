@@ -109,7 +109,7 @@ sidebar_snapins["search"] = {
 #   '----------------------------------------------------------------------'
 
 def search_filter_name(used_filters, column = 'name'):
-    return 'Filter: %s ~~ %s\n' % (column, used_filters[0][1])
+    return 'Filter: %s ~~ %s\n' % (column, lqencode(used_filters[0][1]))
 
 search_plugins.append({
     'id'          : 'hosts',
@@ -138,7 +138,7 @@ search_plugins.append({
 def search_filter_ipaddress(used_filters):
     q = used_filters[0][1]
     if is_ipaddress(q):
-        return 'Filter: address ~~ %s\n' % q
+        return 'Filter: address ~~ %s\n' % lqencode(q)
 
 search_plugins.append({
     'id'             : 'host_address',
@@ -151,7 +151,7 @@ search_plugins.append({
 })
 
 def search_filter_alias(used_filters):
-    return 'Filter: alias ~~ %s\n' % used_filters[0][1]
+    return 'Filter: alias ~~ %s\n' % lqencode(used_filters[0][1])
 
 search_plugins.append({
     'id'              : 'host_alias',
@@ -168,7 +168,7 @@ def search_hosts_filter(filters, host_is_ip = False):
     lq_filter = ""
     filter_template = host_is_ip and "Filter: host_address ~~ %s\n" or "Filter: host_name ~~ %s\n"
     for name, value in filters:
-        lq_filter += filter_template % value
+        lq_filter += filter_template % lqencode(value)
     if len(filters) > 1:
         lq_filter += 'Or: %d\n' % len(filters)
 
@@ -200,7 +200,7 @@ def search_host_service_filter(filters, host_is_ip = False):
         if entries:
             group_count += 1
         for entry in entries:
-            lq_filter += 'Filter: %s %s %s\n' % (filter_name, optr, entry)
+            lq_filter += 'Filter: %s %s %s\n' % (filter_name, optr, lqencode(entry))
         if len(entries) > 1:
             lq_filter += 'Or: %d\n' % len(entries)
 

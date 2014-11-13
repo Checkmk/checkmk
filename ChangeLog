@@ -1,6 +1,7 @@
 1.2.5i6p3:
     Checks & Agents:
     * 1510 FIX: veeam_client: handle case were no status information is available
+    * 1511 FIX: oracle_jobs: avoid broken checks, make compatible with old version...
 
     Multisite:
     * 1436 FIX: quicksearch: search with multiple patterns (h: / s:) no longer discards the host pattern...

@@ -24,18 +24,53 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# <<<veeam_client:sep(9)>>>
+# Status  Success
+# JobName Backup VM04 Unix
+# TotalSizeByte   214748364800
+# ReadSizeByte    310902784
+# TransferedSizeByte      20380746
+# StartTime       04.11.2014 22:32:05
+# StopTime        04.11.2014 22:57:11
+# DurationDDHHMMSS        00:00:25:06
+# AvgSpeedBps     24880980
+# DisplayName
+
+# In some cases there is no useful information. E.g. if the
+# backup job as the state Stopped (and never has run?)
+# <<<veeam_client:sep(9)>>>
+# Status
+# JobName Backup vsrv-mailarc
+# TotalSizeByte
+# ReadSizeByte
+# TransferedSizeByte
+# StartTime
+# StopTime
+# DurationDDHHMMSS        :::
+# AvgSpeedBps
+# DisplayName
+
+
 factory_settings["veeam_client"] = {
     "age": ( 108000, 172800 ), # 30h/2d
 }
 
 def inventory_veeam_client(info):
-    if info[0][0] == "Status":
+    if info[0][0] == "Status" and len(info[0]) == 2:
         return [ (None, {} ) ]
 
 def check_veeam_client(item, params, info):
     if not info[0][0] == "Status":
         return 3, "No status data found in first line of agent data"
-    data = dict(info[:-1])
+
+    data = {}
+    for line in info:
+        key = line[0]
+        if len(line) > 1:
+            value = line[1]
+        else:
+            value = ""
+        data[key] = value
 
     perfdata = []
     infotexts = []
@@ -44,14 +79,15 @@ def check_veeam_client(item, params, info):
     # Append current Status to Output
     if data['Status'] == 'Warning':
         state = 1
-    if data['Status'] == 'Failed':
+    elif data['Status'] == 'Failed':
         state = 2
+    elif not data['Status']:
+        return 3, "No status information available"
+
     infotexts.append("Status: %s" % data['Status'] )
 
     # Only output the Job name
     infotexts.append("Job: %s" % data['JobName'] )
-
-
 
     size_info = []
     size_legend = []

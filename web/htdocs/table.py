@@ -307,8 +307,9 @@ def end():
 
         if not html.in_form():
             html.begin_form("%s_actions" % table_id)
-            html.hidden_fields()
-            html.end_form()
+
+        html.hidden_fields()
+        html.end_form()
         html.write('</tr>')
 
     odd = "even"

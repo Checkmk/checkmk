@@ -1,0 +1,10 @@
+Title: veeam_jobs: fixed incorrect state for BackupSync job
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6p3
+Date: 1415886692
+Class: fix
+
+The check now reports an OK state when type is <tt>BackupSync</tt> and the current state is <tt>Idle</tt>.
+Previously it checked the backup status for <tt>Idle</tt>

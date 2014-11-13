@@ -1,4 +1,7 @@
 1.2.5i6p3:
+    Checks & Agents:
+    * 1437 FIX: veeam_jobs: fixed incorrect state for BackupSync job...
+
     Multisite:
     * 1436 FIX: quicksearch: search with multiple patterns (h: / s:) no longer discards the host pattern...
 

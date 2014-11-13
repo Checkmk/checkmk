@@ -1,0 +1,12 @@
+Title: quicksearch: search with multiple patterns (h: / s:) no longer discards the host pattern
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.5i6p3
+Date: 1415878184
+Class: fix
+
+The host filter name of the target page was renamed from <tt>host</tt> to <tt>host_regex</tt>.
+The quicksearch still used the old filter name to insert this data. Therefore the host pattern
+data got discarded.
+

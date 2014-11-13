@@ -1,4 +1,7 @@
 1.2.5i6p3:
+    Multisite:
+    * 1436 FIX: quicksearch: search with multiple patterns (h: / s:) no longer discards the host pattern...
+
 
 1.2.5i6p2:
     Core & Setup:

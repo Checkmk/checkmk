@@ -45,21 +45,21 @@ def inventory_oracle_jobs(info):
     return [ ( ("%s.%s.%s" % (line[0], line[1], line[2])), {} ) for line in info ]
 
 def check_oracle_jobs(item, params, info):
-    try:
-        if item.count('.') == 2:
-            sid, job_owner, job_name = item.split('.')
-    except ValueError:
-        return (3, 'Invalid check item given (<SID>.<job_owner>.<job_name> expected)')
+    if item.count('.') == 2:
+        sid, job_owner, job_name = item.split('.')
+    else:
+        # old format without job owner. Simply ignore owner.
+        sid, job_name = item.split('.')
+        job_owner = None
 
     data_found = False
     for line in info:
-
         service_found = False
 
         if line[0] == sid:
             data_found = True
 
-        if   (line[0] == sid and line[1] == job_owner and line[2] == job_name):
+        if line[0] == sid and (line[1] == job_owner or job_owner == None) and line[2] == job_name:
 
             service_found = True
             param_disabled = params["disabled"]

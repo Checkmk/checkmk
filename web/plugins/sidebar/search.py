@@ -244,7 +244,7 @@ def search_host_service_url_tmpl(used_filters, data, host_is_ip = False):
     tmpl = 'view.py?view_name=searchsvc&filled_in=filter'
     for url_param, qs_name in [        ("service_regex",   "services"     ),
                         host_is_ip and ("host_address",    "host"         )\
-                                    or ("host",            "hosts"        ),
+                                    or ("host_regex",      "hosts"        ),
                                        ("opthostgroup",    "hostgroups"   ),
                                        ("optservicegroup", "servicegroups")]:
         if filters_combined.get(qs_name):

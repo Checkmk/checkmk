@@ -48,7 +48,7 @@ def check_veeam_jobs(item, _no_params, info):
 
             if backup_status == "Success":
                 state = 0
-            elif backup_status == 'Idle' and backup_type == "BackupSync":
+            elif backup_current == 'Idle' and backup_type == "BackupSync":
                 # A sync job is always idle
                 state = 0
             elif backup_current == "Working":

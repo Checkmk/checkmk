@@ -9351,6 +9351,7 @@ def parse_ical(ical_blob, horizon=10, times=(None, None, None)):
         return t
 
     # Now resolve recurring events starting from 01.01 of current year
+    # Non-recurring events are simply copied
     resolved = []
     now  = list(time.strptime(str(time.localtime().tm_year-1), "%Y"))
     last = now[:]
@@ -9367,8 +9368,14 @@ def parse_ical(ical_blob, horizon=10, times=(None, None, None)):
                     'name'  : event['name'],
                     'date'  : time.strftime('%Y-%m-%d', cur),
                 })
+        else:
+            resolved.append({
+                'name' : event['name'],
+                'date' : time.strftime('%Y-%m-%d', event['start'])
+            })
 
     ical['events'] = sorted(resolved)
+
     return ical
 
 # Displays a dialog for uploading an ical file which will then
@@ -9395,7 +9402,7 @@ def mode_timeperiod_import_ical(phase):
                 custom_validate = validate_ical_file,
             )),
             ('horizon', Integer(
-                title = _('Time Horizon'),
+                title = _('Time horizon for repeated events'),
                 help = _("When the iCalendar file contains definitions of repeating events, these repeating "
                          "events will be resolved to single events for the number of years you specify here."),
                 minvalue = 0,
@@ -9462,7 +9469,7 @@ def mode_timeperiod_import_ical(phase):
     html.begin_form("import_ical", method="POST")
     vs_ical.render_input("ical", ical)
     forms.end()
-    html.button("upload", _("Upload"))
+    html.button("upload", _("Import"))
     html.hidden_fields()
     html.end_form()
 

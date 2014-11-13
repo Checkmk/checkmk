@@ -252,7 +252,7 @@ register_rule(group + '/' + subgroup_inventory,
               choices = _if_porttype_choices,
               columns = 3,
               toggle_all = True,
-              default_value = [ '6', '32', '62', '117' ]
+              default_value = [ '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205','229' ],
         )),
         ("rmon", Checkbox(
               title = _("Collect RMON statistics data"),

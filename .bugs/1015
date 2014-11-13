@@ -1,0 +1,9 @@
+Title: HW/SW Inventory Check should not be applied to clusters
+Component: inv
+State: open
+Date: 2014-11-13 17:11:09
+Targetversion: future
+Class: bug
+
+When HW/SW Inventory is set to be applied to a group of hosts, clusters should be automatically excluded
+since it does not make sense to include themn in the inventory

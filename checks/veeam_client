@@ -143,11 +143,11 @@ def check_veeam_client(item, params, parsed):
     return state, ", ".join(infotexts), perfdata
 
 check_info["veeam_client"] = {
+    'parse_function':          parse_veeam_client,
     'check_function':          check_veeam_client,
     'inventory_function':      inventory_veeam_client,
     'service_description':     'VEEAM Client',
     'group':                   'veeam_backup',
-    'parse_function':          parse_veeam_client,
     'default_levels_variable' : 'veeam_client',
     'has_perfdata':            True,
 }

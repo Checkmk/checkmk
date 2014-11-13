@@ -1,0 +1,9 @@
+Title: veeam_client: handle case were no status information is available
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6p3
+Date: 1415882597
+Class: fix
+
+

@@ -1,0 +1,12 @@
+Title: oracle_jobs: avoid broken checks, make compatible with old version
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6p3
+Date: 1415888257
+Class: fix
+
+After the introduction of the necessary job owner, previous checks would fail
+until reinventorized. This has been fixed. The check is now compatible with
+old checks where the job owner is not yet contained in the item.
+

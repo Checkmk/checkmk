@@ -24,17 +24,21 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+
+# TODO: Remove this. Use time.strptime and time.strftime!!
 import datetime
 
-#<<<mssql_backup>>>
-#MSSQL_SQLEXPRESS test123 1331207325
+# <<<mssql_backup>>>
+# MSSQL_SQLEXPRESS test123 1331207325
 
 # Might be None to have no thresholds or a tuple of two ints
 # (<warn age in seconds>, <crit age in seconds>)
 mssql_backup_default_levels = None
 
 def inventory_mssql_backup(info):
-    return [ (line[0] + ' ' + line[1], 'mssql_backup_default_levels') for line in info ]
+    return [ (line[0] + ' ' + line[1], 'mssql_backup_default_levels')
+             for line in info
+             if len(line) == 4 ]
 
 def check_mssql_backup(item, params, info):
     for line in info:

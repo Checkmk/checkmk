@@ -116,6 +116,15 @@ def inventory_if_common(info, has_nodeinfo = False):
     uses_alias          = settings.get('use_alias', if_inventory_uses_alias)
     porttypes           = settings.get('porttypes', if_inventory_porttypes)
     portstates          = settings.get('portstates', if_inventory_portstates)
+    match_alias         = settings.get('match_alias')
+
+    def alias_matches(alias):
+        if match_alias == None:
+            return True
+        for regex in match_alias:
+            if get_regex(regex).match(alias):
+                return True
+        return False
 
     # Allow main check to set no port type (e.g. hitachi_hnas_fc_if)
     porttypes.append("")
@@ -176,7 +185,7 @@ def inventory_if_common(info, has_nodeinfo = False):
                 duplicate.add(item)
             seen_items.add(item)
 
-            if ifType in porttypes and ifOperStatus in portstates:
+            if ifType in porttypes and ifOperStatus in portstates and alias_matches(ifAlias):
                 params = {}
                 if if_inventory_monitor_state:
                     params["state"] = [ifOperStatus]

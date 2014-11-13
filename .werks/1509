@@ -1,0 +1,13 @@
+Title: if, if64: New option for make inventory based on port alias
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i7
+Date: 1415868493
+Class: feature
+
+All interface checks now allow to inventory just those ports whose
+alias matches one of a list of regular expressions. These are a new
+option in the WATO rule <i>Network Interface and Switch Port Inventory</i>.
+This allows you to control which ports are monitored based on the alias
+<b>without</b> using the alias as the service description.

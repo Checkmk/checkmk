@@ -227,26 +227,41 @@ register_rule(group + '/' + subgroup_inventory,
     title     = _("Network Interface and Switch Port Inventory"),
     valuespec = Dictionary(
         elements = [
-         ("use_desc", Checkbox(
+         ( "use_desc",
+           Checkbox(
                 title = _("Use description as service name for network interface checks"),
                 label = _("use description"),
                 help = _("This option lets Check_MK use the interface description as item instead "
                          "of the port number. If no description is available then the port number is "
                          "used anyway."))),
-        ("use_alias", Checkbox(
+        ( "use_alias",
+          Checkbox(
                  title = _("Use alias as service name for network interface checks"),
                      label = _("use alias"),
                      help = _("This option lets Check_MK use the alias of the port (ifAlias) as item instead "
                               "of the port number. If no alias is available then the port number is used "
                               "anyway."))),
-        ("portstates", ListChoice(title = _("Network interface port states to inventorize"),
+        ( "match_alias",
+          ListOfStrings(
+              title = _("Match interface alias (regex)"),
+              help = _("Only inventorize interfaces whose alias matches one of the configured "
+                       "regular expressions. The match is done on the beginning of the alias. "
+                       "This allows you to select interfaces based on the alias without having "
+                       "the alias be part of the service description."),
+              orientation = "horizontal",
+              valuespec = RegExp(size = 32),
+        )),
+
+        ( "portstates",
+          ListChoice(title = _("Network interface port states to inventorize"),
               help = _("When doing inventory on switches or other devices with network interfaces "
                        "then only ports found in one of the configured port states will be added to the monitoring."),
               choices = _if_portstate_choices,
               toggle_all = True,
               default_value = ['1'],
         )),
-        ("porttypes", ListChoice(title = _("Network interface port types to inventorize"),
+        ( "porttypes",
+          ListChoice(title = _("Network interface port types to inventorize"),
               help = _("When doing inventory on switches or other devices with network interfaces "
                        "then only ports of the specified types will be created services for."),
               choices = _if_porttype_choices,
@@ -254,7 +269,8 @@ register_rule(group + '/' + subgroup_inventory,
               toggle_all = True,
               default_value = [ '6', '32', '62', '117', '127', '128', '129', '180', '181', '182', '205','229' ],
         )),
-        ("rmon", Checkbox(
+        ( "rmon",
+          Checkbox(
               title = _("Collect RMON statistics data"),
               help = _("If you enable this option, for every RMON capable switch port an additional service will "
                        "be created which is always OK and collects RMON data. This will give you detailed information "

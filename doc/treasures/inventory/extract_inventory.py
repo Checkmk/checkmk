@@ -224,6 +224,9 @@ def list_get(hostname, list_start):
 all_data = {}
 inventory_date = {}
 for hostname in os.listdir(inv_dir):
+    # ignore gziped files and invisible files in directory for now
+    if hostname.endswith(".gz") or hostname.startswith("."):
+        continue
     fn = inv_dir + hostname
     if os.path.isfile(fn):
         a = eval(open(fn,'r').read())

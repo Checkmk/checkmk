@@ -1,0 +1,15 @@
+Title: quicksearch: fixed various non-working quicksearch filters
+Level: 2
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.5i7
+Date: 1415962691
+
+Some of the view filters got renamed in the latest releases.
+These changes were not considered in the quicksearch plugins which refer to these filters.
+
+As a result the hostgroup (<i>hg:</i>) search did not work properly.
+Also the some multiple search filters (e.g. <i>h: test s: cpu hg: testgroup</i>) did omit the
+specified host- and servicegroup patterns.

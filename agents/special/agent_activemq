@@ -28,19 +28,19 @@ from lxml import etree
 import sys
 
 if len(sys.argv) > 3:
-    piggybag_mode = True
+    piggyback_mode = True
 else:
-    piggybag_mode = False
+    piggyback_mode = False
 address = "http://%s:%s/admin/xml/queues.jsp" % (sys.argv[1], sys.argv[2])
 
 attributes = [ 'size', 'consumerCount', 'enqueueCount', 'dequeueCount' ]
 data = etree.parse(address).getroot()
 count = 0
-if not piggybag_mode:
+if not piggyback_mode:
     print "<<<mq_queues>>>"
 for line in data:
     count += 1
-    if piggybag_mode:
+    if piggyback_mode:
         print "<<<<%s>>>>" % line.get('name')
         print "<<<mq_queues>>>"
     print "[[%s]]" % line.get('name')
@@ -50,7 +50,7 @@ for line in data:
         values +="%s " % stats[0].get(job)
     print values
 
-if piggybag_mode:
+if piggyback_mode:
     print "<<<<>>>>"
     print "<<<local>>>"
     print "0 Actice_MQ - Found %s Queues in total" % count

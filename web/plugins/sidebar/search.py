@@ -211,17 +211,17 @@ def search_host_service_filter(filters, host_is_ip = False):
 
 def match_host_service_url_tmpl(used_filters, row_dict, host_is_ip = False):
     tmpl = 'view.py?view_name=searchsvc&filled_in=filter'
-    # Sorry, no support for multiple host- or servicegroups filters in match templates
+    # Sorry, no support for multiple host- or servicegroups filters in match templates (yet)
     for ty, entry in [ ("hostgroup", "host_groups"), ("servicegroup", "service_groups")]:
         if row_dict.get(entry):
             if type(row_dict[entry]) == list:
                 row_dict[entry] = row_dict[entry][0]
 
-    for param, key in [                ("service_regex",   "service_description"),
-                (host_is_ip and "host_address" or  "host", "host_name"),
-                                       ("opthostgroup",    "host_groups"),
-                                       ("optservicegroup", "service_groups"),
-                                       ("site",            "site")]:
+    for param, key in [                ("service_regex",    "service_description"),
+          (host_is_ip and "host_address" or  "host_regex",  "host_name"),
+                                       ("opthost_group",    "host_groups"),
+                                       ("optservice_group", "service_groups"),
+                                       ("site",             "site")]:
         if row_dict.get(key):
             tmpl_pre = "&%s=%%(%s)s" % (param, key)
             tmpl += tmpl_pre % row_dict
@@ -245,8 +245,8 @@ def search_host_service_url_tmpl(used_filters, data, host_is_ip = False):
     for url_param, qs_name in [        ("service_regex",   "services"     ),
                         host_is_ip and ("host_address",    "host"         )\
                                     or ("host_regex",      "hosts"        ),
-                                       ("opthostgroup",    "hostgroups"   ),
-                                       ("optservicegroup", "servicegroups")]:
+                                       ("opthost_group",   "hostgroups"   ),
+                                       ("optservice_group", "servicegroups")]:
         if filters_combined.get(qs_name):
             tmpl_pre = "&%s=%%(%s)s" % (url_param, qs_name)
             tmpl += tmpl_pre % filters_combined

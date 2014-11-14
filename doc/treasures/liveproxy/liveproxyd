@@ -716,6 +716,9 @@ def check_inventory_update(mk_inventory_last, sitename):
     if not opt_inventory_dir:
         return # only works if this is set
 
+    if not os.path.exists(opt_inventory_dir):
+        os.makedirs(opt_inventory_dir)
+
     sitestatus = g_sites[sitename]
     if sitestatus["inventory_pid"]:
         return # Sync already running

@@ -877,7 +877,7 @@ def automation_diag_host(args):
             else:
                 return 1, "SNMP command not implemented"
 
-            data = get_snmp_table(hostname, ipaddress, ('.1.3.6.1.2.1.1', ['1.0', '4.0', '5.0', '6.0']))
+            data = get_snmp_table(hostname, ipaddress, None, ('.1.3.6.1.2.1.1', ['1.0', '4.0', '5.0', '6.0']))
             if data:
                 return 0, 'sysDescr:\t%s\nsysContact:\t%s\nsysName:\t%s\nsysLocation:\t%s\n' % tuple(data[0])
             else:
@@ -887,6 +887,8 @@ def automation_diag_host(args):
             return 1, "Command not implemented"
 
     except Exception, e:
+        if opt_debug:
+            raise
         return 1, str(e)
 
 # WATO calls this automation when a host has been renamed. We need to change

@@ -29,10 +29,10 @@
 
 class HostFileColumn : public BlobColumn
 {
-    const char *_base_dir;
-    const char *_suffix;
+    string _base_dir;
+    string _suffix;
 public:
-    HostFileColumn(string name, string description, const char *base_dir, 
+    HostFileColumn(string name, string description, const char *base_dir,
                    const char *suffice, int indirect_offset);
 
     // returns a buffer to be freed afterwards!!

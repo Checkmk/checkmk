@@ -65,7 +65,7 @@ char *HostFileColumn::getBlob(void *data, int *size)
 #endif
 
     char path[4096];
-    snprintf(path, sizeof(path), "%s/%s%s", _base_dir, host_name, _suffix);
+    snprintf(path, sizeof(path), "%s/%s%s", _base_dir.c_str(), host_name, _suffix.c_str());
     int fd = open(path, O_RDONLY);
     if (fd < 0) {
         return 0;

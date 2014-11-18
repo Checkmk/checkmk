@@ -6,7 +6,7 @@
 # |           | |___| | | |  __/ (__|   <    | |  | | . \            |
 # |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
 # |                                                                  |
-# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# | Copyright Mathias Kettner 2013             mk@mathias-kettner.de |
 # +------------------------------------------------------------------+
 #
 # This file is part of Check_MK.
@@ -86,7 +86,7 @@ function run_cached () {
 
     # Cache file outdated and new job not yet running? Start it
     if [ -z "$USE_CACHEFILE" -a ! -e "$CACHEFILE.new" ] ; then
-        echo "set -o noclobber ; exec > \"$CACHEFILE.new\" || exit 1 ; $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | nohup bash 2>/dev/null &
+        echo "set -o noclobber ; exec > $CACHEFILE.new || exit 1 ; $CMDLINE && mv $CACHEFILE.new $CACHEFILE || rm -f $CACHEFILE $CACHEFILE.new" | nohup bash 2>/dev/null &
     fi
 }
 
@@ -106,6 +106,32 @@ else
     zonename="global"
     pszone="-A"
 fi
+
+
+# Get statistics about monitored jobs. Below the job directory there
+# is a sub directory per user that ran a job. That directory must be
+# owned by the user so that a symlink or hardlink attack for reading
+# arbitrary files can be avoided.
+if pushd /var/lib/check_mk_agent/job >/dev/null; then
+    echo '<<<job>>>'
+    for username in *
+    do
+        if [ -d "$username" ] && cd "$username" ; then
+            count=$(su "$username" -c "ls -1 * | wc -l")
+
+            if [ "$count" -eq "1" ]; then
+                filename=$(su "$username" -c "ls -1 *")
+                echo "==> $filename <=="
+            fi
+
+            su "$username" -c "head -n1000 *"
+            cd ..
+        fi
+    done
+    popd > /dev/null
+fi
+
+
 
 
 # Filesystem usage for UFS and VXFS

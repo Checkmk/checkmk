@@ -13,6 +13,9 @@
     * 1438 FIX: quicksearch: fixed various non-working quicksearch filters...
     * 1501 FIX: Legacy view formats created with 2014-09 snapshots are now converted...
 
+    WATO:
+    * 1502 FIX: Fixed removing elements from ListOf choices during complain phase
+
 
 1.2.5i6p2:
     Core & Setup:

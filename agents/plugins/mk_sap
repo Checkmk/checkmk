@@ -221,7 +221,7 @@ def logout():
         'INTERFACE':  'XAL',
     })
 
-def mon_list( cfg ):
+def mon_list(cfg):
     f = query("BAPI_SYSTEM_MON_GETLIST", {
         'EXTERNAL_USER_NAME': cfg['user'],
     })
@@ -355,21 +355,16 @@ def process_alerts(cfg, logs, ms_name, mon_name, node, alerts):
 
 
 
-def connect(cfg):
+def check(cfg):
     global conn
-    try:
-        conn = sapnwrfc.base.rfc_connect(cfg)
-    except sapnwrfc.RFCCommunicationError, e:
-        sys.stderr.write('ERROR: Unable to connect (%s)\n' % e)
-        return
-
+    conn = sapnwrfc.base.rfc_connect(cfg)
     login()
 
     logs     = {}
     sap_data = {}
 
     # This loop is used to collect all information from SAP
-    for ms_name, mon_name in mon_list( cfg ):
+    for ms_name, mon_name in mon_list(cfg):
         path = ms_name + SEPARATOR + mon_name
         if not to_be_monitored(path, True):
             continue
@@ -455,10 +450,14 @@ def connect(cfg):
     logout()
     conn.close()
 
+# It is possible to configure multiple SAP instances to monitor. Loop them all, but
+# do not terminate when one connection failed
 for entry in cfg:
     try:
-        connect(entry)
+        check(entry)
+    except sapnwrfc.RFCCommunicationError, e:
+        sys.stderr.write('ERROR: Unable to connect (%s)\n' % e)
     except:
-        pass # Make sure that other entries are executed anyway
+        sys.stderr.write('ERROR: Unhandled exception (%s)\n' % e)
 
 sys.exit(0)

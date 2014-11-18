@@ -92,6 +92,7 @@ manpage_catalog_titles = {
         "exchange"      : "Microsoft Exchange",
         "java"          : "Java (Tomcat, Weblogic, JBoss, etc.)",
         "libelle"       : "Libelle Business Shadow",
+        "lotusnotes"    : "IBM Lotus Domino",
         "mailman"       : "Mailman",
         "mssql"         : "Microsoft SQL Server",
         "mysql"         : "MySQL",

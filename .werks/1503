@@ -1,0 +1,13 @@
+Title: Fixed monitoring of multiple SAP instances with one mk_sap plugin
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i6p3
+Date: 1416319927
+Class: fix
+
+When monitoring multiple SAP instances from one host by configuring
+multiple instances in the sap.cfg, the monitoring of all following
+instances was skipped when one single instance had connection
+problems.
+

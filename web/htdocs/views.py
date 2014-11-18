@@ -100,9 +100,20 @@ def transform_old_views():
         if "context" not in view: # legacy views did not have this explicitly
             view.setdefault("user_sortable", True)
 
-        # This tries to map the datasource and additional settings of the
-        # views to get the correct view context
-        if 'single_infos' not in view:
+        if 'context_type' in view:
+            # This code transforms views from user_views.mk which have been migrated with
+            # daily snapshots from 2014-08 till beginning 2014-10.
+            if view['context_type'] in [ 'host', 'service', 'hostgroup', 'servicegroup' ]:
+                view['single_infos'] = [view['context_type']]
+            else:
+                view['single_infos'] = [] # drop the context type and assume a "multiple view"
+            del view['context_type']
+
+        elif 'single_infos' not in view:
+            # This tries to map the datasource and additional settings of the
+            # views to get the correct view context
+            #
+            # This code transforms views from views.mk (legacy format) to the current format
             try:
                 hide_filters = view.get('hide_filters')
 

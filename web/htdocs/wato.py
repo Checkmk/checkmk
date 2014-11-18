@@ -8511,6 +8511,20 @@ def vs_notification_rule(userid = None):
                     ( "groupby",
                       vs_notification_bulkby(),
                     ),
+                    ( "groupby_custom",
+                      ListOfStrings(
+                          valuespec = ID(),
+                          orientation = "horizontal",
+                          title = _("Create separate notification bulks for different values of the following custom macros"),
+                          help = _("If you enter the names of host/service-custom macros here then for each different "
+                                   "combination of values of those macros a separate bulk will be created. This can be used "
+                                   "in combination with the grouping by folder, host etc. Omit any leading underscore. "
+                                   "<b>Note</b>: If you are using "
+                                   "Nagios as a core you need to make sure that the values of the required macros are "
+                                   "present in the notification context. This is done in <tt>check_mk_templates.cfg</tt>. If you "
+                                   "macro is <tt>_FOO</tt> then you need to add the variables <tt>NOTIFY_HOST_FOO</tt> and "
+                                   "<tt>NOTIFY_SERVICE_FOO</tt>."),
+                    )),
                   ],
                   columns = 1,
                   optional_keys = False,

@@ -270,12 +270,23 @@ def command_acknowledgement(cmdtag, spec, row):
         comment = html.var_utf8("_ack_comment")
         if not comment:
             raise MKUserError("_ack_comment", _("You need to supply a comment."))
+        if ";" in comment:
+            raise MKUserError("_ack_comment", _("The comment must not contain semicolons."))
         sticky = html.var("_ack_sticky") and 2 or 0
         sendnot = html.var("_ack_notify") and 1 or 0
         perscomm = html.var("_ack_persistent") and 1 or 0
+
+        expire_secs = Age().from_html_vars("_ack_expire")
+        if expire_secs:
+            expire = int(time.time()) + expire_secs
+        else:
+            expire = 0
+
         command = "ACKNOWLEDGE_" + cmdtag + "_PROBLEM;%s;%d;%d;%d;%s" % \
-                      (spec, sticky, sendnot, perscomm, config.user_id) + (";%s" % lqencode(comment))
-        title = _("<b>acknowledge the problems</b> of")
+                      (spec, sticky, sendnot, perscomm, config.user_id) + (";%s" % lqencode(comment)) \
+                      + (";%d" % expire)
+        title = _("<b>acknowledge the problems%s</b> of") % \
+                    (expire and (_(" for a period of %s") % Age().value_to_text(expire_secs)) or "")
         return command, title
 
     elif html.var("_remove_ack"):
@@ -295,6 +306,9 @@ multisite_commands.append({
         html.checkbox("_ack_sticky", True, label=_("sticky")) == \
         html.checkbox("_ack_notify", True, label=_("send notification")) == \
         html.checkbox("_ack_persistent", False, label=_('persistent comment')) == \
+        html.write("<hr>") == \
+        Age(display=["days", "hours", "minutes"], label=_("Expire acknowledgement after")).render_input("_ack_expire", 0) == \
+        html.help(_("Note: Expiration of acknowledgements only works when using the Check_MK Micro Core.")) == \
         html.write("<hr>") == \
         html.write(_("Comment") + ": ") == \
         html.text_input("_ack_comment", size=48, submit="_acknowledge"),

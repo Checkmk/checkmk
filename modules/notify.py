@@ -1443,7 +1443,7 @@ def do_bulk_notify(contact, plugin, params, plugin_context, bulk):
     # 2. plugin
     # 3. time horizon (interval) in seconds
     # 4. max bulked notifications
-    # 5. elements specified in bulk["groupby"]
+    # 5. elements specified in bulk["groupby"] and bulk["groupby_custom"]
     # We first create a bulk path constructed as a tuple of strings.
     # Later we convert that to a unique directory name.
     # Note: if you have separate bulk rules with exactly the same
@@ -1467,6 +1467,13 @@ def do_bulk_notify(contact, plugin, params, plugin_context, bulk):
     if "state" in bulkby:
         state = plugin_context.get(what + "STATE", "")
         bulk_path += ("state", state)
+
+    # User might have specified _FOO instead of FOO
+    bulkby_custom = bulk.get("groupby_custom", [])
+    for macroname in bulkby_custom:
+        macroname = macroname.lstrip("_").upper()
+        value = plugin_context.get(what + "_" + macroname, "")
+        bulk_path += (macroname.lower(), value)
 
     notify_log("    --> storing for bulk notification %s" % "|".join(bulk_path))
     bulk_dirname = create_bulk_dirname(bulk_path)

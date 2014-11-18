@@ -375,7 +375,7 @@ multisite_icons.append({
 #   +----------------------------------------------------------------------+
 
 def paint_comments(what, row, tags, custom_vars):
-    comments = row[what+ "_comments_with_extra_info"]
+    comments = row[what + "_comments_with_extra_info"]
     if len(comments) > 0:
         text = ""
         for c in comments:

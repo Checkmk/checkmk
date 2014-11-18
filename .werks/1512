@@ -1,0 +1,13 @@
+Title: Bulk notification can now be grouped according to custom macro values
+Level: 2
+Component: notifications
+Compatible: compat
+Version: 1.2.5i7
+Date: 1416223329
+Class: feature
+
+When you configure notification bulking you can now let the value of
+one or several host/service custom macros decide in which bulk a
+notification email goes. For example you can select the variable <tt>FOO</tt>
+to be used for grouping. Then for each different value of this macro
+a separate bulk will be created.

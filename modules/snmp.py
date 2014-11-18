@@ -133,13 +133,21 @@ def get_snmp_table(hostname, ip, check_type, oid_info):
                 index_format = column
                 continue
 
-
             if opt_use_snmp_walk or is_usewalk_host(hostname):
                 rowinfo = get_stored_snmpwalk(hostname, fetchoid)
             elif has_inline_snmp and use_inline_snmp:
                 rowinfo = inline_snmpwalk_on_suboid(hostname, check_type, fetchoid)
             else:
                 rowinfo = snmpwalk_on_suboid(hostname, ip, fetchoid)
+
+            # I've seen a broken device (Mikrotik Router), that broke after an
+            # update to RouterOS v6.22. It would return 9 time the same OID when
+            # .1.3.6.1.2.1.1.1.0 was being walked. We try to detect these situations
+            # by removing any duplicate OID information
+            if len(rowinfo) > 1 and rowinfo[0][0] == rowinfo[1][0]:
+                if opt_verbose:
+                    sys.stderr.write("Detected broken SNMP agent. Ignoring duplicate OID %s.\n" % rowinfo[0][0])
+                rowinfo = rowinfo[:1]
 
             columns.append((fetchoid, rowinfo))
             number_rows = len(rowinfo)

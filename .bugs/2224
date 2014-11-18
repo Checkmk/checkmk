@@ -1,0 +1,11 @@
+Title: Options for Email notification not visible when entering rule
+Component: wato
+State: open
+Date: 2014-11-17 11:35:35
+Targetversion: 1.2.5i1
+Class: bug
+
+When you go to the default rule in the RBN then the method
+is set to HTML Email, but the actual options are not visible.
+When you switch back and forth between Cancel, then they
+become visible. Seems to be a bug in the valuespec.

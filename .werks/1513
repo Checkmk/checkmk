@@ -1,0 +1,11 @@
+Title: Handle broken SNMP bulk walk implementation of Mikrotik Router firmware RouterOS v6.22
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i7
+Date: 1416234308
+Class: fix
+
+This firmware sometimes responds with duplicate OIDs on a bulk walk. This has
+been fixed by ignoring consecutive answers for the same OID.
+

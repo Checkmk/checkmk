@@ -825,7 +825,7 @@ class ListOf(ValueSpec):
         # Render reference element for cloning
         html.write('<table style="display:none" id="%s_prototype">' % varprefix)
         html.write('<tr><td class=vlof_buttons>')
-        html.hidden_field(varprefix + "_indexof_" + self._magic, "") # reconstruct order after moving stuff
+        html.hidden_field(varprefix + "_indexof_" + self._magic, "", add_var=True) # reconstruct order after moving stuff
         self.del_button(varprefix, self._magic)
         if self._movable:
             self.move_button(varprefix, self._magic, "up")
@@ -858,7 +858,7 @@ class ListOf(ValueSpec):
         for nr, v in enumerate(value):
             html.push_transformation(lambda x: x.replace(self._magic, str(nr+1)))
             html.write('<tr><td class=vlof_buttons>')
-            html.hidden_field(varprefix + "_indexof_%d" % (nr+1), "") # reconstruct order after moving stuff
+            html.hidden_field(varprefix + "_indexof_%d" % (nr+1), "", add_var=True) # reconstruct order after moving stuff
             self.del_button(varprefix, nr+1)
             if self._movable:
                 self.move_button(varprefix, self._magic, "up") # visibility fixed by javascript

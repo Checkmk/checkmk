@@ -1494,6 +1494,19 @@ def find_wato_folder(context):
 def create_bulk_dirname(bulk_path):
     dirname = notification_bulkdir + "/" + bulk_path[0] + "/" + bulk_path[1] + "/"
     dirname += ",".join([b.replace("/", "\\") for b in bulk_path[2:]])
+
+    # Remove non-Ascii-characters by special %02x-syntax
+    try:
+        str(dirname)
+    except:
+        new_dirname = ""
+        for char in dirname:
+            if ord(char) <= 0 or ord(char) > 127:
+                new_dirname += "%%%04x" % ord(char)
+            else:
+                new_dirname += char
+        dirname = new_dirname
+
     if not os.path.exists(dirname):
         os.makedirs(dirname)
         notify_log("        - created bulk directory %s" % dirname)

@@ -123,6 +123,7 @@ sites_mk           = defaults.default_config_dir + "/multisite.d/sites.mk"
 var_dir            = defaults.var_dir + "/wato/"
 log_dir            = var_dir + "log/"
 snapshot_dir       = var_dir + "snapshots/"
+php_api_dir        = var_dir + "php-api/"
 repstatus_file     = var_dir + "replication_status.mk"
 
 
@@ -13080,6 +13081,126 @@ def show_localization_hint():
     html.message("<sup>*</sup>" + _("These texts may be localized depending on the users' "
           "language. You can configure the localizations <a href=\"%s\">in the global settings</a>.") % url)
 
+def format_php(data, lvl = 1):
+    s = ''
+    if isinstance(data, tuple) or isinstance(data, list):
+        s += 'array(\n'
+        for item in data:
+            s += '    ' * lvl + format_php(item, lvl + 1) + ',\n'
+        s += '    ' * (lvl - 1) + ')'
+    elif isinstance(data, dict):
+        s += 'array(\n'
+        for key, val in data.iteritems():
+            s += '    ' * lvl + format_php(key, lvl + 1) + ' => ' + format_php(val, lvl + 1) + ',\n'
+        s += '    ' * (lvl - 1) + ')'
+    elif isinstance(data, str):
+        s += '\'%s\'' % data.replace('\'', '\\\'')
+    elif isinstance(data, unicode):
+        s += '\'%s\'' % data.encode('utf-8').replace('\'', '\\\'')
+    elif isinstance(data, bool):
+        s += data and 'true' or 'false'
+    elif data is None:
+        s += 'null'
+    else:
+        s += str(data)
+
+    return s
+
+# Creates a includable PHP file which provides some functions which
+# can be used by the calling program, for example NagVis. It declares
+# the following API:
+#
+# taggroup_title(group_id)
+# Returns the title of a WATO tag group
+#
+# taggroup_choice(group_id, list_of_object_tags)
+# Returns either
+#   false: When taggroup does not exist in current config
+#   null:  When no choice can be found for the given taggroup
+#   array(tag, title): When a tag of the taggroup
+#
+# all_taggroup_choices(object_tags):
+# Returns an array of elements which use the tag group id as key
+# and have an assiciative array as value, where 'title' contains
+# the tag group title and the value contains the value returned by
+# taggroup_choice() for this tag group.
+#
+def export_hosttags(hosttags, auxtags):
+    path = php_api_dir + '/hosttags.php'
+    make_nagios_directory(php_api_dir)
+
+    # need an extra lock file, since we move the auth.php.tmp file later
+    # to auth.php. This move is needed for not having loaded incomplete
+    # files into php.
+    tempfile = path + '.tmp'
+    lockfile = path + '.state'
+    file(lockfile, 'a')
+    aquire_lock(lockfile)
+
+    # Transform WATO internal data structures into easier usable ones
+    hosttags_dict =  {}
+    for id, title, choices in hosttags:
+        tags = {}
+        for tag_id, tag_title, auxtags in choices:
+            tags[tag_id] = tag_title, auxtags
+        topic, title = parse_hosttag_title(title)
+        hosttags_dict[id] = topic, title, tags
+    auxtags_dict = dict(auxtags)
+
+    # First write a temp file and then do a move to prevent syntax errors
+    # when reading half written files during creating that new file
+    file(tempfile, 'w').write('''<?php
+// Created by WATO
+global $mk_hosttags, $mk_auxtags;
+$mk_hosttags = %s;
+$mk_auxtags = %s;
+
+function taggroup_title($group_id) {
+    global $mk_hosttags;
+    if (isset($mk_hosttags[$group_id]))
+        return $mk_hosttags[$group_id][0];
+    else
+        return $taggroup;
+}
+
+function taggroup_choice($group_id, $object_tags) {
+    global $mk_hosttags;
+    if (!isset($mk_hosttags[$group_id]))
+        return false;
+    foreach ($object_tags AS $tag) {
+        if (isset($mk_hosttags[$group_id][2][$tag])) {
+            // Found a match of the objects tags with the taggroup
+            // now return an array of the matched tag and its alias
+            return array($tag, $mk_hosttags[$group_id][2][$tag][0]);
+        }
+    }
+    // no match found. Test whether or not a "None" choice is allowed
+    if (isset($mk_hosttags[$group_id][2][null]))
+        return array(null, $mk_hosttags[$group_id][2][null][0]);
+    else
+        return null; // no match found
+}
+
+function all_taggroup_choices($object_tags) {
+    global $mk_hosttags;
+    $choices = array();
+    foreach ($mk_hosttags AS $group_id => $group) {
+        $choices[$group_id] = array(
+            'topic' => $group[0],
+            'title' => $group[1],
+            'value' => taggroup_choice($group_id, $object_tags),
+        );
+    }
+    return $choices;
+}
+
+?>
+''' % (format_php(hosttags_dict), format_php(auxtags_dict)))
+    # Now really replace the destination file
+    os.rename(tempfile, path)
+    release_lock(lockfile)
+    os.unlink(lockfile)
+
 # Current specification for hosttag entries: One tag definition is stored
 # as tuple of at least three elements. The elements are used as follows:
 # taggroup_id, group_title, list_of_choices, depends_on_tags, depends_on_roles, editable
@@ -13112,6 +13233,7 @@ def save_hosttags(hosttags, auxtags):
     out.write("# Written by WATO\n# encoding: utf-8\n\n")
     out.write("wato_host_tags += \\\n%s\n\n" % pprint.pformat(hosttags))
     out.write("wato_aux_tags += \\\n%s\n" % pprint.pformat(auxtags))
+    export_hosttags(hosttags, auxtags)
 
 # Handle renaming and deletion of host tags: find affected
 # hosts, folders and rules. Remove or fix those rules according

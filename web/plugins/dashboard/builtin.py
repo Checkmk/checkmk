@@ -28,6 +28,7 @@ builtin_dashboards["main"] = {
     "single_infos": [],
     "context"     : {},
     "mtime"       : 0,
+    "show_title"  : True,
     "title"       : _("Main Overview"),
     "topic"       : _("Overview"),
     "description" : _("This dashboard gives you a general overview on the state of your "
@@ -191,6 +192,7 @@ if defaults.omd_site:
         "single_infos": [],
         "context"     : {},
         "mtime"       : 0,
+        "show_title"  : True,
         "title"       : _("Network Topology"),
         "topic"       : _("Overview"),
         "description" : _("This dashboard uses the parent relationships of your hosts to display a "
@@ -216,6 +218,7 @@ builtin_dashboards["simple_problems"] = {
     "single_infos": [],
     "context"     : {},
     "mtime"       : 0,
+    "show_title"  : True,
     "title"       : _("Host &amp; Services Problems"),
     "topic"       : _("Overview"),
     "description" : _("A compact dashboard which lists your unhandled host and service problems."),

@@ -1,0 +1,12 @@
+Title: Remove update-alternatives stuff on Debuntu packages
+Component: core
+State: open
+Date: 2014-11-19 11:04:56
+Targetversion: 1.2.5i1
+Class: nastiness
+
+Currently the *.deb packages use the alternatives-mechanism in order to
+select the current default version and for handling the symlink of /usr/bin/omd.
+Remove this and use the same mechanism as with RPM. Our deb packages anyway 
+can never adhere to the Debian package guidelines. So better make sure that
+they exactly behave like on rpm based systems.

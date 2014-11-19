@@ -16,6 +16,7 @@
 
     WATO:
     * 1502 FIX: Fixed removing elements from ListOf choices during complain phase
+    * 1505 FIX: Snapshots are now bound to the used monitoring core...
 
 
 1.2.5i6p2:

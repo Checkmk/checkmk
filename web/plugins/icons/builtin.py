@@ -426,7 +426,7 @@ def paint_flapping(what, row, tags, custom_vars):
             title = _("This host is flapping")
         else:
             title = _("This service is flapping")
-        return '<img class=icon title="%s" src="images/icon_flapping.gif">' % title
+        return '<img class=icon title="%s" src="images/icon_flapping.png">' % title
 
 multisite_icons.append({
     'columns':         [ 'is_flapping' ],

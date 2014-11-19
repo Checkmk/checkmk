@@ -47,7 +47,6 @@ MAX = -1
 # These settings might go into the config module, sometime in future,
 # in order to allow the user to customize this.
 
-header_height    = 60             # Distance from top of the screen to the lower border of the heading
 screen_margin    = 5              # Distance from the left border of the main-frame to the dashboard area
 dashlet_padding  = 21, 5, 5, 0, 4 # Margin (N, E, S, W, N w/o title) between outer border of dashlet and its content
 corner_overlap   = 22
@@ -263,10 +262,12 @@ def render_dashboard(name):
 
     title = visuals.visual_title('dashboard', board)
 
+    # Distance from top of the screen to the lower border of the heading
+    header_height = 60
+
     # The title of the dashboard needs to be prefixed with the WATO path,
     # in order to make it clear to the user, that he is seeing only partial
     # data.
-    global header_height
     if not board.get('show_title'):
         # Remove the whole header line
         html.set_render_headfoot(False)

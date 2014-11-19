@@ -1,0 +1,1 @@
+template-temperature.php

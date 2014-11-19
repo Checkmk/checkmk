@@ -1,0 +1,103 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# This is not intended for overriding in main.mk, as any changes will require
+# re-inventory.
+carel_temp_defaultlevels = {             # This still needs sensible values
+    "Room"                  : (30, 35),
+    "Outdoor"               : (60, 70),
+    "Delivery"              : (60, 70),
+    "Cold Water"            : (60, 70),
+    "Hot Water"             : (60, 70),
+    "Cold Water Outlet"     : (60, 70),
+    "Circuit 1 Suction"     : (60, 70),
+    "Circuit 2 Suction"     : (60, 70),
+    "Circuit 1 Evap"        : (60, 70),
+    "Circuit 2 Evap"        : (60, 70),
+    "Circuit 1 Superheat"   : (60, 70),
+    "Circuit 2 Superheat"   : (60, 70),
+    "Cooling Set Point"     : (60, 70),
+    "Cooling Prop. Band"    : (60, 70),
+    "Cooling 2nd Set Point" : (60, 70),
+    "Heating Set Point"     : (60, 70),
+    "Heating 2nd Set Point" : (60, 70),
+    "Heating Prop. Band"    : (60, 70),
+}
+
+def carel_sensors_parse(info):
+
+    oidtothing = {
+        "1.0"   :   ("temp", "Room"),
+        "2.0"   :   ("temp", "Outdoor"),
+        "3.0"   :   ("temp", "Delivery"),
+        "4.0"   :   ("temp", "Cold Water"),
+        "5.0"   :   ("temp", "Hot Water"),
+        "7.0"   :   ("temp", "Cold Water Outlet"),
+        "10.0"  :   ("temp", "Circuit 1 Suction"),
+        "11.0"  :   ("temp", "Circuit 2 Suction"),
+        "12.0"  :   ("temp", "Circuit 1 Evap"),
+        "13.0"  :   ("temp", "Circuit 2 Evap"),
+        "14.0"  :   ("temp", "Circuit 1 Superheat"),
+        "15.0"  :   ("temp", "Circuit 2 Superheat"),
+        "20.0"  :   ("temp", "Cooling Set Point"),
+        "21.0"  :   ("temp", "Cooling Prop. Band"),
+        "22.0"  :   ("temp", "Cooling 2nd Set Point"),
+        "23.0"  :   ("temp", "Heating Set Point"),
+        "24.0"  :   ("temp", "Heating 2nd Set Point"),
+        "25.0"  :   ("temp", "Heating Prop. Band"),
+    }
+
+    parsed = {}
+    parsed["temp"] = {}
+    for oidend, value in info:
+        quantity, sensor = oidtothing.get(oidend, (None, None))
+        if quantity == "temp":
+            if value and value != "0" and value != "-9999":
+                parsed[quantity][sensor] = float(value) / 10
+
+    return parsed
+
+
+def inventory_carel_sensors_temp(parsed):
+    for thing in parsed["temp"].keys():
+        yield thing, carel_temp_defaultlevels[thing]
+
+
+def check_carel_sensors_temp(item, params, parsed):
+    return check_temperature(parsed["temp"][item], params)
+
+
+check_info["carel_sensors"] = {
+    "parse_function"             : carel_sensors_parse,
+    "inventory_function"         : inventory_carel_sensors_temp,
+    "check_function"             : check_carel_sensors_temp,
+    "service_description"        : "Temperature %s",
+    "group"                      : "room_temperature",
+    "has_perfdata"               : True,
+    "snmp_info"                  : ( ".1.3.6.1.4.1.9839.2.1", [ OID_END, "2" ] ),
+    "snmp_scan_function"         : lambda oid: "pCO" in oid(".1.3.6.1.2.1.1.1.0"),
+    "includes"                   : [ "temperature.include" ],
+}

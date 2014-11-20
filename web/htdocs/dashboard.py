@@ -110,9 +110,33 @@ def transform_builtin_dashboards():
         for nr, dashlet in enumerate(dashboard['dashlets']):
             dashlet.setdefault('show_title', True)
 
-            if dashlet.get('url', '').startswith('dashlet_') and dashlet['url'].endswith('.py'):
+            if dashlet.get('url', '').startswith('dashlet_hoststats') or dashlet.get('url', '').startswith('dashlet_servicestats'):
                 # hoststats and servicestats
-                dashlet['type'] = dashlet['url'][8:-3]
+                dashlet['type'] = dashlet['url'][8:].split('.', 1)[0]
+
+                if '?' in dashlet['url']:
+                    # Transform old parameters:
+                    # wato_folder
+                    # host_contact_group
+                    # service_contact_group
+                    paramstr = dashlet['url'].split('?', 1)[1]
+                    dashlet['context'] = {}
+                    for key, val in [ p.split('=', 1) for p in paramstr.split('&') ]:
+                        if key == 'host_contact_group':
+                            dashlet['context']['opthost_contactgroup'] = {
+                                'neg_opthost_contact_group': '',
+                                'opthost_contact_group': val,
+                            }
+                        elif key == 'service_contact_group':
+                            dashlet['context']['optservice_contactgroup'] = {
+                                'neg_optservice_contact_group': '',
+                                'optservice_contact_group': val,
+                            }
+                        elif key == 'wato_folder':
+                            dashlet['context']['wato_folder'] = {
+                                'wato_folder': val,
+                            }
+
                 del dashlet['url']
 
             elif dashlet.get('urlfunc') and type(dashlet['urlfunc']) != str:
@@ -141,6 +165,9 @@ def transform_builtin_dashboards():
                 raise MKGeneralException(_('Unable to transform dashlet %d of dashboard %s. '
                                            'You will need to migrate it on your own. Definition: %r' %
                                                             (nr, name, html.attrencode(dashlet))))
+
+            dashlet.setdefault('context', {})
+            dashlet.setdefault('single_infos', [])
 
         # the modification time of builtin dashboards can not be checked as on user specific
         # dashboards. Set it to 0 to disable the modification chech.

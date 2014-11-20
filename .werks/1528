@@ -1,0 +1,9 @@
+Title: Fixed actions in mobile GUI
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.5i6p3
+Date: 1416478312
+Class: fix
+
+It was not possible to perform any actions using the mobile GUI. This has been fixed now.

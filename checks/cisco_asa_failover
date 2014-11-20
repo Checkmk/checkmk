@@ -46,12 +46,22 @@ def inventory_cisco_asa_failover(info):
         if "this device" in deviceentry[0]:
             # Return the Cluster role ID of the device.
             return [ (None, int(info[1][1])) ]
-    return []
 
 
 def check_cisco_asa_failover(item, params, info):
 
-    asa_state_names = { 9: "active", 10 : "standby" }
+    asa_state_names = {
+        1   : "other",
+        2   : "up",
+        3   : "down",
+        4   : "error",
+        5   : "overTemp",
+        6   : "busy",
+        7   : "noMedia",
+        8   : "backup",
+        9   : "active",
+        10  : "standby",
+    }
 
 
     for deviceentry in info[-2:]:
@@ -75,9 +85,6 @@ def check_cisco_asa_failover(item, params, info):
 
             msgtxt = "Device is the %s" % deviceentry[2] + errtxt + state * "!"
             return (state, msgtxt)
-
-
-    return (3, "Data not in SNMP output")
 
 
 check_info["cisco_asa_failover"]  = {

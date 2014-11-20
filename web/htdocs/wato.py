@@ -6469,6 +6469,22 @@ def get_snapshot_status(snapshot, validate_checksums = False):
                 else:
                     raise MKGeneralException(_("Invalid snapshot (missing file: %s)") % entry)
 
+    def check_core():
+        if not defaults.omd_root:
+            return # Do not perform this check in non OMD environments
+        cmk_tar = cStringIO.StringIO(access_snapshot(lambda x: multitar.get_file_content(x, 'check_mk.tar.gz')))
+        files = multitar.list_tar_content(cmk_tar)
+        using_cmc = os.path.exists(defaults.omd_root + '/etc/check_mk/conf.d/microcore.mk')
+        snapshot_cmc = 'conf.d/microcore.mk' in files
+        if using_cmc and not snapshot_cmc:
+            raise MKGeneralException(_('You are currently using the Check_MK Microcore, but this snapshot does not use the '
+                                       'Check_MK Microcore. If you need to migrate your data, you could consider changing '
+                                       'the core, restoring the snapshot and changing the core back again.'))
+        elif not using_cmc and snapshot_cmc:
+            raise MKGeneralException(_('You are currently not using the Check_MK Microcore, but this snapshot uses the '
+                                       'Check_MK Microcore. If you need to migrate your data, you could consider changing '
+                                       'the core, restoring the snapshot and changing the core back again.'))
+
     def snapshot_secret():
         path = defaults.default_config_dir + '/snapshot.secret'
         try:
@@ -6558,6 +6574,7 @@ def get_snapshot_status(snapshot, validate_checksums = False):
         check_size()
         check_extension()
         check_content()
+        check_core()
 
         if validate_checksums:
             check_checksums()
@@ -6639,10 +6656,10 @@ def mode_snapshot_detail(phase):
 
             html.write("<td>")
             if verify_checksum:
-                if values['checksum'] == True:
+                if values.get('checksum') == True:
                     checksum_title = _('Checksum valid and signed')
                     checksum_icon  = ''
-                elif values['checksum'] == False:
+                elif values.get('checksum') == False:
                     checksum_title = _('Checksum invalid and not signed')
                     checksum_icon  = 'p'
                 else:

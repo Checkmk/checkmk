@@ -171,6 +171,7 @@ def transform_old_views():
                     # The exact match filters have been removed. They where used only as
                     # link filters anyway - at least by the builtin views.
                     continue
+
                 for var in f.htmlvars:
                     # Check whether or not the filter is supported by the datasource,
                     # then either skip or use the filter vars
@@ -178,6 +179,56 @@ def transform_old_views():
                         value = filtervars[var]
                         all_vars[var] = value
                         context[filter_name][var] = value
+
+                # We changed different filters since the visuals-rewrite. This must be treated here, since
+                # we need to transform views which have been created with the old filter var names.
+                # Changes which have been made so far:
+                changed_filter_vars = {
+                    'serviceregex': { # Name of the filter
+                        # old var name: new var name
+                        'service': 'service_regex',
+                    },
+                    'hostregex': {
+                        'host': 'host_regex',
+                    },
+                    'hostgroupnameregex': {
+                        'hostgroup_name': 'hostgroup_regex',
+                    },
+                    'servicegroupnameregex': {
+                        'servicegroup_name': 'servicegroup_regex',
+                    },
+                    'opthostgroup': {
+                        'opthostgroup': 'opthost_group',
+                        'neg_opthostgroup': 'neg_opthost_group',
+                    },
+                    'optservicegroup': {
+                        'optservicegroup': 'optservice_group',
+                        'neg_optservicegroup': 'neg_optservice_group',
+                    },
+                    'hostgroup': {
+                        'hostgroup': 'host_group',
+                        'neg_hostgroup': 'neg_host_group',
+                    },
+                    'servicegroup': {
+                        'servicegroup': 'service_group',
+                        'neg_servicegroup': 'neg_service_group',
+                    },
+                    'host_contactgroup': {
+                        'host_contactgroup': 'host_contact_group',
+                        'neg_host_contactgroup': 'neg_host_contact_group',
+                    },
+                    'service_contactgroup': {
+                        'service_contactgroup': 'service_contact_group',
+                        'neg_service_contactgroup': 'neg_service_contact_group',
+                    },
+                }
+
+                if filter_name in changed_filter_vars and f.info in datasource['infos']:
+                    for old_var, new_var in changed_filter_vars[filter_name].items():
+                        if old_var in filtervars:
+                            value = filtervars[old_var]
+                            all_vars[new_var] = value
+                            context[filter_name][new_var] = value
 
             # Now, when there are single object infos specified, add these keys to the
             # context

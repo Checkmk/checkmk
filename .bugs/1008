@@ -1,9 +1,9 @@
 Title: dashboards: dashboard of a single hostgroup cannot be edited
 Component: multisite
-State: open
+Class: bug
+State: works4me
 Date: 2014-11-05 21:35:53
 Targetversion: future
-Class: bug
 
 after creating a dashboard for a single hostgroup, saving it and editing it
 again, the following traceback occurs at the and and the dashboard cannot
@@ -34,3 +34,6 @@ Traceback (most recent call last):
   File "/omd/sites/heute/share/check_mk/web/htdocs/visuals.py", line 854, in set_value
     html.set_var(varname, value.get(varname))
 AttributeError: 'unicode' object has no attribute 'get'
+
+2014-11-20 11:31:33: changed state open -> works4me
+Already fixed.

@@ -2,7 +2,7 @@ Title: Fixed views missing values of some filters (serviceregex, hostgroup filte
 Level: 1
 Component: multisite
 Compatible: compat
-Version: 1.2.5i6p3
+Version: 1.2.5i7
 Date: 1416473103
 Class: fix
 

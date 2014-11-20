@@ -1,0 +1,10 @@
+Title: cisco_secure: fix service description, fix OK state in case of no violation
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.5i6p4
+Date: 1416498840
+
+

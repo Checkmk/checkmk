@@ -1,5 +1,6 @@
 1.2.5i6p4:
     Checks & Agents:
+    * 1515 FIX: cisco_secure: fix service description, fix OK state in case of no violation
     * 1548 FIX: bluecat_ntp: do not inventorized devices where NTP information is missing
     * 1549 FIX: bluecat_threads: do not inventorize this check where information is missing...
     * 1536 FIX: fritz!Box special agent now deals with new URLs (firmware >= 6.0) correctly

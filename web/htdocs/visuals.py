@@ -819,7 +819,7 @@ class Filter:
                 (self.name, self.title))
         html.write(_("FILTER NOT IMPLEMENTED"))
 
-    def filter(self, tablename):
+    def filter(self, infoname):
         return ""
 
     # Wether this filter needs to load host inventory data

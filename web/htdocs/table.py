@@ -99,6 +99,8 @@ def add_row(css=None, state=0, collect_headers=True, fixed=False):
             table["collect_headers"] = True
         elif table["collect_headers"] == True:
             table["collect_headers"] = "finished"
+    elif not collect_headers and table["collect_headers"]:
+        table["collect_headers"] = False
 
 # Intermediate title, shown as soon as there is a following row.
 # We store the group headers in the list of rows, with css None

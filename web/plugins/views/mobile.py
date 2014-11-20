@@ -392,7 +392,7 @@ multisite_builtin_views.update({
                       ('hst1', 'on'),
                       ('hst2', 'on'),
                       ('hstp', ''),
-                      ('is_host_acknowledged', '0'),
+                      ('is_host_acknowledged', '-1'),
                       ('host', ''),
                       ('is_summary_host', '0'),
                       ('opthostgroup', '')

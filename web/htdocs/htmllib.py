@@ -1128,14 +1128,21 @@ class html:
         else:
             return False
 
-    def confirm(self, msg, method="POST", action=None):
+    # The confirm dialog is normally not a dialog which need to be protected
+    # by a transid itselfs. It is only a intermediate step to the real action
+    # But there are use cases where the confirm dialog is used during rendering
+    # a normal page, for example when deleting a dashlet from a dashboard. In
+    # such cases, the transid must be added by the confirm dialog.
+    def confirm(self, msg, method="POST", action=None, add_transid=False):
         if self.var("_do_actions") == _("No"):
-            return # user has pressed "No"               # None --> "No"
+            # User has pressed "No", now invalidate the unused transid
+            self.check_transaction()
+            return # None --> "No"
         if not self.has_var("_do_confirm"):
             if self.mobile:
                 self.write('<center>')
             self.write("<div class=really>%s" % msg)
-            self.begin_form("confirm", method=method, action=action)
+            self.begin_form("confirm", method=method, action=action, add_transid=add_transid)
             self.hidden_fields(add_action_vars = True)
             self.button("_do_confirm", _("Yes!"), "really")
             self.button("_do_actions", _("No"), "")
@@ -1143,9 +1150,10 @@ class html:
             self.write("</div>")
             if self.mobile:
                 self.write('</center>')
-            return False                                # False --> "Dialog shown, no answer yet"
+            return False # False --> "Dialog shown, no answer yet"
         else:
-            return self.check_transaction() and True or None # True: "Yes", None --> Browser reload
+            # Now check the transaction
+            return self.check_transaction() and True or None # True: "Yes", None --> Browser reload of "yes" page
 
     def register_event(self, name):
         self.events.add(name)

@@ -1388,7 +1388,7 @@ def show_hosts(folder):
     for attr, topic in host_attributes:
         if attr.show_in_table():
             colspan += 1
-    if config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
+    if not g_folder.get(".lock_hosts") and config.may("wato.edit_hosts") and config.may("wato.move_hosts"):
         colspan += 1
     if show_checkboxes:
         colspan += 1

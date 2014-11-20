@@ -71,6 +71,7 @@ def mobile_html_head(title, ready_code=""):
 
 def mobile_html_foot():
     html.write("</body></html>\n")
+    html.store_new_transids()
 
 def jqm_header_button(pos, url, title, icon=""):
     html.write('<a href="%s" class="ui-btn-%s" data-direction="reverse" data-icon="%s" data-iconpos="notext"  title="%s" ></a>' % (url, pos, icon, title ))
@@ -221,11 +222,10 @@ def page_view():
     try:
 	views.show_view(view, show_heading = False, show_buttons = False,
 			show_footer = False, render_function = render_view)
-	pass
     except Exception, e:
 	if config.debug:
 	    raise
-	html.write("ERROR showing view: %s" % e)
+	html.write("ERROR showing view: %s" % html.attrencode(e))
 
 
     mobile_html_foot()
@@ -355,24 +355,28 @@ def show_command_form(view, datasource, rows):
     if not one_shown:
         html.write(_('No commands are possible in this view'))
 
+# FIXME: Reduce ducplicate code with views.py
 def do_commands(view, what, rows):
     command = None
-    title, executor = views.core_command(what, rows[0])[1:3] # just get the title
+    title, executor = views.core_command(what, rows[0], 0, len(rows))[1:3] # just get the title
     r = html.confirm(_("Do you really want to %(title)s the %(count)d %(what)ss?") %
             { "title" : title, "count" : len(rows), "what" : _(what + "s"), })
     if r != True:
         return r == None # Show commands on negative answer
 
     count = 0
-    for row in rows:
-        nagios_commands, title, executor = views.core_command(what, row)
+    already_executed = set([])
+    for nr, row in enumerate(rows):
+        nagios_commands, title, executor = views.core_command(what, row, nr, len(rows))
         for command in nagios_commands:
-            if type(command) == unicode:
-                command = command.encode("utf-8")
-            executor(command, row["site"])
-            count += 1
+            if command not in already_executed:
+                if type(command) == unicode:
+                    command = command.encode("utf-8")
+                executor(command, row["site"])
+                already_executed.add(command)
+                count += 1
 
-    if command:
+    if count > 0:
         html.message(_("Successfully sent %d commands.") % count)
     return True # Show commands again
 

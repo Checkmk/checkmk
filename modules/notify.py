@@ -1733,8 +1733,11 @@ def complete_raw_context(raw_context):
             # Here We do not know. The transition might be OK -> WARN -> CRIT and
             # the initial OK is completely lost. We use the artificial state "?"
             # here, which matches all states and makes sure that when in doubt a
-            # notification is being sent out.
-            prev_state = "?"
+            # notification is being sent out. But when the new state is UP, then
+            # we know that the previous state was a hard state (otherwise there
+            # would not have been any notification)
+            if raw_context["HOSTSTATE"] != "UP":
+                prev_state = "?"
             notify_log("Previous host hard state not known. Allowing all states.")
         raw_context["PREVIOUSHOSTHARDSTATE"] = prev_state
 
@@ -1745,7 +1748,8 @@ def complete_raw_context(raw_context):
             prev_state = "OK"
         elif "SERVICEATTEMPT" not in raw_context or \
             ("SERVICEATTEMPT" in raw_context and raw_context["SERVICEATTEMPT"] != "1"):
-            prev_state = "?"
+            if raw_context["SERVICESTATE"] != "OK":
+                prev_state = "?"
             notify_log("Previous service hard state not known. Allowing all states.")
         raw_context["PREVIOUSSERVICEHARDSTATE"] = prev_state
 

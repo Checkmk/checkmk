@@ -17,6 +17,9 @@
     WATO:
     * 1502 FIX: Fixed removing elements from ListOf choices during complain phase
 
+    Notifications:
+    * 1514 FIX: Try harder to detect previous hard state in notification when using Nagios as core...
+
 
 1.2.5i6p2:
     Core & Setup:

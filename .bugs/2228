@@ -1,0 +1,9 @@
+Title: WATO context button in a service view show not go to host properties
+Component: multisite
+State: open
+Date: 2014-11-20 15:39:15
+Targetversion: 1.2.5i1
+Class: nastiness
+
+If we really want this button then better point it to the list of service
+of the host.

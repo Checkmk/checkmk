@@ -1,0 +1,8 @@
+Title: Multisite connections: move persistent connection option to TCP
+Component: multisite
+State: open
+Date: 2014-11-20 11:21:24
+Targetversion: 1.2.5i1
+Class: nastiness
+
+This checkbox does not make sense for Livestatus-Proxy and local connections.

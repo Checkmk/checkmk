@@ -977,7 +977,7 @@ def page_delete_dashlet():
     html.context_button(_('Back'), back_url, 'back')
     html.end_context_buttons()
 
-    result = html.confirm(_('Do you really want to delete this dashlet?'), method = 'GET')
+    result = html.confirm(_('Do you really want to delete this dashlet?'), method='GET', add_transid=True)
     if result == False:
         html.footer()
         return # confirm dialog shown

@@ -478,7 +478,7 @@ def add_persisted_info(hostname, info):
 
     now = time.time()
     for section, (persisted_until, persisted_section) in persisted.items():
-        if now < persisted_until:
+        if now < persisted_until or opt_force:
             if section not in info:
                 info[section] = persisted_section
                 if opt_debug:

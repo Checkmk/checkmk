@@ -36,6 +36,7 @@
     * 1511 FIX: oracle_jobs: avoid broken checks, make compatible with old version...
     * 1513 FIX: Handle broken SNMP bulk walk implementation of Mikrotik Router firmware RouterOS v6.22...
     * 1503 FIX: Fixed monitoring of multiple SAP instances with one mk_sap plugin...
+    * 1449 FIX: nginx_status: agent plugin no longer honours "http(s)_proxy" env variables of root user
     * 1515 FIX: cisco_secure: fix service description, fix OK state in case of no violation
 
     Multisite:
@@ -91,6 +92,9 @@
     HW/SW-Inventory:
     * 1479 liveproxyd: new function for collecting remote inventory data...
             NOTE: Please refer to the migration notes!
+
+    inventory:
+    * 1516 FIX: win_disks: fix exception in case of empty signature
 
 
 1.2.5i6:

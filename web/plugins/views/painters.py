@@ -1764,7 +1764,7 @@ def paint_log_icon(row):
     elif log_type == "HOST ALERT":
         img = { 0: "up", 1: "down", 2:"unreach" }.get(row["log_state"])
     elif "DOWNTIME" in log_type:
-        if row["log_state_type"] == "STOPPED":
+        if row["log_state_type"] in [ "END", "STOPPED" ]:
             img = "downtimestop"
         else:
             img = "downtime"
@@ -1776,13 +1776,13 @@ def paint_log_icon(row):
         img = "restart"
     elif "starting..." in log_type:
         img = "start"
-    elif "shutdown..." in log_type:
+    elif "shutdown..." in log_type or "shutting down" in log_type:
         img = "stop"
     elif " FLAPPING " in log_type:
         img = "flapping"
 
     if img:
-        return "icon", '<img src="images/alert_%s.png">' % img
+        return "icon", '<img class=icon src="images/alert_%s.png">' % img
     else:
         return "icon", ""
 

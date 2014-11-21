@@ -1,0 +1,10 @@
+Title: WATO button for service parameters
+Component: multisite
+State: open
+Date: 2014-11-20 15:40:05
+Targetversion: 1.2.5i1
+Class: todo
+
+When you are at the details of a service there should be a context button for
+going to the parameters of that service. And also a button for going to the
+monitoring parameters (all rulesets) for that service.

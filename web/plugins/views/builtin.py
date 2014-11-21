@@ -529,7 +529,7 @@ multisite_builtin_views.update({
                               ('stp', 'on')],
           'hidden': True,
           'hide_filters': ['site', 'host'],
-          'icon': 'services',
+          'icon': 'status',
           'layout': 'boxed',
           'mustsearch': False,
           'name': 'host',

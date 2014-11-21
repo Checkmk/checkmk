@@ -47,7 +47,6 @@ MAX = -1
 # These settings might go into the config module, sometime in future,
 # in order to allow the user to customize this.
 
-header_height    = 60             # Distance from top of the screen to the lower border of the heading
 screen_margin    = 5              # Distance from the left border of the main-frame to the dashboard area
 dashlet_padding  = 21, 5, 5, 0, 4 # Margin (N, E, S, W, N w/o title) between outer border of dashlet and its content
 corner_overlap   = 22
@@ -111,9 +110,33 @@ def transform_builtin_dashboards():
         for nr, dashlet in enumerate(dashboard['dashlets']):
             dashlet.setdefault('show_title', True)
 
-            if dashlet.get('url', '').startswith('dashlet_') and dashlet['url'].endswith('.py'):
+            if dashlet.get('url', '').startswith('dashlet_hoststats') or dashlet.get('url', '').startswith('dashlet_servicestats'):
                 # hoststats and servicestats
-                dashlet['type'] = dashlet['url'][8:-3]
+                dashlet['type'] = dashlet['url'][8:].split('.', 1)[0]
+
+                if '?' in dashlet['url']:
+                    # Transform old parameters:
+                    # wato_folder
+                    # host_contact_group
+                    # service_contact_group
+                    paramstr = dashlet['url'].split('?', 1)[1]
+                    dashlet['context'] = {}
+                    for key, val in [ p.split('=', 1) for p in paramstr.split('&') ]:
+                        if key == 'host_contact_group':
+                            dashlet['context']['opthost_contactgroup'] = {
+                                'neg_opthost_contact_group': '',
+                                'opthost_contact_group': val,
+                            }
+                        elif key == 'service_contact_group':
+                            dashlet['context']['optservice_contactgroup'] = {
+                                'neg_optservice_contact_group': '',
+                                'optservice_contact_group': val,
+                            }
+                        elif key == 'wato_folder':
+                            dashlet['context']['wato_folder'] = {
+                                'wato_folder': val,
+                            }
+
                 del dashlet['url']
 
             elif dashlet.get('urlfunc') and type(dashlet['urlfunc']) != str:
@@ -142,6 +165,9 @@ def transform_builtin_dashboards():
                 raise MKGeneralException(_('Unable to transform dashlet %d of dashboard %s. '
                                            'You will need to migrate it on your own. Definition: %r' %
                                                             (nr, name, html.attrencode(dashlet))))
+
+            dashlet.setdefault('context', {})
+            dashlet.setdefault('single_infos', [])
 
         # the modification time of builtin dashboards can not be checked as on user specific
         # dashboards. Set it to 0 to disable the modification chech.
@@ -263,10 +289,12 @@ def render_dashboard(name):
 
     title = visuals.visual_title('dashboard', board)
 
+    # Distance from top of the screen to the lower border of the heading
+    header_height = 60
+
     # The title of the dashboard needs to be prefixed with the WATO path,
     # in order to make it clear to the user, that he is seeing only partial
     # data.
-    global header_height
     if not board.get('show_title'):
         # Remove the whole header line
         html.set_render_headfoot(False)
@@ -451,11 +479,17 @@ dashboard_scheduler(1);
     html.body_end() # omit regular footer with status icons, etc.
 
 def render_dashlet_content(nr, the_dashlet):
+    html.stash_vars()
+    html.del_all_vars()
+    visuals.add_context_to_uri_vars(the_dashlet)
+
     dashlet_type = dashlet_types[the_dashlet['type']]
     if 'iframe_render' in dashlet_type:
         dashlet_type['iframe_render'](nr, the_dashlet)
     else:
         dashlet_type['render'](nr, the_dashlet)
+
+    html.unstash_vars()
 
 # Create the HTML code for one dashlet. Each dashlet has an id "dashlet_%d",
 # where %d is its index (in board["dashlets"]). Javascript uses that id
@@ -976,7 +1010,7 @@ def page_delete_dashlet():
     html.context_button(_('Back'), back_url, 'back')
     html.end_context_buttons()
 
-    result = html.confirm(_('Do you really want to delete this dashlet?'), method = 'GET')
+    result = html.confirm(_('Do you really want to delete this dashlet?'), method='GET', add_transid=True)
     if result == False:
         html.footer()
         return # confirm dialog shown

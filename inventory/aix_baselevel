@@ -31,6 +31,7 @@ def inv_aix_baselevel(info):
         "version" : version,
         "vendor"  : "IBM",
         "type"    : "aix",
+        "name"    : "IBM AIX %s" %version,
     })
 
 inv_info['aix_baselevel'] = {

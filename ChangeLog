@@ -26,6 +26,9 @@
     Notifications:
     * 1514 FIX: Try harder to detect previous hard state in notification when using Nagios as core...
 
+    inventory:
+    * 1516 FIX: win_disks: fix exception in case of empty signature
+
 
 1.2.5i6p2:
     Core & Setup:

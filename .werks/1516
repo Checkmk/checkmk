@@ -1,0 +1,10 @@
+Title: win_disks: fix exception in case of empty signature
+Level: 1
+Component: inventory
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.5i6p3
+Date: 1416572007
+
+

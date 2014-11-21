@@ -92,6 +92,9 @@
     * 1479 liveproxyd: new function for collecting remote inventory data...
             NOTE: Please refer to the migration notes!
 
+    inventory:
+    * 1516 FIX: win_disks: fix exception in case of empty signature
+
 
 1.2.5i6:
     Core & Setup:

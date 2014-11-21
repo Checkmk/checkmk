@@ -77,7 +77,7 @@ def inv_win_disks(info):
             array["size"] = int(value)
         elif varname == "MediaType":
             array["type"] = value
-        elif varname == "Signature":
+        elif varname == "Signature" and value != '':
             array["signature"] = int(value)
         array["local"] = True
     node.append(array)

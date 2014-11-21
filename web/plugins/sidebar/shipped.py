@@ -1128,7 +1128,6 @@ sidebar_snapins["custom_links"] = {
 #   * [[link4]]
 
 def render_wiki():
-    import re
     filename = defaults.omd_root + '/var/dokuwiki/data/pages/sidebar.txt'
     html.javascript("""
     function wiki_search()

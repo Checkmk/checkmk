@@ -4874,6 +4874,10 @@ NOTES:
   of the RRDs has changed. The option --split will activate conversion
   from exising RRDs in PNP storage type SINGLE to MULTIPLE.
 
+  -i, --inventory does a HW/SW-Inventory for all, one or several
+  hosts. If you add the option -f, --force then persisted sections
+  will be used even if they are outdated.
+
 
 """ % (check_mk_configfile,
        precompiled_hostchecks_dir,

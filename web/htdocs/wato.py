@@ -10968,7 +10968,6 @@ def ajax_activation():
         log_commit_pending() # flush logfile with pending actions
         log_audit(None, "activate-config", _("Configuration activated, monitoring server restarted"))
 
-        # html.message
         html.write('OK: ')
         html.write('<div class=act_success><img src="images/icon_apply.png" /> %s</div>' %
                   _("Configuration successfully activated."))

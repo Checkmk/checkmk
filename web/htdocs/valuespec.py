@@ -1301,7 +1301,7 @@ class CascadingDropdown(ValueSpec):
             options.append((str(nr), title))
             # Determine the default value for the select, so the
             # the dropdown pre-selects the line corresponding with value.
-            # Note: the html.select with automatically show the modified
+            # Note: the html.select() with automatically show the modified
             # selection, if the HTML variable varprefix_sel aleady
             # exists.
             if value == val or (

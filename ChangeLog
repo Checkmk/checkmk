@@ -39,6 +39,7 @@
     * 1515 FIX: cisco_secure: fix service description, fix OK state in case of no violation
     * 1449 FIX: nginx_status: agent plugin no longer honours "http(s)_proxy" env variables of root user
     * 1532 FIX: mk_sap: Cleaning up old state information from sap.state file...
+    * 1548 FIX: bluecat_ntp: do not inventorized devices where NTP information is missing
 
     Multisite:
     * 1508 Allow input of plugin output and perfdata when faking check results...

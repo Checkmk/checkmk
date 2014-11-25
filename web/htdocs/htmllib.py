@@ -1213,19 +1213,7 @@ class html:
         elif type(value) not in [str, unicode]:
             value = str(value)
 
-        new = ""
-        for c in value:
-            if c == '"':
-                new += "&quot;"
-            elif c == '<':
-                new += "&lt;"
-            elif c == '>':
-                new += "&gt;"
-            else:
-                new += c
-        return new
-
-
+        return value.replace('"', "&quot;").replace("<", "&lt;").replace(">", "&gt;")
 
     # This function returns a str object, never unicode!
     # Beware: this code is crucial for the performance of Multisite!

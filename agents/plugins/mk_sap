@@ -137,7 +137,7 @@ local_cfg = {
 # The * matches the whole following string and does not end on next "/".
 # For examples, take a look at the default config file (/etc/check_mk/sap.cfg).
 monitor_paths = [
-#    'SAP CCMS Monitor Templates/Dialog Overview/*',
+    'SAP CCMS Monitor Templates/Dialog Overview/*',
 ]
 monitor_types = []
 config_file = os.getenv('MK_CONFDIR', '/etc/check_mk') + '/sap.cfg'

@@ -1,4 +1,7 @@
 1.2.5i6p4:
+    Checks & Agents:
+    * 1548 FIX: bluecat_ntp: do not inventorized devices where NTP information is missing
+
     HW/SW-Inventory:
     * 1547 FIX: win_cpuinfo: fix case where NumberOfCores is missing (Windows 2003)...
 

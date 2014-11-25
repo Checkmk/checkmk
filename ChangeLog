@@ -1,6 +1,7 @@
 1.2.5i6p4:
     Checks & Agents:
     * 1548 FIX: bluecat_ntp: do not inventorized devices where NTP information is missing
+    * 1549 FIX: bluecat_threads: do not inventorize this check where information is missing...
 
     Event Console:
     * 1531 FIX: Fixed exception in event history view when displaying CHANGESTATE events

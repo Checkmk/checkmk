@@ -2,6 +2,9 @@
     Checks & Agents:
     * 1548 FIX: bluecat_ntp: do not inventorized devices where NTP information is missing
 
+    Event Console:
+    * 1531 FIX: Fixed exception in event history view when displaying CHANGESTATE events
+
     HW/SW-Inventory:
     * 1547 FIX: win_cpuinfo: fix case where NumberOfCores is missing (Windows 2003)...
 

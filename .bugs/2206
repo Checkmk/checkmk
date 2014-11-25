@@ -1,0 +1,22 @@
+Title: Rework "crashed checks" mechanism
+Component: core
+State: open
+Date: 2014-11-25 10:11:51
+Targetversion: 1.2.5i1
+Class: todo
+
+The optional crashed checks log should be replaced by a new mechanism
+where each exception is written to a dedicated folder hierarchy like
+HOST/SERVICE, where only the last exception is stored per service.
+It is written as text file where all needed information like
+
+a) the raw agent output
+b) the raw SNMP data
+c) the traceback
+
+are written to.
+
+This file can be downloaded from the Web-GUI by clicking on an icon
+which is shown when there is some file for a service available.
+
+The files are removed using the diskspace cleanup mechanism regularly.

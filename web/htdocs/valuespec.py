@@ -867,6 +867,7 @@ class ListOf(ValueSpec):
         # Actual table of currently existing entries
         html.write('<table class="valuespec_listof" id="%s_table">' % varprefix)
 
+        # FIXME: Use plug/unplug mechanism instead of transform / then remove transform
         for nr, v in enumerate(value):
             html.push_transformation(lambda x: x.replace(self._magic, str(nr+1)))
             html.write('<tr><td class=vlof_buttons>')

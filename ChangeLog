@@ -1,4 +1,7 @@
 1.2.5i6p4:
+    Event Console:
+    * 1531 FIX: Fixed exception in event history view when displaying CHANGESTATE events
+
 
 1.2.5i6p3:
     Checks & Agents:

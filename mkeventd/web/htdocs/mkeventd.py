@@ -93,12 +93,13 @@ action_whats = {
   "COUNTFAILED"  : _("Event created by required count was not reached in time"),
   "UPDATE"       : _("Event information updated by user"),
   "NEW"          : _("New event created"),
-  "DELETE"       : _("Event deleted manually bu user"),
+  "DELETE"       : _("Event deleted manually by user"),
   "EMAIL"        : _("Email sent"),
   "SCRIPT"       : _("Script executed"),
   "CANCELLED"    : _("The event was cancelled because the corresponding OK message was received"),
   "ARCHIVED"     : _("Event was archived because no rule matched and archiving is activated in global settings."),
   "AUTODELETE"   : _("Event was deleted automatically"),
+  "CHANGESTATE"  : _("State of event changed by user"),
 }
 
 def service_levels():

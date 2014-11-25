@@ -88,6 +88,7 @@
 
     Event Console:
     * 1169 Added host state type filter to "recent event history" view
+    * 1531 FIX: Fixed exception in event history view when displaying CHANGESTATE events
 
     HW/SW-Inventory:
     * 1479 liveproxyd: new function for collecting remote inventory data...

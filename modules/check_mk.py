@@ -5493,7 +5493,7 @@ def restart_myself(keepalive_fd):
 
 
 def do_check_keepalive():
-    global g_initial_times
+    global g_initial_times, g_timeout
 
     def check_timeout(signum, frame):
         raise MKCheckTimeout()
@@ -5537,11 +5537,11 @@ def do_check_keepalive():
 
         num_checks += 1
 
-        timeout = int(keepalive_read_line())
+        g_timeout = int(keepalive_read_line())
         try: # catch non-timeout exceptions
             try: # catch timeouts
                 signal.signal(signal.SIGALRM, check_timeout)
-                signal.alarm(timeout)
+                signal.alarm(g_timeout)
                 if ';' in hostname:
                     hostname, ipaddress = hostname.split(";", 1)
                 elif hostname in ipaddress_cache:
@@ -5564,7 +5564,7 @@ def do_check_keepalive():
                 spec = exit_code_spec(hostname)
                 status = spec.get("timeout", 2)
                 total_check_output = "%s - Check_MK timed out after %d seconds\n" % (
-                    nagios_state_names[status], timeout)
+                    nagios_state_names[status], g_timeout)
 
             os.write(keepalive_fd, "%03d\n%08d\n%s" %
                  (status, len(total_check_output), total_check_output))

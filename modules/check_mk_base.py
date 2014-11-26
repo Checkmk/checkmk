@@ -90,6 +90,7 @@ g_single_oid_hostname        = None
 g_single_oid_cache           = {}
 g_broken_snmp_hosts          = set([])
 g_broken_agent_hosts         = set([])
+g_timeout                    = None
 
 
 # variables set later by getopt

@@ -1782,7 +1782,7 @@ def paint_log_icon(row):
         img = "flapping"
 
     if img:
-        return "icon", '<img src="images/alert_%s.png">' % img
+        return "icon", '<img class="icon" src="images/alert_%s.png">' % img
     else:
         return "icon", ""
 

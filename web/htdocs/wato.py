@@ -3206,7 +3206,7 @@ def show_service_table(host, firsttime):
     if html.var("_scan"):
         html.hidden_field("_scan", "on")
 
-    table.begin(css ="data", searchable = False, limit = None)
+    table.begin(css ="data", searchable = False, limit = None, sortable = False)
 
     # This option will later be switchable somehow
 

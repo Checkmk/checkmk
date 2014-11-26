@@ -1,0 +1,10 @@
+Title: Optimize handling of site context
+Component: multisite
+State: open
+Date: 2014-11-26 09:47:59
+Targetversion: 1.2.5i1
+Class: cleanup
+
+At the moment the site attribute is not handled optimal. We could
+check whether or not a target view has a "single host" context and
+then provide them the site attribute, if we know one in this situation.

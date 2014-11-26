@@ -2,6 +2,7 @@
     Checks & Agents:
     * 1548 FIX: bluecat_ntp: do not inventorized devices where NTP information is missing
     * 1549 FIX: bluecat_threads: do not inventorize this check where information is missing...
+    * 1536 FIX: fritz!Box special agent now deals with new URLs (firmware >= 6.0) correctly
 
     Multisite:
     * 1533 FIX: Fixed sorting of hosts with same name in "services of host" view

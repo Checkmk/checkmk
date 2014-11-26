@@ -843,7 +843,7 @@ if mkeventd_enabled:
             'event_sl_max',
         ],
         'hide_filters': [
-            'site',
+            'siteopt',
             'host',
         ],
     })
@@ -882,7 +882,7 @@ if mkeventd_enabled:
             'event_sl_max',
         ],
         'hide_filters': [
-            'site',
+            'siteopt',
             'event_host',
         ],
     })

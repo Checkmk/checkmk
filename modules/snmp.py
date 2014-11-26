@@ -28,9 +28,11 @@
 
 import subprocess
 
-OID_END    =  0
-OID_STRING = -1
-OID_BIN    = -2
+OID_END              =  0  # Suffix-part of OID that was not specified
+OID_STRING           = -1  # Complete OID as string ".1.3.6.1.4.1.343...."
+OID_BIN              = -2  # Complete OID as binary string "\x01\x03\x06\x01..."
+OID_END_BIN          = -3  # Same, but just the end part
+OID_END_OCTET_STRING = -4  # yet same, but omit first byte (assuming that is the length byte)
 
 def strip_snmp_value(value, hex_plain = False):
     v = value.strip()
@@ -127,7 +129,10 @@ def get_snmp_table(hostname, ip, check_type, oid_info):
             # in later. If the column in OID_STRING or OID_BIN we do something
             # similar: we fill in the complete OID of the entry, either as
             # string or as binary UTF-8 encoded number string
-            if column in [ OID_END, OID_STRING, OID_BIN ]:
+            if column in [ OID_END, OID_STRING, OID_BIN, OID_END_BIN, OID_END_OCTET_STRING ]:
+                if index_column >= 0:
+                    raise MKGeneralException("Invalid SNMP OID specification in implementation of check. "
+                        "You can only use one of OID_END, OID_STRING, OID_BIN, OID_END_BIN and OID_END_OCTET_STRING.")
                 index_column = colno
                 columns.append((fetchoid, []))
                 index_format = column
@@ -161,12 +166,16 @@ def get_snmp_table(hostname, ip, check_type, oid_info):
             fetchoid, max_column  = columns[max_len_col]
             for o, value in max_column:
                 if index_format == OID_END:
-		    eo = extract_end_oid(fetchoid, o)
-                    index_rows.append((o, eo))
+                    index_rows.append((o, extract_end_oid(fetchoid, o)))
                 elif index_format == OID_STRING:
                     index_rows.append((o, o))
-                else:
+                elif index_format == OID_BIN:
                     index_rows.append((o, oid_to_bin(o)))
+                elif index_format == OID_END_BIN:
+                    index_rows.append((o, oid_to_bin(extract_end_oid(fetchoid, o))))
+                else: # OID_END_OCTET_STRING:
+                    index_rows.append((o, oid_to_bin(extract_end_oid(fetchoid, o))[1:]))
+
             columns[index_column] = fetchoid, index_rows
 
 
@@ -360,9 +369,7 @@ def get_stored_snmpwalk(hostname, oid):
                 o = o[1:]
             if o == oid or o.startswith(oid_prefix + "."):
                 if len(parts) > 1:
-                    value = parts[1]
-                    if agent_simulator:
-                        value = agent_simulator_process(value)
+                    value = agent_simulator_process(parts[1])
                 else:
                     value = ""
                 # Fix for missing starting oids

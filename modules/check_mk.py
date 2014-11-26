@@ -5832,8 +5832,7 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
         ]
 
     # Load agent simulator if enabled in configuration
-    if agent_simulator:
-        execfile(modules_dir + "/agent_simulator.py", globals(), globals())
+    execfile(modules_dir + "/agent_simulator.py", globals(), globals())
 
 
 # Compute parameters for a check honoring factory settings,

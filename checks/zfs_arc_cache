@@ -93,7 +93,7 @@
 # [...]
 # }
 
-def zfs_arc_cache_parse(info):
+def parse_zfs_arc_cache(info):
     parsed = {}
     for line in info:
         if len(line) > 2 and line[1] == "=":
@@ -109,15 +109,13 @@ def zfs_arc_cache_parse(info):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def inventory_zfs_arc_cache(info):
-    parsed = zfs_arc_cache_parse(info)
-    if "hits" in parsed.keys() and "misses" in parsed.keys():
+def inventory_zfs_arc_cache(parsed):
+    if parsed.get("hits") and parsed.get("misses"):
         return [ (None, None) ]
     else:
         return []
 
-def check_zfs_arc_cache(_no_item, _no_params, info):
-    parsed = zfs_arc_cache_parse(info)
+def check_zfs_arc_cache(_no_item, _no_params, parsed):
     status = 0
     perfdata = []
     message = "ZFS arc cache:"
@@ -174,6 +172,7 @@ def check_zfs_arc_cache(_no_item, _no_params, info):
     return status, message, perfdata
 
 check_info["zfs_arc_cache"] = {
+    "parse_function"        : parse_zfs_arc_cache,
     "check_function"        : check_zfs_arc_cache,
     "inventory_function"    : inventory_zfs_arc_cache,
     "service_description"   : "ZFS arc cache",
@@ -190,16 +189,14 @@ check_info["zfs_arc_cache"] = {
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def inventory_zfs_arc_cache_l2(info):
-    parsed = zfs_arc_cache_parse(info)
+def inventory_zfs_arc_cache_l2(parsed):
     # if l2_size == 0 there is no l2 cache available at all
     if "l2_size" in parsed.keys() and parsed["l2_size"] > 0:
         return [ (None, None) ]
     else:
         return []
 
-def check_zfs_arc_cache_l2(_no_item, _no_params, info):
-    parsed = zfs_arc_cache_parse(info)
+def check_zfs_arc_cache_l2(_no_item, _no_params, parsed):
     status = 0
     perfdata = []
     message = "ZFS arc cache L2:"

@@ -360,9 +360,7 @@ def get_stored_snmpwalk(hostname, oid):
                 o = o[1:]
             if o == oid or o.startswith(oid_prefix + "."):
                 if len(parts) > 1:
-                    value = parts[1]
-                    if agent_simulator:
-                        value = agent_simulator_process(value)
+                    value = agent_simulator_process(parts[1])
                 else:
                     value = ""
                 # Fix for missing starting oids

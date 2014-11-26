@@ -3325,6 +3325,13 @@ def show_service_table(host, firsttime):
                                  ("item", mk_repr(item))])
                 html.icon_button(url, _("Edit and analyze the check parameters of this service"), "check_parameters")
 
+            if state_type == "ignored":
+                url = make_link([("mode", "edit_ruleset"),
+                                 ("varname", "ignored_services"),
+                                 ("host", hostname),
+                                 ("item", mk_repr(descr))])
+                html.icon_button(url, _("Edit and analyze the disabled services rules"), "ignore")
+
             # Permanently disable icon
             if state_type in ['new', 'old']:
                 url = make_link([

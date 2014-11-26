@@ -1,0 +1,10 @@
+Title: Fixed sorting of hosts with same name in "services of host" view
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.5i6p4
+Date: 1416989899
+
+

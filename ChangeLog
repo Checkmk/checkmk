@@ -3,6 +3,9 @@
     * 1548 FIX: bluecat_ntp: do not inventorized devices where NTP information is missing
     * 1549 FIX: bluecat_threads: do not inventorize this check where information is missing...
 
+    Multisite:
+    * 1533 FIX: Fixed sorting of hosts with same name in "services of host" view
+
     Event Console:
     * 1531 FIX: Fixed exception in event history view when displaying CHANGESTATE events
 

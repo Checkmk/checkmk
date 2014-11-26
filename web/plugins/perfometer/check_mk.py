@@ -1198,3 +1198,9 @@ def perfometer_ups_outphase(row, check_command, perf_data):
     return "%d%%" % load, perfometer_linear(load, "#8050ff")
 
 perfometers["check_mk-ups_socomec_outphase"] = perfometer_ups_outphase
+
+def perfometer_f5_bigip_vserver(row, check_command, perf_data):
+    connections = int(perf_data[0][1])
+    return str(connections), perfometer_logarithmic(connections, 100, 2, "#46a")
+
+perfometers["check_mk-f5_bigip_vserver"] = perfometer_f5_bigip_vserver

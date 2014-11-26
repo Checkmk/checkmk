@@ -5,6 +5,7 @@
 
     Multisite:
     * 1533 FIX: Fixed sorting of hosts with same name in "services of host" view
+    * 1534 FIX: Fixed filtering views in distributed setup lead to empty views...
 
     Event Console:
     * 1531 FIX: Fixed exception in event history view when displaying CHANGESTATE events

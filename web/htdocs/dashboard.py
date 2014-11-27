@@ -92,7 +92,30 @@ def load_dashboards():
     global dashboards, available_dashboards
     transform_builtin_dashboards()
     dashboards = visuals.load('dashboards', builtin_dashboards)
+    transform_dashboards(dashboards)
     available_dashboards = visuals.available('dashboards', dashboards)
+
+# During implementation of the dashboard editor and recode of the visuals
+# we had serveral different data structures, for example one where the
+# views in user dashlets were stored with a context_type instead of the
+# "single_info" key, which is the currently correct one.
+#
+# This code transforms views from user_dashboards.mk which have been
+# migrated/created with daily snapshots from 2014-08 till beginning 2014-10.
+# FIXME: Can be removed one day. Mark as incompatible change or similar.
+def transform_dashboards(dashboards):
+    for (u, n), dashboard in dashboards.items():
+        visuals.transform_old_visual(dashboard)
+
+        # Also transform dashlets
+        for dashlet in dashboard['dashlets']:
+            visuals.transform_old_visual(dashlet)
+
+            if dashlet['type'] == 'pnpgraph':
+                if 'service' not in dashlet['single_infos']:
+                    dashlet['single_infos'].append('service')
+                if 'host' not in dashlet['single_infos']:
+                    dashlet['single_infos'].append('host')
 
 # be compatible to old definitions, where even internal dashlets were
 # referenced by url, e.g. dashboard['url'] = 'hoststats.py'
@@ -851,6 +874,8 @@ def page_edit_dashlet():
             dashlet = dashboard['dashlets'][ident]
         except IndexError:
             raise MKGeneralException(_('The dashlet does not exist.'))
+
+        html.debug(dashlet)
 
         ty           = dashlet['type']
         dashlet_type = dashlet_types[ty]

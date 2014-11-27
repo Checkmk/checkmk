@@ -31,7 +31,7 @@
 # +------------------------------------------------------------------+
 
 
-akcp_sensor_temp_defaultlevels = (28, 32)
+akcp_sensor_temp_defaultlevels = (32, 35)
 
 def inventory_akcp_sensor_temp(info):
     return [ (x[0], "akcp_sensor_temp_defaultlevels" ) for x in info if x[3] == "1" ]

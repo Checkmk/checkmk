@@ -7,7 +7,3 @@ Date: 1416906688
 Class: fix
 
 The Plugin is now able to find instances with '_' in ORACLE_SID.
-
-Some Sections couldn't be executed under Oracle 9.2 because the required
-views are not available. The Data-Guard Status is only availible from 10.1
-onwards.

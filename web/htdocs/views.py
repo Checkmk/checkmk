@@ -91,6 +91,7 @@ def permitted_views():
     return available_views
 
 # Convert views that are saved in the pre 1.2.6-style
+# FIXME: Can be removed one day. Mark as incompatible change or similar.
 def transform_old_views():
 
     for view in multisite_views.values():
@@ -103,11 +104,7 @@ def transform_old_views():
         if 'context_type' in view:
             # This code transforms views from user_views.mk which have been migrated with
             # daily snapshots from 2014-08 till beginning 2014-10.
-            if view['context_type'] in [ 'host', 'service', 'hostgroup', 'servicegroup' ]:
-                view['single_infos'] = [view['context_type']]
-            else:
-                view['single_infos'] = [] # drop the context type and assume a "multiple view"
-            del view['context_type']
+            visuals.transform_old_visual(view)
 
         elif 'single_infos' not in view:
             # This tries to map the datasource and additional settings of the

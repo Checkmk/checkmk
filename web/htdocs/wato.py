@@ -12166,10 +12166,12 @@ def generate_wato_users_elements_function(none_value, only_contacts = False):
                      for (name, us)
                      in users.items()
                      if (not only_contacts or us.get("contactgroups")) ]
+        elements.sort()
         if nv != None:
             elements = [ (None, none_value) ] + elements
         return elements
     return lambda: get_wato_users(none_value)
+
 
 # Dropdown for choosing a multisite user
 class UserSelection(DropdownChoice):

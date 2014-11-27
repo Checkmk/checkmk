@@ -1,0 +1,12 @@
+Title: mk_inventory.ps1: fix garbled or missing entries by removing bogus binary zeroes
+Level: 1
+Component: inv
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.5i6p4
+Date: 1417083051
+
+This fixes a problem in the HW/SW-Inventory plugin for Windows by removing some bogus
+binary zeroes in the output of WMI. Thanks to Christian Michaelski.
+

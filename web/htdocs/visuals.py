@@ -1244,6 +1244,19 @@ def collect_context_links_of(visual_type_name, this_visual, active_filter_vars, 
 
     return context_links
 
+def transform_old_visual(visual):
+    if 'context_type' in visual:
+        if visual['context_type'] in [ 'host', 'service', 'hostgroup', 'servicegroup' ]:
+            visual['single_infos'] = [visual['context_type']]
+        else:
+            visual['single_infos'] = [] # drop the context type and assume a "multiple visual"
+        del visual['context_type']
+    elif 'single_infos' not in visual:
+        visual['single_infos'] = []
+
+    visual.setdefault('context', {})
+
+
 #.
 #   .--Popup Add-----------------------------------------------------------.
 #   |          ____                              _       _     _           |

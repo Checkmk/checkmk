@@ -262,28 +262,32 @@ def extract_domains(tar, domains):
 def extract(tar, components):
     for what, name, path in components:
         try:
-            subtarstream = tar.extractfile(name + ".tar")
-        except:
-            pass # may be missing, e.g. sites.tar is only present
-                 # if some sites have been created.
+            try:
+                subtarstream = tar.extractfile(name + ".tar")
+            except:
+                pass # may be missing, e.g. sites.tar is only present
+                     # if some sites have been created.
 
-        if what == "dir":
-            target_dir = path
-        else:
-            target_dir = os.path.dirname(path)
-
-        # Remove old stuff
-        if os.path.exists(path):
             if what == "dir":
-                wipe_directory(path)
+                target_dir = path
             else:
-                os.remove(path)
-        elif what == "dir":
-            os.makedirs(path)
+                target_dir = os.path.dirname(path)
 
-        # Extract without use of temporary files
-        subtar = tarfile.open(fileobj = subtarstream)
-        subtar.extractall(target_dir)
+            # Remove old stuff
+            if os.path.exists(path):
+                if what == "dir":
+                    wipe_directory(path)
+                else:
+                    os.remove(path)
+            elif what == "dir":
+                os.makedirs(path)
+
+            # Extract without use of temporary files
+            subtar = tarfile.open(fileobj = subtarstream)
+            subtar.extractall(target_dir)
+        except Exception, e:
+            import traceback
+            raise MKGeneralException('Failed to extract subtar %s: %s' % (name, traceback.format_exc()))
 
 # Try to cleanup everything starting from the root_path
 # except the specific exclude files

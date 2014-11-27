@@ -160,7 +160,7 @@ def ack_button(host = None, int_filename = None):
     else:
         label = _("Clear Logs")
 
-    html.context_button(label, html.makeuri([('_ack', '1')]), 'delete')
+    html.context_button(label, html.makeactionuri([('_ack', '1')]), 'delete')
 
 
 def show_file(host, filename):

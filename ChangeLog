@@ -1,12 +1,15 @@
 1.2.5i6p4:
     Checks & Agents:
+    * 1515 FIX: cisco_secure: fix service description, fix OK state in case of no violation
     * 1548 FIX: bluecat_ntp: do not inventorized devices where NTP information is missing
     * 1549 FIX: bluecat_threads: do not inventorize this check where information is missing...
     * 1536 FIX: fritz!Box special agent now deals with new URLs (firmware >= 6.0) correctly
+    * 1550 FIX: zfs_arc_cache: do not inventorize of no cache information available...
 
     Multisite:
     * 1533 FIX: Fixed sorting of hosts with same name in "services of host" view
     * 1534 FIX: Fixed filtering views in distributed setup lead to empty views...
+    * 1553 FIX: Fix deleting (acknowleding) of logfiles in logwatch...
     * 1537 FIX: Added transformation code for user dashboards created between 2014-08 and 2014-10...
 
     WATO:
@@ -17,6 +20,7 @@
 
     HW/SW-Inventory:
     * 1547 FIX: win_cpuinfo: fix case where NumberOfCores is missing (Windows 2003)...
+    * 1552 FIX: mk_inventory.ps1: fix garbled or missing entries by removing bogus binary zeroes...
 
 
 1.2.5i6p3:

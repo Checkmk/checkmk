@@ -24,8 +24,12 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+def inventory_elphase(parsed):
+    for item in parsed.keys():
+        yield item, {}
 
-def check_ups_outphase(item, params, parsed):
+
+def check_elphase(item, params, parsed):
 
     def tostring(value):
         if type(value) == int:
@@ -34,7 +38,7 @@ def check_ups_outphase(item, params, parsed):
             return "%.1f" % value
 
     if "voltage" in parsed[item]:
-        volt = parsed[item]["voltage"]
+        volt, state_info = parsed[item]["voltage"]
         infotext = "Voltage: %s V" % tostring(volt)
         if "voltage" in params:
             warn, crit = params["voltage"]
@@ -53,17 +57,21 @@ def check_ups_outphase(item, params, parsed):
             perfdata = [ ("voltage", volt) ]
 
         yield status, infotext, perfdata
+        if state_info:
+            yield state_info
 
     # Current is currently purely informative and does not support setting levels
     if "current" in parsed[item]:
-        current = parsed[item]["current"]
+        current, state_info = parsed[item]["current"]
         perfdata = [ ("current", current) ]
         infotext = "Current: %s A" % tostring(current)
 
         yield 0, infotext, perfdata
+        if state_info:
+            yield state_info
 
     if "load" in parsed[item]:
-        load = parsed[item]["load"]
+        load, state_info = parsed[item]["load"]
         infotext = "Load: %s%%" % tostring(load)
         if "load" in params:
             warn, crit = params["load"]
@@ -83,3 +91,5 @@ def check_ups_outphase(item, params, parsed):
             perfdata = [ ("load", load) ]
 
         yield status, infotext, perfdata
+        if state_info:
+            yield state_info

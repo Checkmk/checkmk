@@ -1199,6 +1199,15 @@ def perfometer_ups_outphase(row, check_command, perf_data):
 
 perfometers["check_mk-ups_socomec_outphase"] = perfometer_ups_outphase
 
+def perfometer_el_inphase(row, check_command, perf_data):
+    for data in perf_data:
+        if data[0] == "power":
+            power = savefloat(data[1])
+    return "%.0f W" % power, perfometer_linear(power, "#8050ff")
+
+perfometers["check_mk-raritan_pdu_inlet"] = perfometer_el_inphase
+perfometers["check_mk-raritan_pdu_inlet_summary"] = perfometer_el_inphase
+
 def perfometer_f5_bigip_vserver(row, check_command, perf_data):
     connections = int(perf_data[0][1])
     return str(connections), perfometer_logarithmic(connections, 100, 2, "#46a")

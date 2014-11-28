@@ -54,6 +54,7 @@ check_info['raritan_pdu_inlet'] = {
   "check_function"      : check_elphase,
   "service_description" : "Inlet Phase %s",
   "has_perfdata"        : True,
+  "group"               : "el_inphase",
   "snmp_info"           : ( #".1.3.6.1.4.1.13742.6.5.2.4.1.4.1.1",
                             ".1.3.6.1.4.1.13742.6.5.2.4.1",
                                      [ OID_END,

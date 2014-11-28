@@ -9,7 +9,7 @@ description:
  The check displays the measured value of the sensor.
 
 item:
- The ID Number of the phase.
+ One item named Summary.
 
 perfdata:
  Five values: Voltage, current, power, apparent power and energy

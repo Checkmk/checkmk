@@ -4991,7 +4991,7 @@ register_check_parameters(
 register_check_parameters(
     subgroup_environment,
     "ups_outphase",
-    _("Parameters for output phases of UPSs"),
+    _("Parameters for output phases of UPSs and PDUs"),
     Dictionary(
         elements = [
             ( "voltage",
@@ -5009,6 +5009,52 @@ register_check_parameters(
                       Integer(title = _("critical at"), unit = u"%", default_value = 90),
                   ])),
             ]),
+    TextAscii(
+        title = _("Phase Number"),
+        help = _("The number of the phase (usually <tt>1</tt>,<tt>2</tt>,<tt>3</tt>).")),
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_environment,
+    "el_inphase",
+    _("Parameters for input phases of UPSs and PDUs"),
+    Dictionary(
+        elements = [
+            ( "voltage",
+              Tuple(
+                  title = _("Voltage"),
+                  elements = [
+                      Integer(title = _("warning if below"), unit = u"V", default_value = 210),
+                      Integer(title = _("critical if below"), unit = u"V", default_value = 200),
+                  ],
+            )),
+            ( "power",
+              Tuple(
+                  title = _("Power"),
+                  elements = [
+                      Integer(title = _("warning at"), unit = u"W", default_value = 1000),
+                      Integer(title = _("critical at"), unit = u"W", default_value = 1200),
+                  ],
+            )),
+            ( "appower",
+              Tuple(
+                  title = _("Apparent Power"),
+                  elements = [
+                      Integer(title = _("warning at"), unit = u"VA", default_value = 1100),
+                      Integer(title = _("critical at"), unit = u"VA", default_value = 1300),
+                  ],
+            )),
+            ( "current",
+              Tuple(
+                  title = _("Current"),
+                  elements = [
+                      Integer(title = _("warning at"), unit = u"A", default_value = 5),
+                      Integer(title = _("critical at"), unit = u"A", default_value = 10),
+                  ],
+            )),
+        ]
+    ),
     TextAscii(
         title = _("Phase Number"),
         help = _("The number of the phase (usually <tt>1</tt>,<tt>2</tt>,<tt>3</tt>).")),

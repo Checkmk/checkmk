@@ -854,13 +854,9 @@ class Filter:
     # Is used to populate a value, for example loaded from persistance, into
     # the HTML context where it can be used by e.g. the display() method.
     def set_value(self, value):
-        try:
-            val = {}
-            for varname in self.htmlvars:
-                html.set_var(varname, value.get(varname))
-        except:
-            html.debug("%r, %s" % (self, self.name))
-            raise
+        val = {}
+        for varname in self.htmlvars:
+            html.set_var(varname, value.get(varname))
 
 def get_filter(name):
     return multisite_filters[name]

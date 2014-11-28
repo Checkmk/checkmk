@@ -25,44 +25,42 @@
 # Boston, MA 02110-1301 USA.
 
 def parse_raritan_pdu_inlet(info):
-    # List of tuples, sorting like the snmp output,
-    # each tuple contains: capabilities, digits
-    translation = (
-      ( '2',  1 ),
-      ( '1',  0 ),
-      ( '3',  0 ),
-      ( '4',  0 ),
-      ( '-1', 2 ),
-      ( '5',  0 ),
-    )
-    phases = [ 'L1', 'L2', 'L3' ]
-    i = 0
-    state = 4 # We dont know the senosr state, so we assume normal
+    parsed = {}
+    for oid_end, availability, sensor_state, value in info:
+        if availability == '1':
+            phase, sensor_type = oid_end.split('.')[2:4]
+            if int(sensor_type) in raritan_pdu_sensor_types:
+                parsed.setdefault(phase, {})
+                key = raritan_pdu_sensor_types[int(sensor_type)] # get key for elphase.include
+                value = float(value)
+                if sensor_state in [ '2', '6' ]:
+                    state = 2
+                elif sensor_state != '4':
+                    state = 1
+                else:
+                    state = 0
+                if state:
+                    parsed[phase][key] = (value, (state, raritan_pdu_sensor_states[sensor_state]))
+                else:
+                    parsed[phase][key] = (value, None)
 
-    parsed = []
-    for line in info:
-        y = 0
-        # loop over the current Sensor values.
-        # We know the units cause of the translation list
-        for value in line[1:]:
-            item = phases[i] + '-' + capabilities[translation[y][0]]
-            unit = translation[y][0]
-            digits = translation[y][1]
-            parsed.append( (item, unit, digits, '1', state, value) )
-            y += 1
-        i += 1
     return parsed
 
 
+
 check_info['raritan_pdu_inlet'] = {
-  "inventory_function"  : inventory_raritan_pdu_inlet_generic,
-  "check_function"      : check_raritan_pdu_inlet_generic,
   "parse_function"      : parse_raritan_pdu_inlet,
-  "service_description" : "Inlet %s",
+  "inventory_function"  : inventory_elphase,
+  "check_function"      : check_elphase,
+  "service_description" : "Inlet Phase %s",
   "has_perfdata"        : True,
-  "snmp_info"           : ( ".1.3.6.1.4.1.13742.6.5.2.4.1.4.1.1",
-                                                [ 1, 2, 3 ],
-                                                [ OID_END, 1, 4, 5, 6, 7, 8 ]),
+  "snmp_info"           : ( #".1.3.6.1.4.1.13742.6.5.2.4.1.4.1.1",
+                            ".1.3.6.1.4.1.13742.6.5.2.4.1",
+                                     [ OID_END,
+                                       2, # availability
+                                       3, # state
+                                       4, # value
+                            ]),
   "snmp_scan_function"  : lambda oid: oid(".1.3.6.1.2.1.1.2.0") == ".1.3.6.1.4.1.13742.6",
-  "includes"            : [ 'raritan_pdu_inlet.include']
+  "includes"            : [ 'raritan_pdu_inlet.include', 'elphase.include' ]
 }

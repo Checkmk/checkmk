@@ -569,6 +569,12 @@ class Hostname(TextAscii):
         self._regex = re.compile('^[-0-9a-zA-Z_.]+$')
         self._regex_error = _("Please enter a valid hostname or IPv4 address.")
 
+class AbsoluteDirname(TextAscii):
+    def __init__(self, **kwargs):
+        TextAscii.__init__(self, **kwargs)
+        self._regex = re.compile('^(/|(/[^/]+)+)$')
+        self._regex_error = _("Please enter a valid absolut pathname with / as a path separator.")
+
 
 # Valuespec for a HTTP Url (not HTTPS), that
 # automatically adds http:// to the value
@@ -653,6 +659,7 @@ class TextAreaUnicode(TextUnicode):
 
 # A variant of TextAscii() that validates a path to a filename that
 # lies in an existing directory.
+# TODO: Rename the valuespec here to ExistingFilename or somehting similar
 class Filename(TextAscii):
     def __init__(self, **kwargs):
         TextAscii.__init__(self, **kwargs)

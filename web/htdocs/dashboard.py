@@ -875,8 +875,6 @@ def page_edit_dashlet():
         except IndexError:
             raise MKGeneralException(_('The dashlet does not exist.'))
 
-        html.debug(dashlet)
-
         ty           = dashlet['type']
         dashlet_type = dashlet_types[ty]
         single_infos = dashlet['single_infos']

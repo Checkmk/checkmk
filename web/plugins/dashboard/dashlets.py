@@ -336,9 +336,9 @@ def make_pnp_url(dashlet, what):
     else:
         base_url = html.site_status[site]["site"]["url_prefix"]
     base_url += "pnp4nagios/index.php/"
-    var_part = "?host=%s&srv=%s&source=%d&view=%s&theme=multisite&_t=%d" % \
+    var_part = "?host=%s&srv=%s&source=%d&view=%s&theme=multisite" % \
             (pnp_cleanup(dashlet['context']['host']), pnp_cleanup(service),
-             dashlet['source'], dashlet['timerange'], int(time.time()))
+             dashlet['source'], dashlet['timerange'])
     return base_url + what + var_part
 
 def dashlet_pnpgraph(nr, dashlet):
@@ -377,6 +377,9 @@ dashlet_types["pnpgraph"] = {
 }
 """,
     "on_resize"    : lambda nr, dashlet: 'dashboard_render_pnpgraph(%d, \'%s\');' %
+                                                 (nr, make_pnp_url(dashlet, 'image')),
+    # execute this js handler instead of refreshing the dashlet by calling "render" again
+    "on_refresh"   : lambda nr, dashlet: 'dashboard_render_pnpgraph(%d, \'%s\');' %
                                                  (nr, make_pnp_url(dashlet, 'image')),
     "script": """
 var dashlet_offsets = {};
@@ -436,6 +439,7 @@ function load_graph_img(nr, img, img_url, c_w, c_h)
         img_url += '&graph_width='+(c_w - dashlet_offsets[nr][0])
                   +'&graph_height='+(c_h - dashlet_offsets[nr][1]);
     }
+    img_url += '&_t='+Math.floor(Date.parse(new Date()) / 1000); // prevent caching
     img.src = img_url;
 }
 """

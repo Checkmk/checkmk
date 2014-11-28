@@ -379,8 +379,13 @@ def render_dashboard(name):
             url = dashlet.get("url", "dashboard_dashlet.py?name="+name+"&id="+ str(nr))
             refresh = dashlet.get("refresh", dashlet_type.get("refresh"))
             if refresh:
-                # FIXME: remove add_wato_folder_to_url
-                refresh_dashlets.append([nr, refresh, str(add_wato_folder_to_url(url, wato_folder))])
+                if 'on_refresh' in dashlet_type:
+                    action = 'function() {%s}' % dashlet_type['on_refresh'](nr, dashlet)
+                else:
+                    # FIXME: remove add_wato_folder_to_url
+                    action = '"%s"' % add_wato_folder_to_url(url, wato_folder) # url to dashboard_dashlet.py
+                refresh_dashlets.append('[%d, %d, %s]' % (nr, refresh, action))
+
 
         # Update the dashlets context with the dashboard global context when there are
         # useful information
@@ -482,7 +487,7 @@ var title_height = %d;
 var dashlet_padding = Array%s;
 var dashlet_min_size = Array%s;
 var corner_overlap = %d;
-var refresh_dashlets = %r;
+var refresh_dashlets = [%s];
 var on_resize_dashlets = {%s};
 var dashboard_name = '%s';
 var dashboard_mtime = %d;
@@ -493,7 +498,7 @@ calculate_dashboard();
 window.onresize = function () { calculate_dashboard(); }
 dashboard_scheduler(1);
     """ % (MAX, GROW, raster, header_height, screen_margin, title_height, dashlet_padding, dashlet_min_size,
-           corner_overlap, refresh_dashlets, ','.join(on_resize), name, board['mtime'],
+           corner_overlap, ','.join(refresh_dashlets), ','.join(on_resize), name, board['mtime'],
            html.makeuri([('edit', '1')]), repr(dashlets_js)))
 
     if mode == 'edit':

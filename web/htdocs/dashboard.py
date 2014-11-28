@@ -376,8 +376,8 @@ def render_dashboard(name):
         # dashlets using static content (such as an iframe) will not be
         # refreshed by us but need to do that themselves.
         if "url" in dashlet or ('render' in dashlet_type and dashlet_type.get('refresh')):
-            url = dashlet.get("url", "dashboard_dashlet.py?name="+name+"&id="+ str(nr));
-            refresh = dashlet.get("refresh")
+            url = dashlet.get("url", "dashboard_dashlet.py?name="+name+"&id="+ str(nr))
+            refresh = dashlet.get("refresh", dashlet_type.get("refresh"))
             if refresh:
                 # FIXME: remove add_wato_folder_to_url
                 refresh_dashlets.append([nr, refresh, str(add_wato_folder_to_url(url, wato_folder))])

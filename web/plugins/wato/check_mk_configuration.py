@@ -1138,19 +1138,27 @@ register_configvar(group,
                       "for the operation, but on the other hand will lead to a slightly higher load "
                       "of Nagios for the first couple of minutes after the restart. ")))
 
+def log_dir_path():
+    path = defaults.log_dir
+    if path.startswith('/omd'):
+        parts = path.split('/')
+        parts[2] = '&lt;siteid&gt;'
+        return '/'.join(parts)
+    else:
+        return path
 
 register_configvar(group,
     "debug_log",
     Transform(
         Checkbox(
-            label = _("Write exceptions to <tt>%s/crashed-checks.log</tt>" % defaults.log_dir),
+            label = _("Write exceptions to <tt>%s/crashed-checks.log</tt>" % log_dir_path()),
         ),
         title = _("Log exceptions in check plugins"),
         help = _("If this option is enabled Check_MK will create a debug logfile at "
-                 "<tt>%s/chrashed-checks.log</tt> "
+                 "<tt>%s/crashed-checks.log</tt> "
                  "containing details about failed checks (those which have the state <i>UNKNOWN "
                  "and the output UNKNOWN - invalid output from plugin</i>...) Per default no "
-                 "logfile is written.") % defaults.log_dir,
+                 "logfile is written.") % log_dir_path(),
         forth = lambda x: not not x,
     ),
     need_restart = True)

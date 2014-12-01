@@ -1,0 +1,9 @@
+Title: Terminating with exit code 3 now when duplicate host has been found
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.5i7
+Date: 1417425490
+Class: fix
+
+

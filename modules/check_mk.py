@@ -5737,7 +5737,7 @@ def read_config_files(with_autochecks=True, with_conf_d=True):
     for hostname in strip_tags(all_hosts + clusters.keys()):
         if hostname in seen_hostnames:
             sys.stderr.write("Error in configuration: duplicate host '%s'\n" % hostname)
-            sys.exit(4)
+            sys.exit(3)
         seen_hostnames.add(hostname)
 
     # Add WATO-configured explicit checks to (possibly empty) checks

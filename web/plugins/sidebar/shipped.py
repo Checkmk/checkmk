@@ -1257,12 +1257,6 @@ if defaults.omd_root:
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
-def parse_hosttag_title(title):
-    if '/' in title:
-        return title.split('/', 1)
-    else:
-        return None, title
-
 def compute_tag_tree(taglist):
     html.live.set_prepend_site(True)
     query = "GET hosts\n" \

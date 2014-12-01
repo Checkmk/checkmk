@@ -35,11 +35,11 @@ def wato_link(folder, site, hostname, where):
            (html.urlencode(folder), html.urlencode(hostname))
         if where == "inventory":
             url += "&mode=inventory"
-            help = _("Edit services in WATO - the Check_MK Web Administration Tool")
+            help = _("Edit services")
         else:
             url += "&mode=edithost"
-            help = _("Open this host in WATO - the Check_MK Web Administration Tool")
-        return '<a href="%s"><img class=icon src="images/icon_wato.gif" ' \
+            help = _("Edit this host")
+        return '<a href="%s"><img class=icon src="images/icon_wato.png" ' \
                'title="%s"></a>' % (url, help)
     else:
         return ""

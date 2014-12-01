@@ -819,7 +819,7 @@ function handle_host_diag_result(ident, response_text) {
     retry.style.display = 'inline';
 }
 
-function start_host_diag_test(ident, hostname, transid) {
+function start_host_diag_test(ident, hostname) {
     var log   = document.getElementById(ident + '_log');
     var img   = document.getElementById(ident + '_img');
     var retry = document.getElementById(ident + '_retry');
@@ -836,8 +836,7 @@ function start_host_diag_test(ident, hostname, transid) {
 
     img.src = "images/icon_loading.gif";
     log.innerHTML = "...";
-    get_url("wato_ajax_diag_host.py?host=" + escape(hostname) + "&_test=" + escape(ident)
-            + '&_transid=' + transid + vars,
+    get_url("wato_ajax_diag_host.py?host=" + escape(hostname) + "&_test=" + escape(ident) + vars,
               handle_host_diag_result, ident);
 }
 

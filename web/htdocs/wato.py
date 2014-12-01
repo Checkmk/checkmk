@@ -2995,13 +2995,13 @@ def mode_diag_host(phase):
             html.write('<table class="data test"><tr class="data odd0">')
             html.write('<td class="icons"><div>')
             html.write('<img class="icon" id="%s_img" src="">' % ident)
-            html.write('<a href="javascript:start_host_diag_test(\'%s\', \'%s\', \'%s\');">'
+            html.write('<a href="javascript:start_host_diag_test(\'%s\', \'%s\');">'
                        '<img class="icon retry" id="%s_retry" src="images/icon_retry_disabled.gif" title="%s"></a>' %
-                        (ident, hostname, html.fresh_transid(), ident, _('Retry this test')))
+                        (ident, hostname, ident, _('Retry this test')))
             html.write('</div></td>')
             html.write('<td><div class="log" id="%s_log"></div>' % ident)
             html.write('</tr></table>')
-            html.javascript('start_host_diag_test("%s", "%s", "%s")' % (ident, hostname, html.fresh_transid()))
+            html.javascript('start_host_diag_test("%s", "%s")' % (ident, hostname))
 
     html.write('</td></tr></table>')
     html.write('</div>')
@@ -3009,9 +3009,6 @@ def mode_diag_host(phase):
 def ajax_diag_host():
     try:
         prepare_folder_info()
-
-        if not html.check_transaction():
-            return
 
         if not config.may('wato.diag_host'):
             raise MKAuthException(_('You are not permitted to perform this action.'))
@@ -9061,7 +9058,6 @@ def mode_notification_rule(phase, profilemode):
         if profilemode:
             html.context_button(_("All Rules"), make_link([("mode", "user_notifications_p")]), "back")
         else:
-            home_button()
             html.context_button(_("All Rules"), make_link([("mode", "notifications"), ("userid", userid)]), "back")
         return
 
@@ -9080,7 +9076,6 @@ def mode_notification_rule(phase, profilemode):
             rule = {}
     else:
         rule = rules[edit_nr]
-
 
     vs = vs_notification_rule(userid)
 
@@ -15894,8 +15889,7 @@ def create_sample_config():
         'contact_object'         : True,
         'description'            : 'Notify all contacts of a host/service via HTML email',
         'disabled'               : False,
-        'notify_method'          : [],
-        'notify_plugin'          : 'mail'
+        'notify_plugin'          : ('mail', {}),
     }]
     save_notification_rules(notification_rules)
 

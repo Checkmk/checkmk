@@ -116,7 +116,16 @@ def create_user_file(path, mode):
     return f
 
 def write_settings_file(path, content):
-    create_user_file(path, "w").write(pprint.pformat(content) + "\n")
+    try:
+        data = pprint.pformat(content)
+    except UnicodeDecodeError:
+        # When writing a dict with unicode keys and normal strings with garbled
+        # umlaut encoding pprint.pformat() fails with UnicodeDecodeError().
+        # example:
+        #   pprint.pformat({'Z\xc3\xa4ug': 'on',  'Z\xe4ug': 'on', u'Z\xc3\xa4ugx': 'on'})
+        # Catch the exception and use repr() instead
+        data = repr(content)
+    create_user_file(path, "w").write(data + "\n")
 
 def savefloat(f):
     try:

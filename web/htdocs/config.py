@@ -417,6 +417,8 @@ def save_user_file(name, content, unlock = False):
     except Exception, e:
         # Error while writing file -> release lock
         release_lock(path)
+        if debug:
+            raise
         raise MKConfigError(_("Cannot save %s options for user <b>%s</b> into <b>%s</b>: %s") % \
                 (name, user_id, path, e))
 

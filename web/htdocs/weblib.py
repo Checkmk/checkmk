@@ -32,13 +32,14 @@ def ajax_tree_openclose():
     html.load_tree_states()
 
     tree = html.var("tree")
-    name = html.var("name")
+    name = html.var_utf8("name")
 
     if not tree or not name:
         MKUserError('tree or name parameter missing')
 
     html.set_tree_state(tree, name, html.var("state"))
     html.save_tree_states()
+    html.write('OK') # Write out something to make debugging easier
 
 #   .--Row Selector--------------------------------------------------------.
 #   |      ____                 ____       _           _                   |

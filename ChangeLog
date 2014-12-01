@@ -90,6 +90,7 @@
     * 1573 FIX: WATO Quickaccess snapin: Pending button is not overlapped by icons anymore
     * 1557 FIX: Fix sorting of hostnames that only differ in lower/uppercaseness
     * 1577 FIX: Fixed editing of views using the "Downtime for host/service" sorter or column...
+    * 1578 FIX: Folding states of containers with umlauts in titles are now persisted...
 
     WATO:
     * 1170 Added buttons to move rules to top/bottom of the list to ruleset edit dialog

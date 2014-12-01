@@ -9058,7 +9058,6 @@ def mode_notification_rule(phase, profilemode):
         if profilemode:
             html.context_button(_("All Rules"), make_link([("mode", "user_notifications_p")]), "back")
         else:
-            home_button()
             html.context_button(_("All Rules"), make_link([("mode", "notifications"), ("userid", userid)]), "back")
         return
 

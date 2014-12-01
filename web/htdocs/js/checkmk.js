@@ -1495,13 +1495,9 @@ function list_of_strings_init(divid) {
 
 function list_of_strings_add_focus(oLastChild) {
     /* look for <input> in last child node and attach focus handler to it. */
-    for (var j in oLastChild.childNodes) {
-        var o = oLastChild.childNodes[j];
-        if (o.tagName == "INPUT") {
-            o.onfocus = function(e) { return list_of_strings_extend(this); };
-            return;
-        }
-    }
+    var input = oLastChild.getElementsByTagName("input");
+    if (input.length == 1)
+        input[0].onfocus = function(e) { return list_of_strings_extend(this); };
 }
 
 

@@ -33,6 +33,18 @@ sys.path.pop(0)
 
 import socket, os, time, re, signal, math, tempfile
 
+# PLANNED CLEANUP:
+# - central functions for outputting verbose information and bailing
+#   out because of errors. Remove all explicit "if opt_debug:...".
+#   Note: these new functions should force a flush() if TTY is not
+#   a terminal (so that error messages arrive the CMC in time)
+# - --debug should *only* influence exception handling
+# - introduce second levels of verbosity, that takes over debug output
+#   from --debug
+# - remove all remaining print commands and use sys.stdout.write instead
+#   or define a new output function
+# - Also create a function bail_out() for printing and error and exiting
+
 # Python 2.3 does not have 'set' in normal namespace.
 # But it can be imported from 'sets'
 try:

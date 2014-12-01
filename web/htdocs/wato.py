@@ -9077,7 +9077,6 @@ def mode_notification_rule(phase, profilemode):
     else:
         rule = rules[edit_nr]
 
-
     vs = vs_notification_rule(userid)
 
     if phase == "action":
@@ -15890,8 +15889,7 @@ def create_sample_config():
         'contact_object'         : True,
         'description'            : 'Notify all contacts of a host/service via HTML email',
         'disabled'               : False,
-        'notify_method'          : [],
-        'notify_plugin'          : 'mail'
+        'notify_plugin'          : ('mail', {}),
     }]
     save_notification_rules(notification_rules)
 

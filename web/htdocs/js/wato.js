@@ -486,7 +486,7 @@ function progress_scheduler(mode, url_prefix, timeout, items, transids, end_url,
             // update_progress_title(percentage + "%");
             update_progress_title(title);
             use_transid = progress_transids.shift();
-            get_url(url_prefix + '&_transid=' + use_transid + '&_item=' + escape(progress_items[0]),
+            get_url(url_prefix + '&_transid=' + use_transid + '&_item=' + encodeURIComponent(progress_items[0]),
                 progress_handle_response,    // regular handler (http code 200)
                 [ mode, progress_items[0] ], // data to hand over to handlers
                 progress_handle_error        // error handler
@@ -828,16 +828,17 @@ function start_host_diag_test(ident, hostname) {
     retry.style.display = 'none';
 
     var vars = '';
-    vars = '&ipaddress=' + escape(document.getElementsByName('vs_host_p_ipaddress')[0].value);
-    vars += '&snmp_community=' + escape(document.getElementsByName('vs_host_p_snmp_community')[0].value);
-    vars += '&agent_port=' + escape(document.getElementsByName('vs_rules_p_agent_port')[0].value);
-    vars += '&snmp_timeout=' + escape(document.getElementsByName('vs_rules_p_snmp_timeout')[0].value);
-    vars += '&snmp_retries=' + escape(document.getElementsByName('vs_rules_p_snmp_retries')[0].value);
-    vars += '&datasource_program=' + escape(document.getElementsByName('vs_rules_p_datasource_program')[0].value);
+    vars = '&ipaddress=' + encodeURIComponent(document.getElementsByName('vs_host_p_ipaddress')[0].value);
+    vars += '&snmp_community=' + encodeURIComponent(document.getElementsByName('vs_host_p_snmp_community')[0].value);
+    vars += '&agent_port=' + encodeURIComponent(document.getElementsByName('vs_rules_p_agent_port')[0].value);
+    vars += '&snmp_timeout=' + encodeURIComponent(document.getElementsByName('vs_rules_p_snmp_timeout')[0].value);
+    vars += '&snmp_retries=' + encodeURIComponent(document.getElementsByName('vs_rules_p_snmp_retries')[0].value);
+    vars += '&datasource_program=' + encodeURIComponent(document.getElementsByName('vs_rules_p_datasource_program')[0].value);
 
     img.src = "images/icon_loading.gif";
     log.innerHTML = "...";
-    get_url("wato_ajax_diag_host.py?host=" + escape(hostname) + "&_test=" + escape(ident) + vars,
+    get_url("wato_ajax_diag_host.py?host=" + encodeURIComponent(hostname)
+            + "&_test=" + encodeURIComponent(ident) + vars,
               handle_host_diag_result, ident);
 }
 
@@ -854,10 +855,10 @@ function execute_active_check(site, hostname, checktype, item, divid)
 {
     var oDiv = document.getElementById(divid);
     var url = "wato_ajax_execute_check.py?" +
-           "site="       + escape(site) +
-           "&host="      + escape(hostname)  +
-           "&checktype=" + escape(checktype) +
-           "&item="      + escape(item);
+           "site="       + encodeURIComponent(site) +
+           "&host="      + encodeURIComponent(hostname)  +
+           "&checktype=" + encodeURIComponent(checktype) +
+           "&item="      + encodeURIComponent(item);
     get_url(url, handle_execute_active_check, oDiv);
 }
 

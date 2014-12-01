@@ -1941,16 +1941,30 @@ def groupby_host_tag(row, tgid):
     cssclass, title = paint_host_tag(row, tgid)
     return title
 
-for entry in config.wato_host_tags:
-    tgid = entry[0]
-    tit  = entry[1]
-    ch   = entry[2]
+def load_host_tag_painters():
+    # first remove all old painters to reflect delted painters during runtime
+    for key in multisite_painters.keys():
+        if key.startswith('host_tag_'):
+            del multisite_painters[key]
 
-    multisite_painters["host_tag_" + tgid] = {
-        "title"   : _("Host tag:") + ' ' + tit,
-        "short"   : tit,
-        "columns" : [ "host_custom_variables" ],
-        "paint"   : paint_host_tag,
-        "groupby" : groupby_host_tag,
-        "args"    : [ tgid ],
-    }
+    for entry in config.wato_host_tags:
+        tgid = entry[0]
+        tit  = entry[1]
+        ch   = entry[2]
+
+        long_tit = tit
+        if '/' in tit:
+            topic, tit = tit.split('/', 1)
+            if topic:
+                long_tit = topic + ' / ' + tit
+            else:
+                long_tit = tit
+
+        multisite_painters["host_tag_" + tgid] = {
+            "title"   : _("Host tag:") + ' ' + long_tit,
+            "short"   : tit,
+            "columns" : [ "host_custom_variables" ],
+            "paint"   : paint_host_tag,
+            "groupby" : groupby_host_tag,
+            "args"    : [ tgid ],
+        }

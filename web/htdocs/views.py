@@ -41,7 +41,11 @@ loaded_with_language = False
 # Load all view plugins
 def load_plugins():
     global loaded_with_language
+
     if loaded_with_language == current_language:
+        # always reload the hosttag painters, because new hosttags might have been
+        # added during runtime
+        load_host_tag_painters()
         return
 
     global multisite_datasources     ; multisite_datasources      = {}

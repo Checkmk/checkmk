@@ -2053,9 +2053,9 @@ def mode_edithost(phase, new, cluster):
             go_to_diag     = html.var("diag_host")
             if html.check_transaction():
                 if new:
-                    add_host_to_folder(g_folder, hostname, host)
+                    add_hosts_to_folder(g_folder, {hostname: host})
                 else:
-                    set_host_attributes(g_folder[".hosts"][hostname], host)
+                    update_hosts_in_folder(g_folder, {hostname: {"set": host}})
 
             errors = validate_all_hosts([hostname]).get(hostname, []) + validate_host(g_folder[".hosts"][hostname], g_folder)
             if errors: # keep on this page if host does not validate
@@ -17406,69 +17406,66 @@ def create_wato_folder(parent, name, title):
 
     return new_folder
 
-# Adds a new host to the given folder
-def add_host_to_folder(folder, hostname, attributes):
-    hosts                = load_hosts(folder)
-    hosts[hostname]      = attributes
-    folder[".hosts"]     = hosts
-    folder["num_hosts"] += 1
-    save_folder_and_hosts(folder)
 
-    log_pending(AFFECTED, hostname, "create-host",_("Created new host %s.") % hostname)
+# new_hosts: {"hostA": {attr}, "hostB": {attr}}
+def add_hosts_to_folder(folder, new_hosts):
+    load_hosts(folder)
+    folder[".hosts"].update(new_hosts)
+    folder["num_hosts"] = len(folder[".hosts"])
+
+    for hostname in new_hosts.keys():
+        log_pending(AFFECTED, hostname, "create-host",_("Created new host %s.") % hostname)
+
+    save_folder_and_hosts(folder)
 
     reload_hosts(folder)
     mark_affected_sites_dirty(folder, hostname)
     call_hook_hosts_changed(folder)
 
-# Updates attributes of one host
-def update_host_attributes(host, attr = {}, unset_attr = []):
-    cleaned_attr = dict([(k, v) for (k, v) in host.iteritems() if not k.startswith('.') ])
 
-    # unset keys
-    for key in unset_attr:
-        if key in cleaned_attr:
-            del cleaned_attr[key]
+# hosts: {"hostname": {"set": {attr}, "unset": [attr]}}
+def update_hosts_in_folder(folder, hosts):
+    updated_hosts = {}
 
-    # set new keys
-    cleaned_attr.update(attr)
+    for hostname, attributes in hosts.items():
+        cleaned_attr = dict([(k, v) for (k, v) in attributes.get("set", {}).iteritems() if not k.startswith('.') ])
+        # unset keys
+        for key in attributes.get("unset", []):
+            if key in cleaned_attr:
+                del cleaned_attr[key]
 
-    set_host_attributes(host, cleaned_attr)
+        updated_hosts[hostname] = cleaned_attr
 
-# Sets attributes of one host
-def set_host_attributes(host, attributes):
-    hostname = host[".name"]
+        # The site attribute might change. In that case also
+        # the old site of the host must be marked dirty.
+        mark_affected_sites_dirty(folder, hostname)
 
-    the_folder = host[".folder"]
-    load_hosts(the_folder)
+    load_hosts(folder)
+    folder[".hosts"].update(updated_hosts)
 
-    # The site attribute might change. In that case also
-    # the old site of the host must be marked dirty.
-    mark_affected_sites_dirty(the_folder, hostname)
+    for hostname in updated_hosts.keys():
+        mark_affected_sites_dirty(folder, hostname)
+        log_pending(AFFECTED, hostname, "edit-host", _("edited properties of host [%s]") % hostname)
 
-    the_folder[".hosts"][hostname] = attributes
+    save_folder_and_hosts(folder)
+    reload_hosts(folder)
+    call_hook_hosts_changed(folder)
 
-    mark_affected_sites_dirty(the_folder, hostname)
-    log_pending(AFFECTED, hostname, "edit-host", _("edited properties of host [%s]") % hostname)
 
-    save_folder_and_hosts(the_folder)
-    reload_hosts(the_folder)
-    call_hook_hosts_changed(the_folder)
-
-# Deletes host from given folder
-def delete_host(host):
-    folder = host[".folder"]
+# hosts: ["hostA", "hostB", "hostC"]
+def delete_hosts_in_folder(folder, hosts):
     if folder.get(".lock_hosts"):
         raise MKUserError(None, _("Cannot delete host. Hosts in this folder are locked"))
 
-    hostname = host[".name"]
+    for hostname in hosts:
+        del folder[".hosts"][hostname]
+        folder["num_hosts"] -= 1
+        mark_affected_sites_dirty(folder, hostname)
+        log_pending(AFFECTED, hostname, "delete-host", _("Deleted host %s") % hostname)
 
-    mark_affected_sites_dirty(folder, hostname)
-    log_pending(AFFECTED, hostname, "delete-host", _("Deleted host %s") % hostname)
-    del folder[".hosts"][hostname]
-    folder["num_hosts"] -= 1
     save_folder_and_hosts(folder)
-
     call_hook_hosts_changed(folder)
+
 
 #.
 #   .--WEB API-------------------------------------------------------------.
@@ -17491,13 +17488,12 @@ class API:
             prepare_folder_info()
             self.__prepared_folder_info = True
 
-    def __get_all_hosts(self):
-        if not self.__all_hosts:
+    def __get_all_hosts(self, force = False):
+        if not self.__all_hosts or force:
             self.__all_hosts = load_all_hosts()
         return self.__all_hosts
 
-    def __validate_host_data(self, hostname, attributes = {}, all_hosts = {},
-                                   host_foldername = None, create_folders = True, validate = []):
+    def __validate_host_parameters(self, host_foldername, hostname, attributes, all_hosts, create_folders, validate):
         if "hostname" in validate:
             check_new_hostname(None, hostname)
 
@@ -17578,57 +17574,93 @@ class API:
     def lock_wato(self):
         lock_exclusive()
 
-    def add_host(self, hostname, host_foldername, host_attr, create_folders = True):
+    def validate_host_parameters(self, host_foldername, hostname, host_attr, validate = [], create_folders = True):
         self.__prepare_folder_info()
         all_hosts = self.__get_all_hosts()
 
-        # Tidy up foldername
-        host_foldername = host_foldername.strip("/")
-
+        if host_foldername:
+            host_foldername = host_foldername.strip("/")
+        else:
+            if hostname in all_hosts:
+                host_foldername = all_hosts[hostname][".folder"][".path"]
         attributes = self.__get_valid_api_host_attributes(host_attr)
-        self.__validate_host_data(hostname, attributes      = attributes,
-                                            all_hosts       = all_hosts,
-                                            host_foldername = host_foldername,
-                                            create_folders  = create_folders,
-                                            validate = ["hostname", "foldername", "host_exists",
-                                                        "tags", "site", "permissions_create"])
+        self.__validate_host_parameters(host_foldername, hostname, attributes, all_hosts, create_folders, validate)
 
-        ### Add host
-        # Create folder(s) (only when they do not exist)
-        create_wato_folders(host_foldername)
-
-        folder = g_folders[host_foldername]
-        add_host_to_folder(folder, hostname, attributes)
-
-        # Update the all_hosts reference. Saves quite some time on followup calls
-        reload_hosts(g_folders[host_foldername])
-        all_hosts[hostname] = g_folders[host_foldername][".hosts"][hostname]
-
-    def edit_host(self, hostname, attr = {}, unset_attr = []):
+    # hosts: [ { "attributes": {attr}, "hostname": "hostA", "folder": "folder1" }, .. ]
+    def add_hosts(self, hosts, create_folders = True, validate_hosts = True):
         self.__prepare_folder_info()
         all_hosts = self.__get_all_hosts()
 
-        attributes = self.__get_valid_api_host_attributes(attr)
-        self.__validate_host_data(hostname, attributes = attributes,
-                                            all_hosts = all_hosts,
-                                            validate = ["host_missing", "tags", "site", "permissions_edit"])
+        # Sort hosts into folders
+        target_folders = {}
+        for host_data in hosts:
+            host_foldername = host_data["folder"]
+            hostname        = host_data["hostname"]
+            host_attr       = host_data["attributes"]
 
-        ### Update Host
-        host = all_hosts[hostname]
-        update_host_attributes(host, attr = attributes, unset_attr = unset_attr)
+            # Tidy up foldername
+            host_foldername = host_foldername.strip("/")
+            attributes      = self.__get_valid_api_host_attributes(host_attr)
+            if validate_hosts:
+                self.__validate_host_parameters(host_foldername, hostname, host_attr, all_hosts, create_folders,
+                                            ["hostname", "foldername", "host_exists", "tags", "site", "permissions_create"])
+            target_folders.setdefault(host_foldername, {})[hostname] = attributes
 
-        # Update all_hosts reference. Saves quite some time on followup calls
-        host_foldername = all_hosts[hostname][".folder"][".path"]
-        reload_hosts(g_folders[host_foldername])
-        all_hosts[hostname] = g_folders[host_foldername][".hosts"][hostname]
+        for target_foldername, new_hosts in target_folders.items():
+            # Create target folder(s) if required...
+            create_wato_folders(target_foldername)
+
+            folder = g_folders[target_foldername]
+            add_hosts_to_folder(folder, new_hosts)
+
+        # As long as some hooks are able to invalidate the
+        # entire g_folders variable we need to enforce a reload
+        self.__prepare_folder_info(force = True)
+        self.__get_all_hosts(force = True)
+#
+#        for host_foldername, new_hosts in target_folders.items():
+#            for hostname in new_hosts.keys():
+#                all_hosts[hostname] = g_folders[host_foldername][".hosts"][hostname]
+
+
+    # hosts: [ { "attributes": {attr}, "unset_attributes": {attr}, "hostname": "hostA"}, .. ]
+    def edit_hosts(self, hosts, validate_hosts = True):
+        self.__prepare_folder_info()
+        all_hosts = self.__get_all_hosts()
+
+        target_folders = {}
+        for host_data in hosts:
+            hostname        = host_data["hostname"]
+            host_attr       = host_data.get("attributes", {})
+            host_unset_attr = host_data.get("unset_attributes", [])
+
+            attributes = self.__get_valid_api_host_attributes(host_attr)
+            if validate_hosts:
+                self.__validate_host_parameters(None, hostname, attributes, all_hosts, True,
+                                           ["host_missing", "tags", "site", "permissions_edit"])
+            host_foldername = all_hosts[hostname][".folder"][".path"]
+            target_folders.setdefault(host_foldername, {})[hostname] = {"set":   attributes,
+                                                                        "unset": host_unset_attr}
+
+        for target_foldername, update_hosts in target_folders.items():
+            update_hosts_in_folder(g_folders[target_foldername], update_hosts)
+
+        # As long as some hooks are able to invalidate the
+        # entire g_folders variable we need to enforce a reload
+        self.__prepare_folder_info(force = True)
+        self.__get_all_hosts(force = True)
+#
+#        for host_foldername, update_hosts in target_folders.items():
+#            for hostname in update_hosts.keys():
+#                all_hosts[hostname] = g_folders[host_foldername][".hosts"][hostname]
+
 
     def get_host(self, hostname, effective_attr = False):
         self.__prepare_folder_info()
         all_hosts = self.__get_all_hosts()
 
-        self.__validate_host_data(hostname, all_hosts = all_hosts, validate = ["host_missing", "permissions_read"])
+        self.__validate_host_parameters(None, hostname, {}, all_hosts, True, ["host_missing", "permissions_read"])
 
-        ### Get attributes
         the_host = all_hosts[hostname]
         if effective_attr:
             the_host = effective_attributes(the_host, the_host[".folder"])
@@ -17637,24 +17669,35 @@ class API:
 
         return { "attributes": cleaned_host, "path": the_host[".folder"][".path"], "hostname": hostname }
 
-    def delete_host(self, hostname):
+    # hosts: [ "hostA", "hostB", "hostC" ]
+    def delete_hosts(self, hosts, validate_hosts = True):
         self.__prepare_folder_info()
         all_hosts = self.__get_all_hosts()
 
-        self.__validate_host_data(hostname, all_hosts = all_hosts, validate = ["host_missing", "permissions_edit"])
+        target_folders = {}
+        for hostname in hosts:
+            if validate_hosts:
+                self.__validate_host_parameters(None, hostname, {}, all_hosts, True, ["host_missing", "permissions_edit"])
 
-        ### Delete host
-        delete_host(all_hosts[hostname])
+            host_foldername = all_hosts[hostname][".folder"][".path"]
+            target_folders.setdefault(host_foldername, [])
+            target_folders[host_foldername].append(hostname)
 
-        # Remove host from all_hosts reference
-        del all_hosts[hostname]
+        for target_foldername, hosts in target_folders.items():
+            folder = g_folders[target_foldername]
+            delete_hosts_in_folder(folder, hosts)
+
+        # As long as some hooks are able to invalidate the
+        # entire g_folders variable we need to enforce a reload
+        self.__prepare_folder_info(force = True)
+        self.__get_all_hosts(force = True)
 
     def discover_services(self, hostname, mode = "new"):
         self.__prepare_folder_info()
         all_hosts = self.__get_all_hosts()
 
         config.need_permission("wato.services")
-        self.__validate_host_data(hostname, all_hosts = all_hosts, validate = ["host_missing"])
+        self.__validate_host_parameters(None, hostname, {}, all_hosts, True, ["host_missing"])
         check_host_permissions(hostname, folder = all_hosts[hostname][".folder"])
 
         ### Start inventory

@@ -86,7 +86,8 @@ function wato_fix_visibility() {
 
     var oTable = oHostTags.childNodes[0]; /* tbody */
     oHostTags = null;
-    for (var i in oTable.childNodes) {
+
+    for (var i = 0; i < oTable.childNodes.length; i++) {
         var oTr = oTable.childNodes[i];
         if (oTr.tagName == 'TR') {
             var oTdLegend = oTr.childNodes[0];
@@ -119,7 +120,7 @@ function wato_fix_visibility() {
        stored in the global variable wato_depends_on_tags, which is filled
        during the creation of the web page. */
 
-    for (var i in wato_check_attributes) {
+    for (var i = 0; i < wato_check_attributes.length; i++) {
         var attrname = wato_check_attributes[i];
         /* Now comes the tricky part: decide whether that attribute should
            be visible or not: */
@@ -132,8 +133,8 @@ function wato_fix_visibility() {
 
         // Visibility depends on roles
         if( display == "" && attrname in wato_depends_on_roles){
-            for (var i in wato_depends_on_roles[attrname]) {
-                var role = wato_depends_on_roles[attrname][i];
+            for (var index = 0; index < wato_depends_on_roles[attrname].length; index++) {
+                var role = wato_depends_on_roles[attrname][index];
                 var negate = role[0] == '!';
                 var rolename = negate ? role.substr(1) : role;
                 var have_role = user_roles.indexOf(rolename) != -1;
@@ -146,8 +147,8 @@ function wato_fix_visibility() {
 
         // Visibility depends on tags
         if( display == "" && attrname in wato_depends_on_tags){
-            for (var i in wato_depends_on_tags[attrname]) {
-                var tag = wato_depends_on_tags[attrname][i];
+            for (var index = 0; index < wato_depends_on_tags[attrname].length; index++) {
+                var tag = wato_depends_on_tags[attrname][index];
                 var negate = tag[0] == '!';
                 var tagname = negate ? tag.substr(1) : tag;
                 var have_tag = currentTags.indexOf(tagname) != -1;
@@ -199,9 +200,9 @@ function wato_fix_visibility() {
 
     // FIXME: use generic identifier for each form
     var available_forms = [ "form_edithost", "form_editfolder", "form_bulkedit" ];
-    for ( var try_form in available_forms ){
-            var my_form = document.getElementById(available_forms[try_form]);
-            if (my_form != null) {
+    for (var try_form = 0; try_form < available_forms.length; try_form++) {
+        var my_form = document.getElementById(available_forms[try_form]);
+        if (my_form != null) {
             for (var child in my_form.childNodes){
                 oTr = my_form.childNodes[child];
                 if (oTr.className == "nform"){

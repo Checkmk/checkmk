@@ -24,6 +24,16 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Notes for future rewrite:
+#
+# - Make clear which functions return values and which write out values
+#   render_*, add_*, write_* (e.g. icon() -> outputs directly,
+#                                  render_icon() -> returns icon
+#                                  render_icon() -> returns icon
+#
+# - Order of arguments:
+#   e.g. icon(help, icon) -> change and make help otional?
+
 import time, os, pwd, urllib, random
 
 from lib import *

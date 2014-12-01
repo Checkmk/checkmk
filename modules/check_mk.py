@@ -5479,9 +5479,7 @@ def keepalive_check_memory(num_checks, keepalive_fd):
         usage = current_memory_usage()
         # Allow VM size to grow by at most 50%
         if usage[0] > 1.5 * g_keepalive_initial_memusage[0]:
-            file(log_dir + "/cmc-helper.log", "a") \
-                .write("%s [4] check helper[%d]: memory usage increased from %s to %s after %d check cycles. Restarting.\n" %
-                    (time.strftime("%F %T", time.localtime()), os.getpid(),
+            sys.stderr.write("memory usage increased from %s to %s after %d check cycles. Restarting.\n" % (
                     get_bytes_human_readable(g_keepalive_initial_memusage[0]),
                     get_bytes_human_readable(usage[0]), num_checks))
             restart_myself(keepalive_fd)
@@ -5502,18 +5500,17 @@ def do_check_keepalive():
 
     # Prevent against plugins that output debug information (but shouldn't).
     # Their stdout will interfer with communication with the Micro Core.
-    # We do this with a trick:
+    # So we simply redirect stdout to stderr, which will appear in the cmc.log,
+    # with the following trick:
     # 1. move the filedescriptor 1 to a parking position
-    # 2. re-open 0 on /dev/null
+    # 2. dup the stderr channel to stdout (2 to 1)
     # 3. Send our answers to the Micro Core with the parked FD.
     # BEWARE: this must not happen after we have execve'd ourselves!
     if opt_keepalive_fd:
         keepalive_fd = opt_keepalive_fd
     else:
         keepalive_fd = os.dup(1)
-        devnull = os.open("/dev/null", os.O_WRONLY | os.O_CREAT)
-        os.dup2(devnull, 1)
-        os.close(devnull)
+        os.dup2(2, 1)  # Send stuff that is written to stdout instead to stderr
 
     num_checks = 0 # count total number of check cycles
 
@@ -5569,6 +5566,12 @@ def do_check_keepalive():
             os.write(keepalive_fd, "%03d\n%08d\n%s" %
                  (status, len(total_check_output), total_check_output))
             total_check_output = ""
+
+            # Flush file descriptors of stdout and stderr, so that diagnostic
+            # messages arrive in time in cmc.log
+            sys.stdout.flush()
+            sys.stderr.flush()
+
             cleanup_globals()
 
             # Check if all global variables are clean, but only in debug mode
@@ -5580,7 +5583,8 @@ def do_check_keepalive():
                                % (varname, value, repr(after[varname])[:50]))
                 new_vars = set(after.keys()).difference(set(before.keys()))
                 if (new_vars):
-                    sys.stderr.write("WARNING: new variable appeared: %s" % ", ".join(new_vars))
+                    sys.stderr.write("WARNING: new variable appeared: %s\n" % ", ".join(new_vars))
+                sys.stderr.flush()
 
         except Exception, e:
             signal.signal(signal.SIGALRM, signal.SIG_IGN) # Prevent ALRM from CheckHelper.cc

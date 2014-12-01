@@ -353,6 +353,9 @@ def automation_try_inventory_node(hostname, leave_no_tcp=False, with_snmp_scan=F
 	        opt_no_tcp = True
             opt_dont_submit = True
 
+            if ct not in check_info:
+                continue # Skip not existing check silently
+
             try:
                 exitcode = None
                 perfdata = []

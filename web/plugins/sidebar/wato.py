@@ -59,6 +59,7 @@ def render_wato(mini):
     num_pending = wato.num_pending_changes()
     if num_pending:
         footnotelinks([(_("%d changes") % num_pending, "wato.py?mode=changelog")])
+        html.write('<div class=clear></div>')
 
 
 sidebar_snapins["admin"] = {
@@ -78,6 +79,7 @@ sidebar_snapins["admin_mini"] = {
     "styles": """
 #snapin_admin_mini {
     padding-top: 6px;
+    clear: right;
 }
 #snapin_admin_mini img {
     margin-right: 3.9px;
@@ -90,7 +92,10 @@ sidebar_snapins["admin_mini"] = {
 }
 
 #snapin_admin_mini div.footnotelink {
-    margin-top: -14px;
+    float: right;
+}
+#snapin_admin_mini div.clear {
+    clear: right;
 }
 """,
 }

@@ -679,6 +679,7 @@ def transform_valuespec_value_to_view(view):
 # view is the new dict object to be updated.
 def create_view_from_valuespec(old_view, view):
     ds_name = old_view.get('datasource', html.var('datasource'))
+    view['datasource'] = ds_name
     datasource = multisite_datasources[ds_name]
     vs_value = {}
     for ident, vs in view_editor_specs(ds_name):

@@ -548,6 +548,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
 
         if load_handler:
             load_handler(visual)
+
     else:
         mode = 'create'
         single_infos = []

@@ -1,9 +1,12 @@
 Title: Keepalive mode adds multiple --keepalive-fd=__ as time goes by
 Component: core
-State: open
+Class: nastiness
+State: done
 Date: 2014-01-24 16:57:53
 Targetversion: 1.2.5i1
-Class: nastiness
 
 It seems that after each config reload one --keepalive-fd=7 is added to the command line.
 The Check_MK should remove this option when adding new one.
+
+2014-12-02 12:38:01: changed state open -> done
+Is already fixed.

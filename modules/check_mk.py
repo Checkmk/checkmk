@@ -1968,12 +1968,12 @@ def create_nagios_config(outfile = sys.stdout, hostnames = None):
     for hostname in hostnames:
         create_nagios_config_host(outfile, hostname)
 
+    create_nagios_config_contacts(outfile)
     create_nagios_config_hostgroups(outfile)
     create_nagios_config_servicegroups(outfile)
     create_nagios_config_contactgroups(outfile)
     create_nagios_config_commands(outfile)
     create_nagios_config_timeperiods(outfile)
-    create_nagios_config_contacts(outfile)
 
     if extra_nagios_conf:
         outfile.write("\n# extra_nagios_conf\n\n")
@@ -2654,6 +2654,10 @@ def create_nagios_config_contacts(outfile):
         cnames.sort()
         for cname in cnames:
             contact = contacts[cname]
+            # Create contact groups in nagios, even when they are empty. This is needed
+            # for RBN to work correctly when using contactgroups as recipients which are
+            # not assigned to any host
+            contactgroups_to_define.update(contact.get("contactgroups", []))
             # If the contact is in no contact group or all of the contact groups
             # of the contact have neither hosts nor services assigned - in other
             # words if the contact is not assigned to any host or service, then

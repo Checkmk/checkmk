@@ -171,6 +171,8 @@ telegram_list = {
          '<ns1:pathSet>hardware.cpuInfo.numCpuCores</ns1:pathSet>'\
          '<ns1:pathSet>config.multipathState.path</ns1:pathSet>'\
          '<ns1:pathSet>hardware.systemInfo.model</ns1:pathSet>'\
+         '<ns1:pathSet>hardware.systemInfo.uuid</ns1:pathSet>'\
+         '<ns1:pathSet>hardware.systemInfo.otherIdentifyingInfo</ns1:pathSet>'\
          '<ns1:pathSet>hardware.systemInfo.vendor</ns1:pathSet>'\
          '<ns1:pathSet>name</ns1:pathSet>'\
          '<ns1:pathSet>overallStatus</ns1:pathSet>'\
@@ -858,11 +860,24 @@ if not error:
                 def eval_pci_device(pci_propset):
                     eval_propset_block( [ "id", "vendorName", "deviceName" ], "id", pci_propset)
 
+                def eval_systeminfo_other(otherinfo_propset):
+                    data       = get_pattern("<identifierValue>(.*?)</identifierValue>.*?<key>(.*?)</key>", otherinfo_propset)
+                    keys_index = {}
+
+                    for value, key in data:
+                        idx = 0
+                        if key in keys_index:
+                            keys_index[key] = keys_index[key] + 1
+                            idx = keys_index[key]
+                        hostsystems_properties[hostname]["hardware.systemInfo.otherIdentifyingInfo.%s.%d" % (key, idx)] = [ value ]
+                        keys_index[key] = idx
+
                 eval_functions = {
                     "config.multipathState.path"                                    : eval_multipath_state,
                     "runtime.healthSystemRuntime.systemHealthInfo.numericSensorInfo": eval_sensor_info,
                     "hardware.cpuPkg"                                               : eval_cpu_pkg,
                     "hardware.pciDevice"                                            : eval_pci_device,
+                    "hardware.systemInfo.otherIdentifyingInfo"                      : eval_systeminfo_other,
                 }
 
                 elements = get_pattern('<propSet><name>(.*?)</name><val.*?>(.*?)</val></propSet>', entry)

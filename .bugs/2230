@@ -1,9 +1,9 @@
 Title: Dashboard javascript goes to 100% CPU if PNP graph cannot be rendered
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2014-12-01 08:10:12
 Targetversion: 1.2.5i1
-Class: bug
 
 This happened with the following dashboard in a case where the rightmost
 PNP graph was not displayabe because the size of the screen was too
@@ -358,3 +358,6 @@ small:
                      'single_infos': [],
                      'title': u'Main Graph View',
                      'topic': u'Overview'}}
+
+2014-12-02 15:47:35: changed state open -> done
+Fixed.

@@ -1,7 +1,10 @@
 Title: Single Host aggregations shows multiple aggregations per definition
 Component: multisite
-State: open
+Class: bug
+State: works4me
 Date: 2014-08-05 14:19:51
 Targetversion: 1.2.5i1
-Class: bug
 
+
+2014-12-02 10:53:13: changed state open -> works4me
+Cna not produce a problem here.

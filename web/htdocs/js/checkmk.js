@@ -696,8 +696,8 @@ function performAction(oLink, action, site, host, service, wait_svc) {
     // Chrome and IE are not animating the gif during sync ajax request
     // So better use the async request here
     get_url('nagios_action.py?action=' + action +
-            '&site='     + escape(site) +
-            '&host='     + escape(host) +
+            '&site='     + encodeURIComponent(site) +
+            '&host='     + encodeURIComponent(host) +
             '&service='  + service + // Already URL-encoded!
             '&wait_svc=' + wait_svc,
             actionResponseHandler, oImg);
@@ -996,7 +996,8 @@ function toggle_tree_state(tree, name, oContainer, fetch_url) {
                 change_class(oContainer, 'open', 'closed');
         }
     }
-    get_url('tree_openclose.py?tree=' + escape(tree) + '&name=' + escape(name) + '&state=' + state);
+    get_url('tree_openclose.py?tree=' + encodeURIComponent(tree)
+            + '&name=' + encodeURIComponent(name) + '&state=' + state);
     oContainer = null;
 }
 

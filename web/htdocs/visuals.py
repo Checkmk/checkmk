@@ -548,6 +548,7 @@ def page_edit_visual(what, all_visuals, custom_field_handler = None,
 
         if load_handler:
             load_handler(visual)
+
     else:
         mode = 'create'
         single_infos = []
@@ -868,22 +869,22 @@ def filters_allowed_for_info(info):
             allowed[fname] = filt
     return allowed
 
-# Collects all filters to be shown for the given visual
-def show_filters(visual, info_keys, show_all=False):
-    show_filters = []
+# Collects all filters to be used for the given visual
+def filters_of_visual(visual, info_keys, show_all=False):
+    filters = []
     for info_key in info_keys:
         if info_key in visual['single_infos']:
             for key in info_params(info_key):
-                show_filters.append(get_filter(key))
+                filters.append(get_filter(key))
         elif not show_all:
             for key, val in visual['context'].items():
                 if type(val) == dict: # this is a real filter
-                    show_filters.append(get_filter(key))
+                    filters.append(get_filter(key))
 
     if show_all: # add *all* available filters of these infos
         for filter_name, filter in multisite_filters.items():
             if filter.info in info_keys:
-                show_filters.append(filter)
+                filters.append(filter)
 
     # add ubiquitary_filters that are possible for these infos
     for fn in ubiquitary_filters:
@@ -892,10 +893,25 @@ def show_filters(visual, info_keys, show_all=False):
             continue
         filter = get_filter(fn)
         if not filter.info or filter.info in info_keys:
-            show_filters.append(filter)
+            filters.append(filter)
 
-    return list(set(show_filters)) # remove duplicates
+    return list(set(filters)) # remove duplicates
 
+# Reduces the list of the visuals used filters. The result are the ones
+# which are really presented to the user later.
+# For the moment we only remove the single context filters which have a
+# hard coded default value which is treated as enforced value.
+def visible_filters_of_visual(visual, use_filters):
+    show_filters = []
+
+    single_keys = get_single_info_keys(visual)
+
+    for f in use_filters:
+        if f.name not in single_keys or \
+           not visual['context'].get(f.name):
+            show_filters.append(f)
+
+    return show_filters
 
 def add_context_to_uri_vars(visual, only_infos=None, only_count=False):
     if only_infos == None:
@@ -1100,6 +1116,13 @@ def unpack_context_after_editing(packed_context):
 #   +----------------------------------------------------------------------+
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
+
+def verify_single_contexts(what, visual):
+    for k, v in get_singlecontext_html_vars(visual):
+        if v == None:
+            raise MKUserError(k, _('This %s can not be displayed, because the '
+                                   'necessary context information "%s" is missing.') %
+                                                    (visual_types[what]['title'], k))
 
 def visual_title(what, visual):
     extra_titles = []

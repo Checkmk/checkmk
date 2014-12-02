@@ -267,6 +267,12 @@ healspaces:
 	@echo "Removing trailing spaces from code lines..."
 	@sed -ri 's/[[:space:]]+$$//g' $(HEAL_SPACES_IN)
 
+optimize-images:
+	@for F in web/htdocs/images/*.png web/htdocs/images/icons/*.png; do \
+	    echo "Optimizing $$F..." ; \
+	    pngcrush -q -rem alla -brute $$F $$F.opt ; \
+	    mv $$F.opt $$F; \
+	done
 
 clean:
 	rm -rf dist.tmp rpm.topdir *.rpm *.deb *.exe \

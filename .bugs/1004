@@ -1,8 +1,11 @@
 Title: Changes in WATO Quickaccess werden durch Icons überdeckt
 Component: multisite
-State: open
+Class: bug
+State: done
 Date: 2014-07-11 13:00:39
 Targetversion: future
-Class: bug
 
 Changes in WATO Quickaccess werden durch Icons überdeckt
+
+2014-12-01 14:05:36: changed state open -> done
+Fixed.

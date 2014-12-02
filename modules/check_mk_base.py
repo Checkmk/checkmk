@@ -24,6 +24,15 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+import sys
+
+# Remove precompiled directory from sys.path. Leaving it in the path
+# makes problems when host names (name of precompiled files) are equal
+# to python module names like "random"
+sys.path.pop(0)
+
+import socket, os, time, re, signal, math, tempfile
+
 # PLANNED CLEANUP:
 # - central functions for outputting verbose information and bailing
 #   out because of errors. Remove all explicit "if opt_debug:...".
@@ -35,8 +44,6 @@
 # - remove all remaining print commands and use sys.stdout.write instead
 #   or define a new output function
 # - Also create a function bail_out() for printing and error and exiting
-
-import socket, os, sys, time, re, signal, math, tempfile
 
 # Python 2.3 does not have 'set' in normal namespace.
 # But it can be imported from 'sets'

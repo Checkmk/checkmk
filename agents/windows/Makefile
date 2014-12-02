@@ -36,10 +36,18 @@ else
   CXX = mingw32-g++
 endif
 
-all: install_agent.exe install_agent-64.exe msi_installer
+all: fix_linebreaks install_agent.exe install_agent-64.exe msi_installer
 
-.PHONY: inc_build_version
+.PHONY: inc_build_version fix_linebreaks
 
+# Converts all files which are targeted to a windows system to CRLF
+fix_linebreaks:
+	for F in mrpe/* plugins/* *.ini; do \
+	    if [ -f $$F ]; then \
+	        sed -i 's/\r//' $$F ; \
+	        sed -i 's/$$/\r/' $$F ; \
+	    fi ; \
+	done 
 
 # -----------------------------------------------------------------------------
 # 1. Create ressource files with version and product information. Note: That file

@@ -1,4 +1,4 @@
-Title: Terminating with exit code 3 now when duplicate host has been found
+Title: Check_MK Inventory check is now resulting in correct state on duplicate host
 Level: 1
 Component: core
 Compatible: compat

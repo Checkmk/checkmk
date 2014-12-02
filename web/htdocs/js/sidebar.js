@@ -624,7 +624,7 @@ function removeSnapin(id, code) {
   }
 
   // reload main frame if it is just displaying the "add snapin" page
-  var href = escape(parent.frames[1].location);
+  var href = encodeURIComponent(parent.frames[1].location);
   if (href.indexOf("sidebar_add_snapin.py") > -1)
       parent.frames[1].location.reload();
 
@@ -760,7 +760,8 @@ function sidebar_scheduler() {
 function addBookmark() {
     href = parent.frames[1].location;
     title = parent.frames[1].document.title;
-    get_url("add_bookmark.py?title=" + escape(title) + "&href=" + escape(href), updateContents, "snapin_bookmarks");
+    get_url("add_bookmark.py?title=" + encodeURIComponent(title)
+            + "&href=" + encodeURIComponent(href), updateContents, "snapin_bookmarks");
 }
 
 /************************************************
@@ -770,7 +771,7 @@ function addBookmark() {
 function setCookie(cookieName, value,expiredays) {
     var exdate = new Date();
     exdate.setDate(exdate.getDate() + expiredays);
-    document.cookie = cookieName + "=" + escape(value) +
+    document.cookie = cookieName + "=" + encodeURIComponent(value) +
         ((expiredays == null) ? "" : ";expires=" + exdate.toUTCString());
 }
 
@@ -786,7 +787,7 @@ function getCookie(cookieName) {
     var cookieEnd = document.cookie.indexOf(";", cookieStart);
     if(cookieEnd == -1)
         cookieEnd = document.cookie.length;
-    return unescape(document.cookie.substring(cookieStart, cookieEnd));
+    return decodeURIComponent(document.cookie.substring(cookieStart, cookieEnd));
 }
 
 function initScrollPos() {
@@ -833,7 +834,7 @@ function highlight_link(link_obj, container_id) {
 function wato_folders_clicked(link_obj, folderpath) {
     g_last_folder = folderpath;
     highlight_link(link_obj, 'snapin_container_wato_folders');
-    parent.frames[1].location = g_last_view + '&wato_folder=' + escape(g_last_folder);
+    parent.frames[1].location = g_last_view + '&wato_folder=' + encodeURIComponent(g_last_folder);
 }
 
 function wato_views_clicked(link_obj) {
@@ -844,7 +845,7 @@ function wato_views_clicked(link_obj) {
 
     if (g_last_folder != '') {
         // Navigate by using javascript, cancel following the default link
-        parent.frames[1].location = g_last_view + '&wato_folder=' + escape(g_last_folder);
+        parent.frames[1].location = g_last_view + '&wato_folder=' + encodeURIComponent(g_last_folder);
         return false;
     } else {
         // Makes use the url stated in href attribute
@@ -863,12 +864,12 @@ function wato_tree_click(link_obj, folderpath) {
 
     if(target.substr(0, 9) == 'dashboard') {
         dashboard_name = target.substr(10, target.length);
-        href = 'dashboard.py?name=' + escape(dashboard_name);
+        href = 'dashboard.py?name=' + encodeURIComponent(dashboard_name);
     } else {
-        href = 'view.py?view_name=' + escape(target);
+        href = 'view.py?view_name=' + encodeURIComponent(target);
     }
 
-    href += '&wato_folder=' + escape(folderpath);
+    href += '&wato_folder=' + encodeURIComponent(folderpath);
 
     parent.frames[1].location = href;
 }
@@ -891,7 +892,7 @@ function wato_tree_topic_changed(topic_field) {
     }
 
     // Then send the info to python code via ajax call for persistance
-    get_url('ajax_set_foldertree.py?topic=' + escape(topic) + '&target=');
+    get_url('ajax_set_foldertree.py?topic=' + encodeURIComponent(topic) + '&target=');
 }
 
 function wato_tree_target_changed(target_field) {
@@ -899,7 +900,7 @@ function wato_tree_target_changed(target_field) {
     var target = target_field.value;
 
     // Send the info to python code via ajax call for persistance
-    get_url('ajax_set_foldertree.py?topic=' + escape(topic) + '&target=' + escape(target));
+    get_url('ajax_set_foldertree.py?topic=' + encodeURIComponent(topic) + '&target=' + encodeURIComponent(target));
 }
 
 // adds a variable to a GET url, but tries to remove that
@@ -911,9 +912,9 @@ function add_html_var(url, varname, value) {
     var re = new RegExp('&' + varname + '=[^&]*');
     var new_url = url.replace(re, "");
     if (new_url.indexOf('?') != '-1')
-        new_url += "&" + varname + "=" + escape(value);
+        new_url += "&" + varname + "=" + encodeURIComponent(value);
     else
-        new_url += "?" + varname + "=" + escape(value);
+        new_url += "?" + varname + "=" + encodeURIComponent(value);
     return new_url;
 }
 

@@ -208,21 +208,18 @@ div.dashlet_inner div.stats {
     width: 200px;
     list-style: none;
 
+    color: #fff;
     background-color: #508AA1;
-    border: 1px solid #fff;
-    -moz-box-shadow:    1px 1px 1px 1px #000;
-    -webkit-box-shadow: 1px 1px 1px 1px #000;
-    box-shadow:         1px 1px 1px 1px #000;
-
-    /* ie <8 */
-    zoom: 1;
-    filter: progid:DXImageTransform.Microsoft.DropShadow(OffX=2, OffY=2, Color=#000000),
-           progid:DXImageTransform.Microsoft.Chroma(Color='#ffffff');
+    border-width: 1px;
+    border-style: solid;
+    border-color: #9bc #367 #367 #9bc;
+    box-shadow:  0.5px 0.5px 8px #000;
+    border-radius: 5px;
 }
 
 #controls a {
     display: block;
-    padding: 5px 15px;
+    padding: 1px 15px;
     text-align: left;
     text-decoration: none;
 }

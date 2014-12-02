@@ -2232,6 +2232,7 @@ function toggle_add_to_visual(trigger_obj, element_type, context, params)
 
     menu = document.createElement('div');
     menu.setAttribute('id', 'visualadd_popup');
+    menu.className = "popup_menu";
 
     // populate the menu using a webservice, because the list of dashboards
     // is not known in the javascript code. But it might have been cached

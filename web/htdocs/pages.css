@@ -892,6 +892,65 @@ div.help tt {
     color: #000099;
 }
 
+/*--Popupmenu--------------------------------------------------------------.
+|       ____                                                               |
+|      |  _ \ ___  _ __  _   _ _ __  _ __ ___   ___ _ __  _   _            |
+|      | |_) / _ \| '_ \| | | | '_ \| '_ ` _ \ / _ \ '_ \| | | |           |
+|      |  __/ (_) | |_) | |_| | |_) | | | | | |  __/ | | | |_| |           |
+|      |_|   \___/| .__/ \__,_| .__/|_| |_| |_|\___|_| |_|\__,_|           |
+|                 |_|         |_|                                          |
+'-------------------------------------------------------------------------*/
+
+.popup_menu {
+    position: absolute;
+    bottom: 15px;
+    left: 15px;
+    z-index: 10;
+
+    padding: 0;
+    width: 300px;
+
+    color: #fff;
+    background-color: #508AA1;
+    border-width: 1px;
+    border-style: solid;
+    border-color: #9bc #367 #367 #9bc;
+    box-shadow:  0.5px 0.5px 8px #000;
+    border-radius: 5px;
+}
+
+.popup_menu img {
+    width: 12px;
+    height: auto;
+    vertical-align: bottom;
+}
+
+.popup_menu ul {
+    list-style: none;
+    margin: 0;
+    padding: 0px 5px 5px 10px;
+}
+
+body.main table.footer .popup_menu a, .popup_menu span {
+    display: block;
+    padding-top: 1px;
+    padding-bottom: 1px;
+    text-align: left;
+    text-decoration: none;
+    color: #fff;
+}
+
+.popup_menu span {
+    padding-left: 0px;
+    font-weight: bold;
+    margin-top: 8px;
+}
+
+.popup_menu a:hover {
+    text-decoration: underline;
+}
+
+
 /*--Various----------------------------------------------------------------.
 |                __     __         _                                       |
 |                \ \   / /_ _ _ __(_) ___  _   _ ___                       |
@@ -932,6 +991,7 @@ div.contextlink div.keysym {
 div.contextlink.button a {
     width: 135px;
 }
+
 
 /*-------------------------------------------------------------------------.
 |         ____       _                                                     |

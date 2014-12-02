@@ -1300,8 +1300,8 @@ def ajax_popup_add():
             html.write('<li><span>Add to %s:</span></li>' % visual_type["title"])
             for name, title in handler():
                 html.write('<li><a href="javascript:void(0)" '
-                           'onclick="add_to_visual(\'%s\', \'%s\')">%s</a></li>' %
-                           (visual_type_name, name, title))
+                           'onclick="add_to_visual(\'%s\', \'%s\')"><img src="images/icon_%s.png"> %s</a></li>' %
+                           (visual_type_name, name, visual_type_name.rstrip('s'), title))
     html.write('</ul>\n')
 
 

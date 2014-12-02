@@ -48,9 +48,8 @@ MAX = -1
 # in order to allow the user to customize this.
 
 screen_margin    = 5              # Distance from the left border of the main-frame to the dashboard area
-dashlet_padding  = 21, 5, 5, 0, 4 # Margin (N, E, S, W, N w/o title) between outer border of dashlet and its content
+dashlet_padding  = 21, 5, 5, 0, 0 # Margin (N, E, S, W, N w/o title) between outer border of dashlet and its content
 corner_overlap   = 22
-title_height     = 0             # Height of dashlet title-box
 raster           = 10, 10        # Raster the dashlet choords are measured in
 dashlet_min_size = 10, 10        # Minimum width and height of dashlets
 
@@ -313,7 +312,7 @@ def render_dashboard(name):
     title = visuals.visual_title('dashboard', board)
 
     # Distance from top of the screen to the lower border of the heading
-    header_height = 60
+    header_height = 55
 
     # The title of the dashboard needs to be prefixed with the WATO path,
     # in order to make it clear to the user, that he is seeing only partial
@@ -492,7 +491,6 @@ var GROW = %d;
 var grid_size = new vec%s;
 var header_height = %d;
 var screen_margin = %d;
-var title_height = %d;
 var dashlet_padding = Array%s;
 var dashlet_min_size = Array%s;
 var corner_overlap = %d;
@@ -505,9 +503,8 @@ var dashlets = %s;
 calculate_dashboard();
 window.onresize = function () { calculate_dashboard(); }
 dashboard_scheduler(1);
-    """ % (MAX, GROW, raster, header_height, screen_margin, title_height,
-           dashlet_padding, dashlet_min_size, corner_overlap,
-           ','.join(refresh_dashlets), ','.join(on_resize),
+    """ % (MAX, GROW, raster, header_height, screen_margin, dashlet_padding, dashlet_min_size,
+           corner_overlap, ','.join(refresh_dashlets), ','.join(on_resize),
            name, board['mtime'], repr(dashlets_js)))
 
     if mode == 'edit':

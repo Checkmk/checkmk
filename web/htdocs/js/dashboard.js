@@ -399,6 +399,14 @@ function toggle_dashboard_edit() {
     for (var i = 0; i < dashlet_divs.length; i++)
         dashlet_toggle_edit(dashlet_divs[i]);
 
+    // Remove/Add edit=1 parameter from URL to make page reload handling correct
+    // Only a solution for browsers with history.replaceState support. Sadly
+    // we have no F5/reload fix for others...
+    if (window.parent.history.replaceState) {
+        new_url = makeuri({'edit': g_editing ? '1' : '0'});
+        window.parent.history.replaceState({}, document.title, new_url);
+    }
+
     toggle_grid();
 }
 
@@ -527,8 +535,7 @@ function dashlet_toggle_edit(dashlet, edit) {
         edit.className = 'edit';
         edit.onclick = function(dashlet_id, board_name) {
             return function() {
-                location.href = 'edit_dashlet.py?name=' + board_name + '&id=' + dashlet_id
-                                + '&back=' + encodeURIComponent(dashboard_url);
+                location.href = 'edit_dashlet.py?name=' + board_name + '&id=' + dashlet_id;
             };
         }(id, dashboard_name);
         controls.appendChild(edit);
@@ -538,8 +545,7 @@ function dashlet_toggle_edit(dashlet, edit) {
         del.className = 'del';
         del.onclick = function(dashlet_id, board_name) {
             return function() {
-                location.href = 'delete_dashlet.py?name=' + board_name + '&id=' + dashlet_id
-                                + '&back=' + encodeURIComponent(dashboard_url);
+                location.href = 'delete_dashlet.py?name=' + board_name + '&id=' + dashlet_id;
             };
         }(id, dashboard_name);
         controls.appendChild(del);

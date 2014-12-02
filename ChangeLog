@@ -126,6 +126,7 @@
 
     BI:
     * 1435 FIX: Saving BI aggregations: No longer reports 'Request-URI Too Large'...
+    * 1559 FIX: Fix link from BI icon to BI views (aggregations affected by this host/service)
 
     Event Console:
     * 1169 Added host state type filter to "recent event history" view

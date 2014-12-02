@@ -42,7 +42,7 @@ function size_dashlets() {
         if (oDash) {
             has_title = true;
             //if browser window to small prevent js error
-            if(d_width <= 20){
+            if (d_width <= 20) {
                 d_width = 21;
             }
             // 14 => 9 title padding + empty space on right of dashlet

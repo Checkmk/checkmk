@@ -930,10 +930,14 @@ def show_view(view, show_heading = False, show_buttons = True,
     datasource = multisite_datasources[view["datasource"]]
     tablename = datasource["table"]
 
-    # Filters to show in the view
+    # Filters to use in the view
     # In case of single object views, the needed filters are fixed, but not always present
     # in context. In this case, take them from the context type definition.
-    show_filters = visuals.show_filters(view, datasource['infos'], all_filters_active)
+    use_filters = visuals.filters_of_visual(view, datasource['infos'], all_filters_active)
+
+    # Not all filters are really shown later in show_filter_form(), because filters which
+    # have a hardcoded value are not changeable by the user
+    show_filters = visuals.visible_filters_of_visual(view, use_filters)
 
     visuals.add_context_to_uri_vars(view, datasource["infos"], only_count)
 
@@ -944,7 +948,7 @@ def show_view(view, show_heading = False, show_buttons = True,
     # Prepare Filter headers for Livestatus
     filterheaders = ""
     only_sites = None
-    all_active_filters = [ f for f in show_filters if f.available() ]
+    all_active_filters = [ f for f in use_filters if f.available() ]
     for filt in all_active_filters:
         header = filt.filter(tablename)
         if header.startswith("Sites:"):

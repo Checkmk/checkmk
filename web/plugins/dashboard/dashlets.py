@@ -209,8 +209,8 @@ def render_statistics(pie_id, what, table, filter, dashlet):
     pie_right_aspect = 0.8
 
     info = what == 'hosts' and 'host' or 'service'
-    show_filters = visuals.show_filters(dashlet, [info])
-    for filt in show_filters:
+    use_filters = visuals.filters_of_visual(dashlet, [info])
+    for filt in use_filters:
         if filt.available():
             filter += filt.filter(info)
 

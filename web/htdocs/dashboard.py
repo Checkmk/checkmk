@@ -379,7 +379,13 @@ def render_dashboard(name):
             refresh = dashlet.get("refresh", dashlet_type.get("refresh"))
             if refresh:
                 if 'on_refresh' in dashlet_type:
-                    action = 'function() {%s}' % dashlet_type['on_refresh'](nr, dashlet)
+                    try:
+                        action = 'function() {%s}' % dashlet_type['on_refresh'](nr, dashlet)
+                    except Exception, e:
+                        # Ignore the exceptions in non debug mode, assuming the exception also occures
+                        # while dashlet rendering, which is then shown in the dashlet itselfs.
+                        if config.debug:
+                            raise
                 else:
                     # FIXME: remove add_wato_folder_to_url
                     action = '"%s"' % add_wato_folder_to_url(url, wato_folder) # url to dashboard_dashlet.py
@@ -397,7 +403,10 @@ def render_dashboard(name):
             try:
                 on_resize.append('%d: function() {%s}' % (nr, dashlet_type['on_resize'](nr, dashlet)))
             except Exception, e:
-                html.write('Error in "on_resize handler": %s' % html.attrencode(e))
+                # Ignore the exceptions in non debug mode, assuming the exception also occures
+                # while dashlet rendering, which is then shown in the dashlet itselfs.
+                if config.debug:
+                    raise
 
         dimensions = {
             'x' : dashlet['position'][0],
@@ -489,15 +498,14 @@ var refresh_dashlets = [%s];
 var on_resize_dashlets = {%s};
 var dashboard_name = '%s';
 var dashboard_mtime = %d;
-var dashboard_url = '%s';
 var dashlets = %s;
 
 calculate_dashboard();
 window.onresize = function () { calculate_dashboard(); }
 dashboard_scheduler(1);
     """ % (MAX, GROW, raster, header_height, screen_margin, dashlet_padding, dashlet_min_size,
-           corner_overlap, ','.join(refresh_dashlets), ','.join(on_resize), name, board['mtime'],
-           html.makeuri([('edit', '1')]), repr(dashlets_js)))
+           corner_overlap, ','.join(refresh_dashlets), ','.join(on_resize),
+           name, board['mtime'], repr(dashlets_js)))
 
     if mode == 'edit':
         html.javascript('toggle_dashboard_edit(true)')

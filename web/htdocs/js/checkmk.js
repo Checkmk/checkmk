@@ -1172,10 +1172,6 @@ function toggle_row(e, elem) {
     if(checkbox === null)
         return;
 
-    // When CTRL is not pressed, remove the selection
-    //if(!e.ctrlKey)
-    //    remove_selected_rows(row_num);
-
     // Is SHIFT pressed?
     // Yes:
     //   Select all from the last selection
@@ -1206,24 +1202,6 @@ function toggle_row(e, elem) {
         e.returnValue = false;
     return false;
 }
-
-// FIXME: If current "row text selection" behavior is ok - remove this
-//function disable_selection(e) {
-//    if(!e)
-//        e = window.event;
-//
-//    // Skip handling clicks on links/images/...
-//    var target = getTarget(e);
-//    if(target.tagName != 'TD')
-//        return true;
-//
-//    // Firefox handling
-//    if(typeof target.style.MozUserSelect != 'undefined')
-//        target.style.MozUserSelect = 'none';
-//
-//    // All others
-//    return false;
-//}
 
 // Toggles the datarows of the group which the given checkbox is part of.
 function toggle_group_rows(checkbox) {
@@ -1392,13 +1370,6 @@ function table_init_rowselect(oTable) {
             elem.onclick = function(e) {
                 return toggle_row(e, this);
             };
-            // Disable selections in IE and then in mozilla
-            //elem.onselectstart = function(e) {
-            //    return disable_selection(e);
-            //};
-            //elem.onmousedown = function(e) {
-            //    return disable_selection(e);
-            //};
             elem = null;
         });
     }

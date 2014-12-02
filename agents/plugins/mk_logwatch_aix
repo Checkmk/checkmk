@@ -1,0 +1,13 @@
+#!/usr/bin/ksh
+# Beware: This Plugin clears the errors after each run,
+# but it creates an detailed backup in /var/log/errpt_TIMESTAMP.log
+
+echo "<<<logwatch>>>"
+echo "[[[errorlog]]]"
+OUT=$(errpt | awk 'NR>1 { printf "C %s\n", $0 }')
+if [[ $OUT != '' ]];then
+        echo $OUT
+        errpt -a > /var/log/errpt_$(date +%s).log
+        errclear 0
+fi
+

@@ -146,8 +146,8 @@ multisite_commands.append({
 
 # CLEAR MODIFIED ATTRIBUTES
 config.declare_permission("action.clearmodattr",
-        _("Clear modified attributes"),
-        _("Remove the information that an attribute (like check enabling) has been changed"),
+        _("Reset modified attributes"),
+        _("Reset all manually modified attributes of a host or service (like disabled notifications)"),
         [ "admin" ])
 
 multisite_commands.append({
@@ -155,11 +155,11 @@ multisite_commands.append({
     "permission"  : "action.clearmodattr",
     "title"       : _("Modified attributes"),
     "render"      : lambda: \
-       html.button("_clear_modattr", _('Clear information about modified attributes')),
+       html.button("_clear_modattr", _('Clear modified attributes')),
     "action"      : lambda cmdtag, spec, row: (
         html.var("_clear_modattr") and (
         "CHANGE_" + cmdtag + "_MODATTR;%s;0" % spec,
-         _("<b>clear the information about modified attributes</b> of"))),
+         _("<b>clear the modified attributes</b> of"))),
 })
 
 # FAKE CHECKS

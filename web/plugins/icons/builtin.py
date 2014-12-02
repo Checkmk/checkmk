@@ -402,12 +402,21 @@ multisite_icons.append({
 
 def paint_notifications(what, row, tags, custom_vars):
     # Notifications disabled
-    if not row[what + "_notifications_enabled"]:
-        return '<img class=icon title="%s" src="images/icon_ndisabled.gif">' % \
+    enabled = row[what + "_notifications_enabled"]
+    modified = "notifications_enabled" in row[what + "_modified_attributes_list"]
+    if modified and enabled:
+        return '<img class=icon title="%s" src="images/icon_notif_enabled.png">' % \
+                         _('Notifications are manually enabled for this %s') % what
+    elif modified and not enabled:
+        return '<img class=icon title="%s" src="images/icon_notif_man_disabled.png">' % \
+                         _('Notifications are manually disabled for this %s') % what
+    elif not enabled:
+        return '<img class=icon title="%s" src="images/icon_notif_disabled.png">' % \
                          _('Notifications are disabled for this %s') % what
 
+
 multisite_icons.append({
-    'columns':         [ 'notifications_enabled' ],
+    'columns':         [ 'modified_attributes_list', 'notifications_enabled' ],
     'paint':           paint_notifications,
 })
 

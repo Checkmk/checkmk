@@ -152,7 +152,7 @@ def convert_winperf_if(info):
 
     # Sort NIC names are create artifical index
     nic_names = nics.keys()
-    nic_names.sort()
+    nic_names.sort(reverse=True)
 
     for nr, nic_name in enumerate(nic_names):
         nic = nics[nic_name]

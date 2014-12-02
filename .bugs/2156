@@ -1,9 +1,9 @@
 Title: Do always create contact groups, even if no host/service is contained
 Component: core
-State: open
+Class: bug
+State: done
 Date: 2014-05-26 14:18:35
 Targetversion: future
-Class: bug
 
 The rule based notifications allow the selection of a contact group as
 a rule's contact selection. If you create contact groups with WATO that do
@@ -14,3 +14,7 @@ Micro Core is not affected as it seems.
 Beware: an unpatched Nagios might not consider this as a valid configuration.
 If that is the case then we need a global config option. We then set this
 option to True for OMD installations and patch Nagios in OMD.
+
+2014-12-02 12:27:52: changed state open -> done
+Contact groups with contacts assigned, but without host/services are now created
+within Nagios (they are already available within CMC).

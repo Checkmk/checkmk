@@ -1,9 +1,9 @@
 Title: objects.precache missing on first start
 Component: core
-State: open
+Class: bug
+State: works4me
 Date: 2014-03-24 13:28:13
 Targetversion: 1.2.5i1
-Class: bug
 
 creating a new site with
 omd create blubb
@@ -25,3 +25,6 @@ Error: Cannot open config file '/omd/sites/blubb/var/nagios/objects.precache' fo
 after a
 cmk -R
 nagios starts... :-(
+
+2014-12-02 12:35:57: changed state open -> works4me
+Unable to reproduce this problem.

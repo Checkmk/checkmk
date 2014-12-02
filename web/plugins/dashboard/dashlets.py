@@ -385,6 +385,7 @@ dashlet_types["pnpgraph"] = {
 var dashlet_offsets = {};
 function dashboard_render_pnpgraph(nr, img_url)
 {
+    // Get the target size for the graph from the inner dashlet container
     var inner = document.getElementById('dashlet_inner_' + nr);
     var c_w = inner.clientWidth;
     var c_h = inner.clientHeight;
@@ -397,6 +398,12 @@ function dashboard_render_pnpgraph(nr, img_url)
         container.appendChild(img);
     }
 
+    // This handler is called after loading the configured graph image to verify
+    // it fits into the inner dashlet container.
+    // One could think that it can simply be solved by requesting an image of the
+    // given size from PNP/rrdtool, but this is not the case. When we request an
+    // image of a specified size, this size is used for the graphing area. The
+    // resulting image has normally labels which are added to the requested size.
     img.onload = function(nr, url, w, h) {
         return function() {
             var i_w = this.clientWidth;
@@ -410,14 +417,29 @@ function dashboard_render_pnpgraph(nr, img_url)
                 return; // Finished resizing
             }
 
+            // When the target height is smaller or equal to 81 pixels, PNP
+            // returns an image which has no labels, just the graph, which has
+            // exactly the requested height. In this situation no further resizing
+            // is needed.
             if (h <= 81 || h - y_diff <= 81) {
                 this.style.width = '100%';
                 this.style.height = '100%';
                 return;
             }
 
+            // Save the sizing differences between the requested size and the
+            // resulting size. This is, in fact, the size of the graph labels.
+            // load_graph_img() uses these dimensions to try to get an image
+            // which really fits the requested dimensions.
             if (typeof dashlet_offsets[nr] == 'undefined') {
                 dashlet_offsets[nr] = [x_diff, y_diff];
+            } else if (dashlet_offsets[nr][0] != x_diff || dashlet_offsets[nr][1] != y_diff) {
+                // was not successful in getting a correctly sized image. Seems
+                // that PNP/rrdtool was not able to render this size. Terminate
+                // and automatically scale to 100%/100%
+                this.style.width = '100%';
+                this.style.height = '100%';
+                return;
             }
 
             load_graph_img(nr, this, url, w, h);

@@ -939,7 +939,15 @@ def show_view(view, show_heading = False, show_buttons = True,
     # have a hardcoded value are not changeable by the user
     show_filters = visuals.visible_filters_of_visual(view, use_filters)
 
+    # Now populate the HTML vars with context vars from the view definition. Hard
+    # coded default values are treated differently:
+    #
+    # a) single context vars of the view are enforced
+    # b) multi context vars can be overwritten by existing HTML vars
     visuals.add_context_to_uri_vars(view, datasource["infos"], only_count)
+
+    # Check that all needed information for configured single contexts are available
+    visuals.verify_single_contexts('views', view)
 
     # Af any painter, sorter or filter needs the information about the host's
     # inventory, then we load it and attach it as column "host_inventory"

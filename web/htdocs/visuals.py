@@ -1117,6 +1117,13 @@ def unpack_context_after_editing(packed_context):
 #   |                                                                      |
 #   '----------------------------------------------------------------------'
 
+def verify_single_contexts(what, visual):
+    for k, v in get_singlecontext_html_vars(visual):
+        if v == None:
+            raise MKUserError(k, _('This %s can not be displayed, because the '
+                                   'necessary context information "%s" is missing.') %
+                                                    (visual_types[what]['title'], k))
+
 def visual_title(what, visual):
     extra_titles = []
 

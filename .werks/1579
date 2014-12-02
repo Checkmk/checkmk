@@ -1,0 +1,11 @@
+Title: Views: Setting for hard coded single context filters can now be changed by URL and filter
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.5i7
+Date: 1417510947
+Class: fix
+
+When a view has a hard coded value for a single context filter, the value could
+not be changed by the user when watching a view, neither by URL nor filter form.
+This has been changed now to make it possible to override the default value.

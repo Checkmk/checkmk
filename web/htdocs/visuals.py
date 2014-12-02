@@ -903,10 +903,10 @@ def add_context_to_uri_vars(visual, only_infos=None, only_count=False):
         only_infos = infos.keys() # all datasources!
 
     # Populate the HTML vars with missing context vars. The context vars set
-    # in single context are enforced (can not be overwritten by URL). The normal
-    # filter vars in "multiple" context are not enforced.
+    # in single context are not enforced (they can be overwritten by URL or by
+    # changing the filter form).
     for key in get_single_info_keys(visual):
-        if key in visual['context']:
+        if key in visual['context'] and not html.has_var(key):
             html.set_var(key, visual['context'][key])
 
     # Now apply the multiple context filters

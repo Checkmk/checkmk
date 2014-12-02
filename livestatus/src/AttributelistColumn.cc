@@ -61,7 +61,11 @@ unsigned long AttributelistColumn::getValue(void *data)
     data = shiftPointer(data);
     if (!data) return 0;
 
+#ifdef CMC
+    return *(uint16_t *)((char *)data + _offset);
+#else
     return *(unsigned long *)((char *)data + _offset);
+#endif
 }
 
 void AttributelistColumn::output(void *data, Query *query)

@@ -59,7 +59,7 @@ except:
 try:
     if "OMD_ROOT" in os.environ:
         path_prefix = ""
-        tmp_dir = os.environ["OMD_ROOT"]
+        tmp_dir = os.environ["OMD_ROOT"] + "/tmp"
     else:
         path_prefix = "./"
         tmp_dir = "."

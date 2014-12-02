@@ -64,6 +64,7 @@
             NOTE: Please refer to the migration notes!
     * 1500 SEC: Preventing livestatus injections in different places...
     * 1530 Dashboard: Host/service statistics dashlets now deal with the context...
+    * 1558 Better visualize manually changed notification enable/disable
     * 1164 FIX: Fixed links from servicegroup overviews to single servicegroups
     * 1166 FIX: Also prevting stylesheet update issues during version updates (just like for JS files)
     * 1481 FIX: Fix broken layout of Host-, Service- and Contactgroup filters

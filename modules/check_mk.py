@@ -4895,7 +4895,7 @@ def do_create_config():
     sys.stdout.write("Generating configuration for core (type %s)..." % monitoring_core)
     sys.stdout.flush()
     if monitoring_core == "cmc":
-        do_create_cmc_config(opt_cmc_relfilename)
+        do_create_cmc_config(opt_cmc_relfilename, False) # do not use rushed ahead config
     else:
         out = file(nagios_objects_file, "w")
         create_nagios_config(out)

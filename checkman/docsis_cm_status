@@ -1,6 +1,6 @@
 title: DOCSIS Cable Modem Status
 agents: snmp
-catalog: hw/network/docsis
+catalog: hw/network/generic
 license: GPL
 distribution:
 description:

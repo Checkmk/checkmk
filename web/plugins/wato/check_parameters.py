@@ -4237,6 +4237,29 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_storage,
+    "ibm_svc_host",
+    _("IBM SVC: Options for SVC Hosts Check "),
+    Dictionary(
+        elements = [
+            ( "always_ok",
+             DropdownChoice(
+                  choices = [
+                    ( False, _("Check show Errors in Case of degraded or offline hosts")),
+                    ( True, _("Check always is in a OK State") )
+                  ],
+                  title = _("Overwrite Service State"),
+                  )
+            )
+        ],
+        optional_keys = None,
+    ),
+    None,
+    "first"
+)
+
+
+register_check_parameters(
+    subgroup_storage,
     "disk_io",
     _("Levels on disk IO (throughput)"),
     Dictionary(

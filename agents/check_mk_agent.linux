@@ -217,7 +217,7 @@ then
     do
         echo "[$eth]"
         ethtool $eth | egrep '(Speed|Duplex|Link detected|Auto-negotiation):'
-        echo -en "\tAddress: " ; cat /sys/class/net/$eth/address
+        echo -en "\tAddress: " ; cat /sys/class/net/$eth/address ; echo
     done
 fi
 

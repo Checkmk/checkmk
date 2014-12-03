@@ -160,6 +160,9 @@
     * 1531 FIX: Fixed exception in event history view when displaying CHANGESTATE events
     * 1610 FIX: Hostname translation now also works for incoming SNMP traps
 
+    Livestatus:
+    * 1613 FIX: Fixed invalid json format in Stats query with requested heaeders...
+
     HW/SW-Inventory:
     * 1479 liveproxyd: new function for collecting remote inventory data...
             NOTE: Please refer to the migration notes!

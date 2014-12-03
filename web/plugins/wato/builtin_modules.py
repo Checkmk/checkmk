@@ -43,6 +43,9 @@ modules += [
       _("Check parameters and other configuration variables on "
         "hosts and services") ),
 
+      ( "static_checks",      _("Manual Checks"),     "static_checks", "rulesets",
+      _("Configure fixed checks without using service discovery")),
+
       ( "host_groups",       _("Host & Service Groups"),  "hostgroups", "groups",
       _("Organize your hosts and services in groups independent of the tree structure.") ),
 

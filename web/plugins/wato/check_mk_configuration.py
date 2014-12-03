@@ -2247,47 +2247,79 @@ register_rule(group,
              "and can change."))
 group = "agent/" + _("SNMP")
 
-_snmpv3_basic_elements = [
-     DropdownChoice(
-         choices = [
-             ( "authPriv",     _("authPriv")),
-             ( "authNoPriv",   _("authNoPriv")),
-             ( "noAuthNoPriv", _("noAuthNoPriv")),
-             ],
-         title = _("Security level")),
-      DropdownChoice(
-          choices = [
-             ( "md5", _("MD5") ),
-             ( "sha", _("SHA1") ),
-          ],
-          title = _("Authentication protocol")),
-     TextAscii(title = _("Security name"), attrencode = True),
-     Password(title = _("Authentication password"))]
+_snmpv3_auth_elements = [
+    DropdownChoice(
+        choices = [
+            ( "md5", _("MD5") ),
+            ( "sha", _("SHA1") ),
+        ],
+        title = _("Authentication protocol")
+    ),
+    TextAscii(
+        title = _("Security name"),
+        attrencode = True
+    ),
+    Password(
+        title = _("Authentication password"),
+        minlen = 8,
+    )
+]
 
 register_rule(group,
     "snmp_communities",
     Alternative(
-       elements = [
-           TextAscii(
-               title = _("SNMP community (SNMP Versions 1 and 2c)"),
-               allow_empty = False,
-               attrencode = True,
-           ),
-           Tuple(
-               title = _("Credentials for SNMPv3"),
-               elements = _snmpv3_basic_elements),
-           Tuple(
-               title = _("Credentials for SNMPv3 including privacy options"),
-               elements = _snmpv3_basic_elements + [
-                  DropdownChoice(
-                      choices = [
-                         ( "DES", _("DES") ),
-                         ( "AES", _("AES") ),
-                      ],
-                      title = _("Privacy protocol")),
-                 Password(title = _("Privacy pass phrase")),
-                   ])],
+        elements = [
+            TextAscii(
+                title = _("SNMP community (SNMP Versions 1 and 2c)"),
+                allow_empty = False,
+                attrencode = True,
+            ),
+            Tuple(
+                title = _("Credentials for SNMPv3 without authentication and privacy (noAuthNoPriv)"),
+                elements = [
+                    FixedValue("noAuthNoPriv",
+                        title = _("Security Level"),
+                        totext = _("No authentication, no privacy"),
+                    ),
+                ]
+            ),
+            Tuple(
+                title = _("Credentials for SNMPv3 with authentication but without privacy (authNoPriv)"),
+                elements = [
+                    FixedValue("authNoPriv",
+                        title = _("Security Level"),
+                        totext = _("authentication but no privacy"),
+                    ),
+                ] + _snmpv3_auth_elements
+            ),
+            Tuple(
+                title = _("Credentials for SNMPv3 with authentication and privacy (authPriv)"),
+                elements = [
+                    FixedValue("authPriv",
+                        title = _("Security Level"),
+                        totext = _("authentication and encryption"),
+                    ),
+                ] + _snmpv3_auth_elements + [
+                    DropdownChoice(
+                        choices = [
+                            ( "DES", _("DES") ),
+                            ( "AES", _("AES") ),
+                        ],
+                        title = _("Privacy protocol")
+                    ),
+                    Password(
+                        title = _("Privacy pass phrase"),
+                        minlen = 8,
+                    ),
+                ]
+            ),
+        ],
 
+        match = lambda x: type(x) == tuple and ( \
+                          len(x) == 1 and 1 or \
+                          len(x) == 4 and 2 or 3) or 0,
+
+        style = "dropdown",
         default_value = "public",
         title = _("SNMP credentials of monitored hosts"),
         help = _("By default Check_MK uses the community \"public\" to contact hosts via SNMP v1/v2. This rule "

@@ -353,6 +353,7 @@ class TextAscii(ValueSpec):
         self._regex         = kwargs.get("regex")
         self._regex_error   = kwargs.get("regex_error",
             _("Your input does not match the required format."))
+        self._minlen        = kwargs.get('minlen', None)
         if type(self._regex) == str:
             self._regex = re.compile(self._regex)
         self._prefix_buttons = kwargs.get("prefix_buttons", [])
@@ -430,6 +431,10 @@ class TextAscii(ValueSpec):
         if value and self._regex:
             if not self._regex.match(value):
                 raise MKUserError(varprefix, self._regex_error)
+
+        if self._minlen != None and len(value) < self._minlen:
+            raise MKUserError(varprefix, _("You need to provide at least %d characters.") % self._minlen)
+
         ValueSpec.custom_validate(self, value, varprefix)
 
 class TextUnicode(TextAscii):

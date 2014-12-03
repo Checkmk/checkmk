@@ -9877,7 +9877,7 @@ def mode_sites(phase):
                          "the initial handshake and not be stored. If the login is "
                          "successful then both side will exchange a login secret "
                          "which is used for the further remote calls.") % site["alias"])
-            html.begin_form("login")
+            html.begin_form("login", method="POST")
             html.write("<table class=form>")
             html.write("<tr><td class=legend>%s</td>" % _("Administrator login"))
             html.write("<td class=content>")
@@ -10561,15 +10561,20 @@ def do_site_login(site_id, name, password):
     # Trying basic auth AND form based auth to ensure the site login works.
     # Adding _ajaxid makes the web service fail silently with an HTTP code and
     # not output HTML code for an error screen.
-    url = site["multisiteurl"] + 'login.py?_login=1' \
-          '&_username=%s&_password=%s&_origtarget=automation_login.py&_plain_error=1' % \
-          (name, password)
-    response = get_url(url, site.get('insecure', False), name, password).strip()
+    url = site["multisiteurl"] + 'login.py'
+    post_data = html.urlencode_vars([
+        ('_login', '1'),
+        ('_username', name),
+        ('_password', password),
+        ('_origtarget', 'automation_login.py'),
+        ('_plain_error', '1'),
+    ])
+    response = get_url(url, site.get('insecure', False), name, password, post_data=post_data).strip()
     if '<html>' in response.lower():
         message = _("Authentication to web service failed.<br>Message:<br>%s") % \
             html.strip_tags(html.strip_scripts(response))
         if config.debug:
-            message += "<br>Automation URL: <tt>%s</tt><br>" % url
+            message += "<br>" + _("Automation URL:") + " <tt>%s</tt><br>" % url
         raise MKAutomationException(message)
     elif not response:
         raise MKAutomationException(_("Empty response from web service"))

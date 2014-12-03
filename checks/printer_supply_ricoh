@@ -40,7 +40,7 @@ def check_printer_supply_ricoh(item, params, info):
                 state = 2
             elif level < warn:
                 state = 1
-            message = "Remaining: %s%%%s (levels at %d%%/%d%%) " % (level, label, warn, crit)
+            message = "Remaining: %s%% (levels at %d%%/%d%%) " % (level, warn, crit)
             perfdata = [ ("level", level, warn, crit, 0, 100)]
             return (state, message, perfdata)
     return(3, "Supply information not found")

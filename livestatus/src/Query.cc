@@ -912,9 +912,10 @@ void Query::finish()
                 it != _stats_groups.end();
                 ++it)
         {
-            // dataset separator after first group
-            if (it != _stats_groups.begin() && _output_format != OUTPUT_FORMAT_CSV)
+            if (_need_ds_separator && _output_format != OUTPUT_FORMAT_CSV)
                 _output->addBuffer(",\n", 2);
+            else
+                _need_ds_separator = true;
 
             outputDatasetBegin();
 

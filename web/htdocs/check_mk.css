@@ -393,13 +393,7 @@ table.valuespec_tuple td {
 }
 
 table.valuespec_tuple td.tuple_left {
-    padding-right: 8px;
-    padding-top: 5px;
-}
-
-table.valuespec_tuple td.tuple_right,
-table.valuespec_tuple td.tuple_left {
-    /* padding-bottom: 3px; */
+    vertical-align: middle;
 }
 
 table.valuespec_tuple span.title {

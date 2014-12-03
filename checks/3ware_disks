@@ -72,7 +72,7 @@ def check_3ware_disks(item, _no_params, info):
             model     = line[-1]
             infotext = "%s (unit: %s, size: %s,%s, type: %s, model: %s)" % \
                        (status, unit_type, size, size_type, disk_type, model)
-            if status == "OK":
+            if status in [ "OK", "VERIFYING" ]:
                 return (0, "disk status is " + infotext)
             else:
                 return (2, "disk status is " + infotext)

@@ -834,6 +834,7 @@ def mode_folder(phase):
         global_buttons()
         if config.may("wato.rulesets") or config.may("wato.seeall"):
             html.context_button(_("Rulesets"),        make_link([("mode", "ruleeditor")]), "rulesets")
+            html.context_button(_("Manual Checks"),   make_link([("mode", "static_checks")]), "static_checks")
         if auth_read:
             html.context_button(_("Folder Properties"), make_link_to([("mode", "editfolder")], g_folder), "edit")
         if not g_folder.get(".lock_subfolders") and config.may("wato.manage_folders") and auth_write:
@@ -4648,6 +4649,9 @@ def mode_changelog(phase):
         if is_distributed():
             html.context_button(_("Site Configuration"), make_link([("mode", "sites")]), "sites")
 
+        if config.may("wato.auditlog"):
+            html.context_button(_("Audit log"), make_link([("mode", "auditlog")]), "auditlog")
+
     elif phase == "action":
 
         # Let host validators do their work
@@ -7769,7 +7773,14 @@ def mode_groups(phase, what):
 
     elif phase == "buttons":
         global_buttons()
-        html.context_button(_("New group"), make_link([("mode", "edit_%s_group" % what)]), "new")
+        if what == "host":
+            html.context_button(_("Service groups"), make_link([("mode", "service_groups")]), "hostgroups")
+            html.context_button(_("New host group"), make_link([("mode", "edit_host_group")]), "new")
+        elif what == "service":
+            html.context_button(_("Host groups"), make_link([("mode", "host_groups")]), "servicegroups")
+            html.context_button(_("New service group"), make_link([("mode", "edit_service_group")]), "new")
+        else:
+            html.context_button(_("New contact group"), make_link([("mode", "edit_contact_group")]), "new")
         if what == "contact":
             html.context_button(_("Rules"), make_link([("mode", "rulesets"),
                 ("filled_in", "search"), ("search", _("contact group"))]), "rulesets")
@@ -9877,7 +9888,7 @@ def mode_sites(phase):
                          "the initial handshake and not be stored. If the login is "
                          "successful then both side will exchange a login secret "
                          "which is used for the further remote calls.") % site["alias"])
-            html.begin_form("login")
+            html.begin_form("login", method="POST")
             html.write("<table class=form>")
             html.write("<tr><td class=legend>%s</td>" % _("Administrator login"))
             html.write("<td class=content>")
@@ -10561,15 +10572,20 @@ def do_site_login(site_id, name, password):
     # Trying basic auth AND form based auth to ensure the site login works.
     # Adding _ajaxid makes the web service fail silently with an HTTP code and
     # not output HTML code for an error screen.
-    url = site["multisiteurl"] + 'login.py?_login=1' \
-          '&_username=%s&_password=%s&_origtarget=automation_login.py&_plain_error=1' % \
-          (name, password)
-    response = get_url(url, site.get('insecure', False), name, password).strip()
+    url = site["multisiteurl"] + 'login.py'
+    post_data = html.urlencode_vars([
+        ('_login', '1'),
+        ('_username', name),
+        ('_password', password),
+        ('_origtarget', 'automation_login.py'),
+        ('_plain_error', '1'),
+    ])
+    response = get_url(url, site.get('insecure', False), name, password, post_data=post_data).strip()
     if '<html>' in response.lower():
         message = _("Authentication to web service failed.<br>Message:<br>%s") % \
             html.strip_tags(html.strip_scripts(response))
         if config.debug:
-            message += "<br>Automation URL: <tt>%s</tt><br>" % url
+            message += "<br>" + _("Automation URL:") + " <tt>%s</tt><br>" % url
         raise MKAutomationException(message)
     elif not response:
         raise MKAutomationException(_("Empty response from web service"))
@@ -13572,6 +13588,8 @@ def mode_ruleeditor(phase):
             title = _("Used Rulesets")
             help = _("Show only modified rulesets<br>(all rulesets with at least one rule)")
             icon = "usedrulesets"
+        elif groupname == "static": # these have moved into their own WATO module
+            continue
         else:
             title, help = g_rulegroups.get(groupname, (groupname, ""))
             icon = "rulesets"
@@ -13734,9 +13752,14 @@ def mode_ineffective_rules(phase):
     html.write('</div>')
     return
 
+def mode_static_checks(phase):
+    return mode_rulesets(phase, "static")
 
-def mode_rulesets(phase):
-    group = html.var("group") # obligatory
+
+def mode_rulesets(phase, group=None):
+    if not group:
+        group = html.var("group") # obligatory
+
     search = html.var("search")
     if search != None:
         search = search.strip().lower()
@@ -13745,6 +13768,10 @@ def mode_rulesets(phase):
         title = _("Used Rulesets")
         help = _("Non-empty rulesets")
         only_used = True
+    elif group == "static":
+        title = _("Manual Checks")
+        help = _("Here you can create explicit checks that are not being created by the automatic service discovery.")
+        only_used = False
     elif search != None:
         title = _("Rules matching ") + search
         help = _("All rules that contain '%s' in their name") % search
@@ -13765,12 +13792,14 @@ def mode_rulesets(phase):
     elif phase == "buttons":
         if only_host:
             home_button()
-            html.context_button(_("All Rulesets"), make_link([("mode", "ruleeditor"), ("host", only_host)]), "back")
+            if group != "static":
+                html.context_button(_("All Rulesets"), make_link([("mode", "ruleeditor"), ("host", only_host)]), "back")
             html.context_button(only_host,
                  make_link([("mode", "edithost"), ("host", only_host)]), "host")
         else:
             global_buttons()
-            html.context_button(_("All Rulesets"), make_link([("mode", "ruleeditor")]), "back")
+            if group != "static":
+                html.context_button(_("All Rulesets"), make_link([("mode", "ruleeditor")]), "back")
             if config.may("wato.hosts") or config.may("wato.seeall"):
                 html.context_button(_("Folder"), make_link([("mode", "folder")]), "folder")
         return
@@ -13803,7 +13832,7 @@ def mode_rulesets(phase):
 
     # Select matching rule groups while keeping their configured order
     groupnames = [ gn for gn, rulesets in g_rulespec_groups
-                   if only_used or search != None or gn == group or gn.startswith(group + "/") ]
+                   if only_used or search or gn == group or gn.startswith(group + "/") ]
 
     # In case of search we need to sort the groups since main chapters would
     # appear more than once otherwise.
@@ -13837,6 +13866,9 @@ def mode_rulesets(phase):
                 and search not in rulespec["title"].lower() \
                 and search not in varname:
                 continue
+
+            if search != None and groupname.startswith("static/"):
+                continue # search must not find these
 
 
             # Handle case where a host is specified
@@ -18147,6 +18179,14 @@ def is_a_checkbox(vs):
     else:
         return False
 
+def site_neutral_path(path):
+    if path.startswith('/omd'):
+        parts = path.split('/')
+        parts[3] = '&lt;siteid&gt;'
+        return '/'.join(parts)
+    else:
+        return path
+
 #.
 #   .--Plugins-------------------------------------------------------------.
 #   |                   ____  _             _                              |
@@ -18193,6 +18233,7 @@ modes = {
    "edit_configvar"     : (["global"], mode_edit_configvar),
    "ldap_config"        : (["global"], mode_ldap_config),
    "ruleeditor"         : (["rulesets"], mode_ruleeditor),
+   "static_checks"      : (["rulesets"], mode_static_checks),
    "rulesets"           : (["rulesets"], mode_rulesets),
    "ineffective_rules"  : (["rulesets"], mode_ineffective_rules),
    "edit_ruleset"       : (["rulesets"], mode_edit_ruleset),

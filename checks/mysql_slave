@@ -65,16 +65,20 @@ def check_mysql_slave(_unused, params, info):
         output.append('Slave-SQL: running')
 
         # Makes only sense to monitor the age when the SQL slave is running
-        out = 'Time behind Master: %s' % get_age_human_readable(data['Seconds_Behind_Master'])
-        warn, crit = params.get('seconds_behind_master', (None, None))
-        if crit != None and data['Seconds_Behind_Master'] > crit:
+        if data['Seconds_Behind_Master'] == 'NULL':
+            output.append('Time behind master: NULL (Lost connection?)(!!)')
             state = 2
-            out += '(!!)'
-        elif warn != None and data['Seconds_Behind_Master'] > warn:
-            state = max(state, 1)
-            out += '(!)'
-        output.append(out)
-        perfdata.append(('seconds_behind_master', data['Seconds_Behind_Master'], warn, crit))
+        else:
+            out = 'Time behind Master: %s' % get_age_human_readable(data['Seconds_Behind_Master'])
+            warn, crit = params.get('seconds_behind_master', (None, None))
+            if crit != None and data['Seconds_Behind_Master'] > crit:
+                state = 2
+                out += '(!!)'
+            elif warn != None and data['Seconds_Behind_Master'] > warn:
+                state = max(state, 1)
+                out += '(!)'
+            output.append(out)
+            perfdata.append(('seconds_behind_master', data['Seconds_Behind_Master'], warn, crit))
     else:
         output.append('Slave-SQL: not running(!!)')
         state = 2

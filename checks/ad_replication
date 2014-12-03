@@ -82,26 +82,26 @@ def check_ad_replication(item, params, info):
             if int(numFailures) > maxFailuresWarn:
                 status = 1
                 output += '(!) %s/%s replication of context %s reached ' \
-                          ' the threshold of maxmimum failures (%s) (Last Success: %s, ' \
+                          ' the threshold of maximum failures (%s) (Last Success: %s, ' \
                           'LastFailure: %s NumFailures: %s Status: %s), ' % \
-                         (sourceSite, sourceDC, namingContext, maxFailuresWarn, timeLastFailure,
-                          timeLastSuccess, numFailures, statusLastFailure)
+                         (sourceSite, sourceDC, namingContext, maxFailuresWarn, timeLastSuccess,
+                          timeLastFailure, numFailures, statusLastFailure)
 
             if int(numFailures) > maxFailuresCrit:
                 status = 2
                 output += '(!!) %s/%s replication of context %s reached ' \
-                          ' the threshold of maxmimum failures (%s) (Last Success: %s, ' \
+                          ' the threshold of maximum failures (%s) (Last Success: %s, ' \
                           'LastFailure: %s NumFailures: %s Status: %s), ' % \
-                         (sourceSite, sourceDC, namingContext, maxFailuresCrit, timeLastFailure,
-                          timeLastSuccess, numFailures, statusLastFailure)
+                         (sourceSite, sourceDC, namingContext, maxFailuresCrit, timeLastSuccess,
+                          timeLastFailure, numFailures, statusLastFailure)
 
             if timeLastFailure is not None and timeLastSuccess is not None \
                and timeLastFailure > timeLastSuccess:
                 status = 2
                 output += '(!!) %s/%s replication of context %s failed ' \
                          '(Last Success: %s, LastFailure: %s NumFailures: %s Status: %s), ' % \
-                         (sourceSite, sourceDC, namingContext, timeLastFailure,
-                          timeLastSuccess, numFailures, statusLastFailure)
+                         (sourceSite, sourceDC, namingContext, timeLastSuccess,
+                          timeLastFailure, numFailures, statusLastFailure)
     if not foundLine:
         return (3, 'Replication information for %s not found' % item)
 

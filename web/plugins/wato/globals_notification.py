@@ -84,16 +84,20 @@ register_configvar(group,
 
 register_configvar(group,
     "notification_logging",
-    DropdownChoice(
-        title = _("Notification logfile"),
-        help = _("When notification debugging is on, additional information will be "
-                 "logged in the notification logfile <tt>%s</tt>." %
-                  (defaults.var_dir + "/notify/notify.log")),
-        choices = [
-            ( 0, _("No logging")),
-            ( 1, _("One line per notification")),
-            ( 2, _("Full dump of all variables and command"))]
+    Transform(
+        DropdownChoice(
+            choices = [
+                ( 1, _("Normal logging")),
+                ( 2, _("Full dump of all variables and command"))
+            ],
+            default_value = 1,
         ),
+        forth = lambda x: x == 0 and 1 or x, # transform deprecated value 0 (no logging) to 1
+        title = _("Notification log level"),
+        help = _("You can configure the notification mechanism to log more details about "
+                 "the notifications into the notification log. These information are logged "
+                 "into the file <tt>%s</tt>") % site_neutral_path(defaults.log_dir + "/notify.log"),
+    ),
     domain = "check_mk")
 
 register_configvar(group,

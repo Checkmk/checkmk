@@ -53,14 +53,19 @@ def if_lnx_convert_to_if64(info):
     current_nic = None
     index = 0
     for line in info:
+        # Be careful! On clustered hosts we have more than one perf-counters section
+        # and ethtool section. This needs to be handled. Sadly we have no section
+        # headers. Try to detect it by data format.
         if line[0].startswith('['):
             current_nic = line[0][1:-1]
             index += 1
             nic_info[current_nic]['index'] = index
-        elif current_nic == None: # still in perf-counters subsection
+        elif len(line) == 2 and len(line[1].split()) >= 16:
+            # This looks like a perf-counter line
             nic = line[0]
             nic_info[nic] = { "counters": map(int, line[1].split()) }
         else:
+            # ethtool data line
             nic_info[current_nic][line[0].strip()] = ":".join(line[1:]).strip()
 
     # if index is 0 we either have found no nics or no information

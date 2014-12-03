@@ -81,6 +81,10 @@ function run_cached () {
     if [ -e "$CACHEFILE.new" ] ; then
         local CF_ATIME=$(stat -c %X "$CACHEFILE.new")
         if [ $((NOW - CF_ATIME)) -ge $((MAXAGE * 2)) ] ; then
+            # Kill the process still accessing that file in case
+            # it is still running. This avoids overlapping processes!
+            fuser -k -9 "$CACHEFILE.new" >/dev/null 2>&1
+            rm -f "$CACHEFILE.new"
             return
         fi
     fi
@@ -213,7 +217,7 @@ then
     do
         echo "[$eth]"
         ethtool $eth | egrep '(Speed|Duplex|Link detected|Auto-negotiation):'
-        echo -en "\tAddress: " ; cat /sys/class/net/$eth/address
+        echo -en "\tAddress: " ; cat /sys/class/net/$eth/address ; echo
     done
 fi
 
@@ -497,9 +501,11 @@ fi
 # Only handle the last 6 lines (includes the summary line at the bottom and
 # the last message in the queue. The last message is not used at the moment
 # but it could be used to get the timestamp of the last message.
-if type mailq >/dev/null 2>&1 && [ -x /usr/sbin/postfix ] && getent passwd postfix >/dev/null 2>&1; then
+if type postconf ; then
     echo '<<<postfix_mailq>>>'
-    mailq | tail -n 6
+    echo -- \
+        $(du -kd0 $(postconf -h queue_directory)/deferred | awk '{print $1 }') Kbytes in \
+        $(find $(postconf -h queue_directory)/deferred/. ! -name '?' -print | wc -l) Requests.
 elif [ -x /usr/sbin/ssmtp ] ; then
     echo '<<<postfix_mailq>>>'
     mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6

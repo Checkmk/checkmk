@@ -341,12 +341,15 @@ register_rule(group + '/' + subgroup_inventory,
 register_rule(group + '/' + subgroup_inventory,
     varname   = "inventory_processes_rules",
     title     = _('Process Inventory'),
-    help      = _("Keep in mind that all configuration parameters in this rule are only applied during the hosts inventory. "
-                  "Any changes later on require a host re-inventory"),
+    help      = _("This ruleset defines criteria for automatically creating checks for running processes "
+                  "based upon what is running when the service discovery is done. These services will be "
+                  "created with default parameters. They will get critical when no process is running and "
+                  "OK otherwise. You can parameterize the check with the ruleset <i>Process Checks</i>."),
     valuespec = Dictionary(
         elements = [
             ('descr', TextAscii(
                 title = _('Service Description'),
+                style = "dropdown",
                 allow_empty = False,
                 help  = _('<p>The service description may contain one or more occurances of <tt>%s</tt>. If you do this, then the pattern must be a regular '
                           'expression and be prefixed with ~. For each <tt>%s</tt> in the description, the expression has to contain one "group". A group '
@@ -362,14 +365,17 @@ register_rule(group + '/' + subgroup_inventory,
             )),
             ('match', Alternative(
                 title = _("Process Matching"),
+                style = "dropdown",
                 elements = [
                     TextAscii(
                         title = _("Exact name of the process without argments"),
+                        label = _("Executable:"),
                         size = 50,
                     ),
                     Transform(
                         RegExp(size = 50),
                         title = _("Regular expression matching command line"),
+                        label = _("Command line:"),
                         help = _("This regex must match the <i>beginning</i> of the complete "
                                  "command line of the process including arguments"),
                         forth = lambda x: x[1:],   # remove ~
@@ -386,6 +392,7 @@ register_rule(group + '/' + subgroup_inventory,
             )),
             ('user', Alternative(
                 title = _('Name of the User'),
+                style = "dropdown",
                 elements = [
                     FixedValue(
                         None,
@@ -394,6 +401,7 @@ register_rule(group + '/' + subgroup_inventory,
                     ),
                     TextAscii(
                         title = _('Exact name of the user'),
+                        label = _("User:"),
                     ),
                     FixedValue(
                         False,
@@ -410,93 +418,95 @@ register_rule(group + '/' + subgroup_inventory,
                          'create duplicate services with the same description otherwise.</p><p>Windows users are specified by the namespace followed by '
                          'the actual user name. For example "\\\\NT AUTHORITY\NETWORK SERVICE" or "\\\\CHKMKTEST\Administrator".</p>'),
             )),
-            ('perfdata', Checkbox(
-                title = _('Performance Data'),
-                label = _('Collect count of processes, memory and cpu usage'),
-            )),
-            ('levels', Tuple(
-                title = _('Levels'),
-                help = _("Please note that if you specify and also if you modify levels here, the change is activated "
-                         "only during an inventory.  Saving this rule is not enough. This is due to the nature of inventory rules."),
-                elements = [
-                    Integer(
-                        title = _("Critical below"),
-                        unit = _("processes"),
-                        default_value = 1,
-                    ),
-                    Integer(
-                        title = _("Warning below"),
-                        unit = _("processes"),
-                        default_value = 1,
-                    ),
-                    Integer(
-                        title = _("Warning above"),
-                        unit = _("processes"),
-                        default_value = 1,
-                    ),
-                    Integer(
-                        title = _("Critical above"),
-                        unit = _("processes"),
-                        default_value = 1,
-                    ),
-                ],
-            )),
-            ( "cpulevels",
-              Tuple(
-                title = _("Levels on CPU utilization"),
-                elements = [
-                   Percentage(title = _("Warning if above"),  default_value = 90, maxvalue = 10000),
-                   Percentage(title = _("Critical if above"), default_value = 98, maxvalue = 10000),
-                ],
-            )),
-            ( "cpu_average",
-             Integer(
-                 title = _("CPU Averaging"),
-                 help = _("By activating averaging, Check_MK will compute the average of "
-                          "the CPU utilization over a given interval. If you have defined "
-                          "alerting levels then these will automatically be applied on the "
-                          "averaged value. This helps to mask out short peaks. "),
-                 unit = _("minutes"),
-                 minvalue = 1,
-                 default_value = 15,
-             )
-           ),
-           ( "virtual_levels",
-              Tuple(
-                title = _("Virtual memory usage"),
-                elements = [
-                    Filesize(title = _("Warning at")),
-                    Filesize(title = _("Critical at")),
-                ],
-           )),
-           ( "resident_levels",
-              Tuple(
-                title = _("Physical memory usage"),
-                elements = [
-                    Filesize(title = _("Warning at")),
-                    Filesize(title = _("Critical at")),
-                ],
-           )),
-            ('handle_count', Tuple(
-                title = _('Handle Count (Windows only)'),
-                help  = _("The number of object handles in the processes object table. This includes open handles to "
-                          "threads, files and other resources like registry keys."),
-                elements = [
-                    Integer(
-                        title = _("Warning above"),
-                        unit = _("handles"),
-                    ),
-                    Integer(
-                        title = _("Critical above"),
-                        unit = _("handles"),
-                    ),
-                ],
-            )),
         ],
-        optional_keys = ['handle_count', 'cpulevels', 'cpu_average', 'virtual_levels', 'resident_levels'],
+
+        # Some keys have moved into a check parameter ruleset
+        ignored_keys  = [ 'levels', 'perfdata', 'handle_count', 'cpulevels', 'cpu_average', 'virtual_levels', 'resident_levels'],
     ),
     match = 'all',
 )
+
+process_level_elements = [
+    ('levels', Tuple(
+        title = _('Levels for process count'),
+        help = _("Please note that if you specify and also if you modify levels here, the change is activated "
+                 "only during an inventory.  Saving this rule is not enough. This is due to the nature of inventory rules."),
+        elements = [
+            Integer(
+                title = _("Critical below"),
+                unit = _("processes"),
+                default_value = 1,
+            ),
+            Integer(
+                title = _("Warning below"),
+                unit = _("processes"),
+                default_value = 1,
+            ),
+            Integer(
+                title = _("Warning above"),
+                unit = _("processes"),
+                default_value = 99999,
+            ),
+            Integer(
+                title = _("Critical above"),
+                unit = _("processes"),
+                default_value = 99999,
+            ),
+        ],
+    )),
+    ( "cpulevels",
+      Tuple(
+        title = _("Levels on CPU utilization"),
+        elements = [
+           Percentage(title = _("Warning if above"),  default_value = 90, maxvalue = 10000),
+           Percentage(title = _("Critical if above"), default_value = 98, maxvalue = 10000),
+        ],
+    )),
+    ( "cpu_average",
+     Integer(
+         title = _("CPU Averaging"),
+         help = _("By activating averaging, Check_MK will compute the average of "
+                  "the CPU utilization over a given interval. If you have defined "
+                  "alerting levels then these will automatically be applied on the "
+                  "averaged value. This helps to mask out short peaks. "),
+         unit = _("minutes"),
+         minvalue = 1,
+         default_value = 15,
+     )
+   ),
+   ( "virtual_levels",
+      Tuple(
+        title = _("Virtual memory usage"),
+        elements = [
+            Filesize(title = _("Warning at")),
+            Filesize(title = _("Critical at")),
+        ],
+   )),
+   ( "resident_levels",
+      Tuple(
+        title = _("Physical memory usage"),
+        elements = [
+            Filesize(title = _("Warning at")),
+            Filesize(title = _("Critical at")),
+        ],
+   )),
+    ('handle_count', Tuple(
+        title = _('Handle Count (Windows only)'),
+        help  = _("The number of object handles in the processes object table. This includes open handles to "
+                  "threads, files and other resources like registry keys."),
+        elements = [
+            Integer(
+                title = _("Warning above"),
+                unit = _("handles"),
+            ),
+            Integer(
+                title = _("Critical above"),
+                unit = _("handles"),
+            ),
+        ],
+    )),
+]
+
 
 register_rule(group + '/' + subgroup_inventory,
     varname   = "inv_domino_tasks_rules",
@@ -1402,7 +1412,7 @@ register_check_parameters(
                            default_difference = (0.5, 1.0)
                        )
                    ],
-                   default_value = (50.0, 70.0))
+                   default_value = (80.0, 90.0))
             ),
             ("average",
                 Integer (
@@ -3924,9 +3934,69 @@ register_check_parameters(
             ),
             ( "ssl_conns",
                 Levels(
-                     title = _("Max. number of connections"),
+                     title = _("Max. number of SSL connections"),
                      default_value = None,
                      default_levels = (25000, 30000)
+                )
+            ),
+        ]),
+    None,
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "checkpoint_connections",
+    _("Checkpoint Firewall Connections"),
+    Tuple(
+       help = _("This rule sets limits to the current number of connections through "
+                "a Checkpoint firewall."),
+       title = _("Maximum number of firewall connections"),
+       elements = [
+           Integer( title = _("Warning if above"), default_value = 40000),
+           Integer( title = _("Critical if above"), default_value = 50000),
+       ],
+    ),
+    None,
+    None
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "checkpoint_packets",
+    _("Checkpoint Firewall Packet Rates"),
+    Dictionary(
+        elements = [
+            ( "accepted",
+                Levels(
+                     title = _("Maximum Rate of Accepted Packets"),
+                     default_value = None,
+                     default_levels = (100000, 200000),
+                     unit = "pkts/sec"
+                )
+            ),
+            ( "rejected",
+                Levels(
+                     title = _("Maximum Rate of Rejected Packets"),
+                     default_value = None,
+                     default_levels = (100000, 200000),
+                     unit = "pkts/sec"
+                )
+            ),
+            ( "dropped",
+                Levels(
+                     title = _("Maximum Rate of Dropped Packets"),
+                     default_value = None,
+                     default_levels = (100000, 200000),
+                     unit = "pkts/sec"
+                )
+            ),
+            ( "logged",
+                Levels(
+                     title = _("Maximum Rate of Logged Packets"),
+                     default_value = None,
+                     default_levels = (100000, 200000),
+                     unit = "pkts/sec"
                 )
             ),
         ]),
@@ -4164,6 +4234,18 @@ register_check_parameters(
           elements = [
               Integer(title = _("Warning if above"), unit = _("threads"), default_value = 1000),
               Integer(title = _("Critical if above"), unit = _("threads"), default_value = 2000)]),
+    None, None
+)
+
+register_check_parameters(
+    subgroup_os,
+    "users",
+    _("Number of Users Logged In"),
+    Tuple(
+          help = _("This rule defines levels for the number of users logged in on a system."),
+          elements = [
+              Integer(title = _("Warning if above"), unit = _("users"), default_value = 20),
+              Integer(title = _("Critical if above"), unit = _("users"), default_value = 30)]),
     None, None
 )
 
@@ -6125,7 +6207,24 @@ def ps_convert_from_tuple(params):
             params["user"] = user
     return params
 
+# Next step in conversion: introduce "levels"
+def ps_convert_from_singlekeys(old_params):
+    params = {}
+    params.update(ps_convert_from_tuple(old_params))
+    if "warnmin" in params:
+        params["levels"] = (
+            params.get("warnmin",     1),
+            params.get("okmin",       1),
+            params.get("warnmax", 99999),
+            params.get("okmax",   99999),
+        )
+        for key in [ "warnmin", "warnmax", "okmin", "okmax" ]:
+            if key in params:
+                del params[key]
+    return params
 
+
+# Rule for static process checks
 register_check_parameters(
     subgroup_applications,
     "ps",
@@ -6157,28 +6256,12 @@ register_check_parameters(
                     ],
                     match = lambda x: (not x and 2) or (x[0] == '~' and 1 or 0)
                 )),
-                ( "warnmin", Integer(
-                    title = _("Minimum number of matched process for WARNING state"),
-                    default_value = 1,
-                )),
-                ( "okmin", Integer(
-                    title = _("Minimum number of matched process for OK state"),
-                    default_value = 1,
-                )),
-                ( "okmax", Integer(
-                    title = _("Maximum number of matched process for OK state"),
-                    default_value = 1,
-                )),
-                ( "warnmax", Integer(
-                    title = _("Maximum number of matched process for WARNING state"),
-                    default_value = 1,
-                )),
                 ( "user", Alternative(
                     title = _("Name of operating system user"),
                     style = "dropdown",
                     elements = [
                         TextAscii(
-                            title = _("Exact name of the oeprating system user")
+                            title = _("Exact name of the operating system user")
                         ),
                         Transform(
                             RegExp(size = 50),
@@ -6198,61 +6281,10 @@ register_check_parameters(
                     match = lambda x: (not x and 2) or (x[0] == '~' and 1 or 0)
 
                 )),
-                ( "cpulevels",
-                  Tuple(
-                    title = _("Levels on CPU utilization"),
-                    elements = [
-                       Percentage(title = _("Warning if above"),  default_value = 90, maxvalue = 10000),
-                       Percentage(title = _("Critical if above"), default_value = 98, maxvalue = 10000),
-                    ],
-                )),
-                ( "cpu_average",
-                 Integer(
-                     title = _("CPU Averaging"),
-                     help = _("By activating averaging, Check_MK will compute the average of "
-                              "the CPU utilization over a given interval. If you have defined "
-                              "alerting levels then these will automatically be applied on the "
-                              "averaged value. This helps to mask out short peaks."),
-                     unit = _("minutes"),
-                     minvalue = 1,
-                     default_value = 15,
-                 )
-               ),
-               ( "virtual_levels",
-                  Tuple(
-                    title = _("Virtual memory usage"),
-                    elements = [
-                        Filesize(title = _("Warning at")),
-                        Filesize(title = _("Critical at")),
-                    ],
-               )),
-               ( "resident_levels",
-                  Tuple(
-                    title = _("Physical memory usage"),
-                    elements = [
-                        Filesize(title = _("Warning at")),
-                        Filesize(title = _("Critical at")),
-                    ],
-               )),
-               ('handle_count', Tuple(
-                   title = _('Handle Count (Windows only)'),
-                   help  = _("The number of object handles in the process's object table. This includes open handles to "
-                             "threads, files and other resources like registry keys."),
-                   elements = [
-                       Integer(
-                           title = _("Warning above"),
-                           unit = _("handles"),
-                       ),
-                       Integer(
-                           title = _("Critical above"),
-                           unit = _("handles"),
-                       ),
-                   ],
-               )),
-
-            ],
-            optional_keys = [ "user", "cpulevels", "cpu_average", "virtual_levels", "resident_levels", "handle_count" ]),
-        forth = ps_convert_from_tuple,
+            ] + process_level_elements,
+            # required_keys = [ "process" ],
+        ),
+        forth = ps_convert_from_singlekeys,
     ),
     TextAscii(
         title = _("Name of service"),
@@ -6262,7 +6294,8 @@ register_check_parameters(
         regex_error = _("Please use only a-z, A-Z, 0-9, space, underscore, "
                         "dot and hyphon for your service description"),
     ),
-    "first", False
+    "dict",
+    True,
 )
 
 register_check_parameters(
@@ -6982,11 +7015,11 @@ register_check_parameters(
             )),
             ( "okmax", Integer(
                 title = _("Maximum number of matched tasks for OK state"),
-                default_value = 1,
+                default_value = 99999,
             )),
             ( "warnmax", Integer(
                 title = _("Maximum number of matched tasks for WARNING state"),
-                default_value = 1,
+                default_value = 99999,
             )),
         ],
         required_keys = [ 'warnmin', 'okmin', 'okmax', 'warnmax', 'process' ],

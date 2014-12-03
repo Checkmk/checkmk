@@ -50,6 +50,7 @@ check_info["qnap_disks"] = {
                                     6, # Disk Size
                                     7, # Status Text
                               ] ),
-    "snmp_scan_function"    : lambda oid: oid('.1.3.6.1.2.1.1.1.0').startswith('Linux TS-')
+    "snmp_scan_function"    : lambda oid: oid('.1.3.6.1.2.1.1.1.0').startswith('Linux TS-') \
+                                        or oid('.1.3.6.1.2.1.1.1.0').startswith('NAS QR802')
 }
 

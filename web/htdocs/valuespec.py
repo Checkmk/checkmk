@@ -353,6 +353,7 @@ class TextAscii(ValueSpec):
         self._regex         = kwargs.get("regex")
         self._regex_error   = kwargs.get("regex_error",
             _("Your input does not match the required format."))
+        self._minlen        = kwargs.get('minlen', None)
         if type(self._regex) == str:
             self._regex = re.compile(self._regex)
         self._prefix_buttons = kwargs.get("prefix_buttons", [])
@@ -430,6 +431,10 @@ class TextAscii(ValueSpec):
         if value and self._regex:
             if not self._regex.match(value):
                 raise MKUserError(varprefix, self._regex_error)
+
+        if self._minlen != None and len(value) < self._minlen:
+            raise MKUserError(varprefix, _("You need to provide at least %d characters.") % self._minlen)
+
         ValueSpec.custom_validate(self, value, varprefix)
 
 class TextUnicode(TextAscii):
@@ -2636,6 +2641,7 @@ class Dictionary(ValueSpec):
         self._elements = kwargs["elements"]
         self._empty_text = kwargs.get("empty_text", _("(no parameters)"))
         self._required_keys = kwargs.get("required_keys", [])
+        self._ignored_keys = kwargs.get("ignored_keys", [])
         self._default_keys = kwargs.get("default_keys", []) # keys present in default value
         if "optional_keys" in kwargs:
             ok = kwargs["optional_keys"]
@@ -2868,6 +2874,8 @@ class Dictionary(ValueSpec):
 
         # Check for exceeding keys
         allowed_keys = [ p for (p,v) in self._get_elements() ]
+        if self._ignored_keys:
+            allowed_keys += self._ignored_keys
         for param in value.keys():
             if param not in allowed_keys:
                 raise MKUserError(varprefix, _("Undefined key '%s' in the dictionary. Allowed are %s.") %

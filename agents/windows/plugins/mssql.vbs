@@ -17,8 +17,6 @@
 '
 ' This check has been developed with MSSQL Server 2008 R2. It should work with
 ' older versions starting from at least MSSQL Server 2005.
-'
-' 16.10.2013 Instanzen mit Unterstrich im Namen   -- H.Schniggendiller
 ' -----------------------------------------------------------------------------
 
 Option Explicit
@@ -36,7 +34,6 @@ Sub addOutput(text)
     output = output & text & vbLf
 End Sub
 
-
 ' Dummy empty output. 
 ' Contains timeout error if this scripts runtime exceeds the timeout
 WScript.echo "<<<mssql_versions>>>"
@@ -44,23 +41,27 @@ WScript.echo "<<<mssql_versions>>>"
 ' Loop all found local MSSQL server instances
 ' Try different trees to handle different versions of MSSQL
 On Error Resume Next
-' MSSQL >= 10
-' try SQL Server 2012:
-Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement11")
+' try SQL Server 2014:
+Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement12")
 If Err.Number <> 0 Then
     Err.Clear()
-
-    ' try SQL Server 2008
-    Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement10")
+    ' try SQL Server 2012:
+    Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement11")
     If Err.Number <> 0 Then
         Err.Clear()
-
-        ' try MSSQL < 10
-        Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement")
+    
+        ' try SQL Server 2008
+        Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement10")
         If Err.Number <> 0 Then
-            addOutput( "Error: " & Err.Number & " " & Err.Description )
             Err.Clear()
-            wscript.quit()
+    
+            ' try MSSQL < 10
+            Set WMI = GetObject("WINMGMTS:\\.\root\Microsoft\SqlServer\ComputerManagement")
+            If Err.Number <> 0 Then
+                addOutput( "Error: " & Err.Number & " " & Err.Description )
+                Err.Clear()
+                wscript.quit()
+            End If
         End If
     End If
 End If

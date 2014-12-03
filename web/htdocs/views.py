@@ -61,6 +61,7 @@ def load_plugins():
     config.declare_permission_section("action", _("Commands on host and services"), do_sort = True)
 
     load_web_plugins("views", globals())
+    load_host_tag_painters()
 
     # This must be set after plugin loading to make broken plugins raise
     # exceptions all the time and not only the first time (when the plugins

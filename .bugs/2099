@@ -1,23 +1,27 @@
-Title: ps check outputs wrong cpu usage
+Title: Rework ps check
 Component: checks
 State: open
 Date: 2013-12-17 13:10:37
-Targetversion: 1.2.5i1
-Class: bug
+Targetversion: 1.2.7i1
+Class: todo
 
-The check uses the average cpu usage since start of the process:
+The ps check for Linux and Windows needs to be completely reworked.
+We need to write a real parse function using dicts that create a
+useful common structure for Linux and Windows and then remove lots
+of nasty special handlings.
 
+For Linux we need the content of /proc/[pid]/stat in order to
+correctly determine the CPU utilization. This can be done at
+this time - not further.
 
-***
-       CODE        HEADER    DESCRIPTION
+Here is a suggested command line for the agent:
 
-       %cpu        %CPU      cpu utilization of the process in "##.#" format.
-                             Currently, it is the CPU time used divided by the
-                             time the process has been running
-                             (cputime/realtime ratio), expressed as a
-                             percentage.  It will not add up to 100% unless
-                             you are lucky.  (alias pcpu).
-***
+echo '[proc_stat]'
+echo /proc/[0-9]*/stat | xargs awk '{ print $1 " " $14 " " $15; }' 2>/dev/null
+echo '[proc_stat_end]'
 
-This is totally wrong. Better would be to use the raw counter values from ps and
-keep an eye on the counters on our own.
+We might user further data from here and throw that away from the
+current bracket code.
+
+In order not to break compatibility we could implement a new section
+and a new check and the deprecate the existing one.

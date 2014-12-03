@@ -1,4 +1,4 @@
-title: F5 Big-IP: Cluster state
+title: F5 Big-IP: Cluster state, up to firmware version 10
 agents: snmp
 catalog: hw/network/f5
 license: GPL
@@ -10,7 +10,7 @@ description:
      - both nodes have differing configs
      - the node being checked has the status "unconfigured"
 
- It supports devices running the 9.0 and above releases of the F5 OS. It's tested against 9.3
+ It supports devices running the 9.0 and above releases of the F5 OS, but lower then 11. It's tested against 9.3
  devices.
 
 inventory:

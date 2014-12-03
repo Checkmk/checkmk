@@ -1962,6 +1962,7 @@ def load_host_tag_painters():
 
         multisite_painters["host_tag_" + tgid] = {
             "title"   : _("Host tag:") + ' ' + long_tit,
+            "name"    : "host_tag_" + tgid,
             "short"   : tit,
             "columns" : [ "host_custom_variables" ],
             "paint"   : paint_host_tag,

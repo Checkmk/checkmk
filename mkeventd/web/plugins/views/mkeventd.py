@@ -317,14 +317,14 @@ if mkeventd_enabled:
         "title"   : _("ID of the event"),
         "short"   : _("ID"),
         "columns" : ["event_id"],
-        "paint"   : lambda row: ("number", row["event_id"]),
+        "paint"   : lambda row: ("number", str(row["event_id"])),
     }
 
     multisite_painters["event_count"] = {
         "title"   : _("Count (number of recent occurrances)"),
         "short"   : _("Cnt."),
         "columns" : ["event_count"],
-        "paint"   : lambda row: ("number", row["event_count"]),
+        "paint"   : lambda row: ("number", str(row["event_count"])),
     }
 
     multisite_painters["event_text"] = {
@@ -361,7 +361,7 @@ if mkeventd_enabled:
         try:
             return "", dict(config.mkeventd_service_levels)[row["event_sl"]]
         except:
-            return "", row["event_sl"]
+            return "", str(row["event_sl"])
 
     multisite_painters["event_sl"] = {
         "title"   : _("Service-Level"),

@@ -549,8 +549,21 @@ def paint_aggregations(what, row, tags, custom_vars):
     if config.bi_precompile_on_demand \
        or bi.is_part_of_aggregation(what, row["site"], row["host_name"],
                                  row.get("service_description")):
-         return link_to_view('<img class=icon src="images/icon_aggr.gif" title="%s">' %
-                  _('Aggregations containing this %s') % what, row, 'aggr_' + what)
+        urivars = [
+            ("view_name", "aggr_" + what),
+            ("aggr_%s_site" % what, row["site"]),
+            ("aggr_%s_host" % what, row["host_name"]),
+        ]
+        if what == "service":
+            urivars += [
+                ( "aggr_service_service", row["service_description"])
+            ]
+        url = html.makeuri_contextless(urivars)
+        icon = '<img class=icon src="images/icon_aggr.png" title="%s">' \
+            % _("BI Aggregations containing this %s") \
+            % (what == "host" and _("Host") or _("Service"))
+        return '<a href="%s">%s</a>' % (url, icon)
+
 
 multisite_icons.append({
     'paint':           paint_aggregations,
@@ -603,7 +616,7 @@ def paint_icon_check_bi_aggr(what, row, tags, custom_vars):
         url = "%s/check_mk/view.py?view_name=aggr_single&aggr_name=%s" % \
               (base_url, html.urlencode(aggr_name))
 
-        return '<a href="%s"><img class=icon src="images/icon_aggr.gif" title="%s"></a>' % \
+        return '<a href="%s"><img class=icon src="images/icon_aggr.png" title="%s"></a>' % \
                  (html.attrencode(url), _('Open this Aggregation'))
 
 

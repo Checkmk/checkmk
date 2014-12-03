@@ -503,7 +503,9 @@ fi
 # but it could be used to get the timestamp of the last message.
 if type mailq >/dev/null 2>&1 && [ -x /usr/sbin/postfix ] && getent passwd postfix >/dev/null 2>&1; then
     echo '<<<postfix_mailq>>>'
-    mailq | tail -n 6
+    echo -- \
+        $(du -kd0 $(postconf -h queue_directory)/deferred | awk '{print $1 }') Kbytes in \
+        $(find $(postconf -h queue_directory)/deferred/. ! -name '?' -print | wc -l) Requests.
 elif [ -x /usr/sbin/ssmtp ] ; then
     echo '<<<postfix_mailq>>>'
     mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6

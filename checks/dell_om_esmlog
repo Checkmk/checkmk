@@ -36,10 +36,10 @@ def check_dell_om_esmlog(_no_item, _no_params, info):
         message = "ESM Log is full"
     elif status == 3:
         state = 0
-        message = "EMS Log is less then 80% full"
+        message = "EMS Log is less than 80% full"
     else:
         state =1
-        message = "EMS log more then 80% full"
+        message = "EMS log more than 80% full"
 
     return state, message
 

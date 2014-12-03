@@ -44,6 +44,7 @@ megaraid_bbu_refvalues = {
     'Over Temperature'                          : ('No', 2),
     'Over Charged'                              : ('No', 1),
     'Voltage'                                   : ('OK', 2),   # nolearn
+    'isSOHGood'                                 : ('Yes', 2),
 }
 
 
@@ -85,7 +86,8 @@ def check_megaraid_bbu(item, _no_params, info):
     if 'Relative State of Charge' not in controller:
         charge = ", No charge information reported for this controller"
     else:
-        charge = ", Charge is %s" % controller['Relative State of Charge']
+        charge = ", Charge is %s, Capacity is %s" % \
+                (controller['Relative State of Charge'], controller['Full Charge Capacity'])
 
     # verify defined important parameters to current level
     for varname, (refvalue, refstate) in megaraid_bbu_refvalues.items():

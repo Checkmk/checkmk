@@ -122,12 +122,12 @@ bool LogCache::logCachePreChecks()
     // Has Nagios rotated logfiles? => Update
     // our file index. And delete all memorized
     // log messages.
-    #ifdef CMC
+#ifdef CMC
     if (g_core->_last_logfile_rotation > _last_index_update) {
-    #else
+#else
     if (last_log_rotation > _last_index_update) {
-    #endif
-        logger(LG_INFO, "Nagios has rotated logfiles. Rebuilding logfile index");
+#endif
+        logger(LG_INFO, "Core has rotated logfiles. Rebuilding logfile index");
         forgetLogfiles();
         updateLogfileIndex();
     }

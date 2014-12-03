@@ -3934,9 +3934,69 @@ register_check_parameters(
             ),
             ( "ssl_conns",
                 Levels(
-                     title = _("Max. number of connections"),
+                     title = _("Max. number of SSL connections"),
                      default_value = None,
                      default_levels = (25000, 30000)
+                )
+            ),
+        ]),
+    None,
+    "dict"
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "checkpoint_connections",
+    _("Checkpoint Firewall Connections"),
+    Tuple(
+       help = _("This rule sets limits to the current number of connections through "
+                "a Checkpoint firewall."),
+       title = _("Maximum number of firewall connections"),
+       elements = [
+           Integer( title = _("Warning if above"), default_value = 40000),
+           Integer( title = _("Critical if above"), default_value = 50000),
+       ],
+    ),
+    None,
+    None
+)
+
+register_check_parameters(
+    subgroup_applications,
+    "checkpoint_packets",
+    _("Checkpoint Firewall Packet Rates"),
+    Dictionary(
+        elements = [
+            ( "accepted",
+                Levels(
+                     title = _("Maximum Rate of Accepted Packets"),
+                     default_value = None,
+                     default_levels = (100000, 200000),
+                     unit = "pkts/sec"
+                )
+            ),
+            ( "rejected",
+                Levels(
+                     title = _("Maximum Rate of Rejected Packets"),
+                     default_value = None,
+                     default_levels = (100000, 200000),
+                     unit = "pkts/sec"
+                )
+            ),
+            ( "dropped",
+                Levels(
+                     title = _("Maximum Rate of Dropped Packets"),
+                     default_value = None,
+                     default_levels = (100000, 200000),
+                     unit = "pkts/sec"
+                )
+            ),
+            ( "logged",
+                Levels(
+                     title = _("Maximum Rate of Logged Packets"),
+                     default_value = None,
+                     default_levels = (100000, 200000),
+                     unit = "pkts/sec"
                 )
             ),
         ]),

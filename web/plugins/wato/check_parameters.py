@@ -4238,6 +4238,18 @@ register_check_parameters(
 )
 
 register_check_parameters(
+    subgroup_os,
+    "users",
+    _("Number of Users Logged In"),
+    Tuple(
+          help = _("This rule defines levels for the number of users logged in on a system."),
+          elements = [
+              Integer(title = _("Warning if above"), unit = _("users"), default_value = 20),
+              Integer(title = _("Critical if above"), unit = _("users"), default_value = 30)]),
+    None, None
+)
+
+register_check_parameters(
     subgroup_applications,
     "vms_procs",
     _("Number of processes on OpenVMS"),

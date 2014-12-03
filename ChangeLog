@@ -60,6 +60,8 @@
     * 1602 FIX: dell_om_esmlog: Fixed typo in plugin output
     * 1603 FIX: ad_replication: fixed typo in plugin output
     * 1604 FIX: mysql_slave: Dealing with situation where connection with master is lost
+    * 1563 FIX: Reworked configuration of process monitoring...
+            NOTE: Please refer to the migration notes!
 
     Multisite:
     * 1508 Allow input of plugin output and perfdata when faking check results...

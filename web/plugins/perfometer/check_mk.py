@@ -599,6 +599,7 @@ def perfometer_ps_perf(row, check_command, perf_data):
     except:
         return "", ""
 
+perfometers["check_mk-ps"] = perfometer_ps_perf
 perfometers["check_mk-ps.perf"] = perfometer_ps_perf
 
 

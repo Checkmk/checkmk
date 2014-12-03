@@ -2641,6 +2641,7 @@ class Dictionary(ValueSpec):
         self._elements = kwargs["elements"]
         self._empty_text = kwargs.get("empty_text", _("(no parameters)"))
         self._required_keys = kwargs.get("required_keys", [])
+        self._ignored_keys = kwargs.get("ignored_keys", [])
         self._default_keys = kwargs.get("default_keys", []) # keys present in default value
         if "optional_keys" in kwargs:
             ok = kwargs["optional_keys"]
@@ -2873,6 +2874,8 @@ class Dictionary(ValueSpec):
 
         # Check for exceeding keys
         allowed_keys = [ p for (p,v) in self._get_elements() ]
+        if self._ignored_keys:
+            allowed_keys += self._ignored_keys
         for param in value.keys():
             if param not in allowed_keys:
                 raise MKUserError(varprefix, _("Undefined key '%s' in the dictionary. Allowed are %s.") %

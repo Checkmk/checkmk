@@ -1412,7 +1412,7 @@ register_check_parameters(
                            default_difference = (0.5, 1.0)
                        )
                    ],
-                   default_value = (50.0, 70.0))
+                   default_value = (80.0, 90.0))
             ),
             ("average",
                 Integer (

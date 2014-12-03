@@ -59,6 +59,7 @@
     * 1591 FIX: netapp_volumes: The state mixed_raid_type is now treated as non-critical state
     * 1602 FIX: dell_om_esmlog: Fixed typo in plugin output
     * 1603 FIX: ad_replication: fixed typo in plugin output
+    * 1604 FIX: mysql_slave: Dealing with situation where connection with master is lost
 
     Multisite:
     * 1508 Allow input of plugin output and perfdata when faking check results...

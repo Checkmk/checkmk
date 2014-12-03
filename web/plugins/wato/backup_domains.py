@@ -182,7 +182,6 @@ else:
           "prefix"      : defaults.omd_root,
           "paths"       : [
                             ("dir",  "var/log"),
-                            ("file", "var/check_mk/notify/notify.log"),
                             ("file", "var/nagios/livestatus.log"),
                             ("dir",  "var/pnp4nagios/log"),
                           ],

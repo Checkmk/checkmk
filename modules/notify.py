@@ -54,8 +54,8 @@ notification_logdir     = var_dir + "/notify"
 notification_spooldir   = var_dir + "/notify/spool"
 notification_bulkdir    = var_dir + "/notify/bulk"
 notification_core_log   = var_dir + "/notify/nagios.log" # Fallback for history if no CMC running
-notification_log        = notification_logdir + "/notify.log"
-notification_logging    = 0
+notification_log        = log_dir + "/notify.log"
+notification_logging    = 1
 notification_backlog    = 10 # keep the last 10 notification contexts for reference
 
 # Settings for new rule based notifications
@@ -133,7 +133,9 @@ Available commands:
 # keepalive mode (used by CMC), sends out one notifications from
 # several possible sources or sends out all ripe bulk notifications.
 def do_notify(args):
-    global notify_mode
+    global notify_mode, notification_logging
+    if notification_logging == 0:
+        notification_logging = 1 # transform deprecated value 0 to 1
     try:
         if not os.path.exists(notification_logdir):
             os.makedirs(notification_logdir)
@@ -1229,9 +1231,6 @@ def notify_via_email(plugin_context):
             break
     else:
         notify_log("No UTF-8 encoding found in your locale -a! Please provide C.UTF-8 encoding.")
-
-    if notification_logging >= 2:
-        file(var_dir + "/notify/body.log", "w").write(body.encode("utf-8"))
 
     # Important: we must not output anything on stdout or stderr. Data of stdout
     # goes back into the socket to the CMC in keepalive mode and garbles the

@@ -1172,6 +1172,7 @@ class EventServer:
             'application' : application.replace('\n', ''),
             'text'        : text
         }
+        self.do_translate_hostname(event)
         self.process_event(event)
 
     def serve(self):
@@ -2022,6 +2023,13 @@ class EventServer:
 
         return backedhost
 
+    def do_translate_hostname(self, event):
+        try:
+            event["host"] = self.translate_hostname(event["host"])
+        except Exception, e:
+            if g_config["debug_rules"]:
+                log('Unable to parse host "%s" (%s)' % (event.get("host"), e))
+            event["host"] = ""
 
     def parse_event(self, line, address):
         event = {}
@@ -2130,12 +2138,7 @@ class EventServer:
                 "time"        : time.time(),
             }
 
-        try:
-            event["host"] = self.translate_hostname(event["host"])
-        except Exception, e:
-            if g_config["debug_rules"]:
-                log('Unable to parse host "%s" (%s)' % (event.get("host"), e))
-            event["host"] = ""
+        self.do_translate_hostname(event)
 
         if g_config["debug_rules"]:
             log('Parsed message:\n' +

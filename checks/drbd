@@ -166,6 +166,7 @@ drbd_cs_map = {
   'SyncSource':     1, 'SyncTarget':     1,
   'PausedSyncS':    1, 'PausedSyncT':    1,
   'VerifyS':        0, 'VerifyT':        0,
+   'Ahead':         1, 'Behind':         1,
 }
 
 drbd_ds_map = {

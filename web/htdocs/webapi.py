@@ -58,7 +58,7 @@ def load_plugins():
     # Declare permissions for all api actions
     config.declare_permission_section("webapi", _("Web API"), do_sort = True)
     for name, settings in api_actions.items():
-        full_description  = "%s<br>API function <tt>{site}/check_mk/webapi.py&action=%s</tt>" % (settings.get("description",""), name)
+        full_description  = "%s<br>API function <tt>{site}/check_mk/webapi.py?action=%s</tt>" % (settings.get("description",""), name)
         example_request = settings.get("example_request")
         if example_request:
             full_description += "<br>"

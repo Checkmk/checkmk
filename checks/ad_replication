@@ -82,7 +82,7 @@ def check_ad_replication(item, params, info):
             if int(numFailures) > maxFailuresWarn:
                 status = 1
                 output += '(!) %s/%s replication of context %s reached ' \
-                          ' the threshold of maxmimum failures (%s) (Last Success: %s, ' \
+                          ' the threshold of maximum failures (%s) (Last Success: %s, ' \
                           'LastFailure: %s NumFailures: %s Status: %s), ' % \
                          (sourceSite, sourceDC, namingContext, maxFailuresWarn, timeLastFailure,
                           timeLastSuccess, numFailures, statusLastFailure)
@@ -90,7 +90,7 @@ def check_ad_replication(item, params, info):
             if int(numFailures) > maxFailuresCrit:
                 status = 2
                 output += '(!!) %s/%s replication of context %s reached ' \
-                          ' the threshold of maxmimum failures (%s) (Last Success: %s, ' \
+                          ' the threshold of maximum failures (%s) (Last Success: %s, ' \
                           'LastFailure: %s NumFailures: %s Status: %s), ' % \
                          (sourceSite, sourceDC, namingContext, maxFailuresCrit, timeLastFailure,
                           timeLastSuccess, numFailures, statusLastFailure)

@@ -58,6 +58,7 @@
     * 1590 FIX: printer_supply_ricoh: Fixed broken check
     * 1591 FIX: netapp_volumes: The state mixed_raid_type is now treated as non-critical state
     * 1602 FIX: dell_om_esmlog: Fixed typo in plugin output
+    * 1603 FIX: ad_replication: fixed typo in plugin output
 
     Multisite:
     * 1508 Allow input of plugin output and perfdata when faking check results...

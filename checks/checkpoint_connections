@@ -1,4 +1,5 @@
-#!/usr/bin/bash
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -23,35 +24,34 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Check_MK agent plugin for monitoring nfsexports on Solaris. This plugin
-# has been tested with solaris 10 in a standalone and cluster setting.
+# .1.3.6.1.2.1.1.1.0 Linux gateway1 2.6.18-92cp #1 SMP Tue Dec 4 21:44:22 IST 2012 i686
+# .1.3.6.1.4.1.2620.1.1.25.3.0 19190
 
-clusterconfigdir="/etc/cluster/ccr/global/directory"
-if [ -r $clusterconfigdir ]; then
-    # is a clustered nfs server
-    nfsconfig=/etc/cluster/ccr/global/`grep rgm $clusterconfigdir | grep nfs | grep rg_`
-    if [ -r $nsconfig ]; then
-        Pathprefix=`grep Pathprefix $nfsconfig | awk {'print $2'}`/SUNW.nfs
-        dfstabfile=$Pathprefix/dfstab.`grep -v FilesystemMountPoints $nfsconfig | grep SUNW.nfs | \
-            awk {'print $1'} | sed -e 's/RS_//'`
-        if [ -r $dfstabfile ]; then
-            EXPORTS=`grep -v  ^# $dfstabfile | grep -v ^$`
-            ps -aef | grep nfsd | grep $Pathprefix >/dev/null && DAEMONS="ok"
-        fi
-    fi
-else
-    # is a standalone nfs server
-    dfstabfile="/etc/dfs/dfstab"
-    if [ -r $dfstabfile ]; then
-        EXPORTS=`grep -v  ^# $dfstabfile | grep -v ^$`
-        svcs -a | grep nfs/server | grep ^online >/dev/null && DAEMONS="ok"
-    fi
-fi
+checkpoint_connections_default_levels = (40000, 50000)
 
-# any exports or have running daemons? then look for registered exports
-if [ "$EXPORTS" ]; then
-    echo "<<<nfsexports>>>"
-    if [ "$DAEMONS" ]; then
-        showmount -e | grep ^/
-    fi
-fi
+def check_checkpoint_connections(item, params, info):
+    warn, crit = params
+    current = saveint(info[0][0])
+    state = 0
+    icon = ''
+    if current >= warn:
+        state = 1
+    if current >= crit:
+        state = 2
+
+    perfdata = [("connections", current, warn, crit)]
+    infotext = "%d Current Connections (levels at %d/%d)" % (current, warn, crit)
+    yield state, infotext, perfdata
+
+check_info["checkpoint_connections"] = {
+    "check_function"        : check_checkpoint_connections,
+    "inventory_function"    : lambda info: [(None, "checkpoint_connections_default_levels")],
+    "service_description"   : "Connections",
+    "has_perfdata"          : True,
+    "group"                 : "checkpoint_connections",
+    # detect a checkpoint kernel
+    "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.1.0").split(" ")[2].endswith("cp"),
+    # checkpoint.products.fw.fwPolicyStat.fwNumConn
+    "snmp_info"		    : ( ".1.3.6.1.4.1.2620.1.1.25", [ 3 ]),
+}
+

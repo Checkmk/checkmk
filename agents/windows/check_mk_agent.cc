@@ -3651,7 +3651,7 @@ void add_only_from(char *value)
     int bits = 32;
 
     if (strchr(value, '/')) {
-        if (5 != sscanf(value, "%u.%u.%u.%u/%u", &a, &b, &c, &d, &bits)) {
+        if (5 != sscanf(value, "%u.%u.%u.%u/%d", &a, &b, &c, &d, &bits)) {
             fprintf(stderr, "Invalid value %s for only_hosts\n", value);
             exit(1);
         }
@@ -4200,7 +4200,8 @@ void stop_threads()
     // Signal any threads to shut down
     // We don't rely on any check threat running/suspended calls
     // just check the script_container status
-    HANDLE hThreadArray[script_containers.size()];
+    int sizedt = script_containers.size();
+    HANDLE hThreadArray[sizedt];
     int active_thread_count = 0;
 
     script_containers_t::iterator it_cont = script_containers.begin();

@@ -47,6 +47,7 @@ manpage_catalog_titles = {
             "avm"        : "AVM",
             "bintec"     : "Bintec",
             "cbl"        : "Communication by light (CBL)",
+            "checkpoint" : "Checkpoint",
             "cisco"      : "Cisco Systems (also IronPort)",
             "casa"       : "Casa",
             "decru"      : "Decru",

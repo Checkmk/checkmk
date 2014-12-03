@@ -1,0 +1,29 @@
+Title: Make painter options configurable as view defaults
+Component: multisite
+State: open
+Date: 2014-12-03 15:57:40
+Targetversion: 1.2.5i1
+Class: feature
+
+The painter options can not be configured per view, for example in a view dashlet. These
+are user related options. We should implement these options as defaults per view, while
+the user can override them.
+
+----
+Mail from user:
+
+  We used to have a view in the dashboard, with URL defined in the dashboard definition.py like so:
+
+            "title"      : _("Applications - errors"),
+            "title_url"  : "view.py?view_name=aggr_dashboard_apps_all&po_aggr_onlyproblems=1",
+            "view"       : "aggr_dashboard_apps_errs&po_aggr_onlyproblems=1",
+
+  This allowed us to get a neat tree view of problems in the network, and showing only the problems - if list was empty, everything was great. Getting such a view does not seem possible with the new view format.
+
+  While using a link (the title_url) to the actual view still works, such painter options are not stored as part of custom dashboard view configuration - only filters are stored. For other (non-dashlet) views, the chosen view options are of course stored in var/lib/user/viewoptions.mk, but this does not apply to view dashlets.
+
+  What this means is that we are seeing *all* aggregation data, including items in OK state, on the dashboard.
+
+  Could you make it possible to also include the painter options in the custom view dashlets?
+
+  Right now our only workaround is to use a URL Iframe, and with that, we cannot hide the other elements of such an url (such as the action buttons at top of a page and so on). To us this represents a loss of functionality and clarity in dashboard.

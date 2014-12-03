@@ -1,4 +1,7 @@
 1.2.5i6p5:
+    Checks & Agents:
+    * 1441 FIX: cisco_secure: fixed non-working check...
+
 
 1.2.5i6p4:
     Checks & Agents:

@@ -43,11 +43,8 @@ modules += [
       _("Check parameters and other configuration variables on "
         "hosts and services") ),
 
-      ( "host_groups",       _("Host Groups"),        "hostgroups", "groups",
-      _("Organize your hosts in groups independent of the tree structure.") ),
-
-      ( "service_groups",    _("Service Groups"),     "servicegroups", "groups",
-      _("Organize services in groups for a better overview in the status display.") ),
+      ( "host_groups",       _("Host & Service Groups"),  "hostgroups", "groups",
+      _("Organize your hosts and services in groups independent of the tree structure.") ),
 
       ( "users",          _("Users"),     "users", "users",
       _("Manage users of the monitoring system.") ),

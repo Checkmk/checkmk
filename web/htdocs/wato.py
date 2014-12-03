@@ -7769,7 +7769,14 @@ def mode_groups(phase, what):
 
     elif phase == "buttons":
         global_buttons()
-        html.context_button(_("New group"), make_link([("mode", "edit_%s_group" % what)]), "new")
+        if what == "host":
+            html.context_button(_("Service groups"), make_link([("mode", "service_groups")]), "hostgroups")
+            html.context_button(_("New host group"), make_link([("mode", "edit_host_group")]), "new")
+        elif what == "service":
+            html.context_button(_("Host groups"), make_link([("mode", "host_groups")]), "servicegroups")
+            html.context_button(_("New service group"), make_link([("mode", "edit_service_group")]), "new")
+        else:
+            html.context_button(_("New contact group"), make_link([("mode", "edit_contact_group")]), "new")
         if what == "contact":
             html.context_button(_("Rules"), make_link([("mode", "rulesets"),
                 ("filled_in", "search"), ("search", _("contact group"))]), "rulesets")

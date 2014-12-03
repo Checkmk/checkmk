@@ -2289,8 +2289,8 @@ register_rule(group,
                    ])],
 
         default_value = "public",
-        title = _("SNMP communities of monitored hosts"),
-        help = _("By default Check_MK uses the community \"public\" to contact hosts via SNMP. This rule "
+        title = _("SNMP credentials of monitored hosts"),
+        help = _("By default Check_MK uses the community \"public\" to contact hosts via SNMP v1/v2. This rule "
                  "can be used to customize the the credentials to be used when contacting hosts via SNMP.")))
 
 register_rule(group,

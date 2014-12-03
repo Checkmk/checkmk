@@ -4618,16 +4618,24 @@ def dump_host(hostname):
                 inline = "yes"
             else:
                 inline = "no"
+
             credentials = snmp_credentials_of(hostname)
+            if type(credentials) in [ str, unicode ]:
+                cred = "community: \'%s\'" % credentials
+            else:
+                cred = "credentials: '%s'" % ", ".join(credentials)
+
             if is_bulkwalk_host(hostname):
                 bulk = "yes"
             else:
                 bulk = "no"
+
             portinfo = snmp_port_of(hostname)
             if portinfo == None:
                 portinfo = 'default'
-            agenttypes.append("SNMP (community: '%s', bulk walk: %s, port: %s, inline: %s)" %
-                (credentials, bulk, portinfo, inline))
+
+            agenttypes.append("SNMP (%s, bulk walk: %s, port: %s, inline: %s)" %
+                (cred, bulk, portinfo, inline))
 
     if is_ping_host(hostname):
         agenttypes.append('PING only')

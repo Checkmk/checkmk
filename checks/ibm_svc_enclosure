@@ -95,7 +95,7 @@ def check_ibm_svc_enclosure(item, _no_params, info):
 check_info["ibm_svc_enclosure"] = {
     "check_function"        : check_ibm_svc_enclosure,
     "inventory_function"    : inventory_ibm_svc_enclosure,
-    "service_description"   : "IBM SVC Enclosure %s",
+    "service_description"   : "Enclosure %s",
     "has_perfdata"          : False,
 }
 

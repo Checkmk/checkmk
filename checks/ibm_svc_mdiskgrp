@@ -88,7 +88,7 @@ def check_ibm_svc_mdiskgrp(item, params, info):
 check_info["ibm_svc_mdiskgrp"] = {
     "check_function"          : check_ibm_svc_mdiskgrp,
     "inventory_function"      : inventory_ibm_svc_mdiskgrp,
-    "service_description"     : "IBM SVC MDiskGrp %s",
+    "service_description"     : "MDiskGrp %s",
     "has_perfdata"            : True,
     "group"                   : "filesystem",
     "includes"                : [ "df.include" ],

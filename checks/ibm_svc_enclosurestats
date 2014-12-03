@@ -102,7 +102,7 @@ def check_ibm_svc_enclosurestats_power(item, _no_params, info):
 check_info["ibm_svc_enclosurestats.power"] = {
     "check_function"        : check_ibm_svc_enclosurestats_power,
     "inventory_function"    : inventory_ibm_svc_enclosurestats_power,
-    "service_description"   : "IBM SVC Power Enclosure %s",
+    "service_description"   : "Power Enclosure %s",
     "has_perfdata"          : True,
 }
 

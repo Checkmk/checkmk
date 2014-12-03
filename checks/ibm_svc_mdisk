@@ -72,7 +72,7 @@ def check_ibm_svc_mdisk(item, _no_params, info):
 check_info["ibm_svc_mdisk"] = {
     "check_function"        : check_ibm_svc_mdisk,
     "inventory_function"    : inventory_ibm_svc_mdisk,
-    "service_description"   : "IBM SVC MDisk %s",
+    "service_description"   : "MDisk %s",
     "has_perfdata"          : False,
 }
 

@@ -79,7 +79,7 @@ def check_ibm_svc_license(item, _no_params, info):
 check_info["ibm_svc_license"] = {
     "check_function"        : check_ibm_svc_license,
     "inventory_function"    : inventory_ibm_svc_license,
-    "service_description"   : "IBM SVC License %s",
+    "service_description"   : "License %s",
     "has_perfdata"          : True,
 }
 

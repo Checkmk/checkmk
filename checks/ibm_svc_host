@@ -77,7 +77,7 @@ def check_ibm_svc_host(item, _no_params, info):
 check_info["ibm_svc_host"] = {
     "check_function"        : check_ibm_svc_host,
     "inventory_function"    : inventory_ibm_svc_host,
-    "service_description"   : "IBM SVC Hosts",
+    "service_description"   : "Hosts",
     "has_perfdata"          : True,
 }
 

@@ -24,62 +24,60 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Author: Lars Michelsen <lm@mathias-kettner.de>
-
-#.1.3.6.1.4.1.789.1.5.8.1.1.1 = INTEGER: 1
-#.1.3.6.1.4.1.789.1.5.8.1.1.2 = INTEGER: 2
-#.1.3.6.1.4.1.789.1.5.8.1.1.3 = INTEGER: 3
-#.1.3.6.1.4.1.789.1.5.8.1.2.1 = STRING: "vol0"
-#.1.3.6.1.4.1.789.1.5.8.1.2.2 = STRING: "RvRBackup"
-#.1.3.6.1.4.1.789.1.5.8.1.2.3 = STRING: "RundV"
-#.1.3.6.1.4.1.789.1.5.8.1.3.1 = STRING: "67155442"
-#.1.3.6.1.4.1.789.1.5.8.1.3.2 = STRING: "2600515058"
-#.1.3.6.1.4.1.789.1.5.8.1.3.3 = STRING: "788575730"
-#.1.3.6.1.4.1.789.1.5.8.1.4.1 = INTEGER: 1
-#.1.3.6.1.4.1.789.1.5.8.1.4.2 = INTEGER: 1
-#.1.3.6.1.4.1.789.1.5.8.1.4.3 = INTEGER: 1
-#.1.3.6.1.4.1.789.1.5.8.1.5.1 = STRING: "online"
-#.1.3.6.1.4.1.789.1.5.8.1.5.2 = STRING: "online"
-#.1.3.6.1.4.1.789.1.5.8.1.5.3 = STRING: "online"
-#.1.3.6.1.4.1.789.1.5.8.1.6.1 = STRING: "raid_dp"
-#.1.3.6.1.4.1.789.1.5.8.1.6.2 = STRING: "raid_dp"
-#.1.3.6.1.4.1.789.1.5.8.1.6.3 = STRING: "raid_dp"
-#.1.3.6.1.4.1.789.1.5.8.1.7.1 = STRING: "root, diskroot, nosnap=off,
-# nosnapdir=off, minra=off, no_atime_update=off, raidtype=raid_dp, raidsize=16,
-# nvfail=off, snapmirrored=off, resyncsnaptime=60, create_ucode=off,
-# convert_ucode=off, maxdirsize=10485, fs_size_fixed=off, guarantee=volume,
-# svo_enable=off, svo_checksum=off, svo_allow_rman=off, svo_reject_errors=off,
-# no_i2p=off, fractional_reserve=100, extent=off, try_first=volume_grow"
-#.1.3.6.1.4.1.789.1.5.8.1.7.2 = STRING: "nosnap=off, nosnapdir=off,
-# minra=off, no_atime_update=off, raidtype=raid_dp, raidsize=16, nvfail=off,
-# snapmirrored=off, resyncsnaptime=60, create_ucode=off, convert_ucode=off,
-# maxdirsize=10485, fs_size_fixed=off, guarantee=volume, svo_enable=off,
-# svo_checksum=off, svo_allow_rman=off, svo_reject_errors=off, no_i2p=off,
-# fractional_reserve=100, extent=off, try_first=volume_grow"
-#.1.3.6.1.4.1.789.1.5.8.1.7.3 = STRING: "nosnap=on, nosnapdir=on,
-# minra=off, no_atime_update=off, raidtype=raid_dp, raidsize=16, nvfail=off,
-# snapmirrored=off, resyncsnaptime=60, create_ucode=off, convert_ucode=off,
-# maxdirsize=10485, fs_size_fixed=off, guarantee=volume, svo_enable=off,
-# svo_checksum=off, svo_allow_rman=off, svo_reject_errors=off, no_i2p=off,
-# fractional_reserve=100, extent=off, try_first=volume_grow"
-#.1.3.6.1.4.1.789.1.5.8.1.8.1 = STRING: "1ddc9920-496e-11df-aae1-00a09800c998"
-#.1.3.6.1.4.1.789.1.5.8.1.8.2 = STRING: "62ac1040-5a8d-11df-83fd-00a09800c998"
-#.1.3.6.1.4.1.789.1.5.8.1.8.3 = STRING: "4edc66e0-d6a3-11df-8724-00a09800c998"
-#.1.3.6.1.4.1.789.1.5.8.1.9.1 = STRING: "aggr0"
-#.1.3.6.1.4.1.789.1.5.8.1.9.2 = STRING: "aggr0"
-#.1.3.6.1.4.1.789.1.5.8.1.9.3 = STRING: "aggr0"
-#.1.3.6.1.4.1.789.1.5.8.1.10.1 = INTEGER: 2
-#.1.3.6.1.4.1.789.1.5.8.1.10.2 = INTEGER: 2
-#.1.3.6.1.4.1.789.1.5.8.1.10.3 = INTEGER: 2
-#.1.3.6.1.4.1.789.1.5.8.1.11.1 = INTEGER: 1
-#.1.3.6.1.4.1.789.1.5.8.1.11.2 = INTEGER: 1
-#.1.3.6.1.4.1.789.1.5.8.1.11.3 = INTEGER: 1
-#.1.3.6.1.4.1.789.1.5.8.1.12.1 = ""
-#.1.3.6.1.4.1.789.1.5.8.1.12.2 = ""
-#.1.3.6.1.4.1.789.1.5.8.1.12.3 = ""
-#.1.3.6.1.4.1.789.1.5.8.1.13.1 = ""
-#.1.3.6.1.4.1.789.1.5.8.1.13.2 = ""
-#.1.3.6.1.4.1.789.1.5.8.1.13.3 = ""
+# .1.3.6.1.4.1.789.1.5.8.1.1.1 = INTEGER: 1
+# .1.3.6.1.4.1.789.1.5.8.1.1.2 = INTEGER: 2
+# .1.3.6.1.4.1.789.1.5.8.1.1.3 = INTEGER: 3
+# .1.3.6.1.4.1.789.1.5.8.1.2.1 = STRING: "vol0"
+# .1.3.6.1.4.1.789.1.5.8.1.2.2 = STRING: "RvRBackup"
+# .1.3.6.1.4.1.789.1.5.8.1.2.3 = STRING: "RundV"
+# .1.3.6.1.4.1.789.1.5.8.1.3.1 = STRING: "67155442"
+# .1.3.6.1.4.1.789.1.5.8.1.3.2 = STRING: "2600515058"
+# .1.3.6.1.4.1.789.1.5.8.1.3.3 = STRING: "788575730"
+# .1.3.6.1.4.1.789.1.5.8.1.4.1 = INTEGER: 1
+# .1.3.6.1.4.1.789.1.5.8.1.4.2 = INTEGER: 1
+# .1.3.6.1.4.1.789.1.5.8.1.4.3 = INTEGER: 1
+# .1.3.6.1.4.1.789.1.5.8.1.5.1 = STRING: "online"
+# .1.3.6.1.4.1.789.1.5.8.1.5.2 = STRING: "online"
+# .1.3.6.1.4.1.789.1.5.8.1.5.3 = STRING: "online"
+# .1.3.6.1.4.1.789.1.5.8.1.6.1 = STRING: "raid_dp"
+# .1.3.6.1.4.1.789.1.5.8.1.6.2 = STRING: "raid_dp"
+# .1.3.6.1.4.1.789.1.5.8.1.6.3 = STRING: "raid_dp"
+# .1.3.6.1.4.1.789.1.5.8.1.7.1 = STRING: "root, diskroot, nosnap=off,
+#  nosnapdir=off, minra=off, no_atime_update=off, raidtype=raid_dp, raidsize=16,
+#  nvfail=off, snapmirrored=off, resyncsnaptime=60, create_ucode=off,
+#  convert_ucode=off, maxdirsize=10485, fs_size_fixed=off, guarantee=volume,
+#  svo_enable=off, svo_checksum=off, svo_allow_rman=off, svo_reject_errors=off,
+#  no_i2p=off, fractional_reserve=100, extent=off, try_first=volume_grow"
+# .1.3.6.1.4.1.789.1.5.8.1.7.2 = STRING: "nosnap=off, nosnapdir=off,
+#  minra=off, no_atime_update=off, raidtype=raid_dp, raidsize=16, nvfail=off,
+#  snapmirrored=off, resyncsnaptime=60, create_ucode=off, convert_ucode=off,
+#  maxdirsize=10485, fs_size_fixed=off, guarantee=volume, svo_enable=off,
+#  svo_checksum=off, svo_allow_rman=off, svo_reject_errors=off, no_i2p=off,
+#  fractional_reserve=100, extent=off, try_first=volume_grow"
+# .1.3.6.1.4.1.789.1.5.8.1.7.3 = STRING: "nosnap=on, nosnapdir=on,
+#  minra=off, no_atime_update=off, raidtype=raid_dp, raidsize=16, nvfail=off,
+#  snapmirrored=off, resyncsnaptime=60, create_ucode=off, convert_ucode=off,
+#  maxdirsize=10485, fs_size_fixed=off, guarantee=volume, svo_enable=off,
+#  svo_checksum=off, svo_allow_rman=off, svo_reject_errors=off, no_i2p=off,
+#  fractional_reserve=100, extent=off, try_first=volume_grow"
+# .1.3.6.1.4.1.789.1.5.8.1.8.1 = STRING: "1ddc9920-496e-11df-aae1-00a09800c998"
+# .1.3.6.1.4.1.789.1.5.8.1.8.2 = STRING: "62ac1040-5a8d-11df-83fd-00a09800c998"
+# .1.3.6.1.4.1.789.1.5.8.1.8.3 = STRING: "4edc66e0-d6a3-11df-8724-00a09800c998"
+# .1.3.6.1.4.1.789.1.5.8.1.9.1 = STRING: "aggr0"
+# .1.3.6.1.4.1.789.1.5.8.1.9.2 = STRING: "aggr0"
+# .1.3.6.1.4.1.789.1.5.8.1.9.3 = STRING: "aggr0"
+# .1.3.6.1.4.1.789.1.5.8.1.10.1 = INTEGER: 2
+# .1.3.6.1.4.1.789.1.5.8.1.10.2 = INTEGER: 2
+# .1.3.6.1.4.1.789.1.5.8.1.10.3 = INTEGER: 2
+# .1.3.6.1.4.1.789.1.5.8.1.11.1 = INTEGER: 1
+# .1.3.6.1.4.1.789.1.5.8.1.11.2 = INTEGER: 1
+# .1.3.6.1.4.1.789.1.5.8.1.11.3 = INTEGER: 1
+# .1.3.6.1.4.1.789.1.5.8.1.12.1 = ""
+# .1.3.6.1.4.1.789.1.5.8.1.12.2 = ""
+# .1.3.6.1.4.1.789.1.5.8.1.12.3 = ""
+# .1.3.6.1.4.1.789.1.5.8.1.13.1 = ""
+# .1.3.6.1.4.1.789.1.5.8.1.13.2 = ""
+# .1.3.6.1.4.1.789.1.5.8.1.13.3 = ""
 
 netapp_volumes_owner = {
   '1': 'local',
@@ -107,7 +105,8 @@ def check_netapp_volumes(item, _not_used, info):
             if status == 'reconstructing':
                 ret_state = 1
                 output += '(!)'
-            elif status.split(',')[0] not in [ 'normal', 'raid_dp', 'raid0', 'raid0, mirrored', 'raid4' ]:
+            elif status.split(',')[0] not in [ 'normal', 'raid_dp', 'raid0',
+                                               'raid0, mirrored', 'raid4', 'mixed_raid_type' ]:
                 ret_state = 2
                 output += '(!!)'
 

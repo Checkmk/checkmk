@@ -71,9 +71,6 @@ modules += [
       ( "sites",  _("Distributed Monitoring"), "sites", "sites",
       _("Distributed monitoring via Multsite, distributed configuration via WATO")),
 
-      ( "auditlog", _("Audit Logfile"), "auditlog", "auditlog",
-      _("Keep track of all modifications and actions of the users in WATO.")),
-
       ( "snapshot", _("Backup & Restore"), "backup", "snapshots",
         _("Make snapshots of your configuration, download, upload and restore snapshots.")),
 

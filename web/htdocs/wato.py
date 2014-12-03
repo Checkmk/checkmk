@@ -4648,6 +4648,9 @@ def mode_changelog(phase):
         if is_distributed():
             html.context_button(_("Site Configuration"), make_link([("mode", "sites")]), "sites")
 
+        if config.may("wato.auditlog"):
+            html.context_button(_("Audit log"), make_link([("mode", "auditlog")]), "auditlog")
+
     elif phase == "action":
 
         # Let host validators do their work

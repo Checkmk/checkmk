@@ -14,7 +14,7 @@
 # or notification_logging=2 in main.mk (or via WATO in the
 # global settings: Notification -> Debug notifications, then
 # you will see this output in the notitifcation log file.
-# Under OMD this file is in ~/var/check_mk/notify/notify.log.
+# Under OMD this file is in ~/var/log/notify.log.
 
 # Please refer to the official documentation for more details.
 

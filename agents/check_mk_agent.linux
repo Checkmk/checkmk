@@ -81,6 +81,10 @@ function run_cached () {
     if [ -e "$CACHEFILE.new" ] ; then
         local CF_ATIME=$(stat -c %X "$CACHEFILE.new")
         if [ $((NOW - CF_ATIME)) -ge $((MAXAGE * 2)) ] ; then
+            # Kill the process still accessing that file in case
+            # it is still running. This avoids overlapping processes!
+            fuser -k -9 "$CACHEFILE.new" >/dev/null 2>&1
+            rm -f "$CACHEFILE.new"
             return
         fi
     fi

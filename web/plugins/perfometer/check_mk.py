@@ -599,6 +599,7 @@ def perfometer_ps_perf(row, check_command, perf_data):
     except:
         return "", ""
 
+perfometers["check_mk-ps"] = perfometer_ps_perf
 perfometers["check_mk-ps.perf"] = perfometer_ps_perf
 
 
@@ -737,7 +738,7 @@ def perfometer_check_mk_printer_supply(row, check_command, perf_data):
     return "<font color=\"%s\">%.0f%%</font>" % (fg_color, left), perfometer_linear(left, color)
 
 perfometers["check_mk-printer_supply"] = perfometer_check_mk_printer_supply
-perfometers["check_mk-printer_supply_ricon"] = perfometer_check_mk_printer_supply
+perfometers["check_mk-printer_supply_ricoh"] = perfometer_check_mk_printer_supply
 
 def perfometer_printer_pages(row, check_command, perf_data):
     color = "#909090"

@@ -116,15 +116,7 @@ def check_zpool_status(_no_item, _no_params, info):
                 pool_messages[last_pool] = msg
             continue
 
-        if line[0] == "spares":
-            start_pool = False
-            continue
-
-        if line[0] == "logs":
-            start_pool = False
-            continue
-
-        if line[0] == "cache":
+        if line[0] in ["spares", "logs", "cache"]:
             start_pool = False
             continue
 

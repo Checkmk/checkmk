@@ -199,7 +199,12 @@ def match(pattern, text, complete = True):
         # Assume compiled regex
         m = pattern.search(text)
         if m:
-            return m.groups()
+            groups = m.groups()
+            if None in groups:
+                # Remove None from result tuples and replace it with empty strings
+                return tuple([g != None and g or '' for g in groups])
+            else:
+                return groups
         else:
             return False
 

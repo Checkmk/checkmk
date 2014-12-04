@@ -844,7 +844,7 @@ def mode_folder(phase):
             html.context_button(_("New cluster"), make_link([("mode", "newcluster")]), "new_cluster")
             html.context_button(_("Bulk Import"), make_link_to([("mode", "bulk_import")], g_folder), "bulk_import")
         if config.may("wato.services"):
-            html.context_button(_("Bulk Inventory"), make_link([("mode", "bulkinventory"), ("all", "1")]),
+            html.context_button(_("Bulk Discovery"), make_link([("mode", "bulkinventory"), ("all", "1")]),
                         "inventory")
         if not g_folder.get(".lock_hosts") and config.may("wato.parentscan") and auth_write:
             html.context_button(_("Parent scan"), make_link([("mode", "parentscan"), ("all", "1")]),
@@ -1353,7 +1353,7 @@ def show_hosts(folder):
                 html.button("_bulk_edit", _("Edit"))
                 html.button("_bulk_cleanup", _("Cleanup"))
         if config.may("wato.services"):
-            html.button("_bulk_inventory", _("Inventory"))
+            html.button("_bulk_inventory", _("Discovery"))
         if not g_folder.get(".lock_hosts"):
             if config.may("wato.parentscan"):
                 html.button("_parentscan", _("Parentscan"))
@@ -1442,11 +1442,11 @@ def show_hosts(folder):
         html.icon_button(edit_url, _("Edit the properties of this host"), "edit")
         html.icon_button(params_url, _("View the rule based parameters of this host"), "rulesets")
         if check_host_permissions(hostname, False) == True:
-            msg = _("Edit the services of this host, do an inventory")
+            msg = _("Edit the services of this host, do a service discovery")
             image =  "services"
             if host.get("inventory_failed"):
                 image = "inventory_failed"
-                msg += ". " + _("The inventory of this host failed during a previous bulk inventory.")
+                msg += ". " + _("The service discovery of this host failed during a previous bulk service discovery.")
             html.icon_button(services_url, msg, image)
         if not g_folder.get(".lock_hosts") and config.may("wato.manage_hosts"):
             if config.may("wato.clone_hosts"):
@@ -2066,8 +2066,8 @@ def mode_edithost(phase, new, cluster):
                 return
             elif new:
                 if host.get('tag_agent') != 'ping':
-                    create_result = 'folder', _('Successfully created the host. Now you should do an '
-                                                '<a href="%s">inventory</a> in order to auto-configure '
+                    create_result = 'folder', _('Successfully created the host. Now you should do a '
+                                                '<a href="%s">service discovery</a> in order to auto-configure '
                                                 'all services to be checked on this host.') % \
                                                     make_link([("mode", "inventory"), ("host", hostname)])
                 else:
@@ -2592,7 +2592,7 @@ def mode_object_parameters(phase):
                         rulespec = g_rulespecs.get("static_checks:" + checkgroup)
                         if rulespec:
                             url = make_link([('mode', 'edit_ruleset'), ('varname', "static_checks:" + checkgroup), ('host', hostname)])
-                            render_rule_reason(_("Parameters"), url, _("Determined by inventory"), None, False,
+                            render_rule_reason(_("Parameters"), url, _("Determined by discovery"), None, False,
                                        rulespec["valuespec"]._elements[2].value_to_text(serviceinfo["parameters"]))
                         else:
                             render_rule_reason(_("Parameters"), None, "", "", True, _("This check is not configurable via WATO"))
@@ -3683,7 +3683,7 @@ def mode_bulk_import(phase):
 
 def mode_bulk_inventory(phase):
     if phase == "title":
-        return _("Bulk service detection (inventory)")
+        return _("Bulk Service Discovery")
 
     elif phase == "buttons":
         html.context_button(_("Folder"), make_link([("mode", "folder")]), "back")
@@ -3693,8 +3693,8 @@ def mode_bulk_inventory(phase):
         if html.var("_item"):
             if not html.check_transaction():
                 html.write(repr([ 'failed', 0, 0, 0, 0, 0, 0, ]) + "\n")
-                html.write(_("Error during inventory: Maximum number of retries reached. "
-                             "You need to restart the bulk inventory"))
+                html.write(_("Error during discovery: Maximum number of retries reached. "
+                             "You need to restart the bulk service discovery"))
                 return ""
 
             how = html.var("how")
@@ -3842,7 +3842,7 @@ def mode_bulk_inventory(phase):
         # Start interactive progress
         interactive_progress(
             items,
-            _("Bulk inventory"),  # title
+            _("Bulk Service Discovery"),  # title
             [ (_("Total hosts"),      0),
               (_("Failed hosts"),     0),
               (_("Services added"),   0),

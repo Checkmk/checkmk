@@ -15721,8 +15721,6 @@ def page_user_profile(change_pw=False):
 
             userdb.save_users(users)
             success = True
-
-            html.reload_sidebar()
         except MKUserError, e:
             html.add_user_error(e.varname, e.message)
 
@@ -15757,6 +15755,7 @@ def page_user_profile(change_pw=False):
             html.write('<p>%s</p>' % _('You are required to change your password before proceeding.'))
 
     if success:
+        html.reload_sidebar()
         if change_pw:
             html.message(_("Your password has been changed."))
             html.http_redirect(html.var('_origtarget', 'index.py'))

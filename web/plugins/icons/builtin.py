@@ -625,3 +625,29 @@ multisite_icons.append({
     'paint'        : paint_icon_check_bi_aggr,
 })
 
+#.
+#   .--Crashdump-----------------------------------------------------------.
+#   |         ____               _         _                               |
+#   |        / ___|_ __ __ _ ___| |__   __| |_   _ _ __ ___  _ __          |
+#   |       | |   | '__/ _` / __| '_ \ / _` | | | | '_ ` _ \| '_ \         |
+#   |       | |___| | | (_| \__ \ | | | (_| | |_| | | | | | | |_) |        |
+#   |        \____|_|  \__,_|___/_| |_|\__,_|\__,_|_| |_| |_| .__/         |
+#   |                                                       |_|            |
+#   +----------------------------------------------------------------------+
+#   |  Icon for a crashed check with a link to the crash dump page.        |
+#   '----------------------------------------------------------------------'
+
+def paint_icon_crashed_check(what, row, tags, custom_vars):
+    if what == "service" \
+        and row["service_state"] == 3 \
+        and "check failed - please submit a crash report!" in row["service_plugin_output"] :
+        crashurl = html.makeuri([("site", row["site"]), ("host", row["host_name"]), ("service", row["service_description"])], filename="crashed_check.py")
+        return '<a href="%s"><img class=icon src="images/icon_crash.png" title="%s"></a>' % (
+            crashurl,
+            _("This check crash. Please click here for more information. You also can submit "
+              "a crash report to the development team if you like."))
+
+multisite_icons.append({
+    'service_columns' : [ 'plugin_output', 'state', 'host_name' ],
+    'paint'   : paint_icon_crashed_check,
+})

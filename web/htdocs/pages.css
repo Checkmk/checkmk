@@ -992,6 +992,17 @@ div.contextlink.button a {
     width: 135px;
 }
 
+div.log_output {
+    font-family: monospace, sans-serif;
+    box-shadow: 1px 1px 3px #888 inset;
+    overflow-x: scroll;
+    padding: 5px 5px;
+    vertical-align: top;
+    background-color: #fff;
+    color: black;
+    /* below resize option is css3 */
+}
+
 
 /*-------------------------------------------------------------------------.
 |         ____       _                                                     |

@@ -1307,37 +1307,52 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
                 if opt_verbose:
                     print "Cannot compute check result: %s" % e
                 dont_submit = True
+
             except Exception, e:
-                text = "invalid output from agent, invalid check parameters or error in implementation of check %s." % checkname
-                if not debug_log:
-                    text += " Please enable \"Log exceptions in check plugins\" for further information."
-                else:
-                    debug_log_file = debug_log
-                    if debug_log_file == True:
-                        debug_log_file = log_dir + "/crashed-checks.log"
-                    text += " A trace has been written to %s." % debug_log_file
+                text = "check failed - please submit a crash report!"
+                try:
+                    import traceback, pprint, tarfile, base64
+                    # Create a crash dump with a backtrace and the agent output.
+                    # This is put into a directory per service. The content is then
+                    # put into a tarball, base64 encoded and put into the long output
+                    # of the check :-)
+                    crash_dir = var_dir + "/crashed_checks/" + hostname + "/" + description.replace("/", "\\")
+                    if not os.path.exists(crash_dir):
+                        os.makedirs(crash_dir)
+                    file(crash_dir + "/trace", "w").write(
+                       (
+                       "  Check output:     %s\n"
+                       "  Check_MK Version: %s\n"
+                       "  Date:             %s\n"
+                       "  Host:             %s\n"
+                       "  Service:          %s\n"
+                       "  Check type:       %s\n"
+                       "  Item:             %r\n"
+                       "  Parameters:       %s\n"
+                       "  %s\n") % (
+                                    text,
+                                    check_mk_version,
+                                    time.strftime("%Y-%d-%m %H:%M:%S"),
+                                    hostname,
+                                    description,
+                                    checkname,
+                                    item,
+                                    pprint.pformat(params),
+                                    traceback.format_exc().replace('\n', '\n      ')))
+                    file(crash_dir + "/info", "w").write(repr(info) + "\n")
+                    cachefile = tcp_cache_dir + "/" + hostname
+                    if os.path.exists(cachefile):
+                        file(crash_dir + "/agent_output", "w").write(file(cachefile).read())
+                    elif os.path.exists(crash_dir + "/agent_output"):
+                        os.remove(crash_dir + "/agent_output")
+
+                    tarcontent = os.popen("tar czf - -C %s ." % quote_shell_string(crash_dir)).read()
+                    encoded = base64.b64encode(tarcontent)
+                    text += "\n" + "Crash dump:\n" + encoded + "\n"
+                except:
+                    pass
+
                 result = 3, text
-                if debug_log:
-                    try:
-                        import traceback, pprint
-                        l = file(debug_log_file, "a")
-                        l.write(("Invalid output from plugin or error in check:\n"
-                                "  Check_MK Version: %s\n"
-                                "  Date:             %s\n"
-                                "  Host:             %s\n"
-                                "  Service:          %s\n"
-                                "  Check type:       %s\n"
-                                "  Item:             %r\n"
-                                "  Parameters:       %s\n"
-                                "  %s\n"
-                                "  Agent info:       %s\n\n") % (
-                                check_mk_version,
-                                time.strftime("%Y-%d-%m %H:%M:%S"),
-                                hostname, description, checkname, item, pprint.pformat(params),
-                                traceback.format_exc().replace('\n', '\n      '),
-                                pprint.pformat(info)))
-                    except:
-                        pass
 
                 if opt_debug:
                     raise
@@ -1485,7 +1500,7 @@ def submit_check_result(host, servicedesc, result, sa):
         else:
             p = ''
         color = { 0: tty_green, 1: tty_yellow, 2: tty_red, 3: tty_magenta }[state]
-        print "%-20s %s%s%-56s%s%s" % (servicedesc, tty_bold, color, infotext, tty_normal, p)
+        print "%-20s %s%s%-56s%s%s" % (servicedesc, tty_bold, color, infotext.split('\n')[0], tty_normal, p)
 
 
 def submit_to_core(host, service, state, output):

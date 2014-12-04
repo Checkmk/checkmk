@@ -2371,8 +2371,9 @@ define service {
             g_hostname = hostname
 
             has_perfdata = act_info.get('has_perfdata', False)
-            description = description.replace('$HOSTNAME$', g_hostname)
-            description = sanitize_service_description(act_info["service_description"](params))
+            description = sanitize_service_description(
+                 act_info["service_description"](params)
+                 .replace('$HOSTNAME$', g_hostname))
 
             if do_omit_service(hostname, description):
                 continue

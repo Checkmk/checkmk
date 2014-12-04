@@ -1804,8 +1804,11 @@ def mode_editfolder(phase, new):
         if new:
             check_folder_permissions(g_folder, "write")
             check_user_contactgroups(attributes.get("contactgroups", (False, [])))
-
             create_wato_folder(g_folder, name, title)
+            g_folder["attributes"] = attributes
+            save_folder(g_folder)
+            log_audit(g_folder, "new-folder", _("Created new folder %s") % title)
+
         else:
             # TODO: migrate this block into own function edit_wato_folder(..)
             cgs_changed = get_folder_cgconf_from_attributes(attributes) != \

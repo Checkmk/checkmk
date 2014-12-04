@@ -101,6 +101,7 @@
     * 1647 FIX: agent_ipmi: Check_MK service gets critical now when ipmi-sensors command fails
     * 1453 FIX: drbd.stats: tried to send non-numeric write order parameter to rrd...
     * 1598 FIX: bluecat_dhcp: Check is not longer found in inventory if dhcp service is not activated
+    * 1635 FIX: multipath: fix parsing output of multipath on RedHat6 with space in alias
 
     Multisite:
     * 1508 Allow input of plugin output and perfdata when faking check results...

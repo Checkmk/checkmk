@@ -697,7 +697,7 @@ def parse_search_query(s):
         current_string = s
         for token_type, token_offset in found[-1::-1]:
             found_filters.append( (types[token_type.lstrip()],
-                                   current_string[token_offset+len(token_type)+1:].replace("*", ".*").strip()) )
+                                   to_regex(current_string[token_offset+len(token_type)+1:]).strip()) )
             current_string = current_string[:token_offset]
 
     if found_filters:
@@ -712,7 +712,9 @@ def to_regex(s):
     try:
         re.compile(s)
     except re.error:
-        raise MKGeneralException(_('You search statement is not valid. You need to provide a regular expression (regex). For example you need to e use <tt>\\\\</tt> instead of <tt>\\</tt> if you like to search for a single backslash.'))
+        raise MKGeneralException(_('You search statement is not valid. You need to provide a regular '
+            'expression (regex). For example you need to e use <tt>\\\\</tt> instead of <tt>\\</tt> '
+            'if you like to search for a single backslash.'))
     return s
 
 def is_ipaddress(s):

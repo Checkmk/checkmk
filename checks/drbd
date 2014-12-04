@@ -152,7 +152,7 @@ drbd_block_start_match = re.compile('^[0-9]+:')
 drbd_general_map = [ 'cs', 'ro', 'ds' ]
 drbd_net_map     = [ 'cs', 'ns', 'nr' ]
 drbd_disk_map    = [ 'cs', 'dw', 'dr' ]
-drbd_stats_map   = [ 'cs', 'al', 'bm', 'lo', 'pe', 'ua', 'ap', 'ep', 'wo', 'oos' ]
+drbd_stats_map   = [ 'cs', 'al', 'bm', 'lo', 'pe', 'ua', 'ap', 'ep', 'oos' ]
 
 drbd_cs_map = {
   'StandAlone':     1, 'Disconnecting':  1,

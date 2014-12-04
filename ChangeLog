@@ -105,6 +105,7 @@
     * 1598 FIX: bluecat_dhcp: Check is not longer found in inventory if dhcp service is not activated
     * 1635 FIX: multipath: fix parsing output of multipath on RedHat6 with space in alias
     * 1652 FIX: kaspersky_av_quarantine: Fixed exception when a file was found in quarantine
+    * 1653 FIX: megaraid_pdisks: Resulting states are now hard coded within the check...
 
     Multisite:
     * 1508 Allow input of plugin output and perfdata when faking check results...

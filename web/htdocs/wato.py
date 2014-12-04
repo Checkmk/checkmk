@@ -15847,7 +15847,7 @@ def create_sample_config():
 
     # Global configuration settings
     save_configuration_settings({
-        "use_new_descriptions_for" : [
+        "use_new_descriptions_for": [
             "df",
             "df_netapp",
             "df_netapp32",
@@ -15860,6 +15860,7 @@ def create_sample_config():
             "wmic_process",
             "logwatch",
         ],
+        "inventory_check_interval": 120,
     })
 
 

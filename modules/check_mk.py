@@ -1353,7 +1353,7 @@ def exit_code_spec(hostname):
 
 # Remove illegal characters from a service description
 def sanitize_service_description(descr):
-    return "".join([ c for c in descr if c not in nagios_illegal_chars ])
+    return "".join([ c for c in descr if c not in nagios_illegal_chars ]).rstrip("\\")
 
 
 def service_description(check_type, item):
@@ -2371,8 +2371,9 @@ define service {
             g_hostname = hostname
 
             has_perfdata = act_info.get('has_perfdata', False)
-            description = description.replace('$HOSTNAME$', g_hostname)
-            description = sanitize_service_description(act_info["service_description"](params))
+            description = sanitize_service_description(
+                 act_info["service_description"](params)
+                 .replace('$HOSTNAME$', g_hostname))
 
             if do_omit_service(hostname, description):
                 continue

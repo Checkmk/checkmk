@@ -437,10 +437,10 @@ def check_jolokia_metrics_serv_req(item, params, info):
         status_txt = ' (Below or equal %d)' % lo_warn
     elif hi_crit is not None and req >= hi_crit:
         status = 2
-        status_txt = ' (Above or equal %d)' % lo_warn
+        status_txt = ' (Above or equal %d)' % hi_crit
     elif hi_warn is not None and req >= hi_warn:
         status = 1
-        status_txt = ' (Above or equal %d)' % lo_crit
+        status_txt = ' (Above or equal %d)' % hi_warn
 
     output    = ['Requests: %d%s' % (req, status_txt)]
     perfdata  = [('Requests', req, hi_warn, hi_crit)]

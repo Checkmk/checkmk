@@ -199,7 +199,12 @@ def match(pattern, text, complete = True):
         # Assume compiled regex
         m = pattern.search(text)
         if m:
-            return m.groups()
+            groups = m.groups()
+            if None in groups:
+                # Remove None from result tuples and replace it with empty strings
+                return tuple([g != None and g or '' for g in groups])
+            else:
+                return groups
         else:
             return False
 
@@ -1337,7 +1342,10 @@ class EventServer:
                 line = line.decode("latin-1")
 
             if line:
-                self.process_raw_data(self.process_line, (line, address))
+                try:
+                    self.process_raw_data(self.process_line, (line, address))
+                except Exception, e:
+                    log('Exception handling a log line (skipping this one): %s' % format_exception())
 
     def do_housekeeping(self):
         with lock_eventstatus:

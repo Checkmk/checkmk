@@ -1,0 +1,93 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# Example output
+#   PKGINST:  SUNWxvnc
+#      NAME:  X11/VNC server
+#  CATEGORY:  system
+#      ARCH:  sparc
+#   VERSION:  6.6.2.0500,REV=0.2008.02.15
+#   BASEDIR:  /usr
+#    VENDOR:  Sun Microsystems, Inc.
+#      DESC:  X Window System server based on X.Org Foundation open source release and RealVNC open source release that displays over RFB protocol to a VNC client
+#    PSTAMP:  x10s20100523131751
+#  INSTDATE:  Jun 29 2011 12:59
+#   HOTLINE:  Please contact your local service provider
+#    STATUS:  completely installed
+#     FILES:       22 installed pathnames
+#                  10 shared pathnames
+#                  11 directories
+#                   4 executables
+#                   1 setuid/setgid executables
+#                8862 blocks used (approx)
+#
+
+
+def inv_solaris_pkginfo(info):
+    paclist = inv_tree("software.packages:")
+    entry = {}
+    translation_dict = {
+            "ARCH"      : "arch",
+            "CATEGORY"  : "package_type",
+            "DESC"      : "summary",
+            "VERSION"   : "version",
+            "VENDOR"    : "vendor",
+            }
+
+    for line in info:
+        # key / value declaration is clear
+        if len(line) == 2:
+            key, value = line
+        else:
+         # in any other case the first element is the key an the rest will be joined to value
+            key   = line[0]
+            value = " ".join(line[1:])
+        if key == "PKGINST":
+            #append the dict wich was build before to paclist
+            paclist.append(entry)
+            pkginst = value
+        elif key == "NAME":
+            # build a dict for each package initiator = PKGINST
+            # concat solaris pkginst and name to mk inventory name and write to dict
+            entry = {'name' : "%s - %s" %(pkginst, value) }
+        elif key == "INSTDATE":
+            # 'try, except' blog is necessary because date conversion may fail because of non en_US
+            # locale settings on the remote solaris server
+            try:
+                install_date_epoch = int(time.mktime(time.strptime(value.strip(), "%b %d %Y %H %M")))
+                entry.update({'install_date' : install_date_epoch})
+            except Exception,e:
+                pass
+        else:
+            # iterate over translation dict and update entries
+            for tkey in translation_dict:
+                if key == tkey:
+                    entry.update({ translation_dict[tkey] : value.strip()})
+
+
+inv_info['solaris_pkginfo'] = {
+   "inv_function"           : inv_solaris_pkginfo,
+}

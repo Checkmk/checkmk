@@ -1,0 +1,118 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# [['System Configuration:  Sun Microsystems  sun4u SPARC Enterprise M4000 Server'],
+#  ['System clock frequency: 1012 MHz'],
+#  ['Memory size: 262144 Megabytes'],
+#  ['==================================== CPUs ===================================='],
+#  ['CPU                 CPU                         Run    L2$    CPU   CPU'],
+#  ['LSB   Chip                 ID                         MHz     MB    Impl. Mask'],
+#  ['---   ----  ----------------------------------------  ----   ---    ----- ----'],
+#  ['00     0      0,   1,   2,   3,   4,   5,   6,   7   2660  11.0        7  193'],
+#  ['00     1      8,   9,  10,  11,  12,  13,  14,  15   2660  11.0        7  193'],
+#  ['00     2     16,  17,  18,  19,  20,  21,  22,  23   2660  11.0        7  193'],
+#  ['00     3     24,  25,  26,  27,  28,  29,  30,  31   2660  11.0        7  193'],
+#  ['============================ Memory Configuration ============================'],
+#  ['Memory  Available           Memory     DIMM    # of  Mirror  Interleave'],
+#  ['LSB    Group   Size                Status     Size    DIMMs Mode    Factor'],
+#  ['---    ------  ------------------  -------    ------  ----- ------- ----------'],
+#  ['00    A       131072MB            okay       8192MB     16 no       8-way'],
+#  ['00    B       131072MB            okay       8192MB     16 no       8-way'],
+#  ['========================= IO Devices ========================='],
+#  ['IO                                                Lane/Frq'],
+#  ['LSB Type  LPID   RvID,DvID,VnID       BDF       State Act,  Max   Name                           Model'],
+#  ['--- ----- ----   ------------------   --------- ----- ----------- ------------------------------ --------------------'],
+#  ['Logical Path'],
+#  ['------------'],
+#  ['00  PCIe  0      bc, 8532, 10b5       2,  0,  0  okay     8,    8  pci-pciexclass,060400          N/A'],
+#  ['/pci@0,600000/pci@0'],
+#  ['00  PCIe  0      bc, 8532, 10b5       3,  8,  0  okay     8,    8  pci-pciexclass,060400          N/A'],
+#  ['/pci@0,600000/pci@0/pci@8'],
+#  ['00  PCIe  0      bc, 8532, 10b5       3,  9,  0  okay     1,    8  pci-pciexclass,060400          N/A'],
+#  ['/pci@0,600000/pci@0/pci@9'],
+#  ['00  PCIx  0       8,  125, 1033       4,  0,  0  okay   100,  133  pci-pciexclass,060400          N/A'],
+#  ['/pci@0,600000/pci@0/pci@8/pci@0'],
+#  ['00  PCIx  0       8,  125, 1033       4,  0,  1  okay    --,  133  pci-pciexclass,060400          N/A'],
+#  ['/pci@0,600000/pci@0/pci@8/pci@0,1'],
+#  ['00  PCIx  0       2,   50, 1000       5,  1,  0  okay    --,  133  scsi-pci1000,50                LSI,1064'],
+#  ['/pci@0,600000/pci@0/pci@8/pci@0/scsi@1'],
+#  ['00  PCIx  0      10, 1648, 14e4       5,  2,  0  okay    --,  133  network-pci14e4,1648           N/A'],
+#  ['/pci@0,600000/pci@0/pci@8/pci@0/network@2'],
+#  ['00  PCIx  0      10, 1648, 14e4       5,  2,  1  okay    --,  133  network-pci14e4,1648           N/A'],
+#  ['/pci@0,600000/pci@0/pci@8/pci@0/network@2,1'],
+#  ['00  PCIe  1       1, abcd, 108e       2,  0,  0  okay     8,    8  network-pciex108e,abcd         SUNW,pcie-qgc'],
+#  ['/pci@1,700000/network@0'],
+#  ['00  PCIe  1       1, abcd, 108e       2,  0,  1  okay     8,    8  network-pciex108e,abcd         SUNW,pcie-qgc'],
+#  ['/pci@1,700000/network@0,1'],
+#  ['00  PCIe  1       1, abcd, 108e       2,  0,  2  okay     8,    8  network-pciex108e,abcd         SUNW,pcie-qgc'],
+#  ['/pci@1,700000/network@0,2'],
+#  ['00  PCIe  1       1, abcd, 108e       2,  0,  3  okay     8,    8  network-pciex108e,abcd         SUNW,pcie-qgc'],
+#  ['/pci@1,700000/network@0,3'],
+#  ['00  PCIe  2       2, 2532, 1077       2,  0,  0  okay     8,    8  SUNW,qlc-pciex1077,2532        QLE2560'],
+#  ['/pci@2,600000/SUNW,qlc@0'],
+#  ['00  PCIe  3       2, 2532, 1077       2,  0,  0  okay     8,    8  SUNW,qlc-pciex1077,2532        QLE2560'],
+#  ['/pci@3,700000/SUNW,qlc@0'],
+#  ['==================== Hardware Revisions ===================='],
+#  ['System PROM revisions:'],
+#  ['----------------------'],
+#  ['OBP 4.24.16 2010/12/10 01:37'],
+#  ['=================== Environmental Status ==================='],
+#  ['Mode switch is in LOCK mode'],
+#  ['=================== System Processor Mode ==================='],
+#  ['SPARC64-VII mode']]
+#
+
+
+def inv_solaris_prtdiag(info):
+    for line in info:
+        if line[0].startswith('OBP'):
+            node = inv_tree("hardware.bios.")
+            bios_info = line[0].split()
+            node["version"] = "%s %s" %(bios_info[0], bios_info[1])
+            formated_date = bios_info[2] + bios_info[3]
+            node["date"] = int(time.mktime(time.strptime(formated_date, "%Y/%m/%d%H:%M")))
+            node["vendor"] = "Oracle"
+
+        elif line[0].startswith("SerialNumber:"):
+            node = inv_tree("hardware.system.")
+            node["serial"] = line[0].split(':')[1]
+        elif line[0].startswith("System Configuration:"):
+        # 'System Configuration:  Oracle Corporation  sun4v SPARC T4-1'
+        # 'System Configuration:  Sun Microsystems  sun4u SPARC Enterprise M4000 Server'
+            node = inv_tree("hardware.system.")
+            system_info = "%s" %(line[0].split(':')[1])
+            system_info_list = system_info.split()
+            node["vendor"] = "%s" %(system_info.split(system_info_list[2])[0])
+            node["product"] = "%s" %(system_info.split(system_info_list[2])[1])
+
+            if system_info_list[-1].startswith('T'):
+                node["family"] = "T-series"
+            elif system_info_list[-2].startswith('M'):
+                node["family"] = "M-series"
+
+inv_info['solaris_prtdiag'] = {
+   "inv_function"           : inv_solaris_prtdiag,
+}

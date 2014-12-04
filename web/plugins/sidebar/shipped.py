@@ -1165,6 +1165,8 @@ def render_wiki():
                 if start_ul == True:
                     if title:
                          html.begin_foldable_container("wikisnapin", title, True, title, indent=True)
+                    else:
+                        html.write('<ul>')
                     start_ul = False
                     ul_started = True
 
@@ -1178,7 +1180,6 @@ def render_wiki():
                 else:
                     link = erg[0]
                     name = erg[0]
-
 
                 if link.startswith("http://") or link.startswith("https://"):
                     simplelink(name, link, "_blank")
@@ -1196,8 +1197,8 @@ def render_wiki():
         if ul_started == True:
             html.write("</ul>")
     except IOError:
-        html.write("You have to create a <a href='/%s/wiki/doku.php?id=%s'>sidebar</a> first" %
-           (defaults.omd_site, _("sidebar") ))
+        html.write("<p>To get a navigation menu, you have to create a <a href='/%s/wiki/doku.php?id=%s' "
+                   "target='main'>sidebar</a> in your wiki first.</p>" % (defaults.omd_site, _("sidebar")))
 
 if defaults.omd_root:
     sidebar_snapins["wiki"] = {
@@ -1209,6 +1210,10 @@ if defaults.omd_root:
         #snapin_container_wiki div.content {
             font-weight: bold;
             color: white;
+        }
+
+        #snapin_container_wiki div.content p {
+            font-weight: normal;
         }
 
         #wiki_navigation {
@@ -1229,7 +1234,8 @@ if defaults.omd_root:
             height: 26px;
             margin-top: -25px;
             left: 196px;
-            float:right;
+            float: left;
+            position: relative;
             z-index:100;
         }
 

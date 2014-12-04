@@ -1332,6 +1332,11 @@ def exit_code_spec(hostname):
     return spec
 
 
+# Remove illegal characters from a service description
+def sanitize_service_description(descr):
+    return "".join([ c for c in descr if c not in nagios_illegal_chars ])
+
+
 def service_description(check_type, item):
     if check_type not in check_info:
         if item:
@@ -1354,7 +1359,7 @@ def service_description(check_type, item):
 
     if type(item) == str:
         # Remove characters from item name that are banned by Nagios
-        item_safe = "".join([ c for c in item if c not in nagios_illegal_chars ])
+        item_safe = sanitize_service_description(item)
         if "%s" not in descr_format:
             descr_format += " %s"
         return (descr_format % (item_safe,)).strip()
@@ -2290,6 +2295,7 @@ define service {
     if len(legchecks) > 0:
         outfile.write("\n\n# Legacy checks\n")
     for command, description, has_perfdata in legchecks:
+        description = sanitize_service_description(description)
         if do_omit_service(hostname, description):
             continue
 
@@ -2341,8 +2347,8 @@ define service {
             g_hostname = hostname
 
             has_perfdata = act_info.get('has_perfdata', False)
-            description = act_info["service_description"](params)
             description = description.replace('$HOSTNAME$', g_hostname)
+            description = sanitize_service_description(act_info["service_description"](params))
 
             if do_omit_service(hostname, description):
                 continue
@@ -2395,7 +2401,7 @@ define service {
             # "command_name"  (optional)   Name of Monitoring command to define. If missing,
             #                              we use "check-mk-custom"
             # "has_perfdata"  (optional)   If present and True, we activate perf_data
-            description = entry["service_description"]
+            description = sanitize_service_description(entry["service_description"])
             has_perfdata = entry.get("has_perfdata", False)
             command_name = entry.get("command_name", "check-mk-custom")
             command_line = entry.get("command_line", "")

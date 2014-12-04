@@ -36,7 +36,6 @@ def inventory_cpu_load(info):
         return [(None, "cpuload_default_levels")]
 
 def check_cpu_load(item, params, info):
-    17 / 0
     if len(info[0]) >= 6:
         num_cpus = int(info[0][5])
     else:

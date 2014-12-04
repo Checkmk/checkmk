@@ -15864,6 +15864,7 @@ def create_sample_config():
             "cmk-inventory",
         ],
         "inventory_check_interval": 120,
+        "enable_rulebased_notifications": True,
     })
 
 

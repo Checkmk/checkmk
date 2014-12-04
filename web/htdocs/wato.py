@@ -15841,8 +15841,27 @@ def create_sample_config():
     if os.path.exists(multisite_dir + "hosttags.mk") \
         or os.path.exists(root_dir + "rules.mk") \
         or os.path.exists(root_dir + "groups.mk") \
-        or os.path.exists(root_dir + "notifications.mk"):
+        or os.path.exists(root_dir + "notifications.mk") \
+        or os.path.exists(root_dir + "global.mk"):
         return
+
+    # Global configuration settings
+    save_configuration_settings({
+        "use_new_descriptions_for" : [
+            "df",
+            "df_netapp",
+            "df_netapp32",
+            "esx_vsphere_datastores",
+            "hr_fs",
+            "vms_diskstat.df",
+            "zfsget",
+            "ps",
+            "ps.perf",
+            "wmic_process",
+            "logwatch",
+        ],
+    })
+
 
     # A contact group where everyone is member of
     groups = {
@@ -15924,6 +15943,9 @@ def create_sample_config():
     # Make sure the host tag attributes are immediately declared!
     config.wato_host_tags = wato_host_tags
     config.wato_aux_tags = wato_aux_tags
+
+    # Global settings
+    use_new_descriptions_for = [ "df", "ps" ]
 
 #.
 #   .--Pattern Editor------------------------------------------------------.

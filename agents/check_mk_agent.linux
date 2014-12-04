@@ -503,9 +503,15 @@ fi
 # but it could be used to get the timestamp of the last message.
 if type postconf ; then
     echo '<<<postfix_mailq>>>'
-    echo -- \
-        $(du -kd0 $(postconf -h queue_directory)/deferred | awk '{print $1 }') Kbytes in \
-        $(find $(postconf -h queue_directory)/deferred/. ! -name '?' -print | wc -l) Requests.
+    postfix_queue_dir=$(postconf -h queue_directory)
+    postfix_count=$(find $postfix_queue_dir/deferred -type f | wc -l)
+    postfix_size=$(du -ks $postfix_queue_dir/deferred | awk '{print $1 }')
+    if [ $postfix_count -gt 0 ]
+    then
+       echo -- $postfix_size Kbytes in $postfix_count Requests.
+    else
+       echo Mail queue is empty
+    fi
 elif [ -x /usr/sbin/ssmtp ] ; then
     echo '<<<postfix_mailq>>>'
     mailq 2>&1 | sed 's/^[^:]*: \(.*\)/\1/' | tail -n 6

@@ -239,7 +239,7 @@ def check_logwatch(item, params, info):
 check_info['logwatch'] = {
     'check_function':      check_logwatch,
     'inventory_function':  inventory_logwatch,
-    'service_description': "LOG %s",
+    'service_description': "Log %s",
     'group':               'logwatch',
 }
 

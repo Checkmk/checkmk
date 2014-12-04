@@ -1,0 +1,25 @@
+DEVELOPERS DOCU
+
+How to change a service description of an existing check
+------------------------------------------------------------------
+If you want to rename the description of an exsting check (e.g.
+like "fs_%s" -> "Filesystem %s"), then you can now do this in
+a way that is safe for existing installations. You need to:
+
+1. Rename the description in the check (checks/CHECKTYPE)
+
+2. Add an entry for this check in modules/check_mk.py in the
+   variable old_service_descriptions. Here you need to enter
+   the *old* version of the service descriptions.
+
+3. Add a choice for this check in web/plugins/wato/check_mk_configuration.py
+  in the ruleset "use_new_descriptions_for". As a title for the choice
+  use the tile from the checks man page!
+
+4. Add the checktype to the WATO default configuration in
+   web/htdocs/wato.py in the function create_sample_config()
+   in the variale "use_new_descriptions_for"
+
+YOU MUST NOT FORGET ONE OF THEESE FOUR THINGS!
+Also make sure that you have renamed *all* variants of a check,
+for example not only df, but also hr_fs, and so on!

@@ -47,21 +47,42 @@ def inventory_megaraid_ldisks(info):
 
 def check_megaraid_ldisks(item, _no_params, info):
     adapter = None
+    cache   = None
+    write   = None
     found   = False
+    result  = 0
+    infotext = ''
     for line in info:
         l = ' '.join(line)
         if line[0] == "Adapter" and not l.endswith('No Virtual Drive Configured.'):
             adapter = int(line[1])
         elif line[0] == "Virtual" and (line[1] == "Disk:" or line[1] == "Drive:"):
+            if found:
+                break
             disk = int(line[2])
             found = "%d/%d" % (adapter, disk) == item
-        elif found and line[0].startswith("State"):
-            state = " ".join(line[1:]).replace(': ', '')
-            infotext = "state is %s" % state
-            if state == "Optimal":
-                return (0, infotext)
-            else:
-                return (2, infotext)
+        elif found:
+            if line[0].startswith("State"):
+                state = " ".join(line[1:]).replace(': ', '')
+                infotext += "state is %s" % state
+                if state != "Optimal":
+                    result = max(result, 2)
+            elif line[0].startswith("Default") and line[1].startswith("Cache"):
+                cache = " ".join(line[3:]).replace(': ', '')
+            elif line[0].startswith("Current") and line[1].startswith("Cache"):
+                state = " ".join(line[3:]).replace(': ', '')
+                if cache != state:
+                    infotext += ", cache is %s, expected %s" % (state, cache)
+                    result = max(result, 1)
+            elif line[0].startswith("Default") and line[1].startswith("Write"):
+                write = " ".join(line[3:]).replace(': ', '')
+            elif line[0].startswith("Current") and line[1].startswith("Write"):
+                state = " ".join(line[3:]).replace(': ', '')
+                if write != state:
+                    infotext += ", write is %s, expected %s" % (write, cache)
+                    result = max(result, 1)
+    if found:
+        return (result, infotext)
     return (3, "no such adapter/logical disk found")
 
 

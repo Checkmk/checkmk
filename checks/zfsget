@@ -204,7 +204,7 @@ def check_zfsget(item, params, info):
 check_info['zfsget'] = {
     "check_function"          : check_zfsget,
     "inventory_function"      : inventory_zfsget,
-    "service_description"     : "fs_%s",
+    "service_description"     : "Filesystem %s",
     "has_perfdata"            : True,
     "group"                   : "filesystem",
     "default_levels_variable" : "filesystem_default_levels",

@@ -17474,7 +17474,11 @@ def update_hosts_in_folder(folder, hosts):
     updated_hosts = {}
 
     for hostname, attributes in hosts.items():
-        cleaned_attr = dict([(k, v) for (k, v) in attributes.get("set", {}).iteritems() if not k.startswith('.') ])
+        cleaned_attr = dict([
+            (k, v) for
+            (k, v) in
+            attributes.get("set", {}).iteritems()
+            if (not k.startswith('.') or k == ".nodes") ])
         # unset keys
         for key in attributes.get("unset", []):
             if key in cleaned_attr:

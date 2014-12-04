@@ -166,6 +166,7 @@
     * 1642 FIX: Quicksearch: Improved error handling on invalid search statements (invalid regexes)
     * 1651 FIX: Consolidated painters of service list views...
     * 1678 FIX: Fixed problem with garbled styles on user profile page after saving
+    * 1680 FIX: Fixed various dashlet designer position/resizing issues...
 
     WATO:
     * 1170 Added buttons to move rules to top/bottom of the list to ruleset edit dialog

@@ -50,8 +50,8 @@ MAX = -1
 screen_margin    = 5              # Distance from the left border of the main-frame to the dashboard area
 dashlet_padding  = 21, 5, 5, 0, 0 # Margin (N, E, S, W, N w/o title) between outer border of dashlet and its content
 corner_overlap   = 22
-raster           = 10, 10        # Raster the dashlet choords are measured in
-dashlet_min_size = 10, 10        # Minimum width and height of dashlets
+raster           = 10            # Raster the dashlet coords are measured in (px)
+dashlet_min_size = 10, 10        # Minimum width and height of dashlets in raster units
 
 # Load plugins in web/plugins/dashboard and declare permissions,
 # note: these operations produce language-specific results and
@@ -488,7 +488,7 @@ def render_dashboard(name):
     html.javascript("""
 var MAX = %d;
 var GROW = %d;
-var grid_size = new vec%s;
+var grid_size = %d;
 var header_height = %d;
 var screen_margin = %d;
 var dashlet_padding = Array%s;

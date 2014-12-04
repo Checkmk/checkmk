@@ -1080,6 +1080,38 @@ register_configvar(group,
 
 group = _("Operation mode of Check_MK")
 
+
+register_configvar(group,
+    "use_new_descriptions_for",
+    ListChoice(
+        title = _("Use new service descriptions"),
+        help = _("In order to make Check_MK more consistent, "
+                 "the descriptions of several services have been renamed in newer "
+                 "Check_MK versions. One example is the filesystem services that have "
+                 "been renamed from <tt>fs_</tt> into <tt>Filesystem</tt>. But since renaming "
+                 "of existing services has many implications - including existing rules, performance "
+                 "data and availability history - these renamings are disabled per default for "
+                 "existing installations. Here you can switch to the new descriptions for "
+                 "selected check types"),
+        choices = [
+            ( "df",                     _("Used space in filesystems")),
+            ( "df_netapp",              _("NetApp Filers: Used Space in Filesystems")),
+            ( "df_netapp32",            _("NetApp Filers: Used space in Filesystem Using 32-Bit Counters")),
+            ( "esx_vsphere_datastores", _("VMWare ESX host systems: Used space")),
+            ( "hr_fs",                  _("Used space in filesystems via SNMP")),
+            ( "vms_diskstat.df",        _("Disk space on OpenVMS")),
+            ( "zfsget",                 _("Used space in ZFS pools and filesystems")),
+            ( "ps",                     _("State and Count of Processes") ),
+            ( "ps.perf",                _("State and Count of Processes (with additional performance data)")),
+            ( "wmic_process",           _("Ressource consumption of windows processes")),
+            ( "logwatch",               _("Check logfiles for relevant new messages")),
+        ],
+        render_orientation = "vertical",
+    ),
+    need_restart = True
+)
+
+
 register_configvar(group,
     "tcp_connect_timeout",
     Float(title = _("Agent TCP connect timeout (sec)"),

@@ -399,6 +399,14 @@ def regex(r):
     regex_cache[r] = rx
     return rx
 
+def escape_regex_chars(text):
+    escaped = ""
+    for c in text:
+        if c in '().^$[]{}+*\\':
+            escaped += '\\'
+        escaped += c
+    return escaped
+
 
 # Splits a word into sequences of numbers and non-numbers.
 # Creates a tuple from these where the number are converted

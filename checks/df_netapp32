@@ -32,7 +32,7 @@ check_includes['df_netapp32'] = [ "df.include", "df_netapp.include" ]
 check_info["df_netapp32"] = {
     'check_function':          check_df_netapp,
     'inventory_function':      inventory_df_netapp,
-    'service_description':     'fs_%s',
+    'service_description':     'Filesystem %s',
     'has_perfdata':            True,
     'snmp_info':               ('.1.3.6.1.4.1.789.1.5.4.1', [2, 3, 4]),
     'snmp_scan_function':      \

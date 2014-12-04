@@ -1010,12 +1010,11 @@ def omd_rename_host(oldname, newname):
 
     # Fix pathnames in XML files
     dirpath = omd_root + "/var/pnp4nagios/perfdata/" + oldname
-    os.system("sed -i 's@/perfdata/%s/@/perfdata/%s/@' %s/*.xml" % (oldname, newname, dirpath))
+    os.system("sed -i 's@/perfdata/%s/@/perfdata/%s/@' %s/*.xml 2>/dev/null" % (oldname, newname, dirpath))
 
     # RRD files
     if rename_host_dir(rrd_path, oldname, newname):
         actions.append("rrd")
-
 
     # entries of rrdcached journal
     dirpath = omd_root + "/var/rrdcached/"

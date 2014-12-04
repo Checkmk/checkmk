@@ -51,6 +51,7 @@ else:
     opt_debug = False
     opt_interactive = False
 
+
 #.
 #   .--Pathnames-----------------------------------------------------------.
 #   |        ____       _   _                                              |
@@ -354,6 +355,24 @@ check_periods                        = []
 snmp_check_interval                  = []
 inv_exports                          = {} # Rulesets for inventory export hooks
 notification_parameters              = {} # Rulesets for parameters of notification scripts
+
+# Renaming of service descriptions while keeping backward compatibility with
+# existing installations.
+old_service_descriptions = {
+    "df"                     : "fs_%s",
+    "df_netapp"              : "fs_%s",
+    "df_netapp32"            : "fs_%s",
+    "esx_vsphere_datastores" : "fs_%s",
+    "hr_fs"                  : "fs_%s",
+    "vms_diskstat.df"        : "fs_%s",
+    "zfsget"                 : "fs_%s",
+    "ps"                     : "proc_%s",
+    "ps.perf"                : "proc_%s",
+    "wmic_process"           : "proc_%s",
+    "logwatch"               : "LOG %s",
+}
+use_new_descriptions_for = []
+
 
 # Rulesets for agent bakery
 agent_config                         = {}
@@ -1332,6 +1351,11 @@ def exit_code_spec(hostname):
     return spec
 
 
+# Remove illegal characters from a service description
+def sanitize_service_description(descr):
+    return "".join([ c for c in descr if c not in nagios_illegal_chars ])
+
+
 def service_description(check_type, item):
     if check_type not in check_info:
         if item:
@@ -1345,7 +1369,12 @@ def service_description(check_type, item):
     # use user-supplied service description, of available
     descr_format = service_descriptions.get(check_type)
     if not descr_format:
-        descr_format = check_info[check_type]["service_description"]
+        # handle renaming for backward compatibility
+        if check_type in old_service_descriptions and \
+           check_type not in use_new_descriptions_for:
+           descr_format = old_service_descriptions[check_type]
+        else:
+            descr_format = check_info[check_type]["service_description"]
 
     # Note: we strip the service description (remove spaces).
     # One check defines "Pages %s" as a description, but the item
@@ -1354,7 +1383,7 @@ def service_description(check_type, item):
 
     if type(item) == str:
         # Remove characters from item name that are banned by Nagios
-        item_safe = "".join([ c for c in item if c not in nagios_illegal_chars ])
+        item_safe = sanitize_service_description(item)
         if "%s" not in descr_format:
             descr_format += " %s"
         return (descr_format % (item_safe,)).strip()
@@ -2290,6 +2319,7 @@ define service {
     if len(legchecks) > 0:
         outfile.write("\n\n# Legacy checks\n")
     for command, description, has_perfdata in legchecks:
+        description = sanitize_service_description(description)
         if do_omit_service(hostname, description):
             continue
 
@@ -2341,8 +2371,8 @@ define service {
             g_hostname = hostname
 
             has_perfdata = act_info.get('has_perfdata', False)
-            description = act_info["service_description"](params)
             description = description.replace('$HOSTNAME$', g_hostname)
+            description = sanitize_service_description(act_info["service_description"](params))
 
             if do_omit_service(hostname, description):
                 continue
@@ -2395,7 +2425,7 @@ define service {
             # "command_name"  (optional)   Name of Monitoring command to define. If missing,
             #                              we use "check-mk-custom"
             # "has_perfdata"  (optional)   If present and True, we activate perf_data
-            description = entry["service_description"]
+            description = sanitize_service_description(entry["service_description"])
             has_perfdata = entry.get("has_perfdata", False)
             command_name = entry.get("command_name", "check-mk-custom")
             command_line = entry.get("command_line", "")

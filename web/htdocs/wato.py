@@ -8877,9 +8877,8 @@ def mode_notifications(phase):
                            _("Unknown date")
 
                 table.cell(_("Date/Time"), date, css="nobr")
-                nottype = entry.get("NOTIFICATIONTYPE")
+                nottype = entry.get("NOTIFICATIONTYPE", "")
                 table.cell(_("Type"), nottype)
-
 
                 if nottype in [ "PROBLEM", "RECOVERY" ]:
                     if entry.get("SERVICESTATE"):
@@ -8902,8 +8901,6 @@ def mode_notifications(phase):
                     html.icon(_("Flapping"), "flapping")
                 else:
                     table.cell(_("State"), "")
-
-
 
                 table.cell(_("Host"), entry.get("HOSTNAME", ""))
                 table.cell(_("Service"), entry.get("SERVICEDESC", ""))

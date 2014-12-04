@@ -192,6 +192,7 @@
     * 1169 Added host state type filter to "recent event history" view
     * 1531 FIX: Fixed exception in event history view when displaying CHANGESTATE events
     * 1610 FIX: Hostname translation now also works for incoming SNMP traps
+    * 1643 FIX: Improved error handling of exceptions when processing log lines
 
     Livestatus:
     * 1613 FIX: Fixed invalid json format in Stats query with requested heaeders...

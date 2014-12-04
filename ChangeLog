@@ -165,6 +165,7 @@
     * 1620 FIX: Fixed exception during host renaming when host has no perfdata
     * 1625 FIX: Safely handle characters that have a special meaning in regexes when creating service-specific rules...
     * 1637 FIX: Fixed exception in notification analysis when notifications have not NOTIFICATIONTYPE set
+    * 1639 FIX: Interfaces with speed more than 10GBit/s can now be configured correctly
 
     Notifications:
     * 1512 Bulk notification can now be grouped according to custom macro values...

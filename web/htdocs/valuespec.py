@@ -292,7 +292,7 @@ class Integer(ValueSpec):
         return text
 
     def validate_datatype(self, value, varprefix):
-        if type(value) != int:
+        if type(value) not in [ int, long ]:
             raise MKUserError(varprefix, _("The value %r has the wrong type %s, but must be of type int")
             % (value, type_name(value)))
 
@@ -1085,7 +1085,7 @@ class Float(Integer):
 
     def validate_datatype(self, value, varprefix):
         if type(value) != float and not \
-            (type(value) == int and self._allow_int):
+            (type(value) not in [ int, long ] and self._allow_int):
             raise MKUserError(varprefix, _("The value %r has type %s, but must be of type float%s") %
                  (value, type_name(value), self._allow_int and _(" or int") or ""))
 

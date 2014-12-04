@@ -6,3 +6,5 @@ Version: 1.2.5i7
 Date: 1417698377
 Class: fix
 
+When hyperv_vms.ps1 detects no VMs, it does not output a tailing newline.
+Then the following agent section is broken.

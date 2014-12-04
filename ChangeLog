@@ -99,6 +99,7 @@
     * 1500 SEC: Preventing livestatus injections in different places...
     * 1530 Dashboard: Host/service statistics dashlets now deal with the context...
     * 1558 Better visualize manually changed notification enable/disable
+    * 1621 Sorting Check_MK* services always on top of services lists
     * 1164 FIX: Fixed links from servicegroup overviews to single servicegroups
     * 1166 FIX: Also prevting stylesheet update issues during version updates (just like for JS files)
     * 1481 FIX: Fix broken layout of Host-, Service- and Contactgroup filters
@@ -134,6 +135,7 @@
     * 1605 FIX: Fixed perfometer of check check_mk-printer_supply_ricoh
     * 1607 FIX: check_http: Fixed broken links in escaped plugin output
     * 1614 FIX: Fixed wrong URL in webapi.py documentation
+    * 1619 FIX: Renamed "Hostgroups" and "Servicegroups" views to "Host Groups" and "Service Groups"
 
     WATO:
     * 1170 Added buttons to move rules to top/bottom of the list to ruleset edit dialog
@@ -160,7 +162,9 @@
     * 1576 FIX: SNMP Community host attribute is now visible for IE<=8...
     * 1588 FIX: Renamed SNMP communities rule to SNMP credentials
     * 1589 FIX: Restructured SNMP credentials rule specification...
+    * 1620 FIX: Fixed exception during host renaming when host has no perfdata
     * 1625 FIX: Safely handle characters that have a special meaning in regexes when creating service-specific rules...
+    * 1637 FIX: Fixed exception in notification analysis when notifications have not NOTIFICATIONTYPE set
 
     Notifications:
     * 1512 Bulk notification can now be grouped according to custom macro values...

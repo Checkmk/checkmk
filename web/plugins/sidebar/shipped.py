@@ -68,7 +68,7 @@ sidebar_snapins["about"] = {
 # --------------------------------------------------------------
 
 def visuals_by_topic(permitted_visuals,
-        default_order = [ _("Overview"), _("Hosts"), _("Hostgroups"), _("Services"), _("Servicegroups"),
+        default_order = [ _("Overview"), _("Hosts"), _("Host Groups"), _("Services"), _("Service Groups"),
                          _("Business Intelligence"), _("Problems"), _("Addons") ]):
     s = [ (_u(visual.get("topic") or _("Other")), _u(visual.get("title")), name, 'painters' in visual)
           for name, visual

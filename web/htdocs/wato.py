@@ -1804,8 +1804,11 @@ def mode_editfolder(phase, new):
         if new:
             check_folder_permissions(g_folder, "write")
             check_user_contactgroups(attributes.get("contactgroups", (False, [])))
-
             create_wato_folder(g_folder, name, title)
+            g_folder["attributes"] = attributes
+            save_folder(g_folder)
+            log_audit(g_folder, "new-folder", _("Created new folder %s") % title)
+
         else:
             # TODO: migrate this block into own function edit_wato_folder(..)
             cgs_changed = get_folder_cgconf_from_attributes(attributes) != \
@@ -3858,10 +3861,10 @@ def mode_bulk_inventory(phase):
         # Mode of action
         html.write("<p>")
         if not complete_folder:
-            html.write(_("You have selected <b>%d</b> hosts for bulk inventory. ") % len(hostnames))
-        html.write(_("Check_MK inventory will automatically find and configure "
+            html.write(_("You have selected <b>%d</b> hosts for bulk discovery. ") % len(hostnames))
+        html.write(_("Check_MK service discovery will automatically find and configure "
                      "services to be checked on your hosts.</p>"))
-        forms.header(_("Bulk Inventory"))
+        forms.header(_("Bulk discovery"))
         forms.section(_("Mode"))
         html.radiobutton("how", "new",     True,  _("Find only new services") + "<br>")
         html.radiobutton("how", "remove",  False, _("Remove obsolete services") + "<br>")
@@ -3872,9 +3875,9 @@ def mode_bulk_inventory(phase):
         if complete_folder:
             html.checkbox("recurse", True, label=_("Include all subfolders"))
             html.write("<br>")
-        html.checkbox("only_failed", False, label=_("Only include hosts that failed on previous inventory"))
+        html.checkbox("only_failed", False, label=_("Only include hosts that failed on previous discovery"))
         html.write("<br>")
-        html.checkbox("only_failed_invcheck", False, label=_("Only include hosts with a failed inventory check"))
+        html.checkbox("only_failed_invcheck", False, label=_("Only include hosts with a failed discovery check"))
         html.write("<br>")
         html.checkbox("only_ok_agent", False, label=_("Exclude hosts where the agent is unreachable"))
 
@@ -3893,7 +3896,9 @@ def mode_bulk_inventory(phase):
 def find_hosts_with_failed_inventory_check():
     return html.live.query_column(
         "GET services\n"
-        "Filter: description = Check_MK inventory\n"
+        "Filter: description = Check_MK inventory\n" # FIXME: Remove this one day
+        "Filter: description = Check_MK Discovery\n"
+        "Or: 2\n"
         "Filter: state > 0\n"
         "Columns: host_name")
 
@@ -15847,7 +15852,7 @@ def create_sample_config():
 
     # Global configuration settings
     save_configuration_settings({
-        "use_new_descriptions_for" : [
+        "use_new_descriptions_for": [
             "df",
             "df_netapp",
             "df_netapp32",
@@ -15859,7 +15864,10 @@ def create_sample_config():
             "ps.perf",
             "wmic_process",
             "logwatch",
+            "cmk-inventory",
         ],
+        "inventory_check_interval": 120,
+        "enable_rulebased_notifications": True,
     })
 
 
@@ -17471,7 +17479,11 @@ def update_hosts_in_folder(folder, hosts):
     updated_hosts = {}
 
     for hostname, attributes in hosts.items():
-        cleaned_attr = dict([(k, v) for (k, v) in attributes.get("set", {}).iteritems() if not k.startswith('.') ])
+        cleaned_attr = dict([
+            (k, v) for
+            (k, v) in
+            attributes.get("set", {}).iteritems()
+            if (not k.startswith('.') or k == ".nodes") ])
         # unset keys
         for key in attributes.get("unset", []):
             if key in cleaned_attr:

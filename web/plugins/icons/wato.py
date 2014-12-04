@@ -53,7 +53,7 @@ def paint_wato(what, row, tags, custom_vars):
         wato_folder = filename[6:-8].rstrip("/")
         if what == "host":
             return wato_link(wato_folder, row["site"], row["host_name"], "edithost")
-        elif row["service_description"].lower() == "check_mk inventory":
+        elif row["service_description"] in [ "Check_MK inventory", "Check_MK Discovery" ]:
             return wato_link(wato_folder, row["site"], row["host_name"], "inventory")
 
 multisite_icons.append({

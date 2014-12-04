@@ -7,7 +7,7 @@ description:
  This check monitors the health of all FANs in HP BladeSysten enclosures.
  The check uses the state reported by SNMP.
 
- Each fan which is present while the Check_MK inventory will result in an
+ Each fan which is present while the Check_MK service discovery will result in an
  own service. If the fan is not available anymore this service will be shown
  as CRITICAL service.
 

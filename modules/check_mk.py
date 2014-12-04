@@ -2479,9 +2479,14 @@ define service {
             # write service dependencies for custom checks
             outfile.write(get_dependencies(hostname,description))
 
+    # FIXME: Remove old name one day
+    service_discovery_name = 'Check_MK inventory'
+    if 'cmk-inventory' in use_new_descriptions_for:
+        service_discovery_name = 'Check_MK Discovery'
+
     # Inventory checks - if user has configured them. Not for clusters.
     if inventory_check_interval and not is_cluster(hostname) \
-        and not service_ignored(hostname, None, 'Check_MK inventory') \
+        and not service_ignored(hostname, None, service_discovery_name) \
         and not "ping" in tags_of_host(hostname):
         outfile.write("""
 define service {
@@ -2489,11 +2494,12 @@ define service {
   host_name\t\t\t%s
   normal_check_interval\t\t%d
   retry_check_interval\t\t%d
-%s  service_description\t\tCheck_MK inventory
+%s  service_description\t\t%s
 }
 """ % (inventory_check_template, hostname, inventory_check_interval,
        inventory_check_interval,
-       extra_service_conf_of(hostname, "Check_MK inventory")))
+       extra_service_conf_of(hostname, service_discovery_name),
+       service_discovery_name))
 
         if have_at_least_one_service:
             outfile.write("""
@@ -2502,9 +2508,9 @@ define servicedependency {
   host_name\t\t\t%s
   service_description\t\tCheck_MK
   dependent_host_name\t\t%s
-  dependent_service_description\tCheck_MK inventory
+  dependent_service_description\t%s
 }
-""" % (service_dependency_template, hostname, hostname))
+""" % (service_dependency_template, hostname, hostname, service_discovery_name))
 
     # Levels for host check
     if is_cluster(hostname):

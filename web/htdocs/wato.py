@@ -12777,7 +12777,7 @@ def mode_edit_auxtag(phase):
     vs_topic = OptionalDropdownChoice(
         title = _("Topic") + "<sup>*</sup>",
         choices = hosttag_topics(hosttags),
-        explicit = TextAscii(),
+        explicit = TextUnicode(),
         otherlabel = _("Create New Topic"),
         default_value = None,
     )
@@ -12903,7 +12903,7 @@ def mode_edit_hosttag(phase):
     vs_topic = OptionalDropdownChoice(
         title = _("Topic"),
         choices = hosttag_topics(hosttags),
-        explicit = TextAscii(),
+        explicit = TextUnicode(),
         otherlabel = _("Create New Topic"),
         default_value = None,
     )

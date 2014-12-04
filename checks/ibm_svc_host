@@ -88,6 +88,6 @@ check_info["ibm_svc_host"] = {
     "service_description"   : "Hosts",
     "has_perfdata"          : True,
     "default_levels_variable": "ibm_svc_host_default_levels",
-    "group"                 : "ibm_svc_hosts",
+    "group"                 : "ibm_svc_host",
 }
 

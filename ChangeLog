@@ -90,6 +90,7 @@
     * 1617 FIX: lnx_if: Deal with data provided by cluster host
     * 1618 FIX: ad_replication: Output of timeLastSuccess and timeLastFailure was inverted...
     * 1623 FIX: hp_proliant_mem: support for some yet unhandled status situations
+    * 1598 FIX: bluecat_dhcp: Check is not longer found in inventory if dhcp service is not activated
 
     Multisite:
     * 1508 Allow input of plugin output and perfdata when faking check results...

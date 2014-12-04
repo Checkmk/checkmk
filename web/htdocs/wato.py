@@ -3198,8 +3198,6 @@ def show_service_table(host, firsttime):
         else:
             html.button("_show_parameters", _("Show Check Parameters"))
 
-
-
     html.hidden_fields()
     if html.var("_scan"):
         html.hidden_field("_scan", "on")
@@ -14600,9 +14598,9 @@ def get_rule_conditions(ruleset):
     return tag_list, host_list, item_list
 
 
-
 def date_and_user():
     return time.strftime("%F", time.localtime()) + " " + config.user_id + ": "
+
 
 def mode_edit_rule(phase, new = False):
     # Due to localization this cannot be defined in the global context!
@@ -14670,7 +14668,7 @@ def mode_edit_rule(phase, new = False):
             host = html.var("host")
             item = html.has_var("item") and mk_eval(html.var("item")) or NO_ITEM
         try:
-            rule     = create_rule(rulespec, host, item)
+            rule = create_rule(rulespec, host, escape_regex_chars(item))
         except Exception, e:
             if phase != "action":
                 html.message(_("Cannot create rule: %s") % e)

@@ -68,7 +68,7 @@ def check_bluecat_dhcp(item, params, info):
         if ok_on_node:
             node = ok_on_node
             # One Node is OK:
-            yield 0, "DHCP is %s on %s" % (states[ok]['oper_state'], node)
+            yield 0, "DHCP is %s on %s" % (states[node]['oper_state'], node)
             yield 0, '%s Leases per second' % (states[node]['leases_sec']), [ ('leases', states[node]['leases_sec']) ]
         else:
             # None of the nodes is ok:

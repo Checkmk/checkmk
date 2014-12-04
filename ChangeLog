@@ -135,6 +135,7 @@
     * 1607 FIX: check_http: Fixed broken links in escaped plugin output
     * 1614 FIX: Fixed wrong URL in webapi.py documentation
     * 1619 FIX: Renamed "Hostgroups" and "Servicegroups" views to "Host Groups" and "Service Groups"
+    * 1638 FIX: Fixed styling small styling problems in wiki snapin
 
     WATO:
     * 1170 Added buttons to move rules to top/bottom of the list to ruleset edit dialog

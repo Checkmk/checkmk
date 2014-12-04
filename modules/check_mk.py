@@ -245,7 +245,7 @@ simulation_mode                    = False
 agent_simulator                    = False
 perfdata_format                    = "pnp" # also possible: "standard"
 check_mk_perfdata_with_times       = True
-debug_log                          = False
+debug_log                          = False # deprecated
 monitoring_host                    = None # deprecated
 max_num_processes                  = 50
 
@@ -3358,7 +3358,7 @@ no_inventory_possible = None
                  'omd_root',
                  'www_group', 'cluster_max_cachefile_age', 'check_max_cachefile_age',
                  'piggyback_max_cachefile_age',
-                 'simulation_mode', 'agent_simulator', 'aggregate_check_mk', 'debug_log',
+                 'simulation_mode', 'agent_simulator', 'aggregate_check_mk',
                  'check_mk_perfdata_with_times', 'livestatus_unix_socket',
                  'use_inline_snmp', 'record_inline_snmp_stats',
                  ]:
@@ -3557,10 +3557,8 @@ no_inventory_possible = None
     output.write("    sys.stdout.write(\"Traceback: %s\\n\" % traceback.format_exc())\n")
 
     # debug logging
-    output.write("\n    if debug_log:\n")
-    output.write("        if debug_log == True:\n")
-    output.write("            debug_log = log_dir + \"/crashed-checks.log\"\n")
-    output.write("        l = file(debug_log, \"a\")\n")
+    output.write("\n")
+    output.write("        l = file(log_dir + \"/crashed-checks.log\", \"a\")\n")
     output.write("        l.write((\"Exception in precompiled check:\\n\"\n")
     output.write("                \"  Check_MK Version: %s\\n\"\n")
     output.write("                \"  Date:             %s\\n\"\n")

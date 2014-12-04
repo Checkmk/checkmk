@@ -42,6 +42,7 @@ import userdb
 import notify
 import webapi
 import visuals
+import crashed_check
 
 # map URLs to page rendering functions
 
@@ -93,13 +94,15 @@ pagehandlers.update({
    "create_view_dashlet_infos": dashboard.page_create_view_dashlet_infos,
    "ajax_dashlet_pos"         : dashboard.ajax_dashlet_pos,
 
-   "ajax_popup_add_visual"   : visuals.ajax_popup_add,
-   "ajax_add_visual"         : visuals.ajax_add_visual,
+   "ajax_popup_add_visual"    : visuals.ajax_popup_add,
+   "ajax_add_visual"          : visuals.ajax_add_visual,
 
    "ajax_userdb_sync"         : userdb.ajax_sync,
    "notify"                   : notify.page_notify,
    "ajax_inv_render_tree"     : views.ajax_inv_render_tree,
 
    "webapi"                   : webapi.page_api,
+
+   "crashed_check"            : crashed_check.page_crashed_check,
 })
 

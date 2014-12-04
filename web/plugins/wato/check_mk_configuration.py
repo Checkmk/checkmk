@@ -1105,7 +1105,8 @@ register_configvar(group,
             ( "ps.perf",                _("State and Count of Processes (with additional performance data)")),
             ( "wmic_process",           _("Ressource consumption of windows processes")),
             ( "logwatch",               _("Check logfiles for relevant new messages")),
-        ]
+        ],
+        render_orientation = "vertical",
     ),
     need_restart = True
 )

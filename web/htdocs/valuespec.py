@@ -292,7 +292,7 @@ class Integer(ValueSpec):
         return text
 
     def validate_datatype(self, value, varprefix):
-        if type(value) != int:
+        if type(value) not in [ int, long ]:
             raise MKUserError(varprefix, _("The value %r has the wrong type %s, but must be of type int")
             % (value, type_name(value)))
 
@@ -1085,7 +1085,7 @@ class Float(Integer):
 
     def validate_datatype(self, value, varprefix):
         if type(value) != float and not \
-            (type(value) == int and self._allow_int):
+            (type(value) not in [ int, long ] and self._allow_int):
             raise MKUserError(varprefix, _("The value %r has type %s, but must be of type float%s") %
                  (value, type_name(value), self._allow_int and _(" or int") or ""))
 
@@ -1465,6 +1465,7 @@ class ListChoice(ValueSpec):
         self._render_function = kwargs.get("render_function",
                   lambda id, val: val)
         self._toggle_all = kwargs.get("toggle_all", False)
+        self._render_orientation = kwargs.get("render_orientation", "horizontal") # other: vertical
 
     # In case of overloaded functions with dynamic elements
     def load_elements(self):
@@ -1503,7 +1504,11 @@ class ListChoice(ValueSpec):
     def value_to_text(self, value):
         self.load_elements()
         d = dict(self._elements)
-        return ", ".join([ self._render_function(v, d.get(v,v)) for v in value ])
+        texts = [ self._render_function(v, d.get(v,v)) for v in value ]
+        if self._render_orientation == "horizontal":
+            return ", ".join(texts)
+        else:
+            return "<table><tr><td>" + "<br>".join(texts) + "</td></tr></table>"
 
     def from_html_vars(self, varprefix):
         self.load_elements()

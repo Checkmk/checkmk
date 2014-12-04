@@ -141,7 +141,7 @@ def check_ibm_svc_nodestats_diskio(item, _no_params, info):
 check_info["ibm_svc_nodestats.diskio"] = {
     "check_function"        : check_ibm_svc_nodestats_diskio,
     "inventory_function"    : inventory_ibm_svc_nodestats_diskio,
-    "service_description"   : "Disk Throughput %s",
+    "service_description"   : "Disk IO %s",
     "has_perfdata"          : True,
 }
 

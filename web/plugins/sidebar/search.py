@@ -53,7 +53,8 @@ sidebar_snapins["search"] = {
     height: 26px;
     margin-top: -25px;
     left: 196px;
-    float:right;
+    float: left;
+    position: relative;
     z-index:100;
 }
 

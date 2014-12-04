@@ -27,10 +27,10 @@
 # Rules for configuring parameters of checks (services)
 
 register_rulegroup("checkparams", _("Parameters for Inventorized Checks"),
-    _("Levels and other parameters for checks found by the Check_MK inventory.\n"
+    _("Levels and other parameters for checks found by the Check_MK service discovery.\n"
       "Use these rules in order to define parameters like filesystem levels, "
       "levels for CPU load and other things for services that have been found "
-      "by the automatic service detection (inventory) of Check_MK."))
+      "by the automatic service discovery of Check_MK."))
 group = "checkparams"
 
 subgroup_networking =   _("Networking")

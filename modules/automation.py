@@ -497,7 +497,11 @@ def schedule_inventory_check(hostname):
         s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         s.connect(livestatus_unix_socket)
         now = int(time.time())
-        command = "SCHEDULE_FORCED_SVC_CHECK;%s;Check_MK inventory;%d" % (hostname, now)
+        if 'cmk-inventory' in use_new_descriptions_for:
+            command = "SCHEDULE_FORCED_SVC_CHECK;%s;Check_MK Discovery;%d" % (hostname, now)
+        else:
+            # FIXME: Remove this old name handling one day
+            command = "SCHEDULE_FORCED_SVC_CHECK;%s;Check_MK inventory;%d" % (hostname, now)
         s.send("COMMAND [%d] %s\n" % (now, command))
     except Exception, e:
         if opt_debug:

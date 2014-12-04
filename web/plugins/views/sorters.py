@@ -132,10 +132,12 @@ multisite_sorters['servicelevel'] = {
 def cmp_service_name_equiv(r):
     if r == "Check_MK":
         return -5
-    elif r == "Check_MK inventory":
+    elif r == "Check_MK Discovery":
         return -4
+    elif r == "Check_MK inventory":
+        return -3 # FIXME: Remove old name one day
     elif r == "Check_MK HW/SW Inventory":
-        return -3
+        return -2
     else:
         return 0
 

@@ -43,8 +43,10 @@ now=`date +%s`
 # Use the automation API to run an inventory, only for new objects.
 check_mk --automation inventory new $HOST >/dev/null
 
-# Then reschedule the inventory check right now to clear up.
+# Then reschedule the service discovery check right now to clear up.
 # (currently we're running it just once a day at the same time on all hosts)
+echo "COMMAND [$now] SCHEDULE_FORCED_SVC_CHECK;$HOST;Check_MK Discovery;$now" | lq
+# handle old service description
 echo "COMMAND [$now] SCHEDULE_FORCED_SVC_CHECK;$HOST;Check_MK inventory;$now" | lq 
 
 }
@@ -57,7 +59,9 @@ echo "COMMAND [$now] SCHEDULE_FORCED_SVC_CHECK;$HOST;Check_MK inventory;$now" | 
 
 INVENTORY_INFO=`echo "GET services
 Columns: host_name long_plugin_output
+Filter: description = Check_MK Discovery 
 Filter: description = Check_MK inventory
+Or: 2
 Filter: plugin_output !~~ no unchecked" | lq`
 
 if [ "$INVENTORY_INFO" != "" ]; then

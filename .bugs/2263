@@ -1,0 +1,11 @@
+Title: Cannot configure SNMPv3 directly as host attribute
+Component: wato
+State: open
+Date: 2014-12-04 14:06:33
+Targetversion: future
+Class: nastiness
+
+If you have a community entered in a folder then you cannot override single hosts
+in that folder to use v3. We need the SNMP configuration for v3 also in the host
+attributes - the complete ValueSpec for SNMP credentials and not only the community
+string.

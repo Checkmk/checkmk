@@ -1804,8 +1804,11 @@ def mode_editfolder(phase, new):
         if new:
             check_folder_permissions(g_folder, "write")
             check_user_contactgroups(attributes.get("contactgroups", (False, [])))
-
             create_wato_folder(g_folder, name, title)
+            g_folder["attributes"] = attributes
+            save_folder(g_folder)
+            log_audit(g_folder, "new-folder", _("Created new folder %s") % title)
+
         else:
             # TODO: migrate this block into own function edit_wato_folder(..)
             cgs_changed = get_folder_cgconf_from_attributes(attributes) != \
@@ -17476,7 +17479,11 @@ def update_hosts_in_folder(folder, hosts):
     updated_hosts = {}
 
     for hostname, attributes in hosts.items():
-        cleaned_attr = dict([(k, v) for (k, v) in attributes.get("set", {}).iteritems() if not k.startswith('.') ])
+        cleaned_attr = dict([
+            (k, v) for
+            (k, v) in
+            attributes.get("set", {}).iteritems()
+            if (not k.startswith('.') or k == ".nodes") ])
         # unset keys
         for key in attributes.get("unset", []):
             if key in cleaned_attr:

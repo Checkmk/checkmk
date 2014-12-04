@@ -103,6 +103,7 @@
     * 1647 FIX: agent_ipmi: Check_MK service gets critical now when ipmi-sensors command fails
     * 1453 FIX: drbd.stats: tried to send non-numeric write order parameter to rrd...
     * 1598 FIX: bluecat_dhcp: Check is not longer found in inventory if dhcp service is not activated
+    * 1635 FIX: multipath: fix parsing output of multipath on RedHat6 with space in alias
     * 1652 FIX: kaspersky_av_quarantine: Fixed exception when a file was found in quarantine
 
     Multisite:
@@ -186,6 +187,8 @@
     * 1625 FIX: Safely handle characters that have a special meaning in regexes when creating service-specific rules...
     * 1637 FIX: Fixed exception in notification analysis when notifications have not NOTIFICATIONTYPE set
     * 1639 FIX: Interfaces with speed more than 10GBit/s can now be configured correctly
+    * 1633 FIX: Fix problem that attributes of new WATO folders have not been saved...
+    * 1634 FIX: Fix editing of cluster hosts in WATO: cluster-property no longer goes lost...
 
     Notifications:
     * 1512 Bulk notification can now be grouped according to custom macro values...

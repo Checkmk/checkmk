@@ -437,8 +437,8 @@ def render_dashboard(name):
 
             display = html.var('edit') == '1' and 'block' or 'none'
             html.write('<li id="control_add" class="sublink" style="display:%s" '
-                       'onmouseover="show_submenu(\'control_add\')"><a href="javascript:void(0)">%s</a>\n' %
-                            (display, _('Add dashlet')))
+                       'onmouseover="show_submenu(\'control_add\')"><a href="javascript:void(0)">'
+                       '<img src="images/dashboard_menuarrow.png" />%s</a>\n' % (display, _('Add dashlet')))
 
             # The dashlet types which can be added to the view
             html.write('<ul id="control_add_sub" class="menu sub" style="display:none">\n')
@@ -456,7 +456,8 @@ def render_dashboard(name):
                     url = html.makeuri([('type', ty), ('back', html.makeuri([('edit', '1')]))], filename = 'edit_dashlet.py')
                     if 'add_urlfunc' in dashlet_type:
                         url = dashlet_type['add_urlfunc']()
-                    html.write('<li><a href="%s">%s</a></li>\n' % (url, dashlet_type['title']))
+                    html.write('<li><a href="%s"><img src="images/dashlet_%s.png" />%s</a></li>\n' %
+                                                                (url, ty, dashlet_type['title']))
             html.write('</ul>\n')
 
             html.write('</li>\n')
@@ -466,7 +467,7 @@ def render_dashboard(name):
             #
 
             html.write('<li><a href="edit_dashboard.py?load_name=%s&back=%s" '
-                       'onmouseover="hide_submenus();" >%s</a></li>\n' %
+                       'onmouseover="hide_submenus();" ><img src="images/trans.png" />%s</a></li>\n' %
                 (name, html.urlencode(html.makeuri([])), _('Properties')))
 
             #
@@ -476,7 +477,7 @@ def render_dashboard(name):
             display = html.var('edit') == '1' and 'block' or 'none'
             html.write('<li id="control_view" style="display:%s"><a href="javascript:void(0)" '
                        'onmouseover="hide_submenus();" '
-                       'onclick="toggle_dashboard_edit(false)">%s</a></li>\n' %
+                       'onclick="toggle_dashboard_edit(false)"><img src="images/trans.png" />%s</a></li>\n' %
                             (display, _('Stop Editing')))
 
             #
@@ -485,7 +486,7 @@ def render_dashboard(name):
 
             display = html.var('edit') != '1' and 'block' or 'none'
             html.write('<li id="control_edit" style="display:%s"><a href="javascript:void(0)" '
-                       'onclick="toggle_dashboard_edit(true)">%s</a></li>\n' %
+                       'onclick="toggle_dashboard_edit(true)"><img src="images/trans.png" />%s</a></li>\n' %
                             (display, _('Edit Dashboard')))
 
         html.write("</ul>\n")

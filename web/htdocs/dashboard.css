@@ -219,7 +219,8 @@ div.dashlet_inner div.stats {
 
 #controls a {
     display: block;
-    padding: 1px 15px;
+    padding: 1px 15px 1px 2px;
+    line-height: 14px;
     text-align: left;
     text-decoration: none;
 }
@@ -228,22 +229,19 @@ div.dashlet_inner div.stats {
     text-decoration: underline;
 }
 
-#controls li.sublink > a:before {
-    position: absolute;
-    left: 7px;
-    width: 6px;
-    height: 10px;
-    margin-top: 3px;
-    background-image: url(images/dashboard_menuarrow.png);
-    background-repeat: no-repeat;
-    content: " ";
-}
-
 /* submenu */
 
 #controls ul.sub {
     bottom: 5px;
-    right: 210px;
+    right: 212px;
+}
+
+#controls > li > a > img,
+#controls ul.menu > li > a > img {
+    margin-right: 4px;
+    vertical-align: middle;
+    width: 12px;
+    height: 12px;
 }
 
 /* dashlet controls */

@@ -118,18 +118,19 @@ multisite_icons.append({
 
 
 def paint_rule_editor(what, row, tags, custom_vars):
-    if config.may("wato.rulesets") and config.multisite_draw_ruleicon:
+    if config.wato_enabled and config.may("wato.rulesets") and config.multisite_draw_ruleicon:
+        urlvars = [("mode", "object_parameters"),
+                   ("host", row["host_name"])]
+
         if what == 'service':
-            check_command = row["service_check_command"]
-            if check_command.startswith("check_mk-") or \
-               check_command.startswith("check_mk_active-"):
-                url = html.makeuri_contextless( [("mode", "edit_ruleset"),
-                                                 ("check_command", row["service_check_command"]),
-                                                 ("service_description", row["service_description"]),
-                                                 ("host", row["host_name"])], "wato.py")
-                title = _("Edit check parameters for this service")
-                return '<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' % \
-                        (url, title)
+            urlvars.append(("service", row["service_description"]))
+            title = _("View and edit parameters for this service")
+        else:
+            title = _("View and edit parameters for this host")
+
+        url = html.makeuri_contextless(urlvars, "wato.py")
+        return '<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' % \
+                (url, title)
 
 multisite_icons.append({
     'service_columns': [ 'description', 'check_command', "host_name" ],

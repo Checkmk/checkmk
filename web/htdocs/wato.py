@@ -2229,6 +2229,7 @@ def mode_rename_host(phase):
         return _("Rename %s %s") % (is_cluster and _("Cluster") or _("Host"), hostname)
 
     elif phase == "buttons":
+        global_buttons()
         html.context_button(_("Host Properties"), make_link([("mode", "edithost"), ("host", hostname)]), "back")
         return
 
@@ -2280,6 +2281,9 @@ def rename_host_in_list(thelist, oldname, newname):
     for nr, element in enumerate(thelist):
         if element == oldname:
             thelist[nr] = newname
+            did_rename = True
+        elif element == '!'+oldname:
+            thelist[nr] = '!'+newname
             did_rename = True
     return did_rename
 

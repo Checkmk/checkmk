@@ -248,7 +248,12 @@ register_configvar(group,
                  "Event Console when you forward notifications to it and will override the "
                  "setting of the matching rule."),
         allow_empty = False,
-        default_value = [ (0, _("(no service level)")) ],
+        default_value = [
+                (0,  _("(no Service level)")),
+                (10, _("Silver")),
+                (20, _("Gold")),
+                (30, _("Platinum")),
+        ],
     ),
     domain = "multisite",
     allow_reset = False,

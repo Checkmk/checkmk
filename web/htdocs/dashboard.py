@@ -527,9 +527,10 @@ dashboard_scheduler(1);
 
     html.body_end() # omit regular footer with status icons, etc.
 
-def render_dashlet_content(nr, the_dashlet):
-    html.stash_vars()
-    html.del_all_vars()
+def render_dashlet_content(nr, the_dashlet, stash_html_vars = False):
+    if stash_html_vars:
+        html.stash_vars()
+        html.del_all_vars()
     visuals.add_context_to_uri_vars(the_dashlet)
 
     dashlet_type = dashlet_types[the_dashlet['type']]
@@ -538,7 +539,8 @@ def render_dashlet_content(nr, the_dashlet):
     else:
         dashlet_type['render'](nr, the_dashlet)
 
-    html.unstash_vars()
+    if stash_html_vars:
+        html.unstash_vars()
 
 # Create the HTML code for one dashlet. Each dashlet has an id "dashlet_%d",
 # where %d is its index (in board["dashlets"]). Javascript uses that id
@@ -662,7 +664,7 @@ def ajax_dashlet():
     if the_dashlet['type'] not in dashlet_types:
         raise MKGeneralException(_('The requested dashlet type does not exist.'))
 
-    render_dashlet_content(ident, the_dashlet)
+    render_dashlet_content(ident, the_dashlet, stash_html_vars=False)
 
 #.
 #   .--Dashboard List------------------------------------------------------.

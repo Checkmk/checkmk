@@ -1,9 +1,9 @@
 Title: Duplicate Check on Cisco 4500
 Component: checks
-State: open
+Class: nastiness
+State: done
 Date: 2012-06-04 12:20:55
 Targetversion: 1.4.0
-Class: nastiness
 
 Generating Nagios configuration...Configuration Error: ERROR: 
 Duplicate service description 'Temperature Chassis Temperature Sensor' 
@@ -29,3 +29,5 @@ Precedence should be:
 We could do: the cmk -I outputs a warning on duplicate (automatically
 ignored) services. WATO introduces a new section: "Duplicate Services"
 that simply displays the ignored services.
+
+2014-12-05 17:01:29: changed state open -> done

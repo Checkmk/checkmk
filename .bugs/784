@@ -1,9 +1,9 @@
 Title: mkp install should fix file permissions
 Component: core
-State: open
+Class: nastiness
+State: done
 Date: 2012-07-25 17:42:13
 Targetversion: future
-Class: nastiness
 
 When installing the cmc_lcp checks from Bastian from the Exchange into
 GIT, then all files are not group/world readable. The MKP installer should
@@ -11,3 +11,5 @@ automatically fix file permissions.
 
 Resolution: add a new column to packages_parts in packaging.py with the
 correct target permission for that folder.
+
+2014-12-05 17:17:35: changed state open -> done

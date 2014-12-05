@@ -171,6 +171,7 @@ try:
             database=opt_name, user=opt_user, password=opt_password )
 
     elif opt_dbms == "oracle":
+        sys.path.append('/usr/lib/python2.6/site-packages')
         sys.path.append('/usr/lib/python2.7/site-packages')
         import cx_Oracle
         db = cx_Oracle

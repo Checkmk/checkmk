@@ -910,6 +910,7 @@ def page_edit_dashlet():
     back_url = html.var('back', 'dashboard.py?name=%s&edit=1' % board)
     next_url = html.var('next', back_url)
     html.context_button(_('Back'), back_url, 'back')
+    html.context_button(_('All Dashboards'), 'edit_dashboards.py', 'dashboard')
     html.end_context_buttons()
 
     vs_general = Dictionary(

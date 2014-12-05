@@ -341,7 +341,7 @@ function update_dashlet(id, code) {
 // DASHBOARD EDITING
 //
 
-function toggle_dashboard_controls(show, event) {
+function toggle_dashboard_menu(show, event) {
     var controls = document.getElementById('controls');
     if (!controls)
         return; // maybe not permitted -> skip
@@ -395,7 +395,7 @@ var g_editing = false;
 
 function toggle_dashboard_edit() {
     // First hide the controls menu
-    toggle_dashboard_controls(false);
+    toggle_dashboard_menu(false);
 
     g_editing = !g_editing;
 
@@ -720,22 +720,22 @@ function body_click_handler(event) {
     var target = getTarget(event);
     var button = getButton(event);
 
-    if (g_editing && target.id == 'dashboard' && button == 'RIGHT') {
+    if (target.id == 'dashboard' && button == 'RIGHT') {
         // right click on the empty dashboard area
-        toggle_dashboard_controls(undefined, event);
+        toggle_dashboard_menu(undefined, event);
         prevent_default_events(event);
         return false;
     }
     else if (target.parentNode.id == 'controls_toggle' && button == 'LEFT') {
         // left click on the controls menu
-        toggle_dashboard_controls(undefined, event);
+        toggle_dashboard_menu(undefined, event);
         prevent_default_events(event);
         return false;
     }
     else if (target.parentNode.id != 'controls_toggle'
              && (!target.parentNode.parentNode || !has_class(target.parentNode.parentNode, 'menu'))) {
         // Hide the controls menu when clicked somewhere else
-        toggle_dashboard_controls(false);
+        toggle_dashboard_menu(false);
     }
 
     return true;
@@ -1135,13 +1135,8 @@ add_event_handler('click', function(e) {
     return body_click_handler(e);
 });
 
-// Totally disable the context menu for the dashboards in edit mode
+// Totally disable the context menu for all dashboards
 add_event_handler('contextmenu', function(e) {
-    if (g_editing) {
-        prevent_default_events(e);
-        return false;
-    }
-    else {
-        return true;
-    }
+    prevent_default_events(e);
+    return false;
 });

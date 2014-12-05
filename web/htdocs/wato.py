@@ -7308,9 +7308,9 @@ def mode_ldap_config(phase):
                     msg = _('Exception: %s') % html.attrencode(e)
 
                 if state:
-                    img = '<img src="images/icon_success.gif" alt="%s" />' % _('Success')
+                    img = '<img src="images/icon_success.png" alt="%s" />' % _('Success')
                 else:
-                    img = '<img src="images/icon_failed.gif" alt="%s" />' % _('Failed')
+                    img = '<img src="images/icon_failed.png" alt="%s" />' % _('Failed')
 
                 table.cell(_("Test"),   title)
                 table.cell(_("State"),   img)

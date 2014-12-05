@@ -170,6 +170,7 @@
     * 1651 FIX: Consolidated painters of service list views...
     * 1678 FIX: Fixed problem with garbled styles on user profile page after saving
     * 1680 FIX: Fixed various dashlet designer position/resizing issues...
+    * 1683 FIX: Replaced a lot of old GIF images with better looking PNG images
 
     WATO:
     * 1170 Added buttons to move rules to top/bottom of the list to ruleset edit dialog

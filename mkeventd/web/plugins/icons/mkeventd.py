@@ -90,8 +90,7 @@ def paint_mkeventd(what, row, tags, custom_vars):
         title = _('Events of Application "%s" on Host %s') % (app, host)
         url   += '&event_application=' + app
 
-    return '<a href="%s"><img class=icon title="%s" src="images/icon_mkeventd.png" /></a>' % \
-            (url_prefix + url, title)
+    return '<a href="%s">%s</a>' % (url_prefix + url, html.render_icon('mkeventd', title))
 
 if mkeventd_enabled:
     multisite_icons.append({

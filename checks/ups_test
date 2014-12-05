@@ -92,7 +92,6 @@ def check_ups_test(_no_item, params, info):
 
     # State of test
     state = 0
-    print ResultsSummary
     if ResultsSummary in [ '3', '4' ]:
         state = 2
     elif ResultsSummary in [ '2' ]:

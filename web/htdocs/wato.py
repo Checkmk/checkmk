@@ -14486,12 +14486,18 @@ def render_conditions(ruleset, tagspecs, host_list, item_list, varname, folder):
 
         html.write('<li class="condition">')
         alias = config.tag_alias(tag)
+        group_alias = config.tag_group_title(tag)
         if alias:
-            if negate:
-                html.write(_("Host is <b>not</b> of type "))
+            if group_alias:
+                html.write(_("Host") + ": " + group_alias + " " + _("is") + " ")
+                if negate:
+                    html.write("<b>%s</b> " % _("not"))
             else:
-                html.write(_("Host is of type "))
-            html.write("<b>" + alias + "</b>")
+                if negate:
+                    html.write(_("Host has tag"))
+                else:
+                    html.write(_("Host does not have tag"))
+            html.write(" <b>" + alias + "</b>")
         else:
             if negate:
                 html.write(_("Host has <b>not</b> the tag ") + "<tt>" + tag + "</tt>")

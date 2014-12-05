@@ -462,13 +462,16 @@ function render_sizer(controls, id, i, active, size) {
     if (size == MAX) {
         sizer.className += ' max';
         sizer_lbl.innerHTML = 'MAX';
+        sizer.title = 'Use maximum available space in this direction';
     }
     else if (size == GROW) {
         sizer.className += ' grow';
         sizer_lbl.innerHTML = 'GROW';
+        sizer.title = 'Grow in this direction';
     }
     else {
         sizer.className += ' abs';
+        sizer.title = 'Fixed size (drag border for resize)';
         render_resize_controls(controls, i, active);
     }
 
@@ -479,6 +482,7 @@ function render_sizer(controls, id, i, active, size) {
         };
     }(id, i);
     sizer_lbl.onclick = sizer.onclick;
+    sizer_lbl.title = sizer.title;
 
     controls.appendChild(sizer);
     if (size == MAX || size == GROW)
@@ -525,8 +529,11 @@ function dashlet_toggle_edit(dashlet, edit) {
         for (var i = 0; i < 4; i++) {
             var anchor = document.createElement('a');
             anchor.className = 'anchor anchor'+i;
-            if (active != i)
+            anchor.title = 'Currently growing from here';
+            if (active != i) {
                 anchor.className += ' off';
+                anchor.title = 'Click to start growing from here';
+            }
 
             // js magic stuff - closures!
             anchor.onclick = function(dashlet_id, anchor_id) {
@@ -541,6 +548,7 @@ function dashlet_toggle_edit(dashlet, edit) {
         // Add edit dashlet button
         var edit = document.createElement('a');
         edit.className = 'edit';
+        edit.title = 'Edit properties of this dashlet';
         edit.onclick = function(dashlet_id, board_name) {
             return function() {
                 location.href = 'edit_dashlet.py?name=' + board_name + '&id=' + dashlet_id;
@@ -551,6 +559,7 @@ function dashlet_toggle_edit(dashlet, edit) {
         // Add delete dashlet button
         var del = document.createElement('a');
         del.className = 'del';
+        del.title = 'Delete this dashlet';
         del.onclick = function(dashlet_id, board_name) {
             return function() {
                 location.href = 'delete_dashlet.py?name=' + board_name + '&id=' + dashlet_id;

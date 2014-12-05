@@ -317,7 +317,7 @@ div.dashlet.edit .del:hover {
 /* position anchors */
 
 div.dashlet.edit .anchor {
-    cursor: pointer;
+    cursor: auto;
     position: absolute;
     width: 20px;
     height: 20px;
@@ -330,12 +330,13 @@ div.dashlet.edit .anchor {
     background-image: url(images/dashlet_anchor_lo.png);
 }
 
-div.dashlet.edit .anchor:hover {
-    background-image: url(images/dashlet_anchor_hi.png);
+div.dashlet.edit .anchor.off {
+    cursor: pointer;
+    background-image: url(images/dashlet_anchor_off.png);
 }
 
-div.dashlet.edit .anchor.off {
-    background-image: url(images/dashlet_anchor_off.png);
+div.dashlet.edit .anchor.off:hover {
+    background-image: url(images/dashlet_anchor_hi.png);
 }
 
 div.dashlet.edit .anchor.anchor0 {

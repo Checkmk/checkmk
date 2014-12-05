@@ -112,6 +112,7 @@
     * 1656 FIX: cisco_vpn_tunnel: Refactored complete check, fixed threshold bugs...
     * 1677 FIX: f5_bigip_interfaces: Cleaned up check a bit
     * 1679 FIX: ups_bat_temp: Now skipping sensors which are reported to have 0 upsBatteryTemperature
+    * 1681 FIX: cmciii_lcp_fans: Skipping non FAN units now; cleaned up check
 
     Multisite:
     * 1508 Allow input of plugin output and perfdata when faking check results...

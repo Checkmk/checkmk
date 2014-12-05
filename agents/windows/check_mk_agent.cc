@@ -4428,7 +4428,6 @@ void do_test()
     SOCKET dummy;
     open_crash_log();
     crash_log("Started in test mode.");
-    output(dummy, "Enabld: %08x\n", enabled_sections);
     output_data(dummy);
     close_crash_log();
 }

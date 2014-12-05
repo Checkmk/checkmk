@@ -14670,7 +14670,9 @@ def mode_edit_rule(phase, new = False):
             host = html.var("host")
             item = html.has_var("item") and mk_eval(html.var("item")) or NO_ITEM
         try:
-            rule = create_rule(rulespec, host, escape_regex_chars(item))
+            if item != NO_ITEM:
+                item = escape_regex_chars(item)
+            rule = create_rule(rulespec, host, item)
         except Exception, e:
             if phase != "action":
                 html.message(_("Cannot create rule: %s") % e)

@@ -123,26 +123,13 @@ def paint_rule_editor(what, row, tags, custom_vars):
                    ("host", row["host_name"])]
 
         if what == 'service':
-<<<<<<< HEAD
-            check_command = row["service_check_command"]
-            if check_command.startswith("check_mk-") or \
-               check_command.startswith("check_mk_active-"):
-                url = html.makeuri_contextless( [("mode", "edit_ruleset"),
-                                                 ("check_command", row["service_check_command"]),
-                                                 ("service_description", row["service_description"]),
-                                                 ("host", row["host_name"])], "wato.py")
-                title = _("Edit check parameters for this service")
-                return '<a href="%s">%s</a>' % (url, html.render_icon('rulesets', title))
-=======
             urlvars.append(("service", row["service_description"]))
             title = _("View and edit parameters for this service")
         else:
             title = _("View and edit parameters for this host")
 
         url = html.makeuri_contextless(urlvars, "wato.py")
-        return '<a href="%s"><img title="%s" class=icon src="images/icon_rulesets.png"></a>' % \
-                (url, title)
->>>>>>> f3c8aaa68bdf43480870137cb3b76e647aa9a55f
+        return '<a href="%s">%s</a>' % (url, html.render_icon('rulesets', title))
 
 multisite_icons.append({
     'service_columns': [ 'description', 'check_command', "host_name" ],

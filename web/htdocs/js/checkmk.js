@@ -2235,7 +2235,7 @@ function handle_visualadd_close(event) {
     var target = getTarget(event);
 
     // Check whether or not a parent of the clicked node is the popup menu
-    while (target && target.id != 'visualadd_popup' && !has_class(target, 'statusicon')) {
+    while (target && target.id != 'visualadd_popup' && !has_class(target, 'visualadd')) {
         target = target.parentNode;
     }
 
@@ -2301,20 +2301,19 @@ function add_dashboard_response_handler(data, response_text)
 }
 
 function fix_visualadd_menu_position(event, menu) {
-    var target = getTarget(event);
-    var dashboard = document.getElementById('dashboard');
-    
-    // When menu is out of screen on the right, move to left
-    if (menu.offsetLeft + menu.clientWidth > pageWidth()) {
-        menu.style.left = (menu.offsetLeft - menu.clientWidth - 15) + 'px';
-        menu.style.right = 'auto';
-    }
+    //var target = getTarget(event);
+    //
+    //// When menu is out of screen on the right, move to left
+    //if (menu.offsetLeft + menu.clientWidth > pageWidth()) {
+    //    menu.style.left = (menu.offsetLeft - menu.clientWidth - 15) + 'px';
+    //    menu.style.right = 'auto';
+    //}
 
-    // When menu is out of screen on the top, move to bottom
-    if (menu.offsetTop < 0) {
-        menu.style.top = (menu.offsetTop + menu.clientHeight) + 'px';
-        menu.style.bottom = 'auto';
-    }
+    //// When menu is out of screen on the top, move to bottom
+    //if (menu.offsetTop < 0) {
+    //    menu.style.top = (menu.offsetTop + menu.clientHeight) + 'px';
+    //    menu.style.bottom = 'auto';
+    //}
 }
 
 function add_to_visual(visual_type, name)

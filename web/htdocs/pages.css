@@ -901,7 +901,7 @@ div.help tt {
 |                 |_|         |_|                                          |
 '-------------------------------------------------------------------------*/
 
-.popup_menu {
+body.main .popup_menu {
     position: absolute;
     bottom: 15px;
     left: 15px;
@@ -919,20 +919,21 @@ div.help tt {
     border-radius: 5px;
 }
 
-.popup_menu img {
+body.main .popup_menu img {
     width: 12px;
     height: auto;
     vertical-align: bottom;
 }
 
-.popup_menu ul {
+body.main .popup_menu ul {
     list-style: none;
     margin: 0;
     padding: 0px 5px 5px 10px;
 }
 
+body.main .popup_menu a,
 body.main table.footer .popup_menu a,
-.popup_menu span {
+body.main .popup_menu span {
     display: block;
     padding-top: 1px;
     padding-bottom: 1px;
@@ -941,16 +942,16 @@ body.main table.footer .popup_menu a,
     color: #fff;
 }
 
-.popup_menu span {
+body.main .popup_menu span {
     padding-left: 0px;
     font-weight: bold;
     margin-top: 8px;
 }
 
+body.main .popup_menu a:hover,
 body.main table.footer .popup_menu a:hover {
     text-decoration: underline;
 }
-
 
 /*--Various----------------------------------------------------------------.
 |                __     __         _                                       |

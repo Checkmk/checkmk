@@ -2229,6 +2229,7 @@ def mode_rename_host(phase):
         return _("Rename %s %s") % (is_cluster and _("Cluster") or _("Host"), hostname)
 
     elif phase == "buttons":
+        global_buttons()
         html.context_button(_("Host Properties"), make_link([("mode", "edithost"), ("host", hostname)]), "back")
         return
 
@@ -2280,6 +2281,9 @@ def rename_host_in_list(thelist, oldname, newname):
     for nr, element in enumerate(thelist):
         if element == oldname:
             thelist[nr] = newname
+            did_rename = True
+        elif element == '!'+oldname:
+            thelist[nr] = '!'+newname
             did_rename = True
     return did_rename
 
@@ -7308,9 +7312,9 @@ def mode_ldap_config(phase):
                     msg = _('Exception: %s') % html.attrencode(e)
 
                 if state:
-                    img = '<img src="images/icon_success.gif" alt="%s" />' % _('Success')
+                    img = '<img src="images/icon_success.png" alt="%s" />' % _('Success')
                 else:
-                    img = '<img src="images/icon_failed.gif" alt="%s" />' % _('Failed')
+                    img = '<img src="images/icon_failed.png" alt="%s" />' % _('Failed')
 
                 table.cell(_("Test"),   title)
                 table.cell(_("State"),   img)
@@ -8865,8 +8869,8 @@ def mode_notifications(phase):
                 analyse_url = html.makeuri([("analyse", str(nr))])
                 context = entry.items()
                 context.sort()
-                tooltip = "".join("%s: %s\n" % e for e in context)
-                html.icon_button(analyse_url, _("Anaylse ruleset with this notification:\n" + tooltip), "analyze")
+                tooltip = "".join(("%s: %s\n" % e).decode('utf-8') for e in context)
+                html.icon_button(analyse_url, _("Anaylse ruleset with this notification:\n%s" % tooltip), "analyze")
                 replay_url = html.makeactionuri([("_replay", str(nr))])
                 html.icon_button(replay_url, _("Replay this notification, send it again!"), "replay")
                 if html.var("analyse") and nr == int(html.var("analyse")):

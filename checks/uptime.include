@@ -25,6 +25,17 @@
 # Boston, MA 02110-1301 USA.
 
 
+
+def parse_snmp_uptime(ticks):
+    try:
+        if len(ticks) < 3:
+            return 0
+        else:
+            return int(ticks[:-2])
+    except:
+        days, h, m, s = ticks.split(":")
+        return (int(days) * 86400 ) + (int(h) * 3600) + (int(m) * 60) + int(float(s))
+
 # Example for params:
 # {
 #    "min" : ( 7200, 3600 ),            # Minimum required uptime (warn, crit)

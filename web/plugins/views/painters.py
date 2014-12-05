@@ -207,7 +207,8 @@ def paint_nagios_link(row):
     else:
         url += "&type=1"
         what = "host"
-    return "singleicon", "<a href=\"%s\"><img title=\"%s\" src=\"images/icon_nagios.gif\"></a>" % (url, _('Show this %s in Nagios') % what)
+    return "singleicon", "<a href=\"%s\">%s</a>" % \
+        (url, html.render_icon('nagios', _('Show this %s in Nagios') % what))
 
 def paint_age(timestamp, has_been_checked, bold_if_younger_than, mode=None):
     if not has_been_checked:
@@ -1571,19 +1572,26 @@ multisite_painters["comment_expires"] = {
 def paint_comment_entry_type(row):
     t = row["comment_entry_type"]
     linkview = None
-    if t == 1:   icon = "comment"
+    if t == 1:
+        icon = "comment"
+        help = _("Comment")
     elif t == 2:
         icon = "downtime"
+        help = _("Downtime")
         if row["service_description"]:
             linkview = "downtimes_of_service"
         else:
             linkview = "downtimes_of_host"
 
-    elif t == 3: icon = "flapping"
-    elif t == 4: icon = "ack"
+    elif t == 3:
+        icon = "flapping"
+        help = _("Flapping")
+    elif t == 4:
+        icon = "ack"
+        help = _("Acknowledgement")
     else:
         return "", ""
-    code = '<img class=icon src="images/icon_%s.gif">' % icon
+    code = html.render_icon(icon, help)
     if linkview:
         code = link_to_view(code, row, linkview)
     return "icons", code

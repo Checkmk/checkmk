@@ -326,8 +326,12 @@ class html:
             self.write('</label>')
 
     def icon(self, help, icon):
-       self.write('<img align=absmiddle class=icon title="%s" src="images/icon_%s.png" />' % (
-        help, icon))
+       self.write(self.render_icon(icon, help))
+
+    def render_icon(self, icon, help, middle=True):
+        align = middle and ' align=absmiddle' or ''
+        return '<img%s class=icon title="%s" src="images/icon_%s.png" />' % \
+                                            (align, self.attrencode(help), icon)
 
     def empty_icon(self):
         self.write('<img class=icon src="images/trans.png" />')

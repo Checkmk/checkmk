@@ -240,7 +240,7 @@ register_configvar(group,
              help = _("When enabled a rule editor icon is displayed for each "
                       "service in the multisite views. It is only displayed if the user "
                       "does have the permission to edit rules."),
-            default_value = False),
+            default_value = True),
     domain = "multisite")
 
 
@@ -1170,22 +1170,6 @@ register_configvar(group,
                       "time the host is actually checked being by Nagios.<p>This reduces the time needed "
                       "for the operation, but on the other hand will lead to a slightly higher load "
                       "of Nagios for the first couple of minutes after the restart. ")))
-
-register_configvar(group,
-    "debug_log",
-    Transform(
-        Checkbox(
-            label = _("Write exceptions to <tt>%s/crashed-checks.log</tt>" % site_neutral_path(defaults.log_dir)),
-        ),
-        title = _("Log exceptions in check plugins"),
-        help = _("If this option is enabled Check_MK will create a debug logfile at "
-                 "<tt>%s/crashed-checks.log</tt> "
-                 "containing details about failed checks (those which have the state <i>UNKNOWN "
-                 "and the output UNKNOWN - invalid output from plugin</i>...) Per default no "
-                 "logfile is written.") % site_neutral_path(defaults.log_dir),
-        forth = lambda x: not not x,
-    ),
-    need_restart = True)
 
 register_configvar(group,
     "cluster_max_cachefile_age",

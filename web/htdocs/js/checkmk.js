@@ -156,6 +156,21 @@ function add_event_handler(type, func) {
     }
 }
 
+function del_event_handler(type, func) {
+    if (window.removeEventListener) {
+        // W3 stadnard browsers
+        window.removeEventListener(type, func, false);
+    }
+    else if (window.detachEvent) {
+        // IE<9
+        document.documentElement.detachEvent("on"+type, func);
+    }
+    else {
+        window["on" + type] = null;
+    }
+}
+
+
 function prevent_default_events(event) {
     if (event.preventDefault)
         event.preventDefault();
@@ -561,8 +576,8 @@ function create_graph(data, params) {
         visualadd.title = 'Add to dashboard';
         visualadd.setAttribute('class', 'visualadd');
         visualadd.onclick = function(host, service, view, source) {
-            return function() {
-                toggle_add_to_visual(this, 'pnpgraph',
+            return function(event) {
+                toggle_add_to_visual(event, this, 'pnpgraph',
                     { 'host': host, 'service': service },
                     { 'timerange': view, 'source': source }
                 );
@@ -946,6 +961,8 @@ function folding_step(oImg, state, step) {
 
 /* Check if an element has a certain css class. */
 function has_class(o, cn) {
+    if (typeof(o.className) === 'undefined')
+        return false;
     var parts = o.className.split(' ');
     for (x=0; x<parts.length; x++) {
         if (parts[x] == cn)
@@ -2197,9 +2214,9 @@ function toggle_popup(event, id)
 
 // Add to Visual
 
-var add_visual_data    = null;
-var visualadd_popup_id      = null;
-var visualadd_popup_content = null;
+var add_visual_data          = null;
+var visualadd_popup_id       = null;
+var visualadd_popup_contents = {};
 
 function close_visualadd_popup()
 {
@@ -2209,10 +2226,31 @@ function close_visualadd_popup()
         menu.parentNode.removeChild(menu);
         menu = null;
     }
+    visualadd_popup_id = null;
 }
 
-function toggle_add_to_visual(trigger_obj, element_type, context, params)
+// Registerd as click handler on the page while the visualadd menu is opened
+// This is used to close the menu when the user clicks elsewhere
+function handle_visualadd_close(event) {
+    var target = getTarget(event);
+
+    // Check whether or not a parent of the clicked node is the popup menu
+    while (target && target.id != 'visualadd_popup' && !has_class(target, 'visualadd')) {
+        target = target.parentNode;
+    }
+
+    if (target) {
+        return true; // clicked menu or statusicon
+    }
+
+    close_visualadd_popup();
+    del_event_handler('click', handle_visualadd_close);
+}
+
+function toggle_add_to_visual(event, trigger_obj, element_type, context, params)
 {
+    if(!event)
+        event = window.event;
     var container = trigger_obj.parentNode;
     var ident;
     for (var i in container.parentNode.childNodes) {
@@ -2230,6 +2268,8 @@ function toggle_add_to_visual(trigger_obj, element_type, context, params)
     }
     visualadd_popup_id = ident;
 
+    add_event_handler('click', handle_visualadd_close);
+
     menu = document.createElement('div');
     menu.setAttribute('id', 'visualadd_popup');
     menu.className = "popup_menu";
@@ -2237,23 +2277,43 @@ function toggle_add_to_visual(trigger_obj, element_type, context, params)
     // populate the menu using a webservice, because the list of dashboards
     // is not known in the javascript code. But it might have been cached
     // before. In this case do not perform a second request.
-    if (visualadd_popup_content !== null)
-        menu.innerHTML = visualadd_popup_content;
+    if (ident in visualadd_popup_contents)
+        menu.innerHTML = visualadd_popup_contents[ident];
     else
-        get_url('ajax_popup_add_visual.py', add_dashboard_response_handler);
+        get_url('ajax_popup_add_visual.py', add_dashboard_response_handler, [ident, event]);
 
     add_visual_data = [ element_type, context, params ];
 
     container.appendChild(menu);
+    fix_visualadd_menu_position(event, menu);
 }
 
 function add_dashboard_response_handler(data, response_text)
 {
-    visualadd_popup_content = response_text;
-    var popup = document.getElementById('visualadd_popup');
-    if (popup) {
-        popup.innerHTML = response_text;
+    var ident = data[0];
+    var event = data[1];
+    visualadd_popup_contents[ident] = response_text;
+    var menu = document.getElementById('visualadd_popup');
+    if (menu) {
+        menu.innerHTML = response_text;
+        fix_visualadd_menu_position(event, menu);
     }
+}
+
+function fix_visualadd_menu_position(event, menu) {
+    //var target = getTarget(event);
+    //
+    //// When menu is out of screen on the right, move to left
+    //if (menu.offsetLeft + menu.clientWidth > pageWidth()) {
+    //    menu.style.left = (menu.offsetLeft - menu.clientWidth - 15) + 'px';
+    //    menu.style.right = 'auto';
+    //}
+
+    //// When menu is out of screen on the top, move to bottom
+    //if (menu.offsetTop < 0) {
+    //    menu.style.top = (menu.offsetTop + menu.clientHeight) + 'px';
+    //    menu.style.bottom = 'auto';
+    //}
 }
 
 function add_to_visual(visual_type, name)

@@ -128,8 +128,8 @@ def check_hp_proliant_mem(item, params, info):
                 detail_output += '(?) '
 
             condition = 'n/a'
-            if int(module_condition) in hp_proliant_mem_condition_map:
-                condition = hp_proliant_mem_condition_map[int(module_condition)]
+            if saveint(module_condition) in hp_proliant_mem_condition_map:
+                condition = hp_proliant_mem_condition_map[saveint(module_condition)]
             condition_status = hp_proliant_mem_condition_status2nagios_map[condition]
 
             detail_output += ', Condition: %s ' % condition

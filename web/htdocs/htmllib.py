@@ -326,8 +326,12 @@ class html:
             self.write('</label>')
 
     def icon(self, help, icon):
-       self.write('<img align=absmiddle class=icon title="%s" src="images/icon_%s.png" />' % (
-        help, icon))
+       self.write(self.render_icon(icon, help))
+
+    def render_icon(self, icon, help, middle=True):
+        align = middle and ' align=absmiddle' or ''
+        return '<img%s class=icon title="%s" src="images/icon_%s.png" />' % \
+                                            (align, self.attrencode(help), icon)
 
     def empty_icon(self):
         self.write('<img class=icon src="images/trans.png" />')
@@ -879,10 +883,11 @@ class html:
 
         if self.myfile == "view":
             mode_name = self.var('mode') == "availability" and "availability" or "view"
+            encoded_vars = self.attrencode([ (k, v != None and v or '') for k,v in self.page_context.items() ])
             h += '<div class="visualadd"><a class="visualadd" href="javascript:void(0)" ' \
-                 'onclick="toggle_add_to_visual(this, \'%s\', %s, {\'name\': \'%s\'})">' \
+                 'onclick="toggle_add_to_visual(event, this, \'%s\', %s, {\'name\': \'%s\'})">' \
                  '<img class=statusicon src="images/status_add_dashlet.png" title="%s"></a></div>\n' % \
-                 (mode_name, self.attrencode(self.page_context), self.var('view_name'), _("Add this view to..."))
+                 (mode_name, encoded_vars, self.var('view_name'), _("Add this view to..."))
 
         for img, tooltip in self.status_icons.items():
             if type(tooltip) == tuple:

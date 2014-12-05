@@ -1596,25 +1596,29 @@ register_check_parameters(
                       title = ("VPN Tunnel Endpoints"),
                       elements = [
                       IPv4Address(
-                          title = _("IP-Address of Tunnel Endpoint"),
+                          title = _("IP-Address or Name of Tunnel Endpoint"),
+                          help = _("The configured value must match a tunnel reported by the monitored "
+                                   "device."),
                           allow_empty = False,
-                          ),
+                      ),
                       TextAscii(
-                          title = _("Name of Tunnel"),
-                          ),
+                          title = _("Tunnel Alias"),
+                          help = _("You can configure an individual alias here for the tunnel matching "
+                                   "the IP-Address or Name configured in the field above."),
+                      ),
                       MonitoringState(
                           default_value = 2,
-                          title = _("State if this tunnel is not found"),
+                          title = _("State if tunnel is not found"),
                           )]),
-                  add_label = _("Add another Tunnel"),
+                  add_label = _("Add tunnel"),
                   movable = False,
-                  title = _("VPN Tunnel"),
+                  title = _("VPN tunnel specific configuration"),
                   )),
             ( "state",
               MonitoringState(
-                  title = _("Default state if inventorized, unregistered tunnel is not found"),
-                  help = _("Default state if a tunnel, which was inventorized but is not listed in this rule, "
-                      "is not longer present in the snmp data"),
+                  title = _("Default state to report when tunnel can not be found anymore"),
+                  help = _("Default state if a tunnel, which is not listed above in this rule, "
+                           "can no longer be found."),
                   ),
             ),
         ],
@@ -4242,10 +4246,10 @@ register_check_parameters(
     "users",
     _("Number of Users Logged In"),
     Tuple(
-          help = _("This rule defines levels for the number of users logged in on a system."),
+          help = _("This rule defines upper limits for the number of users logged in on a system."),
           elements = [
-              Integer(title = _("Warning if above"), unit = _("users"), default_value = 20),
-              Integer(title = _("Critical if above"), unit = _("users"), default_value = 30)]),
+              Integer(title = _("Warning at"), unit = _("users"), default_value = 20),
+              Integer(title = _("Critical at"), unit = _("users"), default_value = 30)]),
     None, None
 )
 

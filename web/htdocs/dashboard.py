@@ -48,10 +48,10 @@ MAX = -1
 # in order to allow the user to customize this.
 
 screen_margin    = 5              # Distance from the left border of the main-frame to the dashboard area
-dashlet_padding  = 21, 5, 5, 0, 0 # Margin (N, E, S, W, N w/o title) between outer border of dashlet and its content
+dashlet_padding  = 23, 2, 2, 2, 2 # Margin (N, E, S, W, N w/o title) between outer border of dashlet and its content
 corner_overlap   = 22
-raster           = 10, 10        # Raster the dashlet choords are measured in
-dashlet_min_size = 10, 10        # Minimum width and height of dashlets
+raster           = 10            # Raster the dashlet coords are measured in (px)
+dashlet_min_size = 10, 10        # Minimum width and height of dashlets in raster units
 
 # Load plugins in web/plugins/dashboard and declare permissions,
 # note: these operations produce language-specific results and
@@ -431,21 +431,14 @@ def render_dashboard(name):
             html.write('<li><a href="%s">%s</a></li>\n' % (html.makeuri([('edit', 1)]), _('Edit Dashboard')))
 
         else:
-            # Show these options only to the owner of the dashboard
-            html.write('<li><a href="edit_dashboard.py?load_name=%s&back=%s" '
-                       'onmouseover="hide_submenus();" >%s</a></li>\n' %
-                (name, html.urlencode(html.makeuri([])), _('Properties')))
+            #
+            # Add dashlet menu
+            #
 
-            # Links visible during editing
             display = html.var('edit') == '1' and 'block' or 'none'
-            html.write('<li id="control_view" style="display:%s"><a href="javascript:void(0)" '
-                       'onmouseover="hide_submenus();" '
-                       'onclick="toggle_dashboard_edit(false)">%s</a>\n' %
-                            (display, _('Stop Editing')))
-
             html.write('<li id="control_add" class="sublink" style="display:%s" '
-                       'onmouseover="show_submenu(\'control_add\')"><a href="javascript:void(0)">%s</a>\n' %
-                            (display, _('Add dashlet')))
+                       'onmouseover="show_submenu(\'control_add\')"><a href="javascript:void(0)">'
+                       '<img src="images/dashboard_menuarrow.png" />%s</a>\n' % (display, _('Add dashlet')))
 
             # The dashlet types which can be added to the view
             html.write('<ul id="control_add_sub" class="menu sub" style="display:none">\n')
@@ -463,15 +456,37 @@ def render_dashboard(name):
                     url = html.makeuri([('type', ty), ('back', html.makeuri([('edit', '1')]))], filename = 'edit_dashlet.py')
                     if 'add_urlfunc' in dashlet_type:
                         url = dashlet_type['add_urlfunc']()
-                    html.write('<li><a href="%s">%s</a></li>\n' % (url, dashlet_type['title']))
+                    html.write('<li><a href="%s"><img src="images/dashlet_%s.png" />%s</a></li>\n' %
+                                                                (url, ty, dashlet_type['title']))
             html.write('</ul>\n')
 
             html.write('</li>\n')
 
+            #
+            # Properties link
+            #
+
+            html.write('<li><a href="edit_dashboard.py?load_name=%s&back=%s" '
+                       'onmouseover="hide_submenus();" ><img src="images/trans.png" />%s</a></li>\n' %
+                (name, html.urlencode(html.makeuri([])), _('Properties')))
+
+            #
+            # Stop editing
+            #
+
+            display = html.var('edit') == '1' and 'block' or 'none'
+            html.write('<li id="control_view" style="display:%s"><a href="javascript:void(0)" '
+                       'onmouseover="hide_submenus();" '
+                       'onclick="toggle_dashboard_edit(false)"><img src="images/trans.png" />%s</a></li>\n' %
+                            (display, _('Stop Editing')))
+
+            #
             # Enable editing link
+            #
+
             display = html.var('edit') != '1' and 'block' or 'none'
             html.write('<li id="control_edit" style="display:%s"><a href="javascript:void(0)" '
-                       'onclick="toggle_dashboard_edit(true)">%s</a></li>\n' %
+                       'onclick="toggle_dashboard_edit(true)"><img src="images/trans.png" />%s</a></li>\n' %
                             (display, _('Edit Dashboard')))
 
         html.write("</ul>\n")
@@ -488,7 +503,7 @@ def render_dashboard(name):
     html.javascript("""
 var MAX = %d;
 var GROW = %d;
-var grid_size = new vec%s;
+var grid_size = %d;
 var header_height = %d;
 var screen_margin = %d;
 var dashlet_padding = Array%s;
@@ -512,9 +527,10 @@ dashboard_scheduler(1);
 
     html.body_end() # omit regular footer with status icons, etc.
 
-def render_dashlet_content(nr, the_dashlet):
-    html.stash_vars()
-    html.del_all_vars()
+def render_dashlet_content(nr, the_dashlet, stash_html_vars = False):
+    if stash_html_vars:
+        html.stash_vars()
+        html.del_all_vars()
     visuals.add_context_to_uri_vars(the_dashlet)
 
     dashlet_type = dashlet_types[the_dashlet['type']]
@@ -523,7 +539,8 @@ def render_dashlet_content(nr, the_dashlet):
     else:
         dashlet_type['render'](nr, the_dashlet)
 
-    html.unstash_vars()
+    if stash_html_vars:
+        html.unstash_vars()
 
 # Create the HTML code for one dashlet. Each dashlet has an id "dashlet_%d",
 # where %d is its index (in board["dashlets"]). Javascript uses that id
@@ -545,7 +562,7 @@ def render_dashlet(name, board, nr, dashlet, wato_folder, add_url_vars):
             title = '<a href="%s">%s</a>' % (url, _u(title))
         else:
             title = _u(title)
-        html.write('<div class="title" id="dashlet_title_%d">%s</div>' % (nr, title))
+        html.write('<div class="title" id="dashlet_title_%d"><span>%s</span></div>' % (nr, title))
     if dashlet.get("background", True):
         bg = " background"
     else:
@@ -647,7 +664,7 @@ def ajax_dashlet():
     if the_dashlet['type'] not in dashlet_types:
         raise MKGeneralException(_('The requested dashlet type does not exist.'))
 
-    render_dashlet_content(ident, the_dashlet)
+    render_dashlet_content(ident, the_dashlet, stash_html_vars=False)
 
 #.
 #   .--Dashboard List------------------------------------------------------.
@@ -896,6 +913,7 @@ def page_edit_dashlet():
     back_url = html.var('back', 'dashboard.py?name=%s&edit=1' % board)
     next_url = html.var('next', back_url)
     html.context_button(_('Back'), back_url, 'back')
+    html.context_button(_('All Dashboards'), 'edit_dashboards.py', 'dashboard')
     html.end_context_buttons()
 
     vs_general = Dictionary(

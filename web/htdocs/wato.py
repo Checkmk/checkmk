@@ -844,7 +844,7 @@ def mode_folder(phase):
             html.context_button(_("New cluster"), make_link([("mode", "newcluster")]), "new_cluster")
             html.context_button(_("Bulk Import"), make_link_to([("mode", "bulk_import")], g_folder), "bulk_import")
         if config.may("wato.services"):
-            html.context_button(_("Bulk Inventory"), make_link([("mode", "bulkinventory"), ("all", "1")]),
+            html.context_button(_("Bulk Discovery"), make_link([("mode", "bulkinventory"), ("all", "1")]),
                         "inventory")
         if not g_folder.get(".lock_hosts") and config.may("wato.parentscan") and auth_write:
             html.context_button(_("Parent scan"), make_link([("mode", "parentscan"), ("all", "1")]),
@@ -1353,7 +1353,7 @@ def show_hosts(folder):
                 html.button("_bulk_edit", _("Edit"))
                 html.button("_bulk_cleanup", _("Cleanup"))
         if config.may("wato.services"):
-            html.button("_bulk_inventory", _("Inventory"))
+            html.button("_bulk_inventory", _("Discovery"))
         if not g_folder.get(".lock_hosts"):
             if config.may("wato.parentscan"):
                 html.button("_parentscan", _("Parentscan"))
@@ -1442,11 +1442,11 @@ def show_hosts(folder):
         html.icon_button(edit_url, _("Edit the properties of this host"), "edit")
         html.icon_button(params_url, _("View the rule based parameters of this host"), "rulesets")
         if check_host_permissions(hostname, False) == True:
-            msg = _("Edit the services of this host, do an inventory")
+            msg = _("Edit the services of this host, do a service discovery")
             image =  "services"
             if host.get("inventory_failed"):
                 image = "inventory_failed"
-                msg += ". " + _("The inventory of this host failed during a previous bulk inventory.")
+                msg += ". " + _("The service discovery of this host failed during a previous bulk service discovery.")
             html.icon_button(services_url, msg, image)
         if not g_folder.get(".lock_hosts") and config.may("wato.manage_hosts"):
             if config.may("wato.clone_hosts"):
@@ -2066,8 +2066,8 @@ def mode_edithost(phase, new, cluster):
                 return
             elif new:
                 if host.get('tag_agent') != 'ping':
-                    create_result = 'folder', _('Successfully created the host. Now you should do an '
-                                                '<a href="%s">inventory</a> in order to auto-configure '
+                    create_result = 'folder', _('Successfully created the host. Now you should do a '
+                                                '<a href="%s">service discovery</a> in order to auto-configure '
                                                 'all services to be checked on this host.') % \
                                                     make_link([("mode", "inventory"), ("host", hostname)])
                 else:
@@ -2229,6 +2229,7 @@ def mode_rename_host(phase):
         return _("Rename %s %s") % (is_cluster and _("Cluster") or _("Host"), hostname)
 
     elif phase == "buttons":
+        global_buttons()
         html.context_button(_("Host Properties"), make_link([("mode", "edithost"), ("host", hostname)]), "back")
         return
 
@@ -2280,6 +2281,9 @@ def rename_host_in_list(thelist, oldname, newname):
     for nr, element in enumerate(thelist):
         if element == oldname:
             thelist[nr] = newname
+            did_rename = True
+        elif element == '!'+oldname:
+            thelist[nr] = '!'+newname
             did_rename = True
     return did_rename
 
@@ -2592,7 +2596,7 @@ def mode_object_parameters(phase):
                         rulespec = g_rulespecs.get("static_checks:" + checkgroup)
                         if rulespec:
                             url = make_link([('mode', 'edit_ruleset'), ('varname', "static_checks:" + checkgroup), ('host', hostname)])
-                            render_rule_reason(_("Parameters"), url, _("Determined by inventory"), None, False,
+                            render_rule_reason(_("Parameters"), url, _("Determined by discovery"), None, False,
                                        rulespec["valuespec"]._elements[2].value_to_text(serviceinfo["parameters"]))
                         else:
                             render_rule_reason(_("Parameters"), None, "", "", True, _("This check is not configurable via WATO"))
@@ -3683,7 +3687,7 @@ def mode_bulk_import(phase):
 
 def mode_bulk_inventory(phase):
     if phase == "title":
-        return _("Bulk service detection (inventory)")
+        return _("Bulk Service Discovery")
 
     elif phase == "buttons":
         html.context_button(_("Folder"), make_link([("mode", "folder")]), "back")
@@ -3693,8 +3697,8 @@ def mode_bulk_inventory(phase):
         if html.var("_item"):
             if not html.check_transaction():
                 html.write(repr([ 'failed', 0, 0, 0, 0, 0, 0, ]) + "\n")
-                html.write(_("Error during inventory: Maximum number of retries reached. "
-                             "You need to restart the bulk inventory"))
+                html.write(_("Error during discovery: Maximum number of retries reached. "
+                             "You need to restart the bulk service discovery"))
                 return ""
 
             how = html.var("how")
@@ -3842,7 +3846,7 @@ def mode_bulk_inventory(phase):
         # Start interactive progress
         interactive_progress(
             items,
-            _("Bulk inventory"),  # title
+            _("Bulk Service Discovery"),  # title
             [ (_("Total hosts"),      0),
               (_("Failed hosts"),     0),
               (_("Services added"),   0),
@@ -7308,9 +7312,9 @@ def mode_ldap_config(phase):
                     msg = _('Exception: %s') % html.attrencode(e)
 
                 if state:
-                    img = '<img src="images/icon_success.gif" alt="%s" />' % _('Success')
+                    img = '<img src="images/icon_success.png" alt="%s" />' % _('Success')
                 else:
-                    img = '<img src="images/icon_failed.gif" alt="%s" />' % _('Failed')
+                    img = '<img src="images/icon_failed.png" alt="%s" />' % _('Failed')
 
                 table.cell(_("Test"),   title)
                 table.cell(_("State"),   img)
@@ -8865,8 +8869,8 @@ def mode_notifications(phase):
                 analyse_url = html.makeuri([("analyse", str(nr))])
                 context = entry.items()
                 context.sort()
-                tooltip = "".join("%s: %s\n" % e for e in context)
-                html.icon_button(analyse_url, _("Anaylse ruleset with this notification:\n" + tooltip), "analyze")
+                tooltip = "".join(("%s: %s\n" % e).decode('utf-8') for e in context)
+                html.icon_button(analyse_url, _("Anaylse ruleset with this notification:\n%s" % tooltip), "analyze")
                 replay_url = html.makeactionuri([("_replay", str(nr))])
                 html.icon_button(replay_url, _("Replay this notification, send it again!"), "replay")
                 if html.var("analyse") and nr == int(html.var("analyse")):
@@ -12777,7 +12781,7 @@ def mode_edit_auxtag(phase):
     vs_topic = OptionalDropdownChoice(
         title = _("Topic") + "<sup>*</sup>",
         choices = hosttag_topics(hosttags),
-        explicit = TextAscii(),
+        explicit = TextUnicode(),
         otherlabel = _("Create New Topic"),
         default_value = None,
     )
@@ -12903,7 +12907,7 @@ def mode_edit_hosttag(phase):
     vs_topic = OptionalDropdownChoice(
         title = _("Topic"),
         choices = hosttag_topics(hosttags),
-        explicit = TextAscii(),
+        explicit = TextUnicode(),
         otherlabel = _("Create New Topic"),
         default_value = None,
     )
@@ -14486,12 +14490,18 @@ def render_conditions(ruleset, tagspecs, host_list, item_list, varname, folder):
 
         html.write('<li class="condition">')
         alias = config.tag_alias(tag)
+        group_alias = config.tag_group_title(tag)
         if alias:
-            if negate:
-                html.write(_("Host is <b>not</b> of type "))
+            if group_alias:
+                html.write(_("Host") + ": " + group_alias + " " + _("is") + " ")
+                if negate:
+                    html.write("<b>%s</b> " % _("not"))
             else:
-                html.write(_("Host is of type "))
-            html.write("<b>" + alias + "</b>")
+                if negate:
+                    html.write(_("Host has tag"))
+                else:
+                    html.write(_("Host does not have tag"))
+            html.write(" <b>" + alias + "</b>")
         else:
             if negate:
                 html.write(_("Host has <b>not</b> the tag ") + "<tt>" + tag + "</tt>")
@@ -14670,7 +14680,9 @@ def mode_edit_rule(phase, new = False):
             host = html.var("host")
             item = html.has_var("item") and mk_eval(html.var("item")) or NO_ITEM
         try:
-            rule = create_rule(rulespec, host, escape_regex_chars(item))
+            if item != NO_ITEM:
+                item = escape_regex_chars(item)
+            rule = create_rule(rulespec, host, item)
         except Exception, e:
             if phase != "action":
                 html.message(_("Cannot create rule: %s") % e)
@@ -15721,8 +15733,6 @@ def page_user_profile(change_pw=False):
 
             userdb.save_users(users)
             success = True
-
-            html.reload_sidebar()
         except MKUserError, e:
             html.add_user_error(e.varname, e.message)
 
@@ -15757,6 +15767,7 @@ def page_user_profile(change_pw=False):
             html.write('<p>%s</p>' % _('You are required to change your password before proceeding.'))
 
     if success:
+        html.reload_sidebar()
         if change_pw:
             html.message(_("Your password has been changed."))
             html.http_redirect(html.var('_origtarget', 'index.py'))

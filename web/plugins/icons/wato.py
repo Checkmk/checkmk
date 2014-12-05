@@ -39,8 +39,7 @@ def wato_link(folder, site, hostname, where):
         else:
             url += "&mode=edithost"
             help = _("Edit this host")
-        return '<a href="%s"><img class=icon src="images/icon_wato.png" ' \
-               'title="%s"></a>' % (url, help)
+        return '<a href="%s">%s</a>' % (url, html.render_icon('services', help))
     else:
         return ""
 

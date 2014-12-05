@@ -192,7 +192,7 @@ auth_by_http_header = False
 table_row_limit = 100
 
 # Add an icon pointing to the WATO rule to each service
-multisite_draw_ruleicon = False
+multisite_draw_ruleicon = True
 
 # Default downtime configuration
 adhoc_downtime = {}

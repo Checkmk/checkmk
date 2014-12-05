@@ -714,29 +714,3 @@ td.invtree table td {
     background-color: #fff;
 }
 
-/* Popup for adding to visuals (Dashboard, Reports */
-
-div.graph, div.visualadd {
-    position: relative;
-}
-
-div.visualadd {
-    display: inline-block;
-}
-
-div.graph a.visualadd {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-
-    display: block;
-    width: 20px;
-    height: 20px;
-    background-image: url(images/button_add_dashlet_lo.png);
-}
-
-div.graph a.visualadd:hover {
-    background-image: url(images/button_add_dashlet_hi.png);
-    cursor: pointer;
-}
-

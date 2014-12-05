@@ -1387,7 +1387,7 @@ register_rule(group,
                  "log file of your monitoring core."),
         elements = [
             TextUnicode(
-                title = _("Name"),
+                title = _("Service Description"),
                 help = _("The name that will be used in the service description"),
                 allow_empty = False
             ),

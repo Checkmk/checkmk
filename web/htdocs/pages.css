@@ -901,7 +901,7 @@ div.help tt {
 |                 |_|         |_|                                          |
 '-------------------------------------------------------------------------*/
 
-.popup_menu {
+body.main .popup_menu {
     position: absolute;
     bottom: 15px;
     left: 15px;
@@ -919,19 +919,21 @@ div.help tt {
     border-radius: 5px;
 }
 
-.popup_menu img {
+body.main .popup_menu img {
     width: 12px;
     height: auto;
     vertical-align: bottom;
 }
 
-.popup_menu ul {
+body.main .popup_menu ul {
     list-style: none;
     margin: 0;
     padding: 0px 5px 5px 10px;
 }
 
-body.main table.footer .popup_menu a, .popup_menu span {
+body.main .popup_menu a,
+body.main table.footer .popup_menu a,
+body.main .popup_menu span {
     display: block;
     padding-top: 1px;
     padding-bottom: 1px;
@@ -940,16 +942,16 @@ body.main table.footer .popup_menu a, .popup_menu span {
     color: #fff;
 }
 
-.popup_menu span {
+body.main .popup_menu span {
     padding-left: 0px;
     font-weight: bold;
     margin-top: 8px;
 }
 
-.popup_menu a:hover {
+body.main .popup_menu a:hover,
+body.main table.footer .popup_menu a:hover {
     text-decoration: underline;
 }
-
 
 /*--Various----------------------------------------------------------------.
 |                __     __         _                                       |
@@ -992,6 +994,17 @@ div.contextlink.button a {
     width: 135px;
 }
 
+div.log_output {
+    font-family: monospace, sans-serif;
+    box-shadow: 1px 1px 3px #888 inset;
+    overflow-x: scroll;
+    padding: 5px 5px;
+    vertical-align: top;
+    background-color: #fff;
+    color: black;
+    /* below resize option is css3 */
+}
+
 
 /*-------------------------------------------------------------------------.
 |         ____       _                                                     |
@@ -1026,5 +1039,31 @@ table.debug_vars td {
     padding: 2px 6px;
     border: 1px solid #050;
     font-family: courier, monospace;
+}
+
+/* Popup for adding to visuals (Dashboard, Reports */
+
+div.graph, div.visualadd {
+    position: relative;
+}
+
+div.visualadd {
+    display: inline-block;
+}
+
+div.graph a.visualadd {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+
+    display: block;
+    width: 20px;
+    height: 20px;
+    background-image: url(images/button_add_dashlet_lo.png);
+}
+
+div.graph a.visualadd:hover {
+    background-image: url(images/button_add_dashlet_hi.png);
+    cursor: pointer;
 }
 

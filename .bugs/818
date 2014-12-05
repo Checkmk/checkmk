@@ -1,9 +1,9 @@
 Title: check_mk_agent can incorrectly detect postfix on RHEL
 Component: core
-State: open
+Class: nastiness
+State: done
 Date: 2012-10-24 10:19:40
 Targetversion: 1.2.3
-Class: nastiness
 
 osTicket ID 443234
 This probably happens on CentOS too, since it's so similar to RHEL.
@@ -38,3 +38,6 @@ fi
 
 Resolution could be: use postqueue -p instead of mailq, check with 'which postqueue'
 
+
+2014-12-05 17:22:05: changed state open -> done
+Should work now. mailq is not anylonger being used.

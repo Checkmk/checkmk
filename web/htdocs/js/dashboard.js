@@ -591,6 +591,8 @@ function toggle_sizer(nr, sizer_id) {
             dashlet.w = GROW;
         }
         else if (dashlet.w == GROW) {
+            if (!(nr in g_last_absolute_widths))
+                g_last_absolute_widths[nr] = dashlet_obj.clientWidth / grid_size;
             dashlet.w = MAX;
         }
         else if (dashlet.w == MAX) {
@@ -606,6 +608,8 @@ function toggle_sizer(nr, sizer_id) {
             dashlet.h = GROW;
         }
         else if (dashlet.h == GROW) {
+            if (!(nr in g_last_absolute_heights))
+                g_last_absolute_heights[nr] = dashlet_obj.clientHeight / grid_size;
             dashlet.h = MAX;
         }
         else if (dashlet.h == MAX) {

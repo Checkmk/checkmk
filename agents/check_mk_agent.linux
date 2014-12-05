@@ -355,6 +355,8 @@ if type MegaCli >/dev/null ; then
     MegaCli_bin="MegaCli"
 elif type MegaCli64 >/dev/null ; then
     MegaCli_bin="MegaCli64"
+elif type megacli >/dev/null ; then
+    MegaCli_bin="megacli"
 else
     MegaCli_bin="unknown"
 fi

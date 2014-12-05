@@ -4246,10 +4246,10 @@ register_check_parameters(
     "users",
     _("Number of Users Logged In"),
     Tuple(
-          help = _("This rule defines levels for the number of users logged in on a system."),
+          help = _("This rule defines upper limits for the number of users logged in on a system."),
           elements = [
-              Integer(title = _("Warning if above"), unit = _("users"), default_value = 20),
-              Integer(title = _("Critical if above"), unit = _("users"), default_value = 30)]),
+              Integer(title = _("Warning at"), unit = _("users"), default_value = 20),
+              Integer(title = _("Critical at"), unit = _("users"), default_value = 30)]),
     None, None
 )
 

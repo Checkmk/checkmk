@@ -48,7 +48,7 @@ MAX = -1
 # in order to allow the user to customize this.
 
 screen_margin    = 5              # Distance from the left border of the main-frame to the dashboard area
-dashlet_padding  = 21, 5, 5, 0, 0 # Margin (N, E, S, W, N w/o title) between outer border of dashlet and its content
+dashlet_padding  = 23, 2, 2, 2, 2 # Margin (N, E, S, W, N w/o title) between outer border of dashlet and its content
 corner_overlap   = 22
 raster           = 10            # Raster the dashlet coords are measured in (px)
 dashlet_min_size = 10, 10        # Minimum width and height of dashlets in raster units
@@ -560,7 +560,7 @@ def render_dashlet(name, board, nr, dashlet, wato_folder, add_url_vars):
             title = '<a href="%s">%s</a>' % (url, _u(title))
         else:
             title = _u(title)
-        html.write('<div class="title" id="dashlet_title_%d">%s</div>' % (nr, title))
+        html.write('<div class="title" id="dashlet_title_%d"><span>%s</span></div>' % (nr, title))
     if dashlet.get("background", True):
         bg = " background"
     else:

@@ -1,9 +1,9 @@
 Title: cmk --snmpwalk does not always get all oids
 Component: core
-State: open
+Class: nastiness
+State: done
 Date: 2013-09-04 11:27:53
 Targetversion: future
-Class: nastiness
 
 In some cases, on somehow broken devices, the cmk --snmpwalk feature does not
 get complete results. At the moment it walks the standard OIDs 1.2.6.1.2 and
@@ -21,3 +21,5 @@ e.g.
 
 cmk --snmpwalk --extra-oid 1.3.5.1.4.3.5.3.5 HOST
 
+
+2014-12-05 17:58:54: changed state open -> done

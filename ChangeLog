@@ -116,6 +116,7 @@
     * 1681 FIX: cmciii_lcp_fans: Skipping non FAN units now; cleaned up check
     * 1682 FIX: cmciii_lcp_waterflow: Check can now deal with devices with a different setup
     * 1701 FIX: Correctly show absolute level for CPU load in case of warn/crit...
+    * 1454 FIX: megaraid checks: megacli binaries in lowercase (Ubuntu..) are now also detected by the linux agent
 
     Multisite:
     * 1508 Allow input of plugin output and perfdata when faking check results...

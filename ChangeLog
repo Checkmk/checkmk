@@ -134,6 +134,7 @@
     * 1621 Sorting Check_MK* services always on top of services lists
     * 1636 Crash checks now have an icon for viewing and sending a crash dump...
     * 1700 Enable icon for link to host/service parameters per default now...
+    * 1705 Better styling of dashboard designer
     * 1164 FIX: Fixed links from servicegroup overviews to single servicegroups
     * 1166 FIX: Also prevting stylesheet update issues during version updates (just like for JS files)
     * 1481 FIX: Fix broken layout of Host-, Service- and Contactgroup filters

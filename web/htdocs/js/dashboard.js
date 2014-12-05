@@ -28,6 +28,10 @@ var reload_on_resize = {};
 function size_dashlets() {
     var size_info = calculate_dashlets();
     var oDash = null;
+    var oDashTitle = null;
+    var oDashInner = null;
+    var oDashControls = null;
+
     for (var d_number = 0; d_number < size_info.length; d_number++) {
         var dashlet = size_info[d_number];
         var d_left    = dashlet[0];
@@ -37,22 +41,24 @@ function size_dashlets() {
         var disstyle = "block";
 
         // check if dashlet has title and resize its width
-        oDash = document.getElementById("dashlet_title_" + d_number);
+        oDashTitle = document.getElementById("dashlet_title_" + d_number);
         var has_title = false;
-        if (oDash) {
+        if (oDashTitle) {
             has_title = true;
             //if browser window to small prevent js error
             if (d_width <= 20) {
                 d_width = 21;
             }
             // 14 => 9 title padding + empty space on right of dashlet
-            oDash.style.width  = (d_width - 14) + "px";
-            oDash.style.display = disstyle;
+            oDashTitle.style.width  = (d_width - 13) + "px";
+            oDashTitle.style.display = disstyle;
+            oDashTitle.style.left = dashlet_padding[3] + "px";
+            oDashTitle.style.top = dashlet_padding[4] + "px";
         }
 
         // resize outer div
         oDash = document.getElementById("dashlet_" + d_number);
-        if(oDash) {
+        if (oDash) {
             oDash.style.display  = disstyle;
             oDash.style.left     = d_left + "px";
             oDash.style.top      = d_top + "px";
@@ -68,28 +74,45 @@ function size_dashlets() {
         var netto_width  = d_width  - dashlet_padding[1] - dashlet_padding[3];
 
         // resize content div
-        oDash = document.getElementById("dashlet_inner_" + d_number);
-        if(oDash) {
-            oDash.style.display  = disstyle;
+        oDashInner = document.getElementById("dashlet_inner_" + d_number);
+        if (oDashInner) {
+            oDashInner.style.display  = disstyle;
 
-            var old_width  = oDash.clientWidth;
-            var old_height = oDash.clientHeight;
+            var old_width  = oDashInner.clientWidth;
+            var old_height = oDashInner.clientHeight;
 
-            oDash.style.left   = dashlet_padding[3] + "px";
-            oDash.style.top    = top_padding + "px";
+            oDashInner.style.left   = dashlet_padding[3] + "px";
+            oDashInner.style.top    = top_padding + "px";
             if (netto_width > 0)
-                oDash.style.width  = netto_width + "px";
+                oDashInner.style.width  = netto_width + "px";
             if (netto_height > 0)
-                oDash.style.height = netto_height + "px";
+                oDashInner.style.height = netto_height + "px";
 
-            if (old_width != oDash.clientWidth || old_height != oDash.clientHeight) {
+            if (old_width != oDashInner.clientWidth || old_height != oDashInner.clientHeight) {
                 if (!g_resizing
                     || parseInt(g_resizing.parentNode.parentNode.id.replace('dashlet_', '')) != d_number)
-                dashlet_resized(d_number, oDash);
+                dashlet_resized(d_number, oDashInner);
             }
+        }
+
+        // resize controls container when in edit mode
+        oDashControls = document.getElementById("dashlet_controls_" + d_number);
+        if (oDashControls) {
+            set_control_size(oDashControls, d_width, d_height);
         }
     }
     oDash = null;
+    oDashTitle = null;
+    oDashInner = null;
+    oDashControls = null;
+}
+
+function set_control_size(dash_controls, width, height)
+{
+    dash_controls.style.width = (width - dashlet_padding[1] - dashlet_padding[3]) + "px";
+    dash_controls.style.height = (height - dashlet_padding[2] - dashlet_padding[4]) + "px";
+    dash_controls.style.left = dashlet_padding[3] + "px";
+    dash_controls.style.top = dashlet_padding[4] + "px";
 }
 
 function is_dynamic(x) {
@@ -501,6 +524,7 @@ function dashlet_toggle_edit(dashlet, edit) {
         controls.setAttribute('id', 'dashlet_controls_'+id);
         controls.className = 'controls';
         dashlet.appendChild(controls);
+        set_control_size(controls, dashlet.clientWidth, dashlet.clientHeight);
 
         // IE < 9: Without this fix the controls container is not working
         if (is_ie_below_9()) {

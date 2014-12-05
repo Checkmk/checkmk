@@ -1725,18 +1725,18 @@ def check_levels(value, dsname, params, unit="", factor=1.0, scale=1.0, statemar
     # Critical cases
     if crit_upper != None and value >= crit_upper:
         state = 2
-        infotexts.append("critical level at %.2f%s" % (crit_upper / factor / scale, unit))
+        infotexts.append("critical level at %.2f%s" % (crit_upper / scale, unit))
     elif crit_lower != None and value <= crit_lower:
         state = 2
-        infotexts.append("too low: critical level at %.2f%s" % (crit_lower / factor / scale, unit))
+        infotexts.append("too low: critical level at %.2f%s" % (crit_lower / scale, unit))
 
     # Warning cases
     elif warn_upper != None and value >= warn_upper:
         state = 1
-        infotexts.append("warning level at %.2f%s" % (warn_upper / factor / scale, unit))
+        infotexts.append("warning level at %.2f%s" % (warn_upper / scale, unit))
     elif warn_lower != None and value <= warn_lower:
         state = 1
-        infotexts.append("too low: warning level at %.2f%s" % (warn_lower / factor / scale, unit))
+        infotexts.append("too low: warning level at %.2f%s" % (warn_lower / scale, unit))
 
     # OK
     else:

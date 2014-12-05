@@ -431,18 +431,11 @@ def render_dashboard(name):
             html.write('<li><a href="%s">%s</a></li>\n' % (html.makeuri([('edit', 1)]), _('Edit Dashboard')))
 
         else:
-            # Show these options only to the owner of the dashboard
-            html.write('<li><a href="edit_dashboard.py?load_name=%s&back=%s" '
-                       'onmouseover="hide_submenus();" >%s</a></li>\n' %
-                (name, html.urlencode(html.makeuri([])), _('Properties')))
+            #
+            # Add dashlet menu
+            #
 
-            # Links visible during editing
             display = html.var('edit') == '1' and 'block' or 'none'
-            html.write('<li id="control_view" style="display:%s"><a href="javascript:void(0)" '
-                       'onmouseover="hide_submenus();" '
-                       'onclick="toggle_dashboard_edit(false)">%s</a>\n' %
-                            (display, _('Stop Editing')))
-
             html.write('<li id="control_add" class="sublink" style="display:%s" '
                        'onmouseover="show_submenu(\'control_add\')"><a href="javascript:void(0)">%s</a>\n' %
                             (display, _('Add dashlet')))
@@ -468,7 +461,28 @@ def render_dashboard(name):
 
             html.write('</li>\n')
 
+            #
+            # Properties link
+            #
+
+            html.write('<li><a href="edit_dashboard.py?load_name=%s&back=%s" '
+                       'onmouseover="hide_submenus();" >%s</a></li>\n' %
+                (name, html.urlencode(html.makeuri([])), _('Properties')))
+
+            #
+            # Stop editing
+            #
+
+            display = html.var('edit') == '1' and 'block' or 'none'
+            html.write('<li id="control_view" style="display:%s"><a href="javascript:void(0)" '
+                       'onmouseover="hide_submenus();" '
+                       'onclick="toggle_dashboard_edit(false)">%s</a></li>\n' %
+                            (display, _('Stop Editing')))
+
+            #
             # Enable editing link
+            #
+
             display = html.var('edit') != '1' and 'block' or 'none'
             html.write('<li id="control_edit" style="display:%s"><a href="javascript:void(0)" '
                        'onclick="toggle_dashboard_edit(true)">%s</a></li>\n' %

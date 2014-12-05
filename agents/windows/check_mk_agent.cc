@@ -286,6 +286,8 @@ bool verbose_mode               = false;
 bool g_crash_debug              = false;
 bool do_tcp                     = false;
 bool force_tcp_output           = false; // if true, send socket data immediately
+bool do_file                    = false;
+static FILE* fileout;
 
 char g_hostname[256];
 int  g_port                     = CHECK_MK_AGENT_PORT;
@@ -4375,7 +4377,10 @@ void output(SOCKET &out, const char *format, ...)
         }
     }
     else {
-        fwrite(outbuffer, len, 1, stdout);
+        if (do_file)
+            fwrite(outbuffer, len, 1, fileout);
+        else
+            fwrite(outbuffer, len, 1, stdout);
         len = 0;
     }
 }
@@ -4394,12 +4399,13 @@ void output(SOCKET &out, const char *format, ...)
 void usage()
 {
     fprintf(stderr, "Usage: \n"
-            "check_mk_agent version -- show version %s and exit\n"
-            "check_mk_agent install -- install as Windows NT service Check_Mk_Agent\n"
-            "check_mk_agent remove  -- remove Windows NT service\n"
-            "check_mk_agent adhoc   -- open TCP port %d and answer request until killed\n"
-            "check_mk_agent test    -- test output of plugin, do not open TCP port\n"
-            "check_mk_agent debug   -- similar to test, but with lots of debug output\n",
+            "check_mk_agent version         -- show version %s and exit\n"
+            "check_mk_agent install         -- install as Windows NT service Check_Mk_Agent\n"
+            "check_mk_agent remove          -- remove Windows NT service\n"
+            "check_mk_agent adhoc           -- open TCP port %d and answer request until killed\n"
+            "check_mk_agent test            -- test output of plugin, do not open TCP port\n"
+            "check_mk_agent file FILENAME   -- write output of plugin into file, do not open TCP port\n"
+            "check_mk_agent debug           -- similar to test, but with lots of debug output\n",
             check_mk_version, g_port);
     exit(1);
 }
@@ -4414,6 +4420,7 @@ void do_debug()
     SOCKET dummy;
     output_data(dummy);
 }
+
 
 void do_test()
 {
@@ -4780,12 +4787,26 @@ int main(int argc, char **argv)
 
     SetConsoleCtrlHandler((PHANDLER_ROUTINE)ctrl_handler, TRUE);
 
-    if (argc > 2)
+    if ( ( argc > 2) and  (strcmp(argv[1], "file")) )
         usage();
     else if (argc <= 1)
         RunService();
     else if (!strcmp(argv[1], "test"))
         do_test();
+    else if (!strcmp(argv[1], "file")) {
+        if (argc < 3) {
+            fprintf(stderr, "Please specify the name of an output file.\n");
+            exit(1);
+        }
+        fileout = fopen(argv[2], "w");
+        if (!fileout) {
+            fprintf(stderr, "Cannot open %s for writing.\n", argv[2]);
+            exit(1);
+        }
+        do_file = true;
+        do_test();
+        fclose(fileout);
+    }
     else if (!strcmp(argv[1], "adhoc"))
         do_adhoc();
     else if (!strcmp(argv[1], "install"))

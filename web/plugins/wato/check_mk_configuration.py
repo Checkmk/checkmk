@@ -240,7 +240,7 @@ register_configvar(group,
              help = _("When enabled a rule editor icon is displayed for each "
                       "service in the multisite views. It is only displayed if the user "
                       "does have the permission to edit rules."),
-            default_value = False),
+            default_value = True),
     domain = "multisite")
 
 

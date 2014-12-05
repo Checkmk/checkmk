@@ -426,23 +426,12 @@ function toggle_grid() {
     }
 }
 
-function active_anchor(coords) {
-    var active = 0;
-    if (coords.x < 0 && coords.y >= 0)
-        active = 1;
-    else if (coords.x < 0 && coords.y < 0)
-        active = 2;
-    else if (coords.x >= 0 && coords.y < 0)
-        active = 3;
-    return active
-}
-
 // The resize controls are transparent areas at the border of the
 // snapin which give the user the option to dragresize the dashlets
 // in the dimension where absolute sizes are to be used.
 //
 // render top/bottom or left/right areas depending on dimension i
-function render_resize_controls(controls, i, active) {
+function render_resize_controls(controls, i) {
     for (var a = 0; a < 2; a++) {
         var resize = document.createElement('div');
         resize.className = 'resize resize'+i+' resize'+i+'_'+a;
@@ -450,14 +439,14 @@ function render_resize_controls(controls, i, active) {
     }
 }
 
-function render_sizer(controls, id, i, active, size) {
+function render_sizer(controls, nr, i, anchor_id, size) {
     // 0 ~ X, 1 ~ Y
     var sizer = document.createElement('div');
-    sizer.className = 'sizer sizer'+i+' anchor'+active;
+    sizer.className = 'sizer sizer'+i+' anchor'+anchor_id;
 
     // create the sizer label
     var sizer_lbl = document.createElement('div');
-    sizer_lbl.className = 'sizer_lbl sizer_lbl'+i+' anchor'+active;
+    sizer_lbl.className = 'sizer_lbl sizer_lbl'+i+' anchor'+anchor_id;
 
     if (size == MAX) {
         sizer.className += ' max';
@@ -472,7 +461,7 @@ function render_sizer(controls, id, i, active, size) {
     else {
         sizer.className += ' abs';
         sizer.title = 'Fixed size (drag border for resize)';
-        render_resize_controls(controls, i, active);
+        render_resize_controls(controls, i);
     }
 
     // js magic stuff - closures!
@@ -480,31 +469,39 @@ function render_sizer(controls, id, i, active, size) {
         return function() {
             toggle_sizer(dashlet_id, sizer_id);
         };
-    }(id, i);
+    }(nr, i);
     sizer_lbl.onclick = sizer.onclick;
     sizer_lbl.title = sizer.title;
 
     controls.appendChild(sizer);
-    if (size == MAX || size == GROW)
+    if (is_dynamic(size))
         controls.appendChild(sizer_lbl);
 }
 
-function dashlet_toggle_edit(dashlet, edit) {
-    var id = parseInt(dashlet.id.replace('dashlet_', ''));
-    var inner = document.getElementById('dashlet_inner_'+id);
-    var coords = dashlets[id];
+function render_corner_resizers(controls, dashlet_id) {
+    for (var corner_id = 0; corner_id < 4; corner_id++) {
+        var resize = document.createElement('div');
+        resize.className = 'resize resize_corner resize_corner'+corner_id;
+        controls.appendChild(resize);
+    }
+}
+
+function dashlet_toggle_edit(dashlet_obj, edit) {
+    var nr = parseInt(dashlet_obj.id.replace('dashlet_', ''));
+    var inner = document.getElementById('dashlet_inner_'+nr);
+    var dashlet = dashlets[nr];
 
     var edit = edit === undefined ? g_editing : edit;
 
     if (edit) {
         // gray out the inner parts of the dashlet
-        add_class(dashlet, 'edit');
+        add_class(dashlet_obj, 'edit');
 
         // Create the dashlet controls
         var controls = document.createElement('div');
-        controls.setAttribute('id', 'dashlet_controls_'+id);
+        controls.setAttribute('id', 'dashlet_controls_'+nr);
         controls.className = 'controls';
-        dashlet.appendChild(controls);
+        dashlet_obj.appendChild(controls);
 
         // IE < 9: Without this fix the controls container is not working
         if (is_ie_below_9()) {
@@ -512,17 +509,19 @@ function dashlet_toggle_edit(dashlet, edit) {
         }
 
         // Which is the anchor corner?
-        // 0: topleft, 1: topright, 2: bottomright, 3: bottomleft
-        var active = active_anchor(coords);
+        var anchor_id = get_anchor_id(dashlet);
 
-        // Create the size / grow indicators
-        if (has_class(dashlet, 'resizable')) {
+        // Create the size / grow indicators and resizer control elements
+        if (has_class(dashlet_obj, 'resizable')) {
             for (var i = 0; i < 2; i ++) {
                 if (i == 0)
-                    render_sizer(controls, id, i, active, coords.w);
+                    render_sizer(controls, nr, i, anchor_id, dashlet.w);
                 else
-                    render_sizer(controls, id, i, active, coords.h);
+                    render_sizer(controls, nr, i, anchor_id, dashlet.h);
             }
+            
+            if (!is_dynamic(dashlet.w) && !is_dynamic(dashlet.h))
+                render_corner_resizers(controls, nr);
         }
 
         // Create the anchors
@@ -530,7 +529,7 @@ function dashlet_toggle_edit(dashlet, edit) {
             var anchor = document.createElement('a');
             anchor.className = 'anchor anchor'+i;
             anchor.title = 'Currently growing from here';
-            if (active != i) {
+            if (anchor_id != i) {
                 anchor.className += ' off';
                 anchor.title = 'Click to start growing from here';
             }
@@ -540,7 +539,7 @@ function dashlet_toggle_edit(dashlet, edit) {
                 return function() {
                     toggle_anchor(dashlet_id, anchor_id);
                 };
-            }(id, i);
+            }(nr, i);
 
             controls.appendChild(anchor);
         }
@@ -553,7 +552,7 @@ function dashlet_toggle_edit(dashlet, edit) {
             return function() {
                 location.href = 'edit_dashlet.py?name=' + board_name + '&id=' + dashlet_id;
             };
-        }(id, dashboard_name);
+        }(nr, dashboard_name);
         controls.appendChild(edit);
 
         // Add delete dashlet button
@@ -564,15 +563,15 @@ function dashlet_toggle_edit(dashlet, edit) {
             return function() {
                 location.href = 'delete_dashlet.py?name=' + board_name + '&id=' + dashlet_id;
             };
-        }(id, dashboard_name);
+        }(nr, dashboard_name);
         controls.appendChild(del);
 
     } else {
         // make the inner parts visible again
-        remove_class(dashlet, 'edit');
+        remove_class(dashlet_obj, 'edit');
 
         // Remove all dashlet controls
-        var controls = document.getElementById('dashlet_controls_'+id);
+        var controls = document.getElementById('dashlet_controls_'+nr);
         controls.parentNode.removeChild(controls);
     }
 }
@@ -912,7 +911,7 @@ function persist_dashlet_pos(nr) {
     get_url('ajax_dashlet_pos.py?name=' + dashboard_name + '&id=' + nr
             + '&x=' + dashlets[nr].x + '&y=' + dashlets[nr].y
             + '&w=' + dashlets[nr].w + '&h=' + dashlets[nr].h,
-            handle_dashlet_post_response, undefined, null, false);
+            handle_dashlet_post_response, null, undefined, false);
 }
 
 function handle_dashlet_post_response(_unused, response_text) {
@@ -974,6 +973,20 @@ function resize_dashlet_start(event) {
     return true;
 }
 
+function get_horizontal_direction(resizer) {
+    if (has_class(resizer, 'resize0_0') || has_class(resizer, 'resize_corner0') || has_class(resizer, 'resize_corner3'))
+        return 'left';
+    else if (has_class(resizer, 'resize0_1') || has_class(resizer, 'resize_corner1') || has_class(resizer, 'resize_corner2'))
+        return 'right';
+}
+
+function get_vertical_direction(resizer) {
+    if (has_class(resizer, 'resize1_0') || has_class(resizer, 'resize_corner0') || has_class(resizer, 'resize_corner1'))
+        return 'top';
+    else if (has_class(resizer, 'resize1_1') || has_class(resizer, 'resize_corner2') || has_class(resizer, 'resize_corner3'))
+        return 'bottom';
+}
+
 function resize_dashlet(event) {
     if (!event)
         event = window.event;
@@ -998,7 +1011,7 @@ function resize_dashlet(event) {
     var min_w = dashlet_min_size[0] * grid_size;
     var min_h = dashlet_min_size[1] * grid_size;
 
-    if (has_class(g_resizing, 'resize0_0')) {
+    if (get_horizontal_direction(g_resizing) == 'left') {
         // resizing with left border
         var new_x = g_resize_start.x - diff_x;
         if (new_x < 0) {
@@ -1016,7 +1029,7 @@ function resize_dashlet(event) {
             dashlet_obj.style.width = (g_resize_start.w + diff_x) + 'px';
         }
     }
-    else if (has_class(g_resizing, 'resize0_1')) {
+    else if (get_horizontal_direction(g_resizing) == 'right') {
         // resizing with right border
         if (g_resize_start.x + g_resize_start.w - diff_x > board_w) {
             // reached right limit: right screen border
@@ -1031,7 +1044,8 @@ function resize_dashlet(event) {
             dashlet_obj.style.width = (g_resize_start.w - diff_x) + 'px';
         }
     }
-    else if (has_class(g_resizing, 'resize1_0')) {
+
+    if (get_vertical_direction(g_resizing) == 'top') {
         // resizing with top border
         var new_y = g_resize_start.y - diff_y;
         if (new_y < 0) {
@@ -1049,7 +1063,7 @@ function resize_dashlet(event) {
             dashlet_obj.style.height = (g_resize_start.h + diff_y) + 'px';
         }
     }
-    else if (has_class(g_resizing, 'resize1_1')) {
+    else if (get_vertical_direction(g_resizing) == 'bottom') {
         // resizing with bottom border
         if (g_resize_start.y + g_resize_start.h - diff_y >= board_h) {
             // reached bottom limit: bottom screen border

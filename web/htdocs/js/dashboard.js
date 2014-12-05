@@ -524,7 +524,7 @@ function dashlet_toggle_edit(dashlet_obj, edit) {
         var controls = document.createElement('div');
         controls.setAttribute('id', 'dashlet_controls_'+nr);
         controls.className = 'controls';
-        dashlet.appendChild(controls);
+        dashlet_obj.appendChild(controls);
         set_control_size(controls, dashlet_obj.clientWidth, dashlet_obj.clientHeight);
 
         // IE < 9: Without this fix the controls container is not working

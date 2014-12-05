@@ -42,10 +42,8 @@ def check_cmciii_lcp_fans(item, params, info):
     lowlevel = int(re.sub(" .*$", "", info[0][0])) # global low warning
 
     parts = [ info[0][x+1:x+4] for x in range(0, len(info[0]), 4) ]
-    print parts
     for i, (name, value, status) in enumerate(parts):
         if item == i:
-            print value
             rpm, unit = value.split(" ", 1)
             rpm = int(rpm)
 

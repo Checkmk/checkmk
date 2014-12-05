@@ -931,7 +931,8 @@ div.help tt {
     padding: 0px 5px 5px 10px;
 }
 
-body.main table.footer .popup_menu a, .popup_menu span {
+body.main table.footer .popup_menu a,
+.popup_menu span {
     display: block;
     padding-top: 1px;
     padding-bottom: 1px;
@@ -946,7 +947,7 @@ body.main table.footer .popup_menu a, .popup_menu span {
     margin-top: 8px;
 }
 
-.popup_menu a:hover {
+body.main table.footer .popup_menu a:hover {
     text-decoration: underline;
 }
 
@@ -1037,5 +1038,31 @@ table.debug_vars td {
     padding: 2px 6px;
     border: 1px solid #050;
     font-family: courier, monospace;
+}
+
+/* Popup for adding to visuals (Dashboard, Reports */
+
+div.graph, div.visualadd {
+    position: relative;
+}
+
+div.visualadd {
+    display: inline-block;
+}
+
+div.graph a.visualadd {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+
+    display: block;
+    width: 20px;
+    height: 20px;
+    background-image: url(images/button_add_dashlet_lo.png);
+}
+
+div.graph a.visualadd:hover {
+    background-image: url(images/button_add_dashlet_hi.png);
+    cursor: pointer;
 }
 

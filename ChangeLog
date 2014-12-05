@@ -221,6 +221,7 @@
     * 1610 FIX: Hostname translation now also works for incoming SNMP traps
     * 1643 FIX: Improved error handling of exceptions when processing log lines
     * 1644 FIX: Fixed matching dynamic number of regex match groups...
+    * 1698 FIX: Fix specifying explicit path to unix socket for check_mkeventd
 
     Livestatus:
     * 1613 FIX: Fixed invalid json format in Stats query with requested heaeders...

@@ -2003,7 +2003,13 @@ register_rule(
             ( "remote",
               Alternative(
                   title = _("Access to the Event Console"),
+                  style = "dropdown",
                   elements = [
+                      FixedValue(
+                          None,
+                          title = _("Connect to the local Event Console"),
+                          totext = _("local connect"),
+                      ),
                       Tuple(
                           elements = [
                               TextAscii(

@@ -7,8 +7,9 @@ def check_mkevents_arguments(params):
         remote = params["remote"]
         if type(remote) == tuple:
             args += "-H %s:%d " % (quote_shell_string(remote[0]), remote[1])
-        else:
-            args += "-H %s " % quote_shell_string(remote)
+        elif remote:
+            args += "-s %s " % quote_shell_string(remote)
+
     if params.get("ignore_acknowledged"):
         args += "-a "
 

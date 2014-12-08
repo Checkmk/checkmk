@@ -4587,7 +4587,7 @@ def create_random_hosts(folder, count, folders, levels):
 #   '----------------------------------------------------------------------'
 def mode_auditlog(phase):
     if phase == "title":
-        return _("Audit logfile")
+        return _("Audit Log")
 
     elif phase == "buttons":
         home_button()
@@ -4596,7 +4596,7 @@ def mode_auditlog(phase):
             html.context_button(_("Download"),
                 html.makeactionuri([("_action", "csv")]), "download")
             if config.may("wato.edit"):
-                html.context_button(_("Clear Logfile"),
+                html.context_button(_("Clear Log"),
                     html.makeactionuri([("_action", "clear")]), "trash")
         return
 
@@ -4612,7 +4612,7 @@ def mode_auditlog(phase):
 
     audit = parse_audit_log("audit")
     if len(audit) == 0:
-        html.write("<div class=info>" + _("The audit logfile is empty.") + "</div>")
+        html.write("<div class=info>" + _("The audit log is empty.") + "</div>")
     else:
         render_audit_log(audit, "audit")
 
@@ -4648,26 +4648,31 @@ def mode_changelog(phase):
 
         if config.may("wato.activate") and (
                 (not is_distributed() and log_exists("pending"))
-            or  (is_distributed() and global_replication_state() == "dirty")):
+            or (is_distributed() and global_replication_state() == "dirty")):
             html.context_button(_("Activate Changes!"),
                 html.makeactionuri([("_action", "activate")]),
                              "apply", True, id="act_changes_button")
+            if get_last_wato_snapshot_file():
+                html.context_button(_("Discard Changes!"),
+                    html.makeactionuri([("_action", "discard")]),
+                                 "discard", id="discard_changes_button")
 
         if is_distributed():
             html.context_button(_("Site Configuration"), make_link([("mode", "sites")]), "sites")
 
         if config.may("wato.auditlog"):
-            html.context_button(_("Audit log"), make_link([("mode", "auditlog")]), "auditlog")
+            html.context_button(_("Audit Log"), make_link([("mode", "auditlog")]), "auditlog")
 
     elif phase == "action":
-
-        # Let host validators do their work
-        defective_hosts = validate_all_hosts([], force_all = True)
-        if defective_hosts:
-            raise MKUserError(None, _("You cannot activate changes while some hosts have "
-              "an invalid configuration: ") + ", ".join(
-                [ '<a href="%s">%s</a>' % (make_link([("mode", "edithost"), ("host", hn)]), hn)
-                  for hn in defective_hosts.keys() ]))
+        action = html.var("_action")
+        if action == "activate":
+            # Let host validators do their work
+            defective_hosts = validate_all_hosts([], force_all = True)
+            if defective_hosts:
+                raise MKUserError(None, _("You cannot activate changes while some hosts have "
+                  "an invalid configuration: ") + ", ".join(
+                    [ '<a href="%s">%s</a>' % (make_link([("mode", "edithost"), ("host", hn)]), hn)
+                      for hn in defective_hosts.keys() ]))
 
         # If there are changes by other users, we need a confirmation
         transaction_already_checked = False
@@ -4678,10 +4683,18 @@ def mode_changelog(phase):
                 table += '<tr><td>%s: </td><td>%d %s</td></tr>' % \
                    (config.alias_of_user(user_id), count, _("changes"))
             table += '</table>'
-            c = wato_confirm(_("Confirm activating foreign changes"),
-              '<img class=foreignchanges src="images/icon_foreign_changes.png">' +
-              _("There are some changes made by your colleagues that you will "
-                "activate if you proceed:") + table +
+
+            if action == "activate":
+                title = _("Confirm activating foreign changes")
+                text  = _("There are some changes made by your colleagues that you will "
+                          "activate if you proceed:")
+            else:
+                title = _("Confirm discarding foreign changes")
+                text  = _("There are some changes made by your colleagues that you will "
+                          "discard if you proceed:")
+
+            c = wato_confirm(title,
+              '<img class=foreignchanges src="images/icon_foreign_changes.png">' + text + table +
               _("Do you really want to proceed?"))
             if c == False:
                 return ""
@@ -4690,10 +4703,21 @@ def mode_changelog(phase):
             transaction_already_checked = True
 
         if changes and not config.may("wato.activateforeign"):
-            raise MKAuthException(
-              _("Sorry, you are not allowed to activate "
-              "changes of other users."))
+            raise MKAuthException(_("Sorry, you are not allowed to activate "
+                                    "changes of other users."))
 
+        if action == "discard":
+            # Now remove all currently pending changes by simply restoring the last automatically
+            # taken snapshot. Then activate the configuration. This should revert all pending changes.
+            file_to_restore = get_last_wato_snapshot_file()
+            if not file_to_restore:
+                raise MKUserError(None, _('There is no WATO snapshot to be restored.'))
+            log_pending(LOCALRESTART, None, "changes-discarded",
+                 _("Discarded pending changes (Restored %s)") % html.attrencode(file_to_restore))
+            extract_snapshot(file_to_restore)
+            activate_changes()
+            log_commit_pending()
+            return None, _("Successfully discarded all pending changes.")
 
         # Give hooks chance to do some pre-activation things (and maybe stop
         # the activation)
@@ -4726,7 +4750,7 @@ def mode_changelog(phase):
                             response = str(e)
 
                     if response == True:
-                        return None
+                        return
                     else:
                         raise MKUserError(None, _("Error on remote access to site: %s") % response)
 
@@ -4945,6 +4969,12 @@ def mode_changelog(phase):
             render_audit_log(pending, "pending", hilite_others=True)
             html.write('</div>')
 
+def get_last_wato_snapshot_file():
+    for snapshot_file in get_snapshots():
+        status = get_snapshot_status(snapshot_file)
+        if status['type'] == 'automatic' and not status['broken']:
+            return snapshot_file
+
 # Determine if other users have made pending changes
 def foreign_changes():
     changes = {}
@@ -5064,11 +5094,11 @@ def clear_audit_log():
         os.rename(path, newpath)
 
 def clear_audit_log_after_confirm():
-    c = wato_confirm(_("Confirm deletion of audit logfile"),
-                     _("Do you really want to clear audit logfile?"))
+    c = wato_confirm(_("Confirm deletion of audit log"),
+                     _("Do you really want to clear the audit log?"))
     if c:
         clear_audit_log()
-        return None, _("Cleared audit logfile.")
+        return None, _("Cleared audit log.")
     elif c == False: # not yet confirmed
         return ""
     else:
@@ -5215,7 +5245,7 @@ def render_audit_log(log, what, with_filename = False, hilite_others=False):
     htmlcode = ''
     if what == 'audit':
         log, times = paged_log(log)
-        empty_msg = _("The logfile is empty. No host has been created or changed yet.")
+        empty_msg = _("The log is empty. No host has been created or changed yet.")
     elif what == 'pending':
         empty_msg = _("No pending changes, monitoring server is up to date.")
 
@@ -5224,7 +5254,7 @@ def render_audit_log(log, what, with_filename = False, hilite_others=False):
         return
 
     elif what == 'audit':
-        htmlcode += "<h3>" + _("Audit logfile for %s") % fmt_date(times[0]) + "</h3>"
+        htmlcode += "<h3>" + _("Audit log for %s") % fmt_date(times[0]) + "</h3>"
 
     elif what == 'pending':
         if is_distributed():
@@ -6673,6 +6703,19 @@ def mode_snapshot_detail(phase):
         restore_url = make_action_link([("mode", "snapshot"), ("_restore_snapshot", snapshot_name)])
         html.buttonlink(restore_url, _("Restore Snapshot"))
 
+def get_snapshots():
+    snapshots = []
+    try:
+        for f in os.listdir(snapshot_dir):
+            if os.path.isfile(snapshot_dir + f):
+                snapshots.append(f)
+        snapshots.sort(reverse=True)
+    except OSError:
+        pass
+    return snapshots
+
+def extract_snapshot(snapshot_file):
+    multitar.extract_from_file(snapshot_dir + snapshot_file, backup_domains)
 
 def mode_snapshot(phase):
     if phase == "title":
@@ -6684,13 +6727,12 @@ def mode_snapshot(phase):
                 make_action_link([("mode", "snapshot"),("_factory_reset","Yes")]), "factoryreset")
         return
 
-    snapshots = []
-    if os.path.exists(snapshot_dir):
-        if not html.var("_restore_snapshot") and os.path.exists("%s/uploaded_snapshot" % snapshot_dir):
-            os.remove("%s/uploaded_snapshot" % snapshot_dir)
-        for f in os.listdir(snapshot_dir):
-            snapshots.append(f)
-    snapshots.sort(reverse=True)
+    # Cleanup incompletely processed snapshot upload
+    if os.path.exists(snapshot_dir) and not html.var("_restore_snapshot") \
+       and os.path.exists("%s/uploaded_snapshot" % snapshot_dir):
+        os.remove("%s/uploaded_snapshot" % snapshot_dir)
+
+    snapshots = get_snapshots()
 
     # Generate valuespec for snapshot options
     # Sort domains by group
@@ -6861,7 +6903,7 @@ def mode_snapshot(phase):
                 if status["type"] == "legacy":
                     multitar.extract_from_file(snapshot_dir + snapshot_file, backup_paths)
                 else:
-                    multitar.extract_from_file(snapshot_dir + snapshot_file, backup_domains)
+                    extract_snapshot(snapshot_file)
                 log_pending(SYNCRESTART, None, "snapshot-restored",
                      _("Restored snapshot %s") % html.attrencode(snapshot_file))
                 return None, _("Successfully restored snapshot.")
@@ -6883,12 +6925,7 @@ def mode_snapshot(phase):
         return None
 
     else:
-        snapshots = []
-        if os.path.exists(snapshot_dir):
-            for f in os.listdir(snapshot_dir):
-                if os.path.isfile(snapshot_dir + f):
-                    snapshots.append(f)
-        snapshots.sort(reverse=True)
+        snapshots = get_snapshots()
 
         # Render snapshot domain options
         html.begin_form("create_snapshot", method="POST")
@@ -7340,8 +7377,15 @@ def mode_ldap_config(phase):
 #   '----------------------------------------------------------------------'
 
 def mode_globalvars(phase):
+    search = html.var("search")
+    if search != None:
+        search = search.strip().lower()
+
     if phase == "title":
-        return _("Global configuration settings for Check_MK")
+        if search:
+            return _("Global configuration settings matching %s") % html.attrencode(search)
+        else:
+            return _("Global configuration settings for Check_MK")
 
     elif phase == "buttons":
         global_buttons()
@@ -7399,11 +7443,24 @@ def mode_globalvars(phase):
         else:
             return
 
-    render_global_configuration_variables(default_values, current_settings)
+    render_global_configuration_variables(default_values, current_settings, search=search)
 
-def render_global_configuration_variables(default_values, current_settings, show_all  = False):
+def render_global_configuration_variables(default_values, current_settings, show_all=False, search=None):
     groupnames = g_configvar_groups.keys()
     groupnames.sort()
+
+    html.begin_form("search")
+    html.write(_("Search for settings: "))
+    html.text_input("search", size=32)
+    html.hidden_fields()
+    html.hidden_field("mode", "globalvars")
+    html.set_focus("search")
+    html.write(" ")
+    html.button("_do_seach", _("Search"))
+    html.end_form()
+    html.write('<br>')
+
+    at_least_one_painted = False
     html.write('<div class=globalvars>')
     for groupname in groupnames:
         header_is_painted = False # needed for omitting empty groups
@@ -7419,15 +7476,25 @@ def render_global_configuration_variables(default_values, current_settings, show
                 else:
                     continue
 
+            help_text  = type(valuespec.help())  == unicode and valuespec.help().encode("utf-8")  or valuespec.help() or ''
+            title_text = type(valuespec.title()) == unicode and valuespec.title().encode("utf-8") or valuespec.title()
+
+            if search and search not in groupname \
+                           and search not in domain \
+                           and search not in varname \
+                           and search not in help_text \
+                           and search not in title_text:
+                continue # skip variable when search is performed and nothing matches
+            at_least_one_painted = True
+
             if not header_is_painted:
-                forms.header(groupname, isopen=False)
+                # always open headers when searching
+                forms.header(groupname, isopen=search)
                 header_is_painted = True
 
             defaultvalue = default_values.get(varname, valuespec.default_value())
 
             edit_url = make_link([("mode", "edit_configvar"), ("varname", varname), ("site", html.var("site", ""))])
-            help_text  = type(valuespec.help())  == unicode and valuespec.help().encode("utf-8")  or valuespec.help() or ''
-            title_text = type(valuespec.title()) == unicode and valuespec.title().encode("utf-8") or valuespec.title()
             title = '<a href="%s" class=%s title="%s">%s</a>' % \
                     (edit_url, varname in current_settings and '"modified"' or '""',
                      html.strip_tags(help_text), title_text)
@@ -7458,7 +7525,11 @@ def render_global_configuration_variables(default_values, current_settings, show
                     "snapin_switch_" + (defaultvalue and "on" or "off"))
                 else:
                     html.write('<a href="%s">%s</a>' % (edit_url, to_text))
-    forms.end()
+
+        if header_is_painted:
+            forms.end()
+    if not at_least_one_painted:
+        html.message(_('Did not find any global setting matching your search.'))
     html.write('</div>')
 
 
@@ -10070,7 +10141,7 @@ def mode_edit_site_globals(phase):
         html.show_error(_("This site is not a replication slave. You cannot configure specific settings for it."))
         return
 
-    render_global_configuration_variables(default_values, current_settings, show_all = True)
+    render_global_configuration_variables(default_values, current_settings, show_all=True)
 
 def create_site_globals_file(siteid, tmp_dir):
     if not os.path.exists(tmp_dir):
@@ -13802,8 +13873,8 @@ def mode_rulesets(phase, group=None):
         help = _("Here you can create explicit checks that are not being created by the automatic service discovery.")
         only_used = False
     elif search != None:
-        title = _("Rules matching ") + search
-        help = _("All rules that contain '%s' in their name") % search
+        title = _("Rules matching ") + html.attrencode(search)
+        help = _("All rules that contain '%s' in their name") % html.attrencode(search)
         only_used = False
     else:
         title, help = g_rulegroups.get(group, (group, None))
@@ -18432,7 +18503,7 @@ def load_plugins():
          [ "admin", ])
 
     config.declare_permission("wato.auditlog",
-         _("Audit log"),
+         _("Audit Log"),
          _("Access to the historic audit log. A user with write "
            "access can delete the audit log. "
            "The currently pending changes can be seen by all users "

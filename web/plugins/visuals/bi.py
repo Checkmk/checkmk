@@ -75,10 +75,10 @@ class BITextFilter(Filter):
         html.text_input(self.htmlvars[0])
 
     def heading_info(self):
-        return html.var(self.htmlvars[0])
+        return html.var_utf8(self.htmlvars[0])
 
     def filter_table(self, rows):
-        val = html.var(self.htmlvars[0])
+        val = html.var_utf8(self.htmlvars[0])
         if not val:
             return rows
         if self.how == "regex":

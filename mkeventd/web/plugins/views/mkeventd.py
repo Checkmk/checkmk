@@ -334,6 +334,23 @@ if mkeventd_enabled:
         "paint"   : lambda row: ("", row["event_text"].replace("\x01","<br>")),
     }
 
+    def paint_ec_match_groups(row):
+        groups = row["event_match_groups"]
+        if groups:
+            code = ""
+            for text in groups:
+                code += '<span>%s</span>' % text
+            return "matchgroups", code
+        else:
+            return "", ""
+
+    multisite_painters["event_match_groups"] = {
+        "title"   : _("Match Groups"),
+        "short"   : _("Match"),
+        "columns" : ["event_match_groups"],
+        "paint"   : paint_ec_match_groups,
+    }
+
     multisite_painters["event_first"] = {
         "title"   : _("Time of first occurrance of this serial"),
         "short"   : _("First"),
@@ -906,6 +923,7 @@ if mkeventd_enabled:
             ('host_contacts', None, ''),
             ('host_icons', None, ''),
             ('event_text', None, ''),
+            ('event_match_groups', None, ''),
             ('event_comment', None, ''),
             ('event_owner', None, ''),
             ('event_first', None, ''),
@@ -1002,6 +1020,7 @@ if mkeventd_enabled:
             ('event_state', None, ''),
             ('event_host', 'ec_history_of_host', ''),
             ('event_text', None, ''),
+            ('event_match_groups', None, ''),
             ('event_comment', None, ''),
             ('event_owner', None, ''),
             ('event_first', None, ''),

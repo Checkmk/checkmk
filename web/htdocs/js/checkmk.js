@@ -573,8 +573,8 @@ function create_graph(data, params) {
 
         // Add the control for adding the graph to a dashboard
         var visualadd = document.createElement('a');
-        visualadd.title = 'Add to dashboard';
-        visualadd.setAttribute('class', 'visualadd');
+        visualadd.title = 'Add this view to...';
+        visualadd.className = 'visualadd';
         visualadd.onclick = function(host, service, view, source) {
             return function(event) {
                 toggle_add_to_visual(event, this, 'pnpgraph',
@@ -2301,7 +2301,6 @@ function add_dashboard_response_handler(data, response_text)
 }
 
 function fix_visualadd_menu_position(event, menu) {
-    //var target = getTarget(event);
     //
     //// When menu is out of screen on the right, move to left
     //if (menu.offsetLeft + menu.clientWidth > pageWidth()) {
@@ -2309,11 +2308,16 @@ function fix_visualadd_menu_position(event, menu) {
     //    menu.style.right = 'auto';
     //}
 
-    //// When menu is out of screen on the top, move to bottom
-    //if (menu.offsetTop < 0) {
-    //    menu.style.top = (menu.offsetTop + menu.clientHeight) + 'px';
-    //    menu.style.bottom = 'auto';
-    //}
+    // menu.offsetTop does not take whole page offset into account, because
+    // it is positioned relative to another element. Take this into account
+    var offset_top = menu.offsetTop + menu.offsetParent.offsetTop;
+
+    // When menu is out of screen on the top, move to bottom
+    console.log(offset_top)
+    if (offset_top < 0) {
+        menu.style.top = (menu.offsetTop + menu.clientHeight) + 'px';
+        menu.style.bottom = 'auto';
+    }
 }
 
 function add_to_visual(visual_type, name)

@@ -935,14 +935,18 @@ register_rule(group,
                          help = _("You can specify a hostname or IP address different from the IP address "
                                   "of the host as configured in your host properties."))),
                    ( "port",
-                     TextAscii(
-                         title = _("TCP Port to connect to"),
-                         help = _("The TCP Port the SMTP server is listening on. "
-                                  "The default is <tt>25</tt>."),
-                         size = 5,
-                         allow_empty = False,
-                         default_value = "25",
-                     )
+                     Transform(
+                         Integer(
+                             title = _("TCP Port to connect to"),
+                             help = _("The TCP Port the SMTP server is listening on. "
+                                      "The default is <tt>25</tt>."),
+                             size = 5,
+                             minvalue = 1,
+                             maxvalue = 65535,
+                             default_value = "25",
+                         ),
+                         forth = int,
+                      )
                    ),
                    ( "ip_version",
                      Alternative(

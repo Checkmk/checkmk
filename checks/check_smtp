@@ -32,7 +32,8 @@ def check_smtp_arguments(params):
         args += ' -e %s' % quote_shell_string(settings["expect"])
 
     if "port" in settings:
-        args += ' -p %s' % quote_shell_string(settings["port"])
+        port = int(settings["port"]) # ValueSpec was broken, convert to int
+        args += ' -p %d' % port
 
     if "ip_version" in settings:
         if settings['ip_version'] == 'ipv4':

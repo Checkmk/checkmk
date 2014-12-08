@@ -4587,7 +4587,7 @@ def create_random_hosts(folder, count, folders, levels):
 #   '----------------------------------------------------------------------'
 def mode_auditlog(phase):
     if phase == "title":
-        return _("Audit logfile")
+        return _("Audit Log")
 
     elif phase == "buttons":
         home_button()
@@ -4596,7 +4596,7 @@ def mode_auditlog(phase):
             html.context_button(_("Download"),
                 html.makeactionuri([("_action", "csv")]), "download")
             if config.may("wato.edit"):
-                html.context_button(_("Clear Logfile"),
+                html.context_button(_("Clear Log"),
                     html.makeactionuri([("_action", "clear")]), "trash")
         return
 
@@ -4612,7 +4612,7 @@ def mode_auditlog(phase):
 
     audit = parse_audit_log("audit")
     if len(audit) == 0:
-        html.write("<div class=info>" + _("The audit logfile is empty.") + "</div>")
+        html.write("<div class=info>" + _("The audit log is empty.") + "</div>")
     else:
         render_audit_log(audit, "audit")
 
@@ -4661,7 +4661,7 @@ def mode_changelog(phase):
             html.context_button(_("Site Configuration"), make_link([("mode", "sites")]), "sites")
 
         if config.may("wato.auditlog"):
-            html.context_button(_("Audit log"), make_link([("mode", "auditlog")]), "auditlog")
+            html.context_button(_("Audit Log"), make_link([("mode", "auditlog")]), "auditlog")
 
     elif phase == "action":
         action = html.var("_action")
@@ -5094,11 +5094,11 @@ def clear_audit_log():
         os.rename(path, newpath)
 
 def clear_audit_log_after_confirm():
-    c = wato_confirm(_("Confirm deletion of audit logfile"),
-                     _("Do you really want to clear audit logfile?"))
+    c = wato_confirm(_("Confirm deletion of audit log"),
+                     _("Do you really want to clear the audit log?"))
     if c:
         clear_audit_log()
-        return None, _("Cleared audit logfile.")
+        return None, _("Cleared audit log.")
     elif c == False: # not yet confirmed
         return ""
     else:
@@ -5245,7 +5245,7 @@ def render_audit_log(log, what, with_filename = False, hilite_others=False):
     htmlcode = ''
     if what == 'audit':
         log, times = paged_log(log)
-        empty_msg = _("The logfile is empty. No host has been created or changed yet.")
+        empty_msg = _("The log is empty. No host has been created or changed yet.")
     elif what == 'pending':
         empty_msg = _("No pending changes, monitoring server is up to date.")
 
@@ -5254,7 +5254,7 @@ def render_audit_log(log, what, with_filename = False, hilite_others=False):
         return
 
     elif what == 'audit':
-        htmlcode += "<h3>" + _("Audit logfile for %s") % fmt_date(times[0]) + "</h3>"
+        htmlcode += "<h3>" + _("Audit log for %s") % fmt_date(times[0]) + "</h3>"
 
     elif what == 'pending':
         if is_distributed():
@@ -18468,7 +18468,7 @@ def load_plugins():
          [ "admin", ])
 
     config.declare_permission("wato.auditlog",
-         _("Audit log"),
+         _("Audit Log"),
          _("Access to the historic audit log. A user with write "
            "access can delete the audit log. "
            "The currently pending changes can be seen by all users "

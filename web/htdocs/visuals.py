@@ -1179,7 +1179,7 @@ def get_single_info_keys(visual):
 def get_singlecontext_html_vars(visual):
     vars = []
     for key in get_single_info_keys(visual):
-        vars.append((key, html.var(key, visual['context'].get(key))))
+        vars.append((key, html.var_utf8(key, visual['context'].get(key))))
     return vars
 
 # Collect all visuals that share a context with visual. For example

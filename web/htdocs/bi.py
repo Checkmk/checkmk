@@ -1405,7 +1405,7 @@ def ajax_set_assumption():
     save_assumptions()
 
 def ajax_save_treestate():
-    path_id = html.var("path")
+    path_id = html.var_utf8("path")
     current_ex_level, path = path_id.split(":", 1)
     current_ex_level = int(current_ex_level)
 
@@ -1419,9 +1419,9 @@ def ajax_save_treestate():
     save_ex_level(current_ex_level)
 
 def ajax_render_tree():
-    aggr_group = html.var("group")
+    aggr_group = html.var_utf8("group")
     reqhosts = [ tuple(sitehost.split('#')) for sitehost in html.var("reqhosts").split(',') ]
-    aggr_title = html.var("title")
+    aggr_title = html.var_utf8("title")
     omit_root = not not html.var("omit_root")
     boxes = not not html.var("boxes")
     only_problems = not not html.var("only_problems")

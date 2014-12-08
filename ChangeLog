@@ -186,6 +186,7 @@
     * 1683 FIX: Replaced a lot of old GIF images with better looking PNG images
     * 1687 FIX: Add visual to dashboard menu can now be closed with click anywhere on page
     * 1709 FIX: Fix exception when a non-Ascii character is part of the variable part of a view title
+    * 1691 FIX: Fixed problem when watching BI aggregations with umlauts in titles or group name
 
     WATO:
     * 1170 Added buttons to move rules to top/bottom of the list to ruleset edit dialog

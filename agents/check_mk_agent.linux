@@ -529,7 +529,7 @@ fi
 # Check status of OMD sites
 if type omd >/dev/null
 then
-    run_cached omd_status 60 "echo '<<<omd_status>>>' ; omd status --bare --auto"
+    run_cached -s omd_status 60 "omd status --bare --auto"
 fi
 
 

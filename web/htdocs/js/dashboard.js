@@ -473,12 +473,12 @@ function render_sizer(controls, nr, i, anchor_id, size) {
 
     if (size == MAX) {
         sizer.className += ' max';
-        sizer_lbl.innerHTML = 'MAX';
+        //sizer_lbl.innerHTML = 'MAX';
         sizer.title = 'Use maximum available space in this direction';
     }
     else if (size == GROW) {
         sizer.className += ' grow';
-        sizer_lbl.innerHTML = 'GROW';
+        //sizer_lbl.innerHTML = 'GROW';
         sizer.title = 'Grow in this direction';
     }
     else {

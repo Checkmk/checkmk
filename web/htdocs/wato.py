@@ -7208,10 +7208,16 @@ def mode_ldap_config(phase):
     html.write('<div id=ldap>')
     html.write('<table><tr><td>')
     html.begin_form('ldap_config', method = "POST", action = 'wato.py?mode=ldap_config')
-    forms.header(_('LDAP Settings'))
+    need_header = True
     for (var, valuespec) in vs:
         value = current_settings.get(var, valuespec.default_value())
-        forms.section(valuespec.title())
+        if isinstance(valuespec, Dictionary):
+            valuespec._render = "form"
+        else:
+            if need_header:
+                forms.header(_('Other Settings'))
+                need_header = False
+            forms.section(valuespec.title())
         valuespec.render_input(var, value)
         html.help(valuespec.help())
     forms.end()

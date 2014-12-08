@@ -27,9 +27,15 @@
 import sys, getopt, os, time, random, poplib, imaplib, smtplib, email
 import traceback, socket, re
 
+def parse_exception(e):
+    e = str(e)
+    if e[0] == '{':
+        e = "%d - %s" % eval(e).values()[0]
+    return str(e)
+
 def bail_out(rc, s):
-    stxt = ['OK', 'WARN', 'CRIT', 'UNKN'][rc]
-    sys.stdout.write('%s - %s\n' % (stxt, s))
+    stxt = ['OK', 'WARN', 'CRIT', 'UNKNOWN'][rc]
+    sys.stdout.write('%s - %s\n' % (stxt, parse_exception(s)))
     sys.exit(rc)
 
 def usage(msg=None):
@@ -78,8 +84,8 @@ OPTIONS:
                           might make your mailbox grow when you not clean it up
                           manually.
 
-  -d              Enable debug mode
-  -h, --help      Show this help message and exit
+  -d, --debug             Enable debug mode
+  -h, --help              Show this help message and exit
 
 """)
     sys.exit(1)
@@ -88,7 +94,7 @@ short_options = 'dh'
 long_options  = ['smtp-server=', 'smtp-port=', 'smtp-username=', 'smtp-password=',
     'smtp-tls', 'fetch-protocol=', 'fetch-server=', 'fetch-port=', 'fetch-username=',
     'fetch-password=', 'fetch-ssl', 'mail-from=', 'mail-to=', 'warning=', 'critical=',
-    'connect-timeout=', 'delete-messages', 'help', 'status-dir=', 'status-suffix=']
+    'connect-timeout=', 'delete-messages', 'help', 'status-dir=', 'status-suffix=', "debug", ]
 
 required_params = [
     'smtp-server', 'fetch-server', 'fetch-username', 'fetch-password',
@@ -101,7 +107,7 @@ except getopt.GetoptError, err:
     sys.stderr.write("%s\n" % err)
     sys.exit(1)
 
-debug           = False
+opt_debug       = False
 smtp_server     = None
 smtp_port       = None
 smtp_user       = None
@@ -125,8 +131,8 @@ status_suffix   = None
 for o,a in opts:
     if o in [ '-h', '--help' ]:
         usage()
-    elif o == '-d':
-        debug = True
+    elif o in [ '-d', '--debug' ]:
+        opt_debug = True
     elif o == '--smtp-server':
         smtp_server = a
     elif o == '--smtp-port':
@@ -248,7 +254,7 @@ def fetch_mails():
                         ty, data = g_M.fetch(num, '(RFC822)')
                         mails[num] = email.message_from_string(data[0][1])
                     except Exception, e:
-                        raise Exception('Failed to fetch mail %s (%s). Available messages: %r' % (num, e, messages))
+                        raise Exception('Failed to fetch mail %s (%s). Available messages: %r' % (num, parse_exception(e), messages))
 
         # Now filter out the messages for this check
         pattern = re.compile('(?:Re: )?Check_MK-Mail-Loop ([^\s]+) ([^\s]+)')
@@ -269,7 +275,9 @@ def fetch_mails():
                 g_mails[ts+'-'+key] = (index, rx_ts)
 
     except Exception, e:
-        bail_out(3, 'Failed to check for mails: %s' % e)
+        if opt_debug:
+            raise
+        bail_out(3, 'Failed to check for mails: %s' % parse_exception(e))
 
 def send_mail():
     now = time.time()
@@ -291,8 +299,10 @@ def send_mail():
         S.quit()
 
         add_expected_msg(now, key)
-    except Exception , e:
-        bail_out(3, 'Failed to send mail: %s' % e)
+    except Exception, e:
+        if opt_debug:
+            raise
+        bail_out(3, 'Failed to send mail: %s' % parse_exception(e))
 
 def check_mails():
     state    = 0
@@ -374,7 +384,9 @@ def cleanup_mailbox():
         if fetch_proto == 'IMAP':
             g_M.expunge()
     except Exception, e:
-        bail_out(2, 'Failed to delete mail: %s' % e)
+        if opt_debug:
+            raise
+        bail_out(2, 'Failed to delete mail: %s' % parse_exception(e))
 
 def close_mailbox():
     if not g_M:
@@ -387,7 +399,7 @@ def close_mailbox():
 
 def main():
     # Enable showing protocol messages of imap for debugging
-    if debug:
+    if opt_debug:
         imaplib.Debug = 4
 
     load_expected_mails()
@@ -412,6 +424,6 @@ def main():
 try:
     main()
 except Exception, e:
-    if debug:
+    if opt_debug:
         raise
-    bail_out(2, 'Unhandled exception: %s' % e)
+    bail_out(2, 'Unhandled exception: %s' % parse_exception(e))

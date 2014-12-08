@@ -7377,8 +7377,15 @@ def mode_ldap_config(phase):
 #   '----------------------------------------------------------------------'
 
 def mode_globalvars(phase):
+    search = html.var("search")
+    if search != None:
+        search = search.strip().lower()
+
     if phase == "title":
-        return _("Global configuration settings for Check_MK")
+        if search:
+            return _("Global configuration settings matching %s") % html.attrencode(search)
+        else:
+            return _("Global configuration settings for Check_MK")
 
     elif phase == "buttons":
         global_buttons()
@@ -7436,11 +7443,24 @@ def mode_globalvars(phase):
         else:
             return
 
-    render_global_configuration_variables(default_values, current_settings)
+    render_global_configuration_variables(default_values, current_settings, search=search)
 
-def render_global_configuration_variables(default_values, current_settings, show_all  = False):
+def render_global_configuration_variables(default_values, current_settings, show_all=False, search=None):
     groupnames = g_configvar_groups.keys()
     groupnames.sort()
+
+    html.begin_form("search")
+    html.write(_("Search for settings: "))
+    html.text_input("search", size=32)
+    html.hidden_fields()
+    html.hidden_field("mode", "globalvars")
+    html.set_focus("search")
+    html.write(" ")
+    html.button("_do_seach", _("Search"))
+    html.end_form()
+    html.write('<br>')
+
+    at_least_one_painted = False
     html.write('<div class=globalvars>')
     for groupname in groupnames:
         header_is_painted = False # needed for omitting empty groups
@@ -7456,15 +7476,25 @@ def render_global_configuration_variables(default_values, current_settings, show
                 else:
                     continue
 
+            help_text  = type(valuespec.help())  == unicode and valuespec.help().encode("utf-8")  or valuespec.help() or ''
+            title_text = type(valuespec.title()) == unicode and valuespec.title().encode("utf-8") or valuespec.title()
+
+            if search and search not in groupname \
+                           and search not in domain \
+                           and search not in varname \
+                           and search not in help_text \
+                           and search not in title_text:
+                continue # skip variable when search is performed and nothing matches
+            at_least_one_painted = True
+
             if not header_is_painted:
-                forms.header(groupname, isopen=False)
+                # always open headers when searching
+                forms.header(groupname, isopen=search)
                 header_is_painted = True
 
             defaultvalue = default_values.get(varname, valuespec.default_value())
 
             edit_url = make_link([("mode", "edit_configvar"), ("varname", varname), ("site", html.var("site", ""))])
-            help_text  = type(valuespec.help())  == unicode and valuespec.help().encode("utf-8")  or valuespec.help() or ''
-            title_text = type(valuespec.title()) == unicode and valuespec.title().encode("utf-8") or valuespec.title()
             title = '<a href="%s" class=%s title="%s">%s</a>' % \
                     (edit_url, varname in current_settings and '"modified"' or '""',
                      html.strip_tags(help_text), title_text)
@@ -7495,7 +7525,11 @@ def render_global_configuration_variables(default_values, current_settings, show
                     "snapin_switch_" + (defaultvalue and "on" or "off"))
                 else:
                     html.write('<a href="%s">%s</a>' % (edit_url, to_text))
-    forms.end()
+
+        if header_is_painted:
+            forms.end()
+    if not at_least_one_painted:
+        html.message(_('Did not find any global setting matching your search.'))
     html.write('</div>')
 
 
@@ -10107,7 +10141,7 @@ def mode_edit_site_globals(phase):
         html.show_error(_("This site is not a replication slave. You cannot configure specific settings for it."))
         return
 
-    render_global_configuration_variables(default_values, current_settings, show_all = True)
+    render_global_configuration_variables(default_values, current_settings, show_all=True)
 
 def create_site_globals_file(siteid, tmp_dir):
     if not os.path.exists(tmp_dir):
@@ -13839,8 +13873,8 @@ def mode_rulesets(phase, group=None):
         help = _("Here you can create explicit checks that are not being created by the automatic service discovery.")
         only_used = False
     elif search != None:
-        title = _("Rules matching ") + search
-        help = _("All rules that contain '%s' in their name") % search
+        title = _("Rules matching ") + html.attrencode(search)
+        help = _("All rules that contain '%s' in their name") % html.attrencode(search)
         only_used = False
     else:
         title, help = g_rulegroups.get(group, (group, None))

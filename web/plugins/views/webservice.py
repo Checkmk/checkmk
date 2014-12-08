@@ -121,6 +121,17 @@ multisite_layouts["json"] = {
     "hide"   : True,
 }
 
+def render_jsonp(rows, view, group_painters, painters, num_columns, show_checkboxes):
+    html.write("parseJSON(\n");
+    render_json(rows, view, group_painters, painters, num_columns, show_checkboxes)
+    html.write(");\n");
+
+multisite_layouts["jsonp"] = {
+    "title"  : _("JSONP data output"),
+    "render" : render_jsonp,
+    "group"  : False,
+    "hide"   : True,
+}
 
 def render_csv(rows, view, group_painters, painters, num_columns, show_checkboxes, export = False):
     if export:
@@ -168,3 +179,4 @@ multisite_layouts["csv"] = {
     "group"  : False,
     "hide"   : True,
 }
+

@@ -379,6 +379,7 @@ def package_install(args):
                 if not data:
                     break
                 tardest.write(data)
+            tardest.close()
 
             # Fix permissions of extracted files
             for filename in filenames:

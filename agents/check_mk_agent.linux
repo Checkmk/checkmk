@@ -100,7 +100,7 @@ function run_cached () {
 
     # Cache file outdated and new job not yet running? Start it
     if [ -z "$USE_CACHEFILE" -a ! -e "$CACHEFILE.new" ] ; then
-        echo "set -o noclobber ; exec > \"$CACHEFILE.new\" || exit 1 ; $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | nohup bash 2>/dev/null &
+        echo "set -o noclobber ; exec > \"$CACHEFILE.new\" || exit 1 ; $CMDLINE && mv \"$CACHEFILE.new\" \"$CACHEFILE\" || rm -f \"$CACHEFILE\" \"$CACHEFILE.new\"" | nohup bash >/dev/null 2>&1 &
     fi
 }
 
@@ -529,7 +529,7 @@ fi
 # Check status of OMD sites
 if type omd >/dev/null
 then
-    run_cached omd_status 60 "echo '<<<omd_status>>>' ; omd status --bare --auto"
+    run_cached -s omd_status 60 "omd status --bare --auto"
 fi
 
 

@@ -1,0 +1,9 @@
+Title: dell_om_mem: Handle formerly unhandled status code 3 (ECC single bit correction failure rate exceeded)
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.5i7
+Date: 1418074869
+Class: fix
+
+Thanks to Hermann Maurer.

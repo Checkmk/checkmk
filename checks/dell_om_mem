@@ -32,6 +32,7 @@ def check_dell_om_mem(item, _no_params, info):
          0  : 'No failure',
          1  : 'ECC single bit correction warning rate exceeded',
          2  : 'ECC single bit correction failure rate exceeded',
+         3  : 'ECC single bit correction failure rate exceeded',
          4  : 'ECC multibit fault encountered',
          8  : 'ECC single bit correction logging disabled',
          16 : 'device disabled because of spare activation',
@@ -47,7 +48,7 @@ def check_dell_om_mem(item, _no_params, info):
                state = 2
                msg = "Modul State is %s(!!), " % status
            label = ""
-           if failuremode in [ 2, 4 ]:
+           if failuremode in [ 2, 4, 3 ]:
                state = 2
                label = "(!!)"
            elif failuremode in [ 1, 8, 16 ]:

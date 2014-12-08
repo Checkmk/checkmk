@@ -4648,10 +4648,14 @@ def mode_changelog(phase):
 
         if config.may("wato.activate") and (
                 (not is_distributed() and log_exists("pending"))
-            or  (is_distributed() and global_replication_state() == "dirty")):
+            or (is_distributed() and global_replication_state() == "dirty")):
             html.context_button(_("Activate Changes!"),
                 html.makeactionuri([("_action", "activate")]),
                              "apply", True, id="act_changes_button")
+            if get_last_wato_snapshot_file():
+                html.context_button(_("Discard Changes!"),
+                    html.makeactionuri([("_action", "discard")]),
+                                 "discard", id="discard_changes_button")
 
         if is_distributed():
             html.context_button(_("Site Configuration"), make_link([("mode", "sites")]), "sites")
@@ -4660,14 +4664,15 @@ def mode_changelog(phase):
             html.context_button(_("Audit log"), make_link([("mode", "auditlog")]), "auditlog")
 
     elif phase == "action":
-
-        # Let host validators do their work
-        defective_hosts = validate_all_hosts([], force_all = True)
-        if defective_hosts:
-            raise MKUserError(None, _("You cannot activate changes while some hosts have "
-              "an invalid configuration: ") + ", ".join(
-                [ '<a href="%s">%s</a>' % (make_link([("mode", "edithost"), ("host", hn)]), hn)
-                  for hn in defective_hosts.keys() ]))
+        action = html.var("_action")
+        if action == "activate":
+            # Let host validators do their work
+            defective_hosts = validate_all_hosts([], force_all = True)
+            if defective_hosts:
+                raise MKUserError(None, _("You cannot activate changes while some hosts have "
+                  "an invalid configuration: ") + ", ".join(
+                    [ '<a href="%s">%s</a>' % (make_link([("mode", "edithost"), ("host", hn)]), hn)
+                      for hn in defective_hosts.keys() ]))
 
         # If there are changes by other users, we need a confirmation
         transaction_already_checked = False
@@ -4678,10 +4683,18 @@ def mode_changelog(phase):
                 table += '<tr><td>%s: </td><td>%d %s</td></tr>' % \
                    (config.alias_of_user(user_id), count, _("changes"))
             table += '</table>'
-            c = wato_confirm(_("Confirm activating foreign changes"),
-              '<img class=foreignchanges src="images/icon_foreign_changes.png">' +
-              _("There are some changes made by your colleagues that you will "
-                "activate if you proceed:") + table +
+
+            if action == "activate":
+                title = _("Confirm activating foreign changes")
+                text  = _("There are some changes made by your colleagues that you will "
+                          "activate if you proceed:")
+            else:
+                title = _("Confirm discarding foreign changes")
+                text  = _("There are some changes made by your colleagues that you will "
+                          "discard if you proceed:")
+
+            c = wato_confirm(title,
+              '<img class=foreignchanges src="images/icon_foreign_changes.png">' + text + table +
               _("Do you really want to proceed?"))
             if c == False:
                 return ""
@@ -4690,10 +4703,21 @@ def mode_changelog(phase):
             transaction_already_checked = True
 
         if changes and not config.may("wato.activateforeign"):
-            raise MKAuthException(
-              _("Sorry, you are not allowed to activate "
-              "changes of other users."))
+            raise MKAuthException(_("Sorry, you are not allowed to activate "
+                                    "changes of other users."))
 
+        if action == "discard":
+            # Now remove all currently pending changes by simply restoring the last automatically
+            # taken snapshot. Then activate the configuration. This should revert all pending changes.
+            file_to_restore = get_last_wato_snapshot_file()
+            if not file_to_restore:
+                raise MKUserError(None, _('There is no WATO snapshot to be restored.'))
+            log_pending(LOCALRESTART, None, "changes-discarded",
+                 _("Discarded pending changes (Restored %s)") % html.attrencode(file_to_restore))
+            extract_snapshot(file_to_restore)
+            activate_changes()
+            log_commit_pending()
+            return None, _("Successfully discarded all pending changes.")
 
         # Give hooks chance to do some pre-activation things (and maybe stop
         # the activation)
@@ -4726,7 +4750,7 @@ def mode_changelog(phase):
                             response = str(e)
 
                     if response == True:
-                        return None
+                        return
                     else:
                         raise MKUserError(None, _("Error on remote access to site: %s") % response)
 
@@ -4944,6 +4968,12 @@ def mode_changelog(phase):
             html.write('<div id=pending_changes>')
             render_audit_log(pending, "pending", hilite_others=True)
             html.write('</div>')
+
+def get_last_wato_snapshot_file():
+    for snapshot_file in get_snapshots():
+        status = get_snapshot_status(snapshot_file)
+        if status['type'] == 'automatic' and not status['broken']:
+            return snapshot_file
 
 # Determine if other users have made pending changes
 def foreign_changes():
@@ -6673,6 +6703,19 @@ def mode_snapshot_detail(phase):
         restore_url = make_action_link([("mode", "snapshot"), ("_restore_snapshot", snapshot_name)])
         html.buttonlink(restore_url, _("Restore Snapshot"))
 
+def get_snapshots():
+    snapshots = []
+    try:
+        for f in os.listdir(snapshot_dir):
+            if os.path.isfile(snapshot_dir + f):
+                snapshots.append(f)
+        snapshots.sort(reverse=True)
+    except OSError:
+        pass
+    return snapshots
+
+def extract_snapshot(snapshot_file):
+    multitar.extract_from_file(snapshot_dir + snapshot_file, backup_domains)
 
 def mode_snapshot(phase):
     if phase == "title":
@@ -6684,13 +6727,12 @@ def mode_snapshot(phase):
                 make_action_link([("mode", "snapshot"),("_factory_reset","Yes")]), "factoryreset")
         return
 
-    snapshots = []
-    if os.path.exists(snapshot_dir):
-        if not html.var("_restore_snapshot") and os.path.exists("%s/uploaded_snapshot" % snapshot_dir):
-            os.remove("%s/uploaded_snapshot" % snapshot_dir)
-        for f in os.listdir(snapshot_dir):
-            snapshots.append(f)
-    snapshots.sort(reverse=True)
+    # Cleanup incompletely processed snapshot upload
+    if os.path.exists(snapshot_dir) and not html.var("_restore_snapshot") \
+       and os.path.exists("%s/uploaded_snapshot" % snapshot_dir):
+        os.remove("%s/uploaded_snapshot" % snapshot_dir)
+
+    snapshots = get_snapshots()
 
     # Generate valuespec for snapshot options
     # Sort domains by group
@@ -6861,7 +6903,7 @@ def mode_snapshot(phase):
                 if status["type"] == "legacy":
                     multitar.extract_from_file(snapshot_dir + snapshot_file, backup_paths)
                 else:
-                    multitar.extract_from_file(snapshot_dir + snapshot_file, backup_domains)
+                    extract_snapshot(snapshot_file)
                 log_pending(SYNCRESTART, None, "snapshot-restored",
                      _("Restored snapshot %s") % html.attrencode(snapshot_file))
                 return None, _("Successfully restored snapshot.")
@@ -6883,12 +6925,7 @@ def mode_snapshot(phase):
         return None
 
     else:
-        snapshots = []
-        if os.path.exists(snapshot_dir):
-            for f in os.listdir(snapshot_dir):
-                if os.path.isfile(snapshot_dir + f):
-                    snapshots.append(f)
-        snapshots.sort(reverse=True)
+        snapshots = get_snapshots()
 
         # Render snapshot domain options
         html.begin_form("create_snapshot", method="POST")

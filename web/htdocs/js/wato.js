@@ -523,7 +523,11 @@ function wato_do_activation(est) {
 
     // Hide the activate changes button
     var button = document.getElementById('act_changes_button');
-    if(button) {
+    if (button) {
+        button.style.display = 'none';
+    }
+    button = document.getElementById('discard_changes_button');
+    if (button) {
         button.style.display = 'none';
         button = null;
     }

@@ -125,6 +125,7 @@
     * 1455 FIX: hp_proliant_mem:  avoid a crash of the check when module_condition is empty
     * 1688 FIX: juniper_screenos_mem: Fixed wrong total memory computation
     * 1658 FIX: agent_vsphere: no longer crashes when decommissioned vms report no hardware information...
+    * 1708 FIX: cups_queues: fix outputting of current printer jobs if printer daemon is CUPS...
 
     Multisite:
     * 1508 Allow input of plugin output and perfdata when faking check results...
@@ -184,6 +185,7 @@
     * 1680 FIX: Fixed various dashlet designer position/resizing issues...
     * 1683 FIX: Replaced a lot of old GIF images with better looking PNG images
     * 1687 FIX: Add visual to dashboard menu can now be closed with click anywhere on page
+    * 1709 FIX: Fix exception when a non-Ascii character is part of the variable part of a view title
 
     WATO:
     * 1170 Added buttons to move rules to top/bottom of the list to ruleset edit dialog

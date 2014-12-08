@@ -250,6 +250,9 @@
     * 1559 FIX: Fix link from BI icon to BI views (aggregations affected by this host/service)
     * 1692 FIX: Aggregations with umlauts in title/topic can now be displayed in BI/Availability
 
+    Reporting & Availability:
+    * 1720 FIX: Remove bogus column H.Down if "Consider times where the host is down" is switch off...
+
     Event Console:
     * 1169 Added host state type filter to "recent event history" view
     * 1718 Show groups of regex match of events in details views of Event Console

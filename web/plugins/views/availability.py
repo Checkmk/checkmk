@@ -1300,6 +1300,8 @@ def render_availability_group(group_title, range_title, group_id, availability,
             return False
         elif sid == "flapping" and not avoptions["consider"]["flapping"]:
             return False
+        elif sid == "host_down" and not avoptions["consider"]["host_down"]:
+            return False
         elif sid in [ "warn", "unknown", "host_down" ] and sid not in state_groups:
             return False
         else:

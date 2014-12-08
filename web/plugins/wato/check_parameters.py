@@ -5639,7 +5639,7 @@ register_check_parameters(
     _("JVM threads"),
     Tuple(
         help = _("This rule sets the warn and crit levels for the number of threads "
-                 "running in a JVM."),
+                 "running in a JVM. Other keywords for this rule: Tomcat, Jolokia, JMX."),
         elements = [
             Integer(
                 title = _("Warning if above"),
@@ -5666,7 +5666,8 @@ register_check_parameters(
         "jvm_uptime",
         _("JVM uptime (since last reboot)"),
         Dictionary(
-            help = _("This rule sets the warn and crit levels for the uptime of a JVM. "),
+            help = _("This rule sets the warn and crit levels for the uptime of a JVM. "
+                     "Other keywords for this rule: Tomcat, Jolokia, JMX. "),
             elements = [
             ( "min",
               Tuple(
@@ -5700,7 +5701,8 @@ register_check_parameters(
     _("JVM session count"),
     Tuple(
         help = _("This rule sets the warn and crit levels for the number of current "
-                 "connections to a JVM application on the servlet level."),
+                 "connections to a JVM application on the servlet level. "
+                 "Other keywords for this rule: Tomcat, Jolokia, JMX. "),
         elements = [
             Integer(
                 title = _("Warning if below"),
@@ -5738,7 +5740,8 @@ register_check_parameters(
     _("JVM request count"),
     Tuple(
         help = _("This rule sets the warn and crit levels for the number "
-                 "of incoming requests to a JVM application server"),
+                 "of incoming requests to a JVM application server "
+                 "Other keywords for this rule: Tomcat, Jolokia, JMX. "),
         elements = [
             Integer(
                 title = _("Warning if below"),
@@ -5778,7 +5781,8 @@ register_check_parameters(
         help = _("The BEA application servers have 'Execute Queues' "
                  "in which requests are processed. This rule allows to set "
                  "warn and crit levels for the number of requests that are "
-                 "being queued for processing."),
+                 "being queued for processing. "
+                 "Other keywords for this rule: Tomcat, Jolokia, JMX. "),
         elements = [
             Integer(
                 title = _("Warning if above"),
@@ -5807,7 +5811,8 @@ register_check_parameters(
     _("JVM memory levels"),
     Dictionary(
         help = _("This rule allows to set the warn and crit levels of the heap / "
-                 "non-heap and total memory area usage on web application servers."),
+                 "non-heap and total memory area usage on web application servers. "
+                 "Other keywords for this rule: Tomcat, Jolokia, JMX. "),
         elements = [
             ( "totalheap",
                Alternative(
@@ -6834,6 +6839,7 @@ register_check_parameters(
     "jvm_gc",
     _("JVM garbage collection levels"),
     Dictionary(
+        help = _("Other keywords for this rule: Tomcat, Jolokia, JMX. "),
         elements = [
             ( "CollectionTime",
                Alternative(
@@ -6877,6 +6883,7 @@ register_check_parameters(
     "jvm_tp",
     _("JVM tomcat threadpool levels"),
     Dictionary(
+        help = _("Other keywords for this rule: Tomcat, Jolokia, JMX. "),
         elements = [
             ( "currentThreadCount",
                Alternative(

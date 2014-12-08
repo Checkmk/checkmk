@@ -328,10 +328,14 @@ class html:
     def icon(self, help, icon):
        self.write(self.render_icon(icon, help))
 
-    def render_icon(self, icon, help, middle=True):
+    def render_icon(self, icon, help="", middle=True):
         align = middle and ' align=absmiddle' or ''
-        return '<img%s class=icon title="%s" src="images/icon_%s.png" />' % \
-                                            (align, self.attrencode(help), icon)
+        title = help and ' title="%s"' % self.attrencode(help) or ""
+        if "/" in icon:
+            src = "images/" + icon
+        else:
+            src = "images/icon_%s.png" % icon
+        return '<img src="%s" class=icon%s%s />' % (src, align, title)
 
     def empty_icon(self):
         self.write('<img class=icon src="images/trans.png" />')

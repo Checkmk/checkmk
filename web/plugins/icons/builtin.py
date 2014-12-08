@@ -68,7 +68,7 @@
 
 def paint_icon_image(what, row, tags, custom_vars):
     if row[what + '_icon_image']:
-        return '<img align=absmiddle class=icon src="images/icons/%s">' % row[what + '_icon_image']
+        return html.render_icon("icons/" + row[what + '_icon_image'])
 
 multisite_icons.append({
     'columns':         [ 'icon_image' ],

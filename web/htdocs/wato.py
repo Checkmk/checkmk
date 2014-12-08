@@ -10505,6 +10505,8 @@ def save_sites(sites, activate=True):
         if config.liveproxyd_enabled:
             save_liveproxyd_config(sites)
 
+        create_nagvis_backends(sites)
+
         # Call the sites saved hook
         call_hook_sites_saved(sites)
 
@@ -10527,6 +10529,29 @@ def save_liveproxyd_config(sites):
     except Exception, e:
         html.show_error(_("Warning: cannot reload Livestatus Proxy-Daemon: %s" % e))
 
+def create_nagvis_backends(sites):
+    if not defaults.omd_root:
+        return # skip when not in OMD environment
+    cfg = [
+        '; MANAGED BY CHECK_MK WATO - Last Update: %s' % time.strftime('%Y-%m-%d %H:%M:%S'),
+    ]
+    for site_id, site in sites.items():
+        if site == defaults.omd_site:
+            continue # skip local site, backend already added by omd
+        if 'socket' not in site:
+            continue # skip sites without configured sockets
+
+        cfg += [
+            '',
+            '[backend_%s]' % site_id,
+            'backendtype="mklivestatus"',
+            'socket="%s"' % site['socket'],
+        ]
+
+        if 'status_host' in site:
+            cfg.append('statushost="%s"' % ':'.join(site['status_host']))
+
+    file('%s/etc/nagvis/conf.d/cmk_backends.ini.php' % defaults.omd_root, 'w').write('\n'.join(cfg))
 
 # Makes sure, that in distributed mode we monitor only
 # the hosts that are directly assigned to our (the local)

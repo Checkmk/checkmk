@@ -1872,7 +1872,7 @@ def get_age_human_readable(secs):
 
 # Quote string for use as arguments on the shell
 def quote_shell_string(s):
-    return "'" + s.replace("'", "'\"'\"'") + "'"
+    return "'" + str(s).replace("'", "'\"'\"'") + "'"
 
 
 # Check if a timeperiod is currently active. We have no other way than

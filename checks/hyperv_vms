@@ -25,32 +25,87 @@
 # Boston, MA 02110-1301 USA.
 
 # Example output from agent:
-#<<<hyperv_vms>>>
-#DMZ-DC1                         Running 4.21:44:58          Operating normally
-#DMZ-DC2                         Running 4.21:44:47          Operating normally
+# <<<hyperv_vms>>>
+# DMZ-DC1                         Running 4.21:44:58          Operating normally
+# DMZ-DC2                         Running 4.21:44:47          Operating normally
 
-def inventory_hyperv_vms(info):
-    return [ (x[0], {'state': x[1] }) for x in info ]
+# Another example, here with a snapshow with spaces in the name:
+# <<<hyperv_vms>>>
+# windows-hyperv2-z4058044                              Running 21:33:08   Operating normally
+# windows-hyperv2-z4058044_snap (23.05.2014 - 09:29:29) Running 18:20:34   Operating normally
+# windows-hyperv2-z4065002                              Running 11:04:50   Operating normally
+# windows-hyperv2-z4065084                              Running 1.10:42:33 Operating normally
+# windows-hyperv2-z4133235                              Running 1.03:52:18 Operating normally
 
-def check_hyperv_vms(item, params, info):
+# A broken version of the agent outputted this:
+# <<<hyperv_vms>>>
+# z4058044                        Running 21:19:14            Operating normally
+# z4058044_snap (2...             Running 18:06:39            Operating normally
+# z4065002                        Running 10:50:55            Operating normally
+# z4065084                        Running 1.10:28:39          Operating normally
+# z4133235                        Running 1.03:38:23          Operating normally
+
+
+# result:
+# {
+#   "windows-hyperv2-z4058044_snap (23.05.2014 - 09:29:29)" : {
+#        "vm_state" : "Running",
+#        "uptime" : "1.10:42:33",
+#        "state_msg" : "Operating normally",
+#    }
+# }
+
+def parse_hyperv_vms(info):
+    parsed = {}
     for line in info:
-        if line[0] == item:
-            name, vm_state, uptime = line[:3]
-            state_msg = " ".join(line[3:])
-            if vm_state == params['state']:
-                state = 0
-                message = "State is %s (%s)" % (vm_state, state_msg)
-            else:
-                message = "State has changed from %s to %s (%s)" % ( params['state'],\
-                vm_state, state_msg)
-                state = 2
-            return state, message
-    return 3, "VM not found"
+        if line[1].endswith("..."): # broken output
+            vm_name = line[0]
+            line = line[2:]
+        elif line[1].startswith("("):
+            idx = 2
+            while idx < len(line):
+                if line[idx].endswith(")"):
+                    vm_name = " ".join(line[:idx+1])
+                    break
+                idx += 1
+            line = line[idx+1:]
+        else:
+            vm_name = line[0]
+            line = line[1:]
+
+        parsed[vm_name] = {
+            "state"  : line[0],
+            "uptime" : line[1],
+            "state_msg" : " ".join(line[2:]),
+        }
+    return parsed
+
+
+def inventory_hyperv_vms(parsed):
+    return [ (vm_name, {'state': vm["state"] })
+             for (vm_name, vm)
+             in parsed.items() ]
+
+
+def check_hyperv_vms(item, params, parsed):
+    if item in parsed:
+        vm = parsed[item]
+        if vm["state"] == params['state']:
+            state = 0
+            message = "State is %s (%s)" % (vm["state"], vm["state_msg"])
+        else:
+            message = "State has changed from %s to %s (%s)" % (
+                params['state'],\
+                vm["state"],
+                vm["state_msg"])
+            state = 2
+        return state, message
+
 
 check_info["hyperv_vms"] = {
+    "parse_function"        : parse_hyperv_vms,
     "check_function"        : check_hyperv_vms,
     "inventory_function"    : inventory_hyperv_vms,
-    "service_description"   : "hyperv_vms",
-    "has_perfdata"          : False,
+    "service_description"   : "VM %s",
 }
 

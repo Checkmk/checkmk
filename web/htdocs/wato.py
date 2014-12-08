@@ -15901,6 +15901,7 @@ def create_sample_config():
             "wmic_process",
             "logwatch",
             "cmk-inventory",
+            "hyperv_vms",
         ],
         "inventory_check_interval": 120,
         "enable_rulebased_notifications": True,

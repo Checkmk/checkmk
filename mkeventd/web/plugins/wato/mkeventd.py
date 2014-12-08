@@ -1947,11 +1947,13 @@ register_rule(
                    "host. This is needed in cases where the event source (syslog, snmptrapd) "
                    "do not send a host name that matches the monitoring host name."),
                 choices = [
-                    ( '$HOSTNAME$', _("Monitoring Host name") ),
-                    ( '$HOSTADDRESS$', _("Host IP Address" ) ) ],
+                    ( '$HOSTNAME$',               _("Monitoring host name") ),
+                    ( '$HOSTADDRESS$',            _("Host IP address" ) ),
+                    ( '$HOSTNAME$/$HOSTADDRESS$', _("Try both host name and IP address" ) ),
+                ],
                 otherlabel = _("Specify explicitly"),
                 explicit = TextAscii(allow_empty = False, attrencode = True),
-                default_value = '$HOSTNAME$',
+                default_value = '$HOSTNAME$/$HOSTADDRESS$',
               )
             ),
             ( "item",

@@ -47,6 +47,26 @@ void usage()
 {
     printf("Usage: check_mkevents [-s SOCKETPATH] [-H REMOTE:PORT] [-a] HOST [APPLICATION]");
     printf("\n -a    do not take into account acknowledged events.\n");
+    printf(" HOST  may be a hostname, and IP address or hostname/IP-address.\n");
+}
+
+
+string prepare_hostname_regex(const char *s)
+{
+    const char *scan = s;
+    string result = "";
+    while (*scan) {
+        if (strchr("[](){}^$.*+?|\\", *scan)) {
+            result += "\\";
+            result += *scan;
+        }
+        else if (*scan == '/')
+            result += "|";
+        else
+            result += *scan;
+        scan ++;
+    }
+    return result;
 }
 
 
@@ -174,15 +194,22 @@ int main(int argc, char** argv)
 
     // Create query message
     string query_message;
-    query_message.append("GET events\nFilter: event_host =~ ");
-    query_message.append(host);
-    query_message.append("\nFilter: event_phase in open ack\n");
-    query_message.append("OutputFormat: plain\n");
+    query_message += "GET events\nFilter: event_host ";
+    if (strchr(host, '/')) {
+        query_message += "~~ ";
+        query_message += prepare_hostname_regex(host);
+    }
+    else {
+        query_message += "=~ ";
+        query_message += host;
+    }
+    query_message += "\nFilter: event_phase in open ack\n";
+    query_message += "OutputFormat: plain\n";
 
     if (application) {
-        query_message.append("Filter: event_application ~~ ");
-        query_message.append(application);
-        query_message.append("\n");
+        query_message += "Filter: event_application ~~ ";
+        query_message += application;
+        query_message += "\n";
     }
 
     // Send message

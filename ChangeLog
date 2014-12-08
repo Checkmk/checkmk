@@ -253,6 +253,7 @@
     Event Console:
     * 1169 Added host state type filter to "recent event history" view
     * 1718 Show groups of regex match of events in details views of Event Console
+    * 1719 Allow to allow both host name and IP address when checking for events in Event Console...
     * 1531 FIX: Fixed exception in event history view when displaying CHANGESTATE events
     * 1610 FIX: Hostname translation now also works for incoming SNMP traps
     * 1643 FIX: Improved error handling of exceptions when processing log lines

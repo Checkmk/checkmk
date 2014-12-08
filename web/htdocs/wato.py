@@ -1804,10 +1804,7 @@ def mode_editfolder(phase, new):
         if new:
             check_folder_permissions(g_folder, "write")
             check_user_contactgroups(attributes.get("contactgroups", (False, [])))
-            create_wato_folder(g_folder, name, title)
-            g_folder["attributes"] = attributes
-            save_folder(g_folder)
-            log_audit(g_folder, "new-folder", _("Created new folder %s") % title)
+            create_wato_folder(g_folder, name, title, attributes)
 
         else:
             # TODO: migrate this block into own function edit_wato_folder(..)
@@ -17535,7 +17532,7 @@ def create_wato_folders(path):
 
 # Creates and returns an empty wato folder with the given title
 # Write permissions are NOT checked!
-def create_wato_folder(parent, name, title):
+def create_wato_folder(parent, name, title, attributes={}):
     if parent and parent[".path"]:
         newpath = parent[".path"] + "/" + name
     else:
@@ -17545,7 +17542,7 @@ def create_wato_folder(parent, name, title):
         ".name"      : name,
         ".path"      : newpath,
         "title"      : title or name,
-        "attributes" : {},
+        "attributes" : attributes,
         ".folders"   : {},
         ".hosts"     : {},
         "num_hosts"  : 0,

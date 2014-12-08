@@ -454,7 +454,7 @@ if type lpstat > /dev/null 2>&1; then
             echo '---'
             lpstat -o | while read LINE
             do
-                PRINTER=$(echo $LINE | awk '{print $2}')
+                PRINTER=${LINE%%-*}
                 if echo "$LOCAL_PRINTERS" | grep -q "$PRINTER"; then
                     echo $LINE
                 fi

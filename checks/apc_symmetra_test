@@ -53,6 +53,8 @@
 #
 
 import datetime
+# What the F**k! Importing of module is absolutely discouraged in checks.
+# Also we use time in check_mk, not datetime.
 
 ups_test_default = ( 0, 0 )
 

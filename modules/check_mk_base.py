@@ -143,14 +143,10 @@ class MKGeneralException(Exception):
         return self.reason
 
 class MKCounterWrapped(Exception):
-    def __init__(self, countername, reason):
-        self.name = countername
+    def __init__(self, reason):
         self.reason = reason
     def __str__(self):
-        if self.name:
-            return '%s: %s' % (self.name, self.reason)
-        else:
-            return self.reason
+        return self.reason
 
 class MKAgentError(Exception):
     def __init__(self, reason):
@@ -860,6 +856,17 @@ def cachefile_age(filename):
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
+SKIP=None
+RAISE=False
+ZERO=0.0
+g_last_counter_wrap = None
+
+def reset_wrapped_counters():
+    global g_last_counter_wrap
+    g_last_counter_wrap = None
+
+def last_counter_wrap():
+    return g_last_counter_wrap
 
 # Variable                 time_t    value
 # netctr.eth.tx_collisions 112354335 818
@@ -878,6 +885,17 @@ def load_counters(hostname):
         except:
             g_counters = {}
 
+def save_counters(hostname):
+    if not opt_dont_submit and not i_am_root(): # never writer counters as root
+        global g_counters
+        filename = counters_directory + "/" + hostname
+        try:
+            if not os.path.exists(counters_directory):
+                os.makedirs(counters_directory)
+            file(filename, "w").write("%r\n" % g_counters)
+        except Exception, e:
+            raise MKGeneralException("User %s cannot write to %s: %s" % (username(), filename, e))
+
 
 # Deletes counters from g_counters matching the given pattern and are older_than x seconds
 def clear_counters(pattern, older_than):
@@ -893,6 +911,23 @@ def clear_counters(pattern, older_than):
     for name in counters_to_delete:
         del g_counters[name]
 
+
+def get_rate(countername, this_time, this_val, allow_negative=False, onwrap=SKIP):
+    try:
+        timedif, rate = get_counter(countername, this_time, this_val, allow_negative)
+        return rate
+    except MKCounterWrapped, e:
+        if onwrap == RAISE:
+            raise
+        elif onwrap == SKIP:
+            global g_last_counter_wrap
+            g_last_counter_wrap = e
+            return 0.0
+        else:
+            return onwrap
+
+
+# Legacy. Do not use this function in checks directly any more!
 def get_counter(countername, this_time, this_val, allow_negative=False):
     global g_counters
 
@@ -903,7 +938,7 @@ def get_counter(countername, this_time, this_val, allow_negative=False):
         # Do not suppress this check on check_mk -nv
         if opt_dont_submit:
             return 1.0, 0.0
-        raise MKCounterWrapped(countername, 'Counter initialization')
+        raise MKCounterWrapped('Counter initialization')
 
     last_time, last_val = g_counters.get(countername)
     timedif = this_time - last_time
@@ -913,7 +948,7 @@ def get_counter(countername, this_time, this_val, allow_negative=False):
         # Do not suppress this check on check_mk -nv
         if opt_dont_submit:
             return 1.0, 0.0
-        raise MKCounterWrapped(countername, 'No time difference')
+        raise MKCounterWrapped('No time difference')
 
     # update counter for next time
     g_counters[countername] = (this_time, this_val)
@@ -927,7 +962,7 @@ def get_counter(countername, this_time, this_val, allow_negative=False):
         # Do not suppress this check on check_mk -nv
         if opt_dont_submit:
             return 1.0, 0.0
-        raise MKCounterWrapped(countername, 'Value overflow')
+        raise MKCounterWrapped('Value overflow')
 
     per_sec = float(valuedif) / timedif
     return timedif, per_sec
@@ -977,17 +1012,6 @@ def get_average(itemname, this_time, this_val, backlog_minutes, initialize_zero 
     g_counters[itemname] = (this_time, new_val)
     return timedif, new_val
 
-
-def save_counters(hostname):
-    if not opt_dont_submit and not i_am_root(): # never writer counters as root
-        global g_counters
-        filename = counters_directory + "/" + hostname
-        try:
-            if not os.path.exists(counters_directory):
-                os.makedirs(counters_directory)
-            file(filename, "w").write("%r\n" % g_counters)
-        except Exception, e:
-            raise MKGeneralException("User %s cannot write to %s: %s" % (username(), filename, e))
 
 # writelines([ "%s %d %d\n" % (i[0], i[1][0], i[1][1]) for i in g_counters.items() ])
 
@@ -1297,7 +1321,10 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
                 dont_submit = False
 
                 # Call the actual check function
+                reset_wrapped_counters()
                 result = convert_check_result(check_function(item, params, info), check_uses_snmp(checkname))
+                if last_counter_wrap():
+                    raise last_counter_wrap()
 
 
             # handle check implementations that do not yet support the

@@ -391,7 +391,10 @@ def automation_try_inventory_node(hostname, leave_no_tcp=False, with_snmp_scan=F
                     params = compute_check_parameters(hostname, ct, item, params)
 
                 try:
+                    reset_wrapped_counters()
                     result = convert_check_result(check_function(item, params, info), check_uses_snmp(ct))
+                    if last_counter_wrap():
+                        raise last_counter_wrap()
                 except MKCounterWrapped, e:
                     result = (None, "WAITING - Counter based check, cannot be done offline")
                 except Exception, e:

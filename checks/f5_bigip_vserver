@@ -51,7 +51,7 @@ def check_f5_bigip_vserver(item, _no_params, parsed):
 
         # New connections per time
         counter_name = "f5_bigip_vserver.%s.connections" % item
-        timedif, rate = get_counter(counter_name, time.time(), vserver["tot_conns"])
+        rate = get_rate(counter_name, time.time(), vserver["tot_conns"])
         yield 0, "Rate: %.2f/sec" % rate, [("conn_rate", rate)]
 
         # Current server status

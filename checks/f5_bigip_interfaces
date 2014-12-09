@@ -37,6 +37,7 @@ f5_bigip_interface_states = {
     5 : "unpopulated (interface not physically populated)",
 }
 
+
 def check_f5_bigip_interfaces(item, params, info):
     for port, ifstate, inbytes, outbytes in info:
         if item != port:
@@ -47,8 +48,8 @@ def check_f5_bigip_interfaces(item, params, info):
                     (f5_bigip_interface_states.get(ifstate, "unhandled (%d)" % ifstate), port))
 
         this_time = int(time.time())
-        in_timedif,  in_per_sec  = get_counter("f5.interface.in.%s" % item,  this_time, saveint(inbytes))
-        out_timedif,  out_per_sec  = get_counter("f5_interface.out.%s" % item,  this_time, saveint(outbytes))
+        in_per_sec  = get_rate("f5_interface.in.%s" % item,  this_time, saveint(inbytes))
+        out_per_sec  = get_rate("f5_interface.out.%s" % item,  this_time, saveint(outbytes))
 
         inbytes_h = get_bytes_human_readable(in_per_sec)
         outbytes_h = get_bytes_human_readable(out_per_sec)
@@ -58,6 +59,7 @@ def check_f5_bigip_interfaces(item, params, info):
         ]
         return (0, "in bytes: %s/s, out bytes: %s/s" % (inbytes_h, outbytes_h), perf)
     return 3, "Interface not found in SNMP data"
+
 
 check_info["f5_bigip_interfaces"] = {
     "check_function"        : check_f5_bigip_interfaces,

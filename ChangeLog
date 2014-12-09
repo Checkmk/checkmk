@@ -139,6 +139,7 @@
     * 1696 FIX: cisco_temp_sensor: Value reported of check was not always correct (precision was wrong)...
     * 1727 FIX: cisco_secure: Fixed inventory exception when port security is not enabled
     * 1728 FIX: cisco_temp_perf: Not inventorized anymore for hosts supporting cisco_temp_sensor
+    * 1724 FIX: emc_datadomain_temps: convert to new standard check output, add PNP template
     * 1729 FIX: apc_symmetra_test: Cleaned up check, fixed exception when self test date is zero
     * 1730 FIX: apc_symmetra: Fixed exception when last diagnose date was not known
     * 1731 FIX: ipmi_sensors: Fixed agent part when ipmi-sensors call on first agent run...

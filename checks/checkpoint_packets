@@ -51,14 +51,10 @@ def check_checkpoint_packets(item, params, info):
 
         this_time = time.time()
         state = 0
-        wrapped = False
 
         for name in value.keys():
             warn, crit = params.get(name, (None, None))
-            try:
-                timediff, rate = get_counter(name, this_time, value[name])
-            except MKCounterWrapped:
-                wrapped = True
+            rate = get_rate(name, this_time, value[name])
             infotext = "%s: %.1f pkts/s" % ( name, rate )
             if rate >= crit:
                 state = 2
@@ -66,8 +62,7 @@ def check_checkpoint_packets(item, params, info):
                 state = 1
             perfdata = [ (name, rate, warn, crit, 0) ]
             yield state, infotext, perfdata
-        if wrapped:
-            raise MKCounterWrapped(None, "Counter wrap")
+
 
 check_info["checkpoint_packets"] = {
     "check_function"          : check_checkpoint_packets,

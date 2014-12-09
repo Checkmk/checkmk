@@ -41,7 +41,7 @@ def check_statgrab_disk(item, _no_params, info):
             this_val += int(value)
 
     this_time = int(time.time())
-    timedif, bytes_per_sec = get_counter("diskstat." + item, this_time, this_val)
+    bytes_per_sec = get_rate("diskstat." + item, this_time, this_val)
     perfdata = [ (item, bytes_per_sec) ]
     return (0, "%s/s (in last %d secs)" % (get_bytes_human_readable(bytes_per_sec), timedif), perfdata)
 

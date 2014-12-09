@@ -51,7 +51,7 @@ def check_esx_vsphere_vm_mem(_no_item, _no_params, info):
     # If the machine is powered of, we do not get data
     powerstate = data["runtime.powerState"][0]
     if powerstate != "poweredOn":
-        raise MKCounterWrapped("", "VM is %s, skipping this check" % powerstate)
+        raise MKCounterWrapped("VM is %s, skipping this check" % powerstate)
 
 
     try:
@@ -66,7 +66,7 @@ def check_esx_vsphere_vm_mem(_no_item, _no_params, info):
         #The portion of memory, in MB, that is granted to this VM from host memory that is shared between VMs.
         private_memory      = savefloat(data.get("summary.quickStats.privateMemory",[0])[0]) * 1024 * 1024
     except:
-        raise MKCounterWrapped("", "Hostsystem did not provide memory information (reason may be high load)")
+        raise MKCounterWrapped("Hostsystem did not provide memory information (reason may be high load)")
 
     perf = [
         ("host",      host_memory_usage ),
@@ -336,7 +336,7 @@ def check_esx_vsphere_vm_cpu(_no_item, _no_params, info):
     data = esx_vsphere_vm_convert(info)
     # VMs that are currently down do not have this entry
     if 'summary.quickStats.overallCpuUsage' not in data:
-        raise MKCounterWrapped("", "No information about CPU usage. VM is probably powered off.")
+        raise MKCounterWrapped("No information about CPU usage. VM is probably powered off.")
 
     usage_mhz = int(data['summary.quickStats.overallCpuUsage'][0])
     cpus = int(data['config.hardware.numCPU'][0])

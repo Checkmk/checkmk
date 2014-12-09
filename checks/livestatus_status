@@ -75,14 +75,9 @@ def check_livestatus_status(item, _no_params, info):
     infos = []
 
     for counter, title in livestatus_status_counters:
-        try:
-            timedif, rate = get_counter("livestatus_status.%s.%s" % (item, counter), this_time, saveint(status[counter]))
-            perfdata.append((counter, rate))
-            infos.append("%.1f %s/s" % (rate, title))
-        # If one counter wraps then *all* counters should wrap (because the core has
-        # been restarted)
-        except MKCounterWrapped:
-            wrapped = True
+        rate = get_rate("livestatus_status.%s.%s" % (item, counter), this_time, saveint(status[counter]))
+        perfdata.append((counter, rate))
+        infos.append("%.1f %s/s" % (rate, title))
 
     infos += [ "Core version: %s" % status["program_version"],
               "Livestatus version: %s" % status["livestatus_version"]]

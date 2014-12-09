@@ -46,7 +46,7 @@ def inv_win_exefiles(info):
             "path"            : "\\".join(parts[:-1]),
             "package_type"    : "exe",
             "install_date"    : install_date,
-            "size"            : int(size),
+            "size"            : saveint(size),
             "version"         : product_version,
             "summary"         : description,
             "vendor"          : product_name,

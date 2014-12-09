@@ -27,9 +27,9 @@
 # Example output from agent:
 # <<<winperf_ts_sessions>>>
 # 1385714515.93 2102
-# 2 1 rawcount
-# 4 1 rawcount
-# 6 0 rawcount
+# 2 20 rawcount
+# 4 18 rawcount
+# 6 2 rawcount
 
 # Counters, relative to the base ID (e.g. 2102)
 # 2 Total number of Terminal Services sessions.
@@ -44,6 +44,12 @@ def check_winperf_ts_sessions(_unused, params, info):
     if not info or len(info) == 1:
         return 3, "Performance counters not available"
     total, active, inactive = [ int(l[1]) for l in info[1:4] ]
+
+    # Tom Moore said, that the order of the columns has recently changed
+    # in newer Windows versions (hooray!) and is now active, inactive, total.
+    # We try to accomodate for that.
+    if active + inactive != total:
+        active, inactive, total = total, active, inactive
 
     state = 0
     state_txt = []

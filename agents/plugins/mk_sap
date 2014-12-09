@@ -38,7 +38,7 @@
 #
 # During development the "CCMS_Doku.pdf" was really helpful.
 
-import os, sys
+import os, sys, fcntl
 import time, datetime
 
 # sapnwrfc needs to know where the libs are located. During
@@ -486,7 +486,6 @@ try:
 
     # Only write the state file once per run. And only when it has been changed
     if state_file_changed:
-        import fcntl
         new_file = STATE_FILE + '.new'
         fd = os.open(new_file, os.O_WRONLY | os.o_CREAT)
         fcntl.flock(fd, fcntl.LOCK_EX)

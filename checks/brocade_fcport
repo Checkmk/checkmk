@@ -208,7 +208,7 @@ def check_brocade_fcport(item, params, info):
 
         # average turned on: use averaged traffic values instead of current ones
         if average:
-            timedif, value = get_average("brocade_fcport.%s.%s.avg" % (what, item), this_time, value, average)
+            value = get_average("brocade_fcport.%s.%s.avg" % (what, item), this_time, value, average)
             output.append("Avg(%dmin): %s/s" % (average, get_bytes_human_readable(value)))
             perfaverages.append( ("%s_avg" % what.lower(), value, warn_bytes, crit_bytes, 0, wirespeed))
 
@@ -230,7 +230,7 @@ def check_brocade_fcport(item, params, info):
     for what, value in [ ("rxframes", rxframes_rate), ("txframes", txframes_rate) ]:
         perfdata.append((what, value))
         if average:
-            timedif, value = get_average("brocade_fcport.%s.%s.avg" % (what, item), this_time, value, average)
+            value = get_average("brocade_fcport.%s.%s.avg" % (what, item), this_time, value, average)
             perfdata.append( ("%s_avg" % what, value) )
 
     # E R R O R C O U N T E R S
@@ -247,7 +247,7 @@ def check_brocade_fcport(item, params, info):
 
         # if averaging is on, compute average and apply levels to average
         if average:
-            timedif, per_sec_avg = get_average("brocade_fcport.%s.%s.avg" % \
+            per_sec_avg = get_average("brocade_fcport.%s.%s.avg" % \
                     (counter, item), this_time, per_sec, average)
             perfdata.append( ("%s_avg" % counter, per_sec_avg ) )
 
@@ -260,7 +260,7 @@ def check_brocade_fcport(item, params, info):
 
         # Honor averaging of error rate
         if average:
-            timedif, rate = get_average("brocade_fcport.%s.%s.avgrate" %
+            rate = get_average("brocade_fcport.%s.%s.avgrate" %
                     (counter, item), this_time, rate, average)
             text += ", Avg: %.2f%%" % (rate * 100.0)
 

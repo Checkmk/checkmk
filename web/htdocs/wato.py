@@ -14597,9 +14597,9 @@ def render_conditions(ruleset, tagspecs, host_list, item_list, varname, folder):
                     html.write("<b>%s</b> " % _("not"))
             else:
                 if negate:
-                    html.write(_("Host has tag"))
-                else:
                     html.write(_("Host does not have tag"))
+                else:
+                    html.write(_("Host has tag"))
             html.write(" <b>" + alias + "</b>")
         else:
             if negate:

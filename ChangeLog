@@ -156,6 +156,7 @@
     * 1735 FIX: oracle_instance: Inventory function deals better with old bogus agent output
     * 1736 FIX: lparstat_aix: Trying to deal with more kind of lparstat output...
     * 1737 FIX: mk_sap: Working around garbled SAP state file when multiple instances were running parallel
+    * 1738 FIX: oracle_instance: Be compatible to old oracle agent outputs
 
     Multisite:
     * 1508 Allow input of plugin output and perfdata when faking check results...

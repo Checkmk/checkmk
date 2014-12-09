@@ -23,6 +23,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+export MK_VARDIR=/var/lib/check_mk_agent
+
 help() {
     echo "Usage: mk-job IDENT PROGRAM [ARGS...]"
     echo ""
@@ -40,7 +42,7 @@ if [ $# -lt 2 ]; then
 fi
 
 MYSELF=$(id -nu)
-OUTPUT_PATH=/var/lib/check_mk_agent/job/$MYSELF
+OUTPUT_PATH=$MK_VARDIR/job/$MYSELF
 IDENT=$1
 shift
 

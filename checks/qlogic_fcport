@@ -107,67 +107,65 @@ def check_qlogic_fcport(item, params, info):
 
             # Counters
             this_time = time.time()
-            try:
-                # Bytes/sec in and out
-                in_octets  = int(c2_in_octets)  + int(c3_in_octets)
-                out_octets = int(c2_out_octets) + int(c3_out_octets)
 
-                timedif, in_octet_rate  = get_counter("qlogic_fcport.in_octets.%s"  % port_id, this_time, in_octets)
-                timedif, out_octet_rate = get_counter("qlogic_fcport.out_octets.%s" % port_id, this_time, out_octets)
+            # Bytes/sec in and out
+            in_octets  = int(c2_in_octets)  + int(c3_in_octets)
+            out_octets = int(c2_out_octets) + int(c3_out_octets)
 
-                message += ", In: %s/s"  % get_bytes_human_readable(in_octet_rate)
-                message += ", Out: %s/s" % get_bytes_human_readable(out_octet_rate)
+            in_octet_rate  = get_rate("qlogic_fcport.in_octets.%s"  % port_id, this_time, in_octets)
+            out_octet_rate = get_rate("qlogic_fcport.out_octets.%s" % port_id, this_time, out_octets)
 
-                perfdata.append(("in",  in_octet_rate))
-                perfdata.append(("out", out_octet_rate))
+            message += ", In: %s/s"  % get_bytes_human_readable(in_octet_rate)
+            message += ", Out: %s/s" % get_bytes_human_readable(out_octet_rate)
 
-                # Frames in and out
-                in_frames  = int(c2_in_frames)  + int(c3_in_frames)
-                out_frames = int(c2_out_frames) + int(c3_out_frames)
+            perfdata.append(("in",  in_octet_rate))
+            perfdata.append(("out", out_octet_rate))
 
-                timedif, in_frame_rate  = get_counter("qlogic_fcport.in_frames.%s"  % port_id, this_time, in_frames)
-                timedif, out_frame_rate = get_counter("qlogic_fcport.out_frames.%s" % port_id, this_time, out_frames)
+            # Frames in and out
+            in_frames  = int(c2_in_frames)  + int(c3_in_frames)
+            out_frames = int(c2_out_frames) + int(c3_out_frames)
 
-                message += ", in frames: %s/s"  % in_frame_rate
-                message += ", out frames: %s/s" % out_frame_rate
+            in_frame_rate  = get_rate("qlogic_fcport.in_frames.%s"  % port_id, this_time, in_frames)
+            out_frame_rate = get_rate("qlogic_fcport.out_frames.%s" % port_id, this_time, out_frames)
 
-                perfdata.append(("rxframes", in_frame_rate))
-                perfdata.append(("txframes", out_frame_rate))
+            message += ", in frames: %s/s"  % in_frame_rate
+            message += ", out frames: %s/s" % out_frame_rate
 
-                # error rates
-                discards = int(c2_discards) + int(c3_discards)
-                error_sum = 0
-                for descr, counter, value in [
-                    ("Link Failures",         "link_failures",         link_failures),
-                    ("Sync Losses",           "sync_losses",           sync_losses),
-                    ("PrimitSeqErrors",       "prim_seq_proto_errors", prim_seq_proto_errors),
-                    ("Invalid TX Words",      "invalid_tx_words",      invalid_tx_words),
-                    ("Invalid CRCs",          "invalid_crcs",          invalid_crcs),
-                    ("Address ID Errors",     "address_id_errors",     address_id_errors),
-                    ("Link Resets In",        "link_reset_ins",        link_reset_ins),
-                    ("Link Resets Out",       "link_reset_outs",       link_reset_outs),
-                    ("Offline Sequences In",  "ols_ins",               ols_ins),
-                    ("Offline Sequences Out", "ols_outs",              ols_outs),
-                    ("Discards",              "discards",              discards),
-                    ("F_BSY frames",          "c2_fbsy_frames",        c2_fbsy_frames),
-                    ("F_RJT frames",          "c2_frjt_frames",        c2_frjt_frames),
-                ]:
-                    value = int(value)
-                    timedif, per_sec = get_counter("qlogic_fcport.%s.%s" % (counter, port_id), this_time, value)
-                    perfdata.append((counter, per_sec))
-                    error_sum += per_sec
+            perfdata.append(("rxframes", in_frame_rate))
+            perfdata.append(("txframes", out_frame_rate))
 
-                    if per_sec > 0:
-                        message += ", %s: %s/s" % (descr, per_sec)
-                if error_sum == 0:
-                    message += ", no protocol errors"
+            # error rates
+            discards = int(c2_discards) + int(c3_discards)
+            error_sum = 0
+            for descr, counter, value in [
+                ("Link Failures",         "link_failures",         link_failures),
+                ("Sync Losses",           "sync_losses",           sync_losses),
+                ("PrimitSeqErrors",       "prim_seq_proto_errors", prim_seq_proto_errors),
+                ("Invalid TX Words",      "invalid_tx_words",      invalid_tx_words),
+                ("Invalid CRCs",          "invalid_crcs",          invalid_crcs),
+                ("Address ID Errors",     "address_id_errors",     address_id_errors),
+                ("Link Resets In",        "link_reset_ins",        link_reset_ins),
+                ("Link Resets Out",       "link_reset_outs",       link_reset_outs),
+                ("Offline Sequences In",  "ols_ins",               ols_ins),
+                ("Offline Sequences Out", "ols_outs",              ols_outs),
+                ("Discards",              "discards",              discards),
+                ("F_BSY frames",          "c2_fbsy_frames",        c2_fbsy_frames),
+                ("F_RJT frames",          "c2_frjt_frames",        c2_frjt_frames),
+            ]:
+                value = int(value)
+                per_sec = get_rate("qlogic_fcport.%s.%s" % (counter, port_id), this_time, value)
+                perfdata.append((counter, per_sec))
+                error_sum += per_sec
 
-            except MKCounterWrapped:
-                pass
+                if per_sec > 0:
+                    message += ", %s: %s/s" % (descr, per_sec)
+            if error_sum == 0:
+                message += ", no protocol errors"
 
             return status, message, perfdata
 
     return 3, "Port %s not found" % item
+
 
 check_info["qlogic_fcport"] = {
     'check_function':          check_qlogic_fcport,

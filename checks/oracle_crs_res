@@ -135,7 +135,7 @@ def check_oracle_crs_res(item, params, info):
 
     # In case of missing information we assume that the clusterware
     # is not running and we simple skip the result
-    raise MKCounterWrapped(None, "No resource details found for %s. Maybe the cssd/crsd is not running" % item)
+    raise MKCounterWrapped("No resource details found for %s. Maybe the cssd/crsd is not running" % item)
 
 check_info['oracle_crs_res'] = {
     "check_function"          : check_oracle_crs_res,

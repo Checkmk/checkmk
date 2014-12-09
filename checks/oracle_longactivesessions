@@ -84,7 +84,7 @@ def check_oracle_longactivesessions(item, params, info):
     # In case of missing information we assume that the login into
     # the database has failed and we simply skip this check. It won't
     # switch to UNKNOWN, but will get stale.
-    raise MKCounterWrapped(None, "no info from database. Check ORA %s Instance" % item)
+    raise MKCounterWrapped("no info from database. Check ORA %s Instance" % item)
 
 
 check_info['oracle_longactivesessions'] = {

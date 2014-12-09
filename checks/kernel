@@ -69,7 +69,7 @@ def check_kernel(item, params, info):
 
     counter = hits[0][0]
     this_val = int(hits[0][1])
-    timedif, per_sec = get_counter("kernel." + counter, this_time, this_val)
+    per_sec = get_rate("kernel." + counter, this_time, this_val)
 
     if type(params) == tuple:
         warn, crit = params
@@ -78,10 +78,11 @@ def check_kernel(item, params, info):
     perfdata = [ (counter, per_sec, warn, crit) ]
     state, text, extraperf = check_levels(per_sec, counter, params)
     perfdata += extraperf
-    infotext = "%.0f/s in last %d secs" % (per_sec, timedif)
+    infotext = "%.0f/s" % per_sec
     if text:
         infotext += ", " + text
     return state, infotext, perfdata
+
 
 check_info["kernel"] = {
     'check_function':          check_kernel,

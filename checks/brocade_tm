@@ -25,14 +25,19 @@
 # Boston, MA 02110-1301 USA.
 
 
+# FIXME:
+# - no camel case in check parameters
+# - use friendly output of values. Output
+#   "Ingress Dequeue Packets" instead of "brcdTMStatsIngressDequeuePkts"
+
 factory_settings["brocade_tm_default_levels"] = {
-            'brcdTMStatsTotalIngressPktsCnt': (1000,10000),
-            'brcdTMStatsIngressEnqueuePkts': (1000,10000),
-            'brcdTMStatsEgressEnqueuePkts': (1000,10000),
-            'brcdTMStatsIngressDequeuePkts': (1000,10000),
-            'brcdTMStatsIngressTotalQDiscardPkts': (1000,10000),
-            'brcdTMStatsIngressOldestDiscardPkts': (1000,10000),
-            'brcdTMStatsEgressDiscardPkts': (1000,10000),
+    'brcdTMStatsTotalIngressPktsCnt':      (1000, 10000),
+    'brcdTMStatsIngressEnqueuePkts':       (1000, 10000),
+    'brcdTMStatsEgressEnqueuePkts':        (1000, 10000),
+    'brcdTMStatsIngressDequeuePkts':       (1000, 10000),
+    'brcdTMStatsIngressTotalQDiscardPkts': (1000, 10000),
+    'brcdTMStatsIngressOldestDiscardPkts': (1000, 10000),
+    'brcdTMStatsEgressDiscardPkts':        (1000, 10000),
 }
 
 def inventory_brocade_tm(info):
@@ -41,33 +46,29 @@ def inventory_brocade_tm(info):
         inventory.append(( line[0], None ))
     return inventory
 
+
 def check_brocade_tm(item, params, info):
     for line in info:
         if line[0] == item:
             tm = {}
-            rates = {}
-            tm['brcdTMStatsTotalIngressPktsCnt'] = line[1]
-            tm['brcdTMStatsIngressEnqueuePkts'] = line[2]
-            tm['brcdTMStatsEgressEnqueuePkts'] = line[3]
-            tm['brcdTMStatsIngressDequeuePkts'] = line[4]
-            tm['brcdTMStatsIngressTotalQDiscardPkts'] = line[5]
-            tm['brcdTMStatsIngressOldestDiscardPkts'] = line[6]
-            tm['brcdTMStatsEgressDiscardPkts'] = line[7]
+
+            tm['TotalIngressPktsCnt']      = line[1]
+            tm['IngressEnqueuePkts']       = line[2]
+            tm['EgressEnqueuePkts']        = line[3]
+            tm['IngressDequeuePkts']       = line[4]
+            tm['IngressTotalQDiscardPkts'] = line[5]
+            tm['IngressOldestDiscardPkts'] = line[6]
+            tm['EgressDiscardPkts']        = line[7]
 
             now = time.time()
             infotext = ""
-            counter_wrapped = ""
             perfdata = []
             overall_state = 0
 
             for name, counter in tm.items():
-                try:
-                    timediff, rate = get_counter("%s.%s" % (name, item), now, saveint(counter))
-                except MKCounterWrapped, e:
-                    counter_wrapped = e
-                    rate = 0 # we need to fill the rate, even though check will not do anything
+                rate = get_rate("%s.%s" % (name, item), now, int(counter))
 
-                warn, crit = params[name]
+                warn, crit = params["brcdTMStats" + name]
                 if re.search("Discard", name):
                     if rate > crit:
                         state = 2
@@ -81,16 +82,14 @@ def check_brocade_tm(item, params, info):
                 else:
                     state = 0
                     sym = ""
-                infotext += "%s: %.1f%s, " % ( name, rate, sym )
+                infotext += "%s: %.1f%s, " % (name, rate, sym)
                 perfdata.append( (name, rate, warn, crit) )
                 overall_state = max(overall_state, state)
 
-            if counter_wrapped: # interrupt the check, no output this time
-                raise counter_wrapped
-
-            return(overall_state, infotext, perfdata)
+            return (overall_state, infotext, perfdata)
 
     return (3, "Interface not found")
+
 
 check_info["brocade_tm"] = {
     'check_function'         : check_brocade_tm,

@@ -176,122 +176,104 @@ def check_brocade_fcport(item, params, info):
 
     # Now check rates of various error counters
     this_time = time.time()
-    try:
-        timedif, rxwords_rate = get_counter("brocade_fcport.rxwords.%s" % index, this_time, rxwords)
-        timedif, txwords_rate = get_counter("brocade_fcport.txwords.%s" % index, this_time, txwords)
 
-        # compute traffic in B/s and MB/s
-        in_bytes = rxwords_rate * 4
-        out_bytes = txwords_rate * 4
+    rxwords_rate = get_rate("brocade_fcport.rxwords.%s" % index, this_time, rxwords)
+    txwords_rate = get_rate("brocade_fcport.txwords.%s" % index, this_time, txwords)
 
-        average = params.get("average") # range in minutes
+    # compute traffic in B/s and MB/s
+    in_bytes = rxwords_rate * 4
+    out_bytes = txwords_rate * 4
 
-        # B A N D W I D T H
-        # convert thresholds in percentage into MB/s
-        bw_thresh = params.get("bw")
-        if bw_thresh == None: # no levels
-            warn_bytes, crit_bytes = None, None
+    average = params.get("average") # range in minutes
+
+    # B A N D W I D T H
+    # convert thresholds in percentage into MB/s
+    bw_thresh = params.get("bw")
+    if bw_thresh == None: # no levels
+        warn_bytes, crit_bytes = None, None
+    else:
+        warn, crit = bw_thresh
+        if type(warn) == float:
+            warn_bytes = wirespeed * warn / 100.0
+        else: # in MB
+            warn_bytes = warn * 1048576.0
+        if type(crit) == float:
+            crit_bytes = wirespeed * crit / 100.0
+        else: # in MB
+            crit_bytes = crit * 1048576.0
+
+    for what, value in [("In", in_bytes), ("Out", out_bytes)]:
+        output.append("%s: %s/s" % (what, get_bytes_human_readable(value)))
+        perfdata.append((what.lower(), value, warn_bytes, crit_bytes, 0, wirespeed))
+
+        # average turned on: use averaged traffic values instead of current ones
+        if average:
+            timedif, value = get_average("brocade_fcport.%s.%s.avg" % (what, item), this_time, value, average)
+            output.append("Avg(%dmin): %s/s" % (average, get_bytes_human_readable(value)))
+            perfaverages.append( ("%s_avg" % what.lower(), value, warn_bytes, crit_bytes, 0, wirespeed))
+
+        # handle levels for in/out
+        if crit_bytes != None and value >= crit_bytes:
+            summarystate = 2
+            output.append(" >= %s/s(!!)" % (get_bytes_human_readable(crit_bytes)))
+        elif warn_bytes != None and value >= warn_bytes:
+            summarystate = max(1, summarystate)
+            output.append(" >= %s/s(!!)" % (get_bytes_human_readable(warn_bytes)))
+
+    # put perfdata of averages after perfdata for in and out in order not to confuse the perfometer
+    perfdata.extend(perfaverages)
+
+    # R X F R A M E S & T X F R A M E S
+    # Put number of frames into performance data (honor averaging)
+    rxframes_rate  = get_rate("brocade_fcport.rxframes.%s"  % index, this_time, rxframes)
+    txframes_rate  = get_rate("brocade_fcport.txframes.%s"  % index, this_time, txframes)
+    for what, value in [ ("rxframes", rxframes_rate), ("txframes", txframes_rate) ]:
+        perfdata.append((what, value))
+        if average:
+            timedif, value = get_average("brocade_fcport.%s.%s.avg" % (what, item), this_time, value, average)
+            perfdata.append( ("%s_avg" % what, value) )
+
+    # E R R O R C O U N T E R S
+    # handle levels on error counters
+
+    for descr, counter, value, ref in [
+           ("CRC errors",           "rxcrcs",              rxcrcs,          rxframes_rate, ),
+           ("ENC-Out",              "rxencoutframes",      rxencoutframes,  rxframes_rate, ),
+           ("C3 discards",          "c3discards",          c3discards,      txframes_rate, ),
+           ("no TX buffer credits", "notxcredits",         notxcredits,     txframes_rate, ),]:
+        per_sec = get_rate("brocade_fcport.%s.%s" % (counter, index), this_time, value)
+
+        perfdata.append((counter, per_sec))
+
+        # if averaging is on, compute average and apply levels to average
+        if average:
+            timedif, per_sec_avg = get_average("brocade_fcport.%s.%s.avg" % \
+                    (counter, item), this_time, per_sec, average)
+            perfdata.append( ("%s_avg" % counter, per_sec_avg ) )
+
+        # compute error rate (errors in relation to number of frames) (from 0.0 to 1.0)
+        if ref > 0 or per_sec > 0:
+            rate = per_sec / (ref + per_sec)
         else:
-            warn, crit = bw_thresh
-            if type(warn) == float:
-                warn_bytes = wirespeed * warn / 100.0
-            else: # in MB
-                warn_bytes = warn * 1048576.0
-            if type(crit) == float:
-                crit_bytes = wirespeed * crit / 100.0
-            else: # in MB
-                crit_bytes = crit * 1048576.0
+            rate = 0
+        text = "%s: %.2f%%" % (descr, rate * 100.0)
 
-        for what, value in [("In", in_bytes), ("Out", out_bytes)]:
-            output.append("%s: %s/s" % (what, get_bytes_human_readable(value)))
-            perfdata.append((what.lower(), value, warn_bytes, crit_bytes, 0, wirespeed))
+        # Honor averaging of error rate
+        if average:
+            timedif, rate = get_average("brocade_fcport.%s.%s.avgrate" %
+                    (counter, item), this_time, rate, average)
+            text += ", Avg: %.2f%%" % (rate * 100.0)
 
-            # average turned on: use averaged traffic values instead of current ones
-            if average:
-                timedif, value = get_average("brocade_fcport.%s.%s.avg" % (what, item), this_time, value, average)
-                output.append("Avg(%dmin): %s/s" % (average, get_bytes_human_readable(value)))
-                perfaverages.append( ("%s_avg" % what.lower(), value, warn_bytes, crit_bytes, 0, wirespeed))
-
-            # handle levels for in/out
-            if crit_bytes != None and value >= crit_bytes:
-                summarystate = 2
-                output.append(" >= %s/s(!!)" % (get_bytes_human_readable(crit_bytes)))
-            elif warn_bytes != None and value >= warn_bytes:
-                summarystate = max(1, summarystate)
-                output.append(" >= %s/s(!!)" % (get_bytes_human_readable(warn_bytes)))
-
-        # put perfdata of averages after perfdata for in and out in order not to confuse the perfometer
-        perfdata.extend(perfaverages)
-
-        # R X F R A M E S & T X F R A M E S
-        # Put number of frames into performance data (honor averaging)
-        timedif, rxframes_rate  = get_counter("brocade_fcport.rxframes.%s"  % index, this_time, rxframes)
-        timedif, txframes_rate  = get_counter("brocade_fcport.txframes.%s"  % index, this_time, txframes)
-        for what, value in [ ("rxframes", rxframes_rate), ("txframes", txframes_rate) ]:
-            perfdata.append((what, value))
-            if average:
-                timedif, value = get_average("brocade_fcport.%s.%s.avg" % (what, item), this_time, value, average)
-                perfdata.append( ("%s_avg" % what, value) )
-
-        # E R R O R C O U N T E R S
-        # handle levels on error counters
-
-        for descr, counter, value, ref in [
-               ("CRC errors",           "rxcrcs",              rxcrcs,          rxframes_rate, ),
-               ("ENC-Out",              "rxencoutframes",      rxencoutframes,  rxframes_rate, ),
-               ("C3 discards",          "c3discards",          c3discards,      txframes_rate, ),
-               ("no TX buffer credits", "notxcredits",         notxcredits,     txframes_rate, ),]:
-            timedif, per_sec = get_counter("brocade_fcport.%s.%s" % (counter, index), this_time, value)
-
-            perfdata.append((counter, per_sec))
-
-            # if averaging is on, compute average and apply levels to average
-            if average:
-                timedif, per_sec_avg = get_average("brocade_fcport.%s.%s.avg" % \
-                        (counter, item), this_time, per_sec, average)
-                perfdata.append( ("%s_avg" % counter, per_sec_avg ) )
-
-            # compute error rate (errors in relation to number of frames) (from 0.0 to 1.0)
-            if ref > 0 or per_sec > 0:
-                rate = per_sec / (ref + per_sec)
-            else:
-                rate = 0
-            text = "%s: %.2f%%" % (descr, rate * 100.0)
-
-            # Honor averaging of error rate
-            if average:
-                timedif, rate = get_average("brocade_fcport.%s.%s.avgrate" %
-                        (counter, item), this_time, rate, average)
-                text += ", Avg: %.2f%%" % (rate * 100.0)
-
-            error_percentage = rate * 100.0
-            warn, crit = params[counter]
-            if crit != None and error_percentage >= crit:
-                summarystate = 2
-                text += "(!!)"
-                output.append(text)
-            elif warn != None and error_percentage >= warn:
-                summarystate = max(1, summarystate)
-                text += "(!)"
-                output.append(text)
-
-
-    except MKCounterWrapped, e:
-        # Assume that this is the first check of this port. Make sure, all counters
-        # are initialized. If a counter is updated twice, get_counter will handle
-        # that correctly.
-        for counter, value in [ ( "rxwords", rxwords),
-                                ( "txwords", txwords),
-                                ( "txframes", txframes, ),
-                                ( "notxcredits", notxcredits),
-                                ( "rxcrcs", rxcrcs),
-                                ( "rxencoutframes", rxencoutframes),
-                                ( "c3discards", c3discards)]:
-            try:
-                get_counter("brocade_fcport.%s.%s" % (counter, index), this_time, value)
-            except MKCounterWrapped, e:
-                pass
-        perfdata = [] # perfdata might not be valid
+        error_percentage = rate * 100.0
+        warn, crit = params[counter]
+        if crit != None and error_percentage >= crit:
+            summarystate = 2
+            text += "(!!)"
+            output.append(text)
+        elif warn != None and error_percentage >= warn:
+            summarystate = max(1, summarystate)
+            text += "(!)"
+            output.append(text)
 
 
     # P O R T S T A T E

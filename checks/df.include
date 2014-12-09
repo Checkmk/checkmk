@@ -337,7 +337,7 @@ def df_check_filesystem_single(hostname, mountpoint, size_mb, avail_mb, inodes_t
             this_time = time.time()
 
             # first compute current rate in MB/s by computing delta since last check
-            timedif, rate = get_counter("df.%s.delta" % mountpoint, this_time, used_mb, True)
+            rate = get_rate("df.%s.delta" % mountpoint, this_time, used_mb, True)
             if levels.get("trend_perfdata"):
                 # Change in 1.1.13i3: The trend perfdata always outputs
                 # the growth in MB/24h, not any longer in MB/trendrange

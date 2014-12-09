@@ -42,17 +42,11 @@ def check_ucd_cpu_util(item, params, info):
     counters = map(saveint, info[0])
     rates = []
     this_time = time.time()
-    some_counter_wrapped = False
+
     for n, c in enumerate(counters):
         name = "cpu.util.%d" % n
-        try:
-            timedif, rate = get_counter(name, this_time, c)
-            rates.append(rate)
-        except:
-            some_counter_wrapped = True
-
-    if some_counter_wrapped:
-        return (0, "first check, no counter data yet")
+        rate = get_rate(name, this_time, c)
+        rates.append(rate)
 
     total = sum(rates)
     if total == 0:

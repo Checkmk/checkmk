@@ -109,17 +109,15 @@ def check_emcvnx_hba(item, _no_params, info):
     write_blocks = parsed[item]["Blocks Written"]
     countername_r = "emcvnx_hba.read_blocks.%s" % item.replace(" ", "_")
     countername_w = "emcvnx_hba.write_blocks.%s" % item.replace(" ", "_")
-    try:
-        timedif, read_blocks_per_sec = get_counter(countername_r, now, read_blocks)
-        timedif, write_blocks_per_sec = get_counter(countername_w, now, write_blocks)
-        read_blocks_per_sec = saveint(read_blocks_per_sec)
-        write_blocks_per_sec = saveint(write_blocks_per_sec)
-        perfdata.append(("read_blocks", read_blocks_per_sec))
-        perfdata.append(("write_blocks", write_blocks_per_sec))
 
-        return 0, "Read: %s Blocks/s, Write: %s Blocks/s" % (read_blocks_per_sec, write_blocks_per_sec), perfdata
-    except MKCounterWrapped:
-        return 0, "Counter wrapped. Next check contains data again.", perfdata
+    read_blocks_per_sec = get_rate(countername_r, now, read_blocks)
+    write_blocks_per_sec = get_rate(countername_w, now, write_blocks)
+    read_blocks_per_sec = saveint(read_blocks_per_sec)
+    write_blocks_per_sec = saveint(write_blocks_per_sec)
+    perfdata.append(("read_blocks", read_blocks_per_sec))
+    perfdata.append(("write_blocks", write_blocks_per_sec))
+
+    return 0, "Read: %s Blocks/s, Write: %s Blocks/s" % (read_blocks_per_sec, write_blocks_per_sec), perfdata
 
 
 check_info['emcvnx_hba'] = {

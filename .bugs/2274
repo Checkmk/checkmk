@@ -6,3 +6,4 @@ Targetversion: 1.2.5i1
 Class: bug
 
 if you add a topic to a Auxtag, the auxtag is missing in the rules after
+it only works if a normal tag group has the same topic.

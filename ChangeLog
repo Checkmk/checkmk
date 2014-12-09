@@ -302,6 +302,7 @@
     * 1547 FIX: win_cpuinfo: fix case where NumberOfCores is missing (Windows 2003)...
     * 1552 FIX: mk_inventory.ps1: fix garbled or missing entries by removing bogus binary zeroes...
     * 1752 FIX: win_exefiles: handle case gracefully where no size information is available
+    * 1753 FIX: win_bios: handle case with colons in BIOS version
 
     inventory:
     * 1516 FIX: win_disks: fix exception in case of empty signature

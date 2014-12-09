@@ -38,7 +38,12 @@ factory_settings["oracle_instance_defaults"] = {
 
 
 def inventory_oracle_instance(info):
-    return [ (line[0], {} ) for line in info ]
+    # Skip ORA- error messages from broken old oracle agent
+    # <<<oracle_instance:sep(124)>>>
+    # ORA-99999 tnsping failed for +ASM1
+    return [ (line[0], {} ) for line in info
+             if not (line[0].startswith('ORA-') and line[0][4].isdigit())
+                 and len(line[0]) < 20 ]
 
 
 def check_oracle_instance(item, params, info):
@@ -56,7 +61,6 @@ def check_oracle_instance(item, params, info):
     state = 0
     for line in info:
         if line[0] == item:
-
             # In case of a general error (e.g. authentication failed), the second
             # column contains the word "FAILURE"
             if line[1] == 'FAILURE':

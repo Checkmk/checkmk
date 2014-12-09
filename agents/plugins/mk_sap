@@ -486,7 +486,13 @@ try:
 
     # Only write the state file once per run. And only when it has been changed
     if state_file_changed:
-        file(STATE_FILE, 'w').write(repr(states))
+        import fcntl
+        new_file = STATE_FILE + '.new'
+        fd = os.open(new_file, os.O_WRONLY | os.o_CREAT)
+        fcntl.flock(fd, fcntl.LOCK_EX)
+        os.write(fd, repr(states))
+        os.close(fd)
+        os.rename(STATE_FILE+'.new', STATE_FILE)
 
 except Exception, e:
     sys.stderr.write('ERROR: Unhandled exception (%s)\n' % e)

@@ -191,9 +191,12 @@ def inventory_drbd(info, checktype):
                 continue
 
             if checktype == 'drbd':
-                levels = { "roles_inventory":      parsed['ro'],
-                           "diskstates_inventory": parsed['ds']
-                            }
+                if 'ro' not in parsed or 'ds' not in parsed:
+                    continue
+                levels = {
+                    "roles_inventory":      parsed['ro'],
+                    "diskstates_inventory": parsed['ds'],
+                }
             elif checktype == 'drbd.net':
                 levels = "drbd_net_default_levels"
             elif checktype == 'drbd.disk':
@@ -416,7 +419,7 @@ def check_drbd_stats(item, params, info):
             if key in parsed:
                 output += '%s: %s, ' % (label, parsed[key])
             else:
-                parsed[key] = 0 # perfdata must always have same number of entries
+                parsed[key] = '0' # perfdata must always have same number of entries
             if parsed[key].isdigit():
                 perfdata.append(('%s' % label.replace(" ", "_"), parsed[key]))
         return (0, output.rstrip(', '), perfdata)

@@ -143,6 +143,7 @@
     * 1729 FIX: apc_symmetra_test: Cleaned up check, fixed exception when self test date is zero
     * 1730 FIX: apc_symmetra: Fixed exception when last diagnose date was not known
     * 1731 FIX: ipmi_sensors: Fixed agent part when ipmi-sensors call on first agent run...
+    * 1732 FIX: dell_powerconnect_cpu: Fixed exception during inventory for incompatible devices
 
     Multisite:
     * 1508 Allow input of plugin output and perfdata when faking check results...

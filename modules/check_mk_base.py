@@ -980,7 +980,7 @@ def get_average(itemname, this_time, this_val, backlog_minutes, initialize_zero 
         if initialize_zero:
             this_val = 0
         g_counters[itemname] = (this_time, this_val)
-        return 1.0, this_val # avoid time diff of 0.0 -> avoid division by zero
+        return this_val # avoid time diff of 0.0 -> avoid division by zero
 
     # Get previous value and time difference
     last_time, last_val = g_counters.get(itemname)
@@ -1006,14 +1006,9 @@ def get_average(itemname, this_time, this_val, backlog_minutes, initialize_zero 
 
     new_val = last_val * weight + this_val * (1 - weight)
 
-    # print "Alt: %.5f, Jetzt: %.5f, Timedif: %.1f, Gewicht: %.5f, Neu: %.5f" % \
-    #     (last_val, this_val, timedif, weight, new_val)
-
     g_counters[itemname] = (this_time, new_val)
-    return timedif, new_val
+    return new_val
 
-
-# writelines([ "%s %d %d\n" % (i[0], i[1][0], i[1][1]) for i in g_counters.items() ])
 
 
 #   +----------------------------------------------------------------------+

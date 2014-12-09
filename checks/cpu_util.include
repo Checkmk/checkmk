@@ -51,7 +51,7 @@ def check_cpu_util(util, params, this_time = None):
 
     # Averaging
     if "average" in params:
-        timedif, util_avg = get_average("cpu_utilization.avg", this_time, util, params["average"])
+        util_avg = get_average("cpu_utilization.avg", this_time, util, params["average"])
         check_against = util_avg
         counter = "avg"
         infotext += ", %dmin average: %.1f %%" % (params["average"], util_avg)

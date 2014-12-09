@@ -336,7 +336,7 @@ def check_ps_common(item, params, info, cpu_cores = 1, info_name = "processes" )
         infotext += " %.1f%% CPU" % percent_cpu
 
         if "cpu_average" in params:
-            timedif, avg_cpu = get_average("ps.%s.cpu" % item, now, percent_cpu, params["cpu_average"], False)
+            avg_cpu = get_average("ps.%s.cpu" % item, now, percent_cpu, params["cpu_average"], False)
             infotext += " (%d min average: %.1f%%)" % (params["cpu_average"], avg_cpu)
             percent_cpu = avg_cpu # use this for level comparison
             if extended_perfdata:

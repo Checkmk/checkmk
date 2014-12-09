@@ -116,27 +116,19 @@ def parse_cisco_temp_sensor(info):
 
     # Create dict with thresholds
     thresholds = {}
-    for id, sensortype, value, sensorstate in state_info:
-       thresholds.setdefault(id, [])
+    for id, sensortype, precision, value, sensorstate in state_info:
+        thresholds.setdefault(id, [])
 
-    for endoid, levels in levels_info:
-       # endoid is e.g. 21549.9 or 21459.10
-       level = saveint(levels)
-       if level > 150:
-           level = level / 10
-       id, subid = endoid.split('.')
-       thresholds.setdefault(id, []).append(level)
+    for endoid, level in levels_info:
+        level = int(level)*(10**int(precision))
+        # endoid is e.g. 21549.9 or 21459.10
+        id, subid = endoid.split('.')
+        thresholds.setdefault(id, []).append(level)
 
     # Create main dictionary (only of temperature sensors)
     sensors = []
-    for id, sensortype, value, sensorstate in state_info:
-        # Poor try to find temperature values, which are given in tenths of degrees.
-        # Seems that some new firmware shows this behaviour.
-        # A normal temperature sensor has only a range up to
-        # 60 degree, so we've chosen 150.
-        value = saveint(value)
-        if value > 150:
-            value = value / 10
+    for id, sensortype, precision, value, sensorstate in state_info:
+        value = int(value)*(10**int(precision))
         sensors.append( ( id, descriptions.get(id), sensortype,
                         value, sensorstate, thresholds[id] ) )
     return sensors
@@ -187,6 +179,7 @@ check_info['cisco_temp_sensor'] = {
                                ( ".1.3.6.1.4.1.9.9.91.1.1.1.1", [
                                  OID_END,
                                  1, # Type (see above), 8 = Celsius, 12 = truth value
+                                 3, # Precision
                                  4, # Most recent measurement
                                  5, # Status of the sensor 1 == ok, 2 == cannot report, 3 == broken
                                ]),

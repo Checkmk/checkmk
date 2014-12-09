@@ -29,6 +29,7 @@ unset LANG
 
 export MK_LIBDIR="/usr/lib/check_mk_agent"
 export MK_CONFDIR="/etc/check_mk"
+export MK_VARDIR="/var/lib/check_mk_agent"
 
 # Provide information about the remote host. That helps when data
 # is being sent only once to each remote host.
@@ -53,7 +54,7 @@ LOCALDIR=$MK_LIBDIR/local
 
 # All files in SPOOLDIR will simply appended to the agent
 # output if they are not outdated (see below)
-SPOOLDIR=$MK_CONFDIR/spool
+SPOOLDIR=$MK_VARDIR/spool
 
 # close standard input (for security reasons) and stderr
 if [ "$1" = -d ]
@@ -72,8 +73,8 @@ function run_cached () {
     shift 2
     local CMDLINE="$section$@"
 
-    if [ ! -d $MK_CONFDIR/cache ]; then mkdir -p $MK_CONFDIR/cache ; fi
-    CACHEFILE="$MK_CONFDIR/cache/$NAME.cache"
+    if [ ! -d $MK_VARDIR/cache ]; then mkdir -p $MK_VARDIR/cache ; fi
+    CACHEFILE="$MK_VARDIR/cache/$NAME.cache"
 
     # Check if the creation of the cache takes suspiciously long and return
     # nothing if the age (access time) of $CACHEFILE.new is twice the MAXAGE
@@ -110,10 +111,11 @@ export -f run_cached
 echo '<<<check_mk>>>'
 echo Version: 1.2.5i7
 echo AgentOS: linux
+echo AgentDirectory: $MK_CONFDIR
+echo DataDirectory: $MK_VARDIR
+echo SpoolDirectory: $SPOOLDIR
 echo PluginsDirectory: $PLUGINSDIR
 echo LocalDirectory: $LOCALDIR
-echo SpoolDirectory: $SPOOLDIR
-echo AgentDirectory: $MK_CONFDIR
 
 # If we are called via xinetd, try to find only_from configuration
 if [ -n "$REMOTE_HOST" ]
@@ -571,7 +573,7 @@ fi
 # is a sub directory per user that ran a job. That directory must be
 # owned by the user so that a symlink or hardlink attack for reading
 # arbitrary files can be avoided.
-if pushd /var/lib/check_mk_agent/job >/dev/null; then
+if pushd $MK_VARDIR/job >/dev/null; then
     echo '<<<job>>>'
     for username in *
     do

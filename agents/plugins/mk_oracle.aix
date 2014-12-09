@@ -51,6 +51,10 @@ if [ ! "$MK_CONFDIR" ] ; then
     exit 1
 fi
 
+if [ ! "$MK_VARDIR" ] ; then
+    export MK_VARDIR=$MK_CONFDIR
+fi
+
 
 #   .--Config--------------------------------------------------------------.
 #   |                     ____             __ _                            |
@@ -871,8 +875,8 @@ function run_cached_local () {
     shift 2
     local CMDLINE="$section$@"
 
-    if [ ! -d $MK_CONFDIR/cache ]; then mkdir -p $MK_CONFDIR/cache ; fi
-    CACHEFILE="$MK_CONFDIR/cache/$NAME.cache"
+    if [ ! -d $MK_VARDIR/cache ]; then mkdir -p $MK_VARDIR/cache ; fi
+    CACHEFILE="$MK_VARDIR/cache/$NAME.cache"
 
     # Check if the creation of the cache takes suspiciously long and return
     # nothing if the age (access time) of $CACHEFILE.new is twice the MAXAGE

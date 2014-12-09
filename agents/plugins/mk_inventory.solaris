@@ -27,7 +27,7 @@
 # Run and *send* only once every 4 hours
 INTERVAL=14400
 
-FLAGFILE=$MK_CONFDIR/mk_inventory.last.$REMOTE
+FLAGFILE=$MK_VARDIR/mk_inventory.last.$REMOTE
 NOW=$(truss /usr/bin/date 2>&1 | grep ^time | awk -F"= " '{print $2}')
 UNTIL=$((NOW + INTERVAL + 600))
 

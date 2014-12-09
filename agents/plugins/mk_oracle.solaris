@@ -32,7 +32,7 @@
 SIDS=$(UNIX95=true ps -ef -o args | sed -n '/^ora_pmon_/p;/^xe_pmon_/p' | sed -n '/^[a-z]*_pmon_\([^ ]*\)/s//\1/p')
 if [ -z "$SIDS" ] ; then
     # If on this system we've already found a database
-    if [ -e "$MK_CONFDIR/mk_oracle.found" ] ; then
+    if [ -e "$MK_VARDIR/mk_oracle.found" ] ; then
         echo '<<<oracle_version>>>'
         echo '<<<oracle_sessions>>>'
         echo '<<<oracle_logswitches>>>'
@@ -41,7 +41,7 @@ if [ -z "$SIDS" ] ; then
     exit 0
 fi
 
-touch $MK_CONFDIR/mk_oracle.found
+touch $MK_VARDIR/mk_oracle.found
 
 # Recreate data if cachefile is older than 120 seconds.
 # If you set this to 0, then the cache file will be created
@@ -121,7 +121,7 @@ for SID in $SIDS; do
         echo "select banner from v\$version where banner like 'Oracle%';" | sqlplus "$SID"
     fi
 
-    CACHE_FILE=$MK_CONFDIR/oracle_$SID.cache
+    CACHE_FILE=$MK_VARDIR/oracle_$SID.cache
 
     # Check if file exists and recent enough
     CACHE_FILE_UPTODATE=

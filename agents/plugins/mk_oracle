@@ -51,6 +51,10 @@ if [ ! "$MK_CONFDIR" ] ; then
     exit 1
 fi
 
+if [ ! "$MK_VARDIR" ] ; then
+    export MK_VARDIR=$MK_CONFDIR
+fi
+
 
 #   .--Config--------------------------------------------------------------.
 #   |                     ____             __ _                            |
@@ -867,8 +871,8 @@ function run_cached_local () {
     shift 2
     local CMDLINE="$section$@"
 
-    if [ ! -d $MK_CONFDIR/cache ]; then mkdir -p $MK_CONFDIR/cache ; fi
-    CACHEFILE="$MK_CONFDIR/cache/$NAME.cache"
+    if [ ! -d $MK_VARDIR/cache ]; then mkdir -p $MK_VARDIR/cache ; fi
+    CACHEFILE="$MK_VARDIR/cache/$NAME.cache"
 
     # Check if the creation of the cache takes suspiciously long and return
     # nothing if the age (access time) of $CACHEFILE.new is twice the MAXAGE
@@ -919,12 +923,12 @@ SIDS=$(UNIX95=true ps -ef | awk '{print $NF}' | grep -E '^asm_pmon_|^ora_pmon_|^
 # no ORACLE is present on this system or it's just currently not running.
 # In the later case we ouput empty agent sections so that Check_MK will be
 # happy and execute the actual check functions.
-if [ -z "$SIDS" -a ! -e "$MK_CONFDIR/mk_oracle.found" ] ; then
+if [ -z "$SIDS" -a ! -e "$MK_VARDIR/mk_oracle.found" ] ; then
     exit
 fi
 
 # From now on we expect databases on this system (for ever)
-touch $MK_CONFDIR/mk_oracle.found
+touch $MK_VARDIR/mk_oracle.found
 
 # Make sure that always all sections are present, even
 # in case of an error. Note: the section <<<oracle_instance>>>

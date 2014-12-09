@@ -11408,6 +11408,8 @@ def load_notification_scripts_from(adir):
                     lines = file(path)
                     lines.next()
                     line = lines.next().strip()
+                    if line.startswith("#") and "encoding:" in line:
+                        line = lines.next().strip()
                     if line.startswith("#"):
                         info["title"] = line.lstrip("#").strip().split("#", 1)[0]
                     while True:

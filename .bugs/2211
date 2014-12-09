@@ -1,0 +1,39 @@
+Title: Make mailq check monitor different queues individually
+Component: checks
+State: open
+Date: 2014-12-09 14:04:59
+Targetversion: future
+Class: feature
+
+I am currently migrating from using NRPE/nagios-statd to check_mk and I
+have some checks that I have written for monitoring postfix mail queues.
+
+I found the check_mk postfix_mailq check but it seems to only provide
+the total mailq number. The check I had been using was a nagios plugin
+running via NRPE that just counted the files directly in the various
+spool directories. It just takes the queue name as an option.
+
+On my production mail servers it is very useful to be able to set
+limits for each queue.
+
+For example:
+* deferred is normally higher on busy servers due to undelivable mail,
+   bounces, remote server problems, etc. (thousands)
+* active should usually be pretty low when the server is functioning
+   correctly (<20 on relays, <150 on machine receiving mail and
+   doing spam processing)
+* maildrop might have spikes if services are injecting a lot of mail
+   but should clear quickly if the server is functioning well
+* hold should almost always be zero unless an admin is doing things
+   or postfix is configured to automatically put certain things on
+    hold (in which case you probably want to know about it). This
+    is handy for reminding me to take things back off hold when I
+    forget 
+* corrupt should probably always be zero
+
+I can continue to use my local check via MRPE, but it would be much
+nicer if check_mk's native check could support this. (and if it does,
+checking the spool dirs directly is probably lighter weight than
+running mailq).
+
+Oh and the separate perfdata would be interesting too.

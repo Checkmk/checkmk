@@ -3184,17 +3184,22 @@ def remove_autochecks_of(hostname, checktypes = None): # None = all
             if double_quoted.startswith('("'):
                 count += 1
                 splitted = double_quoted.split('"')
-                if splitted[1] != hostname or (checktypes != None and splitted[3] not in checktypes):
+                if len(splitted) < 4:
+                    lines.append(line) # invalid or irrelevant line
+                elif splitted[1] != hostname or (checktypes != None and splitted[3] not in checktypes):
                     if splitted[3] not in check_info:
                         sys.stderr.write('Removing unimplemented check %s\n' % splitted[3])
-                        continue
-                    lines.append(line)
+                        removed += 1
+                    else:
+                        lines.append(line)
                 else:
                     removed += 1
         if len(lines) == 0:
             if opt_verbose:
                 sys.stdout.write("Deleting %s.\n" % fn)
-            os.remove(fn)
+            if os.path.exists(fn):
+                os.remove(fn)
+
         elif count > len(lines):
             if opt_verbose:
                 sys.stdout.write("Removing %d checks from %s.\n" % (count - len(lines), fn))
@@ -3210,7 +3215,8 @@ def remove_all_autochecks():
     for f in glob.glob(autochecksdir + '/*.mk'):
         if opt_verbose:
             sys.stdout.write("Deleting %s.\n" % f)
-        os.remove(f)
+        if os.path.exists(f):
+            os.remove(f)
 
 def reread_autochecks():
     global checks
@@ -5169,7 +5175,8 @@ def do_cleanup_autochecks():
         if f not in newfiles:
             if opt_debug:
                 sys.stdout.write("Deleting %s\n" % f)
-            os.remove(f)
+            if os.path.exists(f):
+                os.remove(f)
 
 def find_bin_in_path(prog):
     for path in os.environ['PATH'].split(os.pathsep):

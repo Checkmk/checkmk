@@ -988,10 +988,10 @@ void outputCounterValue(SOCKET &out, PERF_COUNTER_DEFINITION *counterPtr, PERF_C
     int size = counterPtr->CounterSize;
     BYTE *pData = ((BYTE *)counterBlockPtr) + offset;
 
-    if (counterPtr->CounterType | PERF_SIZE_DWORD)
+    if (counterPtr->CounterType & PERF_SIZE_DWORD)
         output(out, " %llu", (ULONGLONG)(*(DWORD*)pData));
 
-    else if (counterPtr->CounterType | PERF_SIZE_LARGE)
+    else if (counterPtr->CounterType & PERF_SIZE_LARGE)
         output(out, " %llu", *(UNALIGNED ULONGLONG*)pData);
 
     // handle other data generically. This is wrong in some situation.

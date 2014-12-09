@@ -1,4 +1,4 @@
-#!/bin/bash
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -23,49 +23,29 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+$opt[1] = "-l0 -u$MAX[1] --vertical-label \"IP Addresses\" --title \"$servicedesc\" ";
 
-# Run and *send* only once every 4 hours
-INTERVAL=14400
-
-FLAGFILE=$MK_VARDIR/mk_inventory.last.$REMOTE
-NOW=$(truss /usr/bin/date 2>&1 | grep ^time | awk -F"= " '{print $2}')
-UNTIL=$((NOW + INTERVAL + 600))
-
-#check if flagfile exits
-if [ -e "$FLAGFILE" ]; then
-    LAST_RUN=$(cat $FLAGFILE)
-else
-    #First run of the script
-    LAST_RUN=0
-fi
-
-if [ $(( NOW - LAST_RUN )) -ge $INTERVAL ]
-then
-    echo $NOW > $FLAGFILE
-
-    echo "<<<solaris_uname:sep(61):persist($UNTIL)>>>"
-    uname -X
-
-    if type prtdiag > /dev/null; then
-        echo "<<<solaris_prtdiag:sep(10):persist($UNTIL)>>>"
-        serial=`sneep -t serial`;echo "SerialNumber: $serial"
-        prtdiag -v
-    fi
-
-    if type psrinfo > /dev/null; then
-        echo "<<<solaris_psrinfo:persist($UNTIL)>>>"
-        psrinfo -p -v
-    fi
-
-    if type prtpicl > /dev/null; then
-        echo "<<<solaris_prtpicl:persist($UNTIL)>>>"
-        prtpicl -v
-    fi
-
-
-    if type pkginfo >/dev/null ; then
-        echo "<<<solaris_pkginfo:sep(58):persist($UNTIL)>>>"
-        pkginfo -l
-    fi
-fi
-
+$def[1] = "DEF:used=$RRDFILE[2]:$DS[2]:MAX ";
+$def[1] .= "DEF:pending=$RRDFILE[3]:$DS[3]:MAX ";
+$def[1] .= "DEF:free=$RRDFILE[1]:$DS[1]:MAX ";
+$def[1] .= "CDEF:total=used,pending,+,free,+ ";
+$def[1] .= "AREA:used#2080ff:\"Used\:         \" ";
+$def[1] .= "GPRINT:used:LAST:\"%2.0lf\" ";
+$def[1] .= "GPRINT:used:AVERAGE:\"(Avg\: %2.0lf,\" ";
+$def[1] .= "GPRINT:used:MIN:\"Min\: %2.0lf,\" ";
+$def[1] .= "GPRINT:used:MAX:\"Max\: %2.0lf)\\n\" ";
+$def[1] .= "AREA:pending#8020ff:\"Pending\:      \":STACK ";
+$def[1] .= "GPRINT:pending:LAST:\"%2.0lf\" ";
+$def[1] .= "GPRINT:pending:AVERAGE:\"(Avg\: %2.0lf,\" ";
+$def[1] .= "GPRINT:pending:MIN:\"Min\: %2.0lf,\" ";
+$def[1] .= "GPRINT:pending:MAX:\"Max\: %2.0lf)\\n\" ";
+$def[1] .= "AREA:free#80f0ff:\"Free\:         \":STACK ";
+$def[1] .= "GPRINT:free:LAST:\"%2.0lf\" ";
+$def[1] .= "GPRINT:free:AVERAGE:\"(Avg\: %2.0lf,\" ";
+$def[1] .= "GPRINT:free:MIN:\"Min\: %2.0lf,\" ";
+$def[1] .= "GPRINT:free:MAX:\"Max\: %2.0lf)\\n\" ";
+$def[1] .= "LINE:total#666666:\"Total\:        \" ";
+$def[1] .= "GPRINT:total:LAST:\"%2.0lf\\n\" ";
+$def[1] .= "HRULE:$CRIT[1]#FF0000:Warning ";
+$def[1] .= "HRULE:$WARN[1]#FFFF00:Critical\\n ";
+?>

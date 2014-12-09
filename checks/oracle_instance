@@ -66,10 +66,18 @@ def check_oracle_instance(item, params, info):
             if line[1] == 'FAILURE':
                 return 2, " ".join(line[2:])
 
+            state = 0
+
+            # Be compatible to old oracle agent plugin output
+            if len(line) == 6:
+                sid, version, openmode, logins, _unused, _unused2 = line
+                infotext = 'Status %s, Version %s, Logins %s' % (openmode, version, logins.lower())
+                state, infotext = state_marker(state, infotext, 'logins', logins, 'RESTRICTED')
+                return state, infotext
+
             sid, version, openmode, logins, archiver, up_seconds, dbid, \
                 log_mode, database_role, force_logging, name = line
 
-            state = 0
             infotext = "Database Name %s, Status %s" % \
                        (name, openmode)
 

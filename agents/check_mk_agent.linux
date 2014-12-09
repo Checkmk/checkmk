@@ -586,6 +586,7 @@ if ls /sys/class/thermal/thermal_zone* >/dev/null 2>&1; then
     echo '<<<lnx_thermal>>>'
     for F in /sys/class/thermal/thermal_zone*; do
         echo -n "${F##*/} "
+        if [ ! -e $F/mode ] ; then echo -n "- " ; fi
         cat $F/{mode,type,temp,trip_point_*} | tr \\n " "
         echo
     done

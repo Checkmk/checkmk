@@ -4219,8 +4219,8 @@ register_check_parameters(
           help = _("The count of remaining entries in the DHCP pool represents "
                    "the number of IP addresses left which can be assigned in the network"),
           elements = [
-              Percentage(title = _("Warning if more than"), unit = _("pool entries")),
-              Percentage(title = _("Critical if more than"), unit = _("pool entries")),
+              Percentage(title = _("Warning if less than"), unit = _("% free pool entries")),
+              Percentage(title = _("Critical if less than"), unit = _("% free pool entries")),
               ]),
     TextAscii(
         title = _("Service descriptions"),

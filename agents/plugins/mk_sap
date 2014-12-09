@@ -108,7 +108,10 @@ SKIP_MTCLASSES = [
     MTE_LONG_TXT,
 ]
 
-STATE_FILE = '/etc/check_mk/sap.state'
+MK_CONFDIR = os.getenv("MK_CONFDIR)" or "/etc/check_mk"
+MK_VARDIR = os.getenv("MK_VARDIR)" or "/var/lib/check_mk"
+
+STATE_FILE = MK_VARDIR + '/sap.state'
 state_file_changed = False
 
 # #############################################################################
@@ -140,7 +143,7 @@ monitor_paths = [
     'SAP CCMS Monitor Templates/Dialog Overview/*',
 ]
 monitor_types = []
-config_file = os.getenv('MK_CONFDIR', '/etc/check_mk') + '/sap.cfg'
+config_file = MK_CONFDIR + '/sap.cfg'
 
 cfg = {}
 if os.path.exists(config_file):

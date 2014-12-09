@@ -31,7 +31,9 @@ def parse_cisco_secure(info):
     names = dict([ (l[0], ( l[1], l[2] )) for l in info[0]] )
     for num, enabled, status, violationCount, lastmac in info[1]:
         mac = ":".join(["%02s" % hex(ord(m))[2:] for m in lastmac]).replace(' ', '0')
-        parsed.append(( names[num][0], int(names[num][1]), int(enabled), int(status), int(violationCount), mac ))
+        # violationCount is initialized with 0 when security is enabled. When not, the
+        # value is reported as empty string. saveint() makes life easier here.
+        parsed.append((names[num][0], int(names[num][1]), int(enabled), int(status), saveint(violationCount), mac))
     return parsed
 
 

@@ -24,27 +24,18 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# Example output from agent:
-# Put here the example output from your TCP-Based agent. If the
-# check is SNMP-Based, then remove this section
 
 def inventory_bluecat_dns_queries(info):
     return [(None, None)]
 
+
 def check_bluecat_dns_queries(item, _no_params, info):
     value_names = [ 'Success', 'Referral', 'NXRSet',
                     'NXDomain', 'Recursion', 'Failure' ]
-    wrapped = False
     now = time.time()
     for value, name in zip(map(int, info[0]), value_names):
-        try:
-            timedif, rate = get_counter("bluecat_dns_queries."+name, now, value)
-            yield 0, "%s: %s (last %.0f sec)" % (name, rate, timedif), [ ( name, rate )]
-        except MKCounterWrapped:
-            wrapped = True
-    if wrapped:
-        raise MKCounterWrapped(None, "")
-
+        rate = get_rate("bluecat_dns_queries." + name, now, value)
+        yield 0, "%s: %s" % (name, rate), [(name, rate)]
 
 
 check_info["bluecat_dns_queries"] = {

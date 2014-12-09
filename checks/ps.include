@@ -246,12 +246,12 @@ def check_ps_common(item, params, info, cpu_cores = 1, info_name = "processes" )
                         pid, pagefile_usage, user_c, kernel_c, handle_c = map(int, addinfo[4:9])
                         counter_wrapped = False
                         try:
-                            timedif, user_per_sec   = get_counter("ps_wmic.user.%d" % pid, now, user_c)
+                            user_per_sec   = get_rate("ps_wmic.user.%d" % pid, now, user_c, onwrap=RAISE)
                         except MKCounterWrapped, e:
                             counter_wrapped = True
 
                         try:
-                            timedif, kernel_per_sec = get_counter("ps_wmic.kernel.%d" % pid, now, kernel_c)
+                            kernel_per_sec = get_rate("ps_wmic.kernel.%d" % pid, now, kernel_c, onwrap=RAISE)
                         except MKCounterWrapped, e:
                             counter_wrapped = True
 
@@ -275,7 +275,7 @@ def check_ps_common(item, params, info, cpu_cores = 1, info_name = "processes" )
                             hours, minutes, seconds = map(int, addinfo[3].split(":"))
                             total_seconds = 86400 * days + 3600 * hours + 60 * minutes + seconds
                             try:
-                                timedif, cputime = get_counter("ps_stat.pcpu.%s" % pid, now, total_seconds)
+                                cputime = get_rate("ps_stat.pcpu.%s" % pid, now, total_seconds, onwrap=RAISE)
                             except MKCounterWrapped, e:
                                 cputime = 0
 
@@ -336,7 +336,7 @@ def check_ps_common(item, params, info, cpu_cores = 1, info_name = "processes" )
         infotext += " %.1f%% CPU" % percent_cpu
 
         if "cpu_average" in params:
-            timedif, avg_cpu = get_average("ps.%s.cpu" % item, now, percent_cpu, params["cpu_average"], False)
+            avg_cpu = get_average("ps.%s.cpu" % item, now, percent_cpu, params["cpu_average"], False)
             infotext += " (%d min average: %.1f%%)" % (params["cpu_average"], avg_cpu)
             percent_cpu = avg_cpu # use this for level comparison
             if extended_perfdata:

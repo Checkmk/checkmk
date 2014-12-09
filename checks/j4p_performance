@@ -152,7 +152,6 @@ def check_j4p_performance_threads(item, params, info):
     d = parsed[item]
 
     this_time = time.time()
-    wrapped = False
     perfdata = []
     output   = []
     status   = 0
@@ -166,20 +165,14 @@ def check_j4p_performance_threads(item, params, info):
                 status = 1
 
             # Calculate the thread increase rate
-            try:
-                timedif, rate = get_counter("j4p_performance.threads.%s" % item, this_time, val)
-                output.append('ThreadRate: %0.2f' % rate)
-                perfdata.append(('ThreadRate', rate))
-            except MKCounterWrapped:
-                wrapped = True
+            rate = get_rate("j4p_performance.threads.%s" % item, this_time, val)
+            output.append('ThreadRate: %0.2f' % rate)
+            perfdata.append(('ThreadRate', rate))
 
         perfdata.append((key, val))
         output.append('%s: %d' % (key, val))
-    # Only process the perfdata when no wrap occured
-    if wrapped:
-        return (status, ', '.join(output))
-    else:
-        return (status, ', '.join(output), perfdata)
+
+    return (status, ', '.join(output), perfdata)
 
 check_info["j4p_performance.threads"] = {'check_function': check_j4p_performance_threads,
  'default_levels_variable': None,
@@ -300,19 +293,11 @@ def check_j4p_performance_serv_req(item, params, info):
 
     output    = ['Requests: %d%s' % (req, status_txt)]
     perfdata  = [('Requests', req, hi_warn, hi_crit)]
-    wrapped   = False
     this_time = time.time()
-    try:
-        timedif, rate = get_counter("j4p_performance.serv_req.%s" % item, this_time, req)
-        output.append('RequestRate: %0.2f' % rate)
-        perfdata.append(('RequestRate', rate))
-    except MKCounterWrapped:
-        wrapped = True
-
-    if wrapped:
-        return (status, ', '.join(output))
-    else:
-        return (status, ', '.join(output), perfdata)
+    rate = get_rate("j4p_performance.serv_req.%s" % item, this_time, req)
+    output.append('RequestRate: %0.2f' % rate)
+    perfdata.append(('RequestRate', rate))
+    return (status, ', '.join(output), perfdata)
 
 check_info["j4p_performance.serv_req"] = {'check_function': check_j4p_performance_serv_req,
  'default_levels_variable': None,

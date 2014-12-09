@@ -263,24 +263,22 @@ def check_cisco_qos(item, params, info):
     infotext = ''
     this_time = time.time()
     rates = []
-    wrapped = False
     perfdata = []
     perfdata_avg = []
 
     min_value = ("0", "0.0")[unit == 'bit']
-    for name, counter, warn, crit, min_val, max_val in [ ( "post", post_b, post_warn, post_crit, min_value, bw),
-                                                 ( "drop", drop_b, drop_warn, drop_crit, min_value, bw) ]:
-        try:
-            timedif, rate = get_counter("cisco_qos.%s.%s" % (name, item), this_time, saveint(counter))
-            rates.append(rate)
-            perfdata.append( (name, rate, warn, crit, min_val, max_val) )
+    for name, counter, warn, crit, min_val, max_val in [ 
+        ( "post", post_b, post_warn, post_crit, min_value, bw),
+        ( "drop", drop_b, drop_warn, drop_crit, min_value, bw),
+    ]:
+        rate = get_rate("cisco_qos.%s.%s" % (name, item), this_time, saveint(counter))
+        rates.append(rate)
+        perfdata.append( (name, rate, warn, crit, min_val, max_val) )
 
-            if average:
-                timedif, avg_value = get_average("cisco_qos.%s.%s.avg" % (name, item), this_time, rate, average)
-                rates.append(avg_value)
-                perfdata_avg.append( ("%s_avg_%d" % (name, average), avg_value, warn, crit, min_val, max_val) )
-        except MKCounterWrapped, e:
-            wrapped = True
+        if average:
+            avg_value = get_average("cisco_qos.%s.%s.avg" % (name, item), this_time, rate, average)
+            rates.append(avg_value)
+            perfdata_avg.append( ("%s_avg_%d" % (name, average), avg_value, warn, crit, min_val, max_val) )
 
     perfdata.extend(perfdata_avg)
     def format_value(value):
@@ -290,34 +288,29 @@ def check_cisco_qos(item, params, info):
         else:
             return "%s/s" % get_bytes_human_readable(value)
 
-
-    if wrapped:
-        perfdata = []
+    if average:
+        post_rate = rates[1]
+        drop_rate = rates[3]
     else:
-        # if at least one counter wrapped, we do not handle the counters at all
-        if average:
-            post_rate = rates[1]
-            drop_rate = rates[3]
-        else:
-            post_rate = rates[0]
-            drop_rate = rates[1]
+        post_rate = rates[0]
+        drop_rate = rates[1]
 
-        for what, rate, warn, crit in [ ("post",  post_rate, post_warn, post_crit),
-                                        ("drop",  drop_rate, drop_warn, drop_crit) ]:
-            infotext += ', %s: %s' % (what, format_value(rate))
-            if crit is not None and rate >= crit:
-                state = max(2, state)
-                infotext += '(!!)'
-            elif warn is not None and rate >= warn:
-                state = max(1, state)
-                infotext += '(!)'
-
+    for what, rate, warn, crit in [ ("post",  post_rate, post_warn, post_crit),
+                                    ("drop",  drop_rate, drop_warn, drop_crit) ]:
+        infotext += ', %s: %s' % (what, format_value(rate))
+        if crit is not None and rate >= crit:
+            state = max(2, state)
+            infotext += '(!!)'
+        elif warn is not None and rate >= warn:
+            state = max(1, state)
+            infotext += '(!)'
 
     if policy_name:
         infotext += ', Policy-Name: %s, Int-Bandwidth: %s' % (policy_name, format_value(bw))
     else:
         infotext += ', Policy-Map-ID: %s, Int-Bandwidth: %s' % (policy_map_id, format_value(bw))
     return (state, infotext.lstrip(', '), perfdata)
+
 
 check_info["cisco_qos"] = {
     "service_description"     : "QoS %s",

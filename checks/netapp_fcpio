@@ -29,8 +29,8 @@ netapp_fcpio_default_levels = { "read" : (None, None), "write" : (None, None)}
 def check_netapp_fcpio(item, params, info):
     read, write = map(int, info[0])
     this_time = int(time.time())
-    timedif, avg_read  = get_counter("netapp_fcpio.read", this_time, read)
-    timedif, avg_write  = get_counter("netapp_fcpio.write", this_time, write)
+    avg_read  = get_rate("netapp_fcpio.read", this_time, read)
+    avg_write  = get_rate("netapp_fcpio.write", this_time, write)
 
     read_warn, read_crit = params['read']
     write_warn, write_crit = params['write']
@@ -56,8 +56,8 @@ def check_netapp_fcpio(item, params, info):
 	write_msg = ' (!!)'
 
 
-    infotext = "%s read%s, %s write%s in last %d sec" % (get_bytes_human_readable(avg_read), \
-    read_msg, get_bytes_human_readable(avg_write), write_msg, timedif)
+    infotext = "%s read%s, %s write%s" % (get_bytes_human_readable(avg_read), \
+    read_msg, get_bytes_human_readable(avg_write), write_msg)
 
     return(state, infotext, perfdata)
 

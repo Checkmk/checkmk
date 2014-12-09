@@ -332,7 +332,7 @@ def check_jolokia_metrics_threads(item, params, info):
 
             # Calculate the thread increase rate
             try:
-                timedif, rate = get_counter("jolokia_metrics.threads.%s" % item, this_time, val)
+                rate = get_rate("jolokia_metrics.threads.%s" % item, this_time, val)
                 output.append('ThreadRate: %0.2f' % rate)
                 perfdata.append(('ThreadRate', rate))
             except MKCounterWrapped:
@@ -447,7 +447,7 @@ def check_jolokia_metrics_serv_req(item, params, info):
     wrapped   = False
     this_time = time.time()
     try:
-        timedif, rate = get_counter("jolokia_metrics.serv_req.%s" % item, this_time, req)
+        rate = get_rate("jolokia_metrics.serv_req.%s" % item, this_time, req)
         output.append('RequestRate: %0.2f' % rate)
         perfdata.append(('RequestRate', rate))
     except MKCounterWrapped:
@@ -488,7 +488,7 @@ def check_jolokia_metrics_bea_requests(item, _no_params, info):
     for nk in [ "CompletedRequestCount", "requestCount" ]:
        if nk in app:
            requests = int(app[nk])
-           timedif, rate = get_counter("j4p.bea.requests.%s" % item, time.time(), requests)
+           rate = get_rate("j4p.bea.requests.%s" % item, time.time(), requests)
            return (0, "%.2f requests/sec" % rate, [("rate", rate)])
 
     return (3, "data not found in agent output")
@@ -531,9 +531,9 @@ def check_jolokia_metrics_gc(item, params, info):
     status = 0
     perf = []
 
-    ttimedif, trate = get_counter("jvm.gc.time.%s" % (item), \
+    ttrate = get_rate("jvm.gc.time.%s" % (item), \
                         time.time(), saveint(gc['CollectionTime']))
-    ctimedif, crate = get_counter("jvm.gc.count.%s" % (item), \
+    ccrate = get_rate("jvm.gc.count.%s" % (item), \
                         time.time(), saveint(gc['CollectionCount']))
 
     trate = trate * 60.0

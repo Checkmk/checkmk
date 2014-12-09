@@ -67,10 +67,10 @@ def check_adva_fsp_temp(item, params, info):
                     this_time = time.time()
 
                     # first compute current rate in C/s by computing delta since last check
-                    timedif, rate = get_counter("temp.%s.delta" % item, this_time, temp, True)
+                    rate = get_rate("temp.%s.delta" % item, this_time, temp, True)
 
                     # average trend, initialize with zero, rate_avg is in C/s
-                    timedif, rate_avg = get_average("temp.%s.trend" % item,
+                    rate_avg = get_average("temp.%s.trend" % item,
                                                     this_time, rate, range_sec / 60.0, True) #?
 
                     # rate_avg is growth in C/s, trend is in C per trend range minutes

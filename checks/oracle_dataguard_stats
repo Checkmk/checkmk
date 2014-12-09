@@ -109,7 +109,7 @@ def check_oracle_dataguard_stats(item, params, info):
     # In case of missing information we assume that the login into
     # the database has failed and we simply skip this check. It won't
     # switch to UNKNOWN, but will get stale.
-    raise MKCounterWrapped(None, "Dataguard disabled or Instance not running")
+    raise MKCounterWrapped("Dataguard disabled or Instance not running")
 
 
 check_info['oracle_dataguard_stats'] = {

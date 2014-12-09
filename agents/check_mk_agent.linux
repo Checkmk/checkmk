@@ -306,6 +306,9 @@ then
     else
         IPMI_FORMAT=""
     fi
+    # On first run, before ipmi-sensors was first executed, the base directory is not
+    # available. Make sure it exists, otherwise the following subshell creation will fail
+    mkdir -p "$sdcache"
     # Aquire lock with flock in order to avoid multiple runs of ipmi-sensors
     # in case of parallel or overlapping calls of the agent.
     (

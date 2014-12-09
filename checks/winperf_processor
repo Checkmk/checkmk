@@ -51,7 +51,7 @@ def check_winperf_util(_no_item, params, info):
             # sums up to total (called _Total). We only need that last value.
             ticks = int(line[-2])
             num_cpus = len(line) - 3
-            timedif, ticks_per_sec = get_counter("winperf_util", this_time, ticks)
+            ticks_per_sec = get_rate("winperf_util", this_time, ticks)
             # We get the value of the PERF_100NSEC_TIMER_INV here.
             # This counter type shows the average percentage of active time observed
             # during the sample interval. This is an inverse counter. Counters of this

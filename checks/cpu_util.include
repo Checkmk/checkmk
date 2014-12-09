@@ -51,7 +51,7 @@ def check_cpu_util(util, params, this_time = None):
 
     # Averaging
     if "average" in params:
-        timedif, util_avg = get_average("cpu_utilization.avg", this_time, util, params["average"])
+        util_avg = get_average("cpu_utilization.avg", this_time, util, params["average"])
         check_against = util_avg
         counter = "avg"
         infotext += ", %dmin average: %.1f %%" % (params["average"], util_avg)
@@ -102,7 +102,7 @@ def check_cpu_util_unix(values, params):
 
     sum_jiffies = sum(diff_values) # do not account for steal!
     if sum_jiffies == 0:
-        raise MKCounterWrapped(None, "Too short time difference since last check")
+        raise MKCounterWrapped("Too short time difference since last check")
 
     user        = diff_values[0] + diff_values[1] # add user + nice
     system      = diff_values[2] + diff_values[5] + diff_values[6]

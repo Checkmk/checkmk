@@ -76,7 +76,7 @@ def inventory_esx_vsphere_counters_diskio(info):
 
 def check_esx_vsphere_counters_diskio(_no_item, _no_params, info):
     if not info:
-        raise MKCounterWrapped(None, "Counter data is missing")
+        raise MKCounterWrapped("Counter data is missing")
 
     read_bytes  = 0
     write_bytes = 0
@@ -237,7 +237,7 @@ def inventory_esx_vsphere_counters_if(info):
 
 def check_esx_vsphere_counters_if(item, params, info):
     if not info:
-        raise MKCounterWrapped(None, "Counter data is missing")
+        raise MKCounterWrapped("Counter data is missing")
 
     converted = convert_esx_counters_if(info)
     return check_if_common(item, params, converted)
@@ -269,7 +269,7 @@ def inventory_esx_vsphere_counters_uptime(info):
 
 def check_esx_vsphere_counters_uptime(_no_item, params, info):
     if not info:
-        raise MKCounterWrapped(None, "Counter data is missing")
+        raise MKCounterWrapped("Counter data is missing")
 
     for name, instance, counter, unit in info:
         if name == "sys.uptime":
@@ -321,7 +321,7 @@ def inventory_esx_vsphere_counters_ramdisk(info):
 
 def check_esx_vsphere_counters_ramdisk(item, params, info):
     if not info:
-        raise MKCounterWrapped(None, "Counter data is missing")
+        raise MKCounterWrapped("Counter data is missing")
 
     ramdisks = []
     for name, instance, counter, unit in info:

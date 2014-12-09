@@ -89,7 +89,7 @@ def check_oracle_asm_diskgroup(item, params, info):
     # In case of missing information we assume that the ASM-Instance is
     # checked at a later time.
     # This reduce false notifications for not running ASM-Instances
-    raise MKCounterWrapped(None, "Diskgroup %s not found" % item)
+    raise MKCounterWrapped("Diskgroup %s not found" % item)
 
 check_info["oracle_asm_diskgroup"] = {
     'check_function'          : check_oracle_asm_diskgroup,

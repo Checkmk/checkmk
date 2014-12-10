@@ -1,0 +1,8 @@
+Title: It's not possible to add Views to dasbboards etc. anymore
+Component: multisite
+State: open
+Date: 2014-12-10 09:54:19
+Targetversion: 1.2.5i1
+Class: bug
+
+The Dialog doesn't appear. Just for PNP Graphs it still works

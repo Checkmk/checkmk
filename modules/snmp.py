@@ -445,7 +445,7 @@ def snmpwalk_on_suboid(hostname, ip, oid, hex_plain = False):
                or value.startswith('No Such Object available') or value.startswith('No Such Instance currently exists'):
                 continue
 
-            if len(value) > 0 and value[0] == '"' and value[-1] != '"': # to be continued
+            if value == '"' or (len(value) > 1 and value[0] == '"' and (value[-1] != '"')): # to be continued
                 while True: # scan for end of this dataset
                     nextline = line_iter.next().strip()
                     value += " " + nextline

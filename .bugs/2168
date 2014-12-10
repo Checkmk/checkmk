@@ -1,0 +1,36 @@
+Title: Custom-Sorter for Service Descriptions
+Component: multisite
+State: open
+Date: 2014-12-10 14:36:33
+Targetversion: future
+Class: phantasm
+
+Implement a sorter which can accomplish this:
+
+TEMP Unit1
+TEMP Unit2
+TEMP Unit3
+PSU Unit1
+PSU Unit2
+PSU Unit3
+FAN Unit1
+FAN Unit2
+FAN Unit3
+
+can be sorted like this
+
+TEMP Unit1
+PSU Unit1
+FAN Unit1
+TEMP Unit2
+PSU Unit2
+FAN Unit2
+TEMP Unit3
+PSU Unit3
+FAN Unit3
+
+Howto:
+Split service description at keyword, exchange elements, resort table
+
+Feature is configurable via display options.
+Maybe highlight service blocks of the same unit.

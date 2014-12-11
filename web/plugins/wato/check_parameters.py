@@ -344,7 +344,7 @@ register_rule(group + '/' + subgroup_inventory,
     help      = _("This ruleset defines criteria for automatically creating checks for running processes "
                   "based upon what is running when the service discovery is done. These services will be "
                   "created with default parameters. They will get critical when no process is running and "
-                  "OK otherwise. You can parameterize the check with the ruleset <i>Process Checks</i>."),
+                  "OK otherwise. You can parameterize the check with the ruleset <i>State and count of processes</i>."),
     valuespec = Dictionary(
         elements = [
             ('descr', TextAscii(

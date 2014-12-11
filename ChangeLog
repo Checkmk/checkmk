@@ -7,6 +7,7 @@
 
     WATO:
     * 1760 Added search form to manual checks page
+    * 1761 FIX: Ruleset search is now consistent for host & serviceparameters and manual checks
 
 
 1.2.6b1:

@@ -124,9 +124,9 @@ class SpoolfilesHandler:
 
 
     def process_directory(self, dir_path, files_older_than = None):
-        now = time.time()
         for root, dirs, files in os.walk(dir_path):
             for spoolfile in files:
+                now = time.time()
                 spoolfile_process_result = -1
                 # Check spoolfile type
                 # Spoolfiles with the key forward are handled locally
@@ -464,7 +464,7 @@ def run_notifyd():
             g_spoolfiles_handler._should_terminate = True
             now = time.time()
             while (g_tcp_server._is_running or g_spoolfiles_handler._is_running) \
-                and time.time() - now < 2:
+                and time.time() - now < 4:
                 time.sleep(0.1)
 
             if g_tcp_server._is_running:

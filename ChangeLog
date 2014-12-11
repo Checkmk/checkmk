@@ -1,4 +1,6 @@
 1.2.7i1:
+    Multisite:
+    * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...
 
 
 1.2.6b1:

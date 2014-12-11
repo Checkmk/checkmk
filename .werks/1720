@@ -2,7 +2,7 @@ Title: Remove bogus column H.Down if "Consider times where the host is down" is 
 Level: 1
 Component: reporting
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1418074135
 Class: fix
 

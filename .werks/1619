@@ -2,7 +2,7 @@ Title: Renamed "Hostgroups" and "Servicegroups" views to "Host Groups" and "Serv
 Level: 1
 Component: multisite
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417681030
 Class: fix
 

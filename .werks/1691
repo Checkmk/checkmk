@@ -2,7 +2,7 @@ Title: Fixed problem when watching BI aggregations with umlauts in titles or gro
 Level: 1
 Component: multisite
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1418047044
 Class: fix
 

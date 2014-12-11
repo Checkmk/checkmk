@@ -2,7 +2,7 @@ Title: Check_MK Inventory check is now resulting in correct state on duplicate h
 Level: 1
 Component: core
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417425490
 Class: fix
 

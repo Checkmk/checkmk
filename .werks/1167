@@ -2,7 +2,7 @@ Title: citrix_license/esx_license: Can now be configured to always show OK as st
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1414758172
 Class: feature
 

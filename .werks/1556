@@ -2,7 +2,7 @@ Title: WATO inventory ignores already inventorized checks which does not exist a
 Level: 1
 Component: wato
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417432395
 Class: fix
 

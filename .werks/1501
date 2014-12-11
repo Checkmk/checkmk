@@ -4,7 +4,7 @@ Component: multisite
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1416307562
 
 Views which have been created with Check_MK snapshots from 2014-09 created

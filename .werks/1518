@@ -2,7 +2,7 @@ Title: raritan_pdu_inlet, raritan_pdu_inlet_summary: Modified existing check to 
 Level: 1
 Component: checks
 Compatible: incomp
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417190388
 Class: feature
 

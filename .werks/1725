@@ -2,7 +2,7 @@ Title: The get_average() function from now on only returns one argument: the ave
 Level: 2
 Component: core
 Compatible: incomp
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1418121056
 Class: feature
 

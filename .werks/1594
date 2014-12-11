@@ -2,7 +2,7 @@ Title: ibm_svc_host: Can now be set to be always OK
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417617567
 Class: feature
 

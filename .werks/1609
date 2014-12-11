@@ -2,7 +2,7 @@ Title: zpool_status: fix problem when the zpool has a separate log or cache devi
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417617431
 Class: fix
 

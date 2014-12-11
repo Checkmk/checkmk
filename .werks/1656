@@ -2,7 +2,7 @@ Title: cisco_vpn_tunnel: Refactored complete check, fixed threshold bugs
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417714529
 Class: fix
 

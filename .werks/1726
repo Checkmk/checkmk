@@ -2,7 +2,7 @@ Title: Move variable data of Linux/UNIX agents to /var/lib/check_mk_agent
 Level: 2
 Component: checks
 Compatible: incomp
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1418130038
 Class: feature
 

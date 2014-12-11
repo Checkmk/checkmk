@@ -2,7 +2,7 @@ Title: mk_inventory.ps1: fix garbled or missing entries by removing bogus binary
 Level: 1
 Component: inv
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417083051
 Class: fix
 

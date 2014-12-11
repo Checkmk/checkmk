@@ -4,7 +4,7 @@ Component: bi
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1415704778
 
 The data from this formular now gets send as a POST instead of a GET request.

@@ -2,7 +2,7 @@ Title: megaraid_ldisks: Warn if current cache or write policy differs from logic
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417691670
 Class: feature
 

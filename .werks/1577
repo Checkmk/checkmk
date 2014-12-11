@@ -2,7 +2,7 @@ Title: Fixed editing of views using the "Downtime for host/service" sorter or co
 Level: 1
 Component: multisite
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417449307
 Class: fix
 

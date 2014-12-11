@@ -2,7 +2,7 @@ Title: Allow to allow both host name and IP address when checking for events in 
 Level: 2
 Component: ec
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1418073600
 Class: feature
 

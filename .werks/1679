@@ -2,7 +2,7 @@ Title: ups_bat_temp: Now skipping sensors which are reported to have 0 upsBatter
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417718606
 Class: fix
 

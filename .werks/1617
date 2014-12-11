@@ -2,7 +2,7 @@ Title: lnx_if: Deal with data provided by cluster host
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417629588
 Class: fix
 

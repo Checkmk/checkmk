@@ -2,7 +2,7 @@ Title: users: new check to monitor number of users logged in on a linux system
 Level: 2
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417627059
 Class: feature
 

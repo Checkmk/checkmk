@@ -2,7 +2,7 @@ Title: f5_bigip_vserver: add performance data for connections and connection rat
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417012351
 Class: feature
 

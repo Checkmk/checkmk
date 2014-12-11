@@ -2,7 +2,7 @@ Title: Correctly show absolute level for CPU load in case of warn/crit
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417771579
 Class: fix
 

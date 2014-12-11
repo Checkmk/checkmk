@@ -2,7 +2,7 @@ Title: cmciii_lcp_waterflow: Check can now deal with devices with a different se
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417768851
 Class: fix
 

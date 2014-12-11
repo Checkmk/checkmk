@@ -41,6 +41,14 @@ def main():
         (var[7:], value.decode("utf-8"))
         for (var, value)
         in os.environ.items()])
+
+    # check if configured via flexible notifcations
+    if "PARAMETER_1" in context:
+        context["PARAMETER_COMMUNITY"]   = context["PARAMETER_1"]
+        context["PARAMETER_DESTINATION"] = context["PARAMETER_2"]
+
+    # adjust these oids to your needs
+    # Note: HOSTCONTACTGROUPNAMES is only available via cmc
     oids = {
         "1.3.6.1.4.1.13424.10.5.2.1.1.1" : context['MONITORING_HOST'],
         "1.3.6.1.4.1.13424.10.5.2.1.1.2" : context['HOSTNAME'],

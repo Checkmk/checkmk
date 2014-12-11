@@ -2,7 +2,7 @@ Title: if, if64: New option for make inventory based on port alias
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1415868493
 Class: feature
 

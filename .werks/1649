@@ -2,7 +2,7 @@ Title: Check_MK inventory service has been renamed to Check_MK Discovery
 Level: 2
 Component: core
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417704691
 Class: fix
 

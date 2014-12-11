@@ -2,7 +2,7 @@ Title: dell_powerconnect_psu: Skipping inventory of not supported System temp se
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1418125839
 Class: fix
 

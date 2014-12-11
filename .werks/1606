@@ -2,7 +2,7 @@ Title: Moved notify.log to var/log/notify.log in OMD environments
 Level: 1
 Component: notifications
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417615456
 Class: fix
 

@@ -2,7 +2,7 @@ Title: dell_om_sensors: Use sensor name as item
 Level: 1
 Component: checks
 Compatible: incomp
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1415030487
 Class: feature
 

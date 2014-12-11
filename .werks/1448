@@ -2,7 +2,7 @@ Title: domino_info: check is extended to also show and monitor the lnNotesServer
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1415347315
 Class: feature
 

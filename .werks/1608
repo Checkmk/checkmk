@@ -2,7 +2,7 @@ Title: zpool_status: Add an overall state check (thx to Craig Cook)
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417617359
 Class: feature
 

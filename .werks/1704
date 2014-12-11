@@ -2,7 +2,7 @@ Title: Fix notification analyser in case there are non-Ascii characters in the n
 Level: 2
 Component: notifications
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417778357
 Class: fix
 

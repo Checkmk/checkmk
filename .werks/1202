@@ -2,7 +2,7 @@ Title: cisco_power, cisco_temp_perf: Both checks now using a new service descrip
 Level: 1
 Component: checks
 Compatible: incomp
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1415098852
 Class: fix
 

@@ -2,7 +2,7 @@ Title: climaveneta_fan: New check for fan speed on Climaveneta devices
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1414760607
 Class: feature
 

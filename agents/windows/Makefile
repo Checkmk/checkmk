@@ -23,7 +23,7 @@
 # Boston, MA 02110-1301 USA.
 
 SHELL         = /bin/bash
-VERSION       = 1.2.5i7
+VERSION       = 1.2.7i1
 VERSION_DUMMY = @@@@@CHECK_MK_VERSION@@@@@
 WINDRES       = i586-mingw32msvc-windres
 COPTIONS      = -s -O2 -Wall -Werror -static -DCHECK_MK_VERSION='"$(VERSION_DUMMY)"'
@@ -39,6 +39,12 @@ endif
 all: fix_linebreaks install_agent.exe install_agent-64.exe msi_installer
 
 .PHONY: inc_build_version fix_linebreaks
+
+setversion:
+	sed -i 's/!define CHECK_MK_VERSION .*/!define CHECK_MK_VERSION "'$(NEW_VERSION)'"/' installer*.nsi ; \
+	sed -ri 's/^(VERSION[[:space:]]*= *).*/\1'"$(NEW_VERSION)/" Makefile ; \
+	rm check_mk_agent.exe check_mk_agent-64.exe check_mk_agent.msi ; \
+	make
 
 # Converts all files which are targeted to a windows system to CRLF
 fix_linebreaks:

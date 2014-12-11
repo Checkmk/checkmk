@@ -2,7 +2,7 @@ Title: Remove trailing backslashes from service descriptions
 Level: 1
 Component: core
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417693356
 Class: fix
 

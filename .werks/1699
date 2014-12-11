@@ -2,7 +2,7 @@ Title: Windows agent: new option "file" for writing output into a file
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417767417
 Class: feature
 

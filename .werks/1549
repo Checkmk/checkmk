@@ -4,7 +4,7 @@ Component: checks
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1416913048
 
 This avoid UNKNOWN check results on devices where no thread information is

@@ -2,7 +2,7 @@ Title: windows_agent: fixed error on parsing unicode formatted logfiles
 Level: 1
 Component: core
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1415115591
 Class: fix
 

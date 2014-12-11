@@ -2,7 +2,7 @@ Title: brocade_vdx_status: Is now not bein inventorized anymore for devices not 
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1418112916
 Class: fix
 

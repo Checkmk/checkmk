@@ -1,0 +1,10 @@
+Title: Consolidate rules like normal/retry check intervals into single rules
+Component: core
+State: open
+Date: 2014-12-11 10:57:20
+Targetversion: future
+Class: todo
+
+We could really reduce the number of rules by consolidating rules which should
+better be configured in one single rule like normal/retry check intervals or
+host/service rules

@@ -2,7 +2,7 @@ Title: Views: Hardcoded single context filters are not shown in filter form anym
 Level: 1
 Component: multisite
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417512923
 Class: fix
 

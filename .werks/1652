@@ -2,7 +2,7 @@ Title: kaspersky_av_quarantine: Fixed exception when a file was found in quarant
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417707947
 Class: fix
 

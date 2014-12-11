@@ -2,7 +2,7 @@ Title: check_sql: Added support for DB2 (thanks to Troels Arvin)
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1418130932
 Class: feature
 

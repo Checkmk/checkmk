@@ -2,7 +2,7 @@ Title: apc_symmetra_test: Cleaned up check, fixed exception when self test date 
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1418117821
 Class: fix
 

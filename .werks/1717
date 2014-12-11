@@ -2,7 +2,7 @@ Title: Split up LDAP configuration dialog into four boxes
 Level: 1
 Component: wato
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1418070310
 Class: feature
 

@@ -2,7 +2,7 @@ Title: Fix specifying explicit path to unix socket for check_mkeventd
 Level: 1
 Component: ec
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417766546
 Class: fix
 

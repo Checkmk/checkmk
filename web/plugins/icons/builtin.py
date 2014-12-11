@@ -623,7 +623,7 @@ def paint_icon_crashed_check(what, row, tags, custom_vars):
         crashurl = html.makeuri([("site", row["site"]), ("host", row["host_name"]), ("service", row["service_description"])], filename="crashed_check.py")
         return '<a href="%s">%s</a>' % (
             crashurl, html.render_icon('crash',
-            _("This check crash. Please click here for more information. You also can submit "
+            _("This check crashed. Please click here for more information. You also can submit "
               "a crash report to the development team if you like.")))
 
 multisite_icons.append({

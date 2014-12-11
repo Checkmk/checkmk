@@ -52,13 +52,13 @@ waitmax: waitmax.c
 
 setversion:
 	sed -ri 's/^(VERSION[[:space:]]*= *).*/\1'"$(NEW_VERSION)/" Makefile ; \
-	sed -i 's/say "Version: .*"/say "Version: $(NEW_VERSION)"/' agents/check_mk_agent.openvms ; \
-	for agent in *; do \
+	sed -i 's/say "Version: .*"/say "Version: $(NEW_VERSION)"/' check_mk_agent.openvms ; \
+	for agent in check_mk_agent.*; do \
 	    if [ "$$agent" != windows -a "$$agent" != plugins -a "$$agent" != hpux ] ; then \
 	        sed -i 's/echo Version: [0-9.a-z]*/'"echo Version: $(NEW_VERSION)/g" $$agent; \
 	    fi ; \
 	done ; \
-	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion
+	$(MAKE) -C windows NEW_VERSION=$(NEW_VERSION) setversion
 
 packages: rpm deb
 

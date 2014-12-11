@@ -98,6 +98,7 @@ dist: mk-livestatus mk-eventd
 	cp multisite.mk multisite.mk-$(VERSION)
 	tar  czf $(DISTNAME)/conf.tar.gz $(TAROPTS) main.mk-$(VERSION) multisite.mk-$(VERSION)
 	rm -f main.mk-$(VERSION) multisite.mk-$(VERSION)
+	$(MAKE) -C agents packages
 	tar  czf $(DISTNAME)/agents.tar.gz $(TAROPTS) -C agents \
 		--exclude "msibuild" \
 		--exclude "build_version" \

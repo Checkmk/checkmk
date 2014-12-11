@@ -109,7 +109,7 @@ function run_cached () {
 export -f run_cached
 
 echo '<<<check_mk>>>'
-echo Version: 1.2.6b1
+echo Version: 1.2.6b2
 echo AgentOS: linux
 echo AgentDirectory: $MK_CONFDIR
 echo DataDirectory: $MK_VARDIR

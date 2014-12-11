@@ -40,6 +40,12 @@ all: fix_linebreaks install_agent.exe install_agent-64.exe msi_installer
 
 .PHONY: inc_build_version fix_linebreaks
 
+setversion:
+	sed -i 's/!define CHECK_MK_VERSION .*/!define CHECK_MK_VERSION "'$(NEW_VERSION)'"/' installer*.nsi ; \
+	sed -ri 's/^(VERSION[[:space:]]*= *).*/\1'"$(NEW_VERSION)/" Makefile ; \
+	rm check_mk_agent.exe check_mk_agent-64.exe check_mk_agent.msi ; \
+	make
+
 # Converts all files which are targeted to a windows system to CRLF
 fix_linebreaks:
 	for F in mrpe/* plugins/* *.ini; do \

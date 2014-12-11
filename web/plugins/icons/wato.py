@@ -36,10 +36,12 @@ def wato_link(folder, site, hostname, where):
         if where == "inventory":
             url += "&mode=inventory"
             help = _("Edit services")
+            icon = "services"
         else:
             url += "&mode=edithost"
             help = _("Edit this host")
-        return '<a href="%s">%s</a>' % (url, html.render_icon('services', help))
+            icon = "wato"
+        return '<a href="%s">%s</a>' % (url, html.render_icon(icon, help))
     else:
         return ""
 

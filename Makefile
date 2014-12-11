@@ -25,8 +25,6 @@
 SHELL           = /bin/bash
 VERSION        	= 1.2.6b2
 NAME           	= check_mk
-RPM_TOPDIR     	= rpm.topdir
-RPM_BUILDROOT  	= rpm.buildroot
 PREFIX         	= /usr
 BINDIR         	= $(PREFIX)/bin
 CONFDIR	       	= /etc/$(NAME)
@@ -56,13 +54,12 @@ HEAL_SPACES_IN = checkman/* modules/* checks/* notifications/* inventory/* \
 
 .PHONY: help install clean
 
-all: dist rpm deb
+all: dist packages
 
 help:
 	@echo "make                           --> dist, rpm and deb"
 	@echo "make dist                      --> create TGZ package"
-	@echo "make deb                       --> create DEB package"
-	@echo "make rpm                       --> create RPM package"
+	@echo "make packages                  --> create packages of agents"
 	@echo "make DESTDIR=/tmp/hirn install --> install directly"
 	@echo "make version                   --> switch to new version"
 	@echo "make headers                   --> create/update fileheades"
@@ -75,7 +72,6 @@ check-binaries:
 	@if [ -z "$(SKIP_SANITY_CHECKS)" ]; then \
 	    echo -n "Checking precompiled binaries..." && file agents/waitmax | grep 32-bit >/dev/null && echo OK ; \
 	fi
-
 
 check: check-spaces check-permissions check-binaries check-version
 
@@ -129,6 +125,9 @@ dist: mk-livestatus mk-eventd
 	@echo "   FINISHED. "
 	@echo "=============================================================================="
 
+packages:
+	$(MAKE) -C agents packages
+
 mk-eventd:
 	tar -c $(TAROPTS) --exclude=.f12 \
 	    --transform 's,^mkeventd,mkeventd-$(VERSION),' \
@@ -169,7 +168,7 @@ version:
 	if [ -n "$$newversion" ] ; then $(MAKE) NEW_VERSION=$$newversion setversion ; fi
 
 setversion:
-	sed -ri 's/^(VERSION[[:space:]]*= *).*/\1'"$(NEW_VERSION)/" Makefile ; \
+	sed -ri 's/^(VERSION[[:space:]]*= *).*/\1'"$(NEW_VERSION)/" Makefile agents/Makefile ; \
 	for agent in agents/* ; do \
 	    if [ "$$agent" != agents/windows -a "$$agent" != agents/plugins -a "$$agent" != agents/hpux ] ; then \
 	        sed -i 's/echo Version: [0-9.a-z]*/'"echo Version: $(NEW_VERSION)/g" $$agent; \
@@ -191,68 +190,6 @@ setversion:
 
 headers:
 	doc/helpers/headrify
-
-rpm $(DISTNAME)-1.noarch.rpm:
-	rm -rf $(RPM_TOPDIR)
-	mkdir -p $(RPM_TOPDIR)/RPMS
-	mkdir -p $(RPM_TOPDIR)/SRPMS
-	mkdir -p $(RPM_TOPDIR)/SOURCES
-	mkdir -p $(RPM_TOPDIR)/BUILD
-	mkdir -p $(RPM_TOPDIR)/SPECS
-	$(MAKE) dist
-	cp $(DISTNAME).tar.gz $(RPM_TOPDIR)/SOURCES
-	sed "s/^Version:.*/Version: $(VERSION)/" $(NAME).spec > $(NAME)-$(VERSION).spec
-	rpmbuild -ba --buildroot "$$(pwd)/$(RPM_BUILDROOT)" --define "_topdir $$(pwd)/$(RPM_TOPDIR)" $(NAME)-$(VERSION).spec
-	rm -f $(DISTNAME).spec
-	mv -v $(RPM_TOPDIR)/RPMS/*/* .
-	mv -v $(RPM_TOPDIR)/SRPMS/* .
-	rm -rf $(RPM_TOPDIR)
-
-
-deb: deb-agent
-
-deb-base:
-	rm -rf deb.bauen
-	mkdir -p deb.bauen
-	tar xzf $(DISTNAME).tar.gz -C deb.bauen
-	mv deb.bauen/check_mk-$(VERSION) deb.bauen/check-mk-$(VERSION)
-	cp -prv debian deb.bauen/check-mk-$(VERSION)/
-	cd deb.bauen/check-mk-$(VERSION) ; dpkg-buildpackage -uc -us -rfakeroot
-	mv -v deb.bauen/*.deb .
-	rm -rf deb.bauen
-
-deb-agent: $(NAME)-agent-$(VERSION)-1.noarch.rpm $(NAME)-agent-logwatch-$(VERSION)-1.noarch.rpm $(NAME)-agent-oracle-$(VERSION)-1.noarch.rpm
-	@echo "Sorry. Debian packages currently via alien"
-	@for pac in $^ ; do \
-	  fakeroot alien --scripts -d $$pac ; \
-	done
-	@for p in agent agent-logwatch agent-oracle ; do \
-	   pac="check-mk-$${p}_$(VERSION)-2_all.deb" ; \
-	   echo "Repackaging $$pac" ; \
-	   rm -rf deb-unpack && \
-	   mkdir -p deb-unpack && \
-	   cd deb-unpack && \
-	   ar x ../$$pac && \
-	   mkdir ctrl && \
-	   tar xzf control.tar.gz -C ctrl && \
-	   sed -i -e '/^Depends:/d' -e 's/^Maintainer:.*/Maintainer: mk@mathias-kettner.de/' ctrl/control && \
-	   tar czf control.tar.gz $(TAROPTS) -C ctrl . && \
-	   ar r ../$$pac debian-binary control.tar.gz data.tar.gz && \
-	   cd .. && \
-	   rm -rf deb-unpack || exit 1 ; \
-	done
-
-
-setup:
-
-	$(MAKE) dist
-	rm -rf $(DISTNAME)
-	tar xzf $(DISTNAME).tar.gz
-	cd $(DISTNAME) && ./setup.sh --yes
-	rm -rf $(DISTNAME)
-	check_mk -R
-	/etc/init.d/apache2 reload
-
 
 check-spaces:
 	@echo -n "Checking for trailing spaces..."
@@ -284,3 +221,16 @@ clean:
 
 mrproper:
 	git clean -xfd -e .bugs 2>/dev/null || git clean -xfd
+
+
+## Do we really need this crap here any longer?
+## setup:
+## 	$(MAKE) dist
+## 	rm -rf $(DISTNAME)
+## 	tar xzf $(DISTNAME).tar.gz
+## 	cd $(DISTNAME) && ./setup.sh --yes
+## 	rm -rf $(DISTNAME)
+## 	check_mk -R
+## 	/etc/init.d/apache2 reload
+
+

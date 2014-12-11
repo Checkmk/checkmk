@@ -7452,16 +7452,7 @@ def render_global_configuration_variables(default_values, current_settings, show
     groupnames = g_configvar_groups.keys()
     groupnames.sort()
 
-    html.begin_form("search")
-    html.write(_("Search for settings: "))
-    html.text_input("search", size=32)
-    html.hidden_fields()
-    html.hidden_field("mode", "globalvars")
-    html.set_focus("search")
-    html.write(" ")
-    html.button("_do_seach", _("Search"))
-    html.end_form()
-    html.write('<br>')
+    search_form(_("Search for settings:"))
 
     at_least_one_painted = False
     html.write('<div class=globalvars>')
@@ -13702,23 +13693,21 @@ def mode_ruleeditor(phase):
         menu.append((url, title, icon, "rulesets", help))
     render_main_menu(menu)
 
-    html.write("<BR>")
-    rule_search_form()
+    html.write("<br>")
+    search_form(_("Search for rules: "), "rulesets")
 
-
-
-def rule_search_form():
+def search_form(title, mode=None):
     html.begin_form("search")
-    html.write(_("Search for rules: "))
+    html.write(title+' ')
     html.text_input("search", size=32)
     html.hidden_fields()
-    html.hidden_field("mode", "rulesets")
+    if mode:
+        html.hidden_field("mode", mode)
     html.set_focus("search")
     html.write(" ")
     html.button("_do_seach", _("Search"))
     html.end_form()
-    html.write("<br>")
-
+    html.write('<br>')
 
 def rule_is_ineffective(rule, rule_folder, rulespec, hosts):
     value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
@@ -13915,8 +13904,8 @@ def mode_rulesets(phase, group=None):
     if not only_host:
         render_folder_path(keepvarnames = ["mode", "local", "group"])
 
-    if search != None:
-        rule_search_form()
+    if search != None or group == 'static':
+        search_form(_("Search for rules: "), "rulesets")
 
     if help != None:
         help = "".join(help.split("\n", 1)[1:]).strip()

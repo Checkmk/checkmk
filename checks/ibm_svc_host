@@ -36,7 +36,7 @@ def inventory_ibm_svc_host(info):
     return [(None, None)]
 
 factory_settings['ibm_svc_host_default_levels'] = {
-    'always_ok'  : False   
+    'always_ok'  : False
 
 }
 

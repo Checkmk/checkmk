@@ -33,7 +33,7 @@ class StatusSpecialIntColumn : public IntColumn
 {
     int _type;
 public:
-    StatusSpecialIntColumn(string name, string description, int type) 
+    StatusSpecialIntColumn(string name, string description, int type)
       : IntColumn(name, description, -1), _type(type) {}
     int32_t getValue(void *, Query *);
 };

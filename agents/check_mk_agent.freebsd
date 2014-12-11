@@ -253,11 +253,11 @@ if which MegaCli >/dev/null ; then
 fi
 
 
-# OpenVPN Clients. 
+# OpenVPN Clients.
 # Correct log location unknown, sed call might also be broken
 if [ -e /var/log/openvpn/openvpn-status.log ] ; then
     echo '<<<openvpn_clients:sep(44)>>>'
-    sed -n -e '/CLIENT LIST/,/ROUTING TABLE/p' < /var/log/openvpn/openvpn-status.log  | sed -e 1,3d -e '$d' 
+    sed -n -e '/CLIENT LIST/,/ROUTING TABLE/p' < /var/log/openvpn/openvpn-status.log  | sed -e 1,3d -e '$d'
 fi
 
 

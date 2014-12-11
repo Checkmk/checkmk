@@ -7,10 +7,6 @@ check_mk-*.spec
 check_mk-*.tar.gz
 mk-livestatus-*.tar.gz
 mkeventd-*.tar.gz
-rpm.buildroot/
-rpm.topdir/
-*.rpm
-*.deb
 check-mk-*.exe
 var/
 .bugs/.my_ids

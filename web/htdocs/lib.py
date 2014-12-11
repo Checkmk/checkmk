@@ -320,11 +320,8 @@ def format_plugin_output(output, row = None):
     return output
 
 def format_exception():
-    import traceback, StringIO, sys
-    txt = StringIO.StringIO()
-    t, v, tb = sys.exc_info()
-    traceback.print_exception(t, v, tb, None, txt)
-    return txt.getvalue()
+    import traceback
+    return traceback.format_exc()
 
 # Escape/strip unwanted chars from (user provided) strings to
 # use them in livestatus queries. Prevent injections of livestatus

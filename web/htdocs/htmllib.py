@@ -911,6 +911,35 @@ class html:
             h += '</div>'
         return h
 
+    def show_exception(self, e):
+        details = \
+              'Page: ' + self.myfile + '\r\n\r\n' \
+            + 'GET/POST-Variables:\r\n' \
+            + '\r\n'.join([ ' '+n+'='+v for n, v in sorted(self.vars.items()) ]) + '\r\n' \
+            + '\r\n' \
+            + format_exception()
+
+        mail_body = \
+                 "Dear Check_MK Developer team,\r\n\r\n" \
+               + "I hereby send you a report of a crash in the Check_MK Web GUI:\r\n\r\n" \
+               + details + "\r\n" \
+               + "\r\n\r\nWith best regards,\r\n\r\n"
+
+        self.begin_context_buttons()
+        mailto_url = self.makeuri_contextless([
+            ("subject", "Check_MK GUI Crash Report - " + defaults.check_mk_version),
+            ("body", mail_body)], filename="mailto:feedback@check-mk.org")
+        self.context_button(_("Submit Report"), mailto_url, "email")
+        self.end_context_buttons()
+
+        self.show_error("%s: %s" % (_('Internal error'), self.attrencode(e)))
+
+        self.begin_foldable_container("html", "exc_details", False, _("Details"))
+        self.write('<div class=log_output>')
+        self.write("<pre>%s</pre>" % details)
+        self.write('</div>')
+        self.end_foldable_container()
+
     def show_error(self, msg):
         if self.mobile:
             self.write('<center>')

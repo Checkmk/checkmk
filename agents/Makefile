@@ -22,7 +22,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-VERSION         = 1.2.7i1
+VERSION         = 1.2.6b2
 NAME            = check_mk_agent
 DISTNAME       	= $(NAME)-$(VERSION)
 RPM_TOPDIR     	= $$(pwd)/.rpm.topdir

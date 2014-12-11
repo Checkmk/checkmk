@@ -1,0 +1,16 @@
+title: SSH Service (Ping)
+agents: active
+catalog: agentless
+license: GPL
+distribution: check_mk
+description:
+ This performs an active check to connect to a ssh service.
+
+ It optional can check the protocol version or the program version.
+
+ Returns {CRIT} if the connection isn't possible.
+
+ This check can be configured by Wato.
+
+perfdata:
+ One value: The connection time.

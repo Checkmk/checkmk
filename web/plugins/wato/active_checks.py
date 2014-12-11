@@ -70,6 +70,36 @@ check_icmp_params = [
        )),
 ]
 
+register_rule(group,
+    "active_checks:ssh",
+    Dictionary(
+        title = _("Check SSH service"),
+        help = _("This rulset allow you to configure a SSH check for a host"),
+        elements = [
+            ("port",
+               Integer(
+                    title = _("Port number to be used"),
+                    default_value = 22),
+            ),
+            ("timeout",
+                Integer(
+                    title = _("Connection timeout"),
+                    help = _("Seconds before connection times out"),
+                    default_value = 10),
+            ),
+            ("remote_version",
+               TextAscii(
+                    title = _("Remote Version"),
+                    help = _("Warn if string doesn't match expected server version (ex: OpenSSH_3.9p1)"),
+               )),
+            ("remote_protocol",
+                TextAscii(
+                    title = _("Remote Protocol"),
+                    help = _("Warn if protocol doesn't match expected protocol version (ex: 2.0)"),
+                )),
+        ]
+    ),
+    match="all")
 
 register_rule(group,
     "active_checks:icmp",

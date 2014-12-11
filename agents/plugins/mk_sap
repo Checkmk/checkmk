@@ -108,8 +108,8 @@ SKIP_MTCLASSES = [
     MTE_LONG_TXT,
 ]
 
-MK_CONFDIR = os.getenv("MK_CONFDIR)" or "/etc/check_mk"
-MK_VARDIR = os.getenv("MK_VARDIR)" or "/var/lib/check_mk"
+MK_CONFDIR = os.getenv("MK_CONFDIR") or "/etc/check_mk"
+MK_VARDIR = os.getenv("MK_VARDIR") or "/var/lib/check_mk_agent"
 
 STATE_FILE = MK_VARDIR + '/sap.state'
 state_file_changed = False

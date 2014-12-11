@@ -378,6 +378,7 @@ def render_dashboard(name):
             url = dashlet.get("url", "dashboard_dashlet.py?name="+name+"&id="+ str(nr))
             refresh = dashlet.get("refresh", dashlet_type.get("refresh"))
             if refresh:
+                action = None
                 if 'on_refresh' in dashlet_type:
                     try:
                         action = 'function() {%s}' % dashlet_type['on_refresh'](nr, dashlet)
@@ -389,7 +390,9 @@ def render_dashboard(name):
                 else:
                     # FIXME: remove add_wato_folder_to_url
                     action = '"%s"' % add_wato_folder_to_url(url, wato_folder) # url to dashboard_dashlet.py
-                refresh_dashlets.append('[%d, %d, %s]' % (nr, refresh, action))
+
+                if action:
+                    refresh_dashlets.append('[%d, %d, %s]' % (nr, refresh, action))
 
 
         # Update the dashlets context with the dashboard global context when there are

@@ -887,7 +887,7 @@ class html:
 
         if self.myfile == "view":
             mode_name = self.var('mode') == "availability" and "availability" or "view"
-            encoded_vars = self.attrencode([ (k, v != None and v or '') for k,v in self.page_context.items() ])
+            encoded_vars = self.attrencode([ (k, v != None and str(v) or '') for k,v in self.page_context.items() ])
             h += '<div class="visualadd"><a class="visualadd" href="javascript:void(0)" ' \
                  'onclick="toggle_add_to_visual(event, this, \'%s\', %s, {\'name\': \'%s\'})">' \
                  '<img class=statusicon src="images/status_add_dashlet.png" title="%s"></a></div>\n' % \

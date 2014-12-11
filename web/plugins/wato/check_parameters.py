@@ -340,18 +340,18 @@ register_rule(group + '/' + subgroup_inventory,
 
 register_rule(group + '/' + subgroup_inventory,
     varname   = "inventory_processes_rules",
-    title     = _('Process Inventory'),
+    title     = _('Process Discovery'),
     help      = _("This ruleset defines criteria for automatically creating checks for running processes "
                   "based upon what is running when the service discovery is done. These services will be "
                   "created with default parameters. They will get critical when no process is running and "
-                  "OK otherwise. You can parameterize the check with the ruleset <i>Process Checks</i>."),
+                  "OK otherwise. You can parameterize the check with the ruleset <i>State and count of processes</i>."),
     valuespec = Dictionary(
         elements = [
             ('descr', TextAscii(
-                title = _('Service Description'),
+                title = _('Process Name'),
                 style = "dropdown",
                 allow_empty = False,
-                help  = _('<p>The service description may contain one or more occurances of <tt>%s</tt>. If you do this, then the pattern must be a regular '
+                help  = _('<p>The process name may contain one or more occurances of <tt>%s</tt>. If you do this, then the pattern must be a regular '
                           'expression and be prefixed with ~. For each <tt>%s</tt> in the description, the expression has to contain one "group". A group '
                           'is a subexpression enclosed in brackets, for example <tt>(.*)</tt> or <tt>([a-zA-Z]+)</tt> or <tt>(...)</tt>. When the inventory finds a process '
                           'matching the pattern, it will substitute all such groups with the actual values when creating the check. That way one '
@@ -419,6 +419,7 @@ register_rule(group + '/' + subgroup_inventory,
                          'the actual user name. For example "\\\\NT AUTHORITY\NETWORK SERVICE" or "\\\\CHKMKTEST\Administrator".</p>'),
             )),
         ],
+        required_keys = [ "descr" ],
 
         # Some keys have moved into a check parameter ruleset
         ignored_keys  = [ 'levels', 'perfdata', 'handle_count', 'cpulevels', 'cpu_average', 'virtual_levels', 'resident_levels'],
@@ -6233,6 +6234,25 @@ def ps_convert_from_singlekeys(old_params):
     return params
 
 
+# Rule for disovered process checks
+register_check_parameters(
+    subgroup_applications,
+    "ps",
+    _("State and count of processes"),
+    Transform(
+        Dictionary(
+            elements = process_level_elements,
+        ),
+        forth = ps_convert_from_singlekeys,
+    ),
+    TextAscii(
+        title = _("Process name as defined at discovery"),
+    ),
+    "dict",
+    has_inventory = True,
+    register_static_check = False,
+)
+
 # Rule for static process checks
 register_check_parameters(
     subgroup_applications,
@@ -6242,7 +6262,7 @@ register_check_parameters(
         Dictionary(
             elements = [
                 ( "process", Alternative(
-                    title = _("Name of the process"),
+                    title = _("Process Matching"),
                     style = "dropdown",
                     elements = [
                         TextAscii(
@@ -6296,7 +6316,7 @@ register_check_parameters(
         forth = ps_convert_from_singlekeys,
     ),
     TextAscii(
-        title = _("Name of service"),
+        title = _("Process Name"),
         help = _("This name will be used in the description of the service"),
         allow_empty = False,
         regex = "^[a-zA-Z_0-9 _.-]*$",
@@ -6304,7 +6324,7 @@ register_check_parameters(
                         "dot and hyphon for your service description"),
     ),
     "dict",
-    True,
+    has_inventory = False,
 )
 
 register_check_parameters(

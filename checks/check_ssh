@@ -24,42 +24,25 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import wato
+def check_ssh_arguments(params):
+    args = []
+    if 'timeout' in params:
+        args.append("-t " + str(params['timeout']))
+    if 'port' in params:
+        args.append("-p " + str(params['port']))
+    if 'remote_version' in params:
+        args.append("-r " + quote_shell_string(params['remote_version']))
+    if 'remote_protocol' in params:
+        args.append("-P " + quote_shell_string(params['remote_protocol']))
 
-def wato_link(folder, site, hostname, where):
-    if not config.wato_enabled:
-        return ""
+    args.append("$HOSTADDRESS$")
 
-    if 'X' in html.display_options:
-        url = "wato.py?folder=%s&host=%s" % \
-           (html.urlencode(folder), html.urlencode(hostname))
-        if where == "inventory":
-            url += "&mode=inventory"
-            help = _("Edit services")
-            icon = "services"
-        else:
-            url += "&mode=edithost"
-            help = _("Edit this host")
-            icon = "wato"
-        return '<a href="%s">%s</a>' % (url, html.render_icon(icon, help))
-    else:
-        return ""
+    return " ".join(args)
 
-def paint_wato(what, row, tags, custom_vars):
-    if not wato.may_see_hosts() or html.mobile:
-        return
-
-    filename = row["host_filename"]
-    if filename.startswith("/wato/") and filename.endswith("hosts.mk"):
-        wato_folder = filename[6:-8].rstrip("/")
-        if what == "host":
-            return wato_link(wato_folder, row["site"], row["host_name"], "edithost")
-        elif row["service_description"] in [ "Check_MK inventory", "Check_MK Discovery" ]:
-            return wato_link(wato_folder, row["site"], row["host_name"], "inventory")
-
-multisite_icons.append({
- 'host_columns': [ "filename" ],
- 'paint':  paint_wato,
-})
-
+active_check_info['ssh'] = {
+    "command_line"        : '$USER1$/check_ssh $ARG1$',
+    "argument_function"   : check_ssh_arguments,
+    "service_description" : lambda args: "SSH",
+    "has_perfdata"        : True,
+}
 

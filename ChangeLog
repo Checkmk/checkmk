@@ -2,6 +2,10 @@
     Core & Setup:
     * 1759 Packed RPM and DEB agent packages are now shipped with normal Check_MK package...
 
+    Checks & Agents:
+    * 1457 FIX: logins: new check renamed from "users" check...
+            NOTE: Please refer to the migration notes!
+
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...
 

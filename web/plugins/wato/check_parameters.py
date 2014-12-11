@@ -4918,6 +4918,79 @@ register_check_parameters(
      None
 )
 
+
+# New temperature rule for modern temperature checks that have the
+# sensor type (e.g. "CPU", "Chassis", etc.) as the beginning of their
+# item (e.g. "CPU 1", "Chassis 17/11"). This will replace all other
+# temperature rulesets in future. Note: those few temperature checks
+# that do *not* use an item, need to be converted to use one single
+# item (other than None).
+register_check_parameters(
+    subgroup_environment,
+    "temperature",
+    _("Temperature"),
+    Transform(
+        Dictionary(
+            elements = [
+                ( "levels",
+                  Tuple(
+                      title = _("Upper Temperature Levels"),
+                      elements = [
+                          Integer(title = _("warning at"), unit = u"°C", default_value = 26),
+                          Integer(title = _("critical at"), unit = u"°C", default_value = 30),
+                      ]
+                )),
+                ( "levels_lower",
+                  Tuple(
+                      title = _("Lower Temperature Levels"),
+                      elements = [
+                          Integer(title = _("warning at"), unit = u"°C", default_value = 0),
+                          Integer(title = _("critical at"), unit = u"°C", default_value = -10),
+                      ]
+                )),
+                ( "output_unit",
+                  DropdownChoice(
+                      title = _("Display values in "),
+                      choices = [
+                        ( "c", _("Celsius") ),
+                        ( "f", _("Fahrenheit") ),
+                        ( "k", _("Kelvin") ),
+                      ]
+                )),
+                ## ( "input_unit",
+                ##   DropdownChoice(
+                ##       title = _("Override unit of sensor"),
+                ##       help = _("In some rare cases the unit that is signalled by the sensor "
+                ##                "is wrong and e.g. the sensor sends values in Fahrenheit while "
+                ##                "they are misinterpreted as Celsius. With this setting you can "
+                ##                "force the reading of the sensor to be interpreted as customized. "),
+                ##       choices = [
+                ##         ( "c", _("Celsius") ),
+                ##         ( "f", _("Fahrenheit") ),
+                ##         ( "k", _("Kelvin") ),
+                ##       ]
+                ## )),
+                ## ( "sensor_levels",
+                ##   DropdownChoice(
+                ##       title = _("Interpretation of Sensor's own temperature status"),
+                ##       choices = [
+                ##           ( "ignore", _("Ignore sensor's own levels") ),
+                ##           ( "sensor", _("Only use sensor's levels, ignore yours" ) ),
+                ##           ( "best", _("Use least critical of your and sensor's levels") ),
+                ##           ( "worst", _("Use most critical of your and sensor's levels") ),
+                ##       ]
+                ## )),
+
+            ]
+        ),
+        forth = lambda v: type(v) == tuple and { "levels" : v } or v,
+    ),
+    TextAscii(
+        title = _("Sensor ID"),
+        help = _("The identifier of the thermal sensor.")),
+    "dict",
+)
+
 register_check_parameters(
     subgroup_environment,
     "room_temperature",
@@ -4932,7 +5005,7 @@ register_check_parameters(
         ]),
     TextAscii(
         title = _("Sensor ID"),
-        help = _("The identifier of the themal sensor.")),
+        help = _("The identifier of the thermal sensor.")),
     "first"
 )
 

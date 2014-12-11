@@ -15285,7 +15285,7 @@ def register_rule(group, varname, valuespec = None, title = None,
 # Special version of register_rule, dedicated to checks. This is not really
 # modular here, but we cannot put this function into the plugins file because
 # the order is not defined there.
-def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec, matchtype, has_inventory=True):
+def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec, matchtype, has_inventory=True, register_static_check=True):
     # Register rule for inventorized checks
     if valuespec and has_inventory: # would be useless rule if check has no parameters
         itemenum = None
@@ -15312,40 +15312,41 @@ def register_check_parameters(subgroup, checkgroup, title, valuespec, itemspec, 
             itemenum = itemenum,
             match = matchtype)
 
-    # Register rule for static checks
-    elements = [
-        CheckTypeGroupSelection(
-            checkgroup,
-            title = _("Checktype"),
-            help = _("Please choose the check plugin")) ]
-    if itemspec:
-        elements.append(itemspec)
-    else:
-        # In case of static checks without check-item, add the fixed
-        # valuespec to add "None" as second element in the tuple
-        elements.append(FixedValue(
-            None,
-            totext = '',
-        ))
-    if not valuespec:
-        valuespec =\
-            FixedValue(None,
-                help = _("This check has no parameters."),
-                totext = "")
-    if not valuespec.title():
-        valuespec._title = _("Parameters")
-    elements.append(valuespec)
+    if register_static_check:
+        # Register rule for static checks
+        elements = [
+            CheckTypeGroupSelection(
+                checkgroup,
+                title = _("Checktype"),
+                help = _("Please choose the check plugin")) ]
+        if itemspec:
+            elements.append(itemspec)
+        else:
+            # In case of static checks without check-item, add the fixed
+            # valuespec to add "None" as second element in the tuple
+            elements.append(FixedValue(
+                None,
+                totext = '',
+            ))
+        if not valuespec:
+            valuespec =\
+                FixedValue(None,
+                    help = _("This check has no parameters."),
+                    totext = "")
+        if not valuespec.title():
+            valuespec._title = _("Parameters")
+        elements.append(valuespec)
 
-    register_rule(
-        "static/" + subgroup,
-        "static_checks:%s" % checkgroup,
-        title = title,
-        valuespec = Tuple(
-            title = valuespec.title(),
-            elements = elements,
-        ),
-        itemspec = itemspec,
-        match = "all")
+        register_rule(
+            "static/" + subgroup,
+            "static_checks:%s" % checkgroup,
+            title = title,
+            valuespec = Tuple(
+                title = valuespec.title(),
+                elements = elements,
+            ),
+            itemspec = itemspec,
+            match = "all")
 
 # Registers notification parameters for a certain notification script,
 # e.g. "mail" or "sms". This will create:

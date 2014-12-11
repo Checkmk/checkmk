@@ -1,0 +1,10 @@
+Title: Packed RPM and DEB agent packages are now shipped with normal Check_MK package
+Level: 1
+Component: core
+Compatible: compat
+Version: 1.2.6b2
+Date: 1418305715
+Class: feature
+
+The RPM and DEB package of the Check_MK agent are now shipped with the regular package
+of Check_MK. For example in OMD environments, they are located in <tt>share/check_mk/agents</tt>.

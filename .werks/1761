@@ -1,0 +1,9 @@
+Title: Ruleset search is now consistent for host & serviceparameters and manual checks
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6b2
+Date: 1418312629
+Class: fix
+
+

@@ -1,0 +1,11 @@
+Title: Improved exception hander: Shows details without additional debug request, added mailto link for error report
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6b2
+Date: 1418305269
+Class: feature
+
+In case of exceptions in the Web GUI, the handling should be easier now. We have full details on the first page without the need to perform an additional request with debug mode enabled.
+
+Added a context button for reporting the issue via mail to the feedback address.

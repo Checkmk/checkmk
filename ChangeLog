@@ -1,4 +1,14 @@
 1.2.6b2:
+    Core & Setup:
+    * 1759 Packed RPM and DEB agent packages are now shipped with normal Check_MK package...
+
+    Multisite:
+    * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...
+
+    WATO:
+    * 1760 Added search form to manual checks page
+    * 1761 FIX: Ruleset search is now consistent for host & serviceparameters and manual checks
+
     Notifications:
     * 1754 FIX: Recent notifications (for analysis): Fix wrong color of host DOWN (from yellow to red)
 

@@ -98,6 +98,7 @@ dist: mk-livestatus mk-eventd
 	cp multisite.mk multisite.mk-$(VERSION)
 	tar  czf $(DISTNAME)/conf.tar.gz $(TAROPTS) main.mk-$(VERSION) multisite.mk-$(VERSION)
 	rm -f main.mk-$(VERSION) multisite.mk-$(VERSION)
+	$(MAKE) -C agents packages
 	tar  czf $(DISTNAME)/agents.tar.gz $(TAROPTS) -C agents \
 		--exclude "msibuild" \
 		--exclude "build_version" \
@@ -110,6 +111,7 @@ dist: mk-livestatus mk-eventd
 		--exclude "logstate.txt" \
 		--exclude "*.unversioned.exe" \
 		--exclude "*.cc" \
+		--exclude "*.c" \
 		--exclude "*.res" \
 		--exclude "*~" \
 		--exclude "Makefile" \
@@ -168,25 +170,14 @@ version:
 	if [ -n "$$newversion" ] ; then $(MAKE) NEW_VERSION=$$newversion setversion ; fi
 
 setversion:
-	sed -ri 's/^(VERSION[[:space:]]*= *).*/\1'"$(NEW_VERSION)/" Makefile agents/Makefile ; \
-	for agent in agents/* ; do \
-	    if [ "$$agent" != agents/windows -a "$$agent" != agents/plugins -a "$$agent" != agents/hpux ] ; then \
-	        sed -i 's/echo Version: [0-9.a-z]*/'"echo Version: $(NEW_VERSION)/g" $$agent; \
-	    fi ; \
-	done ; \
-        sed -i 's/say "Version: .*"/say "Version: $(NEW_VERSION)"/' agents/check_mk_agent.openvms
-	sed -i 's/!define CHECK_MK_VERSION .*/!define CHECK_MK_VERSION "'$(NEW_VERSION)'"/' agents/windows/installer*.nsi ; \
-	sed -ri 's/^(VERSION[[:space:]]*= *).*/\1'"$(NEW_VERSION)/" agents/windows/Makefile ; \
+	sed -ri 's/^(VERSION[[:space:]]*= *).*/\1'"$(NEW_VERSION)/" Makefile ; \
 	sed -i 's/^AC_INIT.*/AC_INIT([MK Livestatus], ['"$(NEW_VERSION)"'], [mk@mathias-kettner.de])/' livestatus/configure.ac ; \
 	sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' mkeventd/bin/mkeventd ; \
 	sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' doc/treasures/mknotifyd ; \
 	sed -i 's/^VERSION=".*/VERSION="$(NEW_VERSION)"/' doc/treasures/liveproxy/liveproxyd ; \
 	sed -i 's/^VERSION=.*/VERSION='"$(NEW_VERSION)"'/' scripts/setup.sh ; \
-	echo 'check-mk_$(NEW_VERSION)-1_all.deb net optional' > debian/files ; \
-	cd agents/windows ; rm check_mk_agent.exe check_mk_agent-64.exe check_mk_agent.msi ; make ; cd ../.. ; \
-	cp agents/windows/install_agent.exe check-mk-agent-$(NEW_VERSION).exe ; \
-	cp agents/windows/install_agent-64.exe check-mk-agent-$(NEW_VERSION)-64.exe ; \
-	cp agents/windows/check_mk_agent.msi check-mk-agent-$(NEW_VERSION).msi
+	echo 'check-mk_$(NEW_VERSION)-1_all.deb net optional' > debian/files
+	$(MAKE) -C agents NEW_VERSION=$(NEW_VERSION) setversion
 
 headers:
 	doc/helpers/headrify

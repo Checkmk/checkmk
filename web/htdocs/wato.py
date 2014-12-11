@@ -7452,16 +7452,7 @@ def render_global_configuration_variables(default_values, current_settings, show
     groupnames = g_configvar_groups.keys()
     groupnames.sort()
 
-    html.begin_form("search")
-    html.write(_("Search for settings: "))
-    html.text_input("search", size=32)
-    html.hidden_fields()
-    html.hidden_field("mode", "globalvars")
-    html.set_focus("search")
-    html.write(" ")
-    html.button("_do_seach", _("Search"))
-    html.end_form()
-    html.write('<br>')
+    search_form(_("Search for settings:"))
 
     at_least_one_painted = False
     html.write('<div class=globalvars>')
@@ -13678,6 +13669,8 @@ def mode_ruleeditor(phase):
     else:
         html.write("<h3>%s: %s</h3>" % (_("Host"), only_host))
 
+    search_form(_("Search for rules: "), "rulesets")
+
     # Group names are separated with "/" into main group and optional subgroup.
     # Do not loose carefully manually crafted order of groups!
     groupnames = []
@@ -13702,23 +13695,18 @@ def mode_ruleeditor(phase):
         menu.append((url, title, icon, "rulesets", help))
     render_main_menu(menu)
 
-    html.write("<BR>")
-    rule_search_form()
-
-
-
-def rule_search_form():
+def search_form(title, mode=None):
     html.begin_form("search")
-    html.write(_("Search for rules: "))
+    html.write(title+' ')
     html.text_input("search", size=32)
     html.hidden_fields()
-    html.hidden_field("mode", "rulesets")
+    if mode:
+        html.hidden_field("mode", mode)
     html.set_focus("search")
     html.write(" ")
     html.button("_do_seach", _("Search"))
     html.end_form()
-    html.write("<br>")
-
+    html.write('<br>')
 
 def rule_is_ineffective(rule, rule_folder, rulespec, hosts):
     value, tag_specs, host_list, item_list, rule_options = parse_rule(rulespec, rule)
@@ -13878,7 +13866,7 @@ def mode_rulesets(phase, group=None):
         help = _("Here you can create explicit checks that are not being created by the automatic service discovery.")
         only_used = False
     elif search != None:
-        title = _("Rules matching ") + html.attrencode(search)
+        title = _("Rules matching") + ": " + html.attrencode(search)
         help = _("All rules that contain '%s' in their name") % html.attrencode(search)
         only_used = False
     else:
@@ -13915,8 +13903,8 @@ def mode_rulesets(phase, group=None):
     if not only_host:
         render_folder_path(keepvarnames = ["mode", "local", "group"])
 
-    if search != None:
-        rule_search_form()
+    if search != None or group == 'static':
+        search_form(_("Search for rules: "), group != "static" and "rulesets")
 
     if help != None:
         help = "".join(help.split("\n", 1)[1:]).strip()
@@ -13937,7 +13925,7 @@ def mode_rulesets(phase, group=None):
 
     # Select matching rule groups while keeping their configured order
     groupnames = [ gn for gn, rulesets in g_rulespec_groups
-                   if only_used or search or gn == group or gn.startswith(group + "/") ]
+                   if only_used or search != None or gn == group or (group and gn.startswith(group + "/")) ]
 
     # In case of search we need to sort the groups since main chapters would
     # appear more than once otherwise.
@@ -13972,9 +13960,11 @@ def mode_rulesets(phase, group=None):
                 and search not in varname:
                 continue
 
-            if search != None and groupname.startswith("static/"):
-                continue # search must not find these
-
+            # Show static checks rules only in on dedicated page and vice versa
+            if group != 'static' and groupname.startswith("static/"):
+                continue
+            elif group == 'static' and not groupname.startswith("static/"):
+                continue
 
             # Handle case where a host is specified
             rulespec = g_rulespecs[varname]
@@ -13991,7 +13981,7 @@ def mode_rulesets(phase, group=None):
             if only_local and num_local_rules == 0:
                 continue
 
-            if only_used or search != None:
+            if group != 'static' and (only_used or search != None):
                 titlename = g_rulegroups[groupname.split("/")[0]][0]
             else:
                 if '/' in groupname:

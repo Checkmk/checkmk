@@ -317,12 +317,7 @@ def handler(req, fields = None, profiling = True):
             html.write(_("Internal error") + ": %s\n" % html.attrencode(e))
         elif not fail_silently:
             html.header(_("Internal error"))
-            if config.debug:
-                html.show_error("%s: %s<pre>%s</pre>" %
-                    (_('Internal error'), html.attrencode(e), html.attrencode(format_exception())))
-            else:
-                url = html.makeuri([("debug", "1")])
-                html.show_error("%s: %s (<a href=\"%s\">%s</a>)" % (_('Internal error') + ':', html.attrencode(e), url, _('Retry with debug mode')))
+            html.show_exception(e)
             html.footer()
         response_code = apache.OK
 

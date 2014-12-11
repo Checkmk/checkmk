@@ -5940,7 +5940,7 @@ class ContactGroupsAttribute(Attribute):
             html.write(' <a href="%s">%s</a><br>' % (make_link([("mode", "edit_contact_group"), ("edit", name)]), group['alias'] and group['alias'] or name))
         html.write("<hr>")
         if is_host:
-            html.checkbox(self._name + "_use", value["use"], label = _("Add these contact groups the host"))
+            html.checkbox(self._name + "_use", value["use"], label = _("Add these contact groups to host"))
         else:
             html.checkbox(self._name + "_recurse_perms", value["recurse_perms"], label = _("Give these groups also <b>permission on all subfolders</b>"))
             html.write("<hr>")

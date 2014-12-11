@@ -122,7 +122,7 @@ multisite_layouts["json"] = {
 }
 
 def render_jsonp(rows, view, group_painters, painters, num_columns, show_checkboxes):
-    html.write("parseJSON(\n");
+    html.write("%s(\n" % html.var('jsonp'));
     render_json(rows, view, group_painters, painters, num_columns, show_checkboxes)
     html.write(");\n");
 

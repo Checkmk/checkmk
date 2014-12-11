@@ -31,6 +31,10 @@
 # <<<lnx_thermal>>>
 # thermal_zone0 enabled acpitz 47000 90000 critical 79000 passive
 
+# <<<lnx_thermal>>>
+# thermal_zone0 enabled acpitz 38000 98000 critical
+# thermal_zone1 pkg-temp-0  44000 0 passive 0 passive
+
 def inventory_lnx_thermal(info):
     return [ (l[0].replace('thermal_zone', ''), None) for l in info ]
 
@@ -40,6 +44,15 @@ def check_lnx_thermal(item, params, info):
             # ['thermal_zone0', 'enabled', 'acpitz', '51000', '90000', 'critical', '79000', 'passive']
             state = 0
             tp_reached = []
+
+            # Some devices report an empty value for the 3rd field (type). Trying to fix those lines.
+            # -> thermal_zone1 pkg-temp-0  44000 0 passive 0 passive
+            try:
+                int(line[2])
+                int(line[3])
+                line = line[:2] + [''] + line[2:]
+            except:
+                pass # -> regular line
 
             # convert values from millidegree
             cur = int(line[3]) / 1000

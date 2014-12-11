@@ -58,6 +58,7 @@ setversion:
 	        sed -i 's/echo Version: [0-9.a-z]*/'"echo Version: $(NEW_VERSION)/g" $$agent; \
 	    fi ; \
 	done ; \
+	$(MAKE) packages
 	$(MAKE) -C windows NEW_VERSION=$(NEW_VERSION) setversion
 
 packages: rpm deb

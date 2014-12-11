@@ -1271,21 +1271,21 @@ group = _("Service discovery")
 register_configvar(group,
     "inventory_check_interval",
     Optional(
-        Integer(title = _("Do inventory check every"),
+        Integer(title = _("Perform service discovery check every"),
                 unit = _("minutes"),
                 min_value = 1,
-                default_value = 120),
-        title = _("Enable regular inventory checks"),
+                default_value = 720),
+        title = _("Enable regular service discovery checks"),
         help = _("If enabled, Check_MK will create one additional check per host "
-                 "that does a regular check, if the inventory would find new services "
+                 "that does a regular check, if the service discovery would find new services "
                  "currently un-monitored.")),
     need_restart = True)
 
 register_configvar(group,
     "inventory_check_severity",
     DropdownChoice(
-        title = _("Severity of failed inventory check"),
-        help = _("Please select which alarm state the inventory check services "
+        title = _("Severity of failed service discovery check"),
+        help = _("Please select which alarm state the service discovery check services "
                  "shall assume in case that un-monitored services are found."),
         choices = [
             (0, _("OK - do not alert, just display")),
@@ -1298,7 +1298,7 @@ register_configvar(group,
 register_configvar(group,
     "inventory_check_do_scan",
     DropdownChoice(
-        title = _("Inventory check for SNMP devices"),
+        title = _("Service discovery check for SNMP devices"),
         choices = [
            ( True, _("Perform full SNMP scan always, detect new check types") ),
            ( False, _("Just rely on existing check files, detect new items only") )
@@ -1308,11 +1308,11 @@ register_configvar(group,
 register_configvar(group,
     "inventory_check_autotrigger",
     Checkbox(
-        title = _("Inventory triggers inventory check"),
-        label = _("Automatically schedule inventory check after service configuration changes"),
+        title = _("Service Discovery triggers service discovery check"),
+        label = _("Automatically schedule service discovery check after service configuration changes"),
         help = _("When this option is enabled then after each change of the service "
                  "configuration of a host via WATO - may it be via manual changes or a bulk "
-                 "inventory - the inventory check is automatically rescheduled in order "
+                 "discovry - the service discovery check is automatically rescheduled in order "
                  "to reflect the new service state correctly immediately."),
         default_value = True,
     ))

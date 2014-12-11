@@ -1,4 +1,7 @@
 1.2.6b2:
+    Notifications:
+    * 1754 FIX: Recent notifications (for analysis): Fix wrong color of host DOWN (from yellow to red)
+
 
 1.2.6b1:
     Core & Setup:

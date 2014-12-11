@@ -2,7 +2,7 @@ Title: mk_oracle: completely overhauled ORACLE monitoring
 Level: 3
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1415093156
 Class: feature
 

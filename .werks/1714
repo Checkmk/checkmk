@@ -2,7 +2,7 @@ Title: Add support for jsonp export (next to json and python)
 Level: 1
 Component: multisite
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1418053509
 Class: feature
 

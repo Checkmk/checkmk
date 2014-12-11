@@ -2,7 +2,7 @@ Title: Fixed matching dynamic number of regex match groups
 Level: 1
 Component: ec
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417697483
 Class: fix
 

@@ -2,7 +2,7 @@ Title: check_mk_agent.linux: fix output of lnx_if on Ubuntu 8.04 (on older kerne
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417628312
 Class: fix
 

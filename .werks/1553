@@ -4,7 +4,7 @@ Component: multisite
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417084306
 
 The button for deleting (i.e. acknowleding) logfile messages in the webpage

@@ -4,7 +4,7 @@ Component: wato
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1416403159
 
 Snapshots created with CMC can not be restored on sites currently

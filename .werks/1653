@@ -2,7 +2,7 @@ Title: megaraid_pdisks: Resulting states are now hard coded within the check
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417709673
 Class: fix
 

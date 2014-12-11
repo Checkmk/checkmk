@@ -4,7 +4,7 @@ Component: multisite
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1415962691
 
 Some of the view filters got renamed in the latest releases.

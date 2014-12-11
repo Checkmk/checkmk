@@ -2,7 +2,7 @@ Title: Dashboard: Fixed mass client CPU load consumption when making graph dashl
 Level: 1
 Component: multisite
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417531745
 Class: fix
 

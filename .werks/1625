@@ -2,7 +2,7 @@ Title: Safely handle characters that have a special meaning in regexes when crea
 Level: 1
 Component: wato
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417684044
 Class: fix
 

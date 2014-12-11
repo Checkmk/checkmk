@@ -2,7 +2,7 @@ Title: f5_bigip_cluster_v11: new check for F5 cluster status for firmware versio
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417622592
 Class: feature
 

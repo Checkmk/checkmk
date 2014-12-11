@@ -2,7 +2,7 @@ Title: Handle rare cases where SNMP response string begins with a line feed
 Level: 1
 Component: core
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1418141289
 Class: fix
 

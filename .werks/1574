@@ -2,7 +2,7 @@ Title: Hosts named like used python modules do not break precompiled checks anym
 Level: 1
 Component: core
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417440175
 Class: fix
 

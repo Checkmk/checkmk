@@ -4,7 +4,7 @@ Component: multisite
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1416992290
 
 This fixes an error where filtering a view leads into an empty view, because 

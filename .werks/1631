@@ -2,7 +2,7 @@ Title: juniper_bgp_state: check now detects and supports more differen device mo
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417696679
 Class: feature
 

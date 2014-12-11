@@ -2,7 +2,7 @@ Title: Try harder to detect previous hard state in notification when using Nagio
 Level: 1
 Component: notifications
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1416492466
 Class: fix
 

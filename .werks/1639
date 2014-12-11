@@ -2,6 +2,6 @@ Title: Interfaces with speed more than 10GBit/s can now be configured correctly
 Level: 1
 Component: wato
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417689631
 Class: fix

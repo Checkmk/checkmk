@@ -2,7 +2,7 @@ Title: Can use contact groups without hosts/services assigned in RBN rules now
 Level: 1
 Component: notifications
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417519674
 Class: fix
 

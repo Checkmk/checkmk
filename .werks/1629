@@ -2,7 +2,7 @@ Title: check_mk_agent.freebsd: several new features and improvements, now only u
 Level: 2
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417693957
 Class: feature
 

@@ -2,7 +2,7 @@ Title: Allow input of plugin output and perfdata when faking check results
 Level: 2
 Component: multisite
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1415276255
 Class: feature
 

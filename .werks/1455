@@ -2,7 +2,7 @@ Title: hp_proliant_mem:  avoid a crash of the check when module_condition is emp
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417791862
 Class: fix
 

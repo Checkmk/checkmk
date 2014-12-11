@@ -2,7 +2,7 @@ Title: oracle_instance: Inventory function deals better with old bogus agent out
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1418135014
 Class: fix
 

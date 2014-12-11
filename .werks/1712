@@ -2,7 +2,7 @@ Title: hyper_vms: fixed for snapshot VMs with (...) in their names
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1418051145
 Class: fix
 

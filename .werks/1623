@@ -2,7 +2,7 @@ Title: hp_proliant_mem: support for some yet unhandled status situations
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417631124
 Class: fix
 

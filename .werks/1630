@@ -2,7 +2,7 @@ Title: smart: update in plugin that also outputs information about disks attache
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1417694156
 Class: feature
 

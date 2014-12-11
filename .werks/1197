@@ -2,7 +2,7 @@ Title: climaveneta_temp: New check for temperature sensors on Climaveneta clima 
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1414753041
 Class: feature
 

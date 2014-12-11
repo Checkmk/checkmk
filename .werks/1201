@@ -2,7 +2,7 @@ Title: allnet_ip_sensoric: Detect Temperature Sensors now in more cases
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1415097074
 Class: feature
 

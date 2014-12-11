@@ -2,7 +2,7 @@ Title: win_exefiles: handle case gracefully where no size information is availab
 Level: 1
 Component: inv
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1418142708
 Class: fix
 

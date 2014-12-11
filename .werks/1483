@@ -4,7 +4,7 @@ Component: core
 Class: fix
 Compatible: compat
 State: unknown
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1415004782
 
 If a check plugin has a vertical bar in its plugin output then the core chopped

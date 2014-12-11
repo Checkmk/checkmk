@@ -2,7 +2,7 @@ Title: win_dhcp_pools: fix naming of WATO rules and informal WARN/CRIT levels in
 Level: 1
 Component: checks
 Compatible: compat
-Version: 1.2.5i7
+Version: 1.2.6b1
 Date: 1418132633
 Class: fix
 

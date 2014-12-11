@@ -5,6 +5,9 @@
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...
 
+    WATO:
+    * 1760 Added search form to manual checks page
+
 
 1.2.6b1:
     Core & Setup:

@@ -58,11 +58,11 @@ def check_cisco_secure(item, params, parsed):
         message = "Port %s: %s (Violation Count: %s, Last Mac: %s)" % \
         ( name, secure_states[status], violationCount, lastmac )
 
-        # If port cant be enabled and is up
-        if status == 2 and op_state == 1:
+        # If port cant be enabled and is up and has violations -> WARN
+        if status == 2 and op_state == 1 and int(violationCount) > 0:
             yield 1, message
             at_least_one_problem = True
-        # Security issue
+        # Security issue -> CEIT
         elif status == 3:
             yield 2, message
             at_least_one_problem = True

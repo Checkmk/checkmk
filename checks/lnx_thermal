@@ -64,7 +64,7 @@ def check_lnx_thermal(item, params, info):
                     # ignore active cooling device trip points (means enabling a fan or similar)
                     if tp_name == 'active':
                         continue
-                    if cur > level:
+                    if level != 0 and cur > level:
                         if tp_name in [ 'hot', 'critical' ]:
                             state = max(state, 2)
                         else:

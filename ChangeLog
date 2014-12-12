@@ -7,6 +7,7 @@
             NOTE: Please refer to the migration notes!
     * 1762 FIX: lnx_thermal: Now ignoring trip points with level 0...
     * 1763 FIX: diskstat: Fixed error in config example of manpage
+    * 1755 FIX: cisco_vpn_tunnel: fix exception in case tunnel is not OK
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...

@@ -7,6 +7,7 @@
             NOTE: Please refer to the migration notes!
     * 1762 FIX: lnx_thermal: Now ignoring trip points with level 0...
     * 1763 FIX: diskstat: Fixed error in config example of manpage
+    * 1755 FIX: cisco_vpn_tunnel: fix exception in case tunnel is not OK
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...
@@ -14,6 +15,9 @@
     WATO:
     * 1760 Added search form to manual checks page
     * 1761 FIX: Ruleset search is now consistent for host & serviceparameters and manual checks
+
+    Notifications:
+    * 1754 FIX: Recent notifications (for analysis): Fix wrong color of host DOWN (from yellow to red)
 
 
 1.2.6b1:

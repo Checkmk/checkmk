@@ -1602,7 +1602,7 @@ register_check_parameters(
                                    "device."),
                           allow_empty = False,
                       ),
-                      TextAscii(
+                      TextUnicode(
                           title = _("Tunnel Alias"),
                           help = _("You can configure an individual alias here for the tunnel matching "
                                    "the IP-Address or Name configured in the field above."),

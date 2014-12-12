@@ -6,6 +6,7 @@
     * 1457 FIX: logins: new check renamed from "users" check...
             NOTE: Please refer to the migration notes!
     * 1762 FIX: lnx_thermal: Now ignoring trip points with level 0...
+    * 1763 FIX: diskstat: Fixed error in config example of manpage
     * 1755 FIX: cisco_vpn_tunnel: fix exception in case tunnel is not OK
     * 1756 FIX: agent_ibmsvc: do not abort execution if one of the sections fail
 

@@ -482,7 +482,7 @@ def store_persisted_info(hostname, persisted):
         if not os.path.exists(dir):
             os.makedirs(dir)
         file(dir + hostname, "w").write("%r\n" % persisted)
-        if opt_debug:
+        if opt_verbose:
             sys.stdout.write("Persisted sections %s.\n" % ", ".join(persisted.keys()))
 
 def add_persisted_info(hostname, info):
@@ -497,10 +497,10 @@ def add_persisted_info(hostname, info):
         if now < persisted_until or opt_force:
             if section not in info:
                 info[section] = persisted_section
-                if opt_debug:
+                if opt_verbose:
                     sys.stdout.write("Added persisted section %s.\n" % section)
         else:
-            if opt_debug:
+            if opt_verbose:
                 sys.stdout.write("Persisted section %s is outdated by %d seconds.\n" % (
                         section, persisted_until - now))
 
@@ -715,7 +715,7 @@ def get_agent_info_tcp(hostname, ipaddress, port = None):
             s.settimeout(tcp_connect_timeout)
         except:
             pass # some old Python versions lack settimeout(). Better ignore than fail
-        if opt_debug:
+        if opt_verbose:
             sys.stderr.write("Connecting via TCP to %s:%d.\n" % (
                     ipaddress, port))
         s.connect((ipaddress, port))

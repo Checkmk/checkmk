@@ -218,6 +218,18 @@ else:
 #   | for all variables. The user can easily override them.                |
 #   '----------------------------------------------------------------------'
 
+def set_use_cachefile():
+    global opt_use_cachefile, check_max_cachefile_age, inventory_max_cachefile_age
+    opt_use_cachefile = True
+    check_max_cachefile_age     = 1000000000
+    inventory_max_cachefile_age = 1000000000
+
+def no_use_cachefile():
+    global opt_use_cachefile, check_max_cachefile_age, inventory_max_cachefile_age
+    opt_use_cachefile = False
+    check_max_cachefile_age     = 0 # per default do not use cache files when checking
+    inventory_max_cachefile_age = 120 # seconds
+
 # define magic keys for use in host extraconf lists
 PHYSICAL_HOSTS = [ '@physical' ] # all hosts but not clusters
 CLUSTER_HOSTS  = [ '@cluster' ]  # all cluster hosts
@@ -237,7 +249,6 @@ restart_locking                    = "abort" # also possible: "wait", None
 check_submission                   = "file" # alternative: "pipe"
 aggr_summary_hostname              = "%s-s"
 agent_min_version                  = 0 # warn, if plugin has not at least version
-check_max_cachefile_age            = 0 # per default do not use cache files when checking
 cluster_max_cachefile_age          = 90   # secs.
 piggyback_max_cachefile_age        = 3600  # secs
 piggyback_translation              = [] # Ruleset for translating piggyback host names
@@ -263,9 +274,10 @@ explicit_snmp_communities          = {} # override the rule based configuration
 inventory_check_interval           = None # Nagios intervals (4h = 240)
 inventory_check_severity           = 1    # warning
 inventory_check_do_scan            = True # include SNMP scan for SNMP devices
-inventory_max_cachefile_age        = 120  # secs.
 inventory_check_autotrigger        = True # Automatically trigger inv-check after automation-inventory
 always_cleanup_autochecks          = None # For compatiblity with old configuration
+
+no_use_cachefile()
 
 # Nagios templates and other settings concerning generation
 # of Nagios configuration files. No need to change these values.
@@ -3103,7 +3115,7 @@ def make_inventory(checkname, hostnamelist, check_only=False, include_state=Fals
     return newitems
 
 
-def check_inventory(hostname):
+def check_inventory(hostname, ipaddress = None):
     newchecks = []
     newitems = []
     total_count = 0
@@ -3113,7 +3125,8 @@ def check_inventory(hostname):
 
     try:
         if is_snmp and inventory_check_do_scan:
-            ipaddress = lookup_ipaddress(hostname)
+            if not ipaddress:
+                ipaddress = lookup_ipaddress(hostname)
             snmp_checktypes = snmp_scan(hostname, ipaddress)
         else:
             snmp_checktypes = []
@@ -3128,23 +3141,27 @@ def check_inventory(hostname):
             elif not check_uses_snmp(ct) and not is_tcp:
                 continue # Skip TCP checks on non-TCP hosts
 
-            new = make_inventory(ct, [hostname], True)
+            if ipaddress:
+                hostdef = [hostname+'/'+ipaddress]
+            else:
+                hostdef = [hostname]
+            new = make_inventory(ct, hostdef, True)
             newitems += new
             count = len(new)
             if count > 0:
                 newchecks.append((ct, count))
                 total_count += count
+
         if total_count > 0:
             info = ", ".join([ "%s:%d" % (ct, count) for ct,count in newchecks ])
-            statustext = { 0 : "OK", 1: "WARNING", 2:"CRITICAL" }.get(inventory_check_severity, "UNKNOWN")
-            sys.stdout.write("%s - %d unchecked services (%s)\n" % (statustext, total_count, info))
+            output = "%d unchecked services (%s)\n" % (total_count, info)
             # Put detailed list into long plugin output
             for hostname, checkname, item in newitems:
-                sys.stdout.write("%s: %s\n" % (checkname, service_description(checkname, item)))
-            sys.exit(inventory_check_severity)
+                output += "%s: %s\n" % (checkname, service_description(checkname, item))
+            status = inventory_check_severity
         else:
-            sys.stdout.write("OK - no unchecked services found\n")
-            sys.exit(0)
+            output = "no unchecked services found\n"
+            status = 0
     except SystemExit, e:
         raise e
     except Exception, e:
@@ -3158,7 +3175,14 @@ def check_inventory(hostname):
         else:
             what = "exception"
         status = spec.get(what, 3)
-        sys.stdout.write("%s - %s\n" % (nagios_state_names[status], e))
+        output = str(e)
+
+    if opt_keepalive:
+        global total_check_output
+        total_check_output += output
+        return status
+    else:
+        sys.stdout.write(nagios_state_names[status] + " - " + output)
         sys.exit(status)
 
 
@@ -5578,13 +5602,13 @@ def do_check_keepalive():
 
     while True:
         cleanup_globals()
-        hostname = keepalive_read_line()
+        cmdline = keepalive_read_line()
         g_initial_times = os.times()
 
-        hostname = hostname.strip()
-        if hostname == "*":
+        cmdline = cmdline.strip()
+        if cmdline == "*":
             restart_myself(keepalive_fd)
-        elif not hostname:
+        elif not cmdline:
             break
 
         num_checks += 1
@@ -5594,21 +5618,42 @@ def do_check_keepalive():
             try: # catch timeouts
                 signal.signal(signal.SIGALRM, check_timeout)
                 signal.alarm(g_timeout)
-                if ';' in hostname:
-                    hostname, ipaddress = hostname.split(";", 1)
-                elif hostname in ipaddress_cache:
-                    ipaddress = ipaddress_cache[hostname]
-                else:
-                    if is_cluster(hostname):
-                        ipaddress = None
-                    else:
-                        try:
-                            ipaddress = lookup_ipaddress(hostname)
-                        except:
-                            raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
-                    ipaddress_cache[hostname] = ipaddress
 
-                status = do_check(hostname, ipaddress)
+                # TODO: Add real command line parser
+                if ' ' in cmdline:
+                    # the cmc always provides arguments. This is the only used case for cmc. The last
+                    # two arguments are the hostname and the ipaddress of the host to be asked for.
+                    # The other arguments might be different parameters to configure the actions to
+                    # be done
+                    args = cmdline.split(' ')
+                    no_use_cachefile()
+                    if '--cache' in args:
+                        set_use_cachefile()
+                    hostname, ipaddress = args[-2:]
+                else:
+                    # This case is used when calling keepalive mode manually only with a hostname
+                    args      = []
+                    hostname  = cmdline
+                    ipaddress = None
+
+                if ipaddress == None:
+                    if hostname in ipaddress_cache:
+                        ipaddress = ipaddress_cache[hostname]
+                    else:
+                        if is_cluster(hostname):
+                            ipaddress = None
+                        else:
+                            try:
+                                ipaddress = lookup_ipaddress(hostname)
+                            except:
+                                raise MKGeneralException("Cannot resolve hostname %s into IP address" % hostname)
+                        ipaddress_cache[hostname] = ipaddress
+
+                if '--check-inventory' in args:
+                    status = check_inventory(hostname, ipaddress)
+                else:
+                    status = do_check(hostname, ipaddress)
+
                 signal.signal(signal.SIGALRM, signal.SIG_IGN) # Prevent ALRM from CheckHelper.cc
                 signal.alarm(0)
             except MKCheckTimeout:
@@ -6078,9 +6123,7 @@ if __name__ == "__main__":
                 sys.stderr.write("Please use the option -c separated by the other options.\n")
                 sys.exit(1)
         elif o == '--cache':
-            opt_use_cachefile = True
-            check_max_cachefile_age     = 1000000000
-            inventory_max_cachefile_age = 1000000000
+            set_use_cachefile()
         elif o == '--no-tcp':
             opt_no_tcp = True
         elif o == '--no-cache':
@@ -6223,7 +6266,12 @@ if __name__ == "__main__":
                 output_plain_hostinfo(a)
                 done = True
             elif o == '--check-inventory':
-                check_inventory(a)
+                if '/' in a:
+                    hostname, ipaddress = a.split('/', 1)
+                else:
+                    hostname  = a
+                    ipaddress = None
+                check_inventory(hostname, ipaddress)
                 done = True
             elif o == '--scan-parents':
                 do_scan_parents(args)

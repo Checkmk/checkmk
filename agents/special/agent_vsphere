@@ -994,9 +994,6 @@ if not error:
 
         print "<<<<>>>>"
 
-        print "<<<esx_vsphere_objects_count>>>"
-        print "Virtualmachines " + str(len(vms.keys()))
-
         print "<<<esx_vsphere_objects:sep(9)>>>"
 
         # the piggybacked data is printed later on, because it looks quite messy...

@@ -29,8 +29,8 @@ Release:   1
 License:   GPL
 Group:     System/Monitoring
 URL:       http://mathias-kettner.de/check_mk.html
-Source:    check_mk_agent-%{version}.tar.gz
-BuildRoot: /tmp/rpm.buildroot.check_mk-%{version}
+Source:    check_mk_agent-%{_version}.tar.gz
+BuildRoot: %{_topdir}/buildroot
 AutoReq:   off
 AutoProv:  off
 BuildArch: noarch
@@ -40,7 +40,7 @@ The Check_MK Agent uses xinetd to provide information about the system
 on TCP port 6556. This can be used to monitor the host via Check_MK.
 
 %prep
-%setup -q
+%setup -n check_mk_agent-%{_version}
 
 %install
 

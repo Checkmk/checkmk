@@ -1,0 +1,12 @@
+Title: logins: new check renamed from "users" check
+Level: 1
+Component: checks
+Compatible: incomp
+Version: 1.2.6b2
+Date: 1418313533
+Class: fix
+
+The "users" check and "mk_users" plugin have been renamed to "logins" and
+"mk_logins".  If you have utilized the "users" check before, you now need
+to remove the "mk_users" plugin and install the "mk_logins" plugin on your
+monitoring clients.  Afterwards, you need to execute a new service discovery.

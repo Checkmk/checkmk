@@ -22,13 +22,15 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+SHELL           = /bin/bash
 VERSION         = 1.2.7i1
+RPM_VERSION     = $(subst -,_,$(VERSION))
 NAME            = check_mk_agent
 DISTNAME       	= $(NAME)-$(VERSION)
 RPM_TOPDIR     	= $$(pwd)/.rpm.topdir
 RPM_BUILDROOT  	= $$(pwd)/.rpm.buildroot
 RPM_PACKAGE     = $(DISTNAME)-1.noarch.rpm
-DEB_PACKAGE     = check-mk-agent_$(VERSION)-2_all.deb
+DEB_PACKAGE     = check-mk-agent_$(VERSION)-1_all.deb
 
 usage:
 	@echo "make waitmax  -- compile waitmax.c"
@@ -51,14 +53,16 @@ waitmax: waitmax.c
 	@echo "Fine. Typing 'make install' as root now will install into /usr/bin"
 
 setversion:
+	git rm -f *.rpm *.deb
 	sed -ri 's/^(VERSION[[:space:]]*= *).*/\1'"$(NEW_VERSION)/" Makefile ; \
 	sed -i 's/say "Version: .*"/say "Version: $(NEW_VERSION)"/' check_mk_agent.openvms ; \
 	for agent in check_mk_agent.*; do \
 	    if [ "$$agent" != windows -a "$$agent" != plugins -a "$$agent" != hpux ] ; then \
-	        sed -i 's/echo Version: [0-9.a-z]*/'"echo Version: $(NEW_VERSION)/g" $$agent; \
+	        sed -i 's/echo Version: [0-9.a-z-]*/'"echo Version: $(NEW_VERSION)/g" $$agent; \
 	    fi ; \
 	done ; \
 	$(MAKE) packages
+	git add *.rpm *.deb
 	$(MAKE) -C windows NEW_VERSION=$(NEW_VERSION) setversion
 
 packages: rpm deb
@@ -71,29 +75,35 @@ rpm $(RPM_PACKAGE):
 	mkdir -p $(RPM_TOPDIR)/BUILD
 	mkdir -p $(RPM_TOPDIR)/SPECS
 	tar czf $(RPM_TOPDIR)/SOURCES/$(NAME)-$(VERSION).tar.gz --transform='s@^@$(DISTNAME)/@' *
-	sed "s/^Version:.*/Version: $(VERSION)/" $(NAME).spec > $(NAME)-$(VERSION).spec
+	sed "s/^Version:.*/Version: $(RPM_VERSION)/" $(NAME).spec > $(NAME)-$(VERSION).spec
 	rm -f *.rpm
-	rpmbuild -ba --buildroot "$(RPM_BUILDROOT)" --define "_topdir $(RPM_TOPDIR)" $(DISTNAME).spec
+	rpmbuild -ba --buildroot "$(RPM_BUILDROOT)" \
+	    --define "_topdir $(RPM_TOPDIR)" \
+	    --define "_version $(VERSION)" \
+	    $(DISTNAME).spec
 	rm -f $(DISTNAME).spec
-	mv -v $(RPM_TOPDIR)/RPMS/*/* .
+	mv -v $(RPM_TOPDIR)/RPMS/*/* $(RPM_PACKAGE)
 	rm -rf $(RPM_TOPDIR) $(RPM_BUILDROOT)
 
 
 deb $(DEB_PACKAGE): $(RPM_PACKAGE)
 	@echo "Sorry. Debian packages currently via alien"
-	fakeroot alien --scripts --to-deb $(RPM_PACKAGE)
-	echo "Repackaging $(DEB_PACKAGE)"
-	rm -rf deb-unpack
-	mkdir -p deb-unpack
+	rm -f *.deb
+	fakeroot alien --scripts -k --to-deb $(RPM_PACKAGE)
+	DEB_PKG=$$(ls *.deb) ; \
+	echo "Repackaging $$DEB_PKG" ; \
+	rm -rf deb-unpack ; \
+	mkdir -p deb-unpack ; \
 	cd deb-unpack && \
-	ar x ../$(DEB_PACKAGE) && \
+	ar x ../$$DEB_PKG && \
 	mkdir ctrl && \
 	tar xzf control.tar.gz -C ctrl && \
-	sed -i -e '/^Depends:/d' -e 's/^Maintainer:.*/Maintainer: feedback@check-mk.org/' ctrl/control && \
+	sed -i -e '/^Depends:/d' \
+	       -e 's/^Version:.*/Version: $(VERSION)-1/' \
+	       -e 's/^Maintainer:.*/Maintainer: feedback@check-mk.org/' ctrl/control && \
 	tar czf control.tar.gz $(TAROPTS) -C ctrl . && \
 	ar r ../$(DEB_PACKAGE) debian-binary control.tar.gz data.tar.*
 	rm -rf deb-unpack
-
 
 clean:
 	rm -rf *~ waitmax

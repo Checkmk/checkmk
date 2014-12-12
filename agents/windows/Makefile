@@ -120,6 +120,7 @@ install_agent-64.exe: check_mk_agent-64.exe crash.exe nowin.exe
 msi_installer:
 	cd msibuild ; make BUILD_VERSION=$$(cat ../build_version) CHECK_MK_VERSION=$(VERSION)
 	mv msibuild/check_mk_agent.msi .
+	chmod +x check_mk_agent.msi
 
 crash.exe: crash.cc
 	$(CXX) -o $@ $<

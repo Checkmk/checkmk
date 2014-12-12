@@ -83,6 +83,7 @@ examples:
 
  # Then configure levels for 50/90MB/s read IO over 10 Minutes and a bit less for
  # writes. Next put levels on IO latency exceeding 80ms / 160ms.
+ checkgroup_parameters.setdefault('disk_io', [])
  checkgroup_parameters['disk_io'] += [
    ( {'read': (50.0, 90.0), 'write': (40.0, 60.0), 'average': 10, 'latency_perfdata': True, 'latency': (80.0, 160.0)}, [], ALL_HOSTS, ALL_SERVICES ),
  ]

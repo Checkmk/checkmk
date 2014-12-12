@@ -1,0 +1,9 @@
+Title: diskstat: Fixed error in config example of manpage
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b2
+Date: 1418394125
+Class: fix
+
+

@@ -1,0 +1,9 @@
+Title: cisco_secure: do not warn for port where port security cannot be enabled
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b2
+Date: 1418397595
+Class: fix
+
+

@@ -218,18 +218,6 @@ else:
 #   | for all variables. The user can easily override them.                |
 #   '----------------------------------------------------------------------'
 
-def set_use_cachefile():
-    global opt_use_cachefile, check_max_cachefile_age, inventory_max_cachefile_age
-    opt_use_cachefile = True
-    check_max_cachefile_age     = 1000000000
-    inventory_max_cachefile_age = 1000000000
-
-def no_use_cachefile():
-    global opt_use_cachefile, check_max_cachefile_age, inventory_max_cachefile_age
-    opt_use_cachefile = False
-    check_max_cachefile_age     = 0 # per default do not use cache files when checking
-    inventory_max_cachefile_age = 120 # seconds
-
 # define magic keys for use in host extraconf lists
 PHYSICAL_HOSTS = [ '@physical' ] # all hosts but not clusters
 CLUSTER_HOSTS  = [ '@cluster' ]  # all cluster hosts
@@ -249,6 +237,7 @@ restart_locking                    = "abort" # also possible: "wait", None
 check_submission                   = "file" # alternative: "pipe"
 aggr_summary_hostname              = "%s-s"
 agent_min_version                  = 0 # warn, if plugin has not at least version
+check_max_cachefile_age            = 0 # per default do not use cache files when checking
 cluster_max_cachefile_age          = 90   # secs.
 piggyback_max_cachefile_age        = 3600  # secs
 piggyback_translation              = [] # Ruleset for translating piggyback host names
@@ -274,10 +263,9 @@ explicit_snmp_communities          = {} # override the rule based configuration
 inventory_check_interval           = None # Nagios intervals (4h = 240)
 inventory_check_severity           = 1    # warning
 inventory_check_do_scan            = True # include SNMP scan for SNMP devices
+inventory_max_cachefile_age        = 120 # seconds
 inventory_check_autotrigger        = True # Automatically trigger inv-check after automation-inventory
 always_cleanup_autochecks          = None # For compatiblity with old configuration
-
-no_use_cachefile()
 
 # Nagios templates and other settings concerning generation
 # of Nagios configuration files. No need to change these values.
@@ -5570,7 +5558,7 @@ def restart_myself(keepalive_fd):
 
 
 def do_check_keepalive():
-    global g_initial_times, g_timeout
+    global g_initial_times, g_timeout, check_max_cachefile_age, inventory_max_cachefile_age
 
     def check_timeout(signum, frame):
         raise MKCheckTimeout()
@@ -5592,6 +5580,9 @@ def do_check_keepalive():
         os.dup2(2, 1)  # Send stuff that is written to stdout instead to stderr
 
     num_checks = 0 # count total number of check cycles
+
+    orig_check_max_cachefile_age     = check_max_cachefile_age
+    orig_inventory_max_cachefile_age = inventory_max_cachefile_age
 
     global total_check_output
     total_check_output = ""
@@ -5626,9 +5617,12 @@ def do_check_keepalive():
                     # The other arguments might be different parameters to configure the actions to
                     # be done
                     args = cmdline.split(' ')
-                    no_use_cachefile()
                     if '--cache' in args:
-                        set_use_cachefile()
+                        check_max_cachefile_age     = 1000000000
+                        inventory_max_cachefile_age = 1000000000
+                    else:
+                        check_max_cachefile_age     = orig_check_max_cachefile_age
+                        inventory_max_cachefile_age = orig_inventory_max_cachefile_age
                     hostname, ipaddress = args[-2:]
                 else:
                     # This case is used when calling keepalive mode manually only with a hostname
@@ -6123,7 +6117,9 @@ if __name__ == "__main__":
                 sys.stderr.write("Please use the option -c separated by the other options.\n")
                 sys.exit(1)
         elif o == '--cache':
-            set_use_cachefile()
+            opt_use_cachefile = True
+            check_max_cachefile_age     = 1000000000
+            inventory_max_cachefile_age = 1000000000
         elif o == '--no-tcp':
             opt_no_tcp = True
         elif o == '--no-cache':

@@ -31,14 +31,13 @@
 # 2:host105:2:2:online
 # 3:host106:2:2:online
 
+factory_settings['ibm_svc_host_default_levels'] = {
+    'always_ok'  : False
+}
 
 def inventory_ibm_svc_host(info):
     return [(None, None)]
 
-factory_settings['ibm_svc_host_default_levels'] = {
-    'always_ok'  : False   
-
-}
 
 def check_ibm_svc_host_state(state, aw_ok):
     if aw_ok:
@@ -47,12 +46,12 @@ def check_ibm_svc_host_state(state, aw_ok):
         return state
 
 def check_ibm_svc_host(item, params, info):
-    degraded=0
-    offline=0
-    active=0
-    inactive=0
-    other=0
-    status=0
+    degraded = 0
+    offline  = 0
+    active   = 0
+    inactive = 0
+    other    = 0
+    status   = 0
     for line in info:
         if line[4] == 'degraded':
             degraded += 1

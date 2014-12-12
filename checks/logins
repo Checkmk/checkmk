@@ -26,34 +26,34 @@
 
 
 # Example output from agent:
-# <<<user>>>
+# <<<logins>>>
 # 3
 
-users_default_levels = (20,30)
+logins_default_levels = (20,30)
 
-def inventory_users(info):
+def inventory_logins(info):
     if info:
-        return [ (None, "users_default_levels") ]
+        return [ (None, "logins_default_levels") ]
 
-def check_users(_no_item, params, info):
+def check_logins(_no_item, params, info):
     if info:
-        users = int(info[0][0])
+        logins = int(info[0][0])
         warn, crit = params
         state = 0
-        if users >= crit:
+        if logins >= crit:
             state = 2
-        elif users >= warn:
+        elif logins >= warn:
             state = 1
 
-        infotext = "%d users logged in, levels at %d/%d" % ( users, warn, crit )
-        perfdata = [ ( "users", users, warn, crit, 0 ) ]
+        infotext = "%d logins on system, levels at %d/%d" % ( users, warn, crit )
+        perfdata = [ ( "logins", logins, warn, crit, 0 ) ]
         yield state, infotext, perfdata
 
 
-check_info["users"] = {
-    'check_function'      : check_users,
-    'inventory_function'  : inventory_users,
-    'service_description' : 'Users',
+check_info["logins"] = {
+    'check_function'      : check_logins,
+    'inventory_function'  : inventory_logins,
+    'service_description' : 'Logins',
     'has_perfdata'        : True,
-    'group'               : 'users',
+    'group'               : 'logins',
 }

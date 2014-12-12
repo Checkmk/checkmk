@@ -3,6 +3,9 @@
     * 1759 Packed RPM and DEB agent packages are now shipped with normal Check_MK package...
 
     Checks & Agents:
+    * 1457 FIX: logins: new check renamed from "users" check...
+            NOTE: Please refer to the migration notes!
+    * 1762 FIX: lnx_thermal: Now ignoring trip points with level 0...
     * 1755 FIX: cisco_vpn_tunnel: fix exception in case tunnel is not OK
 
     Multisite:

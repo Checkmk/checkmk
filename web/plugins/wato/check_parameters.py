@@ -4244,10 +4244,10 @@ register_check_parameters(
 
 register_check_parameters(
     subgroup_os,
-    "users",
-    _("Number of Users Logged In"),
+    "logins",
+    _("Number of Logins on System"),
     Tuple(
-          help = _("This rule defines upper limits for the number of users logged in on a system."),
+          help = _("This rule defines upper limits for the number of logins on a system."),
           elements = [
               Integer(title = _("Warning at"), unit = _("users"), default_value = 20),
               Integer(title = _("Critical at"), unit = _("users"), default_value = 30)]),

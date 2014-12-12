@@ -24,6 +24,6 @@
 # Boston, MA 02110-1301 USA.
 
 if type who >/dev/null; then
-    echo "<<<users>>>"
+    echo "<<<logins>>>"
     who | wc -l
 fi

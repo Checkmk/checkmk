@@ -21,6 +21,7 @@
 
     Notifications:
     * 1754 FIX: Recent notifications (for analysis): Fix wrong color of host DOWN (from yellow to red)
+    * 1661 FIX: mknotifyd: improved performance when receiving forwarded notifications
 
 
 1.2.6b1:

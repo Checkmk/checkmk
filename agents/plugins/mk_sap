@@ -487,7 +487,7 @@ try:
     # Only write the state file once per run. And only when it has been changed
     if state_file_changed:
         new_file = STATE_FILE + '.new'
-        fd = os.open(new_file, os.O_WRONLY | os.o_CREAT)
+        fd = os.open(new_file, os.O_WRONLY | os.O_CREAT)
         fcntl.flock(fd, fcntl.LOCK_EX)
         os.write(fd, repr(states))
         os.close(fd)

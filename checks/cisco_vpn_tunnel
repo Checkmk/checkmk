@@ -34,27 +34,30 @@
 #       this is the host name used to identify the
 #       remote peer."
 
+def inventory_cisco_vpn_tunnel(info):
+    return [(item[0], {}) for item in info]
+
+
 def check_cisco_vpn_tunnel(item, params, info):
     tunnel_not_found_state = params.get('state', 2) # default error state
 
     # Try to find individual error states by tunnel IP/name
-    tunnel_alias = ""
-    for tunnel in params.get('tunnels', []):
-        if item == tunnel[0]:
-            if tunnel[1]:
-                tunnel_alias = "[%s] " % tunnel[1]
-            tunnel_not_found_state = tunnel[2]
+    alias = ""
+    for tunnel_ip, tunnel_alias, not_found_state in params.get('tunnels', []):
+        if item == tunnel_ip:
+            alias = "[%s] " % tunnel_alias
+            tunnel_not_found_state = not_found_state
 
     if [item] not in info:
-        return tunnel_not_found_state, "%sTunnel is missing" % tunnel_alias
+        return tunnel_not_found_state, "%sTunnel is missing" % alias
     else:
-        return state, "%sTunnel is OK" % tunnel_alias
+        return 0, "%sTunnel is OK" % alias
+
 
 check_info["cisco_vpn_tunnel"] = {
     "check_function"        : check_cisco_vpn_tunnel,
-    "inventory_function"    : lambda info: [(item[0], {}) for item in info],
+    "inventory_function"    : inventory_cisco_vpn_tunnel,
     "service_description"   : "VPN Tunnel %s",
-    "has_perfdata"          : False,
     "group"                 : "vpn_tunnel",
     "snmp_scan_function"    : lambda oid: oid(".1.3.6.1.2.1.1.1.0").lower().startswith("cisco adaptive security") \
                                         or "vpn 3000 concentrator" in oid(".1.3.6.1.2.1.1.1.0").lower(),

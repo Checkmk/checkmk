@@ -1,0 +1,17 @@
+Title: Make cmk --keepalive reload possible without execv
+Component: core
+State: open
+Date: 2014-12-12 15:30:47
+Targetversion: 1.2.5i1
+Class: nastiness
+
+The complete restart of the keepalive processes creates a lot of load when
+multiple ones are performing the restart at the same time.
+
+We should rewrite the "reload config" mechanism to a real reload using a
+dedicated function within Check_MK. To make this possible, we need to
+know which variables are config values and which are not. Then we need
+to precompile the whole config incl. hard coded and user config in a
+dedicated file. 
+This file is being created during "activate changes" and read during
+each start of the keepalive processes.

@@ -1,0 +1,10 @@
+Title: lnx_thermal: Now ignoring trip points with level 0
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1418388782
+
+A level of 0 seem to mean that there is no trip point configured.

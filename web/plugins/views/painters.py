@@ -716,6 +716,7 @@ multisite_painters["svc_pnpgraph" ] = {
     "columns" : [ "host_name", "service_description" ],
     "options" : [ 'pnp_timerange' ],
     "paint"   : lambda row: paint_pnpgraph(row["site"], row["host_name"], row["service_description"]),
+    "printable" : False,
 }
 
 def paint_check_manpage(row):
@@ -1067,7 +1068,8 @@ multisite_painters["host_pnpgraph" ] = {
     "short"   : _("PNP graph"),
     "columns" : [ "host_name" ],
     "options" : [ 'pnp_timerange' ],
-    "paint"   : lambda row: paint_pnpgraph(row["site"], row["host_name"])
+    "paint"   : lambda row: paint_pnpgraph(row["site"], row["host_name"]),
+    "printable" : False,
 }
 
 def paint_host_black(row):

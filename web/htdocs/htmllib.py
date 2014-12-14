@@ -913,7 +913,8 @@ class html:
 
     def show_exception(self, e):
         details = \
-              'Page: ' + self.myfile + '\r\n\r\n' \
+              'Check_MK Version: ' + defaults.check_mk_version + '\r\n' \
+            + 'Page: ' + self.myfile + '.py\r\n\r\n' \
             + 'GET/POST-Variables:\r\n' \
             + '\r\n'.join([ ' '+n+'='+v for n, v in sorted(self.vars.items()) ]) + '\r\n' \
             + '\r\n' \
@@ -932,13 +933,15 @@ class html:
         self.context_button(_("Submit Report"), mailto_url, "email")
         self.end_context_buttons()
 
-        self.show_error("%s: %s" % (_('Internal error'), self.attrencode(e)))
+        self.write("<div class=error>")
+        self.write("<b>%s:</b>\n%s<br><br>" %(_('Internal error'), self.attrencode(e)))
 
         self.begin_foldable_container("html", "exc_details", False, _("Details"))
         self.write('<div class=log_output>')
         self.write("<pre>%s</pre>" % details)
         self.write('</div>')
         self.end_foldable_container()
+        self.write("</div>")
 
     def show_error(self, msg):
         if self.mobile:

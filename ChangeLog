@@ -10,6 +10,7 @@
     * 1755 FIX: cisco_vpn_tunnel: fix exception in case tunnel is not OK
     * 1756 FIX: agent_ibmsvc: do not abort execution if one of the sections fail
     * 1778 FIX: cisco_secure: do not warn for port where port security cannot be enabled
+    * 1764 FIX: mk_sap: Fixed exception when saving status file
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...
@@ -20,6 +21,7 @@
 
     Notifications:
     * 1754 FIX: Recent notifications (for analysis): Fix wrong color of host DOWN (from yellow to red)
+    * 1661 FIX: mknotifyd: improved performance when receiving forwarded notifications
 
 
 1.2.6b1:

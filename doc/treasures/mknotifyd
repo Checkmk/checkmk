@@ -234,7 +234,7 @@ class TcpServer:
 
         handled_connections = 0 # Debug info
         while not self._should_terminate:
-            readable = select.select([self._tcp_socket], [], [], 0.5)[0]
+            readable = select.select([self._tcp_socket], [], [], 0.2)[0]
             for s in readable:
                 client_data = ""
                 chunk_count = 0
@@ -242,7 +242,7 @@ class TcpServer:
                 from_name = "%s:%s" % addr_info
                 while True:
                     try:
-                        data_ready = select.select([client_socket], [], [], 2)[0]
+                        data_ready = select.select([client_socket], [], [], 0.2)[0]
                         if data_ready:
                             chunk = client_socket.recv(8192)
                             if not chunk:

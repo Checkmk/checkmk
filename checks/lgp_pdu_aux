@@ -69,7 +69,7 @@ lgp_pdu_aux_states = [
   'closed',
 ]
 
-lgp_pdu_aux_fields = {
+_lgp_pdu_aux_fields = {
     # Index, Type, Factor, ID
     '10': (str,       None, 'Type'),
     '15': (str,       None, 'SystemLabel'),
@@ -96,8 +96,8 @@ def lgp_pdu_aux_fmt(info):
         if not id in new_info:
             new_info[id] = {'TypeIndex': id.split('.')[-1]}
         # Skip not handled rows
-        if type in lgp_pdu_aux_fields:
-            ty, factor, key = lgp_pdu_aux_fields[type]
+        if type in _lgp_pdu_aux_fields:
+            ty, factor, key = _lgp_pdu_aux_fields[type]
 
             if key == 'Type':
                 value = lgp_pdu_aux_types.get(value, 'UNHANDLED')

@@ -1,0 +1,9 @@
+Title: Passive checks in multisite show "Active check" enabled/disabled icons
+Component: multisite
+State: open
+Date: 2014-12-15 13:38:37
+Targetversion: future
+Class: bug
+
+Setting active checks enabled/disabled for a -passive- check will show
+the corresponding active check icon, e.g. a green check mark, on the passive check.

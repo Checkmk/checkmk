@@ -28,6 +28,9 @@
 
 import os, subprocess
 
+# Note: This notifcation plugin can only handle service notifications
+#       Host notifications will fail
+
 def send_trap(oids, target, community):
     cmd = ["/usr/sbin/snmptrap", '-v', '1', '-c', community, target ]
     for oid, text in oids.items():
@@ -47,6 +50,12 @@ def main():
         context["PARAMETER_COMMUNITY"]   = context["PARAMETER_1"]
         context["PARAMETER_DESTINATION"] = context["PARAMETER_2"]
 
+
+    complete_service_url = context["MONITORING_HOST"]
+    if "OMD_SITE" in context:
+        complete_service_url += "/" + context["OMD_SITE"]
+    complete_service_url += context['SERVICEURL']
+
     # adjust these oids to your needs
     # Note: HOSTCONTACTGROUPNAMES is only available via cmc
     oids = {
@@ -61,7 +70,7 @@ def main():
         "1.3.6.1.4.1.13424.10.5.2.1.1.9" : context['SERVICEDESC'],
         "1.3.6.1.4.1.13424.10.5.2.1.1.10" : 3, #SPECIFIC TRAP (type) NUMBER
         "1.3.6.1.4.1.13424.10.5.2.1.1.11" : "CNO Digital Lvl2 Support (P3 ET, call xxxxx)", #CALLOUT STRING
-        "1.3.6.1.4.1.13424.10.5.2.1.1.12" : context['SERVICEURL'],
+        "1.3.6.1.4.1.13424.10.5.2.1.1.12" : complete_service_url,
         "1.3.6.1.4.1.13424.10.5.2.1.1.13" : "%s Alarm on host %s" % (context['SERVICEDESC'], context['HOSTNAME']),
         "1.3.6.1.4.1.13424.10.5.2.1.1.14" : context['SERVICEGROUPNAMES'],
     }

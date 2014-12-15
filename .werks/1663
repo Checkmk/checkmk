@@ -1,0 +1,11 @@
+Title: winperf_if: fixed incorrect enumeration of interface index
+Level: 2
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1418646805
+
+The previous update broke services, which used the interface index as item.
+This has been fixed.

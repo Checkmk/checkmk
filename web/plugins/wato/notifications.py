@@ -222,6 +222,12 @@ register_notification_parameters("spectrum",
                 title = _("SNMP Community"),
                 help = _("SNMP Community for the SNMP trap")
              ),
+            ("baseoid",
+             TextAscii(
+                title = _("Base OID"),
+                help = _("The base OID for the trap content")
+                default_value = "1.3.6.1.4.1.1234"
+             ),
             ),
         ])
     )

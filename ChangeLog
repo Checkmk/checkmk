@@ -20,6 +20,7 @@
     * 1761 FIX: Ruleset search is now consistent for host & serviceparameters and manual checks
 
     Notifications:
+    * 1662 notification plugin spectrum: finalized script. now able to handle host notications
     * 1754 FIX: Recent notifications (for analysis): Fix wrong color of host DOWN (from yellow to red)
     * 1661 FIX: mknotifyd: improved performance when receiving forwarded notifications
 

@@ -221,7 +221,7 @@ def notify_notify(raw_context, analyse=False):
     try:
         complete_raw_context(raw_context)
     except Exception, e:
-        notify_log("Mist: %s" % e)
+        notify_log("Error on completing raw context: %s" % e)
 
     if notification_logging >= 2:
         notify_log("Computed variables:\n"

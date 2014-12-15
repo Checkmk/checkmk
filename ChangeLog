@@ -20,6 +20,8 @@
     WATO:
     * 1760 Added search form to manual checks page
     * 1761 FIX: Ruleset search is now consistent for host & serviceparameters and manual checks
+    * 1779 FIX: Fix broken icon in host diagnostic mode
+    * 1780 FIX: Fix broken icon in host diagnostic mode
 
     Notifications:
     * 1662 notification plugin spectrum: finalized script. now able to handle host notications

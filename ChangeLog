@@ -11,6 +11,8 @@
     * 1756 FIX: agent_ibmsvc: do not abort execution if one of the sections fail
     * 1778 FIX: cisco_secure: do not warn for port where port security cannot be enabled
     * 1764 FIX: mk_sap: Fixed exception when saving status file
+    * 1663 FIX: winperf_if: fixed incorrect enumeration of interface index...
+    * 1204 FIX: veeam_client: Not longer throwing an error in case of currenlty running backup
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...
@@ -21,8 +23,10 @@
     * 1779 FIX: Fix broken icon in host diagnostic mode
 
     Notifications:
+    * 1662 notification plugin spectrum: finalized script. now able to handle host notications
     * 1754 FIX: Recent notifications (for analysis): Fix wrong color of host DOWN (from yellow to red)
     * 1661 FIX: mknotifyd: improved performance when receiving forwarded notifications
+    * 1664 FIX: mknotifyd: further performance improvements for notification forwarding
 
 
 1.2.6b1:

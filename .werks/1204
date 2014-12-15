@@ -1,0 +1,10 @@
+Title: veeam_client: Not longer throwing an error in case of currenlty running backup
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1418650305
+
+

@@ -105,7 +105,8 @@ def check_veeam_client(item, params, parsed):
     if "StopTime" not in data:
         state = 2
         infotexts.append("No complete Backup(!!)")
-    else:
+    # If the Backup currently is running, the stop time is strange.
+    elif data['StopTime'] != "01.01.1900 00:00:00":
         stop_time = time.mktime(time.strptime( data['StopTime'], "%d.%m.%Y %H:%M:%S"))
         now = time.time()
         age =  now - stop_time

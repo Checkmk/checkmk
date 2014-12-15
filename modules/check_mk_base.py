@@ -95,13 +95,11 @@ else:
         return ''
 
 # global variables used to cache temporary values
-g_dns_cache                  = {}
 g_infocache                  = {} # In-memory cache of host info.
 g_agent_already_contacted    = {} # do we have agent data from this host?
 g_counters                   = {} # storing counters of one host
 g_hostname                   = "unknown" # Host currently being checked
 g_aggregated_service_results = {}   # store results for later submission
-compiled_regexes             = {}   # avoid recompiling regexes
 nagios_command_pipe          = None # Filedescriptor to open nagios command pipe.
 checkresult_file_fd          = None
 checkresult_file_path        = None
@@ -856,9 +854,9 @@ def cachefile_age(filename):
 #   |                                                                      |
 #   +----------------------------------------------------------------------+
 
-SKIP=None
-RAISE=False
-ZERO=0.0
+SKIP  = None
+RAISE = False
+ZERO  = 0.0
 g_last_counter_wrap = None
 
 def reset_wrapped_counters():
@@ -1112,10 +1110,10 @@ def do_check(hostname, ipaddress, only_check_types = None):
     if opt_keepalive:
         global total_check_output
         total_check_output += output
-        return status
     else:
         sys.stdout.write(nagios_state_names[status] + " - " + output)
-        sys.exit(status)
+
+    return status
 
 # Keepalive-mode for running cmk as a check helper.
 class MKCheckTimeout(Exception):
@@ -1250,7 +1248,7 @@ def do_all_checks_on_host(hostname, ipaddress, only_check_types = None):
     g_hostname = hostname
     num_success = 0
     error_sections = set([])
-    check_table = get_sorted_check_table(hostname, remove_duplicates=True)
+    check_table = get_sorted_check_table(hostname, remove_duplicates=True, world=opt_keepalive and "active" or "config")
     problems = []
 
     parsed_infos = {} # temporary cache for section infos, maybe parsed
@@ -1662,7 +1660,6 @@ def is_expected_agent_version(agent_version, expected_version):
 
 # Returns the nodes of a cluster, or None if hostname is
 # not a cluster
-g_nodesof_cache = {}
 def nodes_of(hostname):
     nodes = g_nodesof_cache.get(hostname, False)
     if nodes != False:
@@ -1686,6 +1683,34 @@ def pnp_cleanup(s):
         .replace('/',  '_') \
         .replace('\\', '_')
 
+
+#.
+#   .--Caches--------------------------------------------------------------.
+#   |                    ____           _                                  |
+#   |                   / ___|__ _  ___| |__   ___  ___                    |
+#   |                  | |   / _` |/ __| '_ \ / _ \/ __|                   |
+#   |                  | |__| (_| | (__| | | |  __/\__ \                   |
+#   |                   \____\__,_|\___|_| |_|\___||___/                   |
+#   |                                                                      |
+#   +----------------------------------------------------------------------+
+#   |  Global caches that are valid until the configuration changes        |
+#   '----------------------------------------------------------------------'
+
+def reset_global_caches():
+    global g_check_table_cache
+    g_check_table_cache = {}    # per-host-checktables
+    global g_singlehost_checks
+    g_singlehost_checks = None  # entries in checks used by just one host
+    global g_multihost_checks
+    g_multihost_checks  = None  # entries in checks used by more than one host
+    global g_nodesof_cache
+    g_nodesof_cache     = {}    # Nodes of cluster hosts
+    global g_dns_cache
+    g_dns_cache         = {}
+    global g_ip_lookup_cache
+    g_ip_lookup_cache   = None  # permanently cached ipaddresses from ipaddresses.cache
+
+reset_global_caches()
 
 #   +----------------------------------------------------------------------+
 #   |     ____ _               _      _          _                         |
@@ -1786,6 +1811,7 @@ def within_range(value, minv, maxv):
 # compile regex or look it up in already compiled regexes
 # (compiling is a CPU consuming process. We cache compiled
 # regexes).
+compiled_regexes = {}
 def get_regex(pattern):
     reg = compiled_regexes.get(pattern)
     if not reg:

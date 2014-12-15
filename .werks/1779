@@ -1,0 +1,9 @@
+Title: Fix broken icon in host diagnostic mode
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.6b2
+Date: 1418679041
+Class: fix
+
+

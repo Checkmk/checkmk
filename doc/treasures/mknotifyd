@@ -115,7 +115,7 @@ class SpoolfilesHandler:
             while not self._should_terminate:
                 self.process_directory(g_spool_dir)
                 self.process_directory(g_deferred_dir, g_config["notification_deferred_retention_time"])
-                time.sleep(3)
+                time.sleep(1)
         except Exception, e:
             log("Error processing spoolfile %s" % format_exception())
 
@@ -123,7 +123,7 @@ class SpoolfilesHandler:
         self._is_running = False
 
 
-    def process_directory(self, dir_path, files_older_than = None):
+    def process_directory(self, dir_path, files_older_than = 3):
         for root, dirs, files in os.walk(dir_path):
             for spoolfile in files:
                 now = time.time()
@@ -134,7 +134,6 @@ class SpoolfilesHandler:
                 file_age = now - os.stat(spoolfile_path)[8]
 
                 if file_age < files_older_than:
-                    verbose("File age %d" % file_age, 2)
                     continue
 
                 try:
@@ -157,13 +156,16 @@ class SpoolfilesHandler:
                         del content["forward"]
                         verbose("Forward notification to %s %s" % (host, port), 2)
                         sock.connect((host, int(port)))
-                        sock.send(pickle.dumps(content))
+                        data_to_send = pickle.dumps(content)
+                        sock.send("%10d" % len(data_to_send))
+                        sock.send(data_to_send)
+
                         # Wait for OK response
                         while True:
-                            readable = select.select([sock], [], [], 1)[0]
+                            readable = select.select([sock], [], [], 5)[0]
                             data = None
                             try:
-                               chunk = sock.recv(8192)
+                               chunk = sock.recv(16)
                                response_text += chunk
                                if not chunk:
                                    break
@@ -239,17 +241,21 @@ class TcpServer:
                 client_data = ""
                 chunk_count = 0
                 client_socket, addr_info = s.accept()
-                from_name = "%s:%s" % addr_info
+                from_name   = "%s:%s" % addr_info
+                data_ready  = True
+                data_header = client_socket.recv(10)
+                data_size   = int(data_header)
                 while True:
                     try:
-                        data_ready = select.select([client_socket], [], [], 0.2)[0]
-                        if data_ready:
-                            chunk = client_socket.recv(8192)
-                            if not chunk:
-                                break
-                            chunk_count += 1
-                            client_data += chunk
-                        else:
+                        chunk = client_socket.recv(data_size)
+                        chunk_count += 1
+                        client_data += chunk
+                        if len(client_data) >= data_size:
+                            break
+
+                        # Break if not data was received for the last 5 seconds
+                        data_ready = select.select([client_socket], [], [], 5)[0]
+                        if not data_ready:
                             break
                     except:
                         break # Error while reading
@@ -268,8 +274,8 @@ class TcpServer:
                     verbose("client data processed - sending OK", 2)
                     client_socket.send("OK")
 
+                    client_socket.close()
                 except Exception, e:
-
                     log("Error processing data from %s: %s\n%s" % (from_name, e, format_exception()))
                     try:
                         if client_socket:
@@ -361,7 +367,7 @@ def load_configuration():
              for d, sb, fs in os.walk(config_dir) ], [])
         list_of_files.sort(cmp = cmp_config_paths)
         for path in list_of_files:
-            verbose("Reading configuration file %s" % path)
+            verbose("Reading configuration file %s" % path, 3)
             execfile(path, {}, g_config)
     except:
         g_config = last_config
@@ -464,7 +470,7 @@ def run_notifyd():
             g_spoolfiles_handler._should_terminate = True
             now = time.time()
             while (g_tcp_server._is_running or g_spoolfiles_handler._is_running) \
-                and time.time() - now < 4:
+                and time.time() - now < 6:
                 time.sleep(0.1)
 
             if g_tcp_server._is_running:

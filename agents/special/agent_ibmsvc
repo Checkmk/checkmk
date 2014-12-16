@@ -1,4 +1,3 @@
-OMD[iptv]:~/local/share/check_mk/agents/special$ cat agent_ibmsvc
 #!/usr/bin/python
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 # +------------------------------------------------------------------+

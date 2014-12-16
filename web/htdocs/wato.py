@@ -4560,6 +4560,7 @@ def create_random_hosts(folder, count, folders, levels):
                 ".folders" : {},
                 ".hosts" : {},
                 ".path" : path,
+                ".siteid" : None,
                 "attributes" : {},
                 "num_hosts" : 0,
                 "title" : title,
@@ -10606,11 +10607,17 @@ def create_nagvis_backends(sites):
         if 'socket' not in site:
             continue # skip sites without configured sockets
 
+        # Handle special data format of livestatus proxy config
+        if type(site['socket']) == tuple:
+            socket = 'tcp:%s:%d' % site['socket'][1]['socket']
+        else:
+            socket = site['socket']
+
         cfg += [
             '',
             '[backend_%s]' % site_id,
             'backendtype="mklivestatus"',
-            'socket="%s"' % site['socket'],
+            'socket="%s"' % socket,
         ]
 
         if 'status_host' in site:

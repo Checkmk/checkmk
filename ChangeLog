@@ -16,6 +16,7 @@
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...
+    * 1781 FIX: Fix broken grouping by host/service group in availability
 
     WATO:
     * 1760 Added search form to manual checks page

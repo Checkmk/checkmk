@@ -4560,6 +4560,7 @@ def create_random_hosts(folder, count, folders, levels):
                 ".folders" : {},
                 ".hosts" : {},
                 ".path" : path,
+                ".siteid" : None,
                 "attributes" : {},
                 "num_hosts" : 0,
                 "title" : title,

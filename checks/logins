@@ -45,7 +45,7 @@ def check_logins(_no_item, params, info):
         elif logins >= warn:
             state = 1
 
-        infotext = "%d logins on system, levels at %d/%d" % ( users, warn, crit )
+        infotext = "%d logins on system, levels at %d/%d" % ( logins, warn, crit )
         perfdata = [ ( "logins", logins, warn, crit, 0 ) ]
         yield state, infotext, perfdata
 

@@ -810,11 +810,11 @@ function handle_host_diag_result(ident, response_text) {
     var retry = document.getElementById(ident + '_retry');
 
     if (response_text[0] == "0") {
-        img.src = "images/icon_success.gif";
+        img.src = "images/icon_success.png";
         log.className = "log diag_success";
     }
     else {
-        img.src = "images/icon_failed.gif";
+        img.src = "images/icon_failed.png";
         log.className = "log diag_failed";
     }
 

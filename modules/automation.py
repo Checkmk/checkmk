@@ -140,7 +140,6 @@ def automation_inventory(args):
         for hostname in hostnames:
             counts.setdefault(hostname, [0, 0, 0, 0]) # added, removed, kept, new
             counts[hostname][1] += remove_autochecks_of(hostname) # checktype could be added here
-	reread_autochecks()
 
     for hostname in hostnames:
         counts.setdefault(hostname, [0, 0, 0, 0]) # added, removed, kept, new
@@ -257,7 +256,7 @@ def automation_try_inventory_node(hostname, leave_no_tcp=False, with_snmp_scan=F
                 existing_checks = set([ cn for (cn, item) in get_check_table(hostname) ])
                 for cn in inventorable_checktypes("snmp"):
                     if cn in existing_checks:
-                        found_services += make_inventory(cn, [hostname], True, True)
+                        found_services += make_inventory(cn, [hostname], check_only=True, include_state=True)
             else:
                 if not in_binary_hostlist(hostname, snmp_without_sys_descr):
                     sys_descr = get_single_oid(hostname, ipaddress, ".1.3.6.1.2.1.1.1.0")
@@ -281,7 +280,7 @@ def automation_try_inventory_node(hostname, leave_no_tcp=False, with_snmp_scan=F
            get_piggyback_info(hostname) or get_piggyback_info(ipaddress):
         try:
             for cn in inventorable_checktypes("tcp"):
-                found_services += make_inventory(cn, [hostname], True, True)
+                found_services += make_inventory(cn, [hostname], check_only=True, include_state=True)
         except Exception, e:
             if not dual_host:
                 raise
@@ -297,7 +296,7 @@ def automation_try_inventory_node(hostname, leave_no_tcp=False, with_snmp_scan=F
        found[(ct, item)] = ( state_type, paramstring )
 
     # Check if already in autochecks (but not found anymore)
-    for hn, ct, item, params in autochecks:
+    for ct, item, params in read_autochecks_of(hostname):
         if hn == hostname and (ct, item) not in found:
             found[(ct, item)] = ( 'vanished', repr(params) ) # This is not the real paramstring!
 
@@ -442,7 +441,6 @@ def automation_try_inventory_node(hostname, leave_no_tcp=False, with_snmp_scan=F
 def automation_set_autochecks(args):
     hostname = args[0]
     new_items = eval(sys.stdin.read())
-    do_cleanup_autochecks()
 
     # A Cluster does not have an autochecks file
     # All of its services are located in the nodes instead
@@ -451,7 +449,7 @@ def automation_set_autochecks(args):
     if is_cluster(hostname):
         for node in nodes_of(hostname):
             new_autochecks = []
-            existing = automation_parse_autochecks_file(node)
+            existing = parse_autochecks_file(node)
             for ct, item, params, paramstring in existing:
                 descr = service_description(ct, item)
                 if hostname != host_of_clustered_service(node, descr):
@@ -461,7 +459,7 @@ def automation_set_autochecks(args):
             # write new autochecks file for that host
             automation_write_autochecks_file(node, new_autochecks)
     else:
-        existing = automation_parse_autochecks_file(hostname)
+        existing = parse_autochecks_file(hostname)
         # write new autochecks file, but take paramstrings from existing ones
         # for those checks which are kept
         new_autochecks = []
@@ -479,17 +477,16 @@ def automation_set_autochecks(args):
 
 def automation_get_autochecks(args):
     hostname = args[0]
-    do_cleanup_autochecks()
-    return automation_parse_autochecks_file(hostname)
+    return parse_autochecks_file(hostname)
 
 def automation_write_autochecks_file(hostname, table):
     if not os.path.exists(autochecksdir):
         os.makedirs(autochecksdir)
     path = "%s/%s.mk" % (autochecksdir, hostname)
     f = file(path, "w")
-    f.write("# Autochecks for host %s, created by Check_MK automation\n[\n" % hostname)
+    f.write("[\n")
     for ct, item, paramstring in table:
-        f.write("  (%r, %r, %r, %s),\n" % (hostname, ct, item, paramstring))
+        f.write("  (%r, %r, %s),\n" % (ct, item, paramstring))
     f.write("]\n")
     if inventory_check_autotrigger and inventory_check_interval:
         schedule_inventory_check(hostname)
@@ -510,70 +507,6 @@ def schedule_inventory_check(hostname):
         if opt_debug:
             raise
 
-
-def automation_parse_autochecks_file(hostname):
-    def split_python_tuple(line):
-        quote = None
-        bracklev = 0
-        backslash = False
-        for i, c in enumerate(line):
-            if backslash:
-                backslash = False
-                continue
-            elif c == '\\':
-                backslash = True
-            elif c == quote:
-                quote = None # end of quoted string
-            elif c in [ '"', "'" ]:
-                quote = c # begin of quoted string
-            elif quote:
-                continue
-            elif c in [ '(', '{', '[' ]:
-                bracklev += 1
-            elif c in [ ')', '}', ']' ]:
-                bracklev -= 1
-            elif bracklev > 0:
-                continue
-            elif c == ',':
-                value = line[0:i]
-                rest = line[i+1:]
-                return value.strip(), rest
-        return line.strip(), None
-
-    path = "%s/%s.mk" % (autochecksdir, hostname)
-    if not os.path.exists(path):
-        return []
-    lineno = 0
-
-    table = []
-    for line in file(path):
-        lineno += 1
-        try:
-            line = line.strip()
-            if not line.startswith("("):
-                continue
-
-            # drop everything after potential '#' (from older versions)
-	    i = line.rfind('#')
-	    if i > 0: # make sure # is not contained in string
-		rest = line[i:]
-		if '"' not in rest and "'" not in rest:
-		    line = line[:i].strip()
-
-            if line.endswith(","):
-                line = line[:-1]
-            line = line[1:-1] # drop brackets
-
-            hostnamestring, line = split_python_tuple(line) # should be hostname
-            checktypestring, line = split_python_tuple(line)
-            itemstring, line = split_python_tuple(line)
-            paramstring, line = split_python_tuple(line)
-            table.append((eval(checktypestring), eval(itemstring), eval(paramstring), paramstring))
-        except:
-            if opt_debug:
-                raise
-            raise MKAutomationError("Invalid line %d in autochecks file %s" % (lineno, path))
-    return table
 
 
 # Determine the type of the check, and how the parameters are being
@@ -631,7 +564,13 @@ def automation_analyse_service(args):
     # our service there
     try:
         path = "%s/%s.mk" % (autochecksdir, hostname)
-        for hn, ct, item, params in eval(file(path).read()):
+        for entry in eval(file(path).read()):
+            if len(entry) == 4: # old format
+                hn, ct, item, params = entry
+            else:
+                ct, item, params = entry # new format without host name
+                hn = hostname
+
             if (ct, item) not in check_table:
                 continue # this is a removed duplicate or clustered service
             descr = service_description(ct, item)
@@ -758,7 +697,9 @@ def automation_restart(job = "restart", use_rushd = True):
         if do_check_nagiosconfig():
             if backup_path:
                 os.remove(backup_path)
-            if monitoring_core != "cmc":
+            if monitoring_core == "cmc":
+                do_pack_config()
+            else:
                 do_precompile_hostchecks()
             do_core_action(job)
         else:
@@ -903,31 +844,29 @@ def automation_diag_host(args):
 
 # WATO calls this automation when a host has been renamed. We need to change
 # several file and directory names.
+# HIRN: Hier auch das neue Format berücksichtigen! Andererseits sollte
+# eigentlich auch nix Schlimmes passieren, wenn der Hostname *nicht* in
+# der Datei steht.
 def automation_rename_host(args):
     oldname = args[0]
     newname = args[1]
     actions = []
 
-    # Autochecks: Here we have the problem, that these files cannot
-    # be read and written again with eval/repr, since they contain
-    # variable names that would get expanded. We does this by parsing
-    # the lines ourselves. Also we assume cleaned up autochecks files.
+    # Autochecks: simply read and write out the file again. We do
+    # not store a host name here anymore - but old versions did.
+    # by rewriting we get rid of the host name.
+
     acpath = autochecksdir + "/" + oldname + ".mk"
     if os.path.exists(acpath):
+        old_autochecks = parse_autochecks_file(oldname)
         out = file(autochecksdir + "/" + newname + ".mk", "w")
-        for line in file(acpath):
-            if "'" + oldname + "'" in line:
-                front, tail = line.split(",", 1)
-                front = front.replace("'" + oldname + "'", "'" + newname + "'")
-                line = front + "," + tail
-            out.write(line)
+        out.write("[\n")
+        for ct, item, params, paramstring in old_autochecks:
+            out.write("  (%r, %r, %s),\n" % (ct, item, paramstring))
+        out.write("]\n")
         out.close()
         os.remove(acpath) # Remove old file
         actions.append("autochecks")
-
-    # Reread all autochecks. This is neccessary when creating the config
-    # for the core.
-    reread_autochecks()
 
     # At this place WATO already has changed it's configuration. All further
     # data might be changed by the still running core. So we need to stop

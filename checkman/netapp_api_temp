@@ -1,0 +1,20 @@
+title: NetApp Filer: Temperature sensors
+agents: netapp
+catalog: hw/storagehw/netapp
+license: GPL
+distribution: check_mk
+description:
+ The check monitors the state of the temperature sensors for a NetApp filer.
+ Since a filer may run in a clustered mode there was a requirement to determine
+ which sensors are managed by that filer. The following approach is used:
+ If a filer possess most of the disks in a shelf, the shelf is considered as owned
+ and the temperature sensors also belong to the filer.
+
+ The checks reports {WARN}/{CRIT} when the configured levels reported by the NetApp filer,
+ (e.g. {temp-sensor-hi-critical}) have been breached.
+
+inventory:
+ Two checks are created for a filer. {Temperature Shelfes Internal} and {Temperature Shelfs Ambient}
+
+perfdata:
+ The average temperature of all sensors combined.

@@ -1,0 +1,13 @@
+title: NetApp Filer: Overall system health
+agents: netapp
+catalog: hw/storagehw/netapp
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the overall system health, which can have the following values
+ {ok},{ok-with-suppressed},{degraded},{unreachable}. Both {ok} values are considered as {OK},
+ whereas the other two values result in a {CRIT}.
+
+inventory:
+ One check is created.
+

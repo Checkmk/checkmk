@@ -1,0 +1,69 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<netapp_api_fan:sep(9)>>>
+# 50:05:0c:c0:02:21:95:d9 shelf-owned     false
+# 50:05:0c:c0:02:21:95:d9 cooling-element-number  1       2       3       4       5       6       7       8
+# 50:05:0c:c0:02:21:95:d9 cooling-element-is-error        false   false   None    None    None    None    None    None
+# 50:05:0c:c0:02:21:95:d9 cooling-element-is-not-installed        None    None    true    true    true    true    true    true
+
+def inventory_netapp_api_fan(info):
+    yield None, None
+
+def check_netapp_api_fan(_no_item, _no_params, parsed):
+    fan_count   = 0
+    fan_errors  = []
+
+    for shelf, fans in parsed.items():
+        if fans["shelf-owned"][0] != "true":
+            continue
+
+        for idx, not_installed in enumerate(fans["cooling-element-is-not-installed"]):
+            if not_installed == "true" or fans["cooling-element-number"][idx] == "None":
+                continue
+            fan_count += 1
+            if fans["cooling-element-is-error"][idx] == "true":
+                fan_errors.append((2, "Error in Shelf %s Fan %s" % (shelf, fans["cooling-element-number"][idx])))
+
+    yield 0, "%s Fans installed" % fan_count
+
+    max_fans = 5
+    for state, text in fan_errors[:max_fans]:
+        yield state, text
+
+    if len(fan_errors) > max_fans:
+        yield 0, "more fans failed (%d total) - only the first %d errors are shown..." % (len(fan_errors), max_fans)
+
+
+check_info["netapp_api_fan"] = {
+    'check_function'      : check_netapp_api_fan,
+    'parse_function'      : netapp_api_parse_info_environ,
+    'inventory_function'  : inventory_netapp_api_fan,
+    'service_description' : 'Fan Status Shelfes',
+    'includes'            : ["netapp_api.include"]
+}
+
+

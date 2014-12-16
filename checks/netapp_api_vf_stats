@@ -1,0 +1,99 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+netapp_api_vf_stats_cpu_util_default_levels = (90.0, 95.0)
+
+def inventory_netapp_api_vf_stats_cpu_util(info):
+    stats = netapp_api_convert_info(info, counter_key = "instance_name", counter_as_key = True)
+    for key in stats.keys():
+        yield key, 'netapp_api_vf_stats_cpu_util_default_levels'
+
+def check_netapp_api_vf_stats_cpu_util(item, params, info):
+    stats = netapp_api_convert_info(info, counter_key = "instance_name", counter_as_key = True)
+
+    vf = stats.get(item)
+    if not vf:
+        return
+    else:
+        now = time.time()
+
+        cpu_busy = saveint(vf["vfiler_cpu_busy"])
+        timedif, ticks_per_sec = get_counter("netapp_api_vf_stats.cpu_util.%s" % item, now, cpu_busy )
+        cpusecs_per_sec = ticks_per_sec / 1000.0 / 1000 / 10000
+        used_perc = 100.0 * cpusecs_per_sec
+
+        # Due to timeing invariancies the measured level can become > 100%.
+        # This makes users unhappy, so cut it off.
+        if used_perc < 0:
+            used_perc = 0
+        elif used_perc > 100:
+            used_perc = 100
+
+        state, infotext, perfdata = check_cpu_util(used_perc, params, now)
+        perfdata[0] = perfdata[0][:5]
+        return state, infotext, perfdata
+
+
+check_info["netapp_api_vf_stats.cpu_util"] = {
+    'check_function'      : check_netapp_api_vf_stats_cpu_util,
+    'inventory_function'  : inventory_netapp_api_vf_stats_cpu_util,
+    'has_perfdata'        : True,
+    'group'               : 'cpu_utilization_multiitem',
+    'service_description' : 'CPU utilization %s',
+    'includes'            : [ "cpu_util.include" ]
+}
+
+
+def inventory_netapp_api_vf_stats_traffic(info):
+    stats = netapp_api_convert_info(info, counter_key = "instance_name", counter_as_key = True)
+    for key in stats.keys():
+        yield key, None
+
+def check_netapp_api_vf_stats_traffic(item, params, info):
+    stats = netapp_api_convert_info(info, counter_key = "instance_name", counter_as_key = True)
+
+    vf = stats.get(item)
+    if not vf:
+        return
+    else:
+        now = time.time()
+        for entry, name, base, factor, unit in [ ("read_ops",       "Read",          1000.0, 1,    "OP/s"),
+                                                 ("write_ops",      "Write",         1000.0, 1,    "OP/s"),
+                                                 ("net_data_recv",  "Net Data Recv", 1024.0, 1024, "B/s"),
+                                                 ("net_data_sent",  "Net Data Sent", 1024.0, 1024, "B/s"),
+                                                 ("read_bytes",     "Read",    1024.0, 1024, "B/s"),
+                                                 ("write_bytes",    "Write",   1024.0, 1024, "B/s")]:
+            traffic = saveint(vf["vfiler_" + entry]) * factor
+            timedif, ticks_per_sec = get_counter("netapp_api_vf_stats.traffic.%s.%s" % (item, entry), now, traffic)
+            yield 0, "%s: %s" % (name, get_bytes_human_readable(ticks_per_sec, base = base, unit = unit)), [(entry, ticks_per_sec)]
+
+
+check_info["netapp_api_vf_stats.traffic"] = {
+    'check_function'      : check_netapp_api_vf_stats_traffic,
+    'inventory_function'  : inventory_netapp_api_vf_stats_traffic,
+    'has_perfdata'        : True,
+    'service_description' : 'Traffic vFiler %s',
+}

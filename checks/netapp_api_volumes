@@ -1,0 +1,114 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<netapp_api_volumes:sep(9)>>>
+# [config_instance]       volume-list-info
+# volumes
+#   volume-info
+#     name        vol0
+#     size-total  848203776
+#     size-available      630169600
+# [counter_instance]      volume
+# ---new_counter---
+# instance_name   vol0
+# read_data       11864088127
+# read_latency    25455351
+# write_data      905750632
+# write_latency   197601081
+# nfs_read_data   11603591833
+# nfs_read_latency        21772199
+# nfs_write_data  298307013
+# nfs_write_latency       173041497
+# cifs_read_data  0
+# cifs_read_latency       0
+
+def inventory_netapp_api_volumes(parsed):
+    volumes = parsed.get("volume-list-info")
+    return [ (values.get("name"), {}) for uid, values in volumes.items() if values.get("name") ]
+
+def check_netapp_api_volumes(item, params, parsed):
+    volumes = parsed.get("volume-list-info")
+
+    def find_volume(name):
+        for uid, values in volumes.items():
+            try:
+                if values.get("name") == name:
+                    return values
+            except:
+                continue # continue on configuration
+
+    volume = find_volume(item)
+    if not volume:
+        return (3, "Volume not found in agent output")
+
+    mega = 1024.0 * 1024.0
+    size_total = saveint(volume.get("size-total")) / mega
+    size_avail = saveint(volume.get("size-available")) / mega
+    state, info, perf = df_check_filesystem_list(item, params, [(volume.get("name"), size_total, size_avail)])
+
+    counter_wrapped = False
+    counters        = []
+    now = time.time()
+
+    perf_protocols = params.get("perfdata", [])
+    for protocol in ["", "nfs_", "cifs_", "san_", "fcp_", "iscsi_"]:
+        if protocol[:-1] not in perf_protocols:
+            continue
+        for mode in ["read_", "write_", "other_"]:
+            for field, factor, format_text in [ ("data", None, None), ("latency", 10000.0, "%s: %.2f ms")]:
+                key = protocol + mode + field
+                value = saveint(volume.get("counters", {}).get(key))
+                if value != None:
+                    try:
+                        timedif, delta = get_counter("netapp_api_volumes.%s.%s" % (item, key), now, value)
+                        perf.append( (key, delta) )
+
+                        if protocol == "" and mode in ["read_", "write_"]:
+                            if factor:
+                                delta = delta / factor
+                            if format_text:
+                                counters.append(format_text % (key, delta))
+                            else:
+                                counters.append("%s: %s" % (key, get_bytes_human_readable(delta)))
+                    except MKCounterWrapped:
+                        counter_wrapped = True
+
+    if not counter_wrapped:
+        info += ", " +  ", ".join(counters)
+
+    return state, info, perf
+
+check_info["netapp_api_volumes"] = {
+    'check_function'      : check_netapp_api_volumes,
+    'inventory_function'  : inventory_netapp_api_volumes,
+    'parse_function'      : lambda info: netapp_api_convert_info(info,
+                                         configs = {"volume-list-info": {"block-name": "volume-info", "key": "name"}},
+                                         counter_key = "instance_name"),
+    'service_description' : 'Volume %s',
+    'has_perfdata'        : True,
+    'group'               : "netapp_volumes",
+    'includes'            : [ "df.include", "netapp_api.include" ]
+}

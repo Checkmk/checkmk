@@ -1,0 +1,133 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+#<<<netapp_api_if:sep(9)>>>
+#[config_instance]       net-ifconfig-get
+#interface-config-info
+#  interface-config-info
+#    interface-name      e0a
+#    ipspace-name        default-ipspace
+#    v4-primary-address
+#      ip-address-info
+#        addr-family     af-inet
+#        address 10.1.1.188
+#        netmask-or-prefix       255.255.0.0
+#        broadcast       10.1.255.255
+#        creator vfiler:vfiler0
+#    mac-address 00:0c:29:d8:98:26
+#    mediatype   auto-1000t-fd-up
+#    flowcontrol full
+#...
+#[counter_instance]      ifnet
+#---new_counter---
+#instance_name   e0a
+#recv_errors     0
+#send_errors     0
+#recv_data       90123412
+#send_data       208265211
+#recv_mcasts     699719
+#send_mcasts     7302
+
+
+def netapp_convert_to_if64(info):
+    parsed_data = netapp_api_convert_info(info,
+                      configs = {"net-ifconfig-get":
+                                {"block-name": "interface-config-info", "key": "interface-name"}},
+                      counter_key = "instance_name")
+    interfaces = parsed_data.get("net-ifconfig-get")
+
+    nics = []
+
+    for idx, entry in enumerate(sorted(interfaces)):
+        nic_name, values = entry, interfaces[entry]
+
+        # auto-1000t-fd-up
+        speed = 0
+        state = "1"
+        mediatype = values.get("mediatype")
+        if mediatype:
+            tokens = mediatype.split("-")
+            # Possible values according to 7-Mode docu: 100tx | 100tx-fd | 1000fx | 10g-sr
+            if "1000" in mediatype:
+                speed = 1000000000
+            elif "100" in mediatype:
+                speed = 100000000
+            elif "10g" in mediatype:
+                speed = 10000000000
+            elif "10" in mediatype:
+                speed = 10000000
+            state  = tokens[-1].lower() == "up" and "1" or "2"
+
+        # Only add interfaces with counters
+        if "counters" in values:
+            counter_data = values.get("counters")
+            if values.get("mac-address"):
+                mac = "".join(map(lambda x: chr(int(x, 16)), values["mac-address"].split(':')))
+            else:
+                mac = ''
+
+            nic = ['0'] * 20
+            nic[0]  = idx + 1                               # Index
+            nic[1]  = nic_name                              # Description
+            nic[2]  = "6" # Fake ethernet                   # Type
+            nic[3]  = speed                                 # Speed
+            nic[4]  = state                                 # Status
+            # IN
+            nic[5]  = counter_data.get("recv_data", 0)      # inoctets
+            nic[6]  = 0                                     # inucast
+            nic[7]  = counter_data.get("recv_mcasts", 0)    # inmcast
+            nic[8]  = 0                                     # ibcast
+            nic[9]  = 0                                     # indiscards
+            nic[10] = counter_data.get("recv_errors", 0)    # inerrors
+            # OUT
+            nic[11] = counter_data.get("send_data", 0)      # outoctets
+            nic[12] = 0                                     # outucast
+            nic[13] = counter_data.get("send_mcasts", 0)    # outmcast
+            nic[14] = 0                                     # outbcast
+            nic[15] = 0                                     # outdiscards
+            nic[16] = counter_data.get("send_errors", 0)    # outspeed
+            nic[17] = 0                                     # outqlen
+            nic[18] = values.get("interface-name", "")      # Alias
+            nic[19] = mac                                   # MAC
+
+            nics.append(nic)
+
+    return nics
+
+def inventory_netapp_api_if(parsed):
+    for entry in parsed:
+        yield entry[1], None
+
+check_info["netapp_api_if"] = {
+    'check_function'          : check_if_common,
+    'inventory_function'      : inventory_netapp_api_if,
+    'parse_function'          : netapp_convert_to_if64,
+    'service_description'     : 'Interface %s',
+    'has_perfdata'            : True,
+    'group'                   : 'if',
+    'includes'                : [ 'if.include', 'netapp_api.include' ],
+    'default_levels_variable' : 'if_default_levels',
+}

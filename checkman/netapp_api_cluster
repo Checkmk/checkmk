@@ -1,0 +1,19 @@
+title: NetApp Ontap Filers: Cluster Status
+agents: netapp
+catalog: hw/storagehw/netapp
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the status of NetApp Cluster. It verifies the heartbeat interconnect status, the
+ Partner status and the software defined failover state.
+ It will return WARNING smaller issues (e.g. only one interconnect failure) and CRITICAL on anything that
+ has immediate impact (e.g. being in takeover already)
+
+inventory:
+ The check creates one service per Cluster which will be named "Cluster with Partner_Name".
+
+item:
+ A string named after our Cluster partner.
+
+perfdata:
+ The check does not generate perfdata.

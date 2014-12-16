@@ -569,6 +569,7 @@ def automation_analyse_service(args):
                 hn, ct, item, params = entry
             else:
                 ct, item, params = entry # new format without host name
+                hn = hostname
 
             if (ct, item) not in check_table:
                 continue # this is a removed duplicate or clustered service

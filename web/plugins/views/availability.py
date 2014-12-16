@@ -1199,7 +1199,7 @@ def render_availability_table(availability, from_time, until_time, range_title, 
 
         # 2. Compute Names for the groups and sort according to these names
         if grouping != "host":
-            group_titles = dict(all_groups(grouping[:-7]))
+            group_titles = dict(visuals.all_groups(grouping[:-7]))
 
         titled_groups = []
         for group_id in all_group_ids:

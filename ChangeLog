@@ -2,6 +2,9 @@
     Checks & Agents:
     * 1441 FIX: cisco_secure: fixed non-working check...
 
+    Multisite:
+    * 1781 FIX: Fix broken grouping by host/service group in availability
+
 
 1.2.5i6p4:
     Checks & Agents:

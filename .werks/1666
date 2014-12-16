@@ -1,0 +1,12 @@
+Title: inventory check esx_vsphere_hostsystem: no longer crashes if information is missing
+Level: 1
+Component: checks
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1418742995
+
+In certain scenarios (which still need to be investigated) the hostsystem does
+not report any information for the node "hardware.cpuPkg", which caused an exception in the
+inventory check esx_vsphere_hostsystem.

@@ -4905,7 +4905,7 @@ NOTES:
        )
 
 
-def do_create_config():
+def do_create_config(with_agents=True):
     sys.stdout.write("Generating configuration for core (type %s)..." % monitoring_core)
     sys.stdout.flush()
     if monitoring_core == "cmc":
@@ -4915,7 +4915,7 @@ def do_create_config():
         create_nagios_config(out)
     sys.stdout.write(tty_ok + "\n")
 
-    if bake_agents_on_restart and 'do_bake_agents' in globals():
+    if bake_agents_on_restart and with_agents and 'do_bake_agents' in globals():
         sys.stdout.write("Baking agents...")
         sys.stdout.flush()
         try:
@@ -4948,12 +4948,12 @@ def do_pack_config():
 
 def do_update(with_precompile):
     try:
-        do_create_config()
-        if monitoring_core == "cmc":
-            do_pack_config()
-        elif with_precompile:
-            do_precompile_hostchecks()
-
+        do_create_config(with_agents=with_precompile)
+        if with_precompile:
+            if monitoring_core == "cmc":
+                do_pack_config()
+            else:
+                do_precompile_hostchecks()
 
     except Exception, e:
         sys.stderr.write("Configuration Error: %s\n" % e)
@@ -5035,7 +5035,7 @@ def do_restart(only_reload = False):
             backup_path = None
 
         try:
-            do_create_config()
+            do_create_config(with_agents=True)
         except Exception, e:
             sys.stderr.write("Error creating configuration: %s\n" % e)
             if backup_path:
@@ -5533,8 +5533,6 @@ def do_check_keepalive():
 
         cmdline = cmdline.strip()
         if cmdline == "*":
-            sys.stderr.write("Re-reading configuration\n")
-            sys.stderr.flush()
             read_packed_config()
             cleanup_globals()
             reset_global_caches()
@@ -6208,13 +6206,13 @@ try:
             do_output_nagios_conf(args)
             done = True
         elif o == '-B':
-            do_update(False)
+            do_update(with_precompile=False)
             done = True
         elif o in [ '-C', '--compile' ]:
             precompile_hostchecks()
             done = True
         elif o in [ '-U', '--update' ] :
-            do_update(True)
+            do_update(with_precompile=True)
             done = True
         elif o in [ '-R', '--restart' ] :
             do_restart()

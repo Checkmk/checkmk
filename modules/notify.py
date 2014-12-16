@@ -700,7 +700,7 @@ def rbn_match_servicegroups(rule, context):
 
 def rbn_match_contactgroups(rule, context):
     required_groups = rule.get("match_contactgroups")
-    if context["WHAT"] != "SERVICE":
+    if context["WHAT"] == "SERVICE":
         cgn = context.get("SERVICECONTACTGROUPNAMES")
     else:
         cgn = context.get("HOSTCONTACTGROUPNAMES")

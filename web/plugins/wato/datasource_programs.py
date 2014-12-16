@@ -179,7 +179,6 @@ register_rule(group,
 register_rule(group,
     "special_agents:netapp",
     Dictionary(
-            help = _("TEST"),
             title = _("Username and password for the NetApp Filer."),
             elements = [
                 ( "username",

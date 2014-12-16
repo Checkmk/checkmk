@@ -32,6 +32,9 @@
     * 1664 FIX: mknotifyd: further performance improvements for notification forwarding
     * 1205 FIX: RBN: Fixed match contactgroup condition...
 
+    BI:
+    * 1784 FIX: Fix exception in BI Boxes when parents are being used
+
 
 1.2.6b1:
     Core & Setup:

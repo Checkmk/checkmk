@@ -24,7 +24,7 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-import mkeventd
+import mkeventd, defaults
 
 mkeventd_enabled = config.mkeventd_enabled
 
@@ -838,8 +838,9 @@ def mode_mkeventd_rules(phase):
             html.context_button(_("New Rule"), make_link([("mode", "mkeventd_edit_rule")]), "new")
             html.context_button(_("Reset Counters"),
               make_action_link([("mode", "mkeventd_rules"), ("_reset_counters", "1")]), "resetcounters")
-        html.context_button(_("Server Status"), make_link([("mode", "mkeventd_status")]), "status")
+        mkeventd_status_button()
         mkeventd_config_button()
+        mkeventd_mibs_button()
         return
 
     rules = load_mkeventd_rules()
@@ -1191,6 +1192,7 @@ def mode_mkeventd_changes(phase):
             html.context_button(_("Reload Config!"),
                     html.makeactionuri([("_activate", "now")]), "apply", hot=True)
         mkeventd_config_button()
+        mkeventd_mibs_button()
 
     elif phase == "action":
         if html.check_transaction():
@@ -1234,6 +1236,12 @@ def mkeventd_config_button():
     if config.may("mkeventd.config"):
         html.context_button(_("Settings"), make_link([("mode", "mkeventd_config")]), "configuration")
 
+def mkeventd_status_button():
+    html.context_button(_("Server Status"), make_link([("mode", "mkeventd_status")]), "status")
+
+def mkeventd_mibs_button():
+    html.context_button(_("SNMP MIBs"), make_link([("mode", "mkeventd_mibs")]), "snmpmib")
+
 def mode_mkeventd_status(phase):
     if phase == "title":
         return _("Event Console - Server Status")
@@ -1242,6 +1250,7 @@ def mode_mkeventd_status(phase):
         home_button()
         mkeventd_rules_button()
         mkeventd_config_button()
+        mkeventd_mibs_button()
         return
 
     elif phase == "action":
@@ -1310,7 +1319,7 @@ def mode_mkeventd_edit_configvar(phasee):
         home_button()
         mkeventd_rules_button()
         mkeventd_changes_button()
-        html.context_button(_("Server Status"), make_link([("mode", "mkeventd_status")]), "status")
+        mkeventd_status_button()
         return
 
     vs = [ (v[1], v[2]) for v in g_configvar_groups[_("Event Console")] ]
@@ -1427,6 +1436,126 @@ def mode_mkeventd_config(phase):
     forms.end()
     html.write('</div>')
 
+def mode_mkeventd_mibs(phase):
+    if phase == 'title':
+        return _('SNMP MIBs for Trap Translation')
+
+    elif phase == 'buttons':
+        home_button()
+        mkeventd_rules_button()
+        mkeventd_changes_button()
+        mkeventd_status_button()
+        mkeventd_config_button()
+        return
+
+    elif phase == 'action':
+        if html.has_var("_delete"):
+            filename = html.var("_delete")
+            if filename in load_snmp_mibs():
+                c = wato_confirm(_("Confirm MIB deletion"),
+                                 _("Do you really want to delete the MIB file <b>%s</b>?" % filename))
+                if c:
+                    log_mkeventd("delete-mib", _("Deleted MIB %s") % filename)
+                    os.remove(mkeventd.snmp_mibs_dir + "/" + filename)
+                elif c == False:
+                    return ""
+                else:
+                    return
+        elif "_upload_mib" in html.uploads:
+            uploaded_mib = html.uploaded_file("_upload_mib")
+            filename, mimetype, content = uploaded_mib
+            if filename:
+                try:
+                    upload_mib(filename, mimetype, content)
+                    return None, _("MIB file %s uploaded.") % filename
+                    log_mkeventd("uploaded-mib", _("Uploaded MIB %s") % filename)
+                except Exception, e:
+                    raise MKUserError("_upload_mib", e)
+
+        return
+
+    html.write("<h3>" + _("Upload MIB file") + "</h3>")
+    html.write(_("Allowed are single MIB files - usually with the extension <tt>.mib</tt> or <tt>.txt</tt>.<br><br>"))
+    html.begin_form("upload_form", method = "POST")
+    html.upload_file("_upload_mib")
+    html.button("upload_button", _("Upload MIB(s)"), "submit")
+    html.hidden_fields()
+    html.end_form()
+
+    mibs = load_snmp_mibs().items()
+    mibs.sort()
+    table.begin("mibs", _("Installed SNMP MIBs"))
+    for filename, mib in mibs:
+        table.row()
+
+        table.cell(_("Actions"), css="buttons")
+        delete_url = make_action_link([("mode", "mkeventd_mibs"), ("_delete", filename)])
+        html.icon_button(delete_url, _("Delete this MIB"), "delete")
+
+        table.cell(_("Filename"), filename)
+        table.cell(_("MIB"), mib.get("name", ""))
+        table.cell(_("Organization"), mib.get("organization", ""))
+        table.cell(_("Size"), str(mib.get("size")), css="number")
+    table.end()
+
+
+def load_snmp_mibs():
+    if not os.path.exists(mkeventd.snmp_mibs_dir):
+        os.makedirs(mkeventd.snmp_mibs_dir) # Let exception happen if this fails. Never happens on OMD
+        return []
+
+    found = {}
+    for fn in os.listdir(mkeventd.snmp_mibs_dir):
+        if fn[0] != '.':
+            mib = parse_snmp_mib_header(mkeventd.snmp_mibs_dir + "/" + fn)
+            found[fn] = mib
+    return found
+
+
+def parse_snmp_mib_header(path):
+    mib = {}
+    mib["size"] = os.stat(path).st_size
+    lineno = 0
+    fileit = file(path)
+    line = ""
+    while lineno < 100:
+        lineno += 1
+        try:
+            next_line = fileit.next().strip()
+        except:
+            break
+        if not next_line:
+            continue
+        old_line = line
+        line = next_line
+        if line.startswith("ORGANIZATION"):
+            parts = line.split(None, 1)
+            if len(parts) > 1:
+                org = parts[1].lstrip('"').rstrip('"')
+                if org:
+                    mib["organization"] = org
+        elif "DEFINITIONS" in line:
+            if line.startswith("DEFINITIONS"):
+                name = old_line
+            else:
+                name = line.split()[0]
+            mib["name"] = name
+
+    return mib
+
+
+def upload_mib(filename, mimetype, content):
+    if filename.startswith(".") or "/" in filename:
+        raise Exception(_("Invalid filename"))
+
+    if mimetype == "application/zip" or filename.lower().endswith(".zip"):
+        raise Exception(_("Sorry, uploading ZIP files is not yet implemented."))
+
+    if mimetype == "application/tar" or filename.lower().endswith(".gz") or filename.lower().endswith(".tgz"):
+        raise Exception(_("Sorry, uploading TAR/GZ files is not yet implemented."))
+
+    file(mkeventd.snmp_mibs_dir + "/" + filename, "w").write(content)
+
 
 if mkeventd_enabled:
     modes["mkeventd_rules"]          = (["mkeventd.edit"], mode_mkeventd_rules)
@@ -1435,6 +1564,7 @@ if mkeventd_enabled:
     modes["mkeventd_status"]         = ([], mode_mkeventd_status)
     modes["mkeventd_config"]         = (['mkeventd.config'], mode_mkeventd_config)
     modes["mkeventd_edit_configvar"] = (['mkeventd.config'], lambda p: mode_edit_configvar(p, 'mkeventd'))
+    modes["mkeventd_mibs"]           = (['mkeventd.config'], mode_mkeventd_mibs)
 
 
 

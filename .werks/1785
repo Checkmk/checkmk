@@ -1,0 +1,11 @@
+Title: Upload SNMP MIBs via WATO
+Level: 1
+Component: wato
+Compatible: compat
+Version: 1.2.7i1
+Date: 1418822255
+Class: feature
+
+You can now upload SNMP MIB files via WATO into the directory <tt>local/share/check_mk/mibs</tt>.
+These MIB files are being used when doing a <tt>cmk --snmptranslate</tt> on the command line.
+In a future version the Event Console will also use these file when receiving SNMP traps.

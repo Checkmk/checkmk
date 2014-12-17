@@ -1,0 +1,10 @@
+Title: casa_cpu_mem, casa_cpu_temp, casa_cpu_util, casa_fan, casa_power: support more devices, also C100G
+Level: 1
+Component: checks
+Class: feature
+Compatible: compat
+State: unknown
+Version: 1.2.6b2
+Date: 1418823191
+
+

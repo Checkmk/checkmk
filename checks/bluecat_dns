@@ -70,7 +70,7 @@ def check_bluecat_dns(item, params, info):
         if ok_on_node:
             node = ok_on_node
             # One Node is OK:
-            yield 0, "DHCP is %s on %s" % (states[node]['oper_state'], node)
+            yield 0, "DNS is %s on %s" % (states[node]['oper_state'], node)
         else:
             # None of the nodes is ok:
             for node, data in states.items():

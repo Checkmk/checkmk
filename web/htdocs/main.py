@@ -27,11 +27,12 @@
 import defaults, config
 
 def page_index():
-    start_url = html.var("start_url", config.start_url)
+    default_start_url = config.user.get("start_url") or config.start_url
+    start_url = html.var("start_url", default_start_url)
     # Prevent redirecting to absolute URL which could be used to redirect
     # users to compromised pages
     if '://' in start_url:
-        start_url = config.start_url
+        start_url = default_start_url
 
     # Do not cache the index page -> caching problems when page is accessed
     # while not logged in

@@ -457,6 +457,13 @@ class ID(TextAscii):
         self._regex = re.compile('^[a-zA-Z_][-a-zA-Z0-9_]*$')
         self._regex_error = _("An identifier must only consist of letters, digits, dash and underscore and it must start with a letter or underscore.")
 
+# Same as the ID class, but allowing unicode objects
+class UnicodeID(TextUnicode):
+    def __init__(self, **kwargs):
+        TextAscii.__init__(self, **kwargs)
+        self._regex = re.compile(r'^[\w][-\w0-9_]*$', re.UNICODE)
+        self._regex_error = _("An identifier must only consist of letters, digits, dash and underscore and it must start with a letter or underscore.")
+
 class RegExp(TextAscii):
     def __init__(self, **kwargs):
         TextAscii.__init__(self, attrencode = True, cssclass = 'text regexp', **kwargs)

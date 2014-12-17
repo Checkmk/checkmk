@@ -4396,7 +4396,7 @@ def do_snmptranslate(walk):
             output  = process.read()
             result  = output.split("\n")[0::2]
             for idx, line in enumerate(result):
-                result_lines.append((line, lines[idx]))
+                result_lines.append((line.strip(), lines[idx].strip()))
 
         except Exception, e:
             print e
@@ -4422,13 +4422,8 @@ def do_snmptranslate(walk):
     sys.stderr.write("\rfinished.                \n")
 
     # Output formatted
-    longest_translation = 40
     for translation, line in translated_lines:
-        longest_translation = max(longest_translation, len(translation))
-
-    format_string = "%%-%ds %%s" % longest_translation
-    for translation, line in translated_lines:
-        sys.stdout.write(format_string % (translation, line))
+        sys.stdout.write("%s --> %s\n" % (line, translation))
 
 def do_snmpwalk(hostnames):
     if opt_oids and opt_extra_oids:
@@ -4605,8 +4600,8 @@ def dump_host(hostname):
         parents_list = parents_of(hostname)
     if len(parents_list) > 0:
         print tty_yellow + "Parents:                " + tty_normal + ", ".join(parents_list)
-    print tty_yellow + "Host groups:            " + tty_normal + ", ".join(hostgroups_of(hostname))
-    print tty_yellow + "Contact groups:         " + tty_normal + ", ".join(host_contactgroups_of([hostname]))
+    print tty_yellow + "Host groups:            " + tty_normal + make_utf8(", ".join(hostgroups_of(hostname)))
+    print tty_yellow + "Contact groups:         " + tty_normal + make_utf8(", ".join(host_contactgroups_of([hostname])))
 
     agenttypes = []
     if is_tcp_host(hostname):

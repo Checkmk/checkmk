@@ -1,0 +1,10 @@
+Title: msexch_dag.contentindex, msexch_dag.copyqueue, msexch_dag.dbcopy: new checks for MS Exchange Mailbox Servers in a DAG
+Level: 2
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1418751706
+Class: feature
+
+The corresponding agent plugin will be released very soon...
+

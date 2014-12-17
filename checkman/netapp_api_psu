@@ -1,0 +1,17 @@
+title: NetApp Filer: Power Supplies
+agents: netapp
+catalog: hw/storagehw/netapp
+license: GPL
+distribution: check_mk
+description:
+ The check monitors the state of the shelfes power supplies for a NetApp filer.
+ Since a filer may run in a clustered mode there was a requirement to determine
+ which power supplies are managed by that filer. The following approach is used:
+ If a filer possess most of the disks in a shelf, the shelf is considered as owned
+ and the power supplies also belong to the filer.
+
+ Whenever a power supply fails the check reports {CRIT} and outputs the shelf unique
+ id together with the power supply number.
+
+inventory:
+ On check is created for the entire filer.

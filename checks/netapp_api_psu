@@ -1,0 +1,64 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+# <<<netapp_api_psu:sep(9)>>>
+# 50:05:0c:c0:02:20:d2:c4 shelf-owned     true
+# 50:05:0c:c0:02:20:d2:c4 power-supply-serial-no  PMW944430115711 PMW944430115700 None    None
+# 50:05:0c:c0:02:20:d2:c4 power-supply-is-error   false   false   None    None
+# 50:05:0c:c0:02:20:d2:c4 power-supply-is-not-installed   None    None    true    true
+# 50:05:0c:c0:02:20:d2:c4 power-control-status    ok
+# 50:05:0c:c0:02:20:d2:c4 power-supply-element-number     1       2       3       4
+
+def inventory_netapp_api_psu(info):
+    yield None, None
+
+def check_netapp_api_psu(_no_item, _no_params, parsed):
+    psu_count   = 0
+    psu_errors  = []
+    for shelf, psus in parsed.items():
+        if psus["shelf-owned"][0] != "true":
+            continue
+
+        for idx, not_installed in enumerate(psus["power-supply-is-not-installed"]):
+            if not_installed == "true" or psus["power-supply-element-number"][idx] == "None":
+                continue
+            psu_count += 1
+            if psus["power-supply-is-error"][idx] == "true":
+                psu_errors.append((2, "Error in Shelf %s PSU %s" % (shelf, psus["power-supply-element-number"][idx])))
+
+    yield 0, "%s Power supplies installed" % psu_count
+
+    for state, text in psu_errors:
+        yield state, text
+
+
+check_info["netapp_api_psu"] = {
+    'check_function'      : check_netapp_api_psu,
+    'inventory_function'  : inventory_netapp_api_psu,
+    'parse_function'      : netapp_api_parse_info_environ,
+    'service_description' : 'Power Supplies Shelfes',
+    'includes'            : ["netapp_api.include"]
+}

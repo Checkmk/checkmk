@@ -1752,6 +1752,25 @@ multisite_painters["log_plugin_output"] = {
     "paint"   : paint_log_plugin_output,
 }
 
+
+def paint_log_type(row):
+    lt = row["log_type"]
+    if "HOST" in lt:
+        return "", _("Host")
+    elif "SERVICE" in lt or "SVC" in lt:
+        return "", _("Service")
+    else:
+        return "", _("Program")
+
+
+multisite_painters["log_what"] = {
+    "title"   : _("Log: host or service"),
+    "short"   : _("Host/Service"),
+    "columns" : [ "log_type" ],
+    "paint"   : paint_log_type,
+}
+
+
 multisite_painters["log_attempt"] = {
     "title"   : _("Log: number of check attempt"),
     "short"   : _("Att."),

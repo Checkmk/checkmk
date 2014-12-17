@@ -1,0 +1,77 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+#<<<netapp_api_protocol:sep(9)>>>
+#[counters]
+#---new_counter---
+#instance_name   nfsv4
+#nfsv4_read_data  0
+#nfsv4_write_data 0
+#---new_counter---
+#instance_name   iscsi
+#iscsi_read_data  0
+#iscsi_write_data 0
+#---new_counter---
+#instance_name   cifs
+#cifs_read_data   0
+#cifs_write_data  0
+#---new_counter---
+#instance_name   nfs
+#nfsv3_read_data  0
+#nfsv3_write_data 0
+
+
+def inventory_netapp_api_protocol(parsed):
+    for key in parsed:
+        yield key, None
+
+def check_netapp_api_protocol(item, _no_params, parsed):
+    counter_data = parsed.get(item)
+    if not counter_data:
+         return
+
+    # Fix for nfsv3. The item nfs is internally handled as nfsv3
+    if item == "nfs":
+        item = "nfsv3"
+
+    infotext = ""
+    now = savefloat(time.time())
+    for entry, text in [ ("read_ops", "Read OPS"), ("write_ops", "Write OPS") ]:
+        key = "%s_%s" % (item, entry)
+        value = saveint(counter_data.get(entry, counter_data.get(key, "0")))
+        timedif, per_sec = get_counter("netapp_api_protocol.%s.%s" % (item, entry), now, value)
+        yield 0, "%s %s" % (text, get_bytes_human_readable(per_sec, 1000, unit = "")), [(entry, per_sec)]
+
+
+check_info["netapp_api_protocol"] = {
+    'check_function'      : check_netapp_api_protocol,
+    'inventory_function'  : inventory_netapp_api_protocol,
+    'parse_function'      : lambda info: netapp_api_convert_info(info, counter_key = "instance_name", counter_as_key = True),
+    'service_description' : 'Protocol %s',
+    'has_perfdata'        : True,
+    'includes'            : [ "netapp_api.include" ]
+}
+

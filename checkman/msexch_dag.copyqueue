@@ -1,0 +1,30 @@
+title: MS Exchange DAG CopyQueue Length
+agents: windows
+catalog: app/exchange
+license: GPL
+distribution: check_mk
+description:
+ This check monitors the number of transaction logs waiting to be copied
+ and inspected on your Exchange Mailbox Servers, i.e. the CopyQueue length.
+
+ The check requires that the agent plugin {msexch_dag.ps1} is installed
+ on the Exchange mailbox server(s) to be monitored.  The plugin uses the
+ PowerShell {Get-MailboxDatabaseCopyStatus} cmdlet.
+
+ Warning and critical levels for the queue length can be configured and
+ the state of the check is determined according to these levels.
+
+inventory:
+ One check per database on the Mailbox Server is created.
+
+item:
+ The database name on the Mailbox Server
+
+[parameters]
+warn(int): Warning level for the maximum number of logs in the queues
+crit(int): Critical level
+
+[configuration]
+msexch_dag_copyqueue_default_levels(int, int): Default warning and critical levels for the maximum copy
+ queue length over all queues. The default is preset to {( 100, 200 )}
+

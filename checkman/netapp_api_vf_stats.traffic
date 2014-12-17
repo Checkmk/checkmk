@@ -1,0 +1,16 @@
+title: NetApp Filers: vFiler Traffic
+agents: netapp
+catalog: hw/storagehw/netapp
+license: GPL
+distribution: check_mk
+description:
+ Monitors the traffic of vFilers on the NetApp filer.
+ Right now the check is always {OK} and reports the following informations for
+ each vFilfer: {Network Data Received/Send}, {Disk Data Read/Written}, {Read/Write Operations Per Second}
+
+perfdata:
+ Six values: {Read/Write Operations}, {Network Received/Send}, {Bytes Read/Written}
+
+inventory:
+ Creates one check for each vFiler.
+

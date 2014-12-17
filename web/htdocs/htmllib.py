@@ -1000,8 +1000,8 @@ class html:
             hover = ' onmouseover="this.style.display=\'none\';"'
         else:
             hover = ""
-        self.lowlevel_write('<table %s class=debug_vars>' % hover)
-        self.lowlevel_write("<tr><th colspan=2>POST / GET Variables</th></tr>")
+        self.write('<table %s class=debug_vars>' % hover)
+        self.write("<tr><th colspan=2>POST / GET Variables</th></tr>")
         for name, value in sorted(self.vars.items()):
             if not prefix or name.startswith(prefix):
                 self.write("<tr><td class=left>%s</td><td class=right>%s</td></tr>\n" %

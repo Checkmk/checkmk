@@ -1,0 +1,25 @@
+title: NetApp Filers: vFiler CPU Utilization
+agents: netapp
+catalog: hw/storagehw/netapp
+license: GPL
+distribution: check_mk
+description:
+ Checks the CPU utilization (in percent) of a vFiler.
+
+ {WARN} or {CRIT} is returned, if the usage in the last 60 sec was above
+ given thresholds. {OK} is returned otherwise.
+
+perfdata:
+ One value: The vFilers CPU utilization in percent.
+
+inventory:
+ Creates one check for each vFiler.
+
+examples:
+ # set default levels to 70 and 80 percent:
+ netapp_api_vf_stats_cpu_util_default_levels = { "levels": (70.0, 80.0) }
+
+[parameters]
+parameters (dict): with the element
+{"levels"}: (float, float): levels of vFiler CPU utilization for {WARN} and {CRIT} in percent
+

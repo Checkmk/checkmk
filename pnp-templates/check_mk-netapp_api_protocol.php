@@ -1,5 +1,4 @@
-#!/usr/bin/python
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
+<?php
 # +------------------------------------------------------------------+
 # |             ____ _               _        __  __ _  __           |
 # |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
@@ -24,9 +23,28 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-# This file was shipped with Check_MK previous to 1.2.5i6. To prevent
-# problems during update, this dummy file is shipped. It overwrites
-# the outdated existing file and invalidates it. This can be removed
-# in later versions.
+# Performance data from check:
+# read_ops=0;;;;
+# write_ops=0;;;;
 
-# The filters are now defined in plugins/visuals/filters.py
+$opt[1] = "--vertical-label OPS --title \"Operations per second: $hostname / $servicedesc\" ";
+
+$def[1] = "".
+# read ops
+"DEF:readops=$RRDFILE[1]:$DS[1]:MAX ".
+"AREA:readops#00e060:\" Read  \" ".
+"GPRINT:readops:LAST:\"%7.1lf OPS last\" ".
+"GPRINT:readops:AVERAGE:\"%7.1lf OPS avg\" ".
+"GPRINT:readops:MAX:\"%7.1lf OPS max\\n\" ".
+
+# write ops
+"DEF:writeops=$RRDFILE[2]:$DS[2]:MAX ".
+"CDEF:minuswriteops=writeops,-1,* ".
+"AREA:minuswriteops#0080e0:\"Write  \" ".
+"GPRINT:writeops:LAST:\"%7.1lf OPS last\" ".
+"GPRINT:writeops:AVERAGE:\"%7.1lf OPS avg\" ".
+"GPRINT:writeops:MAX:\"%7.1lf OPS max\\n\" ".
+
+"";
+
+?>

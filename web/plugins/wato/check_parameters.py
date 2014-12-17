@@ -2774,7 +2774,7 @@ register_check_parameters(
                     ])
             ]
         ),
-        help = _("Here you can specify the total memory usage levels for clustered hosts "),
+        help = _("Here you can specify the total memory usage levels for clustered hosts."),
         title = _("Memory Usage"),
         add_label = _("Add limits")
     ),

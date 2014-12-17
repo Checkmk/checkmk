@@ -34,6 +34,7 @@
     * 1779 FIX: Fix broken icon in host diagnostic mode
     * 1765 FIX: Fixed bug when generating nagvis backends while having sites with livestatus proxy configured...
     * 1789 FIX: Fix preview of passive checks in WATO list of services
+    * 1790 FIX: Fix WATO parameters page for passive checks...
 
     Notifications:
     * 1662 notification plugin spectrum: finalized script. now able to handle host notications

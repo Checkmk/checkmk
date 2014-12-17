@@ -4868,6 +4868,13 @@ register_check_parameters(
     _("Windows Services"),
     Dictionary(
         elements = [
+            ( "additional_servicenames",
+                ListOfStrings(
+                    title = _("Additional names for the service"),
+                    help = _("If the service have diffrent names on diffrent "
+                           "Hosts, you can use this option to match them in one rule"),
+                )
+            ),
             ( "states",
               ListOf(
                 Tuple(

@@ -1,0 +1,11 @@
+Title: services: Check can now be configured with additional names for matching
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.7i1
+Date: 1418821879
+Class: feature
+
+If you want to configure windows service monitoring manually on multiple hosts at once, but the service name is not always
+the same, this now can be configured with one single rule.
+

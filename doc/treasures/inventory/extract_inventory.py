@@ -148,7 +148,8 @@ def filt_it(package, relation):
             field = re.sub(list_start+":\*.", "", field)
             for item in field.split("."):
                 value = package[item]
-                if type(value) in (str, int, float) and value == should_be:
+                if type(value) in (str, int, float) and re.search(should_be, value):
+
                     return False
     return True
 

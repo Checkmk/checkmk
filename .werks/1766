@@ -1,0 +1,12 @@
+Title: Fixed exceptions in Web GUI when host or service groups used non ascii characters in names
+Level: 1
+Component: multisite
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1418811123
+
+It is possible to define host and service groups which contain non ascii characters (e.g. umlauts)
+in their names. This is only possible to configure via config files, not via WATO for the moment.
+These groups lead to exceptions in the Web GUI, which has been fixed now.

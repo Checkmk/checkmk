@@ -78,9 +78,10 @@ def inv_esx_vsphere_hostsystem(info):
     node["cores_per_cpu"]   = node["cores"] / node["cpus"]
     node["threads"]         = int(data["hardware.cpuInfo"]["numCpuThreads"])
     node["threads_per_cpu"] = node["threads"] / node["cpus"]
-    node["model"]           = data["hardware.cpuPkg"]["0"]["description"]
-    node["vendor"]          = data["hardware.cpuPkg"]["0"]["vendor"]
-    node["bus_speed"]       = float(data["hardware.cpuPkg"]["0"]["busHz"])
+    if "hardware.cpuPkg" in data:
+        node["model"]           = data["hardware.cpuPkg"]["0"]["description"]
+        node["vendor"]          = data["hardware.cpuPkg"]["0"]["vendor"]
+        node["bus_speed"]       = float(data["hardware.cpuPkg"]["0"]["busHz"])
 
     node = inv_tree("hardware.bios.")
     node["version"] = data["hardware.biosInfo"]["biosVersion"]

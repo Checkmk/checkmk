@@ -1,0 +1,9 @@
+Title: Fix broken grouping by host/service group in availability
+Level: 1
+Component: multisite
+Compatible: compat
+Version: 1.2.6b2
+Date: 1418735585
+Class: fix
+
+

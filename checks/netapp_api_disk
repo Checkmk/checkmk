@@ -1,0 +1,134 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+# +------------------------------------------------------------------+
+# |             ____ _               _        __  __ _  __           |
+# |            / ___| |__   ___  ___| | __   |  \/  | |/ /           |
+# |           | |   | '_ \ / _ \/ __| |/ /   | |\/| | ' /            |
+# |           | |___| | | |  __/ (__|   <    | |  | | . \            |
+# |            \____|_| |_|\___|\___|_|\_\___|_|  |_|_|\_\           |
+# |                                                                  |
+# | Copyright Mathias Kettner 2014             mk@mathias-kettner.de |
+# +------------------------------------------------------------------+
+#
+# This file is part of Check_MK.
+# The official homepage is at http://mathias-kettner.de/check_mk.
+#
+# check_mk is free software;  you can redistribute it and/or modify it
+# under the  terms of the  GNU General Public License  as published by
+# the Free Software Foundation in version 2.  check_mk is  distributed
+# in the hope that it will be useful, but WITHOUT ANY WARRANTY;  with-
+# out even the implied warranty of  MERCHANTABILITY  or  FITNESS FOR A
+# PARTICULAR PURPOSE. See the  GNU General Public License for more de-
+# ails.  You should have  received  a copy of the  GNU  General Public
+# License along with GNU Make; see the file  COPYING.  If  not,  write
+# to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
+# Boston, MA 02110-1301 USA.
+
+
+# Agent output:
+# <<<netapp_api_disk:sep(9)>>>
+# [config_instance]       disk-list-info
+# disk-detail-info
+# disk-uid        2000B452:53C3890F:00000000:00000000:00000000:00000000:00000000:00000000:00000000:00000000
+# raid-state      spare
+# bay     13
+# used-space      587202560000
+# physical-space  587421536256
+# shelf   2
+# serial-number   6SL94Q9C0000N5055GAW
+# disk-detail-info
+# disk-uid        2000B452:53C3893E:00000000:00000000:00000000:00000000:00000000:00000000:00000000:00000000
+# raid-state      spare
+# ...
+# shelf-uid-instance
+# shelf-uid       50:05:0c:c0:02:20:9a:7c
+# disks   2040000C:CA1016C4:00000000:00000000:00000000:00000000:00000000:00000000:00000000:00000000 ...
+
+def inventory_netapp_api_disk_summary(info):
+    return [ (None, {}) ]
+
+def check_netapp_api_disk_summary(_no_item, params, info):
+    disks_info = netapp_api_convert_info(info,
+                        configs = {"disk-list-info":      {"block-name": "disk-detail-info",
+                                                           "key": "disk-uid"},
+                                   "shelf-uids-of-disks": {"block-name": "shelf-uid-instance",
+                                                           "key": "shelf-uid"}})
+
+    disks = disks_info.get("disk-list-info")
+    shelfs = disks_info.get("shelf-uids-of-disks")
+
+    my_disks = dict([disk for disk in disks.items() if not disk[1].get("raid-state") == "partner"])
+
+    spare_count  = 0
+    prefailed_disks = []
+    broken_disks    = []
+    raid_states     = {}
+
+    phys_space = 0
+    total_space  = 0
+
+    for name, disk in my_disks.items():
+        if disk.get("raid-state") == "partner":
+            continue # Disk belongs to partner
+
+        total_space  += saveint(disk.get("used-space"))
+
+        if disk.get("raid-state", "") == "broken":
+            broken_disks.append(disk)
+        elif disk.get("is-prefailed", "false") != "false":
+            prefailed_disks.append(disk)
+        elif disk.get("raid-state","") == "spare":
+            spare_count += 1
+        if disk.get("raid-type"):
+            raid_states.setdefault(disk["raid-type"], 0)
+            raid_states[disk["raid-type"]] += 1
+
+    yield 0, "Total Raw Capacity: %s" % get_bytes_human_readable(total_space), [("total_space", total_space)]
+    yield 0, "Disks Total: %s Spare: %s" % (len(my_disks), spare_count), [ ("total", len(my_disks)),
+                                                                           ("spare", spare_count),
+                                                                           ("broken", len(broken_disks)) ]
+
+
+    disk_to_shelf_map = {}
+    def find_disk_shelf_uid(disk_uid):
+        if not disk_to_shelf_map:
+            for shelf, values in shelfs.items():
+                disks = values["disks"].split(" ")
+                for disk in disks:
+                    disk_to_shelf_map[disk] = shelf
+        return disk_to_shelf_map.get(disk_uid)
+
+    for text, disks, state in [("Prefailed", prefailed_disks, 0),
+                               ("Broken"   , broken_disks,    0)]:
+        info = []
+        for disk in disks:
+            disk_info = "Serial: %s" % disk.get("serial-number")
+            shelf_uid  = find_disk_shelf_uid(disk.get("disk-uid"))
+            if shelf_uid:
+                disk_info += " (Shelf: %s, Bay %s)" % (shelf_uid, disk.get("bay"))
+            info.append(disk_info)
+
+        if info:
+            yield state, "%s: %s - %s" % (text, len(disks), " / ".join(info))
+        else:
+            yield 0, "%s: %s" % (text, len(disks))
+
+    if params.get("broken_spare_ratio") and len(broken_disks):
+        warn, crit  = params["broken_spare_ratio"]
+        ratio = float(len(broken_disks)) / (len(broken_disks) + spare_count) * 100
+        state = 0
+        if ratio >= crit:
+            state = 2
+        elif ratio >= warn:
+            state = 1
+        if state:
+            yield state, "Too much broken disks (levels at %.1f%%/%.1f%%)" % (warn, crit)
+
+check_info["netapp_api_disk.summary"] = {
+    'check_function'      : check_netapp_api_disk_summary,
+    'inventory_function'  : inventory_netapp_api_disk_summary,
+    'service_description' : 'NetApp Disks Summary',
+    'group'               : 'netapp_disks',
+    'has_perfdata'        : True
+}
+

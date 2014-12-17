@@ -333,6 +333,19 @@ declare_1to1_sorter("log_contact_name",        cmp_simple_string)
 declare_1to1_sorter("log_time",                cmp_simple_number)
 declare_1to1_sorter("log_lineno",              cmp_simple_number)
 
+def cmp_log_what(col, a, b):
+    return cmp(log_what(a[col]), log_what(b[col]))
+
+def log_what(t):
+    if "HOST" in t:
+        return 1
+    elif "SERVICE" in t or "SVC" in t:
+        return 2
+    else:
+        return 0
+
+declare_1to1_sorter("log_what",                cmp_log_what)
+
 import time
 def get_day_start_timestamp(t):
     st    = time.localtime(int(t))

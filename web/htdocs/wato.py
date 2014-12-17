@@ -10607,11 +10607,17 @@ def create_nagvis_backends(sites):
         if 'socket' not in site:
             continue # skip sites without configured sockets
 
+        # Handle special data format of livestatus proxy config
+        if type(site['socket']) == tuple:
+            socket = 'tcp:%s:%d' % site['socket'][1]['socket']
+        else:
+            socket = site['socket']
+
         cfg += [
             '',
             '[backend_%s]' % site_id,
             'backendtype="mklivestatus"',
-            'socket="%s"' % site['socket'],
+            'socket="%s"' % socket,
         ]
 
         if 'status_host' in site:

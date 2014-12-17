@@ -3,6 +3,7 @@
     * 1759 Packed RPM and DEB agent packages are now shipped with normal Check_MK package...
 
     Checks & Agents:
+    * 1665 agent_netapp: New special agent for NetApp monitoring via Web-API...
     * 1457 FIX: logins: new check renamed from "users" check...
             NOTE: Please refer to the migration notes!
     * 1762 FIX: lnx_thermal: Now ignoring trip points with level 0...
@@ -13,14 +14,18 @@
     * 1764 FIX: mk_sap: Fixed exception when saving status file
     * 1663 FIX: winperf_if: fixed incorrect enumeration of interface index...
     * 1204 FIX: veeam_client: Not longer throwing an error in case of currenlty running backup
+    * 1666 FIX: inventory check esx_vsphere_hostsystem: no longer crashes if information is missing...
 
     Multisite:
     * 1758 Improved exception hander: Shows details without additional debug request, added mailto link for error report...
+    * 1781 FIX: Fix broken grouping by host/service group in availability
+    * 1783 FIX: Finish the view "History of Scheduled Downtimes"...
 
     WATO:
     * 1760 Added search form to manual checks page
     * 1761 FIX: Ruleset search is now consistent for host & serviceparameters and manual checks
     * 1779 FIX: Fix broken icon in host diagnostic mode
+    * 1765 FIX: Fixed bug when generating nagvis backends while having sites with livestatus proxy configured...
 
     Notifications:
     * 1662 notification plugin spectrum: finalized script. now able to handle host notications
@@ -28,6 +33,9 @@
     * 1661 FIX: mknotifyd: improved performance when receiving forwarded notifications
     * 1664 FIX: mknotifyd: further performance improvements for notification forwarding
     * 1205 FIX: RBN: Fixed match contactgroup condition...
+
+    BI:
+    * 1784 FIX: Fix exception in BI Boxes when parents are being used
 
 
 1.2.6b1:

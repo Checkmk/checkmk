@@ -1,0 +1,10 @@
+Title: brocade_fcport/brocade_info: Only try to discover these services when device provides correct info
+Level: 1
+Component: checks
+Compatible: compat
+Version: 1.2.6b2
+Date: 1418828693
+Class: fix
+
+The brocade_fcport and brocade_info checks were discovered on some devices which do not
+provide the needed information. Improved the scan function to prevent this issue.

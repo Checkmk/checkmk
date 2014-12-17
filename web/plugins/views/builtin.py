@@ -36,7 +36,7 @@ service_view_painters = [
 ]
 
 # Same as list of services, but extended by the hostname
-host_service_view_painters = service_view_painters
+host_service_view_painters = service_view_painters[:]
 host_service_view_painters.insert(1, ('host', 'host'))
 
 multisite_builtin_views.update({

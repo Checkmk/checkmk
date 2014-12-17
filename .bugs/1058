@@ -1,0 +1,10 @@
+Title: Entwicklungsticket schliessen
+Component: core
+State: open
+Date: 2014-12-17 10:33:24
+Targetversion: future
+Class: nastiness
+
+Wenn man ein Entwicklungsticket schliesst, sollte das Ticket zu einem normalen
+Ticket werden, damit, wenn der Kunde doch wieder antwortet, er dann zeitnah 
+eine Antwort bekommt

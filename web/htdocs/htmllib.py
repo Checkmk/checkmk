@@ -500,7 +500,7 @@ class html:
         self.text_input(varname, default_value, type="password", size = size, **args)
 
     def text_area(self, varname, deflt="", rows=4, cols=30, attrs = {}):
-        value = self.vars.get(varname, deflt)
+        value = self.var(varname, deflt)
         error = self.user_errors.get(varname)
         if error:
             self.write("<x class=inputerror>")
@@ -528,7 +528,10 @@ class html:
         self.write("<select%s name=\"%s\" id=\"%s\"%s>\n" %
                              (onchange_code, varname, varname, attributes))
         for value, text in options:
-            if value == None: value = ""
+            if value == None:
+                value = ""
+            elif type(value) == unicode:
+                value = value.encode('utf-8')
             sel = value == current and " selected" or ""
             self.write("<option value=\"%s\"%s>%s</option>\n" %
                 (self.attrencode(value), sel, self.attrencode(text)))
@@ -887,7 +890,7 @@ class html:
 
         if self.myfile == "view":
             mode_name = self.var('mode') == "availability" and "availability" or "view"
-            encoded_vars = self.attrencode([ (k, v != None and str(v) or '') for k,v in self.page_context.items() ])
+            encoded_vars = self.attrencode([ (k, v != None and v or '') for k,v in self.page_context.items() ])
             h += '<div class="visualadd"><a class="visualadd" href="javascript:void(0)" ' \
                  'onclick="toggle_add_to_visual(event, this, \'%s\', %s, {\'name\': \'%s\'})">' \
                  '<img class=statusicon src="images/status_add_dashlet.png" title="%s"></a></div>\n' % \
@@ -1000,8 +1003,8 @@ class html:
             hover = ' onmouseover="this.style.display=\'none\';"'
         else:
             hover = ""
-        self.lowlevel_write('<table %s class=debug_vars>' % hover)
-        self.lowlevel_write("<tr><th colspan=2>POST / GET Variables</th></tr>")
+        self.write('<table %s class=debug_vars>' % hover)
+        self.write("<tr><th colspan=2>POST / GET Variables</th></tr>")
         for name, value in sorted(self.vars.items()):
             if not prefix or name.startswith(prefix):
                 self.write("<tr><td class=left>%s</td><td class=right>%s</td></tr>\n" %
@@ -1256,13 +1259,17 @@ class html:
 
     # From here: Former not class functions
 
+    # This function returns a str object, never unicode!
     # Encode HTML attributes: replace " with &quot;, also replace
     # < and >. This code is slow.
     def attrencode(self, value):
-        if type(value) == int:
+        ty = type(value)
+        if ty == int:
             return str(value)
-        elif type(value) not in [str, unicode]:
+        elif ty not in [str, unicode]:
             value = str(value)
+        elif ty == unicode:
+            value = value.encode("utf-8")
 
         return value.replace('"', "&quot;").replace("<", "&lt;").replace(">", "&gt;")
 

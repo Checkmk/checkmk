@@ -32,8 +32,11 @@ factory_settings["bluecat_dhcp"] = {
 }
 
 def inventory_bluecat_dhcp(info):
-    return [(None, None)]
-# [['dewedns1a', '2', '0'], ['dewedns1b', '1', '0']]
+    # Check if DHCP is not stopped on at least one host
+    for node, oper_state, leases in info:
+        if oper_state != '2':
+            return [(None, None)]
+
 def check_bluecat_dhcp(item, params, info):
     oper_states = {
         1 : "running normally",

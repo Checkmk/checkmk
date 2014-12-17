@@ -599,11 +599,13 @@ def automation_analyse_service(args):
     for nr, entry in enumerate(custchecks):
         desc = entry["service_description"]
         if desc == servicedesc:
-            return {
+            result = {
                 "origin"       : "classic",
                 "rule_nr"      : nr,
-                "command_line" : entry["command_line"],
             }
+            if "command_line" in entry: # Only active checks have a command line
+                result["command_line"] = entry["command_line"]
+            return result
 
     # 4. Active checks
     for acttype, rules in active_checks.items():

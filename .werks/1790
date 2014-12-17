@@ -1,0 +1,11 @@
+Title: Fix WATO parameters page for passive checks
+Level: 1
+Component: wato
+Class: fix
+Compatible: compat
+State: unknown
+Version: 1.2.7i1
+Date: 1418831944
+
+Showing the parameters page for passive checks (i.e. classical checks without
+a command line) resulted in an exception. This has been fixed.

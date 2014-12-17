@@ -2651,9 +2651,12 @@ def mode_object_parameters(phase):
 
                 html.write('<table class=setting><tr><td class=reason><a href="%s">%s %d %s %s</a></td>' % (
                     url, _("Rule"), rel_nr + 1, _("in"), rule[0]["title"]))
-                html.write("<td class=settingvalue used><tt>%s</tt></td></tr></table>" %
-                    serviceinfo["command_line"])
-
+                html.write("<td class=settingvalue used>")
+                if "command_line" in serviceinfo:
+                    html.write("<tt>%s</tt>" % serviceinfo["command_line"])
+                else:
+                    html.write(_("(no command line, passive check)"))
+                html.write("</td></tr></table>")
 
     last_maingroup = None
     for groupname in groupnames:
@@ -5403,7 +5406,7 @@ def check_mk_local_automation(command, args=[], indata=""):
             raise MKGeneralException("Error running <tt>%s</tt> (exit code %d): <pre>%s</pre>%s" %
                   (" ".join(cmd), exitcode, hilite_errors(outdata), outdata.lstrip().startswith('sudo:') and sudo_msg or ''))
         else:
-            raise MKGeneralException("<h1>%s</h1>%s" % (_("Error"), hilite_errors(outdata)))
+            raise MKGeneralException(hilite_errors(outdata))
 
 
     # On successful "restart" command execute the activate changes hook

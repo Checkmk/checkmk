@@ -872,6 +872,8 @@ function handle_execute_active_check(oDiv, response_text)
     // Response is STATUS\nOUTPUT
     var parts = response_text.split("\n", 3);
     var state = parts[0];
+    if (state == "-1")
+        state = "p"; // Pending
     var statename = parts[1];
     var output = parts[2];
     oDiv.innerHTML = output;
